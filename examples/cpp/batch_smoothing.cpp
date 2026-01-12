@@ -1,8 +1,8 @@
 /**
  * @file batch_smoothing.cpp
- * @brief fastlowess Batch Smoothing Example
+ * @brief fastloess Batch Smoothing Example
  *
- * This example demonstrates batch LOWESS smoothing features:
+ * This example demonstrates batch LOESS smoothing features:
  * - Basic smoothing with different parameters
  * - Robustness iterations for outlier handling
  * - Confidence and prediction intervals
@@ -18,7 +18,7 @@
 #include <random>
 #include <vector>
 
-#include "fastlowess.hpp"
+#include "fastloess.hpp"
 
 
 // Synthetic data generation
@@ -65,7 +65,7 @@ Data generate_sample_data(size_t n_points = 100) {
 }
 
 int main() {
-  std::cout << "=== fastlowess Batch Smoothing Example ===" << std::endl;
+  std::cout << "=== fastloess Batch Smoothing Example ===" << std::endl;
 
   // 1. Generate Data
   auto data = generate_sample_data(100);
@@ -74,30 +74,30 @@ int main() {
   try {
     // 2. Basic Smoothing (Default parameters)
     std::cout << "Running basic smoothing..." << std::endl;
-    fastlowess::LowessOptions basic_opts;
+    fastloess::LoessOptions basic_opts;
     basic_opts.fraction = 0.05;
     basic_opts.iterations = 0;
-    auto res_basic = fastlowess::smooth(data.x, data.y, basic_opts);
+    auto res_basic = fastloess::smooth(data.x, data.y, basic_opts);
 
     // 3. Robust Smoothing (IRLS)
     std::cout << "Running robust smoothing (3 iterations)..." << std::endl;
-    fastlowess::LowessOptions robust_opts;
+    fastloess::LoessOptions robust_opts;
     robust_opts.fraction = 0.05;
     robust_opts.iterations = 3;
     robust_opts.robustness_method = "bisquare";
     robust_opts.return_robustness_weights = true;
     
-    auto res_robust = fastlowess::smooth(data.x, data.y, robust_opts);
+    auto res_robust = fastloess::smooth(data.x, data.y, robust_opts);
     
     // 4. Uncertainty Quantification
     std::cout << "Computing confidence and prediction intervals..." << std::endl;
-    fastlowess::LowessOptions interval_opts;
+    fastloess::LoessOptions interval_opts;
     interval_opts.fraction = 0.05;
     interval_opts.confidence_intervals = 0.95;
     interval_opts.prediction_intervals = 0.95;
     interval_opts.return_diagnostics = true;
     
-    auto res_intervals = fastlowess::smooth(data.x, data.y, interval_opts);
+    auto res_intervals = fastloess::smooth(data.x, data.y, interval_opts);
 
     // 5. Cross-Validation for optimal fraction
     std::cout << "Running cross-validation to find optimal fraction..." << std::endl;
@@ -108,10 +108,10 @@ int main() {
     double min_rmse = 1e9;
     
     for(double f : fractions) {
-        fastlowess::LowessOptions cv_opts;
+        fastloess::LoessOptions cv_opts;
         cv_opts.fraction = f;
         cv_opts.return_diagnostics = true;
-        auto res = fastlowess::smooth(data.x, data.y, cv_opts);
+        auto res = fastloess::smooth(data.x, data.y, cv_opts);
         if(res.diagnostics().has_value()) {
              double rmse = res.diagnostics().rmse;
              if(rmse < min_rmse) {
@@ -139,20 +139,20 @@ int main() {
         yl[i] = 2.0 * xl[i] + 1.0;
     }
 
-    fastlowess::LowessOptions opt_ext;
+    fastloess::LoessOptions opt_ext;
     opt_ext.fraction = 0.6;
     opt_ext.boundary_policy = "extend";
-    auto r_ext = fastlowess::smooth(xl, yl, opt_ext);
+    auto r_ext = fastloess::smooth(xl, yl, opt_ext);
     
-    fastlowess::LowessOptions opt_ref;
+    fastloess::LoessOptions opt_ref;
     opt_ref.fraction = 0.6;
     opt_ref.boundary_policy = "reflect";
-    auto r_ref = fastlowess::smooth(xl, yl, opt_ref);
+    auto r_ref = fastloess::smooth(xl, yl, opt_ref);
     
-    fastlowess::LowessOptions opt_zero;
+    fastloess::LoessOptions opt_zero;
     opt_zero.fraction = 0.6;
     opt_zero.boundary_policy = "zero";
-    auto r_zr = fastlowess::smooth(xl, yl, opt_zero);
+    auto r_zr = fastloess::smooth(xl, yl, opt_zero);
 
     std::cout << "Boundary policy comparison:" << std::endl;
     std::cout << std::fixed << std::setprecision(2);
@@ -160,7 +160,7 @@ int main() {
     std::cout << " - Reflect:          first=" << r_ref.y(0) << ", last=" << r_ref.y(49) << std::endl;
     std::cout << " - Zero:             first=" << r_zr.y(0)  << ", last=" << r_zr.y(49)  << std::endl;
 
-  } catch (const fastlowess::LowessError &e) {
+  } catch (const fastloess::LoessError &e) {
     std::cerr << "Error: " << e.what() << std::endl;
     return 1;
   }

@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-# rfastlowess Streaming Smoothing Examples
+# rfastloess Streaming Smoothing Examples
 #
-# This example demonstrates streaming LOWESS smoothing for large datasets:
+# This example demonstrates streaming LOESS smoothing for large datasets:
 # - Basic chunked processing
 # - Different chunk sizes and overlap strategies
 # - Processing very large datasets
@@ -15,11 +15,11 @@
 # - ETL (Extract, Transform, Load) workflows
 # =============================================================================
 
-library(rfastlowess)
+library(rfastloess)
 
 main <- function() {
     cat(strrep("=", 80), "\n")
-    cat("rfastlowess Streaming Smoothing Examples\n")
+    cat("rfastloess Streaming Smoothing Examples\n")
     cat(strrep("=", 80), "\n\n")
 
     example_1_basic_streaming()
@@ -42,7 +42,7 @@ example_1_basic_streaming <- function() {
     y <- 2.0 * x + 1.0 + sin(x * 0.3) * 2.0
 
     # Process with streaming adapter
-    result <- fastlowess_streaming(
+    result <- fastloess_streaming(
         x, y,
         fraction = 0.5,
         chunk_size = 30L,
@@ -83,7 +83,7 @@ example_2_chunk_comparison <- function() {
 
     for (config in chunk_configs) {
         start_time <- Sys.time()
-        result <- fastlowess_streaming(
+        result <- fastloess_streaming(
             x, y,
             fraction = 0.5,
             chunk_size = config$chunk_size,
@@ -117,7 +117,7 @@ example_3_large_dataset <- function() {
     y <- 2.0 * x + 1.0 + sin(x * 0.01) * 10.0
 
     start_time <- Sys.time()
-    result <- fastlowess_streaming(
+    result <- fastloess_streaming(
         x, y,
         fraction = 0.3,
         chunk_size = 5000L,
@@ -145,7 +145,7 @@ example_4_parallel_comparison <- function() {
 
     # Parallel execution
     start_time <- Sys.time()
-    result_parallel <- fastlowess_streaming(
+    result_parallel <- fastloess_streaming(
         x, y,
         fraction = 0.5,
         chunk_size = 1000L,
@@ -157,7 +157,7 @@ example_4_parallel_comparison <- function() {
 
     # Sequential execution
     start_time <- Sys.time()
-    result_sequential <- fastlowess_streaming(
+    result_sequential <- fastloess_streaming(
         x, y,
         fraction = 0.5,
         chunk_size = 1000L,

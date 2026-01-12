@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-# rfastlowess Batch Smoothing Example
+# rfastloess Batch Smoothing Example
 #
-# This example demonstrates batch LOWESS smoothing features:
+# This example demonstrates batch LOESS smoothing features:
 # - Basic smoothing with different parameters
 # - Robustness iterations for outlier handling
 # - Confidence and prediction intervals
@@ -12,7 +12,7 @@
 # processing complete datasets that fit in memory.
 # =============================================================================
 
-library(rfastlowess)
+library(rfastloess)
 
 generate_sample_data <- function(n_points = 1000) {
     # Generate complex sample data with a trend, seasonality, and outliers.
@@ -38,7 +38,7 @@ generate_sample_data <- function(n_points = 1000) {
 
 main <- function() {
     cat(strrep("=", 80), "\n")
-    cat("rfastlowess Batch Smoothing Example\n")
+    cat("rfastloess Batch Smoothing Example\n")
     cat(strrep("=", 80), "\n\n")
 
     # 1. Generate Data
@@ -50,11 +50,11 @@ main <- function() {
     # 2. Basic Smoothing (Default parameters)
     cat("Running basic smoothing...\n")
     # Use a smaller fraction (0.05) to capture the sine wave seasonality
-    res_basic <- fastlowess(x, y, iterations = 0L, fraction = 0.05)
+    res_basic <- fastloess(x, y, iterations = 0L, fraction = 0.05)
 
     # 3. Robust Smoothing (IRLS)
     cat("Running robust smoothing (3 iterations)...\n")
-    res_robust <- fastlowess(
+    res_robust <- fastloess(
         x, y,
         fraction = 0.05,
         iterations = 3L,
@@ -64,7 +64,7 @@ main <- function() {
 
     # 4. Uncertainty Quantification
     cat("Computing confidence and prediction intervals...\n")
-    res_intervals <- fastlowess(
+    res_intervals <- fastloess(
         x, y,
         fraction = 0.05,
         confidence_intervals = 0.95,
@@ -75,7 +75,7 @@ main <- function() {
     # 5. Cross-Validation for optimal fraction
     cat("Running cross-validation to find optimal fraction...\n")
     cv_fractions <- c(0.05, 0.1, 0.2, 0.4)
-    res_cv <- fastlowess(
+    res_cv <- fastloess(
         x, y,
         cv_fractions = cv_fractions,
         cv_method = "kfold",
@@ -107,9 +107,9 @@ main <- function() {
 
     # Compare policies
     # Note: 'extend' is usually default.
-    r_ext <- fastlowess(xl, yl, fraction = 0.6, boundary_policy = "extend")
-    r_ref <- fastlowess(xl, yl, fraction = 0.6, boundary_policy = "reflect")
-    r_zr <- fastlowess(xl, yl, fraction = 0.6, boundary_policy = "zero")
+    r_ext <- fastloess(xl, yl, fraction = 0.6, boundary_policy = "extend")
+    r_ref <- fastloess(xl, yl, fraction = 0.6, boundary_policy = "reflect")
+    r_zr <- fastloess(xl, yl, fraction = 0.6, boundary_policy = "zero")
 
     cat("Boundary policy comparison:\n")
     cat(sprintf(

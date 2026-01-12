@@ -1,6 +1,6 @@
 /**
  * @file streaming_smoothing.cpp
- * @brief Streaming LOWESS smoothing example
+ * @brief Streaming LOESS smoothing example
  *
  * Demonstrates chunk-based processing for large datasets.
  */
@@ -10,10 +10,10 @@
 #include <random>
 #include <vector>
 
-#include "fastlowess.hpp"
+#include "fastloess.hpp"
 
 int main() {
-  std::cout << "=== Streaming LOWESS Smoothing Example ===" << std::endl;
+  std::cout << "=== Streaming LOESS Smoothing Example ===" << std::endl;
 
   // Generate large synthetic dataset
   const size_t n = 10000;
@@ -31,7 +31,7 @@ int main() {
 
   // Streaming smoothing
   try {
-    fastlowess::StreamingOptions opts;
+    fastloess::StreamingOptions opts;
     opts.fraction = 0.1;
     opts.iterations = 2;
     opts.chunk_size = 1000;
@@ -41,7 +41,7 @@ int main() {
     std::cout << "\nProcessing with chunk_size=" << opts.chunk_size
               << ", overlap=" << opts.overlap << std::endl;
 
-    auto result = fastlowess::streaming(x, y, opts);
+    auto result = fastloess::streaming(x, y, opts);
 
     std::cout << "\nStreaming completed:" << std::endl;
     std::cout << "  Points processed: " << result.size() << std::endl;
@@ -61,7 +61,7 @@ int main() {
       std::cout << "  x=" << result.x(i) << " y=" << result.y(i) << std::endl;
     }
 
-  } catch (const fastlowess::LowessError &e) {
+  } catch (const fastloess::LoessError &e) {
     std::cerr << "Error: " << e.what() << std::endl;
     return 1;
   }

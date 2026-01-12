@@ -1,9 +1,9 @@
-const fastlowess = require('../../bindings/nodejs');
+const fastloess = require('../../bindings/nodejs');
 
 /**
- * fastlowess Online Smoothing Example
+ * fastloess Online Smoothing Example
  * 
- * This example demonstrates online LOWESS smoothing for real-time data:
+ * This example demonstrates online LOESS smoothing for real-time data:
  * - Basic incremental processing with streaming data
  * - Real-time sensor data smoothing
  * - Different update modes (Full vs Incremental)
@@ -11,7 +11,7 @@ const fastlowess = require('../../bindings/nodejs');
  */
 
 function main() {
-    console.log("=== fastlowess Online Smoothing Example ===");
+    console.log("=== fastloess Online Smoothing Example ===");
 
     // 1. Simulate a real-time signal
     // A sine wave with changing frequency and random noise
@@ -40,7 +40,7 @@ function main() {
     
     // Full Update Mode (higher accuracy)
     console.log("Processing with 'full' update mode...");
-    const onlineFull = new fastlowess.OnlineLowess(
+    const onlineFull = new fastloess.OnlineLoess(
         { fraction: 0.3, iterations: 3 },
         { windowCapacity: 50, updateMode: "full" }
     );
@@ -52,7 +52,7 @@ function main() {
 
     // Incremental Update Mode (faster for large windows)
     console.log("Processing with 'incremental' update mode...");
-    const onlineInc = new fastlowess.OnlineLowess(
+    const onlineInc = new fastloess.OnlineLoess(
         { fraction: 0.3, iterations: 3 },
         { windowCapacity: 50, updateMode: "incremental" }
     );

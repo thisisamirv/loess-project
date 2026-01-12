@@ -1,16 +1,16 @@
-const fastlowess = require('../../bindings/nodejs');
+const fastloess = require('../../bindings/nodejs');
 
 /**
- * fastlowess Streaming Smoothing Example
+ * fastloess Streaming Smoothing Example
  * 
- * This example demonstrates streaming LOWESS smoothing for large datasets:
+ * This example demonstrates streaming LOESS smoothing for large datasets:
  * - Basic chunked processing
  * - Handling datasets that don't fit in memory
  * - Parallel execution for extreme speed
  */
 
 function main() {
-    console.log("=== fastlowess Streaming Mode Example ===");
+    console.log("=== fastloess Streaming Mode Example ===");
 
     // 1. Generate Very Large Dataset
     // 100,000 points
@@ -31,19 +31,19 @@ function main() {
     }
 
     // 2. Regular Batch Smoothing (for comparison)
-    console.log("Running Batch LOWESS (Parallel)...");
+    console.log("Running Batch LOESS (Parallel)...");
     const batchStart = process.hrtime.bigint();
-    const resBatch = fastlowess.smooth(x, y, { fraction: 0.01 });
+    const resBatch = fastloess.smooth(x, y, { fraction: 0.01 });
     const batchEnd = process.hrtime.bigint();
     const batchTime = Number(batchEnd - batchStart) / 1e9;
     console.log(`Batch took: ${batchTime.toFixed(4)} seconds`);
 
     // 3. Streaming Mode
     // Divide the data into chunks of 2,000 for low memory usage
-    console.log("Running Streaming LOWESS (Chunked)...");
+    console.log("Running Streaming LOESS (Chunked)...");
     const streamStart = process.hrtime.bigint();
     
-    const streamer = new fastlowess.StreamingLowess(
+    const streamer = new fastloess.StreamingLoess(
         { fraction: 0.01 },
         { chunkSize: 2000, overlap: 200 }
     );

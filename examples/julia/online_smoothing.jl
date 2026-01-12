@@ -1,8 +1,8 @@
 #!/usr/bin/env julia
 """
-fastlowess Online Smoothing Example
+fastloess Online Smoothing Example
 
-This example demonstrates online LOWESS smoothing for real-time data:
+This example demonstrates online LOESS smoothing for real-time data:
 - Basic incremental processing with streaming data
 - Real-time sensor data smoothing
 - Different update modes (Full vs Incremental)
@@ -17,22 +17,22 @@ The online adapter (smooth_online function) is designed for:
 using Random
 using Printf
 
-# Handle package loading - check if we're already in the fastlowess project
+# Handle package loading - check if we're already in the fastloess project
 using Pkg
 project_name = Pkg.project().name
-if project_name != "fastlowess"
-    # Not in the fastlowess project, need to develop it
+if project_name != "fastloess"
+    # Not in the fastloess project, need to develop it
     script_dir = @__DIR__
     julia_pkg_dir = joinpath(dirname(script_dir), "julia")
-    if !haskey(Pkg.project().dependencies, "fastlowess")
+    if !haskey(Pkg.project().dependencies, "fastloess")
         Pkg.develop(path=julia_pkg_dir)
     end
 end
 
-using fastlowess
+using fastloess
 
 function main()
-    println("=== fastlowess Online Smoothing Example ===")
+    println("=== fastloess Online Smoothing Example ===")
 
     # 1. Simulate a real-time signal
     # A sine wave with changing frequency and random noise

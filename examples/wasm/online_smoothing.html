@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>fastlowess WASM - Online Smoothing</title>
+    <title>fastloess WASM - Online Smoothing</title>
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
         .controls { margin: 20px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; }
@@ -12,7 +12,7 @@
 </head>
 <body>
     <h1>Online Smoothing Example</h1>
-    <p>Using <code>OnlineLowessWasm</code> for real-time data smoothing.</p>
+    <p>Using <code>OnlineLoessWasm</code> for real-time data smoothing.</p>
     
     <div class="controls">
         <button id="startBtn">Start Simulation</button>
@@ -24,7 +24,7 @@
     <div id="output">Waiting to start...</div>
 
     <script type="module">
-        import init, { OnlineLowessWasm } from "../pkg-web/fastlowess_wasm.js";
+        import init, { OnlineLoessWasm } from "../pkg-web/fastloess_wasm.js";
 
         let running = false;
         let onlineModel = null;
@@ -49,7 +49,7 @@
             document.getElementById('status').innerText = "Running...";
             
             // Initialize new model
-            onlineModel = new OnlineLowessWasm(
+            onlineModel = new OnlineLoessWasm(
                 { fraction: 0.2 },
                 { windowCapacity: 50, updateMode: "incremental" }
             );

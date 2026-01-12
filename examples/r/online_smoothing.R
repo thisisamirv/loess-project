@@ -1,8 +1,8 @@
 #!/usr/bin/env Rscript
 # =============================================================================
-# rfastlowess Online Smoothing Examples
+# rfastloess Online Smoothing Examples
 #
-# This example demonstrates online LOWESS smoothing for real-time data:
+# This example demonstrates online LOESS smoothing for real-time data:
 # - Basic incremental processing with streaming data
 # - Real-time sensor data smoothing
 # - Different window sizes and their effects
@@ -15,11 +15,11 @@
 # - Incremental updates without reprocessing entire dataset
 # =============================================================================
 
-library(rfastlowess)
+library(rfastloess)
 
 main <- function() {
     cat(strrep("=", 80), "\n")
-    cat("rfastlowess Online Smoothing Examples\n")
+    cat("rfastloess Online Smoothing Examples\n")
     cat(strrep("=", 80), "\n\n")
 
     example_1_basic_online()
@@ -41,7 +41,7 @@ example_1_basic_online <- function() {
     y <- c(3.1, 5.0, 7.2, 8.9, 11.1, 13.0, 15.2, 16.8, 19.1, 21.0)
 
     # Process all at once with online adapter
-    result <- fastlowess_online(
+    result <- fastloess_online(
         x, y,
         fraction = 0.5,
         window_capacity = 5L,
@@ -74,7 +74,7 @@ example_2_sensor_simulation <- function() {
     noise <- ((0:(n - 1)) * 7) %% 11 * 0.3 - 1.5
     y <- base_temp + daily_cycle + noise
 
-    result <- fastlowess_online(
+    result <- fastloess_online(
         x, y,
         fraction = 0.4,
         window_capacity = 12L, # Half-day window
@@ -111,7 +111,7 @@ example_3_window_comparison <- function() {
     window_sizes <- c(5L, 10L, 20L)
 
     for (window_size in window_sizes) {
-        result <- fastlowess_online(
+        result <- fastloess_online(
             x, y,
             fraction = 0.5,
             window_capacity = window_size,
@@ -157,7 +157,7 @@ example_4_memory_bounded <- function() {
         ((0:(total_points - 1)) %% 7 - 3.0) * 0.5
 
     start_time <- Sys.time()
-    result <- fastlowess_online(
+    result <- fastloess_online(
         x, y,
         fraction = 0.3,
         window_capacity = 20L, # Small window = low memory usage

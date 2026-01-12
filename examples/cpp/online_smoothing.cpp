@@ -1,6 +1,6 @@
 /**
  * @file online_smoothing.cpp
- * @brief Online LOWESS smoothing example
+ * @brief Online LOESS smoothing example
  *
  * Demonstrates sliding window smoothing for real-time data.
  */
@@ -10,10 +10,10 @@
 #include <random>
 #include <vector>
 
-#include "fastlowess.hpp"
+#include "fastloess.hpp"
 
 int main() {
-  std::cout << "=== Online LOWESS Smoothing Example ===" << std::endl;
+  std::cout << "=== Online LOESS Smoothing Example ===" << std::endl;
 
   // Simulate streaming data arrival
   const size_t n = 200;
@@ -32,7 +32,7 @@ int main() {
 
   // Online smoothing with sliding window
   try {
-    fastlowess::OnlineOptions opts;
+    fastloess::OnlineOptions opts;
     opts.fraction = 0.5;
     opts.iterations = 2;
     opts.window_capacity = 50;
@@ -42,7 +42,7 @@ int main() {
     std::cout << "\nProcessing with window_capacity=" << opts.window_capacity
               << ", min_points=" << opts.min_points << std::endl;
 
-    auto result = fastlowess::online(x, y, opts);
+    auto result = fastloess::online(x, y, opts);
 
     std::cout << "\nOnline processing completed:" << std::endl;
     std::cout << "  Points processed: " << result.size() << std::endl;
@@ -58,7 +58,7 @@ int main() {
                 << std::endl;
     }
 
-  } catch (const fastlowess::LowessError &e) {
+  } catch (const fastloess::LoessError &e) {
     std::cerr << "Error: " << e.what() << std::endl;
     return 1;
   }

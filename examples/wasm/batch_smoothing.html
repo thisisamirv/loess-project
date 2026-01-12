@@ -1,7 +1,7 @@
 <!--
-  fastlowess Batch Smoothing Example
+  fastloess Batch Smoothing Example
 
-  This example demonstrates batch LOWESS smoothing features:
+  This example demonstrates batch LOESS smoothing features:
   - Basic smoothing with different parameters
   - Robustness iterations for outlier handling
   - Confidence and prediction intervals
@@ -13,7 +13,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>fastlowess WASM - Batch Smoothing Example</title>
+    <title>fastloess WASM - Batch Smoothing Example</title>
     <style>
         body { font-family: monospace; max-width: 900px; margin: 0 auto; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
         h1 { color: #569cd6; }
@@ -24,12 +24,12 @@
     </style>
 </head>
 <body>
-    <h1>fastlowess Batch Smoothing Example</h1>
+    <h1>fastloess Batch Smoothing Example</h1>
     <p>Running WASM implementation...</p>
     <div id="output">Initializing...</div>
 
     <script type="module">
-        import init, { smooth } from "../pkg-web/fastlowess_wasm.js";
+        import init, { smooth } from "../pkg-web/fastloess_wasm.js";
         
         // Helper to log to screen
         function log(msg) {
@@ -71,7 +71,7 @@
         async function runDemo() {
             try {
                 clearLog();
-                log("=== fastlowess Batch Smoothing Example ===\n");
+                log("=== fastloess Batch Smoothing Example ===\n");
 
                 await init();
                 

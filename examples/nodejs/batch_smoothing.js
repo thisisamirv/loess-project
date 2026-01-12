@@ -1,9 +1,9 @@
-const fastlowess = require('../../bindings/nodejs');
+const fastloess = require('../../bindings/nodejs');
 
 /**
- * fastlowess Batch Smoothing Example
+ * fastloess Batch Smoothing Example
  * 
- * This example demonstrates batch LOWESS smoothing features:
+ * This example demonstrates batch LOESS smoothing features:
  * - Basic smoothing with different parameters
  * - Robustness iterations for outlier handling
  * - Confidence and prediction intervals
@@ -42,7 +42,7 @@ function generateSampleData(nPoints = 1000) {
 }
 
 function main() {
-    console.log("=== fastlowess Batch Smoothing Example ===");
+    console.log("=== fastloess Batch Smoothing Example ===");
 
     // 1. Generate Data
     const { x, y } = generateSampleData(1000);
@@ -51,11 +51,11 @@ function main() {
     // 2. Basic Smoothing (Default parameters)
     console.log("Running basic smoothing...");
     // Use a smaller fraction (0.05) to capture the sine wave seasonality
-    const resBasic = fastlowess.smooth(x, y, { iterations: 0, fraction: 0.05 });
+    const resBasic = fastloess.smooth(x, y, { iterations: 0, fraction: 0.05 });
 
     // 3. Robust Smoothing (IRLS)
     console.log("Running robust smoothing (3 iterations)...");
-    const resRobust = fastlowess.smooth(x, y, {
+    const resRobust = fastloess.smooth(x, y, {
         fraction: 0.05,
         iterations: 3,
         robustnessMethod: "bisquare",
@@ -64,7 +64,7 @@ function main() {
 
     // 4. Uncertainty Quantification
     console.log("Computing confidence and prediction intervals...");
-    const resIntervals = fastlowess.smooth(x, y, {
+    const resIntervals = fastloess.smooth(x, y, {
         fraction: 0.05,
         confidenceIntervals: 0.95,
         predictionIntervals: 0.95,
@@ -78,7 +78,7 @@ function main() {
     // We pass the fractions and CV method to the smooth function.
     // The main result returned will be the fit using the BEST fraction.
     // We can also retrieve the score for each fraction.
-    const resCV = fastlowess.smooth(x, y, { 
+    const resCV = fastloess.smooth(x, y, { 
         cvFractions, 
         cvMethod: "kfold", 
         cvK: 5,
@@ -115,9 +115,9 @@ function main() {
         yl[i] = 2 * xl[i] + 1;
     }
 
-    const rExt = fastlowess.smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "extend" });
-    const rRef = fastlowess.smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "reflect" });
-    const rZr  = fastlowess.smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "zero" });
+    const rExt = fastloess.smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "extend" });
+    const rRef = fastloess.smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "reflect" });
+    const rZr  = fastloess.smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "zero" });
 
     console.log("Boundary policy comparison:");
     console.log(` - Extend (Default): first=${rExt.y[0].toFixed(2)}, last=${rExt.y[49].toFixed(2)}`);

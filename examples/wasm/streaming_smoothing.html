@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>fastlowess WASM - Streaming Smoothing</title>
+    <title>fastloess WASM - Streaming Smoothing</title>
     <style>
         body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
         .controls { margin: 20px 0; padding: 10px; background: #f0f0f0; border-radius: 4px; }
@@ -11,7 +11,7 @@
 </head>
 <body>
     <h1>Streaming Smoothing Example</h1>
-    <p>Using <code>StreamingLowessWasm</code> to process large data in chunks in the browser.</p>
+    <p>Using <code>StreamingLoessWasm</code> to process large data in chunks in the browser.</p>
     
     <div class="controls">
         <button id="runBtn">Start Streaming Process</button>
@@ -21,7 +21,7 @@
     <div id="output">Ready.</div>
 
     <script type="module">
-        import init, { StreamingLowessWasm } from "../pkg-web/fastlowess_wasm.js";
+        import init, { StreamingLoessWasm } from "../pkg-web/fastloess_wasm.js";
 
         async function run() {
             try {
@@ -38,7 +38,7 @@
                 log("\nStarting streaming process...");
                 
                 // Initialize Streamer
-                const streamer = new StreamingLowessWasm(
+                const streamer = new StreamingLoessWasm(
                     { fraction: 0.1 }, 
                     { chunkSize: 1000, overlap: 100 }
                 );
