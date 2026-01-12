@@ -5,7 +5,7 @@ edition = { workspace = true }
 publish = false
 
 [dependencies]
-loess = { workspace = true, features = ["std", "dev"] }
+loess-rs = { workspace = true, features = ["std", "dev"] }
 fastLoess = { workspace = true, features = ["cpu", "dev"] }
 ndarray = { workspace = true }
 
@@ -19,15 +19,15 @@ dev = []
 # loess examples
 [[example]]
 name = "batch_smoothing"
-path = "loess/batch_smoothing.rs"
+path = "loess-rs/batch_smoothing.rs"
 
 [[example]]
 name = "online_smoothing"
-path = "loess/online_smoothing.rs"
+path = "loess-rs/online_smoothing.rs"
 
 [[example]]
 name = "streaming_smoothing"
-path = "loess/streaming_smoothing.rs"
+path = "loess-rs/streaming_smoothing.rs"
 
 # fastLoess examples
 [[example]]

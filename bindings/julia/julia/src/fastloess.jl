@@ -243,7 +243,6 @@ Perform LOESS smoothing on the data using batch processing.
 # Keyword Arguments
 - `fraction::Float64 = 0.67`: Smoothing fraction (proportion of data used for each fit)
 - `iterations::Int = 3`: Number of robustness iterations
-- `delta::Float64 = NaN`: Interpolation optimization threshold (NaN for auto)
 - `weight_function::String = "tricube"`: Kernel function
   - Options: "tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"
 - `robustness_method::String = "bisquare"`: Robustness method
@@ -283,7 +282,6 @@ println("R² = ", result.diagnostics.r_squared)
 function smooth(x::Vector{Float64}, y::Vector{Float64};
     fraction::Float64=0.67,
     iterations::Int=3,
-    delta::Float64=NaN,
     weight_function::String="tricube",
     robustness_method::String="bisquare",
     scaling_method::String="mad",
@@ -314,7 +312,6 @@ function smooth(x::Vector{Float64}, y::Vector{Float64};
         Culong(n)::Culong,
         fraction::Cdouble,
         Cint(iterations)::Cint,
-        delta::Cdouble,
         weight_function::Cstring,
         robustness_method::Cstring,
         scaling_method::Cstring,
@@ -352,7 +349,6 @@ Processes data in chunks to maintain constant memory usage.
 - `chunk_size::Int = 5000`: Size of each processing chunk
 - `overlap::Int = -1`: Overlap between chunks (-1 for auto = 10% of chunk_size)
 - `iterations::Int = 3`: Number of robustness iterations
-- `delta::Float64 = NaN`: Interpolation threshold
 - `weight_function::String = "tricube"`: Kernel function
 - `robustness_method::String = "bisquare"`: Robustness method
 - `scaling_method::String = "mad"`: Scaling method
@@ -372,7 +368,6 @@ function smooth_streaming(x::Vector{Float64}, y::Vector{Float64};
     chunk_size::Int=5000,
     overlap::Int=-1,
     iterations::Int=3,
-    delta::Float64=NaN,
     weight_function::String="tricube",
     robustness_method::String="bisquare",
     scaling_method::String="mad",
@@ -397,7 +392,6 @@ function smooth_streaming(x::Vector{Float64}, y::Vector{Float64};
         Cint(chunk_size)::Cint,
         Cint(overlap)::Cint,
         Cint(iterations)::Cint,
-        delta::Cdouble,
         weight_function::Cstring,
         robustness_method::Cstring,
         scaling_method::Cstring,
@@ -429,7 +423,6 @@ Maintains a sliding window for incremental updates.
 - `window_capacity::Int = 100`: Maximum points to retain in window
 - `min_points::Int = 2`: Minimum points before smoothing starts
 - `iterations::Int = 3`: Number of robustness iterations
-- `delta::Float64 = NaN`: Interpolation threshold
 - `weight_function::String = "tricube"`: Kernel function
 - `robustness_method::String = "bisquare"`: Robustness method
 - `scaling_method::String = "mad"`: Scaling method
@@ -448,7 +441,6 @@ function smooth_online(x::Vector{Float64}, y::Vector{Float64};
     window_capacity::Int=100,
     min_points::Int=2,
     iterations::Int=3,
-    delta::Float64=NaN,
     weight_function::String="tricube",
     robustness_method::String="bisquare",
     scaling_method::String="mad",
@@ -472,7 +464,6 @@ function smooth_online(x::Vector{Float64}, y::Vector{Float64};
         Cint(window_capacity)::Cint,
         Cint(min_points)::Cint,
         Cint(iterations)::Cint,
-        delta::Cdouble,
         weight_function::Cstring,
         robustness_method::Cstring,
         scaling_method::Cstring,

@@ -15,8 +15,10 @@ use fastLoess::internals::api::{
     ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, Loess as LoessBuilder, LoessResult, Online, Streaming, LOOCV, MAD, MAR,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
 };
+use loess_rs::internals::algorithms::regression::PolynomialDegree;
+use loess_rs::internals::math::distance::DistanceMetric;
 
 /// Result struct that can be passed across FFI boundary.
 /// All arrays are allocated by Rust and must be freed by Rust.
@@ -276,7 +278,6 @@ pub unsafe extern "C" fn cpp_loess_smooth(
     n: c_ulong,
     fraction: c_double,
     iterations: c_int,
-    delta: c_double, // Use NaN to auto-calculate
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
@@ -345,10 +346,6 @@ pub unsafe extern "C" fn cpp_loess_smooth(
     builder = builder.zero_weight_fallback(zwf);
     builder = builder.boundary_policy(bp);
     builder = builder.parallel(parallel != 0);
-
-    if !delta.is_nan() {
-        builder = builder.delta(delta);
-    }
 
     if !confidence_intervals.is_nan() {
         builder = builder.confidence_intervals(confidence_intervals);
@@ -422,7 +419,6 @@ pub unsafe extern "C" fn cpp_loess_streaming(
     chunk_size: c_int,
     overlap: c_int, // Use -1 for auto
     iterations: c_int,
-    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
@@ -510,9 +506,6 @@ pub unsafe extern "C" fn cpp_loess_streaming(
     builder = builder.merge_strategy(ms);
     builder = builder.parallel(parallel != 0);
 
-    if !delta.is_nan() {
-        builder = builder.delta(delta);
-    }
     if !auto_converge.is_nan() {
         builder = builder.auto_converge(auto_converge);
     }
@@ -589,6 +582,15 @@ pub unsafe extern "C" fn cpp_loess_streaming(
         iterations_used: chunk_result.iterations_used,
         fraction_used: chunk_result.fraction_used,
         cv_scores: None,
+        dimensions: 1,
+        distance_metric: DistanceMetric::Euclidean,
+        polynomial_degree: PolynomialDegree::Linear,
+        enp: None,
+        trace_hat: None,
+        delta1: None,
+        delta2: None,
+        residual_scale: None,
+        leverage: None,
     };
 
     loess_result_to_cpp(result)
@@ -607,7 +609,6 @@ pub unsafe extern "C" fn cpp_loess_online(
     window_capacity: c_int,
     min_points: c_int,
     iterations: c_int,
-    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
@@ -675,9 +676,6 @@ pub unsafe extern "C" fn cpp_loess_online(
     builder = builder.update_mode(um);
     builder = builder.parallel(parallel != 0);
 
-    if !delta.is_nan() {
-        builder = builder.delta(delta);
-    }
     if !auto_converge.is_nan() {
         builder = builder.auto_converge(auto_converge);
     }
@@ -715,6 +713,15 @@ pub unsafe extern "C" fn cpp_loess_online(
         iterations_used: Some(iterations as usize),
         fraction_used: fraction,
         cv_scores: None,
+        dimensions: 1,
+        distance_metric: DistanceMetric::Euclidean,
+        polynomial_degree: PolynomialDegree::Linear,
+        enp: None,
+        trace_hat: None,
+        delta1: None,
+        delta2: None,
+        residual_scale: None,
+        leverage: None,
     };
 
     loess_result_to_cpp(result)

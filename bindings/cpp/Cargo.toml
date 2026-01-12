@@ -13,6 +13,7 @@ crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 fastLoess = { path = "../../crates/fastLoess", features = ["cpu", "dev"] }
+loess-rs = { path = "../../crates/loess-rs" }
 libc = { workspace = true }
 
 [build-dependencies]

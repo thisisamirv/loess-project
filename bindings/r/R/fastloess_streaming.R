@@ -12,7 +12,6 @@
 #' @param chunk_size Points per chunk. Default: 5000.
 #' @param overlap Points overlapping between chunks. NULL = 10 percent of chunk.
 #' @param iterations Robustness iterations. Default: 3.
-#' @param delta Interpolation threshold. NULL = auto.
 #' @param weight_function Kernel function. Default: "tricube".
 #' @param robustness_method Robustness method. Default: "bisquare".
 #' @param scaling_method Scale estimation. Default: "mad".
@@ -42,7 +41,6 @@ fastloess_streaming <- function(
     chunk_size = 5000L,
     overlap = NULL,
     iterations = 3L,
-    delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",
     scaling_method = "mad",
@@ -70,7 +68,7 @@ fastloess_streaming <- function(
 
     # Call the Rust function
     .Call("wrap__fastloess_streaming", x, y, fraction, chunk_size, overlap,
-        iterations, delta, weight_function, robustness_method, scaling_method,
+        iterations, weight_function, robustness_method, scaling_method,
         boundary_policy, auto_converge, return_diagnostics,
         return_robustness_weights, parallel,
         PACKAGE = "rfastloess"

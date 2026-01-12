@@ -38,17 +38,26 @@ use rayon::prelude::*;
 
 // External dependencies
 use num_traits::Float;
+#[cfg(feature = "cpu")]
 use std::fmt::Debug;
 
 // Export dependencies from loess-rs crate
+#[cfg(feature = "cpu")]
+use loess_rs::internals::algorithms::regression::RegressionContext;
 use loess_rs::internals::algorithms::regression::{
-    PolynomialDegree, RegressionContext, SolverLinalg, ZeroWeightFallback,
+    PolynomialDegree, SolverLinalg, ZeroWeightFallback,
 };
 
 use loess_rs::internals::math::distance::{DistanceLinalg, DistanceMetric};
 use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
+#[cfg(not(feature = "cpu"))]
+use loess_rs::internals::math::neighborhood::PointDistance;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood, NodeDistance, PointDistance};
+#[cfg(not(feature = "cpu"))]
+use loess_rs::internals::primitives::buffer::CachedNeighborhood;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::primitives::buffer::{
     CachedNeighborhood, FittingBuffer, NeighborhoodSearchBuffer,
 };
@@ -383,6 +392,8 @@ pub fn vertex_pass_parallel<T>(
 
 // Sequential fallback (when cpu feature is not enabled)
 #[cfg(not(feature = "cpu"))]
+/// Parallel implementation of vertex pass (sequential fallback).
+#[allow(clippy::too_many_arguments)]
 pub fn vertex_pass_parallel<T>(
     _x: &[T],
     _y: &[T],
@@ -401,6 +412,6 @@ pub fn vertex_pass_parallel<T>(
     _scales: &[T],
     _boundary_degree_fallback: bool,
 ) where
-    T: Float + Send + Sync,
+    T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Send + Sync + 'static,
 {
 }

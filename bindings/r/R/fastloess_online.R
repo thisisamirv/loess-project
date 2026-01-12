@@ -12,7 +12,6 @@
 #' @param window_capacity Max points in sliding window. Default: 100.
 #' @param min_points Min points before smoothing starts. Default: 3.
 #' @param iterations Robustness iterations. Default: 3.
-#' @param delta Interpolation threshold. NULL = auto.
 #' @param weight_function Kernel function. Default: "tricube".
 #' @param robustness_method Robustness method. Default: "bisquare".
 #' @param scaling_method Scale estimation. Default: "mad".
@@ -41,7 +40,6 @@ fastloess_online <- function(
     window_capacity = 100L,
     min_points = 3L,
     iterations = 3L,
-    delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",
     scaling_method = "mad",
@@ -78,7 +76,7 @@ fastloess_online <- function(
 
     # Call the Rust function
     .Call("wrap__fastloess_online", x, y, fraction, window_capacity,
-        min_points, iterations, delta, weight_function, robustness_method,
+        min_points, iterations, weight_function, robustness_method,
         scaling_method, boundary_policy, update_mode, auto_converge,
         return_robustness_weights, parallel,
         PACKAGE = "rfastloess"

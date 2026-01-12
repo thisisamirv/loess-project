@@ -10,6 +10,7 @@ publish = false
 
 [dependencies]
 fastLoess = { workspace = true, features = ["dev", "cpu"] }
+loess-rs = { workspace = true }
 
 [lib]
 name = "fastloess_jl"

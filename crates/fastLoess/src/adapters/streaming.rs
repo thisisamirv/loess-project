@@ -66,6 +66,7 @@ use loess_rs::internals::primitives::errors::LoessError;
 
 // Internal dependencies
 use crate::input::LoessInput;
+#[cfg(feature = "cpu")]
 use crate::math::neighborhood::build_kdtree_parallel;
 
 // ============================================================================
@@ -287,10 +288,11 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
 
         // Lazily initialize the processor with parallel callbacks
         if self.processor.is_none() {
-            let mut builder = self.config.base.clone();
+            let builder = self.config.base.clone();
 
             #[cfg(feature = "cpu")]
-            {
+            let builder = {
+                let mut builder = builder;
                 if builder.parallel.unwrap_or(true) {
                     builder.custom_smooth_pass = Some(smooth_pass_parallel);
                     builder.custom_cv_pass = Some(cv_pass_parallel);
@@ -298,7 +300,8 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
                     builder.custom_vertex_pass = Some(vertex_pass_parallel);
                     builder.custom_kdtree_builder = Some(build_kdtree_parallel);
                 }
-            }
+                builder
+            };
 
             self.processor = Some(builder.build()?);
         }

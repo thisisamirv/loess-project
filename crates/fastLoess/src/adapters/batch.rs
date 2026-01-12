@@ -65,6 +65,7 @@ use loess_rs::internals::primitives::errors::LoessError;
 
 // Internal dependencies
 use crate::input::LoessInput;
+#[cfg(feature = "cpu")]
 use crate::math::neighborhood::build_kdtree_parallel;
 
 // ============================================================================

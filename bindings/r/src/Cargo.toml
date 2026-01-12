@@ -1,6 +1,6 @@
 [package]
 name = "rfastloess"
-version = "0.99.8"
+version = "0.99.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -11,6 +11,7 @@ publish = false
 [dependencies]
 fastLoess = { path = "vendor/fastLoess", features = ["dev", "cpu"] }
 extendr-api = "0.8.1"
+loess-rs = { path = "vendor/loess-rs" }
 
 [lib]
 name = "rfastloess"

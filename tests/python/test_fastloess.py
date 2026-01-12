@@ -139,14 +139,6 @@ class TestSmooth:
             )
             assert len(result.y) == len(x)
 
-    def test_loess_with_delta(self):
-        """Test loess with delta optimization."""
-        x = np.linspace(0, 100, 200)
-        y = np.sin(x / 10)
-
-        result = fastloess.smooth(x, y, fraction=0.1, delta=0.1)
-        assert len(result.y) == len(x)
-
     def test_loess_iterations(self):
         """Test loess with different iteration counts."""
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
@@ -222,7 +214,7 @@ class TestSmoothStreaming:
         y = np.sin(x / 10)
 
         result = fastloess.smooth_streaming(
-            x, y, fraction=0.1, chunk_size=50, return_residuals=True
+            x, y, fraction=0.1, chunk_size=50, overlap=10, return_residuals=True
         )
 
         assert isinstance(result, fastloess.LoessResult)
@@ -236,7 +228,12 @@ class TestSmoothStreaming:
         y = np.sin(x)
         # Just verifying the parameter is accepted and runs
         result = fastloess.smooth_streaming(
-            x, y, fraction=0.1, chunk_size=50, zero_weight_fallback="return_original"
+            x,
+            y,
+            fraction=0.1,
+            chunk_size=50,
+            overlap=10,
+            zero_weight_fallback="return_original",
         )
         assert len(result.y) == len(x)
 

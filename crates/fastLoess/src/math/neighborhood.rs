@@ -31,7 +31,9 @@
 use loess_rs::internals::algorithms::regression::SolverLinalg;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
-use loess_rs::internals::math::neighborhood::{KDNode, KDTree};
+#[cfg(feature = "cpu")]
+use loess_rs::internals::math::neighborhood::KDNode;
+use loess_rs::internals::math::neighborhood::KDTree;
 use num_traits::Float;
 
 // Feature-gated imports

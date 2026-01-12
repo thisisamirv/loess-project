@@ -10,7 +10,6 @@
 #' @param y Numeric vector of dependent variable values (same length as x).
 #' @param fraction Smoothing fraction (0 to 1). Default: 0.67.
 #' @param iterations Robustness iterations. Default: 3.
-#' @param delta Interpolation threshold. NULL = auto.
 #' @param weight_function Kernel: "tricube", "epanechnikov", "gaussian",
 #'   "uniform", "biweight", "triangle", "cosine".
 #' @param robustness_method Method: "bisquare", "huber", "talwar".
@@ -47,7 +46,6 @@ fastloess <- function(
     y,
     fraction = 0.67,
     iterations = 3L,
-    delta = NULL,
     weight_function = "tricube",
     robustness_method = "bisquare",
     scaling_method = "mad",
@@ -73,7 +71,7 @@ fastloess <- function(
     cv_k <- as.integer(cv_k)
 
     # Call the Rust function
-    .Call("wrap__fastloess", x, y, fraction, iterations, delta,
+    .Call("wrap__fastloess", x, y, fraction, iterations,
         weight_function, robustness_method, scaling_method, boundary_policy,
         confidence_intervals, prediction_intervals, return_diagnostics,
         return_residuals, return_robustness_weights, zero_weight_fallback,

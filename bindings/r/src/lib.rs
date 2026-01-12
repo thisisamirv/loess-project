@@ -7,7 +7,7 @@
 use extendr_api::prelude::*;
 
 use fastLoess::internals::api::{
-    BoundaryPolicy, RobustnessMethod,
+    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod,
     ScalingMethod::{self, MAD, MAR},
     UpdateMode, WeightFunction, ZeroWeightFallback,
 };
@@ -113,7 +113,6 @@ fn parse_update_mode(name: &str) -> Result<UpdateMode> {
 /// @param y Numeric vector of dependent variable values.
 /// @param fraction Smoothing fraction (default: 0.67).
 /// @param iterations Number of robustness iterations (default: 3).
-/// @param delta Interpolation optimization threshold (NULL to auto-calculate).
 /// @param weight_function Kernel function: "tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle".
 /// @param robustness_method Robustness method: "bisquare", "huber", "talwar".
 /// @param scaling_method Scaling method for robustness: "mad", "mar" (default: "mad").
@@ -138,7 +137,6 @@ fn fastloess(
     y: &[f64],
     fraction: f64,
     iterations: i32,
-    delta: Nullable<f64>,
     weight_function: &str,
     robustness_method: &str,
     scaling_method: &str,
@@ -169,10 +167,6 @@ fn fastloess(
     builder = builder.scaling_method(sm);
     builder = builder.zero_weight_fallback(zwf);
     builder = builder.boundary_policy(bp);
-
-    if let NotNull(d) = delta {
-        builder = builder.delta(d);
-    }
 
     if let NotNull(cl) = confidence_intervals {
         builder = builder.confidence_intervals(cl);
@@ -237,7 +231,6 @@ fn fastloess(
 /// @param chunk_size Size of each processing chunk (default: 5000).
 /// @param overlap Overlap between chunks (default: 10% of chunk_size).
 /// @param iterations Number of robustness iterations (default: 3).
-/// @param delta Interpolation optimization threshold (NULL to auto-calculate).
 /// @param weight_function Kernel function: "tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle".
 /// @param robustness_method Robustness method: "bisquare", "huber", "talwar".
 /// @param scaling_method Scaling method for robustness: "mad", "mar" (default: "mad").
@@ -257,7 +250,6 @@ fn fastloess_streaming(
     chunk_size: i32,
     overlap: Nullable<i32>,
     iterations: i32,
-    delta: Nullable<f64>,
     weight_function: &str,
     robustness_method: &str,
     scaling_method: &str,
@@ -296,9 +288,6 @@ fn fastloess_streaming(
     builder = builder.overlap(overlap_size);
     builder = builder.parallel(parallel);
 
-    if let NotNull(d) = delta {
-        builder = builder.delta(d);
-    }
     if let NotNull(tol) = auto_converge {
         builder = builder.auto_converge(tol);
     }
@@ -379,6 +368,15 @@ fn fastloess_streaming(
         iterations_used: chunk_result.iterations_used,
         fraction_used: chunk_result.fraction_used,
         cv_scores: None,
+        dimensions: 1, // Defaulting to 1 for univariate, will need update if N-d supported
+        distance_metric: DistanceMetric::Euclidean,
+        polynomial_degree: PolynomialDegree::Linear,
+        enp: None,
+        trace_hat: None,
+        delta1: None,
+        delta2: None,
+        residual_scale: None,
+        leverage: None,
     };
 
     loess_result_to_list(result)
@@ -394,7 +392,6 @@ fn fastloess_streaming(
 /// @param window_capacity Maximum points to retain in window (default: 100).
 /// @param min_points Minimum points before smoothing starts (default: 2).
 /// @param iterations Number of robustness iterations (default: 3).
-/// @param delta Interpolation optimization threshold (NULL to auto-calculate).
 /// @param weight_function Kernel function: "tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle".
 /// @param robustness_method Robustness method: "bisquare", "huber", "talwar".
 /// @param scaling_method Scaling method for robustness: "mad", "mar" (default: "mad").
@@ -414,7 +411,6 @@ fn fastloess_online(
     window_capacity: i32,
     min_points: i32,
     iterations: i32,
-    delta: Nullable<f64>,
     weight_function: &str,
     robustness_method: &str,
     scaling_method: &str,
@@ -444,9 +440,6 @@ fn fastloess_online(
     builder = builder.update_mode(um);
     builder = builder.parallel(parallel);
 
-    if let NotNull(d) = delta {
-        builder = builder.delta(d);
-    }
     if let NotNull(tol) = auto_converge {
         builder = builder.auto_converge(tol);
     }
@@ -489,6 +482,15 @@ fn fastloess_online(
         iterations_used: Some(iterations as usize),
         fraction_used: fraction,
         cv_scores: None,
+        dimensions: 1,
+        distance_metric: DistanceMetric::Euclidean,
+        polynomial_degree: PolynomialDegree::Linear,
+        enp: None,
+        trace_hat: None,
+        delta1: None,
+        delta2: None,
+        residual_scale: None,
+        leverage: None,
     };
 
     loess_result_to_list(result)

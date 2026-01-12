@@ -7,15 +7,15 @@ FEATURE_SET ?= all
 .SHELLFLAGS := -ec
 
 # loess crate
-LOESS_PKG := loess
-LOESS_DIR := crates/loess
+LOESS_PKG := loess-rs
+LOESS_DIR := crates/loess-rs
 LOESS_FEATURES := std dev
 LOESS_EXAMPLES := batch_smoothing online_smoothing streaming_smoothing
 
 # fastLoess crate
 FASTLOESS_PKG := fastLoess
 FASTLOESS_DIR := crates/fastLoess
-FASTLOESS_FEATURES := cpu gpu dev
+FASTLOESS_FEATURES := cpu dev
 FASTLOESS_EXAMPLES := fast_batch_smoothing fast_online_smoothing fast_streaming_smoothing
 
 # Python bindings
@@ -302,15 +302,15 @@ r:
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
 	@mkdir -p $(R_DIR)/src/vendor
 	@cp -rL crates/fastLoess $(R_DIR)/src/vendor/
-	@cp -rL crates/loess $(R_DIR)/src/vendor/
-	@rm -rf $(R_DIR)/src/vendor/fastLoess/target $(R_DIR)/src/vendor/loess/target
-	@rm -f $(R_DIR)/src/vendor/fastLoess/Cargo.lock $(R_DIR)/src/vendor/loess/Cargo.lock
+	@cp -rL crates/loess-rs $(R_DIR)/src/vendor/
+	@rm -rf $(R_DIR)/src/vendor/fastLoess/target $(R_DIR)/src/vendor/loess-rs/target
+	@rm -f $(R_DIR)/src/vendor/fastLoess/Cargo.lock $(R_DIR)/src/vendor/loess-rs/Cargo.lock
 	@rm -f $(R_DIR)/src/vendor/fastLoess/README.md $(R_DIR)/src/vendor/fastLoess/CHANGELOG.md
-	@rm -f $(R_DIR)/src/vendor/loess/README.md $(R_DIR)/src/vendor/loess/CHANGELOG.md
+	@rm -f $(R_DIR)/src/vendor/loess-rs/README.md $(R_DIR)/src/vendor/loess-rs/CHANGELOG.md
 	@# Step 3: Patch local crates (remove workspace inheritance, strip GPU deps)
 	@dev/patch_vendor_crates.py Cargo.toml $(R_DIR)/src/vendor -q
 	@# Step 4: Create dummy checksum files for local crates
-	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/loess/.cargo-checksum.json
+	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/loess-rs/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLoess/.cargo-checksum.json
 	@# Step 5: Add workspace isolation to R package
 	@dev/prepare_cargo.py isolate $(R_DIR)/src/Cargo.toml -q

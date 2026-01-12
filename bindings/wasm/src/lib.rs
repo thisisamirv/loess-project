@@ -224,11 +224,7 @@ pub fn smooth(
         {
             builder = builder.iterations(val as usize);
         }
-        if let Ok(delta) = Reflect::get(&options, &JsValue::from_str("delta"))
-            && let Some(val) = delta.as_f64()
-        {
-            builder = builder.delta(val);
-        }
+
         if let Ok(wf) = Reflect::get(&options, &JsValue::from_str("weightFunction"))
             && let Some(val) = wf.as_string()
         {
@@ -357,10 +353,7 @@ pub struct StreamingLoessWasm {
 #[wasm_bindgen]
 impl StreamingLoessWasm {
     #[wasm_bindgen(constructor)]
-    pub fn new(
-        options: &JsValue,
-        streaming_opts: &JsValue,
-    ) -> Result<StreamingLoessWasm, JsValue> {
+    pub fn new(options: &JsValue, streaming_opts: &JsValue) -> Result<StreamingLoessWasm, JsValue> {
         let mut builder = LoessBuilder::new();
 
         if !options.is_undefined() && !options.is_null() {
@@ -375,11 +368,7 @@ impl StreamingLoessWasm {
             {
                 builder = builder.iterations(val as usize);
             }
-            if let Ok(delta) = Reflect::get(&options, &JsValue::from_str("delta"))
-                && let Some(val) = delta.as_f64()
-            {
-                builder = builder.delta(val);
-            }
+
             if let Ok(wf) = Reflect::get(&options, &JsValue::from_str("weightFunction"))
                 && let Some(val) = wf.as_string()
             {
@@ -535,7 +524,7 @@ impl OnlineLoessWasm {
     pub fn update(&mut self, x: f64, y: f64) -> Result<Option<f64>, JsValue> {
         let result = self
             .inner
-            .add_point(x, y)
+            .add_point(&[x], y)
             .map_err(|e: ::fastLoess::prelude::LoessError| JsValue::from_str(&e.to_string()))?;
         Ok(result.map(|o| o.smoothed))
     }

@@ -37,13 +37,19 @@ use crate::adapters::streaming::ParallelStreamingLoessBuilder;
 use std::fmt::Debug;
 
 // Import base marker types for delegation
+#[cfg(feature = "cpu")]
 use loess_rs::internals::api::Batch as BaseBatch;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::api::Online as BaseOnline;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::api::Streaming as BaseStreaming;
 
 // Linear algebra imports
+#[cfg(feature = "cpu")]
 use loess_rs::internals::algorithms::regression::SolverLinalg;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::math::distance::DistanceLinalg;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::math::linalg::FloatLinalg;
 
 // Publicly re-exported types

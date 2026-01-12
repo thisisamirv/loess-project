@@ -11,7 +11,7 @@ use fastLoess::internals::api::{
     BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, Loess as LoessBuilder, LoessResult, Online, Streaming, LOOCV, MAD, MAR,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
 };
 
 /// Parse weight function from string
@@ -248,9 +248,7 @@ pub fn smooth(
         if let Some(iter) = opts.iterations {
             builder = builder.iterations(iter as usize);
         }
-        if let Some(d) = opts.delta {
-            builder = builder.delta(d);
-        }
+
         if let Some(wf) = opts.weightFunction {
             builder = builder.weight_function(parse_weight_function(&wf)?);
         }
@@ -353,9 +351,7 @@ impl StreamingLoess {
             if let Some(iter) = opts.iterations {
                 builder = builder.iterations(iter as usize);
             }
-            if let Some(d) = opts.delta {
-                builder = builder.delta(d);
-            }
+
             if let Some(wf) = opts.weightFunction {
                 builder = builder.weight_function(parse_weight_function(&wf)?);
             }
@@ -494,7 +490,7 @@ impl OnlineLoess {
     pub fn update(&mut self, x: f64, y: f64) -> Result<Option<f64>> {
         let result =
             self.inner
-                .add_point(x, y)
+                .add_point(&[x], y)
                 .map_err(|e: ::fastLoess::prelude::LoessError| {
                     Error::new(Status::GenericFailure, e.to_string())
                 })?;

@@ -46,6 +46,7 @@ use std::fmt::Debug;
 use std::result::Result;
 
 // Internal dependencies
+#[cfg(feature = "cpu")]
 use crate::math::neighborhood::build_kdtree_parallel;
 
 // Export dependencies from loess-rs crate
@@ -245,11 +246,11 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
             return Err(err.clone());
         }
 
-        // Configure parallel callbacks before building
-        let mut builder = self.base;
+        let builder = self.base;
 
         #[cfg(feature = "cpu")]
-        {
+        let builder = {
+            let mut builder = builder;
             if builder.parallel.unwrap_or(true) {
                 builder.custom_smooth_pass = Some(smooth_pass_parallel);
                 builder.custom_cv_pass = Some(cv_pass_parallel);
@@ -257,7 +258,8 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
                 builder.custom_vertex_pass = Some(vertex_pass_parallel);
                 builder.custom_kdtree_builder = Some(build_kdtree_parallel);
             }
-        }
+            builder
+        };
 
         let processor = builder.build()?;
         Ok(ParallelOnlineLoess { processor })
@@ -279,6 +281,41 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
     /// Add a new point and get its smoothed value.
     pub fn add_point(&mut self, x: &[T], y: T) -> Result<Option<OnlineOutput<T>>, LoessError> {
         self.processor.add_point(x, y)
+    }
+
+    /// Add multiple points and get their smoothed values.
+    pub fn add_points(
+        &mut self,
+        x: &[T],
+        y: &[T],
+    ) -> Result<Vec<Option<OnlineOutput<T>>>, LoessError> {
+        if y.is_empty() {
+            if !x.is_empty() {
+                return Err(LoessError::MismatchedInputs {
+                    x_len: x.len(),
+                    y_len: y.len(),
+                });
+            }
+            return Ok(Vec::new());
+        }
+
+        if x.len() % y.len() != 0 {
+            return Err(LoessError::MismatchedInputs {
+                x_len: x.len(),
+                y_len: y.len(),
+            });
+        }
+
+        let dims = x.len() / y.len();
+
+        let mut results = Vec::with_capacity(y.len());
+        for (i, &y_val) in y.iter().enumerate() {
+            let start = i * dims;
+            let end = start + dims;
+            let x_point = &x[start..end];
+            results.push(self.processor.add_point(x_point, y_val)?);
+        }
+        Ok(results)
     }
 
     /// Get the current window size.
