@@ -11,7 +11,6 @@ fastloess_online(
   window_capacity = 100L,
   min_points = 3L,
   iterations = 3L,
-  delta = NULL,
   weight_function = "tricube",
   robustness_method = "bisquare",
   scaling_method = "mad",
@@ -34,8 +33,6 @@ fastloess_online(
 \item{min_points}{Min points before smoothing starts. Default: 3.}
 
 \item{iterations}{Robustness iterations. Default: 3.}
-
-\item{delta}{Interpolation threshold. NULL = auto.}
 
 \item{weight_function}{Kernel function. Default: "tricube".}
 

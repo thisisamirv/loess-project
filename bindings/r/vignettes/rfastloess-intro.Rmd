@@ -11,10 +11,10 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.width = 7,
-  fig.height = 5
+    collapse = TRUE,
+    comment = "#>",
+    fig.width = 7,
+    fig.height = 5
 )
 ```
 
@@ -60,9 +60,9 @@ y_outliers[sample(1:100, 10)] <- y_outliers[sample(1:100, 10)] + 5
 
 # Robust smoothing with confidence intervals
 result_robust <- fastloess(x, y_outliers,
-  fraction = 0.3,
-  iterations = 5,
-  confidence_intervals = 0.95
+    fraction = 0.3,
+    iterations = 5,
+    confidence_intervals = 0.95
 )
 
 # Plot

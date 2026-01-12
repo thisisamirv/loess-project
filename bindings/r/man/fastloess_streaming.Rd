@@ -11,7 +11,6 @@ fastloess_streaming(
   chunk_size = 5000L,
   overlap = NULL,
   iterations = 3L,
-  delta = NULL,
   weight_function = "tricube",
   robustness_method = "bisquare",
   scaling_method = "mad",
@@ -34,8 +33,6 @@ fastloess_streaming(
 \item{overlap}{Points overlapping between chunks. NULL = 10 percent of chunk.}
 
 \item{iterations}{Robustness iterations. Default: 3.}
-
-\item{delta}{Interpolation threshold. NULL = auto.}
 
 \item{weight_function}{Kernel function. Default: "tricube".}
 

@@ -278,9 +278,6 @@ r:
 	sed -i "s/^license = \".*\"/license = \"$$WS_LICENSE\"/" $(R_DIR)/src/Cargo.toml; \
 	sed -i "s/^rust-version = \".*\"/rust-version = \"$$WS_RUST_VERSION\"/" $(R_DIR)/src/Cargo.toml; \
 	sed -i "s/^extendr-api = \".*\"/extendr-api = \"$$WS_EXTENDR\"/" $(R_DIR)/src/Cargo.toml; \
-	sed -i '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
-	sed -i '/^\[patch\.crates-io\]/d' $(R_DIR)/src/Cargo.toml; \
-	sed -i '/^loess = { path = "vendor\/loess" }/d' $(R_DIR)/src/Cargo.toml; \
 	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
 	echo "" >> $(R_DIR)/src/Cargo.toml
 	@dev/sync_version.py Cargo.toml -r $(R_DIR)/inst/CITATION -d $(R_DIR)/DESCRIPTION -q

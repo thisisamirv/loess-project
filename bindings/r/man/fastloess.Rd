@@ -9,7 +9,6 @@ fastloess(
   y,
   fraction = 0.67,
   iterations = 3L,
-  delta = NULL,
   weight_function = "tricube",
   robustness_method = "bisquare",
   scaling_method = "mad",
@@ -35,8 +34,6 @@ fastloess(
 \item{fraction}{Smoothing fraction (0 to 1). Default: 0.67.}
 
 \item{iterations}{Robustness iterations. Default: 3.}
-
-\item{delta}{Interpolation threshold. NULL = auto.}
 
 \item{weight_function}{Kernel: "tricube", "epanechnikov", "gaussian",
 "uniform", "biweight", "triangle", "cosine".}

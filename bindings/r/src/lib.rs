@@ -12,7 +12,7 @@ use fastLoess::internals::api::{
     UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, Loess as LoessBuilder, LoessResult, Online, Streaming, LOOCV,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, Online, Streaming,
 };
 
 // ============================================================================
