@@ -1,0 +1,18 @@
+Package: rfastloess
+Title: High-Performance LOESS Smoothing for R
+Version: 0.99.8
+Authors@R: person("Amir", "Valizadeh", email = "thisisamirv@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-5983-8527"))
+Description: Provides high-performance LOESS smoothing (Locally Estimated Scatterplot Smoothing) 
+    using a 'Rust' backend. Supports various weight functions, robustness iterations, 
+    streaming/online processing, cross-validation, and uncertainty quantification.
+    Applicable to genomic data, time series, and general-purpose smoothing tasks.
+License: MIT + file LICENSE | Apache License (== 2.0)
+SystemRequirements: 'Rust' programming language (via 'rustup' or system tools)
+Encoding: UTF-8
+RoxygenNote: 7.3.3
+biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, QualityControl
+Suggests: BiocStyle, knitr, rmarkdown, testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+BugReports: https://github.com/thisisamirv/loess-project/issues
+URL: https://github.com/thisisamirv/loess-project

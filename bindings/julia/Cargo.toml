@@ -1,0 +1,20 @@
+[package]
+name = "fastloess-jl"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+readme = "README.md"
+publish = false
+
+[dependencies]
+fastLoess = { workspace = true, features = ["dev", "cpu"] }
+
+[lib]
+name = "fastloess_jl"
+crate-type = ["cdylib"]
+
+[features]
+default = []
+dev = []

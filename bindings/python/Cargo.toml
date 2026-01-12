@@ -1,0 +1,22 @@
+[package]
+name = "fastLoess-py"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+readme = "README.md"
+publish = false
+
+[dependencies]
+fastLoess = { workspace = true, features = ["dev", "cpu"] }
+pyo3 = { workspace = true, features = ["abi3-py38"] }
+numpy = { workspace = true }
+
+[lib]
+name = "fastloess"
+crate-type = ["cdylib"]
+
+[features]
+default = []
+dev = []

@@ -1,0 +1,98 @@
+---
+title: "Introduction to rfastloess"
+author: "Amir Valizadeh"
+date: "`r Sys.Date()`"
+output: BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Introduction to rfastloess}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Overview
+
+`rfastloess` is a high-performance R package for LOESS (Locally Estimated Scatterplot Smoothing) built on a Rust backend.
+
+**Full documentation**: <https://loess.readthedocs.io/>
+
+## Installation
+
+```{r installation, eval=FALSE}
+# From R-universe (pre-built binaries, no Rust required)
+install.packages("rfastloess", repos = "https://thisisamirv.r-universe.dev")
+```
+
+## Quick Start
+
+### Basic Smoothing
+
+```{r basic_example}
+library(rfastloess)
+
+# Generate example data
+set.seed(42)
+x <- seq(0, 10, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+# Basic smoothing
+result <- fastloess(x, y, fraction = 0.3)
+
+# Plot
+plot(x, y, pch = 16, col = "gray", main = "Basic LOESS Smoothing")
+lines(result$x, result$y, col = "red", lwd = 2)
+```
+
+### Robust Smoothing with Intervals
+
+```{r robust_example}
+# Add outliers
+y_outliers <- y
+y_outliers[sample(1:100, 10)] <- y_outliers[sample(1:100, 10)] + 5
+
+# Robust smoothing with confidence intervals
+result_robust <- fastloess(x, y_outliers,
+  fraction = 0.3,
+  iterations = 5,
+  confidence_intervals = 0.95
+)
+
+# Plot
+plot(x, y_outliers, pch = 16, col = "gray", main = "Robust LOESS")
+lines(result_robust$x, result_robust$y, col = "red", lwd = 2)
+lines(result_robust$x, result_robust$confidence_lower, col = "blue", lty = 2)
+lines(result_robust$x, result_robust$confidence_upper, col = "blue", lty = 2)
+```
+
+## Main Functions
+
+| Function                 | Use Case                             |
+|--------------------------|--------------------------------------|
+| `fastloess()`           | Primary interface - batch processing |
+| `fastloess_streaming()` | Large datasets (>100K points)        |
+| `fastloess_online()`    | Real-time data streams               |
+
+## Learn More
+
+For comprehensive documentation including:
+
+- Parameter selection guides
+- Streaming and online processing tutorials
+- Genomic data examples
+- Performance benchmarks
+
+Visit: **<https://loess.readthedocs.io/>**
+
+## Session Info
+
+```{r session_info}
+sessionInfo()
+```

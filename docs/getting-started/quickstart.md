@@ -1,0 +1,390 @@
+<!-- markdownlint-disable MD024 MD046 -->
+# Quick Start
+
+Get up and running with LOESS in minutes.
+
+## Basic Smoothing
+
+=== "R"
+
+    ```r
+    library(rfastloess)
+
+    # Sample data
+    x <- c(1, 2, 3, 4, 5, 6, 7, 8)
+    y <- c(2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7)
+
+    # Smooth the data
+    result <- fastloess(x, y, fraction = 0.5, iterations = 3)
+
+    print(result$y)
+    ```
+
+**Output:**
+
+```text
+Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
+```
+
+=== "Python"
+
+    ```python
+    import fastloess as fl
+    import numpy as np
+
+    # Sample data
+    x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+    y = np.array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7])
+
+    # Smooth the data
+    result = fl.smooth(x, y, fraction=0.5, iterations=3)
+
+    print("Smoothed values:", result["y"])
+    ```
+
+=== "Rust"
+
+    ```rust
+    use loess::prelude::*;
+
+    fn main() -> Result<(), LoessError> {
+        // Sample data
+        let x = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+        let y = vec![2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7];
+
+        // Build and fit the model
+        let model = Loess::new()
+            .fraction(0.5)      // Use 50% of data for each fit
+            .iterations(3)      // 3 robustness iterations
+            .adapter(Batch)
+            .build()?;
+
+        let result = model.fit(&x, &y)?;
+        
+        println!("{}", result);
+        Ok(())
+    }
+    ```
+
+=== "Julia"
+
+    ```julia
+    using fastloess
+
+    # Sample data
+    x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
+    y = [2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]
+
+    # Smooth the data
+    result = smooth(x, y, fraction=0.5, iterations=3)
+
+    println("Smoothed values: ", result.y)
+    ```
+
+=== "Node.js"
+
+    ```javascript
+    const fastloess = require('fastloess');
+
+    // Sample data
+    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+    const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+
+    // Smooth the data
+    const result = fastloess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+
+    console.log("Smoothed values:", result.y);
+    ```
+
+=== "WebAssembly"
+
+    ```javascript
+    import * as fastloess from 'fastloess-wasm';
+
+    // Sample data
+    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+    const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+
+    // Smooth the data
+    const result = fastloess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+
+    console.log("Smoothed values:", result.y);
+    ```
+
+=== "C++"
+
+    ```cpp
+    #include "fastloess.hpp"
+    #include <iostream>
+
+    int main() {
+        std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+        std::vector<double> y = {2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7};
+
+        auto result = fastloess::smooth(x, y, {.fraction = 0.5, .iterations = 3});
+
+        for (size_t i = 0; i < result.size(); ++i) {
+            std::cout << result.y(i) << " ";
+        }
+        return 0;
+    }
+    ```
+
+---
+
+## With Confidence Intervals
+
+=== "R"
+
+    ```r
+    result <- fastloess(
+        x, y,
+        fraction = 0.5,
+        iterations = 3,
+        confidence_intervals = 0.95,
+        prediction_intervals = 0.95,
+        return_diagnostics = TRUE
+    )
+
+    print(result$confidence_lower)
+    print(result$confidence_upper)
+    print(result$diagnostics$r_squared)
+    ```
+
+=== "Python"
+
+    ```python
+    result = fl.smooth(
+        x, y,
+        fraction=0.5,
+        iterations=3,
+        confidence_intervals=0.95,
+        prediction_intervals=0.95,
+        return_diagnostics=True
+    )
+
+    print("Smoothed:", result["y"])
+    print("CI Lower:", result["confidence_lower"])
+    print("CI Upper:", result["confidence_upper"])
+    print("R²:", result["diagnostics"]["r_squared"])
+    ```
+
+=== "Rust"
+
+    ```rust
+    use loess::prelude::*;
+
+    let model = Loess::new()
+        .fraction(0.5)
+        .iterations(3)
+        .confidence_intervals(0.95)  // 95% CI
+        .prediction_intervals(0.95)  // 95% PI
+        .return_diagnostics()
+        .adapter(Batch)
+        .build()?;
+
+    let result = model.fit(&x, &y)?;
+    
+    // Access intervals
+    if let Some(ci_lower) = &result.confidence_lower {
+        println!("CI Lower: {:?}", ci_lower);
+    }
+    ```
+
+=== "Julia"
+
+    ```julia
+    result = smooth(
+        x, y,
+        fraction=0.5,
+        iterations=3,
+        confidence_intervals=0.95,
+        prediction_intervals=0.95,
+        return_diagnostics=true
+    )
+
+    println("Smoothed: ", result.y)
+    println("CI Lower: ", result.confidence_lower)
+    println("CI Upper: ", result.confidence_upper)
+    println("R²: ", result.diagnostics.r_squared)
+    ```
+
+=== "Node.js"
+
+    ```javascript
+    const result = fastloess.smooth(x, y, {
+        fraction: 0.5,
+        iterations: 3,
+        confidenceIntervals: 0.95,
+        predictionIntervals: 0.95,
+        returnDiagnostics: true
+    });
+
+    console.log("Smoothed:", result.y);
+    console.log("CI Lower:", result.confidenceLower);
+    console.log("CI Upper:", result.confidenceUpper);
+    console.log("R²:", result.diagnostics.rSquared);
+    ```
+
+=== "WebAssembly"
+
+    ```javascript
+    import * as fastloess from 'fastloess-wasm';
+
+    // Sample data
+    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
+    const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+
+    // Smooth the data
+    const result = fastloess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+
+    console.log("Smoothed values:", result.y);
+    ```
+
+---
+
+## Handling Outliers
+
+LOESS can robustly handle outliers through iterative reweighting:
+
+=== "R"
+
+    ```r
+    y_with_outlier <- c(2, 4, 6, 50, 10, 12)
+
+    result <- fastloess(
+        x, y_with_outlier,
+        fraction = 0.5,
+        iterations = 5,
+        robustness_method = "bisquare",
+        return_robustness_weights = TRUE
+    )
+
+    # Check downweighted points
+    weights <- result$robustness_weights
+    for (i in seq_along(weights)) {
+        if (weights[i] < 0.5) {
+            cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n", i, weights[i]))
+        }
+    }
+    ```
+
+=== "Python"
+
+    ```python
+    y_with_outlier = np.array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0])
+
+    result = fl.smooth(
+        x, y_with_outlier,
+        fraction=0.5,
+        iterations=5,
+        robustness_method="bisquare",
+        return_robustness_weights=True
+    )
+
+    # Check which points were downweighted
+    for i, w in enumerate(result["robustness_weights"]):
+        if w < 0.5:
+            print(f"Point {i} is likely an outlier (weight: {w:.3f})")
+    ```
+
+=== "Rust"
+
+    ```rust
+    // Data with an outlier at position 3
+    let y_with_outlier = vec![2.0, 4.0, 6.0, 50.0, 10.0, 12.0];  // 50.0 is outlier
+
+    let model = Loess::new()
+        .fraction(0.5)
+        .iterations(5)                    // More iterations for outliers
+        .robustness_method(Bisquare)      // Default, smooth downweighting
+        .return_robustness_weights()      // See which points were downweighted
+        .adapter(Batch)
+        .build()?;
+
+    let result = model.fit(&x, &y_with_outlier)?;
+    
+    // Outliers will have low robustness weights
+    if let Some(weights) = &result.robustness_weights {
+        for (i, w) in weights.iter().enumerate() {
+            if *w < 0.5 {
+                println!("Point {} is likely an outlier (weight: {:.3})", i, w);
+            }
+        }
+    }
+    ```
+
+=== "Julia"
+
+    ```julia
+    y_with_outlier = [2.0, 4.0, 6.0, 50.0, 10.0, 12.0]
+
+    result = smooth(
+        x, y_with_outlier,
+        fraction=0.5,
+        iterations=5,
+        robustness_method="bisquare",
+        return_robustness_weights=true
+    )
+
+    # Check which points were downweighted
+    for (i, w) in enumerate(result.robustness_weights)
+        if w < 0.5
+            println("Point $i is likely an outlier (weight: $(round(w, digits=3)))")
+        end
+    end
+    ```
+
+=== "Node.js"
+
+    ```javascript
+    const fl = require('fastloess');
+
+    const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
+
+    const result = fl.smooth(x, yWithOutlier, {
+        fraction: 0.5,
+        iterations: 5,
+        robustnessMethod: "bisquare",
+        returnRobustnessWeights: true
+    });
+
+    // Outliers will have low robustness weights
+    result.robustnessWeights.forEach((w, i) => {
+        if (w < 0.5) {
+            console.log(`Point ${i} is likely an outlier (weight: ${w.toFixed(3)})`);
+        }
+    });
+    ```
+
+=== "WebAssembly"
+
+    ```javascript
+    import { smooth } from 'fastloess-wasm';
+
+    // Data with an outlier at position 3
+    const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
+
+    const result = smooth(x, yWithOutlier, {
+        fraction: 0.5,
+        iterations: 5,
+        robustnessMethod: "bisquare",
+        returnRobustnessWeights: true
+    });
+
+    // Outliers will have low robustness weights
+    result.robustnessWeights.forEach((w, i) => {
+        if (w < 0.5) {
+            console.log(`Point ${i} is likely an outlier (weight: ${w.toFixed(3)})`);
+        }
+    });
+    ```
+
+---
+
+## Next Steps
+
+- [Concepts](concepts.md) — Understand how LOESS works
+- [Parameters](../user-guide/parameters.md) — All configuration options
+- [Execution Modes](../user-guide/adapters.md) — Batch, Streaming, Online
+- [C++ API](../api/cpp.md) / [Node.js API](../api/nodejs.md) / [WebAssembly API](../api/wasm.md) — Full references

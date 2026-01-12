@@ -1,0 +1,50 @@
+[package]
+name = "loess-rs"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+rust-version = { workspace = true }
+
+# Metadata
+description = { workspace = true }
+readme = "README.md"
+
+# Links
+repository = { workspace = true }
+documentation = "https://loess.readthedocs.io/"
+homepage = { workspace = true }
+
+# Categories
+keywords = { workspace = true }
+categories = { workspace = true }
+
+# Build
+include = [
+    "src/**/*",
+    "Cargo.toml",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+]
+
+[dependencies]
+num-traits = { workspace = true, default-features = false, features = ["libm"] }
+nalgebra = { workspace = true, default-features = false, features = [
+    "alloc",
+    "libm",
+] }
+wide = { workspace = true, default-features = false }
+
+[dev-dependencies]
+approx = { workspace = true }
+
+[features]
+default = ["std"]
+std = ["num-traits/std", "nalgebra/std", "wide/std"]
+dev = []
+
+# Document all features
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

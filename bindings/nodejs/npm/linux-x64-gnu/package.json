@@ -1,0 +1,21 @@
+{
+  "name": "fastloess-linux-x64-gnu",
+  "version": "0.99.8",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "fastloess.node",
+  "files": [
+    "fastloess.node"
+  ],
+  "license": "MIT OR Apache-2.0",
+  "engines": {
+    "node": ">= 20"
+  },
+  "libc": [
+    "glibc"
+  ]
+}

@@ -1,0 +1,16 @@
+[package]
+name = "fastloess-wasm"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+fastLoess = { path = "../../crates/fastLoess", features = ["dev", "cpu"] }
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+
+[dev-dependencies]
+wasm-bindgen-test = { workspace = true }

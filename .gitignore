@@ -1,0 +1,88 @@
+# Rust / Cargo
+debug/
+target/
+**/target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+**/mutants.out*/
+*.toml.test
+*.toml.orig
+
+# R Package
+*.Rcheck/
+*.tar.gz
+*.tgz
+*.o
+*.so
+src/Makevars
+src/*.o
+src/*.so
+rfastloess.BiocCheck/
+bindings/r/src/vendor/
+bindings/r/src/.cargo/
+bindings/r/docs/
+bindings/r/doc/
+bindings/r/Meta/
+bindings/r/README.html
+bindings/r/src/Makevars
+.Rprofile
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.eggs/
+.venv/
+env/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.pyc
+
+# IDEs & Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS / System
+.DS_Store
+
+# Documentation
+/target/doc/
+doc/
+Meta/
+docs-venv/
+site/
+examples/python/plots/
+bindings/cpp/include/fastloess.h
+
+# Benchmarks
+/target/criterion/
+
+# Test Coverage
+cobertura.xml
+tarpaulin-report.html
+coverage_html/
+coverage_detail.txt
+
+# Node.js
+node_modules/
+npm-debug.log
+*.node
+build/
+
+# WebAssembly
+pkg/
+bindings/wasm/pkg/
+bindings/wasm/pkg-web/
+
+# Julia
+*.cov
+*.mem
+docs/build/
+docs/site/
+Manifest.toml

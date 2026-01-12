@@ -1,0 +1,72 @@
+name: Release C++
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to upload assets to (e.g., v0.99.8)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-upload:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: libfastloess.so
+            asset_name: libfastloess-linux-x64.so
+            target_dir: target/release
+          - os: windows-latest
+            artifact_name: fastloess.dll
+            asset_name: fastloess-win32-x64.dll
+            target_dir: target/release
+          - os: macos-latest
+            artifact_name: libfastloess.dylib
+            asset_name: libfastloess-macos-x64.dylib
+            target_dir: target/release
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Build C++ Library
+        working-directory: bindings/cpp
+        run: cargo build --release --lib
+
+      - name: Prepare Assets (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          # Rust/Cargo naming: libfastloess_cpp.so or .dylib
+          mv target/release/libfastloess_cpp.so ${{ matrix.asset_name }} 2>/dev/null || mv target/release/libfastloess_cpp.dylib ${{ matrix.asset_name }}
+
+      - name: Prepare Assets (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          # Windows: fastloess_cpp.dll
+          mv target/release/fastloess_cpp.dll ${{ matrix.asset_name }}
+
+      - name: Upload Binaries to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+          files: ${{ matrix.asset_name }}
+
+      - name: Upload Header to Release
+        if: matrix.os == 'ubuntu-latest'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+          files: bindings/cpp/include/fastloess.hpp

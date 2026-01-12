@@ -1,0 +1,503 @@
+//! Node.js bindings for fastLoess using N-API.
+
+#![allow(non_snake_case)]
+
+use napi::bindgen_prelude::*;
+use napi_derive::napi;
+
+use fastLoess::internals::adapters::online::ParallelOnlineLoess;
+use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
+use fastLoess::internals::api::{
+    BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
+};
+use fastLoess::prelude::{
+    Batch, KFold, Loess as LoessBuilder, LoessResult, Online, Streaming, LOOCV, MAD, MAR,
+};
+
+/// Parse weight function from string
+fn parse_weight_function(name: &str) -> Result<WeightFunction> {
+    match name.to_lowercase().as_str() {
+        "tricube" => Ok(WeightFunction::Tricube),
+        "epanechnikov" => Ok(WeightFunction::Epanechnikov),
+        "gaussian" => Ok(WeightFunction::Gaussian),
+        "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
+        "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
+        "triangle" | "triangular" => Ok(WeightFunction::Triangle),
+        "cosine" => Ok(WeightFunction::Cosine),
+        _ => Err(Error::new(
+            Status::InvalidArg,
+            format!("Unknown weight function: {}", name),
+        )),
+    }
+}
+
+/// Parse robustness method from string
+fn parse_robustness_method(name: &str) -> Result<RobustnessMethod> {
+    match name.to_lowercase().as_str() {
+        "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
+        "huber" => Ok(RobustnessMethod::Huber),
+        "talwar" => Ok(RobustnessMethod::Talwar),
+        _ => Err(Error::new(
+            Status::InvalidArg,
+            format!("Unknown robustness method: {}", name),
+        )),
+    }
+}
+
+/// Parse zero weight fallback from string
+fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback> {
+    match name.to_lowercase().as_str() {
+        "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
+        "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
+        "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
+        _ => Err(Error::new(
+            Status::InvalidArg,
+            format!("Unknown zero weight fallback: {}", name),
+        )),
+    }
+}
+
+/// Parse boundary policy from string
+fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy> {
+    match name.to_lowercase().as_str() {
+        "extend" | "pad" => Ok(BoundaryPolicy::Extend),
+        "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
+        "zero" | "none" => Ok(BoundaryPolicy::Zero),
+        "noboundary" => Ok(BoundaryPolicy::NoBoundary),
+        _ => Err(Error::new(
+            Status::InvalidArg,
+            format!("Unknown boundary policy: {}", name),
+        )),
+    }
+}
+
+/// Parse scaling method from string
+fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
+    match name.to_lowercase().as_str() {
+        "mad" => Ok(MAD),
+        "mar" => Ok(MAR),
+        _ => Err(Error::new(
+            Status::InvalidArg,
+            format!("Unknown scaling method: {}", name),
+        )),
+    }
+}
+
+/// Parse update mode from string
+fn parse_update_mode(name: &str) -> Result<UpdateMode> {
+    match name.to_lowercase().as_str() {
+        "full" | "resmooth" => Ok(UpdateMode::Full),
+        "incremental" | "single" => Ok(UpdateMode::Incremental),
+        _ => Err(Error::new(
+            Status::InvalidArg,
+            format!("Unknown update mode: {}", name),
+        )),
+    }
+}
+
+#[napi(object)]
+pub struct Diagnostics {
+    pub rmse: f64,
+    pub mae: f64,
+    pub rSquared: f64,
+    pub aic: Option<f64>,
+    pub aicc: Option<f64>,
+    pub effectiveDf: Option<f64>,
+    pub residualSd: f64,
+}
+
+#[napi]
+pub struct LoessResultObj {
+    inner: LoessResult<f64>,
+}
+
+#[napi]
+impl LoessResultObj {
+    #[napi(getter)]
+    pub fn get_x(&self) -> Float64Array {
+        Float64Array::from(self.inner.x.as_slice())
+    }
+
+    #[napi(getter)]
+    pub fn get_y(&self) -> Float64Array {
+        Float64Array::from(self.inner.y.as_slice())
+    }
+
+    #[napi(getter)]
+    pub fn get_residuals(&self) -> Option<Float64Array> {
+        self.inner
+            .residuals
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    #[napi(getter)]
+    pub fn get_standard_errors(&self) -> Option<Float64Array> {
+        self.inner
+            .standard_errors
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    #[napi(getter)]
+    pub fn get_confidence_lower(&self) -> Option<Float64Array> {
+        self.inner
+            .confidence_lower
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    #[napi(getter)]
+    pub fn get_confidence_upper(&self) -> Option<Float64Array> {
+        self.inner
+            .confidence_upper
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    #[napi(getter)]
+    pub fn get_prediction_lower(&self) -> Option<Float64Array> {
+        self.inner
+            .prediction_lower
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    #[napi(getter)]
+    pub fn get_prediction_upper(&self) -> Option<Float64Array> {
+        self.inner
+            .prediction_upper
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    #[napi(getter)]
+    pub fn get_robustness_weights(&self) -> Option<Float64Array> {
+        self.inner
+            .robustness_weights
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    #[napi(getter)]
+    pub fn get_diagnostics(&self) -> Option<Diagnostics> {
+        self.inner.diagnostics.as_ref().map(|d| Diagnostics {
+            rmse: d.rmse,
+            mae: d.mae,
+            rSquared: d.r_squared,
+            aic: d.aic,
+            aicc: d.aicc,
+            effectiveDf: d.effective_df,
+            residualSd: d.residual_sd,
+        })
+    }
+
+    #[napi(getter)]
+    pub fn get_cv_scores(&self) -> Option<Float64Array> {
+        self.inner
+            .cv_scores
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    #[napi(getter)]
+    pub fn get_fraction_used(&self) -> f64 {
+        self.inner.fraction_used
+    }
+
+    #[napi(getter)]
+    pub fn get_iterations_used(&self) -> Option<u32> {
+        self.inner.iterations_used.map(|i| i as u32)
+    }
+}
+
+#[napi(object)]
+pub struct SmoothOptions {
+    pub fraction: Option<f64>,
+    pub iterations: Option<u32>,
+    pub delta: Option<f64>,
+    pub weightFunction: Option<String>,
+    pub robustnessMethod: Option<String>,
+    pub zeroWeightFallback: Option<String>,
+    pub boundaryPolicy: Option<String>,
+    pub scalingMethod: Option<String>,
+    pub autoConverge: Option<f64>,
+    pub returnResiduals: Option<bool>,
+    pub returnRobustnessWeights: Option<bool>,
+    pub returnDiagnostics: Option<bool>,
+    pub confidenceIntervals: Option<f64>,
+    pub predictionIntervals: Option<f64>,
+    pub cvFractions: Option<Vec<f64>>,
+    pub cvMethod: Option<String>,
+    pub cvK: Option<u32>,
+    pub parallel: Option<bool>,
+}
+
+#[napi]
+pub fn smooth(
+    x: Float64Array,
+    y: Float64Array,
+    options: Option<SmoothOptions>,
+) -> Result<LoessResultObj> {
+    let mut builder = LoessBuilder::new();
+
+    if let Some(opts) = options {
+        if let Some(f) = opts.fraction {
+            builder = builder.fraction(f);
+        }
+        if let Some(iter) = opts.iterations {
+            builder = builder.iterations(iter as usize);
+        }
+        if let Some(d) = opts.delta {
+            builder = builder.delta(d);
+        }
+        if let Some(wf) = opts.weightFunction {
+            builder = builder.weight_function(parse_weight_function(&wf)?);
+        }
+        if let Some(rm) = opts.robustnessMethod {
+            builder = builder.robustness_method(parse_robustness_method(&rm)?);
+        }
+        if let Some(zw) = opts.zeroWeightFallback {
+            builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&zw)?);
+        }
+        if let Some(bp) = opts.boundaryPolicy {
+            builder = builder.boundary_policy(parse_boundary_policy(&bp)?);
+        }
+        if let Some(sm) = opts.scalingMethod {
+            builder = builder.scaling_method(parse_scaling_method(&sm)?);
+        }
+        if let Some(ac) = opts.autoConverge {
+            builder = builder.auto_converge(ac);
+        }
+        if opts.returnResiduals.unwrap_or(false) {
+            builder = builder.return_residuals();
+        }
+        if opts.returnRobustnessWeights.unwrap_or(false) {
+            builder = builder.return_robustness_weights();
+        }
+        if opts.returnDiagnostics.unwrap_or(false) {
+            builder = builder.return_diagnostics();
+        }
+        if let Some(ci) = opts.confidenceIntervals {
+            builder = builder.confidence_intervals(ci);
+        }
+        if let Some(pi) = opts.predictionIntervals {
+            builder = builder.prediction_intervals(pi);
+        }
+        if let Some(par) = opts.parallel {
+            builder = builder.parallel(par);
+        }
+
+        // Cross-validation
+        if let Some(fractions) = opts.cvFractions {
+            let method = opts.cvMethod.unwrap_or_else(|| "kfold".to_string());
+            let k = opts.cvK.unwrap_or(5) as usize;
+
+            match method.to_lowercase().as_str() {
+                "simple" | "loo" | "loocv" | "leave_one_out" => {
+                    builder = builder.cross_validate(LOOCV(&fractions));
+                }
+                "kfold" | "k_fold" | "k-fold" => {
+                    builder = builder.cross_validate(KFold(k, &fractions));
+                }
+                _ => {
+                    return Err(Error::new(
+                        Status::InvalidArg,
+                        format!("Unknown CV method: {}. Valid options: loocv, kfold", method),
+                    ));
+                }
+            };
+        }
+    }
+
+    let model = builder
+        .adapter(Batch)
+        .build()
+        .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
+
+    let result =
+        model
+            .fit(x.as_ref(), y.as_ref())
+            .map_err(|e: ::fastLoess::prelude::LoessError| {
+                Error::new(Status::GenericFailure, e.to_string())
+            })?;
+
+    Ok(LoessResultObj { inner: result })
+}
+
+#[napi(object)]
+pub struct StreamingOptions {
+    pub chunkSize: Option<u32>,
+    pub overlap: Option<u32>,
+    pub mergeStrategy: Option<String>,
+}
+
+#[napi]
+pub struct StreamingLoess {
+    inner: ParallelStreamingLoess<f64>,
+}
+
+#[napi]
+impl StreamingLoess {
+    #[napi(constructor)]
+    pub fn new(
+        options: Option<SmoothOptions>,
+        streaming_opts: Option<StreamingOptions>,
+    ) -> Result<Self> {
+        let mut builder = LoessBuilder::new();
+
+        if let Some(opts) = options {
+            if let Some(f) = opts.fraction {
+                builder = builder.fraction(f);
+            }
+            if let Some(iter) = opts.iterations {
+                builder = builder.iterations(iter as usize);
+            }
+            if let Some(d) = opts.delta {
+                builder = builder.delta(d);
+            }
+            if let Some(wf) = opts.weightFunction {
+                builder = builder.weight_function(parse_weight_function(&wf)?);
+            }
+            if let Some(rm) = opts.robustnessMethod {
+                builder = builder.robustness_method(parse_robustness_method(&rm)?);
+            }
+            if let Some(zw) = opts.zeroWeightFallback {
+                builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&zw)?);
+            }
+            if let Some(bp) = opts.boundaryPolicy {
+                builder = builder.boundary_policy(parse_boundary_policy(&bp)?);
+            }
+            if let Some(sm) = opts.scalingMethod {
+                builder = builder.scaling_method(parse_scaling_method(&sm)?);
+            }
+            if let Some(ac) = opts.autoConverge {
+                builder = builder.auto_converge(ac);
+            }
+            if opts.returnResiduals.unwrap_or(false) {
+                builder = builder.return_residuals();
+            }
+            if opts.returnRobustnessWeights.unwrap_or(false) {
+                builder = builder.return_robustness_weights();
+            }
+            if opts.returnDiagnostics.unwrap_or(false) {
+                builder = builder.return_diagnostics();
+            }
+            if let Some(par) = opts.parallel {
+                builder = builder.parallel(par);
+            }
+        }
+
+        let mut chunk_size = 5000;
+        let mut overlap = 500;
+
+        if let Some(sopts) = streaming_opts {
+            if let Some(cs) = sopts.chunkSize {
+                chunk_size = cs as usize;
+            }
+            if let Some(ov) = sopts.overlap {
+                overlap = ov as usize;
+            }
+        }
+
+        let model = builder
+            .adapter(Streaming)
+            .chunk_size(chunk_size)
+            .overlap(overlap)
+            .build()
+            .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
+
+        Ok(StreamingLoess { inner: model })
+    }
+
+    #[napi]
+    pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResultObj> {
+        let result: ::fastLoess::prelude::LoessResult<f64> = self
+            .inner
+            .process_chunk(x.as_ref(), y.as_ref())
+            .map_err(|e: ::fastLoess::prelude::LoessError| {
+                Error::new(Status::GenericFailure, e.to_string())
+            })?;
+        Ok(LoessResultObj { inner: result })
+    }
+
+    #[napi]
+    pub fn finalize(&mut self) -> Result<LoessResultObj> {
+        let result: ::fastLoess::prelude::LoessResult<f64> =
+            self.inner
+                .finalize()
+                .map_err(|e: ::fastLoess::prelude::LoessError| {
+                    Error::new(Status::GenericFailure, e.to_string())
+                })?;
+        Ok(LoessResultObj { inner: result })
+    }
+}
+
+#[napi(object)]
+pub struct OnlineOptions {
+    pub windowCapacity: Option<u32>,
+    pub minPoints: Option<u32>,
+    pub updateMode: Option<String>,
+}
+
+#[napi]
+pub struct OnlineLoess {
+    inner: ParallelOnlineLoess<f64>,
+}
+
+#[napi]
+impl OnlineLoess {
+    #[napi(constructor)]
+    pub fn new(options: Option<SmoothOptions>, online_opts: Option<OnlineOptions>) -> Result<Self> {
+        let mut builder = LoessBuilder::new();
+
+        if let Some(opts) = options {
+            if let Some(f) = opts.fraction {
+                builder = builder.fraction(f);
+            }
+            if let Some(iter) = opts.iterations {
+                builder = builder.iterations(iter as usize);
+            }
+            if let Some(par) = opts.parallel {
+                builder = builder.parallel(par);
+            }
+        }
+
+        let mut window_capacity = 100;
+        let mut min_points = 2;
+        let mut update_mode = UpdateMode::Full;
+
+        if let Some(oopts) = online_opts {
+            if let Some(wc) = oopts.windowCapacity {
+                window_capacity = wc as usize;
+            }
+            if let Some(mp) = oopts.minPoints {
+                min_points = mp as usize;
+            }
+            if let Some(um) = oopts.updateMode {
+                update_mode = parse_update_mode(&um)?;
+            }
+        }
+
+        let model = builder
+            .adapter(Online)
+            .window_capacity(window_capacity)
+            .min_points(min_points)
+            .update_mode(update_mode)
+            .build()
+            .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
+
+        Ok(OnlineLoess { inner: model })
+    }
+
+    #[napi]
+    pub fn update(&mut self, x: f64, y: f64) -> Result<Option<f64>> {
+        let result =
+            self.inner
+                .add_point(x, y)
+                .map_err(|e: ::fastLoess::prelude::LoessError| {
+                    Error::new(Status::GenericFailure, e.to_string())
+                })?;
+        Ok(result.map(|o| o.smoothed))
+    }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "fastloess",
+  "version": "0.99.8",
+  "description": "High-performance LOESS smoothing for Node.js",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "napi build --release",
+    "build:debug": "napi build",
+    "test": "node --test ../../tests/nodejs/test_fastloess.js",
+    "universal": "napi universal"
+  },
+  "napi": {
+    "binaryName": "fastloess",
+    "targets": [
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu",
+      "x86_64-unknown-linux-musl",
+      "x86_64-pc-windows-msvc",
+      "aarch64-pc-windows-msvc",
+      "x86_64-apple-darwin",
+      "aarch64-apple-darwin"
+    ]
+  },
+  "optionalDependencies": {
+    "fastloess-linux-x64-gnu": "^0.99.8",
+    "fastloess-linux-arm64-gnu": "^0.99.8",
+    "fastloess-linux-x64-musl": "^0.99.8",
+    "fastloess-win32-x64-msvc": "^0.99.8",
+    "fastloess-win32-arm64-msvc": "^0.99.8",
+    "fastloess-darwin-x64": "^0.99.8",
+    "fastloess-darwin-arm64": "^0.99.8"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.5.1"
+  },
+  "engines": {
+    "node": ">= 20"
+  },
+  "license": "MIT OR Apache-2.0"
+}

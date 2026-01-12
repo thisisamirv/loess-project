@@ -1,0 +1,29 @@
+[package]
+name = "loess-project-tests"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+loess-rs = { path = "../crates/loess-rs", features = ["dev"] }
+fastLoess = { path = "../crates/fastLoess", features = ["dev"] }
+approx = { workspace = true }
+ndarray = { workspace = true }
+num-traits = { workspace = true }
+rayon = { workspace = true }
+
+[features]
+default = ["dev"]
+# loess-rs features
+std = ["loess-rs/std"]
+dev = ["loess-rs/dev", "fastLoess/dev"]
+# fastLoess features  
+cpu = ["fastLoess/cpu"]
+
+[[test]]
+name = "loess-rs"
+path = "loess-rs/mod.rs"
+
+[[test]]
+name = "fastLoess"
+path = "fastLoess/mod.rs"

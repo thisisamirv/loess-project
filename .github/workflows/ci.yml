@@ -1,0 +1,339 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  PIP_DISABLE_PIP_VERSION_CHECK: 1
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  # ============================================================================
+  # CONSOLIDATED CI JOB
+  # Runs tests and examples for all languages sequentially on each OS
+  # ============================================================================
+  ci:
+    name: CI (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        rust: [stable]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # ---- Toolchain Setup ----
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt, clippy
+
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v2
+        with:
+          version: "1.11"
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+
+      - name: Setup Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Install wasm-pack
+        if: matrix.os == 'ubuntu-latest'
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ci-${{ matrix.os }}-cargo
+
+      # ========================================================================
+      # RUST
+      # ========================================================================
+      - name: "Rust: Format Check"
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cargo fmt -p loess --all -- --check
+          cargo fmt -p fastLoess --all -- --check
+
+      - name: "Rust: Clippy"
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cargo clippy -p loess --all-targets -- -D warnings
+          cargo clippy -p fastLoess --all-targets --features cpu -- -D warnings
+          cargo clippy -p fastLoess --all-targets --features gpu -- -D warnings
+
+      - name: "Rust: Loess Tests"
+        run: |
+          cargo test -q -p loess-project-tests --test loess
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            cargo test -q -p loess-project-tests --test loess --no-default-features
+          fi
+        shell: bash
+
+      - name: "Rust: fastLoess Build"
+        run: |
+          cargo build -p fastLoess --features cpu
+          cargo build -p fastLoess --features gpu
+
+      - name: "Rust: fastLoess Tests"
+        run: |
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+             cargo test -q -p loess-project-tests --test fastLoess --features gpu
+          else
+             cargo test -q -p loess-project-tests --test fastLoess --features cpu
+          fi
+        shell: bash
+
+      - name: "Rust: Documentation"
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cargo doc -p loess --no-deps
+          cargo doc -p fastLoess --no-deps --features cpu
+          cargo doc -p fastLoess --no-deps --features gpu
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+      - name: "Rust: Run Examples"
+        run: |
+          for example in examples/loess/*.rs examples/fastLoess/*.rs; do
+            name=$(basename "$example" .rs)
+            echo "Running example: $name"
+            cargo run -p examples --example "$name" --features cpu
+          done
+        shell: bash
+
+      # ========================================================================
+      # PYTHON
+      # ========================================================================
+      - name: "Python: Setup & Build"
+        working-directory: bindings/python
+        run: |
+          ../../dev/sync_version.py ../../Cargo.toml -p python/fastloess/__version__.py -q
+          python -m pip install --upgrade pip
+          pip install maturin pytest numpy ruff matplotlib
+          pip install .
+
+      - name: "Python: Lint (Ruff)"
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: bindings/python
+        run: |
+          ruff format --check python/fastloess/ ../../tests/python/
+          ruff check python/fastloess/ ../../tests/python/
+
+      - name: "Python: Tests"
+        working-directory: bindings/python
+        run: pytest ../../tests/python/ -v
+
+      - name: "Python: Examples"
+        working-directory: bindings/python
+        run: |
+          python ../../examples/python/batch_smoothing.py
+          python ../../examples/python/streaming_smoothing.py
+          python ../../examples/python/online_smoothing.py
+
+      # ========================================================================
+      # R
+      # ========================================================================
+      - name: "R: Setup Dependencies"
+        working-directory: bindings/r
+        run: |
+          ../../dev/sync_version.py ../../Cargo.toml -r inst/CITATION -d DESCRIPTION -q
+          chmod +x configure cleanup
+          Rscript -e "install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'lintr', 'styler', 'prettycode', 'BiocManager', 'devtools'))"
+          Rscript -e "remotes::install_deps(dependencies = TRUE)"
+
+      - name: "R: CMD Check"
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          error-on: '"error"'
+          working-directory: bindings/r
+
+      - name: "R: Install Package"
+        working-directory: bindings/r
+        run: Rscript -e "devtools::install(quiet = TRUE)"
+
+      - name: "R: Examples"
+        working-directory: bindings/r
+        run: |
+          Rscript ../../examples/r/batch_smoothing.R
+          Rscript ../../examples/r/streaming_smoothing.R
+          Rscript ../../examples/r/online_smoothing.R
+
+      - name: "R: Quality (BiocCheck/Lint)"
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: bindings/r
+        run: |
+          Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL); lintr::lint_dir('R', linters = my_linters)"
+          chmod +x ../../dev/prepare_cran.sh
+          ../../dev/prepare_cran.sh
+          R CMD build .
+          Rscript -e "BiocManager::install('BiocCheck'); BiocCheck::BiocCheck(list.files(pattern='\\\\.tar\\\\.gz$')[1], \`new-package\`=TRUE, \`no-check-vignettes\`=TRUE, \`quit-with-status\`=TRUE)"
+
+      # ========================================================================
+      # JULIA
+      # ========================================================================
+      - name: "Julia: Build"
+        working-directory: bindings/julia
+        run: |
+          ../../dev/sync_version.py ../../Cargo.toml -j julia/Project.toml -b ../../dev/build_tarballs_julia.jl -q
+          cargo build --release
+      - name: "Julia: Verify Exports"
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          nm -D target/release/libfastloess_jl.so | grep -q jl_loess_smooth || exit 1
+          nm -D target/release/libfastloess_jl.so | grep -q jl_loess_streaming || exit 1
+          nm -D target/release/libfastloess_jl.so | grep -q jl_loess_online || exit 1
+          nm -D target/release/libfastloess_jl.so | grep -q jl_loess_free_result || exit 1
+
+      - name: "Julia: Tests"
+        run: julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("tests/julia/test_fastloess.jl")'
+
+      - name: "Julia: Examples"
+        run: |
+          julia --project=bindings/julia/julia examples/julia/batch_smoothing.jl
+          julia --project=bindings/julia/julia examples/julia/streaming_smoothing.jl
+          julia --project=bindings/julia/julia examples/julia/online_smoothing.jl
+
+      - name: "Julia: Lint"
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: bindings/julia
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+      # ========================================================================
+      # NODE.JS
+      # ========================================================================
+      - name: "Node.js: Build"
+        working-directory: bindings/nodejs
+        run: |
+          ../../dev/sync_version.py ../../Cargo.toml -n package.json -q
+          npm install
+          npm run build
+
+      - name: "Node.js: Tests"
+        working-directory: bindings/nodejs
+        run: npm test
+
+      - name: "Node.js: Examples"
+        working-directory: bindings/nodejs
+        run: |
+          node ../../examples/nodejs/batch_smoothing.js
+          node ../../examples/nodejs/streaming_smoothing.js
+          node ../../examples/nodejs/online_smoothing.js
+
+      - name: "Node.js: Lint"
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: bindings/nodejs
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+      # ========================================================================
+      # WEBASSEMBLY (Ubuntu only for build simplicity)
+      # ========================================================================
+      - name: "WebAssembly: Build & Test"
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: bindings/wasm
+        run: |
+          wasm-pack build --target nodejs --out-dir pkg
+          wasm-pack build --target web --out-dir pkg-web
+          wasm-pack test --node
+          node ../../tests/wasm/test_fastloess_wasm.js
+
+      - name: "WebAssembly: Lint"
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: bindings/wasm
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+      # ========================================================================
+      # C++
+      # ========================================================================
+      - name: "C++: Build"
+        working-directory: bindings/cpp
+        run: cargo build --release
+
+      - name: "C++: Examples (Ubuntu only)"
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: bindings/cpp
+        run: |
+          mkdir -p bin
+          g++ -O3 ../../examples/cpp/batch_smoothing.cpp -o bin/batch_smoothing -Iinclude -L../../target/release -lfastloess_cpp -lpthread -ldl -lm
+          g++ -O3 ../../examples/cpp/streaming_smoothing.cpp -o bin/streaming_smoothing -Iinclude -L../../target/release -lfastloess_cpp -lpthread -ldl -lm
+          g++ -O3 ../../examples/cpp/online_smoothing.cpp -o bin/online_smoothing -Iinclude -L../../target/release -lfastloess_cpp -lpthread -ldl -lm
+          LD_LIBRARY_PATH=../../target/release ./bin/batch_smoothing
+          LD_LIBRARY_PATH=../../target/release ./bin/streaming_smoothing
+          LD_LIBRARY_PATH=../../target/release ./bin/online_smoothing
+
+      - name: "C++: Lint"
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: bindings/cpp
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+  # ============================================================================
+  # R - CLANG ASAN
+  # Kept as separate job due to container requirement
+  # ============================================================================
+  r-asan-check:
+    name: R - Clang ASAN
+    runs-on: ubuntu-latest
+    container:
+      image: rhub/clang-asan
+    defaults:
+      run:
+        working-directory: bindings/r
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install latest Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      - name: Install System Dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends git curl libssl-dev libcurl4-openssl-dev libxml2-dev pandoc
+      - name: Install R Dependencies
+        run: |
+          Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown'))"
+          Rscript -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE)"
+      - name: Run ASAN Check
+        run: |
+          Rscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--no-vignettes'), error_on = 'error', check_dir = 'check')"
+      - name: Finalize
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          dev/sync_version.py Cargo.toml -c CITATION.cff -q

@@ -1,0 +1,27 @@
+[package]
+name = "rfastloess"
+version = "0.99.8"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+rust-version = "1.85.0"
+publish = false
+
+# Build
+[dependencies]
+fastLoess = { path = "vendor/fastLoess", features = ["dev", "cpu"] }
+extendr-api = "0.8.1"
+
+[lib]
+name = "rfastloess"
+path = "lib.rs"
+crate-type = ["staticlib", "rlib"]
+
+[features]
+default = []
+dev = []
+
+[workspace]
+
+[patch.crates-io]
+loess-rs = { path = "vendor/loess-rs" }
