@@ -600,8 +600,14 @@ fn test_cpu_gpu_scaling_equivalence() {
     y[80] = 5.0;
 
     let methods = vec![
-        (loess_rs::internals::math::scaling::ScalingMethod::MAR, "MAR"),
-        (loess_rs::internals::math::scaling::ScalingMethod::MAD, "MAD"),
+        (
+            loess_rs::internals::math::scaling::ScalingMethod::MAR,
+            "MAR",
+        ),
+        (
+            loess_rs::internals::math::scaling::ScalingMethod::MAD,
+            "MAD",
+        ),
         (
             loess_rs::internals::math::scaling::ScalingMethod::Mean,
             "Mean",
