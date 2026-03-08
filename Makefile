@@ -66,7 +66,7 @@ all: ISOLATE := false
 
 loess:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py crates/loess -- $(MAKE) _loess_impl; \
+		$(PYTHON) dev/isolate_cargo.py crates/loess-rs -- $(MAKE) _loess_impl; \
 	else \
 		$(MAKE) _loess_impl; \
 	fi

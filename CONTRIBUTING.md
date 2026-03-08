@@ -15,7 +15,7 @@ The project uses a `Makefile` to standardize development tasks.
 
 ### Prerequisites
 
-- **Rust**: 1.85.0+ (stable)
+- **Rust**: 1.88+ (stable)
 - **Python**: 3.8+ with `pip`
 - **R**: 4.2+ (for R bindings)
 - **maturin**: `pip install maturin` (for Python bindings)
@@ -36,7 +36,7 @@ The project is organized as a Cargo workspace with separate targets for each com
 ### Rust Crates
 
 ```bash
-# loess crate (core algorithms)
+# loess-rs crate (core algorithms)
 make loess          # Format, lint, build, test, examples
 make loess-coverage # Run coverage
 make loess-clean    # Clean build artifacts
@@ -78,17 +78,17 @@ This monorepo uses **Cargo workspace inheritance** for centralized configuration
 ```toml
 # Root Cargo.toml
 [workspace.package]
-version = "0.99.3"
+version = "1.1.1"  # Matches current release
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
-rust-version = "1.85.0"
+rust-version = "1.88"
 readme = "README.md"
 # ... and more
 
 [workspace.dependencies]
-loess = { version = "0.99", path = "crates/loess" }
-fastLoess = { version = "0.99", path = "crates/fastLoess" }
+loess-rs = { version = "1.1.1", path = "crates/loess-rs" }
+fastLoess = { version = "1.1.2", path = "crates/fastLoess" }
 # ... shared dependencies
 ```
 
@@ -97,7 +97,7 @@ All member crates inherit from workspace:
 ```toml
 # Individual crate Cargo.toml
 [package]
-name = "loess"
+name = "loess-rs"
 version = { workspace = true }
 authors = { workspace = true }
 readme = { workspace = true }
@@ -115,12 +115,18 @@ readme = { workspace = true }
 ```text
 loess-project/
 ├── crates/
-│   ├── loess/           # Core LOESS algorithms (no_std compatible)
-│   └── fastLoess/       # High-level API with adapters (Rayon + Ndarray)
+│   ├── loess-rs/         # Core LOESS algorithms (no_std compatible)
+│   └── fastLoess/        # High-level API with adapters (Rayon + Ndarray)
 ├── bindings/
 │   ├── python/           # PyO3 bindings (fastloess package)
-│   └── r/                # extendr bindings (rfastloess package)
-├── tests/                # Tests
+│   ├── r/                # extendr bindings (rfastloess package)
+│   ├── julia/            # C-API + Julia Wrapper
+│   ├── nodejs/           # NAPI-RS bindings
+│   ├── wasm/             # wasm-bindgen bindings
+│   └── cpp/              # C++17 Header-only wrapper
+├── tests/                # Workspace-level tests
+├── validation/           # R vs loess-rs parity validation
+├── benchmarks/           # Performance benchmarks (Criterion)
 ├── docs/                 # MkDocs documentation
 └── Makefile              # Build automation
 ```
@@ -137,13 +143,13 @@ loess-project/
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 - Use `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, or `chore` types.
-- Scopes are optional but helpful (e.g., `loess`, `python`, `r`, `docs`).
+- Scopes are optional but helpful (e.g., `loess-rs`, `fastLoess`, `python`, `r`, `docs`).
 
 Examples:
 
 ```text
 feat(python): add streaming adapter support
-fix(loess): correct boundary padding calculation
+fix(loess-rs): correct boundary padding calculation
 docs: update installation instructions
 ```
 
@@ -153,7 +159,7 @@ Tests are organized by component:
 
 ```bash
 # Rust tests
-cargo test -p loess
+cargo test -p loess-rs
 cargo test -p fastLoess
 
 # Python tests

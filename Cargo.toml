@@ -8,6 +8,8 @@ members = [
     "bindings/nodejs",
     "bindings/wasm",
     "bindings/cpp",
+    "validation/fastLoess",
+    "benchmarks/fastLoess",
     "examples",
     "tests",
 ]

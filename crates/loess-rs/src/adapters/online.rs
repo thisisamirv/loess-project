@@ -316,6 +316,9 @@ pub struct OnlineOutput<T> {
 
     // Robustness weight for the latest point (if computed)
     pub robustness_weight: Option<T>,
+
+    // Number of robustness iterations performed for the latest point
+    pub iterations_used: Option<usize>,
 }
 
 // Online LOESS processor for streaming data.
@@ -379,6 +382,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLoess<T> {
                 std_error: None,
                 residual: Some(residual),
                 robustness_weight: Some(T::one()),
+                iterations_used: Some(1),
             }));
         }
 
@@ -386,7 +390,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLoess<T> {
         let zero_flag = self.config.zero_weight_fallback.to_u8();
 
         // Choose update strategy based on configuration
-        let (smoothed, std_err, rob_weight) = match self.config.update_mode {
+        let (smoothed, std_err, rob_weight, iterations_used) = match self.config.update_mode {
             UpdateMode::Incremental => {
                 // Incremental mode: fit only the latest point
                 let n = x_vec.len();
@@ -413,7 +417,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLoess<T> {
                     self.config.zero_weight_fallback,
                 );
 
-                (smoothed_val, None, Some(T::one()))
+                (smoothed_val, None, Some(T::one()), Some(1))
             }
             UpdateMode::Full => {
                 // Full mode: re-smooth entire window
@@ -457,7 +461,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLoess<T> {
                     None
                 };
 
-                (smoothed_val, std_err, rob_weight)
+                (smoothed_val, std_err, rob_weight, result.iterations)
             }
         };
 
@@ -468,6 +472,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> OnlineLoess<T> {
             std_error: std_err,
             residual: Some(residual),
             robustness_weight: rob_weight,
+            iterations_used,
         }))
     }
 

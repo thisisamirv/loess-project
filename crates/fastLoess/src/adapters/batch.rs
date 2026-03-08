@@ -189,7 +189,7 @@ pub struct ParallelBatchLoess<T: Float> {
 
 impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLoess<T> {
     // Perform LOESS smoothing on the provided data.
-    pub fn fit<I1, I2>(self, x: &I1, y: &I2) -> Result<LoessResult<T>, LoessError>
+    pub fn fit<I1, I2>(&self, x: &I1, y: &I2) -> Result<LoessResult<T>, LoessError>
     where
         I1: LoessInput<T> + ?Sized,
         I2: LoessInput<T> + ?Sized,
@@ -198,7 +198,7 @@ impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelBatchLoess<T>
         let y_slice = y.as_loess_slice()?;
 
         // Configure the base builder with parallel callback if enabled
-        let mut builder = self.config.base;
+        let mut builder = self.config.base.clone();
 
         match builder.backend.unwrap_or(Backend::CPU) {
             Backend::CPU => {

@@ -240,10 +240,10 @@ pub mod prelude {
         Backend::{CPU, GPU},
         BoundaryPolicy::{Extend, NoBoundary, Reflect, Zero},
         KFold, LOOCV, LoessBuilder as Loess, LoessError, LoessResult,
-        MergeStrategy::{Average, TakeFirst, WeightedAverage},
+        MergeStrategy::{self, Average, TakeFirst, WeightedAverage},
         RobustnessMethod::{Bisquare, Huber, Talwar},
         ScalingMethod::{MAD, MAR, Mean},
-        UpdateMode::{Full, Incremental},
+        UpdateMode::{self, Full, Incremental},
         WeightFunction::{Biweight, Cosine, Epanechnikov, Gaussian, Triangle, Tricube, Uniform},
         ZeroWeightFallback::{ReturnNone, ReturnOriginal, UseLocalMean},
     };

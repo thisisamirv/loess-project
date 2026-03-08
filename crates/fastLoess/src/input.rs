@@ -40,3 +40,9 @@ where
         })
     }
 }
+
+impl<T: Float, I: LoessInput<T> + ?Sized> LoessInput<T> for &I {
+    fn as_loess_slice(&self) -> Result<&[T], LoessError> {
+        (**self).as_loess_slice()
+    }
+}
