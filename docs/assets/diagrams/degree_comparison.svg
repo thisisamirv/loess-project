@@ -598,7 +598,7 @@ L 358.785 27.6
 " style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
    </g>
    <g id="text_19">
-    <text style="font-size: 14px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: middle" x="207.8425" y="21.6" transform="rotate(-0 207.8425 21.6)">LOWESS vs LOESS: Full View</text>
+    <text style="font-size: 14px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: middle" x="207.8425" y="21.6" transform="rotate(-0 207.8425 21.6)">LOESS: Full View</text>
    </g>
    <g id="legend_1">
     <g id="patch_7">
@@ -651,7 +651,7 @@ L 249.585 70.054688
 " style="fill: none; stroke: #0000ff; stroke-width: 2; stroke-linecap: square"/>
     </g>
     <g id="text_22">
-     <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start" x="257.585" y="73.554688" transform="rotate(-0 257.585 73.554688)">LOWESS (Linear)</text>
+     <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start" x="257.585" y="73.554688" transform="rotate(-0 257.585 73.554688)">LOESS (Linear)</text>
     </g>
     <g id="line2d_39">
      <path d="M 229.585 84.732813 
@@ -1200,7 +1200,7 @@ L 518.1575 216.062187
 " style="fill: none; stroke: #0000ff; stroke-width: 2.5; stroke-linecap: square"/>
     </g>
     <g id="text_46">
-     <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start" x="526.1575" y="219.562187" transform="rotate(-0 526.1575 219.562187)">LOWESS (Linear)</text>
+     <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Bitstream Vera Sans', 'Computer Modern Sans Serif', 'Lucida Grande', 'Verdana', 'Geneva', 'Lucid', 'Arial', 'Helvetica', 'Avant Garde', sans-serif; text-anchor: start" x="526.1575" y="219.562187" transform="rotate(-0 526.1575 219.562187)">LOESS (Linear)</text>
     </g>
     <g id="line2d_78">
      <path d="M 498.1575 230.740313 

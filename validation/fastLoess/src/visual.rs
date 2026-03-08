@@ -925,7 +925,9 @@ fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
         for chunk_idx in 0..4 {
             let start = chunk_idx * 50;
             let end = start + 50;
-            let result = adapter.process_chunk(&x[start..end], &y[start..end]).unwrap();
+            let result = adapter
+                .process_chunk(&x[start..end], &y[start..end])
+                .unwrap();
             final_y.extend(result.y);
         }
         let result = adapter.finalize().unwrap();
@@ -997,8 +999,8 @@ fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut y_large = Vec::<f64>::with_capacity(n);
 
     for i in 0..n {
-        let x_slice = &x[i..i+1];
-        let y_slice = &y[i..i+1];
+        let x_slice = &x[i..i + 1];
+        let y_slice = &y[i..i + 1];
         let r_small = adapter_small.add_points(x_slice, y_slice).unwrap();
         let r_large = adapter_large.add_points(x_slice, y_slice).unwrap();
         y_small.push(r_small[0].as_ref().map(|o| o.smoothed).unwrap_or(y[i]));
@@ -1039,7 +1041,10 @@ fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("-----------------------------");
 
     let mut file = File::create("../output/visual/auto_converge_comparison.csv")?;
-    writeln!(file, "x,y_true,y_noisy,y_batch_off,y_batch_on,iter_batch_off,iter_batch_on,y_stream_off,y_stream_on,iter_stream_off,iter_stream_on,y_online_off,y_online_on,iter_online_off,iter_online_on")?;
+    writeln!(
+        file,
+        "x,y_true,y_noisy,y_batch_off,y_batch_on,iter_batch_off,iter_batch_on,y_stream_off,y_stream_on,iter_stream_off,iter_stream_on,y_online_off,y_online_on,iter_online_off,iter_online_on"
+    )?;
 
     // --- Batch ---
     let res_b_off = Loess::new()
@@ -1088,10 +1093,16 @@ fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
     for chunk in 0..4 {
         let r_off = ad_s_off
-            .process_chunk(&x[chunk * 50..(chunk + 1) * 50], &y[chunk * 50..(chunk + 1) * 50])
+            .process_chunk(
+                &x[chunk * 50..(chunk + 1) * 50],
+                &y[chunk * 50..(chunk + 1) * 50],
+            )
             .unwrap();
         let r_on = ad_s_on
-            .process_chunk(&x[chunk * 50..(chunk + 1) * 50], &y[chunk * 50..(chunk + 1) * 50])
+            .process_chunk(
+                &x[chunk * 50..(chunk + 1) * 50],
+                &y[chunk * 50..(chunk + 1) * 50],
+            )
             .unwrap();
         let n_chunk = r_off.y.len();
         y_s_off.extend(&r_off.y);
@@ -1134,8 +1145,8 @@ fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut it_o_on = Vec::new();
 
     for i in 0..n {
-        let x_slice = &x[i..i+1];
-        let y_slice = &y[i..i+1];
+        let x_slice = &x[i..i + 1];
+        let y_slice = &y[i..i + 1];
         let r_off = ad_o_off.add_points(x_slice, y_slice).unwrap();
         let r_on = ad_o_on.add_points(x_slice, y_slice).unwrap();
         let o_off = r_off[0].as_ref();

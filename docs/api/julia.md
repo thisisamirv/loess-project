@@ -1,233 +1,213 @@
-# Julia API
+# FastLOESS Julia API Reference
 
-API reference for the `fastloess` Julia package.
+The Julia bindings provide a modern interface to the core Rust library, mirroring the Rust API structure.
 
-## Installation
+## Classes
 
-Install from the Julia General Registry:
+### `Loess`
+
+The `Loess` struct allows configuring the LOESS parameters once and fitting multiple datasets using those parameters.
+
+**Constructor:**
 
 ```julia
-using Pkg
-Pkg.add("fastloess")
+model = Loess(; kwargs...)
 ```
 
----
+* `kwargs`: Keyword arguments corresponding to `LoessOptions` fields.
 
-## Functions
-
-### smooth
-
-Main function for batch smoothing.
+**Methods:**
 
 ```julia
-smooth(
-    x::Vector{Float64},
-    y::Vector{Float64};
-    fraction::Float64 = 0.67,
-    iterations::Int = 3,
-    delta::Float64 = NaN,
-    parallel::Bool = true,
-    weight_function::String = "tricube",
-    robustness_method::String = "bisquare",
-    scaling_method::String = "mad",
-    zero_weight_fallback::String = "use_local_mean",
-    boundary_policy::String = "extend",
-    auto_converge::Float64 = NaN,
-    return_residuals::Bool = false,
-    return_diagnostics::Bool = false,
-    return_robustness_weights::Bool = false,
-    confidence_intervals::Float64 = NaN,
-    prediction_intervals::Float64 = NaN,
-    cv_method::String = "",
-    cv_k::Int = 5,
-    cv_fractions::Vector{Float64} = Float64[],
-    cv_seed::Int = -1,
-) -> LoessResult
+result = fit(model, x::Vector{Float64}, y::Vector{Float64}) :: LoessResult
 ```
 
-**Parameters:**
+* Fits the model to the provided `x` and `y` data vectors.
+* Returns a `LoessResult` struct containing the smoothed values and optional diagnostics.
 
-| Parameter    | Type    | Default  | Description             |
-|--------------|---------|----------|-------------------------|
-| `x`          | Vector  | required | Independent variable    |
-| `y`          | Vector  | required | Dependent variable      |
-| `fraction`   | Float64 | 0.67     | Smoothing span (0, 1]   |
-| `iterations` | Int     | 3        | Robustness iterations   |
-| `delta`      | Float64 | NaN      | Interpolation threshold |
-| `parallel`   | Bool    | true     | Enable parallelism      |
+### `StreamingLoess`
 
-**Returns:** `LoessResult` struct with fields:
+The `StreamingLoess` struct processes data in chunks, suitable for very large datasets or streaming applications.
 
-| Field                | Type                       | Description                         |
-|----------------------|----------------------------|-------------------------------------|
-| `x`                  | Vector{Float64}            | Input x values                      |
-| `y`                  | Vector{Float64}            | Smoothed y values                   |
-| `fraction_used`      | Float64                    | Actual fraction used                |
-| `residuals`          | Union{Vector,Nothing}      | If `return_residuals=true`          |
-| `confidence_lower`   | Union{Vector,Nothing}      | If `confidence_intervals` set       |
-| `confidence_upper`   | Union{Vector,Nothing}      | If `confidence_intervals` set       |
-| `prediction_lower`   | Union{Vector,Nothing}      | If `prediction_intervals` set       |
-| `prediction_upper`   | Union{Vector,Nothing}      | If `prediction_intervals` set       |
-| `robustness_weights` | Union{Vector,Nothing}      | If `return_robustness_weights=true` |
-| `diagnostics`        | Union{Diagnostics,Nothing} | If `return_diagnostics=true`        |
-
-**Example:**
+**Constructor:**
 
 ```julia
-using fastloess
+stream = StreamingLoess(; kwargs...)
+```
+
+* `kwargs`: Keyword arguments corresponding to `StreamingOptions` fields.
+
+**Methods:**
+
+```julia
+partial_result = process_chunk(stream, x::Vector{Float64}, y::Vector{Float64}) :: LoessResult
+```
+
+* Processes a chunk of data. Returns partial results.
+
+```julia
+final_result = finalize(stream) :: LoessResult
+```
+
+* Finalizes the smoothing process and returns any remaining buffered results.
+
+### `OnlineLoess`
+
+The `OnlineLoess` struct updates the model incrementally with new data points.
+
+**Constructor:**
+
+```julia
+online = OnlineLoess(; kwargs...)
+```
+
+* `kwargs`: Keyword arguments corresponding to `OnlineOptions` fields.
+
+**Methods:**
+
+```julia
+result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LoessResult
+```
+
+* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+
+## Options Structures
+
+### `LoessOptions`
+
+| Field                       | Type              | Default            | Description                           |
+| --------------------------- | ----------------- | ------------------ | ------------------------------------- |
+| `fraction`                  | `Float64`         | `0.67`             | Smoothing fraction (bandwidth)        |
+| `iterations`                | `Int`             | `3`                | Number of robustifying iterations     |
+| `delta`                     | `Float64`         | `NaN`              | Interpolation distance (NaN for auto) |
+| `weight_function`           | `String`          | `"tricube"`        | Weight function name                  |
+| `robustness_method`         | `String`          | `"bisquare"`       | Robustness method name                |
+| `scaling_method`            | `String`          | `"mad"`            | Residual scaling method               |
+| `boundary_policy`           | `String`          | `"extend"`         | Boundary handling policy              |
+| `zero_weight_fallback`      | `String`          | `"use_local_mean"` | Zero-weight handling strategy         |
+| `auto_converge`             | `Float64`         | `NaN`              | Auto-convergence tolerance            |
+| `confidence_intervals`      | `Float64`         | `NaN`              | Confidence level (e.g., 0.95)         |
+| `prediction_intervals`      | `Float64`         | `NaN`              | Prediction level (e.g., 0.95)         |
+| `return_diagnostics`        | `Bool`            | `false`            | Include diagnostics in result         |
+| `return_residuals`          | `Bool`            | `false`            | Include residuals in result           |
+| `return_robustness_weights` | `Bool`            | `false`            | Include weights in result             |
+| `parallel`                  | `Bool`            | `true`             | Enable parallel execution             |
+| `cv_method`                 | `String`          | `""`               | Cross-validation method ("kfold")     |
+| `cv_k`                      | `Int`             | `5`                | Number of CV folds                    |
+| `cv_fractions`              | `Vector{Float64}` | `[]`               | Manual fractions for CV grid          |
+
+### `StreamingOptions` (inherits `LoessOptions`)
+
+| Field            | Type     | Default      | Description                |
+| ---------------- | -------- | ------------ | -------------------------- |
+| `chunk_size`     | `Int`    | `5000`       | Data chunk size            |
+| `overlap`        | `Int`    | `500`        | Overlap size (-1 for auto) |
+| `merge_strategy` | `String` | `"weighted"` | Merge strategy for overlap |
+
+### `OnlineOptions` (inherits `LoessOptions`)
+
+| Field             | Type     | Default         | Description                           |
+| ----------------- | -------- | --------------- | ------------------------------------- |
+| `window_capacity` | `Int`    | `1000`          | Max window size                       |
+| `min_points`      | `Int`    | `2`             | Min points before smoothing           |
+| `update_mode`     | `String` | `"incremental"` | Update mode ("full" or "incremental") |
+
+## Result Structure
+
+### `LoessResult`
+
+| Field                | Type              | Description               |
+| -------------------- | ----------------- | ------------------------- |
+| `x`                  | `Vector{Float64}` | Smoothed X coordinates    |
+| `y`                  | `Vector{Float64}` | Smoothed Y coordinates    |
+| `valid`              | `Bool`            | True if result is valid   |
+| `error`              | `String`          | Error message if failed   |
+| `diagnostics`        | `Diagnostics`     | Diagnostic metrics struct |
+| `residuals`          | `Vector{Float64}` | Residuals (if requested)  |
+| `confidence_lower`   | `Vector{Float64}` | Lower CI bounds           |
+| `confidence_upper`   | `Vector{Float64}` | Upper CI bounds           |
+| `prediction_lower`   | `Vector{Float64}` | Lower PI bounds           |
+| `prediction_upper`   | `Vector{Float64}` | Upper PI bounds           |
+| `robustness_weights` | `Vector{Float64}` | Robustness weights        |
+
+### `Diagnostics`
+
+| Field          | Type      | Description                 |
+| -------------- | --------- | --------------------------- |
+| `rmse`         | `Float64` | Root Mean Squared Error     |
+| `mae`          | `Float64` | Mean Absolute Error         |
+| `r_squared`    | `Float64` | R-squared                   |
+| `residual_sd`  | `Float64` | Residual standard deviation |
+| `effective_df` | `Float64` | Effective degrees of freedom|
+| `aic`          | `Float64` | AIC                         |
+| `aicc`         | `Float64` | AICc                        |
+
+## String Options
+
+### Weight Functions
+
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"`
+* `"biweight"`
+* `"triangle"`
+* `"cosine"`
+
+### Robustness Methods
+
+* `"bisquare"` (default)
+* `"huber"`
+* `"talwar"`
+
+### Boundary Policies
+
+* `"extend"` (default - linear extrapolation)
+* `"reflect"`
+* `"zero"`
+* `"noboundary"`
+
+### Scaling Methods
+
+* `"mad"` (default - Median Absolute Deviation)
+* `"mar"` (Median Absolute Residual)
+* `"mean"` (Mean Absolute Residual)
+
+### Zero Weight Fallback
+
+* `"use_local_mean"` (default)
+* `"return_original"`
+* `"return_none"`
+
+### Merge Strategies (Streaming)
+
+* `"weighted"` (default - weighted average of overlapping chunks)
+* `"average"`
+* `"left"`
+* `"right"`
+
+### Update Modes (Online)
+
+* `"full"` (default - re-smooth entire window)
+* `"incremental"` (O(1) update using existing fit)
+
+## Example
+
+```julia
+using FastLOESS
 
 x = collect(range(0, 10, length=100))
 y = sin.(x) .+ randn(100) .* 0.2
 
-result = smooth(x, y, fraction=0.3, iterations=3)
-println(result.y)
-```
+# Configure model
+model = Loess(fraction=0.3, iterations=3)
 
----
+# Fit data
+result = fit(model, x, y)
 
-### smooth_streaming
-
-Streaming mode for large datasets.
-
-```julia
-smooth_streaming(
-    x::Vector{Float64},
-    y::Vector{Float64};
-    fraction::Float64 = 0.67,
-    iterations::Int = 3,
-    chunk_size::Int = 5000,
-    overlap::Int = 500,
-    merge_strategy::String = "average",
-    parallel::Bool = true,
-    # ... same kwargs as smooth()
-) -> LoessResult
-```
-
-**Additional Parameters:**
-
-| Parameter        | Type   | Default   | Description            |
-|------------------|--------|-----------|------------------------|
-| `chunk_size`     | Int    | 5000      | Points per chunk       |
-| `overlap`        | Int    | 500       | Overlap between chunks |
-| `merge_strategy` | String | "average" | How to merge overlaps  |
-
-**Example:**
-
-```julia
-# Process 1 million points
-x = collect(range(0, 1000, length=1_000_000))
-y = sin.(x ./ 100) .+ randn(1_000_000) .* 0.1
-
-result = smooth_streaming(x, y, chunk_size=10000, overlap=1000)
-```
-
----
-
-### smooth_online
-
-Online mode for real-time data.
-
-```julia
-smooth_online(
-    x::Vector{Float64},
-    y::Vector{Float64};
-    fraction::Float64 = 0.2,
-    window_capacity::Int = 100,
-    min_points::Int = 2,
-    iterations::Int = 3,
-    update_mode::String = "incremental",
-    # ... same kwargs as smooth()
-) -> LoessResult
-```
-
-**Additional Parameters:**
-
-| Parameter         | Type   | Default       | Description          |
-|-------------------|--------|---------------|----------------------|
-| `window_capacity` | Int    | 100           | Max points in window |
-| `min_points`      | Int    | 2             | Points before output |
-| `update_mode`     | String | "incremental" | Update strategy      |
-
-**Example:**
-
-```julia
-# Sensor data simulation
-sensor_times = collect(Float64, 0:99)
-sensor_values = 20 .+ 5 .* sin.(sensor_times ./ 10) .+ randn(100)
-
-result = smooth_online(sensor_times, sensor_values, window_capacity=25)
-```
-
----
-
-## Types
-
-### LoessResult
-
-```julia
-struct LoessResult
-    x::Vector{Float64}
-    y::Vector{Float64}
-    fraction_used::Float64
-    residuals::Union{Vector{Float64}, Nothing}
-    standard_errors::Union{Vector{Float64}, Nothing}
-    confidence_lower::Union{Vector{Float64}, Nothing}
-    confidence_upper::Union{Vector{Float64}, Nothing}
-    prediction_lower::Union{Vector{Float64}, Nothing}
-    prediction_upper::Union{Vector{Float64}, Nothing}
-    robustness_weights::Union{Vector{Float64}, Nothing}
-    diagnostics::Union{Diagnostics, Nothing}
-    iterations_used::Union{Int, Nothing}
+if !isempty(result.error)
+    println("Error: ", result.error)
+else
+    println("Smoothed Y: ", result.y)
 end
 ```
-
-### Diagnostics
-
-```julia
-struct Diagnostics
-    rmse::Float64         # Root Mean Square Error
-    mae::Float64          # Mean Absolute Error
-    r_squared::Float64    # R² coefficient
-    residual_sd::Float64  # Residual standard deviation
-    effective_df::Float64 # Effective degrees of freedom
-end
-```
-
----
-
-## String Options
-
-### weight_function
-
-- `"tricube"` (default)
-- `"epanechnikov"`
-- `"gaussian"`
-- `"biweight"`
-- `"cosine"`
-- `"triangle"`
-- `"uniform"`
-
-### robustness_method
-
-- `"bisquare"` (default)
-- `"huber"`
-- `"talwar"`
-
-### boundary_policy
-
-- `"extend"` (default)
-- `"reflect"`
-- `"zero"`
-- `"no_boundary"`
-
-### merge_strategy
-
-- `"average"` (default)
-- `"left"`
-- `"right"`
-- `"weighted"`
-
-### update_mode
-
-- `"incremental"` (default)
-- `"full"`

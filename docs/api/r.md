@@ -1,79 +1,206 @@
-# R API
+# fastLoess R API Reference
 
-API reference for the `rfastloess` R package.
+The R bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
-## Installation
+## Classes
 
-```r
-# From R-universe (recommended)
-install.packages("rfastloess", repos = "https://thisisamirv.r-universe.dev")
+### `Loess`
 
-# From source (requires Rust)
-devtools::install_github("thisisamirv/loess-project", subdir = "bindings/r")
-```
+The `Loess` class allows configuring the LOESS parameters once and fitting multiple datasets using those parameters.
 
----
-
-## Functions
-
-### fastloess
-
-Main function for batch smoothing.
+**Constructor:**
 
 ```r
-fastloess(
-  x,
-  y,
-  fraction = 0.67,
-  iterations = 3,
-  delta = NULL,
-  parallel = TRUE,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  zero_weight_fallback = "use_local_mean",
-  boundary_policy = "extend",
-  auto_converge = NULL,
-  return_residuals = FALSE,
-  return_diagnostics = FALSE,
-  return_robustness_weights = FALSE,
-  confidence_intervals = NULL,
-  prediction_intervals = NULL,
-  cv_method = NULL,
-  cv_k = 5,
-  cv_fractions = NULL,
-  cv_seed = NULL
-)
+model <- Loess(...)
 ```
 
-**Arguments:**
+* `...`: Arguments corresponding to `LoessOptions` fields.
 
-| Argument     | Type    | Default  | Description                            |
-|--------------|---------|----------|----------------------------------------|
-| `x`          | numeric | required | Independent variable                   |
-| `y`          | numeric | required | Dependent variable                     |
-| `fraction`   | numeric | 0.67     | Smoothing span (0, 1]                  |
-| `iterations` | integer | 3        | Robustness iterations                  |
-| `delta`      | numeric | NULL     | Interpolation threshold (auto if NULL) |
-| `parallel`   | logical | TRUE     | Enable parallel execution              |
+**Methods:**
 
-**Value:** A list with components:
+```r
+result <- model$fit(x, y)
+```
 
-| Component            | Type    | Description                           |
-|----------------------|---------|---------------------------------------|
-| `x`                  | numeric | Input x values                        |
-| `y`                  | numeric | Smoothed y values                     |
-| `fraction_used`      | numeric | Actual fraction used                  |
-| `residuals`          | numeric | If `return_residuals = TRUE`          |
-| `confidence_lower`   | numeric | If `confidence_intervals` set         |
-| `confidence_upper`   | numeric | If `confidence_intervals` set         |
-| `prediction_lower`   | numeric | If `prediction_intervals` set         |
-| `prediction_upper`   | numeric | If `prediction_intervals` set         |
-| `robustness_weights` | numeric | If `return_robustness_weights = TRUE` |
-| `diagnostics`        | list    | If `return_diagnostics = TRUE`        |
-| `cv_scores`          | numeric | If cross-validation used              |
+* Fits the model to the provided `x` and `y` numeric vectors.
+* Fits the model to the provided `x` and `y` numeric vectors.
+* Returns a `LoessResult` S3 object containing the smoothed values and optional diagnostics.
+* `print(model)`: Displays the model configuration.
 
-**Example:**
+### `StreamingLoess`
+
+The `StreamingLoess` class processes data in chunks, suitable for very large datasets or streaming applications.
+
+**Constructor:**
+
+```r
+stream <- StreamingLoess(...)
+```
+
+* `...`: Arguments corresponding to `LoessOptions` and `StreamingOptions` fields.
+
+**Methods:**
+
+```r
+partial_result <- stream$process_chunk(x, y)
+```
+
+* Processes a chunk of data. Returns partial results.
+
+```r
+final_result <- stream$finalize()
+```
+
+* Finalizes the smoothing process and returns any remaining buffered results.
+
+### `OnlineLoess`
+
+The `OnlineLoess` class updates the model incrementally with new data points.
+
+**Constructor:**
+
+```r
+online <- OnlineLoess(...)
+```
+
+* `...`: Arguments corresponding to `LoessOptions` and `OnlineOptions` fields.
+
+**Methods:**
+
+```r
+result <- online$add_points(x, y)
+```
+
+* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+
+## Options Structures
+
+### `LoessOptions`
+
+| Field                       | Type       | Default            | Description                           |
+| --------------------------- | ---------- | ------------------ | ------------------------------------- |
+| `fraction`                  | `numeric`  | `0.67`             | Smoothing fraction (bandwidth)        |
+| `iterations`                | `integer`  | `3`                | Number of robustifying iterations     |
+| `delta`                     | `numeric`  | `NULL`             | Interpolation distance (NULL for auto)|
+| `weight_function`           | `character`| `"tricube"`        | Weight function name                  |
+| `robustness_method`         | `character`| `"bisquare"`       | Robustness method name                |
+| `scaling_method`            | `character`| `"mad"`            | Residual scaling method               |
+| `boundary_policy`           | `character`| `"extend"`         | Boundary handling policy              |
+| `zero_weight_fallback`      | `character`| `"use_local_mean"` | Zero-weight handling strategy         |
+| `auto_converge`             | `numeric`  | `NULL`             | Auto-convergence tolerance            |
+| `confidence_intervals`      | `numeric`  | `NULL`             | Confidence level (e.g., 0.95)         |
+| `prediction_intervals`      | `numeric`  | `NULL`             | Prediction level (e.g., 0.95)         |
+| `return_diagnostics`        | `logical`  | `FALSE`            | Include diagnostics in result         |
+| `return_residuals`          | `logical`  | `FALSE`            | Include residuals in result           |
+| `return_robustness_weights` | `logical`  | `FALSE`            | Include weights in result             |
+| `parallel`                  | `logical`  | `TRUE`             | Enable parallel execution             |
+| `cv_method`                 | `character`| `"kfold"`          | Cross-validation method ("kfold")     |
+| `cv_k`                      | `integer`  | `5`                | Number of CV folds                    |
+| `cv_fractions`              | `numeric`  | `NULL`             | Manual fractions for CV grid          |
+
+### `StreamingOptions` (inherits `LoessOptions`)
+
+| Field            | Type       | Default      | Description                |
+| ---------------- | ---------- | ------------ | -------------------------- |
+| `chunk_size`     | `integer`  | `5000`       | Data chunk size            |
+| `overlap`        | `integer`  | `500`        | Overlap size (-1 for auto) |
+| `merge_strategy` | `character`| `"weighted"` | Merge strategy for overlap |
+
+### `OnlineOptions` (inherits `LoessOptions`)
+
+| Field             | Type       | Default         | Description                           |
+| ----------------- | ---------- | --------------- | ------------------------------------- |
+| `window_capacity` | `integer`  | `1000`          | Max window size                       |
+| `min_points`      | `integer`  | `2`             | Min points before smoothing           |
+| `update_mode`     | `character`| `"incremental"` | Update mode ("full" or "incremental") |
+
+## Result Structure
+
+### `LoessResult`
+
+An S3 object containing the smoothing results.
+
+**Supported Methods:**
+
+* `print(result)`: Summary of fit statistics.
+* `plot(result)`: Plots the smoothed curve (and confidence intervals if available).
+
+| Field                | Type       | Description               |
+| -------------------- | ---------- | ------------------------- |
+| `x`                  | `numeric`  | Smoothed X coordinates    |
+| `y`                  | `numeric`  | Smoothed Y coordinates    |
+| `valid`              | `logical`  | True if result is valid   |
+| `error`              | `character`| Error message if failed   |
+| `diagnostics`        | `list`     | Diagnostic metrics list   |
+| `residuals`          | `numeric`  | Residuals (if requested)  |
+| `confidence_lower`   | `numeric`  | Lower CI bounds           |
+| `confidence_upper`   | `numeric`  | Upper CI bounds           |
+| `prediction_lower`   | `numeric`  | Lower PI bounds           |
+| `prediction_upper`   | `numeric`  | Upper PI bounds           |
+| `robustness_weights` | `numeric`  | Robustness weights        |
+
+### `Diagnostics`
+
+| Field          | Type      | Description                 |
+| -------------- | --------- | --------------------------- |
+| `rmse`         | `numeric` | Root Mean Squared Error     |
+| `mae`          | `numeric` | Mean Absolute Error         |
+| `r_squared`    | `numeric` | R-squared                   |
+| `residual_sd`  | `numeric` | Residual standard deviation |
+| `effective_df` | `numeric` | Effective degrees of freedom|
+| `aic`          | `numeric` | AIC                         |
+| `aicc`         | `numeric` | AICc                        |
+
+## String Options
+
+### Weight Functions
+
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"`
+* `"biweight"`
+* `"triangle"`
+* `"cosine"`
+
+### Robustness Methods
+
+* `"bisquare"` (default)
+* `"huber"`
+* `"talwar"`
+
+### Boundary Policies
+
+* `"extend"` (default - linear extrapolation)
+* `"reflect"`
+* `"zero"`
+* `"noboundary"`
+
+### Scaling Methods
+
+* `"mad"` (default - Median Absolute Deviation)
+* `"mar"` (Median Absolute Residual)
+* `"mean"` (Mean Absolute Residual)
+
+### Zero Weight Fallback
+
+* `"use_local_mean"` (default)
+* `"return_original"`
+* `"return_none"`
+
+### Merge Strategies (Streaming)
+
+* `"weighted"` (default - weighted average of overlapping chunks)
+* `"average"`
+* `"left"`
+* `"right"`
+
+### Update Modes (Online)
+
+* `"full"` (default - re-smooth entire window)
+* `"incremental"` (O(1) update using existing fit)
+
+## Example
 
 ```r
 library(rfastloess)
@@ -81,157 +208,15 @@ library(rfastloess)
 x <- seq(0, 10, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.2)
 
-result <- fastloess(x, y, fraction = 0.3, iterations = 3)
-plot(x, y, pch = 16, col = "gray")
-lines(result$x, result$y, col = "red", lwd = 2)
+# Configure model
+model <- Loess(fraction = 0.5)
+
+# Fit data
+result <- model$fit(x, y)
+
+# Print summary
+print(result)
+
+# Plot result
+plot(result)
 ```
-
----
-
-### fastloess_streaming
-
-Streaming mode for large datasets.
-
-```r
-fastloess_streaming(
-  x,
-  y,
-  fraction = 0.67,
-  iterations = 3,
-  chunk_size = 5000,
-  overlap = 500,
-  merge_strategy = "average",
-  parallel = TRUE,
-  ...
-)
-```
-
-**Additional Arguments:**
-
-| Argument         | Type      | Default   | Description            |
-|------------------|-----------|-----------|------------------------|
-| `chunk_size`     | integer   | 5000      | Points per chunk       |
-| `overlap`        | integer   | 500       | Overlap between chunks |
-| `merge_strategy` | character | "average" | Merge method           |
-
-**Example:**
-
-```r
-# Large dataset
-x <- seq(0, 100, length.out = 100000)
-y <- sin(x / 10) + rnorm(100000, sd = 0.1)
-
-result <- fastloess_streaming(x, y, chunk_size = 10000)
-```
-
----
-
-### fastloess_online
-
-Online mode for real-time data.
-
-```r
-fastloess_online(
-  x,
-  y,
-  fraction = 0.2,
-  window_capacity = 100,
-  min_points = 2,
-  iterations = 3,
-  update_mode = "incremental",
-  ...
-)
-```
-
-**Additional Arguments:**
-
-| Argument          | Type      | Default       | Description          |
-|-------------------|-----------|---------------|----------------------|
-| `window_capacity` | integer   | 100           | Max points in window |
-| `min_points`      | integer   | 2             | Points before output |
-| `update_mode`     | character | "incremental" | Update strategy      |
-
-**Example:**
-
-```r
-# Sensor simulation
-sensor_times <- 1:100
-sensor_values <- 20 + 5 * sin(sensor_times / 10) + rnorm(100)
-
-result <- fastloess_online(sensor_times, sensor_values, window_capacity = 25)
-```
-
----
-
-## String Options
-
-### weight_function
-
-- `"tricube"` (default)
-- `"epanechnikov"`
-- `"gaussian"`
-- `"biweight"`
-- `"cosine"`
-- `"triangle"`
-- `"uniform"`
-
-### robustness_method
-
-- `"bisquare"` (default)
-- `"huber"`
-- `"talwar"`
-
-### boundary_policy
-
-- `"extend"` (default)
-- `"reflect"`
-- `"zero"`
-- `"no_boundary"`
-
-### merge_strategy
-
-- `"average"` (default)
-- `"left"`
-- `"right"`
-- `"weighted"`
-
-### cv_method
-
-- `"kfold"` — K-fold cross-validation
-- `"loocv"` — Leave-one-out cross-validation
-
----
-
-## Diagnostics
-
-When `return_diagnostics = TRUE`:
-
-```r
-result$diagnostics
-# $rmse        - Root Mean Square Error
-# $mae         - Mean Absolute Error
-# $r_squared   - R² coefficient
-# $residual_sd - Residual standard deviation
-```
-
----
-
-## Comparison with stats::loess
-
-| Feature              | rfastloess | stats::loess |
-|----------------------|:-----------:|:-------------:|
-| Parallel execution   | ✓           | ✗             |
-| Confidence intervals | ✓           | ✗             |
-| Prediction intervals | ✓           | ✗             |
-| Cross-validation     | ✓           | ✗             |
-| Streaming mode       | ✓           | ✗             |
-| Online mode          | ✓           | ✗             |
-| Kernel options       | 7           | 1             |
-| Robustness methods   | 3           | 1             |
-
----
-
-## See Also
-
-- `stats::loess` — Base R implementation
-- `stats::loess` — Local polynomial regression

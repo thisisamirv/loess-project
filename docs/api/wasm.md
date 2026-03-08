@@ -1,175 +1,203 @@
-# WebAssembly API
+# fastLoess WebAssembly API Reference
 
-API reference for the `fastloess-wasm` WebAssembly bindings.
+The WebAssembly bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
-## Installation
+## Classes and Functions
 
-Install via npm:
+### `smooth`
 
-```bash
-npm install fastloess-wasm
+The `smooth` function is the main entry point for batch smoothing.
+
+**Signature:**
+
+```javascript
+const result = smooth(x, y, options);
 ```
 
----
+* `x`: `Float64Array` of input x values.
+* `y`: `Float64Array` of input y values.
+* `options`: An object containing `LoessOptions` fields.
+* Returns: A `LoessResult` object.
 
-## Initialization
+### `StreamingLoessWasm`
 
-The WebAssembly module must be initialized before use.
+The `StreamingLoessWasm` class processes data in chunks, suitable for very large datasets or streaming applications.
 
-### Using with Bundlers (Vite, Webpack, etc.)
+**Constructor:**
 
-Most modern bundlers handle WASM loading automatically when you import the package.
+```javascript
+const stream = new StreamingLoessWasm(options, streamingOptions);
+```
+
+* `options`: An object containing `LoessOptions` fields.
+* `streamingOptions`: An object containing `StreamingOptions` fields.
+
+**Methods:**
+
+```javascript
+const partialResult = stream.processChunk(x, y);
+```
+
+* Processes a chunk of data. Returns partial results.
+
+```javascript
+const finalResult = stream.finalize();
+```
+
+* Finalizes the smoothing process and returns any remaining buffered results.
+
+### `OnlineLoessWasm`
+
+The `OnlineLoessWasm` class updates the model incrementally with new data points.
+
+**Constructor:**
+
+```javascript
+const online = new OnlineLoessWasm(options, onlineOptions);
+```
+
+* `options`: An object containing `LoessOptions` fields.
+* `onlineOptions`: An object containing `OnlineOptions` fields.
+
+**Methods:**
+
+```javascript
+const result = online.update(x, y);
+```
+
+* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+
+## Options Structures
+
+### `LoessOptions`
+
+| Field                       | Type       | Default            | Description                           |
+| --------------------------- | ---------- | ------------------ | ------------------------------------- |
+| `fraction`                  | `number`   | `0.67`             | Smoothing fraction (bandwidth)        |
+| `iterations`                | `number`   | `3`                | Number of robustifying iterations     |
+| `delta`                     | `number`   | `NaN`              | Interpolation distance (NaN for auto) |
+| `weightFunction`            | `string`   | `"tricube"`        | Weight function name                  |
+| `robustnessMethod`          | `string`   | `"bisquare"`       | Robustness method name                |
+| `scalingMethod`             | `string`   | `"mad"`            | Residual scaling method               |
+| `boundaryPolicy`            | `string`   | `"extend"`         | Boundary handling policy              |
+| `zeroWeightFallback`        | `string`   | `"useLocalMean"`   | Zero-weight handling strategy         |
+| `autoConverge`              | `number`   | `null`             | Auto-convergence tolerance            |
+| `confidenceIntervals`       | `number`   | `null`             | Confidence level (e.g., 0.95)         |
+| `predictionIntervals`       | `number`   | `null`             | Prediction level (e.g., 0.95)         |
+| `returnDiagnostics`         | `boolean`  | `false`            | Include diagnostics in result         |
+| `returnResiduals`           | `boolean`  | `false`            | Include residuals in result           |
+| `returnRobustnessWeights`   | `boolean`  | `false`            | Include weights in result             |
+| `cvMethod`                  | `string`   | `"kfold"`          | Cross-validation method ("kfold")     |
+| `cvK`                       | `number`   | `5`                | Number of CV folds                    |
+| `cvFractions`               | `number[]` | `null`             | Manual fractions for CV grid          |
+
+### `StreamingOptions`
+
+| Field           | Type     | Default     | Description                |
+| --------------- | -------- | ----------- | -------------------------- |
+| `chunkSize`     | `number` | `5000`      | Data chunk size            |
+| `overlap`       | `number` | `500`       | Overlap size (-1 for auto) |
+| `mergeStrategy` | `string` | `"average"` | Merge strategy for overlap |
+
+### `OnlineOptions`
+
+| Field            | Type     | Default         | Description                           |
+| ---------------- | -------- | --------------- | ------------------------------------- |
+| `windowCapacity` | `number` | `100`           | Max window size                       |
+| `minPoints`      | `number` | `2`             | Min points before smoothing           |
+| `updateMode`     | `string` | `"incremental"` | Update mode ("full" or "incremental") |
+
+## Result Structure
+
+### `LoessResult`
+
+| Field               | Type           | Description               |
+| ------------------- | -------------- | ------------------------- |
+| `x`                 | `Float64Array` | Smoothed X coordinates    |
+| `y`                 | `Float64Array` | Smoothed Y coordinates    |
+| `valid`             | `boolean`      | True if result is valid   |
+| `error`             | `string`       | Error message if failed   |
+| `diagnostics`       | `Diagnostics`  | Diagnostic metrics object |
+| `residuals`         | `Float64Array` | Residuals (if requested)  |
+| `confidenceLower`   | `Float64Array` | Lower CI bounds           |
+| `confidenceUpper`   | `Float64Array` | Upper CI bounds           |
+| `predictionLower`   | `Float64Array` | Lower PI bounds           |
+| `predictionUpper`   | `Float64Array` | Upper PI bounds           |
+| `robustnessWeights` | `Float64Array` | Robustness weights        |
+
+### `Diagnostics`
+
+| Field         | Type     | Description                 |
+| ------------- | -------- | --------------------------- |
+| `rmse`        | `number` | Root Mean Squared Error     |
+| `mae`         | `number` | Mean Absolute Error         |
+| `rSquared`    | `number` | R-squared                   |
+| `residualSd`  | `number` | Residual standard deviation |
+| `effectiveDf` | `number` | Effective degrees of freedom|
+| `aic`         | `number` | AIC                         |
+| `aicc`        | `number` | AICc                        |
+
+## String Options
+
+### Weight Functions
+
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"`
+* `"biweight"`
+* `"triangle"`
+* `"cosine"`
+
+### Robustness Methods
+
+* `"bisquare"` (default)
+* `"huber"`
+* `"talwar"`
+
+### Boundary Policies
+
+* `"extend"` (default - linear extrapolation)
+* `"reflect"`
+* `"zero"`
+* `"noBoundary"`
+
+### Scaling Methods
+
+* `"mad"` (default - Median Absolute Deviation)
+* `"mar"` (Median Absolute Residual)
+* `"mean"` (Mean Absolute Residual)
+
+### Zero Weight Fallback
+
+* `"useLocalMean"` (default)
+* `"returnOriginal"`
+* `"returnNone"`
+
+### Merge Strategies (Streaming)
+
+* `"weighted"` (default - weighted average of overlapping chunks)
+* `"average"`
+* `"left"`
+* `"right"`
+
+### Update Modes (Online)
+
+* `"full"` (default - re-smooth entire window)
+* `"incremental"` (O(1) update using existing fit)
+
+## Example
 
 ```javascript
 import init, { smooth } from 'fastloess-wasm';
 
-async function run() {
-  await init(); // Initialize the WASM module
-
-  const x = new Float64Array([1, 2, 3, 4, 5]);
-  const y = new Float64Array([2, 4, 6, 8, 10]);
-  
-  const result = smooth(x, y);
-  console.log(result.y);
-}
-```
-
-### Using in Browser (No Bundler)
-
-You must provide the path to the `.wasm` file to the `init` function.
-
-```html
-<script type="module">
-  import init, { smooth } from './pkg/fastloess_wasm.js';
-  
-  async function run() {
-    await init('./pkg/fastloess_wasm_bg.wasm');
-    const result = smooth(x, y);
-  }
-  run();
-</script>
-```
-
----
-
-## Configuration Options
-
-WebAssembly smoothing functions use the following configuration object.
-
-### smoothingOptions
-
-| Parameter                 | Type    | Default        | Description                      |
-| :------------------------ | :------ | :------------- | :------------------------------- |
-| `fraction`                | number  | 0.67           | Smoothing span (0, 1]            |
-| `iterations`              | number  | 3              | Robustness iterations            |
-| `delta`                   | number  | auto           | Interpolation threshold          |
-| `weightFunction`          | string  | "tricube"      | Kernel function                  |
-| `robustnessMethod`        | string  | "bisquare"     | Outlier handling                 |
-| `scalingMethod`           | string  | "mad"          | Robust scale estimation          |
-| `zeroWeightFallback`      | string  | "useLocalMean" | Fallback policy                  |
-| `boundaryPolicy`          | string  | "extend"       | Boundary handling                |
-| `autoConverge`            | number  | null           | Convergence threshold            |
-| `returnResiduals`         | boolean | false          | Include residuals in output      |
-| `returnDiagnostics`       | boolean | false          | Include quality metrics          |
-| `returnRobustnessWeights` | boolean | false          | Include final weights            |
-| `confidenceIntervals`     | number  | null           | 1-alpha for confidence intervals |
-| `predictionIntervals`     | number  | null           | 1-alpha for prediction intervals |
-| `cvFractions`             | number[]| null           | List of fractions for CV         |
-| `cvMethod`                | string  | "kfold"        | CV method (kfold, loocv)         |
-| `cvK`                     | number  | 5              | Number of folds for K-Fold CV    |
-| `parallel`                | boolean | false          | Enable parallel execution        |
-
----
-
-## Core API
-
-### smooth()
-
-Main function for batch smoothing.
-
-```javascript
-import { smooth } from 'fastloess-wasm';
+await init();
 
 const x = new Float64Array([1, 2, 3, 4, 5]);
-const y = new Float64Array([2, 4, 6, 8, 10]);
+const y = new Float64Array([2.1, 4.0, 6.2, 8.0, 10.1]);
 
-const result = smooth(x, y, { fraction: 0.3 });
+// Fit data
+const result = smooth(x, y, { fraction: 0.5 });
+
+console.log("Smoothed Y:", result.y);
 ```
-
-**Parameters:**
-
-- `x`: `Float64Array` (required)
-- `y`: `Float64Array` (required)
-- `options`: `smoothingOptions` (optional)
-
-**Returns:** Object containing smoothed `y` values and any requested optional output (residuals, diagnostics, etc.).
-
----
-
-## Adapters
-
-### StreamingLoessWasm
-
-WASM-optimized class for processing large datasets in chunks.
-
-```javascript
-import { StreamingLoessWasm } from 'fastloess-wasm';
-
-const processor = new StreamingLoessWasm(smoothingOptions, {
-  chunkSize: 5000,
-  overlap: 500
-});
-
-const result = processor.processChunk(x, y);
-const finalResult = processor.finalize();
-```
-
----
-
-### OnlineLoessWasm
-
-WASM-optimized class for real-time incremental smoothing.
-
-```javascript
-import { OnlineLoessWasm } from 'fastloess-wasm';
-
-const online = new OnlineLoessWasm(smoothingOptions, {
-  windowCapacity: 100,
-  minPoints: 2,
-  updateMode: "incremental"
-});
-
-const value = online.update(x, y);
-```
-
----
-
-## Performance & Memory Management
-
-- **TypedArrays**: Always use `Float64Array` to avoid expensive copies and serialization.
-- **WASM Memory**: For extremely large datasets, be mindful of the WASM linear memory limits (defaults to 2GB or 4GB).
-- **Native vs WASM**: Use the native Node.js package (`fastloess`) if running on the server for best performance and multi-threading support.
-
----
-
-## Option Values
-
-### weightFunction
-
-- `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"uniform"`, `"biweight"`, `"triangle"`, `"cosine"`
-
-### robustnessMethod
-
-- `"bisquare"`, `"huber"`, `"talwar"`
-
-### boundaryPolicy
-
-- `"extend"`, `"reflect"`, `"zero"`, `"noBoundary"`
-
-### updateMode
-
-- `"incremental"`, `"full"`
-
-### cvMethod
-
-- `"kfold"`, `"loocv"`

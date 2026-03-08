@@ -1,8 +1,6 @@
-use criterion::{
-    criterion_group, criterion_main, BenchmarkId, Criterion, PlotConfiguration,
-};
-use std::hint::black_box;
+use criterion::{BenchmarkId, Criterion, PlotConfiguration, criterion_group, criterion_main};
 use fastLoess::prelude::*;
+use std::hint::black_box;
 use std::time::Duration;
 
 // Helper to generate sine wave data with some noise
@@ -21,7 +19,8 @@ fn generate_sine_data(n: usize) -> (Vec<f64>, Vec<f64>) {
 
 fn bench_scalability(c: &mut Criterion) {
     let mut group = c.benchmark_group("scalability");
-    group.plot_config(PlotConfiguration::default().summary_scale(criterion::AxisScale::Logarithmic));
+    group
+        .plot_config(PlotConfiguration::default().summary_scale(criterion::AxisScale::Logarithmic));
     group.sample_size(10);
     group.measurement_time(Duration::from_secs(5));
 
@@ -88,11 +87,7 @@ fn bench_parameters(c: &mut Criterion) {
     // Fraction Effect
     for frac in [0.1, 0.3, 0.7].iter() {
         group.bench_with_input(BenchmarkId::new("fraction", frac), frac, |b, &f| {
-            let model = Loess::new()
-                .fraction(f)
-                .adapter(Batch)
-                .build()
-                .unwrap();
+            let model = Loess::new().fraction(f).adapter(Batch).build().unwrap();
             b.iter(|| (&model).fit(black_box(&x), black_box(&y)).unwrap());
         });
     }

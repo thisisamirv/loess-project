@@ -3,164 +3,183 @@
 
 Install the LOESS library for your preferred language.
 
-## R
+=== "R"
 
-**From R-universe (recommended):**
+    === "From R-universe (recommended)"
 
-Pre-built binaries, no Rust toolchain required:
-
-```r
-install.packages("rfastloess", repos = "https://thisisamirv.r-universe.dev")
-```
-
-**From Source:**
-
-Requires Rust toolchain:
-
-```r
-# Install Rust first: https://rustup.rs/
-devtools::install_github("thisisamirv/loess-project", subdir = "bindings/r")
-```
-
----
-
-## Python
-
-**From PyPI (recommended):**
-
-```bash
-pip install fastloess
-```
-
-**From conda-forge:**
-
-```bash
-conda install -c conda-forge fastloess
-```
-
-**From Source:**
-
-```bash
-git clone https://github.com/thisisamirv/loess-project
-cd loess-project/bindings/python
-pip install maturin
-maturin develop --release
-```
-
----
-
-## Rust
-
-**From crates.io:**
-
-=== "loess-rs (no_std compatible)"
-
-    ```toml
-    [dependencies]
-    loess-rs = "1.1"
+    ```r
+    install.packages("rfastloess", repos = "https://thisisamirv.r-universe.dev")
     ```
 
-=== "fastLoess (parallel + GPU)"
+    === "From conda-forge"
 
-    ```toml
-    [dependencies]
-    fastLoess = { version = "0.99", features = ["cpu"] }
+    ```r
+    conda install -c conda-forge r-rfastloess
     ```
 
----
+    === "From Source"
 
-## Julia
+    ```r
+    # Install Rust first: https://rustup.rs/
+    devtools::install_github("thisisamirv/loess-project", subdir = "bindings/r")
+    ```
 
-**From General Registry (recommended):**
+=== "Python"
 
-```julia
-using Pkg
-Pkg.add("fastloess")
-```
+    === "From PyPI (recommended)"
 
-**From Source:**
+    ```bash
+    pip install fastloess
+    ```
 
-```julia
-using Pkg
-Pkg.develop(url="https://github.com/thisisamirv/loess-project", subdir="bindings/julia/julia")
-```
+    === "From conda-forge"
 
----
+    ```bash
+    conda install -c conda-forge fastloess
+    ```
 
-## Node.js
+    === "From Source"
 
-**From NPM (recommended):**
+    ```bash
+    # Install Rust first: https://rustup.rs/
+    git clone https://github.com/thisisamirv/loess-project
+    cd loess-project/bindings/python
+    pip install maturin
+    maturin develop --release
+    ```
 
-```bash
-npm install fastloess
-```
+=== "Rust"
 
-**From Source:**
+    === "From crates.io"
 
-```bash
-git clone https://github.com/thisisamirv/loess-project
-cd loess-project/bindings/nodejs
-npm install
-npm run build
-```
+    ```toml
+    # loess (no_std compatible)
+    [dependencies]
+    loess = "1.1"
 
----
+    # fastLoess (parallel + GPU)
+    [dependencies]
+    fastLoess = { version = "1.1", features = ["cpu"] }
+    ```
 
-## WebAssembly
+    === "Feature Flags"
 
-**From NPM (recommended):**
+    | Crate        | Feature | Description                             |
+    |--------------|---------|-----------------------------------------|
+    | `loess`     | `std`   | Enable standard library (default)       |
+    | `fastLoess` | `cpu`   | Enable CPU parallelism via Rayon        |
+    | `fastLoess` | `gpu`   | Enable GPU acceleration via wgpu (beta) |
 
-```bash
-npm install fastloess-wasm
-```
+=== "Julia"
 
-**From Source:**
+    === "From General Registry (recommended)"
 
-Requires Rust toolchain and [`wasm-pack`](https://rustwasm.github.io/wasm-pack/installer/).
+    ```julia
+    Pkg.add("FastLOESS")
+    ```
 
-```bash
-git clone https://github.com/thisisamirv/loess-project
-cd loess-project/bindings/wasm
-# For bundlers (Webpack, Vite, etc.)
-wasm-pack build --target bundler
-# For Node.js
-wasm-pack build --target nodejs
-# For browser (no bundler)
-wasm-pack build --target web
-```
+    === "From Source"
 
----
+    ```julia
+    using Pkg
+    Pkg.develop(url="https://github.com/thisisamirv/loess-project", subdir="bindings/julia/julia")
+    ```
 
-## C++
+=== "Node.js"
 
-**From Source:**
+    === "From NPM (recommended)"
 
-Requires Rust toolchain.
+    ```bash
+    npm install fastloess
+    ```
 
-```bash
-git clone https://github.com/thisisamirv/loess-project
-cd loess-project/bindings/cpp
+    === "From Source"
 
-# Build the library
-cargo build --release
+    ```bash
+    git clone https://github.com/thisisamirv/loess-project
+    cd loess-project/bindings/nodejs
+    npm install
+    npm run build
+    ```
 
-# Headers are at: include/fastloess.h (C) and include/fastloess.hpp (C++)
-# Library is at: target/release/libfastloess_cpp.so (Linux)
-```
+=== "WebAssembly"
 
----
+    === "From NPM (recommended)"
 
-### Feature Flags
+    ```bash
+    npm install fastloess-wasm
+    ```
 
-| Crate       | Feature | Description                             |
-| ----------- | ------- | --------------------------------------- |
-| `loess-rs`  | `std`   | Enable standard library (default)       |
-| `fastLoess` | `cpu`   | Enable CPU parallelism via Rayon        |
-| `fastLoess` | `gpu`   | Enable GPU acceleration via wgpu (beta) |
+    === "From CDN"
 
-### Minimum Supported Rust Version (MSRV)
+    ```html
+    <script type="module">
+      import { smooth } from "https://cdn.jsdelivr.net/npm/fastloess-wasm@0.99/index.js";
+    </script>
+    ```
 
-Both crates require **Rust 1.85.0** or later.
+    === "From Source"
+
+    ```bash
+    # Install Rust first: https://rustup.rs/
+    # Install wasm-pack: https://rustwasm.github.io/wasm-pack/installer/
+    git clone https://github.com/thisisamirv/loess-project
+    cd loess-project/bindings/wasm
+    # For bundlers (Webpack, Vite, etc.)
+    wasm-pack build --target bundler
+    # For Node.js
+    wasm-pack build --target nodejs
+    # For browser (no bundler)
+    wasm-pack build --target web
+    ```
+
+=== "C++"
+
+    === "Pre-built Binaries (Linux (x64))"
+
+    ```bash
+    wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-x64.so
+    wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+    g++ -o myapp myapp.cpp -L. -lfastloess-linux-x64
+    ```
+
+    === "Pre-built Binaries (macOS (x64))"
+
+    ```bash
+    curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-macos-x64.dylib
+    curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+    clang++ -o myapp myapp.cpp -L. -lfastloess-macos-x64
+    ```
+
+    === "Pre-built Binaries (Windows (x64))"
+
+    ```powershell
+    wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess-win32-x64.dll
+    wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+    cl myapp.cpp /link fastloess-win32-x64.lib
+    ```
+
+    === "From Source"
+
+    ```bash
+    # Install Rust first: https://rustup.rs/
+    git clone https://github.com/thisisamirv/loess-project
+    cd loess-project/bindings/cpp
+
+    # Build the library
+    cargo build --release
+
+    # Headers are at: include/fastloess.hpp (C++)
+    # Library is at: target/release/libfastloess_cpp.so (Linux)
+    #                target/release/libfastloess_cpp.dylib (macOS)
+    #                target/release/fastloess_cpp.dll (Windows)
+    ```
+
+    === "From conda-forge"
+
+    ```bash
+    conda install -c conda-forge libfastloess
+    ```
 
 ---
 
@@ -194,7 +213,7 @@ Both crates require **Rust 1.85.0** or later.
 === "Rust"
 
     ```rust
-    use loess_rs::prelude::*;
+    use loess::prelude::*;
     
     fn main() -> Result<(), LoessError> {
         let x = vec![1.0, 2.0, 3.0];
@@ -211,7 +230,7 @@ Both crates require **Rust 1.85.0** or later.
 === "Julia"
 
     ```julia
-    using fastloess
+    using FastLOESS
     
     x = [1.0, 2.0, 3.0]
     y = [2.0, 4.0, 6.0]
@@ -232,8 +251,6 @@ Both crates require **Rust 1.85.0** or later.
     console.log("Installed successfully!");
     ```
 
-    See [Node.js API](../api/nodejs.md) for full reference.
-
 === "WebAssembly"
 
     ```javascript
@@ -249,4 +266,21 @@ Both crates require **Rust 1.85.0** or later.
     verify();
     ```
 
-    See [WebAssembly API](../api/wasm.md) for full reference.
+=== "C++"
+
+    ```cpp
+    #include <fastloess.hpp>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
+        std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
+
+        fastloess::Loess model;
+        auto result = model.fit(x, y);
+
+        std::cout << "Installed successfully!" << std::endl;
+        return 0;
+    }
+    ```

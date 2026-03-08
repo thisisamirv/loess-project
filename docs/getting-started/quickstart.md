@@ -15,16 +15,11 @@ Get up and running with LOESS in minutes.
     y <- c(2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7)
 
     # Smooth the data
-    result <- fastloess(x, y, fraction = 0.5, iterations = 3)
+    model <- Loess(fraction = 0.5, iterations = 3)
+    result <- model$fit(x, y)
 
     print(result$y)
     ```
-
-**Output:**
-
-```text
-Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
-```
 
 === "Python"
 
@@ -45,7 +40,7 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
 === "Rust"
 
     ```rust
-    use loess_rs::prelude::*;
+    use loess::prelude::*;
 
     fn main() -> Result<(), LoessError> {
         // Sample data
@@ -69,7 +64,7 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
 === "Julia"
 
     ```julia
-    using fastloess
+    using FastLOESS
 
     # Sample data
     x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
@@ -114,18 +109,29 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
 === "C++"
 
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
     #include <iostream>
+    #include <vector>
 
     int main() {
+        // Sample data
         std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
         std::vector<double> y = {2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7};
 
-        auto result = fastloess::smooth(x, y, {.fraction = 0.5, .iterations = 3});
+        // Smooth the data
+        fastloess::LoessOptions options;
+        options.fraction = 0.5;
+        options.iterations = 3;
+        
+        fastloess::Loess model(options);
+        auto result = model.fit(x, y);
 
-        for (size_t i = 0; i < result.size(); ++i) {
-            std::cout << result.y(i) << " ";
-        }
+        // Print smoothed values
+        const auto& y_smooth = result.y_vector();
+        std::cout << "Smoothed values: [";
+        for (double val : y_smooth) std::cout << val << ", ";
+        std::cout << "]" << std::endl;
+        
         return 0;
     }
     ```
@@ -137,14 +143,14 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
 === "R"
 
     ```r
-    result <- fastloess(
-        x, y,
+    model <- Loess(
         fraction = 0.5,
         iterations = 3,
         confidence_intervals = 0.95,
         prediction_intervals = 0.95,
         return_diagnostics = TRUE
     )
+    result <- model$fit(x, y)
 
     print(result$confidence_lower)
     print(result$confidence_upper)
@@ -172,7 +178,7 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
 === "Rust"
 
     ```rust
-    use loess_rs::prelude::*;
+    use loess::prelude::*;
 
     let model = Loess::new()
         .fraction(0.5)
@@ -241,6 +247,25 @@ Smoothed values: [2.02, 4.00, 6.00, 8.10, 10.04, 12.03, 13.90, 15.78]
     console.log("Smoothed values:", result.y);
     ```
 
+=== "C++"
+
+    ```cpp
+    fastloess::LoessOptions options;
+    options.fraction = 0.5;
+    options.iterations = 3;
+    options.confidence_intervals = 0.95;
+    options.prediction_intervals = 0.95;
+    options.return_diagnostics = true;
+
+    fastloess::Loess model(options);
+    auto result = model.fit(x, y);
+
+    // Access standard C++ vectors
+    auto lower = result.confidence_lower();
+    auto upper = result.confidence_upper();
+    double r2 = result.diagnostics().r_squared;
+    ```
+
 ---
 
 ## Handling Outliers
@@ -252,13 +277,13 @@ LOESS can robustly handle outliers through iterative reweighting:
     ```r
     y_with_outlier <- c(2, 4, 6, 50, 10, 12)
 
-    result <- fastloess(
-        x, y_with_outlier,
+    model <- Loess(
         fraction = 0.5,
         iterations = 5,
         robustness_method = "bisquare",
         return_robustness_weights = TRUE
     )
+    result <- model$fit(x, y_with_outlier)
 
     # Check downweighted points
     weights <- result$robustness_weights
@@ -380,6 +405,30 @@ LOESS can robustly handle outliers through iterative reweighting:
     });
     ```
 
+=== "C++"
+
+    ```cpp
+    // Data with an outlier
+    std::vector<double> y_outlier = {2.0, 4.0, 6.0, 50.0, 10.0, 12.0};
+
+    fastloess::LoessOptions options;
+    options.fraction = 0.5;
+    options.iterations = 5;
+    options.robustness_method = "bisquare";
+    options.return_robustness_weights = true;
+
+    fastloess::Loess model(options);
+    auto result = model.fit(x, y_outlier);
+
+    // Check weights
+    auto weights = result.robustness_weights();
+    for (size_t i = 0; i < weights.size(); ++i) {
+        if (weights[i] < 0.5) {
+            std::cout << "Point " << i << " is outlier (weight: " << weights[i] << ")\n";
+        }
+    }
+    ```
+
 ---
 
 ## Next Steps
@@ -387,4 +436,4 @@ LOESS can robustly handle outliers through iterative reweighting:
 - [Concepts](concepts.md) — Understand how LOESS works
 - [Parameters](../user-guide/parameters.md) — All configuration options
 - [Execution Modes](../user-guide/adapters.md) — Batch, Streaming, Online
-- [C++ API](../api/cpp.md) / [Node.js API](../api/nodejs.md) / [WebAssembly API](../api/wasm.md) — Full references
+- [API](../api/index.md) — Full references

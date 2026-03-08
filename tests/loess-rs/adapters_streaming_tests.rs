@@ -34,7 +34,10 @@ use loess_rs::internals::primitives::errors::LoessError;
 /// Verifies that chunk_size < 10 is rejected.
 #[test]
 fn test_streaming_invalid_chunk_size() {
-    let result = Loess::<f64>::new().adapter(Streaming).chunk_size(5).build();
+    let result = Loess::<f64>::new()
+        .adapter(Streaming)
+        .chunk_size(5)
+        .build();
 
     assert!(
         matches!(result, Err(LoessError::InvalidChunkSize { .. })),

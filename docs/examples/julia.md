@@ -1,6 +1,6 @@
 # Julia Examples
 
-Complete Julia examples demonstrating fastloess.jl with native Julia integration.
+Complete Julia examples demonstrating FastLOESS with native Julia integration.
 
 ## Batch Smoothing
 
@@ -56,7 +56,7 @@ julia --project=bindings/julia/julia examples/julia/online_smoothing.jl
 ## Quick Start
 
 ```julia
-using fastloess
+using FastLOESS
 
 # Generate sample data
 x = collect(0.0:0.1:10.0)

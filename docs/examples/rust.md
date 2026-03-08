@@ -40,24 +40,24 @@ Real-time smoothing with sliding window for streaming data applications.
 
 ## Core loess Examples
 
-The core `loess-rs` crate provides single-threaded, `no_std`-compatible implementations.
+The core `loess` crate provides single-threaded, `no_std`-compatible implementations.
 
-### Batch Smoothing (loess-rs)
+### Batch Smoothing (loess)
 
 ```rust
---8<-- "examples/loess-rs/batch_smoothing.rs"
+--8<-- "examples/loess/batch_smoothing.rs"
 ```
 
-### Streaming Smoothing (loess-rs)
+### Streaming Smoothing (loess)
 
 ```rust
---8<-- "examples/loess-rs/streaming_smoothing.rs"
+--8<-- "examples/loess/streaming_smoothing.rs"
 ```
 
-### Online Smoothing (loess-rs)
+### Online Smoothing (loess)
 
 ```rust
---8<-- "examples/loess-rs/online_smoothing.rs"
+--8<-- "examples/loess/online_smoothing.rs"
 ```
 
 ---
@@ -70,7 +70,7 @@ cargo run --example fast_batch_smoothing -p examples
 cargo run --example fast_streaming_smoothing -p examples
 cargo run --example fast_online_smoothing -p examples
 
-# Run loess-rs examples (single-threaded)
+# Run loess examples (single-threaded)
 cargo run --example batch_smoothing -p examples
 cargo run --example streaming_smoothing -p examples
 cargo run --example online_smoothing -p examples

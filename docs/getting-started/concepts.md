@@ -5,7 +5,7 @@ Understanding how LOESS works and when to use it.
 
 ## What is LOESS?
 
-**LOESS** (Locally Estimated Scatterplot Smoothing) is a nonparametric regression method that fits smooth curves through scatter plots without assuming a global functional form.
+**LOESS** (Locally Weighted Scatterplot Smoothing) is a nonparametric regression method that fits smooth curves through scatter plots without assuming a global functional form.
 
 Unlike parametric methods (linear regression, polynomial fitting), LOESS adapts locally to the data structure, making it ideal for:
 

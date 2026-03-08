@@ -21,7 +21,7 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     noise <- rnorm(500, sd = 3)
     y <- trend + noise
 
-    result <- fastloess(t, y, fraction = 0.1, iterations = 3)
+    result <- Loess(fraction = 0.1, iterations = 3)$fit(t, y)
 
     plot(t, y, col = "gray", pch = ".",
          xlab = "Time", ylab = "Value", main = "Trend Extraction")
@@ -75,7 +75,7 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
 
 === "Julia"
     ```julia
-    using fastloess
+    using FastLOESS
 
     t = collect(range(0, 100, length=500))
     trend_true = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0)
@@ -135,7 +135,7 @@ Remove trend to analyze residual patterns:
 
 === "R"
     ```r
-    result <- fastloess(t, y, fraction = 0.3, iterations = 3, return_residuals = TRUE)
+    result <- Loess(fraction = 0.3, iterations = 3, return_residuals = TRUE)$fit(t, y)
 
     trend <- result$y
     detrended <- result$residuals
@@ -237,13 +237,12 @@ Remove trend to analyze residual patterns:
 
 === "R"
     ```r
-    result <- fastloess(
-        t, y,
+    result <- Loess(
         fraction = 0.2,
         iterations = 3,
         confidence_intervals = 0.95,
         prediction_intervals = 0.95
-    )
+    )$fit(t, y)
 
     plot(t, y, col = "gray", pch = 16)
     lines(result$x, result$y, col = "blue", lwd = 2)
@@ -353,7 +352,7 @@ LOESS naturally handles irregular time sampling:
     t_irregular <- sort(runif(200, 0, 100))
     y_irregular <- 10 + 0.3 * t_irregular + rnorm(200, sd = 2)
 
-    result <- fastloess(t_irregular, y_irregular, fraction = 0.2)
+    result <- Loess(fraction = 0.2)$fit(t_irregular, y_irregular)
     ```
 
 === "Python"
@@ -427,7 +426,7 @@ Use different fractions to extract features at different scales:
     plot(t, y, col = "gray", pch = ".", main = "Multi-Scale LOESS")
     colors <- c("red", "blue", "green")
     for (i in seq_along(fractions)) {
-        result <- fastloess(t, y, fraction = fractions[i])
+        result <- Loess(fraction = fractions[i])$fit(t, y)
         lines(result$x, result$y, col = colors[i], lwd = 2)
     }
     legend("topleft", legend = paste("f =", fractions), col = colors, lwd = 2)
@@ -517,13 +516,12 @@ Biological application:
     # Circadian pattern with measurement noise
     expression <- 100 * (1 + 0.5 * sin(hours * pi / 12)) + rnorm(49, sd = 10)
 
-    result <- fastloess(
-        hours, expression,
+    result <- Loess(
         fraction = 0.3,
         iterations = 3,
         confidence_intervals = 0.95,
         return_diagnostics = TRUE
-    )
+    )$fit(hours, expression)
 
     # Plot
     plot(hours, expression, pch = 16, col = "gray",
@@ -577,7 +575,7 @@ Biological application:
 
 === "Julia"
     ```julia
-    using fastloess
+    using FastLOESS
 
     hours = collect(range(0, 24, step=0.5))
     expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hours)) .* 10.0

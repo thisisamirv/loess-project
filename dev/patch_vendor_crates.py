@@ -107,12 +107,12 @@ def patch_crate_toml(
                 deps_to_remove.append(dep_name)
                 continue
             
-            # Handle loess -> path dependency
-            if loess_as_path and dep_name == "loess":
+            # Handle loess-rs -> path dependency
+            if loess_as_path and dep_name == "loess-rs":
                 resolved = resolve_workspace_dep(dep_name, value, workspace)
                 if isinstance(resolved, dict):
                     resolved.pop("version", None)
-                    resolved["path"] = "../loess"
+                    resolved["path"] = "../loess-rs"
                 deps[dep_name] = resolved
                 continue
             
@@ -184,12 +184,12 @@ def main() -> int:
         )
     
     # Patch loess-rs
-    loess_toml = args.vendor_dir / "loess-rs" / "Cargo.toml"
-    if loess_toml.exists():
+    loess_rs_toml = args.vendor_dir / "loess-rs" / "Cargo.toml"
+    if loess_rs_toml.exists():
         if not args.quiet:
-            print(f"Patching {loess_toml}")
+            print(f"Patching {loess_rs_toml}")
         patch_crate_toml(
-            loess_toml,
+            loess_rs_toml,
             workspace,
             remove_gpu=False,
             loess_as_path=False,

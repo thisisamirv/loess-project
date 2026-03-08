@@ -1,224 +1,287 @@
-# Rust API
+# fastLoess & loess Rust API Reference
 
-API reference for the `loess` and `fastLoess` Rust crates.
+The Rust bindings provide the core implementation and high-performance extensions. The API uses a Builder pattern consistent across both the `loess` (pure Rust) and `fastLoess` (accelerated) crates.
 
-## Crate Overview
+## Structs & Usage
 
-| Crate                                    | Features                          | Use Case         |
-| ---------------------------------------- | --------------------------------- | ---------------- |
-| [`loess-rs`](https://docs.rs/loess-rs)   | `no_std` compatible, minimal deps | Embedded, WASM   |
-| [`fastLoess`](https://docs.rs/fastLoess) | Parallel, GPU, ndarray            | High performance |
+Unlike other bindings which have distinct classes, Rust uses a single `Loess` builder that produces different model types based on the configured `.adapter()`.
 
----
+### `Loess` (Batch)
 
-## Builder Pattern
+Standard in-memory smoothing.
 
-Both crates use a fluent builder pattern:
+**Constructor:**
 
 ```rust
-use fastLoess::prelude::*;
+let builder = Loess::new().adapter(Batch); // Batch is default
+```
 
-let model = Loess::new()
-    .fraction(0.5)
-    .iterations(3)
-    .adapter(Batch)
-    .build()?;
+**Methods:**
 
+```rust
 let result = model.fit(&x, &y)?;
 ```
 
----
+* Fits the model to the provided `x` and `y` arrays.
+* Returns `Result<LoessResult<T>, LoessError>`.
 
-## Core Types
+### `Loess` (Streaming)
 
-### Loess
+Streaming mode for large datasets.
 
-The main builder struct.
+**Constructor:**
 
 ```rust
-impl Loess {
-    pub fn new() -> Self;
-    
-    // Core parameters
-    pub fn fraction(self, f: f64) -> Self;
-    pub fn iterations(self, n: usize) -> Self;
-    pub fn delta(self, d: f64) -> Self;
-    pub fn parallel(self, enabled: bool) -> Self;
-    
-    // Weight and robustness
-    pub fn weight_function(self, wf: WeightFunction) -> Self;
-    pub fn robustness_method(self, rm: RobustnessMethod) -> Self;
-    pub fn scaling_method(self, sm: ScalingMethod) -> Self;
-    pub fn zero_weight_fallback(self, zf: ZeroWeightFallback) -> Self;
-    pub fn boundary_policy(self, bp: BoundaryPolicy) -> Self;
-    pub fn auto_converge(self, tol: f64) -> Self;
-    
-    // Output options
-    pub fn return_residuals(self) -> Self;
-    pub fn return_diagnostics(self) -> Self;
-    pub fn return_robustness_weights(self) -> Self;
-    pub fn confidence_intervals(self, level: f64) -> Self;
-    pub fn prediction_intervals(self, level: f64) -> Self;
-    
-    // Cross-validation
-    pub fn cross_validate<CV: CrossValidation>(self, cv: CV) -> Self;
-    
-    // Adapter selection
-    pub fn adapter<A: Adapter>(self, adapter: A) -> LoessBuilder<A>;
-}
+let mut processor = Loess::new().adapter(Streaming);
 ```
 
-### LoessResult
-
-The result of fitting a model.
+**Methods:**
 
 ```rust
-pub struct LoessResult<T> {
-    pub x: Array1<T>,
-    pub y: Array1<T>,
-    pub fraction_used: T,
-    
-    // Optional outputs
-    pub residuals: Option<Array1<T>>,
-    pub std_err: Option<Array1<T>>,
-    pub confidence_lower: Option<Array1<T>>,
-    pub confidence_upper: Option<Array1<T>>,
-    pub prediction_lower: Option<Array1<T>>,
-    pub prediction_upper: Option<Array1<T>>,
-    pub robustness_weights: Option<Array1<T>>,
-    pub diagnostics: Option<Diagnostics<T>>,
-    pub cv_results: Option<CVResults<T>>,
-}
-```
-
-### LoessError
-
-Error type for LOESS operations.
-
-```rust
-pub enum LoessError {
-    InvalidFraction(f64),
-    InvalidIterations(usize),
-    InsufficientData { required: usize, provided: usize },
-    MismatchedLengths { x_len: usize, y_len: usize },
-    EmptyInput,
-    // ... more variants
-}
-```
-
----
-
-## Enums
-
-### WeightFunction
-
-```rust
-pub enum WeightFunction {
-    Tricube,      // Default
-    Epanechnikov,
-    Gaussian,
-    Biweight,
-    Cosine,
-    Triangle,
-    Uniform,
-}
-```
-
-### RobustnessMethod
-
-```rust
-pub enum RobustnessMethod {
-    Bisquare,  // Default
-    Huber,
-    Talwar,
-}
-```
-
-### BoundaryPolicy
-
-```rust
-pub enum BoundaryPolicy {
-    Extend,      // Default
-    Reflect,
-    Zero,
-    NoBoundary,
-}
-```
-
-### Backend (fastLoess only)
-
-```rust
-pub enum Backend {
-    CPU,  // Default
-    GPU,  // Beta
-}
-```
-
----
-
-## Adapters
-
-### Batch
-
-```rust
-use fastLoess::prelude::*;
-
-let model = Loess::new()
-    .adapter(Batch)
-    .backend(CPU)  // or GPU
-    .build()?;
-
-let result = model.fit(&x, &y)?;
-```
-
-### Streaming
-
-```rust
-let mut processor = Loess::new()
-    .adapter(Streaming)
-    .chunk_size(5000)
-    .overlap(500)
-    .merge_strategy(Average)
-    .build()?;
-
 let result = processor.process_chunk(&x, &y)?;
+```
+
+* Processes a chunk of data. Returns `LoessResult<T>` with partial results.
+
+```rust
 let final_result = processor.finalize()?;
 ```
 
-### Online
+* Finalizes processing and returns remaining buffered results.
+
+### `Loess` (Online)
+
+Online mode for real-time data.
+
+**Constructor:**
 
 ```rust
-let mut processor = Loess::new()
-    .adapter(Online)
-    .window_capacity(100)
-    .min_points(5)
-    .update_mode(Incremental)
-    .build()?;
+let mut processor = Loess::new().adapter(Online);
+```
 
-if let Some(output) = processor.add_point(x, y)? {
-    println!("Smoothed: {}", output.smoothed);
+**Methods:**
+
+```rust
+let output = processor.add_point(x, y)?;
+```
+
+* Adds a single point `(x, y)` to the window.
+* Returns `Result<Option<OnlineOutput<T>>, LoessError>`.
+
+```rust
+processor.reset();
+```
+
+* Clears the internal window buffer.
+
+## Builder Configuration
+
+These chained methods configure the builder. They correspond to the "Options Structures" in other bindings.
+
+### Loess Options
+
+| Method                        | Argument Type          | Default            | Description                           |
+| ----------------------------- | ---------------------- | ------------------ | ------------------------------------- |
+| `fraction(T)`                 | `T: Float`             | `0.67`             | Smoothing fraction (bandwidth)        |
+| `iterations(usize)`           | `usize`                | `3`                | Number of robustifying iterations     |
+| `delta(T)`                    | `T: Float`             | `NaN`              | Interpolation distance (NaN for auto) |
+| `weight_function(...)`        | `WeightFunction`       | `Tricube`          | Weight function enum                  |
+| `robustness_method(...)`      | `RobustnessMethod`     | `Bisquare`         | Robustness method enum                |
+| `scaling_method(...)`         | `ScalingMethod`        | `MAD`              | Residual scaling method enum          |
+| `boundary_policy(...)`        | `BoundaryPolicy`       | `Extend`           | Boundary handling policy enum         |
+| `zero_weight_fallback(...)`   | `ZeroWeightFallback`   | `UseLocalMean`     | Zero-weight handling enum             |
+| `auto_converge(T)`            | `T: Float`             | `NaN`              | Auto-convergence tolerance            |
+| `confidence_intervals(T)`     | `T: Float`             | `NaN`              | Confidence level (e.g., 0.95)         |
+| `prediction_intervals(T)`     | `T: Float`             | `NaN`              | Prediction level (e.g., 0.95)         |
+| `return_diagnostics()`        | -                      | `false`            | Include diagnostics in result         |
+| `return_residuals()`          | -                      | `false`            | Include residuals in result           |
+| `return_robustness_weights()` | -                      | `false`            | Include weights in result             |
+| `parallel(bool)`              | `bool`                 | `true`             | Enable parallel execution             |
+| `cross_validate(...)`         | `impl CrossValidation` | `None`             | CV strategy (`KFold`, `LOOCV`)        |
+| `backend(...)`                | `Backend`              | `CPU`              | `fastLoess` only: `CPU` or `GPU`     |
+
+### Streaming Options
+
+| Method               | Argument Type   | Default             | Description                |
+| -------------------- | --------------- | ------------------- | -------------------------- |
+| `chunk_size(usize)`  | `usize`         | `5000`              | Data chunk size            |
+| `overlap(usize)`     | `usize`         | `500`               | Overlap size               |
+| `merge_strategy(...)`| `MergeStrategy` | `WeightedAverage`   | Merge strategy enum        |
+
+### Online Options
+
+| Method                  | Argument Type | Default       | Description                           |
+| ----------------------- | ------------- | ------------- | ------------------------------------- |
+| `window_capacity(usize)`| `usize`       | `1000`        | Max window size                       |
+| `min_points(usize)`     | `usize`       | `2`           | Min points before smoothing           |
+| `update_mode(...)`      | `UpdateMode`  | `Incremental` | Update mode enum                      |
+
+## GPU Acceleration
+
+The `fastLoess` crate provides a GPU-accelerated backend using `wgpu`. This backend is designed for high-throughput processing of large datasets (10k+ points) where parallel regression fitting on the GPU significantly outperforms CPU execution.
+
+### Enabling GPU Support
+
+GPU support is optional and must be enabled via the `gpu` feature in `fastLoess`:
+
+```toml
+[dependencies]
+fastLoess = { version = "*", features = ["gpu"] }
+```
+
+### Usage
+
+To use the GPU backend, configure the builder with `Backend::GPU`:
+
+```rust
+let model = Loess::new()
+    .backend(Backend::GPU)
+    .confidence_intervals(0.95)
+    .build()?;
+```
+
+### Supported Features
+
+The GPU backend implements almost the entire LOESS pipeline in WGSL compute shaders, providing native support for the following features:
+
+* **Weight Functions**: All standard kernels are supported (`Tricube`, `Epanechnikov`, `Gaussian`, `Uniform`, `Biweight`, `Triangle`, `Cosine`).
+* **Robustness Methods**: Support for `Bisquare`, `Huber`, and `Talwar` robustness weighting.
+* **Scaling Methods**: Residual scaling using `MAD` (Median Absolute Deviation), `MAR` (Median Absolute Residual), and `Mean` (Mean Absolute Residual).
+* **Interval Bounds**: GPU-native computation of `Standard Errors`, `Confidence Intervals`, and `Prediction Intervals`.
+* **Optimization**:
+  * **Parallel Fitting**: Local regression for all anchor points is computed in parallel.
+  * **Robustness Loops**: Iterative weight updates and convergence checks occur entirely on the GPU.
+  * **Distance-based Skipping**: Support for the `delta` parameter to accelerate smoothing on dense grids.
+* **Validation**: GPU-accelerated `K-Fold` and `LOOCV` (Leave-One-Out Cross-Validation).
+
+#### Feature Comparison
+
+| Feature                | CPU          | GPU (fastLoess) | Notes                                     |
+| ---------------------- | ------------ | ---------------- | ----------------------------------------- |
+| Batch Smoothing        | ✅           | ✅               | GPU recommended for N > 10,000            |
+| Streaming/Online       | ✅           | ❌               | GPU optimized for static batch data       |
+| All Weight Functions   | ✅           | ✅               | Identical numerical implementation        |
+| Robustness (Bisquare+) | ✅           | ✅               | Full support for all methods              |
+| Scaling (MAD/MAR/Mean) | ✅           | ✅               | Full support for all methods              |
+| Boundary Policies      | ✅           | ✅               | Extend, Reflect, Zero, NoBoundary         |
+| Auto-Convergence       | ✅           | ✅               | Tolerance checking occurs on GPU          |
+| Intervals & SE         | ✅           | ✅               | Native GPU interval calculation           |
+| Cross-Validation       | ✅           | ✅               | Parallel CV folders on GPU                |
+| Interpolation (Delta)  | ✅           | ✅               | Anchor-based skipping supported           |
+
+### Hardware Requirements
+
+The GPU backend leverages `wgpu` and supports:
+
+* **Vulkan** (Linux/Windows)
+* **Metal** (macOS/iOS)
+* **DirectX 12** (Windows)
+
+It requires a device supporting compute shaders. If no compatible GPU is found at runtime, the initialization will return a `LoessError::RuntimeError`.
+
+### Performance Considerations
+
+The GPU backend is optimized for large datasets (N > 100,000) and provides parallelization through compute shaders. For smaller datasets, the CPU backend is faster.
+
+## Result Structure
+
+### `LoessResult<T>`
+
+| Field                | Type                     | Description               |
+| -------------------- | ------------------------ | ------------------------- |
+| `x`                  | `Array1<T>`              | Smoothed X coordinates    |
+| `y`                  | `Array1<T>`              | Smoothed Y coordinates    |
+| `fraction_used`      | `T`                      | Actual fraction used      |
+| `residuals`          | `Option<Array1<T>>`      | Residuals (if requested)  |
+| `confidence_lower`   | `Option<Array1<T>>`      | Lower CI bounds           |
+| `confidence_upper`   | `Option<Array1<T>>`      | Upper CI bounds           |
+| `prediction_lower`   | `Option<Array1<T>>`      | Lower PI bounds           |
+| `prediction_upper`   | `Option<Array1<T>>`      | Upper PI bounds           |
+| `robustness_weights` | `Option<Array1<T>>`      | Robustness weights        |
+| `diagnostics`        | `Option<Diagnostics<T>>` | Diagnostic metrics struct |
+| `cv_results`         | `Option<CVResults<T>>`   | Cross-validation results  |
+
+### `Diagnostics<T>`
+
+| Field          | Type | Description                 |
+| -------------- | ---- | --------------------------- |
+| `rmse`         | `T`  | Root Mean Squared Error     |
+| `mae`          | `T`  | Mean Absolute Error         |
+| `r_squared`    | `T`  | R-squared                   |
+| `residual_sd`  | `T`  | Residual standard deviation |
+| `effective_df` | `T`  | Effective degrees of freedom|
+| `aic`          | `T`  | AIC                         |
+| `aicc`         | `T`  | AICc                        |
+
+## Enum Options
+
+### WeightFunction
+
+* `Tricube` (default)
+* `Epanechnikov`
+* `Gaussian`
+* `Uniform`
+* `Biweight`
+* `Triangle`
+* `Cosine`
+
+### RobustnessMethod
+
+* `Bisquare` (default)
+* `Huber`
+* `Talwar`
+
+### BoundaryPolicy
+
+* `Extend` (default - linear extrapolation)
+* `Reflect`
+* `Zero`
+* `NoBoundary`
+
+### ScalingMethod
+
+* `MAD` (default - Median Absolute Deviation)
+* `MAR` (Median Absolute Residual)
+* `Mean` (Mean Absolute Residual)
+
+### ZeroWeightFallback
+
+* `UseLocalMean` (default)
+* `ReturnOriginal`
+* `ReturnNone`
+
+### MergeStrategy (Streaming)
+
+* `WeightedAverage` (default)
+* `Average`
+* `TakeFirst` (Left)
+* `TakeLast` (Right)
+
+### UpdateMode (Online)
+
+* `Incremental` (default)
+* `Full`
+
+## Example
+
+```rust
+use fastLoess::prelude::*;
+use ndarray::array;
+
+fn main() -> Result<(), LoessError> {
+    let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
+    let y = array![2.1, 4.0, 6.2, 8.0, 10.1];
+
+    // Configure model
+    let model = Loess::new()
+        .fraction(0.5)
+        .iterations(3)
+        .build()?;
+
+    // Fit data
+    let result = model.fit(&x, &y)?;
+
+    println!("Smoothed Y: {:?}", result.y);
+    Ok(())
 }
 ```
-
----
-
-## Prelude
-
-Import common types with:
-
-```rust
-use loess_rs::prelude::*;
-// or
-use fastLoess::prelude::*;
-```
-
-This imports:
-
-- `Loess` — Builder
-- `LoessResult` — Result type
-- `LoessError` — Error type
-- `Batch`, `Streaming`, `Online` — Adapters
-- All enums (`WeightFunction`, `RobustnessMethod`, etc.)
-- `KFold`, `LOOCV` — Cross-validation types
-
----

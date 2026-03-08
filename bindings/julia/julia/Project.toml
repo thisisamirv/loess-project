@@ -13,8 +13,6 @@ description = "High-performance LOESS (Locally Weighted Scatterplot Smoothing)"
 keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 
-[deps]
-
 [compat]
 julia = "1.6"
 Test = "1"

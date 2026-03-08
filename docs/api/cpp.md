@@ -1,160 +1,221 @@
-<!-- markdownlint-disable MD024 -->
-# C++ API Reference
+# fastLoess C++ API Reference
 
-C and C++ bindings for fastLoess.
+The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.
 
-## Installation
+## Classes
 
-### From Source
+### `fastloess::Loess`
 
-```bash
-git clone https://github.com/thisisamirv/loess-project
-cd loess-project/bindings/cpp
+The `Loess` class allows configuring the LOESS parameters once and fitting multiple datasets using those parameters.
 
-# Build the library
-cargo build --release
-
-# Headers are at: include/fastloess.h (C) and include/fastloess.hpp (C++)
-# Library is at: target/release/libfastloess_cpp.so (Linux)
-#                target/release/libfastloess_cpp.dylib (macOS)
-#                target/release/fastloess_cpp.dll (Windows)
-```
-
----
-
-## Quick Start
+**Constructor:**
 
 ```cpp
-#include <vector>
-#include <iostream>
-#include "fastloess.hpp"
-
-int main() {
-    std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-    std::vector<double> y = {2.1, 3.9, 6.2, 8.0, 10.1};
-
-    // Smooth with default options
-    auto result = fastloess::smooth(x, y);
-
-    for (size_t i = 0; i < result.size(); ++i) {
-        std::cout << result.x(i) << " -> " << result.y(i) << std::endl;
-    }
-    return 0;
-}
+explicit Loess(const LoessOptions &options = {})
 ```
 
----
+* `options`: A `LoessOptions` struct containing configuration parameters.
 
-## API
-
-### `fastloess::smooth()`
-
-Batch LOESS smoothing.
+**Methods:**
 
 ```cpp
-LoessResult smooth(
-    const std::vector<double>& x,
-    const std::vector<double>& y,
-    const LoessOptions& options = {}
-);
+LoessResult fit(const std::vector<double> &x, const std::vector<double> &y)
 ```
 
-### `fastloess::streaming()`
+* Fits the model to the provided `x` and `y` data vectors.
+* Returns a `LoessResult` object containing the smoothed values and optional diagnostics.
 
-Streaming LOESS for large datasets.
+### `fastloess::StreamingLoess`
+
+The `StreamingLoess` class processes data in chunks, suitable for very large datasets or streaming applications.
+
+**Constructor:**
 
 ```cpp
-LoessResult streaming(
-    const std::vector<double>& x,
-    const std::vector<double>& y,
-    const StreamingOptions& options = {}
-);
+explicit StreamingLoess(const StreamingOptions &options = {})
 ```
 
-### `fastloess::online()`
+* `options`: A `StreamingOptions` struct (inherits from `LoessOptions`) with additional `chunk_size` and `overlap` parameters.
 
-Online LOESS with sliding window.
+**Methods:**
 
 ```cpp
-LoessResult online(
-    const std::vector<double>& x,
-    const std::vector<double>& y,
-    const OnlineOptions& options = {}
-);
+LoessResult process_chunk(const std::vector<double> &x, const std::vector<double> &y)
 ```
 
----
+* Processes a chunk of data. Returns partial results.
 
-## Options
+```cpp
+LoessResult finalize()
+```
+
+* Finalizes the smoothing process and returns any remaining buffered results.
+
+### `fastloess::OnlineLoess`
+
+The `OnlineLoess` class updates the model incrementally with new data points.
+
+**Constructor:**
+
+```cpp
+explicit OnlineLoess(const OnlineOptions &options = {})
+```
+
+* `options`: An `OnlineOptions` struct (inherits from `LoessOptions`) with `window_capacity`, `min_points`, and `update_mode`.
+
+**Methods:**
+
+```cpp
+LoessResult add_points(const std::vector<double> &x, const std::vector<double> &y)
+```
+
+* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+
+## Options Structures
 
 ### `LoessOptions`
 
-| Field                  | Type          | Default      | Description                       |
-|------------------------|---------------|--------------|-----------------------------------|
-| `fraction`             | `double`      | `0.67`       | Smoothing fraction                |
-| `iterations`           | `int`         | `3`          | Robustness iterations             |
-| `weight_function`      | `std::string` | `"tricube"`  | Weight function                   |
-| `robustness_method`    | `std::string` | `"bisquare"` | Robustness method                 |
-| `confidence_intervals` | `double`      | `NAN`        | Confidence level (NaN = disabled) |
-| `return_diagnostics`   | `bool`        | `false`      | Return fit diagnostics            |
-| `parallel`             | `bool`        | `false`      | Enable parallel processing        |
+| Field                       | Type                  | Default            | Description                           |
+| --------------------------- | --------------------- | ------------------ | ------------------------------------- |
+| `fraction`                  | `double`              | 0.67               | Smoothing fraction (bandwidth)        |
+| `iterations`                | `int`                 | 3                  | Number of robustifying iterations     |
+| `delta`                     | `double`              | NaN                | Interpolation distance (NaN for auto) |
+| `weight_function`           | `std::string`         | "tricube"          | Weight function name                  |
+| `robustness_method`         | `std::string`         | "bisquare"         | Robustness method name                |
+| `scaling_method`            | `std::string`         | "mad"              | Residual scaling method               |
+| `boundary_policy`           | `std::string`         | "extend"           | Boundary handling policy              |
+| `zero_weight_fallback`      | `std::string`         | "use_local_mean"   | Zero-weight handling strategy         |
+| `auto_converge`             | `double`              | NaN                | Auto-convergence tolerance            |
+| `confidence_intervals`      | `double`              | NaN                | Confidence level (e.g., 0.95)         |
+| `prediction_intervals`      | `double`              | NaN                | Prediction level (e.g., 0.95)         |
+| `return_diagnostics`        | `bool`                | false              | Include diagnostics in result         |
+| `return_residuals`          | `bool`                | false              | Include residuals in result           |
+| `return_robustness_weights` | `bool`                | false              | Include weights in result             |
+| `parallel`                  | `bool`                | false              | Enable parallel execution             |
+| `cv_method`                 | `std::string`         | "kfold"            | Cross-validation method               |
+| `cv_k`                      | `int`                 | 5                  | Number of CV folds                    |
+| `cv_fractions`              | `std::vector<double>` | `{}`               | Manual fractions for CV grid          |
 
-### `StreamingOptions`
+### `StreamingOptions` (inherits `LoessOptions`)
 
-Extends `LoessOptions` with:
+| Field            | Type          | Default    | Description                |
+| ---------------- | ------------- | ---------- | -------------------------- |
+| `chunk_size`     | `int`         | 5000       | Data chunk size            |
+| `overlap`        | `int`         | -1         | Overlap size (-1 for auto) |
+| `merge_strategy` | `std::string` | "weighted" | Merge strategy for overlap |
 
-| Field        | Type  | Default | Description                        |
-|--------------|-------|---------|------------------------------------|
-| `chunk_size` | `int` | `5000`  | Points per chunk                   |
-| `overlap`    | `int` | `-1`    | Overlap between chunks (-1 = auto) |
+### `OnlineOptions` (inherits `LoessOptions`)
 
-### `OnlineOptions`
+| Field             | Type          | Default | Description                           |
+| ----------------- | ------------- | ------- | ------------------------------------- |
+| `window_capacity` | `int`         | 1000    | Max window size                       |
+| `min_points`      | `int`         | 2       | Min points before smoothing           |
+| `update_mode`     | `std::string` | "full"  | Update mode ("full" or "incremental") |
 
-Extends `LoessOptions` with:
+## Result Structure
 
-| Field             | Type          | Default  | Description                          |
-|-------------------|---------------|----------|--------------------------------------|
-| `window_capacity` | `int`         | `1000`   | Sliding window size                  |
-| `min_points`      | `int`         | `2`      | Minimum points for smoothing         |
-| `update_mode`     | `std::string` | `"full"` | Update mode: "full" or "incremental" |
+### `fastloess::LoessResult`
 
----
+A RAII wrapper around the C result struct `fastloess_CppLoessResult`.
 
-## LoessResult
+| Method                 | Return Type           | Description               |
+| ---------------------- | --------------------- | ------------------------- |
+| `x_vector()`           | `std::vector<double>` | Smoothed X coordinates    |
+| `y_vector()`           | `std::vector<double>` | Smoothed Y coordinates    |
+| `valid()`              | `bool`                | True if result is valid   |
+| `error()`              | `std::string`         | Error message if failed   |
+| `diagnostics()`        | `Diagnostics`         | Diagnostic metrics struct |
+| `residuals()`          | `std::vector<double>` | Residuals (if requested)  |
+| `confidence_lower()`   | `std::vector<double>` | Lower CI bounds           |
+| `confidence_upper()`   | `std::vector<double>` | Upper CI bounds           |
+| `prediction_lower()`   | `std::vector<double>` | Lower PI bounds           |
+| `prediction_upper()`   | `std::vector<double>` | Upper PI bounds           |
+| `robustness_weights()` | `std::vector<double>` | Robustness weights        |
 
-RAII wrapper with automatic memory management.
+### `fastloess::Diagnostics`
+
+| Field          | Type     | Description                 |
+| -------------- | -------- | --------------------------- |
+| `rmse`         | `double` | Root Mean Squared Error     |
+| `mae`          | `double` | Mean Absolute Error         |
+| `r_squared`    | `double` | R-squared                   |
+| `residual_sd`  | `double` | Residual standard deviation |
+| `effective_df` | `double` | Effective degrees of freedom|
+| `aic`          | `double` | AIC                         |
+| `aicc`         | `double` | AICc                        |
+
+## String Options
+
+### Weight Functions
+
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"`
+* `"biweight"`
+* `"triangle"`
+* `"cosine"`
+
+### Robustness Methods
+
+* `"bisquare"` (default)
+* `"huber"`
+* `"talwar"`
+
+### Boundary Policies
+
+* `"extend"` (default - linear extrapolation)
+* `"reflect"`
+* `"zero"`
+* `"noboundary"`
+
+### Scaling Methods
+
+* `"mad"` (default - Median Absolute Deviation)
+* `"mar"` (Median Absolute Residual)
+* `"mean"` (Mean Absolute Residual)
+
+### Zero Weight Fallback
+
+* `"use_local_mean"` (default)
+* `"return_original"`
+* `"return_none"`
+
+### Merge Strategies (Streaming)
+
+* `"weighted"` (default - weighted average of overlapping chunks)
+* `"average"`
+* `"left"`
+* `"right"`
+
+### Update Modes (Online)
+
+* `"full"` (default - re-smooth entire window)
+* `"incremental"` (O(1) update using existing fit)
+
+## Example
 
 ```cpp
-class LoessResult {
-public:
-    size_t size() const;              // Number of points
-    bool valid() const;               // Check if result is valid
+#include "fastloess.hpp"
+#include <iostream>
+
+int main() {
+    std::vector<double> x = {1, 2, 3, 4, 5};
+    std::vector<double> y = {2.1, 4.0, 6.2, 8.0, 10.1};
+
+    fastloess::LoessOptions opts;
+    opts.fraction = 0.5;
     
-    double x(size_t i) const;         // Access x value
-    double y(size_t i) const;         // Access smoothed y value
-    
-    std::vector<double> x_vector() const;
-    std::vector<double> y_vector() const;
-    std::vector<double> residuals() const;
-    std::vector<double> confidence_lower() const;
-    std::vector<double> confidence_upper() const;
-    
-    double fraction_used() const;
-    int iterations_used() const;
-    Diagnostics diagnostics() const;
-};
-```
+    fastloess::Loess model(opts);
+    auto result = model.fit(x, y);
 
----
-
-## Error Handling
-
-Errors throw `fastloess::LoessError`:
-
-```cpp
-try {
-    auto result = fastloess::smooth(x, y);
-} catch (const fastloess::LoessError& e) {
-    std::cerr << "Error: " << e.what() << std::endl;
+    if (result.valid()) {
+        auto y_hat = result.y_vector();
+        for (double val : y_hat) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+    }
+    return 0;
 }
 ```

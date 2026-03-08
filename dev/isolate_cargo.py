@@ -12,7 +12,7 @@ BACKUP_TOML = "Cargo.toml.bak"
 
 # Mapping of Make targets to Cargo workspace members (partial path matching)
 TARGET_MAPPING = {
-    "crates/loess": ["crates/loess"],
+    "crates/loess-rs": ["crates/loess-rs"],
     "crates/fastLoess": ["crates/fastLoess"],
     "bindings/python": ["bindings/python"],
     "bindings/julia": ["bindings/julia"],
