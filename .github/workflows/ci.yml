@@ -69,20 +69,20 @@ jobs:
       # ========================================================================
       - name: "Rust: Format Check"
         run: |
-          cargo fmt -p loess --all -- --check
+          cargo fmt -p loess-rs --all -- --check
           cargo fmt -p fastLoess --all -- --check
 
       - name: "Rust: Clippy"
         run: |
-          cargo clippy -p loess --all-targets -- -D warnings
+          cargo clippy -p loess-rs --all-targets -- -D warnings
           cargo clippy -p fastLoess --all-targets --features cpu -- -D warnings
           cargo clippy -p fastLoess --all-targets --features gpu -- -D warnings
 
-      - name: "Rust: Loess Tests"
+      - name: "Rust: Loess-rs Tests"
         run: |
-          cargo test -q -p loess-project-tests --test loess
+          cargo test -q -p loess-project-tests --test loess-rs
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            cargo test -q -p loess-project-tests --test loess --no-default-features
+            cargo test -q -p loess-project-tests --test loess-rs --no-default-features
           fi
         shell: bash
 
@@ -104,7 +104,7 @@ jobs:
 
       - name: "Rust: Documentation"
         run: |
-          cargo doc -p loess --no-deps
+          cargo doc -p loess-rs --no-deps
           cargo doc -p fastLoess --no-deps --features cpu
           cargo doc -p fastLoess --no-deps --features gpu
         env:
@@ -112,7 +112,7 @@ jobs:
 
       - name: "Rust: Run Examples"
         run: |
-          for example in examples/loess/*.rs examples/fastLoess/*.rs; do
+          for example in examples/loess-rs/*.rs examples/fastLoess/*.rs; do
             name=$(basename "$example" .rs)
             echo "Running example: $name"
             cargo run -p examples --example "$name" --features cpu

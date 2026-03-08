@@ -73,7 +73,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 ### Speed
 
-The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.loess` and **2-3x faster** than R's `loess`.
+The `loess-rs` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.loess` and **2-3x faster** than R's `loess`.
 
 For more details on the performance comparison, see the [BENCHMARKS](https://github.com/thisisamirv/loess-project/blob/main/BENCHMARKS.md) file.
 
