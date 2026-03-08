@@ -167,7 +167,7 @@ jobs:
           # Extract current version and compat requirement
           VERSION=$(grep "^version =" bindings/julia/julia/Project.toml | head -n 1 | cut -d '"' -f 2)
           # Get fastloess_jll from [compat] specifically to avoid UUID in [deps]
-          COMPAT=$(sed -n '/\[compat\]/,/\[/p' bindings/julia/julia/Project.toml | grep "fastloess_jll" | cut -d '"' -f 2)
+          COMPAT=$(sed -n '/\[compat\]/,/\[/p' bindings/julia/julia/Project.toml | grep "fastloess_jll" | cut -d '"' -f 2 || true)
           echo "Current Project Version: $VERSION"
           echo "Current JLL Compat: $COMPAT"
 
