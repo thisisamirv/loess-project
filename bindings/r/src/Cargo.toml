@@ -1,17 +1,22 @@
 [package]
 name = "rfastloess"
-version = "0.99.0"
+version = "1.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
-rust-version = "1.85.0"
-publish = false
+repository = "https://github.com/thisisamirv/loess-project"
+homepage = "https://github.com/thisisamirv/loess-project"
+documentation = "https://loess.readthedocs.io/"
+rust-version = "1.88"
+readme = "README.md"
+description = "High-performance LOESS (Locally Weighted Scatterplot Smoothing)"
+keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
 
 # Build
 [dependencies]
 fastLoess = { path = "vendor/fastLoess", features = ["dev", "cpu"] }
-extendr-api = "0.8.1"
-loess-rs = { path = "vendor/loess-rs" }
+extendr-api = "0.8"
 
 [lib]
 name = "rfastloess"

@@ -1,404 +1,455 @@
-# loess-rs
+<!-- markdownlint-disable MD024 MD033 -->
+# LOESS Project
 
-[![Crates.io](https://img.shields.io/crates/v/loess-rs.svg)](https://crates.io/crates/loess-rs)
-[![Documentation](https://docs.rs/loess-rs/badge.svg)](https://docs.rs/loess-rs)
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
-[![Rust](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org)
+<p align="center">
+  <a href="https://crates.io/crates/loess-rs"><img src="https://img.shields.io/badge/loess--rs-000000?logo=rust&logoColor=white" alt="loess-rs"></a>
+  <a href="https://crates.io/crates/fastLoess"><img src="https://img.shields.io/badge/fastLoess-000000?logo=rust&logoColor=white" alt="fastLoess"></a>
+  <a href="https://pypi.org/project/fastloess/"><img src="https://img.shields.io/badge/PyPI-3775A9?logo=pypi&logoColor=white" alt="PyPI"></a>
+  <a href="https://thisisamirv.r-universe.dev/rfastloess"><img src="https://img.shields.io/badge/R--universe-276DC3?logo=r&logoColor=white" alt="R-universe"></a>
+  <a href="https://www.npmjs.com/package/fastloess"><img src="https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white" alt="npm"></a>
+  <a href="https://juliahub.com/ui/Packages/General/FastLOESS"><img src="https://img.shields.io/badge/Julia-9558B2?logo=julia&logoColor=white" alt="Julia"></a>
+  <a href="https://www.npmjs.com/package/fastloess-wasm"><img src="https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white" alt="WASM"></a>
+  <a href="https://github.com/thisisamirv/loess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white" alt="C++"></a>
+  <br>
+  <a href="https://anaconda.org/conda-forge/fastloess"><img src="https://img.shields.io/badge/fastloess_(Python)-44A833?logo=anaconda&logoColor=white" alt="fastloess (Python)"></a>
+  <a href="https://anaconda.org/conda-forge/libfastloess"><img src="https://img.shields.io/badge/libfastloess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastloess (C++)"></a>
+  <a href="https://anaconda.org/conda-forge/r-rfastloess"><img src="https://img.shields.io/badge/rfastloess_(R)-44A833?logo=anaconda&logoColor=white" alt="rfastloess (R)"></a>
+  <br>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+</p>
 
-A high-performance implementation of LOESS (Locally Estimated Scatterplot Smoothing) in Rust. This crate provides a robust, production-ready implementation with support for confidence intervals, multiple kernel functions, and optimized execution modes.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/thisisamirv/loess-project/main/dev/logo.png" alt="One LOESS to Rule Them All" width="400">
+  <br>
+  <em>One LOESS to Rule Them All</em>
+</p>
+
+The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
 
 > [!IMPORTANT]
-> For parallelization or `ndarray` support, use [`fastLoess`](https://github.com/av746/fastLoess).
+>
+> The `loess-project` contains a complete ecosystem for LOESS smoothing:
+>
+> - **[`loess-rs`](https://crates.io/crates/loess-rs)** - Core single-threaded Rust implementation with `no_std` support
+> - **[`fastLoess`](https://crates.io/crates/fastLoess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
+> - **[`R bindings`](https://thisisamirv.r-universe.dev/rfastloess)** - extendr-based R binding
+> - **[`Python bindings`](https://pypi.org/project/fastloess/)** - PyO3-based Python binding
+> - **[`Julia bindings`](https://juliahub.com/ui/Packages/General/FastLOESS)** - Native Julia binding with C FFI
+> - **[`JavaScript bindings`](https://www.npmjs.com/package/fastloess)** - Node.js binding
+> - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastloess-wasm)** - WASM binding
+> - **[`C++ bindings`](https://github.com/thisisamirv/loess-project/releases/latest)** - Native C++ binding with CMake integration
 
-## How LOESS works
+---
 
-LOESS creates smooth curves through scattered data using local weighted neighborhoods:
+## Installation
 
-![LOESS Smoothing Concept](https://raw.githubusercontent.com/thisisamirv/loess-rs/main/docs/loess_concept.svg)
+> [!NOTE]
+>
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See [INSTALLATION.md](https://github.com/thisisamirv/loess-project/blob/main/INSTALLATION.md) for detailed installation instructions.
 
-## LOESS vs. LOWESS
+## Documentation
 
-| Feature               | LOESS (This Crate)                | LOWESS                         |
+> [!NOTE]
+>
+> ### 📚 [View the full documentation](https://loess.readthedocs.io/)
+
+---
+
+## LOESS vs. LOESS
+
+| Feature               | LOESS (This Crate)                | LOESS                          |
 |-----------------------|-----------------------------------|--------------------------------|
 | **Polynomial Degree** | Linear, Quadratic, Cubic, Quartic | Linear (Degree 1)              |
 | **Dimensions**        | Multivariate (n-D support)        | Univariate (1-D only)          |
 | **Flexibility**       | High (Distance metrics)           | Standard                       |
 | **Complexity**        | Higher (Matrix inversion)         | Lower (Weighted average/slope) |
 
-LOESS can fit higher-degree polynomials for more complex data:
-
-![Degree Comparison](https://raw.githubusercontent.com/thisisamirv/loess-rs/main/docs/degree_comparison.svg)
-
-LOESS can also handle multivariate data (n-D), while LOWESS is limited to univariate data (1-D):
-
-![Multivariate LOESS](https://raw.githubusercontent.com/thisisamirv/loess-rs/main/docs/multivariate_loess.svg)
-
 > [!TIP]
-> **Note:** For a simple, lightweight, and fast **LOWESS** implementation, use [`lowess`](https://github.com/thisisamirv/lowess) crate.
+> **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
 
-## Features
+---
 
-- **Robust Statistics**: IRLS with Bisquare, Huber, or Talwar weighting for outlier handling.
-- **Multidimensional Smoothing**: Support for n-D data with customizable distance metrics (Euclidean, Manhattan, etc.).
-- **Flexible Fitting**: Linear, Quadratic, Cubic, and Quartic local polynomials.
-- **Uncertainty Quantification**: Point-wise standard errors, confidence intervals, and prediction intervals.
-- **Optimized Performance**: Interpolation surface with Tensor Product Hermite interpolation and streaming/online modes for large or real-time datasets.
-- **Parameter Selection**: Built-in cross-validation for automatic smoothing fraction selection.
-- **Flexibility**: Multiple weight kernels (Tricube, Epanechnikov, etc.) and `no_std` support (requires `alloc`).
-- **Validated**: Numerical twin of R's `stats::loess` with exact match (< 1e-12 diff).
+## Why this package?
 
-## Performance
+### Speed
 
-Benchmarked against R's `loess`. Achieves **4.4×–53× faster performance** across all tested scenarios. No regressions observed.
+The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.loess` and **2-3x faster** than R's `loess`.
 
-### Summary
+For more details on the performance comparison, see the [BENCHMARKS](https://github.com/thisisamirv/loess-project/blob/main/BENCHMARKS.md) file.
 
-| Category               | Matched | Median Speedup | Mean Speedup |
-|------------------------|---------|----------------|--------------|
-| **Polynomial Degrees** | 2       | **21.67×**     | 21.67×       |
-| **Fraction**           | 6       | **13.36×**     | 19.70×       |
-| **Iterations**         | 6       | **16.35×**     | 15.90×       |
-| **Pathological**       | 4       | **16.14×**     | 16.27×       |
-| **Dimensions**         | 3       | **7.98×**      | 8.01×        |
-| **Scalability**        | 2       | **5.86×**      | 5.86×        |
-| **Genomic**            | 2       | **5.27×**      | 5.27×        |
-| **Financial**          | 3       | **4.88×**      | 5.97×        |
-| **Scientific**         | 3       | **4.46×**      | 5.28×        |
+### Robustness
 
-### Top 10 Performance Wins
+This implementation is *more robust* than R's `loess` and Python's `statsmodels` due to two key design choices:
 
-| Benchmark        | Rust   | R       | Speedup    |
-|------------------|--------|---------|------------|
-| fraction_0.67    | 0.83ms | 44.80ms | **53.71×** |
-| fraction_0.5     | 1.22ms | 32.25ms | **26.50×** |
-| degree_quadratic | 0.75ms | 19.21ms | **25.52×** |
-| high_noise       | 1.60ms | 34.68ms | **21.68×** |
-| iterations_1     | 0.80ms | 15.88ms | **19.94×** |
-| iterations_0     | 0.75ms | 13.68ms | **18.25×** |
-| degree_linear    | 0.78ms | 13.92ms | **17.81×** |
-| clustered        | 1.15ms | 19.74ms | **17.17×** |
-| iterations_2     | 0.97ms | 16.63ms | **17.13×** |
-| iterations_3     | 1.13ms | 17.56ms | **15.57×** |
+**MAD-Based Scale Estimation:**
 
-Check [Benchmarks](https://github.com/thisisamirv/loess-rs/tree/bench/benchmarks) for detailed results and reproducible benchmarking code.
-
-## Robustness Advantages
-
-This implementation includes several robustness features beyond R's `loess`:
-
-### MAD-Based Scale Estimation
-
-Uses **MAD-based scale estimation** for robustness weight calculations:
+For robustness weight calculations, this crate uses *Median Absolute Deviation (MAD)* for scale estimation:
 
 ```text
 s = median(|r_i - median(r)|)
 ```
 
-MAD is a **breakdown-point-optimal** estimator—it remains valid even when up to 50% of data are outliers, compared to the median of absolute residuals used by some other implementations.
+In contrast, `statsmodels` and R's `loess` uses the median of absolute residuals (MAR):
 
-Median Absolute Residual (MAR), which is the default Cleveland's choice, is also available through the `scaling_method` parameter.
+```text
+s = median(|r_i|)
+```
 
-### Configurable Boundary Policies
+- MAD is a *breakdown-point-optimal* estimator—it remains valid even when up to 50% of data are outliers.
+- The median-centering step removes asymmetric bias from residual distributions.
+- MAD provides consistent outlier detection regardless of whether residuals are centered around zero.
 
-R's `loess` uses asymmetric windows at data boundaries, which can introduce edge bias. This implementation offers configurable **boundary policies** to mitigate this:
+**Boundary Padding:**
 
-- **Extend** (default): Pad with constant values for symmetric windows
-- **Reflect**: Mirror data at boundaries (best for periodic data)
-- **Zero**: Pad with zeros (signal processing applications)
-- **NoBoundary**: Original R behavior (no padding)
+This crate applies a range of different *boundary policies* at dataset edges:
 
-### Boundary Degree Fallback
+- **Extend**: Repeats edge values to maintain local neighborhood size.
+- **Reflect**: Mirrors data symmetrically around boundaries.
+- **Zero**: Pads with zeros (useful for signal processing).
+- **NoBoundary**: Original Cleveland behavior
 
-When using `Interpolation` mode with higher polynomial degrees (Quadratic, Cubic), vertices outside the tight data bounds can produce unstable extrapolation. This implementation offers a configurable **boundary degree fallback**:
+`statsmodels` and R's `loess` do not apply boundary padding, which can lead to:
 
-- **`true`** (default): Reduce to Linear fits at boundary vertices (more stable)
-- **`false`**: Use full requested degree everywhere (matches R exactly)
+- Biased estimates near boundaries due to asymmetric local neighborhoods.
+- Increased variance at the edges of the smoothed curve.
+
+### Features
+
+A variety of features, supporting a range of use cases:
+
+| Feature              | This package  | statsmodels  | R (stats)    |
+|----------------------|:-------------:|:------------:|:------------:|
+| Kernel               | 7 options     | only Tricube | only Tricube |
+| Robustness Weighting | 3 options     | only Huber   | only Huber   |
+| Scale Estimation     | 2 options     | only MAR     | only MAR     |
+| Boundary Padding     | 4 options     | no padding   | no padding   |
+| Zero Weight Fallback | 3 options     | no           | no           |
+| Auto Convergence     | yes           | no           | no           |
+| Online Mode          | yes           | no           | no           |
+| Streaming Mode       | yes           | no           | no           |
+| Confidence Intervals | yes           | no           | no           |
+| Prediction Intervals | yes           | no           | no           |
+| Cross-Validation     | 2 options     | no           | no           |
+| Parallel Execution   | yes           | no           | no           |
+| GPU Acceleration     | yes*          | no           | no           |
+| `no-std` Support     | yes           | no           | no           |
+
+\* GPU acceleration is currently in beta and may not be available on all platforms.
 
 ## Validation
 
-The Rust `loess-rs` crate is a **numerical twin** of R's `loess` implementation:
+All implementations are **numerical twins** of R's `loess`:
 
-| Aspect          | Status         | Details                                    |
-|-----------------|----------------|--------------------------------------------|
-| **Accuracy**    | ✅ EXACT MATCH | Max diff < 1e-12 across all scenarios      |
-| **Consistency** | ✅ PERFECT     | 20/20 scenarios pass with strict tolerance |
-| **Robustness**  | ✅ VERIFIED    | Robust smoothing matches R exactly         |
+| Aspect          | Status         | Details                                       |
+|-----------------|----------------|-----------------------------------------------|
+| **Accuracy**    | ✅ EXACT MATCH | Max diff < 1e-12 across all scenarios         |
+| **Consistency** | ✅ PERFECT     | Multiple scenarios pass with strict tolerance |
+| **Robustness**  | ✅ VERIFIED    | Robust smoothing matches R exactly            |
 
-Check [Validation](https://github.com/thisisamirv/loess-rs/tree/bench/validation) for detailed scenario results.
+## API Reference
 
-## Installation
+**R:**
 
-Add this to your `Cargo.toml`:
+```r
+Loess(
+    fraction = 0.5,
+    iterations = 3L,
+    delta = 0.01,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    zero_weight_fallback = "use_local_mean",
+    boundary_policy = "extend",
+    confidence_intervals = 0.95,
+    prediction_intervals = 0.95,
+    return_diagnostics = TRUE,
+    return_residuals = TRUE,
+    return_robustness_weights = TRUE,
+    cv_fractions = c(0.3, 0.5, 0.7),
+    cv_method = "kfold",
+    cv_k = 5L,
+    auto_converge = 1e-4,
+    parallel = TRUE
+)$fit(x, y)
 
-```toml
-[dependencies]
-loess-rs = "0.2"
+# Result structure:
+result$x,
+result$y,
+result$standard_errors,
+result$confidence_lower,
+result$confidence_upper,
+result$prediction_lower,
+result$prediction_upper,
+result$residuals,
+result$robustness_weights,
+result$diagnostics,
+result$iterations_used,
+result$fraction_used,
+result$cv_scores
 ```
 
-For `no_std` environments:
+**Python:**
 
-```toml
-[dependencies]
-loess-rs = { version = "0.2", default-features = false }
+```python
+from fastloess import Loess
+
+model = Loess(
+    fraction=0.5,
+    iterations=3,
+    delta=0.01,
+    weight_function="tricube",
+    robustness_method="bisquare",
+    zero_weight_fallback="use_local_mean",
+    boundary_policy="extend",
+    confidence_intervals=0.95,
+    prediction_intervals=0.95,
+    return_diagnostics=True,
+    return_residuals=True,
+    return_robustness_weights=True,
+    cv_fractions=[0.3, 0.5, 0.7],
+    cv_method="kfold",
+    cv_k=5,
+    auto_converge=1e-4,
+    parallel=True
+)
+result = model.fit(x, y)
+
+# Result structure:
+result.x,
+result.y,
+result.standard_errors,
+result.confidence_lower,
+result.confidence_upper,
+result.prediction_lower,
+result.prediction_upper,
+result.residuals,
+result.robustness_weights,
+result.diagnostics,
+result.iterations_used,
+result.fraction_used,
+result.cv_scores
 ```
 
-## Quick Start
+**Rust:**
 
 ```rust
-use loess_rs::prelude::*;
-
-fn main() -> Result<(), LoessError> {
-    let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-    let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
-
-    // Build and fit model
-    let result = Loess::new()
-        .fraction(0.5)      // Use 50% of data for each local fit
-        .iterations(3)      // 3 robustness iterations
-        .adapter(Batch)
-        .build()?
-        .fit(&x, &y)?;
-
-    println!("{}", result);
-    Ok(())
-}
-```
-
-```text
-Summary:
-  Data points: 5
-  Fraction: 0.5
-
-Smoothed Data:
-       X     Y_smooth
-  --------------------
-    1.00     2.00000
-    2.00     4.10000
-    3.00     5.90000
-    4.00     8.20000
-    5.00     9.80000
-```
-
-## Builder Methods
-
-All builder parameters have sensible defaults. You only need to specify what you want to change.
-
-```rust
-use loess_rs::prelude::*;
-
 Loess::new()
-    // Smoothing span (0, 1] - default: 0.67
     .fraction(0.5)
-
-    // Polynomial degree - default: Linear
-    .degree(Quadratic)
-
-    // Number of dimensions - default: 1
-    .dimensions(2)
-
-    // Distance metric - default: Euclidean
-    .distance_metric(Manhattan)
-
-    // Robustness iterations - default: 3
-    .iterations(5)
-
-    // Kernel selection - default: Tricube
-    .weight_function(Epanechnikov)
-
-    // Robustness method - default: Bisquare
-    .robustness_method(Huber)
-
-    // Boundary handling - default: Extend
-    .boundary_policy(Reflect)
-
-    // Boundary degree fallback - default: true
-    .boundary_degree_fallback(true)
-
-    // Confidence intervals (Batch only)
+    .iterations(3)
+    .delta(0.01)
+    .weight_function(Tricube)
+    .robustness_method(Bisquare)
+    .zero_weight_fallback(UseLocalMean)
+    .boundary_policy(Extend)
     .confidence_intervals(0.95)
-
-    // Prediction intervals (Batch only)
     .prediction_intervals(0.95)
-
-    // Include diagnostics
     .return_diagnostics()
     .return_residuals()
     .return_robustness_weights()
-
-    // Cross-validation (Batch only)
     .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(123))
-
-    // Auto-convergence
     .auto_converge(1e-4)
-
-    // Interpolation settings
-    .surface_mode(Interpolation)
-
-    // Interpolation cell size - default: 0.2
-    .cell(0.2)
-
-    // Execution mode
     .adapter(Batch)
-
-    // Build the model
+    .parallel(true)             // fastLoess only
+    .backend(CPU)               // fastLoess only: CPU or GPU
     .build()?;
-```
 
-## Result Structure
+let result = model.fit(x, y);
 
-```rust
+// Result structure:
 pub struct LoessResult<T> {
-    /// Sorted x values (independent variable)
-    pub x: Vec<T>,
-
-    /// Smoothed y values (dependent variable)
-    pub y: Vec<T>,
-
-    /// Point-wise standard errors of the fit
+    pub x: Vec<T>,                           // Sorted x values
+    pub y: Vec<T>,                           // Smoothed y values
     pub standard_errors: Option<Vec<T>>,
-
-    /// Confidence interval bounds (if computed)
     pub confidence_lower: Option<Vec<T>>,
     pub confidence_upper: Option<Vec<T>>,
-
-    /// Prediction interval bounds (if computed)
     pub prediction_lower: Option<Vec<T>>,
     pub prediction_upper: Option<Vec<T>>,
-
-    /// Residuals (y - fit)
     pub residuals: Option<Vec<T>>,
-
-    /// Final robustness weights from outlier downweighting
     pub robustness_weights: Option<Vec<T>>,
-
-    /// Detailed fit diagnostics (RMSE, R^2, Effective DF, etc.)
     pub diagnostics: Option<Diagnostics<T>>,
-
-    /// Number of robustness iterations actually performed
     pub iterations_used: Option<usize>,
-
-    /// Smoothing fraction used (optimal if selected via CV)
     pub fraction_used: T,
-
-    /// RMSE scores for each fraction tested during CV
     pub cv_scores: Option<Vec<T>>,
 }
 ```
 
-> [!TIP]
-> **Using with ndarray:** While the result struct uses `Vec<T>` for maximum compatibility, you can effortlessly convert any field to an `Array1` using `Array1::from_vec(result.y)`.
+**Julia:**
 
-## Streaming Processing
+```julia
+Loess(;
+    fraction=0.5,
+    iterations=3,
+    delta=NaN,  # NaN for auto
+    weight_function="tricube",
+    robustness_method="bisquare",
+    zero_weight_fallback="use_local_mean",
+    boundary_policy="extend",
+    confidence_intervals=NaN,
+    prediction_intervals=NaN,
+    return_diagnostics=true,
+    return_residuals=true,
+    return_robustness_weights=true,
+    cv_fractions=Float64[], # e.g. [0.3, 0.5]
+    cv_method="kfold",
+    cv_k=5,
+    auto_converge=NaN,
+    parallel=true
+)
 
-For datasets that don't fit in memory:
-
-```rust
-let mut processor = Loess::new()
-    .fraction(0.3)
-    .iterations(2)
-    .adapter(Streaming)
-    .chunk_size(1000)
-    .overlap(100)
-    .build()?;
-
-// Process data in chunks
-let result1 = processor.process_chunk(&chunk1_x, &chunk1_y)?;
-let result2 = processor.process_chunk(&chunk2_x, &chunk2_y)?;
-
-// Finalize to get remaining buffered data
-let final_result = processor.finalize()?;
+# Result structure:
+result.x,
+result.y,
+result.standard_errors,
+result.confidence_lower,
+result.confidence_upper,
+result.prediction_lower,
+result.prediction_upper,
+result.residuals,
+result.robustness_weights,
+result.diagnostics,
+result.iterations_used,
+result.fraction_used,
+result.cv_scores
 ```
 
-## Online Processing
+**Node.js:**
 
-For real-time data streams:
+```javascript
+new Loess({
+    fraction: 0.5,
+    iterations: 3,
+    delta: 0.01,
+    weightFunction: "tricube",
+    robustnessMethod: "bisquare",
+    zeroWeightFallback: "use_local_mean",
+    boundaryPolicy: "extend",
+    confidenceIntervals: 0.95,
+    predictionIntervals: 0.95,
+    returnDiagnostics: true,
+    returnResiduals: true,
+    returnRobustnessWeights: true,
+    cvFractions: [0.3, 0.5, 0.7],
+    cvMethod: "kfold",
+    cvK: 5,
+    autoConverge: 1e-4,
+    parallel: true
+}).fit(x, y)
 
-```rust
-let mut processor = Loess::new()
-    .fraction(0.2)
-    .iterations(1)
-    .adapter(Online)
-    .window_capacity(100)
-    .build()?;
-
-// Process points as they arrive
-for i in 1..=10 {
-    let x = i as f64;
-    let y = 2.0 * x + 1.0;
-    if let Some(output) = processor.add_point(&[x], y)? {
-        println!("Smoothed: {:.2}", output.smoothed);
-    }
-}
+// Result structure:
+result.x,
+result.y,
+result.standardErrors,
+result.confidenceLower,
+result.confidenceUpper,
+result.predictionLower,
+result.predictionUpper,
+result.residuals,
+result.robustnessWeights,
+result.diagnostics,
+result.iterationsUsed,
+result.fractionUsed,
+result.cvScores
 ```
 
-## Parameter Selection Guide
+**WebAssembly:**
 
-### Fraction (Smoothing Span)
+```javascript
+smooth(x, y, {
+    fraction: 0.5,
+    iterations: 3,
+    delta: 0.01,
+    weightFunction: "tricube",
+    robustnessMethod: "bisquare",
+    zeroWeightFallback: "use_local_mean",
+    boundaryPolicy: "extend",
+    confidenceIntervals: 0.95,
+    predictionIntervals: 0.95,
+    returnDiagnostics: true,
+    returnResiduals: true,
+    returnRobustnessWeights: true,
+    cvFractions: [0.3, 0.5, 0.7],
+    cvMethod: "kfold",
+    cvK: 5,
+    autoConverge: 1e-4,
+    parallel: true
+})
 
-- **0.1-0.3**: Fine detail, may be noisy
-- **0.3-0.5**: Moderate smoothing (good for most cases)
-- **0.5-0.7**: Heavy smoothing, emphasizes trends
-- **0.7-1.0**: Very smooth, may over-smooth
-- **Default: 0.67** (Cleveland's choice)
-
-### Robustness Iterations
-
-- **0**: No robustness (fastest, sensitive to outliers)
-- **1-3**: Light to moderate robustness (recommended)
-- **4-6**: Strong robustness (for contaminated data)
-- **7+**: Diminishing returns
-
-### Polynomial Degree
-
-- **Constant**: Local weighted mean (smoothing only)
-- **Linear** (default): Standard LOESS, good bias-variance balance
-- **Quadratic**: Better for peaks/valleys, higher variance
-- **Cubic/Quartic**: Specialized high-order fitting
-
-### Kernel Function
-
-- **Tricube** (default): Best all-around, Cleveland's original choice
-- **Epanechnikov**: Theoretically optimal MSE
-- **Gaussian**: Maximum smoothness, no compact support
-- **Uniform**: Fastest, least smooth (moving average)
-
-### Boundary Policy
-
-- **Extend** (default): Pad with constant values
-- **Reflect**: Mirror data at boundaries (for periodic/symmetric data)
-- **Zero**: Pad with zeros (signal processing)
-- **NoBoundary**: Original Cleveland behavior
-
-> **Note:** For nD data, `Extend` defaults to `NoBoundary` to preserve regression accuracy.
-
-## Examples
-
-```bash
-cargo run --example batch_smoothing
-cargo run --example online_smoothing
-cargo run --example streaming_smoothing
+// Result structure:
+result.x,
+result.y,
+result.standardErrors,
+result.confidenceLower,
+result.confidenceUpper,
+result.predictionLower,
+result.predictionUpper,
+result.residuals,
+result.robustnessWeights,
+result.diagnostics,
+result.iterationsUsed,
+result.fractionUsed,
+result.cvScores
 ```
 
-## MSRV
+**C++:**
 
-Rust **1.85.0** or later (2024 Edition).
+```cpp
+fastloess::LoessOptions options;
+options.fraction = 0.5;
+options.iterations = 3;
+options.delta = 0.01;
+options.weight_function = "tricube";
+options.robustness_method = "bisquare";
+options.zero_weight_fallback = "use_local_mean";
+options.boundary_policy = "extend";
+options.confidence_intervals = 0.95;
+options.prediction_intervals = 0.95;
+options.return_diagnostics = true;
+options.return_residuals = true;
+options.return_robustness_weights = true;
+options.cv_fractions = {0.3, 0.5, 0.7};
+options.cv_method = "kfold";
+options.cv_k = 5;
+options.auto_converge = 1e-4;
+options.parallel = true;
+
+fastloess::Loess model(options);
+auto result = model.fit(x, y);
+
+// Result structure:
+result.x_vector(),
+result.y_vector(),
+result.standard_errors(),
+result.confidence_lower(),
+result.confidence_upper(),
+result.prediction_lower(),
+result.prediction_upper(),
+result.residuals(),
+result.robustness_weights(),
+result.diagnostics(),
+result.iterations_used(),
+result.fraction_used(),
+result.cv_scores()
+```
+
+---
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/thisisamirv/loess-project/blob/main/CONTRIBUTING.md) file for more information.
 
 ## License
 
-Licensed under either of
+Licensed under [MIT](https://github.com/thisisamirv/loess-project/blob/main/LICENSE-MIT) or [Apache-2.0](https://github.com/thisisamirv/loess-project/blob/main/LICENSE-APACHE).
 
-- Apache License, Version 2.0
-   ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license
-   ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
+## Citation
 
-at your option.
+If you use this software in your research, please cite it using the [CITATION.cff](https://github.com/thisisamirv/loess-project/blob/main/CITATION.cff) file or the BibTeX entry below:
 
-## References
-
-- Cleveland, W.S. (1979). "Robust Locally Weighted Regression and Smoothing Scatterplots". *Journal of the American Statistical Association*.
-- Cleveland, W.S. & Devlin, S.J. (1988). "Locally Weighted Regression: An Approach to Regression Analysis by Local Fitting". *Journal of the American Statistical Association*.
+```bibtex
+@software{loess_project,
+  author = {Valizadeh, Amir},
+  title = {LOESS Project: High-Performance Locally Weighted Scatterplot Smoothing},
+  year = {2026},
+  url = {https://github.com/thisisamirv/loess-project},
+  license = {MIT OR Apache-2.0}
+}
+```

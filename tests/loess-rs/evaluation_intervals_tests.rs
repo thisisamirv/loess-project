@@ -227,7 +227,7 @@ fn test_confidence_intervals() {
 
     let estimator = IntervalMethod::confidence(level);
     let (cl, cu, _, _) = estimator
-        .compute_intervals(&y_smooth, &std_err, &residuals, None, None)
+        .compute_intervals(&y_smooth, &std_err, &residuals)
         .expect("intervals");
 
     assert!(cl.is_some(), "CI lower should be computed");
@@ -257,7 +257,7 @@ fn test_prediction_intervals() {
 
     let estimator = IntervalMethod::prediction(level);
     let (_, _, pl, pu) = estimator
-        .compute_intervals(&y_smooth, &std_err, &residuals, None, None)
+        .compute_intervals(&y_smooth, &std_err, &residuals)
         .expect("intervals");
 
     assert!(pl.is_some(), "PI lower should be computed");
@@ -276,12 +276,12 @@ fn test_pi_wider_than_ci() {
 
     let estimator_ci = IntervalMethod::confidence(level);
     let (cl, cu, _, _) = estimator_ci
-        .compute_intervals(&y_smooth, &std_err, &residuals_noisy, None, None)
+        .compute_intervals(&y_smooth, &std_err, &residuals_noisy)
         .expect("CI");
 
     let estimator_pi = IntervalMethod::prediction(level);
     let (_, _, pl, pu) = estimator_pi
-        .compute_intervals(&y_smooth, &std_err, &residuals_noisy, None, None)
+        .compute_intervals(&y_smooth, &std_err, &residuals_noisy)
         .expect("PI");
 
     let w_ci = cu.unwrap()[0] - cl.unwrap()[0];
@@ -325,7 +325,7 @@ fn test_interval_method_workflow() {
     // Compute intervals
     let residuals = vec![0.0f64; 3];
     let (ci_lower, ci_upper, _, _) = estimator
-        .compute_intervals(&y_smooth, &std_errors, &residuals, None, None)
+        .compute_intervals(&y_smooth, &std_errors, &residuals)
         .expect("Intervals");
 
     // Verify lengths
@@ -339,7 +339,7 @@ fn test_interval_method_workflow() {
 /// Test residual SD with minimum required points.
 #[test]
 fn test_interval_edge_cases() {
-    let loess_rs = Loess::<f64>::new()
+    let loess = Loess::<f64>::new()
         .fraction(1.0)
         .confidence_intervals(0.95)
         .adapter(Batch)
@@ -348,7 +348,7 @@ fn test_interval_edge_cases() {
 
     let x = [1.0, 2.0];
     let y = [2.0, 4.0];
-    let result = loess_rs.fit(&x, &y).unwrap();
+    let result = loess.fit(&x, &y).unwrap();
     assert!(result.standard_errors.is_some());
 }
 
@@ -434,7 +434,7 @@ fn test_residual_sd_edge_points() {
     let residuals = vec![0.0f64];
 
     let estimator = IntervalMethod::prediction(0.95);
-    let result = estimator.compute_intervals(&ys, &ses, &residuals, None, None);
+    let result = estimator.compute_intervals(&ys, &ses, &residuals);
     assert!(result.is_ok());
 }
 
@@ -458,9 +458,7 @@ fn test_intervals_degenerate_se() {
     let residuals = vec![1.0]; // Non-zero residual
 
     let estimator = IntervalMethod::confidence(0.95);
-    let (cl, cu, _, _) = estimator
-        .compute_intervals(&ys, &ses, &residuals, None, None)
-        .unwrap();
+    let (cl, cu, _, _) = estimator.compute_intervals(&ys, &ses, &residuals).unwrap();
 
     let clv = cl.unwrap();
     let cuv = cu.unwrap();

@@ -15,7 +15,6 @@
 use approx::assert_relative_eq;
 
 use loess_rs::internals::evaluation::cv::CVKind;
-use loess_rs::internals::primitives::buffer::CVBuffer;
 
 // ============================================================================
 // Interpolation Tests
@@ -258,7 +257,8 @@ fn test_cv_method_run_edge_cases() {
     // 1. n < 2 in LOOCV
     let x_mini = vec![1.0];
     let y_mini = vec![2.0];
-    let mut cv_buffer = CVBuffer::new(1, 1);
+    use loess_rs::internals::primitives::buffer::CVBuffer;
+    let mut cv_buffer = CVBuffer::new();
     let (best_mini, _) = CVKind::LOOCV.run(
         &x_mini,
         &y_mini,
@@ -285,7 +285,8 @@ fn test_kfold_insufficient_data() {
     // fold_size = 0.
     // fold 0..4: test_start = f*0 = 0. test_end = 0.
     // Last fold (k-1): test_start = 0, test_end = 3.
-    let mut cv_buffer = CVBuffer::new(3, 1);
+    use loess_rs::internals::primitives::buffer::CVBuffer;
+    let mut cv_buffer = CVBuffer::new();
     let (best, scores) = CVKind::KFold(5).run(
         &x,
         &y,
@@ -310,7 +311,8 @@ fn test_loocv_minimal_data() {
     // Smoother returns original y
     let smoother = |_: &[f64], y: &[f64], _: f64| y.to_vec();
 
-    let mut cv_buffer = CVBuffer::new(2, 1);
+    use loess_rs::internals::primitives::buffer::CVBuffer;
+    let mut cv_buffer = CVBuffer::new();
     let (best, scores) = CVKind::LOOCV.run(
         &x,
         &y,

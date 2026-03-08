@@ -10,7 +10,7 @@
 #include <random>
 #include <vector>
 
-#include "fastloess.hpp"
+#include "../../bindings/cpp/include/fastloess.hpp"
 
 int main() {
   std::cout << "=== Streaming LOESS Smoothing Example ===" << std::endl;
@@ -31,7 +31,7 @@ int main() {
 
   // Streaming smoothing
   try {
-    fastloess::StreamingOptions opts;
+    fastloess_rs::StreamingOptions opts;
     opts.fraction = 0.1;
     opts.iterations = 2;
     opts.chunk_size = 1000;
@@ -41,27 +41,42 @@ int main() {
     std::cout << "\nProcessing with chunk_size=" << opts.chunk_size
               << ", overlap=" << opts.overlap << std::endl;
 
-    auto result = fastloess::streaming(x, y, opts);
+    fastloess_rs::StreamingLoess model(opts);
+
+    std::cout << "\nProcessing data in chunks..." << std::endl;
+
+    size_t chunk_size = opts.chunk_size;
+    size_t total_processed = 0;
+
+    for (size_t i = 0; i < n; i += chunk_size) {
+      size_t current_chunk_len = std::min(chunk_size, n - i);
+      std::vector<double> x_chunk(x.begin() + i,
+                                  x.begin() + i + current_chunk_len);
+      std::vector<double> y_chunk(y.begin() + i,
+                                  y.begin() + i + current_chunk_len);
+
+      auto res = model.process_chunk(x_chunk, y_chunk).value();
+      total_processed += res.size();
+
+      if (i % 2000 == 0) {
+        std::cout << "  Processed " << i << " points..." << std::endl;
+      }
+    }
+
+    auto final_res = model.finalize().value();
+    total_processed += final_res.size();
 
     std::cout << "\nStreaming completed:" << std::endl;
-    std::cout << "  Points processed: " << result.size() << std::endl;
-    std::cout << "  Fraction used: " << result.fraction_used() << std::endl;
+    std::cout << "  Total points smoothed: " << total_processed << std::endl;
 
-    // Show diagnostics
-    auto diag = result.diagnostics();
-    if (diag.has_value()) {
-      std::cout << "\nDiagnostics:" << std::endl;
-      std::cout << "  RMSE: " << diag.rmse << std::endl;
-      std::cout << "  R²: " << diag.r_squared << std::endl;
+    // Show sample of final results
+    if (final_res.size() > 0) {
+      std::cout << "\nSample from final chunk:" << std::endl;
+      std::cout << "  x=" << final_res.x(0) << " y=" << final_res.y(0)
+                << std::endl;
     }
 
-    // Show sample of results
-    std::cout << "\nSample points (every 1000th):" << std::endl;
-    for (size_t i = 0; i < result.size(); i += 1000) {
-      std::cout << "  x=" << result.x(i) << " y=" << result.y(i) << std::endl;
-    }
-
-  } catch (const fastloess::LoessError &e) {
+  } catch (const fastloess_rs::LoessError &e) {
     std::cerr << "Error: " << e.what() << std::endl;
     return 1;
   }

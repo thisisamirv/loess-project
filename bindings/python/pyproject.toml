@@ -4,10 +4,11 @@ build-backend = "maturin"
 
 [project]
 name = "fastloess"
-version = "0.1.0"
-description = "High-level, fast LOESS smoothing built on top of the fastLoess Rust crate."
+dynamic = ["version"]
+description = "High-performance LOESS smoothing for Python."
 authors = [{ name = "Amir Valizadeh", email = "thisisamirv@gmail.com" }]
-license = { text = "MIT OR Apache-2.0" }
+license = "MIT OR Apache-2.0"
+license-files = ["LICENSE-MIT", "LICENSE-APACHE"]
 readme = "README.md"
 requires-python = ">=3.8"
 classifiers = [
@@ -32,18 +33,12 @@ classifiers = [
 keywords = ["loess", "smoothing", "statistics", "regression", "numpy"]
 dependencies = ["numpy>=1.20.0"]
 
-[tool.maturin]
-module-name = "fastloess.fastloess"
-include = [
-    "fastloess/**",
-    "src/**",
-    "Cargo.toml",
-    "pyproject.toml",
-    "README.md",
-    "LICENSE-APACHE",
-    "LICENSE-MIT",
-    "CHANGELOG.md",
-]
+[project.urls]
+Documentation = "https://loess.readthedocs.io/"
+Repository = "https://github.com/thisisamirv/loess-project"
+Changelog = "https://github.com/thisisamirv/loess-project/CHANGELOG.md"
 
-[tool.pytest.ini_options]
-testpaths = ["tests"]
+[tool.maturin]
+python-source = "python"
+module-name = "fastloess._core"
+exclude = ["docs/**", "examples/**", "tests/**", "target/**", ".github/**"]

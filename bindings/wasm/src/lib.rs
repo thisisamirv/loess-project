@@ -1,7 +1,13 @@
 //! WebAssembly bindings for fastLoess.
 
-use js_sys::{Float64Array, Object, Reflect};
+use js_sys::Float64Array;
+use serde::Deserialize;
 use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
+pub fn init_panic_hook() {
+    console_error_panic_hook::set_once();
+}
 
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
@@ -9,8 +15,63 @@ use ::fastLoess::internals::api::{
     BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Mean, Online, Streaming,
 };
+
+#[derive(Deserialize)]
+pub struct SmoothOptions {
+    pub fraction: Option<f64>,
+    pub iterations: Option<usize>,
+    pub delta: Option<f64>,
+    #[serde(rename = "weightFunction")]
+    pub weight_function: Option<String>,
+    #[serde(rename = "robustnessMethod")]
+    pub robustness_method: Option<String>,
+    #[serde(rename = "zeroWeightFallback")]
+    pub zero_weight_fallback: Option<String>,
+    #[serde(rename = "boundaryPolicy")]
+    pub boundary_policy: Option<String>,
+    #[serde(rename = "scalingMethod")]
+    pub scaling_method: Option<String>,
+    #[serde(rename = "autoConverge")]
+    pub auto_converge: Option<f64>,
+    #[serde(rename = "returnResiduals")]
+    pub return_residuals: Option<bool>,
+    #[serde(rename = "returnRobustnessWeights")]
+    pub return_robustness_weights: Option<bool>,
+    #[serde(rename = "returnDiagnostics")]
+    pub return_diagnostics: Option<bool>,
+    #[serde(rename = "confidenceIntervals")]
+    pub confidence_intervals: Option<f64>,
+    #[serde(rename = "predictionIntervals")]
+    pub prediction_intervals: Option<f64>,
+    #[serde(rename = "parallel")]
+    pub parallel: Option<bool>,
+    #[serde(rename = "cvFractions")]
+    pub cv_fractions: Option<Vec<f64>>,
+    #[serde(rename = "cvMethod")]
+    pub cv_method: Option<String>,
+    #[serde(rename = "cvK")]
+    pub cv_k: Option<u32>,
+}
+
+#[derive(Deserialize)]
+pub struct StreamingOptions {
+    #[serde(rename = "chunkSize")]
+    pub chunk_size: Option<usize>,
+    #[serde(rename = "overlap")]
+    pub overlap: Option<usize>,
+}
+
+#[derive(Deserialize)]
+pub struct OnlineOptions {
+    #[serde(rename = "windowCapacity")]
+    pub window_capacity: Option<usize>,
+    #[serde(rename = "minPoints")]
+    pub min_points: Option<usize>,
+    #[serde(rename = "updateMode")]
+    pub update_mode: Option<String>,
+}
 
 fn parse_weight_function(name: &str) -> Result<WeightFunction, JsValue> {
     match name.to_lowercase().as_str() {
@@ -69,8 +130,9 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod, JsValue> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
+        "mean" => Ok(Mean),
         _ => Err(JsValue::from_str(&format!(
-            "Unknown scaling method: {}",
+            "Unknown scaling method: {}. Valid options: mad, mar, mean",
             name
         ))),
     }
@@ -203,127 +265,85 @@ impl LoessResultWasm {
     }
 }
 
+/// Fit the LOESS model to data.
+///
+/// @param {Float64Array} x - X coordinates.
+/// @param {Float64Array} y - Y coordinates.
+/// @param {any} [options] - Configuration object.
+/// @returns {LoessResultWasm} The result of the smoothing.
 #[wasm_bindgen]
 pub fn smooth(
     x: &Float64Array,
     y: &Float64Array,
-    options: &JsValue,
+    options: JsValue,
 ) -> Result<LoessResultWasm, JsValue> {
     let mut builder = LoessBuilder::new();
 
     if !options.is_undefined() && !options.is_null() {
-        let options = Object::from(options.clone());
+        let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
 
-        if let Ok(f) = Reflect::get(&options, &JsValue::from_str("fraction"))
-            && let Some(val) = f.as_f64()
-        {
-            builder = builder.fraction(val);
+        if let Some(f) = opts.fraction {
+            builder = builder.fraction(f);
         }
-        if let Ok(iter) = Reflect::get(&options, &JsValue::from_str("iterations"))
-            && let Some(val) = iter.as_f64()
-        {
-            builder = builder.iterations(val as usize);
+        if let Some(iter) = opts.iterations {
+            builder = builder.iterations(iter);
         }
-
-        if let Ok(wf) = Reflect::get(&options, &JsValue::from_str("weightFunction"))
-            && let Some(val) = wf.as_string()
-        {
-            builder = builder.weight_function(parse_weight_function(&val)?);
+        if let Some(d) = opts.delta {
+            builder = builder.delta(d);
         }
-        if let Ok(rm) = Reflect::get(&options, &JsValue::from_str("robustnessMethod"))
-            && let Some(val) = rm.as_string()
-        {
-            builder = builder.robustness_method(parse_robustness_method(&val)?);
+        if let Some(wf) = opts.weight_function {
+            builder = builder.weight_function(parse_weight_function(&wf)?);
         }
-        if let Ok(zw) = Reflect::get(&options, &JsValue::from_str("zeroWeightFallback"))
-            && let Some(val) = zw.as_string()
-        {
-            builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&val)?);
+        if let Some(rm) = opts.robustness_method {
+            builder = builder.robustness_method(parse_robustness_method(&rm)?);
         }
-        if let Ok(bp) = Reflect::get(&options, &JsValue::from_str("boundaryPolicy"))
-            && let Some(val) = bp.as_string()
-        {
-            builder = builder.boundary_policy(parse_boundary_policy(&val)?);
+        if let Some(zw) = opts.zero_weight_fallback {
+            builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&zw)?);
         }
-        if let Ok(sm) = Reflect::get(&options, &JsValue::from_str("scalingMethod"))
-            && let Some(val) = sm.as_string()
-        {
-            builder = builder.scaling_method(parse_scaling_method(&val)?);
+        if let Some(bp) = opts.boundary_policy {
+            builder = builder.boundary_policy(parse_boundary_policy(&bp)?);
         }
-        if let Ok(ac) = Reflect::get(&options, &JsValue::from_str("autoConverge"))
-            && let Some(val) = ac.as_f64()
-        {
-            builder = builder.auto_converge(val);
+        if let Some(sm) = opts.scaling_method {
+            builder = builder.scaling_method(parse_scaling_method(&sm)?);
         }
-        if let Ok(rr) = Reflect::get(&options, &JsValue::from_str("returnResiduals"))
-            && rr.as_bool().unwrap_or(false)
-        {
+        if let Some(ac) = opts.auto_converge {
+            builder = builder.auto_converge(ac);
+        }
+        if opts.return_residuals.unwrap_or(false) {
             builder = builder.return_residuals();
         }
-        if let Ok(rw) = Reflect::get(&options, &JsValue::from_str("returnRobustnessWeights"))
-            && rw.as_bool().unwrap_or(false)
-        {
+        if opts.return_robustness_weights.unwrap_or(false) {
             builder = builder.return_robustness_weights();
         }
-        if let Ok(rd) = Reflect::get(&options, &JsValue::from_str("returnDiagnostics"))
-            && rd.as_bool().unwrap_or(false)
-        {
+        if opts.return_diagnostics.unwrap_or(false) {
             builder = builder.return_diagnostics();
         }
-        if let Ok(ci) = Reflect::get(&options, &JsValue::from_str("confidenceIntervals"))
-            && let Some(val) = ci.as_f64()
-        {
-            builder = builder.confidence_intervals(val);
+        if let Some(ci) = opts.confidence_intervals {
+            builder = builder.confidence_intervals(ci);
         }
-        if let Ok(pi) = Reflect::get(&options, &JsValue::from_str("predictionIntervals"))
-            && let Some(val) = pi.as_f64()
-        {
-            builder = builder.prediction_intervals(val);
+        if let Some(pi) = opts.prediction_intervals {
+            builder = builder.prediction_intervals(pi);
         }
-        if let Ok(par) = Reflect::get(&options, &JsValue::from_str("parallel"))
-            && let Some(val) = par.as_bool()
-        {
-            builder = builder.parallel(val);
+        if let Some(par) = opts.parallel {
+            builder = builder.parallel(par);
         }
 
         // Cross-validation
-        if let Ok(cv_fractions) = Reflect::get(&options, &JsValue::from_str("cvFractions"))
-            && !cv_fractions.is_undefined()
-            && !cv_fractions.is_null()
-        {
-            // Convert JS number array to Vec<f64>
-            let fractions: Vec<f64> = js_sys::Array::from(&cv_fractions)
-                .iter()
-                .map(|val| val.as_f64().unwrap_or(0.0))
-                .collect();
+        if let Some(fractions) = opts.cv_fractions {
+            let method = opts.cv_method.as_deref().unwrap_or("kfold");
+            let k = opts.cv_k.unwrap_or(5) as usize;
 
-            let cv_method = if let Ok(m) = Reflect::get(&options, &JsValue::from_str("cvMethod"))
-                && let Some(val) = m.as_string()
-            {
-                val
-            } else {
-                "kfold".to_string()
-            };
-
-            let cv_k = if let Ok(k) = Reflect::get(&options, &JsValue::from_str("cvK"))
-                && let Some(val) = k.as_f64()
-            {
-                val as usize
-            } else {
-                5
-            };
-
-            match cv_method.to_lowercase().as_str() {
+            match method.to_lowercase().as_str() {
                 "simple" | "loo" | "loocv" | "leave_one_out" => {
                     builder = builder.cross_validate(LOOCV(&fractions));
                 }
                 "kfold" | "k_fold" | "k-fold" => {
-                    builder = builder.cross_validate(KFold(cv_k, &fractions));
+                    builder = builder.cross_validate(KFold(k, &fractions));
                 }
                 _ => {
                     return Err(JsValue::from_str(&format!(
                         "Unknown CV method: {}. Valid options: loocv, kfold",
-                        cv_method
+                        method
                     )));
                 }
             };
@@ -345,6 +365,7 @@ pub fn smooth(
     Ok(LoessResultWasm { inner: result })
 }
 
+/// Streaming LOESS smoother.
 #[wasm_bindgen]
 pub struct StreamingLoessWasm {
     inner: ParallelStreamingLoess<f64>,
@@ -352,57 +373,43 @@ pub struct StreamingLoessWasm {
 
 #[wasm_bindgen]
 impl StreamingLoessWasm {
+    /// Create a new streaming smoother.
     #[wasm_bindgen(constructor)]
-    pub fn new(options: &JsValue, streaming_opts: &JsValue) -> Result<StreamingLoessWasm, JsValue> {
+    pub fn new(options: JsValue, streaming_opts: JsValue) -> Result<StreamingLoessWasm, JsValue> {
         let mut builder = LoessBuilder::new();
 
         if !options.is_undefined() && !options.is_null() {
-            let options = Object::from(options.clone());
-            if let Ok(f) = Reflect::get(&options, &JsValue::from_str("fraction"))
-                && let Some(val) = f.as_f64()
-            {
-                builder = builder.fraction(val);
-            }
-            if let Ok(iter) = Reflect::get(&options, &JsValue::from_str("iterations"))
-                && let Some(val) = iter.as_f64()
-            {
-                builder = builder.iterations(val as usize);
-            }
+            let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
 
-            if let Ok(wf) = Reflect::get(&options, &JsValue::from_str("weightFunction"))
-                && let Some(val) = wf.as_string()
-            {
-                builder = builder.weight_function(parse_weight_function(&val)?);
+            if let Some(f) = opts.fraction {
+                builder = builder.fraction(f);
             }
-            if let Ok(rm) = Reflect::get(&options, &JsValue::from_str("robustnessMethod"))
-                && let Some(val) = rm.as_string()
-            {
-                builder = builder.robustness_method(parse_robustness_method(&val)?);
+            if let Some(iter) = opts.iterations {
+                builder = builder.iterations(iter);
             }
-            if let Ok(zw) = Reflect::get(&options, &JsValue::from_str("zeroWeightFallback"))
-                && let Some(val) = zw.as_string()
-            {
-                builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&val)?);
+            if let Some(d) = opts.delta {
+                builder = builder.delta(d);
             }
-            if let Ok(bp) = Reflect::get(&options, &JsValue::from_str("boundaryPolicy"))
-                && let Some(val) = bp.as_string()
-            {
-                builder = builder.boundary_policy(parse_boundary_policy(&val)?);
+            if let Some(wf) = opts.weight_function {
+                builder = builder.weight_function(parse_weight_function(&wf)?);
             }
-            if let Ok(sm) = Reflect::get(&options, &JsValue::from_str("scalingMethod"))
-                && let Some(val) = sm.as_string()
-            {
-                builder = builder.scaling_method(parse_scaling_method(&val)?);
+            if let Some(rm) = opts.robustness_method {
+                builder = builder.robustness_method(parse_robustness_method(&rm)?);
             }
-            if let Ok(ac) = Reflect::get(&options, &JsValue::from_str("autoConverge"))
-                && let Some(val) = ac.as_f64()
-            {
-                builder = builder.auto_converge(val);
+            if let Some(zw) = opts.zero_weight_fallback {
+                builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&zw)?);
             }
-            if let Ok(par) = Reflect::get(&options, &JsValue::from_str("parallel"))
-                && let Some(val) = par.as_bool()
-            {
-                builder = builder.parallel(val);
+            if let Some(bp) = opts.boundary_policy {
+                builder = builder.boundary_policy(parse_boundary_policy(&bp)?);
+            }
+            if let Some(sm) = opts.scaling_method {
+                builder = builder.scaling_method(parse_scaling_method(&sm)?);
+            }
+            if let Some(ac) = opts.auto_converge {
+                builder = builder.auto_converge(ac);
+            }
+            if let Some(par) = opts.parallel {
+                builder = builder.parallel(par);
             }
         }
 
@@ -410,16 +417,12 @@ impl StreamingLoessWasm {
         let mut overlap = 500;
 
         if !streaming_opts.is_undefined() && !streaming_opts.is_null() {
-            let sopts = Object::from(streaming_opts.clone());
-            if let Ok(cs) = Reflect::get(&sopts, &JsValue::from_str("chunkSize"))
-                && let Some(val) = cs.as_f64()
-            {
-                chunk_size = val as usize;
+            let sopts: StreamingOptions = serde_wasm_bindgen::from_value(streaming_opts)?;
+            if let Some(cs) = sopts.chunk_size {
+                chunk_size = cs;
             }
-            if let Ok(ov) = Reflect::get(&sopts, &JsValue::from_str("overlap"))
-                && let Some(val) = ov.as_f64()
-            {
-                overlap = val as usize;
+            if let Some(ov) = sopts.overlap {
+                overlap = ov;
             }
         }
 
@@ -457,6 +460,7 @@ impl StreamingLoessWasm {
     }
 }
 
+/// Online LOESS smoother.
 #[wasm_bindgen]
 pub struct OnlineLoessWasm {
     inner: ParallelOnlineLoess<f64>,
@@ -464,26 +468,22 @@ pub struct OnlineLoessWasm {
 
 #[wasm_bindgen]
 impl OnlineLoessWasm {
+    /// Create a new online smoother.
     #[wasm_bindgen(constructor)]
-    pub fn new(options: &JsValue, online_opts: &JsValue) -> Result<OnlineLoessWasm, JsValue> {
+    pub fn new(options: JsValue, online_opts: JsValue) -> Result<OnlineLoessWasm, JsValue> {
         let mut builder = LoessBuilder::new();
 
         if !options.is_undefined() && !options.is_null() {
-            let options = Object::from(options.clone());
-            if let Ok(f) = Reflect::get(&options, &JsValue::from_str("fraction"))
-                && let Some(val) = f.as_f64()
-            {
-                builder = builder.fraction(val);
+            let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
+
+            if let Some(f) = opts.fraction {
+                builder = builder.fraction(f);
             }
-            if let Ok(iter) = Reflect::get(&options, &JsValue::from_str("iterations"))
-                && let Some(val) = iter.as_f64()
-            {
-                builder = builder.iterations(val as usize);
+            if let Some(iter) = opts.iterations {
+                builder = builder.iterations(iter);
             }
-            if let Ok(par) = Reflect::get(&options, &JsValue::from_str("parallel"))
-                && let Some(val) = par.as_bool()
-            {
-                builder = builder.parallel(val);
+            if let Some(par) = opts.parallel {
+                builder = builder.parallel(par);
             }
         }
 
@@ -492,21 +492,15 @@ impl OnlineLoessWasm {
         let mut update_mode = UpdateMode::Full;
 
         if !online_opts.is_undefined() && !online_opts.is_null() {
-            let oopts = Object::from(online_opts.clone());
-            if let Ok(wc) = Reflect::get(&oopts, &JsValue::from_str("windowCapacity"))
-                && let Some(val) = wc.as_f64()
-            {
-                window_capacity = val as usize;
+            let oopts: OnlineOptions = serde_wasm_bindgen::from_value(online_opts)?;
+            if let Some(wc) = oopts.window_capacity {
+                window_capacity = wc;
             }
-            if let Ok(mp) = Reflect::get(&oopts, &JsValue::from_str("minPoints"))
-                && let Some(val) = mp.as_f64()
-            {
-                min_points = val as usize;
+            if let Some(mp) = oopts.min_points {
+                min_points = mp;
             }
-            if let Ok(um) = Reflect::get(&oopts, &JsValue::from_str("updateMode"))
-                && let Some(val) = um.as_string()
-            {
-                update_mode = parse_update_mode(&val)?;
+            if let Some(um) = oopts.update_mode {
+                update_mode = parse_update_mode(&um)?;
             }
         }
 
@@ -524,7 +518,7 @@ impl OnlineLoessWasm {
     pub fn update(&mut self, x: f64, y: f64) -> Result<Option<f64>, JsValue> {
         let result = self
             .inner
-            .add_point(&[x], y)
+            .add_point(x, y)
             .map_err(|e: ::fastLoess::prelude::LoessError| JsValue::from_str(&e.to_string()))?;
         Ok(result.map(|o| o.smoothed))
     }

@@ -22,7 +22,6 @@ use loess_rs::prelude::*;
 
 use loess_rs::internals::adapters::online::OnlineLoessBuilder;
 use loess_rs::internals::adapters::online::UpdateMode;
-use loess_rs::internals::algorithms::robustness::RobustnessMethod::{Bisquare, Huber, Talwar};
 use loess_rs::internals::math::boundary::BoundaryPolicy;
 use loess_rs::internals::primitives::errors::LoessError;
 
@@ -41,7 +40,6 @@ fn test_online_exact_linear_reproduction() {
     let mut processor = Loess::new()
         .fraction(1.0)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(3)
         .min_points(2)
@@ -51,7 +49,7 @@ fn test_online_exact_linear_reproduction() {
     let mut smoothed = Vec::new();
     for (&xi, &yi) in x.iter().zip(y.iter()) {
         if let Some(output) = processor
-            .add_point(&[xi], yi)
+            .add_point(xi, yi)
             .expect("add_point should succeed")
         {
             smoothed.push(output.smoothed);
@@ -62,9 +60,8 @@ fn test_online_exact_linear_reproduction() {
     }
 
     assert_eq!(smoothed.len(), 3, "Should have 3 smoothed values");
-    // Note: With unified KD-Tree approach, exact reproduction is not guaranteed
-    for &s in smoothed.iter() {
-        assert!(s.is_finite(), "Smoothed value should be finite");
+    for (&s, &t) in smoothed.iter().zip(y.iter()) {
+        assert_relative_eq!(s, t, max_relative = 1e-12, epsilon = 1e-14);
     }
 }
 
@@ -79,7 +76,6 @@ fn test_online_add_point_basic() {
     let mut processor = Loess::new()
         .fraction(1.0)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(5)
         .min_points(2)
@@ -91,13 +87,13 @@ fn test_online_add_point_basic() {
 
     // First point returns None (need min_points)
     assert_eq!(
-        processor.add_point(&[0.0], 1.0).expect("add_point ok"),
+        processor.add_point(0.0, 1.0).expect("add_point ok"),
         None,
         "First point should return None"
     );
 
     // Second point produces smoothed value
-    let output = processor.add_point(&[1.0], 3.0).expect("add_point ok");
+    let output = processor.add_point(1.0, 3.0).expect("add_point ok");
     assert!(output.is_some(), "Second point should return Some");
     assert_relative_eq!(
         output.unwrap().smoothed,
@@ -122,7 +118,6 @@ fn test_online_window_eviction() {
     let mut processor = Loess::new()
         .fraction(1.0) // Exact linear fit => smoothed value equals y
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(3)
         .min_points(2)
@@ -132,35 +127,26 @@ fn test_online_window_eviction() {
     // First point - not enough points yet
     assert_eq!(processor.window_size(), 0);
     assert_eq!(
-        processor.add_point(&[0.0f64], 1.0f64).expect("ok"),
+        processor.add_point(0.0, 1.0).expect("ok"),
         None,
         "First point returns None"
     );
 
     // Second point - produces smoothed value
-    let second = processor.add_point(&[1.0f64], 3.0f64).expect("ok");
+    let second = processor.add_point(1.0, 3.0).expect("ok");
     assert!(second.is_some(), "Second point should return Some");
-    let second_val = second.unwrap().smoothed;
-    assert!(
-        f64::is_finite(second_val),
-        "Smoothed value should be finite"
-    );
+    assert_relative_eq!(second.unwrap().smoothed, 3.0, max_relative = 1e-12);
 
     // Third point - window fills to capacity
-    let third = processor.add_point(&[2.0f64], 5.0f64).expect("ok");
+    let third = processor.add_point(2.0, 5.0).expect("ok");
     assert!(third.is_some(), "Third point should return Some");
-    let third_val = third.unwrap().smoothed;
-    assert!(f64::is_finite(third_val), "Smoothed value should be finite");
+    assert_relative_eq!(third.unwrap().smoothed, 5.0, max_relative = 1e-12);
     assert_eq!(processor.window_size(), 3, "Window should be at capacity");
 
     // Fourth point - oldest should be evicted, window size stays at capacity
-    let fourth = processor.add_point(&[3.0f64], 7.0f64).expect("ok");
+    let fourth = processor.add_point(3.0, 7.0).expect("ok");
     assert!(fourth.is_some(), "Fourth point should return Some");
-    let fourth_val = fourth.unwrap().smoothed;
-    assert!(
-        f64::is_finite(fourth_val),
-        "Smoothed value should be finite"
-    );
+    assert_relative_eq!(fourth.unwrap().smoothed, 7.0, max_relative = 1e-12);
     assert_eq!(
         processor.window_size(),
         3,
@@ -176,7 +162,6 @@ fn test_online_sliding_window() {
     let mut processor = Loess::new()
         .fraction(0.5)
         .iterations(1)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10)
         .min_points(3)
@@ -187,7 +172,7 @@ fn test_online_sliding_window() {
     for i in 0..20 {
         let x = i as f64;
         let y = 2.0 * x + 1.0;
-        let result = processor.add_point(&[x], y).expect("add_point ok");
+        let result = processor.add_point(x, y).expect("add_point ok");
 
         if i >= 2 {
             // After min_points, should always return Some
@@ -220,7 +205,6 @@ fn test_online_reset() {
     let mut processor = Loess::new()
         .fraction(1.0)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(5)
         .min_points(2)
@@ -228,8 +212,8 @@ fn test_online_reset() {
         .expect("Builder should succeed");
 
     // Add some points
-    processor.add_point(&[0.0], 1.0).expect("ok");
-    processor.add_point(&[1.0], 3.0).expect("ok");
+    processor.add_point(0.0, 1.0).expect("ok");
+    processor.add_point(1.0, 3.0).expect("ok");
 
     // Reset clears state
     processor.reset();
@@ -248,7 +232,6 @@ fn test_online_reuse_after_reset() {
     let mut processor = Loess::new()
         .fraction(1.0)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(4)
         .min_points(2)
@@ -256,8 +239,8 @@ fn test_online_reuse_after_reset() {
         .expect("Builder should succeed");
 
     // Populate and ensure smoothing occurs
-    processor.add_point(&[0.0], 1.0).expect("ok");
-    let _ = processor.add_point(&[1.0], 3.0).expect("ok");
+    processor.add_point(0.0, 1.0).expect("ok");
+    let _ = processor.add_point(1.0, 3.0).expect("ok");
     assert!(
         processor.window_size() >= 2,
         "Window should have at least 2 points"
@@ -269,13 +252,13 @@ fn test_online_reuse_after_reset() {
 
     // Reuse after reset: first point returns None again
     assert_eq!(
-        processor.add_point(&[10.0], 21.0).expect("ok"),
+        processor.add_point(10.0, 21.0).expect("ok"),
         None,
         "First point after reset should return None"
     );
 
     // Second point after reset should produce a smoothed value
-    let output = processor.add_point(&[11.0], 23.0).expect("ok");
+    let output = processor.add_point(11.0, 23.0).expect("ok");
     assert!(output.is_some(), "Second point should return Some");
     assert_relative_eq!(output.unwrap().smoothed, 23.0, max_relative = 1e-12);
 }
@@ -290,7 +273,6 @@ fn test_online_reuse_after_reset() {
 #[test]
 fn test_online_invalid_window_capacity() {
     let result = Loess::<f64>::new()
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(2)
         .build();
@@ -308,7 +290,6 @@ fn test_online_invalid_window_capacity() {
 fn test_online_invalid_min_points() {
     // min_points < 2 should error
     let result1 = Loess::<f64>::new()
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10)
         .min_points(1)
@@ -321,7 +302,6 @@ fn test_online_invalid_min_points() {
 
     // min_points > window_capacity should error
     let result2 = Loess::<f64>::new()
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10)
         .min_points(20)
@@ -341,7 +321,6 @@ fn test_online_valid_builder() {
     let result = Loess::new()
         .fraction(0.5)
         .iterations(2)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10)
         .min_points(3)
@@ -355,9 +334,9 @@ fn test_online_valid_builder() {
     assert_eq!(processor.window_size(), 0, "Window should start empty");
 
     // Add points to verify it works
-    assert_eq!(processor.add_point(&[0.0], 1.0).expect("ok"), None);
-    assert_eq!(processor.add_point(&[1.0], 3.0).expect("ok"), None);
-    let third = processor.add_point(&[2.0], 5.0).expect("ok");
+    assert_eq!(processor.add_point(0.0, 1.0).expect("ok"), None);
+    assert_eq!(processor.add_point(1.0, 3.0).expect("ok"), None);
+    let third = processor.add_point(2.0, 5.0).expect("ok");
     assert!(third.is_some(), "Third point should return Some");
     assert_eq!(processor.window_size(), 3, "Window should have 3 points");
 
@@ -386,10 +365,12 @@ fn test_online_builder_defaults() {
 fn test_online_builder_setters() {
     let b = OnlineLoessBuilder::<f64>::default()
         .boundary_policy(BoundaryPolicy::Extend)
+        .delta(0.1)
         .update_mode(UpdateMode::Incremental)
         .window_capacity(100)
         .min_points(5);
     assert_eq!(b.boundary_policy, BoundaryPolicy::Extend);
+    assert_eq!(b.delta, 0.1);
     assert_eq!(b.update_mode, UpdateMode::Incremental);
     assert_eq!(b.window_capacity, 100);
     assert_eq!(b.min_points, 5);
@@ -400,7 +381,6 @@ fn test_online_builder_setters() {
 fn test_online_loess_basic() {
     let mut model = Loess::<f64>::new()
         .fraction(0.5)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10)
         .min_points(5)
@@ -408,7 +388,7 @@ fn test_online_loess_basic() {
         .unwrap();
 
     for i in 0..10 {
-        let res = model.add_point(&[i as f64], i as f64 * 2.0).unwrap();
+        let res = model.add_point(i as f64, i as f64 * 2.0).unwrap();
         if i < 4 {
             assert!(res.is_none());
         } else {
@@ -429,7 +409,6 @@ fn test_online_duplicate_x_values() {
     let mut processor = Loess::new()
         .fraction(0.5)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(5)
         .min_points(2)
@@ -438,13 +417,13 @@ fn test_online_duplicate_x_values() {
 
     // First point - returns None (needs min_points)
     assert_eq!(
-        processor.add_point(&[1.0], 1.0).expect("ok"),
+        processor.add_point(1.0, 1.0).expect("ok"),
         None,
         "First point returns None"
     );
 
     // Second point with same x - should fallback to mean((1+3)/2)=2.0
-    let output = processor.add_point(&[1.0], 3.0).expect("ok");
+    let output = processor.add_point(1.0, 3.0).expect("ok");
     assert!(output.is_some(), "Second point should return Some");
     assert_relative_eq!(
         output.unwrap().smoothed,
@@ -462,7 +441,6 @@ fn test_online_minimum_window_capacity() {
     let mut processor = Loess::new()
         .fraction(1.0)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(3) // Minimum allowed
         .min_points(2)
@@ -470,11 +448,11 @@ fn test_online_minimum_window_capacity() {
         .expect("Minimum window capacity should be accepted");
 
     // Add 3 points
-    processor.add_point(&[0.0], 1.0).expect("ok");
-    let second = processor.add_point(&[1.0], 2.0).expect("ok");
+    processor.add_point(0.0, 1.0).expect("ok");
+    let second = processor.add_point(1.0, 2.0).expect("ok");
     assert!(second.is_some(), "Second point should return Some");
 
-    let third = processor.add_point(&[2.0], 3.0).expect("ok");
+    let third = processor.add_point(2.0, 3.0).expect("ok");
     assert!(third.is_some(), "Third point should return Some");
     assert_eq!(processor.window_size(), 3, "Window should be at capacity");
 }
@@ -491,7 +469,6 @@ fn test_online_robustness_methods() {
             .fraction(0.5)
             .iterations(3)
             .robustness_method(method)
-            .surface_mode(Direct)
             .adapter(Online)
             .window_capacity(10)
             .min_points(3)
@@ -502,7 +479,7 @@ fn test_online_robustness_methods() {
         for i in 0..10 {
             let x = i as f64;
             let y = if i == 5 { 100.0 } else { 2.0 * x + 1.0 }; // Outlier at i=5
-            let result = processor.add_point(&[x], y).expect("add_point ok");
+            let result = processor.add_point(x, y).expect("add_point ok");
 
             if i >= 2 {
                 assert!(result.is_some(), "Should return smoothed value");
@@ -524,7 +501,6 @@ fn test_online_with_residuals() {
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10)
         .min_points(3)
@@ -535,7 +511,7 @@ fn test_online_with_residuals() {
     for i in 0..10 {
         let x = i as f64;
         let y = 2.0 * x + 1.0;
-        let result = processor.add_point(&[x], y).expect("add_point ok");
+        let result = processor.add_point(x, y).expect("add_point ok");
 
         if let Some(output) = result {
             // Verify residual is present when requested
@@ -573,7 +549,6 @@ fn test_update_mode_consistency() {
     let mut incremental = Loess::new()
         .fraction(0.5)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10)
         .min_points(3)
@@ -585,7 +560,6 @@ fn test_update_mode_consistency() {
     let mut full = Loess::new()
         .fraction(0.5)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10)
         .min_points(3)
@@ -593,14 +567,14 @@ fn test_update_mode_consistency() {
         .build()
         .expect("Builder should succeed");
 
-    let mut incremental_results: Vec<f64> = Vec::new();
-    let mut full_results: Vec<f64> = Vec::new();
+    let mut incremental_results = Vec::new();
+    let mut full_results = Vec::new();
 
     for (x, y) in test_data {
-        if let Some(output) = incremental.add_point(&[x], y).expect("add_point ok") {
+        if let Some(output) = incremental.add_point(x, y).expect("add_point ok") {
             incremental_results.push(output.smoothed);
         }
-        if let Some(output) = full.add_point(&[x], y).expect("add_point ok") {
+        if let Some(output) = full.add_point(x, y).expect("add_point ok") {
             full_results.push(output.smoothed);
         }
     }
@@ -630,13 +604,14 @@ fn test_update_mode_consistency() {
     }
 }
 
-/// Test that both modes produce valid output.
+/// Test that Incremental mode is faster than Full mode.
 ///
-/// Note: With unified KD-Tree approach, Incremental mode uses full LOESS internally
-/// so performance difference is minimal. This just verifies both complete successfully.
+/// This is a basic sanity check that Incremental mode completes faster.
 #[test]
 fn test_incremental_mode_performance() {
-    let test_data: Vec<(f64, f64)> = (0..100) // Reduced size
+    use std::time::Instant;
+
+    let test_data: Vec<(f64, f64)> = (0..1000)
         .map(|i| {
             let x = i as f64;
             let y = 2.0 * x + 1.0;
@@ -644,45 +619,52 @@ fn test_incremental_mode_performance() {
         })
         .collect();
 
-    // Test Incremental mode completes
+    // Benchmark Incremental mode
     let mut incremental = Loess::new()
         .fraction(0.3)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Online)
-        .window_capacity(20)
+        .window_capacity(100)
         .min_points(3)
         .update_mode(UpdateMode::Incremental)
         .build()
         .expect("Builder should succeed");
 
+    let start = Instant::now();
     for (x, y) in &test_data {
-        let result = incremental.add_point(&[*x], *y).expect("add_point ok");
-        if incremental.window_size() >= 3 {
-            assert!(result.is_some(), "Should produce output");
-            assert!(result.unwrap().smoothed.is_finite(), "Should be finite");
-        }
+        let _ = incremental.add_point(*x, *y).expect("add_point ok");
     }
+    let incremental_time = start.elapsed();
 
-    // Test Full mode completes
+    // Benchmark Full mode
     let mut full = Loess::new()
         .fraction(0.3)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Online)
-        .window_capacity(20)
+        .window_capacity(100)
         .min_points(3)
         .update_mode(UpdateMode::Full)
         .build()
         .expect("Builder should succeed");
 
+    let start = Instant::now();
     for (x, y) in &test_data {
-        let result = full.add_point(&[*x], *y).expect("add_point ok");
-        if full.window_size() >= 3 {
-            assert!(result.is_some(), "Should produce output");
-            assert!(result.unwrap().smoothed.is_finite(), "Should be finite");
-        }
+        let _ = full.add_point(*x, *y).expect("add_point ok");
     }
+    let full_time = start.elapsed();
+
+    // Incremental should be faster (at least 2x for this window size)
+    println!(
+        "Incremental: {:?}, Full: {:?}, Speedup: {:.2}x",
+        incremental_time,
+        full_time,
+        full_time.as_secs_f64() / incremental_time.as_secs_f64()
+    );
+
+    assert!(
+        incremental_time < full_time,
+        "Incremental mode should be faster than Full mode"
+    );
 }
 
 /// Test with robustness weights enabled.
@@ -694,7 +676,6 @@ fn test_online_with_robustness_weights() {
         .fraction(0.99)
         .iterations(3)
         .return_robustness_weights()
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(30)
         .min_points(10)
@@ -706,7 +687,7 @@ fn test_online_with_robustness_weights() {
     for i in 0..30 {
         let x = i as f64;
         let y = if i == 15 { 500.0 } else { 2.0 * x + 1.0 };
-        let result = processor.add_point(&[x], y).expect("add_point ok");
+        let result = processor.add_point(x, y).expect("add_point ok");
 
         if let Some(output) = result {
             // Verify robustness weight is present when requested
@@ -723,13 +704,11 @@ fn test_online_with_robustness_weights() {
                 w
             );
 
-            // After outlier is added (i=15), it should be somewhat downweighted
-            // Note: Surface interpolation approach may not downweight as aggressively
-            // as per-point fitting, but should still show some effect
+            // After outlier is added (i=15), it should be heavily downweighted
             if i == 15 {
                 assert!(
-                    w < 0.95,
-                    "Outlier at i=15 should show some downweighting effect, got {}",
+                    w < 0.2,
+                    "Outlier at i=15 should be heavily downweighted, got {}",
                     w
                 );
             }
@@ -746,7 +725,6 @@ fn test_online_with_robustness_weights() {
 fn test_online_window_exactly_min_points() {
     let mut processor = Loess::new()
         .fraction(0.8)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(5)
         .min_points(5)
@@ -755,11 +733,11 @@ fn test_online_window_exactly_min_points() {
 
     // Add exactly min_points
     for i in 0..5 {
-        let output = processor.add_point(&[i as f64], (i * 2) as f64).unwrap();
+        let output = processor.add_point(i as f64, (i * 2) as f64).unwrap();
         if i >= 4 {
             if let Some(output) = output {
                 assert!(output.smoothed.is_finite());
-            };
+            }
         }
     }
 
@@ -771,7 +749,6 @@ fn test_online_window_exactly_min_points() {
 fn test_online_all_points_identical() {
     let mut processor = Loess::new()
         .fraction(0.5)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10)
         .min_points(3)
@@ -780,12 +757,12 @@ fn test_online_all_points_identical() {
 
     // Add identical points
     for _ in 0..10 {
-        let output = processor.add_point(&[5.0], 10.0).unwrap();
+        let output = processor.add_point(5.0, 10.0).unwrap();
         // Should return the constant value
         if processor.window_size() >= 3 {
             if let Some(output) = output {
                 assert_relative_eq!(output.smoothed, 10.0, epsilon = 1e-6);
-            };
+            }
         }
     }
 }
@@ -795,7 +772,6 @@ fn test_online_all_points_identical() {
 fn test_online_decreasing_x_values() {
     let mut processor = Loess::new()
         .fraction(0.5)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10)
         .min_points(3)
@@ -806,13 +782,13 @@ fn test_online_decreasing_x_values() {
     for i in 0..10 {
         let x = (10 - i) as f64;
         let y = x * 2.0;
-        let output = processor.add_point(&[x], y).unwrap();
+        let output = processor.add_point(x, y).unwrap();
 
         // Should still produce valid output
         if processor.window_size() >= 3 {
             if let Some(output) = output {
                 assert!(output.smoothed.is_finite());
-            };
+            }
         }
     }
 }
@@ -823,7 +799,6 @@ fn test_online_extreme_window_sizes() {
     // Very large window
     let processor = Loess::new()
         .fraction(0.1)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10000)
         .min_points(100)
@@ -835,7 +810,6 @@ fn test_online_extreme_window_sizes() {
     // Minimum window
     let processor_min = Loess::new()
         .fraction(0.9)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(3)
         .min_points(2)
@@ -851,7 +825,6 @@ fn test_online_fraction_boundaries() {
     // Very small fraction
     let mut proc_small = Loess::new()
         .fraction(0.01)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(100)
         .min_points(10)
@@ -859,13 +832,12 @@ fn test_online_fraction_boundaries() {
         .unwrap();
 
     for i in 0..20 {
-        proc_small.add_point(&[i as f64], (i * 2) as f64).unwrap();
+        proc_small.add_point(i as f64, (i * 2) as f64).unwrap();
     }
 
     // Fraction = 1.0 (global regression on window)
     let mut proc_one = Loess::new()
         .fraction(1.0)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(20)
         .min_points(5)
@@ -873,11 +845,11 @@ fn test_online_fraction_boundaries() {
         .unwrap();
 
     for i in 0..10 {
-        let output = proc_one.add_point(&[i as f64], (i * 2) as f64).unwrap();
+        let output = proc_one.add_point(i as f64, (i * 2) as f64).unwrap();
         if proc_one.window_size() >= 5 {
             if let Some(output) = output {
                 assert!(output.smoothed.is_finite());
-            };
+            }
         }
     }
 }
@@ -887,7 +859,6 @@ fn test_online_fraction_boundaries() {
 fn test_online_reset_complete() {
     let mut processor = Loess::new()
         .fraction(0.5)
-        .surface_mode(Direct)
         .adapter(Online)
         .window_capacity(10)
         .min_points(3)
@@ -896,7 +867,7 @@ fn test_online_reset_complete() {
 
     // Add some points
     for i in 0..5 {
-        processor.add_point(&[i as f64], (i * 2) as f64).unwrap();
+        processor.add_point(i as f64, (i * 2) as f64).unwrap();
     }
 
     assert_eq!(processor.window_size(), 5);
@@ -908,6 +879,6 @@ fn test_online_reset_complete() {
     assert_eq!(processor.window_size(), 0);
 
     // Should be able to add new points
-    let _output = processor.add_point(&[100.0], 200.0).unwrap();
+    let _output = processor.add_point(100.0, 200.0).unwrap();
     assert_eq!(processor.window_size(), 1);
 }

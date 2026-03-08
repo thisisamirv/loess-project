@@ -1,23 +1,20 @@
 [package]
-name = "loess-rs"
-version = { workspace = true }
-authors = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-rust-version = { workspace = true }
-
 # Metadata
-description = { workspace = true }
+name = "loess-rs"
+version = "1.1.1"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+rust-version = "1.88"
+license = "MIT OR Apache-2.0"
+
+# Documentation and Discovery
+description = "LOESS (Locally Weighted Scatterplot Smoothing)"
 readme = "README.md"
-
-# Links
-repository = { workspace = true }
+repository = "https://github.com/thisisamirv/loess-project"
+homepage = "https://github.com/thisisamirv/loess-project"
 documentation = "https://loess.readthedocs.io/"
-homepage = { workspace = true }
-
-# Categories
-keywords = { workspace = true }
-categories = { workspace = true }
+keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
 
 # Build
 include = [
@@ -29,22 +26,21 @@ include = [
 ]
 
 [dependencies]
-num-traits = { workspace = true, default-features = false, features = ["libm"] }
-nalgebra = { workspace = true, default-features = false, features = [
+num-traits = { version = "0.2", default-features = false, features = ["libm"] }
+nalgebra = { version = "0.34", default-features = false, features = [
     "alloc",
     "libm",
 ] }
-wide = { workspace = true, default-features = false }
+wide = { version = "0.7", default-features = false }
 
 [dev-dependencies]
-approx = { workspace = true }
+approx = "0.5"
 
 [features]
 default = ["std"]
 std = ["num-traits/std", "nalgebra/std", "wide/std"]
 dev = []
 
-# Document all features
+
 [package.metadata.docs.rs]
-all-features = true
 rustdoc-args = ["--cfg", "docsrs"]

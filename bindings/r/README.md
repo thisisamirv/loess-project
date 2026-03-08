@@ -1,13 +1,22 @@
 <!-- markdownlint-disable MD024 MD033 -->
 # LOESS Project
 
-[![License](https://img.shields.io/badge/license-MIT%2FApache--2.0-blue.svg)](LICENSE-MIT)
-[![Docs](https://img.shields.io/badge/docs-readthedocs-blue.svg)](https://loess.readthedocs.io/)
-[![Crates.io](https://img.shields.io/crates/v/loess.svg)](https://crates.io/crates/loess)
-[![PyPI](https://img.shields.io/pypi/v/fastloess.svg)](https://pypi.org/project/fastloess/)
-[![Conda](https://anaconda.org/conda-forge/fastloess/badges/version.svg)](https://anaconda.org/conda-forge/fastloess)
-[![R-universe](https://thisisamirv.r-universe.dev/badges/rfastloess)](https://thisisamirv.r-universe.dev/rfastloess)
-[![npm](https://img.shields.io/npm/v/fastloess.svg)](https://www.npmjs.com/package/fastloess)
+<p align="center">
+  <a href="https://crates.io/crates/loess-rs"><img src="https://img.shields.io/badge/loess--rs-000000?logo=rust&logoColor=white" alt="loess-rs"></a>
+  <a href="https://crates.io/crates/fastLoess"><img src="https://img.shields.io/badge/fastLoess-000000?logo=rust&logoColor=white" alt="fastLoess"></a>
+  <a href="https://pypi.org/project/fastloess/"><img src="https://img.shields.io/badge/PyPI-3775A9?logo=pypi&logoColor=white" alt="PyPI"></a>
+  <a href="https://thisisamirv.r-universe.dev/rfastloess"><img src="https://img.shields.io/badge/R--universe-276DC3?logo=r&logoColor=white" alt="R-universe"></a>
+  <a href="https://www.npmjs.com/package/fastloess"><img src="https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=white" alt="npm"></a>
+  <a href="https://juliahub.com/ui/Packages/General/FastLOESS"><img src="https://img.shields.io/badge/Julia-9558B2?logo=julia&logoColor=white" alt="Julia"></a>
+  <a href="https://www.npmjs.com/package/fastloess-wasm"><img src="https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white" alt="WASM"></a>
+  <a href="https://github.com/thisisamirv/loess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white" alt="C++"></a>
+  <br>
+  <a href="https://anaconda.org/conda-forge/fastloess"><img src="https://img.shields.io/badge/fastloess_(Python)-44A833?logo=anaconda&logoColor=white" alt="fastloess (Python)"></a>
+  <a href="https://anaconda.org/conda-forge/libfastloess"><img src="https://img.shields.io/badge/libfastloess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastloess (C++)"></a>
+  <a href="https://anaconda.org/conda-forge/r-rfastloess"><img src="https://img.shields.io/badge/rfastloess_(R)-44A833?logo=anaconda&logoColor=white" alt="rfastloess (R)"></a>
+  <br>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+</p>
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/thisisamirv/loess-project/main/dev/logo.png" alt="One LOESS to Rule Them All" width="400">
@@ -15,20 +24,36 @@
   <em>One LOESS to Rule Them All</em>
 </p>
 
-The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Estimated Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
+The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
 
 > [!IMPORTANT]
 >
 > The `loess-project` contains a complete ecosystem for LOESS smoothing:
 >
-> - **[`loess`](https://github.com/thisisamirv/loess-project/tree/main/crates/loess)** - Core single-threaded Rust implementation with `no_std` support
-> - **[`fastLoess`](https://github.com/thisisamirv/loess-project/tree/main/crates/fastLoess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
-> - **[`R bindings`](https://github.com/thisisamirv/loess-project/tree/main/bindings/r)** - extendr-based R package
-> - **[`Python bindings`](https://github.com/thisisamirv/loess-project/tree/main/bindings/python)** - PyO3-based Python package
-> - **[`Julia bindings`](https://github.com/thisisamirv/loess-project/tree/main/bindings/julia)** - Native Julia package with C FFI
-> - **[`JavaScript bindings`](https://github.com/thisisamirv/loess-project/tree/main/bindings/nodejs)** - Node.js package
-> - **[`WebAssembly bindings`](https://github.com/thisisamirv/loess-project/tree/main/bindings/wasm)** - WASM package
-> - **[`C++ bindings`](https://github.com/thisisamirv/loess-project/tree/main/bindings/cpp)** - Native C++ package with CMake integration
+> - **[`loess-rs`](https://crates.io/crates/loess-rs)** - Core single-threaded Rust implementation with `no_std` support
+> - **[`fastLoess`](https://crates.io/crates/fastLoess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
+> - **[`R bindings`](https://thisisamirv.r-universe.dev/rfastloess)** - extendr-based R binding
+> - **[`Python bindings`](https://pypi.org/project/fastloess/)** - PyO3-based Python binding
+> - **[`Julia bindings`](https://juliahub.com/ui/Packages/General/FastLOESS)** - Native Julia binding with C FFI
+> - **[`JavaScript bindings`](https://www.npmjs.com/package/fastloess)** - Node.js binding
+> - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastloess-wasm)** - WASM binding
+> - **[`C++ bindings`](https://github.com/thisisamirv/loess-project/releases/latest)** - Native C++ binding with CMake integration
+
+---
+
+## Installation
+
+> [!NOTE]
+>
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See [INSTALLATION.md](https://github.com/thisisamirv/loess-project/blob/main/INSTALLATION.md) for detailed installation instructions.
+
+## Documentation
+
+> [!NOTE]
+>
+> ### 📚 [View the full documentation](https://loess.readthedocs.io/)
+
+---
 
 ## LOESS vs. LOESS
 
@@ -44,38 +69,13 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 ---
 
-## Documentation
-
-> [!NOTE]
->
-> ### 📚 [View the full documentation](https://loess.readthedocs.io/)
-
 ## Why this package?
 
 ### Speed
 
-The `loess` project crushes the competition in terms of speed, wether in single-threaded or multi-threaded parallel execution.
+The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.loess` and **2-3x faster** than R's `loess`.
 
-Speedup relative to Python's `statsmodels.loess` (higher is better):
-
-| Category                        | statsmodels | R (stats) | Serial | Parallel | GPU     |
-|---------------------------------|-------------|-----------|--------|----------|---------|
-| **Clustered**                   | 163ms       | 83×       | 203×   | **433×** | 32×     |
-| **Constant Y**                  | 134ms       | 92×       | 212×   | **410×** | 18×     |
-| **Delta** (large–none)          | 105ms       | 2×        | 4×     | 6×       | **16×** |
-| **Extreme Outliers**            | 489ms       | 106×      | 201×   | **388×** | 29×     |
-| **Financial** (500–10K)         | 106ms       | 105×      | 252×   | **293×** | 12×     |
-| **Fraction** (0.05–0.67)        | 221ms       | 104×      | 228×   | **391×** | 22×     |
-| **Genomic** (1K–50K)            | 1833ms      | 7×        | 9×     | 20×      | **95×** |
-| **High Noise**                  | 435ms       | 133×      | 134×   | **375×** | 32×     |
-| **Iterations** (0–10)           | 204ms       | 115×      | 224×   | **386×** | 18×     |
-| **Scale** (1K–50K)              | 1841ms      | 264×      | 487×   | **581×** | 98×     |
-| **Scientific** (500–10K)        | 167ms       | 109×      | 205×   | **314×** | 15×     |
-| **Scale Large**\* (100K–2M)     | —           | —         | 1×     | **1.4×** | 0.3×    |
-
-\*Scale Large benchmarks are relative to Serial (statsmodels cannot handle these sizes)
-
-*The numbers are the average across a range of scenarios for each category (e.g., Delta from none, to small, medium, and large).*
+For more details on the performance comparison, see the [BENCHMARKS](https://github.com/thisisamirv/loess-project/blob/main/BENCHMARKS.md) file.
 
 ### Robustness
 
@@ -146,185 +146,12 @@ All implementations are **numerical twins** of R's `loess`:
 | **Consistency** | ✅ PERFECT     | Multiple scenarios pass with strict tolerance |
 | **Robustness**  | ✅ VERIFIED    | Robust smoothing matches R exactly            |
 
-## Installation
-
-Currently available for R, Python, Julia, and Rust:
-
-**R** (from R-universe, recommended):
-
-```r
-install.packages("rfastloess", repos = "https://thisisamirv.r-universe.dev")
-```
-
-**Python** (from PyPI):
-
-```bash
-pip install fastloess
-```
-
-Or from conda-forge:
-
-```bash
-conda install -c conda-forge fastloess
-```
-
-**Rust** (loess, no_std compatible):
-
-```toml
-[dependencies]
-loess = "0.99"
-```
-
-**Rust** (fastLoess, parallel + GPU):
-
-```toml
-[dependencies]
-fastLoess = { version = "0.99", features = ["cpu"] }
-```
-
-**Julia** (from Julia General Registry):
-
-```julia
-using Pkg
-Pkg.add("fastLoess")
-```
-
-**Node.js** (from npm):
-
-```bash
-npm install fastloess
-```
-
-**WebAssembly** (from npm):
-
-```bash
-npm install fastloess-wasm
-```
-
-Or via CDN:
-
-```html
-<script type="module">
-  import init, { smooth } from 'https://unpkg.com/fastloess-wasm@latest';
-  await init();
-</script>
-```
-
-**C++** (build from source):
-
-```bash
-make cpp
-# Links against libfastloess_cpp.so
-```
-
-## Quick Example
-
-**R:**
-
-```r
-library(rfastloess)
-
-x <- c(1, 2, 3, 4, 5)
-y <- c(2.0, 4.1, 5.9, 8.2, 9.8)
-
-result <- fastloess(x, y, fraction = 0.5, iterations = 3)
-print(result$y)
-```
-
-**Python:**
-
-```python
-import fastloess as fl
-import numpy as np
-
-x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
-y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
-
-result = fl.smooth(x, y, fraction=0.5, iterations=3)
-print(result["y"])
-```
-
-**Rust:**
-
-```rust
-use loess::prelude::*;
-
-let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
-
-let model = Loess::new()
-    .fraction(0.5)
-    .iterations(3)
-    .adapter(Batch)
-    .build()?;
-
-let result = model.fit(&x, &y)?;
-println!("{}", result);
-```
-
-**Julia:**
-
-```julia
-using fastloess
-
-x = [1.0, 2.0, 3.0, 4.0, 5.0]
-y = [2.0, 4.1, 5.9, 8.2, 9.8]
-
-result = smooth(x, y, fraction=0.5, iterations=3)
-println(result.y)
-```
-
-**Node.js:**
-
-```javascript
-const { smooth } = require('fastloess');
-
-const x = [1.0, 2.0, 3.0, 4.0, 5.0];
-const y = [2.0, 4.1, 5.9, 8.2, 9.8];
-
-const result = smooth(x, y, { fraction: 0.5, iterations: 3 });
-console.log(result.y);
-```
-
-**WebAssembly:**
-
-```javascript
-import init, { smooth } from 'fastloess-wasm';
-
-await init();
-
-const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0]);
-const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
-
-const result = smooth(x, y, { fraction: 0.5, iterations: 3 });
-console.log(result.y);
-```
-
-**C++:**
-
-```cpp
-#include <fastloess.hpp>
-
-std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
-
-fastloess::LoessOptions options;
-options.fraction = 0.5;
-options.iterations = 3;
-
-auto result = fastloess::smooth(x, y, options);
-for (double val : result.y_vector()) std::cout << val << " ";
-```
-
----
-
 ## API Reference
 
 **R:**
 
 ```r
-fastloess(
-    x, y,
+Loess(
     fraction = 0.5,
     iterations = 3L,
     delta = 0.01,
@@ -342,14 +169,30 @@ fastloess(
     cv_k = 5L,
     auto_converge = 1e-4,
     parallel = TRUE
-)
+)$fit(x, y)
+
+# Result structure:
+result$x,
+result$y,
+result$standard_errors,
+result$confidence_lower,
+result$confidence_upper,
+result$prediction_lower,
+result$prediction_upper,
+result$residuals,
+result$robustness_weights,
+result$diagnostics,
+result$iterations_used,
+result$fraction_used,
+result$cv_scores
 ```
 
 **Python:**
 
 ```python
-fastloess.smooth(
-    x, y,
+from fastloess import Loess
+
+model = Loess(
     fraction=0.5,
     iterations=3,
     delta=0.01,
@@ -368,16 +211,32 @@ fastloess.smooth(
     auto_converge=1e-4,
     parallel=True
 )
+result = model.fit(x, y)
+
+# Result structure:
+result.x,
+result.y,
+result.standard_errors,
+result.confidence_lower,
+result.confidence_upper,
+result.prediction_lower,
+result.prediction_upper,
+result.residuals,
+result.robustness_weights,
+result.diagnostics,
+result.iterations_used,
+result.fraction_used,
+result.cv_scores
 ```
 
 **Rust:**
 
 ```rust
 Loess::new()
-    .fraction(0.5)              // Smoothing span (0, 1]
-    .iterations(3)              // Robustness iterations
-    .delta(0.01)                // Interpolation threshold
-    .weight_function(Tricube)   // Kernel selection
+    .fraction(0.5)
+    .iterations(3)
+    .delta(0.01)
+    .weight_function(Tricube)
     .robustness_method(Bisquare)
     .zero_weight_fallback(UseLocalMean)
     .boundary_policy(Extend)
@@ -388,17 +247,35 @@ Loess::new()
     .return_robustness_weights()
     .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(123))
     .auto_converge(1e-4)
-    .adapter(Batch)             // or Streaming, Online
+    .adapter(Batch)
     .parallel(true)             // fastLoess only
     .backend(CPU)               // fastLoess only: CPU or GPU
     .build()?;
+
+let result = model.fit(x, y);
+
+// Result structure:
+pub struct LoessResult<T> {
+    pub x: Vec<T>,                           // Sorted x values
+    pub y: Vec<T>,                           // Smoothed y values
+    pub standard_errors: Option<Vec<T>>,
+    pub confidence_lower: Option<Vec<T>>,
+    pub confidence_upper: Option<Vec<T>>,
+    pub prediction_lower: Option<Vec<T>>,
+    pub prediction_upper: Option<Vec<T>>,
+    pub residuals: Option<Vec<T>>,
+    pub robustness_weights: Option<Vec<T>>,
+    pub diagnostics: Option<Diagnostics<T>>,
+    pub iterations_used: Option<usize>,
+    pub fraction_used: T,
+    pub cv_scores: Option<Vec<T>>,
+}
 ```
 
 **Julia:**
 
 ```julia
-smooth(
-    x, y,
+Loess(;
     fraction=0.5,
     iterations=3,
     delta=NaN,  # NaN for auto
@@ -406,20 +283,74 @@ smooth(
     robustness_method="bisquare",
     zero_weight_fallback="use_local_mean",
     boundary_policy="extend",
-    confidence_intervals=0.95,
-    prediction_intervals=0.95,
+    confidence_intervals=NaN,
+    prediction_intervals=NaN,
     return_diagnostics=true,
     return_residuals=true,
     return_robustness_weights=true,
-    cv_fractions=[0.3, 0.5, 0.7],
+    cv_fractions=Float64[], # e.g. [0.3, 0.5]
     cv_method="kfold",
     cv_k=5,
-    auto_converge=1e-4,
+    auto_converge=NaN,
     parallel=true
 )
+
+# Result structure:
+result.x,
+result.y,
+result.standard_errors,
+result.confidence_lower,
+result.confidence_upper,
+result.prediction_lower,
+result.prediction_upper,
+result.residuals,
+result.robustness_weights,
+result.diagnostics,
+result.iterations_used,
+result.fraction_used,
+result.cv_scores
 ```
 
 **Node.js:**
+
+```javascript
+new Loess({
+    fraction: 0.5,
+    iterations: 3,
+    delta: 0.01,
+    weightFunction: "tricube",
+    robustnessMethod: "bisquare",
+    zeroWeightFallback: "use_local_mean",
+    boundaryPolicy: "extend",
+    confidenceIntervals: 0.95,
+    predictionIntervals: 0.95,
+    returnDiagnostics: true,
+    returnResiduals: true,
+    returnRobustnessWeights: true,
+    cvFractions: [0.3, 0.5, 0.7],
+    cvMethod: "kfold",
+    cvK: 5,
+    autoConverge: 1e-4,
+    parallel: true
+}).fit(x, y)
+
+// Result structure:
+result.x,
+result.y,
+result.standardErrors,
+result.confidenceLower,
+result.confidenceUpper,
+result.predictionLower,
+result.predictionUpper,
+result.residuals,
+result.robustnessWeights,
+result.diagnostics,
+result.iterationsUsed,
+result.fractionUsed,
+result.cvScores
+```
+
+**WebAssembly:**
 
 ```javascript
 smooth(x, y, {
@@ -441,29 +372,21 @@ smooth(x, y, {
     autoConverge: 1e-4,
     parallel: true
 })
-```
 
-**WebAssembly:**
-
-```javascript
-smooth(x, y, {
-    fraction: 0.5,
-    iterations: 3,
-    delta: 0.01,
-    weightFunction: "tricube",
-    robustnessMethod: "bisquare",
-    zeroWeightFallback: "use_local_mean",
-    boundaryPolicy: "extend",
-    confidenceIntervals: 0.95,
-    predictionIntervals: 0.95,
-    returnDiagnostics: true,
-    returnResiduals: true,
-    returnRobustnessWeights: true,
-    cvFractions: [0.3, 0.5, 0.7],
-    cvMethod: "kfold",
-    cvK: 5,
-    autoConverge: 1e-4
-})
+// Result structure:
+result.x,
+result.y,
+result.standardErrors,
+result.confidenceLower,
+result.confidenceUpper,
+result.predictionLower,
+result.predictionUpper,
+result.residuals,
+result.robustnessWeights,
+result.diagnostics,
+result.iterationsUsed,
+result.fractionUsed,
+result.cvScores
 ```
 
 **C++:**
@@ -488,99 +411,23 @@ options.cv_k = 5;
 options.auto_converge = 1e-4;
 options.parallel = true;
 
-auto result = fastloess::smooth(x, y, options);
-```
+fastloess::Loess model(options);
+auto result = model.fit(x, y);
 
-## Result Structure
-
-**R:**
-
-```r
-result$x, result$y, result$standard_errors
-result$confidence_lower, result$confidence_upper
-result$prediction_lower, result$prediction_upper
-result$residuals, result$robustness_weights
-result$diagnostics, result$iterations_used
-result$fraction_used, result$cv_scores
-```
-
-**Python:**
-
-```python
-result.x, result.y, result.standard_errors
-result.confidence_lower, result.confidence_upper
-result.prediction_lower, result.prediction_upper
-result.residuals, result.robustness_weights
-result.diagnostics, result.iterations_used
-result.fraction_used, result.cv_scores
-```
-
-**Rust:**
-
-```rust
-pub struct LoessResult<T> {
-    pub x: Vec<T>,                           // Sorted x values
-    pub y: Vec<T>,                           // Smoothed y values
-    pub standard_errors: Option<Vec<T>>,
-    pub confidence_lower: Option<Vec<T>>,
-    pub confidence_upper: Option<Vec<T>>,
-    pub prediction_lower: Option<Vec<T>>,
-    pub prediction_upper: Option<Vec<T>>,
-    pub residuals: Option<Vec<T>>,
-    pub robustness_weights: Option<Vec<T>>,
-    pub diagnostics: Option<Diagnostics<T>>,
-    pub iterations_used: Option<usize>,
-    pub fraction_used: T,
-    pub cv_scores: Option<Vec<T>>,
-}
-```
-
-**Julia:**
-
-```julia
-result.x, result.y, result.standard_errors
-result.confidence_lower, result.confidence_upper
-result.prediction_lower, result.prediction_upper
-result.residuals, result.robustness_weights
-result.diagnostics, result.iterations_used
-result.fraction_used
-```
-
-**Node.js:**
-
-```javascript
-result.x, result.y, result.standardErrors
-result.confidenceLower, result.confidenceUpper
-result.predictionLower, result.predictionUpper
-result.residuals, result.robustnessWeights
-result.diagnostics, result.iterationsUsed
-result.fractionUsed, result.cvScores
-```
-
-**WebAssembly:**
-
-```javascript
-result.x, result.y, result.standardErrors
-result.confidenceLower, result.confidenceUpper
-result.predictionLower, result.predictionUpper
-result.residuals, result.robustnessWeights
-result.diagnostics, result.iterationsUsed
-result.fractionUsed, result.cvScores
-```
-
-**C++:**
-
-```cpp
-result.y_vector()              // std::vector<double>
-result.confidence_lower()      // std::vector<double>
-result.confidence_upper()      // std::vector<double>
-result.prediction_lower()      // std::vector<double>
-result.prediction_upper()      // std::vector<double>
-result.residuals()             // std::vector<double>
-result.robustness_weights()    // std::vector<double>
-result.diagnostics()           // Diagnostics struct
-result.iterations_used()       // size_t
-result.fraction_used()         // double
+// Result structure:
+result.x_vector(),
+result.y_vector(),
+result.standard_errors(),
+result.confidence_lower(),
+result.confidence_upper(),
+result.prediction_lower(),
+result.prediction_upper(),
+result.residuals(),
+result.robustness_weights(),
+result.diagnostics(),
+result.iterations_used(),
+result.fraction_used(),
+result.cv_scores()
 ```
 
 ---
@@ -591,17 +438,7 @@ Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/t
 
 ## License
 
-Licensed under either of:
-
-- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
-- MIT license ([LICENSE-MIT](LICENSE-MIT) or <https://opensource.org/licenses/MIT>)
-
-at your option.
-
-## References
-
-- Cleveland, W.S. (1979). "Robust Locally Weighted Regression and Smoothing Scatterplots". *JASA*.
-- Cleveland, W.S. (1981). "LOESS: A Program for Smoothing Scatterplots". *The American Statistician*.
+Licensed under [MIT](https://github.com/thisisamirv/loess-project/blob/main/LICENSE-MIT) or [Apache-2.0](https://github.com/thisisamirv/loess-project/blob/main/LICENSE-APACHE).
 
 ## Citation
 

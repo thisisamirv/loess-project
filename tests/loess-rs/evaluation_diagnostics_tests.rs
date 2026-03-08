@@ -184,8 +184,8 @@ fn test_residual_sd_single() {
 /// Verifies that SD equals MAD * factor.
 #[test]
 fn test_residual_sd_normal() {
-    let mut res = vec![0.0f64, 1.0, -1.0, 2.0, -2.0];
-    let mad = ScalingMethod::MAD.compute(&mut res);
+    let res = vec![0.0f64, 1.0, -1.0, 2.0, -2.0];
+    let mad = ScalingMethod::MAD.compute(&mut res.clone());
 
     assert!(mad > 0.0, "MAD should be positive");
     assert_relative_eq!(

@@ -1,3 +1,6 @@
-pub mod integration_tests;
-pub mod parallel_eval_tests;
-pub mod parallel_interval_tests;
+#![cfg(feature = "dev")]
+mod gpu_tests;
+mod integration_tests;
+mod parallel_eval_tests;
+mod parallel_interval_tests;
+mod smooth_pass_consistency;

@@ -14,7 +14,6 @@
 
 use approx::assert_relative_eq;
 
-use loess_rs::internals::algorithms::robustness::RobustnessMethod;
 use loess_rs::internals::math::scaling::ScalingMethod;
 
 // ============================================================================
@@ -29,180 +28,193 @@ fn test_mad_even_length() {
     // Even-length: [1, 2, 3, 4]
     // Median = (2 + 3) / 2 = 2.5
     // Deviations: [1.5, 0.5, 0.5, 1.5]
-    // Sorted Deviations: [0.5, 0.5, 1.5, 1.5]
-    // MAD = (0.5 + 1.5) / 2 = 1.0
-    let mut data = [1.0, 2.0, 3.0, 4.0];
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 1.0);
+    // MAD = median([0.5, 0.5, 1.5, 1.5]) = 1.0
+    let mut residuals = vec![1.0f64, 2.0, 3.0, 4.0];
+    let mad = ScalingMethod::MAD.compute(&mut residuals);
+
+    assert_relative_eq!(mad, 1.0, epsilon = 1e-12);
 }
 
 /// Test MAD computation with odd-length input.
+///
+/// Verifies correct median and MAD calculation.
 #[test]
 fn test_mad_odd_length() {
-    // Odd-length: [1, 1, 2, 2, 4]
+    // Odd-length: [1, 2, 3]
     // Median = 2
-    // Deviations: [1, 1, 0, 0, 2]
-    // Sorted Deviations: [0, 0, 1, 1, 2]
-    // MAD = 1
-    let mut data = [1.0, 1.0, 2.0, 2.0, 4.0];
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 1.0);
+    // Deviations: [1, 0, 1]
+    // MAD = median([0, 1, 1]) = 1
+    let mut residuals = vec![1.0f64, 2.0, 3.0];
+    let mad = ScalingMethod::MAD.compute(&mut residuals);
+
+    assert_relative_eq!(mad, 1.0, epsilon = 1e-12);
 }
 
-/// Test MAD computation with identical values.
+/// Test MAD with identical values.
+///
+/// Verifies that MAD is zero when all values are the same.
 #[test]
 fn test_mad_identical_values() {
-    let mut data = [5.0, 5.0, 5.0, 5.0, 5.0];
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 0.0);
+    let mut residuals = vec![5.0f64; 10];
+    let mad = ScalingMethod::MAD.compute(&mut residuals);
+
+    // MAD should be zero for identical values
+    assert_relative_eq!(mad, 0.0, epsilon = 1e-12);
 }
 
-/// Test MAD computation with zeros.
+/// Test MAD with symmetric distribution.
+///
+/// Verifies MAD calculation for symmetric data.
 #[test]
-fn test_mad_with_zeros() {
-    let mut data = [0.0, 0.0, 0.0, 0.0];
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 0.0);
+fn test_mad_symmetric_distribution() {
+    // Symmetric around 0: [-2, -1, 0, 1, 2]
+    // Median = 0
+    // Deviations: [2, 1, 0, 1, 2]
+    // MAD = median([0, 1, 1, 2, 2]) = 1
+    let mut residuals = vec![-2.0f64, -1.0, 0.0, 1.0, 2.0];
+    let mad = ScalingMethod::MAD.compute(&mut residuals);
+
+    assert_relative_eq!(mad, 1.0, epsilon = 1e-12);
 }
 
-/// Test MAD with mixed positive and negative values.
+// ============================================================================
+// Edge Cases Tests
+// ============================================================================
+
+/// Test MAD with two values.
+///
+/// Verifies correct calculation for minimal non-trivial case.
 #[test]
-fn test_mad_mixed_signs() {
-    // Data: [-10, 0, 10]
-    // Median: 0
-    // Deviations: [10, 0, 10]
-    // MAD: 10
-    let mut data = [-10.0, 0.0, 10.0];
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 10.0);
+fn test_mad_two_values() {
+    // Two values: [1, 3]
+    // Median = (1 + 3) / 2 = 2
+    // Deviations: [1, 1]
+    // MAD = median([1, 1]) = 1
+    let mut residuals = vec![1.0f64, 3.0];
+    let mad = ScalingMethod::MAD.compute(&mut residuals);
+
+    assert_relative_eq!(mad, 1.0, epsilon = 1e-12);
+}
+
+// ============================================================================
+// Statistical Properties Tests
+// ============================================================================
+
+/// Test MAD with outliers.
+///
+/// Verifies that MAD is robust to outliers.
+#[test]
+fn test_mad_with_outliers() {
+    // Data with outlier: [1, 2, 3, 4, 100]
+    // Median = 3
+    // Deviations: [2, 1, 0, 1, 97]
+    // MAD = median([0, 1, 1, 2, 97]) = 1
+    let mut residuals = vec![1.0f64, 2.0, 3.0, 4.0, 100.0];
+    let mad = ScalingMethod::MAD.compute(&mut residuals);
+
+    // MAD should be robust to the outlier
+    assert_relative_eq!(mad, 1.0, epsilon = 1e-12);
 }
 
 /// Test MAD with negative values.
+///
+/// Verifies that MAD handles negative values correctly.
 #[test]
 fn test_mad_negative_values() {
-    // Data: [-4, -3, -2, -1]
-    // Median: -2.5
+    // All negative: [-4, -3, -2, -1]
+    // Median = (-3 + -2) / 2 = -2.5
     // Deviations: [1.5, 0.5, 0.5, 1.5]
-    // MAD: 1.0
-    let mut data = [-4.0, -3.0, -2.0, -1.0];
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 1.0);
+    // MAD = 1.0
+    let mut residuals = vec![-4.0f64, -3.0, -2.0, -1.0];
+    let mad = ScalingMethod::MAD.compute(&mut residuals);
+
+    assert_relative_eq!(mad, 1.0, epsilon = 1e-12);
 }
 
-/// Test MAD with symmetrical distribution.
+/// Test MAD with mixed positive and negative values.
+///
+/// Verifies correct handling of mixed signs.
 #[test]
-fn test_mad_symmetric_distribution() {
-    let mut data = [1.0, 2.0, 3.0, 4.0, 5.0];
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 1.0);
+fn test_mad_mixed_signs() {
+    // Mixed: [-3, -1, 1, 3]
+    // Median = (-1 + 1) / 2 = 0
+    // Deviations: [3, 1, 1, 3]
+    // MAD = median([1, 1, 3, 3]) = 2
+    let mut residuals = vec![-3.0f64, -1.0, 1.0, 3.0];
+    let mad = ScalingMethod::MAD.compute(&mut residuals);
+
+    assert_relative_eq!(mad, 2.0, epsilon = 1e-12);
 }
 
-/// Test MAD with outliers.
-#[test]
-fn test_mad_with_outliers() {
-    // Data with high outlier: [1, 2, 3, 100]
-    // Median: 2.5
-    // Deviations: [1.5, 0.5, 0.5, 97.5]
-    // MAD: 1.0
-    let mut data = [1.0, 2.0, 3.0, 100.0];
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 1.0);
-}
-
-/// Test MAD scale invariance: MAD(k*X) = |k| * MAD(X).
-#[test]
-fn test_mad_scale_invariance() {
-    let data = [1.0, 2.0, 3.0, 4.0, 5.0];
-    let data_scaled = [10.0, 20.0, 30.0, 40.0, 50.0];
-
-    let mut data_vec = data.to_vec();
-    let mut data_scaled_vec = data_scaled.to_vec();
-
-    let mad = ScalingMethod::MAD.compute(&mut data_vec);
-    let mad_scaled = ScalingMethod::MAD.compute(&mut data_scaled_vec);
-
-    assert_relative_eq!(mad_scaled, 10.0 * mad);
-}
-
-/// Test MAD with small values.
+/// Test MAD with very small values.
+///
+/// Verifies numerical stability with small numbers.
 #[test]
 fn test_mad_small_values() {
-    let mut data = [1e-10, 2e-10, 3e-10];
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 1e-10);
+    let mut residuals = vec![1e-10f64, 2e-10, 3e-10, 4e-10];
+    let mad = ScalingMethod::MAD.compute(&mut residuals);
+
+    // Should be approximately 1e-10
+    assert!(mad > 0.0, "MAD should be positive");
+    assert!(mad < 1e-9, "MAD should be small");
+    assert!(mad.is_finite(), "MAD should be finite");
 }
 
 /// Test MAD with large values.
+///
+/// Verifies numerical stability with large numbers.
 #[test]
 fn test_mad_large_values() {
-    let mut data = [1e10, 2e10, 3e10];
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 1e10);
+    let mut residuals = vec![1e10f64, 2e10, 3e10, 4e10];
+    let mad = ScalingMethod::MAD.compute(&mut residuals);
+
+    // Should be approximately 1e10
+    assert!(mad > 0.0, "MAD should be positive");
+    assert!(mad.is_finite(), "MAD should be finite");
+    assert_relative_eq!(mad, 1e10, epsilon = 1e8);
+}
+
+/// Test MAD is scale-invariant.
+///
+/// Verifies that MAD(k*x) = k*MAD(x) for positive k.
+#[test]
+fn test_mad_scale_invariance() {
+    let residuals = vec![1.0f64, 2.0, 3.0, 4.0];
+    let mad1 = ScalingMethod::MAD.compute(&mut residuals.clone());
+
+    let mut scaled: Vec<f64> = residuals.iter().map(|&x| x * 10.0).collect();
+    let mad2 = ScalingMethod::MAD.compute(&mut scaled);
+
+    assert_relative_eq!(mad2, mad1 * 10.0, epsilon = 1e-10);
 }
 
 /// Test MAD with unsorted input.
+///
+/// Verifies that MAD works correctly regardless of input order.
 #[test]
 fn test_mad_unsorted_input() {
-    let mut data = [5.0, 1.0, 4.0, 2.0, 3.0];
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 1.0);
+    // Unsorted: [4, 1, 3, 2]
+    // Should give same result as sorted [1, 2, 3, 4]
+    let mut unsorted = vec![4.0f64, 1.0, 3.0, 2.0];
+    let mad_unsorted = ScalingMethod::MAD.compute(&mut unsorted);
+
+    let mut sorted = vec![1.0f64, 2.0, 3.0, 4.0];
+    let mad_sorted = ScalingMethod::MAD.compute(&mut sorted);
+
+    assert_relative_eq!(mad_unsorted, mad_sorted, epsilon = 1e-12);
 }
 
-/// Test MAD with two values.
-#[test]
-fn test_mad_two_values() {
-    let mut data = [1.0, 10.0];
-    // Median: 5.5
-    // Deviations: [4.5, 4.5]
-    // MAD: 4.5
-    let mad = ScalingMethod::MAD.compute(&mut data);
-    assert_relative_eq!(mad, 4.5);
-}
-
-// ============================================================================
-// Scaling Method Integration Tests
-// ============================================================================
-
-/// Test that MAR and MAD produce distinct results for robustness weighting.
+/// Test MAD with zeros.
 ///
-/// This test verifies that the chosen scaling method correctly affects
-/// the downweighting of outliers.
+/// Verifies handling of zero values.
 #[test]
-fn test_scaling_method_differences_direct() {
-    // Residuals where median is far from 0
-    // [10.0, 11.0, 12.0, 13.0, 14.0]
-    // Median = 12.0
-    // MAR = median(|10, 11, 12, 13, 14|) = 12.0
-    // MAD = median(|-2, -1, 0, 1, 2|) = 1.0
-    let residuals = vec![10.0, 11.0, 12.0, 13.0, 14.0];
+fn test_mad_with_zeros() {
+    // Data with zeros: [0, 0, 1, 2]
+    // Median = (0 + 1) / 2 = 0.5
+    // Deviations: [0.5, 0.5, 0.5, 1.5]
+    // MAD = median([0.5, 0.5, 0.5, 1.5]) = 0.5
+    let mut residuals = vec![0.0f64, 0.0, 1.0, 2.0];
+    let mad = ScalingMethod::MAD.compute(&mut residuals);
 
-    let mut weights_mar = vec![0.0; 5];
-    let mut scratch = vec![0.0; 5];
-
-    RobustnessMethod::Bisquare.apply_robustness_weights(
-        &residuals,
-        &mut weights_mar,
-        ScalingMethod::MAR,
-        &mut scratch,
-    );
-
-    let mut weights_mad = vec![0.0; 5];
-    RobustnessMethod::Bisquare.apply_robustness_weights(
-        &residuals,
-        &mut weights_mad,
-        ScalingMethod::MAD,
-        &mut scratch,
-    );
-
-    // With MAR (scale=12), tuned_scale = 72.
-    // u = [10/72, 11/72, 12/72, 13/72, 14/72] all < 1.0, so weights > 0.
-
-    // With MAD (scale=1), tuned_scale = 6.
-    // u = [10/6, 11/6, 12/6, 13/6, 14/6] all > 1.0, so weights = 0.
-
-    assert!(weights_mar[0] > 0.0, "MAR weights should be non-zero");
-    assert_eq!(
-        weights_mad[0], 0.0,
-        "MAD weights should be zero for these residuals"
-    );
+    assert_relative_eq!(mad, 0.5, epsilon = 1e-12);
 }

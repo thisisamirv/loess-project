@@ -28,7 +28,7 @@ fn test_standard_batch_parallel() {
     let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     let y = vec![2.0, 4.0, 6.0, 8.0, 10.0];
 
-    // Parallel fit works for simple cases without iterations/intervals
+    // Parallel fit
     let res = Loess::new()
         .adapter(Batch)
         .parallel(true)
@@ -65,22 +65,18 @@ fn test_robustness() {
     // Larger dataset to ensure robust statistics work (N=20)
     let n = 20;
     let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
-    // Add small noise to avoid perfect linear fit which might cause 0-scale issues in some implementations
-    let mut y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 0.01 * (xi % 3.0)).collect();
+    let mut y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi).collect();
 
     // Add heavy outlier at index 10 (x=10)
-    // Expected y ~ 20.0, set to 100.0
+    // Expected y=20, set to 100
     y[10] = 100.0;
 
     // Fit with robustness (Bisquare, 5 iterations)
-    // NOTE: Running sequentially
     let res = Loess::new()
         .fraction(0.5)
         .iterations(5)
         .robustness_method(Bisquare)
-        .surface_mode(Direct)
         .adapter(Batch)
-        .parallel(true)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -94,11 +90,7 @@ fn test_robustness() {
         "Smoothed value {} is too high (outlier not suppressed, expected ~20)",
         smoothed_val
     );
-    assert!(
-        smoothed_val > 10.0,
-        "Smoothed value {} is too low",
-        smoothed_val
-    );
+    assert!(smoothed_val > 10.0);
 }
 
 #[test]
@@ -112,7 +104,6 @@ fn test_streaming_adapter() {
         .adapter(Streaming)
         .chunk_size(20)
         .overlap(5)
-        .parallel(false) // NOTE: Running sequentially
         .build()
         .unwrap();
 
@@ -133,20 +124,17 @@ fn test_streaming_adapter() {
     let res3 = processor.finalize().unwrap();
     total_points += res3.x.len();
 
+    // Streaming adapter might output slightly fewer points due to windowing/edge effects depending on config,
+    // but for simple linear data and these settings it should be close to N.
+    // Ideally it's exactly N if boundary handling extends properly.
+    // Let's just check we got *some* output and values are reasonable.
     assert!(total_points > 80);
 
     if !res1.y.is_empty() {
-        // Relaxed check due to potential boundary artifacts in Streaming implementation
+        // Note: With boundary padding in loess v0.5.0, edge values may shift slightly
+        // The smoothed value should still be close to the expected linear trend
         let expected_y = 2.0 * res1.x[0]; // y = 2x
-        let diff = (res1.y[0] - expected_y).abs();
-        // Just verify we are in the ballpark, not asserting strict equality due to artifacts
-        if diff > 15.0 {
-            println!(
-                "Warning: Streaming start value deviation might be high ({}) but test passes",
-                diff
-            );
-        }
-        // assert_abs_diff_eq!(res1.y[0], expected_y, epsilon = 20.0);
+        assert_abs_diff_eq!(res1.y[0], expected_y, epsilon = 5.0);
     }
 }
 
@@ -160,24 +148,31 @@ fn test_online_adapter() {
         .unwrap();
 
     // 1st point (not enough)
-    let out1 = processor.add_point(&[1.0], 2.0).unwrap();
+    let out1 = processor.add_point(1.0, 2.0).unwrap();
     assert!(out1.is_none());
 
     // 2nd point (not enough)
-    let out2 = processor.add_point(&[2.0], 4.0).unwrap();
+    let out2 = processor.add_point(2.0, 4.0).unwrap();
     assert!(out2.is_none());
 
     // 3rd point (enough!)
-    let out3 = processor.add_point(&[3.0], 6.0).unwrap();
+    let out3 = processor.add_point(3.0, 6.0).unwrap();
     assert!(out3.is_some());
     let val = out3.unwrap();
     assert_abs_diff_eq!(val.smoothed, 6.0, epsilon = 0.1);
+
+    // Bulk add
+    let x_bulk = vec![4.0, 5.0];
+    let y_bulk = vec![8.0, 10.0];
+    let results = processor.add_points(&x_bulk, &y_bulk).unwrap();
+    assert_eq!(results.len(), 2);
+    assert!(results[0].is_some());
+    assert!(results[1].is_some());
 }
 
 #[test]
 fn test_consistency() {
     // Verify that parallel and sequential computation yield identical results
-    // NOTE: This test might fail if Parallel is broken. We verify it here.
     let n = 20;
     let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + (xi / 10.0).exp()).collect();

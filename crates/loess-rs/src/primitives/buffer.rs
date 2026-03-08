@@ -1,100 +1,45 @@
 //! Memory management and buffer recycling for LOESS operations.
 //!
-//! ## Purpose
-//!
-//! This module provides a centralized, reusable workspace (`LoessBuffer`) to minimize
-//! dynamic memory allocations during repeated LOESS fitting. By allocating buffers once
-//! and recycling them across multiple query points or cross-validation folds, we significantly
-//! reduce allocator pressure and improve cache locality.
-//!
-//! ## Design notes
-//!
-//! * **Centralized Ownership**: The `LoessBuffer` struct holds all necessary scratch space
-//!   for the entire pipeline (neighborhood search, regression weights, solver matrices, etc.).
-//! * **Lazy Expansion**: Buffers are grown on demand via `ensure_capacity` but never shrunk,
-//!   stabilizing at the maximum required size for the dataset.
-//! * **Generic injection**: The workspace is generic over the `Neighborhood` storage to
-//!   allow decoupling from specific spatial index implementations.
-//!
-//! ## Key concepts
-//!
-//! * **LoessBuffer**: The top-level struct passed through the executor pipeline.
-//! * **NeighborhoodSearchBuffer**: Reusable heap and vector for K-nearest neighbor searches.
-//! * **FittingBuffer**: Matrices and vectors for the weighted least squares solver.
-//! * **ExecutorBuffer**: Buffers for global operations like robustness iteration and normalization.
-//! * **CVBuffer**: Scratch space specifically for cross-validation data subsets.
-//!
-//! ## Invariants
-//!
-//! * Buffers are only logically cleared (e.g., `vec.clear()`), not deallocated, between iterations.
-//! * Capability is monotonically increasing; `ensure_capacity` only reallocates if current capacity is insufficient.
-//!
-//! ## Non-goals
-//!
-//! * Thread-local automatic caching (buffers are explicitly passed to allow parallel execution with one buffer per thread).
-//! * Dynamic shrinking or aggressive memory reclamation (performance is prioritized over minimal footprint).
+//! This module provides centralized, reusable workspaces to minimize dynamic memory
+//! allocations during LOESS fitting. By allocating buffers once and recycling them
+//! across multiple query points or robustness iterations, we significantly reduce
+//! allocator pressure and improve cache locality.
 
-// Feature-gated dependencies
-#[cfg(not(feature = "std"))]
-use alloc::collections::BinaryHeap;
+// External dependencies
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-#[cfg(feature = "std")]
-use std::collections::BinaryHeap;
+use core::ops::{Deref, DerefMut};
+use num_traits::{One, Zero};
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
-// External dependencies
-use core::fmt::Debug;
-use core::ops::{Deref, DerefMut};
-use num_traits::Float;
-
-// ============================================================================
-// Slot - Unified Vector Abstraction
-// ============================================================================
-
-/// A reusable vector slot with automatic capacity management.
+// A reusable vector slot with automatic capacity management.
 #[derive(Debug, Clone)]
 pub struct Slot<T>(Vec<T>);
 
 impl<T> Slot<T> {
-    /// Create a new slot with the given initial capacity.
+    // Create a new slot with the given initial capacity.
     #[inline]
     pub fn new(capacity: usize) -> Self {
         Self(Vec::with_capacity(capacity))
     }
 
-    /// Ensure the slot has at least the given capacity.
-    /// Grows the underlying vector if needed; never shrinks.
-    #[inline]
-    pub fn ensure_capacity(&mut self, capacity: usize) {
-        if self.0.capacity() < capacity {
-            self.0.reserve(capacity - self.0.capacity());
-        }
-    }
-
-    /// Clear the slot (sets length to 0, preserves capacity).
+    // Clear the slot (sets length to 0, preserves capacity).
     #[inline]
     pub fn clear(&mut self) {
         self.0.clear();
     }
 
-    /// Get a reference to the underlying vector.
+    // Get a reference to the underlying vector.
     #[inline]
     pub fn as_vec(&self) -> &Vec<T> {
         &self.0
     }
 
-    /// Get a mutable reference to the underlying vector.
+    // Get a mutable reference to the underlying vector.
     #[inline]
     pub fn as_vec_mut(&mut self) -> &mut Vec<T> {
         &mut self.0
-    }
-
-    /// Consume the slot and return the underlying vector.
-    #[inline]
-    pub fn into_inner(self) -> Vec<T> {
-        self.0
     }
 }
 
@@ -125,244 +70,262 @@ impl<T> From<Vec<T>> for Slot<T> {
     }
 }
 
-// ============================================================================
-// Main Workspace
-// ============================================================================
-
-/// A struct containing pre-allocated buffers for LOESS operations.
-pub struct LoessBuffer<T: Float, N, NH> {
-    /// Buffer for KD-tree search state.
-    pub search_buffer: NeighborhoodSearchBuffer<N>,
-    /// Buffer for neighbor indices and distances.
-    pub neighborhood: NH,
-    /// Buffer for regression fitting (WLS matrices).
-    pub fitting_buffer: FittingBuffer<T>,
-    /// Buffer for global executor state.
-    pub executor_buffer: ExecutorBuffer<T>,
-    /// Buffer for cross-validation.
-    pub cv_buffer: CVBuffer<T>,
-}
-
-impl<T: Float + Debug + Send + Sync + 'static, N, NH> LoessBuffer<T, N, NH>
-where
-    N: Ord,
-    NH: NeighborhoodStorage,
-{
-    /// Create a new workspace with capacities matching the expected fit parameters.
-    ///
-    /// - `n`: Total number of points.
-    /// - `dims`: Predictor dimensions.
-    /// - `k`: Expected number of neighbors (window size).
-    /// - `n_coeffs`: Expected number of polynomial coefficients.
-    pub fn new(n: usize, dims: usize, k: usize, n_coeffs: usize) -> Self {
-        Self {
-            search_buffer: NeighborhoodSearchBuffer::new(k),
-            neighborhood: NH::with_capacity(k),
-            fitting_buffer: FittingBuffer::<T>::new(k, n_coeffs),
-            executor_buffer: ExecutorBuffer::<T>::new(n, dims),
-            cv_buffer: CVBuffer::<T>::new(n, dims),
-        }
-    }
-
-    /// Ensure all buffers have enough capacity for the given problem size.
-    pub fn ensure_capacity(&mut self, n_total: usize, dims: usize, k: usize, n_coeffs: usize) {
-        if self.neighborhood.capacity() < k {
-            self.neighborhood = NH::with_capacity(k);
-            self.search_buffer = NeighborhoodSearchBuffer::new(k);
-        }
-        if self.fitting_buffer.weights.capacity() < k
-            || self.fitting_buffer.xtw_x.capacity() < n_coeffs * n_coeffs
-        {
-            self.fitting_buffer = FittingBuffer::new(k, n_coeffs);
-        }
-
-        self.executor_buffer.ensure_capacity(n_total, dims);
-        self.cv_buffer.ensure_capacity(n_total, dims);
-    }
-}
-
-// ============================================================================
-// Traits
-// ============================================================================
-
-/// Trait for neighborhood storage that can be injected into the workspace.
-pub trait NeighborhoodStorage {
-    /// Create a new neighborhood storage with given capacity.
-    fn with_capacity(k: usize) -> Self;
-    /// Get the current capacity of the storage.
-    fn capacity(&self) -> usize;
-}
-
-// ============================================================================
-// Internal Buffers
-// ============================================================================
-
-/// Persistent buffers for KD-tree search to avoid allocations.
-pub struct NeighborhoodSearchBuffer<N> {
-    pub(crate) heap: BinaryHeap<N>,
-    pub(crate) stack: Vec<usize>,
-}
-
-impl<N: Ord> NeighborhoodSearchBuffer<N> {
-    /// Create a new search buffer with capacity k.
-    pub fn new(k: usize) -> Self {
-        // Stack depth is bounded by tree height, typically O(log n).
-        // Pre-allocate for ~1M points (log2(1M) ≈ 20).
-        Self {
-            heap: BinaryHeap::with_capacity(k),
-            stack: Vec::with_capacity(32),
-        }
-    }
-
-    /// Clear all internal buffers for reuse.
-    pub fn clear(&mut self) {
-        self.heap.clear();
-        self.stack.clear();
-    }
-}
-
-/// Persistent buffers for local regression to avoid allocations.
-pub struct FittingBuffer<T> {
-    /// Weights for each neighbor.
-    pub weights: Slot<T>,
-    /// Normal matrix X'WX.
-    pub xtw_x: Slot<T>,
-    /// Normal vector X'WY.
-    pub xtw_y: Slot<T>,
-    /// Column norms for equilibration.
-    pub col_norms: Slot<T>,
-}
-
-impl<T> FittingBuffer<T> {
-    /// Create a new fitting buffer with estimated capacities.
-    pub fn new(k: usize, n_coeffs: usize) -> Self {
-        Self {
-            weights: Slot::new(k),
-            xtw_x: Slot::new(n_coeffs * n_coeffs),
-            xtw_y: Slot::new(n_coeffs),
-            col_norms: Slot::new(n_coeffs),
-        }
-    }
-}
-
-/// Cache of pre-computed neighborhoods for each query point.
-///
-/// Used to avoid repeated KD-tree searches during robustness iterations,
-/// since neighborhoods are invariant (only regression weights change).
+// Buffers used during cross-validation to hold training and test subsets.
 #[derive(Debug, Clone)]
-pub struct NeighborhoodCache<T> {
-    /// Cached neighborhoods: (indices, distances, max_distance) for each point.
-    pub entries: Vec<CachedNeighborhood<T>>,
-    /// Whether the cache is populated and valid.
-    pub is_valid: bool,
+pub struct CVBuffer<T> {
+    // Training subset x-values.
+    pub train_x: Vec<T>,
+    // Training subset y-values.
+    pub train_y: Vec<T>,
+    // Test subset x-values (for K-Fold).
+    pub test_x: Vec<T>,
+    // Test subset y-values (for K-Fold).
+    pub test_y: Vec<T>,
+    // Sorted training subset x-values.
+    pub sorted_train_x: Vec<T>,
+    // Sorted training subset y-values.
+    pub sorted_train_y: Vec<T>,
 }
 
-/// A single cached neighborhood for one query point.
-#[derive(Debug, Clone)]
-pub struct CachedNeighborhood<T> {
-    /// Indices of the k nearest neighbors.
-    pub indices: Vec<usize>,
-    /// Distances to each neighbor.
-    pub distances: Vec<T>,
-    /// Maximum distance in the neighborhood (bandwidth).
-    pub max_distance: T,
+impl<T> Default for CVBuffer<T> {
+    fn default() -> Self {
+        Self {
+            train_x: Vec::new(),
+            train_y: Vec::new(),
+            test_x: Vec::new(),
+            test_y: Vec::new(),
+            sorted_train_x: Vec::new(),
+            sorted_train_y: Vec::new(),
+        }
+    }
 }
 
-impl<T: Float> NeighborhoodCache<T> {
-    /// Create a new empty cache.
+impl<T: Clone> CVBuffer<T> {
+    // Create a new CV buffer with estimated capacities.
     pub fn new() -> Self {
         Self {
-            entries: Vec::new(),
-            is_valid: false,
+            train_x: Vec::new(),
+            train_y: Vec::new(),
+            test_x: Vec::new(),
+            test_y: Vec::new(),
+            sorted_train_x: Vec::new(),
+            sorted_train_y: Vec::new(),
         }
     }
 
-    /// Create a cache with pre-allocated capacity for n points.
+    // Ensure sufficient capacity for subsets.
+    pub fn ensure_capacity(&mut self, n_total: usize, dims: usize) {
+        if self.train_x.capacity() < n_total * dims {
+            self.train_x.reserve(n_total * dims);
+        }
+        if self.train_y.capacity() < n_total {
+            self.train_y.reserve(n_total);
+        }
+        // Test sets are usually smaller, but ensure safe defaults
+        if self.test_x.capacity() < (n_total / 2 + 1) * dims {
+            self.test_x.reserve((n_total / 2 + 1) * dims);
+        }
+        if self.test_y.capacity() < (n_total / 2 + 1) {
+            self.test_y.reserve(n_total / 2 + 1);
+        }
+        if self.sorted_train_x.capacity() < n_total * dims {
+            self.sorted_train_x.reserve(n_total * dims);
+        }
+        if self.sorted_train_y.capacity() < n_total {
+            self.sorted_train_y.reserve(n_total);
+        }
+    }
+}
+
+// Working memory for the LOESS executor.
+// This buffer holds all scratch space needed during LOESS smoothing iterations,
+// including smoothed values, convergence tracking, robustness weights, and kernel weights.
+#[derive(Debug, Clone)]
+pub struct LoessBuffer<T> {
+    // Current smoothed y-values.
+    pub y_smooth: Slot<T>,
+
+    // Previous iteration values (for convergence check).
+    pub y_prev: Slot<T>,
+
+    // Robustness weights (updated each iteration).
+    pub robustness_weights: Slot<T>,
+
+    // Residuals buffer (y - y_smooth).
+    pub residuals: Slot<T>,
+
+    // Kernel weights scratch buffer.
+    pub weights: Slot<T>,
+}
+
+impl<T> Default for LoessBuffer<T> {
+    fn default() -> Self {
+        Self {
+            y_smooth: Slot::default(),
+            y_prev: Slot::default(),
+            robustness_weights: Slot::default(),
+            residuals: Slot::default(),
+            weights: Slot::default(),
+        }
+    }
+}
+
+impl<T: Clone> LoessBuffer<T> {
+    // Create a buffer pre-allocated for `n` data points.
     pub fn with_capacity(n: usize) -> Self {
         Self {
-            entries: Vec::with_capacity(n),
-            is_valid: false,
-        }
-    }
-}
-
-impl<T: Float> Default for NeighborhoodCache<T> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// Persistent buffers for global executor state.
-pub struct ExecutorBuffer<T> {
-    /// Minimum values for each dimension.
-    pub mins: Slot<T>,
-    /// Maximum values for each dimension.
-    pub maxs: Slot<T>,
-    /// Normalization scales for each dimension.
-    pub scales: Slot<T>,
-    /// Robustness weights for iterative refinement.
-    pub robustness_weights: Slot<T>,
-    /// Residuals for iterative refinement.
-    pub residuals: Slot<T>,
-    /// Sorted residuals for median computation.
-    pub sorted_residuals: Slot<T>,
-    /// Cached neighborhoods to avoid repeated KD-tree searches.
-    pub neighborhood_cache: NeighborhoodCache<T>,
-}
-
-impl<T: Float> ExecutorBuffer<T> {
-    /// Create a new executor buffer with given capacities.
-    pub fn new(n: usize, dims: usize) -> Self {
-        Self {
-            mins: Slot::new(dims),
-            maxs: Slot::new(dims),
-            scales: Slot::new(dims),
+            y_smooth: Slot::new(n),
+            y_prev: Slot::new(n),
             robustness_weights: Slot::new(n),
             residuals: Slot::new(n),
-            sorted_residuals: Slot::new(n),
-            neighborhood_cache: NeighborhoodCache::with_capacity(n),
+            weights: Slot::new(n),
         }
     }
 
-    /// Ensure buffers have enough capacity for given dimensions and points.
-    pub fn ensure_capacity(&mut self, n: usize, dims: usize) {
-        self.mins.ensure_capacity(dims);
-        self.maxs.ensure_capacity(dims);
-        self.scales.ensure_capacity(dims);
-        self.robustness_weights.ensure_capacity(n);
-        self.residuals.ensure_capacity(n);
-        self.sorted_residuals.ensure_capacity(n);
+    // Prepare buffers for a dataset of size `n`.
+    // Resizes all slots to `n` if they are smaller; clears them if they are larger.
+    pub fn prepare(&mut self, n: usize, use_convergence: bool)
+    where
+        T: Zero + One + Clone,
+    {
+        // Resize or clear based on needs
+        self.y_smooth.as_vec_mut().assign(n, T::zero());
+
+        if use_convergence {
+            self.y_prev.as_vec_mut().assign(n, T::zero());
+        } else {
+            self.y_prev.clear();
+        }
+
+        self.robustness_weights.as_vec_mut().assign(n, T::one());
+        self.residuals.as_vec_mut().assign(n, T::zero());
+        self.weights.as_vec_mut().assign(n, T::zero());
     }
 }
 
-/// Persistent buffers for cross-validation subsets.
-pub struct CVBuffer<T> {
-    /// Training subset x-values.
-    pub train_x: Slot<T>,
-    /// Training subset y-values.
-    pub train_y: Slot<T>,
-    /// Test subset x-values.
-    pub test_x: Slot<T>,
-    /// Test subset y-values.
-    pub test_y: Slot<T>,
+// Helper trait to simplify resizing and filling vectors.
+pub trait VecExt<T> {
+    // Resize the vector to `n` and fill with `val`.
+    fn assign(&mut self, n: usize, val: T);
+    // Replaces the vector contents with `slice`, reusing capacity.
+    fn assign_slice(&mut self, slice: &[T]);
 }
 
-impl<T> CVBuffer<T> {
-    /// Create a new CV buffer with given capacities.
-    pub fn new(n: usize, dims: usize) -> Self {
+impl<T: Clone> VecExt<T> for Vec<T> {
+    fn assign(&mut self, n: usize, val: T) {
+        if self.len() != n {
+            self.clear();
+            self.resize(n, val);
+        } else {
+            self.fill(val);
+        }
+    }
+
+    fn assign_slice(&mut self, slice: &[T]) {
+        self.clear();
+        self.extend_from_slice(slice);
+    }
+}
+
+// Scratch buffers for the online (incremental) LOESS adapter.
+// These buffers hold temporary copies of the sliding window data
+// for use during smoothing operations.
+#[derive(Debug, Clone)]
+pub struct OnlineBuffer<T> {
+    // Scratch buffer for x-values from the sliding window.
+    pub scratch_x: Slot<T>,
+
+    // Scratch buffer for y-values from the sliding window.
+    pub scratch_y: Slot<T>,
+
+    // Scratch buffer for kernel weights.
+    pub weights: Slot<T>,
+
+    // Scratch buffer for robustness weights.
+    pub robustness_weights: Slot<T>,
+}
+
+impl<T> Default for OnlineBuffer<T> {
+    fn default() -> Self {
         Self {
-            train_x: Slot::new(n * dims),
-            train_y: Slot::new(n),
-            test_x: Slot::new(n * dims),
-            test_y: Slot::new(n),
+            scratch_x: Slot::default(),
+            scratch_y: Slot::default(),
+            weights: Slot::default(),
+            robustness_weights: Slot::default(),
+        }
+    }
+}
+
+impl<T: Clone> OnlineBuffer<T> {
+    // Create a buffer pre-allocated for `capacity` points.
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self {
+            scratch_x: Slot::new(capacity),
+            scratch_y: Slot::new(capacity),
+            weights: Slot::new(capacity),
+            robustness_weights: Slot::new(capacity),
         }
     }
 
-    /// Ensure buffers have enough capacity for given dimensions and points.
-    pub fn ensure_capacity(&mut self, n: usize, dims: usize) {
-        self.train_x.ensure_capacity(n * dims);
-        self.train_y.ensure_capacity(n);
-        self.test_x.ensure_capacity(n * dims);
-        self.test_y.ensure_capacity(n);
+    // Clear all slots (preserves capacity).
+    pub fn clear(&mut self) {
+        self.scratch_x.clear();
+        self.scratch_y.clear();
+        self.weights.clear();
+        self.robustness_weights.clear();
+    }
+}
+
+// Overlap buffers for the streaming LOESS adapter.
+// These buffers hold data from the overlap region of the previous chunk,
+// enabling smooth transitions between chunk boundaries.
+#[derive(Debug, Clone)]
+pub struct StreamingBuffer<T> {
+    // Overlap region x-values from the previous chunk.
+    pub overlap_x: Slot<T>,
+
+    // Overlap region y-values from the previous chunk.
+    pub overlap_y: Slot<T>,
+
+    // Smoothed values for the overlap region.
+    pub overlap_smoothed: Slot<T>,
+
+    // Robustness weights for the overlap region.
+    pub overlap_robustness_weights: Slot<T>,
+
+    // Reusable work buffer for LOESS operations on chunks.
+    pub work_buffer: LoessBuffer<T>,
+}
+
+impl<T> Default for StreamingBuffer<T> {
+    fn default() -> Self {
+        Self {
+            overlap_x: Slot::default(),
+            overlap_y: Slot::default(),
+            overlap_smoothed: Slot::default(),
+            overlap_robustness_weights: Slot::default(),
+            work_buffer: LoessBuffer::default(),
+        }
+    }
+}
+
+impl<T: Clone> StreamingBuffer<T> {
+    // Create a buffer pre-allocated for `overlap` points and `chunk_size`.
+    pub fn with_capacity(overlap: usize, chunk_size: usize) -> Self {
+        Self {
+            overlap_x: Slot::new(overlap),
+            overlap_y: Slot::new(overlap),
+            overlap_smoothed: Slot::new(overlap),
+            overlap_robustness_weights: Slot::new(overlap),
+            work_buffer: LoessBuffer::with_capacity(chunk_size),
+        }
+    }
+
+    // Clear all slots (preserves capacity).
+    pub fn clear(&mut self) {
+        self.overlap_x.clear();
+        self.overlap_y.clear();
+        self.overlap_smoothed.clear();
+        self.overlap_robustness_weights.clear();
     }
 }

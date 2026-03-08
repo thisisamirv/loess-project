@@ -17,6 +17,7 @@
 //! 5. **Lifecycle Management** - Reset and state management
 //! 6. **Edge Cases** - Boundary conditions and special scenarios
 
+use approx::assert_relative_eq;
 use loess_rs::prelude::*;
 
 use loess_rs::internals::adapters::streaming::MergeStrategy;
@@ -33,11 +34,7 @@ use loess_rs::internals::primitives::errors::LoessError;
 /// Verifies that chunk_size < 10 is rejected.
 #[test]
 fn test_streaming_invalid_chunk_size() {
-    let result = Loess::<f64>::new()
-        .surface_mode(Direct)
-        .adapter(Streaming)
-        .chunk_size(5)
-        .build();
+    let result = Loess::<f64>::new().adapter(Streaming).chunk_size(5).build();
 
     assert!(
         matches!(result, Err(LoessError::InvalidChunkSize { .. })),
@@ -51,7 +48,6 @@ fn test_streaming_invalid_chunk_size() {
 #[test]
 fn test_streaming_invalid_overlap() {
     let result = Loess::<f64>::new()
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(10)
         .overlap(10)
@@ -70,7 +66,6 @@ fn test_streaming_invalid_overlap() {
 fn test_streaming_invalid_fraction() {
     let result = Loess::<f64>::new()
         .fraction(0.0)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(10)
         .overlap(1)
@@ -90,7 +85,6 @@ fn test_streaming_mismatched_inputs() {
     let mut processor = Loess::new()
         .fraction(0.5)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(10)
         .overlap(1)
@@ -121,7 +115,6 @@ fn test_streaming_basic_roundtrip() {
     let mut processor = Loess::new()
         .fraction(1.0) // Global linear fit => exact predictions for linear data
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
@@ -139,17 +132,16 @@ fn test_streaming_basic_roundtrip() {
         "Should return n - overlap = 5 - 2 = 3 values"
     );
 
-    // Note: With unified KD-Tree approach, exact reproduction is not guaranteed
-    for &v in result.y.iter() {
-        assert!(v.is_finite(), "Smoothed value should be finite");
+    for (i, &v) in result.y.iter().enumerate() {
+        assert_relative_eq!(v, y[i], max_relative = 1e-12, epsilon = 1e-14);
     }
 
     // finalize returns remaining overlap buffer (last 2 points)
     let remaining = processor.finalize().expect("finalize ok");
     assert_eq!(remaining.y.len(), 2, "Should return 2 remaining points");
 
-    for &v in remaining.y.iter() {
-        assert!(v.is_finite(), "Smoothed value should be finite");
+    for (i, &v) in remaining.y.iter().enumerate() {
+        assert_relative_eq!(v, y[3 + i], max_relative = 1e-12, epsilon = 1e-14);
     }
 }
 
@@ -164,7 +156,6 @@ fn test_streaming_multi_chunk_overlap() {
     let mut processor = Loess::new()
         .fraction(1.0)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
@@ -178,23 +169,26 @@ fn test_streaming_multi_chunk_overlap() {
 
     // With chunk_size=10 and overlap=2, non-overlap return length is 10 - 2 = 8
     assert_eq!(out_a.y.len(), 8, "First chunk should return 8 values");
-    // Note: With unified KD-Tree approach, exact match is not guaranteed
-    for &v in out_a.y.iter() {
-        assert!(v.is_finite(), "Smoothed value should be finite");
-    }
+    assert_eq!(
+        out_a.y,
+        y_all[0..8].to_vec(),
+        "First chunk values should match"
+    );
 
     // Second chunk (indices 10..15)
     let x_b = &x_all[10..15];
     let y_b = &y_all[10..15];
     let out_b = processor.process_chunk(x_b, y_b).expect("process_chunk ok");
 
-    // 5 input points + 2 overlap buffer = 7 total.
-    // returns 7 - 2 (new overlap) = 5 values.
     assert_eq!(out_b.y.len(), 5, "Second chunk should return 5 values");
     assert!(
         out_b.y.iter().all(|v| v.is_finite()),
         "All values should be finite"
     );
+
+    // Verify first values match expected
+    assert_relative_eq!(out_b.y[0], y_all[8], max_relative = 1e-12);
+    assert_relative_eq!(out_b.y[1], y_all[9], max_relative = 1e-12);
 }
 
 /// Test that finalize on fresh processor returns empty.
@@ -205,7 +199,6 @@ fn test_streaming_finalize_fresh() {
     let mut processor = Loess::new()
         .fraction(0.5)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
@@ -227,7 +220,6 @@ fn test_single_chunk_returns_all_points() {
 
     let mut processor = Loess::new()
         .fraction(0.3)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(50)
         .overlap(10)
@@ -270,7 +262,6 @@ fn test_streaming_reset() {
     let mut processor = Loess::new()
         .fraction(1.0)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
@@ -296,10 +287,11 @@ fn test_streaming_reset() {
         6,
         "After reset should return 6 values"
     );
-    // Note: With unified KD-Tree approach, exact match is not guaranteed
-    for &v in out_after_reset.y.iter() {
-        assert!(v.is_finite(), "Smoothed value should be finite");
-    }
+    assert_eq!(
+        out_after_reset.y,
+        y_all[0..6].to_vec(),
+        "Values should match first 6"
+    );
 }
 
 // ============================================================================
@@ -342,7 +334,6 @@ fn test_streaming_merge_strategies() {
         let mut model = Loess::<f64>::new()
             .fraction(0.2)
             .merge_strategy(strategy)
-            .surface_mode(Direct)
             .adapter(Streaming)
             .chunk_size(20)
             .overlap(10)
@@ -369,7 +360,6 @@ fn test_streaming_robustness_merge() {
         .iterations(1)
         .return_robustness_weights()
         .merge_strategy(MergeStrategy::Average)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(20)
         .overlap(10)
@@ -398,7 +388,6 @@ fn test_streaming_minimum_chunk_size() {
     let result = Loess::new()
         .fraction(0.5)
         .iterations(0)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(10) // Minimum allowed
         .overlap(2)
@@ -418,7 +407,6 @@ fn test_streaming_various_overlaps() {
         let result = Loess::new()
             .fraction(0.5)
             .iterations(0)
-            .surface_mode(Direct)
             .adapter(Streaming)
             .chunk_size(10)
             .overlap(overlap)
@@ -441,7 +429,6 @@ fn test_streaming_with_robustness() {
         .fraction(0.5)
         .iterations(3)
         .robustness_method(Bisquare)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(20)
         .overlap(5)
@@ -466,7 +453,7 @@ fn test_streaming_with_robustness() {
     let result1 = processor.process_chunk(&x[0..20], &y[0..20]).expect("ok");
     assert!(result1.y.iter().all(|v| v.is_finite()));
 
-    let result2 = processor.process_chunk(&x[15..30], &y[15..30]).expect("ok");
+    let result2 = processor.process_chunk(&x[20..30], &y[20..30]).expect("ok");
     assert!(result2.y.iter().all(|v| v.is_finite()));
 
     let final_result = processor.finalize().expect("ok");
@@ -482,7 +469,6 @@ fn test_streaming_with_residuals() {
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(15)
         .overlap(3)
@@ -514,7 +500,6 @@ fn test_streaming_large_dataset() {
     let mut processor = Loess::new()
         .fraction(0.3)
         .iterations(1)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(100)
         .overlap(10)
@@ -525,11 +510,10 @@ fn test_streaming_large_dataset() {
     let total_points = 1000;
     let chunk_size = 100;
     let overlap = 10;
-    let step = chunk_size - overlap;
 
     let mut total_output = 0;
 
-    for chunk_start in (0..total_points).step_by(step) {
+    for chunk_start in (0..total_points).step_by(chunk_size) {
         let chunk_end = (chunk_start + chunk_size).min(total_points);
         let x: Vec<f64> = (chunk_start..chunk_end).map(|i| i as f64).collect();
         let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
@@ -565,7 +549,6 @@ fn test_streaming_with_robustness_weights() {
         .fraction(0.5)
         .iterations(2)
         .return_robustness_weights()
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(15)
         .overlap(3)
@@ -624,7 +607,6 @@ fn test_streaming_with_diagnostics() {
     let mut processor = Loess::new()
         .fraction(0.5)
         .return_diagnostics()
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(15)
         .overlap(3)
@@ -669,7 +651,6 @@ fn test_streaming_with_diagnostics() {
 fn test_streaming_chunk_exactly_overlap_plus_one() {
     let mut processor = Loess::new()
         .fraction(0.5)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(11)
         .overlap(10)
@@ -691,7 +672,6 @@ fn test_streaming_chunk_exactly_overlap_plus_one() {
 fn test_streaming_zero_overlap() {
     let mut processor = Loess::new()
         .fraction(0.5)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(10)
         .overlap(0)
@@ -717,7 +697,6 @@ fn test_streaming_zero_overlap() {
 fn test_streaming_single_point_chunks() {
     // This should fail validation since chunk_size must be >= 10
     let result = Loess::<f64>::new()
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(2)
         .overlap(0)
@@ -731,7 +710,6 @@ fn test_streaming_single_point_chunks() {
 fn test_streaming_unsorted_chunks() {
     let mut processor = Loess::new()
         .fraction(0.5)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
@@ -762,7 +740,6 @@ fn test_streaming_all_merge_strategies_identical_data() {
         let mut processor = Loess::new()
             .fraction(0.5)
             .merge_strategy(strategy)
-            .surface_mode(Direct)
             .adapter(Streaming)
             .chunk_size(10)
             .overlap(3)
@@ -773,7 +750,7 @@ fn test_streaming_all_merge_strategies_identical_data() {
         let y: Vec<f64> = x.iter().map(|&xi| xi * 2.0).collect();
 
         let result1 = processor.process_chunk(&x[0..10], &y[0..10]).unwrap();
-        let result2 = processor.process_chunk(&x[7..15], &y[7..15]).unwrap();
+        let result2 = processor.process_chunk(&x[10..15], &y[10..15]).unwrap();
 
         // All strategies should produce valid results
         assert!(!result1.x.is_empty());
@@ -786,7 +763,6 @@ fn test_streaming_all_merge_strategies_identical_data() {
 fn test_streaming_finalize_multiple_times() {
     let mut processor = Loess::new()
         .fraction(0.5)
-        .surface_mode(Direct)
         .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)

@@ -1,24 +1,35 @@
 [package]
 name = "loess-project-tests"
 version = "0.0.0"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
-publish = false
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/thisisamirv/loess-project"
+homepage = "https://github.com/thisisamirv/loess-project"
+rust-version = "1.88"
+readme = "README.md"
+description = "High-performance LOESS (Locally Weighted Scatterplot Smoothing)"
+keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
 
 [dependencies]
 loess-rs = { path = "../crates/loess-rs", features = ["dev"] }
 fastLoess = { path = "../crates/fastLoess", features = ["dev"] }
-approx = { workspace = true }
-ndarray = { workspace = true }
-num-traits = { workspace = true }
-rayon = { workspace = true }
+approx = "0.5"
+ndarray = { version = "0.17", default-features = false }
+num-traits = { version = "0.2", default-features = false }
+rayon = { version = "1.11" }
+bytemuck = "1.24"
+pollster = "0.4"
 
 [features]
 default = ["dev"]
-# loess-rs features
+# loess features
 std = ["loess-rs/std"]
 dev = ["loess-rs/dev", "fastLoess/dev"]
 # fastLoess features  
 cpu = ["fastLoess/cpu"]
+gpu = ["fastLoess/gpu"]
 
 [[test]]
 name = "loess-rs"

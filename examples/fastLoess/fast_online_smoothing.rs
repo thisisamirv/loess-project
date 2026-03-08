@@ -7,17 +7,11 @@
 //! - Different window sizes and their effects
 //! - Memory-bounded processing for embedded systems
 //! - Sliding window behavior demonstration
-//!
-//! The Online adapter is designed for:
-//! - Real-time data streams
-//! - Memory-constrained environments
-//! - Sensor data processing
-//! - Incremental updates without reprocessing entire dataset
-//!
-//! Each scenario includes the expected output as comments.
 
+#[cfg(feature = "cpu")]
 use fastLoess::prelude::*;
 
+#[cfg(feature = "cpu")]
 fn main() -> Result<(), LoessError> {
     println!("{}", "=".repeat(80));
     println!("LOESS Online Smoothing - Comprehensive Examples");
@@ -31,11 +25,18 @@ fn main() -> Result<(), LoessError> {
     example_4_window_size_comparison()?;
     example_5_memory_bounded_processing()?;
     example_6_sliding_window_behavior()?;
-    example_7_benchmark()?;
+    example_7_parallel_benchmark()?;
+    example_8_sequential_benchmark()?;
 
     Ok(())
 }
 
+#[cfg(not(feature = "cpu"))]
+fn main() {
+    // Empty main for no-std
+}
+
+#[cfg(feature = "cpu")]
 /// Example 1: Basic Streaming Processing
 /// Demonstrates incremental data processing with online LOESS
 fn example_1_basic_streaming() -> Result<(), LoessError> {
@@ -56,7 +57,7 @@ fn example_1_basic_streaming() -> Result<(), LoessError> {
         (10.0, 21.0),
     ];
 
-    let mut processor = Loess::new()
+    let mut processor = Loess::<f64>::new()
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
@@ -72,13 +73,14 @@ fn example_1_basic_streaming() -> Result<(), LoessError> {
     println!("{}", "-".repeat(50));
 
     for (x, y) in data_points {
-        if let Some(output) = processor.add_point(&[x], y)? {
+        if let Some(output) = processor.add_point(x, y)? {
+            let res = output.residual.unwrap_or(0.0);
+            // Sanitize near-zero residuals to avoid "-0.0000" display
+            let res_clean = if res.abs() < 1e-10f64 { 0.0f64 } else { res };
+
             println!(
                 "{:8.2} {:12.2} {:12.2} {:12.4}",
-                x,
-                y,
-                output.smoothed,
-                output.residual.unwrap_or(0.0)
+                x, y, output.smoothed, res_clean
             );
         } else {
             println!("{:8.2} {:12.2} {:>12} {:>12}", x, y, "(buffering)", "");
@@ -90,7 +92,7 @@ fn example_1_basic_streaming() -> Result<(), LoessError> {
            X   Y_observed     Y_smooth     Residual
     --------------------------------------------------
         1.00         3.10  (buffering)
-        2.00         5.00  (buffering)
+        2.00         5.00         5.00       0.0000
         3.00         7.20         7.20       0.0000
         4.00         8.90         8.90       0.0000
         5.00        11.10        11.10       0.0000
@@ -98,13 +100,14 @@ fn example_1_basic_streaming() -> Result<(), LoessError> {
         7.00        15.20        15.20       0.0000
         8.00        16.80        16.80       0.0000
         9.00        19.10        19.10       0.0000
-       10.00        21.00        21.00       0.0000
+        10.00       21.00        21.00       0.0000
     */
 
     println!();
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 2: Real-Time Sensor Data Simulation
 /// Simulates processing temperature sensor readings in real-time
 fn example_2_sensor_data_simulation() -> Result<(), LoessError> {
@@ -125,7 +128,7 @@ fn example_2_sensor_data_simulation() -> Result<(), LoessError> {
         })
         .collect();
 
-    let mut processor = Loess::new()
+    let mut processor = Loess::<f64>::new()
         .fraction(0.4)
         .iterations(3) // More iterations for noisy sensor data
         .robustness_method(Bisquare)
@@ -141,13 +144,14 @@ fn example_2_sensor_data_simulation() -> Result<(), LoessError> {
     println!("{}", "-".repeat(50));
 
     for (time, temp) in sensor_data {
-        if let Some(output) = processor.add_point(&[time], temp)? {
+        if let Some(output) = processor.add_point(time, temp)? {
+            let res = output.residual.unwrap_or(0.0);
+            // Sanitize near-zero residuals to avoid "-0.0000" display
+            let res_clean = if res.abs() < 1e-10f64 { 0.0f64 } else { res };
+
             println!(
                 "{:6.0} {:12.2}°C {:12.2}°C {:12.3}°C",
-                time,
-                temp,
-                output.smoothed,
-                output.residual.unwrap_or(0.0)
+                time, temp, output.smoothed, res_clean
             );
         } else {
             println!(
@@ -163,17 +167,17 @@ fn example_2_sensor_data_simulation() -> Result<(), LoessError> {
       Hour     Raw Temp     Smoothed        Noise
     --------------------------------------------------
          0        18.50°C (warming up)
-         1        21.41°C (warming up)
-         2        22.72°C (warming up)
-         3        24.73°C      24.73°C      0.000°C
-         4        25.34°C      25.34°C      0.000°C
-         ... (continues for 24 hours)
+         1        21.89°C        21.89°C        0.000°C
+         2        21.90°C        21.90°C        0.000°C
+    ...
+        14        19.00°C        18.56°C        0.441°C
     */
 
     println!();
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 3: Outlier Handling in Online Mode
 /// Demonstrates how online LOESS handles outliers with robustness iterations
 fn example_3_outlier_handling() -> Result<(), LoessError> {
@@ -181,7 +185,7 @@ fn example_3_outlier_handling() -> Result<(), LoessError> {
     println!("{}", "-".repeat(80));
 
     // Data with deliberate outliers
-    let data_points = vec![
+    let data_points = [
         (1.0, 2.0),
         (2.0, 4.1),
         (3.0, 5.9),
@@ -198,7 +202,7 @@ fn example_3_outlier_handling() -> Result<(), LoessError> {
 
     // Test with Bisquare (default)
     println!("Using Bisquare robustness method:");
-    let mut processor = Loess::new()
+    let mut processor = Loess::<f64>::new()
         .fraction(0.5)
         .iterations(5)
         .robustness_method(Bisquare)
@@ -209,7 +213,7 @@ fn example_3_outlier_handling() -> Result<(), LoessError> {
 
     print!("  Smoothed values: [");
     for (i, (x, y)) in data_points.iter().enumerate() {
-        if let Some(output) = processor.add_point(&[*x], *y)? {
+        if let Some(output) = processor.add_point(*x, *y)? {
             if i > 0 {
                 print!(", ");
             }
@@ -220,7 +224,7 @@ fn example_3_outlier_handling() -> Result<(), LoessError> {
 
     // Test with Talwar (hard threshold)
     println!("\nUsing Talwar robustness method:");
-    let mut processor = Loess::new()
+    let mut processor = Loess::<f64>::new()
         .fraction(0.5)
         .iterations(5)
         .robustness_method(Talwar)
@@ -231,7 +235,7 @@ fn example_3_outlier_handling() -> Result<(), LoessError> {
 
     print!("  Smoothed values: [");
     for (i, (x, y)) in data_points.iter().enumerate() {
-        if let Some(output) = processor.add_point(&[*x], *y)? {
+        if let Some(output) = processor.add_point(*x, *y)? {
             if i > 0 {
                 print!(", ");
             }
@@ -254,6 +258,7 @@ fn example_3_outlier_handling() -> Result<(), LoessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 4: Window Size Comparison
 /// Shows how different window sizes affect smoothing behavior
 fn example_4_window_size_comparison() -> Result<(), LoessError> {
@@ -274,7 +279,7 @@ fn example_4_window_size_comparison() -> Result<(), LoessError> {
     for window_size in window_sizes {
         println!("Window capacity: {}", window_size);
 
-        let mut processor = Loess::new()
+        let mut processor = Loess::<f64>::new()
             .fraction(0.5)
             .iterations(2)
             .adapter(Online)
@@ -283,7 +288,7 @@ fn example_4_window_size_comparison() -> Result<(), LoessError> {
 
         let mut smoothed_values = Vec::new();
         for (x, y) in &data {
-            if let Some(output) = processor.add_point(&[*x], *y)? {
+            if let Some(output) = processor.add_point(*x, *y)? {
                 smoothed_values.push(output.smoothed);
             }
         }
@@ -311,6 +316,7 @@ fn example_4_window_size_comparison() -> Result<(), LoessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 5: Memory-Bounded Processing
 /// Demonstrates efficient processing for embedded/resource-constrained systems
 fn example_5_memory_bounded_processing() -> Result<(), LoessError> {
@@ -324,7 +330,7 @@ fn example_5_memory_bounded_processing() -> Result<(), LoessError> {
         total_points
     );
 
-    let mut processor = Loess::new()
+    let mut processor = Loess::<f64>::new()
         .fraction(0.3)
         .iterations(1) // Fewer iterations for speed
         .adapter(Online)
@@ -339,7 +345,7 @@ fn example_5_memory_bounded_processing() -> Result<(), LoessError> {
         let x = i as f64;
         let y = 2.0 * x + (x * 0.1).sin() * 5.0 + ((i % 7) as f64 - 3.0) * 0.5;
 
-        if let Some(output) = processor.add_point(&[x], y)? {
+        if let Some(output) = processor.add_point(x, y)? {
             processed_count += 1;
             last_smoothed = output.smoothed;
 
@@ -374,6 +380,7 @@ fn example_5_memory_bounded_processing() -> Result<(), LoessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 6: Sliding Window Behavior
 /// Demonstrates how the sliding window processes sequential data
 fn example_6_sliding_window_behavior() -> Result<(), LoessError> {
@@ -393,7 +400,7 @@ fn example_6_sliding_window_behavior() -> Result<(), LoessError> {
         (8.0, 16.0),
     ];
 
-    let mut processor = Loess::new()
+    let mut processor = Loess::<f64>::new()
         .fraction(0.6)
         .iterations(0) // No robustness for clarity
         .return_residuals()
@@ -409,7 +416,7 @@ fn example_6_sliding_window_behavior() -> Result<(), LoessError> {
     println!("{}", "-".repeat(65));
 
     for (i, (x, y)) in data.iter().enumerate() {
-        if let Some(output) = processor.add_point(&[*x], *y)? {
+        if let Some(output) = processor.add_point(*x, *y)? {
             println!(
                 "{:6} {:10.1} {:12.1} {:12.2} {:>20}",
                 i + 1,
@@ -454,23 +461,25 @@ fn example_6_sliding_window_behavior() -> Result<(), LoessError> {
     Ok(())
 }
 
-/// Example 7: Benchmark (Sequential Online)
-/// Measure execution time for a large dataset using the sequential Online adapter
-fn example_7_benchmark() -> Result<(), LoessError> {
-    println!("Example 7: Benchmark (Sequential Online)");
+#[cfg(feature = "cpu")]
+/// Example 7: Parallel Online Benchmark
+/// Measure execution time for a large dataset using the parallel Online adapter
+fn example_7_parallel_benchmark() -> Result<(), LoessError> {
+    println!("Example 7: Benchmark (Parallel Online)");
     println!("{}", "-".repeat(80));
 
     // Generate a larger synthetic dataset
-    let n = 1_000;
-    println!("Processing {} data points in online mode...", n);
+    let n = 10_000;
+    println!("Processing {} data points in parallel online mode...", n);
 
     let start = std::time::Instant::now();
 
-    let mut processor = Loess::new()
+    let mut processor = Loess::<f64>::new()
         .fraction(0.5)
         .iterations(3)
         .adapter(Online)
-        .window_capacity(10) // 10-point sliding window
+        .window_capacity(100) // 100-point sliding window
+        .parallel(true) // Enable parallel execution
         .build()?;
 
     let mut processed_count = 0;
@@ -480,7 +489,50 @@ fn example_7_benchmark() -> Result<(), LoessError> {
         let x = i as f64;
         let y = (x * 0.1).sin() + (x * 0.01).cos();
 
-        if processor.add_point(&[x], y)?.is_some() {
+        if processor.add_point(x, y)?.is_some() {
+            processed_count += 1;
+        }
+    }
+
+    let duration = start.elapsed();
+
+    println!("Processed {} points in {:?}", processed_count, duration);
+    println!("Execution mode: Parallel Online");
+    println!("Window capacity: 100");
+
+    println!();
+    Ok(())
+}
+
+#[cfg(feature = "cpu")]
+/// Example 8: Sequential Online Benchmark
+/// Measure execution time for a large dataset using the sequential Online adapter
+fn example_8_sequential_benchmark() -> Result<(), LoessError> {
+    println!("Example 8: Benchmark (Sequential Online)");
+    println!("{}", "-".repeat(80));
+
+    // Generate a larger synthetic dataset
+    let n = 10_000;
+    println!("Processing {} data points in sequential online mode...", n);
+
+    let start = std::time::Instant::now();
+
+    let mut processor = Loess::<f64>::new()
+        .fraction(0.5)
+        .iterations(3)
+        .adapter(Online)
+        .window_capacity(100) // 100-point sliding window
+        .parallel(false) // Disable parallel execution
+        .build()?;
+
+    let mut processed_count = 0;
+
+    // Process points one at a time
+    for i in 0..n {
+        let x = i as f64;
+        let y = (x * 0.1).sin() + (x * 0.01).cos();
+
+        if processor.add_point(x, y)?.is_some() {
             processed_count += 1;
         }
     }
@@ -489,7 +541,7 @@ fn example_7_benchmark() -> Result<(), LoessError> {
 
     println!("Processed {} points in {:?}", processed_count, duration);
     println!("Execution mode: Sequential Online");
-    println!("Window capacity: 10");
+    println!("Window capacity: 100");
 
     println!();
     Ok(())

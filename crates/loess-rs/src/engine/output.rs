@@ -1,178 +1,95 @@
 //! Output types and result structures for LOESS operations.
 //!
-//! ## Purpose
-//!
 //! This module defines the `LoessResult` struct which encapsulates all
 //! outputs from a LOESS smoothing operation, including smoothed values,
 //! diagnostics, and confidence/prediction intervals.
-//!
-//! ## Design notes
-//!
-//! * **Memory Efficiency**: All optional outputs use `Option<Vec<T>>`.
-//! * **Generics**: Results are generic over `Float` types.
-//! * **Ergonomics**: Implements `Display` for human-readable output.
-//! * **Consistency**: Input x-values are stored to maintain correspondence.
-//!
-//! ## Key concepts
-//!
-//! * **Optional Outputs**: Results are only populated when specific features are enabled.
-//! * **Intervals**: Confidence (mean curve) and Prediction (new observations).
-//! * **Metadata**: Tracks iterations, fraction used, and CV scores.
-//!
-//! ## Invariants
-//!
-//! * All populated vectors have the same length as the input data.
-//! * x-values maintain the original input order (not guaranteed to be sorted for nD).
-//! * Lower bounds are always less than or equal to upper bounds for all intervals.
-//! * Robustness weights are always in the range [0, 1].
-//!
-//! ## Non-goals
-//!
-//! * This module does not perform calculations; it only stores results.
-//! * This module does not validate result consistency (responsibility of the engine).
-//! * This module does not provide serialization/deserialization logic.
 
-// Feature-gated imports
+// External dependencies
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+use core::cmp::Ordering;
+use core::fmt::{Debug, Display, Formatter, Result};
+use num_traits::Float;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
-// External dependencies
-use core::cmp::Ordering::Equal;
-use core::fmt::{Debug, Display, Formatter, Result};
-use num_traits::Float;
-
 // Internal dependencies
-use crate::algorithms::regression::PolynomialDegree;
 use crate::evaluation::diagnostics::Diagnostics;
-use crate::math::distance::DistanceMetric;
 
-// ============================================================================
-// Result Structure
-// ============================================================================
-
-/// Comprehensive LOESS output containing smoothed values and diagnostics.
+// Comprehensive LOESS output containing smoothed values and diagnostics.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LoessResult<T> {
-    /// Input x-values (independent variable). Flattened for nD.
+    // Sorted x-values (independent variable).
     pub x: Vec<T>,
 
-    /// Number of predictor dimensions.
-    pub dimensions: usize,
-
-    /// Distance metric used for neighborhood search.
-    pub distance_metric: DistanceMetric<T>,
-
-    /// Degree of local polynomial (0 for local mean, 1 for local linear, 2 for local quadratic).
-    pub polynomial_degree: PolynomialDegree,
-
-    /// Smoothed y-values (dependent variable).
+    // Smoothed y-values (dependent variable).
     pub y: Vec<T>,
 
-    /// Standard errors of the fit at each point.
+    // Standard errors of the fit at each point.
     pub standard_errors: Option<Vec<T>>,
 
-    /// Lower bounds of the confidence intervals for the mean response.
+    // Lower bounds of the confidence intervals for the mean response.
     pub confidence_lower: Option<Vec<T>>,
 
-    /// Upper bounds of the confidence intervals for the mean response.
+    // Upper bounds of the confidence intervals for the mean response.
     pub confidence_upper: Option<Vec<T>>,
 
-    /// Lower bounds of the prediction intervals for new observations.
+    // Lower bounds of the prediction intervals for new observations.
     pub prediction_lower: Option<Vec<T>>,
 
-    /// Upper bounds of the prediction intervals for new observations.
+    // Upper bounds of the prediction intervals for new observations.
     pub prediction_upper: Option<Vec<T>>,
 
-    /// Residuals from the fit (y_i - y_hat_i).
+    // Residuals from the fit (y_i - y_hat_i).
     pub residuals: Option<Vec<T>>,
 
-    /// Final robustness weights from the iterative refinement process.
+    // Final robustness weights from the iterative refinement process.
     pub robustness_weights: Option<Vec<T>>,
 
-    /// Comprehensive diagnostic metrics (RMSE, R^2, AIC, etc.).
+    // Comprehensive diagnostic metrics (RMSE, R^2, AIC, etc.).
     pub diagnostics: Option<Diagnostics<T>>,
 
-    /// Number of robustness iterations actually performed.
+    // Number of robustness iterations actually performed.
     pub iterations_used: Option<usize>,
 
-    /// Smoothing fraction used for the fit (optimal if selected by CV).
+    // Smoothing fraction used for the fit (optimal if selected by CV).
     pub fraction_used: T,
 
-    /// RMSE scores for each tested fraction during cross-validation.
+    // RMSE scores for each tested fraction during cross-validation.
     pub cv_scores: Option<Vec<T>>,
-
-    // ========================================================================
-    // Hat Matrix Statistics
-    // ========================================================================
-    /// Equivalent Number of Parameters (trace of hat matrix).
-    /// This measures the effective model complexity.
-    pub enp: Option<T>,
-
-    /// Trace of the hat matrix (same as ENP for LOESS).
-    pub trace_hat: Option<T>,
-
-    /// Delta1 for proper SE computation: tr((I-L)(I-L)').
-    /// Used as the denominator for residual scale estimation.
-    pub delta1: Option<T>,
-
-    /// Delta2 for SE computation: tr(((I-L)(I-L)')²).
-    /// Used for confidence interval width adjustment.
-    pub delta2: Option<T>,
-
-    /// Residual scale estimate: sqrt(RSS / delta1).
-    /// This is the proper estimate of sigma for inference.
-    pub residual_scale: Option<T>,
-
-    /// Leverage (hat matrix diagonal) at each point.
-    /// l_ii measures how much influence point i has on its own fitted value.
-    pub leverage: Option<Vec<T>>,
 }
 
 impl<T: Float> LoessResult<T> {
-    // ========================================================================
-    // Query Methods
-    // ========================================================================
-
-    /// Check if confidence intervals were computed.
+    // Check if confidence intervals were computed.
     pub fn has_confidence_intervals(&self) -> bool {
         self.confidence_lower.is_some() && self.confidence_upper.is_some()
     }
 
-    /// Check if prediction intervals were computed.
+    // Check if prediction intervals were computed.
     pub fn has_prediction_intervals(&self) -> bool {
         self.prediction_lower.is_some() && self.prediction_upper.is_some()
     }
 
-    /// Check if cross-validation was performed.
+    // Check if cross-validation was performed.
     pub fn has_cv_scores(&self) -> bool {
         self.cv_scores.is_some()
     }
 
-    /// Get the best (minimum) CV score.
+    // Get the best (minimum) CV score.
     pub fn best_cv_score(&self) -> Option<T> {
         self.cv_scores.as_ref().and_then(|scores| {
             scores
                 .iter()
                 .copied()
-                .min_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
+                .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
         })
     }
 }
 
-// ============================================================================
-// Display Implementation
-// ============================================================================
-
 impl<T: Float + Display + Debug> Display for LoessResult<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         writeln!(f, "Summary:")?;
-        let n = self.y.len();
-        writeln!(f, "  Data points: {}", n)?;
-        writeln!(f, "  Dimensions:  {}", self.dimensions)?;
-        writeln!(f, "  Distance:    {:?}", self.distance_metric)?;
-        writeln!(f, "  Degree:      {:?}", self.polynomial_degree)?;
+        writeln!(f, "  Data points: {}", self.x.len())?;
         writeln!(f, "  Fraction:    {}", self.fraction_used)?;
 
         if let Some(iters) = self.iterations_used {
@@ -184,10 +101,10 @@ impl<T: Float + Display + Debug> Display for LoessResult<T> {
             writeln!(f, "  Robustness: Applied")?;
         }
 
-        if self.has_cv_scores() {
-            if let Some(best_score) = self.best_cv_score() {
-                writeln!(f, "  Best CV score: {}", best_score)?;
-            }
+        if self.has_cv_scores()
+            && let Some(best_score) = self.best_cv_score()
+        {
+            writeln!(f, "  Best CV score: {}", best_score)?;
         }
         writeln!(f)?;
 
@@ -205,11 +122,7 @@ impl<T: Float + Display + Debug> Display for LoessResult<T> {
         let has_weights = self.robustness_weights.is_some();
 
         // Build header
-        if self.dimensions == 1 {
-            write!(f, "{:>8} {:>12}", "X", "Y_smooth")?;
-        } else {
-            write!(f, "{:>8} {:>12}", "X (nD)", "Y_smooth")?;
-        }
+        write!(f, "{:>8} {:>12}", "X", "Y_smooth")?;
         if has_std_err {
             write!(f, " {:>12}", "Std_Err")?;
         }
@@ -253,47 +166,42 @@ impl<T: Float + Display + Debug> Display for LoessResult<T> {
             }
             prev_idx = idx;
 
-            if self.dimensions == 1 {
-                write!(f, "{:>8.2} {:>12.6}", self.x[idx], self.y[idx])?;
-            } else {
-                write!(f, "{:>8.2} {:>12.6}", "[...]", self.y[idx])?;
-            }
+            write!(f, "{:>8.2} {:>12.6}", self.x[idx], self.y[idx])?;
 
             // Standard error
-            if has_std_err {
-                if let Some(se) = &self.standard_errors {
-                    write!(f, " {:>12.6}", se[idx])?;
-                }
+            if has_std_err && let Some(se) = &self.standard_errors {
+                write!(f, " {:>12.6}", se[idx])?;
             }
 
             // Confidence intervals
-            if has_conf {
-                if let (Some(lower), Some(upper)) = (&self.confidence_lower, &self.confidence_upper)
-                {
-                    write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
-                }
+            if has_conf
+                && let (Some(lower), Some(upper)) = (&self.confidence_lower, &self.confidence_upper)
+            {
+                write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
             }
 
             // Prediction intervals
-            if has_pred {
-                if let (Some(lower), Some(upper)) = (&self.prediction_lower, &self.prediction_upper)
-                {
-                    write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
-                }
+            if has_pred
+                && let (Some(lower), Some(upper)) = (&self.prediction_lower, &self.prediction_upper)
+            {
+                write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
             }
 
             // Residuals
-            if has_resid {
-                if let Some(resid) = &self.residuals {
-                    write!(f, " {:>12.6}", resid[idx])?;
-                }
+            if has_resid && let Some(resid) = &self.residuals {
+                let r = resid[idx];
+                // Sanitize near-zero residuals to avoid "-0.0000" display
+                let r_clean = if r.abs() < T::from(1e-10).unwrap() {
+                    T::zero()
+                } else {
+                    r
+                };
+                write!(f, " {:>12.6}", r_clean)?;
             }
 
             // Robustness weights
-            if has_weights {
-                if let Some(weights) = &self.robustness_weights {
-                    write!(f, " {:>10.4}", weights[idx])?;
-                }
+            if has_weights && let Some(weights) = &self.robustness_weights {
+                write!(f, " {:>10.4}", weights[idx])?;
             }
 
             writeln!(f)?;

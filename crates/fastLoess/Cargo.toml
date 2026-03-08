@@ -1,23 +1,20 @@
 [package]
-name = "fastLoess"
-version = { workspace = true }
-authors = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-rust-version = { workspace = true }
-
 # Metadata
-description = { workspace = true }
+name = "fastLoess"
+version = "1.1.2"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+rust-version = "1.88"
+license = "MIT OR Apache-2.0"
+
+# Documentation and Discovery
+description = "High-performance LOESS (Locally Weighted Scatterplot Smoothing)"
 readme = "README.md"
-
-# Links
-repository = { workspace = true }
+repository = "https://github.com/thisisamirv/loess-project"
+homepage = "https://github.com/thisisamirv/loess-project"
 documentation = "https://loess.readthedocs.io/"
-homepage = { workspace = true }
-
-# Categories
-keywords = { workspace = true }
-categories = { workspace = true }
+keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
 
 # Build
 include = [
@@ -29,19 +26,20 @@ include = [
 ]
 
 [dependencies]
-loess-rs = { workspace = true, features = ["dev"] }
-num-traits = { workspace = true, default-features = false, features = ["libm"] }
-ndarray = { workspace = true, default-features = false, optional = true }
-rayon = { workspace = true, optional = true }
-
-[dev-dependencies]
-approx = { workspace = true }
+loess-rs = { path = "../loess-rs", version = "1.1", features = ["dev"] }
+num-traits = { version = "0.2", features = ["libm"] }
+ndarray = { version = "0.17", optional = true }
+rayon = { version = "1.11", optional = true }
+wgpu = { version = "26.0", optional = true }
+bytemuck = { version = "1.25", optional = true }
+pollster = { version = "0.4", optional = true }
+futures-intrusive = { version = "0.5", optional = true }
 
 [features]
 default = ["cpu"]
 cpu = ["dep:rayon", "dep:ndarray"]
+gpu = ["dep:wgpu", "dep:bytemuck", "dep:pollster", "dep:futures-intrusive"]
 dev = []
-
 
 # Document all features
 [package.metadata.docs.rs]

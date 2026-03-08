@@ -1,6 +1,6 @@
 {
   "name": "fastloess-linux-x64-gnu",
-  "version": "0.99.8",
+  "version": "1.0.0",
   "os": [
     "linux"
   ],

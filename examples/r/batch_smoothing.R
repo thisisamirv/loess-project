@@ -7,8 +7,9 @@
 # - Robustness iterations for outlier handling
 # - Confidence and prediction intervals
 # - Diagnostics and cross-validation
+# - S3 methods for print and plot
 #
-# The batch adapter (smooth function) is the primary interface for
+# The Loess class is the primary interface for
 # processing complete datasets that fit in memory.
 # =============================================================================
 
@@ -19,7 +20,7 @@ generate_sample_data <- function(n_points = 1000) {
     set.seed(42)
     x <- seq(0, 50, length.out = n_points)
 
-    # Trend + Seasonality
+    # Trend plus Seasonality
     y_true <- 0.5 * x + 5 * sin(x * 0.5)
 
     # Gaussian noise
@@ -50,37 +51,40 @@ main <- function() {
     # 2. Basic Smoothing (Default parameters)
     cat("Running basic smoothing...\n")
     # Use a smaller fraction (0.05) to capture the sine wave seasonality
-    res_basic <- fastloess(x, y, iterations = 0L, fraction = 0.05)
+    basic_model <- Loess(iterations = 0L, fraction = 0.05)
+    print(basic_model)
+    basic_res <- basic_model$fit(x, y)
+    print(basic_res)
 
     # 3. Robust Smoothing (IRLS)
     cat("Running robust smoothing (3 iterations)...\n")
-    res_robust <- fastloess(
-        x, y,
+    robust_model <- Loess(
         fraction = 0.05,
         iterations = 3L,
         robustness_method = "bisquare",
         return_robustness_weights = TRUE
     )
+    print(robust_model)
+    robust_res <- robust_model$fit(x, y)
+    print(robust_res)
 
     # 4. Uncertainty Quantification
     cat("Computing confidence and prediction intervals...\n")
-    res_intervals <- fastloess(
-        x, y,
+    res_intervals <- Loess(
         fraction = 0.05,
         confidence_intervals = 0.95,
         prediction_intervals = 0.95,
         return_diagnostics = TRUE
-    )
+    )$fit(x, y)
 
     # 5. Cross-Validation for optimal fraction
     cat("Running cross-validation to find optimal fraction...\n")
     cv_fractions <- c(0.05, 0.1, 0.2, 0.4)
-    res_cv <- fastloess(
-        x, y,
+    res_cv <- Loess(
         cv_fractions = cv_fractions,
         cv_method = "kfold",
         cv_k = 5L
-    )
+    )$fit(x, y)
 
     if (!is.null(res_cv$fraction_used)) {
         cat(sprintf("Optimal fraction found: %.2f\n", res_cv$fraction_used))
@@ -94,7 +98,7 @@ main <- function() {
         r2 <- if (!is.null(diag$r_squared)) diag$r_squared else NA
         rmse <- if (!is.null(diag$rmse)) diag$rmse else NA
         mae <- if (!is.null(diag$mae)) diag$mae else NA
-        
+
         cat(sprintf(" - R^2:   %.4f\n", r2))
         cat(sprintf(" - RMSE: %.4f\n", rmse))
         cat(sprintf(" - MAE:  %.4f\n", mae))
@@ -106,10 +110,9 @@ main <- function() {
     yl <- 2 * xl + 1
 
     # Compare policies
-    # Note: 'extend' is usually default.
-    r_ext <- fastloess(xl, yl, fraction = 0.6, boundary_policy = "extend")
-    r_ref <- fastloess(xl, yl, fraction = 0.6, boundary_policy = "reflect")
-    r_zr <- fastloess(xl, yl, fraction = 0.6, boundary_policy = "zero")
+    r_ext <- Loess(fraction = 0.6, boundary_policy = "extend")$fit(xl, yl)
+    r_ref <- Loess(fraction = 0.6, boundary_policy = "reflect")$fit(xl, yl)
+    r_zr <- Loess(fraction = 0.6, boundary_policy = "zero")$fit(xl, yl)
 
     cat("Boundary policy comparison:\n")
     cat(sprintf(

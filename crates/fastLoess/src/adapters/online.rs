@@ -1,330 +1,235 @@
 //! Online adapter for incremental LOESS smoothing.
 //!
-//! ## Purpose
-//!
 //! This module provides the online (incremental) execution adapter for LOESS
-//! smoothing. It wraps the loess-rs OnlineLoess with parallel execution support.
+//! smoothing. It maintains a sliding window of recent observations and produces
+//! smoothed values for new points as they arrive.
 //!
-//! ## Design notes
+//! ## srrstats Compliance
 //!
-//! * **Storage**: Uses a fixed-size circular buffer for the sliding window.
-//! * **Processing**: Performs smoothing on the current window for each new point.
-//! * **Parallelism**: Optional parallel execution (defaults to false for latency).
-//!
-//! ## Key concepts
-//!
-//! * **Sliding Window**: Maintains recent history up to `capacity`.
-//! * **Incremental Processing**: Validates, adds, evicts, and smooths.
-//! * **Initialization Phase**: Returns `None` until `min_points` are accumulated.
-//! * **Update Modes**: Supports `Incremental` (fast) and `Full` (accurate) modes.
-//!
-//! ## Invariants
-//!
-//! * Window size never exceeds capacity.
-//! * All values in window are finite.
-//! * At least `min_points` are required before smoothing.
-//! * Window maintains insertion order (oldest to newest).
-//!
-//! ## Non-goals
-//!
-//! * This adapter does not support confidence/prediction intervals.
-//! * This adapter does not compute diagnostic statistics.
-//! * This adapter does not support cross-validation.
-//! * This adapter does not handle out-of-order points.
+//! @srrstats {G1.6} Sliding window with optional parallel re-smoothing.
+//! @srrstats {G2.1} Configurable min_points threshold before smoothing starts.
 
 // Feature-gated imports
 #[cfg(feature = "cpu")]
-use crate::engine::executor::{smooth_pass_parallel, vertex_pass_parallel};
-#[cfg(feature = "cpu")]
-use crate::evaluation::cv::cv_pass_parallel;
-#[cfg(feature = "cpu")]
-use crate::evaluation::intervals::interval_pass_parallel;
+use crate::engine::executor::smooth_pass_parallel;
+#[cfg(feature = "gpu")]
+use crate::engine::gpu::fit_pass_gpu;
+use crate::input::LoessInput;
 
 // External dependencies
 use num_traits::Float;
 use std::fmt::Debug;
 use std::result::Result;
 
-// Internal dependencies
-#[cfg(feature = "cpu")]
-use crate::math::neighborhood::build_kdtree_parallel;
-
-// Export dependencies from loess-rs crate
-use loess_rs::internals::adapters::online::{OnlineLoessBuilder, OnlineOutput, UpdateMode};
-use loess_rs::internals::algorithms::regression::PolynomialDegree;
-use loess_rs::internals::algorithms::regression::SolverLinalg;
+// Export dependencies from loess crate
+use loess_rs::internals::adapters::online::OnlineOutput;
+use loess_rs::internals::adapters::online::UpdateMode;
+use loess_rs::internals::adapters::online::{OnlineLoess, OnlineLoessBuilder};
+use loess_rs::internals::algorithms::regression::WLSSolver;
 use loess_rs::internals::algorithms::regression::ZeroWeightFallback;
 use loess_rs::internals::algorithms::robustness::RobustnessMethod;
-use loess_rs::internals::engine::executor::SurfaceMode;
 use loess_rs::internals::math::boundary::BoundaryPolicy;
-use loess_rs::internals::math::distance::DistanceLinalg;
-use loess_rs::internals::math::distance::DistanceMetric;
 use loess_rs::internals::math::kernel::WeightFunction;
-use loess_rs::internals::math::linalg::FloatLinalg;
-use loess_rs::internals::math::scaling::ScalingMethod;
 use loess_rs::internals::primitives::backend::Backend;
 use loess_rs::internals::primitives::errors::LoessError;
 
-// ============================================================================
-// Extended Online LOESS Builder
-// ============================================================================
-
-/// Builder for online LOESS processor with parallel support.
+// Builder for online LOESS processor with parallel support.
 #[derive(Debug, Clone)]
-pub struct ParallelOnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
-    /// Base builder from the loess-rs crate
+pub struct ParallelOnlineLoessBuilder<T: Float> {
+    // Base builder from the loess crate
     pub base: OnlineLoessBuilder<T>,
 }
 
-impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Default
-    for ParallelOnlineLoessBuilder<T>
-{
+impl<T: Float> Default for ParallelOnlineLoessBuilder<T> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
-    ParallelOnlineLoessBuilder<T>
-{
-    /// Create a new online LOESS builder with default parameters.
+impl<T: Float> ParallelOnlineLoessBuilder<T> {
+    // Create a new online LOESS builder with default parameters.
     fn new() -> Self {
-        let mut base = OnlineLoessBuilder::default();
-        // Default to false for online (latency-sensitive)
-        base.parallel = Some(false);
+        let base = OnlineLoessBuilder::default().parallel(false); // Default to non-parallel in fastLoess for Online
         Self { base }
     }
 
-    /// Set parallel execution mode.
+    // Set parallel execution mode.
     pub fn parallel(mut self, parallel: bool) -> Self {
-        self.base.parallel = Some(parallel);
+        self.base = self.base.parallel(parallel);
         self
     }
 
-    /// Set the execution backend.
+    // Set the execution backend.
     pub fn backend(mut self, backend: Backend) -> Self {
-        self.base.backend = Some(backend);
+        self.base = self.base.backend(backend);
         self
     }
 
-    // ========================================================================
-    // Shared Setters
-    // ========================================================================
-
-    /// Set the smoothing fraction (span).
+    // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
-        self.base.fraction = fraction;
+        self.base = self.base.fraction(fraction);
         self
     }
 
-    /// Set the number of robustness iterations.
+    // Set the number of robustness iterations.
     pub fn iterations(mut self, iterations: usize) -> Self {
-        self.base.iterations = iterations;
+        self.base = self.base.iterations(iterations);
         self
     }
 
-    /// Set the kernel weight function.
+    // Set the delta parameter for interpolation optimization.
+    pub fn delta(mut self, delta: T) -> Self {
+        self.base = self.base.delta(delta);
+        self
+    }
+
+    // Set the kernel weight function.
     pub fn weight_function(mut self, wf: WeightFunction) -> Self {
-        self.base.weight_function = wf;
+        self.base = self.base.weight_function(wf);
         self
     }
 
-    /// Set the robustness method for outlier handling.
+    // Set the robustness method for outlier handling.
     pub fn robustness_method(mut self, method: RobustnessMethod) -> Self {
-        self.base.robustness_method = method;
+        self.base = self.base.robustness_method(method);
         self
     }
 
-    /// Set the residual scaling method (MAR/MAD).
-    pub fn scaling_method(mut self, method: ScalingMethod) -> Self {
-        self.base.scaling_method = method;
-        self
-    }
-
-    /// Set the zero-weight fallback policy.
+    // Set the zero-weight fallback policy.
     pub fn zero_weight_fallback(mut self, fallback: ZeroWeightFallback) -> Self {
-        self.base.zero_weight_fallback = fallback;
+        self.base = self.base.zero_weight_fallback(fallback);
         self
     }
 
-    /// Set the boundary handling policy.
+    // Set the boundary handling policy.
     pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
-        self.base.boundary_policy = policy;
+        self.base = self.base.boundary_policy(policy);
         self
     }
 
-    /// Set the polynomial degree.
-    pub fn polynomial_degree(mut self, degree: PolynomialDegree) -> Self {
-        self.base.polynomial_degree = degree;
-        self
-    }
-
-    /// Set the number of dimensions explicitly (though usually inferred from input).
-    pub fn dimensions(mut self, dims: usize) -> Self {
-        self.base.dimensions = dims;
-        self
-    }
-
-    /// Set the distance metric.
-    pub fn distance_metric(mut self, metric: DistanceMetric<T>) -> Self {
-        self.base.distance_metric = metric;
-        self
-    }
-
-    /// Set the surface evaluation mode (Direct or Interpolation).
-    pub fn surface_mode(mut self, mode: SurfaceMode) -> Self {
-        self.base.surface_mode = mode;
-        self
-    }
-
-    /// Set the cell size for interpolation mode.
-    pub fn cell(mut self, cell: f64) -> Self {
-        self.base.cell = Some(cell);
-        self
-    }
-
-    /// Set the maximum number of vertices for interpolation.
-    pub fn interpolation_vertices(mut self, vertices: usize) -> Self {
-        self.base.interpolation_vertices = Some(vertices);
-        self
-    }
-
-    /// Set whether to reduce polynomial degree at boundary vertices.
-    pub fn boundary_degree_fallback(mut self, enabled: bool) -> Self {
-        self.base = self.base.boundary_degree_fallback(enabled);
-        self
-    }
-
-    /// Enable auto-convergence for robustness iterations.
+    // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
-        self.base.auto_converge = Some(tolerance);
+        self.base = self.base.auto_converge(tolerance);
         self
     }
 
-    /// Set whether to compute residuals.
-    pub fn compute_residuals(mut self, compute: bool) -> Self {
-        self.base.compute_residuals = compute;
+    // Enable returning residuals in the output.
+    pub fn compute_residuals(mut self, enabled: bool) -> Self {
+        self.base = self.base.compute_residuals(enabled);
         self
     }
 
-    /// Set whether to return robustness weights.
-    pub fn return_robustness_weights(mut self, ret: bool) -> Self {
-        self.base.return_robustness_weights = ret;
+    // Enable returning robustness weights in the result.
+    pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
+        self.base = self.base.return_robustness_weights(enabled);
         self
     }
 
-    // ========================================================================
-    // Online-Specific Setters
-    // ========================================================================
-
-    /// Set the window capacity.
+    // Set the maximum window capacity.
     pub fn window_capacity(mut self, capacity: usize) -> Self {
-        self.base.window_capacity = capacity;
+        self.base = self.base.window_capacity(capacity);
         self
     }
 
-    /// Set the minimum points required before smoothing.
-    pub fn min_points(mut self, min: usize) -> Self {
-        self.base.min_points = min;
+    // Set the minimum points required before smoothing starts.
+    pub fn min_points(mut self, min_points: usize) -> Self {
+        self.base = self.base.min_points(min_points);
         self
     }
 
-    /// Set the update mode (Incremental/Full).
+    // Set the update mode for incremental processing.
     pub fn update_mode(mut self, mode: UpdateMode) -> Self {
-        self.base.update_mode = mode;
+        self.base = self.base.update_mode(mode);
         self
     }
+}
 
-    // ========================================================================
-    // Build Method
-    // ========================================================================
+// Online LOESS processor with parallel support.
+pub struct ParallelOnlineLoess<T: Float> {
+    processor: OnlineLoess<T>,
+}
 
-    /// Build the online processor.
+impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelOnlineLoess<T> {
+    // Add a new point and return the smoothed value.
+    pub fn add_point(&mut self, x: T, y: T) -> Result<Option<OnlineOutput<T>>, LoessError> {
+        self.processor.add_point(x, y)
+    }
+
+    // Add multiple points and return their smoothed values.
+    pub fn add_points<I1, I2>(
+        &mut self,
+        x: &I1,
+        y: &I2,
+    ) -> Result<Vec<Option<OnlineOutput<T>>>, LoessError>
+    where
+        I1: LoessInput<T> + ?Sized,
+        I2: LoessInput<T> + ?Sized,
+    {
+        let x_slice = x.as_loess_slice()?;
+        let y_slice = y.as_loess_slice()?;
+
+        if x_slice.len() != y_slice.len() {
+            return Err(LoessError::InvalidInput("x and y lengths differ".into()));
+        }
+
+        let mut results = Vec::with_capacity(x_slice.len());
+        for (xi, yi) in x_slice.iter().zip(y_slice.iter()) {
+            results.push(self.add_point(*xi, *yi)?);
+        }
+        Ok(results)
+    }
+
+    // Reset the processor, clearing all window data.
+    pub fn reset(&mut self) {
+        self.processor.reset();
+    }
+}
+
+impl<T: Float + WLSSolver + Debug + Send + Sync + 'static> ParallelOnlineLoessBuilder<T> {
+    // Build the online processor.
     pub fn build(self) -> Result<ParallelOnlineLoess<T>, LoessError> {
         // Check for deferred errors from adapter conversion
         if let Some(ref err) = self.base.deferred_error {
             return Err(err.clone());
         }
 
-        let builder = self.base;
+        // Configure the base builder with parallel callback if enabled
+        let mut builder = self.base.clone();
 
-        #[cfg(feature = "cpu")]
-        let builder = {
-            let mut builder = builder;
-            if builder.parallel.unwrap_or(true) {
-                builder.custom_smooth_pass = Some(smooth_pass_parallel);
-                builder.custom_cv_pass = Some(cv_pass_parallel);
-                builder.custom_interval_pass = Some(interval_pass_parallel);
-                builder.custom_vertex_pass = Some(vertex_pass_parallel);
-                builder.custom_kdtree_builder = Some(build_kdtree_parallel);
+        match builder.backend.unwrap_or(Backend::CPU) {
+            Backend::CPU => {
+                #[cfg(feature = "cpu")]
+                {
+                    if builder.parallel.unwrap_or(false) {
+                        builder = builder.custom_smooth_pass(smooth_pass_parallel);
+                    } else {
+                        builder.custom_smooth_pass = None;
+                    }
+                }
+                #[cfg(not(feature = "cpu"))]
+                {
+                    builder.custom_smooth_pass = None;
+                }
             }
-            builder
-        };
+            Backend::GPU => {
+                #[cfg(feature = "gpu")]
+                {
+                    // For Online, we currently use fit_pass_gpu as a hook
+                    builder.custom_fit_pass = Some(fit_pass_gpu);
+                }
+                #[cfg(not(feature = "gpu"))]
+                {
+                    return Err(LoessError::UnsupportedFeature {
+                        adapter: "Online",
+                        feature: "GPU backend (requires 'gpu' feature)",
+                    });
+                }
+            }
+        }
 
+        // Delegate execution to the base implementation
         let processor = builder.build()?;
+
         Ok(ParallelOnlineLoess { processor })
-    }
-}
-
-// ============================================================================
-// Extended Online LOESS Processor
-// ============================================================================
-
-/// Online LOESS processor with parallel support.
-pub struct ParallelOnlineLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
-    processor: loess_rs::internals::adapters::online::OnlineLoess<T>,
-}
-
-impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Sync + 'static>
-    ParallelOnlineLoess<T>
-{
-    /// Add a new point and get its smoothed value.
-    pub fn add_point(&mut self, x: &[T], y: T) -> Result<Option<OnlineOutput<T>>, LoessError> {
-        self.processor.add_point(x, y)
-    }
-
-    /// Add multiple points and get their smoothed values.
-    pub fn add_points(
-        &mut self,
-        x: &[T],
-        y: &[T],
-    ) -> Result<Vec<Option<OnlineOutput<T>>>, LoessError> {
-        if y.is_empty() {
-            if !x.is_empty() {
-                return Err(LoessError::MismatchedInputs {
-                    x_len: x.len(),
-                    y_len: y.len(),
-                });
-            }
-            return Ok(Vec::new());
-        }
-
-        if x.len() % y.len() != 0 {
-            return Err(LoessError::MismatchedInputs {
-                x_len: x.len(),
-                y_len: y.len(),
-            });
-        }
-
-        let dims = x.len() / y.len();
-
-        let mut results = Vec::with_capacity(y.len());
-        for (i, &y_val) in y.iter().enumerate() {
-            let start = i * dims;
-            let end = start + dims;
-            let x_point = &x[start..end];
-            results.push(self.processor.add_point(x_point, y_val)?);
-        }
-        Ok(results)
-    }
-
-    /// Get the current window size.
-    pub fn window_size(&self) -> usize {
-        self.processor.window_size()
-    }
-
-    /// Clear the window.
-    pub fn reset(&mut self) {
-        self.processor.reset();
     }
 }

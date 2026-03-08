@@ -2,7 +2,10 @@
 title: "Introduction to rfastloess"
 author: "Amir Valizadeh"
 date: "`r Sys.Date()`"
-output: BiocStyle::html_document
+output:
+  BiocStyle::html_document:
+    toc: true
+    pagetitle: "Introduction to rfastloess"
 vignette: >
   %\VignetteIndexEntry{Introduction to rfastloess}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,16 +14,26 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-    collapse = TRUE,
-    comment = "#>",
-    fig.width = 7,
-    fig.height = 5
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
 )
+```
+
+```{r srr-tags, eval = FALSE, echo = FALSE}
+#' @srrstats {G1.0} Package introduction with academic context.
+#' @srrstats {G1.4} Examples use roxygen2-documented functions.
+#' @srrstats {RE1.2} Documents expected numeric vector input format.
+#' @srrstats {RE1.4} Documents LOESS assumptions and use cases.
+#' @srrstats {RE4.17} Demonstrates print() method for model objects.
+#' @srrstats {RE6.0, RE6.2} Demonstrates plot() method with CI visualization.
 ```
 
 ## Overview
 
-`rfastloess` is a high-performance R package for LOESS (Locally Estimated Scatterplot Smoothing) built on a Rust backend.
+`rfastloess` is a high-performance R package for LOESS (Locally Weighted
+Scatterplot Smoothing) built on a Rust backend.
 
 **Full documentation**: <https://loess.readthedocs.io/>
 
@@ -35,6 +48,10 @@ install.packages("rfastloess", repos = "https://thisisamirv.r-universe.dev")
 
 ### Basic Smoothing
 
+The package uses S3 classes to provide a user-friendly interface.
+Models and results can be inspected using `print()`.
+Results can also be visualized using `plot()`.
+
 ```{r basic_example}
 library(rfastloess)
 
@@ -43,11 +60,19 @@ set.seed(42)
 x <- seq(0, 10, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-# Basic smoothing
-result <- fastloess(x, y, fraction = 0.3)
+# Initialize model
+model <- Loess(fraction = 0.3)
+print(model)
 
-# Plot
-plot(x, y, pch = 16, col = "gray", main = "Basic LOESS Smoothing")
+# Fit model
+result <- model$fit(x, y)
+print(result)
+
+# Quick visualization using the S3 plot method
+plot(result, main = "Auto-plot of LoessResult")
+
+# For custom plotting, access components directly
+plot(x, y, pch = 16, col = "gray", main = "Manual Overlay")
 lines(result$x, result$y, col = "red", lwd = 2)
 ```
 
@@ -59,11 +84,11 @@ y_outliers <- y
 y_outliers[sample(1:100, 10)] <- y_outliers[sample(1:100, 10)] + 5
 
 # Robust smoothing with confidence intervals
-result_robust <- fastloess(x, y_outliers,
-    fraction = 0.3,
-    iterations = 5,
-    confidence_intervals = 0.95
-)
+result_robust <- Loess(
+  fraction = 0.3,
+  iterations = 5,
+  confidence_intervals = 0.95
+)$fit(x, y_outliers)
 
 # Plot
 plot(x, y_outliers, pch = 16, col = "gray", main = "Robust LOESS")
@@ -72,13 +97,13 @@ lines(result_robust$x, result_robust$confidence_lower, col = "blue", lty = 2)
 lines(result_robust$x, result_robust$confidence_upper, col = "blue", lty = 2)
 ```
 
-## Main Functions
+## Main Classes
 
-| Function                 | Use Case                             |
-|--------------------------|--------------------------------------|
-| `fastloess()`           | Primary interface - batch processing |
-| `fastloess_streaming()` | Large datasets (>100K points)        |
-| `fastloess_online()`    | Real-time data streams               |
+| Class              | Use Case                             |
+|--------------------|--------------------------------------|
+| `Loess`           | Primary interface - batch processing |
+| `StreamingLoess`  | Large datasets (>100K points)        |
+| `OnlineLoess`     | Real-time data streams               |
 
 ## Learn More
 

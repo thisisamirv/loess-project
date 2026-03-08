@@ -33,7 +33,7 @@ function main() {
     // 2. Regular Batch Smoothing (for comparison)
     console.log("Running Batch LOESS (Parallel)...");
     const batchStart = process.hrtime.bigint();
-    const resBatch = fastloess.smooth(x, y, { fraction: 0.01 });
+    const resBatch = new fastloess.Loess({ fraction: 0.01 }).fit(x, y);
     const batchEnd = process.hrtime.bigint();
     const batchTime = Number(batchEnd - batchStart) / 1e9;
     console.log(`Batch took: ${batchTime.toFixed(4)} seconds`);

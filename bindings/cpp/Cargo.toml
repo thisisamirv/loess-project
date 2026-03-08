@@ -1,20 +1,26 @@
 [package]
 name = "fastloess-cpp"
-version = { workspace = true }
-edition = { workspace = true }
-authors = { workspace = true }
-license = { workspace = true }
+version = "1.0.0"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/thisisamirv/loess-project"
+homepage = "https://github.com/thisisamirv/loess-project"
+documentation = "https://loess.readthedocs.io/"
+rust-version = "1.88"
 readme = "README.md"
-publish = false
+description = "High-performance LOESS (Locally Weighted Scatterplot Smoothing)"
+keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
 
 [lib]
 name = "fastloess_cpp"
 crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
-fastLoess = { path = "../../crates/fastLoess", features = ["cpu", "dev"] }
-loess-rs = { path = "../../crates/loess-rs" }
-libc = { workspace = true }
+loess-rs = { path = "../../crates/loess-rs", version = "1.1" }
+fastLoess = { path = "../../crates/fastLoess", version = "1.1", features = ["cpu", "dev"] }
+libc = "0.2"
 
 [build-dependencies]
-cbindgen = { workspace = true }
+cbindgen = "0.29"

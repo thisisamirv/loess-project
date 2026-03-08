@@ -4,9 +4,9 @@ API reference for the `loess` and `fastLoess` Rust crates.
 
 ## Crate Overview
 
-| Crate                                      | Features                          | Use Case         |
-|--------------------------------------------|-----------------------------------|------------------|
-| [`loess`](https://docs.rs/loess)         | `no_std` compatible, minimal deps | Embedded, WASM   |
+| Crate                                    | Features                          | Use Case         |
+| ---------------------------------------- | --------------------------------- | ---------------- |
+| [`loess-rs`](https://docs.rs/loess-rs)   | `no_std` compatible, minimal deps | Embedded, WASM   |
 | [`fastLoess`](https://docs.rs/fastLoess) | Parallel, GPU, ndarray            | High performance |
 
 ---
@@ -207,7 +207,7 @@ if let Some(output) = processor.add_point(x, y)? {
 Import common types with:
 
 ```rust
-use loess::prelude::*;
+use loess_rs::prelude::*;
 // or
 use fastLoess::prelude::*;
 ```

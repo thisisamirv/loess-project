@@ -6,16 +6,19 @@
 \alias{rfastloess-package}
 \title{rfastloess: High-performance LOESS Smoothing for R}
 \description{
-A high-performance LOESS (Locally Estimated Scatterplot Smoothing)
-implementation built on the Rust `fastLoess` crate.
+A high-performance LOESS (Locally Weighted Scatterplot Smoothing)
+implementation built on the Rust \code{fastLoess} crate.
+
+For comprehensive documentation, see:
+\url{https://github.com/thisisamirv/loess-project/tree/main/docs}
 }
-\section{Main Functions}{
+\section{Main Classes}{
 
 \itemize{
-  \item \code{\link{fastloess}}: Primary interface for batch processing
-  \item \code{\link{fastloess_streaming}}: Chunked processing for large
-    datasets
-  \item \code{\link{fastloess_online}}: Sliding window for real-time data
+\item \code{\link{Loess}}: Primary interface for batch processing
+\item \code{\link{StreamingLoess}}: Chunked processing for large
+datasets
+\item \code{\link{OnlineLoess}}: Sliding window for real-time data
 }
 }
 
@@ -29,7 +32,8 @@ For comprehensive documentation, tutorials, and API reference, see:
 # Basic smoothing
 x <- seq(1, 10, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.2)
-result <- fastloess(x, y, fraction = 0.3)
+model <- Loess(fraction = 0.3)
+result <- model$fit(x, y)
 plot(x, y)
 lines(result$x, result$y, col = "red", lwd = 2)
 
@@ -43,6 +47,6 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Amir Valizadeh \email{thisisamirv@gmail.com} (\href{https://orcid.org/0000-0001-5983-8527}{ORCID})
+\strong{Maintainer}: Amir Valizadeh \email{thisisamirv@gmail.com} (\href{https://orcid.org/0000-0001-5983-8527}{ORCID}) [funder]
 
 }

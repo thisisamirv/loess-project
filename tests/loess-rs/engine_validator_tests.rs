@@ -34,7 +34,7 @@ fn make_valid_xy() -> (Vec<f64>, Vec<f64>) {
 fn test_validate_empty_input() {
     let x: Vec<f64> = vec![];
     let y: Vec<f64> = vec![];
-    let res = Validator::validate_inputs(&x, &y, 1);
+    let res = Validator::validate_inputs(&x, &y);
 
     assert!(
         matches!(res, Err(LoessError::EmptyInput)),
@@ -49,7 +49,7 @@ fn test_validate_empty_input() {
 fn test_validate_length_mismatch() {
     let x = vec![0.0, 1.0];
     let y = vec![1.0];
-    let res = Validator::validate_inputs(&x, &y, 1);
+    let res = Validator::validate_inputs(&x, &y);
 
     assert!(
         matches!(
@@ -67,7 +67,7 @@ fn test_validate_length_mismatch() {
 fn test_validate_too_few_points() {
     let x = vec![0.0];
     let y = vec![1.0];
-    let res = Validator::validate_inputs(&x, &y, 1);
+    let res = Validator::validate_inputs(&x, &y);
 
     assert!(
         matches!(res, Err(LoessError::TooFewPoints { got: 1, min: 2 })),
@@ -82,7 +82,7 @@ fn test_validate_too_few_points() {
 fn test_validate_nonfinite_x() {
     let x = vec![0.0, f64::NAN];
     let y = vec![1.0, 2.0];
-    let res_x = Validator::validate_inputs(&x, &y, 1);
+    let res_x = Validator::validate_inputs(&x, &y);
 
     if let Err(LoessError::InvalidNumericValue(s)) = res_x {
         assert!(
@@ -101,7 +101,7 @@ fn test_validate_nonfinite_x() {
 fn test_validate_nonfinite_y() {
     let x = vec![0.0, 1.0];
     let y = vec![1.0, f64::INFINITY];
-    let res_y = Validator::validate_inputs(&x, &y, 1);
+    let res_y = Validator::validate_inputs(&x, &y);
 
     if let Err(LoessError::InvalidNumericValue(s)) = res_y {
         assert!(
@@ -119,13 +119,13 @@ fn test_validate_nonfinite_y() {
 #[test]
 fn test_validate_valid_input() {
     let (x, y) = make_valid_xy();
-    let res = Validator::validate_inputs(&x, &y, 1);
+    let res = Validator::validate_inputs(&x, &y);
 
     assert!(res.is_ok(), "Valid input should pass");
 
     // Edge case: fraction=1.0 is valid
     assert!(
-        Validator::validate_inputs(&x, &y, 1).is_ok(),
+        Validator::validate_inputs(&x, &y).is_ok(),
         "Fraction 1.0 should be valid"
     );
 }
@@ -359,65 +359,4 @@ fn test_validate_cv_fractions_single() {
     // Single invalid fraction should fail
     assert!(Validator::validate_cv_fractions(&[0.0]).is_err());
     assert!(Validator::validate_cv_fractions(&[1.5]).is_err());
-}
-// ============================================================================
-// New Edge Case Tests (Invalid Inputs)
-// ============================================================================
-
-/// Test validation with ALL NaNs in x.
-#[test]
-fn test_validate_all_nans() {
-    let x = vec![f64::NAN, f64::NAN, f64::NAN];
-    let y = vec![1.0, 2.0, 3.0];
-
-    let res = Validator::validate_inputs(&x, &y, 1);
-    assert!(res.is_err(), "All NaNs should fail validation");
-}
-
-/// Test validation with Infinity.
-#[test]
-fn test_validate_infinity_handling() {
-    let x = vec![1.0, f64::INFINITY, 3.0];
-    let y = vec![1.0, 2.0, 3.0];
-
-    let res = Validator::validate_inputs(&x, &y, 1);
-    assert!(
-        matches!(res, Err(LoessError::InvalidNumericValue(_))),
-        "Infinity should be rejected"
-    );
-
-    let x2 = vec![1.0, 2.0, 3.0];
-    let y2 = vec![1.0, f64::NEG_INFINITY, 3.0];
-    let res2 = Validator::validate_inputs(&x2, &y2, 1);
-    assert!(
-        matches!(res2, Err(LoessError::InvalidNumericValue(_))),
-        "Negative Infinity should be rejected"
-    );
-}
-
-/// Test validation with Subnormal values (very small, but non-zero).
-/// These should typically be valid.
-#[test]
-fn test_validate_subnormal_values() {
-    let small = f64::MIN_POSITIVE; // 2.2e-308
-    let x = vec![0.0, small, small * 2.0];
-    let y = vec![1.0, 2.0, 3.0];
-
-    let res = Validator::validate_inputs(&x, &y, 1);
-    assert!(
-        res.is_ok(),
-        "Subnormal values should be accepted as valid floats"
-    );
-}
-
-/// Test validation with Max Float values.
-/// These should be valid (finite).
-#[test]
-fn test_validate_max_float() {
-    let max = f64::MAX;
-    let x = vec![0.0, max, -max];
-    let y = vec![1.0, 1.0, 1.0];
-
-    let res = Validator::validate_inputs(&x, &y, 1);
-    assert!(res.is_ok(), "Max finite float values should be accepted");
 }

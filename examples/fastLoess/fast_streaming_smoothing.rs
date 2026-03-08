@@ -8,17 +8,11 @@
 //! - Merge strategies for chunk boundaries
 //! - File-based streaming simulation
 //! - Performance comparison with different configurations
-//!
-//! The Streaming adapter is designed for:
-//! - Large datasets (>100K points) that don't fit in memory
-//! - Batch processing pipelines
-//! - File-based data processing
-//! - ETL (Extract, Transform, Load) workflows
-//!
-//! Each scenario includes the expected output as comments.
 
+#[cfg(feature = "cpu")]
 use fastLoess::prelude::*;
 
+#[cfg(feature = "cpu")]
 fn main() -> Result<(), LoessError> {
     println!("{}", "=".repeat(80));
     println!("LOESS Streaming Smoothing - Comprehensive Examples");
@@ -32,11 +26,18 @@ fn main() -> Result<(), LoessError> {
     example_4_large_dataset_processing()?;
     example_5_outlier_handling()?;
     example_6_file_simulation()?;
-    example_7_benchmark()?;
+    example_7_parallel_benchmark()?;
+    example_8_sequential_benchmark()?;
 
     Ok(())
 }
 
+#[cfg(not(feature = "cpu"))]
+fn main() {
+    // Empty main for no-std
+}
+
+#[cfg(feature = "cpu")]
 /// Example 1: Basic Chunked Processing
 /// Demonstrates the fundamental streaming workflow
 fn example_1_basic_chunked_processing() -> Result<(), LoessError> {
@@ -51,7 +52,7 @@ fn example_1_basic_chunked_processing() -> Result<(), LoessError> {
         .map(|&xi| 2.0 * xi + 1.0 + (xi * 0.3).sin() * 2.0)
         .collect();
 
-    let mut processor = Loess::new()
+    let mut processor = Loess::<f64>::new()
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
@@ -68,7 +69,7 @@ fn example_1_basic_chunked_processing() -> Result<(), LoessError> {
     let chunk_size = 15;
 
     // Process in chunks
-    for (chunk_idx, chunk_start) in (0..x.len()).step_by(chunk_size - 5).enumerate() {
+    for (chunk_idx, chunk_start) in (0..x.len()).step_by(chunk_size).enumerate() {
         let chunk_end = (chunk_start + chunk_size).min(x.len());
         let x_chunk = &x[chunk_start..chunk_end];
         let y_chunk = &y[chunk_start..chunk_end];
@@ -119,6 +120,7 @@ fn example_1_basic_chunked_processing() -> Result<(), LoessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 2: Chunk Size Comparison
 /// Shows how different chunk sizes affect processing
 fn example_2_chunk_size_comparison() -> Result<(), LoessError> {
@@ -142,7 +144,7 @@ fn example_2_chunk_size_comparison() -> Result<(), LoessError> {
             description, chunk_size, overlap
         );
 
-        let mut processor = Loess::new()
+        let mut processor = Loess::<f64>::new()
             .fraction(0.5)
             .iterations(1)
             .adapter(Streaming)
@@ -153,7 +155,7 @@ fn example_2_chunk_size_comparison() -> Result<(), LoessError> {
         let mut chunk_count = 0;
         let mut total_processed = 0;
 
-        for chunk_start in (0..x.len()).step_by(chunk_size - overlap) {
+        for chunk_start in (0..x.len()).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(x.len());
             let x_chunk = &x[chunk_start..chunk_end];
             let y_chunk = &y[chunk_start..chunk_end];
@@ -194,6 +196,7 @@ fn example_2_chunk_size_comparison() -> Result<(), LoessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 3: Overlap Strategies
 /// Demonstrates different overlap configurations
 fn example_3_overlap_strategies() -> Result<(), LoessError> {
@@ -225,7 +228,7 @@ fn example_3_overlap_strategies() -> Result<(), LoessError> {
     for (overlap, description) in overlap_configs {
         println!("{}", description);
 
-        let mut processor = Loess::new()
+        let mut processor = Loess::<f64>::new()
             .fraction(0.5)
             .iterations(2)
             .adapter(Streaming)
@@ -235,7 +238,7 @@ fn example_3_overlap_strategies() -> Result<(), LoessError> {
 
         let mut results = Vec::new();
 
-        for chunk_start in (0..x.len()).step_by(chunk_size.saturating_sub(overlap)) {
+        for chunk_start in (0..x.len()).step_by(chunk_size) {
             let chunk_end = (chunk_start + chunk_size).min(x.len());
             let x_chunk = &x[chunk_start..chunk_end];
             let y_chunk = &y[chunk_start..chunk_end];
@@ -276,6 +279,7 @@ fn example_3_overlap_strategies() -> Result<(), LoessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 4: Large Dataset Processing
 /// Simulates processing a very large dataset
 fn example_4_large_dataset_processing() -> Result<(), LoessError> {
@@ -286,7 +290,7 @@ fn example_4_large_dataset_processing() -> Result<(), LoessError> {
     println!("Processing {} data points in streaming mode...", n);
     println!("(Simulating a dataset too large for memory)\n");
 
-    let mut processor = Loess::new()
+    let mut processor = Loess::<f64>::new()
         .fraction(0.3)
         .iterations(2)
         .return_residuals()
@@ -299,9 +303,11 @@ fn example_4_large_dataset_processing() -> Result<(), LoessError> {
     let overlap = 50;
     let mut total_processed = 0;
     let mut chunk_count = 0;
+    // overlap is not used in loop step as adapter handles it
+    let _ = overlap;
 
     // Simulate streaming from a large data source
-    for chunk_start in (0..n).step_by(chunk_size - overlap) {
+    for chunk_start in (0..n).step_by(chunk_size) {
         let chunk_end = (chunk_start + chunk_size).min(n);
 
         // Generate chunk on-the-fly (simulating reading from disk/network)
@@ -361,6 +367,7 @@ fn example_4_large_dataset_processing() -> Result<(), LoessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 5: Outlier Handling in Streaming Mode
 /// Demonstrates robust smoothing with chunked data
 fn example_5_outlier_handling() -> Result<(), LoessError> {
@@ -392,7 +399,7 @@ fn example_5_outlier_handling() -> Result<(), LoessError> {
     for (method, name) in methods {
         println!("Using {} robustness:", name);
 
-        let mut processor = Loess::new()
+        let mut processor = Loess::<f64>::new()
             .fraction(0.5)
             .iterations(5) // More iterations for better outlier handling
             .robustness_method(method)
@@ -412,10 +419,8 @@ fn example_5_outlier_handling() -> Result<(), LoessError> {
 
             let result = processor.process_chunk(x_chunk, y_chunk)?;
 
-            if !result.x.is_empty() {
-                if let Some(residuals) = &result.residuals {
-                    large_residuals += residuals.iter().filter(|&&r| r.abs() > 10.0).count();
-                }
+            if let Some(residuals) = &result.residuals {
+                large_residuals += residuals.iter().filter(|&&r| r.abs() > 10.0).count();
             }
         }
 
@@ -446,6 +451,7 @@ fn example_5_outlier_handling() -> Result<(), LoessError> {
     Ok(())
 }
 
+#[cfg(feature = "cpu")]
 /// Example 6: File-Based Streaming Simulation
 /// Simulates reading from a file and writing results incrementally
 fn example_6_file_simulation() -> Result<(), LoessError> {
@@ -457,7 +463,7 @@ fn example_6_file_simulation() -> Result<(), LoessError> {
     let total_lines = 200;
     println!("Input file: {} data points", total_lines);
 
-    let mut processor = Loess::new()
+    let mut processor = Loess::<f64>::new()
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
@@ -472,8 +478,8 @@ fn example_6_file_simulation() -> Result<(), LoessError> {
     println!("Processing in chunks...\n");
 
     // Simulate reading and processing file chunks
-    for chunk_idx in 0..(total_lines / (chunk_size - 10)) {
-        let chunk_start = chunk_idx * (chunk_size - 10);
+    for chunk_idx in 0..(total_lines / chunk_size) {
+        let chunk_start = chunk_idx * chunk_size;
         let chunk_end = (chunk_start + chunk_size).min(total_lines);
 
         // Simulate reading chunk from file
@@ -546,28 +552,88 @@ fn example_6_file_simulation() -> Result<(), LoessError> {
     Ok(())
 }
 
-/// Example 7: Benchmark (Sequential Streaming)
-/// Measure execution time for a large dataset using the sequential Streaming adapter
-fn example_7_benchmark() -> Result<(), LoessError> {
-    println!("Example 7: Benchmark (Sequential Streaming)");
+#[cfg(feature = "cpu")]
+/// Example 7: Parallel Streaming Benchmark
+/// Measure execution time for a large dataset using the parallel Streaming adapter
+fn example_7_parallel_benchmark() -> Result<(), LoessError> {
+    println!("Example 7: Benchmark (Parallel Streaming)");
     println!("{}", "-".repeat(80));
 
     // Generate a larger synthetic dataset
-    let n = 1_000;
-    println!("Processing {} data points in streaming mode...", n);
+    let n = 10_000;
+    println!("Processing {} data points in parallel streaming mode...", n);
 
     let start = std::time::Instant::now();
 
-    let mut processor = Loess::new()
+    let mut processor = Loess::<f64>::new()
         .fraction(0.5)
         .iterations(3)
         .adapter(Streaming)
-        .chunk_size(100) // Process 100 points per chunk
-        .overlap(10) // 10 points overlap
+        .chunk_size(1000) // Process 1000 points per chunk
+        .overlap(100) // 100 points overlap
+        .parallel(true) // Enable parallel execution
         .build()?;
 
-    let chunk_size = 100;
-    let overlap = 10;
+    let chunk_size = 1000;
+    let overlap = 100;
+    let mut total_processed = 0;
+
+    // Process in chunks
+    for chunk_start in (0..n).step_by(chunk_size - overlap) {
+        let chunk_end = (chunk_start + chunk_size).min(n);
+
+        // Generate chunk on-the-fly
+        let x_chunk: Vec<f64> = (chunk_start..chunk_end).map(|i| i as f64).collect();
+        let y_chunk: Vec<f64> = x_chunk
+            .iter()
+            .map(|&xi| (xi * 0.1).sin() + (xi * 0.01).cos())
+            .collect();
+
+        let result = processor.process_chunk(&x_chunk, &y_chunk)?;
+        total_processed += result.x.len();
+    }
+
+    // Finalize
+    let final_result = processor.finalize()?;
+    total_processed += final_result.x.len();
+
+    let duration = start.elapsed();
+
+    println!("Processed {} points in {:?}", total_processed, duration);
+    println!("Execution mode: Parallel Streaming");
+    println!("Chunk size: {}, Overlap: {}", chunk_size, overlap);
+
+    println!();
+    Ok(())
+}
+
+#[cfg(feature = "cpu")]
+/// Example 8: Sequential Streaming Benchmark
+/// Measure execution time for a large dataset using the sequential Streaming adapter
+fn example_8_sequential_benchmark() -> Result<(), LoessError> {
+    println!("Example 8: Benchmark (Sequential Streaming)");
+    println!("{}", "-".repeat(80));
+
+    // Generate a larger synthetic dataset
+    let n = 10_000;
+    println!(
+        "Processing {} data points in sequential streaming mode...",
+        n
+    );
+
+    let start = std::time::Instant::now();
+
+    let mut processor = Loess::<f64>::new()
+        .fraction(0.5)
+        .iterations(3)
+        .adapter(Streaming)
+        .chunk_size(1000) // Process 1000 points per chunk
+        .overlap(100) // 100 points overlap
+        .parallel(false) // Disable parallel execution
+        .build()?;
+
+    let chunk_size = 1000;
+    let overlap = 100;
     let mut total_processed = 0;
 
     // Process in chunks

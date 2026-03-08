@@ -1,7 +1,7 @@
 #![cfg(feature = "dev")]
 
 use loess_rs::internals::api::{Adapter, BoundaryPolicy, LoessBuilder as Loess, WeightFunction};
-use loess_rs::internals::math::boundary::BoundaryPolicy as BoundaryPolicyInternal;
+use loess_rs::internals::math::boundary::apply_boundary_policy;
 
 #[test]
 fn test_boundary_policy_comparison() {
@@ -45,6 +45,11 @@ fn test_boundary_policy_comparison() {
         .fit(&x, &y)
         .unwrap();
 
+    println!(
+        "Edge values (q=4, Uniform): Extend={}, Reflect={}, Zero={}",
+        res_extend.y[0], res_reflect.y[0], res_zero.y[0]
+    );
+
     assert_ne!(
         res_extend.y[0], res_reflect.y[0],
         "Extend vs Reflect at edge"
@@ -58,6 +63,7 @@ fn test_boundary_policy_zero_effect() {
     let x = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0];
     let y = vec![100.0, 100.0, 100.0, 100.0, 100.0, 100.0];
 
+    // Zero padding should pull the edge down
     let res_zero = Loess::new()
         .fraction(0.8)
         .iterations(0)
@@ -69,19 +75,32 @@ fn test_boundary_policy_zero_effect() {
         .fit(&x, &y)
         .unwrap();
 
+    // With q=4, res_zero.y[0] should be around 50 (if window includes two 0s and two 100s)
+    // res_zero.y[2] should be 100 (if window only includes 100s)
+    println!(
+        "Zero padding effect: edge={}, middle={}",
+        res_zero.y[0], res_zero.y[2]
+    );
     assert!(
         res_zero.y[2] > res_zero.y[0],
         "Center should be higher than Zero-padded edge"
     );
 }
 
+// ============================================================================
+// Internal Boundary Edge Cases
+// ============================================================================
+
+/// Test boundary policy with a minimal dataset (2 points).
 #[test]
 fn test_boundary_minimal_dataset() {
     let x = vec![0.0, 1.0];
     let y = vec![10.0, 20.0];
 
-    let (px, py, _) = BoundaryPolicyInternal::Extend.apply(&x, &y, 1, 2);
+    // window_size=2 => pad_len=1. min(1, n-1) = 1.
+    let (px, py) = apply_boundary_policy(&x, &y, 2, BoundaryPolicy::Extend);
 
+    // Should result in [x0-dx, x0, x1, x1+dx] => [-1.0, 0.0, 1.0, 2.0]
     assert_eq!(px.len(), 4);
     assert_eq!(py.len(), 4);
     assert_eq!(px[0], -1.0);
@@ -90,197 +109,44 @@ fn test_boundary_minimal_dataset() {
     assert_eq!(py[3], 20.0);
 }
 
+/// Test boundary policy with a window size larger than the data length.
 #[test]
 fn test_boundary_large_window() {
     let x = vec![0.0, 1.0, 2.0];
     let y = vec![10.0, 20.0, 30.0];
 
-    let (px, _, _) = BoundaryPolicyInternal::Extend.apply(&x, &y, 1, 10);
+    // window_size=10 => pad_len=5. min(5, 3-1) = 2.
+    let (px, _) = apply_boundary_policy(&x, &y, 10, BoundaryPolicy::Extend);
 
+    // pad_len is capped at n-1 = 2.
+    // total_len = 3 + 2*2 = 7.
     assert_eq!(px.len(), 7);
 }
 
+/// Test boundary policy with zero dx (identical x values).
 #[test]
 fn test_boundary_zero_dx() {
     let x = vec![1.0, 1.0, 2.0, 2.0];
     let y = vec![10.0, 20.0, 30.0, 40.0];
 
-    let (px, _, _) = BoundaryPolicyInternal::Extend.apply(&x, &y, 1, 4);
+    // x[1] - x[0] = 0.
+    let (px, _) = apply_boundary_policy(&x, &y, 4, BoundaryPolicy::Extend);
 
+    // Padding should all have x=1.0 on the left
     assert_eq!(px[0], 1.0);
     assert_eq!(px[1], 1.0);
 }
 
+/// Test boundary policy with a small window (size 2).
 #[test]
 fn test_boundary_small_window() {
     let x = vec![0.0, 1.0, 2.0, 3.0, 4.0];
     let y = vec![10.0, 20.0, 30.0, 40.0, 50.0];
 
-    let (px, _, _) = BoundaryPolicyInternal::Reflect.apply(&x, &y, 1, 2);
+    // window_size=2 => pad_len=1.
+    let (px, _) = apply_boundary_policy(&x, &y, 2, BoundaryPolicy::Reflect);
 
-    assert_eq!(px.len(), 7);
-    assert_eq!(px[0], -1.0);
-    assert_eq!(px[6], 5.0);
-}
-
-#[test]
-fn test_boundary_no_boundary_policy() {
-    let x = vec![0.0, 1.0, 2.0, 3.0, 4.0];
-    let y = vec![10.0, 20.0, 30.0, 40.0, 50.0];
-
-    let (px, py, mapping) = BoundaryPolicyInternal::NoBoundary.apply(&x, &y, 1, 3);
-
-    assert_eq!(px.len(), x.len());
-    assert_eq!(py.len(), y.len());
-    assert_eq!(px, x);
-    assert_eq!(py, y);
-    assert_eq!(mapping.len(), x.len());
-}
-
-#[test]
-fn test_boundary_extend_2d() {
-    let x = vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0];
-    let y = vec![10.0, 20.0, 30.0];
-
-    let (px, py, _) = BoundaryPolicyInternal::Extend.apply(&x, &y, 2, 4);
-
-    assert!(px.len() >= x.len());
-    assert!(py.len() >= y.len());
-}
-
-#[test]
-fn test_boundary_reflect_2d() {
-    let x = vec![0.0, 0.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0];
-    let y = vec![10.0, 20.0, 30.0, 40.0];
-
-    let (px, py, _) = BoundaryPolicyInternal::Reflect.apply(&x, &y, 2, 4);
-
-    assert!(px.len() >= x.len());
-    assert!(py.len() >= y.len());
-}
-
-#[test]
-fn test_boundary_extend_3d() {
-    let x = vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0];
-    let y = vec![10.0, 20.0, 30.0];
-
-    let (px, py, mapping) = BoundaryPolicyInternal::Extend.apply(&x, &y, 3, 4);
-
-    assert!(px.len() >= x.len());
-    assert!(py.len() >= y.len());
-    assert_eq!(mapping.len(), py.len());
-}
-
-#[test]
-fn test_boundary_mapping_correctness() {
-    let x = vec![0.0, 1.0, 2.0, 3.0];
-    let y = vec![10.0, 20.0, 30.0, 40.0];
-
-    let (_, _, mapping) = BoundaryPolicyInternal::Extend.apply(&x, &y, 1, 3);
-
-    assert_eq!(mapping[0], 0);
-    assert_eq!(mapping[mapping.len() - 1], y.len() - 1);
-}
-
-#[test]
-fn test_boundary_extend_uniform_spacing() {
-    let x = vec![0.0, 2.0, 4.0, 6.0, 8.0];
-    let y = vec![10.0, 20.0, 30.0, 40.0, 50.0];
-
-    let (px, _, _) = BoundaryPolicyInternal::Extend.apply(&x, &y, 1, 3);
-
-    assert_eq!(px[0], -2.0);
-    assert_eq!(px[px.len() - 1], 10.0);
-}
-
-#[test]
-fn test_boundary_extend_non_uniform_spacing() {
-    let x = vec![0.0, 1.0, 3.0, 6.0, 10.0];
-    let y = vec![10.0, 20.0, 30.0, 40.0, 50.0];
-
-    let (px, _, _) = BoundaryPolicyInternal::Extend.apply(&x, &y, 1, 3);
-
-    assert_eq!(px[0], -1.0);
-    assert_eq!(px[px.len() - 1], 14.0);
-}
-
-#[test]
-fn test_boundary_single_point() {
-    let x = vec![5.0];
-    let y = vec![10.0];
-
-    let (px, py, _) = BoundaryPolicyInternal::Extend.apply(&x, &y, 1, 2);
-
-    assert_eq!(px.len(), 1);
-    assert_eq!(py.len(), 1);
-}
-
-#[test]
-fn test_boundary_window_size_one() {
-    let x = vec![0.0, 1.0, 2.0];
-    let y = vec![10.0, 20.0, 30.0];
-
-    let (px, py, _) = BoundaryPolicyInternal::Extend.apply(&x, &y, 1, 1);
-
-    assert_eq!(px.len(), x.len());
-    assert_eq!(py.len(), y.len());
-}
-
-#[test]
-fn test_boundary_large_dataset() {
-    let x: Vec<f64> = (0..100).map(|i| i as f64).collect();
-    let y: Vec<f64> = (0..100).map(|i| (i * 2) as f64).collect();
-
-    let (px, py, mapping) = BoundaryPolicyInternal::Extend.apply(&x, &y, 1, 20);
-
-    assert!(px.len() > x.len());
-    assert!(py.len() > y.len());
-    assert_eq!(mapping.len(), py.len());
-}
-
-#[test]
-fn test_boundary_f32_precision() {
-    let x = vec![0.0f32, 1.0, 2.0, 3.0];
-    let y = vec![10.0f32, 20.0, 30.0, 40.0];
-
-    let (px, py, _) = BoundaryPolicyInternal::Extend.apply(&x, &y, 1, 3);
-
-    assert!(px.len() > x.len());
-    assert!(py.len() > y.len());
-    assert!(px[0].is_finite());
-    assert!(py[0].is_finite());
-}
-
-#[test]
-fn test_boundary_negative_values() {
-    let x = vec![-5.0, -3.0, -1.0, 1.0, 3.0];
-    let y = vec![-10.0, -20.0, -30.0, -40.0, -50.0];
-
-    let (px, py, _) = BoundaryPolicyInternal::Reflect.apply(&x, &y, 1, 3);
-
-    assert!(px.len() > x.len());
-    assert!(py.len() > y.len());
-    assert!(px[0] < x[0]);
-}
-
-#[test]
-fn test_boundary_policy_enum_equality() {
-    assert_eq!(
-        BoundaryPolicyInternal::Extend,
-        BoundaryPolicyInternal::Extend
-    );
-    assert_ne!(
-        BoundaryPolicyInternal::Extend,
-        BoundaryPolicyInternal::Reflect
-    );
-    assert_ne!(
-        BoundaryPolicyInternal::Zero,
-        BoundaryPolicyInternal::NoBoundary
-    );
-}
-
-#[test]
-fn test_boundary_policy_default() {
-    let default_policy = BoundaryPolicyInternal::default();
-    assert_eq!(default_policy, BoundaryPolicyInternal::Extend);
+    assert_eq!(px.len(), 7); // 5 + 2*1
+    assert_eq!(px[0], -1.0); // x0 - (x1 - x0) = 0 - (1 - 0) = -1
+    assert_eq!(px[6], 5.0); // x4 + (x4 - x3) = 4 + (4 - 3) = 5
 }

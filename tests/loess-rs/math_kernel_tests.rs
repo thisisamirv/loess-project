@@ -17,7 +17,9 @@
 
 use approx::assert_relative_eq;
 
+use loess_rs::internals::algorithms::regression::WeightParams;
 use loess_rs::internals::math::kernel::WeightFunction;
+use loess_rs::internals::math::scaling::ScalingMethod;
 use loess_rs::internals::primitives::window::Window;
 
 // ============================================================================
@@ -272,12 +274,17 @@ fn test_kernel_support() {
 fn test_window_weights_no_points_in_range() {
     let x = vec![1.0, 2.0, 3.0];
     let weights = &mut [0.0f64; 3];
+    let params = WeightParams::new(5.0, 1.0, false);
+
     let kernel = WeightFunction::Tricube;
     let (sum, rightmost) = kernel.compute_window_weights(
-        &x, 0, 2, 5.0, // x_current
-        1.0, // window_radius
-        0.0, // h1
-        1.0, // h9
+        &x,
+        0,
+        2,
+        params.x_current,
+        params.window_radius,
+        params.h1,
+        params.h9,
         weights,
     );
 
@@ -293,12 +300,17 @@ fn test_window_weights_no_points_in_range() {
 fn test_window_weights_bandwidth_cutoff() {
     let x = vec![0.0, 1.0, 10.0];
     let weights = &mut [0.0f64; 3];
+    let params = WeightParams::new(0.0, 2.0, false);
+
     let kernel = WeightFunction::Tricube;
     let (_sum, rightmost) = kernel.compute_window_weights(
-        &x, 0, 2, 0.0, // x_current
-        2.0, // window_radius
-        0.0, // h1
-        2.0, // h9
+        &x,
+        0,
+        2,
+        params.x_current,
+        params.window_radius,
+        params.h1,
+        params.h9,
         weights,
     );
 
@@ -325,6 +337,14 @@ fn test_window_weights_degenerate_bandwidth() {
     let x = vec![0.0f64, 1.0];
     let window = Window { left: 0, right: 1 };
 
+    // Zero bandwidth (degenerate case)
+    let params = WeightParams {
+        x_current: 0.0f64,
+        window_radius: 0.0f64,
+        h1: 0.0f64,
+        h9: 0.0f64,
+    };
+
     let mut weights = vec![1.0f64; 2];
     let kernel = WeightFunction::Tricube;
 
@@ -332,10 +352,10 @@ fn test_window_weights_degenerate_bandwidth() {
         &x,
         window.left,
         window.right,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
+        params.x_current,
+        params.window_radius,
+        params.h1,
+        params.h9,
         &mut weights,
     );
 
@@ -356,6 +376,11 @@ fn test_window_weights_skip_left_points() {
     let x = vec![-10.0f64, 0.0f64, 1.0f64, 2.0f64];
     let window = Window { left: 0, right: 3 };
 
+    // x_current = 1.0, bandwidth = 1.0
+    let mut params = WeightParams::new(1.0f64, 1.0f64, true);
+    params.h9 = 0.5f64; // lower_bound = 0.5 => skip indices 0 and 1
+    params.h1 = 0.01f64; // Center point gets weight 1
+
     let mut weights = vec![0.0f64; 4];
     let kernel = WeightFunction::Tricube;
 
@@ -363,10 +388,10 @@ fn test_window_weights_skip_left_points() {
         &x,
         window.left,
         window.right,
-        1.0,  // x_current
-        1.0,  // window_radius
-        0.01, // h1
-        0.5,  // h9
+        params.x_current,
+        params.window_radius,
+        params.h1,
+        params.h9,
         &mut weights,
     );
 
@@ -398,22 +423,65 @@ fn test_window_weights_various_kernels() {
     ];
 
     let x = vec![0.0, 1.0, 2.0, 3.0, 4.0];
+    let params = WeightParams::new(2.0, 2.0, false);
+
     for kernel in kernels {
         let mut weights = vec![0.0f64; 5];
         let (sum, _rightmost) = kernel.compute_window_weights(
             &x,
             0,
             4,
-            0.0, // x_current
-            2.0, // window_radius
-            0.0, // h1
-            2.0, // h9
+            params.x_current,
+            params.window_radius,
+            params.h1,
+            params.h9,
             &mut weights,
         );
 
         assert!(sum > 0.0, "{} should produce positive sum", kernel.name());
         assert!(sum.is_finite(), "{} sum should be finite", kernel.name());
     }
+}
+
+// ============================================================================
+// MAD and Additional Math Edge Cases
+// ============================================================================
+
+/// Test explicit MAD computation for various distributions.
+#[test]
+fn test_compute_mad_explicit() {
+    // 1. Identical values => MAD=0
+    let mut residuals = vec![10.0, 10.0, 10.0, 10.0];
+    assert_eq!(ScalingMethod::MAD.compute(&mut residuals), 0.0);
+
+    // 2. Uniformly spaced => [1, 2, 3, 4, 5]
+    // Median is 3. Deviations: [2, 1, 0, 1, 2]. Sorted: [0, 1, 1, 2, 2]. MAD median = 1.
+    let mut residuals = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+    assert_relative_eq!(
+        ScalingMethod::MAD.compute(&mut residuals),
+        1.0,
+        epsilon = 1e-12
+    );
+
+    // 3. Even length: [1, 2, 3, 4]
+    // Median: (2+3)/2 = 2.5.
+    // Deviations: [1.5, 0.5, 0.5, 1.5]. Sorted: [0.5, 0.5, 1.5, 1.5]. MAD median = (0.5+1.5)/2 = 1.0.
+    let mut residuals = vec![1.0, 2.0, 3.0, 4.0];
+    assert_relative_eq!(
+        ScalingMethod::MAD.compute(&mut residuals),
+        1.0,
+        epsilon = 1e-12
+    );
+
+    // 4. Extreme outlier: [1, 2, 3, 1000]
+    // Median: (2+3)/2 = 2.5.
+    // Deviations: [1.5, 0.5, 0.5, 997.5]. Sorted: [0.5, 0.5, 1.5, 997.5]. MAD median = (0.5+1.5)/2 = 1.0.
+    let mut residuals = vec![1.0, 2.0, 3.0, 1000.0];
+    assert_relative_eq!(
+        ScalingMethod::MAD.compute(&mut residuals),
+        1.0,
+        epsilon = 1e-12
+    );
 }
 
 /// Test kernel weights exactly at the 1.0 boundary.

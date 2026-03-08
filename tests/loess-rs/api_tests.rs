@@ -26,9 +26,7 @@ use std::fmt::Write;
 
 use loess_rs::internals::algorithms::regression::ZeroWeightFallback;
 use loess_rs::internals::algorithms::robustness::RobustnessMethod;
-use loess_rs::internals::api::{
-    Batch, DistanceMetric, KFold, LOOCV, LoessBuilder as Loess, Online, PolynomialDegree, Streaming,
-};
+use loess_rs::internals::api::{Batch, KFold, LOOCV, LoessBuilder as Loess, Online, Streaming};
 use loess_rs::internals::engine::output::LoessResult;
 use loess_rs::internals::engine::validator::Validator;
 use loess_rs::internals::evaluation::diagnostics::Diagnostics;
@@ -221,16 +219,41 @@ fn test_validate_invalid_confidence_level() {
     }
 }
 
+/// Test validation rejects negative delta.
+///
+/// Verifies that negative delta values are rejected.
+#[test]
+fn test_validate_negative_delta() {
+    let res = Loess::<f64>::new().delta(-1.0).adapter(Batch).build();
+
+    assert!(res.is_err(), "Negative delta should error");
+}
+
+#[test]
+fn test_fit_empty_input() {
+    let x: Vec<f64> = vec![];
+    let y: Vec<f64> = vec![];
+
+    let res = Loess::<f64>::new()
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y);
+
+    assert!(matches!(res, Err(LoessError::EmptyInput)));
+}
+
 /// Test LoessError Display and Debug formatting.
 ///
 /// Exercises error variants for coverage.
 #[test]
-fn test_loess_rs_error_display() {
+fn test_loess_error_display() {
     let errs = [
         LoessError::EmptyInput,
         LoessError::MismatchedInputs { x_len: 1, y_len: 2 },
         LoessError::TooFewPoints { got: 1, min: 2 },
         LoessError::InvalidFraction(1.5),
+        LoessError::InvalidDelta(-0.1),
         LoessError::InvalidIterations(0),
         LoessError::InvalidIntervals(0.95),
         LoessError::InvalidChunkSize { got: 5, min: 10 },
@@ -405,10 +428,8 @@ fn test_fit_with_intervals_and_diagnostics() {
         .fit(&x, &y)
         .expect("fit ok");
 
-    // Note: With unified KD-Tree approach, exact reproduction is not guaranteed
-    for &yi in res.y.iter() {
-        assert!(yi.is_finite(), "Smoothed value should be finite");
-    }
+    // Predictions should reproduce linear y
+    assert_eq!(res.y, y);
 
     // Intervals computed
     assert!(res.has_confidence_intervals());
@@ -517,9 +538,9 @@ fn test_fit_with_residuals() {
     assert!(res.residuals.is_some());
     let r = res.residuals.unwrap();
 
-    // Note: With unified KD-Tree approach, exact zero residuals are not guaranteed
+    // Perfect linear data => residuals should be ~zero
     for &v in &r {
-        assert!(v.is_finite(), "Residual should be finite");
+        assert_relative_eq!(v, 0.0, epsilon = 1e-12);
     }
 }
 
@@ -555,12 +576,9 @@ fn test_diagnostics_display() {
 ///
 /// Verifies confidence_width, prediction_width, best_cv_score.
 #[test]
-fn test_loess_rs_result_helpers() {
+fn test_loess_result_helpers() {
     let lr = LoessResult {
         x: vec![0.0, 1.0, 2.0],
-        dimensions: 1,
-        distance_metric: DistanceMetric::Euclidean,
-        polynomial_degree: PolynomialDegree::Linear,
         y: vec![1.0, 2.0, 3.0],
         standard_errors: None,
         confidence_lower: Some(vec![0.9, 1.9, 2.9]),
@@ -573,12 +591,6 @@ fn test_loess_rs_result_helpers() {
         iterations_used: Some(0),
         fraction_used: 0.5,
         cv_scores: Some(vec![0.3, 0.1, 0.2]),
-        enp: None,
-        trace_hat: None,
-        delta1: None,
-        delta2: None,
-        residual_scale: None,
-        leverage: None,
     };
 
     // Best CV score
@@ -593,9 +605,6 @@ fn test_loess_rs_result_helpers() {
 fn test_has_cv_scores() {
     let lr_with = LoessResult {
         x: vec![0.0],
-        dimensions: 1,
-        distance_metric: DistanceMetric::Euclidean,
-        polynomial_degree: PolynomialDegree::Linear,
         y: vec![1.0],
         standard_errors: None,
         confidence_lower: None,
@@ -608,12 +617,6 @@ fn test_has_cv_scores() {
         iterations_used: None,
         fraction_used: 0.5,
         cv_scores: Some(vec![0.1, 0.2]),
-        enp: None,
-        trace_hat: None,
-        delta1: None,
-        delta2: None,
-        residual_scale: None,
-        leverage: None,
     };
     assert!(lr_with.has_cv_scores());
 
@@ -728,7 +731,7 @@ fn test_streaming_propagates_options() {
     let out = runner.process_chunk(&x, &y).expect("process ok");
 
     assert!(!out.y.is_empty());
-    assert!(out.y[0].is_finite(), "Smoothed value should be finite");
+    assert_relative_eq!(out.y[0], y[0], epsilon = 1e-12);
 }
 
 /// Test Online propagates shared options.
@@ -740,15 +743,12 @@ fn test_online_propagates_options() {
     let ob = base.adapter(Online).window_capacity(5);
     let mut online = ob.build().expect("online builder build ok");
 
-    assert_eq!(online.add_point(&[0.0], 1.0).expect("ok"), None);
-    assert_eq!(online.add_point(&[1.0], 3.0).expect("ok"), None);
+    assert_eq!(online.add_point(0.0, 1.0).expect("ok"), None);
+    assert!(online.add_point(1.0, 3.0).expect("ok").is_some());
 
-    let third = online.add_point(&[2.0], 5.0).expect("ok");
+    let third = online.add_point(2.0, 5.0).expect("ok");
     assert!(third.is_some());
-    assert!(
-        third.unwrap().smoothed.is_finite(),
-        "Smoothed value should be finite"
-    );
+    assert_relative_eq!(third.unwrap().smoothed, 5.0, epsilon = 1e-12);
     assert!(online.window_size() > 0);
 
     online.reset();
@@ -780,6 +780,7 @@ fn test_builder_method_chaining_order() {
     let result1 = Loess::new()
         .fraction(0.5)
         .iterations(2)
+        .delta(0.1)
         .adapter(Batch)
         .build()
         .unwrap()
@@ -788,6 +789,7 @@ fn test_builder_method_chaining_order() {
 
     // Order 2: delta -> fraction -> iterations
     let result2 = Loess::new()
+        .delta(0.1)
         .fraction(0.5)
         .iterations(2)
         .adapter(Batch)
@@ -829,6 +831,7 @@ fn test_builder_all_parameters_set() {
     let result = Loess::new()
         .fraction(0.4)
         .iterations(3)
+        .delta(0.05)
         .weight_function(WeightFunction::Tricube)
         .robustness_method(RobustnessMethod::Bisquare)
         .return_se()
@@ -943,6 +946,7 @@ fn test_delta_at_zero() {
     // Delta = 0.0 means no interpolation optimization
     let result = Loess::new()
         .fraction(0.5)
+        .delta(0.0)
         .adapter(Batch)
         .build()
         .unwrap()
@@ -1053,7 +1057,7 @@ fn test_adapter_online_ignores_batch_params() {
     // Batch doesn't have unique params, but test delta which is less relevant for online
     let mut processor = Loess::new()
         .fraction(0.5)
-        // Less relevant for online
+        .delta(0.1) // Less relevant for online
         .adapter(Online)
         .window_capacity(10)
         .min_points(3)
@@ -1062,7 +1066,7 @@ fn test_adapter_online_ignores_batch_params() {
 
     // Should work fine
     for i in 0..5 {
-        processor.add_point(&[i as f64], (i * 2) as f64).unwrap();
+        processor.add_point(i as f64, (i * 2) as f64).unwrap();
     }
 
     assert_eq!(processor.window_size(), 5);

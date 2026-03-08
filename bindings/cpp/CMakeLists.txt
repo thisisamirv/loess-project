@@ -43,3 +43,10 @@ install(DIRECTORY include/
 export(EXPORT fastloessTargets
     FILE "${CMAKE_CURRENT_BINARY_DIR}/fastloessTargets.cmake"
 )
+
+# Tests
+enable_testing()
+add_executable(test_fastloess tests/test_fastloess.cpp)
+target_link_libraries(test_fastloess PRIVATE fastloess_cpp)
+target_include_directories(test_fastloess PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+add_test(NAME test_fastloess COMMAND test_fastloess)

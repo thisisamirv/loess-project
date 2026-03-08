@@ -53,11 +53,11 @@ maturin develop --release
 
 **From crates.io:**
 
-=== "loess (no_std compatible)"
+=== "loess-rs (no_std compatible)"
 
     ```toml
     [dependencies]
-    loess = "0.99"
+    loess-rs = "1.1"
     ```
 
 === "fastLoess (parallel + GPU)"
@@ -152,9 +152,9 @@ cargo build --release
 
 ### Feature Flags
 
-| Crate        | Feature | Description                             |
-|--------------|---------|-----------------------------------------|
-| `loess`     | `std`   | Enable standard library (default)       |
+| Crate       | Feature | Description                             |
+| ----------- | ------- | --------------------------------------- |
+| `loess-rs`  | `std`   | Enable standard library (default)       |
 | `fastLoess` | `cpu`   | Enable CPU parallelism via Rayon        |
 | `fastLoess` | `gpu`   | Enable GPU acceleration via wgpu (beta) |
 
@@ -194,7 +194,7 @@ Both crates require **Rust 1.85.0** or later.
 === "Rust"
 
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
     
     fn main() -> Result<(), LoessError> {
         let x = vec![1.0, 2.0, 3.0];

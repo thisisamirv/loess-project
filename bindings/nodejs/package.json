@@ -1,6 +1,6 @@
 {
   "name": "fastloess",
-  "version": "0.99.8",
+  "version": "1.0.0",
   "description": "High-performance LOESS smoothing for Node.js",
   "main": "index.js",
   "types": "index.d.ts",
@@ -8,6 +8,7 @@
     "build": "napi build --release",
     "build:debug": "napi build",
     "test": "node --test ../../tests/nodejs/test_fastloess.js",
+    "lint": "eslint index.js ../../tests/nodejs/test_fastloess.js",
     "universal": "napi universal"
   },
   "napi": {
@@ -23,16 +24,17 @@
     ]
   },
   "optionalDependencies": {
-    "fastloess-linux-x64-gnu": "^0.99.8",
-    "fastloess-linux-arm64-gnu": "^0.99.8",
-    "fastloess-linux-x64-musl": "^0.99.8",
-    "fastloess-win32-x64-msvc": "^0.99.8",
-    "fastloess-win32-arm64-msvc": "^0.99.8",
-    "fastloess-darwin-x64": "^0.99.8",
-    "fastloess-darwin-arm64": "^0.99.8"
+    "fastloess-darwin-arm64": "^1.0.0",
+    "fastloess-darwin-x64": "^1.0.0",
+    "fastloess-linux-arm64-gnu": "^1.0.0",
+    "fastloess-linux-x64-gnu": "^1.0.0",
+    "fastloess-linux-x64-musl": "^1.0.0",
+    "fastloess-win32-arm64-msvc": "^1.0.0",
+    "fastloess-win32-x64-msvc": "^1.0.0"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.5.1"
+    "@napi-rs/cli": "^3.5",
+    "oxlint": "^1.48"
   },
   "engines": {
     "node": ">= 20"

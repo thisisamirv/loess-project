@@ -1,9 +1,9 @@
-#![cfg(all(feature = "dev", feature = "cpu"))]
+#![cfg(feature = "dev")]
 use approx::assert_abs_diff_eq;
 use fastLoess::prelude::*;
 use ndarray::Array1;
 
-#[test] // Parallel intervals produce inconsistent standard errors compared to Sequential
+#[test]
 fn test_parallel_interval_estimation() {
     // Generate sample data
     let n = 100;
@@ -23,7 +23,6 @@ fn test_parallel_interval_estimation() {
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .adapter(Batch)
-        .surface_mode(Direct)
         .parallel(false)
         .build()
         .unwrap();
@@ -44,28 +43,25 @@ fn test_parallel_interval_estimation() {
     let par_result = par_model.fit(&x, &y).unwrap();
 
     // Compare results
-    // assert_eq!(par_result.y, seq_result.y);
-    for (p, s) in par_result.y.iter().zip(seq_result.y.iter()) {
-        assert_abs_diff_eq!(p, s, epsilon = 1e-2);
-    }
+    assert_eq!(par_result.y, seq_result.y);
 
     let par_std_err = par_result.standard_errors.as_ref().unwrap();
     let seq_std_err = seq_result.standard_errors.as_ref().unwrap();
 
     for (p, s) in par_std_err.iter().zip(seq_std_err.iter()) {
-        assert_abs_diff_eq!(p, s, epsilon = 1e-2);
+        assert_abs_diff_eq!(p, s, epsilon = 1e-10);
     }
 
     let par_conf_lower = par_result.confidence_lower.as_ref().unwrap();
     let seq_conf_lower = seq_result.confidence_lower.as_ref().unwrap();
     for (p, s) in par_conf_lower.iter().zip(seq_conf_lower.iter()) {
-        assert_abs_diff_eq!(p, s, epsilon = 1e-2);
+        assert_abs_diff_eq!(p, s, epsilon = 1e-10);
     }
 
     let par_pred_lower = par_result.prediction_lower.as_ref().unwrap();
     let seq_pred_lower = seq_result.prediction_lower.as_ref().unwrap();
     for (p, s) in par_pred_lower.iter().zip(seq_pred_lower.iter()) {
-        assert_abs_diff_eq!(p, s, epsilon = 1e-2);
+        assert_abs_diff_eq!(p, s, epsilon = 1e-10);
     }
 
     println!("Parallel and Sequential Intervals match exactly!");

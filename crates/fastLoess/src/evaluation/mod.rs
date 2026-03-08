@@ -1,30 +1,11 @@
 //! Layer 4: Evaluation
 //!
-//! ## Purpose
-//!
-//! This layer provides parallel implementations of evaluation functions,
-//! including cross-validation and interval estimation.
-//!
-//! ## Architecture
-//!
-//! ```text
-//! Layer 7: API
-//!   ↓
-//! Layer 6: Adapters
-//!   ↓
-//! Layer 5: Engine
-//!   ↓
-//! Layer 4: Evaluation ← You are here
-//!   ↓
-//! Layer 3: Algorithms (at loess-rs)
-//!   ↓
-//! Layer 2: Math
-//!   ↓
-//! loess-rs
-//! ```
+//! This layer provides parallel implementations of statistical evaluation tools:
+//! - Parallel cross-validation for bandwidth selection
+//! - Parallel estimation of confidence and prediction intervals
 
-/// Parallel cross-validation implementation.
+// Parallel cross-validation for bandwidth selection
 pub mod cv;
 
-/// Parallel interval estimation implementation.
+// Parallel estimation of confidence and prediction intervals
 pub mod intervals;

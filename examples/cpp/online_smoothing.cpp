@@ -10,7 +10,7 @@
 #include <random>
 #include <vector>
 
-#include "fastloess.hpp"
+#include "../../bindings/cpp/include/fastloess.hpp"
 
 int main() {
   std::cout << "=== Online LOESS Smoothing Example ===" << std::endl;
@@ -32,7 +32,7 @@ int main() {
 
   // Online smoothing with sliding window
   try {
-    fastloess::OnlineOptions opts;
+    fastloess_rs::OnlineOptions opts;
     opts.fraction = 0.5;
     opts.iterations = 2;
     opts.window_capacity = 50;
@@ -42,23 +42,28 @@ int main() {
     std::cout << "\nProcessing with window_capacity=" << opts.window_capacity
               << ", min_points=" << opts.min_points << std::endl;
 
-    auto result = fastloess::online(x, y, opts);
+    fastloess_rs::OnlineLoess model(opts);
 
-    std::cout << "\nOnline processing completed:" << std::endl;
-    std::cout << "  Points processed: " << result.size() << std::endl;
-    std::cout << "  Fraction used: " << result.fraction_used() << std::endl;
+    std::cout << "\nProcessing data point-by-point..." << std::endl;
 
-    // Show sample of results
-    std::cout << "\nSample points (every 20th):" << std::endl;
-    for (size_t i = 0; i < result.size(); i += 20) {
-      double original = y[i];
-      double smoothed = result.y(i);
-      std::cout << "  t=" << result.x(i) << " original=" << original
-                << " smoothed=" << smoothed << " diff=" << (original - smoothed)
-                << std::endl;
+    size_t total_emitted = 0;
+    for (size_t i = 0; i < n; ++i) {
+      std::vector<double> xi = {x[i]};
+      std::vector<double> yi = {y[i]};
+
+      auto res = model.add_points(xi, yi).value();
+      total_emitted += res.size();
+
+      if (i > 0 && i % 40 == 0 && res.size() > 0) {
+        std::cout << "  t=" << i << " original=" << y[i]
+                  << " smoothed=" << res.y(res.size() - 1) << std::endl;
+      }
     }
 
-  } catch (const fastloess::LoessError &e) {
+    std::cout << "\nOnline processing completed:" << std::endl;
+    std::cout << "  Total points emitted: " << total_emitted << std::endl;
+
+  } catch (const fastloess_rs::LoessError &e) {
     std::cerr << "Error: " << e.what() << std::endl;
     return 1;
   }

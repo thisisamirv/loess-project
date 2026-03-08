@@ -9,7 +9,7 @@ const fastloess = require('../../bindings/nodejs');
  * - Confidence and prediction intervals
  * - Diagnostics and cross-validation
  *
- * The batch adapter (smooth function) is the primary interface for
+ * The Loess class is the primary interface for
  * processing complete datasets that fit in memory.
  */
 
@@ -51,25 +51,25 @@ function main() {
     // 2. Basic Smoothing (Default parameters)
     console.log("Running basic smoothing...");
     // Use a smaller fraction (0.05) to capture the sine wave seasonality
-    const resBasic = fastloess.smooth(x, y, { iterations: 0, fraction: 0.05 });
+    const _resBasic = new fastloess.Loess({ iterations: 0, fraction: 0.05 }).fit(x, y);
 
     // 3. Robust Smoothing (IRLS)
     console.log("Running robust smoothing (3 iterations)...");
-    const resRobust = fastloess.smooth(x, y, {
+    const _resRobust = new fastloess.Loess({
         fraction: 0.05,
         iterations: 3,
         robustnessMethod: "bisquare",
         returnRobustnessWeights: true
-    });
+    }).fit(x, y);
 
     // 4. Uncertainty Quantification
     console.log("Computing confidence and prediction intervals...");
-    const resIntervals = fastloess.smooth(x, y, {
+    const resIntervals = new fastloess.Loess({
         fraction: 0.05,
         confidenceIntervals: 0.95,
         predictionIntervals: 0.95,
         returnDiagnostics: true
-    });
+    }).fit(x, y);
 
     // 5. Cross-Validation for optimal fraction
     console.log("Running cross-validation to find optimal fraction...");
@@ -78,13 +78,13 @@ function main() {
     // We pass the fractions and CV method to the smooth function.
     // The main result returned will be the fit using the BEST fraction.
     // We can also retrieve the score for each fraction.
-    const resCV = fastloess.smooth(x, y, { 
+    const resCV = new fastloess.Loess({ 
         cvFractions, 
         cvMethod: "kfold", 
         cvK: 5,
         // We can request robustness weights or diagnostics for the final best model too
         returnDiagnostics: true 
-    });
+    }).fit(x, y);
 
     console.log(`Optimal fraction selected: ${resCV.fractionUsed}`);
     
@@ -115,9 +115,9 @@ function main() {
         yl[i] = 2 * xl[i] + 1;
     }
 
-    const rExt = fastloess.smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "extend" });
-    const rRef = fastloess.smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "reflect" });
-    const rZr  = fastloess.smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "zero" });
+    const rExt = new fastloess.Loess({ fraction: 0.6, boundaryPolicy: "extend" }).fit(xl, yl);
+    const rRef = new fastloess.Loess({ fraction: 0.6, boundaryPolicy: "reflect" }).fit(xl, yl);
+    const rZr  = new fastloess.Loess({ fraction: 0.6, boundaryPolicy: "zero" }).fit(xl, yl);
 
     console.log("Boundary policy comparison:");
     console.log(` - Extend (Default): first=${rExt.y[0].toFixed(2)}, last=${rExt.y[49].toFixed(2)}`);

@@ -1,455 +1,130 @@
 #![cfg(feature = "dev")]
-// Tests for interpolation algorithms.
-//
-// These tests verify the `InterpolationSurface` and its multilinear interpolation
-// capabilities used for efficient nD LOESS evaluation.
-//
-// ## Test Organization
-//
-// 1. **Surface Construction** - Verifies cell subdivision and vertex creation
-// 2. **Interpolation Accuracy** - Verifies 1D (linear) and 2D (bilinear) interpolation
-// 3. **Adaptive Subdivision** - Verifies finding high-variance regions
-// 4. **Edge Cases** - Boundary conditions and degenerate inputs
+//! Tests for interpolation and delta optimization algorithms.
+//!
+//! These tests verify the core interpolation utilities used in LOESS for:
+//! - Delta calculation for optimization (skipping dense regions)
+//! - Gap interpolation between fitted points
+//! - Close point detection and skipping
+//!
+//! ## Test Organization
+//!
+//! 1. **Delta Calculation** - Computing optimal delta for interpolation
+//! 2. **Gap Interpolation** - Linear interpolation between fitted points
+//! 3. **Point Skipping** - Detecting and handling close points
+//! 4. **Boundary Conditions** - Edge cases and special scenarios
+
 use approx::assert_relative_eq;
 
-use loess_rs::internals::algorithms::interpolation::InterpolationSurface;
-use loess_rs::internals::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
-use loess_rs::internals::engine::executor::LoessDistanceCalculator;
-use loess_rs::internals::math::distance::DistanceMetric;
-use loess_rs::internals::math::kernel::WeightFunction;
-use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood, NodeDistance};
-use loess_rs::internals::primitives::buffer::{FittingBuffer, LoessBuffer};
+use loess_rs::internals::algorithms::interpolation::{calculate_delta, interpolate_gap};
 
 // ============================================================================
-// Helper Functions & Mocks
+// Delta Calculation Tests
 // ============================================================================
 
-fn create_mock_dist_calc() -> LoessDistanceCalculator<'static, f64> {
-    LoessDistanceCalculator {
-        metric: DistanceMetric::Euclidean,
-        scales: &[], // Not used for these tests
-    }
-}
-
-// ============================================================================
-// Surface Construction Tests
-// ============================================================================
-
-/// Test building a simple 1D surface.
+/// Test delta calculation with None (automatic) and empty input.
 ///
-/// Verifies that vertices are created at bounds.
+/// Verifies:
+/// - Empty input returns delta of 0.0
+/// - Automatic delta is 1% of x range
 #[test]
-fn test_build_simple_1d() {
-    let x = vec![0.0, 1.0, 2.0, 3.0, 4.0];
-    let y = vec![0.0, 1.0, 2.0, 3.0, 4.0];
-    let fraction = 0.5;
-    let dimensions = 1;
+fn test_calculate_delta_automatic() {
+    // Empty x => delta zero
+    let empty: Vec<f64> = vec![];
+    let delta = calculate_delta::<f64>(None, &empty).unwrap();
+    assert_relative_eq!(delta, 0.0, epsilon = 1e-12);
 
-    let kdtree = KDTree::new(&x, dimensions);
-    let dist_calc = create_mock_dist_calc();
-
-    let mut workspace =
-        LoessBuffer::<f64, NodeDistance<f64>, Neighborhood<f64>>::new(x.len(), dimensions, 2, 2); // k=2, n_coeffs=2 (1D linear)
-    let LoessBuffer {
-        ref mut search_buffer,
-        ref mut neighborhood,
-        ref mut fitting_buffer,
-        ..
-    } = workspace;
-
-    // Simple fitter that just returns the x-coordinate (identity)
-    let fitter = |vertex: &[f64],
-                  _: &Neighborhood<f64>,
-                  _: &mut FittingBuffer<f64>,
-                  _: PolynomialDegree|
-     -> Option<Vec<f64>> { Some(vec![vertex[0], 1.0]) };
-
-    let surface = InterpolationSurface::build(
-        &x,
-        &y,
-        dimensions,
-        fraction,
-        2,
-        &dist_calc,
-        &kdtree,
-        10, // Max vertices
-        fitter,
-        search_buffer,
-        neighborhood,
-        fitting_buffer,
-        0.2,
-        None,
-        &[],
-        WeightFunction::default(),
-        ZeroWeightFallback::default(),
-        PolynomialDegree::default(),
-        &DistanceMetric::default(),
-        true,
-    );
-
-    assert!(surface.vertex_data.len() >= 4); // At least 2 vertices * 2 values each
-    // Determine min/max from input to check bounds
-    let min_x = 0.0;
-    let max_x = 4.0;
-
-    // Bounds are expanded by 0.5%
-    let range = 4.0;
-    let margin = range * 0.005;
-    let effective_min = min_x - margin;
-    let effective_max = max_x + margin;
-
-    // Check root cell correctness
-    let root = &surface.cells[surface.root];
-    assert_relative_eq!(root.lower[0], effective_min, epsilon = 1e-10);
-    assert_relative_eq!(root.upper[0], effective_max, epsilon = 1e-10);
+    // Range-based default: 1% of (last - first)
+    let xs = vec![1.0f64, 2.0, 5.0];
+    let delta = calculate_delta::<f64>(None, &xs).unwrap();
+    let expected = 0.01 * (5.0 - 1.0);
+    assert_relative_eq!(delta, expected, epsilon = 1e-12);
 }
 
-/// Test building a simple 2D surface.
-#[test]
-fn test_build_simple_2d() {
-    // 4 points in a square
-    let x = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0];
-    let y = vec![0.0, 1.0, 1.0, 2.0]; // x + y
-    let dimensions = 2;
-    let fraction = 1.0;
-
-    let kdtree = KDTree::new(&x, dimensions);
-    let dist_calc = create_mock_dist_calc();
-
-    let mut workspace =
-        LoessBuffer::<f64, NodeDistance<f64>, Neighborhood<f64>>::new(4, dimensions, 4, 3); // k=4, n_coeffs=3 (2D linear)
-    let LoessBuffer {
-        ref mut search_buffer,
-        ref mut neighborhood,
-        ref mut fitting_buffer,
-        ..
-    } = workspace;
-
-    let fitter = |vertex: &[f64],
-                  _: &Neighborhood<f64>,
-                  _: &mut FittingBuffer<f64>,
-                  _: PolynomialDegree|
-     -> Option<Vec<f64>> { Some(vec![vertex[0] + vertex[1], 1.0, 1.0]) };
-
-    let surface = InterpolationSurface::build(
-        &x,
-        &y,
-        dimensions,
-        fraction,
-        4,
-        &dist_calc,
-        &kdtree,
-        20,
-        fitter,
-        search_buffer,
-        neighborhood,
-        fitting_buffer,
-        0.2,
-        None,
-        &[],
-        WeightFunction::default(),
-        ZeroWeightFallback::default(),
-        PolynomialDegree::default(),
-        &DistanceMetric::default(),
-        true,
-    );
-
-    // Initial cell has 4 vertices (2^2)
-    assert!(surface.vertex_data.len() >= 12); // At least 4 vertices * 3 values each
-}
-
-// ============================================================================
-// Interpolation Accuracy Tests
-// ============================================================================
-
-/// Test exact 1D linear interpolation.
+/// Test delta calculation with explicit valid and invalid values.
 ///
-/// Linear interpolation of a linear function should be exact.
+/// Verifies:
+/// - Valid provided delta is used as-is
+/// - Negative delta produces error
 #[test]
-fn test_interpolate_1d_linear() {
-    let x = vec![0.0, 2.0, 4.0];
-    let y = vec![0.0, 2.0, 4.0]; // y = x
-    let dimensions = 1;
+fn test_calculate_delta_explicit() {
+    let xs = vec![0.0f64, 1.0];
 
-    let kdtree = KDTree::new(&x, dimensions);
-    let dist_calc = create_mock_dist_calc();
-    let mut workspace = LoessBuffer::new(x.len(), dimensions, 2, 2);
-    let LoessBuffer {
-        ref mut search_buffer,
-        ref mut neighborhood,
-        ref mut fitting_buffer,
-        ..
-    } = workspace;
-
-    let fitter = |vertex: &[f64],
-                  _: &Neighborhood<f64>,
-                  _: &mut FittingBuffer<f64>,
-                  _: PolynomialDegree|
-     -> Option<Vec<f64>> { Some(vec![vertex[0], 1.0]) };
-
-    let surface = InterpolationSurface::build(
-        &x,
-        &y,
-        dimensions,
-        0.5,
-        1,
-        &dist_calc,
-        &kdtree,
-        10,
-        fitter,
-        search_buffer,
-        neighborhood,
-        fitting_buffer,
-        0.2,
-        None,
-        &[],
-        WeightFunction::default(),
-        ZeroWeightFallback::default(),
-        PolynomialDegree::default(),
-        &DistanceMetric::default(),
-        true,
-    );
-
-    // Test points
-    // Hermite interpolation (smoothstep) deviates from linear
-    assert_relative_eq!(surface.evaluate(&[1.0]), 1.0, epsilon = 0.2);
-    assert_relative_eq!(surface.evaluate(&[3.0]), 3.0, epsilon = 0.2);
-    assert_relative_eq!(surface.evaluate(&[0.5]), 0.5, epsilon = 0.2);
-}
-
-/// Test exact 2D bilinear interpolation.
-///
-/// Bilinear interpolation of f(x,y) = ax + by + c should be exact.
-#[test]
-fn test_interpolate_2d_bilinear() {
-    // Grid
-    let x = vec![0.0, 0.0, 2.0, 0.0, 0.0, 2.0, 2.0, 2.0];
-    let y: Vec<f64> = x.chunks(2).map(|p| 2.0 * p[0] + 3.0 * p[1] + 1.0).collect();
-    let dimensions = 2;
-
-    let kdtree = KDTree::new(&x, dimensions);
-    let dist_calc = create_mock_dist_calc();
-    let mut workspace =
-        LoessBuffer::<f64, NodeDistance<f64>, Neighborhood<f64>>::new(y.len(), dimensions, 4, 3);
-    let LoessBuffer {
-        ref mut search_buffer,
-        ref mut neighborhood,
-        ref mut fitting_buffer,
-        ..
-    } = workspace;
-
-    let fitter = |vertex: &[f64],
-                  _: &Neighborhood<f64>,
-                  _: &mut FittingBuffer<f64>,
-                  _: PolynomialDegree|
-     -> Option<Vec<f64>> {
-        Some(vec![2.0 * vertex[0] + 3.0 * vertex[1] + 1.0, 2.0, 3.0])
-    };
-
-    let surface = InterpolationSurface::build(
-        &x,
-        &y,
-        dimensions,
-        1.0,
-        4,
-        &dist_calc,
-        &kdtree,
-        20,
-        fitter,
-        search_buffer,
-        neighborhood,
-        fitting_buffer,
-        0.2,
-        None,
-        &[],
-        WeightFunction::default(),
-        ZeroWeightFallback::default(),
-        PolynomialDegree::default(),
-        &DistanceMetric::default(),
-        true,
-    );
-
-    // Evaluate at center (1, 1) -> 2(1) + 3(1) + 1 = 6
-    // Note: With Hermite interpolation, this may deviate slightly if boundaries have margins
-    assert_relative_eq!(surface.evaluate(&[1.0, 1.0]), 6.0, epsilon = 0.2);
-
-    // Evaluate at (0.5, 1.5) -> 2(0.5) + 3(1.5) + 1 = 1 + 4.5 + 1 = 6.5
-    // Hermite interpolation is non-linear, so it won't be exact 6.5
-    assert_relative_eq!(surface.evaluate(&[0.5, 1.5]), 6.5, epsilon = 0.5);
+    // Valid provided delta
+    let delta = calculate_delta(Some(0.2f64), &xs).unwrap();
+    assert_relative_eq!(delta, 0.2, epsilon = 1e-12);
 }
 
 // ============================================================================
-// Adaptive Subdivision Tests
+// Gap Interpolation Tests
 // ============================================================================
 
-/// Test that adaptive subdivision occurs.
+/// Test linear interpolation between fitted points.
 ///
-/// With max_vertices high enough, it should split cells.
+/// Verifies that gaps are filled with linear interpolation.
 #[test]
-fn test_adaptive_subdivision() {
-    let n = 20;
-    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
-    let y: Vec<f64> = x.iter().map(|v| v * v).collect(); // Nonlinear
-    let dimensions = 1;
+fn test_interpolate_gap_linear() {
+    let x = vec![0.0f64, 1.0, 2.0, 3.0];
+    let mut y_smooth = vec![10.0f64, 0.0, 0.0, 20.0];
 
-    let kdtree = KDTree::new(&x, dimensions);
-    let dist_calc = create_mock_dist_calc();
-    let mut workspace =
-        LoessBuffer::<f64, NodeDistance<f64>, Neighborhood<f64>>::new(x.len(), dimensions, 6, 2);
-    let LoessBuffer {
-        ref mut search_buffer,
-        ref mut neighborhood,
-        ref mut fitting_buffer,
-        ..
-    } = workspace;
+    // Interpolate between indices 0 and 3
+    interpolate_gap(&x, &mut y_smooth, 0, 3);
 
-    // Fitter returns x^2
-    let fitter = |vertex: &[f64],
-                  _: &Neighborhood<f64>,
-                  _: &mut FittingBuffer<f64>,
-                  _: PolynomialDegree|
-     -> Option<Vec<f64>> { Some(vec![vertex[0] * vertex[0], 2.0 * vertex[0]]) };
-
-    let surface = InterpolationSurface::build(
-        &x,
-        &y,
-        dimensions,
-        0.3,
-        6,
-        &dist_calc,
-        &kdtree,
-        100, // Allow many vertices to force subdivision
-        fitter,
-        search_buffer,
-        neighborhood,
-        fitting_buffer,
-        0.2,
-        None,
-        &[],
-        WeightFunction::default(),
-        ZeroWeightFallback::default(),
-        PolynomialDegree::default(),
-        &DistanceMetric::default(),
-        true,
-    );
-
-    // Should have more than just the initial 2 vertices
-    assert!(surface.vertex_data.len() > 4); // More than 2 vertices * 2 values each
-    // Should have created child cells
-    assert!(surface.cells.len() > 1);
+    // Linear interpolation between 10 and 20 over x=[0,3]
+    // At x=1: 10 + (1/3)*10 = 13.333...
+    // At x=2: 10 + (2/3)*10 = 16.666...
+    assert_relative_eq!(y_smooth[1], 10.0 + (1.0 / 3.0) * 10.0, epsilon = 1e-12);
+    assert_relative_eq!(y_smooth[2], 10.0 + (2.0 / 3.0) * 10.0, epsilon = 1e-12);
 }
 
-// ============================================================================
-// Edge Cases Tests
-// ============================================================================
-
-/// Test surface evaluation outside bounds.
+/// Test interpolation with duplicate x values.
 ///
-/// Should clamp to the nearest cell/edge.
+/// Verifies that when x values are equal, averaging is used instead of interpolation.
 #[test]
-fn test_interpolate_boundary_clamping() {
-    let x = vec![0.0, 2.0];
-    let y = vec![0.0, 2.0];
-    let dimensions = 1;
+fn test_interpolate_gap_duplicate_x() {
+    // Duplicate x values: denom <= 0 leads to averaging
+    let x = vec![0.0f64, 0.0, 0.0, 1.0];
+    let mut y = vec![5.0f64, 0.0, 15.0, 0.0];
 
-    let kdtree = KDTree::new(&x, dimensions);
-    let dist_calc = create_mock_dist_calc();
-    let mut workspace = LoessBuffer::new(x.len(), dimensions, 2, 2);
-    let LoessBuffer {
-        ref mut search_buffer,
-        ref mut neighborhood,
-        ref mut fitting_buffer,
-        ..
-    } = workspace;
+    // Interpolate between index 0 and 2 where x values are equal
+    // Should average y[0] and y[2]
+    interpolate_gap(&x, &mut y, 0, 2);
 
-    let fitter = |vertex: &[f64],
-                  _: &Neighborhood<f64>,
-                  _: &mut FittingBuffer<f64>,
-                  _: PolynomialDegree|
-     -> Option<Vec<f64>> { Some(vec![vertex[0], 1.0]) };
-
-    let surface = InterpolationSurface::build(
-        &x,
-        &y,
-        dimensions,
-        0.5,
-        1,
-        &dist_calc,
-        &kdtree,
-        10,
-        fitter,
-        search_buffer,
-        neighborhood,
-        fitting_buffer,
-        0.2,
-        None,
-        &[],
-        WeightFunction::default(),
-        ZeroWeightFallback::default(),
-        PolynomialDegree::default(),
-        &DistanceMetric::default(),
-        true,
-    );
-
-    // Far outside right (should be clamped to upper bound value)
-    // Upper bound is ~2.01 (0.5% margin)
-    // Value should be ~2.01
-    let val_far = surface.evaluate(&[10.0]);
-    assert!(val_far > 2.0);
-    assert!(val_far < 2.1); // Margin check
+    assert_relative_eq!(y[1], (5.0 + 15.0) / 2.0, epsilon = 1e-12);
 }
 
-/// Test build handles identical implementation results when fitter fails.
-///
-/// If fitter returns None, build should fallback to global mean.
+/// Test delta calculation with extremely large x range.
 #[test]
-fn test_fitter_fallback() {
-    let x = vec![0.0, 1.0, 2.0];
-    let y = vec![2.0, 2.0, 2.0];
-    let dimensions = 1;
+fn test_calculate_delta_extreme_range() {
+    let xs = vec![0.0f64, 1e20];
+    let delta = calculate_delta::<f64>(None, &xs).unwrap();
+    // Default 1% of 1e20 = 1e18
+    assert_relative_eq!(delta, 1e18f64, epsilon = 1e6);
+}
 
-    let kdtree = KDTree::new(&x, dimensions);
-    let dist_calc = create_mock_dist_calc();
+/// Test interpolation with a minimal gap (gap size 1).
+#[test]
+fn test_interpolate_gap_minimal() {
+    let x = vec![0.0f64, 1.0, 2.0];
+    let mut y = vec![10.0f64, 0.0, 20.0];
 
-    let mut workspace =
-        LoessBuffer::<f64, NodeDistance<f64>, Neighborhood<f64>>::new(x.len(), dimensions, 1, 2);
-    let LoessBuffer {
-        ref mut search_buffer,
-        ref mut neighborhood,
-        ref mut fitting_buffer,
-        ..
-    } = workspace;
+    // Gap at index 1
+    interpolate_gap(&x, &mut y, 0, 2);
 
-    // Broken fitter always returns None
-    let fitter = |_: &[f64],
-                  _: &Neighborhood<f64>,
-                  _: &mut FittingBuffer<f64>,
-                  _: PolynomialDegree|
-     -> Option<Vec<f64>> { None };
+    assert_relative_eq!(y[1], 15.0f64, epsilon = 1e-12);
+}
 
-    let surface = InterpolationSurface::build(
-        &x,
-        &y,
-        dimensions,
-        0.5,
-        1,
-        &dist_calc,
-        &kdtree,
-        10,
-        fitter,
-        search_buffer,
-        neighborhood,
-        fitting_buffer,
-        0.2,
-        None,
-        &[],
-        WeightFunction::default(),
-        ZeroWeightFallback::default(),
-        PolynomialDegree::default(),
-        &DistanceMetric::default(),
-        true,
-    );
+/// Test interpolation with non-finite smoothed values.
+#[test]
+fn test_interpolate_gap_nan_inf() {
+    let x = vec![0.0f64, 1.0, 2.0];
 
-    // Should use mean (2.0)
-    assert_relative_eq!(surface.evaluate(&[1.0]), 2.0, epsilon = 1e-10);
+    // y0 is Inf, y1 is finite => Inf - Inf => NaN
+    let mut y_inf = vec![f64::INFINITY, 0.0, 20.0];
+    interpolate_gap(&x, &mut y_inf, 0, 2);
+    assert!(y_inf[1].is_nan());
+
+    // y0 is NaN
+    let mut y_nan = vec![f64::NAN, 0.0, 20.0];
+    interpolate_gap(&x, &mut y_nan, 0, 2);
+    assert!(y_nan[1].is_nan());
 }

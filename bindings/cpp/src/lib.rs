@@ -10,15 +10,15 @@ use std::ffi::CStr;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::ptr;
 
+use fastLoess::internals::adapters::online::ParallelOnlineLoess;
+use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use fastLoess::internals::api::{
     BoundaryPolicy, MergeStrategy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction,
     ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Mean, Online, Streaming,
 };
-use loess_rs::internals::algorithms::regression::PolynomialDegree;
-use loess_rs::internals::math::distance::DistanceMetric;
 
 /// Result struct that can be passed across FFI boundary.
 /// All arrays are allocated by Rust and must be freed by Rust.
@@ -186,7 +186,11 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
-        _ => Err(format!("Unknown scaling method: {}. Valid: mad, mar", name)),
+        "mean" => Ok(Mean),
+        _ => Err(format!(
+            "Unknown scaling method: {}. Valid: mad, mar, mean",
+            name
+        )),
     }
 }
 
@@ -216,127 +220,134 @@ fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
     }
 }
 
-/// Convert LoessResult to CppLoessResult.
-fn loess_result_to_cpp(result: LoessResult<f64>) -> CppLoessResult {
-    let n = result.y.len();
+impl From<LoessResult<f64>> for CppLoessResult {
+    fn from(result: LoessResult<f64>) -> Self {
+        let n = result.y.len();
 
-    let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
-        if let Some(ref d) = result.diagnostics {
-            (
-                d.rmse,
-                d.mae,
-                d.r_squared,
-                d.aic.unwrap_or(f64::NAN),
-                d.aicc.unwrap_or(f64::NAN),
-                d.effective_df.unwrap_or(f64::NAN),
-                d.residual_sd,
-            )
-        } else {
-            (
-                f64::NAN,
-                f64::NAN,
-                f64::NAN,
-                f64::NAN,
-                f64::NAN,
-                f64::NAN,
-                f64::NAN,
-            )
-        };
+        let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
+            if let Some(ref d) = result.diagnostics {
+                (
+                    d.rmse,
+                    d.mae,
+                    d.r_squared,
+                    d.aic.unwrap_or(f64::NAN),
+                    d.aicc.unwrap_or(f64::NAN),
+                    d.effective_df.unwrap_or(f64::NAN),
+                    d.residual_sd,
+                )
+            } else {
+                (
+                    f64::NAN,
+                    f64::NAN,
+                    f64::NAN,
+                    f64::NAN,
+                    f64::NAN,
+                    f64::NAN,
+                    f64::NAN,
+                )
+            };
 
-    CppLoessResult {
-        x: vec_to_ptr(result.x),
-        y: vec_to_ptr(result.y),
-        n: n as c_ulong,
-        standard_errors: opt_vec_to_ptr(result.standard_errors),
-        confidence_lower: opt_vec_to_ptr(result.confidence_lower),
-        confidence_upper: opt_vec_to_ptr(result.confidence_upper),
-        prediction_lower: opt_vec_to_ptr(result.prediction_lower),
-        prediction_upper: opt_vec_to_ptr(result.prediction_upper),
-        residuals: opt_vec_to_ptr(result.residuals),
-        robustness_weights: opt_vec_to_ptr(result.robustness_weights),
-        fraction_used: result.fraction_used,
-        iterations_used: result.iterations_used.map(|i| i as c_int).unwrap_or(-1),
-        rmse,
-        mae,
-        r_squared,
-        aic,
-        aicc,
-        effective_df,
-        residual_sd,
-        error: ptr::null_mut(),
+        CppLoessResult {
+            x: vec_to_ptr(result.x),
+            y: vec_to_ptr(result.y),
+            n: n as c_ulong,
+            standard_errors: opt_vec_to_ptr(result.standard_errors),
+            confidence_lower: opt_vec_to_ptr(result.confidence_lower),
+            confidence_upper: opt_vec_to_ptr(result.confidence_upper),
+            prediction_lower: opt_vec_to_ptr(result.prediction_lower),
+            prediction_upper: opt_vec_to_ptr(result.prediction_upper),
+            residuals: opt_vec_to_ptr(result.residuals),
+            robustness_weights: opt_vec_to_ptr(result.robustness_weights),
+            fraction_used: result.fraction_used,
+            iterations_used: result.iterations_used.map(|i| i as c_int).unwrap_or(-1),
+            rmse,
+            mae,
+            r_squared,
+            aic,
+            aicc,
+            effective_df,
+            residual_sd,
+            error: ptr::null_mut(),
+        }
     }
 }
 
-/// LOESS smoothing with batch adapter.
+/// Opaque handle to a Loess batch model.
+pub struct CppLoess {
+    builder: Option<LoessBuilder<f64>>,
+    // Store CV options to apply lazily because of lifetime constraints
+    cv_fractions: Option<Vec<f64>>,
+    cv_method: Option<String>,
+    cv_k: usize,
+}
+
+/// Opaque handle to a Loess streaming model.
+pub struct CppStreamingLoess {
+    builder: LoessBuilder<f64>,
+    streaming_opts: Option<(usize, usize, MergeStrategy)>,
+    model: Option<ParallelStreamingLoess<f64>>,
+}
+
+/// Opaque handle to a Loess online model.
+pub struct CppOnlineLoess {
+    builder: LoessBuilder<f64>,
+    online_opts: Option<(usize, usize, UpdateMode)>,
+    model: Option<ParallelOnlineLoess<f64>>,
+}
+
+/// C++ wrapper constructor.
 ///
 /// # Safety
-/// All pointer arguments must be valid and point to arrays of the specified length.
+/// Pointers must be valid null-terminated strings or null. Arrays must be valid.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_loess_smooth(
-    x: *const c_double,
-    y: *const c_double,
-    n: c_ulong,
+pub unsafe extern "C" fn cpp_loess_new(
     fraction: c_double,
     iterations: c_int,
+    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
     boundary_policy: *const c_char,
-    confidence_intervals: c_double, // Use NaN to disable
-    prediction_intervals: c_double, // Use NaN to disable
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
     return_diagnostics: c_int,
     return_residuals: c_int,
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
-    auto_converge: c_double, // Use NaN to disable
+    auto_converge: c_double,
     cv_fractions: *const c_double,
     cv_fractions_len: c_ulong,
     cv_method: *const c_char,
     cv_k: c_int,
     parallel: c_int,
-) -> CppLoessResult {
-    // Validate input pointers
-    if x.is_null() || y.is_null() {
-        return error_result("x and y arrays must not be null");
-    }
-    if n == 0 {
-        return error_result("Array length must be greater than 0");
-    }
-
-    // Convert input arrays to slices
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    let y_slice = std::slice::from_raw_parts(y, n as usize);
-
-    // Parse string parameters
+) -> *mut CppLoess {
     let wf_str = parse_c_str(weight_function, "tricube");
     let rm_str = parse_c_str(robustness_method, "bisquare");
     let sm_str = parse_c_str(scaling_method, "mad");
     let bp_str = parse_c_str(boundary_policy, "extend");
     let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
-    let cv_method_str = parse_c_str(cv_method, "kfold");
 
     let wf = match parse_weight_function(wf_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let rm = match parse_robustness_method(rm_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let sm = match parse_scaling_method(sm_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let bp = match parse_boundary_policy(bp_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let zwf = match parse_zero_weight_fallback(zwf_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
 
-    // Build the LOESS model
     let mut builder = LoessBuilder::<f64>::new();
     builder = builder.fraction(fraction);
     builder = builder.iterations(iterations as usize);
@@ -347,108 +358,131 @@ pub unsafe extern "C" fn cpp_loess_smooth(
     builder = builder.boundary_policy(bp);
     builder = builder.parallel(parallel != 0);
 
+    if !delta.is_nan() {
+        builder = builder.delta(delta);
+    }
     if !confidence_intervals.is_nan() {
         builder = builder.confidence_intervals(confidence_intervals);
     }
-
     if !prediction_intervals.is_nan() {
         builder = builder.prediction_intervals(prediction_intervals);
     }
-
     if return_diagnostics != 0 {
         builder = builder.return_diagnostics();
     }
-
     if return_residuals != 0 {
         builder = builder.return_residuals();
     }
-
     if return_robustness_weights != 0 {
         builder = builder.return_robustness_weights();
     }
-
     if !auto_converge.is_nan() {
         builder = builder.auto_converge(auto_converge);
     }
 
-    // Cross-validation
-    if !cv_fractions.is_null() && cv_fractions_len > 0 {
+    // Store CV options
+    let cv_fractions_vec = if !cv_fractions.is_null() && cv_fractions_len > 0 {
         let fractions = std::slice::from_raw_parts(cv_fractions, cv_fractions_len as usize);
-        let fractions_vec: Vec<f64> = fractions.to_vec();
-
-        match cv_method_str.to_lowercase().as_str() {
-            "simple" | "loo" | "loocv" | "leave_one_out" => {
-                builder = builder.cross_validate(LOOCV(&fractions_vec));
-            }
-            "kfold" | "k_fold" | "k-fold" => {
-                builder = builder.cross_validate(KFold(cv_k as usize, &fractions_vec));
-            }
-            _ => {
-                return error_result(&format!(
-                    "Unknown CV method: {}. Valid: loocv, kfold",
-                    cv_method_str
-                ));
-            }
-        }
-    }
-
-    // Build and fit
-    let model = match builder.adapter(Batch).build() {
-        Ok(m) => m,
-        Err(e) => return error_result(&e.to_string()),
+        Some(fractions.to_vec())
+    } else {
+        None
     };
 
-    let result = match model.fit(x_slice, y_slice) {
-        Ok(r) => r,
-        Err(e) => return error_result(&e.to_string()),
-    };
+    let cv_method_str = parse_c_str(cv_method, "kfold").to_string();
 
-    loess_result_to_cpp(result)
+    Box::into_raw(Box::new(CppLoess {
+        builder: Some(builder),
+        cv_fractions: cv_fractions_vec,
+        cv_method: Some(cv_method_str),
+        cv_k: cv_k as usize,
+    }))
 }
 
-/// Streaming LOESS for large datasets.
+/// Fit the batch model.
 ///
 /// # Safety
-/// All pointer arguments must be valid and point to arrays of the specified length.
+/// `ptr` must be a valid CppLoess pointer. `x` and `y` must be valid arrays of length `n`.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_loess_streaming(
+pub unsafe extern "C" fn cpp_loess_fit(
+    ptr: *mut CppLoess,
     x: *const c_double,
     y: *const c_double,
     n: c_ulong,
+) -> CppLoessResult {
+    if ptr.is_null() {
+        return error_result("Model pointer is null");
+    }
+    if x.is_null() || y.is_null() || n == 0 {
+        return error_result("Invalid data inputs");
+    }
+
+    let loess = &mut *ptr;
+    let x_slice = std::slice::from_raw_parts(x, n as usize);
+    let y_slice = std::slice::from_raw_parts(y, n as usize);
+
+    if let Some(mut builder) = loess.builder.clone() {
+        // Apply CV options if present
+        if let Some(fractions) = &loess.cv_fractions
+            && let Some(method) = &loess.cv_method
+        {
+            match method.to_lowercase().as_str() {
+                "simple" | "loo" | "loocv" | "leave_one_out" => {
+                    builder = builder.cross_validate(LOOCV(fractions));
+                }
+                "kfold" | "k_fold" | "k-fold" => {
+                    builder = builder.cross_validate(KFold(loess.cv_k, fractions));
+                }
+                _ => return error_result("Unknown CV method"),
+            }
+        }
+
+        match builder.adapter(Batch).build() {
+            Ok(m) => match m.fit(x_slice, y_slice) {
+                Ok(r) => r.into(),
+                Err(e) => error_result(&e.to_string()),
+            },
+            Err(e) => error_result(&e.to_string()),
+        }
+    } else {
+        error_result("Model initialization failed")
+    }
+}
+
+/// Free batch model.
+///
+/// # Safety
+/// `ptr` must be a valid pointer returned by `cpp_loess_new` or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_loess_free(ptr: *mut CppLoess) {
+    if !ptr.is_null() {
+        let _ = Box::from_raw(ptr);
+    }
+}
+
+/// Create a new Streaming Loess model.
+///
+/// # Safety
+/// Pointers must be valid null-terminated strings or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_streaming_new(
     fraction: c_double,
-    chunk_size: c_int,
-    overlap: c_int, // Use -1 for auto
     iterations: c_int,
+    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
     boundary_policy: *const c_char,
-    auto_converge: c_double,
     return_diagnostics: c_int,
     return_residuals: c_int,
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
-    merge_strategy: *const c_char,
+    auto_converge: c_double,
     parallel: c_int,
-) -> CppLoessResult {
-    if x.is_null() || y.is_null() {
-        return error_result("x and y arrays must not be null");
-    }
-    if n == 0 {
-        return error_result("Array length must be greater than 0");
-    }
-
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    let y_slice = std::slice::from_raw_parts(y, n as usize);
-
-    let chunk_size = chunk_size as usize;
-    let overlap_size = if overlap < 0 {
-        let default = chunk_size / 10;
-        default.min(chunk_size.saturating_sub(10)).max(1)
-    } else {
-        overlap as usize
-    };
-
+    // Streaming opts
+    chunk_size: c_int,
+    overlap: c_int,
+    merge_strategy: *const c_char,
+) -> *mut CppStreamingLoess {
     let wf_str = parse_c_str(weight_function, "tricube");
     let rm_str = parse_c_str(robustness_method, "bisquare");
     let sm_str = parse_c_str(scaling_method, "mad");
@@ -458,27 +492,27 @@ pub unsafe extern "C" fn cpp_loess_streaming(
 
     let wf = match parse_weight_function(wf_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let rm = match parse_robustness_method(rm_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let sm = match parse_scaling_method(sm_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let bp = match parse_boundary_policy(bp_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let zwf = match parse_zero_weight_fallback(zwf_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let ms = match parse_merge_strategy(ms_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
 
     let mut builder = LoessBuilder::<f64>::new();
@@ -489,7 +523,11 @@ pub unsafe extern "C" fn cpp_loess_streaming(
     builder = builder.scaling_method(sm);
     builder = builder.zero_weight_fallback(zwf);
     builder = builder.boundary_policy(bp);
+    builder = builder.parallel(parallel != 0);
 
+    if !delta.is_nan() {
+        builder = builder.delta(delta);
+    }
     if return_diagnostics != 0 {
         builder = builder.return_diagnostics();
     }
@@ -499,136 +537,126 @@ pub unsafe extern "C" fn cpp_loess_streaming(
     if return_robustness_weights != 0 {
         builder = builder.return_robustness_weights();
     }
-
-    let mut builder = builder.adapter(Streaming);
-    builder = builder.chunk_size(chunk_size);
-    builder = builder.overlap(overlap_size);
-    builder = builder.merge_strategy(ms);
-    builder = builder.parallel(parallel != 0);
-
     if !auto_converge.is_nan() {
         builder = builder.auto_converge(auto_converge);
     }
 
-    let mut processor = match builder.build() {
-        Ok(p) => p,
-        Err(e) => return error_result(&e.to_string()),
+    let chunk_size = chunk_size as usize;
+    let overlap_size = if overlap < 0 {
+        let default = chunk_size / 10;
+        default.min(chunk_size.saturating_sub(10)).max(1)
+    } else {
+        overlap as usize
     };
 
-    let chunk_result = match processor.process_chunk(x_slice, y_slice) {
-        Ok(r) => r,
-        Err(e) => return error_result(&e.to_string()),
-    };
-
-    let final_result = match processor.finalize() {
-        Ok(r) => r,
-        Err(e) => return error_result(&e.to_string()),
-    };
-
-    // Combine results
-    let mut combined_x = chunk_result.x;
-    let mut combined_y = chunk_result.y;
-    let mut combined_se = chunk_result.standard_errors;
-    let mut combined_cl = chunk_result.confidence_lower;
-    let mut combined_cu = chunk_result.confidence_upper;
-    let mut combined_pl = chunk_result.prediction_lower;
-    let mut combined_pu = chunk_result.prediction_upper;
-    let mut combined_res = chunk_result.residuals;
-    let mut combined_rw = chunk_result.robustness_weights;
-
-    combined_x.extend(final_result.x);
-    combined_y.extend(final_result.y);
-
-    if let (Some(mut s), Some(f)) = (combined_se.take(), final_result.standard_errors) {
-        s.extend(f);
-        combined_se = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_cl.take(), final_result.confidence_lower) {
-        s.extend(f);
-        combined_cl = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_cu.take(), final_result.confidence_upper) {
-        s.extend(f);
-        combined_cu = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_pl.take(), final_result.prediction_lower) {
-        s.extend(f);
-        combined_pl = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_pu.take(), final_result.prediction_upper) {
-        s.extend(f);
-        combined_pu = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_res.take(), final_result.residuals) {
-        s.extend(f);
-        combined_res = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_rw.take(), final_result.robustness_weights) {
-        s.extend(f);
-        combined_rw = Some(s);
-    }
-
-    let result = LoessResult {
-        x: combined_x,
-        y: combined_y,
-        standard_errors: combined_se,
-        confidence_lower: combined_cl,
-        confidence_upper: combined_cu,
-        prediction_lower: combined_pl,
-        prediction_upper: combined_pu,
-        residuals: combined_res,
-        robustness_weights: combined_rw,
-        diagnostics: final_result.diagnostics,
-        iterations_used: chunk_result.iterations_used,
-        fraction_used: chunk_result.fraction_used,
-        cv_scores: None,
-        dimensions: 1,
-        distance_metric: DistanceMetric::Euclidean,
-        polynomial_degree: PolynomialDegree::Linear,
-        enp: None,
-        trace_hat: None,
-        delta1: None,
-        delta2: None,
-        residual_scale: None,
-        leverage: None,
-    };
-
-    loess_result_to_cpp(result)
+    Box::into_raw(Box::new(CppStreamingLoess {
+        builder,
+        streaming_opts: Some((chunk_size, overlap_size, ms)),
+        model: None,
+    }))
 }
 
-/// Online LOESS with sliding window.
+#[unsafe(no_mangle)]
+/// Process a chunk of data.
 ///
 /// # Safety
-/// All pointer arguments must be valid and point to arrays of the specified length.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_loess_online(
+/// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
+pub unsafe extern "C" fn cpp_streaming_process(
+    ptr: *mut CppStreamingLoess,
     x: *const c_double,
     y: *const c_double,
     n: c_ulong,
+) -> CppLoessResult {
+    if ptr.is_null() {
+        return error_result("Model pointer is null");
+    }
+    let loess = &mut *ptr;
+    if x.is_null() || y.is_null() || n == 0 {
+        return error_result("Invalid data inputs");
+    }
+    let x_slice = std::slice::from_raw_parts(x, n as usize);
+    let y_slice = std::slice::from_raw_parts(y, n as usize);
+
+    if loess.model.is_none()
+        && let Some((cs, ov, ms)) = loess.streaming_opts
+    {
+        match loess
+            .builder
+            .clone()
+            .adapter(Streaming)
+            .chunk_size(cs)
+            .overlap(ov)
+            .merge_strategy(ms)
+            .build()
+        {
+            Ok(m) => loess.model = Some(m),
+            Err(e) => return error_result(&e.to_string()),
+        }
+    }
+
+    if let Some(model) = &mut loess.model {
+        match model.process_chunk(x_slice, y_slice) {
+            Ok(r) => r.into(),
+            Err(e) => error_result(&e.to_string()),
+        }
+    } else {
+        error_result("Streaming model initialization failed")
+    }
+}
+
+#[unsafe(no_mangle)]
+/// Finalize the streaming process.
+///
+/// # Safety
+/// `ptr` must be valid.
+pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLoess) -> CppLoessResult {
+    if ptr.is_null() {
+        return error_result("Model pointer is null");
+    }
+    let loess = &mut *ptr;
+    if let Some(model) = &mut loess.model {
+        match model.finalize() {
+            Ok(r) => r.into(),
+            Err(e) => error_result(&e.to_string()),
+        }
+    } else {
+        error_result("Streaming model not initialized")
+    }
+}
+
+#[unsafe(no_mangle)]
+/// Free streaming model.
+///
+/// # Safety
+/// `ptr` must be valid or null.
+pub unsafe extern "C" fn cpp_streaming_free(ptr: *mut CppStreamingLoess) {
+    if !ptr.is_null() {
+        let _ = Box::from_raw(ptr);
+    }
+}
+
+/// Create a new Online Loess model.
+///
+/// # Safety
+/// Pointers must be valid null-terminated strings or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_online_new(
     fraction: c_double,
-    window_capacity: c_int,
-    min_points: c_int,
     iterations: c_int,
+    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
     boundary_policy: *const c_char,
-    update_mode: *const c_char,
-    auto_converge: c_double,
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
+    auto_converge: c_double,
     parallel: c_int,
-) -> CppLoessResult {
-    if x.is_null() || y.is_null() {
-        return error_result("x and y arrays must not be null");
-    }
-    if n == 0 {
-        return error_result("Array length must be greater than 0");
-    }
-
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    let y_slice = std::slice::from_raw_parts(y, n as usize);
-
+    // Online opts
+    window_capacity: c_int,
+    min_points: c_int,
+    update_mode: *const c_char,
+) -> *mut CppOnlineLoess {
     let wf_str = parse_c_str(weight_function, "tricube");
     let rm_str = parse_c_str(robustness_method, "bisquare");
     let sm_str = parse_c_str(scaling_method, "mad");
@@ -638,27 +666,27 @@ pub unsafe extern "C" fn cpp_loess_online(
 
     let wf = match parse_weight_function(wf_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let rm = match parse_robustness_method(rm_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let sm = match parse_scaling_method(sm_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let bp = match parse_boundary_policy(bp_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let zwf = match parse_zero_weight_fallback(zwf_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
     let um = match parse_update_mode(um_str) {
         Ok(v) => v,
-        Err(e) => return error_result(&e),
+        Err(_) => return ptr::null_mut(),
     };
 
     let mut builder = LoessBuilder::<f64>::new();
@@ -669,68 +697,113 @@ pub unsafe extern "C" fn cpp_loess_online(
     builder = builder.scaling_method(sm);
     builder = builder.zero_weight_fallback(zwf);
     builder = builder.boundary_policy(bp);
-
-    let mut builder = builder.adapter(Online);
-    builder = builder.window_capacity(window_capacity as usize);
-    builder = builder.min_points(min_points as usize);
-    builder = builder.update_mode(um);
     builder = builder.parallel(parallel != 0);
 
+    if !delta.is_nan() {
+        builder = builder.delta(delta);
+    }
+    if return_robustness_weights != 0 {
+        builder = builder.return_robustness_weights();
+    }
     if !auto_converge.is_nan() {
         builder = builder.auto_converge(auto_converge);
     }
-    if return_robustness_weights != 0 {
-        builder = builder.return_robustness_weights(true);
-    }
 
-    let mut processor = match builder.build() {
-        Ok(p) => p,
-        Err(e) => return error_result(&e.to_string()),
-    };
-
-    let outputs = match processor.add_points(x_slice, y_slice) {
-        Ok(o) => o,
-        Err(e) => return error_result(&e.to_string()),
-    };
-
-    let smoothed: Vec<f64> = outputs
-        .into_iter()
-        .zip(y_slice.iter())
-        .map(|(opt, &original_y)| opt.map_or(original_y, |o| o.smoothed))
-        .collect();
-
-    let result = LoessResult {
-        x: x_slice.to_vec(),
-        y: smoothed,
-        standard_errors: None,
-        confidence_lower: None,
-        confidence_upper: None,
-        prediction_lower: None,
-        prediction_upper: None,
-        residuals: None,
-        robustness_weights: None,
-        diagnostics: None,
-        iterations_used: Some(iterations as usize),
-        fraction_used: fraction,
-        cv_scores: None,
-        dimensions: 1,
-        distance_metric: DistanceMetric::Euclidean,
-        polynomial_degree: PolynomialDegree::Linear,
-        enp: None,
-        trace_hat: None,
-        delta1: None,
-        delta2: None,
-        residual_scale: None,
-        leverage: None,
-    };
-
-    loess_result_to_cpp(result)
+    Box::into_raw(Box::new(CppOnlineLoess {
+        builder,
+        online_opts: Some((window_capacity as usize, min_points as usize, um)),
+        model: None,
+    }))
 }
 
-/// Free a CppLoessResult allocated by Rust.
+#[unsafe(no_mangle)]
+/// Add points to online model.
 ///
 /// # Safety
-/// The result pointer must have been returned by one of the cpp_loess_* functions.
+/// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
+pub unsafe extern "C" fn cpp_online_add_points(
+    ptr: *mut CppOnlineLoess,
+    x: *const c_double,
+    y: *const c_double,
+    n: c_ulong,
+) -> CppLoessResult {
+    if ptr.is_null() {
+        return error_result("Model pointer is null");
+    }
+    let loess = &mut *ptr;
+    if x.is_null() || y.is_null() || n == 0 {
+        return error_result("Invalid data inputs");
+    }
+    let x_slice = std::slice::from_raw_parts(x, n as usize);
+    let y_slice = std::slice::from_raw_parts(y, n as usize);
+
+    if loess.model.is_none()
+        && let Some((wc, mp, um)) = loess.online_opts
+    {
+        match loess
+            .builder
+            .clone()
+            .adapter(Online)
+            .window_capacity(wc)
+            .min_points(mp)
+            .update_mode(um)
+            .build()
+        {
+            Ok(m) => loess.model = Some(m),
+            Err(e) => return error_result(&e.to_string()),
+        }
+    }
+
+    if let Some(model) = &mut loess.model {
+        let outputs = match model.add_points(x_slice, y_slice) {
+            Ok(o) => o,
+            Err(e) => return error_result(&e.to_string()),
+        };
+
+        // Convert PointOutput to LoessResult
+        // Matches Node.js/Python logic
+        let smoothed: Vec<f64> = outputs
+            .iter()
+            .zip(y_slice.iter())
+            .map(|(opt, &orig_y)| opt.as_ref().map_or(orig_y, |o| o.smoothed))
+            .collect();
+
+        let result = LoessResult {
+            x: x_slice.to_vec(),
+            y: smoothed,
+            standard_errors: None,
+            confidence_lower: None,
+            confidence_upper: None,
+            prediction_lower: None,
+            prediction_upper: None,
+            residuals: None,
+            robustness_weights: None,
+            diagnostics: None,
+            iterations_used: None,
+            fraction_used: 0.0,
+            cv_scores: None,
+        };
+        result.into()
+    } else {
+        error_result("Online model initialization failed")
+    }
+}
+
+#[unsafe(no_mangle)]
+/// Free online model.
+///
+/// # Safety
+/// `ptr` must be valid or null.
+pub unsafe extern "C" fn cpp_online_free(ptr: *mut CppOnlineLoess) {
+    if !ptr.is_null() {
+        let _ = Box::from_raw(ptr);
+    }
+}
+
+/// Free a CppLoessResult.
+///
+/// # Safety
+/// `result` must be a valid pointer to a CppLoessResult struct.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_free_result(result: *mut CppLoessResult) {
     if result.is_null() {
@@ -740,7 +813,7 @@ pub unsafe extern "C" fn cpp_loess_free_result(result: *mut CppLoessResult) {
     let r = &mut *result;
     let n = r.n as usize;
 
-    // Free arrays using ptr::slice_from_raw_parts_mut
+    // Free arrays
     if !r.x.is_null() {
         let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.x, n));
     }

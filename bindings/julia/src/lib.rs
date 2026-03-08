@@ -5,18 +5,19 @@
 #![allow(non_snake_case)]
 #![allow(unsafe_op_in_unsafe_fn)]
 
+use ptr::null_mut;
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
+use std::panic::catch_unwind;
 use std::ptr;
+use std::slice::from_raw_parts;
 
 use fastLoess::internals::api::{
     BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Mean, Online, Streaming,
 };
-use loess_rs::internals::algorithms::regression::PolynomialDegree;
-use loess_rs::internals::math::distance::DistanceMetric;
 
 /// Result struct that can be passed across FFI boundary.
 /// All arrays are allocated by Rust and must be freed by Rust.
@@ -65,16 +66,16 @@ pub struct JlLoessResult {
 impl Default for JlLoessResult {
     fn default() -> Self {
         JlLoessResult {
-            x: ptr::null_mut(),
-            y: ptr::null_mut(),
+            x: null_mut(),
+            y: null_mut(),
             n: 0,
-            standard_errors: ptr::null_mut(),
-            confidence_lower: ptr::null_mut(),
-            confidence_upper: ptr::null_mut(),
-            prediction_lower: ptr::null_mut(),
-            prediction_upper: ptr::null_mut(),
-            residuals: ptr::null_mut(),
-            robustness_weights: ptr::null_mut(),
+            standard_errors: null_mut(),
+            confidence_lower: null_mut(),
+            confidence_upper: null_mut(),
+            prediction_lower: null_mut(),
+            prediction_upper: null_mut(),
+            residuals: null_mut(),
+            robustness_weights: null_mut(),
             fraction_used: 0.0,
             iterations_used: -1,
             rmse: f64::NAN,
@@ -84,7 +85,7 @@ impl Default for JlLoessResult {
             aicc: f64::NAN,
             effective_df: f64::NAN,
             residual_sd: f64::NAN,
-            error: ptr::null_mut(),
+            error: null_mut(),
         }
     }
 }
@@ -101,7 +102,7 @@ fn vec_to_ptr(v: Vec<f64>) -> *mut c_double {
 fn opt_vec_to_ptr(v: Option<Vec<f64>>) -> *mut c_double {
     match v {
         Some(vec) => vec_to_ptr(vec),
-        None => ptr::null_mut(),
+        None => null_mut(),
     }
 }
 
@@ -184,7 +185,11 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
-        _ => Err(format!("Unknown scaling method: {}. Valid: mad, mar", name)),
+        "mean" => Ok(Mean),
+        _ => Err(format!(
+            "Unknown scaling method: {}. Valid: mad, mar, mean",
+            name
+        )),
     }
 }
 
@@ -247,162 +252,295 @@ fn loess_result_to_jl(result: LoessResult<f64>) -> JlLoessResult {
         aicc,
         effective_df,
         residual_sd,
-        error: ptr::null_mut(),
+        error: null_mut(),
     }
 }
 
-/// LOESS smoothing with batch adapter.
+// ============================================================================
+// Stateful Structs (Opaque to C)
+// ============================================================================
+
+use fastLoess::internals::adapters::online::ParallelOnlineLoess;
+use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
+
+pub struct JlLoessConfig {
+    fraction: f64,
+    iterations: usize,
+    delta: Option<f64>,
+    weight_function: WeightFunction,
+    robustness_method: RobustnessMethod,
+    scaling_method: ScalingMethod,
+    zero_weight_fallback: ZeroWeightFallback,
+    boundary_policy: BoundaryPolicy,
+    auto_converge: Option<f64>,
+    confidence_intervals: Option<f64>,
+    prediction_intervals: Option<f64>,
+    return_diagnostics: bool,
+    return_residuals: bool,
+    return_robustness_weights: bool,
+    cv_fractions: Option<Vec<f64>>,
+    cv_method: String,
+    cv_k: usize,
+    parallel: bool,
+}
+
+pub struct JlStreamingLoess {
+    inner: ParallelStreamingLoess<f64>,
+}
+
+pub struct JlOnlineLoess {
+    inner: ParallelOnlineLoess<f64>,
+    fraction: f64,
+    iterations: usize,
+}
+
+// ============================================================================
+// Loess (Batch) C API
+// ============================================================================
+
+/// Create a new Loess configuration.
 ///
 /// # Safety
-/// All pointer arguments must be valid and point to arrays of the specified length.
+/// The returned pointer must be freed with jl_loess_free.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn jl_loess_smooth(
-    x: *const c_double,
-    y: *const c_double,
-    n: c_ulong,
+pub unsafe extern "C" fn jl_loess_new(
     fraction: c_double,
     iterations: c_int,
+    delta: c_double, // NaN for auto
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
     boundary_policy: *const c_char,
-    confidence_intervals: c_double, // Use NaN to disable
-    prediction_intervals: c_double, // Use NaN to disable
+    confidence_intervals: c_double, // NaN for disable
+    prediction_intervals: c_double, // NaN for disable
     return_diagnostics: c_int,
     return_residuals: c_int,
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
-    auto_converge: c_double, // Use NaN to disable
+    auto_converge: c_double, // NaN for disable
     cv_fractions: *const c_double,
     cv_fractions_len: c_ulong,
     cv_method: *const c_char,
     cv_k: c_int,
     parallel: c_int,
-) -> JlLoessResult {
-    // Validate input pointers
-    if x.is_null() || y.is_null() {
-        return error_result("x and y arrays must not be null");
+) -> *mut JlLoessConfig {
+    let result = catch_unwind(|| {
+        let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
+        let rm_str = unsafe { parse_c_str(robustness_method, "bisquare") };
+        let sm_str = unsafe { parse_c_str(scaling_method, "mad") };
+        let bp_str = unsafe { parse_c_str(boundary_policy, "extend") };
+        let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
+        let cv_method_str = unsafe { parse_c_str(cv_method, "kfold") };
+
+        let wf = unwrap_or_return_null!(parse_weight_function(wf_str));
+        let rm = unwrap_or_return_null!(parse_robustness_method(rm_str));
+        let sm = unwrap_or_return_null!(parse_scaling_method(sm_str));
+        let bp = unwrap_or_return_null!(parse_boundary_policy(bp_str));
+        let zwf = unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
+
+        let cv_fractions_vec = if !cv_fractions.is_null() && cv_fractions_len > 0 {
+            let slice = unsafe { from_raw_parts(cv_fractions, cv_fractions_len as usize) };
+            Some(slice.to_vec())
+        } else {
+            None
+        };
+
+        let config = JlLoessConfig {
+            fraction,
+            iterations: iterations as usize,
+            delta: if delta.is_nan() { None } else { Some(delta) },
+            weight_function: wf,
+            robustness_method: rm,
+            scaling_method: sm,
+            zero_weight_fallback: zwf,
+            boundary_policy: bp,
+            auto_converge: if auto_converge.is_nan() {
+                None
+            } else {
+                Some(auto_converge)
+            },
+            confidence_intervals: if confidence_intervals.is_nan() {
+                None
+            } else {
+                Some(confidence_intervals)
+            },
+            prediction_intervals: if prediction_intervals.is_nan() {
+                None
+            } else {
+                Some(prediction_intervals)
+            },
+            return_diagnostics: return_diagnostics != 0,
+            return_residuals: return_residuals != 0,
+            return_robustness_weights: return_robustness_weights != 0,
+            cv_fractions: cv_fractions_vec,
+            cv_method: cv_method_str.to_string(),
+            cv_k: cv_k as usize,
+            parallel: parallel != 0,
+        };
+
+        Box::into_raw(Box::new(config))
+    });
+
+    match result {
+        Ok(ptr) => ptr,
+        Err(_) => null_mut(),
     }
-    if n == 0 {
-        return error_result("Array length must be greater than 0");
-    }
-
-    // Convert input arrays to slices
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    let y_slice = std::slice::from_raw_parts(y, n as usize);
-
-    // Parse string parameters
-    let wf_str = parse_c_str(weight_function, "tricube");
-    let rm_str = parse_c_str(robustness_method, "bisquare");
-    let sm_str = parse_c_str(scaling_method, "mad");
-    let bp_str = parse_c_str(boundary_policy, "extend");
-    let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
-    let cv_method_str = parse_c_str(cv_method, "kfold");
-
-    let wf = match parse_weight_function(wf_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let rm = match parse_robustness_method(rm_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let sm = match parse_scaling_method(sm_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let bp = match parse_boundary_policy(bp_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let zwf = match parse_zero_weight_fallback(zwf_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-
-    // Build the LOESS model
-    let mut builder = LoessBuilder::<f64>::new();
-    builder = builder.fraction(fraction);
-    builder = builder.iterations(iterations as usize);
-    builder = builder.weight_function(wf);
-    builder = builder.robustness_method(rm);
-    builder = builder.scaling_method(sm);
-    builder = builder.zero_weight_fallback(zwf);
-    builder = builder.boundary_policy(bp);
-    builder = builder.parallel(parallel != 0);
-
-    if !confidence_intervals.is_nan() {
-        builder = builder.confidence_intervals(confidence_intervals);
-    }
-
-    if !prediction_intervals.is_nan() {
-        builder = builder.prediction_intervals(prediction_intervals);
-    }
-
-    if return_diagnostics != 0 {
-        builder = builder.return_diagnostics();
-    }
-
-    if return_residuals != 0 {
-        builder = builder.return_residuals();
-    }
-
-    if return_robustness_weights != 0 {
-        builder = builder.return_robustness_weights();
-    }
-
-    if !auto_converge.is_nan() {
-        builder = builder.auto_converge(auto_converge);
-    }
-
-    // Cross-validation
-    if !cv_fractions.is_null() && cv_fractions_len > 0 {
-        let fractions = std::slice::from_raw_parts(cv_fractions, cv_fractions_len as usize);
-        let fractions_vec: Vec<f64> = fractions.to_vec();
-
-        match cv_method_str.to_lowercase().as_str() {
-            "simple" | "loo" | "loocv" | "leave_one_out" => {
-                builder = builder.cross_validate(LOOCV(&fractions_vec));
-            }
-            "kfold" | "k_fold" | "k-fold" => {
-                builder = builder.cross_validate(KFold(cv_k as usize, &fractions_vec));
-            }
-            _ => {
-                return error_result(&format!(
-                    "Unknown CV method: {}. Valid: loocv, kfold",
-                    cv_method_str
-                ));
-            }
-        }
-    }
-
-    // Build and fit
-    let model = match builder.adapter(Batch).build() {
-        Ok(m) => m,
-        Err(e) => return error_result(&e.to_string()),
-    };
-
-    let result = match model.fit(x_slice, y_slice) {
-        Ok(r) => r,
-        Err(e) => return error_result(&e.to_string()),
-    };
-
-    loess_result_to_jl(result)
 }
 
-/// Streaming LOESS for large datasets.
+/// Fit the Loess model to data.
 ///
 /// # Safety
-/// All pointer arguments must be valid and point to arrays of the specified length.
+/// config_ptr must be a valid pointer returned by jl_loess_new.
+/// x and y must be valid arrays of length n.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn jl_loess_streaming(
+pub unsafe extern "C" fn jl_loess_fit(
+    config_ptr: *const JlLoessConfig,
     x: *const c_double,
     y: *const c_double,
     n: c_ulong,
+) -> JlLoessResult {
+    let result = catch_unwind(|| {
+        if config_ptr.is_null() {
+            return error_result("Config pointer is null");
+        }
+        let config = unsafe { &*config_ptr };
+
+        if x.is_null() || y.is_null() {
+            return error_result("x and y arrays must not be null");
+        }
+        if n == 0 {
+            return error_result("Array length must be greater than 0");
+        }
+
+        let x_slice = unsafe { from_raw_parts(x, n as usize) };
+        let y_slice = unsafe { from_raw_parts(y, n as usize) };
+
+        let mut builder = LoessBuilder::<f64>::new();
+        builder = builder.fraction(config.fraction);
+        builder = builder.iterations(config.iterations);
+        builder = builder.weight_function(config.weight_function);
+        builder = builder.robustness_method(config.robustness_method);
+        builder = builder.scaling_method(config.scaling_method);
+        builder = builder.zero_weight_fallback(config.zero_weight_fallback);
+        builder = builder.boundary_policy(config.boundary_policy);
+        builder = builder.parallel(config.parallel);
+
+        if let Some(d) = config.delta {
+            builder = builder.delta(d);
+        }
+        if let Some(cl) = config.confidence_intervals {
+            builder = builder.confidence_intervals(cl);
+        }
+        if let Some(pl) = config.prediction_intervals {
+            builder = builder.prediction_intervals(pl);
+        }
+        if config.return_diagnostics {
+            builder = builder.return_diagnostics();
+        }
+        if config.return_residuals {
+            builder = builder.return_residuals();
+        }
+        if config.return_robustness_weights {
+            builder = builder.return_robustness_weights();
+        }
+        if let Some(tol) = config.auto_converge {
+            builder = builder.auto_converge(tol);
+        }
+
+        // Cross-validation
+        if let Some(ref fractions) = config.cv_fractions {
+            match config.cv_method.to_lowercase().as_str() {
+                "simple" | "loo" | "loocv" | "leave_one_out" => {
+                    builder = builder.cross_validate(LOOCV(fractions));
+                }
+                "kfold" | "k_fold" | "k-fold" => {
+                    builder = builder.cross_validate(KFold(config.cv_k, fractions));
+                }
+                _ => {
+                    return error_result(&format!(
+                        "Unknown CV method: {}. Valid: loocv, kfold",
+                        config.cv_method
+                    ));
+                }
+            }
+        }
+
+        let result = match builder.adapter(Batch).build() {
+            Ok(m) => match m.fit(x_slice, y_slice) {
+                Ok(r) => r,
+                Err(e) => return error_result(&e.to_string()),
+            },
+            Err(e) => return error_result(&e.to_string()),
+        };
+
+        loess_result_to_jl(result)
+    });
+
+    match result {
+        Ok(res) => res,
+        Err(_) => error_result("Panic in Rust library"),
+    }
+}
+
+/// Free the LoessResult.
+///
+/// # Safety
+/// `result` must be a valid pointer to a `JlLoessResult` struct.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_loess_free_result(result: *mut JlLoessResult) {
+    if result.is_null() {
+        return;
+    }
+    let res = &mut *result;
+    let n = res.n as usize;
+
+    unsafe fn free_vec(ptr: *mut c_double, len: usize) {
+        if !ptr.is_null() {
+            let _ = Vec::from_raw_parts(ptr, len, len);
+        }
+    }
+
+    free_vec(res.x, n);
+    free_vec(res.y, n);
+    free_vec(res.standard_errors, n);
+    free_vec(res.confidence_lower, n);
+    free_vec(res.confidence_upper, n);
+    free_vec(res.prediction_lower, n);
+    free_vec(res.prediction_upper, n);
+    free_vec(res.residuals, n);
+    free_vec(res.robustness_weights, n);
+
+    if !res.error.is_null() {
+        let _ = std::ffi::CString::from_raw(res.error);
+    }
+}
+
+/// Free the Loess configuration.
+///
+/// # Safety
+/// `ptr` must be a valid pointer to a `JlLoessConfig` struct.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_loess_free(ptr: *mut JlLoessConfig) {
+    if !ptr.is_null() {
+        let _ = Box::from_raw(ptr);
+    }
+}
+
+// ============================================================================
+// StreamingLoess C API
+// ============================================================================
+
+/// Create a new StreamingLoess processor.
+///
+/// # Safety
+/// Pointers must be valid null-terminated strings or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_streaming_loess_new(
     fraction: c_double,
     chunk_size: c_int,
-    overlap: c_int, // Use -1 for auto
+    overlap: c_int, // -1 for auto
     iterations: c_int,
+    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
@@ -413,179 +551,162 @@ pub unsafe extern "C" fn jl_loess_streaming(
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
     parallel: c_int,
-) -> JlLoessResult {
-    if x.is_null() || y.is_null() {
-        return error_result("x and y arrays must not be null");
+) -> *mut JlStreamingLoess {
+    let result = catch_unwind(|| {
+        let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
+        let rm_str = unsafe { parse_c_str(robustness_method, "bisquare") };
+        let sm_str = unsafe { parse_c_str(scaling_method, "mad") };
+        let bp_str = unsafe { parse_c_str(boundary_policy, "extend") };
+        let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
+
+        let wf = unwrap_or_return_null!(parse_weight_function(wf_str));
+        let rm = unwrap_or_return_null!(parse_robustness_method(rm_str));
+        let sm = unwrap_or_return_null!(parse_scaling_method(sm_str));
+        let bp = unwrap_or_return_null!(parse_boundary_policy(bp_str));
+        let zwf = unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
+
+        let mut builder = LoessBuilder::<f64>::new();
+        builder = builder.fraction(fraction);
+        builder = builder.iterations(iterations as usize);
+        builder = builder.weight_function(wf);
+        builder = builder.robustness_method(rm);
+        builder = builder.scaling_method(sm);
+        builder = builder.zero_weight_fallback(zwf);
+        builder = builder.boundary_policy(bp);
+
+        if return_diagnostics != 0 {
+            builder = builder.return_diagnostics();
+        }
+        if return_residuals != 0 {
+            builder = builder.return_residuals();
+        }
+        if return_robustness_weights != 0 {
+            builder = builder.return_robustness_weights();
+        }
+
+        let chunk_size_usize = chunk_size as usize;
+        let overlap_size = if overlap < 0 {
+            let default = chunk_size_usize / 10;
+            default.min(chunk_size_usize.saturating_sub(10)).max(1)
+        } else {
+            overlap as usize
+        };
+
+        let mut s_builder = builder.adapter(Streaming);
+        s_builder = s_builder.chunk_size(chunk_size_usize);
+        s_builder = s_builder.overlap(overlap_size);
+        s_builder = s_builder.parallel(parallel != 0);
+
+        if !delta.is_nan() {
+            s_builder = s_builder.delta(delta);
+        }
+        if !auto_converge.is_nan() {
+            s_builder = s_builder.auto_converge(auto_converge);
+        }
+
+        let processor = match s_builder.build() {
+            Ok(p) => p,
+            Err(_) => return null_mut(),
+        };
+
+        Box::into_raw(Box::new(JlStreamingLoess { inner: processor }))
+    });
+
+    match result {
+        Ok(ptr) => ptr,
+        Err(_) => null_mut(),
     }
-    if n == 0 {
-        return error_result("Array length must be greater than 0");
-    }
-
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    let y_slice = std::slice::from_raw_parts(y, n as usize);
-
-    let chunk_size = chunk_size as usize;
-    let overlap_size = if overlap < 0 {
-        let default = chunk_size / 10;
-        default.min(chunk_size.saturating_sub(10)).max(1)
-    } else {
-        overlap as usize
-    };
-
-    let wf_str = parse_c_str(weight_function, "tricube");
-    let rm_str = parse_c_str(robustness_method, "bisquare");
-    let sm_str = parse_c_str(scaling_method, "mad");
-    let bp_str = parse_c_str(boundary_policy, "extend");
-    let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
-
-    let wf = match parse_weight_function(wf_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let rm = match parse_robustness_method(rm_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let sm = match parse_scaling_method(sm_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let bp = match parse_boundary_policy(bp_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let zwf = match parse_zero_weight_fallback(zwf_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-
-    let mut builder = LoessBuilder::<f64>::new();
-    builder = builder.fraction(fraction);
-    builder = builder.iterations(iterations as usize);
-    builder = builder.weight_function(wf);
-    builder = builder.robustness_method(rm);
-    builder = builder.scaling_method(sm);
-    builder = builder.zero_weight_fallback(zwf);
-    builder = builder.boundary_policy(bp);
-
-    if return_diagnostics != 0 {
-        builder = builder.return_diagnostics();
-    }
-    if return_residuals != 0 {
-        builder = builder.return_residuals();
-    }
-    if return_robustness_weights != 0 {
-        builder = builder.return_robustness_weights();
-    }
-
-    let mut builder = builder.adapter(Streaming);
-    builder = builder.chunk_size(chunk_size);
-    builder = builder.overlap(overlap_size);
-    builder = builder.parallel(parallel != 0);
-
-    if !auto_converge.is_nan() {
-        builder = builder.auto_converge(auto_converge);
-    }
-
-    let mut processor = match builder.build() {
-        Ok(p) => p,
-        Err(e) => return error_result(&e.to_string()),
-    };
-
-    let chunk_result = match processor.process_chunk(x_slice, y_slice) {
-        Ok(r) => r,
-        Err(e) => return error_result(&e.to_string()),
-    };
-
-    let final_result = match processor.finalize() {
-        Ok(r) => r,
-        Err(e) => return error_result(&e.to_string()),
-    };
-
-    // Combine results
-    let mut combined_x = chunk_result.x;
-    let mut combined_y = chunk_result.y;
-    let mut combined_se = chunk_result.standard_errors;
-    let mut combined_cl = chunk_result.confidence_lower;
-    let mut combined_cu = chunk_result.confidence_upper;
-    let mut combined_pl = chunk_result.prediction_lower;
-    let mut combined_pu = chunk_result.prediction_upper;
-    let mut combined_res = chunk_result.residuals;
-    let mut combined_rw = chunk_result.robustness_weights;
-
-    combined_x.extend(final_result.x);
-    combined_y.extend(final_result.y);
-
-    if let (Some(mut s), Some(f)) = (combined_se.take(), final_result.standard_errors) {
-        s.extend(f);
-        combined_se = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_cl.take(), final_result.confidence_lower) {
-        s.extend(f);
-        combined_cl = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_cu.take(), final_result.confidence_upper) {
-        s.extend(f);
-        combined_cu = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_pl.take(), final_result.prediction_lower) {
-        s.extend(f);
-        combined_pl = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_pu.take(), final_result.prediction_upper) {
-        s.extend(f);
-        combined_pu = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_res.take(), final_result.residuals) {
-        s.extend(f);
-        combined_res = Some(s);
-    }
-    if let (Some(mut s), Some(f)) = (combined_rw.take(), final_result.robustness_weights) {
-        s.extend(f);
-        combined_rw = Some(s);
-    }
-
-    let result = LoessResult {
-        x: combined_x,
-        y: combined_y,
-        standard_errors: combined_se,
-        confidence_lower: combined_cl,
-        confidence_upper: combined_cu,
-        prediction_lower: combined_pl,
-        prediction_upper: combined_pu,
-        residuals: combined_res,
-        robustness_weights: combined_rw,
-        diagnostics: final_result.diagnostics,
-        iterations_used: chunk_result.iterations_used,
-        fraction_used: chunk_result.fraction_used,
-        cv_scores: None,
-        dimensions: 1,
-        distance_metric: DistanceMetric::Euclidean,
-        polynomial_degree: PolynomialDegree::Linear,
-        enp: None,
-        trace_hat: None,
-        delta1: None,
-        delta2: None,
-        residual_scale: None,
-        leverage: None,
-    };
-
-    loess_result_to_jl(result)
 }
 
-/// Online LOESS with sliding window.
+/// Process a chunk of data.
 ///
 /// # Safety
-/// All pointer arguments must be valid and point to arrays of the specified length.
+/// `ptr` must be a valid pointer. `x` and `y` must be valid arrays of length `n`.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn jl_loess_online(
+pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
+    ptr: *mut JlStreamingLoess,
     x: *const c_double,
     y: *const c_double,
     n: c_ulong,
+) -> JlLoessResult {
+    let result = catch_unwind(|| {
+        if ptr.is_null() {
+            return error_result("Processor pointer is null");
+        }
+        let processor = unsafe { &mut *ptr };
+
+        if x.is_null() || y.is_null() {
+            return error_result("x and y arrays must not be null");
+        }
+        if n == 0 {
+            return error_result("Array length must be greater than 0");
+        }
+
+        let x_slice = unsafe { from_raw_parts(x, n as usize) };
+        let y_slice = unsafe { from_raw_parts(y, n as usize) };
+
+        match processor.inner.process_chunk(x_slice, y_slice) {
+            Ok(r) => loess_result_to_jl(r),
+            Err(e) => error_result(&e.to_string()),
+        }
+    });
+
+    match result {
+        Ok(res) => res,
+        Err(_) => error_result("Panic in Rust library"),
+    }
+}
+
+/// Finalize streaming and return remaining data.
+///
+/// # Safety
+/// `ptr` must be a valid pointer.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_streaming_loess_finalize(ptr: *mut JlStreamingLoess) -> JlLoessResult {
+    let result = catch_unwind(|| {
+        if ptr.is_null() {
+            return error_result("Processor pointer is null");
+        }
+        let processor = unsafe { &mut *ptr };
+
+        match processor.inner.finalize() {
+            Ok(r) => loess_result_to_jl(r),
+            Err(e) => error_result(&e.to_string()),
+        }
+    });
+
+    match result {
+        Ok(res) => res,
+        Err(_) => error_result("Panic in Rust library"),
+    }
+}
+
+/// Free the StreamingLoess processor.
+///
+/// # Safety
+/// `ptr` must be a valid pointer or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_streaming_loess_free(ptr: *mut JlStreamingLoess) {
+    if !ptr.is_null() {
+        let _ = Box::from_raw(ptr);
+    }
+}
+
+// ============================================================================
+// OnlineLoess C API
+// ============================================================================
+
+/// Create a new OnlineLoess processor.
+///
+/// # Safety
+/// Pointers must be valid null-terminated strings or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_online_loess_new(
     fraction: c_double,
     window_capacity: c_int,
     min_points: c_int,
     iterations: c_int,
+    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
@@ -595,159 +716,145 @@ pub unsafe extern "C" fn jl_loess_online(
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
     parallel: c_int,
-) -> JlLoessResult {
-    if x.is_null() || y.is_null() {
-        return error_result("x and y arrays must not be null");
+) -> *mut JlOnlineLoess {
+    let result = catch_unwind(|| {
+        let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
+        let rm_str = unsafe { parse_c_str(robustness_method, "bisquare") };
+        let sm_str = unsafe { parse_c_str(scaling_method, "mad") };
+        let bp_str = unsafe { parse_c_str(boundary_policy, "extend") };
+        let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
+        let um_str = unsafe { parse_c_str(update_mode, "full") };
+
+        let wf = unwrap_or_return_null!(parse_weight_function(wf_str));
+        let rm = unwrap_or_return_null!(parse_robustness_method(rm_str));
+        let sm = unwrap_or_return_null!(parse_scaling_method(sm_str));
+        let bp = unwrap_or_return_null!(parse_boundary_policy(bp_str));
+        let zwf = unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
+        let um = unwrap_or_return_null!(parse_update_mode(um_str));
+
+        let mut builder = LoessBuilder::<f64>::new();
+        builder = builder.fraction(fraction);
+        builder = builder.iterations(iterations as usize);
+        builder = builder.weight_function(wf);
+        builder = builder.robustness_method(rm);
+        builder = builder.scaling_method(sm);
+        builder = builder.zero_weight_fallback(zwf);
+        builder = builder.boundary_policy(bp);
+
+        let mut o_builder = builder.adapter(Online);
+        o_builder = o_builder.window_capacity(window_capacity as usize);
+        o_builder = o_builder.min_points(min_points as usize);
+        o_builder = o_builder.update_mode(um);
+        o_builder = o_builder.parallel(parallel != 0);
+
+        if !delta.is_nan() {
+            o_builder = o_builder.delta(delta);
+        }
+        if !auto_converge.is_nan() {
+            o_builder = o_builder.auto_converge(auto_converge);
+        }
+        if return_robustness_weights != 0 {
+            o_builder = o_builder.return_robustness_weights(true);
+        }
+
+        let processor = match o_builder.build() {
+            Ok(p) => p,
+            Err(_) => return null_mut(),
+        };
+
+        Box::into_raw(Box::new(JlOnlineLoess {
+            inner: processor,
+            fraction,
+            iterations: iterations as usize,
+        }))
+    });
+
+    match result {
+        Ok(ptr) => ptr,
+        Err(_) => null_mut(),
     }
-    if n == 0 {
-        return error_result("Array length must be greater than 0");
-    }
-
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    let y_slice = std::slice::from_raw_parts(y, n as usize);
-
-    let wf_str = parse_c_str(weight_function, "tricube");
-    let rm_str = parse_c_str(robustness_method, "bisquare");
-    let sm_str = parse_c_str(scaling_method, "mad");
-    let bp_str = parse_c_str(boundary_policy, "extend");
-    let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
-    let um_str = parse_c_str(update_mode, "full");
-
-    let wf = match parse_weight_function(wf_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let rm = match parse_robustness_method(rm_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let sm = match parse_scaling_method(sm_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let bp = match parse_boundary_policy(bp_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let zwf = match parse_zero_weight_fallback(zwf_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-    let um = match parse_update_mode(um_str) {
-        Ok(v) => v,
-        Err(e) => return error_result(&e),
-    };
-
-    let mut builder = LoessBuilder::<f64>::new();
-    builder = builder.fraction(fraction);
-    builder = builder.iterations(iterations as usize);
-    builder = builder.weight_function(wf);
-    builder = builder.robustness_method(rm);
-    builder = builder.scaling_method(sm);
-    builder = builder.zero_weight_fallback(zwf);
-    builder = builder.boundary_policy(bp);
-
-    let mut builder = builder.adapter(Online);
-    builder = builder.window_capacity(window_capacity as usize);
-    builder = builder.min_points(min_points as usize);
-    builder = builder.update_mode(um);
-    builder = builder.parallel(parallel != 0);
-
-    if !auto_converge.is_nan() {
-        builder = builder.auto_converge(auto_converge);
-    }
-    if return_robustness_weights != 0 {
-        builder = builder.return_robustness_weights(true);
-    }
-
-    let mut processor = match builder.build() {
-        Ok(p) => p,
-        Err(e) => return error_result(&e.to_string()),
-    };
-
-    let outputs = match processor.add_points(x_slice, y_slice) {
-        Ok(o) => o,
-        Err(e) => return error_result(&e.to_string()),
-    };
-
-    let smoothed: Vec<f64> = outputs
-        .into_iter()
-        .zip(y_slice.iter())
-        .map(|(opt, &original_y)| opt.map_or(original_y, |o| o.smoothed))
-        .collect();
-
-    let result = LoessResult {
-        x: x_slice.to_vec(),
-        y: smoothed,
-        standard_errors: None,
-        confidence_lower: None,
-        confidence_upper: None,
-        prediction_lower: None,
-        prediction_upper: None,
-        residuals: None,
-        robustness_weights: None,
-        diagnostics: None,
-        iterations_used: Some(iterations as usize),
-        fraction_used: fraction,
-        cv_scores: None,
-        dimensions: 1,
-        distance_metric: DistanceMetric::Euclidean,
-        polynomial_degree: PolynomialDegree::Linear,
-        enp: None,
-        trace_hat: None,
-        delta1: None,
-        delta2: None,
-        residual_scale: None,
-        leverage: None,
-    };
-
-    loess_result_to_jl(result)
 }
 
-/// Free a JlLoessResult allocated by Rust.
+/// Add points to the online processor.
 ///
 /// # Safety
-/// The result pointer must have been returned by one of the jl_loess_* functions.
+/// `ptr` must be a valid pointer. `x` and `y` must be valid arrays of length `n`.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn jl_loess_free_result(result: *mut JlLoessResult) {
-    if result.is_null() {
-        return;
-    }
+pub unsafe extern "C" fn jl_online_loess_add_points(
+    ptr: *mut JlOnlineLoess,
+    x: *const c_double,
+    y: *const c_double,
+    n: c_ulong,
+) -> JlLoessResult {
+    let result = catch_unwind(|| {
+        if ptr.is_null() {
+            return error_result("Processor pointer is null");
+        }
+        let processor = unsafe { &mut *ptr };
 
-    let r = &mut *result;
-    let n = r.n as usize;
+        if x.is_null() || y.is_null() {
+            return error_result("x and y arrays must not be null");
+        }
+        if n == 0 {
+            return error_result("Array length must be greater than 0");
+        }
 
-    // Free arrays using ptr::slice_from_raw_parts_mut
-    if !r.x.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.x, n));
-    }
-    if !r.y.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.y, n));
-    }
-    if !r.standard_errors.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.standard_errors, n));
-    }
-    if !r.confidence_lower.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.confidence_lower, n));
-    }
-    if !r.confidence_upper.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.confidence_upper, n));
-    }
-    if !r.prediction_lower.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.prediction_lower, n));
-    }
-    if !r.prediction_upper.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.prediction_upper, n));
-    }
-    if !r.residuals.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.residuals, n));
-    }
-    if !r.robustness_weights.is_null() {
-        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.robustness_weights, n));
-    }
+        let x_slice = unsafe { from_raw_parts(x, n as usize) };
+        let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
-    // Free error string
-    if !r.error.is_null() {
-        let _ = std::ffi::CString::from_raw(r.error);
+        match processor.inner.add_points(x_slice, y_slice) {
+            Ok(outputs) => {
+                // Extract smoothed values
+                let smoothed: Vec<f64> = outputs
+                    .into_iter()
+                    .zip(y_slice.iter())
+                    .map(|(opt, &original_y)| opt.map_or(original_y, |o| o.smoothed))
+                    .collect();
+
+                let result = LoessResult {
+                    x: x_slice.to_vec(),
+                    y: smoothed,
+                    standard_errors: None,
+                    confidence_lower: None,
+                    confidence_upper: None,
+                    prediction_lower: None,
+                    prediction_upper: None,
+                    residuals: None,
+                    robustness_weights: None,
+                    diagnostics: None,
+                    iterations_used: Some(processor.iterations),
+                    fraction_used: processor.fraction,
+                    cv_scores: None,
+                };
+                loess_result_to_jl(result)
+            }
+            Err(e) => error_result(&e.to_string()),
+        }
+    });
+
+    match result {
+        Ok(res) => res,
+        Err(_) => error_result("Panic in Rust library"),
     }
+}
+
+/// Free the OnlineLoess processor.
+///
+/// # Safety
+/// `ptr` must be a valid pointer or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_online_loess_free(ptr: *mut JlOnlineLoess) {
+    if !ptr.is_null() {
+        let _ = Box::from_raw(ptr);
+    }
+}
+
+#[macro_export]
+macro_rules! unwrap_or_return_null {
+    ($e:expr) => {
+        match $e {
+            Ok(val) => val,
+            Err(_) => return null_mut(),
+        }
+    };
 }

@@ -335,6 +335,42 @@ fn test_calculate_span_small_n() {
     assert_eq!(span, 2, "Span should be max(2, floor(0.5 * 3)) = 2");
 }
 
+/// Test Window::max_distance with various distributions.
+#[test]
+fn test_max_distance_distributions() {
+    // Symmetric distribution
+    let x = vec![0.0, 1.0, 2.0, 3.0, 4.0];
+    let win = Window::new(1, 3).unwrap();
+    let dist = win.max_distance(&x, 2.0); // Center point
+    assert_eq!(dist, 1.0, "Max distance from center should be 1.0");
+
+    // Asymmetric - closer to left
+    let win = Window::new(0, 2).unwrap();
+    let dist = win.max_distance(&x, 1.0);
+    assert_eq!(dist, 1.0, "Max distance should be max(1-0, 2-1) = 1.0");
+
+    // Asymmetric - closer to right
+    let win = Window::new(2, 4).unwrap();
+    let dist = win.max_distance(&x, 3.0);
+    assert_eq!(dist, 1.0, "Max distance should be max(3-2, 4-3) = 1.0");
+}
+
+/// Test Window::max_distance at boundaries.
+#[test]
+fn test_max_distance_boundaries() {
+    let x = vec![0.0, 10.0, 20.0, 30.0];
+
+    // At left boundary
+    let win = Window::new(0, 2).unwrap();
+    let dist = win.max_distance(&x, 0.0);
+    assert_eq!(dist, 20.0, "Distance from left edge");
+
+    // At right boundary
+    let win = Window::new(1, 3).unwrap();
+    let dist = win.max_distance(&x, 30.0);
+    assert_eq!(dist, 20.0, "Distance from right edge");
+}
+
 /// Test window initialization with n=1.
 #[test]
 fn test_initialize_window_n_equals_one() {
@@ -390,6 +426,16 @@ fn test_recenter_clustered_data() {
 
     // Window should prefer the closer cluster
     assert!(win.left >= 3, "Window should shift to second cluster");
+}
+
+/// Test window is_empty.
+#[test]
+fn test_window_is_empty() {
+    let win = Window::new(5, 5).unwrap();
+    assert!(!win.is_empty(), "Single-point window should not be empty");
+
+    let win = Window::new(0, 10).unwrap();
+    assert!(!win.is_empty(), "Normal window should not be empty");
 }
 
 /// Test window recenter doesn't go out of bounds.

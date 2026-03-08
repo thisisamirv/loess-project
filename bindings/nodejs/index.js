@@ -28,7 +28,11 @@ function isMusl() {
   }
 }
 
-switch (platform) {
+// Check for local build first (prioritize dev/CI environment)
+if (existsSync(join(__dirname, 'fastloess.node'))) {
+  nativeBinding = require('./fastloess.node')
+} else {
+  switch (platform) {
   case 'android':
     switch (arch) {
       case 'arm64':
@@ -262,6 +266,7 @@ switch (platform) {
     break
   default:
     throw new Error(`Unsupported OS: ${platform}, architecture: ${arch}`)
+  }
 }
 
 if (!nativeBinding) {
@@ -275,9 +280,9 @@ if (!nativeBinding) {
     }
 }
 
-const { smooth, StreamingLoess, OnlineLoess, LoessResultObj } = nativeBinding
+const { Loess, StreamingLoess, OnlineLoess, LoessResultObj } = nativeBinding
 
-module.exports.smooth = smooth
+module.exports.Loess = Loess
 module.exports.StreamingLoess = StreamingLoess
 module.exports.OnlineLoess = OnlineLoess
 module.exports.LoessResultObj = LoessResultObj

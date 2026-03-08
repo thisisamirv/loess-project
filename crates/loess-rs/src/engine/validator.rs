@@ -1,101 +1,62 @@
 //! Input validation for LOESS configuration and data.
 //!
-//! ## Purpose
-//!
 //! This module provides comprehensive validation functions for LOESS
 //! configuration parameters and input data. It checks requirements
 //! such as input lengths, finite values, and parameter bounds.
 //!
-//! ## Design notes
+//! ## srrstats Compliance
 //!
-//! * **Fail-Fast**: Validation stops at the first error encountered.
-//! * **Efficiency**: Checks are ordered from cheap to expensive.
-//! * **Generics**: Validation is generic over `Float` types.
-//!
-//! ## Key concepts
-//!
-//! * **Parameter Bounds**: Enforces constraints like fraction in (0, 1].
-//! * **Finite Checks**: Ensures all inputs are finite (no NaN/Inf).
-//! * **Regression Requirements**: Ensures at least 2 points for linear regression.
-//!
-//! ## Invariants
-//!
-//! * All validated inputs satisfy their respective mathematical constraints.
-//! * Validation logic is deterministic and side-effect free.
-//!
-//! ## Non-goals
-//!
-//! * This module does not sort, transform, or filter input data.
-//! * This module does not provide automatic correction of invalid inputs.
-//! * This module does not perform the smoothing or optimization itself.
-
-// Feature-gated imports
-#[cfg(not(feature = "std"))]
-use alloc::format;
+//! @srrstats {G2.0} Input validation: non-empty arrays, matching lengths, finite values.
+//! @srrstats {G2.1} Edge case handling: minimum points, parameter bounds, duplicates.
+//! @srrstats {G2.3} Informative error messages for invalid configuration.
 
 // External dependencies
+#[cfg(not(feature = "std"))]
+use alloc::format;
 use num_traits::Float;
 
 // Internal dependencies
 use crate::primitives::errors::LoessError;
 
-// ============================================================================
-// Validator
-// ============================================================================
-
-/// Validation utility for LOESS configuration and input data.
-///
-/// Provides static methods for validating various LOESS parameters and
-/// input data. All methods return `Result<(), LoessError>` and fail fast
-/// upon identifying the first violation.
+// Validation utility for LOESS configuration and input data.
 pub struct Validator;
 
 impl Validator {
-    // ========================================================================
-    // Core Input Validation
-    // ========================================================================
-
-    /// Validate input arrays for LOESS smoothing.
-    pub fn validate_inputs<T: Float>(
-        x: &[T],
-        y: &[T],
-        dimensions: usize,
-    ) -> Result<(), LoessError> {
+    // Validate input arrays for LOESS smoothing.
+    pub fn validate_inputs<T: Float>(x: &[T], y: &[T]) -> Result<(), LoessError> {
         // Check 1: Non-empty arrays
         if x.is_empty() || y.is_empty() {
             return Err(LoessError::EmptyInput);
         }
 
-        // Check 2: Matching lengths (x.len() should be y.len() * dimensions)
-        let n_y = y.len();
-        if x.len() != n_y * dimensions {
+        // Check 2: Matching lengths
+        let n = x.len();
+        if n != y.len() {
             return Err(LoessError::MismatchedInputs {
-                x_len: x.len(),
-                y_len: n_y,
+                x_len: n,
+                y_len: y.len(),
             });
         }
 
         // Check 3: Sufficient points for regression
-        if n_y < 2 {
-            return Err(LoessError::TooFewPoints { got: n_y, min: 2 });
+        if n < 2 {
+            return Err(LoessError::TooFewPoints { got: n, min: 2 });
         }
 
         // Check 4: All values finite (combined loop for cache locality)
-        for (i, &val) in x.iter().enumerate() {
-            if !val.is_finite() {
+        for i in 0..n {
+            if !x[i].is_finite() {
                 return Err(LoessError::InvalidNumericValue(format!(
                     "x[{}]={}",
                     i,
-                    val.to_f64().unwrap_or(f64::NAN)
+                    x[i].to_f64().unwrap_or(f64::NAN)
                 )));
             }
-        }
-        for (i, &val) in y.iter().enumerate() {
-            if !val.is_finite() {
+            if !y[i].is_finite() {
                 return Err(LoessError::InvalidNumericValue(format!(
                     "y[{}]={}",
                     i,
-                    val.to_f64().unwrap_or(f64::NAN)
+                    y[i].to_f64().unwrap_or(f64::NAN)
                 )));
             }
         }
@@ -103,7 +64,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate a single numeric value for finiteness.
+    // Validate a single numeric value for finiteness.
     pub fn validate_scalar<T: Float>(val: T, name: &str) -> Result<(), LoessError> {
         if !val.is_finite() {
             return Err(LoessError::InvalidNumericValue(format!(
@@ -115,11 +76,7 @@ impl Validator {
         Ok(())
     }
 
-    // ========================================================================
-    // Parameter Validation
-    // ========================================================================
-
-    /// Validate the smoothing fraction (bandwidth) parameter.
+    // Validate the smoothing fraction (bandwidth) parameter.
     pub fn validate_fraction<T: Float>(fraction: T) -> Result<(), LoessError> {
         if !fraction.is_finite() || fraction <= T::zero() || fraction > T::one() {
             return Err(LoessError::InvalidFraction(
@@ -129,12 +86,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the number of robustness iterations.
-    ///
-    /// # Notes
-    ///
-    /// * 0 iterations means initial fit only (no robustness).
-    /// * Maximum of 1000 iterations to prevent excessive computation.
+    // Validate the number of robustness iterations.
     pub fn validate_iterations(iterations: usize) -> Result<(), LoessError> {
         const MAX_ITERATIONS: usize = 1000;
         if iterations > MAX_ITERATIONS {
@@ -143,7 +95,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the confidence/prediction interval level.
+    // Validate the confidence/prediction interval level.
     pub fn validate_interval_level<T: Float>(level: T) -> Result<(), LoessError> {
         if !level.is_finite() || level <= T::zero() || level >= T::one() {
             return Err(LoessError::InvalidIntervals(
@@ -153,7 +105,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate a collection of candidate fractions for cross-validation.
+    // Validate a collection of candidate fractions for cross-validation.
     pub fn validate_cv_fractions<T: Float>(fracs: &[T]) -> Result<(), LoessError> {
         if fracs.is_empty() {
             return Err(LoessError::InvalidFraction(0.0));
@@ -166,7 +118,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the number of folds for k-fold cross-validation.
+    // Validate the number of folds for k-fold cross-validation.
     pub fn validate_kfold(k: usize) -> Result<(), LoessError> {
         if k < 2 {
             return Err(LoessError::InvalidNumericValue(format!(
@@ -177,7 +129,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the auto-convergence tolerance.
+    // Validate the auto-convergence tolerance.
     pub fn validate_tolerance<T: Float>(tol: T) -> Result<(), LoessError> {
         if !tol.is_finite() || tol <= T::zero() {
             return Err(LoessError::InvalidTolerance(
@@ -187,84 +139,15 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate interpolation grid resolution against vertex limits.
-    ///
-    /// **Resolution First:**
-    /// - `cell` must be in the range (0, 1]
-    /// - Consistency check only when BOTH `cell` AND `interpolation_vertices` are
-    ///   explicitly provided by the user
-    ///
-    /// When both are provided, estimates the number of vertices required by the
-    /// cell size and checks if it exceeds the user-provided limit.
-    pub fn validate_interpolation_grid<T: Float>(
-        cell: T,
-        fraction: T,
-        dimensions: usize,
-        max_vertices: usize,
-        cell_provided: bool,
-        limit_provided: bool,
-    ) -> Result<(), LoessError> {
-        let cell_f64 = cell.to_f64().unwrap_or(0.2);
-
-        // Rule 1: Validate cell range (0, 1]
-        if cell_f64 <= 0.0 || cell_f64 > 1.0 {
-            return Err(LoessError::InvalidCell(cell_f64));
+    // Validate delta optimization parameter (equivalent to cell size in some contexts).
+    pub fn validate_delta<T: Float>(delta: T) -> Result<(), LoessError> {
+        if !delta.is_finite() || delta < T::zero() {
+            return Err(LoessError::InvalidDelta(delta.to_f64().unwrap_or(f64::NAN)));
         }
-
-        // Rule 2: Only check consistency when BOTH parameters are user-provided
-        // This follows "Resolution First" philosophy where the grid size is purely
-        // resolution-driven via `cell` unless explicitly limited.
-        if cell_provided && limit_provided {
-            let one = T::one();
-
-            // Effective cell width fraction relative to domain: fraction * cell
-            let width_fraction = fraction * cell;
-
-            if width_fraction <= T::zero() {
-                return Err(LoessError::InsufficientVertices {
-                    required: usize::MAX,
-                    limit: max_vertices,
-                    cell: cell_f64,
-                    cell_provided,
-                    limit_provided,
-                });
-            }
-
-            // Estimated cells per dimension: 1 / width_fraction
-            let cells_per_dim = one / width_fraction;
-            let cells_per_dim_f64 = cells_per_dim.to_f64().unwrap_or(f64::INFINITY);
-
-            // Vertices per dimension is cells + 1. Ceiling to be safe.
-            let vertices_per_dim = cells_per_dim_f64.ceil() + 1.0;
-
-            // Calculate total estimated vertices
-            let estimated_vertices = vertices_per_dim.powi(dimensions as i32);
-
-            if estimated_vertices > max_vertices as f64 {
-                let required = if estimated_vertices > (usize::MAX as f64) {
-                    usize::MAX
-                } else {
-                    estimated_vertices as usize
-                };
-
-                return Err(LoessError::InsufficientVertices {
-                    required,
-                    limit: max_vertices,
-                    cell: cell_f64,
-                    cell_provided,
-                    limit_provided,
-                });
-            }
-        }
-
         Ok(())
     }
 
-    // ========================================================================
-    // Adapter-Specific Validation
-    // ========================================================================
-
-    /// Validate the chunk size for shared processing in streaming mode.
+    // Validate the chunk size for shared processing in streaming mode.
     pub fn validate_chunk_size(chunk_size: usize, min: usize) -> Result<(), LoessError> {
         if chunk_size < min {
             return Err(LoessError::InvalidChunkSize {
@@ -275,7 +158,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the overlap between consecutive chunks in streaming mode.
+    // Validate the overlap between consecutive chunks in streaming mode.
     pub fn validate_overlap(overlap: usize, chunk_size: usize) -> Result<(), LoessError> {
         if overlap >= chunk_size {
             return Err(LoessError::InvalidOverlap {
@@ -286,7 +169,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the maximum capacity of the sliding window in online mode.
+    // Validate the maximum capacity of the sliding window in online mode.
     pub fn validate_window_capacity(window_capacity: usize, min: usize) -> Result<(), LoessError> {
         if window_capacity < min {
             return Err(LoessError::InvalidWindowCapacity {
@@ -297,7 +180,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate the activation threshold for online smoothing.
+    // Validate the activation threshold for online smoothing.
     pub fn validate_min_points(
         min_points: usize,
         window_capacity: usize,
@@ -311,7 +194,7 @@ impl Validator {
         Ok(())
     }
 
-    /// Validate that no parameters were set multiple times in the builder.
+    // Validate that no parameters were set multiple times in the builder.
     pub fn validate_no_duplicates(duplicate_param: Option<&'static str>) -> Result<(), LoessError> {
         if let Some(param) = duplicate_param {
             return Err(LoessError::DuplicateParameter { parameter: param });
