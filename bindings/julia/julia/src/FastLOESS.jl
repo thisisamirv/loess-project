@@ -190,9 +190,7 @@ function convert_result(c_result::CJlLoessResult)
     if c_result.error != C_NULL
         error_msg = unsafe_string(c_result.error)
         # Free the result before throwing
-        @ccall libfastloess.jl_loess_free_result(
-            Ref(c_result)::Ptr{CJlLoessResult},
-        )::Cvoid
+        @ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
         error("fastloess error: $error_msg")
     end
 
@@ -203,9 +201,7 @@ function convert_result(c_result::CJlLoessResult)
     y = ptr_to_vector(c_result.y, n)
 
     if x === nothing || y === nothing
-        @ccall libfastloess.jl_loess_free_result(
-            Ref(c_result)::Ptr{CJlLoessResult},
-        )::Cvoid
+        @ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
         error("fastloess error: result arrays are null")
     end
 
@@ -376,10 +372,7 @@ mutable struct Loess
         end
 
         obj = new(handle)
-        finalizer(
-            x -> @ccall(libfastloess.jl_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
-            obj,
-        )
+        finalizer(x -> @ccall(libfastloess.jl_loess_free(x.handle::Ptr{Cvoid})::Cvoid), obj)
         return obj
     end
 end
@@ -471,8 +464,7 @@ mutable struct StreamingLoess
 
         obj = new(handle)
         finalizer(
-            x ->
-                @ccall(libfastloess.jl_streaming_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
+            x -> @ccall(libfastloess.jl_streaming_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
             obj,
         )
         return obj

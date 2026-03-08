@@ -143,7 +143,7 @@
 //! But you can also handle results explicitly:
 //!
 //! ```rust
-//! use loess::prelude::*;
+//! use loess_rs::prelude::*;
 //! # let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 //! # let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
 //!
@@ -176,7 +176,7 @@
 //!
 //! ```rust
 //! # #[cfg(feature = "std")] {
-//! use loess::prelude::*;
+//! use loess_rs::prelude::*;
 //!
 //! // In an embedded context (e.g., sensor data processing)
 //! fn smooth_sensor_data() -> Result<(), LoessError> {

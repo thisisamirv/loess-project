@@ -32,7 +32,7 @@ int main() {
 
   // Online smoothing with sliding window
   try {
-    fastloess_rs::OnlineOptions opts;
+    fastloess::OnlineOptions opts;
     opts.fraction = 0.5;
     opts.iterations = 2;
     opts.window_capacity = 50;
@@ -42,7 +42,7 @@ int main() {
     std::cout << "\nProcessing with window_capacity=" << opts.window_capacity
               << ", min_points=" << opts.min_points << std::endl;
 
-    fastloess_rs::OnlineLoess model(opts);
+    fastloess::OnlineLoess model(opts);
 
     std::cout << "\nProcessing data point-by-point..." << std::endl;
 
@@ -63,7 +63,7 @@ int main() {
     std::cout << "\nOnline processing completed:" << std::endl;
     std::cout << "  Total points emitted: " << total_emitted << std::endl;
 
-  } catch (const fastloess_rs::LoessError &e) {
+  } catch (const fastloess::LoessError &e) {
     std::cerr << "Error: " << e.what() << std::endl;
     return 1;
   }

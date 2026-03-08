@@ -76,33 +76,33 @@ int main() {
   try {
     // 2. Basic Smoothing (Default parameters)
     std::cout << "Running basic smoothing..." << std::endl;
-    fastloess_rs::LoessOptions basic_opts;
+    fastloess::LoessOptions basic_opts;
     basic_opts.fraction = 0.05;
     basic_opts.iterations = 0;
-    fastloess_rs::Loess model_basic(basic_opts);
+    fastloess::Loess model_basic(basic_opts);
     auto res_basic = model_basic.fit(data.x, data.y).value();
 
     // 3. Robust Smoothing (IRLS)
     std::cout << "Running robust smoothing (3 iterations)..." << std::endl;
-    fastloess_rs::LoessOptions robust_opts;
+    fastloess::LoessOptions robust_opts;
     robust_opts.fraction = 0.05;
     robust_opts.iterations = 3;
     robust_opts.robustness_method = "bisquare";
     robust_opts.return_robustness_weights = true;
 
-    fastloess_rs::Loess model_robust(robust_opts);
+    fastloess::Loess model_robust(robust_opts);
     auto res_robust = model_robust.fit(data.x, data.y).value();
 
     // 4. Uncertainty Quantification
     std::cout << "Computing confidence and prediction intervals..."
               << std::endl;
-    fastloess_rs::LoessOptions interval_opts;
+    fastloess::LoessOptions interval_opts;
     interval_opts.fraction = 0.05;
     interval_opts.confidence_intervals = 0.95;
     interval_opts.prediction_intervals = 0.95;
     interval_opts.return_diagnostics = true;
 
-    fastloess_rs::Loess model_intervals(interval_opts);
+    fastloess::Loess model_intervals(interval_opts);
     auto res_intervals = model_intervals.fit(data.x, data.y).value();
 
     // 5. Cross-Validation for optimal fraction
@@ -115,10 +115,10 @@ int main() {
     double min_rmse = 1e9;
 
     for (double f : fractions) {
-      fastloess_rs::LoessOptions cv_opts;
+      fastloess::LoessOptions cv_opts;
       cv_opts.fraction = f;
       cv_opts.return_diagnostics = true;
-      fastloess_rs::Loess model(cv_opts);
+      fastloess::Loess model(cv_opts);
       auto res_exp = model.fit(data.x, data.y);
 
       // Use non-throwing interface
@@ -154,20 +154,20 @@ int main() {
       yl[i] = 2.0 * xl[i] + 1.0;
     }
 
-    fastloess_rs::LoessOptions opt_ext;
+    fastloess::LoessOptions opt_ext;
     opt_ext.fraction = 0.6;
     opt_ext.boundary_policy = "extend";
-    auto r_ext = fastloess_rs::Loess(opt_ext).fit(xl, yl).value();
+    auto r_ext = fastloess::Loess(opt_ext).fit(xl, yl).value();
 
-    fastloess_rs::LoessOptions opt_ref;
+    fastloess::LoessOptions opt_ref;
     opt_ref.fraction = 0.6;
     opt_ref.boundary_policy = "reflect";
-    auto r_ref = fastloess_rs::Loess(opt_ref).fit(xl, yl).value();
+    auto r_ref = fastloess::Loess(opt_ref).fit(xl, yl).value();
 
-    fastloess_rs::LoessOptions opt_zero;
+    fastloess::LoessOptions opt_zero;
     opt_zero.fraction = 0.6;
     opt_zero.boundary_policy = "zero";
-    auto r_zr = fastloess_rs::Loess(opt_zero).fit(xl, yl).value();
+    auto r_zr = fastloess::Loess(opt_zero).fit(xl, yl).value();
 
     std::cout << "Boundary policy comparison:" << std::endl;
     std::cout << std::fixed << std::setprecision(2);
@@ -178,7 +178,7 @@ int main() {
     std::cout << " - Zero:             first=" << r_zr.y(0)
               << ", last=" << r_zr.y(49) << std::endl;
 
-  } catch (const fastloess_rs::LoessError &e) {
+  } catch (const fastloess::LoessError &e) {
     std::cerr << "Error: " << e.what() << std::endl;
     return 1;
   }

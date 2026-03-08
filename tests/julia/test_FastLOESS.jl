@@ -409,10 +409,7 @@ using FastLOESS
         end
 
         @testset "invalid robustness method" begin
-            @test_throws ErrorException Loess(
-                fraction = 0.5,
-                robustness_method = "invalid",
-            )
+            @test_throws ErrorException Loess(fraction = 0.5, robustness_method = "invalid")
         end
     end
 

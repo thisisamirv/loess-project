@@ -1,6 +1,6 @@
 # C++ Examples
 
-Complete C++ examples demonstrating the fastLowess C++ bindings with modern C++ features.
+Complete C++ examples demonstrating the fastLoess C++ bindings with modern C++ features.
 
 ## Batch Smoothing
 
@@ -68,7 +68,7 @@ int main() {
     }
 
     // Configure options
-    fastloess::LowessOptions options;
+    fastloess::LoessOptions options;
     options.fraction = 0.3;
     options.iterations = 3;
     options.confidence_intervals = 0.95;
@@ -82,7 +82,7 @@ int main() {
         
         // Access smoothed values
         auto smoothed = result.y_vector();
-    } catch (const fastloess::LowessError& e) {
+    } catch (const fastloess::LoessError& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;
     }
@@ -97,5 +97,5 @@ The C++ bindings provide:
 
 - **RAII memory management** - Resources automatically freed
 - **STL container support** - `std::vector<double>` for all arrays
-- **Exception-based errors** - `fastloess::LowessError` for error handling
+- **Exception-based errors** - `fastloess::LoessError` for error handling
 - **Modern C++ idioms** - Designated initializers, move semantics

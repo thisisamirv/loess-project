@@ -31,7 +31,7 @@ int main() {
 
   // Streaming smoothing
   try {
-    fastloess_rs::StreamingOptions opts;
+    fastloess::StreamingOptions opts;
     opts.fraction = 0.1;
     opts.iterations = 2;
     opts.chunk_size = 1000;
@@ -41,7 +41,7 @@ int main() {
     std::cout << "\nProcessing with chunk_size=" << opts.chunk_size
               << ", overlap=" << opts.overlap << std::endl;
 
-    fastloess_rs::StreamingLoess model(opts);
+    fastloess::StreamingLoess model(opts);
 
     std::cout << "\nProcessing data in chunks..." << std::endl;
 
@@ -76,7 +76,7 @@ int main() {
                 << std::endl;
     }
 
-  } catch (const fastloess_rs::LoessError &e) {
+  } catch (const fastloess::LoessError &e) {
     std::cerr << "Error: " << e.what() << std::endl;
     return 1;
   }
