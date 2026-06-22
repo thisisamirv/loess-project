@@ -19,12 +19,12 @@
 //! executor's public interface and configuration.
 
 use approx::assert_relative_eq;
-use num_traits::Float;
 
+use loess_rs::internals::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
 use loess_rs::internals::algorithms::robustness::RobustnessMethod;
-use loess_rs::internals::api::BoundaryPolicy;
+use loess_rs::internals::api::{BoundaryPolicy, DistanceMetric};
 use loess_rs::internals::engine::executor::{
-    ExecutorOutput, LoessBuffer, LoessConfig, LoessExecutor,
+    ExecutorOutput, LoessConfig, LoessExecutor, SurfaceMode,
 };
 use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::scaling::ScalingMethod;
@@ -42,14 +42,14 @@ fn test_executor_new_defaults() {
 
     assert_relative_eq!(executor.fraction, 0.67, epsilon = 1e-6);
     assert_eq!(executor.iterations, 3, "Default iterations should be 3");
-    assert_relative_eq!(executor.delta, 0.0, epsilon = 1e-12);
     assert_eq!(
         executor.weight_function,
         WeightFunction::Tricube,
         "Default weight function should be Tricube"
     );
     assert_eq!(
-        executor.zero_weight_fallback, 0,
+        executor.zero_weight_fallback,
+        ZeroWeightFallback::default(),
         "Default zero weight fallback should be 0 (UseLocalMean)"
     );
     assert_eq!(
@@ -69,7 +69,6 @@ fn test_executor_default_trait() {
 
     assert_relative_eq!(executor1.fraction, executor2.fraction, epsilon = 1e-12);
     assert_eq!(executor1.iterations, executor2.iterations);
-    assert_relative_eq!(executor1.delta, executor2.delta, epsilon = 1e-12);
     assert_eq!(executor1.weight_function, executor2.weight_function);
     assert_eq!(
         executor1.zero_weight_fallback,
@@ -91,14 +90,14 @@ fn test_config_defaults() {
 
     assert!(config.fraction.is_none(), "Default fraction should be None");
     assert_eq!(config.iterations, 3, "Default iterations should be 3");
-    assert_relative_eq!(config.delta, 0.0, epsilon = 1e-12);
     assert_eq!(
         config.weight_function,
         WeightFunction::Tricube,
         "Default weight function should be Tricube"
     );
     assert_eq!(
-        config.zero_weight_fallback, 0,
+        config.zero_weight_fallback,
+        ZeroWeightFallback::default(),
         "Default zero weight fallback should be 0"
     );
     assert_eq!(
@@ -112,7 +111,7 @@ fn test_config_defaults() {
     );
     assert!(config.cv_kind.is_none(), "Default CV kind should be None");
     assert!(
-        config.auto_convergence.is_none(),
+        config.auto_converge.is_none(),
         "Default auto-convergence should be None"
     );
     assert!(
@@ -129,34 +128,44 @@ fn test_config_custom() {
     let config = LoessConfig {
         fraction: Some(0.5),
         iterations: 5,
-        delta: 0.01,
+
         weight_function: WeightFunction::Epanechnikov,
-        zero_weight_fallback: 1,
+        zero_weight_fallback: ZeroWeightFallback::ReturnOriginal,
         robustness_method: RobustnessMethod::Huber,
+        scaling_method: ScalingMethod::default(),
         cv_fractions: Some(vec![0.3, 0.5, 0.7]),
         cv_kind: None,
-        auto_convergence: Some(1e-6),
+        auto_converge: Some(1e-6),
         return_variance: None,
         boundary_policy: BoundaryPolicy::default(),
-        scaling_method: ScalingMethod::default(),
         custom_smooth_pass: None,
         custom_cv_pass: None,
         custom_interval_pass: None,
         custom_fit_pass: None,
+        custom_vertex_pass: None,
+        custom_kdtree_builder: None,
         parallel: false,
         backend: None,
         cv_seed: None,
-        delegate_boundary_handling: false,
+        dimensions: 1,
+        distance_metric: DistanceMetric::Euclidean,
+        polynomial_degree: PolynomialDegree::Linear,
+        surface_mode: SurfaceMode::default(),
+        interpolation_vertices: None,
+        cell: Some(0.2),
+        boundary_degree_fallback: true,
     };
 
     assert_eq!(config.fraction, Some(0.5));
     assert_eq!(config.iterations, 5);
-    assert_relative_eq!(config.delta, 0.01, epsilon = 1e-12);
     assert_eq!(config.weight_function, WeightFunction::Epanechnikov);
-    assert_eq!(config.zero_weight_fallback, 1);
+    assert_eq!(
+        config.zero_weight_fallback,
+        ZeroWeightFallback::ReturnOriginal
+    );
     assert_eq!(config.robustness_method, RobustnessMethod::Huber);
     assert_eq!(config.cv_fractions, Some(vec![0.3, 0.5, 0.7]));
-    assert_eq!(config.auto_convergence, Some(1e-6));
+    assert_eq!(config.auto_converge, Some(1e-6));
 }
 
 // ============================================================================
@@ -175,11 +184,7 @@ fn test_executor_output_basic() {
         used_fraction: 0.5,
         cv_scores: None,
         robustness_weights: vec![1.0, 1.0, 1.0],
-        residuals: None,
-        confidence_lower: None,
-        confidence_upper: None,
-        prediction_lower: None,
-        prediction_upper: None,
+        leverage: None,
     };
 
     assert_eq!(output.smoothed, vec![1.0, 2.0, 3.0]);
@@ -201,11 +206,7 @@ fn test_executor_output_complete() {
         used_fraction: 0.5,
         cv_scores: Some(vec![0.1, 0.2, 0.3]),
         robustness_weights: vec![1.0, 1.0, 1.0],
-        residuals: None,
-        confidence_lower: None,
-        confidence_upper: None,
-        prediction_lower: None,
-        prediction_upper: None,
+        leverage: None,
     };
 
     assert_eq!(output.smoothed.len(), 3);
@@ -227,11 +228,7 @@ fn test_executor_output_empty() {
         used_fraction: 0.5,
         cv_scores: None,
         robustness_weights: vec![],
-        residuals: None,
-        confidence_lower: None,
-        confidence_upper: None,
-        prediction_lower: None,
-        prediction_upper: None,
+        leverage: None,
     };
 
     assert!(output.smoothed.is_empty());
@@ -261,16 +258,6 @@ fn test_executor_builder_iterations() {
     assert_eq!(executor.iterations, 5);
 }
 
-/// Test executor builder pattern for delta.
-///
-/// Verifies that delta can be set via builder.
-#[test]
-fn test_executor_builder_delta() {
-    let executor = LoessExecutor::<f64>::new().delta(0.01);
-
-    assert_relative_eq!(executor.delta, 0.01, epsilon = 1e-12);
-}
-
 /// Test executor builder pattern for weight function.
 ///
 /// Verifies that weight function can be set via builder.
@@ -286,9 +273,13 @@ fn test_executor_builder_weight_function() {
 /// Verifies that zero weight fallback can be set via builder.
 #[test]
 fn test_executor_builder_zero_weight_fallback() {
-    let executor = LoessExecutor::<f64>::new().zero_weight_fallback(1);
+    let executor =
+        LoessExecutor::<f64>::new().zero_weight_fallback(ZeroWeightFallback::ReturnOriginal);
 
-    assert_eq!(executor.zero_weight_fallback, 1);
+    assert_eq!(
+        executor.zero_weight_fallback,
+        ZeroWeightFallback::ReturnOriginal
+    );
 }
 
 /// Test executor builder pattern for robustness method.
@@ -309,16 +300,17 @@ fn test_executor_builder_chaining() {
     let executor = LoessExecutor::<f64>::new()
         .fraction(0.5)
         .iterations(5)
-        .delta(0.01)
         .weight_function(WeightFunction::Gaussian)
-        .zero_weight_fallback(2)
+        .zero_weight_fallback(ZeroWeightFallback::ReturnNone)
         .robustness_method(RobustnessMethod::Talwar);
 
     assert_relative_eq!(executor.fraction, 0.5, epsilon = 1e-12);
     assert_eq!(executor.iterations, 5);
-    assert_relative_eq!(executor.delta, 0.01, epsilon = 1e-12);
     assert_eq!(executor.weight_function, WeightFunction::Gaussian);
-    assert_eq!(executor.zero_weight_fallback, 2);
+    assert_eq!(
+        executor.zero_weight_fallback,
+        ZeroWeightFallback::ReturnNone
+    );
     assert_eq!(executor.robustness_method, RobustnessMethod::Talwar);
 }
 
@@ -341,24 +333,32 @@ fn test_config_f32() {
     let config = LoessConfig::<f32> {
         fraction: Some(0.5f32),
         iterations: 3,
-        delta: 0.0f32,
+
         weight_function: WeightFunction::Tricube,
-        zero_weight_fallback: 0,
+        zero_weight_fallback: ZeroWeightFallback::default(),
         robustness_method: RobustnessMethod::Bisquare,
+        scaling_method: ScalingMethod::default(),
         cv_fractions: None,
         cv_kind: None,
-        auto_convergence: None,
+        auto_converge: None,
         return_variance: None,
         boundary_policy: BoundaryPolicy::default(),
-        scaling_method: ScalingMethod::default(),
         custom_smooth_pass: None,
         custom_cv_pass: None,
         custom_interval_pass: None,
         custom_fit_pass: None,
+        custom_vertex_pass: None,
+        custom_kdtree_builder: None,
         parallel: false,
         backend: None,
         cv_seed: None,
-        delegate_boundary_handling: false,
+        dimensions: 1,
+        distance_metric: DistanceMetric::Euclidean,
+        polynomial_degree: PolynomialDegree::Linear,
+        surface_mode: SurfaceMode::default(),
+        interpolation_vertices: None,
+        cell: Some(0.2),
+        boundary_degree_fallback: true,
     };
 
     assert_eq!(config.fraction, Some(0.5f32));
@@ -376,11 +376,7 @@ fn test_output_f32() {
         used_fraction: 0.5f32,
         cv_scores: None,
         robustness_weights: vec![1.0f32, 1.0f32, 1.0f32],
-        residuals: None,
-        confidence_lower: None,
-        confidence_upper: None,
-        prediction_lower: None,
-        prediction_upper: None,
+        leverage: None,
     };
 
     assert_eq!(output.smoothed.len(), 3);
@@ -401,92 +397,40 @@ fn test_executor_convergence_zero_tolerance() {
     let config = LoessConfig {
         fraction: Some(0.5),
         iterations: 10,
-        delta: 0.0,
+
         weight_function: WeightFunction::Tricube,
-        zero_weight_fallback: 0,
+        zero_weight_fallback: ZeroWeightFallback::default(),
         robustness_method: RobustnessMethod::Bisquare,
+        scaling_method: ScalingMethod::default(),
         cv_fractions: None,
         cv_kind: None,
-        auto_convergence: Some(0.0), // Zero tolerance
+        auto_converge: Some(0.0), // Zero tolerance
         return_variance: None,
         boundary_policy: BoundaryPolicy::Extend,
-        scaling_method: ScalingMethod::default(),
         custom_smooth_pass: None,
         custom_cv_pass: None,
         custom_interval_pass: None,
         custom_fit_pass: None,
+        custom_vertex_pass: None,
+        custom_kdtree_builder: None,
         parallel: false,
         backend: None,
         cv_seed: None,
-        delegate_boundary_handling: false,
+        dimensions: 1,
+        distance_metric: DistanceMetric::Euclidean,
+        polynomial_degree: PolynomialDegree::Linear,
+        surface_mode: SurfaceMode::default(),
+        interpolation_vertices: None,
+        cell: Some(0.2),
+        boundary_degree_fallback: true,
     };
 
-    let output = LoessExecutor::run_with_config(&x, &y, config).unwrap();
+    let output = LoessExecutor::run_with_config(&x, &y, config);
 
     // Should run all iterations since tolerance=0 is impossible to meet
     // (or very few if it happens to converge exactly)
     assert!(output.iterations.is_some());
     assert!(output.iterations.unwrap() >= 1);
-}
-
-/// Test executor with delta equal to or greater than data range.
-#[test]
-fn test_executor_delta_equals_range() {
-    let x = vec![0.0, 1.0, 2.0, 3.0, 4.0];
-    let y = vec![0.0, 1.0, 0.0, 1.0, 0.0];
-
-    // Data range is 4.0 (max - min)
-    let config = LoessConfig {
-        fraction: Some(0.5),
-        iterations: 0,
-        delta: 4.0,
-        weight_function: WeightFunction::Tricube,
-        zero_weight_fallback: 0,
-        robustness_method: RobustnessMethod::Bisquare,
-        cv_fractions: None,
-        cv_kind: None,
-        auto_convergence: None,
-        return_variance: None,
-        boundary_policy: BoundaryPolicy::Extend,
-        scaling_method: ScalingMethod::default(),
-        custom_smooth_pass: None,
-        custom_cv_pass: None,
-        custom_interval_pass: None,
-        custom_fit_pass: None,
-        parallel: false,
-        backend: None,
-        cv_seed: None,
-        delegate_boundary_handling: false,
-    };
-
-    let output = LoessExecutor::run_with_config(&x, &y, config).unwrap();
-
-    // Should still produce valid output
-    assert_eq!(output.smoothed.len(), 5);
-    assert!(output.smoothed.iter().all(|v| v.is_finite()));
-}
-
-/// Test LoessBuffer allocation without convergence tracking.
-#[test]
-fn test_buffer_allocation_no_convergence() {
-    let mut buffers = LoessBuffer::<f64>::with_capacity(5);
-    buffers.prepare(5, false);
-
-    assert_eq!(buffers.y_smooth.len(), 5);
-    assert!(buffers.y_prev.is_empty());
-    assert_eq!(buffers.robustness_weights.len(), 5);
-    assert_eq!(buffers.residuals.len(), 5);
-    assert_eq!(buffers.weights.len(), 5);
-}
-
-/// Test LoessBuffer allocation with convergence tracking.
-#[test]
-fn test_buffer_allocation_with_convergence() {
-    let mut buffers = LoessBuffer::<f64>::with_capacity(5);
-    buffers.prepare(5, true);
-
-    assert_eq!(buffers.y_smooth.len(), 5);
-    assert_eq!(buffers.y_prev.len(), 5);
 }
 
 // ============================================================================
@@ -534,7 +478,6 @@ fn test_config_clone() {
     let config2 = config1.clone();
 
     assert_eq!(config1.iterations, config2.iterations);
-    assert_relative_eq!(config1.delta, config2.delta, epsilon = 1e-12);
 }
 
 /// Test executor clone trait.
@@ -561,11 +504,7 @@ fn test_output_clone() {
         used_fraction: 0.5,
         cv_scores: Some(vec![0.1, 0.2]),
         robustness_weights: vec![1.0, 1.0, 1.0],
-        residuals: None,
-        confidence_lower: None,
-        confidence_upper: None,
-        prediction_lower: None,
-        prediction_upper: None,
+        leverage: None,
     };
 
     let output2 = output1.clone();

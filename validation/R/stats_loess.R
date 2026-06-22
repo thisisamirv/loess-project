@@ -1,204 +1,315 @@
-#!/usr/bin/env Rscript
-# R LOESS Validation Script
-# Generates reference outputs for validation using R's loess() function
-# (which implements Cleveland's original local regression algorithm).
-#
-# NOTE: R's loess() supports univariate and multivariate fits with selectable
-# polynomial degree. It uses 'span' for the smoothing fraction and the
-# "symmetric" family for robustness iterations.
+#' Industry-level LOESS benchmarks for R with JSON output for comparison.
+#'
+#' Benchmarks are aligned with the Rust benchmarks to enable direct comparison.
+#' Results are written to benchmarks/output/r_benchmark.json.
+#'
+#' Run with: Rscript benchmark.R
 
 library(jsonlite)
+library(stats)
 
-OUTPUT_DIR <- "output/r/"
-dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
+# ============================================================================
+# Benchmark Result Storage
+# ============================================================================
 
-run_scenario <- function(name, x, y, frac, iter, delta = NULL, notes = "", ...) {
-    cat(sprintf("Running scenario: %s\n", name))
+run_benchmark <- function(name, size, func, iterations = 10, warmup = 2) {
+    cat(sprintf("Running benchmark: %s (size: %d)\n", name, size))
 
-    # R's loess default delta is 0.01 * diff(range(x)).
-    # If we want "direct" computation (exact), we set delta = 0.
-
-    args <- list(...)
-    is_direct <- FALSE
-    if (!is.null(args$surface) && args$surface == "direct") {
-        is_direct <- TRUE
-    }
-
-    # If delta is not provided explicitly, check if we want direct
-    val_delta <- if (!is.null(delta)) {
-        delta
-    } else if (is_direct) {
-        0.0
-    } else {
-        # Use R's default (NULL lets loess decide, typically 0.01 * range)
-        NULL
-    }
-
-    # Run loess via the formula interface. We use local linear fits
-    # (degree = 1) to mirror the lowess-style smoother, map robustness
-    # iterations onto the "symmetric" family, and pick the fitting surface
-    # ("direct" for exact, "interpolate" otherwise).
-    family_arg <- if (iter > 0) "symmetric" else "gaussian"
-    surface_arg <- if (is_direct) "direct" else "interpolate"
-    fit <- loess(
-        y ~ x,
-        span = frac,
-        degree = 1,
-        family = family_arg,
-        control = loess.control(
-            surface = surface_arg,
-            iterations = max(iter, 1)
+    # Warmup runs
+    for (i in seq_len(warmup)) {
+        tryCatch(
+            {
+                func()
+            },
+            error = function(e) {
+                cat(
+                    sprintf(
+                        "Benchmark %s failed during warmup: %s\n",
+                        name,
+                        e$message
+                    )
+                )
+            }
         )
-    )
+    }
 
-    fitted <- fitted(fit) # These are the smoothed values
+    # Timed runs
+    times <- numeric(iterations)
+    for (i in seq_len(iterations)) {
+        start <- Sys.time()
+        tryCatch(
+            {
+                func()
+                end <- Sys.time()
+                elapsed <- as.numeric(difftime(end, start, units = "secs"))
+                times[i] <- elapsed * 1000 # convert to ms
+            },
+            error = function(e) {
+                cat(sprintf("Benchmark %s failed: %s\n", name, e$message))
+            }
+        )
+    }
 
-    # Create output structure
-    data <- list(
+    list(
         name = name,
-        notes = notes,
-        input = list(
-            x = x,
-            y = y
-        ),
-        params = list(
-            fraction = frac,
-            degree = 1, # loess is effectively degree 1
-            iterations = iter,
-            delta = val_delta,
-            extra = list(...)
-        ),
-        result = list(
-            fitted = fitted
-        )
+        size = size,
+        iterations = iterations,
+        mean_time_ms = mean(times),
+        std_time_ms = sd(times),
+        median_time_ms = median(times),
+        min_time_ms = min(times),
+        max_time_ms = max(times)
     )
-
-    # Save to JSON
-    path <- file.path(OUTPUT_DIR, paste0(name, ".json"))
-    write_json(data, path, auto_unbox = TRUE, pretty = TRUE, digits = NA)
 }
 
-generate_data <- function(
-  n = 100,
-  kind = "linear",
-  noise = 0.0,
-  range_min = 0.0,
-  range_max = 1.0,
-  outlier_ratio = 0.0
-) {
-    # Fixed seed for reproducibility
-    set.seed(42)
+# ============================================================================
+# Data Generation (Aligned with Rust/Python)
+# ============================================================================
 
-    x <- seq(range_min, range_max, length.out = n)
-
-    if (kind == "linear") {
-        y <- 2 * x + 1
-    } else if (kind == "quadratic") {
-        y <- x^2
-    } else if (kind == "sine") {
-        y <- sin(4 * x)
-    } else if (kind == "step") {
-        y <- ifelse(x < (range_min + range_max) / 2, 0.0, 1.0)
-    } else if (kind == "constant") {
-        y <- rep(5.0, n)
-    } else {
-        y <- x
-    }
-
-    # Add noise
-    if (noise > 0) {
-        y <- y + rnorm(n, 0, noise)
-    }
-
-    # Add outliers
-    if (outlier_ratio > 0) {
-        n_out <- as.integer(n * outlier_ratio)
-        indices <- sample(n, n_out, replace = FALSE)
-        y[indices] <- y[indices] + 10.0 # Significant outlier
-    }
-
+generate_sine_data <- function(size, seed = 42) {
+    set.seed(seed)
+    x <- seq(0, 10, length.out = size)
+    y <- sin(x) + rnorm(size, mean = 0, sd = 0.2)
     list(x = x, y = y)
 }
 
-main <- function() {
-    # 1. Tiny Linear
-    data <- generate_data(n = 10, kind = "linear")
-    run_scenario("01_tiny_linear", data$x, data$y, frac = 0.8, iter = 0)
+generate_outlier_data <- function(size, seed = 42) {
+    set.seed(seed)
+    x <- seq(0, 10, length.out = size)
+    y <- sin(x) + rnorm(size, mean = 0, sd = 0.2)
 
-    # 3. Sine Standard
-    data <- generate_data(n = 100, kind = "sine", noise = 0.1)
-    run_scenario("03_sine_standard", data$x, data$y, frac = 0.3, iter = 0)
-
-    # 4. Sine Robust
-    data <- generate_data(n = 100, kind = "sine", outlier_ratio = 0.05)
-    run_scenario("04_sine_robust", data$x, data$y, frac = 0.3, iter = 4)
-
-    # 6. Large scale
-    data <- generate_data(n = 500, kind = "sine")
-    run_scenario("06_large_scale", data$x, data$y, frac = 0.1, iter = 0)
-
-    # 7. High Smoothness
-    data <- generate_data(n = 100, kind = "linear", noise = 0.5)
-    run_scenario("07_high_smoothness", data$x, data$y, frac = 0.9, iter = 0)
-
-    # 8. Low Smoothness
-    data <- generate_data(n = 100, kind = "sine")
-    run_scenario("08_low_smoothness", data$x, data$y,
-        frac = 0.05, iter = 0,
-        surface = "direct"
-    )
-
-    # 10. Constant Function
-    data <- generate_data(n = 50, kind = "constant")
-    run_scenario("10_constant", data$x, data$y, frac = 0.5, iter = 0)
-
-    # 11. Step Function
-    data <- generate_data(n = 100, kind = "step")
-    run_scenario("11_step_func", data$x, data$y, frac = 0.4, iter = 0)
-
-    # 12. End-effects Left
-    data <- generate_data(n = 50, kind = "linear", noise = 0.1)
-    run_scenario("12_end_effects_left", data$x, data$y,
-        frac = 0.3, iter = 0,
-        notes = "Check left boundary"
-    )
-
-    # 13. End-effects Right (same data, just naming)
-    run_scenario("13_end_effects_right", data$x, data$y,
-        frac = 0.3, iter = 0,
-        notes = "Check right boundary"
-    )
-
-    # 14. Sparse Data
-    data <- generate_data(
-        n = 20,
-        range_max = 100.0,
-        kind = "linear",
-        noise = 1.0
-    )
-    run_scenario("14_sparse_data", data$x, data$y, frac = 0.6, iter = 0)
-
-    # 15. Dense Data
-    data <- generate_data(n = 1000, kind = "sine", noise = 0.1)
-    run_scenario("15_dense_data", data$x, data$y,
-        frac = 0.01, iter = 0,
-        surface = "direct"
-    )
-
-    # 18. Iter 2 Check
-    data <- generate_data(n = 100, kind = "sine", outlier_ratio = 0.05)
-    run_scenario("18_iter_2", data$x, data$y, frac = 0.4, iter = 2)
-
-    # 19. Interpolate Exact
-    data <- generate_data(n = 50, kind = "linear")
-    run_scenario("19_interpolate_exact", data$x, data$y, frac = 0.5, iter = 0)
-
-    # 20. Zero Variance
-    data <- generate_data(n = 10, kind = "constant") # all 5.0
-    run_scenario("20_zero_variance", data$x, data$y, frac = 0.5, iter = 0)
-
-    cat("\nAll supported loess scenarios completed successfully!\n")
+    n_outliers <- floor(size / 20)
+    indices <- sample(seq_len(size), n_outliers)
+    y[indices] <- y[indices] + runif(n_outliers, -5, 5)
+    list(x = x, y = y)
 }
 
-# Run main function
-main()
+generate_financial_data <- function(size, seed = 42) {
+    set.seed(seed)
+    x <- seq(0, size - 1)
+    y <- numeric(size)
+    y[1] <- 100.0
+    returns <- rnorm(size - 1, mean = 0.0005, sd = 0.02)
+    for (i in 2:size) {
+        y[i] <- y[i - 1] * (1 + returns[i - 1])
+    }
+    list(x = x, y = y)
+}
+
+generate_scientific_data <- function(size, seed = 42) {
+    set.seed(seed)
+    x <- seq(0, 10, length.out = size)
+    signal <- exp(-x * 0.3) * cos(x * 2 * pi)
+    noise <- rnorm(size, mean = 0, sd = 0.05)
+    list(x = x, y = signal + noise)
+}
+
+generate_genomic_data <- function(size, seed = 42) {
+    set.seed(seed)
+    x <- seq(0, size - 1) * 1000.0
+    base <- 0.5 + sin(x / 50000.0) * 0.3
+    noise <- rnorm(size, mean = 0, sd = 0.1)
+    y <- pmin(pmax(base + noise, 0.0), 1.0)
+    list(x = x, y = y)
+}
+
+generate_clustered_data <- function(size, seed = 42) {
+    set.seed(seed)
+    i <- seq(0, size - 1)
+    x <- (i %/% 100) + (i %% 100) * 1e-6
+    y <- sin(x) + rnorm(size, mean = 0, sd = 0.1)
+    list(x = x, y = y)
+}
+
+generate_high_noise_data <- function(size, seed = 42) {
+    set.seed(seed)
+    x <- seq(0, 10, length.out = size)
+    signal <- sin(x) * 0.5
+    noise <- rnorm(size, mean = 0, sd = 2.0)
+    list(x = x, y = signal + noise)
+}
+
+# ============================================================================
+# Benchmark Categories
+# ============================================================================
+
+benchmark_scalability <- function(iterations = 10) {
+    results <- list()
+    sizes <- c(1000, 5000, 10000)
+
+    for (size in sizes) {
+        data <- generate_sine_data(size)
+        run <- function() {
+            loess(x = data$x, y = data$y, f = 0.1, iter = 3)
+        }
+        results[[paste0("scale_", size)]] <- run_benchmark(
+            paste0("scale_", size), size, run, iterations
+        )
+    }
+    results
+}
+
+benchmark_fraction <- function(iterations = 10) {
+    results <- list()
+    size <- 5000
+    fractions <- c(0.05, 0.1, 0.2, 0.3, 0.5, 0.67)
+    data <- generate_sine_data(size)
+
+    for (frac in fractions) {
+        run <- function() {
+            loess(x = data$x, y = data$y, f = frac, iter = 3)
+        }
+        results[[paste0("fraction_", frac)]] <- run_benchmark(
+            paste0("fraction_", frac), size, run, iterations
+        )
+    }
+    results
+}
+
+benchmark_iterations <- function(iterations = 10) {
+    results <- list()
+    size <- 5000
+    iter_values <- c(0, 1, 2, 3, 5, 10)
+    data <- generate_outlier_data(size)
+
+    for (it in iter_values) {
+        run <- function() {
+            loess(x = data$x, y = data$y, f = 0.2, iter = it)
+        }
+        results[[paste0("iterations_", it)]] <- run_benchmark(
+            paste0("iterations_", it), size, run, iterations
+        )
+    }
+    results
+}
+
+benchmark_financial <- function(iterations = 10) {
+    results <- list()
+    sizes <- c(500, 1000, 5000)
+
+    for (size in sizes) {
+        data <- generate_financial_data(size)
+        run <- function() {
+            loess(x = data$x, y = data$y, f = 0.1, iter = 2)
+        }
+        results[[paste0("financial_", size)]] <- run_benchmark(
+            paste0("financial_", size), size, run, iterations
+        )
+    }
+    results
+}
+
+benchmark_scientific <- function(iterations = 10) {
+    results <- list()
+    sizes <- c(500, 1000, 5000)
+
+    for (size in sizes) {
+        data <- generate_scientific_data(size)
+        run <- function() {
+            loess(x = data$x, y = data$y, f = 0.15, iter = 3)
+        }
+        results[[paste0("scientific_", size)]] <- run_benchmark(
+            paste0("scientific_", size), size, run, iterations
+        )
+    }
+    results
+}
+
+benchmark_genomic <- function(iterations = 10) {
+    results <- list()
+    sizes <- c(1000, 5000, 100000)
+
+    for (size in sizes) {
+        data <- generate_genomic_data(size)
+        run <- function() {
+            loess(x = data$x, y = data$y, f = 0.1, iter = 3)
+        }
+        results[[paste0("genomic_", size)]] <- run_benchmark(
+            paste0("genomic_", size), size, run, iterations
+        )
+    }
+    results
+}
+
+benchmark_pathological <- function(iterations = 10) {
+    results <- list()
+    size <- 5000
+
+    # Clustered
+    data_clustered <- generate_clustered_data(size)
+    run_clustered <- function() {
+        loess(x = data_clustered$x, y = data_clustered$y, f = 0.3, iter = 2)
+    }
+    results$clustered <- run_benchmark(
+        "clustered", size, run_clustered, iterations
+    )
+
+    # High noise
+    data_noisy <- generate_high_noise_data(size)
+    run_noise <- function() {
+        loess(x = data_noisy$x, y = data_noisy$y, f = 0.5, iter = 5)
+    }
+    results$high_noise <- run_benchmark(
+        "high_noise", size, run_noise, iterations
+    )
+
+    # Extreme outliers
+    data_outlier <- generate_outlier_data(size)
+    run_outliers <- function() {
+        loess(x = data_outlier$x, y = data_outlier$y, f = 0.2, iter = 10)
+    }
+    results$extreme_outliers <- run_benchmark(
+        "extreme_outliers", size, run_outliers, iterations
+    )
+
+    # Constant y
+    x_const <- seq(size)
+    y_const <- rep(5.0, size)
+    data_const <- list(x = x_const, y = y_const)
+    run_const <- function() {
+        loess(x = data_const$x, y = data_const$y, f = 0.2, iter = 2)
+    }
+    results$constant_y <- run_benchmark(
+        "constant_y", size, run_const, iterations
+    )
+
+    results
+}
+
+# ============================================================================
+# Main Execution
+# ============================================================================
+
+main <- function() {
+    cat("=============================================================\n")
+    cat("R LOESS BENCHMARK SUITE (Aligned with Python/Rust)\n")
+    cat("=============================================================\n")
+
+    iterations <- 10
+    all_results <- list()
+
+    all_results$scalability <- unname(benchmark_scalability(iterations))
+    all_results$fraction <- unname(benchmark_fraction(iterations))
+    all_results$iterations <- unname(benchmark_iterations(iterations))
+    all_results$financial <- unname(benchmark_financial(iterations))
+    all_results$scientific <- unname(benchmark_scientific(iterations))
+    all_results$genomic <- unname(benchmark_genomic(iterations))
+    all_results$pathological <- unname(benchmark_pathological(iterations))
+
+    # Move to output directory
+    out_dir <- "output"
+    if (!dir.exists(out_dir)) {
+        dir.create(out_dir, recursive = TRUE)
+    }
+
+    out_path <- file.path(out_dir, "r_benchmark.json")
+    write_json(all_results, out_path, auto_unbox = TRUE, pretty = TRUE)
+
+    cat("\n============================================================\n")
+    cat(sprintf("Results saved to %s\n", out_path))
+    cat("============================================================\n")
+}
+
+if (interactive() == FALSE) {
+    main()
+}

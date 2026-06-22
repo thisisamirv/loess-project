@@ -1,57 +1,51 @@
 //! Robust scale estimation using MAR or MAD.
 //!
+//! ## Purpose
+//!
 //! This module provides robust scale estimation methods, which are resistant
 //! to outliers.
 //!
-//! ## srrstats Compliance
+//! ## Design notes
 //!
-//! @srrstats {G2.5} Robust scale estimation: MAD (default), MAR, and Mean methods.
-//! @srrstats {G2.7} Quickselect-based median for O(n) performance.
+//! * **Algorithm**: Uses Quickselect for O(n) median finding.
+//! * **Memory**: Reuses allocated buffers to minimize memory allocations.
+//! * **Methods**:
+//!     - MAR: Median Absolute Residual: `median(|r|)`
+//!     - MAD: Median Absolute Deviation: `median(|r - median(r)|)`
+//!
+//! ## Invariants
+//!
+//! * Scale >= 0 for any input.
+//! * Handles even and odd population sizes correctly.
 
 // External dependencies
 use core::cmp::Ordering::Equal;
 use num_traits::Float;
 
-// Method for measuring the scale of residuals.
+/// Method for measuring the scale of residuals.
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum ScalingMethod {
-    // Median Absolute Residual: `median(|r|)`.
+    /// Median Absolute Residual: `median(|r|)`.
     MAR,
 
-    // Median Absolute Deviation: `median(|r - median(r)|)`.
+    /// Median Absolute Deviation: `median(|r - median(r)|)`.
     #[default]
     MAD,
-
-    // Mean Absolute Residual: `mean(|r|)`.
-    Mean,
 }
 
 impl ScalingMethod {
-    // Compute the scale of the given values using the selected method.
+    /// Compute the scale of the given values using the selected method.
+    ///
+    /// The input slice is modified in-place to avoid allocations.
     pub fn compute<T: Float>(&self, vals: &mut [T]) -> T {
         match self {
             Self::MAR => self.compute_mar(vals),
             Self::MAD => self.compute_mad(vals),
-            Self::Mean => self.compute_mean(vals),
         }
     }
 
-    // Compute the Mean Absolute Residual.
-    #[inline]
-    fn compute_mean<T: Float>(&self, vals: &mut [T]) -> T {
-        if vals.is_empty() {
-            return T::zero();
-        }
-        let n = T::from(vals.len()).unwrap_or(T::one());
-        let mut sum = T::zero();
-        for val in vals.iter() {
-            sum = sum + val.abs();
-        }
-        sum / n
-    }
-
-    // Compute the Median Absolute Deviation (MAD).
+    /// Compute the Median Absolute Deviation (MAD).
     #[inline]
     fn compute_mad<T: Float>(&self, vals: &mut [T]) -> T {
         if vals.is_empty() {
@@ -70,7 +64,7 @@ impl ScalingMethod {
         Self::median_inplace(vals)
     }
 
-    // Compute the Median Absolute Residual (uncentered).
+    /// Compute the Median Absolute Residual (uncentered).
     #[inline]
     fn compute_mar<T: Float>(&self, vals: &mut [T]) -> T {
         if vals.is_empty() {
@@ -86,7 +80,7 @@ impl ScalingMethod {
         Self::median_inplace(vals)
     }
 
-    // Internal helper function to compute median in-place using Quickselect.
+    /// Internal helper function to compute median in-place using Quickselect.
     #[inline]
     fn median_inplace<T: Float>(vals: &mut [T]) -> T {
         let n = vals.len();
@@ -96,22 +90,15 @@ impl ScalingMethod {
 
         let mid = n / 2;
 
-        if n.is_multiple_of(2) {
+        if n % 2 == 0 {
             // Even length: average of two middle values
             vals.select_nth_unstable_by(mid, |a, b| a.partial_cmp(b).unwrap_or(Equal));
             let upper = vals[mid];
 
-            // Find the largest value in the lower half using simple loop
-            let mut lower = vals[0];
-            let mut i = 1;
-            while i < mid {
-                if vals[i] > lower {
-                    lower = vals[i];
-                }
-                i += 1;
-            }
+            // Find the largest value in the lower half
+            let lower = vals[..mid].iter().copied().fold(T::neg_infinity(), T::max);
 
-            (lower + upper) / T::from(2.0).unwrap_or(T::one() + T::one())
+            (lower + upper) / T::from(2.0).unwrap()
         } else {
             // Odd length: middle value
             vals.select_nth_unstable_by(mid, |a, b| a.partial_cmp(b).unwrap_or(Equal));

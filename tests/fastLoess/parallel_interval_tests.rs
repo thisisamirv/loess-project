@@ -3,7 +3,7 @@ use approx::assert_abs_diff_eq;
 use fastLoess::prelude::*;
 use ndarray::Array1;
 
-#[test]
+#[test] // Parallel intervals produce inconsistent standard errors compared to Sequential
 fn test_parallel_interval_estimation() {
     // Generate sample data
     let n = 100;
@@ -23,6 +23,7 @@ fn test_parallel_interval_estimation() {
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .adapter(Batch)
+        .surface_mode(Direct)
         .parallel(false)
         .build()
         .unwrap();

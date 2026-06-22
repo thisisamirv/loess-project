@@ -19,6 +19,7 @@ categories = ["science", "algorithms"]
 # Build
 include = [
     "src/**/*",
+    "docs/**/*.svg",
     "Cargo.toml",
     "README.md",
     "LICENSE-MIT",

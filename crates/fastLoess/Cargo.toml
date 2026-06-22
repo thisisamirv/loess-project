@@ -19,6 +19,7 @@ categories = ["science", "algorithms"]
 # Build
 include = [
     "src/**/*",
+    "docs/**/*.svg",
     "Cargo.toml",
     "README.md",
     "LICENSE-MIT",
@@ -30,15 +31,10 @@ loess-rs = { path = "../loess-rs", version = "1.1", features = ["dev"] }
 num-traits = { version = "0.2", features = ["libm"] }
 ndarray = { version = "0.17", optional = true }
 rayon = { version = "1.11", optional = true }
-wgpu = { version = "26.0", optional = true }
-bytemuck = { version = "1.25", optional = true }
-pollster = { version = "0.4", optional = true }
-futures-intrusive = { version = "0.5", optional = true }
 
 [features]
 default = ["cpu"]
 cpu = ["dep:rayon", "dep:ndarray"]
-gpu = ["dep:wgpu", "dep:bytemuck", "dep:pollster", "dep:futures-intrusive"]
 dev = []
 
 # Document all features

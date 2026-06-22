@@ -10,12 +10,9 @@
 //!
 //! Each scenario includes the expected output as comments.
 
-#[cfg(feature = "std")]
 use loess_rs::prelude::*;
-#[cfg(feature = "std")]
 use std::time::Instant;
 
-#[cfg(feature = "std")]
 fn main() -> Result<(), LoessError> {
     println!("{}", "=".repeat(80));
     println!("LOESS Batch Smoothing - Comprehensive Examples");
@@ -35,10 +32,6 @@ fn main() -> Result<(), LoessError> {
     Ok(())
 }
 
-#[cfg(not(feature = "std"))]
-fn main() {}
-
-#[cfg(feature = "std")]
 /// Example 1: Basic Smoothing
 /// Demonstrates the simplest usage with minimal configuration
 fn example_1_basic_smoothing() -> Result<(), LoessError> {
@@ -77,7 +70,6 @@ fn example_1_basic_smoothing() -> Result<(), LoessError> {
     Ok(())
 }
 
-#[cfg(feature = "std")]
 /// Example 2: Robust Smoothing with Outliers
 /// Shows how LOESS handles outliers with robustness iterations
 fn example_2_robust_with_outliers() -> Result<(), LoessError> {
@@ -139,7 +131,6 @@ fn example_2_robust_with_outliers() -> Result<(), LoessError> {
     Ok(())
 }
 
-#[cfg(feature = "std")]
 /// Example 3: Uncertainty Quantification
 /// Demonstrates confidence and prediction intervals
 fn example_3_uncertainty_quantification() -> Result<(), LoessError> {
@@ -182,7 +173,6 @@ fn example_3_uncertainty_quantification() -> Result<(), LoessError> {
     Ok(())
 }
 
-#[cfg(feature = "std")]
 /// Example 4: Cross-Validation
 /// Automatic selection of optimal smoothing fraction
 fn example_4_cross_validation() -> Result<(), LoessError> {
@@ -231,7 +221,6 @@ fn example_4_cross_validation() -> Result<(), LoessError> {
     Ok(())
 }
 
-#[cfg(feature = "std")]
 /// Example 5: Complete Diagnostic Analysis
 /// Full feature demonstration with all diagnostics
 fn example_5_complete_diagnostics() -> Result<(), LoessError> {
@@ -287,7 +276,6 @@ fn example_5_complete_diagnostics() -> Result<(), LoessError> {
     Ok(())
 }
 
-#[cfg(feature = "std")]
 /// Example 6: Different Weight Functions (Kernels)
 /// Comparison of various kernel functions
 fn example_6_different_kernels() -> Result<(), LoessError> {
@@ -308,7 +296,7 @@ fn example_6_different_kernels() -> Result<(), LoessError> {
         println!("Using {} kernel:", name);
 
         let model = Loess::new()
-            .fraction(0.8)
+            .fraction(0.5)
             .weight_function(kernel)
             .adapter(Batch)
             .build()?;
@@ -341,7 +329,6 @@ fn example_6_different_kernels() -> Result<(), LoessError> {
     Ok(())
 }
 
-#[cfg(feature = "std")]
 /// Example 7: Robustness Methods Comparison
 /// Different methods for handling outliers
 fn example_7_robustness_methods() -> Result<(), LoessError> {
@@ -358,7 +345,7 @@ fn example_7_robustness_methods() -> Result<(), LoessError> {
         println!("Using {} robustness method:", name);
 
         let model = Loess::new()
-            .fraction(0.99) // Use large fraction but stay in local regression for robustness
+            .fraction(0.5)
             .iterations(5)
             .robustness_method(method)
             .return_robustness_weights()
@@ -391,21 +378,20 @@ fn example_7_robustness_methods() -> Result<(), LoessError> {
 
     /* Expected Output:
     Using Bisquare robustness method:
-      Smoothed Y: [0.45, 7.97, 11.69, 11.96, 8.29]
-      Weights:    [0.995, 0.970, 0.866, 0.972, 0.995]
+      Smoothed Y: [2.00, 4.10, 5.90, 8.20, 9.80]
+      Weights:    [1.000, 1.000, 0.000, 1.000, 1.000]
     Using Huber robustness method:
-      Smoothed Y: [0.47, 7.86, 11.36, 11.85, 8.32]
-      Weights:    [1.000, 1.000, 0.809, 1.000, 1.000]
+      Smoothed Y: [2.00, 4.10, 6.15, 8.20, 9.80]
+      Weights:    [1.000, 1.000, 0.123, 1.000, 1.000]
     Using Talwar robustness method:
-      Smoothed Y: [0.35, 8.05, 12.07, 12.04, 8.20]
-      Weights:    [1.000, 1.000, 1.000, 1.000, 1.000]
+      Smoothed Y: [2.00, 4.10, 5.90, 8.20, 9.80]
+      Weights:    [1.000, 1.000, 0.000, 1.000, 1.000]
     */
 
     println!();
     Ok(())
 }
 
-#[cfg(feature = "std")]
 /// Example 8: Benchmark (Sequential Batch)
 /// Measure execution time for a large dataset using the sequential Batch adapter
 fn example_8_benchmark() -> Result<(), LoessError> {
@@ -413,7 +399,7 @@ fn example_8_benchmark() -> Result<(), LoessError> {
     println!("{}", "-".repeat(80));
 
     // Generate a larger synthetic dataset
-    let n = 10_000;
+    let n = 1_000;
     let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
     let y: Vec<f64> = x
         .iter()

@@ -21,7 +21,6 @@ ndarray = "0.17"
 default = ["std", "cpu", "dev"]
 std = ["loess-rs/std"]
 cpu = ["fastLoess/cpu"]
-gpu = ["fastLoess/gpu"]
 dev = ["loess-rs/dev", "fastLoess/dev"]
 
 # loess examples

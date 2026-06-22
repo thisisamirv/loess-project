@@ -29,7 +29,6 @@ std = ["loess-rs/std"]
 dev = ["loess-rs/dev", "fastLoess/dev"]
 # fastLoess features  
 cpu = ["fastLoess/cpu"]
-gpu = ["fastLoess/gpu"]
 
 [[test]]
 name = "loess-rs"

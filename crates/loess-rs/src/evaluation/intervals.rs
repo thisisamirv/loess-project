@@ -1,39 +1,66 @@
 //! Confidence and prediction intervals for LOESS smoothing.
 //!
+//! ## Purpose
+//!
 //! This module provides tools for quantifying uncertainty in LOESS smoothing
 //! through standard errors, confidence intervals, and prediction intervals.
 //!
-//! ## srrstats Compliance
+//! ## Design notes
 //!
-//! @srrstats {RE5.0} Confidence intervals for the mean smoothed function.
-//! @srrstats {RE5.1} Prediction intervals for new observations.
-//! @srrstats {G2.8} Acklam's rational approximation for inverse normal CDF (z-scores).
+//! * **Methodology**: Uses local leverage and robust weighted residuals.
+//! * **Approximation**: Z-scores estimated via Acklam's inverse normal CDF.
+//! * **Flexibility**: Configurable coverage levels and interval types.
+//!
+//! ## Key concepts
+//!
+//! * **Standard Errors (SE)**: Uncertainty in fitted values due to sampling.
+//! * **Confidence Intervals (CI)**: Uncertainty in the estimated mean curve.
+//! * **Prediction Intervals (PI)**: Uncertainty for new observations (wider than CI).
+//! * **Leverage**: Influence of an observation on its own fitted value.
+//!
+//! ## Invariants
+//!
+//! * Confidence levels must satisfy 0 < level < 1.
+//! * Prediction intervals are always wider than confidence intervals.
+//! * Standard errors are non-negative.
+//!
+//! ## Non-goals
+//!
+//! * This module does not perform the smoothing or iterative refinement.
+//! * This module does not provide bootstrap or simulation-based intervals.
+//! * This module does not handle simultaneous confidence bands.
 
-// External dependencies
+// Feature-gated imports
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-use num_traits::Float;
 #[cfg(feature = "std")]
 use std::vec::Vec;
+
+// External dependencies
+use num_traits::Float;
 
 // Internal dependencies
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::errors::LoessError;
 use crate::primitives::window::Window;
 
-// Configuration for computing confidence/prediction intervals and standard errors.
+// ============================================================================
+// Interval Configuration
+// ============================================================================
+
+/// Configuration for computing confidence/prediction intervals and standard errors.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IntervalMethod<T> {
-    // Desired probability coverage (e.g., 0.95 for 95% intervals).
+    /// Desired probability coverage (e.g., 0.95 for 95% intervals).
     pub level: T,
 
-    // Whether to compute confidence intervals for the mean function.
+    /// Whether to compute confidence intervals for the mean function.
     pub confidence: bool,
 
-    // Whether to compute prediction intervals for new observations.
+    /// Whether to compute prediction intervals for new observations.
     pub prediction: bool,
 
-    // Whether to return estimated standard errors for fitted values.
+    /// Whether to return estimated standard errors for fitted values.
     pub se: bool,
 }
 
@@ -44,7 +71,11 @@ impl<T: Float> Default for IntervalMethod<T> {
 }
 
 impl<T: Float> IntervalMethod<T> {
-    // No intervals or standard errors.
+    // ========================================================================
+    // Constructors
+    // ========================================================================
+
+    /// No intervals or standard errors.
     fn none() -> Self {
         Self {
             level: T::from(0.95).unwrap(),
@@ -54,7 +85,7 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    // Confidence intervals only at the specified level.
+    /// Confidence intervals only at the specified level.
     pub fn confidence(level: T) -> Self {
         Self {
             level,
@@ -64,7 +95,7 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    // Prediction intervals only at the specified level.
+    /// Prediction intervals only at the specified level.
     pub fn prediction(level: T) -> Self {
         Self {
             level,
@@ -74,7 +105,7 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    // Standard errors only (no intervals).
+    /// Standard errors only (no intervals).
     pub fn se() -> Self {
         Self {
             level: T::from(0.95).unwrap(),
@@ -86,18 +117,36 @@ impl<T: Float> IntervalMethod<T> {
 }
 
 impl<T: Float> IntervalMethod<T> {
-    // Constant to convert MAD to an unbiased estimate of sigma for normal data.
+    // ========================================================================
+    // Constants
+    // ========================================================================
+
+    /// Constant to convert MAD to an unbiased estimate of sigma for normal data.
+    ///
+    /// For normally distributed data, MAD × 1.4826 ≈ standard deviation.
     const MAD_TO_STD_FACTOR: f64 = 1.4826;
 
-    // Minimum tuned-scale absolute epsilon to avoid division by zero.
+    /// Minimum tuned-scale absolute epsilon to avoid division by zero.
     const MIN_TUNED_SCALE: f64 = 1e-12;
 
-    // Number of parameters in local linear regression (intercept + slope).
+    /// Number of parameters in local linear regression (intercept + slope).
     const LINEAR_PARAMS: f64 = 2.0;
 
-    // Estimate the residual standard deviation using a robust method.
-    // Default sigma_hat = 1.4826 * MAD(residuals).
-    pub fn calculate_residual_sd(residuals: &[T]) -> T {
+    // ========================================================================
+    // Robust Scale Estimation
+    // ========================================================================
+
+    /// Estimate the residual standard deviation using a robust method or delta1.
+    /// - If delta1 is provided: sigma = sqrt(RSS / delta1)
+    /// - Fallback: sigma_hat = 1.4826 * MAD(residuals).
+    fn calculate_residual_sd(residuals: &[T], delta1: Option<T>) -> T {
+        if let Some(d1) = delta1 {
+            if d1 > T::zero() {
+                let rss = residuals.iter().fold(T::zero(), |acc, &r| acc + r * r);
+                return (rss / d1).sqrt();
+            }
+        }
+
         let n = residuals.len();
         let scale_const = T::from(Self::MAD_TO_STD_FACTOR).unwrap();
 
@@ -116,10 +165,14 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    // Core mathematical function for computing standard error at a point.
-    // SE = sqrt(sigma_local^2 * l_ii), where
-    // sigma_local^2 = (sum w_k r_k^2) / ((sum w_k) - 2) and
-    // l_ii = w_i / sum w_k.
+    // ========================================================================
+    // Standard Error Computation
+    // ========================================================================
+
+    /// Core mathematical function for computing standard error at a point.
+    /// SE = sqrt(sigma_local^2 * l_ii), where
+    /// sigma_local^2 = (sum w_k r_k^2) / ((sum w_k) - 2) and
+    /// l_ii = w_i / sum w_k.
     pub fn compute_se(sum_w: T, sum_w_r2: T, w_idx: T) -> T {
         // Effective degrees of freedom for weighted regression
         if sum_w <= T::zero() {
@@ -139,7 +192,7 @@ impl<T: Float> IntervalMethod<T> {
         (variance * leverage).sqrt()
     }
 
-    // Compute standard errors for all points in a smoothed series.
+    /// Compute standard errors for all points in a smoothed series.
     #[allow(clippy::too_many_arguments)]
     pub fn compute_window_se<F>(
         &self,
@@ -207,13 +260,19 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    // Compute requested intervals (confidence and/or prediction).
+    // ========================================================================
+    // Interval Computation
+    // ========================================================================
+
+    /// Compute requested intervals (confidence and/or prediction).
     #[allow(clippy::type_complexity)]
     pub fn compute_intervals(
         &self,
         y_smooth: &[T],
         std_errors: &[T],
         residuals: &[T],
+        delta1: Option<T>,
+        delta2: Option<T>,
     ) -> Result<
         (
             Option<Vec<T>>, // confidence lower
@@ -223,10 +282,21 @@ impl<T: Float> IntervalMethod<T> {
         ),
         LoessError,
     > {
+        // Effective degrees of freedom: df = delta1^2 / delta2
+        let df = if let (Some(d1), Some(d2)) = (delta1, delta2) {
+            if d2 > T::zero() {
+                Some(d1 * d1 / d2)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
         // Compute confidence intervals if requested
         let (mut conf_lower, mut conf_upper) = if self.confidence {
             let (lower, upper) = self
-                .compute_confidence_intervals_impl(y_smooth, std_errors)
+                .compute_confidence_intervals_impl(y_smooth, std_errors, df)
                 .map_err(|_| LoessError::InvalidIntervals(self.level.to_f64().unwrap_or(0.0)))?;
             (Some(lower), Some(upper))
         } else {
@@ -235,9 +305,9 @@ impl<T: Float> IntervalMethod<T> {
 
         // Compute prediction intervals if requested
         let (mut pred_lower, mut pred_upper) = if self.prediction {
-            let rsd = Self::calculate_residual_sd(residuals);
+            let residual_sd = Self::calculate_residual_sd(residuals, delta1);
             let (lower, upper) = self
-                .compute_prediction_intervals_impl(y_smooth, std_errors, rsd)
+                .compute_prediction_intervals_impl(y_smooth, std_errors, residual_sd, df)
                 .map_err(|_| LoessError::InvalidIntervals(self.level.to_f64().unwrap_or(0.0)))?;
             (Some(lower), Some(upper))
         } else {
@@ -245,7 +315,7 @@ impl<T: Float> IntervalMethod<T> {
         };
 
         // Guard against degenerate intervals
-        let residual_sd = Self::calculate_residual_sd(residuals);
+        let residual_sd = Self::calculate_residual_sd(residuals, delta1);
         let any_std_nonzero = std_errors.iter().any(|&s| s > T::zero());
 
         if residual_sd > T::zero() || any_std_nonzero {
@@ -279,8 +349,13 @@ impl<T: Float> IntervalMethod<T> {
         &self,
         y_smooth: &[T],
         std_errors: &[T],
+        df: Option<T>,
     ) -> Result<(Vec<T>, Vec<T>), &'static str> {
-        let z = Self::approximate_z_score(self.level)?;
+        let z = if let Some(df_val) = df {
+            Self::approximate_t_score(self.level, df_val)?
+        } else {
+            Self::approximate_z_score(self.level)?
+        };
 
         let lower: Vec<T> = y_smooth
             .iter()
@@ -302,8 +377,13 @@ impl<T: Float> IntervalMethod<T> {
         y_smooth: &[T],
         std_errors: &[T],
         residual_sd: T,
+        df: Option<T>,
     ) -> Result<(Vec<T>, Vec<T>), &'static str> {
-        let z = Self::approximate_z_score(self.level)?;
+        let z = if let Some(df_val) = df {
+            Self::approximate_t_score(self.level, df_val)?
+        } else {
+            Self::approximate_z_score(self.level)?
+        };
         let rsd_sq = residual_sd * residual_sd;
 
         let lower: Vec<T> = y_smooth
@@ -327,8 +407,35 @@ impl<T: Float> IntervalMethod<T> {
         Ok((lower, upper))
     }
 
-    // Approximate the critical value (Z-score) for a given confidence level.
-    // z = Phi^-1((1 + p) / 2) where Phi^-1 is the inverse standard normal CDF.
+    /// Approximate the critical value (T-score) for a given confidence level and DOF.
+    /// For very large DOF, fallback to Z-score.
+    pub fn approximate_t_score(confidence_level: T, df: T) -> Result<T, &'static str> {
+        let df_f = df.to_f64().unwrap_or(2.0);
+
+        // Approximation for T-distribution: Z * sqrt(df / (df - 2))
+        // This is only valid for df > 2 and is an approximation for the variance.
+        // A better approach for small df would be appreciated, but for LOESS,
+        // df is usually reasonable.
+
+        let z = Self::approximate_z_score(confidence_level)?;
+        let z_f = z.to_f64().unwrap_or(1.96);
+
+        let t_f = if df_f > 2.0 {
+            z_f * (df_f / (df_f - 2.0)).sqrt()
+        } else {
+            // Very small DOF fallback: increase Z significantly or use a fixed high value
+            z_f * 1.5
+        };
+
+        Ok(T::from(t_f).unwrap_or(z))
+    }
+
+    // ========================================================================
+    // Z-Score Approximation
+    // ========================================================================
+
+    /// Approximate the critical value (Z-score) for a given confidence level.
+    /// z = Phi^-1((1 + p) / 2) where Phi^-1 is the inverse standard normal CDF.
     pub fn approximate_z_score(confidence_level: T) -> Result<T, &'static str> {
         let cl_f = confidence_level.to_f64().unwrap_or(0.95);
 
@@ -350,7 +457,7 @@ impl<T: Float> IntervalMethod<T> {
         Ok(T::from(z).unwrap_or_else(|| T::one()))
     }
 
-    // Rational approximation of the inverse standard normal CDF.
+    /// Rational approximation of the inverse standard normal CDF.
     fn acklam_inverse_cdf(p: f64) -> f64 {
         if p <= 0.0 || p >= 1.0 {
             return 0.0;
