@@ -13,11 +13,11 @@ use std::ptr;
 use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use fastLoess::internals::api::{
-    BoundaryPolicy, MergeStrategy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction,
-    ZeroWeightFallback,
+    BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
+    ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Mean, Online, Streaming,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
 };
 
 /// Result struct that can be passed across FFI boundary.
@@ -60,6 +60,17 @@ pub struct CppLoessResult {
     pub effective_df: c_double,
     pub residual_sd: c_double,
 
+    /// Hat-matrix statistics (NaN / NULL if not computed; set return_se = 1 to enable)
+    pub enp: c_double,
+    pub trace_hat: c_double,
+    pub delta1: c_double,
+    pub delta2: c_double,
+    pub residual_scale: c_double,
+    /// Per-point leverage / hat-matrix diagonal (NULL if not computed, length = n)
+    pub leverage: *mut c_double,
+    /// Number of predictor dimensions used
+    pub dimensions: c_int,
+
     /// Error message (NULL if no error)
     pub error: *mut c_char,
 }
@@ -86,6 +97,13 @@ impl Default for CppLoessResult {
             aicc: f64::NAN,
             effective_df: f64::NAN,
             residual_sd: f64::NAN,
+            enp: f64::NAN,
+            trace_hat: f64::NAN,
+            delta1: f64::NAN,
+            delta2: f64::NAN,
+            residual_scale: f64::NAN,
+            leverage: ptr::null_mut(),
+            dimensions: 1,
             error: ptr::null_mut(),
         }
     }
@@ -186,11 +204,7 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
-        _ => Err(format!(
-            "Unknown scaling method: {}. Valid: mad, mar, mean",
-            name
-        )),
+        _ => Err(format!("Unknown scaling method: {}. Valid: mad, mar", name)),
     }
 }
 
@@ -215,6 +229,47 @@ fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
         "last" | "take_last" | "takelast" | "right" => Ok(MergeStrategy::TakeLast),
         _ => Err(format!(
             "Unknown merge strategy: {}. Valid: average, weighted, first, last",
+            name
+        )),
+    }
+}
+
+/// Parse polynomial degree from string.
+fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree, String> {
+    match name.to_lowercase().as_str() {
+        "constant" | "0" => Ok(PolynomialDegree::Constant),
+        "linear" | "1" => Ok(PolynomialDegree::Linear),
+        "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
+        "cubic" | "3" => Ok(PolynomialDegree::Cubic),
+        "quartic" | "4" => Ok(PolynomialDegree::Quartic),
+        _ => Err(format!(
+            "Unknown degree: {}. Valid: constant, linear, quadratic, cubic, quartic",
+            name
+        )),
+    }
+}
+
+/// Parse surface mode from string.
+fn parse_surface_mode(name: &str) -> Result<SurfaceMode, String> {
+    match name.to_lowercase().as_str() {
+        "direct" => Ok(SurfaceMode::Direct),
+        "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
+        _ => Err(format!(
+            "Unknown surface mode: {}. Valid: direct, interpolation",
+            name
+        )),
+    }
+}
+
+/// Parse distance metric from string.
+fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>, String> {
+    match name.to_lowercase().as_str() {
+        "euclidean" => Ok(DistanceMetric::Euclidean),
+        "normalized" | "norm" => Ok(DistanceMetric::Normalized),
+        "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
+        "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
+        _ => Err(format!(
+            "Unknown distance metric: {}. Valid: euclidean, normalized, manhattan, chebyshev",
             name
         )),
     }
@@ -267,6 +322,13 @@ impl From<LoessResult<f64>> for CppLoessResult {
             aicc,
             effective_df,
             residual_sd,
+            enp: result.enp.unwrap_or(f64::NAN),
+            trace_hat: result.trace_hat.unwrap_or(f64::NAN),
+            delta1: result.delta1.unwrap_or(f64::NAN),
+            delta2: result.delta2.unwrap_or(f64::NAN),
+            residual_scale: result.residual_scale.unwrap_or(f64::NAN),
+            leverage: opt_vec_to_ptr(result.leverage),
+            dimensions: result.dimensions as c_int,
             error: ptr::null_mut(),
         }
     }
@@ -293,6 +355,7 @@ pub struct CppOnlineLoess {
     builder: LoessBuilder<f64>,
     online_opts: Option<(usize, usize, UpdateMode)>,
     model: Option<ParallelOnlineLoess<f64>>,
+    dimensions: usize,
 }
 
 /// C++ wrapper constructor.
@@ -303,7 +366,6 @@ pub struct CppOnlineLoess {
 pub unsafe extern "C" fn cpp_loess_new(
     fraction: c_double,
     iterations: c_int,
-    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
@@ -320,6 +382,12 @@ pub unsafe extern "C" fn cpp_loess_new(
     cv_method: *const c_char,
     cv_k: c_int,
     parallel: c_int,
+    // LOESS-specific options
+    degree: *const c_char,
+    dimensions: c_int,
+    distance_metric: *const c_char,
+    surface_mode: *const c_char,
+    return_se: c_int,
 ) -> *mut CppLoess {
     let wf_str = parse_c_str(weight_function, "tricube");
     let rm_str = parse_c_str(robustness_method, "bisquare");
@@ -358,9 +426,6 @@ pub unsafe extern "C" fn cpp_loess_new(
     builder = builder.boundary_policy(bp);
     builder = builder.parallel(parallel != 0);
 
-    if !delta.is_nan() {
-        builder = builder.delta(delta);
-    }
     if !confidence_intervals.is_nan() {
         builder = builder.confidence_intervals(confidence_intervals);
     }
@@ -389,6 +454,35 @@ pub unsafe extern "C" fn cpp_loess_new(
     };
 
     let cv_method_str = parse_c_str(cv_method, "kfold").to_string();
+
+    // Apply LOESS-specific options
+    if !degree.is_null() {
+        let deg_str = parse_c_str(degree, "linear");
+        match parse_polynomial_degree(deg_str) {
+            Ok(d) => builder = builder.degree(d),
+            Err(_) => return ptr::null_mut(),
+        }
+    }
+    if dimensions > 0 {
+        builder = builder.dimensions(dimensions as usize);
+    }
+    if !distance_metric.is_null() {
+        let dm_str = parse_c_str(distance_metric, "normalized");
+        match parse_distance_metric(dm_str) {
+            Ok(m) => builder = builder.distance_metric(m),
+            Err(_) => return ptr::null_mut(),
+        }
+    }
+    if !surface_mode.is_null() {
+        let sm_str = parse_c_str(surface_mode, "interpolation");
+        match parse_surface_mode(sm_str) {
+            Ok(s) => builder = builder.surface_mode(s),
+            Err(_) => return ptr::null_mut(),
+        }
+    }
+    if return_se != 0 {
+        builder = builder.return_se();
+    }
 
     Box::into_raw(Box::new(CppLoess {
         builder: Some(builder),
@@ -467,7 +561,6 @@ pub unsafe extern "C" fn cpp_loess_free(ptr: *mut CppLoess) {
 pub unsafe extern "C" fn cpp_streaming_new(
     fraction: c_double,
     iterations: c_int,
-    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
@@ -482,6 +575,12 @@ pub unsafe extern "C" fn cpp_streaming_new(
     chunk_size: c_int,
     overlap: c_int,
     merge_strategy: *const c_char,
+    // LOESS-specific options
+    degree: *const c_char,
+    dimensions: c_int,
+    distance_metric: *const c_char,
+    surface_mode: *const c_char,
+    return_se: c_int,
 ) -> *mut CppStreamingLoess {
     let wf_str = parse_c_str(weight_function, "tricube");
     let rm_str = parse_c_str(robustness_method, "bisquare");
@@ -525,9 +624,6 @@ pub unsafe extern "C" fn cpp_streaming_new(
     builder = builder.boundary_policy(bp);
     builder = builder.parallel(parallel != 0);
 
-    if !delta.is_nan() {
-        builder = builder.delta(delta);
-    }
     if return_diagnostics != 0 {
         builder = builder.return_diagnostics();
     }
@@ -548,6 +644,35 @@ pub unsafe extern "C" fn cpp_streaming_new(
     } else {
         overlap as usize
     };
+
+    // Apply LOESS-specific options
+    if !degree.is_null() {
+        let deg_str = parse_c_str(degree, "linear");
+        match parse_polynomial_degree(deg_str) {
+            Ok(d) => builder = builder.degree(d),
+            Err(_) => return ptr::null_mut(),
+        }
+    }
+    if dimensions > 0 {
+        builder = builder.dimensions(dimensions as usize);
+    }
+    if !distance_metric.is_null() {
+        let dm_str = parse_c_str(distance_metric, "normalized");
+        match parse_distance_metric(dm_str) {
+            Ok(m) => builder = builder.distance_metric(m),
+            Err(_) => return ptr::null_mut(),
+        }
+    }
+    if !surface_mode.is_null() {
+        let sm_str = parse_c_str(surface_mode, "interpolation");
+        match parse_surface_mode(sm_str) {
+            Ok(s) => builder = builder.surface_mode(s),
+            Err(_) => return ptr::null_mut(),
+        }
+    }
+    if return_se != 0 {
+        builder = builder.return_se();
+    }
 
     Box::into_raw(Box::new(CppStreamingLoess {
         builder,
@@ -643,7 +768,6 @@ pub unsafe extern "C" fn cpp_streaming_free(ptr: *mut CppStreamingLoess) {
 pub unsafe extern "C" fn cpp_online_new(
     fraction: c_double,
     iterations: c_int,
-    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
@@ -656,6 +780,12 @@ pub unsafe extern "C" fn cpp_online_new(
     window_capacity: c_int,
     min_points: c_int,
     update_mode: *const c_char,
+    // LOESS-specific options
+    degree: *const c_char,
+    dimensions: c_int,
+    distance_metric: *const c_char,
+    surface_mode: *const c_char,
+    return_se: c_int,
 ) -> *mut CppOnlineLoess {
     let wf_str = parse_c_str(weight_function, "tricube");
     let rm_str = parse_c_str(robustness_method, "bisquare");
@@ -699,9 +829,6 @@ pub unsafe extern "C" fn cpp_online_new(
     builder = builder.boundary_policy(bp);
     builder = builder.parallel(parallel != 0);
 
-    if !delta.is_nan() {
-        builder = builder.delta(delta);
-    }
     if return_robustness_weights != 0 {
         builder = builder.return_robustness_weights();
     }
@@ -709,10 +836,45 @@ pub unsafe extern "C" fn cpp_online_new(
         builder = builder.auto_converge(auto_converge);
     }
 
+    // Apply LOESS-specific options
+    let configured_dimensions = if dimensions > 0 {
+        dimensions as usize
+    } else {
+        1
+    };
+    if dimensions > 0 {
+        builder = builder.dimensions(configured_dimensions);
+    }
+    if !degree.is_null() {
+        let deg_str = parse_c_str(degree, "linear");
+        match parse_polynomial_degree(deg_str) {
+            Ok(d) => builder = builder.degree(d),
+            Err(_) => return ptr::null_mut(),
+        }
+    }
+    if !distance_metric.is_null() {
+        let dm_str = parse_c_str(distance_metric, "normalized");
+        match parse_distance_metric(dm_str) {
+            Ok(m) => builder = builder.distance_metric(m),
+            Err(_) => return ptr::null_mut(),
+        }
+    }
+    if !surface_mode.is_null() {
+        let sm_str = parse_c_str(surface_mode, "interpolation");
+        match parse_surface_mode(sm_str) {
+            Ok(s) => builder = builder.surface_mode(s),
+            Err(_) => return ptr::null_mut(),
+        }
+    }
+    if return_se != 0 {
+        builder = builder.return_se();
+    }
+
     Box::into_raw(Box::new(CppOnlineLoess {
         builder,
         online_opts: Some((window_capacity as usize, min_points as usize, um)),
         model: None,
+        dimensions: configured_dimensions,
     }))
 }
 
@@ -755,22 +917,21 @@ pub unsafe extern "C" fn cpp_online_add_points(
     }
 
     if let Some(model) = &mut loess.model {
-        let outputs = match model.add_points(x_slice, y_slice) {
-            Ok(o) => o,
-            Err(e) => return error_result(&e.to_string()),
-        };
-
-        // Convert PointOutput to LoessResult
-        // Matches Node.js/Python logic
-        let smoothed: Vec<f64> = outputs
-            .iter()
-            .zip(y_slice.iter())
-            .map(|(opt, &orig_y)| opt.as_ref().map_or(orig_y, |o| o.smoothed))
-            .collect();
+        // The new LOESS online API processes one point at a time via add_point.
+        let mut smoothed = Vec::with_capacity(y_slice.len());
+        for (&xi, &yi) in x_slice.iter().zip(y_slice.iter()) {
+            match model.add_point(std::slice::from_ref(&xi), yi) {
+                Ok(output) => smoothed.push(output.as_ref().map_or(yi, |o| o.smoothed)),
+                Err(e) => return error_result(&e.to_string()),
+            }
+        }
 
         let result = LoessResult {
             x: x_slice.to_vec(),
             y: smoothed,
+            dimensions: loess.dimensions,
+            distance_metric: DistanceMetric::Normalized,
+            polynomial_degree: PolynomialDegree::Linear,
             standard_errors: None,
             confidence_lower: None,
             confidence_upper: None,
@@ -782,6 +943,12 @@ pub unsafe extern "C" fn cpp_online_add_points(
             iterations_used: None,
             fraction_used: 0.0,
             cv_scores: None,
+            enp: None,
+            trace_hat: None,
+            delta1: None,
+            delta2: None,
+            residual_scale: None,
+            leverage: None,
         };
         result.into()
     } else {
@@ -840,6 +1007,9 @@ pub unsafe extern "C" fn cpp_loess_free_result(result: *mut CppLoessResult) {
     }
     if !r.robustness_weights.is_null() {
         let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.robustness_weights, n));
+    }
+    if !r.leverage.is_null() {
+        let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(r.leverage, n));
     }
 
     // Free error string

@@ -101,11 +101,10 @@ private:
 struct LoessOptions {
   double fraction = detail::k_default_fraction; ///< Smoothing fraction (0, 1]
   int iterations = 3;                           ///< Robustness iterations
-  double delta = NAN; ///< Interpolation threshold (NaN = auto)
 
   std::string weight_function = "tricube";
   std::string robustness_method = "bisquare";
-  std::string scaling_method = "mad";
+  std::string scaling_method = "mad"; ///< mad, mar
   std::string boundary_policy = "extend";
   std::string zero_weight_fallback = "use_local_mean";
 
@@ -116,7 +115,16 @@ struct LoessOptions {
   bool return_diagnostics = false;
   bool return_residuals = false;
   bool return_robustness_weights = false;
+  bool return_se = false; ///< Compute standard errors and hat-matrix statistics
   bool parallel = false;
+
+  // LOESS-specific options
+  std::string degree =
+      "linear";       ///< constant, linear, quadratic, cubic, quartic
+  int dimensions = 1; ///< Number of predictor dimensions
+  std::string distance_metric =
+      "normalized"; ///< euclidean, normalized, manhattan, chebyshev
+  std::string surface_mode = "interpolation"; ///< direct, interpolation
 
   // Cross-validation options
   std::vector<double> cv_fractions;
@@ -307,6 +315,33 @@ public:
   /// Number of iterations performed (-1 if not available)
   int iterationsUsed() const { return result_.iterations_used; }
 
+  /// Number of predictor dimensions used
+  int dimensions() const { return result_.dimensions; }
+
+  /// Equivalent number of parameters / ENP (NaN if not computed)
+  double enp() const { return result_.enp; }
+
+  /// Trace of hat matrix (NaN if not computed)
+  double traceHat() const { return result_.trace_hat; }
+
+  /// Delta1 for SE/CI computation (NaN if not computed)
+  double delta1() const { return result_.delta1; }
+
+  /// Delta2 for SE/CI computation (NaN if not computed)
+  double delta2() const { return result_.delta2; }
+
+  /// Residual scale estimate (NaN if not computed)
+  double residualScale() const { return result_.residual_scale; }
+
+  /// Per-point leverage / hat-matrix diagonal (empty if not computed)
+  std::vector<double> leverage() const {
+    if (result_.leverage != nullptr) {
+      return std::vector<double>(result_.leverage,
+                                 result_.leverage + result_.n);
+    }
+    return {};
+  }
+
   /// Get diagnostics
   Diagnostics diagnostics() const { return Diagnostics(result_); }
 
@@ -321,16 +356,19 @@ class Loess {
 public:
   explicit Loess(const LoessOptions &options = {}) {
     ptr_ = cpp_loess_new(
-        options.fraction, options.iterations, options.delta,
-        options.weight_function.c_str(), options.robustness_method.c_str(),
-        options.scaling_method.c_str(), options.boundary_policy.c_str(),
-        options.confidence_intervals, options.prediction_intervals,
-        options.return_diagnostics ? 1 : 0, options.return_residuals ? 1 : 0,
+        options.fraction, options.iterations, options.weight_function.c_str(),
+        options.robustness_method.c_str(), options.scaling_method.c_str(),
+        options.boundary_policy.c_str(), options.confidence_intervals,
+        options.prediction_intervals, options.return_diagnostics ? 1 : 0,
+        options.return_residuals ? 1 : 0,
         options.return_robustness_weights ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.cv_fractions.empty() ? nullptr : options.cv_fractions.data(),
         static_cast<unsigned long>(options.cv_fractions.size()),
-        options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0);
+        options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0,
+        options.degree.c_str(), options.dimensions,
+        options.distance_metric.c_str(), options.surface_mode.c_str(),
+        options.return_se ? 1 : 0);
   }
 
   ~Loess() {
@@ -390,14 +428,16 @@ class StreamingLoess {
 public:
   explicit StreamingLoess(const StreamingOptions &options = {}) {
     ptr_ = cpp_streaming_new(
-        options.fraction, options.iterations, options.delta,
-        options.weight_function.c_str(), options.robustness_method.c_str(),
-        options.scaling_method.c_str(), options.boundary_policy.c_str(),
-        options.return_diagnostics ? 1 : 0, options.return_residuals ? 1 : 0,
+        options.fraction, options.iterations, options.weight_function.c_str(),
+        options.robustness_method.c_str(), options.scaling_method.c_str(),
+        options.boundary_policy.c_str(), options.return_diagnostics ? 1 : 0,
+        options.return_residuals ? 1 : 0,
         options.return_robustness_weights ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.parallel ? 1 : 0, options.chunk_size, options.overlap,
-        options.merge_strategy.c_str());
+        options.merge_strategy.c_str(), options.degree.c_str(),
+        options.dimensions, options.distance_metric.c_str(),
+        options.surface_mode.c_str(), options.return_se ? 1 : 0);
   }
 
   ~StreamingLoess() {
@@ -470,13 +510,15 @@ class OnlineLoess {
 public:
   explicit OnlineLoess(const OnlineOptions &options = {}) {
     ptr_ = cpp_online_new(
-        options.fraction, options.iterations, options.delta,
-        options.weight_function.c_str(), options.robustness_method.c_str(),
-        options.scaling_method.c_str(), options.boundary_policy.c_str(),
+        options.fraction, options.iterations, options.weight_function.c_str(),
+        options.robustness_method.c_str(), options.scaling_method.c_str(),
+        options.boundary_policy.c_str(),
         options.return_robustness_weights ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.parallel ? 1 : 0, options.window_capacity, options.min_points,
-        options.update_mode.c_str());
+        options.update_mode.c_str(), options.degree.c_str(), options.dimensions,
+        options.distance_metric.c_str(), options.surface_mode.c_str(),
+        options.return_se ? 1 : 0);
   }
 
   ~OnlineLoess() {
