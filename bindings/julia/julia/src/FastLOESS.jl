@@ -138,6 +138,13 @@ Result from LOESS smoothing.
 - `fraction_used::Float64`: Fraction used for smoothing
 - `iterations_used::Int`: Number of iterations performed (-1 if not available)
 - `diagnostics::Union{Diagnostics, Nothing}`: Diagnostic metrics
+- `enp::Union{Float64, Nothing}`: Equivalent number of parameters
+- `trace_hat::Union{Float64, Nothing}`: Trace of hat matrix
+- `delta1::Union{Float64, Nothing}`: First delta statistic
+- `delta2::Union{Float64, Nothing}`: Second delta statistic
+- `residual_scale::Union{Float64, Nothing}`: Residual scale estimate
+- `leverage::Union{Vector{Float64}, Nothing}`: Per-point leverage (hat matrix diagonal)
+- `dimensions::Int`: Number of predictor dimensions
 """
 struct LoessResult
 	x::Vector{Float64}
@@ -152,6 +159,13 @@ struct LoessResult
 	fraction_used::Float64
 	iterations_used::Int
 	diagnostics::Union{Diagnostics, Nothing}
+	enp::Union{Float64, Nothing}
+	trace_hat::Union{Float64, Nothing}
+	delta1::Union{Float64, Nothing}
+	delta2::Union{Float64, Nothing}
+	residual_scale::Union{Float64, Nothing}
+	leverage::Union{Vector{Float64}, Nothing}
+	dimensions::Int
 end
 
 # C FFI result struct (must match Rust definition)
@@ -175,6 +189,13 @@ struct CJlLoessResult
 	aicc::Cdouble
 	effective_df::Cdouble
 	residual_sd::Cdouble
+	enp::Cdouble
+	trace_hat::Cdouble
+	delta1::Cdouble
+	delta2::Cdouble
+	residual_scale::Cdouble
+	leverage::Ptr{Cdouble}
+	dimensions::Cint
 	error::Ptr{Cchar}
 end
 
@@ -213,6 +234,14 @@ function convert_result(c_result::CJlLoessResult)
 	residuals = ptr_to_vector(c_result.residuals, n)
 	robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
 
+	# Extract hat-matrix statistics
+	enp = isnan(c_result.enp) ? nothing : c_result.enp
+	trace_hat = isnan(c_result.trace_hat) ? nothing : c_result.trace_hat
+	delta1 = isnan(c_result.delta1) ? nothing : c_result.delta1
+	delta2 = isnan(c_result.delta2) ? nothing : c_result.delta2
+	residual_scale = isnan(c_result.residual_scale) ? nothing : c_result.residual_scale
+	leverage = ptr_to_vector(c_result.leverage, n)
+
 	# Extract diagnostics
 	diagnostics = if !isnan(c_result.rmse)
 		Diagnostics(
@@ -241,6 +270,13 @@ function convert_result(c_result::CJlLoessResult)
 		c_result.fraction_used,
 		Int(c_result.iterations_used),
 		diagnostics,
+		enp,
+		trace_hat,
+		delta1,
+		delta2,
+		residual_scale,
+		leverage,
+		Int(c_result.dimensions),
 	)
 
 	# Free the C result
@@ -296,7 +332,6 @@ Stateful batch LOESS smoother.
 # Keyword Arguments
 - `fraction::Float64 = 0.67`: Smoothing fraction (proportion of data used for each fit)
 - `iterations::Int = 3`: Number of robustness iterations
-- `delta::Float64 = NaN`: Interpolation optimization threshold (NaN for auto)
 - `weight_function::String = "tricube"`: Kernel function
 - `robustness_method::String = "bisquare"`: Robustness method
 - `scaling_method::String = "mad"`: Scaling method for robustness
@@ -312,6 +347,11 @@ Stateful batch LOESS smoother.
 - `cv_method::String = "kfold"`: CV method ("loocv" or "kfold")
 - `cv_k::Int = 5`: Number of folds for k-fold CV
 - `parallel::Bool = true`: Enable parallel execution
+- `degree::String = "linear"`: Polynomial degree ("constant", "linear", "quadratic", etc.)
+- `dimensions::Int = 1`: Number of predictor dimensions
+- `distance_metric::String = "normalized"`: Distance metric ("normalized", "euclidean", etc.)
+- `surface_mode::String = "interpolation"`: Surface mode ("interpolation" or "direct")
+- `return_se::Bool = false`: Whether to compute hat-matrix statistics (enp, trace_hat, etc.)
 
 # Example
 ```julia
@@ -325,7 +365,6 @@ mutable struct Loess
 	function Loess(;
 		fraction::Float64 = 0.67,
 		iterations::Int = 3,
-		delta::Float64 = NaN,
 		weight_function::String = "tricube",
 		robustness_method::String = "bisquare",
 		scaling_method::String = "mad",
@@ -341,6 +380,11 @@ mutable struct Loess
 		cv_method::String = "kfold",
 		cv_k::Int = 5,
 		parallel::Bool = true,
+		degree::String = "linear",
+		dimensions::Int = 1,
+		distance_metric::String = "normalized",
+		surface_mode::String = "interpolation",
+		return_se::Bool = false,
 	)
 		cv_ptr = isempty(cv_fractions) ? C_NULL : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
@@ -348,7 +392,6 @@ mutable struct Loess
 		handle = @ccall libfastloess.jl_loess_new(
 			fraction::Cdouble,
 			Cint(iterations)::Cint,
-			delta::Cdouble,
 			weight_function::Cstring,
 			robustness_method::Cstring,
 			scaling_method::Cstring,
@@ -365,6 +408,11 @@ mutable struct Loess
 			cv_method::Cstring,
 			Cint(cv_k)::Cint,
 			Cint(parallel)::Cint,
+			degree::Cstring,
+			Cint(dimensions)::Cint,
+			distance_metric::Cstring,
+			surface_mode::Cstring,
+			Cint(return_se)::Cint,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -408,7 +456,6 @@ Stateful streaming LOESS smoother.
 - `chunk_size::Int = 5000`: Size of each processing chunk
 - `overlap::Int = -1`: Overlap between chunks (-1 for auto = 10% of chunk_size)
 - `iterations::Int = 3`: Number of robustness iterations
-- `delta::Float64 = NaN`: Interpolation threshold
 - `weight_function::String = "tricube"`: Kernel function
 - `robustness_method::String = "bisquare"`: Robustness method
 - `scaling_method::String = "mad"`: Scaling method
@@ -419,6 +466,11 @@ Stateful streaming LOESS smoother.
 - `return_robustness_weights::Bool = false`: Include weights
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling
 - `parallel::Bool = true`: Enable parallel execution
+- `degree::String = "linear"`: Polynomial degree
+- `dimensions::Int = 1`: Number of predictor dimensions
+- `distance_metric::String = "normalized"`: Distance metric
+- `surface_mode::String = "interpolation"`: Surface mode
+- `return_se::Bool = false`: Compute hat-matrix statistics
 """
 mutable struct StreamingLoess
 	handle::Ptr{Cvoid}
@@ -428,7 +480,6 @@ mutable struct StreamingLoess
 		chunk_size::Int = 5000,
 		overlap::Int = -1,
 		iterations::Int = 3,
-		delta::Float64 = NaN,
 		weight_function::String = "tricube",
 		robustness_method::String = "bisquare",
 		scaling_method::String = "mad",
@@ -439,13 +490,17 @@ mutable struct StreamingLoess
 		return_robustness_weights::Bool = false,
 		zero_weight_fallback::String = "use_local_mean",
 		parallel::Bool = true,
+		degree::String = "linear",
+		dimensions::Int = 1,
+		distance_metric::String = "normalized",
+		surface_mode::String = "interpolation",
+		return_se::Bool = false,
 	)
 		handle = @ccall libfastloess.jl_streaming_loess_new(
 			fraction::Cdouble,
 			Cint(chunk_size)::Cint,
 			Cint(overlap)::Cint,
 			Cint(iterations)::Cint,
-			delta::Cdouble,
 			weight_function::Cstring,
 			robustness_method::Cstring,
 			scaling_method::Cstring,
@@ -456,6 +511,11 @@ mutable struct StreamingLoess
 			Cint(return_robustness_weights)::Cint,
 			zero_weight_fallback::Cstring,
 			Cint(parallel)::Cint,
+			degree::Cstring,
+			Cint(dimensions)::Cint,
+			distance_metric::Cstring,
+			surface_mode::Cstring,
+			Cint(return_se)::Cint,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -515,7 +575,6 @@ Stateful online LOESS smoother.
 - `window_capacity::Int = 100`: Maximum points to retain in window
 - `min_points::Int = 2`: Minimum points before smoothing starts
 - `iterations::Int = 3`: Number of robustness iterations
-- `delta::Float64 = NaN`: Interpolation threshold
 - `weight_function::String = "tricube"`: Kernel function
 - `robustness_method::String = "bisquare"`: Robustness method
 - `scaling_method::String = "mad"`: Scaling method
@@ -525,6 +584,11 @@ Stateful online LOESS smoother.
 - `return_robustness_weights::Bool = false`: Include weights
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling
 - `parallel::Bool = false`: Enable parallel execution
+- `degree::String = "linear"`: Polynomial degree
+- `dimensions::Int = 1`: Number of predictor dimensions
+- `distance_metric::String = "normalized"`: Distance metric
+- `surface_mode::String = "interpolation"`: Surface mode
+- `return_se::Bool = false`: Compute hat-matrix statistics
 """
 mutable struct OnlineLoess
 	handle::Ptr{Cvoid}
@@ -534,7 +598,6 @@ mutable struct OnlineLoess
 		window_capacity::Int = 100,
 		min_points::Int = 2,
 		iterations::Int = 3,
-		delta::Float64 = NaN,
 		weight_function::String = "tricube",
 		robustness_method::String = "bisquare",
 		scaling_method::String = "mad",
@@ -544,13 +607,17 @@ mutable struct OnlineLoess
 		return_robustness_weights::Bool = false,
 		zero_weight_fallback::String = "use_local_mean",
 		parallel::Bool = false,
+		degree::String = "linear",
+		dimensions::Int = 1,
+		distance_metric::String = "normalized",
+		surface_mode::String = "interpolation",
+		return_se::Bool = false,
 	)
 		handle = @ccall libfastloess.jl_online_loess_new(
 			fraction::Cdouble,
 			Cint(window_capacity)::Cint,
 			Cint(min_points)::Cint,
 			Cint(iterations)::Cint,
-			delta::Cdouble,
 			weight_function::Cstring,
 			robustness_method::Cstring,
 			scaling_method::Cstring,
@@ -560,6 +627,11 @@ mutable struct OnlineLoess
 			Cint(return_robustness_weights)::Cint,
 			zero_weight_fallback::Cstring,
 			Cint(parallel)::Cint,
+			degree::Cstring,
+			Cint(dimensions)::Cint,
+			distance_metric::Cstring,
+			surface_mode::Cstring,
+			Cint(return_se)::Cint,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL

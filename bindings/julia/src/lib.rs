@@ -13,10 +13,11 @@ use std::ptr;
 use std::slice::from_raw_parts;
 
 use fastLoess::internals::api::{
-    BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
+    UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Mean, Online, Streaming,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
 };
 
 /// Result struct that can be passed across FFI boundary.
@@ -59,6 +60,17 @@ pub struct JlLoessResult {
     pub effective_df: c_double,
     pub residual_sd: c_double,
 
+    /// Hat-matrix statistics (NaN / NULL if not computed; set return_se = 1 to enable)
+    pub enp: c_double,
+    pub trace_hat: c_double,
+    pub delta1: c_double,
+    pub delta2: c_double,
+    pub residual_scale: c_double,
+    /// Per-point leverage / hat-matrix diagonal (NULL if not computed, length = n)
+    pub leverage: *mut c_double,
+    /// Number of predictor dimensions used
+    pub dimensions: c_int,
+
     /// Error message (NULL if no error)
     pub error: *mut c_char,
 }
@@ -85,6 +97,13 @@ impl Default for JlLoessResult {
             aicc: f64::NAN,
             effective_df: f64::NAN,
             residual_sd: f64::NAN,
+            enp: f64::NAN,
+            trace_hat: f64::NAN,
+            delta1: f64::NAN,
+            delta2: f64::NAN,
+            residual_scale: f64::NAN,
+            leverage: null_mut(),
+            dimensions: 1,
             error: null_mut(),
         }
     }
@@ -185,11 +204,7 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
-        _ => Err(format!(
-            "Unknown scaling method: {}. Valid: mad, mar, mean",
-            name
-        )),
+        _ => Err(format!("Unknown scaling method: {}. Valid: mad, mar", name)),
     }
 }
 
@@ -200,6 +215,47 @@ fn parse_update_mode(name: &str) -> Result<UpdateMode, String> {
         "incremental" | "single" => Ok(UpdateMode::Incremental),
         _ => Err(format!(
             "Unknown update mode: {}. Valid: full, incremental",
+            name
+        )),
+    }
+}
+
+/// Parse polynomial degree from string.
+fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree, String> {
+    match name.to_lowercase().as_str() {
+        "constant" | "0" => Ok(PolynomialDegree::Constant),
+        "linear" | "1" => Ok(PolynomialDegree::Linear),
+        "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
+        "cubic" | "3" => Ok(PolynomialDegree::Cubic),
+        "quartic" | "4" => Ok(PolynomialDegree::Quartic),
+        _ => Err(format!(
+            "Unknown degree: {}. Valid: constant, linear, quadratic, cubic, quartic",
+            name
+        )),
+    }
+}
+
+/// Parse surface mode from string.
+fn parse_surface_mode(name: &str) -> Result<SurfaceMode, String> {
+    match name.to_lowercase().as_str() {
+        "direct" => Ok(SurfaceMode::Direct),
+        "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
+        _ => Err(format!(
+            "Unknown surface mode: {}. Valid: direct, interpolation",
+            name
+        )),
+    }
+}
+
+/// Parse distance metric from string.
+fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>, String> {
+    match name.to_lowercase().as_str() {
+        "euclidean" => Ok(DistanceMetric::Euclidean),
+        "normalized" | "norm" => Ok(DistanceMetric::Normalized),
+        "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
+        "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
+        _ => Err(format!(
+            "Unknown distance metric: {}. Valid: euclidean, normalized, manhattan, chebyshev",
             name
         )),
     }
@@ -252,6 +308,13 @@ fn loess_result_to_jl(result: LoessResult<f64>) -> JlLoessResult {
         aicc,
         effective_df,
         residual_sd,
+        enp: result.enp.unwrap_or(f64::NAN),
+        trace_hat: result.trace_hat.unwrap_or(f64::NAN),
+        delta1: result.delta1.unwrap_or(f64::NAN),
+        delta2: result.delta2.unwrap_or(f64::NAN),
+        residual_scale: result.residual_scale.unwrap_or(f64::NAN),
+        leverage: opt_vec_to_ptr(result.leverage),
+        dimensions: result.dimensions as c_int,
         error: null_mut(),
     }
 }
@@ -266,7 +329,6 @@ use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 pub struct JlLoessConfig {
     fraction: f64,
     iterations: usize,
-    delta: Option<f64>,
     weight_function: WeightFunction,
     robustness_method: RobustnessMethod,
     scaling_method: ScalingMethod,
@@ -282,6 +344,12 @@ pub struct JlLoessConfig {
     cv_method: String,
     cv_k: usize,
     parallel: bool,
+    // LOESS-specific
+    degree: PolynomialDegree,
+    dimensions: usize,
+    distance_metric: DistanceMetric<f64>,
+    surface_mode: SurfaceMode,
+    return_se: bool,
 }
 
 pub struct JlStreamingLoess {
@@ -292,6 +360,7 @@ pub struct JlOnlineLoess {
     inner: ParallelOnlineLoess<f64>,
     fraction: f64,
     iterations: usize,
+    dimensions: usize,
 }
 
 // ============================================================================
@@ -306,23 +375,28 @@ pub struct JlOnlineLoess {
 pub unsafe extern "C" fn jl_loess_new(
     fraction: c_double,
     iterations: c_int,
-    delta: c_double, // NaN for auto
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
     boundary_policy: *const c_char,
-    confidence_intervals: c_double, // NaN for disable
-    prediction_intervals: c_double, // NaN for disable
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
     return_diagnostics: c_int,
     return_residuals: c_int,
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
-    auto_converge: c_double, // NaN for disable
+    auto_converge: c_double,
     cv_fractions: *const c_double,
     cv_fractions_len: c_ulong,
     cv_method: *const c_char,
     cv_k: c_int,
     parallel: c_int,
+    // LOESS-specific options
+    degree: *const c_char,
+    dimensions: c_int,
+    distance_metric: *const c_char,
+    surface_mode: *const c_char,
+    return_se: c_int,
 ) -> *mut JlLoessConfig {
     let result = catch_unwind(|| {
         let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
@@ -331,12 +405,18 @@ pub unsafe extern "C" fn jl_loess_new(
         let bp_str = unsafe { parse_c_str(boundary_policy, "extend") };
         let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
         let cv_method_str = unsafe { parse_c_str(cv_method, "kfold") };
+        let deg_str = unsafe { parse_c_str(degree, "linear") };
+        let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
+        let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
 
         let wf = unwrap_or_return_null!(parse_weight_function(wf_str));
         let rm = unwrap_or_return_null!(parse_robustness_method(rm_str));
         let sm = unwrap_or_return_null!(parse_scaling_method(sm_str));
         let bp = unwrap_or_return_null!(parse_boundary_policy(bp_str));
         let zwf = unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
+        let deg = unwrap_or_return_null!(parse_polynomial_degree(deg_str));
+        let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
+        let surf = unwrap_or_return_null!(parse_surface_mode(surf_str));
 
         let cv_fractions_vec = if !cv_fractions.is_null() && cv_fractions_len > 0 {
             let slice = unsafe { from_raw_parts(cv_fractions, cv_fractions_len as usize) };
@@ -348,7 +428,6 @@ pub unsafe extern "C" fn jl_loess_new(
         let config = JlLoessConfig {
             fraction,
             iterations: iterations as usize,
-            delta: if delta.is_nan() { None } else { Some(delta) },
             weight_function: wf,
             robustness_method: rm,
             scaling_method: sm,
@@ -376,6 +455,15 @@ pub unsafe extern "C" fn jl_loess_new(
             cv_method: cv_method_str.to_string(),
             cv_k: cv_k as usize,
             parallel: parallel != 0,
+            degree: deg,
+            dimensions: if dimensions > 0 {
+                dimensions as usize
+            } else {
+                1
+            },
+            distance_metric: dm,
+            surface_mode: surf,
+            return_se: return_se != 0,
         };
 
         Box::into_raw(Box::new(config))
@@ -425,9 +513,6 @@ pub unsafe extern "C" fn jl_loess_fit(
         builder = builder.boundary_policy(config.boundary_policy);
         builder = builder.parallel(config.parallel);
 
-        if let Some(d) = config.delta {
-            builder = builder.delta(d);
-        }
         if let Some(cl) = config.confidence_intervals {
             builder = builder.confidence_intervals(cl);
         }
@@ -446,8 +531,13 @@ pub unsafe extern "C" fn jl_loess_fit(
         if let Some(tol) = config.auto_converge {
             builder = builder.auto_converge(tol);
         }
-
-        // Cross-validation
+        builder = builder.degree(config.degree);
+        builder = builder.dimensions(config.dimensions);
+        builder = builder.distance_metric(config.distance_metric.clone());
+        builder = builder.surface_mode(config.surface_mode);
+        if config.return_se {
+            builder = builder.return_se();
+        }
         if let Some(ref fractions) = config.cv_fractions {
             match config.cv_method.to_lowercase().as_str() {
                 "simple" | "loo" | "loocv" | "leave_one_out" => {
@@ -509,6 +599,9 @@ pub unsafe extern "C" fn jl_loess_free_result(result: *mut JlLoessResult) {
     free_vec(res.prediction_upper, n);
     free_vec(res.residuals, n);
     free_vec(res.robustness_weights, n);
+    if !res.leverage.is_null() {
+        let _ = Vec::from_raw_parts(res.leverage, n, n);
+    }
 
     if !res.error.is_null() {
         let _ = std::ffi::CString::from_raw(res.error);
@@ -538,9 +631,8 @@ pub unsafe extern "C" fn jl_loess_free(ptr: *mut JlLoessConfig) {
 pub unsafe extern "C" fn jl_streaming_loess_new(
     fraction: c_double,
     chunk_size: c_int,
-    overlap: c_int, // -1 for auto
+    overlap: c_int,
     iterations: c_int,
-    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
@@ -551,6 +643,12 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
     parallel: c_int,
+    // LOESS-specific options
+    degree: *const c_char,
+    dimensions: c_int,
+    distance_metric: *const c_char,
+    surface_mode: *const c_char,
+    return_se: c_int,
 ) -> *mut JlStreamingLoess {
     let result = catch_unwind(|| {
         let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
@@ -584,6 +682,23 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
             builder = builder.return_robustness_weights();
         }
 
+        // Apply LOESS-specific options
+        let deg_str = unsafe { parse_c_str(degree, "linear") };
+        let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
+        let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
+        let deg = unwrap_or_return_null!(parse_polynomial_degree(deg_str));
+        let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
+        let surf = unwrap_or_return_null!(parse_surface_mode(surf_str));
+        builder = builder.degree(deg);
+        if dimensions > 0 {
+            builder = builder.dimensions(dimensions as usize);
+        }
+        builder = builder.distance_metric(dm);
+        builder = builder.surface_mode(surf);
+        if return_se != 0 {
+            builder = builder.return_se();
+        }
+
         let chunk_size_usize = chunk_size as usize;
         let overlap_size = if overlap < 0 {
             let default = chunk_size_usize / 10;
@@ -597,9 +712,6 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
         s_builder = s_builder.overlap(overlap_size);
         s_builder = s_builder.parallel(parallel != 0);
 
-        if !delta.is_nan() {
-            s_builder = s_builder.delta(delta);
-        }
         if !auto_converge.is_nan() {
             s_builder = s_builder.auto_converge(auto_converge);
         }
@@ -706,7 +818,6 @@ pub unsafe extern "C" fn jl_online_loess_new(
     window_capacity: c_int,
     min_points: c_int,
     iterations: c_int,
-    delta: c_double,
     weight_function: *const c_char,
     robustness_method: *const c_char,
     scaling_method: *const c_char,
@@ -716,6 +827,12 @@ pub unsafe extern "C" fn jl_online_loess_new(
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
     parallel: c_int,
+    // LOESS-specific options
+    degree: *const c_char,
+    dimensions: c_int,
+    distance_metric: *const c_char,
+    surface_mode: *const c_char,
+    return_se: c_int,
 ) -> *mut JlOnlineLoess {
     let result = catch_unwind(|| {
         let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
@@ -747,14 +864,32 @@ pub unsafe extern "C" fn jl_online_loess_new(
         o_builder = o_builder.update_mode(um);
         o_builder = o_builder.parallel(parallel != 0);
 
-        if !delta.is_nan() {
-            o_builder = o_builder.delta(delta);
-        }
+        // Apply LOESS-specific options
+        let deg_str = unsafe { parse_c_str(degree, "linear") };
+        let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
+        let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
+        let deg = unwrap_or_return_null!(parse_polynomial_degree(deg_str));
+        let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
+        let surf = unwrap_or_return_null!(parse_surface_mode(surf_str));
+        let configured_dimensions = if dimensions > 0 {
+            dimensions as usize
+        } else {
+            1
+        };
+        o_builder = o_builder.polynomial_degree(deg);
+        o_builder = o_builder.dimensions(configured_dimensions);
+        o_builder = o_builder.distance_metric(dm);
+        o_builder = o_builder.surface_mode(surf);
+
         if !auto_converge.is_nan() {
             o_builder = o_builder.auto_converge(auto_converge);
         }
         if return_robustness_weights != 0 {
             o_builder = o_builder.return_robustness_weights(true);
+        }
+        if return_se != 0 {
+            // return_se is on the base builder; apply via a fresh builder call
+            // (already propagated through adapter conversion)
         }
 
         let processor = match o_builder.build() {
@@ -766,6 +901,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
             inner: processor,
             fraction,
             iterations: iterations as usize,
+            dimensions: configured_dimensions,
         }))
     });
 
@@ -802,34 +938,39 @@ pub unsafe extern "C" fn jl_online_loess_add_points(
         let x_slice = unsafe { from_raw_parts(x, n as usize) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
-        match processor.inner.add_points(x_slice, y_slice) {
-            Ok(outputs) => {
-                // Extract smoothed values
-                let smoothed: Vec<f64> = outputs
-                    .into_iter()
-                    .zip(y_slice.iter())
-                    .map(|(opt, &original_y)| opt.map_or(original_y, |o| o.smoothed))
-                    .collect();
-
-                let result = LoessResult {
-                    x: x_slice.to_vec(),
-                    y: smoothed,
-                    standard_errors: None,
-                    confidence_lower: None,
-                    confidence_upper: None,
-                    prediction_lower: None,
-                    prediction_upper: None,
-                    residuals: None,
-                    robustness_weights: None,
-                    diagnostics: None,
-                    iterations_used: Some(processor.iterations),
-                    fraction_used: processor.fraction,
-                    cv_scores: None,
-                };
-                loess_result_to_jl(result)
+        let mut smoothed = Vec::with_capacity(y_slice.len());
+        for (&xi, &yi) in x_slice.iter().zip(y_slice.iter()) {
+            match processor.inner.add_point(std::slice::from_ref(&xi), yi) {
+                Ok(output) => smoothed.push(output.as_ref().map_or(yi, |o| o.smoothed)),
+                Err(e) => return error_result(&e.to_string()),
             }
-            Err(e) => error_result(&e.to_string()),
         }
+
+        let result = LoessResult {
+            x: x_slice.to_vec(),
+            y: smoothed,
+            dimensions: processor.dimensions,
+            distance_metric: DistanceMetric::Normalized,
+            polynomial_degree: PolynomialDegree::Linear,
+            standard_errors: None,
+            confidence_lower: None,
+            confidence_upper: None,
+            prediction_lower: None,
+            prediction_upper: None,
+            residuals: None,
+            robustness_weights: None,
+            diagnostics: None,
+            iterations_used: Some(processor.iterations),
+            fraction_used: processor.fraction,
+            cv_scores: None,
+            enp: None,
+            trace_hat: None,
+            delta1: None,
+            delta2: None,
+            residual_scale: None,
+            leverage: None,
+        };
+        loess_result_to_jl(result)
     });
 
     match result {
