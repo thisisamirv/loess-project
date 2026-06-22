@@ -10,12 +10,12 @@
 use extendr_api::prelude::*;
 
 use fastLoess::internals::api::{
-    BoundaryPolicy, RobustnessMethod,
-    ScalingMethod::{self, MAD, MAR, Mean},
-    UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod,
+    ScalingMethod::{self, MAD, MAR},
+    SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, Online, Streaming,
+    Batch, KFold, Loess as LoessBuilder, LoessResult, Online, Streaming, LOOCV,
 };
 
 // ============================================================================
@@ -84,11 +84,42 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
         _ => Err(Error::Other(format!(
-            "Unknown scaling method: {}. Valid options: mad, mar, mean",
+            "Unknown scaling method: {}. Valid options: mad, mar",
             name
         ))),
+    }
+}
+
+/// Parse polynomial degree from string
+fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree> {
+    match name.to_lowercase().as_str() {
+        "constant" | "0" => Ok(PolynomialDegree::Constant),
+        "linear" | "1" => Ok(PolynomialDegree::Linear),
+        "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
+        "cubic" | "3" => Ok(PolynomialDegree::Cubic),
+        "quartic" | "4" => Ok(PolynomialDegree::Quartic),
+        _ => Err(Error::Other(format!("Unknown polynomial degree: {}", name))),
+    }
+}
+
+/// Parse distance metric from string
+fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
+    match name.to_lowercase().as_str() {
+        "normalized" | "norm" => Ok(DistanceMetric::Normalized),
+        "euclidean" | "euclid" => Ok(DistanceMetric::Euclidean),
+        "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
+        "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
+        _ => Err(Error::Other(format!("Unknown distance metric: {}", name))),
+    }
+}
+
+/// Parse surface mode from string
+fn parse_surface_mode(name: &str) -> Result<SurfaceMode> {
+    match name.to_lowercase().as_str() {
+        "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
+        "direct" => Ok(SurfaceMode::Direct),
+        _ => Err(Error::Other(format!("Unknown surface mode: {}", name))),
     }
 }
 
@@ -121,7 +152,6 @@ impl RLoess {
     fn new(
         fraction: f64,
         iterations: i32,
-        delta: Nullable<f64>,
         weight_function: &str,
         robustness_method: &str,
         scaling_method: &str,
@@ -137,6 +167,11 @@ impl RLoess {
         cv_method: &str,
         cv_k: i32,
         parallel: bool,
+        degree: &str,
+        dimensions: i32,
+        distance_metric: &str,
+        surface_mode: &str,
+        return_se: bool,
     ) -> Result<Self> {
         let wf = parse_weight_function(weight_function)?;
         let rm = parse_robustness_method(robustness_method)?;
@@ -153,9 +188,6 @@ impl RLoess {
         builder = builder.zero_weight_fallback(zwf);
         builder = builder.boundary_policy(bp);
 
-        if let NotNull(d) = delta {
-            builder = builder.delta(d);
-        }
         if let NotNull(cl) = confidence_intervals {
             builder = builder.confidence_intervals(cl);
         }
@@ -173,6 +205,17 @@ impl RLoess {
         }
         if let NotNull(tol) = auto_converge {
             builder = builder.auto_converge(tol);
+        }
+
+        let deg = parse_polynomial_degree(degree)?;
+        let dm = parse_distance_metric(distance_metric)?;
+        let surf = parse_surface_mode(surface_mode)?;
+        builder = builder.degree(deg);
+        builder = builder.dimensions(dimensions as usize);
+        builder = builder.distance_metric(dm);
+        builder = builder.surface_mode(surf);
+        if return_se {
+            builder = builder.return_se();
         }
 
         // Cross-validation if fractions are provided
@@ -231,7 +274,6 @@ impl RStreamingLoess {
         chunk_size: i32,
         overlap: Nullable<i32>,
         iterations: i32,
-        delta: Nullable<f64>,
         weight_function: &str,
         robustness_method: &str,
         scaling_method: &str,
@@ -240,6 +282,11 @@ impl RStreamingLoess {
         return_diagnostics: bool,
         return_robustness_weights: bool,
         parallel: bool,
+        degree: &str,
+        dimensions: i32,
+        distance_metric: &str,
+        surface_mode: &str,
+        return_se: bool,
     ) -> Result<Self> {
         let chunk_size = chunk_size as usize;
         let overlap_size = match overlap {
@@ -260,25 +307,33 @@ impl RStreamingLoess {
         builder = builder.scaling_method(sm);
         builder = builder.boundary_policy(bp);
 
-        let mut builder = builder.adapter(Streaming);
-        builder = builder.chunk_size(chunk_size);
-        builder = builder.overlap(overlap_size);
-        builder = builder.parallel(parallel);
-
-        if let NotNull(d) = delta {
-            builder = builder.delta(d);
+        let deg = parse_polynomial_degree(degree)?;
+        let dm = parse_distance_metric(distance_metric)?;
+        let surf = parse_surface_mode(surface_mode)?;
+        builder = builder.degree(deg);
+        builder = builder.dimensions(dimensions as usize);
+        builder = builder.distance_metric(dm);
+        builder = builder.surface_mode(surf);
+        if return_se {
+            builder = builder.return_se();
         }
+
+        let mut s_builder = builder.adapter(Streaming);
+        s_builder = s_builder.chunk_size(chunk_size);
+        s_builder = s_builder.overlap(overlap_size);
+        s_builder = s_builder.parallel(parallel);
+
         if let NotNull(tol) = auto_converge {
-            builder = builder.auto_converge(tol);
+            s_builder = s_builder.auto_converge(tol);
         }
         if return_diagnostics {
-            builder = builder.return_diagnostics(true);
+            s_builder = s_builder.return_diagnostics(true);
         }
         if return_robustness_weights {
-            builder = builder.return_robustness_weights(true);
+            s_builder = s_builder.return_robustness_weights(true);
         }
 
-        let model = builder.build().map_err(|e| Error::Other(e.to_string()))?;
+        let model = s_builder.build().map_err(|e| Error::Other(e.to_string()))?;
         Ok(Self {
             inner: model,
             fraction,
@@ -316,6 +371,7 @@ pub struct ROnlineLoess {
     inner: fastLoess::internals::adapters::online::ParallelOnlineLoess<f64>,
     fraction: f64,
     iterations: usize,
+    dimensions: usize,
 }
 
 #[extendr]
@@ -326,7 +382,6 @@ impl ROnlineLoess {
         window_capacity: i32,
         min_points: i32,
         iterations: i32,
-        delta: Nullable<f64>,
         weight_function: &str,
         robustness_method: &str,
         scaling_method: &str,
@@ -335,6 +390,11 @@ impl ROnlineLoess {
         auto_converge: Nullable<f64>,
         return_robustness_weights: bool,
         parallel: bool,
+        degree: &str,
+        dimensions: i32,
+        distance_metric: &str,
+        surface_mode: &str,
+        return_se: bool,
     ) -> Result<Self> {
         let wf = parse_weight_function(weight_function)?;
         let rm = parse_robustness_method(robustness_method)?;
@@ -350,47 +410,56 @@ impl ROnlineLoess {
         builder = builder.scaling_method(sm);
         builder = builder.boundary_policy(bp);
 
-        let mut builder = builder.adapter(Online);
-        builder = builder.window_capacity(window_capacity as usize);
-        builder = builder.min_points(min_points as usize);
-        builder = builder.update_mode(um);
-        builder = builder.parallel(parallel);
-
-        if let NotNull(d) = delta {
-            builder = builder.delta(d);
+        let deg = parse_polynomial_degree(degree)?;
+        let dm = parse_distance_metric(distance_metric)?;
+        let surf = parse_surface_mode(surface_mode)?;
+        let configured_dimensions = dimensions as usize;
+        builder = builder.degree(deg);
+        builder = builder.dimensions(configured_dimensions);
+        builder = builder.distance_metric(dm);
+        builder = builder.surface_mode(surf);
+        if return_se {
+            builder = builder.return_se();
         }
+
+        let mut o_builder = builder.adapter(Online);
+        o_builder = o_builder.window_capacity(window_capacity as usize);
+        o_builder = o_builder.min_points(min_points as usize);
+        o_builder = o_builder.update_mode(um);
+        o_builder = o_builder.parallel(parallel);
+
         if let NotNull(tol) = auto_converge {
-            builder = builder.auto_converge(tol);
+            o_builder = o_builder.auto_converge(tol);
         }
         if return_robustness_weights {
-            builder = builder.return_robustness_weights(true);
+            o_builder = o_builder.return_robustness_weights(true);
         }
 
-        let model = builder.build().map_err(|e| Error::Other(e.to_string()))?;
+        let model = o_builder.build().map_err(|e| Error::Other(e.to_string()))?;
         Ok(Self {
             inner: model,
             fraction,
             iterations: iterations as usize,
+            dimensions: configured_dimensions,
         })
     }
 
     fn add_points(&mut self, x: &[f64], y: &[f64]) -> Result<List> {
-        let outputs = self
-            .inner
-            .add_points(x, y)
-            .map_err(|e| Error::Other(e.to_string()))?;
+        let mut smoothed = Vec::with_capacity(y.len());
+        for (&xi, &yi) in x.iter().zip(y.iter()) {
+            let output = self
+                .inner
+                .add_point(std::slice::from_ref(&xi), yi)
+                .map_err(|e| Error::Other(e.to_string()))?;
+            smoothed.push(output.as_ref().map_or(yi, |o| o.smoothed));
+        }
 
-        // Extract smoothed values (use original y for points that haven't accumulated enough data)
-        let smoothed: Vec<f64> = outputs
-            .into_iter()
-            .zip(y.iter())
-            .map(|(opt, &original_y)| opt.map_or(original_y, |o| o.smoothed))
-            .collect();
-
-        // Create result
         let result = LoessResult {
             x: x.to_vec(),
             y: smoothed,
+            dimensions: self.dimensions,
+            distance_metric: DistanceMetric::Normalized,
+            polynomial_degree: PolynomialDegree::Linear,
             standard_errors: None,
             confidence_lower: None,
             confidence_upper: None,
@@ -402,6 +471,12 @@ impl ROnlineLoess {
             iterations_used: Some(self.iterations),
             fraction_used: self.fraction,
             cv_scores: None,
+            enp: None,
+            trace_hat: None,
+            delta1: None,
+            delta2: None,
+            residual_scale: None,
+            leverage: None,
         };
 
         loess_result_to_list(result)
@@ -446,6 +521,25 @@ fn loess_result_to_list(result: LoessResult<f64>) -> Result<List> {
     if let Some(cv) = result.cv_scores {
         list_items.push(("cv_scores", cv.into_robj()));
     }
+    if let Some(enp) = result.enp {
+        list_items.push(("enp", enp.into_robj()));
+    }
+    if let Some(th) = result.trace_hat {
+        list_items.push(("trace_hat", th.into_robj()));
+    }
+    if let Some(d1) = result.delta1 {
+        list_items.push(("delta1", d1.into_robj()));
+    }
+    if let Some(d2) = result.delta2 {
+        list_items.push(("delta2", d2.into_robj()));
+    }
+    if let Some(rs) = result.residual_scale {
+        list_items.push(("residual_scale", rs.into_robj()));
+    }
+    if let Some(lev) = result.leverage {
+        list_items.push(("leverage", lev.into_robj()));
+    }
+    list_items.push(("dimensions", (result.dimensions as i32).into_robj()));
     if let Some(diag) = result.diagnostics {
         let diag_list = list!(
             rmse = diag.rmse,

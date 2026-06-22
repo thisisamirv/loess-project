@@ -10,7 +10,6 @@
 #' @param chunk_size Points per chunk.
 #' @param overlap Overlap between chunks.
 #' @param iterations Robustness iterations.
-#' @param delta Interpolation threshold. NULL = auto.
 #' @param weight_function Kernel name. Default: "tricube".
 #' @param robustness_method Method: "bisquare", "huber", "talwar".
 #' @param scaling_method Scale estimation: "mad", "mar".
@@ -20,6 +19,14 @@
 #' @param return_diagnostics Return fit metrics. Default: FALSE.
 #' @param return_robustness_weights Return weights. Default: FALSE.
 #' @param parallel Enable parallel processing. Default: TRUE.
+#' @param degree Polynomial degree: "constant", "linear", "quadratic", etc.
+#'   Default: "linear".
+#' @param dimensions Number of predictor dimensions. Default: 1.
+#' @param distance_metric Distance metric: "normalized", "euclidean", etc.
+#'   Default: "normalized".
+#' @param surface_mode Surface mode: "interpolation" or "direct".
+#'   Default: "interpolation".
+#' @param return_se Compute hat-matrix statistics. Default: FALSE.
 #'
 #' @return A StreamingLoess object.
 #' @examples
@@ -31,19 +38,23 @@
 #' final <- model$finalize()
 #' @export
 StreamingLoess <- function(
-    fraction = 0.3,
-    chunk_size = 5000L,
-    overlap = NULL,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_robustness_weights = FALSE,
-    parallel = TRUE
+  fraction = 0.3,
+  chunk_size = 5000L,
+  overlap = NULL,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  auto_converge = NULL,
+  return_diagnostics = FALSE,
+  return_robustness_weights = FALSE,
+  parallel = TRUE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  return_se = FALSE
 ) {
     validate_params(fraction = fraction, chunk_size = chunk_size)
     handle <- do.call(RStreamingLoess$new, env_args(streaming_params))

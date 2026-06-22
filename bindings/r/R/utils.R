@@ -57,11 +57,11 @@ validate_common_args <- function(x, y, fraction, iterations) {
 #' @param chunk_size Chunk size (optional)
 #' @noRd
 validate_params <- function(
-    fraction,
-    iterations = NULL,
-    window_capacity = NULL,
-    min_points = NULL,
-    chunk_size = NULL
+  fraction,
+  iterations = NULL,
+  window_capacity = NULL,
+  min_points = NULL,
+  chunk_size = NULL
 ) {
     if (fraction < 0 || fraction > 1) {
         stop("fraction must be between 0 and 1")
@@ -99,6 +99,7 @@ param_types <- list(
     min_points = "integer",
     chunk_size = "integer",
     cv_k = "integer",
+    dimensions = "integer",
     # Character parameters
     weight_function = "character",
     robustness_method = "character",
@@ -107,13 +108,16 @@ param_types <- list(
     update_mode = "character",
     zero_weight_fallback = "character",
     cv_method = "character",
+    degree = "character",
+    distance_metric = "character",
+    surface_mode = "character",
     # Logical parameters
     return_diagnostics = "logical",
     return_residuals = "logical",
     return_robustness_weights = "logical",
     parallel = "logical",
+    return_se = "logical",
     # Nullable parameters (optional, NULL -> Nullable(NULL))
-    delta = "nullable",
     overlap = "nullable",
     confidence_intervals = "nullable",
     prediction_intervals = "nullable",
@@ -149,23 +153,26 @@ env_args <- function(param_names) {
 #' Parameter names for each Loess constructor
 #' @noRd
 loess_params <- c(
-    "fraction", "iterations", "delta", "weight_function", "robustness_method",
+    "fraction", "iterations", "weight_function", "robustness_method",
     "scaling_method", "boundary_policy", "confidence_intervals",
     "prediction_intervals", "return_diagnostics", "return_residuals",
     "return_robustness_weights", "zero_weight_fallback", "auto_converge",
-    "cv_fractions", "cv_method", "cv_k", "parallel"
+    "cv_fractions", "cv_method", "cv_k", "parallel",
+    "degree", "dimensions", "distance_metric", "surface_mode", "return_se"
 )
 
 online_params <- c(
-    "fraction", "window_capacity", "min_points", "iterations", "delta",
+    "fraction", "window_capacity", "min_points", "iterations",
     "weight_function", "robustness_method", "scaling_method",
     "boundary_policy", "update_mode", "auto_converge",
-    "return_robustness_weights", "parallel"
+    "return_robustness_weights", "parallel",
+    "degree", "dimensions", "distance_metric", "surface_mode", "return_se"
 )
 
 streaming_params <- c(
-    "fraction", "chunk_size", "overlap", "iterations", "delta",
+    "fraction", "chunk_size", "overlap", "iterations",
     "weight_function", "robustness_method", "scaling_method",
     "boundary_policy", "auto_converge", "return_diagnostics",
-    "return_robustness_weights", "parallel"
+    "return_robustness_weights", "parallel",
+    "degree", "dimensions", "distance_metric", "surface_mode", "return_se"
 )

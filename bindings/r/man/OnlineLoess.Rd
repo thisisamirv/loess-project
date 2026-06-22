@@ -9,7 +9,6 @@ OnlineLoess(
   window_capacity = 100L,
   min_points = 2L,
   iterations = 3L,
-  delta = NULL,
   weight_function = "tricube",
   robustness_method = "bisquare",
   scaling_method = "mad",
@@ -17,7 +16,12 @@ OnlineLoess(
   update_mode = "incremental",
   auto_converge = NULL,
   return_robustness_weights = FALSE,
-  parallel = FALSE
+  parallel = FALSE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  return_se = FALSE
 )
 }
 \arguments{
@@ -28,8 +32,6 @@ OnlineLoess(
 \item{min_points}{Minimum points before smoothing.}
 
 \item{iterations}{Robustness iterations.}
-
-\item{delta}{Interpolation threshold. NULL = auto.}
 
 \item{weight_function}{Kernel name. Default: "tricube".}
 
@@ -47,9 +49,19 @@ OnlineLoess(
 \item{return_robustness_weights}{Return weights. Default: FALSE.}
 
 \item{parallel}{Enable parallel processing. Default: TRUE.}
-}
-\value{
-An OnlineLoess object.
+
+\item{degree}{Polynomial degree: "constant", "linear", "quadratic", etc.
+Default: "linear".}
+
+\item{dimensions}{Number of predictor dimensions. Default: 1.}
+
+\item{distance_metric}{Distance metric: "normalized", "euclidean", etc.
+Default: "normalized".}
+
+\item{surface_mode}{Surface mode: "interpolation" or "direct".
+Default: "interpolation".}
+
+\item{return_se}{Compute hat-matrix statistics. Default: FALSE.}
 }
 \description{
 Create a stateful LOESS model for real-time online data.

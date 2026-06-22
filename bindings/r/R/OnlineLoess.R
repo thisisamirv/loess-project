@@ -10,7 +10,6 @@
 #' @param window_capacity Max points in sliding window.
 #' @param min_points Minimum points before smoothing.
 #' @param iterations Robustness iterations.
-#' @param delta Interpolation threshold. NULL = auto.
 #' @param weight_function Kernel name. Default: "tricube".
 #' @param robustness_method Method: "bisquare", "huber", "talwar".
 #' @param scaling_method Scale estimation: "mad", "mar".
@@ -20,6 +19,14 @@
 #' @param auto_converge Convergence tolerance. NULL disables.
 #' @param return_robustness_weights Return weights. Default: FALSE.
 #' @param parallel Enable parallel processing. Default: TRUE.
+#' @param degree Polynomial degree: "constant", "linear", "quadratic", etc.
+#'   Default: "linear".
+#' @param dimensions Number of predictor dimensions. Default: 1.
+#' @param distance_metric Distance metric: "normalized", "euclidean", etc.
+#'   Default: "normalized".
+#' @param surface_mode Surface mode: "interpolation" or "direct".
+#'   Default: "interpolation".
+#' @param return_se Compute hat-matrix statistics. Default: FALSE.
 #'
 #' @return An OnlineLoess object.
 #' @examples
@@ -31,19 +38,23 @@
 #' lines(x, result$y, col = "red")
 #' @export
 OnlineLoess <- function(
-    fraction = 0.2,
-    window_capacity = 100L,
-    min_points = 2L,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    update_mode = "incremental",
-    auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    parallel = FALSE
+  fraction = 0.2,
+  window_capacity = 100L,
+  min_points = 2L,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  update_mode = "incremental",
+  auto_converge = NULL,
+  return_robustness_weights = FALSE,
+  parallel = FALSE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  return_se = FALSE
 ) {
     validate_params(
         fraction = fraction, window_capacity = window_capacity,

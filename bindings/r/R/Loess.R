@@ -16,7 +16,6 @@
 #'
 #' @param fraction Smoothing fraction (0 to 1). Default: 0.67.
 #' @param iterations Robustness iterations. Default: 3.
-#' @param delta Interpolation threshold. NULL = auto.
 #' @param weight_function Kernel name. Default: "tricube".
 #' @param robustness_method Method: "bisquare", "huber", "talwar".
 #' @param scaling_method Scale estimation: "mad", "mar".
@@ -34,6 +33,15 @@
 #' @param cv_method CV method: "kfold", "loocv".
 #' @param cv_k Folds for k-fold CV. Default: 5.
 #' @param parallel Enable parallel processing. Default: TRUE.
+#' @param degree Polynomial degree: "constant", "linear", "quadratic", etc.
+#'   Default: "linear".
+#' @param dimensions Number of predictor dimensions. Default: 1.
+#' @param distance_metric Distance metric: "normalized", "euclidean", etc.
+#'   Default: "normalized".
+#' @param surface_mode Surface mode: "interpolation" or "direct".
+#'   Default: "interpolation".
+#' @param return_se Compute hat-matrix statistics (enp, leverage, etc.).
+#'   Default: FALSE.
 #'
 #' @return A Loess object.
 #' @examples
@@ -45,24 +53,28 @@
 #' lines(x, result$y, col = "red")
 #' @export
 Loess <- function(
-    fraction = 0.67,
-    iterations = 3L,
-    delta = NULL,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
-    parallel = TRUE
+  fraction = 0.67,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  cv_fractions = NULL,
+  cv_method = "kfold",
+  cv_k = 5L,
+  parallel = TRUE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  return_se = FALSE
 ) {
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLoess$new, env_args(loess_params))
@@ -83,7 +95,11 @@ Loess <- function(
                 weight_function = weight_function,
                 robustness_method = robustness_method,
                 scaling_method = scaling_method,
-                parallel = parallel
+                parallel = parallel,
+                degree = degree,
+                dimensions = dimensions,
+                distance_metric = distance_metric,
+                surface_mode = surface_mode
             )
         ),
         class = "Loess"
