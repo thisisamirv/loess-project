@@ -10,10 +10,11 @@ use std::sync::Mutex;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::{
-    BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
+    UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Mean, Online, Streaming,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
 };
 
 // ============================================================================
@@ -87,9 +88,49 @@ fn parse_scaling_method(name: &str) -> PyResult<ScalingMethod> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
         _ => Err(PyValueError::new_err(format!(
-            "Unknown scaling method: {}. Valid options: mad, mar, mean",
+            "Unknown scaling method: {}. Valid options: mad, mar",
+            name
+        ))),
+    }
+}
+
+/// Parse polynomial degree from string
+fn parse_polynomial_degree(name: &str) -> PyResult<PolynomialDegree> {
+    match name.to_lowercase().as_str() {
+        "constant" | "0" => Ok(PolynomialDegree::Constant),
+        "linear" | "1" => Ok(PolynomialDegree::Linear),
+        "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
+        "cubic" | "3" => Ok(PolynomialDegree::Cubic),
+        "quartic" | "4" => Ok(PolynomialDegree::Quartic),
+        _ => Err(PyValueError::new_err(format!(
+            "Unknown polynomial degree: {}",
+            name
+        ))),
+    }
+}
+
+/// Parse distance metric from string
+fn parse_distance_metric(name: &str) -> PyResult<DistanceMetric<f64>> {
+    match name.to_lowercase().as_str() {
+        "normalized" | "norm" => Ok(DistanceMetric::Normalized),
+        "euclidean" | "euclid" => Ok(DistanceMetric::Euclidean),
+        "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
+        "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
+        _ => Err(PyValueError::new_err(format!(
+            "Unknown distance metric: {}",
+            name
+        ))),
+    }
+}
+
+/// Parse surface mode from string
+fn parse_surface_mode(name: &str) -> PyResult<SurfaceMode> {
+    match name.to_lowercase().as_str() {
+        "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
+        "direct" => Ok(SurfaceMode::Direct),
+        _ => Err(PyValueError::new_err(format!(
+            "Unknown surface mode: {}",
             name
         ))),
     }
@@ -272,6 +313,51 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
+    /// Equivalent number of parameters (hat-matrix stat, if return_se was set)
+    #[getter]
+    fn enp(&self) -> Option<f64> {
+        self.inner.enp
+    }
+
+    /// Trace of hat matrix (if return_se was set)
+    #[getter]
+    fn trace_hat(&self) -> Option<f64> {
+        self.inner.trace_hat
+    }
+
+    /// First delta statistic (if return_se was set)
+    #[getter]
+    fn delta1(&self) -> Option<f64> {
+        self.inner.delta1
+    }
+
+    /// Second delta statistic (if return_se was set)
+    #[getter]
+    fn delta2(&self) -> Option<f64> {
+        self.inner.delta2
+    }
+
+    /// Residual scale estimate (if return_se was set)
+    #[getter]
+    fn residual_scale(&self) -> Option<f64> {
+        self.inner.residual_scale
+    }
+
+    /// Per-point leverage / hat-matrix diagonal (if return_se was set)
+    #[getter]
+    fn leverage<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
+        self.inner
+            .leverage
+            .as_ref()
+            .map(|v| PyArray1::from_vec(py, v.clone()))
+    }
+
+    /// Number of predictor dimensions
+    #[getter]
+    fn dimensions(&self) -> usize {
+        self.inner.dimensions
+    }
+
     fn __repr__(&self) -> String {
         format!(
             "LoessResult(n={}, fraction_used={:.4})",
@@ -299,7 +385,6 @@ impl PyStreamingLoess {
         chunk_size=5000,
         overlap=None,
         iterations=3,
-        delta=None,
         weight_function="tricube",
         robustness_method="bisquare",
         scaling_method="mad",
@@ -309,7 +394,12 @@ impl PyStreamingLoess {
         return_residuals=false,
         return_robustness_weights=false,
         zero_weight_fallback="use_local_mean",
-        parallel=true
+        parallel=true,
+        degree="linear",
+        dimensions=1usize,
+        distance_metric="normalized",
+        surface_mode="interpolation",
+        return_se=false
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -317,7 +407,6 @@ impl PyStreamingLoess {
         chunk_size: usize,
         overlap: Option<usize>,
         iterations: usize,
-        delta: Option<f64>,
         weight_function: &str,
         robustness_method: &str,
         scaling_method: &str,
@@ -328,12 +417,20 @@ impl PyStreamingLoess {
         return_robustness_weights: bool,
         zero_weight_fallback: &str,
         parallel: bool,
+        degree: &str,
+        dimensions: usize,
+        distance_metric: &str,
+        surface_mode: &str,
+        return_se: bool,
     ) -> PyResult<Self> {
         let wf = parse_weight_function(weight_function)?;
         let rm = parse_robustness_method(robustness_method)?;
         let sm = parse_scaling_method(scaling_method)?;
         let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
         let bp = parse_boundary_policy(boundary_policy)?;
+        let deg = parse_polynomial_degree(degree)?;
+        let dm = parse_distance_metric(distance_metric)?;
+        let surf = parse_surface_mode(surface_mode)?;
 
         let mut builder = LoessBuilder::<f64>::new();
         builder = builder.fraction(fraction);
@@ -343,6 +440,13 @@ impl PyStreamingLoess {
         builder = builder.scaling_method(sm);
         builder = builder.zero_weight_fallback(zwf);
         builder = builder.boundary_policy(bp);
+        builder = builder.degree(deg);
+        builder = builder.dimensions(dimensions);
+        builder = builder.distance_metric(dm);
+        builder = builder.surface_mode(surf);
+        if return_se {
+            builder = builder.return_se();
+        }
 
         if return_diagnostics {
             builder = builder.return_diagnostics();
@@ -364,9 +468,6 @@ impl PyStreamingLoess {
         streaming_builder = streaming_builder.overlap(overlap_size);
         streaming_builder = streaming_builder.parallel(parallel);
 
-        if let Some(d) = delta {
-            streaming_builder = streaming_builder.delta(d);
-        }
         if let Some(tol) = auto_converge {
             streaming_builder = streaming_builder.auto_converge(tol);
         }
@@ -418,6 +519,7 @@ pub struct PyOnlineLoess {
     inner: Mutex<ParallelOnlineLoess<f64>>,
     fraction: f64,
     iterations: usize,
+    dimensions: usize,
 }
 
 #[pymethods]
@@ -428,7 +530,6 @@ impl PyOnlineLoess {
         window_capacity=100,
         min_points=2,
         iterations=3,
-        delta=None,
         weight_function="tricube",
         robustness_method="bisquare",
         scaling_method="mad",
@@ -437,7 +538,12 @@ impl PyOnlineLoess {
         auto_converge=None,
         return_robustness_weights=false,
         zero_weight_fallback="use_local_mean",
-        parallel=false
+        parallel=false,
+        degree="linear",
+        dimensions=1usize,
+        distance_metric="normalized",
+        surface_mode="interpolation",
+        return_se=false
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -445,7 +551,6 @@ impl PyOnlineLoess {
         window_capacity: usize,
         min_points: usize,
         iterations: usize,
-        delta: Option<f64>,
         weight_function: &str,
         robustness_method: &str,
         scaling_method: &str,
@@ -455,6 +560,11 @@ impl PyOnlineLoess {
         return_robustness_weights: bool,
         zero_weight_fallback: &str,
         parallel: bool,
+        degree: &str,
+        dimensions: usize,
+        distance_metric: &str,
+        surface_mode: &str,
+        return_se: bool,
     ) -> PyResult<Self> {
         let wf = parse_weight_function(weight_function)?;
         let rm = parse_robustness_method(robustness_method)?;
@@ -462,6 +572,9 @@ impl PyOnlineLoess {
         let bp = parse_boundary_policy(boundary_policy)?;
         let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
         let um = parse_update_mode(update_mode)?;
+        let deg = parse_polynomial_degree(degree)?;
+        let dm = parse_distance_metric(distance_metric)?;
+        let surf = parse_surface_mode(surface_mode)?;
 
         let mut builder = LoessBuilder::<f64>::new();
         builder = builder.fraction(fraction);
@@ -471,6 +584,13 @@ impl PyOnlineLoess {
         builder = builder.scaling_method(sm);
         builder = builder.zero_weight_fallback(zwf);
         builder = builder.boundary_policy(bp);
+        builder = builder.degree(deg);
+        builder = builder.dimensions(dimensions);
+        builder = builder.distance_metric(dm);
+        builder = builder.surface_mode(surf);
+        if return_se {
+            builder = builder.return_se();
+        }
 
         let mut online_builder = builder.adapter(Online);
         online_builder = online_builder.window_capacity(window_capacity);
@@ -478,9 +598,6 @@ impl PyOnlineLoess {
         online_builder = online_builder.update_mode(um);
         online_builder = online_builder.parallel(parallel);
 
-        if let Some(d) = delta {
-            online_builder = online_builder.delta(d);
-        }
         if let Some(tol) = auto_converge {
             online_builder = online_builder.auto_converge(tol);
         }
@@ -493,6 +610,7 @@ impl PyOnlineLoess {
             inner: Mutex::new(processor),
             fraction,
             iterations,
+            dimensions,
         })
     }
 
@@ -502,7 +620,7 @@ impl PyOnlineLoess {
             .inner
             .lock()
             .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?;
-        let result = inner.add_point(x, y).map_err(to_py_error)?;
+        let result = inner.add_point(&[x], y).map_err(to_py_error)?;
         Ok(result.map(|o| o.smoothed))
     }
 
@@ -513,31 +631,30 @@ impl PyOnlineLoess {
         x: PyReadonlyArray1<'py, f64>,
         y: PyReadonlyArray1<'py, f64>,
     ) -> PyResult<PyLoessResult> {
-        let x_vec = x.as_slice().map_err(to_py_error)?.to_vec();
-        let y_vec = y.as_slice().map_err(to_py_error)?.to_vec();
+        let x_slice = x.as_slice().map_err(to_py_error)?;
+        let y_slice = y.as_slice().map_err(to_py_error)?;
+        let x_vec_out = x_slice.to_vec();
 
-        let x_vec_out = x_vec.clone();
-        let y_vec_out = y_vec.clone();
-
-        let outputs = py.detach(move || {
-            self.inner
+        let mut smoothed = Vec::with_capacity(y_slice.len());
+        {
+            let mut inner = self
+                .inner
                 .lock()
-                .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?
-                .add_points(&x_vec, &y_vec)
-                .map_err(to_py_error)
-        })?;
-
-        // Extract smoothed values using the outer copy of y_vec
-        let smoothed: Vec<f64> = outputs
-            .into_iter()
-            .zip(y_vec_out.iter())
-            .map(|(opt, &original_y)| opt.map_or(original_y, |o| o.smoothed))
-            .collect();
+                .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?;
+            for (&xi, &yi) in x_slice.iter().zip(y_slice.iter()) {
+                let output = inner.add_point(&[xi], yi).map_err(to_py_error)?;
+                smoothed.push(output.as_ref().map_or(yi, |o| o.smoothed));
+            }
+        }
+        let _ = py;
 
         Ok(PyLoessResult {
             inner: LoessResult {
                 x: x_vec_out,
                 y: smoothed,
+                dimensions: self.dimensions,
+                distance_metric: DistanceMetric::Normalized,
+                polynomial_degree: PolynomialDegree::Linear,
                 standard_errors: None,
                 confidence_lower: None,
                 confidence_upper: None,
@@ -549,6 +666,12 @@ impl PyOnlineLoess {
                 iterations_used: Some(self.iterations),
                 fraction_used: self.fraction,
                 cv_scores: None,
+                enp: None,
+                trace_hat: None,
+                delta1: None,
+                delta2: None,
+                residual_scale: None,
+                leverage: None,
             },
         })
     }
@@ -563,7 +686,6 @@ impl PyOnlineLoess {
 pub struct PyLoess {
     fraction: f64,
     iterations: usize,
-    delta: Option<f64>,
     weight_function: WeightFunction,
     robustness_method: RobustnessMethod,
     scaling_method: ScalingMethod,
@@ -579,6 +701,11 @@ pub struct PyLoess {
     cv_method: String,
     cv_k: usize,
     parallel: bool,
+    degree: PolynomialDegree,
+    dimensions: usize,
+    distance_metric: DistanceMetric<f64>,
+    surface_mode: SurfaceMode,
+    return_se: bool,
 }
 
 #[pymethods]
@@ -587,7 +714,6 @@ impl PyLoess {
     #[pyo3(signature = (
         fraction=0.67,
         iterations=3,
-        delta=None,
         weight_function="tricube",
         robustness_method="bisquare",
         scaling_method="mad",
@@ -602,13 +728,17 @@ impl PyLoess {
         cv_fractions=None,
         cv_method="kfold",
         cv_k=5,
-        parallel=true
+        parallel=true,
+        degree="linear",
+        dimensions=1usize,
+        distance_metric="normalized",
+        surface_mode="interpolation",
+        return_se=false
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
         fraction: f64,
         iterations: usize,
-        delta: Option<f64>,
         weight_function: &str,
         robustness_method: &str,
         scaling_method: &str,
@@ -624,17 +754,24 @@ impl PyLoess {
         cv_method: &str,
         cv_k: usize,
         parallel: bool,
+        degree: &str,
+        dimensions: usize,
+        distance_metric: &str,
+        surface_mode: &str,
+        return_se: bool,
     ) -> PyResult<Self> {
         let wf = parse_weight_function(weight_function)?;
         let rm = parse_robustness_method(robustness_method)?;
         let sm = parse_scaling_method(scaling_method)?;
         let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
         let bp = parse_boundary_policy(boundary_policy)?;
+        let deg = parse_polynomial_degree(degree)?;
+        let dm = parse_distance_metric(distance_metric)?;
+        let surf = parse_surface_mode(surface_mode)?;
 
         Ok(PyLoess {
             fraction,
             iterations,
-            delta,
             weight_function: wf,
             robustness_method: rm,
             scaling_method: sm,
@@ -650,6 +787,11 @@ impl PyLoess {
             cv_method: cv_method.to_string(),
             cv_k,
             parallel,
+            degree: deg,
+            dimensions,
+            distance_metric: dm,
+            surface_mode: surf,
+            return_se,
         })
     }
 
@@ -691,8 +833,12 @@ impl PyLoess {
             builder = builder.boundary_policy(params.boundary_policy);
             builder = builder.parallel(params.parallel);
 
-            if let Some(d) = params.delta {
-                builder = builder.delta(d);
+            builder = builder.degree(params.degree);
+            builder = builder.dimensions(params.dimensions);
+            builder = builder.distance_metric(params.distance_metric);
+            builder = builder.surface_mode(params.surface_mode);
+            if params.return_se {
+                builder = builder.return_se();
             }
 
             if let Some(cl) = params.confidence_intervals {

@@ -111,12 +111,46 @@ class LoessResult:
         """CV scores for tested fractions."""
         ...
 
+    @property
+    def enp(self) -> float | None:
+        """Equivalent number of parameters (hat-matrix stat, if return_se was set)."""
+        ...
+
+    @property
+    def trace_hat(self) -> float | None:
+        """Trace of hat matrix (if return_se was set)."""
+        ...
+
+    @property
+    def delta1(self) -> float | None:
+        """First delta statistic (if return_se was set)."""
+        ...
+
+    @property
+    def delta2(self) -> float | None:
+        """Second delta statistic (if return_se was set)."""
+        ...
+
+    @property
+    def residual_scale(self) -> float | None:
+        """Residual scale estimate (if return_se was set)."""
+        ...
+
+    @property
+    def leverage(self) -> NDArray[np.float64] | None:
+        """Per-point leverage / hat-matrix diagonal (if return_se was set)."""
+        ...
+
+    @property
+    def dimensions(self) -> int:
+        """Number of predictor dimensions."""
+        ...
+
 def smooth(
     x: ArrayLike,
     y: ArrayLike,
     fraction: float = 0.67,
     iterations: int = 3,
-    delta: float | None = None,
     weight_function: str = "tricube",
     robustness_method: str = "bisquare",
     scaling_method: str = "mad",
@@ -132,6 +166,11 @@ def smooth(
     cv_method: str = "kfold",
     cv_k: int = 5,
     parallel: bool = True,
+    degree: str = "linear",
+    dimensions: int = 1,
+    distance_metric: str = "normalized",
+    surface_mode: str = "interpolation",
+    return_se: bool = False,
 ) -> LoessResult:
     """LOESS smoothing with the batch adapter.
 
@@ -145,15 +184,13 @@ def smooth(
         Smoothing fraction (default: 0.67).
     iterations : int, optional
         Number of robustness iterations (default: 3).
-    delta : float, optional
-        Interpolation optimization threshold.
     weight_function : str, optional
         Kernel function: "tricube", "epanechnikov", "gaussian", "uniform",
         "biweight", "triangle", "cosine".
     robustness_method : str, optional
         Robustness method: "bisquare", "huber", "talwar".
     scaling_method : str, optional
-        Scaling method: "mad", "mar", "mean" (default: "mad").
+        Scaling method: "mad", "mar" (default: "mad").
     boundary_policy : str, optional
         Boundary policy: "extend", "reflect", "zero", "noboundary".
     confidence_intervals : float, optional
@@ -178,6 +215,16 @@ def smooth(
         Number of folds for k-fold CV (default: 5).
     parallel : bool, optional
         Enable parallel execution (default: True).
+    degree : str, optional
+        Polynomial degree: "constant", "linear", "quadratic", etc. (default: "linear").
+    dimensions : int, optional
+        Number of predictor dimensions (default: 1).
+    distance_metric : str, optional
+        Distance metric: "normalized", "euclidean", etc. (default: "normalized").
+    surface_mode : str, optional
+        Surface mode: "interpolation" or "direct" (default: "interpolation").
+    return_se : bool, optional
+        Compute hat-matrix statistics (enp, trace_hat, etc.) (default: False).
 
     Returns
     -------
@@ -193,7 +240,6 @@ def smooth_streaming(
     chunk_size: int = 5000,
     overlap: int | None = None,
     iterations: int = 3,
-    delta: float | None = None,
     weight_function: str = "tricube",
     robustness_method: str = "bisquare",
     scaling_method: str = "mad",
@@ -204,6 +250,11 @@ def smooth_streaming(
     return_robustness_weights: bool = False,
     zero_weight_fallback: str = "use_local_mean",
     parallel: bool = True,
+    degree: str = "linear",
+    dimensions: int = 1,
+    distance_metric: str = "normalized",
+    surface_mode: str = "interpolation",
+    return_se: bool = False,
 ) -> LoessResult:
     """Streaming LOESS for large datasets.
 
@@ -221,8 +272,6 @@ def smooth_streaming(
         Overlap between chunks (default: 10% of chunk_size).
     iterations : int, optional
         Number of robustness iterations (default: 3).
-    delta : float, optional
-        Interpolation optimization threshold.
     weight_function : str, optional
         Kernel function.
     robustness_method : str, optional
@@ -243,6 +292,16 @@ def smooth_streaming(
         Fallback when all weights are zero.
     parallel : bool, optional
         Enable parallel execution (default: True).
+    degree : str, optional
+        Polynomial degree (default: "linear").
+    dimensions : int, optional
+        Number of predictor dimensions (default: 1).
+    distance_metric : str, optional
+        Distance metric (default: "normalized").
+    surface_mode : str, optional
+        Surface mode (default: "interpolation").
+    return_se : bool, optional
+        Compute hat-matrix statistics (default: False).
 
     Returns
     -------
@@ -258,7 +317,6 @@ def smooth_online(
     window_capacity: int = 100,
     min_points: int = 2,
     iterations: int = 3,
-    delta: float | None = None,
     weight_function: str = "tricube",
     robustness_method: str = "bisquare",
     scaling_method: str = "mad",
@@ -268,6 +326,11 @@ def smooth_online(
     return_robustness_weights: bool = False,
     zero_weight_fallback: str = "use_local_mean",
     parallel: bool = False,
+    degree: str = "linear",
+    dimensions: int = 1,
+    distance_metric: str = "normalized",
+    surface_mode: str = "interpolation",
+    return_se: bool = False,
 ) -> LoessResult:
     """Online LOESS with sliding window.
 
@@ -285,8 +348,6 @@ def smooth_online(
         Minimum points before smoothing starts (default: 2).
     iterations : int, optional
         Number of robustness iterations (default: 3).
-    delta : float, optional
-        Interpolation optimization threshold.
     weight_function : str, optional
         Kernel function.
     robustness_method : str, optional
@@ -305,6 +366,16 @@ def smooth_online(
         Fallback when all weights are zero.
     parallel : bool, optional
         Enable parallel execution (default: False).
+    degree : str, optional
+        Polynomial degree (default: "linear").
+    dimensions : int, optional
+        Number of predictor dimensions (default: 1).
+    distance_metric : str, optional
+        Distance metric (default: "normalized").
+    surface_mode : str, optional
+        Surface mode (default: "interpolation").
+    return_se : bool, optional
+        Compute hat-matrix statistics (default: False).
 
     Returns
     -------
@@ -312,6 +383,41 @@ def smooth_online(
         Result object with smoothed values.
     """
     ...
+
+class Loess:
+    """Batch LOESS processor with configurable parameters."""
+
+    def __init__(
+        self,
+        fraction: float = 0.67,
+        iterations: int = 3,
+        weight_function: str = "tricube",
+        robustness_method: str = "bisquare",
+        scaling_method: str = "mad",
+        boundary_policy: str = "extend",
+        confidence_intervals: float | None = None,
+        prediction_intervals: float | None = None,
+        return_diagnostics: bool = False,
+        return_residuals: bool = False,
+        return_robustness_weights: bool = False,
+        zero_weight_fallback: str = "use_local_mean",
+        auto_converge: float | None = None,
+        cv_fractions: Sequence[float] | None = None,
+        cv_method: str = "kfold",
+        cv_k: int = 5,
+        parallel: bool = True,
+        degree: str = "linear",
+        dimensions: int = 1,
+        distance_metric: str = "normalized",
+        surface_mode: str = "interpolation",
+        return_se: bool = False,
+    ) -> None:
+        """Initialize the batch LOESS processor."""
+        ...
+
+    def fit(self, x: ArrayLike, y: ArrayLike) -> LoessResult:
+        """Fit LOESS model to data."""
+        ...
 
 class StreamingLoess:
     """Streaming LOESS processor for incremental chunk-based smoothing."""
@@ -322,7 +428,6 @@ class StreamingLoess:
         chunk_size: int = 5000,
         overlap: int | None = None,
         iterations: int = 3,
-        delta: float | None = None,
         weight_function: str = "tricube",
         robustness_method: str = "bisquare",
         scaling_method: str = "mad",
@@ -333,6 +438,11 @@ class StreamingLoess:
         return_robustness_weights: bool = False,
         zero_weight_fallback: str = "use_local_mean",
         parallel: bool = True,
+        degree: str = "linear",
+        dimensions: int = 1,
+        distance_metric: str = "normalized",
+        surface_mode: str = "interpolation",
+        return_se: bool = False,
     ) -> None:
         """Initialize the streaming processor."""
         ...
@@ -354,7 +464,6 @@ class OnlineLoess:
         window_capacity: int = 100,
         min_points: int = 2,
         iterations: int = 3,
-        delta: float | None = None,
         weight_function: str = "tricube",
         robustness_method: str = "bisquare",
         scaling_method: str = "mad",
@@ -364,6 +473,11 @@ class OnlineLoess:
         return_robustness_weights: bool = False,
         zero_weight_fallback: str = "use_local_mean",
         parallel: bool = False,
+        degree: str = "linear",
+        dimensions: int = 1,
+        distance_metric: str = "normalized",
+        surface_mode: str = "interpolation",
+        return_se: bool = False,
     ) -> None:
         """Initialize the online processor."""
         ...
