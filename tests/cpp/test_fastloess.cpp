@@ -1,5 +1,4 @@
 #include "../../bindings/cpp/include/fastloess.hpp"
-#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <string>
@@ -7,327 +6,350 @@
 
 using namespace fastloess;
 
-// Helper to check approximate equality
-bool is_approx(double a, double b, double epsilon = 1e-10) {
-  if (std::isnan(a) && std::isnan(b))
+namespace {
+
+// ── Named constants ────────────────────────────────────────────────────────
+constexpr double kDefaultEpsilon = 1e-10;
+constexpr double kFractionHalf = 0.5;
+constexpr double kFractionThird = 0.3;
+constexpr double kFractionSeventh = 0.7;
+constexpr double kFractionTenth = 0.1;
+constexpr double kConfidenceLevel = 0.95;
+constexpr size_t kSmallCount = 5;
+constexpr size_t kTwentyCount = 20;
+constexpr size_t kHundredCount = 100;
+constexpr size_t kTwoHundredCount = 200;
+constexpr size_t kTwoThousandCount = 2000;
+constexpr size_t kChunkSmall = 1000;
+constexpr size_t kChunkLarge = 5000;
+constexpr size_t kWindowCapacity = 10;
+constexpr size_t kMinPointsOnline = 3;
+constexpr int kIterations3 = 3;
+
+// ── Assert helpers ─────────────────────────────────────────────────────────
+bool isApprox(double lhs, double rhs, double epsilon = kDefaultEpsilon) {
+  if (std::isnan(lhs) && std::isnan(rhs)) {
     return true;
-  return std::abs(a - b) < epsilon;
+  }
+  return std::abs(lhs - rhs) < epsilon;
 }
 
-void assert_approx(double a, double b, const std::string &msg = "") {
-  if (!is_approx(a, b)) {
-    std::cerr << "Assertion failed: " << a << " != " << b << " " << msg
-              << std::endl;
+void assertApprox(double lhs, double rhs, const std::string &msg = "") {
+  if (!isApprox(lhs, rhs)) {
+    std::cerr << "Assertion failed: " << lhs << " != " << rhs << " " << msg
+              << '\n';
     std::exit(1);
   }
 }
 
-void assert_approx(double a, double b, double epsilon) {
-  if (!is_approx(a, b, epsilon)) {
-    std::cerr << "Assertion failed: " << a << " != " << b << " (eps=" << epsilon
-              << ")" << std::endl;
+void assertApprox(double lhs, double rhs, double epsilon) {
+  if (!isApprox(lhs, rhs, epsilon)) {
+    std::cerr << "Assertion failed: " << lhs << " != " << rhs
+              << " (eps=" << epsilon << ")" << '\n';
     std::exit(1);
   }
 }
 
-void assert_true(bool cond, const std::string &msg = "") {
+void assertTrue(bool cond, const std::string &msg = "") {
   if (!cond) {
-    std::cerr << "Assertion failed " << msg << std::endl;
+    std::cerr << "Assertion failed " << msg << '\n';
     std::exit(1);
   }
 }
 
-// TestLoess
-void test_basic_smooth() {
-  std::cout << "Running test_basic_smooth..." << std::endl;
-  std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-  std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
+// ── Batch LOESS tests ──────────────────────────────────────────────────────
+void testBasicSmooth() {
+  std::cout << "Running testBasicSmooth...\n";
+  std::vector<double> xVals = {1.0, 2.0, 3.0, 4.0, 5.0};
+  std::vector<double> yVals = {2.0, 4.1, 5.9, 8.2, 9.8};
 
   LoessOptions opts;
-  opts.fraction = 0.5;
+  opts.fraction = kFractionHalf;
   Loess loess(opts);
-  auto result = loess.fit(x, y).value();
+  auto result = loess.fit(xVals, yVals).value();
 
-  assert_true(result.valid(), "Result should be valid");
-  assert_true(result.y_vector().size() == 5, "Output length mismatch");
-  assert_true(result.x_vector().size() == 5, "X length mismatch");
-  assert_approx(result.fraction_used(), 0.5);
+  assertTrue(result.valid(), "Result should be valid");
+  assertTrue(result.yVector().size() == kSmallCount, "Output length mismatch");
+  assertTrue(result.xVector().size() == kSmallCount, "X length mismatch");
+  assertApprox(result.fractionUsed(), kFractionHalf);
 }
 
-void test_basic_smooth_serial() {
-  std::cout << "Running test_basic_smooth_serial..." << std::endl;
-  std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-  std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
+void testBasicSmoothSerial() {
+  std::cout << "Running testBasicSmoothSerial...\n";
+  std::vector<double> xVals = {1.0, 2.0, 3.0, 4.0, 5.0};
+  std::vector<double> yVals = {2.0, 4.1, 5.9, 8.2, 9.8};
 
   LoessOptions opts;
-  opts.fraction = 0.5;
+  opts.fraction = kFractionHalf;
   opts.parallel = false;
   Loess loess(opts);
-  auto result = loess.fit(x, y).value();
+  auto result = loess.fit(xVals, yVals).value();
 
-  assert_true(result.valid());
-  assert_true(result.y_vector().size() == 5);
+  assertTrue(result.valid());
+  assertTrue(result.yVector().size() == kSmallCount);
 }
 
-void test_loess_with_diagnostics() {
-  std::cout << "Running test_loess_with_diagnostics..." << std::endl;
-  std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-  std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
+void testLoessWithDiagnostics() {
+  std::cout << "Running testLoessWithDiagnostics...\n";
+  std::vector<double> xVals = {1.0, 2.0, 3.0, 4.0, 5.0};
+  std::vector<double> yVals = {2.0, 4.1, 5.9, 8.2, 9.8};
 
   LoessOptions opts;
-  opts.fraction = 0.5;
+  opts.fraction = kFractionHalf;
   opts.return_diagnostics = true;
   Loess loess(opts);
-  auto result = loess.fit(x, y).value();
+  auto result = loess.fit(xVals, yVals).value();
 
   auto diag = result.diagnostics();
-  assert_true(diag.rmse >= 0, "RMSE negative");
-  assert_true(diag.mae >= 0, "MAE negative");
-  assert_true(diag.r_squared >= 0 && diag.r_squared <= 1, "R2 out of range");
+  assertTrue(diag.rmse() >= 0, "RMSE negative");
+  assertTrue(diag.mae() >= 0, "MAE negative");
+  assertTrue(diag.rSquared() >= 0 && diag.rSquared() <= 1, "R2 out of range");
 }
 
-void test_loess_with_residuals() {
-  std::cout << "Running test_loess_with_residuals..." << std::endl;
-  std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-  std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
+void testLoessWithResiduals() {
+  std::cout << "Running testLoessWithResiduals...\n";
+  std::vector<double> xVals = {1.0, 2.0, 3.0, 4.0, 5.0};
+  std::vector<double> yVals = {2.0, 4.1, 5.9, 8.2, 9.8};
 
   LoessOptions opts;
-  opts.fraction = 0.5;
+  opts.fraction = kFractionHalf;
   opts.return_residuals = true;
   Loess loess(opts);
-  auto result = loess.fit(x, y).value();
+  auto result = loess.fit(xVals, yVals).value();
 
-  assert_true(result.residuals().size() == 5, "Residuals missing");
+  assertTrue(result.residuals().size() == kSmallCount, "Residuals missing");
 }
 
-void test_loess_with_robustness_weights() {
-  std::cout << "Running test_loess_with_robustness_weights..." << std::endl;
-  std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-  std::vector<double> y = {2.0, 4.1, 100.0, 8.2, 9.8}; // Outlier
+void testLoessWithRobustnessWeights() {
+  std::cout << "Running testLoessWithRobustnessWeights...\n";
+  std::vector<double> xVals = {1.0, 2.0, 3.0, 4.0, 5.0};
+  std::vector<double> yVals = {2.0, 4.1, 100.0, 8.2, 9.8}; // Outlier
 
   LoessOptions opts;
-  opts.fraction = 0.7;
-  opts.iterations = 3;
+  opts.fraction = kFractionSeventh;
+  opts.iterations = kIterations3;
   opts.return_robustness_weights = true;
   Loess loess(opts);
-  auto result = loess.fit(x, y).value();
+  auto result = loess.fit(xVals, yVals).value();
 
-  auto rw = result.robustness_weights();
-  assert_true(rw.size() == 5);
-  for (double w : rw) {
-    assert_true(w >= 0 && w <= 1, "Weight out of range");
+  auto weights = result.robustnessWeights();
+  assertTrue(weights.size() == kSmallCount);
+  for (double weight : weights) {
+    assertTrue(weight >= 0 && weight <= 1, "Weight out of range");
   }
 }
 
-void test_loess_with_confidence_intervals() {
-  std::cout << "Running test_loess_with_confidence_intervals..." << std::endl;
-  std::vector<double> x(20);
-  std::vector<double> y(20);
-  for (int i = 0; i < 20; ++i) {
-    x[i] = i * (10.0 / 19.0);
-    y[i] = 2 * x[i]; // simple linear
+void testLoessWithConfidenceIntervals() {
+  std::cout << "Running testLoessWithConfidenceIntervals...\n";
+  std::vector<double> xVals(kTwentyCount);
+  std::vector<double> yVals(kTwentyCount);
+  for (size_t idx = 0; idx < kTwentyCount; ++idx) {
+    xVals[idx] = static_cast<double>(idx) * (10.0 / 19.0);
+    yVals[idx] = 2 * xVals[idx]; // simple linear
   }
 
   LoessOptions opts;
-  opts.fraction = 0.5;
-  opts.confidence_intervals = 0.95;
+  opts.fraction = kFractionHalf;
+  opts.confidence_intervals = kConfidenceLevel;
   Loess loess(opts);
-  auto result = loess.fit(x, y).value();
+  auto result = loess.fit(xVals, yVals).value();
 
-  auto cl = result.confidence_lower();
-  auto cu = result.confidence_upper();
-  assert_true(cl.size() == 20);
-  assert_true(cu.size() == 20);
-  for (size_t i = 0; i < 20; ++i) {
-    assert_true(cl[i] <= cu[i], "Lower > Upper confidence");
+  auto confLower = result.confidenceLower();
+  auto confUpper = result.confidenceUpper();
+  assertTrue(confLower.size() == kTwentyCount);
+  assertTrue(confUpper.size() == kTwentyCount);
+  for (size_t idx = 0; idx < kTwentyCount; ++idx) {
+    assertTrue(confLower[idx] <= confUpper[idx], "Lower > Upper confidence");
   }
 }
 
-void test_loess_with_prediction_intervals() {
-  std::cout << "Running test_loess_with_prediction_intervals..." << std::endl;
-  std::vector<double> x(20);
-  std::vector<double> y(20);
-  for (int i = 0; i < 20; ++i) {
-    x[i] = i * (10.0 / 19.0);
-    y[i] = 2 * x[i];
+void testLoessWithPredictionIntervals() {
+  std::cout << "Running testLoessWithPredictionIntervals...\n";
+  std::vector<double> xVals(kTwentyCount);
+  std::vector<double> yVals(kTwentyCount);
+  for (size_t idx = 0; idx < kTwentyCount; ++idx) {
+    xVals[idx] = static_cast<double>(idx) * (10.0 / 19.0);
+    yVals[idx] = 2 * xVals[idx];
   }
 
   LoessOptions opts;
-  opts.fraction = 0.5;
-  opts.prediction_intervals = 0.95;
+  opts.fraction = kFractionHalf;
+  opts.prediction_intervals = kConfidenceLevel;
   Loess loess(opts);
-  auto result = loess.fit(x, y).value();
+  auto result = loess.fit(xVals, yVals).value();
 
-  assert_true(result.prediction_lower().size() == 20);
-  assert_true(result.prediction_upper().size() == 20);
+  assertTrue(result.predictionLower().size() == kTwentyCount);
+  assertTrue(result.predictionUpper().size() == kTwentyCount);
 }
 
-void test_loess_reuse() {
-  std::cout << "Running test_loess_reuse..." << std::endl;
-  std::vector<double> x1 = {1.0, 2.0, 3.0, 4.0, 5.0};
-  std::vector<double> y1 = {2.0, 4.1, 5.9, 8.2, 9.8};
-  std::vector<double> x2 = {10.0, 20.0, 30.0, 40.0, 50.0};
-  std::vector<double> y2 = {20.0, 40.0, 60.0, 80.0, 100.0};
+void testLoessReuse() {
+  std::cout << "Running testLoessReuse...\n";
+  std::vector<double> xVals1 = {1.0, 2.0, 3.0, 4.0, 5.0};
+  std::vector<double> yVals1 = {2.0, 4.1, 5.9, 8.2, 9.8};
+  std::vector<double> xVals2 = {10.0, 20.0, 30.0, 40.0, 50.0};
+  std::vector<double> yVals2 = {20.0, 40.0, 60.0, 80.0, 100.0};
 
   LoessOptions opts;
-  opts.fraction = 0.5;
+  opts.fraction = kFractionHalf;
   opts.return_diagnostics = true;
   Loess loess(opts);
 
-  auto r1 = loess.fit(x1, y1).value();
-  auto r2 = loess.fit(x2, y2).value();
+  auto res1 = loess.fit(xVals1, yVals1).value();
+  auto res2 = loess.fit(xVals2, yVals2).value();
 
-  assert_true(r1.y_vector().size() == 5);
-  assert_true(r2.y_vector().size() == 5);
+  assertTrue(res1.yVector().size() == kSmallCount);
+  assertTrue(res2.yVector().size() == kSmallCount);
 }
 
-// TestStreamingLoess
-void test_streaming_returns_all_points() {
-  std::cout << "Running test_streaming_returns_all_points..." << std::endl;
-  int n = 100;
-  std::vector<double> x(n), y(n);
-  for (int i = 0; i < n; ++i) {
-    x[i] = i * (100.0 / 99.0);
-    y[i] = 2 * x[i] + 1;
+// ── Streaming LOESS tests ──────────────────────────────────────────────────
+void testStreamingReturnsAllPoints() {
+  std::cout << "Running testStreamingReturnsAllPoints...\n";
+  std::vector<double> xVals(kHundredCount);
+  std::vector<double> yVals(kHundredCount);
+  for (size_t idx = 0; idx < kHundredCount; ++idx) {
+    xVals[idx] = static_cast<double>(idx) * (100.0 / 99.0);
+    yVals[idx] = (2 * xVals[idx]) + 1;
   }
 
   StreamingOptions opts;
-  opts.fraction = 0.3;
-  opts.chunk_size = 5000; // > n
+  opts.fraction = kFractionThird;
+  opts.chunk_size = kChunkLarge; // > kHundredCount
   StreamingLoess stream(opts);
 
-  // Cannot move out here directly if we want to combine, actually we can since
-  // y_vector() copies
-  auto val1 = stream.process_chunk(x, y).value();
+  auto val1 = stream.processChunk(xVals, yVals).value();
   auto val2 = stream.finalize().value();
 
-  assert_true(val1.y_vector().size() + val2.y_vector().size() == n,
-              "Total points mismatch");
+  assertTrue(val1.yVector().size() + val2.yVector().size() == kHundredCount,
+             "Total points mismatch");
 }
 
-void test_streaming_basic() {
-  std::cout << "Running test_streaming_basic..." << std::endl;
-  int n = 2000;
-  std::vector<double> x(n), y(n);
-  for (int i = 0; i < n; ++i) {
-    x[i] = i * (1000.0 / 1999.0);
-    y[i] = std::sin(x[i] / 100.0);
+void testStreamingBasic() {
+  std::cout << "Running testStreamingBasic...\n";
+  std::vector<double> xVals(kTwoThousandCount);
+  std::vector<double> yVals(kTwoThousandCount);
+  for (size_t idx = 0; idx < kTwoThousandCount; ++idx) {
+    xVals[idx] = static_cast<double>(idx) * (1000.0 / 1999.0);
+    yVals[idx] = std::sin(xVals[idx] / 100.0);
   }
 
   StreamingOptions opts;
-  opts.fraction = 0.1;
-  opts.chunk_size = 1000;
+  opts.fraction = kFractionTenth;
+  opts.chunk_size = kChunkSmall;
   StreamingLoess stream(opts);
 
-  auto r1 = stream.process_chunk(x, y).value();
-  auto r2 = stream.finalize().value();
+  auto chunkResult = stream.processChunk(xVals, yVals).value();
+  auto finalResult = stream.finalize().value();
+  (void)chunkResult;
+  (void)finalResult;
 }
 
-void test_streaming_accuracy() {
-  std::cout << "Running test_streaming_accuracy..." << std::endl;
-  int n = 200;
-  std::vector<double> x(n), y(n);
-  for (int i = 0; i < n; ++i) {
-    x[i] = i * (100.0 / 199.0);
-    y[i] = 2 * x[i] + 1;
+void testStreamingAccuracy() {
+  std::cout << "Running testStreamingAccuracy...\n";
+  std::vector<double> xVals(kTwoHundredCount);
+  std::vector<double> yVals(kTwoHundredCount);
+  for (size_t idx = 0; idx < kTwoHundredCount; ++idx) {
+    xVals[idx] = static_cast<double>(idx) * (100.0 / 199.0);
+    yVals[idx] = (2 * xVals[idx]) + 1;
   }
 
   // Streaming
   StreamingOptions sopts;
-  sopts.fraction = 0.5;
-  sopts.chunk_size = 1000;
+  sopts.fraction = kFractionHalf;
+  sopts.chunk_size = kChunkSmall;
   StreamingLoess stream(sopts);
-  auto val1 = stream.process_chunk(x, y).value();
+  auto val1 = stream.processChunk(xVals, yVals).value();
   auto val2 = stream.finalize().value();
 
-  std::vector<double> stream_y;
-  auto y1 = val1.y_vector();
-  stream_y.insert(stream_y.end(), y1.begin(), y1.end());
-  auto y2 = val2.y_vector();
-  stream_y.insert(stream_y.end(), y2.begin(), y2.end());
+  std::vector<double> streamY;
+  auto yVec1 = val1.yVector();
+  streamY.insert(streamY.end(), yVec1.begin(), yVec1.end());
+  auto yVec2 = val2.yVector();
+  streamY.insert(streamY.end(), yVec2.begin(), yVec2.end());
 
   // Batch
   LoessOptions bopts;
-  bopts.fraction = 0.5;
+  bopts.fraction = kFractionHalf;
   Loess batch(bopts);
-  auto bres = batch.fit(x, y).value();
-  auto by = bres.y_vector();
+  auto bres = batch.fit(xVals, yVals).value();
+  auto batchY = bres.yVector();
 
-  assert_true(stream_y.size() == by.size());
-  for (size_t i = 0; i < n; ++i) {
-    assert_approx(stream_y[i], by[i], 1e-10);
+  assertTrue(streamY.size() == batchY.size());
+  for (size_t idx = 0; idx < kTwoHundredCount; ++idx) {
+    assertApprox(streamY[idx], batchY[idx], kDefaultEpsilon);
   }
 }
 
-// TestOnlineLoess
-void test_online_basic() {
-  std::cout << "Running test_online_basic..." << std::endl;
-  std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
-  std::vector<double> y = {2.0,  4.0,  6.0,  8.0,  10.0,
-                           12.0, 14.0, 16.0, 18.0, 20.0};
+// ── Online LOESS tests ─────────────────────────────────────────────────────
+void testOnlineBasic() {
+  std::cout << "Running testOnlineBasic...\n";
+  std::vector<double> xVals = {1.0, 2.0, 3.0, 4.0, 5.0,
+                               6.0, 7.0, 8.0, 9.0, 10.0};
+  std::vector<double> yVals = {2.0,  4.0,  6.0,  8.0,  10.0,
+                               12.0, 14.0, 16.0, 18.0, 20.0};
 
   OnlineOptions opts;
-  opts.fraction = 0.5;
-  opts.window_capacity = 10;
-  opts.min_points = 3;
+  opts.fraction = kFractionHalf;
+  opts.window_capacity = kWindowCapacity;
+  opts.min_points = kMinPointsOnline;
   OnlineLoess online(opts);
 
-  int points_out = 0;
-  for (size_t i = 0; i < x.size(); ++i) {
-    std::vector<double> xi = {x[i]};
-    std::vector<double> yi = {y[i]};
-    // Result is rvalue from temporary Expected, needs move or const ref
-    auto res = online.add_points(xi, yi).value();
-    if (!res.y_vector().empty()) {
-      points_out++;
+  int pointsOut = 0;
+  for (size_t idx = 0; idx < xVals.size(); ++idx) {
+    std::vector<double> xVal = {xVals[idx]};
+    std::vector<double> yVal = {yVals[idx]};
+    auto res = online.addPoints(xVal, yVal).value();
+    if (!res.yVector().empty()) {
+      pointsOut++;
     }
   }
-  assert_true(points_out > 0);
+  assertTrue(pointsOut > 0);
 }
 
-// TestErrorHandling
-void test_mismatched_lengths() {
-  std::cout << "Running test_mismatched_lengths..." << std::endl;
-  std::vector<double> x = {1.0, 2.0, 3.0};
-  std::vector<double> y = {2.0, 4.0};
+// ── Error handling tests ───────────────────────────────────────────────────
+void testMismatchedLengths() {
+  std::cout << "Running testMismatchedLengths...\n";
+  std::vector<double> xVals = {1.0, 2.0, 3.0};
+  std::vector<double> yVals = {2.0, 4.0};
 
   LoessOptions opts;
   Loess loess(opts);
   try {
-    loess.fit(x, y).value();
-    assert_true(false, "Should have thrown");
-  } catch (const std::exception &e) {
-    // Expected
+    loess.fit(xVals, yVals).value();
+    assertTrue(false, "Should have thrown");
+  } catch (const std::exception &err) {
+    (void)err; // expected: mismatched lengths throw
   }
 
-  // Also test checking has_value()
-  auto res = loess.fit(x, y);
-  assert_true(!res.has_value());
-  assert_true(!res.error().empty());
+  // Also test checking hasValue()
+  auto res = loess.fit(xVals, yVals);
+  assertTrue(!res.hasValue());
+  assertTrue(!res.error().empty());
 }
+
+} // namespace
 
 int main() {
   try {
-    test_basic_smooth();
-    test_basic_smooth_serial();
-    test_loess_with_diagnostics();
-    test_loess_with_residuals();
-    test_loess_with_robustness_weights();
-    test_loess_with_confidence_intervals();
-    test_loess_with_prediction_intervals();
-    test_loess_reuse();
+    testBasicSmooth();
+    testBasicSmoothSerial();
+    testLoessWithDiagnostics();
+    testLoessWithResiduals();
+    testLoessWithRobustnessWeights();
+    testLoessWithConfidenceIntervals();
+    testLoessWithPredictionIntervals();
+    testLoessReuse();
 
-    test_streaming_returns_all_points();
-    test_streaming_basic();
-    test_streaming_accuracy();
+    testStreamingReturnsAllPoints();
+    testStreamingBasic();
+    testStreamingAccuracy();
 
-    test_online_basic();
+    testOnlineBasic();
 
-    test_mismatched_lengths();
+    testMismatchedLengths();
 
-    std::cout << "All C++ tests passed!" << std::endl;
-  } catch (const std::exception &e) {
-    std::cerr << "Test failed with exception: " << e.what() << std::endl;
+    std::cout << "All C++ tests passed!\n";
+  } catch (const std::exception &err) {
+    std::cerr << "Test failed with exception: " << err.what() << '\n';
     return 1;
   }
   return 0;

@@ -148,12 +148,12 @@ class TestLoess:
             result = loess.fit(x, y)
             assert len(result.y) == len(x)
 
-    def test_loess_with_delta(self):
-        """Test loess with delta optimization."""
+    def test_loess_with_surface_mode(self):
+        """Test loess with surface_mode option."""
         x = np.linspace(0, 100, 200)
         y = np.sin(x / 10)
 
-        loess = fastloess.Loess(fraction=0.1, delta=0.1)
+        loess = fastloess.Loess(fraction=0.1, surface_mode="direct")
         result = loess.fit(x, y)
         assert len(result.y) == len(x)
 
