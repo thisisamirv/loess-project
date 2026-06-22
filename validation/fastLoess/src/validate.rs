@@ -65,38 +65,27 @@ fn process_file(input_path: &Path, output_dir: &Path) -> Result<(), Box<dyn Erro
     let file = fs::File::open(input_path)?;
     let mut data: ValidationData = serde_json::from_reader(file)?;
 
-    let delta = if let Some(extra) = &data.params.extra {
+    let surface_mode = if let Some(extra) = &data.params.extra {
         let is_direct = extra.get("surface").and_then(|v| v.as_str()) == Some("direct")
             || extra
                 .get("extra")
                 .and_then(|v| v.get("surface"))
                 .and_then(|v| v.as_str())
                 == Some("direct");
-
-        if is_direct {
-            Some(0.0)
-        } else {
-            None // Use default heuristic
-        }
+        if is_direct { Direct } else { Interpolation }
     } else {
-        None
+        Interpolation
     };
 
-    let processor = Loess::new()
+    let model = Loess::new()
         .fraction(data.params.fraction)
         .iterations(data.params.iterations)
         .boundary_policy(NoBoundary) // R doesn't have boundary extension by default
         .scaling_method(MAR) // Match R's default scaling if applicable, usually MAD/MAR
+        .surface_mode(surface_mode)
         .adapter(Batch)
-        .parallel(true);
-
-    let processor = if let Some(d) = delta {
-        processor.delta(d)
-    } else {
-        processor
-    };
-
-    let model = processor.build()?;
+        .parallel(true)
+        .build()?;
 
     let result = model.fit(&data.input.x, &data.input.y)?;
     let fitted = result.y;

@@ -111,7 +111,6 @@ fn run_fraction_comparison() -> Result<(), Box<dyn std::error::Error>> {
         let result = Loess::new()
             .fraction(frac)
             .iterations(2)
-            .delta(0.0) // Direct equivalent
             .boundary_policy(Reflect)
             .adapter(Batch)
             .build()
@@ -171,7 +170,6 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .fraction(0.3)
         .iterations(2)
         .confidence_intervals(0.95)
-        .delta(0.0)
         .boundary_policy(Reflect)
         .adapter(Batch)
         .build()
@@ -184,7 +182,6 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .fraction(0.3)
         .iterations(2)
         .prediction_intervals(0.95)
-        .delta(0.0)
         .boundary_policy(Reflect)
         .adapter(Batch)
         .build()
@@ -275,7 +272,6 @@ fn run_robustness_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let result_non_robust = Loess::new()
         .fraction(0.25)
         .iterations(0)
-        .delta(0.0)
         .adapter(Batch)
         .build()
         .unwrap()
@@ -286,7 +282,6 @@ fn run_robustness_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let result_robust = Loess::new()
         .fraction(0.25)
         .iterations(6)
-        .delta(0.0)
         .adapter(Batch)
         .build()
         .unwrap()
@@ -344,7 +339,6 @@ fn run_loess_concept() -> Result<(), Box<dyn std::error::Error>> {
     let result = Loess::new()
         .fraction(fraction)
         .iterations(0)
-        .delta(0.0)
         .adapter(Batch)
         .build()
         .unwrap()
@@ -741,7 +735,7 @@ fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("-------------------------------------------");
 
     let result_direct = Loess::new()
-        .delta(0.0) // Direct evaluation
+        .surface_mode(Direct)
         .fraction(0.2)
         .adapter(Batch)
         .build()
@@ -750,7 +744,7 @@ fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .unwrap();
 
     let result_interp = Loess::new()
-        .delta(0.1) // Allow interpolation
+        .surface_mode(Interpolation)
         .fraction(0.2)
         .adapter(Batch)
         .build()
@@ -999,12 +993,10 @@ fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut y_large = Vec::<f64>::with_capacity(n);
 
     for i in 0..n {
-        let x_slice = &x[i..i + 1];
-        let y_slice = &y[i..i + 1];
-        let r_small = adapter_small.add_points(x_slice, y_slice).unwrap();
-        let r_large = adapter_large.add_points(x_slice, y_slice).unwrap();
-        y_small.push(r_small[0].as_ref().map(|o| o.smoothed).unwrap_or(y[i]));
-        y_large.push(r_large[0].as_ref().map(|o| o.smoothed).unwrap_or(y[i]));
+        let r_small = adapter_small.add_point(&x[i..i + 1], y[i]).unwrap();
+        let r_large = adapter_large.add_point(&x[i..i + 1], y[i]).unwrap();
+        y_small.push(r_small.as_ref().map(|o| o.smoothed).unwrap_or(y[i]));
+        y_large.push(r_large.as_ref().map(|o| o.smoothed).unwrap_or(y[i]));
     }
 
     let path = "../output/visual/online_comparison.csv";
@@ -1145,12 +1137,10 @@ fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let mut it_o_on = Vec::new();
 
     for i in 0..n {
-        let x_slice = &x[i..i + 1];
-        let y_slice = &y[i..i + 1];
-        let r_off = ad_o_off.add_points(x_slice, y_slice).unwrap();
-        let r_on = ad_o_on.add_points(x_slice, y_slice).unwrap();
-        let o_off = r_off[0].as_ref();
-        let o_on = r_on[0].as_ref();
+        let r_off = ad_o_off.add_point(&x[i..i + 1], y[i]).unwrap();
+        let r_on = ad_o_on.add_point(&x[i..i + 1], y[i]).unwrap();
+        let o_off = r_off.as_ref();
+        let o_on = r_on.as_ref();
         y_o_off.push(o_off.map(|o| o.smoothed).unwrap_or(y[i]));
         y_o_on.push(o_on.map(|o| o.smoothed).unwrap_or(y[i]));
         it_o_off.push(o_off.and_then(|o| o.iterations_used).unwrap_or(0));
