@@ -1,0 +1,5 @@
+linters: linters_with_defaults(
+    indentation_linter(indent = 4L),
+    object_name_linter(styles = c("snake_case", "SNAKE_CASE", "symbols"))
+  )
+encoding: "UTF-8"

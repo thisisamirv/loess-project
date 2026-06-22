@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
+import argparse
 import hashlib
 import json
 import os
 import shutil
-import sys
-import argparse
+
 
 def sha256_file(path):
     """Calculate SHA256 hash of a file."""
@@ -14,13 +14,14 @@ def sha256_file(path):
             h.update(chunk)
     return h.hexdigest()
 
+
 def clean_checksums(vendor_dir, quiet=False):
     if not quiet:
         print(f"Cleaning checksums in {vendor_dir}...")
-    
+
     # 1. Remove non-essential directories
     STRIP_DIRS = ["tests", "benches", "examples", "doc", "docs", ".github", ".config"]
-    
+
     for root, dirs, files in os.walk(vendor_dir):
         # Remove hidden directories and STRIP_DIRS
         for d in list(dirs):
@@ -46,10 +47,10 @@ def clean_checksums(vendor_dir, quiet=False):
             try:
                 with open(filepath, "r") as f:
                     data = json.load(f)
-                
+
                 if "files" in data:
                     original_files = data["files"]
-                    
+
                     # Remove keys that:
                     # 1. Were hidden files (handled above)
                     # 2. Don't exist on disk (were inside stripped dirs)
@@ -59,13 +60,13 @@ def clean_checksums(vendor_dir, quiet=False):
                         file_path = os.path.join(root, k)
                         exists = os.path.exists(file_path)
                         is_hidden = any(part.startswith(".") for part in k.split("/"))
-                        
+
                         if exists and not is_hidden:
                             # Recalculate checksum to handle line ending changes
                             new_hash = sha256_file(file_path)
                             new_files[k] = new_hash
                         # If it doesn't exist or is hidden, it is excluded from checksum
-                    
+
                     if original_files != new_files:
                         data["files"] = new_files
                         with open(filepath, "w") as f:
@@ -74,13 +75,16 @@ def clean_checksums(vendor_dir, quiet=False):
             except Exception as e:
                 if not quiet:
                     print(f"  Error processing {filepath}: {e}")
-    
+
     if not quiet:
         print(f"Done. Updated {updated_count} checksum files.")
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Clean vendor checksums")
-    parser.add_argument("vendor_dir", nargs="?", default="src/vendor", help="Vendor directory")
+    parser.add_argument(
+        "vendor_dir", nargs="?", default="src/vendor", help="Vendor directory"
+    )
     parser.add_argument("-q", "--quiet", action="store_true", help="Suppress output")
     args = parser.parse_args()
     clean_checksums(args.vendor_dir, args.quiet)

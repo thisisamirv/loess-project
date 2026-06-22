@@ -8,11 +8,12 @@ This example demonstrates streaming LOESS smoothing for large datasets:
 - Parallel execution for extreme speed
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from fastloess import StreamingLoess, Loess
-import time
 import os
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+from fastloess import Loess, StreamingLoess
 
 # Get script directory for relative paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))

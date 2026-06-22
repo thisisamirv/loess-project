@@ -15,12 +15,12 @@ def parse_estimates(estimates_file: Path) -> dict | None:
     try:
         with open(estimates_file) as f:
             estimates = json.load(f)
-        
+
         # Criterion stores in nanoseconds
         mean_ns = estimates.get("mean", {}).get("point_estimate", 0)
         std_ns = estimates.get("std_dev", {}).get("point_estimate", 0)
         median_ns = estimates.get("median", {}).get("point_estimate", 0)
-        
+
         # Try to get min/max from sample data
         sample_file = estimates_file.parent / "sample.json"
         min_ns = mean_ns
@@ -35,7 +35,7 @@ def parse_estimates(estimates_file: Path) -> dict | None:
                     max_ns = max(times)
             except Exception:
                 pass
-        
+
         return {
             "mean_time_ms": mean_ns / 1_000_000,
             "std_time_ms": std_ns / 1_000_000,
@@ -51,18 +51,18 @@ def parse_estimates(estimates_file: Path) -> dict | None:
 def find_criterion_results(criterion_dir: Path) -> Dict[str, List[dict]]:
     """Find all criterion benchmark results and organize by category."""
     results: Dict[str, List[dict]] = {}
-    
+
     if not criterion_dir.exists():
         print(f"Criterion directory not found: {criterion_dir}")
         return results
-    
+
     # Walk through criterion output structure
     for group_dir in criterion_dir.iterdir():
         if not group_dir.is_dir() or group_dir.name == "report":
             continue
-        
+
         category = group_dir.name
-        
+
         # Strip suffix for logical checking
         clean_category = category
         if category.endswith("_parallel"):
@@ -74,13 +74,13 @@ def find_criterion_results(criterion_dir: Path) -> Dict[str, List[dict]]:
 
         if category not in results:
             results[category] = []
-        
+
         for bench_dir in group_dir.iterdir():
             if not bench_dir.is_dir() or bench_dir.name == "report":
                 continue
-            
+
             bench_id = bench_dir.name
-            
+
             # Check if this has 'new/' directly (non-parameterized)
             new_dir = bench_dir / "new"
             if new_dir.exists() and (new_dir / "estimates.json").exists():
@@ -91,18 +91,23 @@ def find_criterion_results(criterion_dir: Path) -> Dict[str, List[dict]]:
                         "name": bench_id,
                         "size": 5000,
                         "iterations": 10,
-                        **timing
+                        **timing,
                     }
                     results[category].append(result)
             else:
                 # Parameterized benchmark
                 for param_dir in bench_dir.iterdir():
-                    if not param_dir.is_dir() or param_dir.name in ("report", "new", "base", "change"):
+                    if not param_dir.is_dir() or param_dir.name in (
+                        "report",
+                        "new",
+                        "base",
+                        "change",
+                    ):
                         continue
-                    
+
                     param = param_dir.name
                     estimates_file = param_dir / "new" / "estimates.json"
-                    
+
                     if estimates_file.exists():
                         timing = parse_estimates(estimates_file)
                         if timing:
@@ -111,27 +116,33 @@ def find_criterion_results(criterion_dir: Path) -> Dict[str, List[dict]]:
                                 size = int(param)
                             except ValueError:
                                 size = 0
-                            
+
                             # Create aligned name
                             if clean_category == "scalability":
                                 name = f"scale_{param}"
-                            elif clean_category in ("financial", "scientific", "genomic", "fraction", "iterations"):
+                            elif clean_category in (
+                                "financial",
+                                "scientific",
+                                "genomic",
+                                "fraction",
+                                "iterations",
+                            ):
                                 name = f"{clean_category}_{param}"
                             else:
                                 name = f"{bench_id}_{param}"
-                            
+
                             result = {
                                 "name": name,
                                 "size": size,
                                 "iterations": 10,
-                                **timing
+                                **timing,
                             }
                             results[category].append(result)
-    
+
     # Sort results
     for category in results:
         results[category].sort(key=lambda x: x["name"])
-    
+
     return results
 
 
@@ -140,22 +151,22 @@ def main():
     workspace_root = script_dir.parent
     criterion_dir = workspace_root / "target" / "criterion"
     output_dir = script_dir / "output"
-    
+
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     print(f"Reading criterion results from: {criterion_dir}")
-    
+
     results = find_criterion_results(criterion_dir)
-    
+
     if not results:
         print("No criterion results found. Run 'cargo bench' first.")
         return 1
-    
+
     # Separate results
     cpu_results = {}
     cpu_serial_results = {}
     gpu_results = {}
-    
+
     for category, benchmarks in results.items():
         if category.endswith("_serial"):
             target_dict = cpu_serial_results
@@ -165,15 +176,18 @@ def main():
             target_dict = gpu_results
         else:
             target_dict = cpu_results
-            
-        clean_cat = category.replace("_serial", "").replace("_parallel", "").replace("_gpu", "")
+
+        clean_cat = (
+            category.replace("_serial", "").replace("_parallel", "").replace("_gpu", "")
+        )
         if clean_cat not in target_dict:
             target_dict[clean_cat] = []
         target_dict[clean_cat].extend(benchmarks)
 
     # Helper to save
     def save_results(data, filename):
-        if not data: return
+        if not data:
+            return
         output_path = output_dir / filename
         with open(output_path, "w") as f:
             json.dump(data, f, indent=2)
@@ -182,7 +196,7 @@ def main():
     save_results(cpu_results, "rust_benchmark_cpu.json")
     save_results(cpu_serial_results, "rust_benchmark_cpu_serial.json")
     save_results(gpu_results, "rust_benchmark_gpu.json")
-    
+
     return 0
 
 

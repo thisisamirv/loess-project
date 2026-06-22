@@ -1,18 +1,18 @@
 {
-  "name": "fastloess-win32-arm64-msvc",
-  "version": "1.0.0",
-  "os": [
-    "win32"
-  ],
-  "cpu": [
-    "arm64"
-  ],
-  "main": "fastloess.node",
-  "files": [
-    "fastloess.node"
-  ],
-  "license": "MIT OR Apache-2.0",
-  "engines": {
-    "node": ">= 20"
-  }
+    "name": "fastloess-win32-arm64-msvc",
+    "version": "1.0.0",
+    "os": [
+        "win32"
+    ],
+    "cpu": [
+        "arm64"
+    ],
+    "main": "fastloess.node",
+    "files": [
+        "fastloess.node"
+    ],
+    "license": "MIT OR Apache-2.0",
+    "engines": {
+        "node": ">= 20"
+    }
 }

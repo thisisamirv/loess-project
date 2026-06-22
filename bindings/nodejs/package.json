@@ -1,43 +1,43 @@
 {
-  "name": "fastloess",
-  "version": "1.0.0",
-  "description": "High-performance LOESS smoothing for Node.js",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "scripts": {
-    "build": "napi build --release",
-    "build:debug": "napi build",
-    "test": "node --test ../../tests/nodejs/test_fastloess.js",
-    "lint": "eslint index.js ../../tests/nodejs/test_fastloess.js",
-    "universal": "napi universal"
-  },
-  "napi": {
-    "binaryName": "fastloess",
-    "targets": [
-      "x86_64-unknown-linux-gnu",
-      "aarch64-unknown-linux-gnu",
-      "x86_64-unknown-linux-musl",
-      "x86_64-pc-windows-msvc",
-      "aarch64-pc-windows-msvc",
-      "x86_64-apple-darwin",
-      "aarch64-apple-darwin"
-    ]
-  },
-  "optionalDependencies": {
-    "fastloess-darwin-arm64": "^1.0.0",
-    "fastloess-darwin-x64": "^1.0.0",
-    "fastloess-linux-arm64-gnu": "^1.0.0",
-    "fastloess-linux-x64-gnu": "^1.0.0",
-    "fastloess-linux-x64-musl": "^1.0.0",
-    "fastloess-win32-arm64-msvc": "^1.0.0",
-    "fastloess-win32-x64-msvc": "^1.0.0"
-  },
-  "devDependencies": {
-    "@napi-rs/cli": "^3.5",
-    "oxlint": "^1.48"
-  },
-  "engines": {
-    "node": ">= 20"
-  },
-  "license": "MIT OR Apache-2.0"
+    "name": "fastloess",
+    "version": "1.0.0",
+    "description": "High-performance LOESS smoothing for Node.js",
+    "main": "index.js",
+    "types": "index.d.ts",
+    "scripts": {
+        "build": "napi build --release",
+        "build:debug": "napi build",
+        "test": "node --test ../../tests/nodejs/test_fastloess.js",
+        "lint": "eslint index.js ../../tests/nodejs/test_fastloess.js",
+        "universal": "napi universal"
+    },
+    "napi": {
+        "binaryName": "fastloess",
+        "targets": [
+            "x86_64-unknown-linux-gnu",
+            "aarch64-unknown-linux-gnu",
+            "x86_64-unknown-linux-musl",
+            "x86_64-pc-windows-msvc",
+            "aarch64-pc-windows-msvc",
+            "x86_64-apple-darwin",
+            "aarch64-apple-darwin"
+        ]
+    },
+    "optionalDependencies": {
+        "fastloess-darwin-arm64": "^1.0.0",
+        "fastloess-darwin-x64": "^1.0.0",
+        "fastloess-linux-arm64-gnu": "^1.0.0",
+        "fastloess-linux-x64-gnu": "^1.0.0",
+        "fastloess-linux-x64-musl": "^1.0.0",
+        "fastloess-win32-arm64-msvc": "^1.0.0",
+        "fastloess-win32-x64-msvc": "^1.0.0"
+    },
+    "devDependencies": {
+        "@napi-rs/cli": "^3.5",
+        "oxlint": "^1.48"
+    },
+    "engines": {
+        "node": ">= 20"
+    },
+    "license": "MIT OR Apache-2.0"
 }

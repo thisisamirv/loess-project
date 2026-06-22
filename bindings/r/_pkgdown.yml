@@ -1,0 +1,41 @@
+url: https://thisisamirv.github.io/loess-project/
+template:
+  bootstrap: 5
+  bootswatch: flatly
+
+development:
+  mode: auto
+
+reference:
+  - title: Core LOESS Interface
+    desc: Main R6 classes for LOESS smoothing.
+    contents:
+      - rfastloess-package
+      - Loess
+      - StreamingLoess
+      - OnlineLoess
+  - title: Results and Utilities
+    desc: Objects returned by fit methods and helper functions.
+    contents:
+      - plot.LoessResult
+      - print.Loess
+      - print.LoessResult
+      - print.OnlineLoess
+      - print.StreamingLoess
+  - title: Types
+    desc: Helper types for documentation.
+    contents:
+      - Nullable
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/thisisamirv/loess-project
+      aria-label: GitHub
+    intro:
+      text: Get Started
+      href: articles/rfastloess.html

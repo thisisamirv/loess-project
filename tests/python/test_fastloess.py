@@ -9,9 +9,9 @@ Comprehensive test suite covering:
 - Edge cases
 """
 
+import fastloess
 import numpy as np
 import pytest
-import fastloess
 
 
 class TestLoess:

@@ -7,11 +7,10 @@ fastLoess Rust crate.
 """
 
 from .__version__ import __version__
-
 from ._core import (
-    LoessResult,
     Diagnostics,
     Loess,
+    LoessResult,
     OnlineLoess,
     StreamingLoess,
 )

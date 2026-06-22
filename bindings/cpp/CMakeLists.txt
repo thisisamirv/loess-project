@@ -18,9 +18,11 @@ corrosion_import_crate(MANIFEST_PATH Cargo.toml)
 
 # Configure include directories
 # This ensures that #include "fastloess.hpp" works for consumers
-target_include_directories(fastloess_cpp INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
+target_include_directories(
+    fastloess_cpp
+    INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
 )
 
 # Create an alias for idiomatic usage (fastloess::fastloess)
@@ -29,18 +31,18 @@ add_library(fastloess::fastloess ALIAS fastloess_cpp)
 # Installation configuration
 include(GNUInstallDirs)
 
-install(TARGETS fastloess_cpp
+install(
+    TARGETS fastloess_cpp
     EXPORT fastloessTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-install(DIRECTORY include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-export(EXPORT fastloessTargets
+export(
+    EXPORT fastloessTargets
     FILE "${CMAKE_CURRENT_BINARY_DIR}/fastloessTargets.cmake"
 )
 
@@ -48,5 +50,8 @@ export(EXPORT fastloessTargets
 enable_testing()
 add_executable(test_fastloess tests/test_fastloess.cpp)
 target_link_libraries(test_fastloess PRIVATE fastloess_cpp)
-target_include_directories(test_fastloess PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+target_include_directories(
+    test_fastloess
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/tests
+)
 add_test(NAME test_fastloess COMMAND test_fastloess)

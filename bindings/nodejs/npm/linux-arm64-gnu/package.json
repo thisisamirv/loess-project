@@ -1,21 +1,21 @@
 {
-  "name": "fastloess-linux-arm64-gnu",
-  "version": "1.0.0",
-  "os": [
-    "linux"
-  ],
-  "cpu": [
-    "arm64"
-  ],
-  "main": "fastloess.node",
-  "files": [
-    "fastloess.node"
-  ],
-  "license": "MIT OR Apache-2.0",
-  "engines": {
-    "node": ">= 20"
-  },
-  "libc": [
-    "glibc"
-  ]
+    "name": "fastloess-linux-arm64-gnu",
+    "version": "1.0.0",
+    "os": [
+        "linux"
+    ],
+    "cpu": [
+        "arm64"
+    ],
+    "main": "fastloess.node",
+    "files": [
+        "fastloess.node"
+    ],
+    "license": "MIT OR Apache-2.0",
+    "engines": {
+        "node": ">= 20"
+    },
+    "libc": [
+        "glibc"
+    ]
 }

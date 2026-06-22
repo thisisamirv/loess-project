@@ -12,10 +12,11 @@ The Loess class is the primary interface for
 processing complete datasets that fit in memory.
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-from fastloess import Loess
 import os
+
+import matplotlib.pyplot as plt
+import numpy as np
+from fastloess import Loess
 
 # Get script directory for relative paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))

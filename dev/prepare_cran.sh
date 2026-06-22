@@ -6,14 +6,14 @@ echo "📦 Preparing package for CRAN submission..."
 # 1. Extract vendor archive if needed
 echo "   -> Extracting vendored dependencies..."
 if [ -f src/vendor.tar.xz ] && [ ! -d src/vendor ]; then
-    (cd src && tar -xf vendor.tar.xz)
+	(cd src && tar -xf vendor.tar.xz)
 fi
 
 # 2. Ensure cargo config exists
 mkdir -p src/cargo
 if [ ! -f src/cargo/config.toml ]; then
-    echo "   -> Creating cargo config..."
-    cat > src/cargo/config.toml << 'EOF'
+	echo "   -> Creating cargo config..."
+	cat >src/cargo/config.toml <<'EOF'
 [source.crates-io]
 replace-with = "vendored-sources"
 
@@ -25,7 +25,7 @@ fi
 # 3. Generate AUTHORS file
 echo "   -> Generating inst/AUTHORS..."
 mkdir -p inst
-(cd src && cargo metadata --locked --format-version 1 > ../cargo_metadata_temp.json)
+(cd src && cargo metadata --locked --format-version 1 >../cargo_metadata_temp.json)
 
 python3 -c '
 import json

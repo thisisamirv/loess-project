@@ -1,18 +1,18 @@
 {
-  "name": "fastloess-darwin-x64",
-  "version": "1.0.0",
-  "os": [
-    "darwin"
-  ],
-  "cpu": [
-    "x64"
-  ],
-  "main": "fastloess.node",
-  "files": [
-    "fastloess.node"
-  ],
-  "license": "MIT OR Apache-2.0",
-  "engines": {
-    "node": ">= 20"
-  }
+    "name": "fastloess-darwin-x64",
+    "version": "1.0.0",
+    "os": [
+        "darwin"
+    ],
+    "cpu": [
+        "x64"
+    ],
+    "main": "fastloess.node",
+    "files": [
+        "fastloess.node"
+    ],
+    "license": "MIT OR Apache-2.0",
+    "engines": {
+        "node": ">= 20"
+    }
 }
