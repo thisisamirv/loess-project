@@ -8,10 +8,11 @@ use napi_derive::napi;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::{
-    BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
+    UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessError, LoessResult, MAD, MAR, Mean, Online,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessError, LoessResult, MAD, MAR, Online,
     Streaming,
 };
 
@@ -77,13 +78,50 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
         _ => Err(Error::new(
             Status::InvalidArg,
-            format!(
-                "Unknown scaling method: {}. Valid options: mad, mar, mean",
-                name
-            ),
+            format!("Unknown scaling method: {}. Valid options: mad, mar", name),
+        )),
+    }
+}
+
+/// Parse polynomial degree from string
+fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree> {
+    match name.to_lowercase().as_str() {
+        "constant" | "0" => Ok(PolynomialDegree::Constant),
+        "linear" | "1" => Ok(PolynomialDegree::Linear),
+        "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
+        "cubic" | "3" => Ok(PolynomialDegree::Cubic),
+        "quartic" | "4" => Ok(PolynomialDegree::Quartic),
+        _ => Err(Error::new(
+            Status::InvalidArg,
+            format!("Unknown polynomial degree: {}", name),
+        )),
+    }
+}
+
+/// Parse distance metric from string
+fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
+    match name.to_lowercase().as_str() {
+        "normalized" | "norm" => Ok(DistanceMetric::Normalized),
+        "euclidean" | "euclid" => Ok(DistanceMetric::Euclidean),
+        "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
+        "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
+        _ => Err(Error::new(
+            Status::InvalidArg,
+            format!("Unknown distance metric: {}", name),
+        )),
+    }
+}
+
+/// Parse surface mode from string
+fn parse_surface_mode(name: &str) -> Result<SurfaceMode> {
+    match name.to_lowercase().as_str() {
+        "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
+        "direct" => Ok(SurfaceMode::Direct),
+        _ => Err(Error::new(
+            Status::InvalidArg,
+            format!("Unknown surface mode: {}", name),
         )),
     }
 }
@@ -236,6 +274,51 @@ impl LoessResultObj {
     pub fn get_iterations_used(&self) -> Option<u32> {
         self.inner.iterations_used.map(|i| i as u32)
     }
+
+    /// Get equivalent number of parameters (hat-matrix stat, if return_se was set).
+    #[napi(getter)]
+    pub fn get_enp(&self) -> Option<f64> {
+        self.inner.enp
+    }
+
+    /// Get trace of hat matrix (if return_se was set).
+    #[napi(getter)]
+    pub fn get_trace_hat(&self) -> Option<f64> {
+        self.inner.trace_hat
+    }
+
+    /// Get first delta statistic (if return_se was set).
+    #[napi(getter)]
+    pub fn get_delta1(&self) -> Option<f64> {
+        self.inner.delta1
+    }
+
+    /// Get second delta statistic (if return_se was set).
+    #[napi(getter)]
+    pub fn get_delta2(&self) -> Option<f64> {
+        self.inner.delta2
+    }
+
+    /// Get residual scale estimate (if return_se was set).
+    #[napi(getter)]
+    pub fn get_residual_scale(&self) -> Option<f64> {
+        self.inner.residual_scale
+    }
+
+    /// Get per-point leverage / hat-matrix diagonal (if return_se was set).
+    #[napi(getter)]
+    pub fn get_leverage(&self) -> Option<Float64Array> {
+        self.inner
+            .leverage
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    /// Get number of predictor dimensions.
+    #[napi(getter)]
+    pub fn get_dimensions(&self) -> u32 {
+        self.inner.dimensions as u32
+    }
 }
 
 /// Configuration options for LOESS smoothing.
@@ -245,9 +328,6 @@ pub struct SmoothOptions {
     pub fraction: Option<f64>,
     /// Number of robustness iterations. Default: 3.
     pub iterations: Option<u32>,
-    /// Delta for interpolation speedup. Default: NaN (auto).
-    /// Set to 0.0 to disable interpolation.
-    pub delta: Option<f64>,
     /// Weight function ("tricube", "gaussian", etc.). Default: "tricube".
     pub weightFunction: Option<String>,
     /// Robustness method ("bisquare", "huber"). Default: "bisquare".
@@ -278,6 +358,16 @@ pub struct SmoothOptions {
     pub cvK: Option<u32>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
+    /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
+    pub degree: Option<String>,
+    /// Number of predictor dimensions. Default: 1.
+    pub dimensions: Option<u32>,
+    /// Distance metric ("normalized", "euclidean", etc.). Default: "normalized".
+    pub distanceMetric: Option<String>,
+    /// Surface mode ("interpolation" or "direct"). Default: "interpolation".
+    pub surfaceMode: Option<String>,
+    /// Compute hat-matrix statistics (enp, traceHat, etc.). Default: false.
+    pub returnSe: Option<bool>,
 }
 
 /// Batch LOESS smoothing.
@@ -335,9 +425,6 @@ impl Loess {
             if let Some(iter) = opts.iterations {
                 builder = builder.iterations(iter as usize);
             }
-            if let Some(d) = opts.delta {
-                builder = builder.delta(d);
-            }
             if let Some(wf) = &opts.weightFunction {
                 builder = builder.weight_function(parse_weight_function(wf)?);
             }
@@ -373,6 +460,21 @@ impl Loess {
             }
             if let Some(par) = opts.parallel {
                 builder = builder.parallel(par);
+            }
+            if let Some(deg) = &opts.degree {
+                builder = builder.degree(parse_polynomial_degree(deg)?);
+            }
+            if let Some(dims) = opts.dimensions {
+                builder = builder.dimensions(dims as usize);
+            }
+            if let Some(dm) = &opts.distanceMetric {
+                builder = builder.distance_metric(parse_distance_metric(dm)?);
+            }
+            if let Some(sm) = &opts.surfaceMode {
+                builder = builder.surface_mode(parse_surface_mode(sm)?);
+            }
+            if opts.returnSe.unwrap_or(false) {
+                builder = builder.return_se();
             }
 
             // Cross-validation
@@ -462,9 +564,6 @@ impl StreamingLoess {
             if let Some(iter) = opts.iterations {
                 builder = builder.iterations(iter as usize);
             }
-            if let Some(d) = opts.delta {
-                builder = builder.delta(d);
-            }
             if let Some(wf) = opts.weightFunction {
                 builder = builder.weight_function(parse_weight_function(&wf)?);
             }
@@ -494,6 +593,21 @@ impl StreamingLoess {
             }
             if let Some(par) = opts.parallel {
                 builder = builder.parallel(par);
+            }
+            if let Some(deg) = opts.degree {
+                builder = builder.degree(parse_polynomial_degree(&deg)?);
+            }
+            if let Some(dims) = opts.dimensions {
+                builder = builder.dimensions(dims as usize);
+            }
+            if let Some(dm) = opts.distanceMetric {
+                builder = builder.distance_metric(parse_distance_metric(&dm)?);
+            }
+            if let Some(sm) = opts.surfaceMode {
+                builder = builder.surface_mode(parse_surface_mode(&sm)?);
+            }
+            if opts.returnSe.unwrap_or(false) {
+                builder = builder.return_se();
             }
         }
 
@@ -574,6 +688,21 @@ impl OnlineLoess {
             if let Some(par) = opts.parallel {
                 builder = builder.parallel(par);
             }
+            if let Some(deg) = opts.degree {
+                builder = builder.degree(parse_polynomial_degree(&deg)?);
+            }
+            if let Some(dims) = opts.dimensions {
+                builder = builder.dimensions(dims as usize);
+            }
+            if let Some(dm) = opts.distanceMetric {
+                builder = builder.distance_metric(parse_distance_metric(&dm)?);
+            }
+            if let Some(sm) = opts.surfaceMode {
+                builder = builder.surface_mode(parse_surface_mode(&sm)?);
+            }
+            if opts.returnSe.unwrap_or(false) {
+                builder = builder.return_se();
+            }
         }
 
         let mut window_capacity = 100;
@@ -606,23 +735,25 @@ impl OnlineLoess {
     /// Add new points to the window and get smoothed values.
     #[napi]
     pub fn add_points(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResultObj> {
-        let result = self
-            .inner
-            .add_points(x.as_ref(), y.as_ref())
-            .map_err(|e: LoessError| Error::new(Status::GenericFailure, e.to_string()))?;
+        let x_slice = x.as_ref();
+        let y_slice = y.as_ref();
+        let x_vec = x_slice.to_vec();
 
-        // Extract smoothed values from results
-        let x_vec = x.as_ref().to_vec();
-
-        let smoothed: Vec<f64> = result
-            .iter()
-            .zip(y.as_ref().iter())
-            .map(|(opt, &original_y)| opt.as_ref().map_or(original_y, |o| o.smoothed))
-            .collect();
+        let mut smoothed = Vec::with_capacity(y_slice.len());
+        for (&xi, &yi) in x_slice.iter().zip(y_slice.iter()) {
+            let output = self
+                .inner
+                .add_point(std::slice::from_ref(&xi), yi)
+                .map_err(|e: LoessError| Error::new(Status::GenericFailure, e.to_string()))?;
+            smoothed.push(output.as_ref().map_or(yi, |o| o.smoothed));
+        }
 
         let inner_result = LoessResult {
             x: x_vec,
             y: smoothed,
+            dimensions: 1,
+            distance_metric: DistanceMetric::Normalized,
+            polynomial_degree: PolynomialDegree::Linear,
             standard_errors: None,
             confidence_lower: None,
             confidence_upper: None,
@@ -634,6 +765,12 @@ impl OnlineLoess {
             iterations_used: None,
             fraction_used: 0.0,
             cv_scores: None,
+            enp: None,
+            trace_hat: None,
+            delta1: None,
+            delta2: None,
+            residual_scale: None,
+            leverage: None,
         };
 
         Ok(LoessResultObj {

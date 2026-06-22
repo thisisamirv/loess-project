@@ -38,6 +38,20 @@ export declare class LoessResultObj {
   get fractionUsed(): number
   /** Get the number of iterations performed. */
   get iterationsUsed(): number | null
+  /** Get equivalent number of parameters (if returnSe was set). */
+  get enp(): number | null
+  /** Get trace of hat matrix (if returnSe was set). */
+  get traceHat(): number | null
+  /** Get first delta statistic (if returnSe was set). */
+  get delta1(): number | null
+  /** Get second delta statistic (if returnSe was set). */
+  get delta2(): number | null
+  /** Get residual scale estimate (if returnSe was set). */
+  get residualScale(): number | null
+  /** Get per-point leverage / hat-matrix diagonal (if returnSe was set). */
+  get leverage(): Float64Array | null
+  /** Get number of predictor dimensions. */
+  get dimensions(): number
 }
 
 /** Online LOESS smoother for real-time data. */
@@ -92,11 +106,6 @@ export interface SmoothOptions {
   fraction?: number
   /** Number of robustness iterations. Default: 3. */
   iterations?: number
-  /**
-   * Delta for interpolation speedup. Default: NaN (auto).
-   * Set to 0.0 to disable interpolation.
-   */
-  delta?: number
   /** Weight function ("tricube", "gaussian", etc.). Default: "tricube". */
   weightFunction?: string
   /** Robustness method ("bisquare", "huber"). Default: "bisquare". */
@@ -127,6 +136,16 @@ export interface SmoothOptions {
   cvK?: number
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
+  /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
+  degree?: string
+  /** Number of predictor dimensions. Default: 1. */
+  dimensions?: number
+  /** Distance metric ("normalized", "euclidean", etc.). Default: "normalized". */
+  distanceMetric?: string
+  /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
+  surfaceMode?: string
+  /** Compute hat-matrix statistics (enp, traceHat, etc.). Default: false. */
+  returnSe?: boolean
 }
 
 /** Configuration options for streaming processing. */
