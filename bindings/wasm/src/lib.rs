@@ -12,17 +12,18 @@ pub fn init_panic_hook() {
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::{
-    BoundaryPolicy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod,
+    ScalingMethod::{self, MAD, MAR},
+    SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Mean, Online, Streaming,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, Online, Streaming,
 };
 
 #[derive(Deserialize)]
 pub struct SmoothOptions {
     pub fraction: Option<f64>,
     pub iterations: Option<usize>,
-    pub delta: Option<f64>,
     #[serde(rename = "weightFunction")]
     pub weight_function: Option<String>,
     #[serde(rename = "robustnessMethod")]
@@ -53,6 +54,14 @@ pub struct SmoothOptions {
     pub cv_method: Option<String>,
     #[serde(rename = "cvK")]
     pub cv_k: Option<u32>,
+    pub degree: Option<String>,
+    pub dimensions: Option<usize>,
+    #[serde(rename = "distanceMetric")]
+    pub distance_metric: Option<String>,
+    #[serde(rename = "surfaceMode")]
+    pub surface_mode: Option<String>,
+    #[serde(rename = "returnSe")]
+    pub return_se: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -130,9 +139,42 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod, JsValue> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
         _ => Err(JsValue::from_str(&format!(
-            "Unknown scaling method: {}. Valid options: mad, mar, mean",
+            "Unknown scaling method: {}. Valid options: mad, mar",
+            name
+        ))),
+    }
+}
+
+fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree, JsValue> {
+    match name.to_lowercase().as_str() {
+        "constant" | "0" => Ok(PolynomialDegree::Constant),
+        "linear" | "1" => Ok(PolynomialDegree::Linear),
+        "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
+        _ => Err(JsValue::from_str(&format!(
+            "Unknown polynomial degree: {}. Valid options: constant, linear, quadratic",
+            name
+        ))),
+    }
+}
+
+fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>, JsValue> {
+    match name.to_lowercase().as_str() {
+        "normalized" => Ok(DistanceMetric::Normalized),
+        "euclidean" => Ok(DistanceMetric::Euclidean),
+        _ => Err(JsValue::from_str(&format!(
+            "Unknown distance metric: {}. Valid options: normalized, euclidean",
+            name
+        ))),
+    }
+}
+
+fn parse_surface_mode(name: &str) -> Result<SurfaceMode, JsValue> {
+    match name.to_lowercase().as_str() {
+        "interpolation" | "interpolate" => Ok(SurfaceMode::Interpolation),
+        "direct" => Ok(SurfaceMode::Direct),
+        _ => Err(JsValue::from_str(&format!(
+            "Unknown surface mode: {}. Valid options: interpolation, direct",
             name
         ))),
     }
@@ -288,9 +330,6 @@ pub fn smooth(
         if let Some(iter) = opts.iterations {
             builder = builder.iterations(iter);
         }
-        if let Some(d) = opts.delta {
-            builder = builder.delta(d);
-        }
         if let Some(wf) = opts.weight_function {
             builder = builder.weight_function(parse_weight_function(&wf)?);
         }
@@ -326,6 +365,21 @@ pub fn smooth(
         }
         if let Some(par) = opts.parallel {
             builder = builder.parallel(par);
+        }
+        if let Some(deg) = opts.degree {
+            builder = builder.degree(parse_polynomial_degree(&deg)?);
+        }
+        if let Some(dim) = opts.dimensions {
+            builder = builder.dimensions(dim);
+        }
+        if let Some(dm) = opts.distance_metric {
+            builder = builder.distance_metric(parse_distance_metric(&dm)?);
+        }
+        if let Some(sm_val) = opts.surface_mode {
+            builder = builder.surface_mode(parse_surface_mode(&sm_val)?);
+        }
+        if opts.return_se.unwrap_or(false) {
+            builder = builder.return_se();
         }
 
         // Cross-validation
@@ -387,9 +441,6 @@ impl StreamingLoessWasm {
             if let Some(iter) = opts.iterations {
                 builder = builder.iterations(iter);
             }
-            if let Some(d) = opts.delta {
-                builder = builder.delta(d);
-            }
             if let Some(wf) = opts.weight_function {
                 builder = builder.weight_function(parse_weight_function(&wf)?);
             }
@@ -410,6 +461,21 @@ impl StreamingLoessWasm {
             }
             if let Some(par) = opts.parallel {
                 builder = builder.parallel(par);
+            }
+            if let Some(deg) = opts.degree {
+                builder = builder.degree(parse_polynomial_degree(&deg)?);
+            }
+            if let Some(dim) = opts.dimensions {
+                builder = builder.dimensions(dim);
+            }
+            if let Some(dm) = opts.distance_metric {
+                builder = builder.distance_metric(parse_distance_metric(&dm)?);
+            }
+            if let Some(sm_val) = opts.surface_mode {
+                builder = builder.surface_mode(parse_surface_mode(&sm_val)?);
+            }
+            if opts.return_se.unwrap_or(false) {
+                builder = builder.return_se();
             }
         }
 
@@ -485,6 +551,18 @@ impl OnlineLoessWasm {
             if let Some(par) = opts.parallel {
                 builder = builder.parallel(par);
             }
+            if let Some(deg) = opts.degree {
+                builder = builder.degree(parse_polynomial_degree(&deg)?);
+            }
+            if let Some(dim) = opts.dimensions {
+                builder = builder.dimensions(dim);
+            }
+            if let Some(dm) = opts.distance_metric {
+                builder = builder.distance_metric(parse_distance_metric(&dm)?);
+            }
+            if let Some(sm_val) = opts.surface_mode {
+                builder = builder.surface_mode(parse_surface_mode(&sm_val)?);
+            }
         }
 
         let mut window_capacity = 100;
@@ -518,8 +596,8 @@ impl OnlineLoessWasm {
     pub fn update(&mut self, x: f64, y: f64) -> Result<Option<f64>, JsValue> {
         let result = self
             .inner
-            .add_point(x, y)
+            .add_point(std::slice::from_ref(&x), y)
             .map_err(|e: ::fastLoess::prelude::LoessError| JsValue::from_str(&e.to_string()))?;
-        Ok(result.map(|o| o.smoothed))
+        Ok(result.as_ref().map(|o| o.smoothed))
     }
 }
