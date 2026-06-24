@@ -35,7 +35,7 @@ fn bench_scalability(c: &mut Criterion) {
                 .adapter(Batch)
                 .build()
                 .unwrap();
-            b.iter(|| (&model).fit(black_box(&x), black_box(&y)).unwrap());
+            b.iter(|| model.clone().fit(black_box(&x), black_box(&y)).unwrap());
         });
 
         // CPU Parallel
@@ -46,23 +46,8 @@ fn bench_scalability(c: &mut Criterion) {
                 .adapter(Batch)
                 .build()
                 .unwrap();
-            b.iter(|| (&model).fit(black_box(&x), black_box(&y)).unwrap());
+            b.iter(|| model.clone().fit(black_box(&x), black_box(&y)).unwrap());
         });
-
-        // GPU (optional feature)
-        #[cfg(feature = "gpu")]
-        {
-            group.bench_with_input(BenchmarkId::new("gpu", size), size, |b, _| {
-                // We'd need to ensure wgpu is initialized or benchmark a build that includes it
-                let model = Loess::new()
-                    .fraction(0.3)
-                    .backend(Backend::Gpu)
-                    .adapter(Batch)
-                    .build()
-                    .unwrap();
-                b.iter(|| (&model).fit(black_box(&x), black_box(&y)).unwrap());
-            });
-        }
     }
     group.finish();
 }
@@ -80,7 +65,7 @@ fn bench_parameters(c: &mut Criterion) {
                 .adapter(Batch)
                 .build()
                 .unwrap();
-            b.iter(|| (&model).fit(black_box(&x), black_box(&y)).unwrap());
+            b.iter(|| model.clone().fit(black_box(&x), black_box(&y)).unwrap());
         });
     }
 
@@ -88,7 +73,7 @@ fn bench_parameters(c: &mut Criterion) {
     for frac in [0.1, 0.3, 0.7].iter() {
         group.bench_with_input(BenchmarkId::new("fraction", frac), frac, |b, &f| {
             let model = Loess::new().fraction(f).adapter(Batch).build().unwrap();
-            b.iter(|| (&model).fit(black_box(&x), black_box(&y)).unwrap());
+            b.iter(|| model.clone().fit(black_box(&x), black_box(&y)).unwrap());
         });
     }
 
