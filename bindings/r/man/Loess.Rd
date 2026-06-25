@@ -5,28 +5,28 @@
 \title{LOESS Batch Smoothing}
 \usage{
 Loess(
-  fraction = 0.67,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  confidence_intervals = NULL,
-  prediction_intervals = NULL,
-  return_diagnostics = FALSE,
-  return_residuals = FALSE,
-  return_robustness_weights = FALSE,
-  zero_weight_fallback = "use_local_mean",
-  auto_converge = NULL,
-  cv_fractions = NULL,
-  cv_method = "kfold",
-  cv_k = 5L,
-  parallel = TRUE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  return_se = FALSE
+    fraction = 0.67,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    return_robustness_weights = FALSE,
+    zero_weight_fallback = "use_local_mean",
+    auto_converge = NULL,
+    cv_fractions = NULL,
+    cv_method = "kfold",
+    cv_k = 5L,
+    parallel = TRUE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    return_se = FALSE
 )
 }
 \arguments{
@@ -79,6 +79,8 @@ Default: "interpolation".}
 
 \item{return_se}{Compute hat-matrix statistics (enp, leverage, etc.).
 Default: FALSE.}
+}
+\value{
 A Loess object.
 }
 \description{

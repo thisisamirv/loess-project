@@ -38,23 +38,23 @@
 #' lines(x, result$y, col = "red")
 #' @export
 OnlineLoess <- function(
-  fraction = 0.2,
-  window_capacity = 100L,
-  min_points = 2L,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  update_mode = "incremental",
-  auto_converge = NULL,
-  return_robustness_weights = FALSE,
-  parallel = FALSE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  return_se = FALSE
+    fraction = 0.2,
+    window_capacity = 100L,
+    min_points = 2L,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    update_mode = "incremental",
+    auto_converge = NULL,
+    return_robustness_weights = FALSE,
+    parallel = FALSE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    return_se = FALSE
 ) {
     validate_params(
         fraction = fraction, window_capacity = window_capacity,

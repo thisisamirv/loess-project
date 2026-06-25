@@ -45,7 +45,6 @@ pub enum UpdateMode {
     Incremental,
 }
 
-
 // Builder for online LOESS processor.
 #[derive(Debug, Clone)]
 pub struct OnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
@@ -200,7 +199,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         }
     }
 
-
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.fraction = fraction;
@@ -303,7 +301,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         self
     }
 
-
     // Set window capacity (maximum number of points to retain).
     pub fn window_capacity(mut self, capacity: usize) -> Self {
         self.window_capacity = capacity;
@@ -368,7 +365,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         self
     }
 
-
     // Build the online processor.
     pub fn build(self) -> Result<OnlineLoess<T>, LoessError> {
         if let Some(err) = self.deferred_error {
@@ -399,7 +395,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
     }
 }
 
-
 // Result of a single online update.
 #[derive(Debug, Clone, PartialEq)]
 pub struct OnlineOutput<T> {
@@ -418,7 +413,6 @@ pub struct OnlineOutput<T> {
     // Number of robustness iterations actually performed
     pub iterations_used: Option<usize>,
 }
-
 
 // Online LOESS processor for streaming data.
 pub struct OnlineLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg> {

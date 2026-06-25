@@ -22,7 +22,6 @@ pub struct Window {
 }
 
 impl Window {
-
     // Initialize window boundaries for the first point in a sequence.
     #[inline]
     pub fn initialize(idx: usize, window_size: usize, n: usize) -> Self {
@@ -87,8 +86,8 @@ impl Window {
         }
     }
 
-
     // Compute the maximum distance from `x_current` to any point in the window.
+    #[allow(dead_code)]
     #[inline]
     pub fn max_distance<T: Float>(&self, x: &[T], x_current: T) -> T {
         T::max(x_current - x[self.left], x[self.right] - x_current)

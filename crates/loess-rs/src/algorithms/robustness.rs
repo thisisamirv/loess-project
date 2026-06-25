@@ -17,7 +17,6 @@ use num_traits::Float;
 // Internal dependencies
 use crate::math::scaling::ScalingMethod;
 
-
 // Robustness weighting method for outlier downweighting.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub enum RobustnessMethod {
@@ -32,9 +31,7 @@ pub enum RobustnessMethod {
     Talwar,
 }
 
-
 impl RobustnessMethod {
-
     // Default tuning constant for bisquare robustness weights.
     //
     // Value of 6.0 follows Cleveland (1979) and is applied to the raw MAD.
@@ -58,7 +55,6 @@ impl RobustnessMethod {
 
     // Minimum tuned-scale absolute epsilon to avoid division by zero.
     const MIN_TUNED_SCALE: f64 = 1e-12;
-
 
     // Apply robustness weights using the configured method.
     pub fn apply_robustness_weights<T: Float>(
@@ -90,7 +86,6 @@ impl RobustnessMethod {
             };
         }
     }
-
 
     // Compute robust scale estimate with zero-scale safety fallback.
     //
@@ -141,7 +136,6 @@ impl RobustnessMethod {
             scale_val
         }
     }
-
 
     // Compute bisquare weight.
     //

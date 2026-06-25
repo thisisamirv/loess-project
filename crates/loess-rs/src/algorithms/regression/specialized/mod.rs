@@ -18,7 +18,6 @@ pub mod accumulators_3d;
 // Implementations of specialized solvers.
 pub mod impls;
 
-
 // Trait for specialized low-dimensional linear solvers.
 // Extracted from FloatLinalg to keep specialized logic near regression code.
 pub trait SolverLinalg: Float + 'static {

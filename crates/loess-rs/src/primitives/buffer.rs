@@ -20,7 +20,6 @@ use core::fmt::Debug;
 use core::ops::{Deref, DerefMut};
 use num_traits::Float;
 
-
 // A reusable vector slot with automatic capacity management.
 #[derive(Debug, Clone)]
 pub struct Slot<T>(Vec<T>);
@@ -93,7 +92,6 @@ impl<T> From<Vec<T>> for Slot<T> {
     }
 }
 
-
 // A struct containing pre-allocated buffers for LOESS operations.
 pub struct LoessBuffer<T: Float, N, NH> {
     // Buffer for KD-tree search state.
@@ -146,7 +144,6 @@ where
     }
 }
 
-
 // Trait for neighborhood storage that can be injected into the workspace.
 pub trait NeighborhoodStorage {
     // Create a new neighborhood storage with given capacity.
@@ -154,7 +151,6 @@ pub trait NeighborhoodStorage {
     // Get the current capacity of the storage.
     fn capacity(&self) -> usize;
 }
-
 
 // Persistent buffers for KD-tree search to avoid allocations.
 pub struct NeighborhoodSearchBuffer<N> {

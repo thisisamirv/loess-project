@@ -17,7 +17,6 @@ use num_traits::Float;
 // Internal dependencies
 use crate::math::scaling::ScalingMethod;
 
-
 // Diagnostic metrics for assessing LOESS fit quality.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Diagnostics<T> {
@@ -144,7 +143,6 @@ impl<T: Float> DiagnosticsState<T> {
 }
 
 impl<T: Float> Diagnostics<T> {
-
     // Number of parameters in local linear regression (intercept + slope).
     const LINEAR_PARAMS: f64 = 2.0;
 
@@ -155,7 +153,6 @@ impl<T: Float> Diagnostics<T> {
     //
     // For normally distributed data, MAD × 1.4826 ≈ standard deviation.
     const MAD_TO_STD_FACTOR: f64 = 1.4826;
-
 
     // Compute diagnostic statistics from fit results.
     pub fn compute(y: &[T], y_smooth: &[T], residuals: &[T], std_errors: Option<&[T]>) -> Self {
@@ -185,7 +182,6 @@ impl<T: Float> Diagnostics<T> {
             residual_sd,
         }
     }
-
 
     // Compute the residual sum of squares (RSS).
     // RSS = sum r_i^2.
@@ -219,7 +215,6 @@ impl<T: Float> Diagnostics<T> {
 
         sum / n_t
     }
-
 
     // Compute the coefficient of determination (R^2).
     // R^2 = 1 - SS_res / SS_tot, where SS_res is the residual
@@ -258,7 +253,6 @@ impl<T: Float> Diagnostics<T> {
         }
     }
 
-
     // Estimate the residual standard deviation using a robust method.
     // sigma_hat = 1.4826 * MAD(residuals).
     pub fn calculate_residual_sd(residuals: &[T]) -> T {
@@ -279,7 +273,6 @@ impl<T: Float> Diagnostics<T> {
             min_eps * scale_const
         }
     }
-
 
     // Estimate the effective degrees of freedom from standard errors.
     // df_eff approx sum (SE_i / sigma_hat)^2.
@@ -318,7 +311,6 @@ impl<T: Float> Diagnostics<T> {
             .fold(T::zero(), |acc, v| acc + v)
     }
 
-
     // Compute the Akaike Information Criterion (AIC).
     // AIC = n * ln(RSS / n) + 2 * df_eff.
     pub fn calculate_aic(residuals: &[T], effective_df: T) -> T {
@@ -350,7 +342,6 @@ impl<T: Float> Diagnostics<T> {
         aic + correction
     }
 }
-
 
 impl<T: Float + Display> Display for Diagnostics<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {

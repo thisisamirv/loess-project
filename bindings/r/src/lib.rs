@@ -9,13 +9,15 @@
 
 use extendr_api::prelude::*;
 
+type Result<T> = std::result::Result<T, Error>;
+
 use fastLoess::internals::api::{
     BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod,
     ScalingMethod::{self, MAD, MAR},
     SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, Loess as LoessBuilder, LoessResult, Online, Streaming, LOOCV,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, Online, Streaming,
 };
 
 // ============================================================================

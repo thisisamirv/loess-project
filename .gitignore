@@ -8,6 +8,7 @@ Cargo.lock
 **/mutants.out*/
 *.toml.test
 *.toml.orig
+Cargo.toml.bak
 
 # R Package
 *.Rcheck/
@@ -15,10 +16,15 @@ Cargo.lock
 *.tgz
 *.o
 *.so
+*.dll
+*.a
 src/Makevars
 src/*.o
 src/*.so
+src/*.dll
+src/*.a
 rfastloess.BiocCheck/
+bindings/r/.r-lib/
 bindings/r/src/vendor/
 bindings/r/src/.cargo/
 bindings/r/docs/
@@ -28,6 +34,7 @@ bindings/r/README.html
 bindings/r/src/Makevars
 .Rprofile
 tests/r/testthat/Rplots.pdf
+bindings/r/tests/
 
 # Python
 __pycache__/
@@ -46,6 +53,9 @@ venv/
 # IDEs & Editors
 .idea/
 .vscode/
+.clangd
+.cache/
+compile_commands.json
 *.swp
 *.swo
 *~

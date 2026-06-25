@@ -38,17 +38,17 @@ export declare class LoessResultObj {
   get fractionUsed(): number
   /** Get the number of iterations performed. */
   get iterationsUsed(): number | null
-  /** Get equivalent number of parameters (if returnSe was set). */
+  /** Get equivalent number of parameters (hat-matrix stat, if return_se was set). */
   get enp(): number | null
-  /** Get trace of hat matrix (if returnSe was set). */
+  /** Get trace of hat matrix (if return_se was set). */
   get traceHat(): number | null
-  /** Get first delta statistic (if returnSe was set). */
+  /** Get first delta statistic (if return_se was set). */
   get delta1(): number | null
-  /** Get second delta statistic (if returnSe was set). */
+  /** Get second delta statistic (if return_se was set). */
   get delta2(): number | null
-  /** Get residual scale estimate (if returnSe was set). */
+  /** Get residual scale estimate (if return_se was set). */
   get residualScale(): number | null
-  /** Get per-point leverage / hat-matrix diagonal (if returnSe was set). */
+  /** Get per-point leverage / hat-matrix diagonal (if return_se was set). */
   get leverage(): Float64Array | null
   /** Get number of predictor dimensions. */
   get dimensions(): number

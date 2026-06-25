@@ -42,8 +42,8 @@ use loess_rs::internals::primitives::errors::LoessError;
 
 // Internal dependencies
 use crate::input::LoessInput;
+#[cfg(feature = "cpu")]
 use crate::math::neighborhood::build_kdtree_parallel;
-
 
 // Builder for batch LOESS processor with parallel support.
 #[derive(Debug, Clone)]
@@ -86,7 +86,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self.base.backend = Some(backend);
         self
     }
-
 
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
@@ -184,7 +183,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-
     // Enable returning robustness weights in the result.
     pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
         self.base.return_robustness_weights = enabled;
@@ -235,7 +233,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-
     // Build the batch processor.
     pub fn build(self) -> Result<ParallelBatchLoess<T>, LoessError> {
         // Check for deferred errors from adapter conversion
@@ -250,7 +247,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         Ok(ParallelBatchLoess { config: self })
     }
 }
-
 
 // Batch LOESS processor with parallel support.
 #[derive(Clone)]

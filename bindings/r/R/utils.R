@@ -57,14 +57,24 @@ validate_common_args <- function(x, y, fraction, iterations) {
 #' @param chunk_size Chunk size (optional)
 #' @noRd
 validate_params <- function(
-  fraction,
-  iterations = NULL,
-  window_capacity = NULL,
-  min_points = NULL,
-  chunk_size = NULL
+    fraction,
+    iterations = NULL,
+    window_capacity = NULL,
+    min_points = NULL,
+    chunk_size = NULL
 ) {
+    if (!is.numeric(fraction) || length(fraction) != 1 || is.na(fraction)) {
+        stop("fraction must be a single numeric value")
+    }
     if (fraction < 0 || fraction > 1) {
         stop("fraction must be between 0 and 1")
+    }
+    iter_invalid <- !is.null(iterations) &&
+        (!is.numeric(iterations) ||
+            length(iterations) != 1 ||
+            is.na(iterations))
+    if (iter_invalid) {
+        stop("iterations must be a single numeric value")
     }
     if (!is.null(iterations) && iterations < 0) {
         stop("iterations must be a non-negative integer")

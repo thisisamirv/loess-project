@@ -39,7 +39,6 @@ use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::errors::LoessError;
 
-
 // Builder for batch LOESS processor.
 #[derive(Debug, Clone)]
 pub struct BatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
@@ -204,7 +203,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
         }
     }
 
-
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.fraction = fraction;
@@ -309,7 +307,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
         self
     }
 
-
     // Enable returning diagnostics in the result.
     pub fn return_diagnostics(mut self, enabled: bool) -> Self {
         self.return_diagnostics = enabled;
@@ -350,10 +347,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
     pub fn return_se(mut self, enabled: bool) -> Self {
         if enabled {
             self.interval_type = Some(IntervalMethod::se());
-        } else if let Some(method) = self.interval_type {
-            if method.se && !method.confidence && !method.prediction {
-                self.interval_type = None;
-            }
+        } else if let Some(method) = self.interval_type
+            && method.se
+            && !method.confidence
+            && !method.prediction
+        {
+            self.interval_type = None;
         }
         self
     }
@@ -404,7 +403,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
         self
     }
 
-
     // Build the batch processor.
     pub fn build(self) -> Result<BatchLoess<T>, LoessError> {
         if let Some(err) = self.deferred_error {
@@ -441,7 +439,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
         Ok(BatchLoess { config: self })
     }
 }
-
 
 // Batch LOESS processor.
 #[derive(Clone)]

@@ -23,7 +23,6 @@ use crate::math::scaling::ScalingMethod;
 use crate::primitives::errors::LoessError;
 use crate::primitives::window::Window;
 
-
 // Configuration for computing confidence/prediction intervals and standard errors.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IntervalMethod<T> {
@@ -47,7 +46,6 @@ impl<T: Float> Default for IntervalMethod<T> {
 }
 
 impl<T: Float> IntervalMethod<T> {
-
     // No intervals or standard errors.
     fn none() -> Self {
         Self {
@@ -90,7 +88,6 @@ impl<T: Float> IntervalMethod<T> {
 }
 
 impl<T: Float> IntervalMethod<T> {
-
     // Constant to convert MAD to an unbiased estimate of sigma for normal data.
     //
     // For normally distributed data, MAD × 1.4826 ≈ standard deviation.
@@ -102,16 +99,15 @@ impl<T: Float> IntervalMethod<T> {
     // Number of parameters in local linear regression (intercept + slope).
     const LINEAR_PARAMS: f64 = 2.0;
 
-
     // Estimate the residual standard deviation using a robust method or delta1.
     // - If delta1 is provided: sigma = sqrt(RSS / delta1)
     // - Fallback: sigma_hat = 1.4826 * MAD(residuals).
     fn calculate_residual_sd(residuals: &[T], delta1: Option<T>) -> T {
-        if let Some(d1) = delta1 {
-            if d1 > T::zero() {
-                let rss = residuals.iter().fold(T::zero(), |acc, &r| acc + r * r);
-                return (rss / d1).sqrt();
-            }
+        if let Some(d1) = delta1
+            && d1 > T::zero()
+        {
+            let rss = residuals.iter().fold(T::zero(), |acc, &r| acc + r * r);
+            return (rss / d1).sqrt();
         }
 
         let n = residuals.len();
@@ -131,7 +127,6 @@ impl<T: Float> IntervalMethod<T> {
             min_eps * scale_const
         }
     }
-
 
     // Core mathematical function for computing standard error at a point.
     // SE = sqrt(sigma_local^2 * l_ii), where
@@ -223,7 +218,6 @@ impl<T: Float> IntervalMethod<T> {
             *se = Self::compute_se(sum_w, sum_w_r2, w_idx);
         }
     }
-
 
     // Compute requested intervals (confidence and/or prediction).
     #[allow(clippy::type_complexity)]
@@ -390,7 +384,6 @@ impl<T: Float> IntervalMethod<T> {
 
         Ok(T::from(t_f).unwrap_or(z))
     }
-
 
     // Approximate the critical value (Z-score) for a given confidence level.
     // z = Phi^-1((1 + p) / 2) where Phi^-1 is the inverse standard normal CDF.

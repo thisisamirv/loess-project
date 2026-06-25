@@ -26,7 +26,10 @@ def parse_version(v_str):
         return None
     try:
         parts = v_str.split(".")
-        return tuple(map(int, parts))
+        # Normalize to 3 elements (e.g. "1.89" -> (1, 89, 0), "1.89.0" -> (1, 89, 0))
+        while len(parts) < 3:
+            parts.append("0")
+        return tuple(map(int, parts[:3]))
     except (TypeError, ValueError):
         return None
 

@@ -16,13 +16,19 @@ use crate::adapters::streaming::ParallelStreamingLoessBuilder;
 use std::fmt::Debug;
 
 // Import base marker types for delegation
+#[cfg(feature = "cpu")]
 use loess_rs::internals::api::Batch as BaseBatch;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::api::Online as BaseOnline;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::api::Streaming as BaseStreaming;
 
 // Linear algebra imports
+#[cfg(feature = "cpu")]
 use loess_rs::internals::algorithms::regression::SolverLinalg;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::math::distance::DistanceLinalg;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::math::linalg::FloatLinalg;
 
 // Publicly re-exported types
@@ -41,13 +47,11 @@ pub use loess_rs::internals::math::scaling::ScalingMethod;
 pub use loess_rs::internals::primitives::backend::Backend;
 pub use loess_rs::internals::primitives::errors::LoessError;
 
-
 // Adapter selection namespace.
 #[allow(non_snake_case)]
 pub mod Adapter {
     pub use super::{Batch, Online, Streaming};
 }
-
 
 // Marker for parallel in-memory batch processing.
 #[derive(Debug, Clone, Copy)]

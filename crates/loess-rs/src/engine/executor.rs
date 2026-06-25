@@ -105,7 +105,6 @@ impl<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> PointDistance<T>
     }
 }
 
-
 // Mode for surface evaluation.
 //
 // Controls whether to use interpolation surface (faster, less accurate) or
@@ -119,7 +118,6 @@ pub enum SurfaceMode {
     // Use direct per-point fitting for maximum accuracy.
     Direct,
 }
-
 
 // Signature for custom smooth pass function
 #[doc(hidden)]
@@ -231,7 +229,6 @@ pub struct ExecutorOutput<T: FloatLinalg> {
     // Only computed when intervals are requested.
     pub leverage: Option<Vec<T>>,
 }
-
 
 // Configuration for LOESS execution.
 #[derive(Debug, Clone)]
@@ -461,7 +458,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLinalg>
     LoessExecutor<T>
 {
-
     // Create a new executor with default parameters.
     pub fn new() -> Self {
         Self {
@@ -664,7 +660,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self.backend = backend;
         self
     }
-
 
     // Smooth data using a `LoessConfig` payload.
     pub fn run_with_config(x: &[T], y: &[T], config: LoessConfig<T>) -> ExecutorOutput<T>
@@ -1315,7 +1310,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             leverage: leverage_values,
         }
     }
-
 
     // Predict values at arbitrary points using the provided training data.
     //

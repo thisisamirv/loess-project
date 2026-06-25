@@ -38,23 +38,23 @@
 #' final <- model$finalize()
 #' @export
 StreamingLoess <- function(
-  fraction = 0.3,
-  chunk_size = 5000L,
-  overlap = NULL,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  auto_converge = NULL,
-  return_diagnostics = FALSE,
-  return_robustness_weights = FALSE,
-  parallel = TRUE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  return_se = FALSE
+    fraction = 0.3,
+    chunk_size = 5000L,
+    overlap = NULL,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    auto_converge = NULL,
+    return_diagnostics = FALSE,
+    return_robustness_weights = FALSE,
+    parallel = TRUE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    return_se = FALSE
 ) {
     validate_params(fraction = fraction, chunk_size = chunk_size)
     handle <- do.call(RStreamingLoess$new, env_args(streaming_params))

@@ -7,7 +7,6 @@
 use num_traits::Float;
 use wide::f64x2;
 
-
 // Optimized accumulation for 3D Linear Case (Scalar).
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_3d_linear_scalar<T: Float>(

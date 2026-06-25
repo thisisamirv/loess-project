@@ -17,21 +17,25 @@ use rayon::prelude::*;
 
 // External dependencies
 use num_traits::Float;
+#[cfg(feature = "cpu")]
 use std::fmt::Debug;
 
 // Export dependencies from loess-rs crate
+#[cfg(feature = "cpu")]
+use loess_rs::internals::algorithms::regression::RegressionContext;
 use loess_rs::internals::algorithms::regression::{
-    PolynomialDegree, RegressionContext, SolverLinalg, ZeroWeightFallback,
+    PolynomialDegree, SolverLinalg, ZeroWeightFallback,
 };
 
 use loess_rs::internals::math::distance::{DistanceLinalg, DistanceMetric};
 use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
-use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood, NodeDistance, PointDistance};
-use loess_rs::internals::primitives::buffer::{
-    CachedNeighborhood, FittingBuffer, NeighborhoodSearchBuffer,
-};
-
+use loess_rs::internals::math::neighborhood::PointDistance;
+#[cfg(feature = "cpu")]
+use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood, NodeDistance};
+use loess_rs::internals::primitives::buffer::CachedNeighborhood;
+#[cfg(feature = "cpu")]
+use loess_rs::internals::primitives::buffer::{FittingBuffer, NeighborhoodSearchBuffer};
 
 // Standard LOESS distance calculator for neighbor finding.
 pub struct LoessDistanceCalculator<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> {
@@ -87,7 +91,6 @@ impl<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> PointDistance<T>
         d.sqrt()
     }
 }
-
 
 // Perform a single smoothing pass over all points in parallel.
 //
@@ -356,6 +359,7 @@ pub fn vertex_pass_parallel<T>(
 
 // Sequential fallback (when cpu feature is not enabled)
 #[cfg(not(feature = "cpu"))]
+#[allow(clippy::too_many_arguments)]
 pub fn vertex_pass_parallel<T>(
     _x: &[T],
     _y: &[T],

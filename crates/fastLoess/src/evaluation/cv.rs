@@ -15,18 +15,23 @@ use rayon::prelude::*;
 
 // External dependencies
 use num_traits::Float;
+#[cfg(feature = "cpu")]
 use std::fmt::Debug;
 use std::vec::Vec;
 
 // Export dependencies from loess-rs crate
 use loess_rs::internals::algorithms::regression::SolverLinalg;
-use loess_rs::internals::engine::executor::{LoessConfig, LoessExecutor};
+use loess_rs::internals::engine::executor::LoessConfig;
+#[cfg(feature = "cpu")]
+use loess_rs::internals::engine::executor::LoessExecutor;
 use loess_rs::internals::evaluation::cv::CVKind;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::math::neighborhood::KDTree;
+#[cfg(feature = "cpu")]
 use loess_rs::internals::primitives::window::Window;
-
 
 // Perform parallel cross-validation to select optimal LOESS bandwidth.
 //
@@ -66,6 +71,7 @@ where
 }
 
 // Evaluate a single fraction using cross-validation.
+#[cfg(feature = "cpu")]
 fn evaluate_fraction_cv<T>(
     x: &[T],
     y: &[T],
@@ -262,7 +268,7 @@ pub fn cv_pass_parallel<T>(
     _config: &LoessConfig<T>,
 ) -> (T, Vec<T>)
 where
-    T: Float + Send + Sync,
+    T: Float + Send + Sync + FloatLinalg + SolverLinalg,
 {
     // Return first fraction as default if parallel CV not available
     let best = fractions

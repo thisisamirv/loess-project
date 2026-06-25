@@ -9,7 +9,6 @@ Description: Provides high-performance LOESS smoothing (Locally Estimated Scatte
 License: MIT + file LICENSE | Apache License (== 2.0)
 SystemRequirements: 'Rust' programming language (via 'rustup' or system tools)
 Encoding: UTF-8
-RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE, roclets = c("namespace", "rd", "srr::srr_stats_roclet"))
 biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, QualityControl, KEGG
 Imports: BiocGenerics
@@ -19,3 +18,4 @@ VignetteBuilder: knitr
 BugReports: https://github.com/thisisamirv/loess-project/issues
 URL: https://github.com/thisisamirv/loess-project
 Config/rextendr/version: 0.4.2
+Config/roxygen2/version: 8.0.0

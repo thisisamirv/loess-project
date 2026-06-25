@@ -129,7 +129,6 @@ test_that("Loess constructor coerces all param types via env_args", {
         iterations = 2L,
         weight_function = "tricube",
         parallel = FALSE,
-        delta = NULL,
         confidence_intervals = 0.95
     )
     expect_s3_class(model, "Loess")

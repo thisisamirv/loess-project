@@ -151,7 +151,7 @@ DOCS_VENV := docs-venv
 # Temporary directory for build checks
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
-    TEMP := $(TEMP)
+    TEMP := /tmp
 endif
 
 # ==============================================================================
@@ -375,7 +375,6 @@ _r_impl:
 	@# Metadata sync disabled by user request
 	@# (Only cleaning up workspace/patch/vendor directives below)
 	@sed -i.bak '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
-	sed -i.bak '/^\[patch\.crates-io\]/d' $(R_DIR)/src/Cargo.toml; \
 	sed -i.bak '/^lowess = { path = "vendor\/lowess" }/d' $(R_DIR)/src/Cargo.toml; \
 	rm -f $(R_DIR)/src/Cargo.toml.bak; \
 	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
@@ -465,7 +464,13 @@ _r_impl:
 	@echo "=============================================================================="
 	@echo "8. Testing..."
 	@echo "=============================================================================="
-	@cd $(R_DIR)/src && cargo test -q $(R_CARGO_TARGET)
+	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
+	@if [ -n "$(R_CARGO_TARGET)" ]; then \
+	    GCC_LIBDIR="c:/rtools45/x86_64-w64-mingw32.static.posix/lib/gcc/x86_64-w64-mingw32.static.posix/14.3.0"; \
+	    test -f "$$GCC_LIBDIR/libgcc_eh.a" || x86_64-w64-mingw32.static.posix-ar rcs "$$GCC_LIBDIR/libgcc_eh.a"; \
+	fi
+	@cd $(R_DIR)/src && cargo test -q --no-run $(R_CARGO_TARGET)
+	@rm -rf $(R_DIR)/src/.cargo
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('tests/r/testthat', package = 'rfastloess')"
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."
@@ -550,6 +555,7 @@ _julia_checks_internal:
 	@echo "=============================================================================="
 	@cd $(JL_DIR) && cargo clippy -q --all-targets -- -D warnings
 	@echo "Linting Julia files..."
+	@julia dev/format_julia.jl || true
 	@julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.add("JuliaFormatter"); using JuliaFormatter; format(["bindings/julia/julia", "tests/julia", "examples/julia"], verbose=true, overwrite=false) ? exit(0) : exit(1)'
 	@echo "=============================================================================="
 	@echo "3. Building..."

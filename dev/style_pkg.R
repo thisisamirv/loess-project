@@ -11,7 +11,7 @@ style_4spaces <- function(...) {
         old_fun <- style$indention$unindent_function_declaration
         style$indention$unindent_function_declaration <- function(pd,
                                                                   indent_by = 4L) {
-            old_fun(pd, indent_by = indent_by)
+            old_fun(pd, indent_by = 4L)
         }
     }
 

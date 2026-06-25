@@ -18,7 +18,6 @@ use std::vec::Vec;
 // External dependencies
 use num_traits::Float;
 
-
 // Statistics derived from the hat (smoother) matrix.
 #[derive(Debug, Clone, PartialEq)]
 pub struct HatMatrixStats<T> {

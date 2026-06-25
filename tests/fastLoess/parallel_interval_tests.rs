@@ -37,6 +37,7 @@ fn test_parallel_interval_estimation() {
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .adapter(Batch)
+        .surface_mode(Direct)
         .parallel(true)
         .build()
         .unwrap();

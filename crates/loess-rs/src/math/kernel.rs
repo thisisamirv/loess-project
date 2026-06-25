@@ -13,7 +13,6 @@
 use core::f64::consts::{PI, SQRT_2};
 use num_traits::Float;
 
-
 // Square root of 2*pi, used in Gaussian kernel calculations.
 const SQRT_2PI: f64 = 2.5066282746310005024157652848110452530069867406099_f64;
 
@@ -29,7 +28,6 @@ const PI_OVER_2: f64 = PI / 2.0;
 // zero (exp(-6^2/2) approx 6.9e-9). This prevents numerical underflow and improves
 // performance.
 const GAUSSIAN_CUTOFF: f64 = 6.0;
-
 
 // # Mathematical Properties
 //
@@ -112,7 +110,6 @@ const UNIFORM_PROPERTIES: KernelProperties = KernelProperties {
     roughness: 2.0,
 };
 
-
 // Weight function (kernel) for LOESS smoothing.
 //
 // Each kernel defines a function K: ℝ → [0, ∞) that maps normalized
@@ -146,7 +143,6 @@ pub enum WeightFunction {
 }
 
 impl WeightFunction {
-
     // Get the name of the weight function.
     #[inline]
     pub const fn name(&self) -> &'static str {
@@ -173,7 +169,6 @@ impl WeightFunction {
             WeightFunction::Uniform => &UNIFORM_PROPERTIES,
         }
     }
-
 
     // Get the unnormalized variance (second moment) of the kernel.
     #[inline]
@@ -219,7 +214,6 @@ impl WeightFunction {
         r_ratio.powf(4.0 / 5.0) * v_ratio.powf(2.0 / 5.0) * c_ratio.powf(2.0)
     }
 
-
     // Returns the support interval for bounded kernels.
     #[inline]
     pub fn support(&self) -> Option<(f64, f64)> {
@@ -234,7 +228,6 @@ impl WeightFunction {
     fn is_bounded(&self) -> bool {
         self.support().is_some()
     }
-
 
     // Compute the unnormalized weight K(u) for a given normalized distance.
     #[inline]

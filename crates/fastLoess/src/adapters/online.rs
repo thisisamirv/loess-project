@@ -23,6 +23,7 @@ use std::fmt::Debug;
 use std::result::Result;
 
 // Internal dependencies
+#[cfg(feature = "cpu")]
 use crate::math::neighborhood::build_kdtree_parallel;
 
 // Export dependencies from loess-rs crate
@@ -40,7 +41,6 @@ use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::math::scaling::ScalingMethod;
 use loess_rs::internals::primitives::backend::Backend;
 use loess_rs::internals::primitives::errors::LoessError;
-
 
 // Builder for online LOESS processor with parallel support.
 #[derive(Debug, Clone)]
@@ -79,7 +79,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self.base.backend = Some(backend);
         self
     }
-
 
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
@@ -183,7 +182,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-
     // Set the window capacity.
     pub fn window_capacity(mut self, capacity: usize) -> Self {
         self.base.window_capacity = capacity;
@@ -202,7 +200,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-
     // Build the online processor.
     pub fn build(self) -> Result<ParallelOnlineLoess<T>, LoessError> {
         // Check for deferred errors from adapter conversion
@@ -211,6 +208,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         }
 
         // Configure parallel callbacks before building
+        #[cfg_attr(not(feature = "cpu"), allow(unused_mut))]
         let mut builder = self.base;
 
         #[cfg(feature = "cpu")]
@@ -228,7 +226,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         Ok(ParallelOnlineLoess { processor })
     }
 }
-
 
 // Online LOESS processor with parallel support.
 pub struct ParallelOnlineLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg> {

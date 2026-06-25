@@ -56,7 +56,6 @@ pub enum MergeStrategy {
     TakeLast,
 }
 
-
 // Builder for streaming LOESS processor.
 #[derive(Debug, Clone)]
 pub struct StreamingLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
@@ -218,7 +217,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
         }
     }
 
-
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.fraction = fraction;
@@ -321,7 +319,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
         self
     }
 
-
     // Set whether to return diagnostics.
     pub fn return_diagnostics(mut self, return_diagnostics: bool) -> Self {
         self.return_diagnostics = return_diagnostics;
@@ -392,7 +389,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
         self
     }
 
-
     // Build the streaming processor.
     pub fn build(self) -> Result<StreamingLoess<T>, LoessError> {
         if let Some(err) = self.deferred_error {
@@ -429,7 +425,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
         })
     }
 }
-
 
 // Streaming LOESS processor for large datasets.
 pub struct StreamingLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> {
@@ -555,26 +550,26 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             None
         };
 
-        if let Some(ref mut rw_out) = rob_weights_out {
-            if prev_overlap_len > 0 {
-                let prev_rw = mem::take(&mut self.overlap_buffer_robustness_weights);
-                for (i, (&prev_val, &curr_val)) in prev_rw
-                    .iter()
-                    .zip(result.robustness_weights.iter())
-                    .take(prev_overlap_len)
-                    .enumerate()
-                {
-                    let merged = match self.config.merge_strategy {
-                        MergeStrategy::Average => (prev_val + curr_val) / T::from(2.0).unwrap(),
-                        MergeStrategy::WeightedAverage => {
-                            let weight = T::from(i as f64 / prev_overlap_len as f64).unwrap();
-                            prev_val * (T::one() - weight) + curr_val * weight
-                        }
-                        MergeStrategy::TakeFirst => prev_val,
-                        MergeStrategy::TakeLast => curr_val,
-                    };
-                    rw_out.push(merged);
-                }
+        if let Some(ref mut rw_out) = rob_weights_out
+            && prev_overlap_len > 0
+        {
+            let prev_rw = mem::take(&mut self.overlap_buffer_robustness_weights);
+            for (i, (&prev_val, &curr_val)) in prev_rw
+                .iter()
+                .zip(result.robustness_weights.iter())
+                .take(prev_overlap_len)
+                .enumerate()
+            {
+                let merged = match self.config.merge_strategy {
+                    MergeStrategy::Average => (prev_val + curr_val) / T::from(2.0).unwrap(),
+                    MergeStrategy::WeightedAverage => {
+                        let weight = T::from(i as f64 / prev_overlap_len as f64).unwrap();
+                        prev_val * (T::one() - weight) + curr_val * weight
+                    }
+                    MergeStrategy::TakeFirst => prev_val,
+                    MergeStrategy::TakeLast => curr_val,
+                };
+                rw_out.push(merged);
             }
         }
 

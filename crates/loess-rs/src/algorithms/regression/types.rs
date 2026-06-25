@@ -6,7 +6,6 @@
 // External dependencies
 use num_traits::Float;
 
-
 // Polynomial degree for local regression fitting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum PolynomialDegree {
@@ -182,7 +181,6 @@ impl PolynomialDegree {
         count
     }
 }
-
 
 // Policy for handling cases where all weights are zero.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

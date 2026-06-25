@@ -19,7 +19,6 @@ use std::vec::Vec;
 use num_traits::Float;
 use wide::{f32x8, f64x4};
 
-
 // Trait for SIMD-optimized distance computations.
 pub trait DistanceLinalg: Float + 'static {
     // Compute Euclidean distance between two points.
@@ -167,7 +166,6 @@ impl DistanceLinalg for f32 {
     }
 }
 
-
 // Distance metric for nD LOESS neighborhood computation.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum DistanceMetric<T> {
@@ -190,7 +188,6 @@ pub enum DistanceMetric<T> {
     // Weighted Euclidean distance: √(Σ wᵢ(xᵢ - yᵢ)²)
     Weighted(Vec<T>),
 }
-
 
 impl<T: DistanceLinalg> DistanceMetric<T> {
     // Compute Euclidean distance between two nD points.
@@ -280,11 +277,9 @@ impl<T: DistanceLinalg> DistanceMetric<T> {
     }
 }
 
-
 // SIMD-optimized distance calculations using the `wide` crate.
 pub mod simd_distance {
     use super::*;
-
 
     // SIMD-optimized Euclidean distance for f64 slices.
     // Processes 4 elements at a time using AVX/SSE2 instructions.
@@ -397,7 +392,6 @@ pub mod simd_distance {
     pub fn euclidean_f32(a: &[f32], b: &[f32]) -> f32 {
         euclidean_sq_f32(a, b).sqrt()
     }
-
 
     // SIMD-optimized normalized Euclidean distance for f64 slices.
     #[inline]
@@ -519,7 +513,6 @@ pub mod simd_distance {
         total
     }
 
-
     // SIMD-optimized weighted Euclidean distance for f64 slices.
     #[inline]
     pub fn weighted_f64(a: &[f64], b: &[f64], weights: &[f64]) -> f64 {
@@ -640,7 +633,6 @@ pub mod simd_distance {
         weighted_sq_f32(a, b, weights).sqrt()
     }
 
-
     // SIMD-optimized Manhattan distance for f64 slices.
     #[inline]
     pub fn manhattan_f64(a: &[f64], b: &[f64]) -> f64 {
@@ -728,7 +720,6 @@ pub mod simd_distance {
 
         total
     }
-
 
     // SIMD-optimized Chebyshev distance for f64 slices.
     #[inline]
@@ -825,7 +816,6 @@ pub mod simd_distance {
         total
     }
 
-
     // Minkowski distance for f64 slices.
     #[inline]
     pub fn minkowski_f64(a: &[f64], b: &[f64], p: f64) -> f64 {
@@ -869,7 +859,6 @@ pub mod simd_distance {
             .sum();
         sum_pow.powf(1.0 / p)
     }
-
 
     #[inline]
     fn euclidean_sq_scalar<T: Float>(a: &[T], b: &[T]) -> T {

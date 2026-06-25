@@ -24,7 +24,6 @@ use num_traits::Float;
 // Internal dependencies
 use crate::primitives::buffer::CVBuffer;
 
-
 // Minimal PRNG for no-std shuffling.
 //
 // Uses an LCG (Linear Congruential Generator) with constants from PCG/MQL.
@@ -45,7 +44,6 @@ impl SimpleRng {
     }
 }
 
-
 // Internal representation of CV method for storage (no lifetime needed).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum CVKind {
@@ -55,7 +53,6 @@ pub enum CVKind {
     #[allow(clippy::upper_case_acronyms)]
     LOOCV,
 }
-
 
 // Cross-validation configuration combining strategy, fractions, and seed.
 #[derive(Debug, Clone)]
@@ -118,7 +115,6 @@ pub fn LOOCV<T>(fractions: &[T]) -> CVConfig<'_, T> {
     }
 }
 
-
 impl CVKind {
     // Run cross-validation to select the best fraction.
     #[allow(clippy::too_many_arguments)]
@@ -161,7 +157,6 @@ impl CVKind {
             ),
         }
     }
-
 
     // Build a data subset from a list of indices into provided scratch buffers.
     pub fn build_subset_inplace<T: Float>(
@@ -313,7 +308,6 @@ impl CVKind {
             }
         }
     }
-
 
     // Select the best fraction based on cross-validation scores.
     fn select_best_fraction<T: Float>(fractions: &[T], scores: &[T]) -> (T, Vec<T>) {

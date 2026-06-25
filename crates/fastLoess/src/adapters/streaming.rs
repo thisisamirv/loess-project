@@ -42,8 +42,8 @@ use loess_rs::internals::primitives::errors::LoessError;
 
 // Internal dependencies
 use crate::input::LoessInput;
+#[cfg(feature = "cpu")]
 use crate::math::neighborhood::build_kdtree_parallel;
-
 
 // Builder for streaming LOESS processor with parallel support.
 #[derive(Debug, Clone)]
@@ -81,7 +81,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self.base.backend = Some(backend);
         self
     }
-
 
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
@@ -185,7 +184,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-
     // Enable returning diagnostics in the result.
     pub fn return_diagnostics(mut self, enabled: bool) -> Self {
         self.base.return_diagnostics = enabled;
@@ -210,7 +208,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-
     // Build the streaming processor.
     pub fn build(self) -> Result<ParallelStreamingLoess<T>, LoessError> {
         // Check for deferred errors from adapter conversion
@@ -224,7 +221,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         })
     }
 }
-
 
 // Streaming LOESS processor with parallel support.
 pub struct ParallelStreamingLoess<
@@ -248,6 +244,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
 
         // Lazily initialize the processor with parallel callbacks
         if self.processor.is_none() {
+            #[cfg_attr(not(feature = "cpu"), allow(unused_mut))]
             let mut builder = self.config.base.clone();
 
             #[cfg(feature = "cpu")]
