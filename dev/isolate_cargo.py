@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Temporarily isolate Cargo workspace members while a target-specific command runs."""
+
 import argparse
 import os
 import re
@@ -34,7 +36,7 @@ def restore_cargo_toml():
         # print("Restored Cargo.toml")
 
 
-def signal_handler(sig, frame):
+def signal_handler(_sig, _frame):
     """Handle interruption signals."""
     print("\nInterrupted! Restoring Cargo.toml...")
     restore_cargo_toml()
@@ -66,8 +68,8 @@ def isolate_members(keep_member_key):
 
     shutil.copy2(CARGO_TOML, BACKUP_TOML)
 
-    with open(BACKUP_TOML, "r") as f:
-        lines = f.readlines()
+    with open(BACKUP_TOML, "r", encoding="utf-8") as file_handle:
+        lines = file_handle.readlines()
 
     new_lines = []
     in_members = False
@@ -87,7 +89,7 @@ def isolate_members(keep_member_key):
                 new_lines.append(line)
                 continue
 
-            # This is a member line (e.g. "crates/loess",)
+            # This is a member line (e.g. "crates/lowess",)
             # We extracting the string inside quotes
             match = re.search(r'"([^"]+)"', stripped)
             if match:
@@ -101,7 +103,7 @@ def isolate_members(keep_member_key):
                     else:
                         new_lines.append(line)
                 else:
-                    # Ensure it's uncommented if it was commented (though we start from clean source ideally)
+                    # Ensure it's uncommented if it was commented
                     # But here we just keep it as is if it matches
                     new_lines.append(line)
             else:
@@ -110,11 +112,12 @@ def isolate_members(keep_member_key):
         else:
             new_lines.append(line)
 
-    with open(CARGO_TOML, "w") as f:
-        f.writelines(new_lines)
+    with open(CARGO_TOML, "w", encoding="utf-8") as file_handle:
+        file_handle.writelines(new_lines)
 
 
 def main():
+    """Isolate the requested workspace member, run the command, then restore."""
     parser = argparse.ArgumentParser(description="Isolate Cargo workspace members.")
     parser.add_argument(
         "target_path",
@@ -140,18 +143,16 @@ def main():
 
             if not cmd:
                 print("No command specified.")
-                return
+                return 1
 
             # print(f"Running command: {' '.join(cmd)}")
-            result = subprocess.run(cmd)
-            sys.exit(result.returncode)
+            result = subprocess.run(cmd, check=False)
+            return result.returncode
 
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        sys.exit(1)
+        return 0
     finally:
         restore_cargo_toml()
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

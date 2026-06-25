@@ -7,6 +7,7 @@ GPU dependencies that are not needed for the R binding.
 """
 
 import argparse
+import importlib
 import sys
 from pathlib import Path
 from typing import Any, Dict
@@ -16,13 +17,16 @@ try:
 except ImportError:
     import tomli as tomllib  # type: ignore
 
-import tomli_w
+
+def load_tomli_w():
+    """Import `tomli_w` lazily so editor-only envs do not fail static import resolution."""
+    return importlib.import_module("tomli_w")
 
 
 def load_workspace_values(workspace_toml: Path) -> Dict[str, Any]:
     """Load workspace package values from root Cargo.toml."""
-    with open(workspace_toml, "rb") as f:
-        data = tomllib.load(f)
+    with open(workspace_toml, "rb") as file_handle:
+        data = tomllib.load(file_handle)
 
     workspace = data.get("workspace", {})
     package = workspace.get("package", {})
@@ -79,8 +83,8 @@ def patch_crate_toml(
     loess_as_path: bool = False,
 ) -> None:
     """Patch a crate's Cargo.toml to remove workspace inheritance."""
-    with open(crate_toml, "rb") as f:
-        data = tomllib.load(f)
+    with open(crate_toml, "rb") as file_handle:
+        data = tomllib.load(file_handle)
 
     # Patch [package] section
     package = data.get("package", {})
@@ -138,11 +142,13 @@ def patch_crate_toml(
             features["gpu"] = []
 
     # Write back
-    with open(crate_toml, "wb") as f:
-        tomli_w.dump(data, f)
+    tomli_w = load_tomli_w()
+    with open(crate_toml, "wb") as file_handle:
+        tomli_w.dump(data, file_handle)
 
 
 def main() -> int:
+    """Patch vendored crates so the R package can build without workspace inheritance."""
     parser = argparse.ArgumentParser(
         description="Patch vendored Cargo.toml files for R package build"
     )
@@ -192,12 +198,12 @@ def main() -> int:
         )
 
     # Patch loess-rs
-    loess_rs_toml = args.vendor_dir / "loess-rs" / "Cargo.toml"
-    if loess_rs_toml.exists():
+    loess_toml = args.vendor_dir / "loess-rs" / "Cargo.toml"
+    if loess_toml.exists():
         if not args.quiet:
-            print(f"Patching {loess_rs_toml}")
+            print(f"Patching {loess_toml}")
         patch_crate_toml(
-            loess_rs_toml,
+            loess_toml,
             workspace,
             remove_gpu=False,
             loess_as_path=False,

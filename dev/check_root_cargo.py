@@ -18,10 +18,10 @@ REQUIRED_MEMBERS = [
     "bindings/nodejs",
     "bindings/wasm",
     "bindings/cpp",
-    "validation/fastLoess",
-    "benchmarks/fastLoess",
     "examples",
     "tests",
+    "validation/fastLoess",
+    "benchmarks/fastLoess",
 ]
 
 
