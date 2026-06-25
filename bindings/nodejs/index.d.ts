@@ -114,7 +114,7 @@ export interface SmoothOptions {
   zeroWeightFallback?: string
   /** Boundary handling ("extend", "reflect"). Default: "extend". */
   boundaryPolicy?: string
-  /** Scaling method ("mad", "mar"). Default: "mad". */
+  /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
   scalingMethod?: string
   /** Auto-convergence tolerance. Default: None. */
   autoConverge?: number

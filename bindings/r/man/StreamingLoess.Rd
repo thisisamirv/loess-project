@@ -37,7 +37,7 @@ StreamingLoess(
 
 \item{robustness_method}{Method: "bisquare", "huber", "talwar".}
 
-\item{scaling_method}{Scale estimation: "mad", "mar".}
+\item{scaling_method}{Scale estimation: "mad", "mar", "mean".}
 
 \item{boundary_policy}{Edge handling: "extend", "reflect", "zero",
 "noboundary".}

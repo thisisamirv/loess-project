@@ -13,7 +13,7 @@ type Result<T> = std::result::Result<T, Error>;
 
 use fastLoess::internals::api::{
     BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod,
-    ScalingMethod::{self, MAD, MAR},
+    ScalingMethod::{self, MAD, MAR, Mean},
     SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
@@ -86,8 +86,9 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
+        "mean" => Ok(Mean),
         _ => Err(Error::Other(format!(
-            "Unknown scaling method: {}. Valid options: mad, mar",
+            "Unknown scaling method: {}. Valid options: mad, mar, mean",
             name
         ))),
     }

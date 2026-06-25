@@ -69,10 +69,11 @@ validate_params <- function(
     if (fraction < 0 || fraction > 1) {
         stop("fraction must be between 0 and 1")
     }
-    iter_invalid <- !is.null(iterations) &&
-        (!is.numeric(iterations) ||
+    iter_invalid <- !is.null(iterations) && (
+        !is.numeric(iterations) ||
             length(iterations) != 1 ||
-            is.na(iterations))
+            is.na(iterations)
+    )
     if (iter_invalid) {
         stop("iterations must be a single numeric value")
     }

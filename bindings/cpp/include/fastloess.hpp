@@ -104,7 +104,7 @@ struct LoessOptions {
 
   std::string weight_function = "tricube";
   std::string robustness_method = "bisquare";
-  std::string scaling_method = "mad"; ///< mad, mar
+  std::string scaling_method = "mad"; ///< mad, mar, mean
   std::string boundary_policy = "extend";
   std::string zero_weight_fallback = "use_local_mean";
 

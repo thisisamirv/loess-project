@@ -12,7 +12,7 @@
 #' @param iterations Robustness iterations.
 #' @param weight_function Kernel name. Default: "tricube".
 #' @param robustness_method Method: "bisquare", "huber", "talwar".
-#' @param scaling_method Scale estimation: "mad", "mar".
+#' @param scaling_method Scale estimation: "mad", "mar", "mean".
 #' @param boundary_policy Edge handling: "extend", "reflect", "zero",
 #'   "noboundary".
 #' @param auto_converge Convergence tolerance. NULL disables.

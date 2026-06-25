@@ -18,7 +18,7 @@
 #' @param iterations Robustness iterations. Default: 3.
 #' @param weight_function Kernel name. Default: "tricube".
 #' @param robustness_method Method: "bisquare", "huber", "talwar".
-#' @param scaling_method Scale estimation: "mad", "mar".
+#' @param scaling_method Scale estimation: "mad", "mar", "mean".
 #' @param boundary_policy Edge handling: "extend", "reflect", "zero",
 #'   "noboundary".
 #' @param confidence_intervals Confidence level (e.g., 0.95). NULL disables.

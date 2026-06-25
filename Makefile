@@ -162,9 +162,9 @@ all: ISOLATE := false
 
 lowess:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py crates/loess-rs -- $(MAKE) _loess_impl; \
+		$(PYTHON) dev/isolate_cargo.py crates/loess-rs -- "$(MAKE)" _loess_impl; \
 	else \
-		$(MAKE) _loess_impl; \
+		"$(MAKE)" _loess_impl; \
 	fi
 
 _loess_impl:
@@ -228,9 +228,9 @@ loess-clean:
 # ==============================================================================
 fastLowess:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py crates/fastLoess -- $(MAKE) _fastLoess_impl; \
+		$(PYTHON) dev/isolate_cargo.py crates/fastLoess -- "$(MAKE)" _fastLoess_impl; \
 	else \
-		$(MAKE) _fastLoess_impl; \
+		"$(MAKE)" _fastLoess_impl; \
 	fi
 
 _fastLoess_impl:
@@ -285,9 +285,9 @@ fastLoess-clean:
 # ==============================================================================
 python:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/python -- $(MAKE) _python_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/python -- "$(MAKE)" _python_impl; \
 	else \
-		$(MAKE) _python_impl; \
+		"$(MAKE)" _python_impl; \
 	fi
 
 _python_impl:
@@ -350,9 +350,9 @@ python-clean:
 # ==============================================================================
 r:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/r -- $(MAKE) _r_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/r -- "$(MAKE)" _r_impl; \
 	else \
-		$(MAKE) _r_impl; \
+		"$(MAKE)" _r_impl; \
 	fi
 
 _r_impl:
@@ -516,9 +516,9 @@ r-clean:
 # ==============================================================================
 julia:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/julia -- $(MAKE) _julia_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/julia -- "$(MAKE)" _julia_impl; \
 	else \
-		$(MAKE) _julia_impl; \
+		"$(MAKE)" _julia_impl; \
 	fi
 
 _julia_impl:
@@ -625,9 +625,9 @@ julia-clean:
 # ==============================================================================
 nodejs:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/nodejs -- $(MAKE) _nodejs_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/nodejs -- "$(MAKE)" _nodejs_impl; \
 	else \
-		$(MAKE) _nodejs_impl; \
+		"$(MAKE)" _nodejs_impl; \
 	fi
 
 _nodejs_impl:
@@ -667,9 +667,9 @@ nodejs-clean:
 # ==============================================================================
 wasm:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/wasm -- $(MAKE) _wasm_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/wasm -- "$(MAKE)" _wasm_impl; \
 	else \
-		$(MAKE) _wasm_impl; \
+		"$(MAKE)" _wasm_impl; \
 	fi
 
 _wasm_impl:
@@ -719,9 +719,9 @@ wasm-clean:
 # ==============================================================================
 cpp:
 	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/cpp -- $(MAKE) _cpp_impl; \
+		$(PYTHON) dev/isolate_cargo.py bindings/cpp -- "$(MAKE)" _cpp_impl; \
 	else \
-		$(MAKE) _cpp_impl; \
+		"$(MAKE)" _cpp_impl; \
 	fi
 
 _cpp_impl:

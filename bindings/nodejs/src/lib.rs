@@ -78,9 +78,13 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
+        "mean" => Ok(ScalingMethod::Mean),
         _ => Err(Error::new(
             Status::InvalidArg,
-            format!("Unknown scaling method: {}. Valid options: mad, mar", name),
+            format!(
+                "Unknown scaling method: {}. Valid options: mad, mar, mean",
+                name
+            ),
         )),
     }
 }
@@ -336,7 +340,7 @@ pub struct SmoothOptions {
     pub zeroWeightFallback: Option<String>,
     /// Boundary handling ("extend", "reflect"). Default: "extend".
     pub boundaryPolicy: Option<String>,
-    /// Scaling method ("mad", "mar"). Default: "mad".
+    /// Scaling method ("mad", "mar", "mean"). Default: "mad".
     pub scalingMethod: Option<String>,
     /// Auto-convergence tolerance. Default: None.
     pub autoConverge: Option<f64>,

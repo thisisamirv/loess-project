@@ -88,8 +88,9 @@ fn parse_scaling_method(name: &str) -> PyResult<ScalingMethod> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
         "mar" => Ok(MAR),
+        "mean" => Ok(ScalingMethod::Mean),
         _ => Err(PyValueError::new_err(format!(
-            "Unknown scaling method: {}. Valid options: mad, mar",
+            "Unknown scaling method: {}. Valid options: mad, mar, mean",
             name
         ))),
     }
