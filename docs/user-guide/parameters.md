@@ -238,6 +238,8 @@ The proportion of data used for each local fit. **Most important parameter.**
 | 0.5–0.7 | Heavy smoothing | Noisy data               |
 | 0.7–1.0 | Very smooth     | Trend extraction         |
 
+![Fraction Comparison](../assets/diagrams/fraction_comparison.svg)
+
 === "R"
     ```r
     result <- Loess(fraction = 0.3)$fit(x, y)
@@ -326,6 +328,34 @@ Number of robustness iterations for outlier resistance.
     ```cpp
     auto result = fastloess::smooth(x, y, { .iterations = 5 });
     ```
+
+---
+
+### degree
+
+Polynomial degree for the local regression fits.
+
+![Degree Comparison](../assets/diagrams/degree_comparison.svg)
+
+| Degree | Fit Type             | Default? |
+|--------|----------------------|----------|
+| `0`    | Local constant       |          |
+| `1`    | Local linear         | Yes      |
+| `2`    | Local quadratic      |          |
+
+Higher degrees capture curvature but can overfit with small fractions. Degree 1 is appropriate for most use cases.
+
+---
+
+### dimensions
+
+Number of predictor variables. Enables multivariate LOESS over an n-dimensional input space.
+
+![Multivariate LOESS](../assets/diagrams/multivariate_loess.svg)
+
+- **1** (default): Standard 1D smoothing over a single predictor
+- **2**: Spatial or bi-predictor surface smoothing
+- **3+**: High-dimensional local regression
 
 ---
 
@@ -916,7 +946,7 @@ Include final robustness weights (useful for outlier detection).
         .iterations = 3,
         .return_robustness_weights = true
     });
-    auto weights = result.robustness_weights();
+    auto weights = result.robustnessWeights();
     ```
 
 ---

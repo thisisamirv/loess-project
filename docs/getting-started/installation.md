@@ -55,11 +55,11 @@ Install the LOESS library for your preferred language.
     ```toml
     # loess (no_std compatible)
     [dependencies]
-    loess = "1.1"
+    loess = "1.3"
 
     # fastLoess (parallel + GPU)
     [dependencies]
-    fastLoess = { version = "1.1", features = ["cpu"] }
+    fastLoess = { version = "1.3", features = ["cpu"] }
     ```
 
     === "Feature Flags"

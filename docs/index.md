@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD033 -->
 # LOESS Project
 
-The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Estimated Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
+The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
 
 ## What is LOESS?
 
@@ -299,7 +299,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
         fastloess::Loess model(options);
         auto result = model.fit(x, y);
 
-        for (const auto& val : result.y_vector()) {
+        for (const auto& val : result.yVector()) {
             std::cout << val << " ";
         }
         std::cout << std::endl;

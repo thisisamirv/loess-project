@@ -153,7 +153,7 @@ fn parse_update_mode(name: &str) -> PyResult<UpdateMode> {
 // ============================================================================
 
 /// Diagnostic statistics for LOESS fit quality.
-#[pyclass(name = "Diagnostics")]
+#[pyclass(name = "Diagnostics", from_py_object)]
 #[derive(Clone)]
 pub struct PyDiagnostics {
     /// Root Mean Squared Error
@@ -681,7 +681,7 @@ impl PyOnlineLoess {
 ///
 /// This class allows you to configure LOESS parameters once and then
 /// call `fit()` multiple times with different datasets.
-#[pyclass(name = "Loess")]
+#[pyclass(name = "Loess", from_py_object)]
 #[derive(Clone)]
 pub struct PyLoess {
     fraction: f64,

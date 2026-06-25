@@ -78,10 +78,10 @@ int main() {
     try {
         auto result = fastloess::smooth(x, y, options);
         
-        std::cout << "R²: " << result.diagnostics().r_squared << std::endl;
+        std::cout << "R²: " << result.diagnostics().rSquared() << std::endl;
         
         // Access smoothed values
-        auto smoothed = result.y_vector();
+        auto smoothed = result.yVector();
     } catch (const fastloess::LoessError& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return 1;

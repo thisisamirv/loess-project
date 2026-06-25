@@ -14,6 +14,8 @@ Standard LOESS can be biased by outliers. Robustness iterations downweight point
 
 ![Robust vs Standard](../assets/diagrams/robust_vs_standard_loess.svg)
 
+![Robustness Iterations](../assets/diagrams/robustness_comparison.svg)
+
 ---
 
 ## Robustness Methods
@@ -265,7 +267,7 @@ Use robustness weights to identify potential outliers:
         .return_robustness_weights = true
     });
 
-    auto weights = result.robustness_weights();
+    auto weights = result.robustnessWeights();
     for (size_t i = 0; i < weights.size(); ++i) {
         if (weights[i] < 0.5) {
             std::cout << "Potential outlier at " << i << std::endl;

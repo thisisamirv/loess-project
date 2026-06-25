@@ -7,6 +7,8 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ![Intervals](../assets/diagrams/confidence_vs_prediction_intervals.svg)
 
+![Uncertainty Decomposition](../assets/diagrams/intervals_comparison.svg)
+
 | Type           | Represents                 | Width  | Use                       |
 |----------------|----------------------------|--------|---------------------------|
 | **Confidence** | Uncertainty in mean curve  | Narrow | Where is the true trend?  |
@@ -97,8 +99,8 @@ Estimate uncertainty in the smoothed curve itself.
         .confidence_intervals = 0.95
     });
 
-    auto ci_lower = result.confidence_lower();
-    auto ci_upper = result.confidence_upper();
+    auto ci_lower = result.confidenceLower();
+    auto ci_upper = result.confidenceUpper();
     ```
 
 ---

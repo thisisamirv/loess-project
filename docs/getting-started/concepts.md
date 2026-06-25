@@ -19,8 +19,8 @@ Unlike parametric methods (linear regression, polynomial fitting), LOESS adapts 
 ## How It Works
 
 <figure markdown="span">
-  ![LOESS Smoothing Concept](../assets/diagrams/loess_smoothing_concept.svg){ width="800" }
-  <figcaption>LOESS fits local weighted regressions at each point</figcaption>
+  ![LOESS Smoothing Concept](../assets/diagrams/loess_concept.svg){ width="800" }
+  <figcaption>LOESS fits local weighted regressions at each point, using a focused local window around each evaluation point</figcaption>
 </figure>
 
 For each point in your data, LOESS:
@@ -115,7 +115,7 @@ flowchart TD
 
 ## Key Advantages
 
-| Feature                    | LOESS | Polynomial Regression | Moving Average |
+| Feature                    | LOESS  | Polynomial Regression | Moving Average |
 |----------------------------|:------:|:---------------------:|:--------------:|
 | No parametric assumptions  | ✓      | ✗                     | ✓              |
 | Adapts to local structure  | ✓      | ✗                     | Partial        |
