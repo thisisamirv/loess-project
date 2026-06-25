@@ -1,16 +1,11 @@
-//! Regression Types
+//! Regression types: polynomial degree, zero-weight fallback, and solver trait.
 //!
-//! ## Purpose
-//!
-//! This module defines the core data types and configuration enums used in
-//! regression fitting, such as `PolynomialDegree` and `ZeroWeightFallback`.
+//! This module defines the core configuration enums and the `SolverLinalg` trait
+//! used across all regression fitting backends.
 
 // External dependencies
 use num_traits::Float;
 
-// ============================================================================
-// Polynomial Degree
-// ============================================================================
 
 // Polynomial degree for local regression fitting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -188,9 +183,6 @@ impl PolynomialDegree {
     }
 }
 
-// ============================================================================
-// Zero-Weight Fallback Policy
-// ============================================================================
 
 // Policy for handling cases where all weights are zero.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

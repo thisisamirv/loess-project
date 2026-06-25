@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/thisisamirv/loess-project"
 homepage = "https://github.com/thisisamirv/loess-project"
 documentation = "https://loess.readthedocs.io/"
-rust-version = "1.88"
+rust-version = "1.89"
 readme = "README.md"
 description = "High-performance LOESS (Locally Estimated Scatterplot Smoothing)"
 keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
@@ -15,7 +15,10 @@ categories = ["science", "algorithms"]
 
 [dependencies]
 loess-rs = { path = "../../crates/loess-rs", version = "1.1" }
-fastLoess = { path = "../../crates/fastLoess", version = "1.1", features = ["dev", "cpu"] }
+fastLoess = { path = "../../crates/fastLoess", version = "1.1", features = [
+    "dev",
+    "cpu",
+] }
 
 [lib]
 name = "fastloess_jl"

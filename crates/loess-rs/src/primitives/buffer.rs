@@ -20,9 +20,6 @@ use core::fmt::Debug;
 use core::ops::{Deref, DerefMut};
 use num_traits::Float;
 
-// ============================================================================
-// Slot - Unified Vector Abstraction
-// ============================================================================
 
 // A reusable vector slot with automatic capacity management.
 #[derive(Debug, Clone)]
@@ -96,9 +93,6 @@ impl<T> From<Vec<T>> for Slot<T> {
     }
 }
 
-// ============================================================================
-// Main Workspace
-// ============================================================================
 
 // A struct containing pre-allocated buffers for LOESS operations.
 pub struct LoessBuffer<T: Float, N, NH> {
@@ -152,9 +146,6 @@ where
     }
 }
 
-// ============================================================================
-// Traits
-// ============================================================================
 
 // Trait for neighborhood storage that can be injected into the workspace.
 pub trait NeighborhoodStorage {
@@ -164,9 +155,6 @@ pub trait NeighborhoodStorage {
     fn capacity(&self) -> usize;
 }
 
-// ============================================================================
-// Internal Buffers
-// ============================================================================
 
 // Persistent buffers for KD-tree search to avoid allocations.
 pub struct NeighborhoodSearchBuffer<N> {

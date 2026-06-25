@@ -19,9 +19,6 @@ use nalgebra::{DMatrix, DVector};
 use num_traits::Float;
 use wide::{f32x8, f64x4};
 
-// ============================================================================
-// FloatLinalg Trait
-// ============================================================================
 
 // Helper trait to bridge generic Float types to the optimized Nalgebra backend.
 //
@@ -35,9 +32,6 @@ pub trait FloatLinalg: Float + 'static {
     // Invert the normal matrix X'WX.
     fn invert_normal(a: &[Self], n: usize) -> Option<Vec<Self>>;
 
-    // ========================================================================
-    // Batch SIMD Operations
-    // ========================================================================
 
     // Batch compute absolute residuals: `out[i] = |a[i] - b[i]|`
     fn batch_abs_residuals(a: &[Self], b: &[Self], out: &mut [Self]);
@@ -92,9 +86,6 @@ impl FloatLinalg for f32 {
     }
 }
 
-// ============================================================================
-// Nalgebra Backend Implementation
-// ============================================================================
 
 // Nalgebra-based linear algebra operations.
 pub mod nalgebra_backend {
@@ -189,9 +180,6 @@ pub mod nalgebra_backend {
     }
 }
 
-// ============================================================================
-// SIMD Batch Operations
-// ============================================================================
 
 // SIMD-optimized batch operations for array processing.
 pub mod simd_batch {

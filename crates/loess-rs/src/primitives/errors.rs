@@ -14,9 +14,6 @@ use std::string::String;
 // External dependencies
 use core::fmt::{Display, Formatter, Result};
 
-// ============================================================================
-// Error Type
-// ============================================================================
 
 // Error type for LOESS operations.
 #[derive(Debug, Clone, PartialEq)]
@@ -125,9 +122,6 @@ pub enum LoessError {
     },
 }
 
-// ============================================================================
-// Display Implementation
-// ============================================================================
 
 impl Display for LoessError {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -224,9 +218,6 @@ impl Display for LoessError {
     }
 }
 
-// ============================================================================
-// Standard Error Trait
-// ============================================================================
 
 #[cfg(feature = "std")]
 impl Error for LoessError {}

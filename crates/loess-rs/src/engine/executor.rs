@@ -105,9 +105,6 @@ impl<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> PointDistance<T>
     }
 }
 
-// ============================================================================
-// Surface Mode
-// ============================================================================
 
 // Mode for surface evaluation.
 //
@@ -123,9 +120,6 @@ pub enum SurfaceMode {
     Direct,
 }
 
-// ============================================================================
-// Type Definitions
-// ============================================================================
 
 // Signature for custom smooth pass function
 #[doc(hidden)]
@@ -238,9 +232,6 @@ pub struct ExecutorOutput<T: FloatLinalg> {
     pub leverage: Option<Vec<T>>,
 }
 
-// ============================================================================
-// Configuration
-// ============================================================================
 
 // Configuration for LOESS execution.
 #[derive(Debug, Clone)]
@@ -470,9 +461,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLinalg>
     LoessExecutor<T>
 {
-    // ========================================================================
-    // Constructor and Builder Methods
-    // ========================================================================
 
     // Create a new executor with default parameters.
     pub fn new() -> Self {
@@ -677,9 +665,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self
     }
 
-    // ========================================================================
-    // Main Entry Points
-    // ========================================================================
 
     // Smooth data using a `LoessConfig` payload.
     pub fn run_with_config(x: &[T], y: &[T], config: LoessConfig<T>) -> ExecutorOutput<T>
@@ -1331,9 +1316,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         }
     }
 
-    // ========================================================================
-    // Main Algorithmic Logic
-    // ========================================================================
 
     // Predict values at arbitrary points using the provided training data.
     //

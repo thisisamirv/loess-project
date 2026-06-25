@@ -19,9 +19,6 @@ use std::vec::Vec;
 use num_traits::Float;
 use wide::{f32x8, f64x4};
 
-// ============================================================================
-// DistanceLinalg Trait
-// ============================================================================
 
 // Trait for SIMD-optimized distance computations.
 pub trait DistanceLinalg: Float + 'static {
@@ -170,9 +167,6 @@ impl DistanceLinalg for f32 {
     }
 }
 
-// ============================================================================
-// Distance Metric Enum
-// ============================================================================
 
 // Distance metric for nD LOESS neighborhood computation.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -197,9 +191,6 @@ pub enum DistanceMetric<T> {
     Weighted(Vec<T>),
 }
 
-// ============================================================================
-// Distance Computation Functions
-// ============================================================================
 
 impl<T: DistanceLinalg> DistanceMetric<T> {
     // Compute Euclidean distance between two nD points.
@@ -289,17 +280,11 @@ impl<T: DistanceLinalg> DistanceMetric<T> {
     }
 }
 
-// ============================================================================
-// SIMD Distance Implementation
-// ============================================================================
 
 // SIMD-optimized distance calculations using the `wide` crate.
 pub mod simd_distance {
     use super::*;
 
-    // ========================================================================
-    // Euclidean Distance
-    // ========================================================================
 
     // SIMD-optimized Euclidean distance for f64 slices.
     // Processes 4 elements at a time using AVX/SSE2 instructions.
@@ -413,9 +398,6 @@ pub mod simd_distance {
         euclidean_sq_f32(a, b).sqrt()
     }
 
-    // ========================================================================
-    // Normalized Distance
-    // ========================================================================
 
     // SIMD-optimized normalized Euclidean distance for f64 slices.
     #[inline]
@@ -537,9 +519,6 @@ pub mod simd_distance {
         total
     }
 
-    // ========================================================================
-    // Weighted Distance
-    // ========================================================================
 
     // SIMD-optimized weighted Euclidean distance for f64 slices.
     #[inline]
@@ -661,9 +640,6 @@ pub mod simd_distance {
         weighted_sq_f32(a, b, weights).sqrt()
     }
 
-    // ========================================================================
-    // Manhattan Distance (L1 norm)
-    // ========================================================================
 
     // SIMD-optimized Manhattan distance for f64 slices.
     #[inline]
@@ -753,9 +729,6 @@ pub mod simd_distance {
         total
     }
 
-    // ========================================================================
-    // Chebyshev Distance (L-infinity norm)
-    // ========================================================================
 
     // SIMD-optimized Chebyshev distance for f64 slices.
     #[inline]
@@ -852,9 +825,6 @@ pub mod simd_distance {
         total
     }
 
-    // ========================================================================
-    // Minkowski Distance (Lp norm)
-    // ========================================================================
 
     // Minkowski distance for f64 slices.
     #[inline]
@@ -900,9 +870,6 @@ pub mod simd_distance {
         sum_pow.powf(1.0 / p)
     }
 
-    // ========================================================================
-    // Scalar Fallbacks
-    // ========================================================================
 
     #[inline]
     fn euclidean_sq_scalar<T: Float>(a: &[T], b: &[T]) -> T {

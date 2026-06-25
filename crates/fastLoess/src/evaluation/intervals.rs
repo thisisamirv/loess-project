@@ -32,9 +32,6 @@ use loess_rs::internals::primitives::buffer::{FittingBuffer, NeighborhoodSearchB
 
 use crate::engine::executor::LoessDistanceCalculator;
 
-// ============================================================================
-// Parallel Interval Estimation
-// ============================================================================
 
 // Compute standard errors in parallel for interval estimation.
 //

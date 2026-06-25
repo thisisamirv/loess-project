@@ -27,9 +27,6 @@ use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::math::neighborhood::KDTree;
 use loess_rs::internals::primitives::window::Window;
 
-// ============================================================================
-// Parallel Cross-Validation
-// ============================================================================
 
 // Perform parallel cross-validation to select optimal LOESS bandwidth.
 //

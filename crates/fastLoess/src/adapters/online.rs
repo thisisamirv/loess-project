@@ -41,9 +41,6 @@ use loess_rs::internals::math::scaling::ScalingMethod;
 use loess_rs::internals::primitives::backend::Backend;
 use loess_rs::internals::primitives::errors::LoessError;
 
-// ============================================================================
-// Extended Online LOESS Builder
-// ============================================================================
 
 // Builder for online LOESS processor with parallel support.
 #[derive(Debug, Clone)]
@@ -83,9 +80,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // ========================================================================
-    // Shared Setters
-    // ========================================================================
 
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
@@ -189,9 +183,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // ========================================================================
-    // Online-Specific Setters
-    // ========================================================================
 
     // Set the window capacity.
     pub fn window_capacity(mut self, capacity: usize) -> Self {
@@ -211,9 +202,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // ========================================================================
-    // Build Method
-    // ========================================================================
 
     // Build the online processor.
     pub fn build(self) -> Result<ParallelOnlineLoess<T>, LoessError> {
@@ -241,9 +229,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     }
 }
 
-// ============================================================================
-// Extended Online LOESS Processor
-// ============================================================================
 
 // Online LOESS processor with parallel support.
 pub struct ParallelOnlineLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg> {

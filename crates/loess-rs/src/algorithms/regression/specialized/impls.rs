@@ -1,8 +1,7 @@
-//! Specialized Solver Implementations
+//! Concrete `SolverLinalg` implementations for f32 and f64.
 //!
-//! ## Purpose
-//!
-//! This module provides the concrete implementations of the `SolverLinalg` trait for `f32` (standard precision) and `f64` (double precision) types.
+//! Routes each (dimensions, degree) combination to the fastest available
+//! accumulator — specialized SIMD path or generic fallback.
 
 // Modular dependencies
 use super::SolverLinalg;

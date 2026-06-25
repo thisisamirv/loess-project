@@ -1,15 +1,12 @@
 //! Regression Module
 //!
-//! ## Purpose
+//! This module provides the core functionality for local regression fitting:
+//! context, types, generic solvers, and specialized low-dimensional accumulators.
 //!
-//! This module provides the core functionality for local regression fitting,
-//! including the `RegressionContext` struct and the `SolverLinalg` trait.
+//! ## srrstats Compliance
 //!
-//! ## Features
-//!
-//! - Local regression fitting with support for different polynomial degrees.
-//! - Support for different solver backends.
-//! - Support for different weight functions.
+//! @srrstats {RE2.0} Local polynomial fitting with distance-based kernel weighting.
+//! @srrstats {G2.0} Input validation at regression boundaries; empty/zero-weight fallbacks.
 
 // Regression Context
 mod context;

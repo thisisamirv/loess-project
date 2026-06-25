@@ -56,9 +56,6 @@ pub enum MergeStrategy {
     TakeLast,
 }
 
-// ============================================================================
-// Streaming LOESS Builder
-// ============================================================================
 
 // Builder for streaming LOESS processor.
 #[derive(Debug, Clone)]
@@ -221,9 +218,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
         }
     }
 
-    // ========================================================================
-    // Shared Setters
-    // ========================================================================
 
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
@@ -327,9 +321,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
         self
     }
 
-    // ========================================================================
-    // Streaming-Specific Setters
-    // ========================================================================
 
     // Set whether to return diagnostics.
     pub fn return_diagnostics(mut self, return_diagnostics: bool) -> Self {
@@ -401,9 +392,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
         self
     }
 
-    // ========================================================================
-    // Build Method
-    // ========================================================================
 
     // Build the streaming processor.
     pub fn build(self) -> Result<StreamingLoess<T>, LoessError> {
@@ -442,9 +430,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
     }
 }
 
-// ============================================================================
-// Streaming LOESS Processor
-// ============================================================================
 
 // Streaming LOESS processor for large datasets.
 pub struct StreamingLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> {

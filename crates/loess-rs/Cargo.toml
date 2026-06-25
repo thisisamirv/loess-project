@@ -4,7 +4,7 @@ name = "loess-rs"
 version = "1.1.1"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.89"
 license = "MIT OR Apache-2.0"
 
 # Documentation and Discovery
@@ -32,7 +32,7 @@ nalgebra = { version = "0.34", default-features = false, features = [
     "alloc",
     "libm",
 ] }
-wide = { version = "0.7", default-features = false }
+wide = { version = "1.4", default-features = false }
 
 [dev-dependencies]
 approx = "0.5"

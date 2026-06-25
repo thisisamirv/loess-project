@@ -17,9 +17,6 @@ use num_traits::Float;
 // Internal dependencies
 use crate::math::scaling::ScalingMethod;
 
-// ============================================================================
-// Diagnostics Structure
-// ============================================================================
 
 // Diagnostic metrics for assessing LOESS fit quality.
 #[derive(Debug, Clone, PartialEq)]
@@ -147,9 +144,6 @@ impl<T: Float> DiagnosticsState<T> {
 }
 
 impl<T: Float> Diagnostics<T> {
-    // ========================================================================
-    // Constants
-    // ========================================================================
 
     // Number of parameters in local linear regression (intercept + slope).
     const LINEAR_PARAMS: f64 = 2.0;
@@ -162,9 +156,6 @@ impl<T: Float> Diagnostics<T> {
     // For normally distributed data, MAD × 1.4826 ≈ standard deviation.
     const MAD_TO_STD_FACTOR: f64 = 1.4826;
 
-    // ========================================================================
-    // Main Computation
-    // ========================================================================
 
     // Compute diagnostic statistics from fit results.
     pub fn compute(y: &[T], y_smooth: &[T], residuals: &[T], std_errors: Option<&[T]>) -> Self {
@@ -195,9 +186,6 @@ impl<T: Float> Diagnostics<T> {
         }
     }
 
-    // ========================================================================
-    // Error Metrics
-    // ========================================================================
 
     // Compute the residual sum of squares (RSS).
     // RSS = sum r_i^2.
@@ -232,9 +220,6 @@ impl<T: Float> Diagnostics<T> {
         sum / n_t
     }
 
-    // ========================================================================
-    // Goodness-of-Fit Metrics
-    // ========================================================================
 
     // Compute the coefficient of determination (R^2).
     // R^2 = 1 - SS_res / SS_tot, where SS_res is the residual
@@ -273,9 +258,6 @@ impl<T: Float> Diagnostics<T> {
         }
     }
 
-    // ========================================================================
-    // Robust Scale Estimation
-    // ========================================================================
 
     // Estimate the residual standard deviation using a robust method.
     // sigma_hat = 1.4826 * MAD(residuals).
@@ -298,9 +280,6 @@ impl<T: Float> Diagnostics<T> {
         }
     }
 
-    // ========================================================================
-    // Model Complexity
-    // ========================================================================
 
     // Estimate the effective degrees of freedom from standard errors.
     // df_eff approx sum (SE_i / sigma_hat)^2.
@@ -339,9 +318,6 @@ impl<T: Float> Diagnostics<T> {
             .fold(T::zero(), |acc, v| acc + v)
     }
 
-    // ========================================================================
-    // Model Selection Criteria
-    // ========================================================================
 
     // Compute the Akaike Information Criterion (AIC).
     // AIC = n * ln(RSS / n) + 2 * df_eff.
@@ -375,9 +351,6 @@ impl<T: Float> Diagnostics<T> {
     }
 }
 
-// ============================================================================
-// Display Implementation
-// ============================================================================
 
 impl<T: Float + Display> Display for Diagnostics<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {

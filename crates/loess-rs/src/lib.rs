@@ -240,9 +240,6 @@
 #[macro_use]
 extern crate alloc;
 
-// ============================================================================
-// Internal Modules
-// ============================================================================
 
 // Layer 1: Primitives - data structures and basic utilities.
 mod primitives;

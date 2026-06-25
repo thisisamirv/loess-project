@@ -22,9 +22,6 @@ pub struct Window {
 }
 
 impl Window {
-    // ========================================================================
-    // Window Management
-    // ========================================================================
 
     // Initialize window boundaries for the first point in a sequence.
     #[inline]
@@ -90,9 +87,6 @@ impl Window {
         }
     }
 
-    // ========================================================================
-    // Utility Methods
-    // ========================================================================
 
     // Compute the maximum distance from `x_current` to any point in the window.
     #[inline]

@@ -1,16 +1,12 @@
-//! Specialized 1D Accumulators
+//! Optimized 1D normal-equation accumulators for LOESS regression.
 //!
-//! ## Purpose
-//!
-//! This module provides optimized scalar and SIMD accumulation functions for building Normal Equations matrices in 1D linear, quadratic, and cubic regression.
+//! Provides scalar and SIMD-vectorized accumulation for 1D linear, quadratic,
+//! and cubic local polynomial fits.
 
 // External dependencies
 use num_traits::Float;
 use wide::f64x2;
 
-// ============================================================================
-// Specialized Accumulation Functions
-// ============================================================================
 
 // Optimized accumulation for 1D Linear Case (Scalar).
 #[allow(clippy::too_many_arguments)]

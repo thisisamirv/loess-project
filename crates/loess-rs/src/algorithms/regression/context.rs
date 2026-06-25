@@ -1,9 +1,7 @@
-//! Regression Context and Fitting Logic
+//! Regression context and fitting logic for LOESS local polynomial fits.
 //!
-//! ## Purpose
-//!
-//! This module defines the `RegressionContext` which captures all state needed
-//! for a single local fit, and implements the high-level orchestration of the solver.
+//! This module defines `RegressionContext`, which captures all state for a single
+//! local fit and orchestrates the solver dispatch (generic or specialized).
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]

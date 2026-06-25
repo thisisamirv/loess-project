@@ -39,9 +39,6 @@ use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::errors::LoessError;
 
-// ============================================================================
-// Batch LOESS Builder
-// ============================================================================
 
 // Builder for batch LOESS processor.
 #[derive(Debug, Clone)]
@@ -207,9 +204,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
         }
     }
 
-    // ========================================================================
-    // Shared Setters
-    // ========================================================================
 
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
@@ -315,9 +309,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
         self
     }
 
-    // ========================================================================
-    // Batch-Specific Setters
-    // ========================================================================
 
     // Enable returning diagnostics in the result.
     pub fn return_diagnostics(mut self, enabled: bool) -> Self {
@@ -413,9 +404,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
         self
     }
 
-    // ========================================================================
-    // Build Method
-    // ========================================================================
 
     // Build the batch processor.
     pub fn build(self) -> Result<BatchLoess<T>, LoessError> {
@@ -454,9 +442,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
     }
 }
 
-// ============================================================================
-// Batch LOESS Processor
-// ============================================================================
 
 // Batch LOESS processor.
 #[derive(Clone)]

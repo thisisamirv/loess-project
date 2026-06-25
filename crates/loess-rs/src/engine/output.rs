@@ -20,9 +20,6 @@ use crate::algorithms::regression::PolynomialDegree;
 use crate::evaluation::diagnostics::Diagnostics;
 use crate::math::distance::DistanceMetric;
 
-// ============================================================================
-// Result Structure
-// ============================================================================
 
 // Comprehensive LOESS output containing smoothed values and diagnostics.
 #[derive(Debug, Clone, PartialEq)]
@@ -75,9 +72,6 @@ pub struct LoessResult<T> {
     // RMSE scores for each tested fraction during cross-validation.
     pub cv_scores: Option<Vec<T>>,
 
-    // ========================================================================
-    // Hat Matrix Statistics
-    // ========================================================================
     // Equivalent Number of Parameters (trace of hat matrix).
     // This measures the effective model complexity.
     pub enp: Option<T>,
@@ -103,9 +97,6 @@ pub struct LoessResult<T> {
 }
 
 impl<T: Float> LoessResult<T> {
-    // ========================================================================
-    // Query Methods
-    // ========================================================================
 
     // Check if confidence intervals were computed.
     pub fn has_confidence_intervals(&self) -> bool {
@@ -133,9 +124,6 @@ impl<T: Float> LoessResult<T> {
     }
 }
 
-// ============================================================================
-// Display Implementation
-// ============================================================================
 
 impl<T: Float + Display + Debug> Display for LoessResult<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {

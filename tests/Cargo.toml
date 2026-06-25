@@ -6,7 +6,7 @@ edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/thisisamirv/loess-project"
 homepage = "https://github.com/thisisamirv/loess-project"
-rust-version = "1.88"
+rust-version = "1.89"
 readme = "README.md"
 description = "High-performance LOESS (Locally Estimated Scatterplot Smoothing)"
 keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
@@ -18,8 +18,8 @@ fastLoess = { path = "../crates/fastLoess", features = ["dev"] }
 approx = "0.5"
 ndarray = { version = "0.17", default-features = false }
 num-traits = { version = "0.2", default-features = false }
-rayon = { version = "1.11" }
-bytemuck = "1.24"
+rayon = { version = "1.12" }
+bytemuck = "1.25"
 pollster = "0.4"
 
 [features]

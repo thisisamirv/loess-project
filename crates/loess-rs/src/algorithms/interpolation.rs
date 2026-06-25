@@ -27,9 +27,6 @@ use crate::math::kernel::WeightFunction;
 use crate::math::neighborhood::{KDTree, Neighborhood, NodeDistance, PointDistance};
 use crate::primitives::buffer::{CachedNeighborhood, FittingBuffer, NeighborhoodSearchBuffer};
 
-// ============================================================================
-// Surface Cell
-// ============================================================================
 
 // A cell in the spatial partition with references to its vertices.
 #[derive(Debug, Clone)]
@@ -52,9 +49,6 @@ pub struct SurfaceCell<T: Float> {
     pub point_hi: usize,
 }
 
-// ============================================================================
-// Interpolation Surface
-// ============================================================================
 
 // Pre-computed surface for efficient LOESS evaluation.
 //

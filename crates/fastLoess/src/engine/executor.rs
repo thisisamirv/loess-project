@@ -32,9 +32,6 @@ use loess_rs::internals::primitives::buffer::{
     CachedNeighborhood, FittingBuffer, NeighborhoodSearchBuffer,
 };
 
-// ============================================================================
-// LOESS Distance Calculator
-// ============================================================================
 
 // Standard LOESS distance calculator for neighbor finding.
 pub struct LoessDistanceCalculator<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> {
@@ -91,9 +88,6 @@ impl<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> PointDistance<T>
     }
 }
 
-// ============================================================================
-// Parallel Smoothing Function
-// ============================================================================
 
 // Perform a single smoothing pass over all points in parallel.
 //

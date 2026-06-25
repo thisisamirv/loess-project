@@ -1,10 +1,7 @@
-//! Specialized Solvers
+//! Specialized SIMD solvers for 1D, 2D, and 3D LOESS regression.
 //!
-//! ## Purpose
-//!
-//! This module provides high-performance, specialized solvers and accumulation
-//! logic for common low-dimensional cases (1D, 2D, and 3D linear, quadratic,
-//! and cubic specialized regression).
+//! This module routes to hand-optimized accumulators and solver implementations
+//! for the most common low-dimensional cases, bypassing the generic path.
 
 // External dependencies
 use num_traits::Float;
@@ -21,9 +18,6 @@ pub mod accumulators_3d;
 // Implementations of specialized solvers.
 pub mod impls;
 
-// ============================================================================
-// Specialized Solvers Trait
-// ============================================================================
 
 // Trait for specialized low-dimensional linear solvers.
 // Extracted from FloatLinalg to keep specialized logic near regression code.

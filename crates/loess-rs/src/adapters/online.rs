@@ -45,9 +45,6 @@ pub enum UpdateMode {
     Incremental,
 }
 
-// ============================================================================
-// Online LOESS Builder
-// ============================================================================
 
 // Builder for online LOESS processor.
 #[derive(Debug, Clone)]
@@ -203,9 +200,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         }
     }
 
-    // ========================================================================
-    // Shared Setters
-    // ========================================================================
 
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
@@ -309,9 +303,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         self
     }
 
-    // ========================================================================
-    // Online-Specific Setters
-    // ========================================================================
 
     // Set window capacity (maximum number of points to retain).
     pub fn window_capacity(mut self, capacity: usize) -> Self {
@@ -377,9 +368,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         self
     }
 
-    // ========================================================================
-    // Build Method
-    // ========================================================================
 
     // Build the online processor.
     pub fn build(self) -> Result<OnlineLoess<T>, LoessError> {
@@ -411,9 +399,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
     }
 }
 
-// ============================================================================
-// Online LOESS Output
-// ============================================================================
 
 // Result of a single online update.
 #[derive(Debug, Clone, PartialEq)]
@@ -434,9 +419,6 @@ pub struct OnlineOutput<T> {
     pub iterations_used: Option<usize>,
 }
 
-// ============================================================================
-// Online LOESS Processor
-// ============================================================================
 
 // Online LOESS processor for streaming data.
 pub struct OnlineLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg> {

@@ -1,16 +1,11 @@
-//! Generic Solvers and Term Generation
+//! Generic normal-equation accumulator for arbitrary-dimensional LOESS fits.
 //!
-//! ## Design notes
+//! Uses a fixed stack buffer (64 terms) for accumulation to avoid heap
+//! allocations in the inner loop, covering all practical nD polynomial degrees.
 //!
-//! * Uses a fixed stack buffer (size 64) for terms during generic accumulation
-//!   to avoid heap allocations in the inner loop. This imposes a practical
-//!   limit on the complexity of generic regression (e.g., high-dimensional
-//!   quadratic fits).
+//! ## srrstats Compliance
 //!
-//! ## Features
-//!
-//! - Trait-based term generation for different polynomial degrees.
-//! - Generic accumulation logic for arbitrary dimensions.
+//! @srrstats {RE2.0} Generic WLS normal-equation accumulation for nD local fits.
 
 // External dependencies
 use core::marker::PhantomData;

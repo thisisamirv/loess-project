@@ -44,9 +44,6 @@ use loess_rs::internals::primitives::errors::LoessError;
 use crate::input::LoessInput;
 use crate::math::neighborhood::build_kdtree_parallel;
 
-// ============================================================================
-// Extended Streaming LOESS Builder
-// ============================================================================
 
 // Builder for streaming LOESS processor with parallel support.
 #[derive(Debug, Clone)]
@@ -85,9 +82,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // ========================================================================
-    // Shared Setters
-    // ========================================================================
 
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
@@ -191,9 +185,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // ========================================================================
-    // Streaming-Specific Setters
-    // ========================================================================
 
     // Enable returning diagnostics in the result.
     pub fn return_diagnostics(mut self, enabled: bool) -> Self {
@@ -219,9 +210,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // ========================================================================
-    // Build Method
-    // ========================================================================
 
     // Build the streaming processor.
     pub fn build(self) -> Result<ParallelStreamingLoess<T>, LoessError> {
@@ -237,9 +225,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     }
 }
 
-// ============================================================================
-// Extended Streaming LOESS Processor
-// ============================================================================
 
 // Streaming LOESS processor with parallel support.
 pub struct ParallelStreamingLoess<

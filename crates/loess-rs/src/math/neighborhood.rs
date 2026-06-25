@@ -21,9 +21,6 @@ use num_traits::Float;
 // Internal dependencies
 use crate::primitives::buffer::{NeighborhoodSearchBuffer, NeighborhoodStorage};
 
-// ============================================================================
-// Helper Types
-// ============================================================================
 
 // Helper structure for max-heap in KD-tree search.
 // Orders by distance (the second field).
@@ -64,9 +61,6 @@ pub trait PointDistance<T: Float> {
     fn post_process_distance(&self, d: T) -> T;
 }
 
-// ============================================================================
-// Neighborhood Structure
-// ============================================================================
 
 // Result container for k-nearest neighbor search.
 #[derive(Debug, Clone)]
@@ -127,9 +121,6 @@ impl<T: Float> Default for Neighborhood<T> {
     }
 }
 
-// ============================================================================
-// KD-Tree Implementation
-// ============================================================================
 
 // Compressed node structure for Eytzinger layout.
 // Reduced to 8 bytes to maximize cache line efficiency.

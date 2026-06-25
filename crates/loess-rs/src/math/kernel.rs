@@ -13,9 +13,6 @@
 use core::f64::consts::{PI, SQRT_2};
 use num_traits::Float;
 
-// ============================================================================
-// Mathematical Constants
-// ============================================================================
 
 // Square root of 2*pi, used in Gaussian kernel calculations.
 const SQRT_2PI: f64 = 2.5066282746310005024157652848110452530069867406099_f64;
@@ -33,9 +30,6 @@ const PI_OVER_2: f64 = PI / 2.0;
 // performance.
 const GAUSSIAN_CUTOFF: f64 = 6.0;
 
-// ============================================================================
-// Kernel Properties
-// ============================================================================
 
 // # Mathematical Properties
 //
@@ -118,9 +112,6 @@ const UNIFORM_PROPERTIES: KernelProperties = KernelProperties {
     roughness: 2.0,
 };
 
-// ============================================================================
-// Weight Function Enum
-// ============================================================================
 
 // Weight function (kernel) for LOESS smoothing.
 //
@@ -155,9 +146,6 @@ pub enum WeightFunction {
 }
 
 impl WeightFunction {
-    // ========================================================================
-    // Metadata Methods
-    // ========================================================================
 
     // Get the name of the weight function.
     #[inline]
@@ -186,9 +174,6 @@ impl WeightFunction {
         }
     }
 
-    // ========================================================================
-    // Kernel Property Accessors
-    // ========================================================================
 
     // Get the unnormalized variance (second moment) of the kernel.
     #[inline]
@@ -234,9 +219,6 @@ impl WeightFunction {
         r_ratio.powf(4.0 / 5.0) * v_ratio.powf(2.0 / 5.0) * c_ratio.powf(2.0)
     }
 
-    // ========================================================================
-    // Support Methods
-    // ========================================================================
 
     // Returns the support interval for bounded kernels.
     #[inline]
@@ -253,9 +235,6 @@ impl WeightFunction {
         self.support().is_some()
     }
 
-    // ========================================================================
-    // Weight Computation
-    // ========================================================================
 
     // Compute the unnormalized weight K(u) for a given normalized distance.
     #[inline]

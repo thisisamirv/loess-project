@@ -44,9 +44,6 @@ use loess_rs::internals::primitives::errors::LoessError;
 use crate::input::LoessInput;
 use crate::math::neighborhood::build_kdtree_parallel;
 
-// ============================================================================
-// Extended Batch LOESS Builder
-// ============================================================================
 
 // Builder for batch LOESS processor with parallel support.
 #[derive(Debug, Clone)]
@@ -90,9 +87,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // ========================================================================
-    // Shared Setters
-    // ========================================================================
 
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
@@ -190,9 +184,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // ========================================================================
-    // Batch-Specific Setters
-    // ========================================================================
 
     // Enable returning robustness weights in the result.
     pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
@@ -244,9 +235,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // ========================================================================
-    // Build Method
-    // ========================================================================
 
     // Build the batch processor.
     pub fn build(self) -> Result<ParallelBatchLoess<T>, LoessError> {
@@ -263,9 +251,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     }
 }
 
-// ============================================================================
-// Extended Batch LOESS Processor
-// ============================================================================
 
 // Batch LOESS processor with parallel support.
 #[derive(Clone)]

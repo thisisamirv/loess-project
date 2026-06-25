@@ -20,9 +20,6 @@ use num_traits::Float;
 // Internal dependencies
 use crate::primitives::errors::LoessError;
 
-// ============================================================================
-// Validator
-// ============================================================================
 
 // Validation utility for LOESS configuration and input data.
 //
@@ -32,9 +29,6 @@ use crate::primitives::errors::LoessError;
 pub struct Validator;
 
 impl Validator {
-    // ========================================================================
-    // Core Input Validation
-    // ========================================================================
 
     // Validate input arrays for LOESS smoothing.
     pub fn validate_inputs<T: Float>(
@@ -96,9 +90,6 @@ impl Validator {
         Ok(())
     }
 
-    // ========================================================================
-    // Parameter Validation
-    // ========================================================================
 
     // Validate the smoothing fraction (bandwidth) parameter.
     pub fn validate_fraction<T: Float>(fraction: T) -> Result<(), LoessError> {
@@ -241,9 +232,6 @@ impl Validator {
         Ok(())
     }
 
-    // ========================================================================
-    // Adapter-Specific Validation
-    // ========================================================================
 
     // Validate the chunk size for shared processing in streaming mode.
     pub fn validate_chunk_size(chunk_size: usize, min: usize) -> Result<(), LoessError> {

@@ -4,7 +4,7 @@ name = "fastLoess"
 version = "1.1.2"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
-rust-version = "1.88"
+rust-version = "1.89"
 license = "MIT OR Apache-2.0"
 
 # Documentation and Discovery
@@ -30,7 +30,7 @@ include = [
 loess-rs = { path = "../loess-rs", version = "1.1", features = ["dev"] }
 num-traits = { version = "0.2", features = ["libm"] }
 ndarray = { version = "0.17", optional = true }
-rayon = { version = "1.11", optional = true }
+rayon = { version = "1.12", optional = true }
 
 [features]
 default = ["cpu"]

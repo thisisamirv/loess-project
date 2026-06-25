@@ -24,9 +24,6 @@ use num_traits::Float;
 // Internal dependencies
 use crate::primitives::buffer::CVBuffer;
 
-// ============================================================================
-// Internal PRNG
-// ============================================================================
 
 // Minimal PRNG for no-std shuffling.
 //
@@ -48,9 +45,6 @@ impl SimpleRng {
     }
 }
 
-// ============================================================================
-// Internal CV Kind (for storage)
-// ============================================================================
 
 // Internal representation of CV method for storage (no lifetime needed).
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -62,9 +56,6 @@ pub enum CVKind {
     LOOCV,
 }
 
-// ============================================================================
-// Cross-Validation Configuration
-// ============================================================================
 
 // Cross-validation configuration combining strategy, fractions, and seed.
 #[derive(Debug, Clone)]
@@ -127,9 +118,6 @@ pub fn LOOCV<T>(fractions: &[T]) -> CVConfig<'_, T> {
     }
 }
 
-// ============================================================================
-// Cross-Validation Execution
-// ============================================================================
 
 impl CVKind {
     // Run cross-validation to select the best fraction.
@@ -174,9 +162,6 @@ impl CVKind {
         }
     }
 
-    // ========================================================================
-    // Utility Methods
-    // ========================================================================
 
     // Build a data subset from a list of indices into provided scratch buffers.
     pub fn build_subset_inplace<T: Float>(
@@ -329,9 +314,6 @@ impl CVKind {
         }
     }
 
-    // ========================================================================
-    // Internal Cross-Validation Implementations
-    // ========================================================================
 
     // Select the best fraction based on cross-validation scores.
     fn select_best_fraction<T: Float>(fractions: &[T], scores: &[T]) -> (T, Vec<T>) {

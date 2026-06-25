@@ -41,9 +41,6 @@ pub use loess_rs::internals::math::scaling::ScalingMethod;
 pub use loess_rs::internals::primitives::backend::Backend;
 pub use loess_rs::internals::primitives::errors::LoessError;
 
-// ============================================================================
-// Adapter Module
-// ============================================================================
 
 // Adapter selection namespace.
 #[allow(non_snake_case)]
@@ -51,9 +48,6 @@ pub mod Adapter {
     pub use super::{Batch, Online, Streaming};
 }
 
-// ============================================================================
-// Adapter Marker Types
-// ============================================================================
 
 // Marker for parallel in-memory batch processing.
 #[derive(Debug, Clone, Copy)]
