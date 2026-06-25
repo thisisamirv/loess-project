@@ -12,7 +12,7 @@ use wide::f64x2;
 // Specialized Accumulation Functions
 // ============================================================================
 
-/// Optimized accumulation for 1D Linear Case (Scalar).
+// Optimized accumulation for 1D Linear Case (Scalar).
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_1d_linear_scalar<T: Float>(
     x: &[T],
@@ -56,7 +56,7 @@ pub fn accumulate_1d_linear_scalar<T: Float>(
     xtwy[1] = s_wdxy;
 }
 
-/// Optimized accumulation for 1D Linear Case using SIMD.
+// Optimized accumulation for 1D Linear Case using SIMD.
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_1d_linear_simd(
     x: &[f64],
@@ -139,7 +139,7 @@ pub fn accumulate_1d_linear_simd(
     xtwy[1] = a_wdxy;
 }
 
-/// Optimized accumulation for 1D Quadratic Case (Scalar).
+// Optimized accumulation for 1D Quadratic Case (Scalar).
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_1d_quadratic_scalar<T: Float>(
     x: &[T],
@@ -206,7 +206,7 @@ pub fn accumulate_1d_quadratic_scalar<T: Float>(
     xtwy[2] = s_wdx2_y;
 }
 
-/// Optimized accumulation for 1D Quadratic Case using SIMD.
+// Optimized accumulation for 1D Quadratic Case using SIMD.
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_1d_quadratic_simd(
     x: &[f64],
@@ -315,7 +315,7 @@ pub fn accumulate_1d_quadratic_simd(
     xtwy[2] = a_wdx2_y;
 }
 
-/// Optimized accumulation for 1D Cubic Case (Scalar).
+// Optimized accumulation for 1D Cubic Case (Scalar).
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_1d_cubic_scalar<T: Float>(
     x: &[T],
@@ -399,7 +399,7 @@ pub fn accumulate_1d_cubic_scalar<T: Float>(
     xtwy[3] = s_wdx3_y;
 }
 
-/// Optimized accumulation for 1D Cubic Case using SIMD.
+// Optimized accumulation for 1D Cubic Case using SIMD.
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_1d_cubic_simd(
     x: &[f64],

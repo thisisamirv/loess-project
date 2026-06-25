@@ -25,39 +25,39 @@ use super::generic::{self, GenericTermGenerator};
 use super::specialized::SolverLinalg;
 use super::types::{PolynomialDegree, ZeroWeightFallback};
 
-/// Context containing all data needed to fit a single point (unified 1D/nD).
+// Context containing all data needed to fit a single point (unified 1D/nD).
 pub struct RegressionContext<'a, T: FloatLinalg + SolverLinalg> {
-    /// Independent variables (flattened if row-major)
+    // Independent variables (flattened if row-major)
     pub x: &'a [T],
-    /// Dimensions of independent variables
+    // Dimensions of independent variables
     pub dimensions: usize,
-    /// Dependent variables
+    // Dependent variables
     pub y: &'a [T],
-    /// Index of the current query point (if using a point from x)
+    // Index of the current query point (if using a point from x)
     pub query_idx: usize,
-    /// Explicit query point (if not using query_idx)
+    // Explicit query point (if not using query_idx)
     pub query_point: Option<&'a [T]>,
-    /// Neighborhood of points to consider
+    // Neighborhood of points to consider
     pub neighborhood: &'a Neighborhood<T>,
-    /// Whether to use robustness weights
+    // Whether to use robustness weights
     pub use_robustness: bool,
-    /// Robustness weights for the neighborhood
+    // Robustness weights for the neighborhood
     pub robustness_weights: &'a [T],
-    /// Weight function (kernel)
+    // Weight function (kernel)
     pub weight_function: WeightFunction,
-    /// Fallback strategy for zero-weight cases
+    // Fallback strategy for zero-weight cases
     pub zero_weight_fallback: ZeroWeightFallback,
-    /// Degree of polynomial to fit
+    // Degree of polynomial to fit
     pub polynomial_degree: PolynomialDegree,
-    /// Whether to compute leverage (diagonal of hat matrix)
+    // Whether to compute leverage (diagonal of hat matrix)
     pub compute_leverage: bool,
-    /// Persistent buffer for reuse
+    // Persistent buffer for reuse
     pub buffer: Option<&'a mut FittingBuffer<T>>,
     _phantom: PhantomData<T>,
 }
 
 impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
-    /// Create a new regression context for a specific query point.
+    // Create a new regression context for a specific query point.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         x: &'a [T],
@@ -92,7 +92,7 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
         }
     }
 
-    /// Returns the (predicted value, leverage) at the query point.
+    // Returns the (predicted value, leverage) at the query point.
     pub fn fit(&mut self) -> Option<(T, T)> {
         let n_neighbors = self.neighborhood.len();
         if n_neighbors == 0 {
@@ -207,7 +207,7 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
         result
     }
 
-    /// Returns all polynomial coefficients [value, d/dx1, d/dx2, ..., d/dxd] at the query point.
+    // Returns all polynomial coefficients [value, d/dx1, d/dx2, ..., d/dxd] at the query point.
     pub fn fit_with_coefficients(&mut self) -> Option<Vec<T>> {
         let n_neighbors = self.neighborhood.len();
         if n_neighbors == 0 {
@@ -458,7 +458,7 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
         Some(coeffs)
     }
 
-    /// Handle zero weight cases using fallback policy.
+    // Handle zero weight cases using fallback policy.
     fn handle_zero_weights_fit(&self) -> Option<(T, T)> {
         match self.zero_weight_fallback {
             ZeroWeightFallback::UseLocalMean => {
@@ -476,7 +476,7 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
         }
     }
 
-    /// Compute weighted mean and sum of weights.
+    // Compute weighted mean and sum of weights.
     fn weighted_mean_and_sum(&self) -> (T, T) {
         let mut sum_wy = T::zero();
         let mut sum_w = T::zero();
@@ -515,7 +515,7 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
         (val, sum_w)
     }
 
-    /// Internal WLS solver.
+    // Internal WLS solver.
     fn fit_polynomial_wls_internal(
         &self,
         weights: &[T],

@@ -38,10 +38,10 @@ use num_traits::Float;
 #[cfg(feature = "cpu")]
 use rayon::join;
 
-/// Parallel KD-tree builder using Rayon.
-///
-/// This provides a multi-threaded implementation of the Eytzinger-layout KD-tree
-/// used in loess-rs.
+// Parallel KD-tree builder using Rayon.
+//
+// This provides a multi-threaded implementation of the Eytzinger-layout KD-tree
+// used in loess-rs.
 #[cfg(feature = "cpu")]
 pub fn build_kdtree_parallel<T>(points: &[T], dimensions: usize) -> KDTree<T>
 where
@@ -232,7 +232,7 @@ fn build_recursive_sequential<T>(
     );
 }
 
-/// Fallback for non-CPU targets.
+// Fallback for non-CPU targets.
 #[cfg(not(feature = "cpu"))]
 pub fn build_kdtree_parallel<T>(points: &[T], dimensions: usize) -> KDTree<T>
 where

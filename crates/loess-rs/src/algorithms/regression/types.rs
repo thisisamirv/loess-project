@@ -12,28 +12,28 @@ use num_traits::Float;
 // Polynomial Degree
 // ============================================================================
 
-/// Polynomial degree for local regression fitting.
+// Polynomial degree for local regression fitting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum PolynomialDegree {
-    /// Degree 0: Local constant (weighted mean)
+    // Degree 0: Local constant (weighted mean)
     Constant,
 
-    /// Degree 1: Local linear regression (default)
+    // Degree 1: Local linear regression (default)
     #[default]
     Linear,
 
-    /// Degree 2: Local quadratic regression
+    // Degree 2: Local quadratic regression
     Quadratic,
 
-    /// Degree 3: Local cubic regression
+    // Degree 3: Local cubic regression
     Cubic,
 
-    /// Degree 4: Local quartic regression
+    // Degree 4: Local quartic regression
     Quartic,
 }
 
 impl PolynomialDegree {
-    /// Get the numeric degree value.
+    // Get the numeric degree value.
     #[inline]
     pub const fn value(&self) -> usize {
         match self {
@@ -45,13 +45,13 @@ impl PolynomialDegree {
         }
     }
 
-    /// Number of coefficients for 1D polynomial of this degree.
+    // Number of coefficients for 1D polynomial of this degree.
     #[inline]
     pub const fn num_coefficients_1d(&self) -> usize {
         self.value() + 1
     }
 
-    /// Number of coefficients for nD polynomial of this degree.
+    // Number of coefficients for nD polynomial of this degree.
     #[inline]
     pub const fn num_coefficients_nd(&self, dimensions: usize) -> usize {
         match self {
@@ -69,7 +69,7 @@ impl PolynomialDegree {
         }
     }
 
-    /// Build polynomial terms for a point relative to center.
+    // Build polynomial terms for a point relative to center.
     pub fn build_terms<T: Float>(&self, point: &[T], center: &[T], terms: &mut [T]) -> usize {
         let d = point.len();
         let degree = self.value();
@@ -192,22 +192,22 @@ impl PolynomialDegree {
 // Zero-Weight Fallback Policy
 // ============================================================================
 
-/// Policy for handling cases where all weights are zero.
+// Policy for handling cases where all weights are zero.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ZeroWeightFallback {
-    /// Use local mean (default).
+    // Use local mean (default).
     #[default]
     UseLocalMean,
 
-    /// Return the original y-value.
+    // Return the original y-value.
     ReturnOriginal,
 
-    /// Return None (propagate failure).
+    // Return None (propagate failure).
     ReturnNone,
 }
 
 impl ZeroWeightFallback {
-    /// Create from u8 flag.
+    // Create from u8 flag.
     #[inline]
     pub fn from_u8(flag: u8) -> Self {
         match flag {
@@ -218,7 +218,7 @@ impl ZeroWeightFallback {
         }
     }
 
-    /// Convert to u8 flag.
+    // Convert to u8 flag.
     #[inline]
     pub fn to_u8(self) -> u8 {
         match self {

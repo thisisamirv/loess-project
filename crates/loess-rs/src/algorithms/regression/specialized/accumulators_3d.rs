@@ -12,7 +12,7 @@ use wide::f64x2;
 // Specialized Accumulation Functions
 // ============================================================================
 
-/// Optimized accumulation for 3D Linear Case (Scalar).
+// Optimized accumulation for 3D Linear Case (Scalar).
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_3d_linear_scalar<T: Float>(
     x: &[T],
@@ -99,7 +99,7 @@ pub fn accumulate_3d_linear_scalar<T: Float>(
     xtwy[3] = s_wzy;
 }
 
-/// Optimized accumulation for 3D Linear Case using SIMD.
+// Optimized accumulation for 3D Linear Case using SIMD.
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_3d_linear_simd(
     x: &[f64],
@@ -253,10 +253,10 @@ pub fn accumulate_3d_linear_simd(
     xtwy[3] = a_wzy;
 }
 
-/// Optimized accumulation for 3D Quadratic Case (Scalar).
-///
-/// Matrix size 10x10.
-/// Terms: 1, x, y, z, x2, xy, xz, y2, yz, z2.
+// Optimized accumulation for 3D Quadratic Case (Scalar).
+//
+// Matrix size 10x10.
+// Terms: 1, x, y, z, x2, xy, xz, y2, yz, z2.
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::cognitive_complexity)]
 pub fn accumulate_3d_quadratic_scalar<T: Float>(
@@ -544,7 +544,7 @@ pub fn accumulate_3d_quadratic_scalar<T: Float>(
     xtwy[9] = s_wz2y;
 }
 
-/// Optimized accumulation for 3D Quadratic Case using SIMD.
+// Optimized accumulation for 3D Quadratic Case using SIMD.
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::cognitive_complexity)]
 pub fn accumulate_3d_quadratic_simd(

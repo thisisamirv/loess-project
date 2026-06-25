@@ -1,7 +1,7 @@
 #' rfastloess: High-performance LOESS Smoothing for R
 #'
 #' @description
-#' A high-performance LOESS (Locally Weighted Scatterplot Smoothing)
+#' A high-performance LOESS (Locally Estimated Scatterplot Smoothing)
 #' implementation built on the Rust `fastLoess` crate.
 #'
 #' For comprehensive documentation, see:

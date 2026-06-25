@@ -24,7 +24,7 @@
   <em>One LOESS to Rule Them All</em>
 </p>
 
-The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Weighted Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
+The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Estimated Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
 
 > [!IMPORTANT]
 >
@@ -73,7 +73,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 ### Speed
 
-The `loess-rs` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.loess` and **2-3x faster** than R's `loess`.
+The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.loess` and **2-3x faster** than R's `loess`.
 
 For more details on the performance comparison, see the [BENCHMARKS](https://github.com/thisisamirv/loess-project/blob/main/BENCHMARKS.md) file.
 
@@ -447,7 +447,7 @@ If you use this software in your research, please cite it using the [CITATION.cf
 ```bibtex
 @software{loess_project,
   author = {Valizadeh, Amir},
-  title = {LOESS Project: High-Performance Locally Weighted Scatterplot Smoothing},
+  title = {LOESS Project: High-Performance Locally Estimated Scatterplot Smoothing},
   year = {2026},
   url = {https://github.com/thisisamirv/loess-project},
   license = {MIT OR Apache-2.0}

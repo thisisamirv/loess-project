@@ -11,19 +11,19 @@
 //! - Support for different solver backends.
 //! - Support for different weight functions.
 
-/// Regression Context
+// Regression Context
 mod context;
 
-/// Generic Regression
+// Generic Regression
 mod generic;
 
-/// Specialized Regression
+// Specialized Regression
 mod specialized;
 
-/// Regression Types
+// Regression Types
 mod types;
 
-/// Re-exports
+// Re-exports
 pub use context::RegressionContext;
 pub use specialized::SolverLinalg;
 pub use types::{PolynomialDegree, ZeroWeightFallback};

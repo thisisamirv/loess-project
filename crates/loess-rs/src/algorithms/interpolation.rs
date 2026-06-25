@@ -1,21 +1,12 @@
 //! Interpolation utilities for LOESS smoothing.
 //!
-//! ## Purpose
-//!
 //! This module provides an interpolation surface for efficient nD LOESS evaluation
 //! by fitting at cell vertices and using n-linear interpolation.
 //!
-//! ## Design notes
+//! ## srrstats Compliance
 //!
-//! * **Vertex-based**: Fits are computed only at cell vertices.
-//! * **Multilinear**: Uses n-linear interpolation within hypercube cells.
-//! * **Adaptive**: Cell subdivision based on data density.
-//!
-//! ## Key concepts
-//!
-//! * **Cell**: A hypercube region with 2^d vertices for surface interpolation.
-//! * **Vertex**: A corner point where local regression is computed.
-//! * **Interpolation**: Weighted average of vertex fits based on position.
+//! @srrstats {G1.6} Cell-based vertex interpolation reduces O(n2) to O(nxk) for dense data.
+//! @srrstats {RE2.2} n-linear interpolation between cell vertices for non-fitted values.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
@@ -40,24 +31,24 @@ use crate::primitives::buffer::{CachedNeighborhood, FittingBuffer, NeighborhoodS
 // Surface Cell
 // ============================================================================
 
-/// A cell in the spatial partition with references to its vertices.
+// A cell in the spatial partition with references to its vertices.
 #[derive(Debug, Clone)]
 pub struct SurfaceCell<T: Float> {
-    /// Lower bounds for each dimension.
+    // Lower bounds for each dimension.
     pub lower: Vec<T>,
-    /// Upper bounds for each dimension.
+    // Upper bounds for each dimension.
     pub upper: Vec<T>,
-    /// Indices of the 2^d vertices (corners) in the vertices array.
+    // Indices of the 2^d vertices (corners) in the vertices array.
     pub vertex_indices: Vec<usize>,
-    /// Child cell indices (for tree structure), None if leaf.
+    // Child cell indices (for tree structure), None if leaf.
     pub children: Option<(usize, usize)>,
-    /// Split dimension (if not a leaf).
+    // Split dimension (if not a leaf).
     pub split_dim: Option<usize>,
-    /// Split value (if not a leaf).
+    // Split value (if not a leaf).
     pub split_val: Option<T>,
-    /// Start index in point index array (for O(1) point counting).
+    // Start index in point index array (for O(1) point counting).
     pub point_lo: usize,
-    /// End index in point index array, inclusive (for O(1) point counting).
+    // End index in point index array, inclusive (for O(1) point counting).
     pub point_hi: usize,
 }
 
@@ -65,35 +56,35 @@ pub struct SurfaceCell<T: Float> {
 // Interpolation Surface
 // ============================================================================
 
-/// Pre-computed surface for efficient LOESS evaluation.
-///
-/// This structure enables fast evaluation by:
-/// 1. Building a spatial partition (KD-tree-like cell structure)
-/// 2. Fitting local regression only at cell vertices
-/// 3. Interpolating within cells using n-linear interpolation
+// Pre-computed surface for efficient LOESS evaluation.
+//
+// This structure enables fast evaluation by:
+// 1. Building a spatial partition (KD-tree-like cell structure)
+// 2. Fitting local regression only at cell vertices
+// 3. Interpolating within cells using n-linear interpolation
 #[derive(Debug, Clone)]
 pub struct InterpolationSurface<T: Float> {
-    /// Fitted data at each vertex: [val, ∂/∂x₁, ∂/∂x₂, ...] for each vertex.
-    /// Layout: vertex 0 data, vertex 1 data, ... with (d+1) values per vertex.
+    // Fitted data at each vertex: [val, ∂/∂x₁, ∂/∂x₂, ...] for each vertex.
+    // Layout: vertex 0 data, vertex 1 data, ... with (d+1) values per vertex.
     pub vertex_data: Vec<T>,
-    /// Vertex coordinates (stored for refitting).
-    /// Layout: [v0_d0, v0_d1, ..., v1_d0, v1_d1, ...]
+    // Vertex coordinates (stored for refitting).
+    // Layout: [v0_d0, v0_d1, ..., v1_d0, v1_d1, ...]
     pub vertices: Vec<T>,
-    /// Spatial cells for lookup.
+    // Spatial cells for lookup.
     pub cells: Vec<SurfaceCell<T>>,
-    /// Root cell index.
+    // Root cell index.
     pub root: usize,
-    /// Number of dimensions.
+    // Number of dimensions.
     pub dimensions: usize,
-    /// Cached neighborhoods for each vertex to speed up refitting.
+    // Cached neighborhoods for each vertex to speed up refitting.
     pub vertex_neighborhoods: Vec<CachedNeighborhood<T>>,
 }
 
 impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
-    /// Build an interpolation surface from data.
-    ///
-    /// This creates a spatial partition and interpolates between pre-computed vertex fits.
-    /// The fitter closure performs local regression at each vertex.
+    // Build an interpolation surface from data.
+    //
+    // This creates a spatial partition and interpolates between pre-computed vertex fits.
+    // The fitter closure performs local regression at each vertex.
     #[allow(clippy::too_many_arguments)]
     pub fn build<D, F>(
         x: &[T],
@@ -311,10 +302,10 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         }
     }
 
-    /// Refit vertex values without rebuilding the cell structure.
-    ///
-    /// This is used during robustness iterations to update vertex fits
-    /// with new robustness weights, avoiding the expensive cell subdivision.
+    // Refit vertex values without rebuilding the cell structure.
+    //
+    // This is used during robustness iterations to update vertex fits
+    // with new robustness weights, avoiding the expensive cell subdivision.
     #[allow(clippy::too_many_arguments)]
     pub fn refit_values<F>(
         &mut self,
@@ -431,15 +422,15 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         }
     }
 
-    /// Build KD-tree iteratively
-    ///
-    /// Uses a while loop with cell counter `p` instead of recursion.
-    /// Cells are processed in order while new cells are appended to the end.
-    ///
-    /// Stopping criteria (Cleveland):
-    /// - `points_in_cell <= fc` (minimum points per cell)
-    /// - `cell_diameter <= fd` (minimum cell diameter)
-    /// - `nv >= nvmax` or `nc >= ncmax` (resource limits)
+    // Build KD-tree iteratively
+    //
+    // Uses a while loop with cell counter `p` instead of recursion.
+    // Cells are processed in order while new cells are appended to the end.
+    //
+    // Stopping criteria (Cleveland):
+    // - `points_in_cell <= fc` (minimum points per cell)
+    // - `cell_diameter <= fd` (minimum cell diameter)
+    // - `nv >= nvmax` or `nc >= ncmax` (resource limits)
     #[allow(clippy::too_many_arguments)]
     fn build_kdtree(
         cells: &mut Vec<SurfaceCell<T>>,
@@ -693,8 +684,8 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         }
     }
 
-    /// Partition pi[lo..=hi] so that pi[m] contains the median element along dimension dim.
-    /// Uses a quickselect-style algorithm similar to Floyd-Rivest.
+    // Partition pi[lo..=hi] so that pi[m] contains the median element along dimension dim.
+    // Uses a quickselect-style algorithm similar to Floyd-Rivest.
     fn partition_by_dim(
         pi: &mut [usize],
         lo: usize,
@@ -740,7 +731,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         }
     }
 
-    /// Evaluate the surface at a query point using multilinear interpolation.
+    // Evaluate the surface at a query point using multilinear interpolation.
     pub fn evaluate(&self, query: &[T]) -> T {
         // Find the leaf cell containing the query point
         let cell_idx = self.find_cell(query);
@@ -750,7 +741,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         self.interpolate_in_cell(cell, query)
     }
 
-    /// Find the leaf cell containing a query point.
+    // Find the leaf cell containing a query point.
     fn find_cell(&self, query: &[T]) -> usize {
         let mut current = self.root;
 
@@ -776,7 +767,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         }
     }
 
-    /// Hermite basis functions
+    // Hermite basis functions
     #[inline]
     fn hermite_phi0(h: T) -> T {
         // (1-h)^2 * (1+2h)
@@ -807,7 +798,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         h * h * (h - one)
     }
 
-    /// Perform Hermite interpolation within a cell using value + derivatives.
+    // Perform Hermite interpolation within a cell using value + derivatives.
     fn interpolate_in_cell(&self, cell: &SurfaceCell<T>, query: &[T]) -> T {
         let d = self.dimensions;
         let stride = d + 1; // d+1 values per vertex: [value, d/dx1, d/dx2, ..., d/dxd]
@@ -856,7 +847,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         self.hermite_tensor_interpolation(cell, query)
     }
 
-    /// Fallback interpolation when cell has insufficient vertices.
+    // Fallback interpolation when cell has insufficient vertices.
     fn fallback_interpolation(&self, cell: &SurfaceCell<T>) -> T {
         let stride = self.dimensions + 1;
         let sum: T = cell
@@ -875,7 +866,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         }
     }
 
-    /// Tensor Hermite interpolation for nD case.
+    // Tensor Hermite interpolation for nD case.
     fn hermite_tensor_interpolation(&self, cell: &SurfaceCell<T>, query: &[T]) -> T {
         let d = self.dimensions;
         let stride = d + 1;

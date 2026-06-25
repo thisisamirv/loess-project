@@ -1,30 +1,13 @@
 //! Distance metrics for nD LOESS.
 //!
-//! ## Purpose
+//! This module provides distance computation for multivariate (nD) LOESS,
+//! supporting Euclidean, Normalized, Manhattan, Chebyshev, Minkowski, and
+//! Weighted metrics, all backed by SIMD-optimized implementations.
 //!
-//! This module provides distance computation for multivariate (nD) LOESS.
-//! In 1D LOWESS, distance is simply |x - x_i|. For nD LOESS, we need proper
-//! distance metrics that work in higher-dimensional spaces.
+//! ## srrstats Compliance
 //!
-//! ## Design notes
-//!
-//! * **Decoupling**: Distance calculation is separated from kernel evaluation.
-//! * **Normalization**: Supports normalizing dimensions to handle differing scales.
-//! * **SIMD**: Uses vectorized operations via `DistanceLinalg` for f64/f32.
-//!
-//! ## Key concepts
-//!
-//! * **Metric**: Defines how "closeness" is measured (Euclidean, Manhattan, etc.).
-//! * **Normalization**: Rescaling dimensions to [0, 1] to ensure equal influence.
-//!
-//! ## Invariants
-//!
-//! * Distance is always non-negative.
-//! * Distance is zero if and only if points are identical (for metrics satisfying identity).
-//!
-//! ## Non-goals
-//!
-//! * This module does not handle the kernel weighting (bandwidth/smoothing).
+//! @srrstats {G1.6} SIMD-optimized distance kernels via the `wide` crate (f64x4, f32x8).
+//! @srrstats {G3.0} Normalized distance handles differing dimension scales automatically.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
@@ -40,42 +23,42 @@ use wide::{f32x8, f64x4};
 // DistanceLinalg Trait
 // ============================================================================
 
-/// Trait for SIMD-optimized distance computations.
+// Trait for SIMD-optimized distance computations.
 pub trait DistanceLinalg: Float + 'static {
-    /// Compute Euclidean distance between two points.
+    // Compute Euclidean distance between two points.
     fn euclidean_distance(a: &[Self], b: &[Self]) -> Self;
 
-    /// Compute normalized Euclidean distance with per-dimension scales.
+    // Compute normalized Euclidean distance with per-dimension scales.
     fn normalized_distance(a: &[Self], b: &[Self], scales: &[Self]) -> Self;
 
-    /// Compute weighted Euclidean distance.
+    // Compute weighted Euclidean distance.
     fn weighted_distance(a: &[Self], b: &[Self], weights: &[Self]) -> Self;
 
-    /// Compute Manhattan distance (L1 norm): Σ|xᵢ - yᵢ|
+    // Compute Manhattan distance (L1 norm): Σ|xᵢ - yᵢ|
     fn manhattan_distance(a: &[Self], b: &[Self]) -> Self;
 
-    /// Compute Chebyshev distance (L∞ norm): max|xᵢ - yᵢ|
+    // Compute Chebyshev distance (L∞ norm): max|xᵢ - yᵢ|
     fn chebyshev_distance(a: &[Self], b: &[Self]) -> Self;
 
-    /// Compute Minkowski distance (Lp norm): (Σ|xᵢ - yᵢ|^p)^(1/p)
+    // Compute Minkowski distance (Lp norm): (Σ|xᵢ - yᵢ|^p)^(1/p)
     fn minkowski_distance(a: &[Self], b: &[Self], p: Self) -> Self;
 
-    /// Compute squared Euclidean distance (avoids sqrt).
+    // Compute squared Euclidean distance (avoids sqrt).
     fn euclidean_distance_squared(a: &[Self], b: &[Self]) -> Self;
 
-    /// Compute squared normalized Euclidean distance.
+    // Compute squared normalized Euclidean distance.
     fn normalized_distance_squared(a: &[Self], b: &[Self], scales: &[Self]) -> Self;
 
-    /// Compute squared weighted Euclidean distance.
+    // Compute squared weighted Euclidean distance.
     fn weighted_distance_squared(a: &[Self], b: &[Self], weights: &[Self]) -> Self;
 
-    /// Compute squared Manhattan distance.
+    // Compute squared Manhattan distance.
     fn manhattan_distance_squared(a: &[Self], b: &[Self]) -> Self;
 
-    /// Compute squared Chebyshev distance.
+    // Compute squared Chebyshev distance.
     fn chebyshev_distance_squared(a: &[Self], b: &[Self]) -> Self;
 
-    /// Compute squared Minkowski distance.
+    // Compute squared Minkowski distance.
     fn minkowski_distance_squared(a: &[Self], b: &[Self], p: Self) -> Self;
 }
 
@@ -191,26 +174,26 @@ impl DistanceLinalg for f32 {
 // Distance Metric Enum
 // ============================================================================
 
-/// Distance metric for nD LOESS neighborhood computation.
+// Distance metric for nD LOESS neighborhood computation.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum DistanceMetric<T> {
-    /// Standard Euclidean distance: √(Σ(xᵢ - yᵢ)²)
+    // Standard Euclidean distance: √(Σ(xᵢ - yᵢ)²)
     Euclidean,
 
-    /// Normalized Euclidean distance.
+    // Normalized Euclidean distance.
     #[default]
     Normalized,
 
-    /// Manhattan distance (L1 norm): Σ|xᵢ - yᵢ|
+    // Manhattan distance (L1 norm): Σ|xᵢ - yᵢ|
     Manhattan,
 
-    /// Chebyshev distance (L∞ norm): max|xᵢ - yᵢ|
+    // Chebyshev distance (L∞ norm): max|xᵢ - yᵢ|
     Chebyshev,
 
-    /// Minkowski distance (Lp norm): (Σ|xᵢ - yᵢ|^p)^(1/p)
+    // Minkowski distance (Lp norm): (Σ|xᵢ - yᵢ|^p)^(1/p)
     Minkowski(T),
 
-    /// Weighted Euclidean distance: √(Σ wᵢ(xᵢ - yᵢ)²)
+    // Weighted Euclidean distance: √(Σ wᵢ(xᵢ - yᵢ)²)
     Weighted(Vec<T>),
 }
 
@@ -219,14 +202,14 @@ pub enum DistanceMetric<T> {
 // ============================================================================
 
 impl<T: DistanceLinalg> DistanceMetric<T> {
-    /// Compute Euclidean distance between two nD points.
+    // Compute Euclidean distance between two nD points.
     #[inline]
     pub fn euclidean(a: &[T], b: &[T]) -> T {
         debug_assert_eq!(a.len(), b.len(), "Points must have same dimension");
         T::euclidean_distance(a, b)
     }
 
-    /// Compute normalized distance between two nD points.
+    // Compute normalized distance between two nD points.
     #[inline]
     pub fn normalized(a: &[T], b: &[T], scales: &[T]) -> T {
         debug_assert_eq!(a.len(), b.len());
@@ -234,28 +217,28 @@ impl<T: DistanceLinalg> DistanceMetric<T> {
         T::normalized_distance(a, b, scales)
     }
 
-    /// Compute Manhattan distance (L1 norm).
+    // Compute Manhattan distance (L1 norm).
     #[inline]
     pub fn manhattan(a: &[T], b: &[T]) -> T {
         debug_assert_eq!(a.len(), b.len());
         T::manhattan_distance(a, b)
     }
 
-    /// Compute Chebyshev distance (L-inf norm).
+    // Compute Chebyshev distance (L-inf norm).
     #[inline]
     pub fn chebyshev(a: &[T], b: &[T]) -> T {
         debug_assert_eq!(a.len(), b.len());
         T::chebyshev_distance(a, b)
     }
 
-    /// Compute Minkowski distance (Lp norm).
+    // Compute Minkowski distance (Lp norm).
     #[inline]
     pub fn minkowski(a: &[T], b: &[T], p: T) -> T {
         debug_assert_eq!(a.len(), b.len());
         T::minkowski_distance(a, b, p)
     }
 
-    /// Compute Weighted Euclidean distance.
+    // Compute Weighted Euclidean distance.
     #[inline]
     pub fn weighted(a: &[T], b: &[T], weights: &[T]) -> T {
         debug_assert_eq!(a.len(), b.len());
@@ -263,42 +246,42 @@ impl<T: DistanceLinalg> DistanceMetric<T> {
         T::weighted_distance(a, b, weights)
     }
 
-    /// Compute Squared Euclidean distance.
+    // Compute Squared Euclidean distance.
     #[inline]
     pub fn euclidean_squared(a: &[T], b: &[T]) -> T {
         debug_assert_eq!(a.len(), b.len());
         T::euclidean_distance_squared(a, b)
     }
 
-    /// Compute Squared Normalized Euclidean distance.
+    // Compute Squared Normalized Euclidean distance.
     #[inline]
     pub fn normalized_squared(a: &[T], b: &[T], scales: &[T]) -> T {
         debug_assert_eq!(a.len(), b.len());
         T::normalized_distance_squared(a, b, scales)
     }
 
-    /// Compute Squared Weighted Euclidean distance.
+    // Compute Squared Weighted Euclidean distance.
     #[inline]
     pub fn weighted_squared(a: &[T], b: &[T], weights: &[T]) -> T {
         debug_assert_eq!(a.len(), b.len());
         T::weighted_distance_squared(a, b, weights)
     }
 
-    /// Compute Squared Manhattan distance.
+    // Compute Squared Manhattan distance.
     #[inline]
     pub fn manhattan_squared(a: &[T], b: &[T]) -> T {
         debug_assert_eq!(a.len(), b.len());
         T::manhattan_distance_squared(a, b)
     }
 
-    /// Compute Squared Chebyshev distance.
+    // Compute Squared Chebyshev distance.
     #[inline]
     pub fn chebyshev_squared(a: &[T], b: &[T]) -> T {
         debug_assert_eq!(a.len(), b.len());
         T::chebyshev_distance_squared(a, b)
     }
 
-    /// Compute Squared Minkowski distance.
+    // Compute Squared Minkowski distance.
     #[inline]
     pub fn minkowski_squared(a: &[T], b: &[T], p: T) -> T {
         debug_assert_eq!(a.len(), b.len());
@@ -310,7 +293,7 @@ impl<T: DistanceLinalg> DistanceMetric<T> {
 // SIMD Distance Implementation
 // ============================================================================
 
-/// SIMD-optimized distance calculations using the `wide` crate.
+// SIMD-optimized distance calculations using the `wide` crate.
 pub mod simd_distance {
     use super::*;
 
@@ -318,14 +301,14 @@ pub mod simd_distance {
     // Euclidean Distance
     // ========================================================================
 
-    /// SIMD-optimized Euclidean distance for f64 slices.
-    /// Processes 4 elements at a time using AVX/SSE2 instructions.
+    // SIMD-optimized Euclidean distance for f64 slices.
+    // Processes 4 elements at a time using AVX/SSE2 instructions.
     #[inline]
     pub fn euclidean_f64(a: &[f64], b: &[f64]) -> f64 {
         euclidean_sq_f64(a, b).sqrt()
     }
 
-    /// SIMD-optimized squared Euclidean distance for f64 slices.
+    // SIMD-optimized squared Euclidean distance for f64 slices.
     #[inline]
     pub fn euclidean_sq_f64(a: &[f64], b: &[f64]) -> f64 {
         debug_assert_eq!(a.len(), b.len(), "Points must have same dimension");
@@ -365,7 +348,7 @@ pub mod simd_distance {
         total
     }
 
-    /// SIMD-optimized squared Euclidean distance for f32 slices.
+    // SIMD-optimized squared Euclidean distance for f32 slices.
     #[inline]
     pub fn euclidean_sq_f32(a: &[f32], b: &[f32]) -> f32 {
         debug_assert_eq!(a.len(), b.len(), "Points must have same dimension");
@@ -423,8 +406,8 @@ pub mod simd_distance {
         total
     }
 
-    /// SIMD-optimized Euclidean distance for f32 slices.
-    /// Processes 8 elements at a time using AVX/SSE2 instructions.
+    // SIMD-optimized Euclidean distance for f32 slices.
+    // Processes 8 elements at a time using AVX/SSE2 instructions.
     #[inline]
     pub fn euclidean_f32(a: &[f32], b: &[f32]) -> f32 {
         euclidean_sq_f32(a, b).sqrt()
@@ -434,13 +417,13 @@ pub mod simd_distance {
     // Normalized Distance
     // ========================================================================
 
-    /// SIMD-optimized normalized Euclidean distance for f64 slices.
+    // SIMD-optimized normalized Euclidean distance for f64 slices.
     #[inline]
     pub fn normalized_f64(a: &[f64], b: &[f64], scales: &[f64]) -> f64 {
         normalized_sq_f64(a, b, scales).sqrt()
     }
 
-    /// SIMD-optimized squared normalized Euclidean distance for f64 slices.
+    // SIMD-optimized squared normalized Euclidean distance for f64 slices.
     #[inline]
     pub fn normalized_sq_f64(a: &[f64], b: &[f64], scales: &[f64]) -> f64 {
         debug_assert_eq!(a.len(), b.len());
@@ -483,13 +466,13 @@ pub mod simd_distance {
         total
     }
 
-    /// SIMD-optimized normalized Euclidean distance for f32 slices.
+    // SIMD-optimized normalized Euclidean distance for f32 slices.
     #[inline]
     pub fn normalized_f32(a: &[f32], b: &[f32], scales: &[f32]) -> f32 {
         normalized_sq_f32(a, b, scales).sqrt()
     }
 
-    /// SIMD-optimized squared normalized Euclidean distance for f32 slices.
+    // SIMD-optimized squared normalized Euclidean distance for f32 slices.
     #[inline]
     pub fn normalized_sq_f32(a: &[f32], b: &[f32], scales: &[f32]) -> f32 {
         debug_assert_eq!(a.len(), b.len());
@@ -558,13 +541,13 @@ pub mod simd_distance {
     // Weighted Distance
     // ========================================================================
 
-    /// SIMD-optimized weighted Euclidean distance for f64 slices.
+    // SIMD-optimized weighted Euclidean distance for f64 slices.
     #[inline]
     pub fn weighted_f64(a: &[f64], b: &[f64], weights: &[f64]) -> f64 {
         weighted_sq_f64(a, b, weights).sqrt()
     }
 
-    /// SIMD-optimized squared weighted Euclidean distance for f64 slices.
+    // SIMD-optimized squared weighted Euclidean distance for f64 slices.
     #[inline]
     pub fn weighted_sq_f64(a: &[f64], b: &[f64], weights: &[f64]) -> f64 {
         debug_assert_eq!(a.len(), b.len());
@@ -607,7 +590,7 @@ pub mod simd_distance {
         total
     }
 
-    /// SIMD-optimized squared weighted Euclidean distance for f32 slices.
+    // SIMD-optimized squared weighted Euclidean distance for f32 slices.
     #[inline]
     pub fn weighted_sq_f32(a: &[f32], b: &[f32], weights: &[f32]) -> f32 {
         debug_assert_eq!(a.len(), b.len());
@@ -672,7 +655,7 @@ pub mod simd_distance {
         total
     }
 
-    /// SIMD-optimized weighted Euclidean distance for f32 slices.
+    // SIMD-optimized weighted Euclidean distance for f32 slices.
     #[inline]
     pub fn weighted_f32(a: &[f32], b: &[f32], weights: &[f32]) -> f32 {
         weighted_sq_f32(a, b, weights).sqrt()
@@ -682,7 +665,7 @@ pub mod simd_distance {
     // Manhattan Distance (L1 norm)
     // ========================================================================
 
-    /// SIMD-optimized Manhattan distance for f64 slices.
+    // SIMD-optimized Manhattan distance for f64 slices.
     #[inline]
     pub fn manhattan_f64(a: &[f64], b: &[f64]) -> f64 {
         debug_assert_eq!(a.len(), b.len(), "Points must have same dimension");
@@ -717,7 +700,7 @@ pub mod simd_distance {
         total
     }
 
-    /// SIMD-optimized Manhattan distance for f32 slices.
+    // SIMD-optimized Manhattan distance for f32 slices.
     #[inline]
     pub fn manhattan_f32(a: &[f32], b: &[f32]) -> f32 {
         debug_assert_eq!(a.len(), b.len(), "Points must have same dimension");
@@ -774,7 +757,7 @@ pub mod simd_distance {
     // Chebyshev Distance (L-infinity norm)
     // ========================================================================
 
-    /// SIMD-optimized Chebyshev distance for f64 slices.
+    // SIMD-optimized Chebyshev distance for f64 slices.
     #[inline]
     pub fn chebyshev_f64(a: &[f64], b: &[f64]) -> f64 {
         debug_assert_eq!(a.len(), b.len(), "Points must have same dimension");
@@ -809,7 +792,7 @@ pub mod simd_distance {
         total
     }
 
-    /// SIMD-optimized Chebyshev distance for f32 slices.
+    // SIMD-optimized Chebyshev distance for f32 slices.
     #[inline]
     pub fn chebyshev_f32(a: &[f32], b: &[f32]) -> f32 {
         debug_assert_eq!(a.len(), b.len(), "Points must have same dimension");
@@ -873,7 +856,7 @@ pub mod simd_distance {
     // Minkowski Distance (Lp norm)
     // ========================================================================
 
-    /// Minkowski distance for f64 slices.
+    // Minkowski distance for f64 slices.
     #[inline]
     pub fn minkowski_f64(a: &[f64], b: &[f64], p: f64) -> f64 {
         debug_assert_eq!(a.len(), b.len(), "Points must have same dimension");
@@ -895,7 +878,7 @@ pub mod simd_distance {
         sum_pow.powf(1.0 / p)
     }
 
-    /// Minkowski distance for f32 slices.
+    // Minkowski distance for f32 slices.
     #[inline]
     pub fn minkowski_f32(a: &[f32], b: &[f32], p: f32) -> f32 {
         debug_assert_eq!(a.len(), b.len(), "Points must have same dimension");

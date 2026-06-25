@@ -1,29 +1,8 @@
-//! High-level API for LOESS smoothing.
+//! High-level API for LOESS smoothing with parallel execution support.
 //!
-//! ## Purpose
-//!
-//! This module provides the primary user-facing entry point for LOESS. It
-//! implements a fluent builder pattern for configuring regression parameters
-//! and choosing an execution adapter (Batch, Streaming, or Online).
-//!
-//! ## Design notes
-//!
-//! * **Ergonomic**: Fluent builder with sensible defaults for all parameters.
-//! * **Polymorphic**: Uses marker types to transition to specialized adapter builders.
-//! * **Validated**: Core parameters are validated during adapter construction.
-//! * **Type-Safe**: Generic over `Float` types for flexible precision.
-//!
-//! ## Key concepts
-//!
-//! * **Execution Adapters**: Batch, Streaming, and Online modes.
-//! * **Configuration Flow**: Builder pattern ending in `.adapter(Adapter::Type)`.
-//! * **Validation**: Parameters are validated when `.build()` is called on the adapter.
-//!
-//! ### Configuration Flow
-//!
-//! 1. Create a [`LoessBuilder`](crate::api::LoessBuilder) via `Loess::new()`.
-//! 2. Chain configuration methods (`.fraction()`, `.iterations()`, etc.).
-//! 3. Select an adapter via `.adapter(Adapter::Batch)` to get an execution builder.
+//! This module provides the primary user-facing entry point for LOESS with
+//! heavy-duty parallel execution capabilities. It extends the loess API
+//! with adapters that utilize all available CPU cores or GPU hardware.
 
 // Feature-gated imports
 #[cfg(feature = "cpu")]
@@ -66,7 +45,7 @@ pub use loess_rs::internals::primitives::errors::LoessError;
 // Adapter Module
 // ============================================================================
 
-/// Adapter selection namespace.
+// Adapter selection namespace.
 #[allow(non_snake_case)]
 pub mod Adapter {
     pub use super::{Batch, Online, Streaming};
@@ -76,7 +55,7 @@ pub mod Adapter {
 // Adapter Marker Types
 // ============================================================================
 
-/// Marker for parallel in-memory batch processing.
+// Marker for parallel in-memory batch processing.
 #[derive(Debug, Clone, Copy)]
 pub struct Batch;
 
@@ -99,7 +78,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'sta
     }
 }
 
-/// Marker for parallel chunked streaming processing.
+// Marker for parallel chunked streaming processing.
 #[derive(Debug, Clone, Copy)]
 pub struct Streaming;
 
@@ -122,7 +101,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'sta
     }
 }
 
-/// Marker for incremental online processing with parallel support.
+// Marker for incremental online processing with parallel support.
 #[derive(Debug, Clone, Copy)]
 pub struct Online;
 

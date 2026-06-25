@@ -1,40 +1,16 @@
 //! Execution engine for LOESS smoothing operations.
 //!
-//! ## Purpose
-//!
 //! This module provides the core execution engine that orchestrates LOESS
 //! smoothing operations. It handles the iteration loop, robustness weight
 //! updates, convergence checking, cross-validation, and variance estimation.
 //! The executor is the central component that coordinates all lower-level
 //! algorithms to produce smoothed results.
 //!
-//! ## Design notes
+//! ## srrstats Compliance
 //!
-//! * Provides both configuration-based and parameter-based entry points.
-//! * Handles cross-validation for automatic fraction selection.
-//! * Supports auto-convergence for adaptive iteration counts.
-//! * Manages working buffers efficiently to minimize allocations.
-//! * Separates concerns: fitting, interpolation, robustness, convergence.
-//! * Generic over `Float` types to support f32 and f64.
-//!
-//! ## Key concepts
-//!
-//! * Execution loop: The central iteration cycle (Fit -> Residuals -> Weights -> Repeat).
-//! * Auto-convergence: Dynamically stopping iterations when parameters stabilize.
-//!
-//! ## Invariants
-//!
-//! * Input x-values are assumed to be monotonically increasing (sorted).
-//! * All working buffers have the same length as input data.
-//! * Robustness weights are always in [0, 1].
-//! * Window size is at least 2 and at most n.
-//! * Iteration count is non-negative.
-//!
-//! ## Non-goals
-//!
-//! * This module does not validate input data (handled by `validator`).
-//! * This module does not sort input data (caller's responsibility).
-//! * This module does not provide public-facing result formatting.
+//! @srrstats {RE2.0} Core LOESS execution: boundary handling, iteration loop, convergence.
+//! @srrstats {G2.2} Auto-convergence tolerance for early stopping of iterations.
+//! Configurable robustness iterations with convergence monitoring.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
@@ -69,13 +45,13 @@ use crate::primitives::buffer::{
 };
 use crate::primitives::window::Window;
 
-/// Standard LOESS distance calculator.
-///
-/// Implements `PointDistance` using either Euclidean or Normalized Euclidean metrics.
+// Standard LOESS distance calculator.
+//
+// Implements `PointDistance` using either Euclidean or Normalized Euclidean metrics.
 pub struct LoessDistanceCalculator<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> {
-    /// The distance metric to use (Euclidean or Normalized).
+    // The distance metric to use (Euclidean or Normalized).
     pub metric: DistanceMetric<T>,
-    /// Normalization scales for each dimension (used if metric is Normalized).
+    // Normalization scales for each dimension (used if metric is Normalized).
     pub scales: &'a [T],
 }
 
@@ -133,17 +109,17 @@ impl<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> PointDistance<T>
 // Surface Mode
 // ============================================================================
 
-/// Mode for surface evaluation.
-///
-/// Controls whether to use interpolation surface (faster, less accurate) or
-/// direct per-point fitting (slower, more accurate).
+// Mode for surface evaluation.
+//
+// Controls whether to use interpolation surface (faster, less accurate) or
+// direct per-point fitting (slower, more accurate).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum SurfaceMode {
-    /// Use interpolation surface for faster evaluation.
+    // Use interpolation surface for faster evaluation.
     #[default]
     Interpolation,
 
-    /// Use direct per-point fitting for maximum accuracy.
+    // Use direct per-point fitting for maximum accuracy.
     Direct,
 }
 
@@ -151,7 +127,7 @@ pub enum SurfaceMode {
 // Type Definitions
 // ============================================================================
 
-/// Signature for custom smooth pass function
+// Signature for custom smooth pass function
 #[doc(hidden)]
 pub type SmoothPassFn<T> = fn(
     &[T],               // x (query points)
@@ -170,7 +146,7 @@ pub type SmoothPassFn<T> = fn(
     &[T],               // scales (normalization scales per dimension)
 );
 
-/// Signature for custom cross-validation pass function
+// Signature for custom cross-validation pass function
 #[doc(hidden)]
 pub type CVPassFn<T> = fn(
     &[T],            // x
@@ -180,7 +156,7 @@ pub type CVPassFn<T> = fn(
     &LoessConfig<T>, // Config for internal fits
 ) -> (T, Vec<T>); // (best_fraction, scores)
 
-/// Signature for custom interval estimation pass function
+// Signature for custom interval estimation pass function
 #[doc(hidden)]
 pub type IntervalPassFn<T> = fn(
     &[T],               // x (query points)
@@ -198,7 +174,7 @@ pub type IntervalPassFn<T> = fn(
     &[T],               // scales (normalization scales per dimension)
 ) -> Vec<T>; // standard errors
 
-/// Signature for custom iteration batch pass function (GPU acceleration).
+// Signature for custom iteration batch pass function (GPU acceleration).
 #[doc(hidden)]
 pub type FitPassFn<T> = fn(
     &[T],            // x
@@ -211,7 +187,7 @@ pub type FitPassFn<T> = fn(
     Vec<T>,         // robustness_weights
 );
 
-/// Signature for custom vertex pass function (Interpolation mode).
+// Signature for custom vertex pass function (Interpolation mode).
 #[doc(hidden)]
 pub type VertexPassFn<T> = fn(
     &[T],                             // x (augmented)
@@ -232,33 +208,33 @@ pub type VertexPassFn<T> = fn(
     bool, // boundary_degree_fallback
 );
 
-/// Signature for custom KD-tree builder function.
+// Signature for custom KD-tree builder function.
 #[doc(hidden)]
 pub type KDTreeBuilderFn<T> = fn(points: &[T], dims: usize) -> KDTree<T>;
 
-/// Output from LOESS execution.
+// Output from LOESS execution.
 #[derive(Debug, Clone)]
 pub struct ExecutorOutput<T: FloatLinalg> {
-    /// Smoothed y-values.
+    // Smoothed y-values.
     pub smoothed: Vec<T>,
 
-    /// Standard errors (if SE estimation or intervals were requested).
+    // Standard errors (if SE estimation or intervals were requested).
     pub std_errors: Option<Vec<T>>,
 
-    /// Number of iterations performed (if auto-convergence was active).
+    // Number of iterations performed (if auto-convergence was active).
     pub iterations: Option<usize>,
 
-    /// Smoothing fraction used (selected by CV or configured).
+    // Smoothing fraction used (selected by CV or configured).
     pub used_fraction: T,
 
-    /// RMSE scores for each tested fraction (if CV was performed).
+    // RMSE scores for each tested fraction (if CV was performed).
     pub cv_scores: Option<Vec<T>>,
 
-    /// Final robustness weights from iterative refinement.
+    // Final robustness weights from iterative refinement.
     pub robustness_weights: Vec<T>,
 
-    /// Leverage values (hat matrix diagonal) for each point.
-    /// Only computed when intervals are requested.
+    // Leverage values (hat matrix diagonal) for each point.
+    // Only computed when intervals are requested.
     pub leverage: Option<Vec<T>>,
 }
 
@@ -266,102 +242,102 @@ pub struct ExecutorOutput<T: FloatLinalg> {
 // Configuration
 // ============================================================================
 
-/// Configuration for LOESS execution.
+// Configuration for LOESS execution.
 #[derive(Debug, Clone)]
 pub struct LoessConfig<T: FloatLinalg + SolverLinalg> {
-    /// Smoothing fraction (0, 1].
-    /// If `None` and `cv_fractions` are provided, bandwidth selection is performed.
+    // Smoothing fraction (0, 1].
+    // If `None` and `cv_fractions` are provided, bandwidth selection is performed.
     pub fraction: Option<T>,
 
-    /// Number of robustness iterations (0 means initial fit only).
+    // Number of robustness iterations (0 means initial fit only).
     pub iterations: usize,
 
-    /// Kernel weight function used for local regression.
+    // Kernel weight function used for local regression.
     pub weight_function: WeightFunction,
 
-    /// Zero-weight fallback policy.
+    // Zero-weight fallback policy.
     pub zero_weight_fallback: ZeroWeightFallback,
 
-    /// Robustness weighting method for outlier downweighting.
+    // Robustness weighting method for outlier downweighting.
     pub robustness_method: RobustnessMethod,
 
-    /// Residual scaling method (MAR or MAD).
+    // Residual scaling method (MAR or MAD).
     pub scaling_method: ScalingMethod,
 
-    /// Candidate fractions to evaluate during cross-validation.
+    // Candidate fractions to evaluate during cross-validation.
     pub cv_fractions: Option<Vec<T>>,
 
-    /// Cross-validation strategy (e.g., K-Fold or LOOCV).
+    // Cross-validation strategy (e.g., K-Fold or LOOCV).
     pub cv_kind: Option<CVKind>,
 
-    /// Seed for random number generation in cross-validation.
+    // Seed for random number generation in cross-validation.
     pub cv_seed: Option<u64>,
 
-    /// Convergence tolerance for early stopping of robustness iterations.
+    // Convergence tolerance for early stopping of robustness iterations.
     pub auto_converge: Option<T>,
 
-    /// Configuration for standard errors and intervals.
+    // Configuration for standard errors and intervals.
     pub return_variance: Option<IntervalMethod<T>>,
 
-    /// Boundary handling policy.
+    // Boundary handling policy.
     pub boundary_policy: BoundaryPolicy,
 
-    /// Polynomial degree for local regression (0=constant, 1=linear, 2=quadratic).
+    // Polynomial degree for local regression (0=constant, 1=linear, 2=quadratic).
     pub polynomial_degree: PolynomialDegree,
 
-    /// Number of predictor dimensions (default: 1).
+    // Number of predictor dimensions (default: 1).
     pub dimensions: usize,
 
-    /// Distance metric for nD neighborhood computation.
+    // Distance metric for nD neighborhood computation.
     pub distance_metric: DistanceMetric<T>,
 
-    /// Surface evaluation mode (Interpolation or Direct).
+    // Surface evaluation mode (Interpolation or Direct).
     pub surface_mode: SurfaceMode,
 
-    /// Maximum number of vertices for the interpolation surface.
+    // Maximum number of vertices for the interpolation surface.
     pub interpolation_vertices: Option<usize>,
 
-    /// Cell size as a fraction of the smoothing span (default: 0.2).
-    /// Used to determine subdivision when `surface_mode` is `Interpolation`.
+    // Cell size as a fraction of the smoothing span (default: 0.2).
+    // Used to determine subdivision when `surface_mode` is `Interpolation`.
     pub cell: Option<f64>,
 
-    /// Whether to reduce polynomial degree to Linear at boundary vertices during interpolation.
-    /// When `true` (default), vertices outside the tight data bounds use Linear fits to avoid
-    /// unstable extrapolation. Set to `false` to match R's loess behavior exactly.
+    // Whether to reduce polynomial degree to Linear at boundary vertices during interpolation.
+    // When `true` (default), vertices outside the tight data bounds use Linear fits to avoid
+    // unstable extrapolation. Set to `false` to match R's loess behavior exactly.
     pub boundary_degree_fallback: bool,
 
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
-    /// Custom smooth pass function (enables parallel execution).
+    // Custom smooth pass function (enables parallel execution).
     #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
-    /// Custom cross-validation pass function.
+    // Custom cross-validation pass function.
     #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
-    /// Custom interval estimation pass function.
+    // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
-    /// Custom iteration batch pass function for GPU acceleration.
+    // Custom iteration batch pass function for GPU acceleration.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
-    /// Custom vertex pass function (Interpolation mode).
+    // Custom vertex pass function (Interpolation mode).
     #[doc(hidden)]
     pub custom_vertex_pass: Option<VertexPassFn<T>>,
 
-    /// Custom KD-tree builder function.
+    // Custom KD-tree builder function.
     #[doc(hidden)]
     pub custom_kdtree_builder: Option<KDTreeBuilderFn<T>>,
 
-    /// Execution backend hint for extension crates.
+    // Execution backend hint for extension crates.
     #[doc(hidden)]
     pub backend: Option<Backend>,
 
-    /// Whether to use parallel execution
+    // Whether to use parallel execution
     #[doc(hidden)]
     pub parallel: bool,
 }
@@ -402,83 +378,83 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Defau
     }
 }
 
-/// Unified executor for LOESS smoothing operations.
+// Unified executor for LOESS smoothing operations.
 #[derive(Debug, Clone)]
 pub struct LoessExecutor<T: FloatLinalg + SolverLinalg> {
-    /// Smoothing fraction (0, 1].
+    // Smoothing fraction (0, 1].
     pub fraction: T,
 
-    /// Number of robustness iterations.
+    // Number of robustness iterations.
     pub iterations: usize,
 
-    /// Kernel weight function.
+    // Kernel weight function.
     pub weight_function: WeightFunction,
 
-    /// Zero weight fallback flag.
+    // Zero weight fallback flag.
     pub zero_weight_fallback: ZeroWeightFallback,
 
-    /// Robustness method for iterative refinement.
+    // Robustness method for iterative refinement.
     pub robustness_method: RobustnessMethod,
 
-    /// Residual scaling method.
+    // Residual scaling method.
     pub scaling_method: ScalingMethod,
 
-    /// Boundary handling policy.
+    // Boundary handling policy.
     pub boundary_policy: BoundaryPolicy,
 
-    /// Polynomial degree for local regression.
+    // Polynomial degree for local regression.
     pub polynomial_degree: PolynomialDegree,
 
-    /// Number of predictor dimensions.
+    // Number of predictor dimensions.
     pub dimensions: usize,
 
-    /// Distance metric for nD neighborhood computation.
+    // Distance metric for nD neighborhood computation.
     pub distance_metric: DistanceMetric<T>,
 
-    /// Surface evaluation mode (Interpolation or Direct).
+    // Surface evaluation mode (Interpolation or Direct).
     pub surface_mode: SurfaceMode,
 
-    /// Maximum number of vertices for interpolation.
+    // Maximum number of vertices for interpolation.
     pub interpolation_vertices: Option<usize>,
 
-    /// Cell size for interpolation subdivision.
+    // Cell size for interpolation subdivision.
     pub cell: Option<f64>,
 
-    /// Whether to reduce polynomial degree to Linear at boundary vertices during interpolation.
+    // Whether to reduce polynomial degree to Linear at boundary vertices during interpolation.
     pub boundary_degree_fallback: bool,
 
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
-    /// Custom smooth pass function (e.g., for parallel execution).
+    // Custom smooth pass function (e.g., for parallel execution).
     #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
-    /// Custom cross-validation pass function.
+    // Custom cross-validation pass function.
     #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
-    /// Custom interval estimation pass function.
+    // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
-    /// Custom iteration batch pass function for GPU acceleration.
+    // Custom iteration batch pass function for GPU acceleration.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
-    /// Custom vertex pass function (Interpolation mode).
+    // Custom vertex pass function (Interpolation mode).
     #[doc(hidden)]
     pub custom_vertex_pass: Option<VertexPassFn<T>>,
 
-    /// Custom KD-tree builder function.
+    // Custom KD-tree builder function.
     #[doc(hidden)]
     pub custom_kdtree_builder: Option<KDTreeBuilderFn<T>>,
 
-    /// Execution backend hint for extension crates.
+    // Execution backend hint for extension crates.
     #[doc(hidden)]
     pub backend: Option<Backend>,
 
-    /// Whether to use parallel execution
+    // Whether to use parallel execution
     #[doc(hidden)]
     pub parallel: bool,
 }
@@ -498,7 +474,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // Constructor and Builder Methods
     // ========================================================================
 
-    /// Create a new executor with default parameters.
+    // Create a new executor with default parameters.
     pub fn new() -> Self {
         Self {
             fraction: T::from(0.67).unwrap_or_else(|| T::from(0.5).unwrap()),
@@ -526,7 +502,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         }
     }
 
-    /// Create a new executor from a `LoessConfig`.
+    // Create a new executor from a `LoessConfig`.
     pub fn from_config(config: &LoessConfig<T>) -> Self {
         let default_frac = T::from(0.67).unwrap_or_else(|| T::from(0.5).unwrap());
         Self::new()
@@ -557,85 +533,85 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             .backend(config.backend)
     }
 
-    /// Set the smoothing fraction (bandwidth).
+    // Set the smoothing fraction (bandwidth).
     pub fn fraction(mut self, frac: T) -> Self {
         self.fraction = frac;
         self
     }
 
-    /// Set the number of robustness iterations.
+    // Set the number of robustness iterations.
     pub fn iterations(mut self, niter: usize) -> Self {
         self.iterations = niter;
         self
     }
 
-    /// Set the kernel weight function.
+    // Set the kernel weight function.
     pub fn weight_function(mut self, wf: WeightFunction) -> Self {
         self.weight_function = wf;
         self
     }
 
-    /// Set the zero weight fallback policy flag.
+    // Set the zero weight fallback policy flag.
     pub fn zero_weight_fallback(mut self, flag: ZeroWeightFallback) -> Self {
         self.zero_weight_fallback = flag;
         self
     }
 
-    /// Set the robustness method for iterative refinement.
+    // Set the robustness method for iterative refinement.
     pub fn robustness_method(mut self, method: RobustnessMethod) -> Self {
         self.robustness_method = method;
         self
     }
 
-    /// Set the residual scaling method (MAR/MAD).
+    // Set the residual scaling method (MAR/MAD).
     pub fn scaling_method(mut self, method: ScalingMethod) -> Self {
         self.scaling_method = method;
         self
     }
 
-    /// Set the boundary handling policy.
+    // Set the boundary handling policy.
     pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
         self.boundary_policy = policy;
         self
     }
 
-    /// Set the polynomial degree for local regression.
+    // Set the polynomial degree for local regression.
     pub fn polynomial_degree(mut self, degree: PolynomialDegree) -> Self {
         self.polynomial_degree = degree;
         self
     }
 
-    /// Set the number of predictor dimensions.
+    // Set the number of predictor dimensions.
     pub fn dimensions(mut self, dims: usize) -> Self {
         self.dimensions = dims;
         self
     }
 
-    /// Set the distance metric for nD neighborhood computation.
+    // Set the distance metric for nD neighborhood computation.
     pub fn distance_metric(mut self, metric: DistanceMetric<T>) -> Self {
         self.distance_metric = metric;
         self
     }
 
-    /// Set the surface evaluation mode (Interpolation or Direct).
+    // Set the surface evaluation mode (Interpolation or Direct).
     pub fn surface_mode(mut self, mode: SurfaceMode) -> Self {
         self.surface_mode = mode;
         self
     }
 
-    /// Set the maximum number of vertices for interpolation.
+    // Set the maximum number of vertices for interpolation.
     pub fn interpolation_vertices(mut self, vertices: Option<usize>) -> Self {
         self.interpolation_vertices = vertices;
         self
     }
 
-    /// Set the interpolation cell size.
+    // Set the interpolation cell size.
     pub fn cell(mut self, cell: Option<f64>) -> Self {
         self.cell = cell;
         self
     }
 
-    /// Set whether to reduce polynomial degree at boundary vertices.
+    // Set whether to reduce polynomial degree at boundary vertices.
     pub fn boundary_degree_fallback(mut self, enabled: bool) -> Self {
         self.boundary_degree_fallback = enabled;
         self
@@ -645,56 +621,56 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
 
-    /// Set a custom smooth pass function (e.g., for parallelization).
+    // Set a custom smooth pass function (e.g., for parallelization).
     #[doc(hidden)]
     pub fn custom_smooth_pass(mut self, smooth_pass_fn: Option<SmoothPassFn<T>>) -> Self {
         self.custom_smooth_pass = smooth_pass_fn;
         self
     }
 
-    /// Set a custom cross-validation pass function.
+    // Set a custom cross-validation pass function.
     #[doc(hidden)]
     pub fn custom_cv_pass(mut self, cv_pass_fn: Option<CVPassFn<T>>) -> Self {
         self.custom_cv_pass = cv_pass_fn;
         self
     }
 
-    /// Set a custom interval estimation pass function.
+    // Set a custom interval estimation pass function.
     #[doc(hidden)]
     pub fn custom_interval_pass(mut self, interval_pass_fn: Option<IntervalPassFn<T>>) -> Self {
         self.custom_interval_pass = interval_pass_fn;
         self
     }
 
-    /// Set a custom vertex pass function (Interpolation mode).
+    // Set a custom vertex pass function (Interpolation mode).
     #[doc(hidden)]
     pub fn custom_vertex_pass(mut self, vertex_pass_fn: Option<VertexPassFn<T>>) -> Self {
         self.custom_vertex_pass = vertex_pass_fn;
         self
     }
 
-    /// Set a custom iteration batch pass function for GPU acceleration.
+    // Set a custom iteration batch pass function for GPU acceleration.
     #[doc(hidden)]
     pub fn custom_fit_pass(mut self, fit_pass_fn: Option<FitPassFn<T>>) -> Self {
         self.custom_fit_pass = fit_pass_fn;
         self
     }
 
-    /// Set a custom KD-tree builder function.
+    // Set a custom KD-tree builder function.
     #[doc(hidden)]
     pub fn custom_kdtree_builder(mut self, kdtree_builder_fn: Option<KDTreeBuilderFn<T>>) -> Self {
         self.custom_kdtree_builder = kdtree_builder_fn;
         self
     }
 
-    /// Set whether to use parallel execution.
+    // Set whether to use parallel execution.
     #[doc(hidden)]
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.parallel = parallel;
         self
     }
 
-    /// Set the execution backend hint.
+    // Set the execution backend hint.
     #[doc(hidden)]
     pub fn backend(mut self, backend: Option<Backend>) -> Self {
         self.backend = backend;
@@ -705,7 +681,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // Main Entry Points
     // ========================================================================
 
-    /// Smooth data using a `LoessConfig` payload.
+    // Smooth data using a `LoessConfig` payload.
     pub fn run_with_config(x: &[T], y: &[T], config: LoessConfig<T>) -> ExecutorOutput<T>
     where
         T: Float + Debug + Send + Sync + 'static,
@@ -826,15 +802,15 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         }
     }
 
-    /// Execute smoothing with explicit overrides for specific parameters.
-    ///
-    /// Uses interpolation surface for efficient evaluation - fits only at
-    /// cell vertices and interpolates for all other points.
-    ///
-    /// # Special Cases
-    ///
-    /// * **Insufficient data** (n < 2): Returns original y-values.
-    /// * **Global regression** (fraction >= 1.0): Performs OLS on the entire dataset.
+    // Execute smoothing with explicit overrides for specific parameters.
+    //
+    // Uses interpolation surface for efficient evaluation - fits only at
+    // cell vertices and interpolates for all other points.
+    //
+    // # Special Cases
+    //
+    // * **Insufficient data** (n < 2): Returns original y-values.
+    // * **Global regression** (fraction >= 1.0): Performs OLS on the entire dataset.
     #[allow(clippy::too_many_arguments)]
     fn run(
         &self,
@@ -1359,9 +1335,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // Main Algorithmic Logic
     // ========================================================================
 
-    /// Predict values at arbitrary points using the provided training data.
-    ///
-    /// This is used for out-of-sample prediction, specifically during cross-validation.
+    // Predict values at arbitrary points using the provided training data.
+    //
+    // This is used for out-of-sample prediction, specifically during cross-validation.
     #[allow(clippy::too_many_arguments)]
     pub fn predict(
         &self,
@@ -1437,14 +1413,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         y_pred
     }
 
-    /// Perform a single smoothing pass over all nD points (Direct mode).
-    ///
-    /// # Caching Behavior
-    ///
-    /// * `populate_cache`: If `Some(&mut cache)`, populate the cache with neighborhoods during this pass.
-    /// * `cached_neighborhoods`: If `Some(&cache)`, use cached neighborhoods instead of calling `find_k_nearest`.
-    ///
-    /// Typically, the first pass populates the cache, and subsequent robustness iterations use it.
+    // Perform a single smoothing pass over all nD points (Direct mode).
+    //
+    // # Caching Behavior
+    //
+    // * `populate_cache`: If `Some(&mut cache)`, populate the cache with neighborhoods during this pass.
+    // * `cached_neighborhoods`: If `Some(&cache)`, use cached neighborhoods instead of calling `find_k_nearest`.
+    //
+    // Typically, the first pass populates the cache, and subsequent robustness iterations use it.
     #[allow(clippy::too_many_arguments)]
     fn smooth_pass(
         &self,

@@ -9,35 +9,35 @@
 // External dependencies
 use num_traits::Float;
 
-/// Specialized 1D accumulators
+// Specialized 1D accumulators
 pub mod accumulators_1d;
 
-/// Specialized 2D accumulators
+// Specialized 2D accumulators
 pub mod accumulators_2d;
 
-/// Specialized 3D accumulators
+// Specialized 3D accumulators
 pub mod accumulators_3d;
 
-/// Implementations of specialized solvers.
+// Implementations of specialized solvers.
 pub mod impls;
 
 // ============================================================================
 // Specialized Solvers Trait
 // ============================================================================
 
-/// Trait for specialized low-dimensional linear solvers.
-/// Extracted from FloatLinalg to keep specialized logic near regression code.
+// Trait for specialized low-dimensional linear solvers.
+// Extracted from FloatLinalg to keep specialized logic near regression code.
 pub trait SolverLinalg: Float + 'static {
-    /// Solve 2x2 system of linear equations Ax = b.
+    // Solve 2x2 system of linear equations Ax = b.
     fn solve_2x2(a: [Self; 4], b: [Self; 2]) -> Option<[Self; 2]>;
 
-    /// Solve 3x3 system of linear equations Ax = b.
+    // Solve 3x3 system of linear equations Ax = b.
     fn solve_3x3(a: [Self; 9], b: [Self; 3]) -> Option<[Self; 3]>;
 
-    /// Solve 6x6 system of linear equations Ax = b.
+    // Solve 6x6 system of linear equations Ax = b.
     fn solve_6x6(a: [Self; 36], b: [Self; 6]) -> Option<[Self; 6]>;
 
-    /// Accumulate Normal Equations for 1D Linear Case.
+    // Accumulate Normal Equations for 1D Linear Case.
     fn accumulate_1d_linear(
         x: &[Self],
         y: &[Self],
@@ -48,7 +48,7 @@ pub trait SolverLinalg: Float + 'static {
         xtwy: &mut [Self; 2],
     );
 
-    /// Accumulate Normal Equations for 1D Quadratic Case.
+    // Accumulate Normal Equations for 1D Quadratic Case.
     fn accumulate_1d_quadratic(
         x: &[Self],
         y: &[Self],
@@ -59,7 +59,7 @@ pub trait SolverLinalg: Float + 'static {
         xtwy: &mut [Self; 3],
     );
 
-    /// Accumulate Normal Equations for 1D Cubic Case.
+    // Accumulate Normal Equations for 1D Cubic Case.
     fn accumulate_1d_cubic(
         x: &[Self],
         y: &[Self],
@@ -70,7 +70,7 @@ pub trait SolverLinalg: Float + 'static {
         xtwy: &mut [Self; 4],
     );
 
-    /// Accumulate Normal Equations for 2D Linear Case.
+    // Accumulate Normal Equations for 2D Linear Case.
     #[allow(clippy::too_many_arguments)]
     fn accumulate_2d_linear(
         x: &[Self],
@@ -83,7 +83,7 @@ pub trait SolverLinalg: Float + 'static {
         xtwy: &mut [Self; 3],
     );
 
-    /// Accumulate Normal Equations for 2D Quadratic Case.
+    // Accumulate Normal Equations for 2D Quadratic Case.
     #[allow(clippy::too_many_arguments)]
     fn accumulate_2d_quadratic(
         x: &[Self],
@@ -96,7 +96,7 @@ pub trait SolverLinalg: Float + 'static {
         xtwy: &mut [Self; 6],
     );
 
-    /// Accumulate Normal Equations for 2D Cubic Case.
+    // Accumulate Normal Equations for 2D Cubic Case.
     #[allow(clippy::too_many_arguments)]
     fn accumulate_2d_cubic(
         x: &[Self],
@@ -109,7 +109,7 @@ pub trait SolverLinalg: Float + 'static {
         xtwy: &mut [Self; 10],
     );
 
-    /// Accumulate Normal Equations for 3D Linear Case.
+    // Accumulate Normal Equations for 3D Linear Case.
     #[allow(clippy::too_many_arguments)]
     fn accumulate_3d_linear(
         x: &[Self],
@@ -123,7 +123,7 @@ pub trait SolverLinalg: Float + 'static {
         xtwy: &mut [Self; 4],
     );
 
-    /// Accumulate Normal Equations for 3D Quadratic Case.
+    // Accumulate Normal Equations for 3D Quadratic Case.
     #[allow(clippy::too_many_arguments)]
     fn accumulate_3d_quadratic(
         x: &[Self],

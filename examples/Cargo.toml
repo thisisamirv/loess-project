@@ -8,7 +8,7 @@ repository = "https://github.com/thisisamirv/loess-project"
 homepage = "https://github.com/thisisamirv/loess-project"
 rust-version = "1.89"
 readme = "README.md"
-description = "High-performance LOESS (Locally Weighted Scatterplot Smoothing)"
+description = "High-performance LOESS (Locally Estimated Scatterplot Smoothing)"
 keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 

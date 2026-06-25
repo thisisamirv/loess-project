@@ -1,36 +1,15 @@
 //! Parallel execution engine for LOESS smoothing operations.
 //!
-//! ## Purpose
-//!
-//! This module provides parallel smoothing functions that are injected into
-//! the `loess-rs` crate's execution engine. It enables multi-threaded execution
+//! This module provides the parallel smoothing function that is injected into
+//! the loess-rs crate execution engine. It enables multi-threaded execution
 //! of the local regression fits, significantly speeding up LOESS smoothing
 //! for large datasets by utilizing all available CPU cores.
 //!
-//! ## Design notes
+//! ## srrstats Compliance
 //!
-//! * **Implementation**: Provides drop-in replacement for the sequential smoothing pass.
-//! * **Parallelism**: Uses `rayon` for data-parallel execution across CPU cores.
-//! * **Optimization**: Reuses buffers per thread to minimize allocations.
-//! * **Multi-dimensional**: Fully supports N-dimensional LOESS with configurable distance metrics.
-//! * **Generics**: Generic over `Float` types.
-//!
-//! ## Key concepts
-//!
-//! * **Parallel Fitting**: Distributes points across CPU cores independently.
-//! * **Buffer Reuse**: Thread-local scratch buffers to avoid allocation overhead.
-//! * **Integration**: Plugs into the `loess-rs` executor via the `SmoothPassFn` hook.
-//!
-//! ## Invariants
-//!
-//! * Input slices must have matching lengths.
-//! * All values must be finite.
-//! * Window size is at least 1 and at most n.
-//!
-//! ## Non-goals
-//!
-//! * This module does not handle the iteration loop (handled by `loess-rs::executor`).
-//! * This module does not validate input data (handled by `validator`).
+//! @srrstats {G3.0} Rayon par_iter for embarrassingly parallel local fits.
+//! @srrstats {G1.6} Tile-based processing for cache locality on large datasets.
+//! @srrstats {RE2.2} Delta optimization with parallel anchor point computation.
 
 // Feature-gated imports
 #[cfg(feature = "cpu")]
@@ -57,11 +36,11 @@ use loess_rs::internals::primitives::buffer::{
 // LOESS Distance Calculator
 // ============================================================================
 
-/// Standard LOESS distance calculator for neighbor finding.
+// Standard LOESS distance calculator for neighbor finding.
 pub struct LoessDistanceCalculator<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> {
-    /// The distance metric to use.
+    // The distance metric to use.
     pub metric: &'a DistanceMetric<T>,
-    /// Normalization scales for each dimension.
+    // Normalization scales for each dimension.
     pub scales: &'a [T],
 }
 
@@ -116,25 +95,25 @@ impl<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> PointDistance<T>
 // Parallel Smoothing Function
 // ============================================================================
 
-/// Perform a single smoothing pass over all points in parallel.
-///
-/// This function is designed to be injected via the `SmoothPassFn` hook.
-/// It parallelizes the local regression fitting process using rayon.
-///
-/// # Parameters
-///
-/// * `x` - Input x-values (flattened, row-major for multi-dimensional)
-/// * `y` - Input y-values
-/// * `dims` - Number of dimensions
-/// * `window_size` - Number of neighbors to use
-/// * `use_robustness` - Whether to apply robustness weights
-/// * `robustness_weights` - Weights from robustness iteration
-/// * `y_smooth` - Output buffer for smoothed values
-/// * `weight_function` - Kernel weight function
-/// * `zero_weight_fallback` - Fallback strategy for zero weights
-/// * `polynomial_degree` - Degree of local polynomial (Linear, Quadratic)
-/// * `distance_metric` - Distance metric for neighbor finding
-/// * `scales` - Normalization scales per dimension
+// Perform a single smoothing pass over all points in parallel.
+//
+// This function is designed to be injected via the `SmoothPassFn` hook.
+// It parallelizes the local regression fitting process using rayon.
+//
+// # Parameters
+//
+// * `x` - Input x-values (flattened, row-major for multi-dimensional)
+// * `y` - Input y-values
+// * `dims` - Number of dimensions
+// * `window_size` - Number of neighbors to use
+// * `use_robustness` - Whether to apply robustness weights
+// * `robustness_weights` - Weights from robustness iteration
+// * `y_smooth` - Output buffer for smoothed values
+// * `weight_function` - Kernel weight function
+// * `zero_weight_fallback` - Fallback strategy for zero weights
+// * `polynomial_degree` - Degree of local polynomial (Linear, Quadratic)
+// * `distance_metric` - Distance metric for neighbor finding
+// * `scales` - Normalization scales per dimension
 #[allow(clippy::too_many_arguments)]
 #[cfg(feature = "cpu")]
 pub fn smooth_pass_parallel<T>(
@@ -224,7 +203,7 @@ pub fn smooth_pass_parallel<T>(
     y_smooth[..n].copy_from_slice(&smoothed_values);
 }
 
-/// Perform a parallel vertex pass for interpolation mode.
+// Perform a parallel vertex pass for interpolation mode.
 #[allow(clippy::too_many_arguments)]
 #[cfg(feature = "cpu")]
 pub fn vertex_pass_parallel<T>(

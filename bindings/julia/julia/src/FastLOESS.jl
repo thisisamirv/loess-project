@@ -1,7 +1,7 @@
 """
 	FastLOESS
 
-High-performance LOESS (Locally Weighted Scatterplot Smoothing) for Julia.
+High-performance LOESS (Locally Estimated Scatterplot Smoothing) for Julia.
 
 Provides bindings to the fastloess Rust library for fast, robust LOESS smoothing.
 

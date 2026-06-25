@@ -1,36 +1,13 @@
 //! Batch adapter for standard LOESS smoothing.
 //!
-//! ## Purpose
-//!
 //! This module provides the batch execution adapter for LOESS smoothing.
 //! It handles complete datasets in memory with optional parallel processing,
 //! making it suitable for small to medium-sized datasets.
 //!
-//! ## Design notes
+//! ## srrstats Compliance
 //!
-//! * **Processing**: Processes entire dataset in a single pass.
-//! * **Delegation**: Delegates computation to the execution engine.
-//! * **Parallelism**: Adds parallel execution via `rayon` (fastLoess extension).
-//! * **Generics**: Generic over `Float` types.
-//!
-//! ## Key concepts
-//!
-//! * **Batch Processing**: Validates, executes, and returns results.
-//! * **Builder Pattern**: Fluent API for configuration with sensible defaults.
-//! * **Parallel Execution**: Uses Rayon for multi-threaded processing.
-//!
-//! ## Invariants
-//!
-//! * Input arrays x and y must have the same length.
-//! * All values must be finite.
-//! * At least 2 data points are required.
-//! * Output order matches input order.
-//!
-//! ## Non-goals
-//!
-//! * This adapter does not handle streaming data (use streaming adapter).
-//! * This adapter does not handle incremental updates (use online adapter).
-//! * This adapter does not handle missing values.
+//! @srrstats {G3.0} Rayon-based parallel execution for CPU-bound workloads.
+//! @srrstats {G1.5} GPU backend support via feature flag for accelerated fits.
 
 // Feature-gated imports
 #[cfg(feature = "cpu")]
@@ -71,10 +48,10 @@ use crate::math::neighborhood::build_kdtree_parallel;
 // Extended Batch LOESS Builder
 // ============================================================================
 
-/// Builder for batch LOESS processor with parallel support.
+// Builder for batch LOESS processor with parallel support.
 #[derive(Debug, Clone)]
 pub struct ParallelBatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
-    /// Base builder from the loess-rs crate
+    // Base builder from the loess-rs crate
     pub base: BatchLoessBuilder<T>,
 }
 
@@ -89,25 +66,25 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Defau
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     ParallelBatchLoessBuilder<T>
 {
-    /// Create a new batch LOESS builder with default parameters.
-    ///
-    /// # Defaults
-    ///
-    /// * All base parameters from loess-rs BatchLoessBuilder
-    /// * parallel: true (fastLoess extension)
+    // Create a new batch LOESS builder with default parameters.
+    //
+    // # Defaults
+    //
+    // * All base parameters from loess-rs BatchLoessBuilder
+    // * parallel: true (fastLoess extension)
     fn new() -> Self {
         let mut base = BatchLoessBuilder::default();
         base.parallel = Some(true); // Default to parallel in fastLoess
         Self { base }
     }
 
-    /// Set parallel execution mode.
+    // Set parallel execution mode.
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.base.parallel = Some(parallel);
         self
     }
 
-    /// Set the execution backend.
+    // Set the execution backend.
     pub fn backend(mut self, backend: Backend) -> Self {
         self.base.backend = Some(backend);
         self
@@ -117,97 +94,97 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     // Shared Setters
     // ========================================================================
 
-    /// Set the smoothing fraction (span).
+    // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.base.fraction = fraction;
         self
     }
 
-    /// Set the number of robustness iterations.
+    // Set the number of robustness iterations.
     pub fn iterations(mut self, iterations: usize) -> Self {
         self.base.iterations = iterations;
         self
     }
 
-    /// Set the kernel weight function.
+    // Set the kernel weight function.
     pub fn weight_function(mut self, wf: WeightFunction) -> Self {
         self.base.weight_function = wf;
         self
     }
 
-    /// Set the robustness method for outlier handling.
+    // Set the robustness method for outlier handling.
     pub fn robustness_method(mut self, method: RobustnessMethod) -> Self {
         self.base.robustness_method = method;
         self
     }
 
-    /// Set the residual scaling method (MAR/MAD).
+    // Set the residual scaling method (MAR/MAD).
     pub fn scaling_method(mut self, method: ScalingMethod) -> Self {
         self.base.scaling_method = method;
         self
     }
 
-    /// Set the zero-weight fallback policy.
+    // Set the zero-weight fallback policy.
     pub fn zero_weight_fallback(mut self, fallback: ZeroWeightFallback) -> Self {
         self.base.zero_weight_fallback = fallback;
         self
     }
 
-    /// Set the boundary handling policy.
+    // Set the boundary handling policy.
     pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
         self.base.boundary_policy = policy;
         self
     }
 
-    /// Set the polynomial degree.
+    // Set the polynomial degree.
     pub fn polynomial_degree(mut self, degree: PolynomialDegree) -> Self {
         self.base.polynomial_degree = degree;
         self
     }
 
-    /// Set the number of dimensions explicitly.
+    // Set the number of dimensions explicitly.
     pub fn dimensions(mut self, dims: usize) -> Self {
         self.base.dimensions = dims;
         self
     }
 
-    /// Set the distance metric.
+    // Set the distance metric.
     pub fn distance_metric(mut self, metric: DistanceMetric<T>) -> Self {
         self.base.distance_metric = metric;
         self
     }
 
-    /// Set the surface evaluation mode (Direct or Interpolation).
+    // Set the surface evaluation mode (Direct or Interpolation).
     pub fn surface_mode(mut self, mode: SurfaceMode) -> Self {
         self.base.surface_mode = mode;
         self
     }
 
-    /// Set the cell size for interpolation mode.
+    // Set the cell size for interpolation mode.
     pub fn cell(mut self, cell: f64) -> Self {
         self.base.cell = Some(cell);
         self
     }
 
-    /// Set whether to reduce polynomial degree at boundary vertices.
+    // Set whether to reduce polynomial degree at boundary vertices.
     pub fn boundary_degree_fallback(mut self, enabled: bool) -> Self {
         self.base = self.base.boundary_degree_fallback(enabled);
         self
     }
 
-    /// Set the maximum number of vertices for interpolation.
+    // Set the maximum number of vertices for interpolation.
     pub fn interpolation_vertices(mut self, vertices: usize) -> Self {
         self.base.interpolation_vertices = Some(vertices);
         self
     }
 
-    /// Enable auto-convergence for robustness iterations.
+    // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
         self.base.auto_converge = Some(tolerance);
         self
     }
 
-    /// Enable returning residuals in the output.
+    // Enable returning residuals in the output.
     pub fn compute_residuals(mut self, enabled: bool) -> Self {
         self.base.compute_residuals = enabled;
         self
@@ -217,31 +194,31 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     // Batch-Specific Setters
     // ========================================================================
 
-    /// Enable returning robustness weights in the result.
+    // Enable returning robustness weights in the result.
     pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
         self.base.return_robustness_weights = enabled;
         self
     }
 
-    /// Enable returning diagnostics in the result.
+    // Enable returning diagnostics in the result.
     pub fn return_diagnostics(mut self, enabled: bool) -> Self {
         self.base.return_diagnostics = enabled;
         self
     }
 
-    /// Enable confidence intervals at the specified level.
+    // Enable confidence intervals at the specified level.
     pub fn confidence_intervals(mut self, level: T) -> Self {
         self.base = self.base.confidence_intervals(level);
         self
     }
 
-    /// Enable prediction intervals at the specified level.
+    // Enable prediction intervals at the specified level.
     pub fn prediction_intervals(mut self, level: T) -> Self {
         self.base = self.base.prediction_intervals(level);
         self
     }
 
-    /// Enable cross-validation using the specified configuration.
+    // Enable cross-validation using the specified configuration.
     pub fn cross_validate(mut self, config: CVConfig<'_, T>) -> Self {
         self.base.cv_fractions = Some(config.fractions().to_vec());
         self.base.cv_kind = Some(config.kind());
@@ -249,19 +226,19 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    /// Set the random seed for reproducible cross-validation.
+    // Set the random seed for reproducible cross-validation.
     pub fn cv_seed(mut self, seed: u64) -> Self {
         self.base.cv_seed = Some(seed);
         self
     }
 
-    /// Set the cross-validation method.
+    // Set the cross-validation method.
     pub fn cv_kind(mut self, method: CVKind) -> Self {
         self.base.cv_kind = Some(method);
         self
     }
 
-    /// Enable returning standard errors in the result.
+    // Enable returning standard errors in the result.
     pub fn return_se(mut self, enabled: bool) -> Self {
         self.base = self.base.return_se(enabled);
         self
@@ -271,7 +248,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     // Build Method
     // ========================================================================
 
-    /// Build the batch processor.
+    // Build the batch processor.
     pub fn build(self) -> Result<ParallelBatchLoess<T>, LoessError> {
         // Check for deferred errors from adapter conversion
         if let Some(ref err) = self.base.deferred_error {
@@ -290,7 +267,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
 // Extended Batch LOESS Processor
 // ============================================================================
 
-/// Batch LOESS processor with parallel support.
+// Batch LOESS processor with parallel support.
 #[derive(Clone)]
 pub struct ParallelBatchLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     config: ParallelBatchLoessBuilder<T>,
@@ -299,7 +276,7 @@ pub struct ParallelBatchLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Sync + 'static>
     ParallelBatchLoess<T>
 {
-    /// Perform LOESS smoothing on the provided data.
+    // Perform LOESS smoothing on the provided data.
     pub fn fit<I1, I2>(self, x: &I1, y: &I2) -> Result<LoessResult<T>, LoessError>
     where
         I1: LoessInput<T> + ?Sized,

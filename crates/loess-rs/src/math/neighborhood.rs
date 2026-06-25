@@ -1,33 +1,12 @@
-//! KD-Tree for efficient k-nearest neighbor search in nD space.
+//! KD-tree for efficient k-nearest neighbor search in nD LOESS.
 //!
-//! ## Purpose
+//! This module implements a KD-tree with Eytzinger layout for cache-optimal
+//! neighborhood lookups, reducing search time from O(n) to O(log n) per query.
 //!
-//! This module implements a KD-tree to optimize nD neighborhood searches.
-//! By organizing points in a spatial hierarchy, we can reduce the search
-//! time from O(n) to approximately O(log n) per query.
+//! ## srrstats Compliance
 //!
-//! ## Design notes
-//!
-//! * **Static Construction**: The tree is built once and then used for queries.
-//! * **Eytzinger Layout**: Tree nodes are stored in a left-complete binary tree (array) layout for optimal cache locality.
-//! * **Node Compression**: Nodes are compressed to 8 bytes, calculating split information on the fly to maximize cache density.
-//! * **Trait-based Distance**: Supports generic distance metrics.
-//!
-//! ## Key concepts
-//!
-//! * **Splitting Plane**: The dimension and value used to split points at each node.
-//! * **Implicit Navigation**: Child nodes are accessed via arithmetic ($2i+1$, $2i+2$) rather than pointers.
-//! * **Pruning**: Skipping branches that cannot possibly contain nearer neighbors.
-//!
-//! ## Invariants
-//!
-//! * Tree depth is bound by O(log n).
-//! * Queries always return the exact nearest neighbors (no approximation).
-//!
-//! ## Non-goals
-//!
-//! * This module does not support dynamic insertions or deletions.
-//! * This module does not support approximate nearest neighbor search.
+//! @srrstats {G1.6} O(log n) spatial indexing for nD local window computation.
+//! @srrstats {G3.0} Eytzinger layout and node compression for cache locality.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
@@ -46,8 +25,8 @@ use crate::primitives::buffer::{NeighborhoodSearchBuffer, NeighborhoodStorage};
 // Helper Types
 // ============================================================================
 
-/// Helper structure for max-heap in KD-tree search.
-/// Orders by distance (the second field).
+// Helper structure for max-heap in KD-tree search.
+// Orders by distance (the second field).
 #[derive(Debug, Clone, Copy)]
 pub struct NodeDistance<T>(pub usize, pub T);
 
@@ -69,19 +48,19 @@ impl<T: PartialOrd> Ord for NodeDistance<T> {
     }
 }
 
-/// Trait for distance calculations used in KD-tree search.
+// Trait for distance calculations used in KD-tree search.
 pub trait PointDistance<T: Float> {
-    /// Compute squared distance between two points (optimization to avoid sqrt).
+    // Compute squared distance between two points (optimization to avoid sqrt).
     fn distance_squared(&self, a: &[T], b: &[T]) -> T;
 
-    /// Compute distance along a single dimension (for pruning).
+    // Compute distance along a single dimension (for pruning).
     fn split_distance(&self, dim: usize, split_val: T, query_val: T) -> T;
 
-    /// Compute squared distance along a single dimension.
+    // Compute squared distance along a single dimension.
     fn split_distance_squared(&self, dim: usize, split_val: T, query_val: T) -> T;
 
-    /// Convert a distance from the comparison space (e.g., squared) to the actual metric space.
-    /// For Euclidean or Manhattan, this computes `sqrt` from the squared distance.
+    // Convert a distance from the comparison space (e.g., squared) to the actual metric space.
+    // For Euclidean or Manhattan, this computes `sqrt` from the squared distance.
     fn post_process_distance(&self, d: T) -> T;
 }
 
@@ -89,19 +68,19 @@ pub trait PointDistance<T: Float> {
 // Neighborhood Structure
 // ============================================================================
 
-/// Result container for k-nearest neighbor search.
+// Result container for k-nearest neighbor search.
 #[derive(Debug, Clone)]
 pub struct Neighborhood<T> {
-    /// Indices of the k nearest neighbors (unordered).
+    // Indices of the k nearest neighbors (unordered).
     pub indices: Vec<usize>,
-    /// Distances to each neighbor (corresponding to indices).
+    // Distances to each neighbor (corresponding to indices).
     pub distances: Vec<T>,
-    /// Maximum distance in the neighborhood (bandwidth).
+    // Maximum distance in the neighborhood (bandwidth).
     pub max_distance: T,
 }
 
 impl<T: Float> Neighborhood<T> {
-    /// Create a new empty neighborhood.
+    // Create a new empty neighborhood.
     pub fn new() -> Self {
         Self {
             indices: Vec::new(),
@@ -110,7 +89,7 @@ impl<T: Float> Neighborhood<T> {
         }
     }
 
-    /// Pre-allocate buffers for a neighborhood of size k.
+    // Pre-allocate buffers for a neighborhood of size k.
     pub fn with_capacity(k: usize) -> Self {
         Self {
             indices: Vec::with_capacity(k),
@@ -119,13 +98,13 @@ impl<T: Float> Neighborhood<T> {
         }
     }
 
-    /// Returns the number of neighbors currently stored.
+    // Returns the number of neighbors currently stored.
     #[inline]
     pub fn len(&self) -> usize {
         self.indices.len()
     }
 
-    /// Returns true if no neighbors are stored.
+    // Returns true if no neighbors are stored.
     #[inline]
     #[allow(dead_code)]
     pub fn is_empty(&self) -> bool {
@@ -152,22 +131,22 @@ impl<T: Float> Default for Neighborhood<T> {
 // KD-Tree Implementation
 // ============================================================================
 
-/// Compressed node structure for Eytzinger layout.
-/// Reduced to 8 bytes to maximize cache line efficiency.
+// Compressed node structure for Eytzinger layout.
+// Reduced to 8 bytes to maximize cache line efficiency.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct KDNode {
-    /// Index of the point in the original flattened data array.
+    // Index of the point in the original flattened data array.
     pub index: usize,
 }
 
-/// KD-tree for spatial indexing of nD points.
+// KD-tree for spatial indexing of nD points.
 #[derive(Debug, Clone)]
 pub struct KDTree<T: Float> {
-    /// The implicit Eytzinger tree nodes.
+    // The implicit Eytzinger tree nodes.
     nodes: Vec<KDNode>,
-    /// Permuted points aligned with the nodes for cache locality.
+    // Permuted points aligned with the nodes for cache locality.
     points: Vec<T>,
-    /// Dimensionality of the data.
+    // Dimensionality of the data.
     dimensions: usize,
 }
 
@@ -176,10 +155,10 @@ impl<T: Float> KDTree<T> {
     // Public API
     // ------------------------------------------------------------------------
 
-    /// Build a KD-tree from a flattened data array.
-    ///
-    /// The tree is built using a left-complete Eytzinger, reordering the
-    /// input points into a layout optimized for cache locality during search.
+    // Build a KD-tree from a flattened data array.
+    //
+    // The tree is built using a left-complete Eytzinger, reordering the
+    // input points into a layout optimized for cache locality during search.
     pub fn new(points: &[T], dimensions: usize) -> Self {
         let n = points.len() / dimensions;
         let mut indices: Vec<usize> = (0..n).collect();
@@ -205,10 +184,10 @@ impl<T: Float> KDTree<T> {
         }
     }
 
-    /// Create a KD-tree from pre-built parts.
-    ///
-    /// This allows external builders (e.g., parallel ones) to construct the tree.
-    /// The nodes and points must follow the Eytzinger layout convention.
+    // Create a KD-tree from pre-built parts.
+    //
+    // This allows external builders (e.g., parallel ones) to construct the tree.
+    // The nodes and points must follow the Eytzinger layout convention.
     pub fn from_parts(nodes: Vec<KDNode>, points: Vec<T>, dimensions: usize) -> Self {
         Self {
             nodes,
@@ -217,9 +196,9 @@ impl<T: Float> KDTree<T> {
         }
     }
 
-    /// Optimized search for k nearest neighbors.
-    ///
-    /// This method uses the provided buffer and neighborhood structure to avoid allocations.
+    // Optimized search for k nearest neighbors.
+    //
+    // This method uses the provided buffer and neighborhood structure to avoid allocations.
     pub fn find_k_nearest<D: PointDistance<T>>(
         &self,
         query: &[T],
@@ -256,7 +235,7 @@ impl<T: Float> KDTree<T> {
     // Private Helpers & Algorithms
     // ------------------------------------------------------------------------
 
-    /// Recursively builds the tree in Eytzinger layout.
+    // Recursively builds the tree in Eytzinger layout.
     fn build_recursive(
         points: &[T],
         dims: usize,
@@ -321,12 +300,12 @@ impl<T: Float> KDTree<T> {
         );
     }
 
-    /// Iterative search using an explicit stack for traversal.
-    ///
-    /// **Optimization Note**: To minimize the stack footprint and avoid storing 24-byte
-    /// `KDNode` structs, we use bit-packing to store `(node_idx, axis)` in a single `usize`.
-    /// - `node_idx`: High bits (>> 8)
-    /// - `axis`: Low 8 bits (& 0xFF)
+    // Iterative search using an explicit stack for traversal.
+    //
+    // **Optimization Note**: To minimize the stack footprint and avoid storing 24-byte
+    // `KDNode` structs, we use bit-packing to store `(node_idx, axis)` in a single `usize`.
+    // - `node_idx`: High bits (>> 8)
+    // - `axis`: Low 8 bits (& 0xFF)
     #[inline]
     fn search_iterative<D: PointDistance<T>>(
         &self,
@@ -432,7 +411,7 @@ impl<T: Float> KDTree<T> {
         }
     }
 
-    /// Calculate number of nodes in the left subtree of a left-complete binary tree of size N.
+    // Calculate number of nodes in the left subtree of a left-complete binary tree of size N.
     pub fn calculate_left_subtree_size(n: usize) -> usize {
         if n == 0 {
             return 0;

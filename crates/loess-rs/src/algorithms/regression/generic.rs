@@ -23,18 +23,18 @@ use super::types::PolynomialDegree;
 // Term Generators (Strategy Pattern)
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-/// Trait for generating polynomial terms for a given point.
-/// This abstracts the dimensionality and degree logic from the solver.
+// Trait for generating polynomial terms for a given point.
+// This abstracts the dimensionality and degree logic from the solver.
 pub trait TermGenerator<T: Float> {
-    /// Returns the number of coefficients (terms) generated.
+    // Returns the number of coefficients (terms) generated.
     fn n_coeffs(&self) -> usize;
 
-    /// Generates terms for a single point relative to the query point.
-    /// Writes terms into `out`, which must have length >= `n_coeffs()`.
+    // Generates terms for a single point relative to the query point.
+    // Writes terms into `out`, which must have length >= `n_coeffs()`.
     fn generate(&self, point: &[T], query: &[T], out: &mut [T]);
 }
 
-/// Generator for N-dimensional generic polynomial terms.
+// Generator for N-dimensional generic polynomial terms.
 pub struct GenericTermGenerator<'a, T: Float> {
     degree: PolynomialDegree,
     _d: usize,
@@ -43,7 +43,7 @@ pub struct GenericTermGenerator<'a, T: Float> {
 }
 
 impl<'a, T: Float> GenericTermGenerator<'a, T> {
-    /// Create a new generic term generator.
+    // Create a new generic term generator.
     pub fn new(degree: PolynomialDegree, d: usize, n_coeffs: usize) -> Self {
         Self {
             degree,
@@ -70,7 +70,7 @@ impl<'a, T: Float> TermGenerator<T> for GenericTermGenerator<'a, T> {
 // Generic Accumulation
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-/// Helper to accumulate Normal Equations using a Generator.
+// Helper to accumulate Normal Equations using a Generator.
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_normal_equations<T: Float, G: TermGenerator<T>>(
     x: &[T],

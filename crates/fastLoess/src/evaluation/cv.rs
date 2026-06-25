@@ -1,34 +1,13 @@
 //! Parallel cross-validation for LOESS bandwidth selection.
 //!
-//! ## Purpose  
+//! This module provides the parallel cross-validation logic for selecting the
+//! optimal smoothing fraction. It utilizes all available CPU cores to evaluate
+//! multiple candidate fractions concurrently.
 //!
-//! This module provides parallel cross-validation functions for optimal
-//! bandwidth (fraction) selection. Cross-validation is computationally
-//! expensive as it requires fitting the model multiple times, making it
-//! an ideal candidate for parallelization.
+//! ## srrstats Compliance
 //!
-//! ## Design notes
-//!
-//! * **Parallelism**: Uses `rayon` to evaluate candidate fractions in parallel.
-//! * **Integration**: Plugs into the `loess-rs` executor via the `CVPassFn` hook.
-//! * **Generics**: Generic over `Float` types.
-//!
-//! ## Key concepts
-//!
-//! * **Parallel Evaluation**: Evaluates all candidate fractions simultaneously.
-//! * **Fraction Selection**: Selects bandwidth minimizing Cross-Validation (CV) error.
-//! * **Integration**: Seamlessly integrates with serial/parallel executors.
-//!
-//! ## Invariants
-//!
-//! * Input arrays x and y must have the same length.
-//! * Fractions must be in (0, 1].
-//! * At least 2 data points are required.
-//!
-//! ## Non-goals
-//!
-//! * This module does not implement the CV strategy logic (delegated to loess-rs).
-//! * This module does not handle partial parallelism (all-or-nothing).
+//! @srrstats {RE6.0} Parallel CV: fraction candidates evaluated concurrently.
+//! @srrstats {G3.0} Rayon-based parallelization for bandwidth grid search.
 
 // Feature-gated imports
 #[cfg(feature = "cpu")]
@@ -52,10 +31,10 @@ use loess_rs::internals::primitives::window::Window;
 // Parallel Cross-Validation
 // ============================================================================
 
-/// Perform parallel cross-validation to select optimal LOESS bandwidth.
-///
-/// This function evaluates candidate fractions in parallel to find the
-/// one that minimizes the cross-validation error.
+// Perform parallel cross-validation to select optimal LOESS bandwidth.
+//
+// This function evaluates candidate fractions in parallel to find the
+// one that minimizes the cross-validation error.
 #[cfg(feature = "cpu")]
 pub fn cv_pass_parallel<T>(
     x: &[T],
@@ -89,7 +68,7 @@ where
     (best_fraction, scores)
 }
 
-/// Evaluate a single fraction using cross-validation.
+// Evaluate a single fraction using cross-validation.
 fn evaluate_fraction_cv<T>(
     x: &[T],
     y: &[T],

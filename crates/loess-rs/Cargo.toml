@@ -8,7 +8,7 @@ rust-version = "1.88"
 license = "MIT OR Apache-2.0"
 
 # Documentation and Discovery
-description = "LOESS (Locally Weighted Scatterplot Smoothing)"
+description = "LOESS (Locally Estimated Scatterplot Smoothing)"
 readme = "README.md"
 repository = "https://github.com/thisisamirv/loess-project"
 homepage = "https://github.com/thisisamirv/loess-project"

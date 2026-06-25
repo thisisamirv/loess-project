@@ -1,40 +1,14 @@
 //! Streaming adapter for large-scale LOESS smoothing.
 //!
-//! ## Purpose
-//!
 //! This module provides the streaming execution adapter for LOESS smoothing
 //! on datasets too large to fit in memory. It divides the data into overlapping
 //! chunks, processes each chunk independently, and merges the results while
 //! handling boundary effects.
 //!
-//! ## Design notes
+//! ## srrstats Compliance
 //!
-//! * **Strategy**: Processes data in fixed-size chunks with configurable overlap.
-//! * **Merging**: Merges overlapping regions using configurable strategies (Average, Weighted).
-//! * **Order**: Processes chunks in stream order; preserves input order within chunks.
-//! * **Generics**: Generic over `Float` types.
-//!
-//! ## Key concepts
-//!
-//! * **Chunked Processing**: Divides stream into `chunk_size` pieces.
-//! * **Overlap**: Ensures smooth transitions, typically 2x window size.
-//! * **Merging**: Handles value conflicts in overlapping regions.
-//! * **Boundary Policies**: Handles edge effects at stream start/end.
-//!
-//! ## Invariants
-//!
-//! * Chunk size must be larger than overlap.
-//! * Overlap must be sufficient for local smoothing window.
-//! * values must be finite.
-//! * At least 2 points per chunk.
-//!
-//! ## Non-goals
-//!
-//! * This adapter does not support confidence/prediction intervals.
-//! * This adapter does not support cross-validation.
-//! * This adapter does not handle batch processing.
-//! * This adapter does not handle incremental updates.
-//! * This adapter requires chunks to be provided in stream order.
+//! @srrstats {G1.6} Memory-efficient streaming for large datasets via chunking.
+//! Configurable merge strategies (Average, WeightedAverage, TakeFirst, TakeLast).
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
@@ -64,21 +38,21 @@ use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::errors::LoessError;
 
-/// Strategy for merging overlapping regions between streaming chunks.
+// Strategy for merging overlapping regions between streaming chunks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum MergeStrategy {
-    /// Arithmetic mean of overlapping smoothed values: `(v1 + v2) / 2`.
+    // Arithmetic mean of overlapping smoothed values: `(v1 + v2) / 2`.
     Average,
 
-    /// Distance-based weights that favor values from the center of each chunk:
-    /// v1 * (1 - alpha) + v2 * alpha where `alpha` is the relative position within the overlap.
+    // Distance-based weights that favor values from the center of each chunk:
+    // v1 * (1 - alpha) + v2 * alpha where `alpha` is the relative position within the overlap.
     #[default]
     WeightedAverage,
 
-    /// Use the value from the first chunk in processing order.
+    // Use the value from the first chunk in processing order.
     TakeFirst,
 
-    /// Use the value from the last chunk in processing order.
+    // Use the value from the last chunk in processing order.
     TakeLast,
 }
 
@@ -86,112 +60,112 @@ pub enum MergeStrategy {
 // Streaming LOESS Builder
 // ============================================================================
 
-/// Builder for streaming LOESS processor.
+// Builder for streaming LOESS processor.
 #[derive(Debug, Clone)]
 pub struct StreamingLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
-    /// Chunk size for processing
+    // Chunk size for processing
     pub chunk_size: usize,
 
-    /// Overlap between chunks
+    // Overlap between chunks
     pub overlap: usize,
 
-    /// Smoothing fraction (span)
+    // Smoothing fraction (span)
     pub fraction: T,
 
-    /// Number of robustness iterations
+    // Number of robustness iterations
     pub iterations: usize,
 
-    /// Convergence tolerance for early stopping (None = disabled)
+    // Convergence tolerance for early stopping (None = disabled)
     pub auto_converge: Option<T>,
 
-    /// Kernel weight function
+    // Kernel weight function
     pub weight_function: WeightFunction,
 
-    /// Boundary handling policy
+    // Boundary handling policy
     pub boundary_policy: BoundaryPolicy,
 
-    /// Robustness method
+    // Robustness method
     pub robustness_method: RobustnessMethod,
 
-    /// Residual scaling method
+    // Residual scaling method
     pub scaling_method: ScalingMethod,
 
-    /// Policy for handling zero-weight neighborhoods
+    // Policy for handling zero-weight neighborhoods
     pub zero_weight_fallback: ZeroWeightFallback,
 
-    /// Merging strategy for overlapping chunks
+    // Merging strategy for overlapping chunks
     pub merge_strategy: MergeStrategy,
 
-    /// Whether to return residuals
+    // Whether to return residuals
     pub compute_residuals: bool,
 
-    /// Whether to return diagnostics
+    // Whether to return diagnostics
     pub return_diagnostics: bool,
 
-    /// Whether to return robustness weights
+    // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
-    /// Deferred error from adapter conversion
+    // Deferred error from adapter conversion
     pub deferred_error: Option<LoessError>,
 
-    /// Polynomial degree for local regression
+    // Polynomial degree for local regression
     pub polynomial_degree: PolynomialDegree,
 
-    /// Number of predictor dimensions (default: 1).
+    // Number of predictor dimensions (default: 1).
     pub dimensions: usize,
 
-    /// Distance metric for nD neighborhood computation.
+    // Distance metric for nD neighborhood computation.
     pub distance_metric: DistanceMetric<T>,
 
-    /// Cell size for interpolation subdivision (default: 0.2).
+    // Cell size for interpolation subdivision (default: 0.2).
     pub cell: Option<f64>,
 
-    /// Maximum number of vertices for interpolation.
+    // Maximum number of vertices for interpolation.
     pub interpolation_vertices: Option<usize>,
 
-    /// Evaluation mode (default: Interpolation)
+    // Evaluation mode (default: Interpolation)
     pub surface_mode: SurfaceMode,
 
-    /// Whether to reduce polynomial degree at boundary vertices during interpolation.
-    /// When `true` (default), Linear fits are used outside data bounds.
+    // Whether to reduce polynomial degree at boundary vertices during interpolation.
+    // When `true` (default), Linear fits are used outside data bounds.
     pub boundary_degree_fallback: bool,
 
-    /// Tracks if any parameter was set multiple times (for validation)
+    // Tracks if any parameter was set multiple times (for validation)
     #[doc(hidden)]
     pub(crate) duplicate_param: Option<&'static str>,
 
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
-    /// Custom smooth pass function.
+    // Custom smooth pass function.
     #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
-    /// Custom cross-validation pass function.
+    // Custom cross-validation pass function.
     #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
-    /// Custom interval estimation pass function.
+    // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
-    /// Custom fit pass function.
+    // Custom fit pass function.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
-    /// Custom vertex pass function.
+    // Custom vertex pass function.
     #[doc(hidden)]
     pub custom_vertex_pass: Option<VertexPassFn<T>>,
 
-    /// Custom KD-tree builder function.
+    // Custom KD-tree builder function.
     #[doc(hidden)]
     pub custom_kdtree_builder: Option<KDTreeBuilderFn<T>>,
 
-    /// Execution backend hint.
+    // Execution backend hint.
     #[doc(hidden)]
     pub backend: Option<Backend>,
 
-    /// Parallel execution hint.
+    // Parallel execution hint.
     #[doc(hidden)]
     pub parallel: Option<bool>,
 }
@@ -207,7 +181,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Defau
 impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
     StreamingLoessBuilder<T>
 {
-    /// Create a new streaming LOESS builder with default parameters.
+    // Create a new streaming LOESS builder with default parameters.
     fn new() -> Self {
         Self {
             chunk_size: 5000,
@@ -251,103 +225,103 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
     // Shared Setters
     // ========================================================================
 
-    /// Set the smoothing fraction (span).
+    // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.fraction = fraction;
         self
     }
 
-    /// Set the number of robustness iterations.
+    // Set the number of robustness iterations.
     pub fn iterations(mut self, iterations: usize) -> Self {
         self.iterations = iterations;
         self
     }
 
-    /// Set kernel weight function.
+    // Set kernel weight function.
     pub fn weight_function(mut self, weight_function: WeightFunction) -> Self {
         self.weight_function = weight_function;
         self
     }
 
-    /// Set the robustness method for outlier handling.
+    // Set the robustness method for outlier handling.
     pub fn robustness_method(mut self, method: RobustnessMethod) -> Self {
         self.robustness_method = method;
         self
     }
 
-    /// Set the residual scaling method (MAR/MAD).
+    // Set the residual scaling method (MAR/MAD).
     pub fn scaling_method(mut self, method: ScalingMethod) -> Self {
         self.scaling_method = method;
         self
     }
 
-    /// Set the zero-weight fallback policy.
+    // Set the zero-weight fallback policy.
     pub fn zero_weight_fallback(mut self, fallback: ZeroWeightFallback) -> Self {
         self.zero_weight_fallback = fallback;
         self
     }
 
-    /// Set the boundary handling policy.
+    // Set the boundary handling policy.
     pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
         self.boundary_policy = policy;
         self
     }
 
-    /// Set the polynomial degree.
+    // Set the polynomial degree.
     pub fn polynomial_degree(mut self, degree: PolynomialDegree) -> Self {
         self.polynomial_degree = degree;
         self
     }
 
-    /// Set the number of dimensions explicitly.
+    // Set the number of dimensions explicitly.
     pub fn dimensions(mut self, dims: usize) -> Self {
         self.dimensions = dims;
         self
     }
 
-    /// Set the distance metric.
+    // Set the distance metric.
     pub fn distance_metric(mut self, metric: DistanceMetric<T>) -> Self {
         self.distance_metric = metric;
         self
     }
 
-    /// Set the evaluation mode (Interpolation or Direct).
+    // Set the evaluation mode (Interpolation or Direct).
     pub fn surface_mode(mut self, mode: SurfaceMode) -> Self {
         self.surface_mode = mode;
         self
     }
 
-    /// Set the interpolation cell size (default: 0.2).
+    // Set the interpolation cell size (default: 0.2).
     pub fn cell(mut self, cell: f64) -> Self {
         self.cell = Some(cell);
         self
     }
 
-    /// Set the maximum number of vertices for interpolation.
+    // Set the maximum number of vertices for interpolation.
     pub fn interpolation_vertices(mut self, vertices: usize) -> Self {
         self.interpolation_vertices = Some(vertices);
         self
     }
 
-    /// Set whether to reduce polynomial degree at boundary vertices.
+    // Set whether to reduce polynomial degree at boundary vertices.
     pub fn boundary_degree_fallback(mut self, enabled: bool) -> Self {
         self.boundary_degree_fallback = enabled;
         self
     }
 
-    /// Enable auto-convergence for robustness iterations.
+    // Enable auto-convergence for robustness iterations.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
         self.auto_converge = Some(tolerance);
         self
     }
 
-    /// Enable returning residuals in the output.
+    // Enable returning residuals in the output.
     pub fn compute_residuals(mut self, enabled: bool) -> Self {
         self.compute_residuals = enabled;
         self
     }
 
-    /// Enable returning robustness weights in the result.
+    // Enable returning robustness weights in the result.
     pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
         self.return_robustness_weights = enabled;
         self
@@ -357,25 +331,25 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
     // Streaming-Specific Setters
     // ========================================================================
 
-    /// Set whether to return diagnostics.
+    // Set whether to return diagnostics.
     pub fn return_diagnostics(mut self, return_diagnostics: bool) -> Self {
         self.return_diagnostics = return_diagnostics;
         self
     }
 
-    /// Set chunk size for processing.
+    // Set chunk size for processing.
     pub fn chunk_size(mut self, size: usize) -> Self {
         self.chunk_size = size;
         self
     }
 
-    /// Set overlap between chunks.
+    // Set overlap between chunks.
     pub fn overlap(mut self, overlap: usize) -> Self {
         self.overlap = overlap;
         self
     }
 
-    /// Set the merge strategy for overlapping chunks.
+    // Set the merge strategy for overlapping chunks.
     pub fn merge_strategy(mut self, strategy: MergeStrategy) -> Self {
         self.merge_strategy = strategy;
         self
@@ -385,42 +359,42 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
 
-    /// Set a custom smooth pass function.
+    // Set a custom smooth pass function.
     #[doc(hidden)]
     pub fn custom_smooth_pass(mut self, pass: SmoothPassFn<T>) -> Self {
         self.custom_smooth_pass = Some(pass);
         self
     }
 
-    /// Set a custom cross-validation pass function.
+    // Set a custom cross-validation pass function.
     #[doc(hidden)]
     pub fn custom_cv_pass(mut self, pass: CVPassFn<T>) -> Self {
         self.custom_cv_pass = Some(pass);
         self
     }
 
-    /// Set a custom interval estimation pass function.
+    // Set a custom interval estimation pass function.
     #[doc(hidden)]
     pub fn custom_interval_pass(mut self, pass: IntervalPassFn<T>) -> Self {
         self.custom_interval_pass = Some(pass);
         self
     }
 
-    /// Set the execution backend hint.
+    // Set the execution backend hint.
     #[doc(hidden)]
     pub fn backend(mut self, backend: Backend) -> Self {
         self.backend = Some(backend);
         self
     }
 
-    /// Set a custom KD-tree builder function.
+    // Set a custom KD-tree builder function.
     #[doc(hidden)]
     pub fn custom_kdtree_builder(mut self, kdtree_builder_fn: Option<KDTreeBuilderFn<T>>) -> Self {
         self.custom_kdtree_builder = kdtree_builder_fn;
         self
     }
 
-    /// Set parallel execution hint.
+    // Set parallel execution hint.
     #[doc(hidden)]
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.parallel = Some(parallel);
@@ -431,7 +405,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
     // Build Method
     // ========================================================================
 
-    /// Build the streaming processor.
+    // Build the streaming processor.
     pub fn build(self) -> Result<StreamingLoess<T>, LoessError> {
         if let Some(err) = self.deferred_error {
             return Err(err);
@@ -472,7 +446,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
 // Streaming LOESS Processor
 // ============================================================================
 
-/// Streaming LOESS processor for large datasets.
+// Streaming LOESS processor for large datasets.
 pub struct StreamingLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> {
     config: StreamingLoessBuilder<T>,
     overlap_buffer_x: Vec<T>,
@@ -485,7 +459,7 @@ pub struct StreamingLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug
 impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLinalg>
     StreamingLoess<T>
 {
-    /// Process a chunk of data.
+    // Process a chunk of data.
     pub fn process_chunk(&mut self, x: &[T], y: &[T]) -> Result<LoessResult<T>, LoessError> {
         // Validate inputs using standard validator
         Validator::validate_inputs(x, y, self.config.dimensions)?;
@@ -699,7 +673,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         })
     }
 
-    /// Finalize processing and get any remaining buffered data.
+    // Finalize processing and get any remaining buffered data.
     pub fn finalize(&mut self) -> Result<LoessResult<T>, LoessError> {
         if self.overlap_buffer_x.is_empty() {
             return Ok(LoessResult {
@@ -787,7 +761,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         Ok(result)
     }
 
-    /// Reset the processor state.
+    // Reset the processor state.
     pub fn reset(&mut self) {
         self.overlap_buffer_x.clear();
         self.overlap_buffer_y.clear();

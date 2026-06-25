@@ -1,7 +1,7 @@
 """
 fastloess: High-performance LOESS Smoothing for Python.
 
-A high-performance LOESS (Locally Weighted Scatterplot Smoothing) implementation
+A high-performance LOESS (Locally Estimated Scatterplot Smoothing) implementation
 with parallel execution via Rayon and NumPy integration. Built on top of the
 fastLoess Rust crate.
 """

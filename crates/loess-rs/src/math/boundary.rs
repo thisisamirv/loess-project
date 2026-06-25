@@ -1,29 +1,13 @@
 //! Boundary padding strategies for local regression.
 //!
-//! ## Purpose
-//!
 //! This module implements boundary padding strategies to reduce smoothing bias at
 //! data edges. By providing context beyond the original boundaries, local
 //! regression can perform better near the start and end of the dataset.
 //!
-//! ## Design notes
+//! ## srrstats Compliance
 //!
-//! * **Strategy Pattern**: Uses `BoundaryPolicy` enum to select the padding method.
-//! * **Allocation**: Creates new vectors for padded data (necessary for extension).
-//!
-//! ## Key concepts
-//!
-//! * **Boundary Effect**: The tendency for local regression to have higher bias at edges.
-//! * **Padding strategies**: `Extend` (extrapolate x, repeat y), `Reflect` (mirror), `Zero` (pad 0).
-//!
-//! ## Invariants
-//!
-//! * Padding length is limited to half the window size or `n - 1`.
-//! * Original data is preserved in the middle of the value range.
-//!
-//! ## Non-goals
-//!
-//! * This module does not perform in-place modification of input data.
+//! @srrstats {RE2.0} Boundary padding strategies (Extend, Reflect, Zero) reduce edge effects.
+//! @srrstats {G2.1} Edge case handling: boundary policies configurable per-fit.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
@@ -36,27 +20,27 @@ use core::cmp::Ordering::Equal;
 use core::iter::repeat_n;
 use num_traits::Float;
 
-/// Policy for handling boundaries at the start and end of a data stream.
+// Policy for handling boundaries at the start and end of a data stream.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum BoundaryPolicy {
-    /// Linearly extrapolate x-values and replicate y-values to provide context.
+    // Linearly extrapolate x-values and replicate y-values to provide context.
     #[default]
     Extend,
 
-    /// Mirror values across the boundary.
+    // Mirror values across the boundary.
     Reflect,
 
-    /// Use zero padding beyond data boundaries.
+    // Use zero padding beyond data boundaries.
     Zero,
 
-    /// No boundary padding (standard LOESS behavior).
+    // No boundary padding (standard LOESS behavior).
     NoBoundary,
 }
 
 impl BoundaryPolicy {
-    /// Apply the boundary policy to pad input data (1D or nD).
-    ///
-    /// Returns augmented x, augmented y, and a mapping from augmented index to original index.
+    // Apply the boundary policy to pad input data (1D or nD).
+    //
+    // Returns augmented x, augmented y, and a mapping from augmented index to original index.
     pub fn apply<T: Float>(
         &self,
         x: &[T],

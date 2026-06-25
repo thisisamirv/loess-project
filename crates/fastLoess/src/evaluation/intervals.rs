@@ -1,34 +1,13 @@
 //! Parallel interval estimation for LOESS smoothing.
 //!
-//! ## Purpose
+//! This module provides parallel logic for computing standard errors and
+//! confidence/prediction intervals. It distributes the uncertainty calculations
+//! across CPU cores for maximum performance on large datasets.
 //!
-//! This module provides parallel computation of standard errors for
-//! confidence and prediction intervals. The computation involves
-//! fitting local regressions at each point to estimate leverage,
-//! which is naturally parallelizable.
+//! ## srrstats Compliance
 //!
-//! ## Design notes
-//!
-//! * **Parallelism**: Uses `rayon` to compute standard errors in parallel.
-//! * **Integration**: Plugs into the `loess-rs` executor via the `IntervalPassFn` hook.
-//! * **Generics**: Generic over `Float` types.
-//!
-//! ## Key concepts
-//!
-//! * **Standard Errors**: Computed in parallel for each query point.
-//! * **Leverage**: Hat matrix diagonal elements used for uncertainty estimation.
-//! * **Parallel Computation**: Independent per-point calculations for high throughput.
-//!
-//! ## Invariants
-//!
-//! * Input arrays x and y must have the same length.
-//! * Window size must be sufficient for degrees of freedom.
-//! * Standard errors are non-negative.
-//!
-//! ## Non-goals
-//!
-//! * This module does not compute the intervals itself (only standard errors).
-//! * This module does not handle T-distribution approximations (delegated to loess-rs).
+//! @srrstats {RE5.0} Parallel SE computation for confidence/prediction intervals.
+//! @srrstats {G3.0} Rayon par_iter for pointwise interval estimation.
 
 // Feature-gated imports
 #[cfg(feature = "cpu")]
@@ -57,10 +36,10 @@ use crate::engine::executor::LoessDistanceCalculator;
 // Parallel Interval Estimation
 // ============================================================================
 
-/// Compute standard errors in parallel for interval estimation.
-///
-/// This function computes the leverage values (hat matrix diagonal) for each
-/// point in parallel, then uses them to estimate standard errors.
+// Compute standard errors in parallel for interval estimation.
+//
+// This function computes the leverage values (hat matrix diagonal) for each
+// point in parallel, then uses them to estimate standard errors.
 #[allow(clippy::too_many_arguments)]
 #[cfg(feature = "cpu")]
 pub fn interval_pass_parallel<T>(

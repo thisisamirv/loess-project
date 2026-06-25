@@ -24,5 +24,5 @@
 //! ```
 //!
 
-/// Parallel nD neighborhood search (KD-Tree implementation).
+// Parallel nD neighborhood search (KD-Tree implementation).
 pub mod neighborhood;

@@ -1,16 +1,12 @@
-//! Linear algebra backend abstraction for LOESS.
+//! Linear algebra backend for LOESS local regression.
 //!
-//! ## Purpose
+//! This module provides QR/SVD-based normal equation solvers and leverage
+//! computation via nalgebra, with SIMD batch operations for residual processing.
 //!
-//! This module provides a trait-based abstraction over linear algebra operations,
-//! standardizing on the optimized nalgebra backend.
+//! ## srrstats Compliance
 //!
-//! ## Design notes
-//!
-//! * Uses QR decomposition (Householder reflections) instead of Cholesky for better
-//!   numerical stability with ill-conditioned systems.
-//! * Fallback to SVD for rank-deficient matrices.
-//! * Generic over `FloatLinalg` types (f32 and f64) which delegate to nalgebra.
+//! @srrstats {G3.0} QR decomposition with SVD fallback for numerical stability.
+//! @srrstats {RE2.0} Leverage computation via X'(X'WX)\u207b\u00b9X for hat matrix diagonal.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
@@ -27,26 +23,26 @@ use wide::{f32x8, f64x4};
 // FloatLinalg Trait
 // ============================================================================
 
-/// Helper trait to bridge generic Float types to the optimized Nalgebra backend.
-///
-/// This trait provides type-specific optimized implementations for linear algebra
-/// operations. Implemented for f32 and f64.
+// Helper trait to bridge generic Float types to the optimized Nalgebra backend.
+//
+// This trait provides type-specific optimized implementations for linear algebra
+// operations. Implemented for f32 and f64.
 pub trait FloatLinalg: Float + 'static {
-    /// Solve normal equations X'WX * beta = X'Wy.
+    // Solve normal equations X'WX * beta = X'Wy.
     fn solve_normal(a: &[Self], b: &[Self], n: usize) -> Option<Vec<Self>>;
-    /// Compute leverage (hat matrix diagonal element) for a query point.
+    // Compute leverage (hat matrix diagonal element) for a query point.
     fn compute_leverage(design_vec: &[Self], xtw_x_inv: &[Self], n: usize) -> Self;
-    /// Invert the normal matrix X'WX.
+    // Invert the normal matrix X'WX.
     fn invert_normal(a: &[Self], n: usize) -> Option<Vec<Self>>;
 
     // ========================================================================
     // Batch SIMD Operations
     // ========================================================================
 
-    /// Batch compute absolute residuals: `out[i] = |a[i] - b[i]|`
+    // Batch compute absolute residuals: `out[i] = |a[i] - b[i]|`
     fn batch_abs_residuals(a: &[Self], b: &[Self], out: &mut [Self]);
 
-    /// Batch compute sqrt-scaled values: `out[i] = scale * sqrt(input[i])`
+    // Batch compute sqrt-scaled values: `out[i] = scale * sqrt(input[i])`
     fn batch_sqrt_scale(input: &[Self], scale: Self, out: &mut [Self]);
 }
 
@@ -100,11 +96,11 @@ impl FloatLinalg for f32 {
 // Nalgebra Backend Implementation
 // ============================================================================
 
-/// Nalgebra-based linear algebra operations.
+// Nalgebra-based linear algebra operations.
 pub mod nalgebra_backend {
     use super::*;
 
-    /// Solve normal equations X'WX * beta = X'Wy using f64 precision.
+    // Solve normal equations X'WX * beta = X'Wy using f64 precision.
     pub fn solve_normal_equations_f64(
         xtw_x: &[f64],
         xtw_y: &[f64],
@@ -125,14 +121,14 @@ pub mod nalgebra_backend {
             .map(|s: DVector<f64>| s.as_slice().to_vec())
     }
 
-    /// Compute leverage for a query point using f64 precision.
+    // Compute leverage for a query point using f64 precision.
     pub fn compute_leverage_f64(design_vec: &[f64], xtw_x_inv: &[f64], n_coeffs: usize) -> f64 {
         let x = DVector::from_column_slice(design_vec);
         let inv = DMatrix::from_column_slice(n_coeffs, n_coeffs, xtw_x_inv);
         (x.transpose() * &inv * &x)[(0, 0)]
     }
 
-    /// Invert normal matrix X'WX using f64 precision.
+    // Invert normal matrix X'WX using f64 precision.
     pub fn invert_normal_matrix_f64(xtw_x: &[f64], n_coeffs: usize) -> Option<Vec<f64>> {
         let matrix = DMatrix::from_column_slice(n_coeffs, n_coeffs, xtw_x);
         let qr = matrix.clone().qr();
@@ -148,7 +144,7 @@ pub mod nalgebra_backend {
             .map(|inv: DMatrix<f64>| inv.as_slice().to_vec())
     }
 
-    /// Solve normal equations X'WX * beta = X'Wy using f32 precision.
+    // Solve normal equations X'WX * beta = X'Wy using f32 precision.
     pub fn solve_normal_equations_f32(
         xtw_x: &[f32],
         xtw_y: &[f32],
@@ -169,14 +165,14 @@ pub mod nalgebra_backend {
             .map(|s: DVector<f32>| s.as_slice().to_vec())
     }
 
-    /// Compute leverage for a query point using f32 precision.
+    // Compute leverage for a query point using f32 precision.
     pub fn compute_leverage_f32(design_vec: &[f32], xtw_x_inv: &[f32], n_coeffs: usize) -> f32 {
         let x = DVector::from_column_slice(design_vec);
         let inv = DMatrix::from_column_slice(n_coeffs, n_coeffs, xtw_x_inv);
         (x.transpose() * &inv * &x)[(0, 0)]
     }
 
-    /// Invert normal matrix X'WX using f32 precision.
+    // Invert normal matrix X'WX using f32 precision.
     pub fn invert_normal_matrix_f32(xtw_x: &[f32], n_coeffs: usize) -> Option<Vec<f32>> {
         let matrix = DMatrix::from_column_slice(n_coeffs, n_coeffs, xtw_x);
         let qr = matrix.clone().qr();
@@ -197,11 +193,11 @@ pub mod nalgebra_backend {
 // SIMD Batch Operations
 // ============================================================================
 
-/// SIMD-optimized batch operations for array processing.
+// SIMD-optimized batch operations for array processing.
 pub mod simd_batch {
     use super::*;
 
-    /// Batch compute `|a[i] - b[i]|` for f64, SIMD-optimized.
+    // Batch compute `|a[i] - b[i]|` for f64, SIMD-optimized.
     #[inline]
     pub fn batch_abs_residuals_f64(a: &[f64], b: &[f64], out: &mut [f64]) {
         debug_assert_eq!(a.len(), b.len());
@@ -229,7 +225,7 @@ pub mod simd_batch {
         }
     }
 
-    /// Batch compute `|a[i] - b[i]|` for f32, SIMD-optimized.
+    // Batch compute `|a[i] - b[i]|` for f32, SIMD-optimized.
     #[inline]
     pub fn batch_abs_residuals_f32(a: &[f32], b: &[f32], out: &mut [f32]) {
         debug_assert_eq!(a.len(), b.len());
@@ -279,7 +275,7 @@ pub mod simd_batch {
         }
     }
 
-    /// Batch compute `scale * sqrt(input[i])` for f64, SIMD-optimized.
+    // Batch compute `scale * sqrt(input[i])` for f64, SIMD-optimized.
     #[inline]
     pub fn batch_sqrt_scale_f64(input: &[f64], scale: f64, out: &mut [f64]) {
         debug_assert!(out.len() >= input.len());
@@ -311,7 +307,7 @@ pub mod simd_batch {
         }
     }
 
-    /// Batch compute `scale * sqrt(input[i])` for f32, SIMD-optimized.
+    // Batch compute `scale * sqrt(input[i])` for f32, SIMD-optimized.
     #[inline]
     pub fn batch_sqrt_scale_f32(input: &[f32], scale: f32, out: &mut [f32]) {
         debug_assert!(out.len() >= input.len());

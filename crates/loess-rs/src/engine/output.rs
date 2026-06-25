@@ -1,36 +1,8 @@
 //! Output types and result structures for LOESS operations.
 //!
-//! ## Purpose
-//!
-//! This module defines the `LoessResult` struct which encapsulates all
+//! This module defines the LoessResult struct which encapsulates all
 //! outputs from a LOESS smoothing operation, including smoothed values,
 //! diagnostics, and confidence/prediction intervals.
-//!
-//! ## Design notes
-//!
-//! * **Memory Efficiency**: All optional outputs use `Option<Vec<T>>`.
-//! * **Generics**: Results are generic over `Float` types.
-//! * **Ergonomics**: Implements `Display` for human-readable output.
-//! * **Consistency**: Input x-values are stored to maintain correspondence.
-//!
-//! ## Key concepts
-//!
-//! * **Optional Outputs**: Results are only populated when specific features are enabled.
-//! * **Intervals**: Confidence (mean curve) and Prediction (new observations).
-//! * **Metadata**: Tracks iterations, fraction used, and CV scores.
-//!
-//! ## Invariants
-//!
-//! * All populated vectors have the same length as the input data.
-//! * x-values maintain the original input order (not guaranteed to be sorted for nD).
-//! * Lower bounds are always less than or equal to upper bounds for all intervals.
-//! * Robustness weights are always in the range [0, 1].
-//!
-//! ## Non-goals
-//!
-//! * This module does not perform calculations; it only stores results.
-//! * This module does not validate result consistency (responsibility of the engine).
-//! * This module does not provide serialization/deserialization logic.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
@@ -52,81 +24,81 @@ use crate::math::distance::DistanceMetric;
 // Result Structure
 // ============================================================================
 
-/// Comprehensive LOESS output containing smoothed values and diagnostics.
+// Comprehensive LOESS output containing smoothed values and diagnostics.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LoessResult<T> {
-    /// Input x-values (independent variable). Flattened for nD.
+    // Input x-values (independent variable). Flattened for nD.
     pub x: Vec<T>,
 
-    /// Number of predictor dimensions.
+    // Number of predictor dimensions.
     pub dimensions: usize,
 
-    /// Distance metric used for neighborhood search.
+    // Distance metric used for neighborhood search.
     pub distance_metric: DistanceMetric<T>,
 
-    /// Degree of local polynomial (0 for local mean, 1 for local linear, 2 for local quadratic).
+    // Degree of local polynomial (0 for local mean, 1 for local linear, 2 for local quadratic).
     pub polynomial_degree: PolynomialDegree,
 
-    /// Smoothed y-values (dependent variable).
+    // Smoothed y-values (dependent variable).
     pub y: Vec<T>,
 
-    /// Standard errors of the fit at each point.
+    // Standard errors of the fit at each point.
     pub standard_errors: Option<Vec<T>>,
 
-    /// Lower bounds of the confidence intervals for the mean response.
+    // Lower bounds of the confidence intervals for the mean response.
     pub confidence_lower: Option<Vec<T>>,
 
-    /// Upper bounds of the confidence intervals for the mean response.
+    // Upper bounds of the confidence intervals for the mean response.
     pub confidence_upper: Option<Vec<T>>,
 
-    /// Lower bounds of the prediction intervals for new observations.
+    // Lower bounds of the prediction intervals for new observations.
     pub prediction_lower: Option<Vec<T>>,
 
-    /// Upper bounds of the prediction intervals for new observations.
+    // Upper bounds of the prediction intervals for new observations.
     pub prediction_upper: Option<Vec<T>>,
 
-    /// Residuals from the fit (y_i - y_hat_i).
+    // Residuals from the fit (y_i - y_hat_i).
     pub residuals: Option<Vec<T>>,
 
-    /// Final robustness weights from the iterative refinement process.
+    // Final robustness weights from the iterative refinement process.
     pub robustness_weights: Option<Vec<T>>,
 
-    /// Comprehensive diagnostic metrics (RMSE, R^2, AIC, etc.).
+    // Comprehensive diagnostic metrics (RMSE, R^2, AIC, etc.).
     pub diagnostics: Option<Diagnostics<T>>,
 
-    /// Number of robustness iterations actually performed.
+    // Number of robustness iterations actually performed.
     pub iterations_used: Option<usize>,
 
-    /// Smoothing fraction used for the fit (optimal if selected by CV).
+    // Smoothing fraction used for the fit (optimal if selected by CV).
     pub fraction_used: T,
 
-    /// RMSE scores for each tested fraction during cross-validation.
+    // RMSE scores for each tested fraction during cross-validation.
     pub cv_scores: Option<Vec<T>>,
 
     // ========================================================================
     // Hat Matrix Statistics
     // ========================================================================
-    /// Equivalent Number of Parameters (trace of hat matrix).
-    /// This measures the effective model complexity.
+    // Equivalent Number of Parameters (trace of hat matrix).
+    // This measures the effective model complexity.
     pub enp: Option<T>,
 
-    /// Trace of the hat matrix (same as ENP for LOESS).
+    // Trace of the hat matrix (same as ENP for LOESS).
     pub trace_hat: Option<T>,
 
-    /// Delta1 for proper SE computation: tr((I-L)(I-L)').
-    /// Used as the denominator for residual scale estimation.
+    // Delta1 for proper SE computation: tr((I-L)(I-L)').
+    // Used as the denominator for residual scale estimation.
     pub delta1: Option<T>,
 
-    /// Delta2 for SE computation: tr(((I-L)(I-L)')²).
-    /// Used for confidence interval width adjustment.
+    // Delta2 for SE computation: tr(((I-L)(I-L)')²).
+    // Used for confidence interval width adjustment.
     pub delta2: Option<T>,
 
-    /// Residual scale estimate: sqrt(RSS / delta1).
-    /// This is the proper estimate of sigma for inference.
+    // Residual scale estimate: sqrt(RSS / delta1).
+    // This is the proper estimate of sigma for inference.
     pub residual_scale: Option<T>,
 
-    /// Leverage (hat matrix diagonal) at each point.
-    /// l_ii measures how much influence point i has on its own fitted value.
+    // Leverage (hat matrix diagonal) at each point.
+    // l_ii measures how much influence point i has on its own fitted value.
     pub leverage: Option<Vec<T>>,
 }
 
@@ -135,22 +107,22 @@ impl<T: Float> LoessResult<T> {
     // Query Methods
     // ========================================================================
 
-    /// Check if confidence intervals were computed.
+    // Check if confidence intervals were computed.
     pub fn has_confidence_intervals(&self) -> bool {
         self.confidence_lower.is_some() && self.confidence_upper.is_some()
     }
 
-    /// Check if prediction intervals were computed.
+    // Check if prediction intervals were computed.
     pub fn has_prediction_intervals(&self) -> bool {
         self.prediction_lower.is_some() && self.prediction_upper.is_some()
     }
 
-    /// Check if cross-validation was performed.
+    // Check if cross-validation was performed.
     pub fn has_cv_scores(&self) -> bool {
         self.cv_scores.is_some()
     }
 
-    /// Get the best (minimum) CV score.
+    // Get the best (minimum) CV score.
     pub fn best_cv_score(&self) -> Option<T> {
         self.cv_scores.as_ref().and_then(|scores| {
             scores

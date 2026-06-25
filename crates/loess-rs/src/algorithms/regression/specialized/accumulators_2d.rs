@@ -14,7 +14,7 @@ use wide::f64x2;
 // Specialized Accumulation Functions
 // ============================================================================
 
-/// Optimized accumulation for 2D Linear Case (Scalar).
+// Optimized accumulation for 2D Linear Case (Scalar).
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_2d_linear_scalar<T: Float>(
     x: &[T],
@@ -75,7 +75,7 @@ pub fn accumulate_2d_linear_scalar<T: Float>(
     xtwy[2] = s_wdyy;
 }
 
-/// Optimized accumulation for 2D Linear Case using SIMD.
+// Optimized accumulation for 2D Linear Case using SIMD.
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_2d_linear_simd(
     x: &[f64],
@@ -189,7 +189,7 @@ pub fn accumulate_2d_linear_simd(
     xtwy[2] = a_wdyy;
 }
 
-/// Optimized accumulation for 2D Quadratic Case (Scalar).
+// Optimized accumulation for 2D Quadratic Case (Scalar).
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_2d_quadratic_scalar<T: Float>(
     x: &[T],
@@ -320,7 +320,7 @@ pub fn accumulate_2d_quadratic_scalar<T: Float>(
     xtwy[5] = s_wyy2;
 }
 
-/// Optimized accumulation for 2D Quadratic Case using SIMD.
+// Optimized accumulation for 2D Quadratic Case using SIMD.
 #[allow(clippy::too_many_arguments)]
 pub fn accumulate_2d_quadratic_simd(
     x: &[f64],
@@ -551,10 +551,10 @@ pub fn accumulate_2d_quadratic_simd(
     xtwy[5] = a_wyy2;
 }
 
-/// Optimized accumulation for 2D Cubic Case (Scalar).
-///
-/// Matrix size 10x10.
-/// Terms: 1, x, y, x2, xy, y2, x3, x2y, xy2, y3
+// Optimized accumulation for 2D Cubic Case (Scalar).
+//
+// Matrix size 10x10.
+// Terms: 1, x, y, x2, xy, y2, x3, x2y, xy2, y3
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::cognitive_complexity)]
 pub fn accumulate_2d_cubic_scalar<T: Float>(
@@ -865,7 +865,7 @@ pub fn accumulate_2d_cubic_scalar<T: Float>(
     xtwy[9] = s_wy_y3;
 }
 
-/// Optimized accumulation for 2D Cubic Case using SIMD.
+// Optimized accumulation for 2D Cubic Case using SIMD.
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::cognitive_complexity)]
 pub fn accumulate_2d_cubic_simd(
