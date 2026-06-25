@@ -15,11 +15,54 @@ The project uses a `Makefile` to standardize development tasks.
 
 ### Prerequisites
 
-- **Rust**: 1.88+ (stable)
-- **Python**: 3.8+ with `pip`
-- **R**: 4.2+ (for R bindings)
-- **maturin**: `pip install maturin` (for Python bindings)
-- **ruff**: `pip install ruff` (for Python linting)
+To develop across all platforms, you will need the following tools installed. You only need to install the prerequisites for the specific bindings you are working on.
+
+**Core (Rust)**:
+
+- **Rust**: 1.89.0+ (stable)
+- **Cargo Tools**: `cargo fmt`, `cargo clippy`, `cargo llvm-cov` (for coverage)
+
+**Python**:
+
+- **Python**: 3.8+
+- **Packages**: `pip install maturin ruff pytest numpy matplotlib` (or allow the Makefile to create a virtual environment)
+
+**R**:
+
+- **R**: 4.2+ (with `Rscript` in PATH). Note: On Windows, you must ensure the R `bin\x64` directory (e.g., `C:\Program Files\R\R-4.x.x\bin\x64`) is added to your system `Path` via `sysdm.cpl` so that test binaries can locate `R.dll`.
+- **Rtools**: Required on Windows for C/C++ compilation. You must manually add it to your PATH to use `make` (e.g., in PowerShell: `$env:PATH = "C:\rtools45\usr\bin;C:\rtools45\x86_64-w64-mingw32.static.posix\bin;" + $env:PATH`)
+- **Windows Rust Target**: `rustup target add x86_64-pc-windows-gnu` (R on Windows requires the GNU MinGW toolchain)
+- **LaTeX Distribution**: Required for building PDF manual during `R CMD check --as-cran`. Install TinyTeX (`install.packages('tinytex'); tinytex::install_tinytex()`) or MiKTeX (Windows) or MacTeX (macOS) or TeX Live (Linux)
+- **System Dependencies**:
+  - **All platforms**: `pandoc`
+  - **Linux/Ubuntu**: `libcurl4-openssl-dev`, `libssl-dev`, `libxml2-dev`, `libfontconfig1-dev`, `libharfbuzz-dev`, `libfribidi-dev`, `libfreetype6-dev`, `libpng-dev`, `libtiff5-dev`, `libjpeg-dev`, `libprotobuf-dev`, `protobuf-compiler`, `libuv1-dev`, `libgit2-dev`, `libssh2-1-dev`, `libmagick++-dev`
+  - **macOS**: System libraries are typically available; install Xcode Command Line Tools if needed
+  - **Windows**: System libraries are typically bundled with Rtools
+- *Note: The Makefile automatically installs R-level development dependencies (BiocManager, styler, lintr, roxygen2, pkgdown, testthat, etc.)*
+
+**Julia**:
+
+- **Julia**: 1.11+ (with `julia` in PATH)
+- *Note: The Makefile automatically handles Julia package dependencies like JuliaFormatter, Aqua, and JET.*
+
+**Node.js**:
+
+- **Node.js & npm**: v22+ recommended (with `npx` in PATH)
+
+**WebAssembly**:
+
+- **wasm-pack**: Install via `cargo install wasm-pack` or the official installer
+- **Node.js & npm**: Required for testing WASM output
+
+**C++**:
+
+- **Compiler**: `g++` or `clang++` with C++17 support
+- **Tools**: `cmake`, `make`, `clang-tidy`, `cppcheck`, `valgrind`
+- **cbindgen**: Install via `cargo install cbindgen` (for header generation)
+
+**Documentation**:
+
+- **Python**: `python3` (the Makefile automatically creates a virtual environment and installs `mkdocs`)
 
 ### Clone and Branch
 
@@ -82,7 +125,7 @@ version = "1.1.1"  # Matches current release
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
-rust-version = "1.88"
+rust-version = "1.89"
 readme = "README.md"
 # ... and more
 
@@ -143,7 +186,7 @@ loess-project/
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 - Use `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, or `chore` types.
-- Scopes are optional but helpful (e.g., `loess-rs`, `fastLoess`, `python`, `r`, `docs`).
+- Scopes are optional but helpful (e.g., `loess-rs`, `fastLoess`, `python`, `r`, `julia`, `nodejs`, `wasm`, `cpp`, `docs`).
 
 Examples:
 
@@ -166,6 +209,16 @@ cargo test -p fastLoess
 pytest tests/python/
 
 # R tests (via make r)
+
+# Julia tests
+julia tests/julia/test_FastLOESS.jl
+
+# Node.js tests (via make nodejs)
+
+# WASM tests
+wasm-pack test --node bindings/wasm
+
+# C++ tests (via make cpp)
 ```
 
 ## License

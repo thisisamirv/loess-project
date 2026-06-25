@@ -7,6 +7,7 @@ on:
 
 env:
   DEBUG: "napi:*"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
@@ -50,12 +51,12 @@ jobs:
             pkg_name: darwin-arm64
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: bindings/nodejs/package-lock.json
 
@@ -93,7 +94,7 @@ jobs:
           cp fastloess.node npm/${{ matrix.settings.pkg_name }}/fastloess.node
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.settings.pkg_name }}
           path: bindings/nodejs/npm/${{ matrix.settings.pkg_name }}
@@ -104,16 +105,16 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           registry-url: "https://registry.npmjs.org"
 
       - name: Download Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: bindings/nodejs/npm
 

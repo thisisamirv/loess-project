@@ -8,10 +8,10 @@ members = [
     "bindings/nodejs",
     "bindings/wasm",
     "bindings/cpp",
-    "validation/fastLoess",
-    "benchmarks/fastLoess",
     "examples",
     "tests",
+    "validation/fastLoess",
+    "benchmarks/fastLoess",
 ]
 exclude = ["bindings/r/src/vendor"]
 
@@ -22,7 +22,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/thisisamirv/loess-project"
 homepage = "https://github.com/thisisamirv/loess-project"
 documentation = "https://loess.readthedocs.io/"
-rust-version = "1.88"
+rust-version = "1.89"
 readme = "README.md"
 
 [profile.release]
