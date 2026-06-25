@@ -26,6 +26,7 @@ PLOTS_DIR = os.path.join(SCRIPT_DIR, "plots")
 
 
 def main():
+    """Run the online smoothing example and save the generated plots."""
     print("=== fastloess Online Smoothing Example ===")
 
     # 1. Simulate a real-time signal
