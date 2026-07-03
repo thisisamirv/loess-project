@@ -9,11 +9,9 @@
 //! @srrstats {RE5.0} Parallel SE computation for confidence/prediction intervals.
 //! @srrstats {G3.0} Rayon par_iter for pointwise interval estimation.
 
-// Imports
-use rayon::prelude::*;
-
 // External dependencies
 use num_traits::Float;
+use rayon::prelude::*;
 use std::cmp::Ordering::Equal;
 use std::fmt::Debug;
 use std::vec::Vec;

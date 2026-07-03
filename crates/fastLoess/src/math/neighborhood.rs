@@ -1,33 +1,15 @@
 //! Parallel KD-tree builder using Rayon.
 //!
-//! ## Purpose
+//! This module provides a multi-threaded builder for the Eytzinger-layout KD-tree
+//! used in nearest-neighbor searches. Construction is parallelized at upper tree
+//! levels via `rayon::join` for fast initialization on large datasets.
 //!
-//! This module provides a multi-threaded builder for the KD-tree used in
-//! nearest neighbor searches. Construction is parallelized at the top levels
-//! of recursion to speed up initialization for large datasets.
+//! ## srrstats Compliance
 //!
-//! ## Design notes
-//!
-//! * **Recursive Parallelism**: Uses `rayon::join` to parallelize the recursive build steps.
-//! * **Depth Limit**: Parallelism typically targets the upper levels of the tree.
-//! * **Unsafe Access**: Uses raw pointers for concurrent writes to disjoint array indices.
-//!
-//! ## Key concepts
-//!
-//! * **KD-Tree**: Spatial indexing structure for fast neighbor lookup.
-//! * **Eytzinger Layout**: Cache-optimal array layout (left-complete binary tree).
-//! * **Median Splitting**: Balanced tree construction via `select_nth_unstable`.
-//!
-//! ## Invariants
-//!
-//! * Parallel construction produces an identical tree to sequential construction.
-//! * Thread safety is guaranteed by disjoint index access patterns.
-//!
-//! ## Non-goals
-//!
-//! * This module does not implement the search logic (delegated to loess-rs).
-//! * This module does not support dynamic updates.
-//!
+//! @srrstats {G3.0} Rayon join for parallel KD-tree construction at upper tree levels.
+//! @srrstats {RE4.0} KD-tree spatial index for fast nearest-neighbor lookup in local fits.
+
+// Export dependencies from loess-rs crate
 use loess_rs::internals::algorithms::regression::SolverLinalg;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
@@ -35,7 +17,7 @@ use loess_rs::internals::math::neighborhood::KDNode;
 use loess_rs::internals::math::neighborhood::KDTree;
 use num_traits::Float;
 
-// Imports
+// External dependencies
 use rayon::join;
 
 // Parallel KD-tree builder using Rayon.
