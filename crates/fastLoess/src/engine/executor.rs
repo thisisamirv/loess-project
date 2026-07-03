@@ -11,17 +11,14 @@
 //! @srrstats {G1.6} Tile-based processing for cache locality on large datasets.
 //! @srrstats {RE2.2} Delta optimization with parallel anchor point computation.
 
-// Feature-gated imports
-#[cfg(feature = "cpu")]
+// Imports
 use rayon::prelude::*;
 
 // External dependencies
 use num_traits::Float;
-#[cfg(feature = "cpu")]
 use std::fmt::Debug;
 
 // Export dependencies from loess-rs crate
-#[cfg(feature = "cpu")]
 use loess_rs::internals::algorithms::regression::RegressionContext;
 use loess_rs::internals::algorithms::regression::{
     PolynomialDegree, SolverLinalg, ZeroWeightFallback,
@@ -31,10 +28,8 @@ use loess_rs::internals::math::distance::{DistanceLinalg, DistanceMetric};
 use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::math::neighborhood::PointDistance;
-#[cfg(feature = "cpu")]
 use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood, NodeDistance};
 use loess_rs::internals::primitives::buffer::CachedNeighborhood;
-#[cfg(feature = "cpu")]
 use loess_rs::internals::primitives::buffer::{FittingBuffer, NeighborhoodSearchBuffer};
 
 // Standard LOESS distance calculator for neighbor finding.
@@ -112,7 +107,6 @@ impl<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> PointDistance<T>
 // * `distance_metric` - Distance metric for neighbor finding
 // * `scales` - Normalization scales per dimension
 #[allow(clippy::too_many_arguments)]
-#[cfg(feature = "cpu")]
 pub fn smooth_pass_parallel<T>(
     x: &[T],
     y: &[T],
@@ -202,7 +196,6 @@ pub fn smooth_pass_parallel<T>(
 
 // Perform a parallel vertex pass for interpolation mode.
 #[allow(clippy::too_many_arguments)]
-#[cfg(feature = "cpu")]
 pub fn vertex_pass_parallel<T>(
     x: &[T], // augmented x
     y: &[T], // augmented y

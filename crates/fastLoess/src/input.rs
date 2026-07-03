@@ -4,8 +4,7 @@
 //! fit method to process multiple data formats (slices, vectors, ndarray)
 //! through a single interface.
 
-// Feature-gated imports
-#[cfg(feature = "cpu")]
+// Imports
 use ndarray::{ArrayBase, Data, Ix1};
 
 // External dependencies
@@ -32,7 +31,6 @@ impl<T: Float> LoessInput<T> for Vec<T> {
     }
 }
 
-#[cfg(feature = "cpu")]
 impl<T: Float, S> LoessInput<T> for ArrayBase<S, Ix1>
 where
     S: Data<Elem = T>,

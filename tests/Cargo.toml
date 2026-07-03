@@ -27,8 +27,6 @@ default = ["dev"]
 # loess features
 std = ["loess-rs/std"]
 dev = ["loess-rs/dev", "fastLoess/dev"]
-# fastLoess features  
-cpu = ["fastLoess/cpu"]
 
 [[test]]
 name = "loess-rs"

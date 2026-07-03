@@ -9,37 +9,28 @@
 //! @srrstats {RE5.0} Parallel SE computation for confidence/prediction intervals.
 //! @srrstats {G3.0} Rayon par_iter for pointwise interval estimation.
 
-// Feature-gated imports
-#[cfg(feature = "cpu")]
+// Imports
 use rayon::prelude::*;
 
 // External dependencies
 use num_traits::Float;
-#[cfg(feature = "cpu")]
 use std::cmp::Ordering::Equal;
-#[cfg(feature = "cpu")]
 use std::fmt::Debug;
 use std::vec::Vec;
 
 // Export dependencies from loess-rs crate
 use loess_rs::internals::algorithms::regression::PolynomialDegree;
-#[cfg(feature = "cpu")]
 use loess_rs::internals::algorithms::regression::{
     RegressionContext, SolverLinalg, ZeroWeightFallback,
 };
 use loess_rs::internals::evaluation::intervals::IntervalMethod;
-#[cfg(feature = "cpu")]
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::distance::DistanceMetric;
 use loess_rs::internals::math::kernel::WeightFunction;
-#[cfg(feature = "cpu")]
 use loess_rs::internals::math::linalg::FloatLinalg;
-#[cfg(feature = "cpu")]
 use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood, NodeDistance};
-#[cfg(feature = "cpu")]
 use loess_rs::internals::primitives::buffer::{FittingBuffer, NeighborhoodSearchBuffer};
 
-#[cfg(feature = "cpu")]
 use crate::engine::executor::LoessDistanceCalculator;
 
 // Compute standard errors in parallel for interval estimation.
@@ -47,7 +38,6 @@ use crate::engine::executor::LoessDistanceCalculator;
 // This function computes the leverage values (hat matrix diagonal) for each
 // point in parallel, then uses them to estimate standard errors.
 #[allow(clippy::too_many_arguments)]
-#[cfg(feature = "cpu")]
 pub fn interval_pass_parallel<T>(
     x: &[T],
     y: &[T],

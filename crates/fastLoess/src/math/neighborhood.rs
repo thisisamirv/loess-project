@@ -31,20 +31,17 @@
 use loess_rs::internals::algorithms::regression::SolverLinalg;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
-#[cfg(feature = "cpu")]
 use loess_rs::internals::math::neighborhood::KDNode;
 use loess_rs::internals::math::neighborhood::KDTree;
 use num_traits::Float;
 
-// Feature-gated imports
-#[cfg(feature = "cpu")]
+// Imports
 use rayon::join;
 
 // Parallel KD-tree builder using Rayon.
 //
 // This provides a multi-threaded implementation of the Eytzinger-layout KD-tree
 // used in loess-rs.
-#[cfg(feature = "cpu")]
 pub fn build_kdtree_parallel<T>(points: &[T], dimensions: usize) -> KDTree<T>
 where
     T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Send + Sync + 'static,
@@ -75,7 +72,6 @@ where
     KDTree::from_parts(nodes, permuted_points, dimensions)
 }
 
-#[cfg(feature = "cpu")]
 fn build_recursive_parallel<T>(
     points: &[T],
     indices: &mut [usize],
@@ -170,7 +166,6 @@ fn build_recursive_parallel<T>(
     }
 }
 
-#[cfg(feature = "cpu")]
 fn build_recursive_sequential<T>(
     points: &[T],
     indices: &mut [usize],

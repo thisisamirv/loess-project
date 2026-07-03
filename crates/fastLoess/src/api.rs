@@ -4,31 +4,22 @@
 //! heavy-duty parallel execution capabilities. It extends the loess API
 //! with adapters that utilize all available CPU cores or GPU hardware.
 
-// Feature-gated imports
-#[cfg(feature = "cpu")]
+// Imports
 use crate::adapters::batch::ParallelBatchLoessBuilder;
-#[cfg(feature = "cpu")]
 use crate::adapters::online::ParallelOnlineLoessBuilder;
-#[cfg(feature = "cpu")]
 use crate::adapters::streaming::ParallelStreamingLoessBuilder;
 
 // External dependencies
 use std::fmt::Debug;
 
 // Import base marker types for delegation
-#[cfg(feature = "cpu")]
 use loess_rs::internals::api::Batch as BaseBatch;
-#[cfg(feature = "cpu")]
 use loess_rs::internals::api::Online as BaseOnline;
-#[cfg(feature = "cpu")]
 use loess_rs::internals::api::Streaming as BaseStreaming;
 
 // Linear algebra imports
-#[cfg(feature = "cpu")]
 use loess_rs::internals::algorithms::regression::SolverLinalg;
-#[cfg(feature = "cpu")]
 use loess_rs::internals::math::distance::DistanceLinalg;
-#[cfg(feature = "cpu")]
 use loess_rs::internals::math::linalg::FloatLinalg;
 
 // Publicly re-exported types
@@ -57,7 +48,6 @@ pub mod Adapter {
 #[derive(Debug, Clone, Copy)]
 pub struct Batch;
 
-#[cfg(feature = "cpu")]
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static> LoessAdapter<T>
     for Batch
 {
@@ -80,7 +70,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'sta
 #[derive(Debug, Clone, Copy)]
 pub struct Streaming;
 
-#[cfg(feature = "cpu")]
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static> LoessAdapter<T>
     for Streaming
 {
@@ -103,7 +92,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'sta
 #[derive(Debug, Clone, Copy)]
 pub struct Online;
 
-#[cfg(feature = "cpu")]
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static> LoessAdapter<T>
     for Online
 {

@@ -29,12 +29,11 @@ include = [
 [dependencies]
 loess-rs = { path = "../loess-rs", version = "1.1", features = ["dev"] }
 num-traits = { version = "0.2", features = ["libm"] }
-ndarray = { version = "0.17", optional = true }
-rayon = { version = "1.12", optional = true }
+ndarray = { version = "0.17" }
+rayon = { version = "1.12" }
 
 [features]
-default = ["cpu"]
-cpu = ["dep:rayon", "dep:ndarray"]
+default = []
 dev = []
 
 # Document all features

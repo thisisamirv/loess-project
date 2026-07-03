@@ -10,12 +10,9 @@
 //! @srrstats {G1.6} Chunk-based streaming with parallel execution per chunk.
 //! @srrstats {G3.0} Rayon parallelization injected for chunk processing.
 
-// Feature-gated imports
-#[cfg(feature = "cpu")]
+// Imports
 use crate::engine::executor::{smooth_pass_parallel, vertex_pass_parallel};
-#[cfg(feature = "cpu")]
 use crate::evaluation::cv::cv_pass_parallel;
-#[cfg(feature = "cpu")]
 use crate::evaluation::intervals::interval_pass_parallel;
 
 // External dependencies
@@ -42,7 +39,6 @@ use loess_rs::internals::primitives::errors::LoessError;
 
 // Internal dependencies
 use crate::input::LoessInput;
-#[cfg(feature = "cpu")]
 use crate::math::neighborhood::build_kdtree_parallel;
 
 // Builder for streaming LOESS processor with parallel support.
@@ -246,15 +242,12 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
         if self.processor.is_none() {
             let mut builder = self.config.base.clone();
 
-            #[cfg(feature = "cpu")]
-            {
-                if builder.parallel.unwrap_or(true) {
-                    builder.custom_smooth_pass = Some(smooth_pass_parallel);
-                    builder.custom_cv_pass = Some(cv_pass_parallel);
-                    builder.custom_interval_pass = Some(interval_pass_parallel);
-                    builder.custom_vertex_pass = Some(vertex_pass_parallel);
-                    builder.custom_kdtree_builder = Some(build_kdtree_parallel);
-                }
+            if builder.parallel.unwrap_or(true) {
+                builder.custom_smooth_pass = Some(smooth_pass_parallel);
+                builder.custom_cv_pass = Some(cv_pass_parallel);
+                builder.custom_interval_pass = Some(interval_pass_parallel);
+                builder.custom_vertex_pass = Some(vertex_pass_parallel);
+                builder.custom_kdtree_builder = Some(build_kdtree_parallel);
             }
 
             self.processor = Some(builder.build()?);

@@ -9,12 +9,9 @@
 //! @srrstats {G1.6} Sliding window with optional parallel re-smoothing.
 //! @srrstats {G2.1} Configurable min_points threshold before smoothing starts.
 
-// Feature-gated imports
-#[cfg(feature = "cpu")]
+// Imports
 use crate::engine::executor::{smooth_pass_parallel, vertex_pass_parallel};
-#[cfg(feature = "cpu")]
 use crate::evaluation::cv::cv_pass_parallel;
-#[cfg(feature = "cpu")]
 use crate::evaluation::intervals::interval_pass_parallel;
 
 // External dependencies
@@ -23,7 +20,6 @@ use std::fmt::Debug;
 use std::result::Result;
 
 // Internal dependencies
-#[cfg(feature = "cpu")]
 use crate::math::neighborhood::build_kdtree_parallel;
 
 // Export dependencies from loess-rs crate
@@ -210,15 +206,12 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         // Configure parallel callbacks before building
         let mut builder = self.base;
 
-        #[cfg(feature = "cpu")]
-        {
-            if builder.parallel.unwrap_or(true) {
-                builder.custom_smooth_pass = Some(smooth_pass_parallel);
-                builder.custom_cv_pass = Some(cv_pass_parallel);
-                builder.custom_interval_pass = Some(interval_pass_parallel);
-                builder.custom_vertex_pass = Some(vertex_pass_parallel);
-                builder.custom_kdtree_builder = Some(build_kdtree_parallel);
-            }
+        if builder.parallel.unwrap_or(true) {
+            builder.custom_smooth_pass = Some(smooth_pass_parallel);
+            builder.custom_cv_pass = Some(cv_pass_parallel);
+            builder.custom_interval_pass = Some(interval_pass_parallel);
+            builder.custom_vertex_pass = Some(vertex_pass_parallel);
+            builder.custom_kdtree_builder = Some(build_kdtree_parallel);
         }
 
         let processor = builder.build()?;

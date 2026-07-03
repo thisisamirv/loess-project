@@ -18,9 +18,8 @@ fastLoess = { path = "../crates/fastLoess", default-features = false }
 ndarray = "0.17"
 
 [features]
-default = ["std", "cpu", "dev"]
+default = ["std", "dev"]
 std = ["loess-rs/std"]
-cpu = ["fastLoess/cpu"]
 dev = ["loess-rs/dev", "fastLoess/dev"]
 
 # loess examples
