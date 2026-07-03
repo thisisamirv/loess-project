@@ -12,7 +12,7 @@ pub fn init_panic_hook() {
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::{
-    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod,
+    BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
     ScalingMethod::{self, MAD, MAR, Mean},
     SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
@@ -70,6 +70,8 @@ pub struct StreamingOptions {
     pub chunk_size: Option<usize>,
     #[serde(rename = "overlap")]
     pub overlap: Option<usize>,
+    #[serde(rename = "mergeStrategy")]
+    pub merge_strategy: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -152,19 +154,44 @@ fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree, JsValue> {
         "constant" | "0" => Ok(PolynomialDegree::Constant),
         "linear" | "1" => Ok(PolynomialDegree::Linear),
         "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
+        "cubic" | "3" => Ok(PolynomialDegree::Cubic),
+        "quartic" | "4" => Ok(PolynomialDegree::Quartic),
         _ => Err(JsValue::from_str(&format!(
-            "Unknown polynomial degree: {}. Valid options: constant, linear, quadratic",
+            "Unknown polynomial degree: {}. Valid options: constant, linear, quadratic, cubic, quartic",
             name
         ))),
     }
 }
 
 fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>, JsValue> {
+    // Handle "minkowski:p" inline format
+    if let Some(p_str) = name.to_lowercase().strip_prefix("minkowski:") {
+        let p: f64 = p_str
+            .parse()
+            .map_err(|_| JsValue::from_str(&format!("Invalid Minkowski p value: {}", p_str)))?;
+        return Ok(DistanceMetric::Minkowski(p));
+    }
     match name.to_lowercase().as_str() {
         "normalized" => Ok(DistanceMetric::Normalized),
         "euclidean" => Ok(DistanceMetric::Euclidean),
+        "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
+        "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
+        "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
         _ => Err(JsValue::from_str(&format!(
-            "Unknown distance metric: {}. Valid options: normalized, euclidean",
+            "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski",
+            name
+        ))),
+    }
+}
+
+fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, JsValue> {
+    match name.to_lowercase().as_str() {
+        "average" | "mean" => Ok(MergeStrategy::Average),
+        "weighted_average" | "weighted" => Ok(MergeStrategy::WeightedAverage),
+        "take_first" | "first" => Ok(MergeStrategy::TakeFirst),
+        "take_last" | "last" => Ok(MergeStrategy::TakeLast),
+        _ => Err(JsValue::from_str(&format!(
+            "Unknown merge strategy: {}. Valid options: average, weighted_average, take_first, take_last",
             name
         ))),
     }
@@ -460,6 +487,21 @@ impl StreamingLoessWasm {
             if let Some(ac) = opts.auto_converge {
                 builder = builder.auto_converge(ac);
             }
+            if opts.return_residuals.unwrap_or(false) {
+                builder = builder.return_residuals();
+            }
+            if opts.return_robustness_weights.unwrap_or(false) {
+                builder = builder.return_robustness_weights();
+            }
+            if opts.return_diagnostics.unwrap_or(false) {
+                builder = builder.return_diagnostics();
+            }
+            if let Some(ci) = opts.confidence_intervals {
+                builder = builder.confidence_intervals(ci);
+            }
+            if let Some(pi) = opts.prediction_intervals {
+                builder = builder.prediction_intervals(pi);
+            }
             if let Some(par) = opts.parallel {
                 builder = builder.parallel(par);
             }
@@ -478,10 +520,30 @@ impl StreamingLoessWasm {
             if opts.return_se.unwrap_or(false) {
                 builder = builder.return_se();
             }
+            // Cross-validation
+            if let Some(fractions) = opts.cv_fractions {
+                let method = opts.cv_method.as_deref().unwrap_or("kfold");
+                let k = opts.cv_k.unwrap_or(5) as usize;
+                match method.to_lowercase().as_str() {
+                    "simple" | "loo" | "loocv" | "leave_one_out" => {
+                        builder = builder.cross_validate(LOOCV(&fractions));
+                    }
+                    "kfold" | "k_fold" | "k-fold" => {
+                        builder = builder.cross_validate(KFold(k, &fractions));
+                    }
+                    _ => {
+                        return Err(JsValue::from_str(&format!(
+                            "Unknown CV method: {}. Valid options: loocv, kfold",
+                            method
+                        )));
+                    }
+                };
+            }
         }
 
         let mut chunk_size = 5000;
         let mut overlap = 500;
+        let mut merge_strategy = MergeStrategy::WeightedAverage;
 
         if !streaming_opts.is_undefined() && !streaming_opts.is_null() {
             let sopts: StreamingOptions = serde_wasm_bindgen::from_value(streaming_opts)?;
@@ -491,12 +553,16 @@ impl StreamingLoessWasm {
             if let Some(ov) = sopts.overlap {
                 overlap = ov;
             }
+            if let Some(ms) = sopts.merge_strategy {
+                merge_strategy = parse_merge_strategy(&ms)?;
+            }
         }
 
         let model = builder
             .adapter(Streaming)
             .chunk_size(chunk_size)
             .overlap(overlap)
+            .merge_strategy(merge_strategy)
             .build()
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
@@ -549,6 +615,39 @@ impl OnlineLoessWasm {
             if let Some(iter) = opts.iterations {
                 builder = builder.iterations(iter);
             }
+            if let Some(wf) = opts.weight_function {
+                builder = builder.weight_function(parse_weight_function(&wf)?);
+            }
+            if let Some(rm) = opts.robustness_method {
+                builder = builder.robustness_method(parse_robustness_method(&rm)?);
+            }
+            if let Some(zw) = opts.zero_weight_fallback {
+                builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&zw)?);
+            }
+            if let Some(bp) = opts.boundary_policy {
+                builder = builder.boundary_policy(parse_boundary_policy(&bp)?);
+            }
+            if let Some(sm) = opts.scaling_method {
+                builder = builder.scaling_method(parse_scaling_method(&sm)?);
+            }
+            if let Some(ac) = opts.auto_converge {
+                builder = builder.auto_converge(ac);
+            }
+            if opts.return_residuals.unwrap_or(false) {
+                builder = builder.return_residuals();
+            }
+            if opts.return_robustness_weights.unwrap_or(false) {
+                builder = builder.return_robustness_weights();
+            }
+            if opts.return_diagnostics.unwrap_or(false) {
+                builder = builder.return_diagnostics();
+            }
+            if let Some(ci) = opts.confidence_intervals {
+                builder = builder.confidence_intervals(ci);
+            }
+            if let Some(pi) = opts.prediction_intervals {
+                builder = builder.prediction_intervals(pi);
+            }
             if let Some(par) = opts.parallel {
                 builder = builder.parallel(par);
             }
@@ -563,6 +662,9 @@ impl OnlineLoessWasm {
             }
             if let Some(sm_val) = opts.surface_mode {
                 builder = builder.surface_mode(parse_surface_mode(&sm_val)?);
+            }
+            if opts.return_se.unwrap_or(false) {
+                builder = builder.return_se();
             }
         }
 

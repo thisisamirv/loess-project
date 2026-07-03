@@ -12,12 +12,12 @@ use extendr_api::prelude::*;
 type Result<T> = std::result::Result<T, Error>;
 
 use fastLoess::internals::api::{
-    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod,
-    ScalingMethod::{self, MAD, MAR, Mean},
+    BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
+    ScalingMethod::{self, Mean, MAD, MAR},
     SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, Online, Streaming,
+    Batch, KFold, Loess as LoessBuilder, LoessResult, Online, Streaming, LOOCV,
 };
 
 // ============================================================================
@@ -108,12 +108,21 @@ fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree> {
 
 /// Parse distance metric from string
 fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
-    match name.to_lowercase().as_str() {
+    let lower = name.to_lowercase();
+    // Handle "minkowski:p" inline format
+    if let Some(p_str) = lower.strip_prefix("minkowski:") {
+        let p: f64 = p_str
+            .parse()
+            .map_err(|_| Error::Other(format!("Invalid Minkowski p value: {}", p_str)))?;
+        return Ok(DistanceMetric::Minkowski(p));
+    }
+    match lower.as_str() {
         "normalized" | "norm" => Ok(DistanceMetric::Normalized),
         "euclidean" | "euclid" => Ok(DistanceMetric::Euclidean),
         "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
         "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
-        _ => Err(Error::Other(format!("Unknown distance metric: {}", name))),
+        "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
+        _ => Err(Error::Other(format!("Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski", name))),
     }
 }
 
@@ -133,6 +142,20 @@ fn parse_update_mode(name: &str) -> Result<UpdateMode> {
         "incremental" | "single" => Ok(UpdateMode::Incremental),
         _ => Err(Error::Other(format!(
             "Unknown update mode: {}. Valid options: full, incremental",
+            name
+        ))),
+    }
+}
+
+/// Parse merge strategy from string
+fn parse_merge_strategy(name: &str) -> Result<MergeStrategy> {
+    match name.to_lowercase().as_str() {
+        "average" | "mean" => Ok(MergeStrategy::Average),
+        "weighted_average" | "weighted" => Ok(MergeStrategy::WeightedAverage),
+        "take_first" | "first" => Ok(MergeStrategy::TakeFirst),
+        "take_last" | "last" => Ok(MergeStrategy::TakeLast),
+        _ => Err(Error::Other(format!(
+            "Unknown merge strategy: {}. Valid options: average, weighted_average, take_first, take_last",
             name
         ))),
     }
@@ -281,9 +304,12 @@ impl RStreamingLoess {
         robustness_method: &str,
         scaling_method: &str,
         boundary_policy: &str,
+        zero_weight_fallback: &str,
         auto_converge: Nullable<f64>,
         return_diagnostics: bool,
+        return_residuals: bool,
         return_robustness_weights: bool,
+        merge_strategy: &str,
         parallel: bool,
         degree: &str,
         dimensions: i32,
@@ -301,6 +327,8 @@ impl RStreamingLoess {
         let rm = parse_robustness_method(robustness_method)?;
         let sm = parse_scaling_method(scaling_method)?;
         let bp = parse_boundary_policy(boundary_policy)?;
+        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
+        let ms = parse_merge_strategy(merge_strategy)?;
 
         let mut builder = LoessBuilder::<f64>::new();
         builder = builder.fraction(fraction);
@@ -309,6 +337,7 @@ impl RStreamingLoess {
         builder = builder.robustness_method(rm);
         builder = builder.scaling_method(sm);
         builder = builder.boundary_policy(bp);
+        builder = builder.zero_weight_fallback(zwf);
 
         let deg = parse_polynomial_degree(degree)?;
         let dm = parse_distance_metric(distance_metric)?;
@@ -320,11 +349,15 @@ impl RStreamingLoess {
         if return_se {
             builder = builder.return_se();
         }
+        if return_residuals {
+            builder = builder.return_residuals();
+        }
 
         let mut s_builder = builder.adapter(Streaming);
         s_builder = s_builder.chunk_size(chunk_size);
         s_builder = s_builder.overlap(overlap_size);
         s_builder = s_builder.parallel(parallel);
+        s_builder = s_builder.merge_strategy(ms);
 
         if let NotNull(tol) = auto_converge {
             s_builder = s_builder.auto_converge(tol);
@@ -375,6 +408,8 @@ pub struct ROnlineLoess {
     fraction: f64,
     iterations: usize,
     dimensions: usize,
+    degree: PolynomialDegree,
+    distance_metric: DistanceMetric<f64>,
 }
 
 #[extendr]
@@ -389,6 +424,7 @@ impl ROnlineLoess {
         robustness_method: &str,
         scaling_method: &str,
         boundary_policy: &str,
+        zero_weight_fallback: &str,
         update_mode: &str,
         auto_converge: Nullable<f64>,
         return_robustness_weights: bool,
@@ -403,6 +439,7 @@ impl ROnlineLoess {
         let rm = parse_robustness_method(robustness_method)?;
         let sm = parse_scaling_method(scaling_method)?;
         let bp = parse_boundary_policy(boundary_policy)?;
+        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
         let um = parse_update_mode(update_mode)?;
 
         let mut builder = LoessBuilder::<f64>::new();
@@ -412,6 +449,7 @@ impl ROnlineLoess {
         builder = builder.robustness_method(rm);
         builder = builder.scaling_method(sm);
         builder = builder.boundary_policy(bp);
+        builder = builder.zero_weight_fallback(zwf);
 
         let deg = parse_polynomial_degree(degree)?;
         let dm = parse_distance_metric(distance_metric)?;
@@ -419,7 +457,7 @@ impl ROnlineLoess {
         let configured_dimensions = dimensions as usize;
         builder = builder.degree(deg);
         builder = builder.dimensions(configured_dimensions);
-        builder = builder.distance_metric(dm);
+        builder = builder.distance_metric(dm.clone());
         builder = builder.surface_mode(surf);
         if return_se {
             builder = builder.return_se();
@@ -444,6 +482,8 @@ impl ROnlineLoess {
             fraction,
             iterations: iterations as usize,
             dimensions: configured_dimensions,
+            degree: deg,
+            distance_metric: dm,
         })
     }
 
@@ -461,8 +501,8 @@ impl ROnlineLoess {
             x: x.to_vec(),
             y: smoothed,
             dimensions: self.dimensions,
-            distance_metric: DistanceMetric::Normalized,
-            polynomial_degree: PolynomialDegree::Linear,
+            distance_metric: self.distance_metric.clone(),
+            polynomial_degree: self.degree,
             standard_errors: None,
             confidence_lower: None,
             confidence_upper: None,

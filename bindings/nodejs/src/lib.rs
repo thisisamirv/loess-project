@@ -8,8 +8,8 @@ use napi_derive::napi;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::{
-    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
-    UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
+    ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLoess::prelude::{
     Batch, KFold, LOOCV, Loess as LoessBuilder, LoessError, LoessResult, MAD, MAR, Online,
@@ -106,14 +106,45 @@ fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree> {
 
 /// Parse distance metric from string
 fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
+    // Handle "minkowski:p" inline format
+    if let Some(p_str) = name.to_lowercase().strip_prefix("minkowski:") {
+        let p: f64 = p_str.parse().map_err(|_| {
+            Error::new(
+                Status::InvalidArg,
+                format!("Invalid Minkowski p value: {}", p_str),
+            )
+        })?;
+        return Ok(DistanceMetric::Minkowski(p));
+    }
     match name.to_lowercase().as_str() {
         "normalized" | "norm" => Ok(DistanceMetric::Normalized),
         "euclidean" | "euclid" => Ok(DistanceMetric::Euclidean),
         "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
         "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
+        "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
         _ => Err(Error::new(
             Status::InvalidArg,
-            format!("Unknown distance metric: {}", name),
+            format!(
+                "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski",
+                name
+            ),
+        )),
+    }
+}
+
+/// Parse merge strategy from string
+fn parse_merge_strategy(name: &str) -> Result<MergeStrategy> {
+    match name.to_lowercase().as_str() {
+        "average" | "mean" => Ok(MergeStrategy::Average),
+        "weighted_average" | "weighted" => Ok(MergeStrategy::WeightedAverage),
+        "take_first" | "first" => Ok(MergeStrategy::TakeFirst),
+        "take_last" | "last" => Ok(MergeStrategy::TakeLast),
+        _ => Err(Error::new(
+            Status::InvalidArg,
+            format!(
+                "Unknown merge strategy: {}. Valid options: average, weighted_average, take_first, take_last",
+                name
+            ),
         )),
     }
 }
@@ -541,7 +572,7 @@ pub struct StreamingOptions {
     pub chunkSize: Option<u32>,
     /// Header/footer overlap size. Default: 500.
     pub overlap: Option<u32>,
-    /// Strategy for merging chunks (not exposed yet).
+    /// Strategy for merging chunk overlaps ("average", "weighted_average", "take_first", "take_last").
     pub mergeStrategy: Option<String>,
 }
 
@@ -617,6 +648,7 @@ impl StreamingLoess {
 
         let mut chunk_size = 5000;
         let mut overlap = 500;
+        let mut merge_strategy = MergeStrategy::WeightedAverage;
 
         if let Some(sopts) = streaming_opts {
             if let Some(cs) = sopts.chunkSize {
@@ -625,12 +657,16 @@ impl StreamingLoess {
             if let Some(ov) = sopts.overlap {
                 overlap = ov as usize;
             }
+            if let Some(ms) = sopts.mergeStrategy {
+                merge_strategy = parse_merge_strategy(&ms)?;
+            }
         }
 
         let model = builder
             .adapter(Streaming)
             .chunk_size(chunk_size)
             .overlap(overlap)
+            .merge_strategy(merge_strategy)
             .build()
             .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
 
@@ -673,6 +709,10 @@ pub struct OnlineOptions {
 #[napi]
 pub struct OnlineLoess {
     inner: ParallelOnlineLoess<f64>,
+    dimensions: usize,
+    degree: PolynomialDegree,
+    distance_metric: DistanceMetric<f64>,
+    fraction_used: f64,
 }
 
 #[napi]
@@ -681,31 +721,91 @@ impl OnlineLoess {
     #[napi(constructor)]
     pub fn new(options: Option<SmoothOptions>, online_opts: Option<OnlineOptions>) -> Result<Self> {
         let mut builder = LoessBuilder::new();
+        let mut dimensions = 1usize;
+        let mut degree = PolynomialDegree::Linear;
+        let mut distance_metric = DistanceMetric::Normalized;
+        let mut fraction_used = 0.2f64;
 
         if let Some(opts) = options {
             if let Some(f) = opts.fraction {
+                fraction_used = f;
                 builder = builder.fraction(f);
             }
             if let Some(iter) = opts.iterations {
                 builder = builder.iterations(iter as usize);
             }
+            if let Some(wf) = &opts.weightFunction {
+                builder = builder.weight_function(parse_weight_function(wf)?);
+            }
+            if let Some(rm) = &opts.robustnessMethod {
+                builder = builder.robustness_method(parse_robustness_method(rm)?);
+            }
+            if let Some(zw) = &opts.zeroWeightFallback {
+                builder = builder.zero_weight_fallback(parse_zero_weight_fallback(zw)?);
+            }
+            if let Some(bp) = &opts.boundaryPolicy {
+                builder = builder.boundary_policy(parse_boundary_policy(bp)?);
+            }
+            if let Some(sm) = &opts.scalingMethod {
+                builder = builder.scaling_method(parse_scaling_method(sm)?);
+            }
+            if let Some(ac) = opts.autoConverge {
+                builder = builder.auto_converge(ac);
+            }
+            if opts.returnResiduals.unwrap_or(false) {
+                builder = builder.return_residuals();
+            }
+            if opts.returnRobustnessWeights.unwrap_or(false) {
+                builder = builder.return_robustness_weights();
+            }
+            if opts.returnDiagnostics.unwrap_or(false) {
+                builder = builder.return_diagnostics();
+            }
+            if let Some(ci) = opts.confidenceIntervals {
+                builder = builder.confidence_intervals(ci);
+            }
+            if let Some(pi) = opts.predictionIntervals {
+                builder = builder.prediction_intervals(pi);
+            }
             if let Some(par) = opts.parallel {
                 builder = builder.parallel(par);
             }
-            if let Some(deg) = opts.degree {
-                builder = builder.degree(parse_polynomial_degree(&deg)?);
+            if let Some(deg_str) = &opts.degree {
+                degree = parse_polynomial_degree(deg_str)?;
+                builder = builder.degree(degree);
             }
             if let Some(dims) = opts.dimensions {
-                builder = builder.dimensions(dims as usize);
+                dimensions = dims as usize;
+                builder = builder.dimensions(dimensions);
             }
-            if let Some(dm) = opts.distanceMetric {
-                builder = builder.distance_metric(parse_distance_metric(&dm)?);
+            if let Some(dm_str) = &opts.distanceMetric {
+                distance_metric = parse_distance_metric(dm_str)?;
+                builder = builder.distance_metric(distance_metric.clone());
             }
-            if let Some(sm) = opts.surfaceMode {
-                builder = builder.surface_mode(parse_surface_mode(&sm)?);
+            if let Some(sm) = &opts.surfaceMode {
+                builder = builder.surface_mode(parse_surface_mode(sm)?);
             }
             if opts.returnSe.unwrap_or(false) {
                 builder = builder.return_se();
+            }
+            // Cross-validation
+            if let Some(fractions) = &opts.cvFractions {
+                let method = opts.cvMethod.as_deref().unwrap_or("kfold");
+                let k = opts.cvK.unwrap_or(5) as usize;
+                match method.to_lowercase().as_str() {
+                    "simple" | "loo" | "loocv" | "leave_one_out" => {
+                        builder = builder.cross_validate(LOOCV(fractions));
+                    }
+                    "kfold" | "k_fold" | "k-fold" => {
+                        builder = builder.cross_validate(KFold(k, fractions));
+                    }
+                    _ => {
+                        return Err(Error::new(
+                            Status::InvalidArg,
+                            format!("Unknown CV method: {}", method),
+                        ));
+                    }
+                };
             }
         }
 
@@ -733,7 +833,13 @@ impl OnlineLoess {
             .build()
             .map_err(|e| Error::new(Status::GenericFailure, e.to_string()))?;
 
-        Ok(OnlineLoess { inner: model })
+        Ok(OnlineLoess {
+            inner: model,
+            dimensions,
+            degree,
+            distance_metric,
+            fraction_used,
+        })
     }
 
     /// Add new points to the window and get smoothed values.
@@ -755,9 +861,9 @@ impl OnlineLoess {
         let inner_result = LoessResult {
             x: x_vec,
             y: smoothed,
-            dimensions: 1,
-            distance_metric: DistanceMetric::Normalized,
-            polynomial_degree: PolynomialDegree::Linear,
+            dimensions: self.dimensions,
+            distance_metric: self.distance_metric.clone(),
+            polynomial_degree: self.degree,
             standard_errors: None,
             confidence_lower: None,
             confidence_upper: None,
@@ -767,7 +873,7 @@ impl OnlineLoess {
             robustness_weights: None,
             diagnostics: None,
             iterations_used: None,
-            fraction_used: 0.0,
+            fraction_used: self.fraction_used,
             cv_scores: None,
             enp: None,
             trace_hat: None,

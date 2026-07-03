@@ -13,8 +13,8 @@ use std::ptr;
 use std::slice::from_raw_parts;
 
 use fastLoess::internals::api::{
-    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
-    UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
+    ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
     Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
@@ -224,6 +224,20 @@ fn parse_update_mode(name: &str) -> Result<UpdateMode, String> {
     }
 }
 
+/// Parse merge strategy from string.
+fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
+    match name.to_lowercase().as_str() {
+        "average" | "mean" => Ok(MergeStrategy::Average),
+        "weighted_average" | "weighted" => Ok(MergeStrategy::WeightedAverage),
+        "take_first" | "first" => Ok(MergeStrategy::TakeFirst),
+        "take_last" | "last" => Ok(MergeStrategy::TakeLast),
+        _ => Err(format!(
+            "Unknown merge strategy: {}. Valid: average, weighted_average, take_first, take_last",
+            name
+        )),
+    }
+}
+
 /// Parse polynomial degree from string.
 fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree, String> {
     match name.to_lowercase().as_str() {
@@ -253,13 +267,22 @@ fn parse_surface_mode(name: &str) -> Result<SurfaceMode, String> {
 
 /// Parse distance metric from string.
 fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>, String> {
-    match name.to_lowercase().as_str() {
+    let lower = name.to_lowercase();
+    // Handle "minkowski:p" inline format
+    if let Some(p_str) = lower.strip_prefix("minkowski:") {
+        let p: f64 = p_str
+            .parse()
+            .map_err(|_| format!("Invalid Minkowski p value: {}", p_str))?;
+        return Ok(DistanceMetric::Minkowski(p));
+    }
+    match lower.as_str() {
         "euclidean" => Ok(DistanceMetric::Euclidean),
         "normalized" | "norm" => Ok(DistanceMetric::Normalized),
         "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
         "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
+        "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
         _ => Err(format!(
-            "Unknown distance metric: {}. Valid: euclidean, normalized, manhattan, chebyshev",
+            "Unknown distance metric: {}. Valid: euclidean, normalized, manhattan, chebyshev, minkowski",
             name
         )),
     }
@@ -646,6 +669,7 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
     return_residuals: c_int,
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
+    merge_strategy: *const c_char,
     parallel: c_int,
     // LOESS-specific options
     degree: *const c_char,
@@ -660,12 +684,14 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
         let sm_str = unsafe { parse_c_str(scaling_method, "mad") };
         let bp_str = unsafe { parse_c_str(boundary_policy, "extend") };
         let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
+        let ms_str = unsafe { parse_c_str(merge_strategy, "weighted_average") };
 
         let wf = unwrap_or_return_null!(parse_weight_function(wf_str));
         let rm = unwrap_or_return_null!(parse_robustness_method(rm_str));
         let sm = unwrap_or_return_null!(parse_scaling_method(sm_str));
         let bp = unwrap_or_return_null!(parse_boundary_policy(bp_str));
         let zwf = unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
+        let ms = unwrap_or_return_null!(parse_merge_strategy(ms_str));
 
         let mut builder = LoessBuilder::<f64>::new();
         builder = builder.fraction(fraction);
@@ -685,6 +711,9 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
         if return_robustness_weights != 0 {
             builder = builder.return_robustness_weights();
         }
+        if return_se != 0 {
+            builder = builder.return_se();
+        }
 
         // Apply LOESS-specific options
         let deg_str = unsafe { parse_c_str(degree, "linear") };
@@ -699,9 +728,6 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
         }
         builder = builder.distance_metric(dm);
         builder = builder.surface_mode(surf);
-        if return_se != 0 {
-            builder = builder.return_se();
-        }
 
         let chunk_size_usize = chunk_size as usize;
         let overlap_size = if overlap < 0 {
@@ -715,6 +741,7 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
         s_builder = s_builder.chunk_size(chunk_size_usize);
         s_builder = s_builder.overlap(overlap_size);
         s_builder = s_builder.parallel(parallel != 0);
+        s_builder = s_builder.merge_strategy(ms);
 
         if !auto_converge.is_nan() {
             s_builder = s_builder.auto_converge(auto_converge);
@@ -861,6 +888,9 @@ pub unsafe extern "C" fn jl_online_loess_new(
         builder = builder.scaling_method(sm);
         builder = builder.zero_weight_fallback(zwf);
         builder = builder.boundary_policy(bp);
+        if return_se != 0 {
+            builder = builder.return_se();
+        }
 
         let mut o_builder = builder.adapter(Online);
         o_builder = o_builder.window_capacity(window_capacity as usize);
@@ -890,10 +920,6 @@ pub unsafe extern "C" fn jl_online_loess_new(
         }
         if return_robustness_weights != 0 {
             o_builder = o_builder.return_robustness_weights(true);
-        }
-        if return_se != 0 {
-            // return_se is on the base builder; apply via a fresh builder call
-            // (already propagated through adapter conversion)
         }
 
         let processor = match o_builder.build() {
