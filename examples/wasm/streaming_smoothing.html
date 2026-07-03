@@ -1,121 +1,294 @@
+<!--
+  fastloess WASM Streaming Smoothing - Comprehensive Examples
+
+  9 examples covering the full StreamingLoessWasm API:
+   1. Basic chunked processing
+   2. Chunk size comparison
+   3. Overlap strategies
+   4. Large dataset processing
+   5. Outlier handling in streaming mode
+   6. File-based streaming simulation
+   7. Benchmark (sequential streaming)
+   8. Merge strategies
+   9. Advanced streaming options
+-->
 <!DOCTYPE html>
 <html>
 
 <head>
-    <title>fastloess WASM - Streaming Smoothing</title>
+    <title>fastloess WASM - Streaming Smoothing Examples</title>
     <style>
         body {
-            font-family: sans-serif;
-            max-width: 800px;
+            font-family: monospace;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
         }
 
-        .controls {
-            margin: 20px 0;
-            padding: 10px;
-            background: #f0f0f0;
-            border-radius: 4px;
+        h1 {
+            color: #569cd6;
         }
 
         #output {
             white-space: pre-wrap;
-            background: #fafafa;
-            border: 1px solid #ddd;
-            padding: 10px;
-        }
-
-        button {
-            cursor: pointer;
-            padding: 5px 10px;
         }
     </style>
 </head>
 
 <body>
-    <h1>Streaming Smoothing Example</h1>
-    <p>Using <code>StreamingLoessWasm</code> to process large data in chunks in the browser.</p>
-
-    <div class="controls">
-        <button id="runBtn">Start Streaming Process</button>
-    </div>
-
-    <h3>Output Logs:</h3>
-    <div id="output">Ready.</div>
+    <h1>fastloess WASM - Streaming Smoothing Examples</h1>
+    <div id="output">Initializing...</div>
 
     <script type="module">
         import init, { StreamingLoessWasm } from "../../bindings/wasm/pkg-web/fastloess_wasm.js";
 
-        async function run() {
-            try {
-                await init();
-                log("WASM Initialized.");
-                document.getElementById('runBtn').addEventListener('click', startStreaming);
-            } catch (e) {
-                log("Error: " + e);
-            }
+        const out = document.getElementById('output');
+        function log(msg) { out.innerText += msg + "\n"; console.log(msg); }
+        function clearLog() { out.innerText = ""; }
+
+        function makeLinear(n) {
+            const x = new Float64Array(n), y = new Float64Array(n);
+            for (let i = 0; i < n; i++) { x[i] = i; y[i] = 2 * i + 1; }
+            return { x, y };
         }
 
-        async function startStreaming() {
-            try {
-                log("\nStarting streaming process...");
+        // ── Example 1: Basic Chunked Processing ───────────────────────────────
+        function example_1_basic_chunked_processing() {
+            log("Example 1: Basic Chunked Processing");
+            const n = 50, { x, y } = makeLinear(n);
+            const chunkSize = 15, overlap = 5;
 
-                // Initialize Streamer
-                const streamer = new StreamingLoessWasm(
-                    { fraction: 0.1 },
-                    { chunkSize: 1000, overlap: 100 }
-                );
-
-                // Simulate processing 10 chunks
-                const chunkSize = 1000;
-                let totalPoints = 0;
-
-                log("Processing chunks...");
-
-                const start = performance.now();
-
-                for (let i = 0; i < 10; i++) {
-                    // Generate random chunk
-                    const x = new Float64Array(chunkSize);
-                    const y = new Float64Array(chunkSize);
-                    for (let j = 0; j < chunkSize; j++) {
-                        const globalIdx = i * chunkSize + j;
-                        x[j] = globalIdx;
-                        y[j] = Math.log(globalIdx + 1) + Math.random();
-                    }
-
-                    // Process
-                    const res = streamer.processChunk(x, y);
-                    if (res && res.y) {
-                        totalPoints += res.y.length;
-                    }
-
-                    // Small delay to let UI update (simulate async stream)
-                    if (i % 2 === 0) await new Promise(r => setTimeout(r, 10));
+            const s = new StreamingLoessWasm(
+                { fraction: 0.5, iterations: 2, returnResiduals: true },
+                { chunkSize, overlap }
+            );
+            log(`  Dataset: ${n} pts, chunk=${chunkSize}, overlap=${overlap}`);
+            let total = 0, ci = 0;
+            for (let start = 0; start < n; start += chunkSize - overlap) {
+                const end = Math.min(start + chunkSize, n);
+                const res = s.processChunk(x.subarray(start, end), y.subarray(start, end));
+                if (res.x.length > 0) {
+                    total += res.x.length;
+                    log(`  Chunk ${ci}: ${res.x.length} pts (x: ${res.x[0].toFixed(0)}..${res.x[res.x.length - 1].toFixed(0)})`);
                 }
+                ci++;
+            }
+            const fin = s.finalize();
+            if (fin.x.length > 0) { total += fin.x.length; log(`  Finalize: ${fin.x.length} remaining`); }
+            log(`  Total: ${total}/${n}`);
+            log("");
+        }
 
-                const finalRes = streamer.finalize();
-                if (finalRes && finalRes.y) totalPoints += finalRes.y.length;
+        // ── Example 2: Chunk Size Comparison ──────────────────────────────────
+        function example_2_chunk_size_comparison() {
+            log("Example 2: Chunk Size Comparison");
+            const n = 100, { x, y } = makeLinear(n);
+            for (const [cs, ov, label] of [[20, 5, "Small"], [50, 10, "Medium"], [80, 15, "Large"]]) {
+                const s = new StreamingLoessWasm({ fraction: 0.5, iterations: 1 }, { chunkSize: cs, overlap: ov });
+                let chunks = 0, total = 0;
+                for (let start = 0; start < n; start += cs - ov) {
+                    const end = Math.min(start + cs, n);
+                    const res = s.processChunk(x.subarray(start, end), y.subarray(start, end));
+                    if (res.x.length > 0) { chunks++; total += res.x.length; }
+                }
+                const fin = s.finalize();
+                if (fin.x.length > 0) { chunks++; total += fin.x.length; }
+                log(`  ${label} (size=${cs}, overlap=${ov}): chunks=${chunks}, total=${total}`);
+            }
+            log("");
+        }
 
-                const end = performance.now();
+        // ── Example 3: Overlap Strategies ─────────────────────────────────────
+        function example_3_overlap_strategies() {
+            log("Example 3: Overlap Strategies");
+            const n = 100, { x, y } = makeLinear(n);
+            for (const [overlap, label] of [[0, "No overlap"], [10, "10-pt overlap"], [20, "20-pt overlap"]]) {
+                const cs = 40;
+                const s = new StreamingLoessWasm({ fraction: 0.5 }, { chunkSize: cs, overlap });
+                let total = 0;
+                const step = cs - overlap;
+                // Feed only full-size chunks; finalize() handles remaining data
+                for (let start = 0; start + cs <= n; start += step) {
+                    total += s.processChunk(x.subarray(start, start + cs), y.subarray(start, start + cs)).x.length;
+                }
+                total += s.finalize().x.length;
+                log(`  ${label}: total output=${total}`);
+            }
+            log("");
+        }
 
-                log(`Streaming complete.`);
-                log(`Total output points: ${totalPoints}`);
-                log(`Time taken: ${(end - start).toFixed(2)}ms`);
+        // ── Example 4: Large Dataset Processing ───────────────────────────────
+        function example_4_large_dataset_processing() {
+            log("Example 4: Large Dataset Processing");
+            const n = 10000;
+            const x = new Float64Array(n), y = new Float64Array(n);
+            for (let i = 0; i < n; i++) { x[i] = i; y[i] = Math.sin(i * 0.01) + i * 0.001; }
 
+            const cs = 500, ov = 50;
+            const s = new StreamingLoessWasm({ fraction: 0.05, iterations: 2 }, { chunkSize: cs, overlap: ov });
+            let total = 0;
+            const step = cs - ov;
+            for (let start = 0; start < n; start += step) {
+                const end = Math.min(start + cs, n);
+                total += s.processChunk(x.subarray(start, end), y.subarray(start, end)).x.length;
+                if (total > 0 && total % 2000 < step) log(`  Progress: ~${total} pts smoothed`);
+            }
+            total += s.finalize().x.length;
+            log(`  Total: ${total}/${n}, memory: constant (chunk=${cs})`);
+            log("");
+        }
+
+        // ── Example 5: Outlier Handling ───────────────────────────────────────
+        function example_5_outlier_handling() {
+            log("Example 5: Outlier Handling in Streaming Mode");
+            const n = 100;
+            const x = new Float64Array(n), y = new Float64Array(n);
+            for (let i = 0; i < n; i++) {
+                x[i] = i; y[i] = 2 * i + 1 + Math.sin(i * 0.2) * 2;
+                if (i === 25 || i === 50 || i === 75) y[i] += 50;
+            }
+            for (const m of ["bisquare", "huber", "talwar"]) {
+                const s = new StreamingLoessWasm(
+                    { fraction: 0.5, iterations: 5, robustnessMethod: m, returnResiduals: true },
+                    { chunkSize: 30, overlap: 10 }
+                );
+                let large = 0;
+                for (let start = 0; start < n; start += 20) {
+                    const end = Math.min(start + 30, n);
+                    const res = s.processChunk(x.subarray(start, end), y.subarray(start, end));
+                    if (res.residuals) for (const r of res.residuals) if (Math.abs(r) > 10) large++;
+                }
+                const fin = s.finalize();
+                if (fin.residuals) for (const r of fin.residuals) if (Math.abs(r) > 10) large++;
+                log(`  ${m}: pts with |residual|>10: ${large}`);
+            }
+            log("");
+        }
+
+        // ── Example 6: File-Based Streaming Simulation ────────────────────────
+        function example_6_file_simulation() {
+            log("Example 6: File-Based Streaming Simulation");
+            log("  Simulating: input.csv -> Smooth -> output.csv");
+            const total = 200, cs = 50, ov = 10;
+            const s = new StreamingLoessWasm(
+                { fraction: 0.5, iterations: 2, returnResiduals: true },
+                { chunkSize: cs, overlap: ov }
+            );
+            let out_count = 0;
+            for (let ci = 0; ci < Math.ceil(total / (cs - ov)); ci++) {
+                const start = ci * (cs - ov), end = Math.min(start + cs, total);
+                const xc = new Float64Array(end - start), yc = new Float64Array(end - start);
+                for (let j = 0; j < end - start; j++) { xc[j] = start + j; yc[j] = 2 * xc[j] + 1 + Math.sin(xc[j] * 0.1) * 3; }
+                log(`  Reading chunk ${ci} (lines ${start}..${end - 1})`);
+                const res = s.processChunk(xc, yc);
+                if (res.x.length > 0) { out_count += res.x.length; log(`    -> Writing ${res.x.length} pts (total: ${out_count})`); }
+            }
+            const fin = s.finalize();
+            if (fin.x.length > 0) { out_count += fin.x.length; log(`  Finalizing: ${fin.x.length} remaining`); }
+            log(`  Input: ${total}, Output: ${out_count}`);
+            log("");
+        }
+
+        // ── Example 7: Benchmark ──────────────────────────────────────────────
+        function example_7_benchmark() {
+            log("Example 7: Benchmark (Sequential Streaming)");
+            const n = 1000, cs = 100, ov = 10;
+            const s = new StreamingLoessWasm({ fraction: 0.5, iterations: 3 }, { chunkSize: cs, overlap: ov });
+            const t0 = performance.now();
+            let total = 0;
+            for (let start = 0; start < n; start += cs - ov) {
+                const end = Math.min(start + cs, n);
+                const xc = new Float64Array(end - start), yc = new Float64Array(end - start);
+                for (let j = 0; j < end - start; j++) { xc[j] = start + j; yc[j] = Math.sin(xc[j] * 0.1) + Math.cos(xc[j] * 0.01); }
+                total += s.processChunk(xc, yc).x.length;
+            }
+            total += s.finalize().x.length;
+            log(`  ${total} pts in ${(performance.now() - t0).toFixed(2)}ms (chunk=${cs}, overlap=${ov})`);
+            log("");
+        }
+
+        // ── Example 8: Merge Strategies ───────────────────────────────────────
+        function example_8_merge_strategies() {
+            log("Example 8: Merge Strategies");
+            const n = 50, { x, y } = makeLinear(n);
+            for (const ms of ["average", "weighted_average", "take_first", "take_last"]) {
+                const s = new StreamingLoessWasm(
+                    { fraction: 0.5, iterations: 2 },
+                    { chunkSize: 20, overlap: 5, mergeStrategy: ms }
+                );
+                let total = 0;
+                for (let start = 0; start < n; start += 15) {
+                    const end = Math.min(start + 20, n);
+                    total += s.processChunk(x.subarray(start, end), y.subarray(start, end)).x.length;
+                }
+                total += s.finalize().x.length;
+                log(`  ${ms}: total=${total}`);
+            }
+            log("");
+        }
+
+        // ── Example 9: Advanced Streaming Options ─────────────────────────────
+        function example_9_advanced_options() {
+            log("Example 9: Advanced Streaming Options");
+            const n = 50, { x, y } = makeLinear(n);
+            const s = new StreamingLoessWasm(
+                {
+                    fraction: 0.5, iterations: 2, degree: "quadratic",
+                    scalingMethod: "mar", boundaryPolicy: "reflect",
+                    zeroWeightFallback: "return_original", distanceMetric: "manhattan",
+                    surfaceMode: "direct", returnSe: true, returnDiagnostics: true,
+                    returnRobustnessWeights: true, autoConverge: 1e-3,
+                },
+                { chunkSize: 20, overlap: 5 }
+            );
+            let total = 0;
+            for (let start = 0; start < n; start += 15) {
+                const end = Math.min(start + 20, n);
+                total += s.processChunk(x.subarray(start, end), y.subarray(start, end)).x.length;
+            }
+            const fin = s.finalize(); total += fin.x.length;
+            log(`  total pts: ${total}`);
+            if (fin.standardErrors && fin.standardErrors.length > 0)
+                log(`  standardErrors[0]: ${fin.standardErrors[0].toFixed(4)}`);
+            if (fin.diagnostics) {
+                log(`  diagnostics.rmse: ${fin.diagnostics.rmse.toFixed(3)}`);
+                log(`  diagnostics.rSquared: ${fin.diagnostics.rSquared.toFixed(3)}`);
+                if (fin.diagnostics.aic != null) log(`  diagnostics.aic: ${fin.diagnostics.aic.toFixed(3)}`);
+            }
+            if (fin.robustnessWeights && fin.robustnessWeights.length > 0)
+                log(`  robustnessWeights[0]: ${fin.robustnessWeights[0].toFixed(4)}`);
+            log("");
+        }
+
+        async function runDemo() {
+            try {
+                clearLog();
+                await init();
+                log("=".repeat(60));
+                log("fastloess WASM Streaming Smoothing - Comprehensive Examples");
+                log("=".repeat(60));
+                log("");
+
+                example_1_basic_chunked_processing();
+                example_2_chunk_size_comparison();
+                example_3_overlap_strategies();
+                example_4_large_dataset_processing();
+                example_5_outlier_handling();
+                example_6_file_simulation();
+                example_7_benchmark();
+                example_8_merge_strategies();
+                example_9_advanced_options();
+
+                log("=== Streaming Smoothing Examples Complete ===");
             } catch (e) {
-                log("Error: " + e);
+                log(`Error: ${e}`);
                 console.error(e);
             }
         }
 
-        function log(msg) {
-            const out = document.getElementById('output');
-            out.innerText += msg + "\n";
-            console.log(msg);
-        }
-
-        run();
+        runDemo();
     </script>
 </body>
 

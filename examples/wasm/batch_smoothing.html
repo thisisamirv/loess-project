@@ -1,20 +1,30 @@
 <!--
-  fastloess Batch Smoothing Example
+  fastloess WASM Batch Smoothing - Comprehensive Examples
 
-  This example demonstrates batch LOESS smoothing features:
-  - Basic smoothing with different parameters
-  - Robustness iterations for outlier handling
-  - Confidence and prediction intervals
-  - Diagnostics and cross-validation
-
-  The batch adapter (smooth function) is the primary interface for
-  processing complete datasets that fit in memory.
+  17 examples covering the full smooth() API:
+   1. Basic smoothing
+   2. Robust smoothing with outliers
+   3. Uncertainty quantification (confidence/prediction intervals)
+   4. Cross-validation (K-Fold)
+   5. Complete diagnostic analysis
+   6. Different weight functions (kernels)
+   7. Robustness methods comparison
+   8. Benchmark
+   9. Scaling methods (MAR, MAD, Mean)
+  10. Boundary policies
+  11. Zero-weight fallback strategies
+  12. Polynomial degrees + iterationsUsed
+  13. Distance metrics
+  14. Surface modes and standard errors
+  15. Additional weight functions
+  16. LOOCV and auto-converge
+  17. Interpolation tuning (surfaceMode effects)
 -->
 <!DOCTYPE html>
 <html>
 
 <head>
-    <title>fastloess WASM - Batch Smoothing Example</title>
+    <title>fastloess WASM - Batch Smoothing Examples</title>
     <style>
         body {
             font-family: monospace;
@@ -33,165 +43,330 @@
             white-space: pre-wrap;
             font-family: 'Consolas', 'Monaco', monospace;
         }
-
-        .log-section {
-            margin-bottom: 20px;
-            border-left: 2px solid #569cd6;
-            padding-left: 10px;
-        }
-
-        button {
-            cursor: pointer;
-            padding: 8px 16px;
-            font-size: 14px;
-            background: #0e639c;
-            color: white;
-            border: none;
-            border-radius: 4px;
-        }
-
-        button:hover {
-            background: #1177bb;
-        }
     </style>
 </head>
 
 <body>
-    <h1>fastloess Batch Smoothing Example</h1>
-    <p>Running WASM implementation...</p>
+    <h1>fastloess WASM - Batch Smoothing Examples</h1>
     <div id="output">Initializing...</div>
 
     <script type="module">
         import init, { smooth } from "../../bindings/wasm/pkg-web/fastloess_wasm.js";
 
-        // Helper to log to screen
-        function log(msg) {
-            const out = document.getElementById('output');
-            out.innerText += msg + "\n";
-            console.log(msg);
-        }
+        const out = document.getElementById('output');
+        function log(msg) { out.innerText += msg + "\n"; console.log(msg); }
+        function clearLog() { out.innerText = ""; }
 
-        function clearLog() {
-            document.getElementById('output').innerText = "";
-        }
-
-        // 1. Generate Data
-        function generateSampleData(nPoints = 1000) {
-            const x = new Float64Array(nPoints);
-            const y = new Float64Array(nPoints);
-
-            for (let i = 0; i < nPoints; i++) {
-                x[i] = (i / (nPoints - 1)) * 50; // range 0 to 50
-                // Trend + Seasonality
-                const yTrue = 0.5 * x[i] + 5 * Math.sin(x[i] * 0.5);
-                // Gaussian noise (approx)
-                let u1 = Math.random();
-                let u2 = Math.random();
-                let z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-                y[i] = yTrue + z * 1.5;
-            }
-
-            // Add significant outliers (10% of data)
-            const nOutliers = Math.round(nPoints * 0.1);
-            for (let k = 0; k < nOutliers; k++) {
-                const idx = Math.floor(Math.random() * nPoints);
-                const sign = Math.random() < 0.5 ? -1 : 1;
-                y[idx] += (10 + Math.random() * 10) * sign;
-            }
+        function makeLinear(n) {
+            const x = new Float64Array(n), y = new Float64Array(n);
+            for (let i = 0; i < n; i++) { x[i] = i; y[i] = 2 * i + 1; }
             return { x, y };
+        }
+
+        // ── Example 1: Basic Smoothing ────────────────────────────────────────
+        function example_1_basic_smoothing() {
+            log("Example 1: Basic Smoothing");
+            const x = new Float64Array([1, 2, 3, 4, 5]);
+            const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
+            const r = smooth(x, y, { fraction: 0.5, iterations: 3 });
+            log(`  fractionUsed=${r.fractionUsed}`);
+            log(`  Smoothed: [${Array.from(r.y).map(v => v.toFixed(3)).join(', ')}]`);
+            log("");
+        }
+
+        // ── Example 2: Robust Smoothing with Outliers ─────────────────────────
+        function example_2_robust_with_outliers() {
+            log("Example 2: Robust Smoothing with Outliers");
+            const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8]);
+            const y = new Float64Array([2.1, 4.0, 5.9, 25.0, 10.1, 12.0, 14.1, 15.9]);
+            const r = smooth(x, y, {
+                fraction: 0.5, iterations: 5, robustnessMethod: "bisquare",
+                returnRobustnessWeights: true, returnResiduals: true
+            });
+            const w = r.robustnessWeights;
+            if (w) for (let i = 0; i < w.length; i++) {
+                if (w[i] < 0.5) log(`  Outlier at index ${i} (y=${y[i]}): weight=${w[i].toFixed(3)}`);
+            }
+            log(`  Smoothed: [${Array.from(r.y).map(v => v.toFixed(2)).join(', ')}]`);
+            log("");
+        }
+
+        // ── Example 3: Uncertainty Quantification ─────────────────────────────
+        function example_3_uncertainty_quantification() {
+            log("Example 3: Uncertainty Quantification");
+            const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8]);
+            const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+            const r = smooth(x, y, {
+                fraction: 0.5, iterations: 3,
+                confidenceIntervals: 0.95, predictionIntervals: 0.95
+            });
+            log("  x\ty_smooth\tconf_low\tconf_high\tpred_low\tpred_high");
+            for (let i = 0; i < r.y.length; i++) {
+                log(`  ${r.x[i].toFixed(0)}\t${r.y[i].toFixed(4)}\t${r.confidenceLower[i].toFixed(4)}\t${r.confidenceUpper[i].toFixed(4)}\t${r.predictionLower[i].toFixed(4)}\t${r.predictionUpper[i].toFixed(4)}`);
+            }
+            log("");
+        }
+
+        // ── Example 4: Cross-Validation ───────────────────────────────────────
+        function example_4_cross_validation() {
+            log("Example 4: Cross-Validation");
+            const n = 20, x = new Float64Array(n), y = new Float64Array(n);
+            for (let i = 0; i < n; i++) { x[i] = i + 1; y[i] = 2 * x[i] + 1 + Math.sin(x[i] * 0.5); }
+            const r = smooth(x, y, {
+                cvFractions: [0.2, 0.3, 0.5, 0.7], cvMethod: "kfold", cvK: 5,
+                iterations: 2, returnDiagnostics: true
+            });
+            log(`  Selected fraction: ${r.fractionUsed}`);
+            if (r.cvScores) {
+                const fs = [0.2, 0.3, 0.5, 0.7];
+                log("  CV Scores:");
+                for (let i = 0; i < fs.length; i++) log(`    fraction=${fs[i]}: ${r.cvScores[i].toFixed(4)}`);
+            }
+            log("");
+        }
+
+        // ── Example 5: Complete Diagnostic Analysis ───────────────────────────
+        function example_5_complete_diagnostics() {
+            log("Example 5: Complete Diagnostic Analysis");
+            const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8]);
+            const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+            const r = smooth(x, y, {
+                fraction: 0.5, iterations: 3, confidenceIntervals: 0.95,
+                predictionIntervals: 0.95, returnDiagnostics: true,
+                returnResiduals: true, returnRobustnessWeights: true
+            });
+            const d = r.diagnostics;
+            if (d) {
+                log("  Diagnostics:");
+                log(`    RMSE:        ${d.rmse.toFixed(6)}`);
+                log(`    MAE:         ${d.mae.toFixed(6)}`);
+                log(`    R²:          ${d.rSquared.toFixed(6)}`);
+                log(`    Residual SD: ${d.residualSd.toFixed(6)}`);
+                if (d.aic != null) log(`    AIC:         ${d.aic.toFixed(2)}`);
+                if (d.aicc != null) log(`    AICc:        ${d.aicc.toFixed(2)}`);
+                if (d.effectiveDf != null) log(`    Eff. DF:     ${d.effectiveDf.toFixed(2)}`);
+            }
+            log(`  smoothed[0]: ${r.y[0].toFixed(5)}`);
+            if (r.residuals) log(`  residuals[0]: ${r.residuals[0].toFixed(5)}`);
+            if (r.robustnessWeights) log(`  robWeight[0]: ${r.robustnessWeights[0].toFixed(4)}`);
+            log("");
+        }
+
+        // ── Example 6: Different Weight Functions ─────────────────────────────
+        function example_6_different_kernels() {
+            log("Example 6: Different Weight Functions (Kernels)");
+            const x = new Float64Array([1, 2, 3, 4, 5]);
+            const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
+            for (const k of ["tricube", "epanechnikov", "gaussian", "biweight"]) {
+                const r = smooth(x, y, { fraction: 0.5, weightFunction: k });
+                log(`  ${k}: [${Array.from(r.y).map(v => v.toFixed(3)).join(', ')}]`);
+            }
+            log("");
+        }
+
+        // ── Example 7: Robustness Methods ─────────────────────────────────────
+        function example_7_robustness_methods() {
+            log("Example 7: Robustness Methods Comparison");
+            const x = new Float64Array([1, 2, 3, 4, 5]);
+            const y = new Float64Array([2.0, 4.1, 20.0, 8.2, 9.8]);
+            for (const m of ["bisquare", "huber", "talwar"]) {
+                const r = smooth(x, y, {
+                    fraction: 0.5, iterations: 5, robustnessMethod: m,
+                    returnRobustnessWeights: true
+                });
+                const ws = r.robustnessWeights ? Array.from(r.robustnessWeights).map(v => v.toFixed(3)).join(', ') : 'N/A';
+                log(`  ${m}:`);
+                log(`    Smoothed: [${Array.from(r.y).map(v => v.toFixed(2)).join(', ')}]`);
+                log(`    Weights:  [${ws}]`);
+            }
+            log("");
+        }
+
+        // ── Example 8: Benchmark ──────────────────────────────────────────────
+        function example_8_benchmark() {
+            log("Example 8: Benchmark");
+            const n = 1000, x = new Float64Array(n), y = new Float64Array(n);
+            for (let i = 0; i < n; i++) { x[i] = i; y[i] = Math.sin(i * 0.1) + Math.cos(i * 0.01); }
+            const t0 = performance.now();
+            const r = smooth(x, y, { parallel: true });
+            const ms = (performance.now() - t0).toFixed(2);
+            log(`  ${n} points in ${ms}ms, fractionUsed=${r.fractionUsed}, y[0]=${r.y[0].toFixed(4)}`);
+            log("");
+        }
+
+        // ── Example 9: Scaling Methods ────────────────────────────────────────
+        function example_9_scaling_methods() {
+            log("Example 9: Scaling Methods (MAR, MAD, Mean)");
+            const { x, y } = makeLinear(20);
+            for (const m of ["mar", "mad", "mean"]) {
+                const r = smooth(x, y, { fraction: 0.5, scalingMethod: m });
+                log(`  ${m}: y[0]=${r.y[0].toFixed(3)}`);
+            }
+            log("");
+        }
+
+        // ── Example 10: Boundary Policies ────────────────────────────────────
+        function example_10_boundary_policies() {
+            log("Example 10: Boundary Policies");
+            const { x, y } = makeLinear(30);
+            for (const p of ["extend", "reflect", "zero", "noboundary"]) {
+                const r = smooth(x, y, { fraction: 0.5, boundaryPolicy: p });
+                log(`  ${p}: first=${r.y[0].toFixed(2)}, last=${r.y[r.y.length - 1].toFixed(2)}`);
+            }
+            log("");
+        }
+
+        // ── Example 11: Zero-Weight Fallback ─────────────────────────────────
+        function example_11_zero_weight_fallback() {
+            log("Example 11: Zero-Weight Fallback Strategies");
+            const { x, y } = makeLinear(20);
+            for (const fb of ["use_local_mean", "return_original", "return_none"]) {
+                const r = smooth(x, y, { fraction: 0.5, zeroWeightFallback: fb });
+                log(`  ${fb}: y[0]=${r.y[0].toFixed(3)}`);
+            }
+            log("");
+        }
+
+        // ── Example 12: Polynomial Degrees ────────────────────────────────────
+        function example_12_polynomial_degrees() {
+            log("Example 12: Polynomial Degrees + iterationsUsed");
+            const { x, y } = makeLinear(30);
+            for (const deg of ["constant", "linear", "quadratic", "cubic", "quartic"]) {
+                const r = smooth(x, y, { fraction: 0.5, iterations: 2, degree: deg });
+                log(`  ${deg}: y[0]=${r.y[0].toFixed(3)}, iterationsUsed=${r.iterationsUsed}`);
+            }
+            log("");
+        }
+
+        // ── Example 13: Distance Metrics ──────────────────────────────────────
+        function example_13_distance_metrics() {
+            log("Example 13: Distance Metrics");
+            const { x, y } = makeLinear(20);
+            for (const m of ["euclidean", "normalized", "manhattan", "chebyshev"]) {
+                const r = smooth(x, y, { fraction: 0.5, distanceMetric: m });
+                log(`  ${m}: y[0]=${r.y[0].toFixed(3)}`);
+            }
+            // Minkowski with custom p via "minkowski:p" format
+            const rMink = smooth(x, y, { fraction: 0.5, distanceMetric: "minkowski:3" });
+            log(`  minkowski(p=3): y[0]=${rMink.y[0].toFixed(3)}`);
+            log("");
+        }
+
+        // ── Example 14: Surface Modes and Standard Errors ─────────────────────
+        // Note: enp, traceHat, delta1, delta2, residualScale, leverage are not
+        // exposed by the WASM binding (LoessResultWasm). Use the Node.js binding
+        // for full hat-matrix statistics.
+        function example_14_surface_modes_and_se() {
+            log("Example 14: Surface Modes and Standard Errors");
+            const { x, y } = makeLinear(30);
+
+            const rDirect = smooth(x, y, {
+                fraction: 0.5, surfaceMode: "direct",
+                returnSe: true, confidenceIntervals: 0.95,
+                predictionIntervals: 0.95
+            });
+            log("  surfaceMode=direct:");
+            log(`    confidenceLower non-null: ${rDirect.confidenceLower != null}`);
+            log(`    predictionLower non-null: ${rDirect.predictionLower != null}`);
+            if (rDirect.standardErrors) log(`    standardErrors[0]: ${rDirect.standardErrors[0].toFixed(4)}`);
+
+            const rInterp = smooth(x, y, {
+                fraction: 0.5, surfaceMode: "interpolation",
+                returnSe: true
+            });
+            log("  surfaceMode=interpolation:");
+            log(`    y[0]: ${rInterp.y[0].toFixed(3)}`);
+            if (rInterp.standardErrors) log(`    standardErrors[0]: ${rInterp.standardErrors[0].toFixed(4)}`);
+            log("");
+        }
+
+        // ── Example 15: Additional Weight Functions ───────────────────────────
+        function example_15_additional_kernels() {
+            log("Example 15: Additional Weight Functions (Uniform, Triangle, Cosine)");
+            const x = new Float64Array([1, 2, 3, 4, 5]);
+            const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
+            for (const k of ["uniform", "triangle", "cosine"]) {
+                const r = smooth(x, y, { fraction: 0.5, weightFunction: k });
+                log(`  ${k}: [${Array.from(r.y).map(v => v.toFixed(3)).join(', ')}]`);
+            }
+            log("");
+        }
+
+        // ── Example 16: LOOCV, K-Fold, and Auto-Converge ─────────────────────
+        function example_16_loocv_and_auto_converge() {
+            log("Example 16: LOOCV, K-Fold, and Auto-Converge");
+            const n = 20, x = new Float64Array(n), y = new Float64Array(n);
+            for (let i = 0; i < n; i++) { x[i] = i + 1; y[i] = 2 * x[i] + 1 + Math.sin(x[i] * 0.5); }
+
+            const rLoocv = smooth(x, y, { cvFractions: [0.3, 0.5, 0.7], cvMethod: "loocv" });
+            log(`  LOOCV selected fraction: ${rLoocv.fractionUsed}`);
+            if (rLoocv.cvScores) log(`  LOOCV scores: [${Array.from(rLoocv.cvScores).map(v => v.toFixed(4)).join(', ')}]`);
+
+            const rKfold = smooth(x, y, { cvFractions: [0.2, 0.4, 0.6], cvMethod: "kfold", cvK: 5 });
+            log(`  KFold(k=5) selected fraction: ${rKfold.fractionUsed}`);
+            if (rKfold.cvScores) log(`  KFold scores: [${Array.from(rKfold.cvScores).map(v => v.toFixed(4)).join(', ')}]`);
+
+            const rAc = smooth(x, y, { fraction: 0.5, autoConverge: 1e-4 });
+            log(`  autoConverge=1e-4: iterationsUsed=${rAc.iterationsUsed}`);
+            log("");
+        }
+
+        // ── Example 17: Interpolation Tuning (surfaceMode effects) ────────────
+        function example_17_interpolation_tuning() {
+            log("Example 17: Interpolation Tuning (surfaceMode effects)");
+            const n = 50, { x, y } = makeLinear(n);
+
+            const rInterp = smooth(x, y, { fraction: 0.5, surfaceMode: "interpolation" });
+            log(`  interpolation: y[0]=${rInterp.y[0].toFixed(3)}, y[-1]=${rInterp.y[n - 1].toFixed(3)}`);
+
+            const rDirect = smooth(x, y, { fraction: 0.5, surfaceMode: "direct" });
+            log(`  direct:        y[0]=${rDirect.y[0].toFixed(3)}, y[-1]=${rDirect.y[n - 1].toFixed(3)}`);
+
+            for (const frac of [0.2, 0.5, 0.8]) {
+                const r = smooth(x, y, { fraction: frac, surfaceMode: "direct" });
+                log(`  direct fraction=${frac}: y[0]=${r.y[0].toFixed(3)}`);
+            }
+
+            // returnSe works with interpolation mode too (fractionUsed/iterationsUsed)
+            const rSe = smooth(x, y, { fraction: 0.5, surfaceMode: "interpolation", returnSe: true });
+            log(`  interpolation+SE: fractionUsed=${rSe.fractionUsed}, iterationsUsed=${rSe.iterationsUsed}`);
+            log("");
         }
 
         async function runDemo() {
             try {
                 clearLog();
-                log("=== fastloess Batch Smoothing Example ===\n");
-
                 await init();
+                log("=".repeat(60));
+                log("fastloess WASM Batch Smoothing - Comprehensive Examples");
+                log("=".repeat(60));
+                log("");
 
-                // 1. Generate Data
-                const { x, y } = generateSampleData(1000);
-                log(`1. Generated ${x.length} data points with outliers.`);
+                example_1_basic_smoothing();
+                example_2_robust_with_outliers();
+                example_3_uncertainty_quantification();
+                example_4_cross_validation();
+                example_5_complete_diagnostics();
+                example_6_different_kernels();
+                example_7_robustness_methods();
+                example_8_benchmark();
+                example_9_scaling_methods();
+                example_10_boundary_policies();
+                example_11_zero_weight_fallback();
+                example_12_polynomial_degrees();
+                example_13_distance_metrics();
+                example_14_surface_modes_and_se();
+                example_15_additional_kernels();
+                example_16_loocv_and_auto_converge();
+                example_17_interpolation_tuning();
 
-                // 2. Basic Smoothing (Default parameters)
-                log("\n2. Running basic smoothing...");
-                const startBasic = performance.now();
-                const resBasic = smooth(x, y, { iterations: 0, fraction: 0.05 });
-                log(`   - Completed in ${(performance.now() - startBasic).toFixed(2)}ms`);
-
-                // 3. Robust Smoothing (IRLS)
-                log("\n3. Running robust smoothing (3 iterations)...");
-                const resRobust = smooth(x, y, {
-                    fraction: 0.05,
-                    iterations: 3,
-                    robustnessMethod: "bisquare",
-                    returnRobustnessWeights: true
-                });
-                const weights = resRobust.robustnessWeights;
-                let outlierCount = 0;
-                if (weights) {
-                    for (let i = 0; i < weights.length; i++) {
-                        if (weights[i] < 0.1) outlierCount++;
-                    }
-                }
-                log(`   - Identified ~${outlierCount} outliers (weight < 0.1)`);
-
-                // 4. Uncertainty Quantification
-                log("\n4. Computing confidence and prediction intervals...");
-                const resIntervals = smooth(x, y, {
-                    fraction: 0.05,
-                    confidenceIntervals: 0.95,
-                    predictionIntervals: 0.95,
-                    returnDiagnostics: true
-                });
-
-                if (resIntervals.diagnostics) {
-                    const d = resIntervals.diagnostics;
-                    log(`   - Fit Statistics:`);
-                    log(`     R²:   ${d.rSquared.toFixed(4)}`);
-                    log(`     RMSE: ${d.rmse.toFixed(4)}`);
-                    log(`     MAE:  ${d.mae.toFixed(4)}`);
-                }
-
-                // 5. Cross-Validation for optimal fraction
-                log("\n5. Running cross-validation to find optimal fraction...");
-                const cvFractions = [0.05, 0.1, 0.2, 0.4];
-                const resCV = smooth(x, y, {
-                    cvFractions,
-                    cvMethod: "kfold",
-                    cvK: 5
-                });
-
-                log(`   - Optimal fraction selected: ${resCV.fractionUsed}`);
-                if (resCV.cvScores) {
-                    log(`   - CV Scores: [${Array.from(resCV.cvScores).map(n => n.toFixed(4)).join(', ')}]`);
-                }
-
-                // 6. Boundary Policy Comparison
-                log("\n6. Demonstrating boundary policy effects on linear data...");
-                const xl = new Float64Array(50);
-                const yl = new Float64Array(50);
-                for (let i = 0; i < 50; i++) {
-                    xl[i] = (i / 49) * 10;
-                    yl[i] = 2 * xl[i] + 1;
-                }
-
-                const rExt = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "extend" });
-                const rRef = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "reflect" });
-                const rZr = smooth(xl, yl, { fraction: 0.6, boundaryPolicy: "zero" });
-
-                log(`   - Extend (Default): first=${rExt.y[0].toFixed(2)}, last=${rExt.y[49].toFixed(2)}`);
-                log(`   - Reflect:          first=${rRef.y[0].toFixed(2)}, last=${rRef.y[49].toFixed(2)}`);
-                log(`   - Zero:             first=${rZr.y[0].toFixed(2)}, last=${rZr.y[49].toFixed(2)}`);
-
-                log("\n=== Batch Smoothing Example Complete ===");
-
+                log("=== Batch Smoothing Examples Complete ===");
             } catch (e) {
-                log(`\nError: ${e}`);
+                log(`Error: ${e}`);
                 console.error(e);
             }
         }
 
-        // Start execution
         runDemo();
     </script>
 </body>

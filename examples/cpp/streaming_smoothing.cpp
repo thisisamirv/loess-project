@@ -108,6 +108,50 @@ int main() {
                 << '\n';
     }
 
+    // Merge strategy variants
+    std::cout << "\n--- Merge Strategy Variants ---\n";
+    for (const char *strat : {"weighted", "average", "first", "last"}) {
+      fastloess::StreamingOptions ms_opts;
+      ms_opts.fraction = k_fraction;
+      ms_opts.chunk_size = k_chunk_size;
+      ms_opts.merge_strategy = strat;
+      fastloess::StreamingLoess ms_model(ms_opts);
+      const std::vector<double> x_s(x_values.begin(),
+                                    x_values.begin() + k_overlap);
+      const std::vector<double> y_s(y_values.begin(),
+                                    y_values.begin() + k_overlap);
+      auto ms_r1 = ms_model.processChunk(x_s, y_s).value();
+      auto ms_r2 = ms_model.finalize().value();
+      std::cout << "  merge_strategy=" << strat
+                << "  total=" << ms_r1.size() + ms_r2.size() << '\n';
+    }
+
+    // Advanced inherited options: degree, scaling_method, distance_metric,
+    // surface_mode, return_se, return_residuals, zero_weight_fallback
+    std::cout << "\n--- Advanced Streaming Options ---\n";
+    {
+      fastloess::StreamingOptions adv_opts;
+      adv_opts.fraction = k_fraction;
+      adv_opts.chunk_size = k_chunk_size;
+      adv_opts.degree = "quadratic";
+      adv_opts.scaling_method = "mean";
+      adv_opts.distance_metric = "euclidean";
+      adv_opts.surface_mode = "direct";
+      adv_opts.return_se = true;
+      adv_opts.return_residuals = true;
+      adv_opts.zero_weight_fallback = "return_original";
+      fastloess::StreamingLoess adv_model(adv_opts);
+      const std::vector<double> a_x(
+          x_values.begin(),
+          x_values.begin() + static_cast<std::ptrdiff_t>(k_chunk_size));
+      const std::vector<double> a_y(
+          y_values.begin(),
+          y_values.begin() + static_cast<std::ptrdiff_t>(k_chunk_size));
+      auto adv_r1 = adv_model.processChunk(a_x, a_y).value();
+      auto adv_r2 = adv_model.finalize().value();
+      std::cout << "  total points: " << adv_r1.size() + adv_r2.size() << '\n';
+    }
+
     std::cout << "\n=== Example completed successfully ===\n";
 
   } catch (const std::exception &exception) {

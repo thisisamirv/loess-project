@@ -33,6 +33,8 @@ fn main() -> Result<(), LoessError> {
     example_5_outlier_handling()?;
     example_6_file_simulation()?;
     example_7_benchmark()?;
+    example_8_merge_strategies()?;
+    example_9_advanced_options()?;
 
     Ok(())
 }
@@ -594,6 +596,104 @@ fn example_7_benchmark() -> Result<(), LoessError> {
     println!("Processed {} points in {:?}", total_processed, duration);
     println!("Execution mode: Sequential Streaming");
     println!("Chunk size: {}, Overlap: {}", chunk_size, overlap);
+
+    println!();
+    Ok(())
+}
+
+/// Example 8: Merge Strategies (Average, WeightedAverage, TakeFirst, TakeLast)
+fn example_8_merge_strategies() -> Result<(), LoessError> {
+    println!("Example 8: Merge Strategies");
+    println!("{}", "-".repeat(80));
+
+    let n = 50usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+
+    for strategy in [Average, WeightedAverage, TakeFirst, TakeLast] {
+        let mut processor = Loess::new()
+            .fraction(0.5)
+            .iterations(2)
+            .merge_strategy(strategy)
+            .adapter(Streaming)
+            .chunk_size(20)
+            .overlap(5)
+            .build()?;
+
+        let mut total = 0;
+        for chunk_start in (0..n).step_by(15) {
+            let chunk_end = (chunk_start + 20).min(n);
+            let result =
+                processor.process_chunk(&x[chunk_start..chunk_end], &y[chunk_start..chunk_end])?;
+            total += result.x.len();
+        }
+        let final_result = processor.finalize()?;
+        total += final_result.x.len();
+        println!("  {:?}: total={}", strategy, total);
+    }
+
+    println!();
+    Ok(())
+}
+
+/// Example 9: Advanced Streaming Options
+/// Covers `degree`, `scaling_method`, `boundary_policy`, `zero_weight_fallback`,
+/// `distance_metric`, `surface_mode`, `return_se`, `return_diagnostics`,
+/// `return_robustness_weights`, `auto_converge`, and `diagnostics` result fields.
+fn example_9_advanced_options() -> Result<(), LoessError> {
+    println!("Example 9: Advanced Streaming Options");
+    println!("{}", "-".repeat(80));
+
+    let n = 50usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+
+    let mut processor = Loess::new()
+        .fraction(0.5)
+        .iterations(2)
+        .degree(Quadratic)
+        .scaling_method(MAR)
+        .boundary_policy(Reflect)
+        .zero_weight_fallback(ReturnOriginal)
+        .distance_metric(Manhattan)
+        .surface_mode(Direct)
+        .return_se()
+        .return_diagnostics()
+        .return_robustness_weights()
+        .auto_converge(1e-3_f64)
+        .adapter(Streaming)
+        .chunk_size(20)
+        .overlap(5)
+        .build()?;
+
+    let mut total = 0;
+    for chunk_start in (0..n).step_by(15) {
+        let chunk_end = (chunk_start + 20).min(n);
+        let result =
+            processor.process_chunk(&x[chunk_start..chunk_end], &y[chunk_start..chunk_end])?;
+        total += result.x.len();
+    }
+    let final_result = processor.finalize()?;
+    total += final_result.x.len();
+    println!("  total points: {}", total);
+
+    if let Some(se) = &final_result.standard_errors {
+        if !se.is_empty() {
+            println!("  standard_errors[0]: {:.4}", se[0]);
+        }
+    }
+    if let Some(diag) = &final_result.diagnostics {
+        println!("  diagnostics.rmse: {:.3}", diag.rmse);
+        println!("  diagnostics.r_squared: {:.3}", diag.r_squared);
+        if let Some(aic) = diag.aic {
+            println!("  diagnostics.aic: {:.3}", aic);
+        }
+    }
+    if let Some(rw) = &final_result.robustness_weights {
+        if !rw.is_empty() {
+            println!("  robustness_weights[0]: {:.4}", rw[0]);
+        }
+    }
 
     println!();
     Ok(())

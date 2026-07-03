@@ -74,6 +74,7 @@ bindings/cpp/include/fastloess.h
 bindings/cpp/bin/
 bindings/cpp/build/
 tests/cpp/build/
+examples/cpp/bin/
 
 # Benchmarks
 /target/criterion/

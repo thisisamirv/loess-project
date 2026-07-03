@@ -1,105 +1,297 @@
 const fastloess = require('../../bindings/nodejs');
 
 /**
- * fastloess Online Smoothing Example
- * 
- * This example demonstrates online LOESS smoothing for real-time data:
- * - Basic incremental processing with streaming data
- * - Real-time sensor data smoothing
- * - Different update modes (Full vs Incremental)
- * - Memory-bounded processing with sliding window
+ * fastloess Online Smoothing - Comprehensive Examples
+ *
+ * 9 examples covering the full OnlineLoess API:
+ *  1. Basic incremental processing
+ *  2. Real-time sensor data simulation
+ *  3. Outlier handling in online mode
+ *  4. Window size comparison
+ *  5. Memory-bounded processing (embedded systems)
+ *  6. Sliding window behavior
+ *  7. Benchmark (sequential online)
+ *  8. Update modes (Full vs Incremental) and minPoints
+ *  9. Advanced online options
  */
 
-function main() {
-    console.log("=== fastloess Online Smoothing Example ===");
+// ── Example 1: Basic Incremental Processing ──────────────────────────────────
+function example_1_basic_streaming() {
+    console.log("Example 1: Basic Incremental Processing");
 
-    // 1. Simulate a real-time signal
-    // A sine wave with changing frequency and random noise
-    const nPoints = 1000;
-    const x = new Float64Array(nPoints);
-    const yTrue = new Float64Array(nPoints);
-    const y = new Float64Array(nPoints);
+    const data = [
+        [1, 3.1], [2, 5.0], [3, 7.2], [4, 8.9], [5, 11.1],
+        [6, 13.0], [7, 15.2], [8, 16.8], [9, 19.1], [10, 21.0],
+    ];
 
-    for (let i = 0; i < nPoints; i++) {
-        x[i] = i;
-        yTrue[i] = 20.0 + 5.0 * Math.sin(x[i] * 0.1) + 2.0 * Math.sin(x[i] * 0.02);
-        // Gaussian noise
-        let u1 = Math.random();
-        let u2 = Math.random();
-        let z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-        y[i] = yTrue[i] + z * 1.2;
-    }
-
-    // Add some sudden spikes (sensor glitches)
-    for (let i = 200; i < 205; i++) y[i] += 15.0;
-    for (let i = 600; i < 610; i++) y[i] -= 10.0;
-
-    console.log(`Simulating ${nPoints} real-time data points...`);
-
-    // 2. Sequential Online Processing
-
-    // Full Update Mode (higher accuracy)
-    console.log("Processing with 'full' update mode...");
-    const onlineFull = new fastloess.OnlineLoess(
-        { fraction: 0.3, iterations: 3 },
-        { windowCapacity: 50, updateMode: "full" }
+    const model = new fastloess.OnlineLoess(
+        { fraction: 0.5, iterations: 2, returnResiduals: true },
+        { windowCapacity: 5 }
     );
-    const resFull = new Float64Array(nPoints);
-    for (let i = 0; i < nPoints; i++) {
-        const chunkX = new Float64Array([x[i]]);
-        const chunkY = new Float64Array([y[i]]);
-        const res = onlineFull.addPoints(chunkX, chunkY);
-        resFull[i] = res.y[0];
-    }
 
-    // Incremental Update Mode (faster for large windows)
-    console.log("Processing with 'incremental' update mode...");
-    const onlineInc = new fastloess.OnlineLoess(
-        { fraction: 0.3, iterations: 3 },
-        { windowCapacity: 50, updateMode: "incremental" }
+    console.log(`  ${"X".padStart(8)} ${"Y_obs".padStart(12)} ${"Y_smooth".padStart(12)}`);
+    for (const [x, y] of data) {
+        const res = model.addPoints(
+            new Float64Array([x]),
+            new Float64Array([y])
+        );
+        const smoothed = res.y.length > 0 ? res.y[0].toFixed(2) : "(buffering)";
+        console.log(`  ${x.toFixed(2).padStart(8)} ${y.toFixed(2).padStart(12)} ${smoothed.padStart(12)}`);
+    }
+    console.log();
+}
+
+// ── Example 2: Real-Time Sensor Data Simulation ───────────────────────────────
+function example_2_sensor_data_simulation() {
+    console.log("Example 2: Real-Time Sensor Data Simulation");
+    console.log("  Simulating temperature sensor readings with noise...");
+
+    const n = 24; // 24 hours
+    const model = new fastloess.OnlineLoess(
+        { fraction: 0.4, iterations: 3, robustnessMethod: "bisquare", returnResiduals: true },
+        { windowCapacity: 12 }
     );
-    const resInc = new Float64Array(nPoints);
-    for (let i = 0; i < nPoints; i++) {
-        const chunkX = new Float64Array([x[i]]);
-        const chunkY = new Float64Array([y[i]]);
-        const res = onlineInc.addPoints(chunkX, chunkY);
-        resInc[i] = res.y[0];
-    }
 
-    // Compare results
-    console.log("\nResults Comparison:");
+    console.log(`  ${"Hour".padStart(6)} ${"Raw".padStart(12)} ${"Smoothed".padStart(12)}`);
+    for (let hour = 0; hour < n; hour++) {
+        const baseTemp = 20.0;
+        const cycle = 5.0 * Math.sin(hour * Math.PI / 12.0);
+        const noise = ((hour * 7) % 11) * 0.3 - 1.5;
+        const temp = baseTemp + cycle + noise;
 
-    // Show sample around spike area
-    console.log("\nSample around spike (indices 198-208):");
-    console.log("Index\tRaw\t\tTrue\t\tFull\t\tIncremental");
-    for (let i = 198; i <= 208; i++) {
-        // Handle initial points where output might be null (though by 198 it should be fine)
-        const fullVal = isNaN(resFull[i]) ? "NaN" : resFull[i].toFixed(2);
-        const incVal = isNaN(resInc[i]) ? "NaN" : resInc[i].toFixed(2);
-        console.log(`${i}\t${y[i].toFixed(2)}\t\t${yTrue[i].toFixed(2)}\t\t${fullVal}\t\t${incVal}`);
-    }
-
-    // Calculate overall statistics
-    // Filter out initial NaNs
-    let mseFull = 0;
-    let mseInc = 0;
-    let count = 0;
-
-    for (let i = 0; i < nPoints; i++) {
-        if (!isNaN(resFull[i]) && !isNaN(resInc[i])) {
-            mseFull += Math.pow(resFull[i] - yTrue[i], 2);
-            mseInc += Math.pow(resInc[i] - yTrue[i], 2);
-            count++;
+        const res = model.addPoints(new Float64Array([hour]), new Float64Array([temp]));
+        if (res.y.length > 0) {
+            console.log(
+                `  ${hour.toString().padStart(6)} ${temp.toFixed(2).padStart(12)}°C ${res.y[0].toFixed(2).padStart(12)}°C`
+            );
+        } else {
+            console.log(`  ${hour.toString().padStart(6)} ${temp.toFixed(2).padStart(12)}°C ${"(warming up)".padStart(13)}`);
         }
     }
-    mseFull /= count;
-    mseInc /= count;
+    console.log();
+}
 
-    console.log("\nMean Squared Error vs True Signal:");
-    console.log(` - Full Update:        ${mseFull.toFixed(4)}`);
-    console.log(` - Incremental Update: ${mseInc.toFixed(4)}`);
+// ── Example 3: Outlier Handling in Online Mode ────────────────────────────────
+function example_3_outlier_handling() {
+    console.log("Example 3: Outlier Handling in Online Mode");
 
-    console.log("\n=== Online Smoothing Example Complete ===");
+    const data = [
+        [1, 2.0], [2, 4.1], [3, 5.9],
+        [4, 25.0], // Outlier!
+        [5, 10.1], [6, 12.0], [7, 14.1],
+        [8, 50.0], // Outlier!
+        [9, 18.0], [10, 20.1],
+    ];
+
+    for (const method of ["bisquare", "talwar"]) {
+        const model = new fastloess.OnlineLoess(
+            { fraction: 0.5, iterations: 5, robustnessMethod: method, returnResiduals: true },
+            { windowCapacity: 6 }
+        );
+        const smoothed = [];
+        for (const [x, y] of data) {
+            const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+            if (res.y.length > 0) smoothed.push(res.y[0].toFixed(1));
+        }
+        console.log(`  ${method}: [${smoothed.join(', ')}]`);
+    }
+    console.log();
+}
+
+// ── Example 4: Window Size Comparison ────────────────────────────────────────
+function example_4_window_size_comparison() {
+    console.log("Example 4: Window Size Comparison");
+
+    const data = Array.from({ length: 20 }, (_, i) => {
+        const x = i + 1;
+        return [x, 2 * x + Math.sin(x * 0.5) * 3];
+    });
+
+    for (const windowSize of [5, 10, 15]) {
+        const model = new fastloess.OnlineLoess(
+            { fraction: 0.5, iterations: 2 },
+            { windowCapacity: windowSize }
+        );
+        const smoothed = [];
+        for (const [x, y] of data) {
+            const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+            if (res.y.length > 0) smoothed.push(res.y[0]);
+        }
+        const last5 = smoothed.slice(-5).map(v => v.toFixed(2));
+        console.log(`  windowCapacity=${windowSize}: last 5 = [${last5.join(', ')}]`);
+    }
+    console.log();
+}
+
+// ── Example 5: Memory-Bounded Processing ──────────────────────────────────────
+function example_5_memory_bounded_processing() {
+    console.log("Example 5: Memory-Bounded Processing (Embedded Systems)");
+
+    const total = 1000;
+    const model = new fastloess.OnlineLoess(
+        { fraction: 0.3, iterations: 1 },
+        { windowCapacity: 20 }
+    );
+
+    let count = 0;
+    let lastSmoothed = 0;
+    for (let i = 0; i < total; i++) {
+        const x = i;
+        const y = 2 * x + Math.sin(x * 0.1) * 5 + ((i % 7) - 3) * 0.5;
+        const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+        if (res.y.length > 0) {
+            count++;
+            lastSmoothed = res.y[0];
+            if (count % 200 === 0) {
+                console.log(`  Processed: ${count.toString().padStart(4)} pts | smoothed=${lastSmoothed.toFixed(2)}`);
+            }
+        }
+    }
+    console.log(`  Total processed: ${count}, final smoothed: ${lastSmoothed.toFixed(2)}`);
+    console.log(`  Memory: constant (window=20)`);
+    console.log();
+}
+
+// ── Example 6: Sliding Window Behavior ───────────────────────────────────────
+function example_6_sliding_window_behavior() {
+    console.log("Example 6: Sliding Window Behavior");
+
+    const data = [[1, 2], [2, 4], [3, 6], [4, 8], [5, 10], [6, 12], [7, 14], [8, 16]];
+    const model = new fastloess.OnlineLoess(
+        { fraction: 0.6, iterations: 0, returnResiduals: true },
+        { windowCapacity: 4 }
+    );
+
+    console.log(`  ${"Pt".padStart(4)} ${"X".padStart(6)} ${"Y".padStart(8)} ${"Smoothed".padStart(10)} ${"Status".padStart(22)}`);
+    data.forEach(([x, y], i) => {
+        const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+        if (res.y.length > 0) {
+            console.log(`  ${(i + 1).toString().padStart(4)} ${x.toFixed(0).padStart(6)} ${y.toFixed(0).padStart(8)} ${res.y[0].toFixed(2).padStart(10)} ${"Window full (sliding)".padStart(22)}`);
+        } else {
+            console.log(`  ${(i + 1).toString().padStart(4)} ${x.toFixed(0).padStart(6)} ${y.toFixed(0).padStart(8)} ${"-".padStart(10)} ${`Filling (${i + 1}/4)`.padStart(22)}`);
+        }
+    });
+    console.log("  Output starts after window fills (4 pts), then slides.");
+    console.log();
+}
+
+// ── Example 7: Benchmark (Sequential Online) ──────────────────────────────────
+function example_7_benchmark() {
+    console.log("Example 7: Benchmark (Sequential Online)");
+
+    const n = 1000;
+    const model = new fastloess.OnlineLoess(
+        { fraction: 0.5, iterations: 3 },
+        { windowCapacity: 10 }
+    );
+
+    const t0 = process.hrtime.bigint();
+    let count = 0;
+    for (let i = 0; i < n; i++) {
+        const x = i;
+        const y = Math.sin(x * 0.1) + Math.cos(x * 0.01);
+        const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+        if (res.y.length > 0) count++;
+    }
+    const ms = Number(process.hrtime.bigint() - t0) / 1e6;
+
+    console.log(`  ${count} pts processed in ${ms.toFixed(2)}ms`);
+    console.log(`  windowCapacity=10`);
+    console.log();
+}
+
+// ── Example 8: Update Modes (Full vs Incremental) and minPoints ───────────────
+function example_8_update_modes() {
+    console.log("Example 8: Update Modes (Full vs Incremental) and minPoints");
+
+    const data = Array.from({ length: 30 }, (_, i) => [i, 2 * i + 1]);
+
+    for (const mode of ["full", "incremental"]) {
+        const model = new fastloess.OnlineLoess(
+            { fraction: 0.5, iterations: 2 },
+            { windowCapacity: 15, minPoints: 5, updateMode: mode }
+        );
+        let emitted = 0;
+        for (const [x, y] of data) {
+            const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+            if (res.y.length > 0) emitted++;
+        }
+        console.log(`  ${mode}: ${emitted} points emitted (out of ${data.length})`);
+    }
+
+    // Show fractionUsed and iterationsUsed from the returned LoessResultObj
+    const model = new fastloess.OnlineLoess(
+        { fraction: 0.5, iterations: 2, returnResiduals: true, returnRobustnessWeights: true },
+        { windowCapacity: 10, minPoints: 3 }
+    );
+    let lastRes = null;
+    for (const [x, y] of data) {
+        const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+        if (res.y.length > 0) lastRes = res;
+    }
+    if (lastRes) {
+        console.log(`  last smoothed: ${lastRes.y[0].toFixed(3)}`);
+        console.log(`  fractionUsed: ${lastRes.fractionUsed}`);
+    }
+    console.log();
+}
+
+// ── Example 9: Advanced Online Options ────────────────────────────────────────
+function example_9_advanced_online_options() {
+    console.log("Example 9: Advanced Online Options");
+
+    const data = Array.from({ length: 30 }, (_, i) => [i, 2 * i + 1]);
+
+    const model = new fastloess.OnlineLoess(
+        {
+            fraction: 0.5,
+            iterations: 2,
+            degree: "quadratic",
+            scalingMethod: "mar",
+            boundaryPolicy: "reflect",
+            zeroWeightFallback: "return_original",
+            distanceMetric: "chebyshev",
+            autoConverge: 1e-3,
+            returnResiduals: true,
+            returnRobustnessWeights: true,
+        },
+        { windowCapacity: 15, minPoints: 5 }
+    );
+
+    let emitted = 0;
+    let lastRes = null;
+    for (const [x, y] of data) {
+        const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+        if (res.y.length > 0) { emitted++; lastRes = res; }
+    }
+
+    console.log(`  emitted: ${emitted}`);
+    if (lastRes) {
+        console.log(`  last smoothed: ${lastRes.y[0].toFixed(3)}`);
+        console.log(`  fractionUsed: ${lastRes.fractionUsed}`);
+    }
+    console.log();
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+function main() {
+    console.log("=".repeat(60));
+    console.log("fastloess Online Smoothing - Comprehensive Examples");
+    console.log("=".repeat(60));
+    console.log();
+
+    example_1_basic_streaming();
+    example_2_sensor_data_simulation();
+    example_3_outlier_handling();
+    example_4_window_size_comparison();
+    example_5_memory_bounded_processing();
+    example_6_sliding_window_behavior();
+    example_7_benchmark();
+    example_8_update_modes();
+    example_9_advanced_online_options();
+
+    console.log("=== Online Smoothing Examples Complete ===");
 }
 
 main();
+

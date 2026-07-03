@@ -32,6 +32,8 @@ fn main() -> Result<(), LoessError> {
     example_5_memory_bounded_processing()?;
     example_6_sliding_window_behavior()?;
     example_7_benchmark()?;
+    example_8_update_modes()?;
+    example_9_advanced_online_options()?;
 
     Ok(())
 }
@@ -490,6 +492,115 @@ fn example_7_benchmark() -> Result<(), LoessError> {
     println!("Processed {} points in {:?}", processed_count, duration);
     println!("Execution mode: Sequential Online");
     println!("Window capacity: 10");
+
+    println!();
+    Ok(())
+}
+
+/// Example 8: Update Modes and min_points
+/// Covers `update_mode` (Full vs Incremental) and `min_points` builder options,
+/// plus `std_error`, `robustness_weight`, `iterations_used` from `OnlineOutput`.
+fn example_8_update_modes() -> Result<(), LoessError> {
+    println!("Example 8: Update Modes (Full vs Incremental) and min_points");
+    println!("{}", "-".repeat(80));
+
+    let data: Vec<(f64, f64)> = (0..30).map(|i| (i as f64, 2.0 * i as f64 + 1.0)).collect();
+
+    for mode in [Full, Incremental] {
+        let mut processor = Loess::new()
+            .fraction(0.5)
+            .iterations(2)
+            .update_mode(mode)
+            .min_points(5)
+            .adapter(Online)
+            .window_capacity(15)
+            .build()?;
+
+        let mut emitted = 0;
+        for (x, y) in &data {
+            if processor.add_point(&[*x], *y)?.is_some() {
+                emitted += 1;
+            }
+        }
+        println!(
+            "  {:?}: {} points emitted (out of {})",
+            mode,
+            emitted,
+            data.len()
+        );
+    }
+
+    // Show OnlineOutput fields: std_error, robustness_weight, iterations_used
+    let mut processor = Loess::new()
+        .fraction(0.5)
+        .iterations(2)
+        .return_se()
+        .return_residuals()
+        .return_robustness_weights()
+        .min_points(3)
+        .adapter(Online)
+        .window_capacity(10)
+        .build()?;
+
+    let mut last_output = None;
+    for (x, y) in &data {
+        if let Some(out) = processor.add_point(&[*x], *y)? {
+            last_output = Some(out);
+        }
+    }
+    if let Some(out) = last_output {
+        println!("  last smoothed: {:.3}", out.smoothed);
+        if let Some(se) = out.std_error {
+            println!("  std_error: {:.4}", se);
+        }
+        if let Some(r) = out.residual {
+            println!("  residual: {:.4}", r);
+        }
+        if let Some(rw) = out.robustness_weight {
+            println!("  robustness_weight: {:.4}", rw);
+        }
+        if let Some(iters) = out.iterations_used {
+            println!("  iterations_used: {}", iters);
+        }
+    }
+
+    println!();
+    Ok(())
+}
+
+/// Example 9: Advanced Online Options
+/// Covers `degree`, `scaling_method`, `boundary_policy`, `zero_weight_fallback`,
+/// `distance_metric`, `auto_converge`, `return_diagnostics`.
+fn example_9_advanced_online_options() -> Result<(), LoessError> {
+    println!("Example 9: Advanced Online Options");
+    println!("{}", "-".repeat(80));
+
+    let data: Vec<(f64, f64)> = (0..30).map(|i| (i as f64, 2.0 * i as f64 + 1.0)).collect();
+
+    let mut processor = Loess::new()
+        .fraction(0.5)
+        .iterations(2)
+        .degree(Quadratic)
+        .scaling_method(MAR)
+        .boundary_policy(Reflect)
+        .zero_weight_fallback(ReturnOriginal)
+        .distance_metric(Chebyshev)
+        .auto_converge(1e-3_f64)
+        .return_se()
+        .return_residuals()
+        .return_robustness_weights()
+        .min_points(5)
+        .adapter(Online)
+        .window_capacity(15)
+        .build()?;
+
+    let mut emitted = 0;
+    for (x, y) in &data {
+        if processor.add_point(&[*x], *y)?.is_some() {
+            emitted += 1;
+        }
+    }
+    println!("  advanced online: {} points emitted", emitted);
 
     println!();
     Ok(())

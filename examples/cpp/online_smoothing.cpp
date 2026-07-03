@@ -90,6 +90,48 @@ int main() {
     std::cout << "\nOnline processing completed:\n";
     std::cout << "  Total points emitted: " << total_emitted << '\n';
 
+    // Incremental update mode
+    std::cout << "\n--- Update Mode: incremental ---\n";
+    {
+      fastloess::OnlineOptions inc_opts;
+      inc_opts.fraction = k_fraction;
+      inc_opts.window_capacity = k_window_capacity;
+      inc_opts.min_points = k_min_points;
+      inc_opts.update_mode = "incremental";
+      fastloess::OnlineLoess inc_model(inc_opts);
+      size_t inc_emitted = 0;
+      for (size_t point_index = 0; point_index < point_count; ++point_index) {
+        const std::vector<double> x_s = {x_values[point_index]};
+        const std::vector<double> y_s = {y_values[point_index]};
+        auto res_i = inc_model.addPoints(x_s, y_s).value();
+        inc_emitted += res_i.size();
+      }
+      std::cout << "  incremental mode total emitted: " << inc_emitted << '\n';
+    }
+
+    // Advanced inherited options: degree, scaling_method, distance_metric,
+    // zero_weight_fallback
+    std::cout << "\n--- Advanced Online Options ---\n";
+    {
+      fastloess::OnlineOptions adv_opts;
+      adv_opts.fraction = k_fraction;
+      adv_opts.window_capacity = k_window_capacity;
+      adv_opts.min_points = k_min_points;
+      adv_opts.degree = "quadratic";
+      adv_opts.scaling_method = "mar";
+      adv_opts.distance_metric = "chebyshev";
+      adv_opts.zero_weight_fallback = "return_original";
+      fastloess::OnlineLoess adv_model(adv_opts);
+      size_t adv_emitted = 0;
+      for (size_t point_index = 0; point_index < point_count; ++point_index) {
+        const std::vector<double> x_s = {x_values[point_index]};
+        const std::vector<double> y_s = {y_values[point_index]};
+        auto res_a = adv_model.addPoints(x_s, y_s).value();
+        adv_emitted += res_a.size();
+      }
+      std::cout << "  advanced online total emitted: " << adv_emitted << '\n';
+    }
+
     std::cout << "\n=== Example completed successfully ===\n";
 
   } catch (const std::exception &exception) {

@@ -1,110 +1,350 @@
 const fastloess = require('../../bindings/nodejs');
 
 /**
- * fastloess Streaming Smoothing Example
- * 
- * This example demonstrates streaming LOESS smoothing for large datasets:
- * - Basic chunked processing
- * - Handling datasets that don't fit in memory
- * - Parallel execution for extreme speed
+ * fastloess Streaming Smoothing - Comprehensive Examples
+ *
+ * 9 examples covering the full StreamingLoess API:
+ *  1. Basic chunked processing
+ *  2. Chunk size comparison
+ *  3. Overlap strategies
+ *  4. Large dataset processing
+ *  5. Outlier handling in streaming mode
+ *  6. File-based streaming simulation
+ *  7. Benchmark (sequential streaming)
+ *  8. Merge strategies (average, weighted_average, take_first, take_last)
+ *  9. Advanced streaming options
  */
 
-function main() {
-    console.log("=== fastloess Streaming Mode Example ===");
+function makeLinear(n) {
+    const x = new Float64Array(n);
+    const y = new Float64Array(n);
+    for (let i = 0; i < n; i++) { x[i] = i; y[i] = 2 * i + 1; }
+    return { x, y };
+}
 
-    // 1. Generate Very Large Dataset
-    // 100,000 points
-    const nPoints = 100000;
-    console.log(`Generating large dataset: ${nPoints} points...`);
+// ── Example 1: Basic Chunked Processing ─────────────────────────────────────
+function example_1_basic_chunked_processing() {
+    console.log("Example 1: Basic Chunked Processing");
 
-    // Pre-allocate arrays
-    const x = new Float64Array(nPoints);
-    const y = new Float64Array(nPoints);
-
-    for (let i = 0; i < nPoints; i++) {
-        x[i] = (i / (nPoints - 1)) * 100; // range 0 to 100
-        // Gaussian noise
-        let u1 = Math.random();
-        let u2 = Math.random();
-        let z = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
-        y[i] = Math.cos(x[i] * 0.1) + z * 0.5;
-    }
-
-    // 2. Regular Batch Smoothing (for comparison)
-    console.log("Running Batch LOESS (Parallel)...");
-    const batchStart = process.hrtime.bigint();
-    const resBatch = new fastloess.Loess({ fraction: 0.01 }).fit(x, y);
-    const batchEnd = process.hrtime.bigint();
-    const batchTime = Number(batchEnd - batchStart) / 1e9;
-    console.log(`Batch took: ${batchTime.toFixed(4)} seconds`);
-
-    // 3. Streaming Mode
-    // Divide the data into chunks of 2,000 for low memory usage
-    console.log("Running Streaming LOESS (Chunked)...");
-    const streamStart = process.hrtime.bigint();
+    const n = 50;
+    const { x, y } = makeLinear(n);
+    const chunkSize = 15;
+    const overlap = 5;
 
     const streamer = new fastloess.StreamingLoess(
-        { fraction: 0.01 },
-        { chunkSize: 2000, overlap: 200 }
+        { fraction: 0.5, iterations: 2, returnResiduals: true },
+        { chunkSize, overlap }
     );
 
-    // Simulate reading chunks from a stream/file
-    // In a real app we wouldn't load all x/y into memory first
-    const chunkSize = 2000;
-    const resChunks = [];
+    console.log(`  Dataset: ${n} points, chunk=${chunkSize}, overlap=${overlap}`);
 
-    for (let i = 0; i < nPoints; i += chunkSize) {
-        // Slice creates a view or copy depending on usage;
-        // Float64Array.subarray creates a view (zero copy), but the binding expects TypedArray.
-        // If the binding makes a copy anyway, subarray is fine.
-        const chunkX = x.subarray(i, Math.min(i + chunkSize, nPoints));
-        const chunkY = y.subarray(i, Math.min(i + chunkSize, nPoints));
-
-        const chunkRes = streamer.processChunk(chunkX, chunkY);
-        if (chunkRes) resChunks.push(chunkRes.y);
+    let totalProcessed = 0;
+    let chunkIdx = 0;
+    for (let start = 0; start < n; start += chunkSize - overlap) {
+        const end = Math.min(start + chunkSize, n);
+        const res = streamer.processChunk(x.subarray(start, end), y.subarray(start, end));
+        if (res.x.length > 0) {
+            totalProcessed += res.x.length;
+            console.log(`  Chunk ${chunkIdx}: ${res.x.length} pts (x: ${res.x[0].toFixed(0)}..${res.x[res.x.length - 1].toFixed(0)})`);
+        }
+        chunkIdx++;
     }
-    const finalChunk = streamer.finalize();
-    if (finalChunk) resChunks.push(finalChunk.y);
+    const fin = streamer.finalize();
+    if (fin.x.length > 0) {
+        totalProcessed += fin.x.length;
+        console.log(`  Finalize: ${fin.x.length} remaining pts`);
+    }
+    console.log(`  Total: ${totalProcessed}/${n}`);
+    console.log();
+}
 
-    // Combine chunks into one array for comparison
-    const totalLen = resChunks.reduce((acc, c) => acc + c.length, 0);
-    const streamY = new Float64Array(totalLen);
-    let offset = 0;
-    for (const c of resChunks) {
-        streamY.set(c, offset);
-        offset += c.length;
+// ── Example 2: Chunk Size Comparison ────────────────────────────────────────
+function example_2_chunk_size_comparison() {
+    console.log("Example 2: Chunk Size Comparison");
+
+    const n = 100;
+    const { x, y } = makeLinear(n);
+
+    for (const [chunkSize, overlap, label] of [[20, 5, "Small"], [50, 10, "Medium"], [80, 15, "Large"]]) {
+        const streamer = new fastloess.StreamingLoess(
+            { fraction: 0.5, iterations: 1 },
+            { chunkSize, overlap }
+        );
+        let chunks = 0, total = 0;
+        for (let start = 0; start < n; start += chunkSize - overlap) {
+            const end = Math.min(start + chunkSize, n);
+            const res = streamer.processChunk(x.subarray(start, end), y.subarray(start, end));
+            if (res.x.length > 0) { chunks++; total += res.x.length; }
+        }
+        const fin = streamer.finalize();
+        if (fin.x.length > 0) { chunks++; total += fin.x.length; }
+        console.log(`  ${label} (size=${chunkSize}, overlap=${overlap}): chunks=${chunks}, total=${total}`);
+    }
+    console.log();
+}
+
+// ── Example 3: Overlap Strategies ────────────────────────────────────────────
+function example_3_overlap_strategies() {
+    console.log("Example 3: Overlap Strategies");
+
+    const n = 100;
+    const { x, y } = makeLinear(n);
+
+    for (const [overlap, label] of [[0, "No overlap"], [10, "10-pt overlap"], [20, "20-pt overlap"]]) {
+        const chunkSize = 40;
+        const streamer = new fastloess.StreamingLoess(
+            { fraction: 0.5 },
+            { chunkSize, overlap }
+        );
+        let total = 0;
+        const step = chunkSize - overlap;
+        // Feed only full-size chunks; finalize() handles remaining data
+        for (let start = 0; start + chunkSize <= n; start += step) {
+            const res = streamer.processChunk(x.subarray(start, start + chunkSize), y.subarray(start, start + chunkSize));
+            total += res.x.length;
+        }
+        total += streamer.finalize().x.length;
+        console.log(`  ${label} (overlap=${overlap}): total points output=${total}`);
+    }
+    console.log();
+}
+
+// ── Example 4: Large Dataset Processing ──────────────────────────────────────
+function example_4_large_dataset_processing() {
+    console.log("Example 4: Large Dataset Processing");
+
+    const n = 10000;
+    const x = new Float64Array(n);
+    const y = new Float64Array(n);
+    for (let i = 0; i < n; i++) { x[i] = i; y[i] = Math.sin(i * 0.01) + i * 0.001; }
+
+    const chunkSize = 500;
+    const overlap = 50;
+
+    const streamer = new fastloess.StreamingLoess(
+        { fraction: 0.05, iterations: 2 },
+        { chunkSize, overlap }
+    );
+
+    let total = 0;
+    const step = chunkSize - overlap;
+    for (let start = 0; start < n; start += step) {
+        const end = Math.min(start + chunkSize, n);
+        const res = streamer.processChunk(x.subarray(start, end), y.subarray(start, end));
+        total += res.x.length;
+        if (total > 0 && total % 2000 < step) {
+            console.log(`  Progress: ~${total} points smoothed`);
+        }
+    }
+    total += streamer.finalize().x.length;
+    console.log(`  Total processed: ${total}/${n}`);
+    console.log(`  Memory efficiency: constant (chunk=${chunkSize})`);
+    console.log();
+}
+
+// ── Example 5: Outlier Handling in Streaming Mode ─────────────────────────────
+function example_5_outlier_handling() {
+    console.log("Example 5: Outlier Handling in Streaming Mode");
+
+    const n = 100;
+    const x = new Float64Array(n);
+    const y = new Float64Array(n);
+    for (let i = 0; i < n; i++) {
+        x[i] = i;
+        y[i] = 2 * i + 1 + Math.sin(i * 0.2) * 2;
+        if (i === 25 || i === 50 || i === 75) y[i] += 50; // Outliers
     }
 
-    const streamEnd = process.hrtime.bigint();
-    const streamTime = Number(streamEnd - streamStart) / 1e9;
-    console.log(`Streaming took: ${streamTime.toFixed(4)} seconds`);
-
-    // 4. Verify Accuracy
-    let mse = 0;
-    // Lengths might differ slightly if streaming dropped points or handled boundaries differently,
-    // but usually they should match if configured right.
-    // Let's assume matches for this example or truncate to min.
-    const cmpLen = Math.min(resBatch.y.length, streamY.length);
-    const batchY = resBatch.y;
-
-    for (let i = 0; i < cmpLen; i++) {
-        mse += Math.pow(batchY[i] - streamY[i], 2);
+    for (const method of ["bisquare", "huber", "talwar"]) {
+        const streamer = new fastloess.StreamingLoess(
+            { fraction: 0.5, iterations: 5, robustnessMethod: method, returnResiduals: true },
+            { chunkSize: 30, overlap: 10 }
+        );
+        let largeResiduals = 0;
+        for (let start = 0; start < n; start += 20) {
+            const end = Math.min(start + 30, n);
+            const res = streamer.processChunk(x.subarray(start, end), y.subarray(start, end));
+            if (res.residuals) {
+                for (const r of res.residuals) { if (Math.abs(r) > 10) largeResiduals++; }
+            }
+        }
+        const fin = streamer.finalize();
+        if (fin.residuals) {
+            for (const r of fin.residuals) { if (Math.abs(r) > 10) largeResiduals++; }
+        }
+        console.log(`  ${method}: points with |residual|>10: ${largeResiduals}`);
     }
-    mse /= cmpLen;
+    console.log();
+}
 
-    console.log(`Mean Squared Difference (Batch vs Stream): ${mse.toExponential(2)}`);
+// ── Example 6: File-Based Streaming Simulation ───────────────────────────────
+function example_6_file_simulation() {
+    console.log("Example 6: File-Based Streaming Simulation");
+    console.log("  Simulating: Read from input.csv -> Smooth -> Write to output.csv");
 
-    // Show sample of results
-    console.log("\nSample comparison (indices 1000-1005):");
-    console.log("Index\tBatch\t\tStreaming\tDiff");
-    for (let i = 1000; i <= 1005; i++) {
-        if (i < cmpLen) {
-            const diff = Math.abs(batchY[i] - streamY[i]);
-            console.log(`${i}\t${batchY[i].toFixed(6)}\t${streamY[i].toFixed(6)}\t${diff.toFixed(6)}`);
+    const totalLines = 200;
+    const chunkSize = 50;
+    const overlap = 10;
+
+    const streamer = new fastloess.StreamingLoess(
+        { fraction: 0.5, iterations: 2, returnResiduals: true },
+        { chunkSize, overlap }
+    );
+
+    let outputLines = 0;
+    for (let ci = 0; ci < Math.ceil(totalLines / (chunkSize - overlap)); ci++) {
+        const start = ci * (chunkSize - overlap);
+        const end = Math.min(start + chunkSize, totalLines);
+
+        // Simulate reading a chunk from a file
+        const xChunk = new Float64Array(end - start);
+        const yChunk = new Float64Array(end - start);
+        for (let j = 0; j < end - start; j++) {
+            xChunk[j] = start + j;
+            yChunk[j] = 2 * xChunk[j] + 1 + Math.sin(xChunk[j] * 0.1) * 3;
+        }
+
+        console.log(`  Reading chunk ${ci} (lines ${start}..${end - 1})`);
+        const res = streamer.processChunk(xChunk, yChunk);
+        if (res.x.length > 0) {
+            outputLines += res.x.length;
+            console.log(`    -> Writing ${res.x.length} smoothed pts (total: ${outputLines})`);
         }
     }
 
-    console.log("\n=== Streaming Smoothing Example Complete ===");
+    const fin = streamer.finalize();
+    if (fin.x.length > 0) {
+        outputLines += fin.x.length;
+        console.log(`  Finalizing: Writing ${fin.x.length} remaining pts`);
+    }
+    console.log(`  Input: ${totalLines}, Output: ${outputLines}`);
+    console.log();
+}
+
+// ── Example 7: Benchmark (Sequential Streaming) ───────────────────────────────
+function example_7_benchmark() {
+    console.log("Example 7: Benchmark (Sequential Streaming)");
+
+    const n = 1000;
+    const chunkSize = 100;
+    const overlap = 10;
+
+    const streamer = new fastloess.StreamingLoess(
+        { fraction: 0.5, iterations: 3 },
+        { chunkSize, overlap }
+    );
+
+    const t0 = process.hrtime.bigint();
+    let total = 0;
+    const step = chunkSize - overlap;
+    for (let start = 0; start < n; start += step) {
+        const end = Math.min(start + chunkSize, n);
+        const xc = new Float64Array(end - start);
+        const yc = new Float64Array(end - start);
+        for (let j = 0; j < end - start; j++) {
+            xc[j] = start + j;
+            yc[j] = Math.sin(xc[j] * 0.1) + Math.cos(xc[j] * 0.01);
+        }
+        total += streamer.processChunk(xc, yc).x.length;
+    }
+    total += streamer.finalize().x.length;
+    const ms = Number(process.hrtime.bigint() - t0) / 1e6;
+
+    console.log(`  ${total} points in ${ms.toFixed(2)}ms`);
+    console.log(`  chunk=${chunkSize}, overlap=${overlap}`);
+    console.log();
+}
+
+// ── Example 8: Merge Strategies ──────────────────────────────────────────────
+function example_8_merge_strategies() {
+    console.log("Example 8: Merge Strategies");
+
+    const n = 50;
+    const { x, y } = makeLinear(n);
+
+    for (const strategy of ["average", "weighted_average", "take_first", "take_last"]) {
+        const streamer = new fastloess.StreamingLoess(
+            { fraction: 0.5, iterations: 2 },
+            { chunkSize: 20, overlap: 5, mergeStrategy: strategy }
+        );
+        let total = 0;
+        for (let start = 0; start < n; start += 15) {
+            const end = Math.min(start + 20, n);
+            total += streamer.processChunk(x.subarray(start, end), y.subarray(start, end)).x.length;
+        }
+        total += streamer.finalize().x.length;
+        console.log(`  ${strategy}: total=${total}`);
+    }
+    console.log();
+}
+
+// ── Example 9: Advanced Streaming Options ─────────────────────────────────────
+function example_9_advanced_options() {
+    console.log("Example 9: Advanced Streaming Options");
+
+    const n = 50;
+    const { x, y } = makeLinear(n);
+
+    const streamer = new fastloess.StreamingLoess(
+        {
+            fraction: 0.5,
+            iterations: 2,
+            degree: "quadratic",
+            scalingMethod: "mar",
+            boundaryPolicy: "reflect",
+            zeroWeightFallback: "return_original",
+            distanceMetric: "manhattan",
+            surfaceMode: "direct",
+            returnSe: true,
+            returnDiagnostics: true,
+            returnRobustnessWeights: true,
+            autoConverge: 1e-3,
+        },
+        { chunkSize: 20, overlap: 5 }
+    );
+
+    let total = 0;
+    for (let start = 0; start < n; start += 15) {
+        const end = Math.min(start + 20, n);
+        total += streamer.processChunk(x.subarray(start, end), y.subarray(start, end)).x.length;
+    }
+    const fin = streamer.finalize();
+    total += fin.x.length;
+
+    console.log(`  total points: ${total}`);
+    if (fin.standardErrors && fin.standardErrors.length > 0) {
+        console.log(`  standardErrors[0]: ${fin.standardErrors[0].toFixed(4)}`);
+    }
+    if (fin.diagnostics) {
+        console.log(`  diagnostics.rmse: ${fin.diagnostics.rmse.toFixed(3)}`);
+        console.log(`  diagnostics.rSquared: ${fin.diagnostics.rSquared.toFixed(3)}`);
+        if (fin.diagnostics.aic != null) console.log(`  diagnostics.aic: ${fin.diagnostics.aic.toFixed(3)}`);
+    }
+    if (fin.robustnessWeights && fin.robustnessWeights.length > 0) {
+        console.log(`  robustnessWeights[0]: ${fin.robustnessWeights[0].toFixed(4)}`);
+    }
+    console.log();
+}
+
+// ── Main ──────────────────────────────────────────────────────────────────────
+function main() {
+    console.log("=".repeat(60));
+    console.log("fastloess Streaming Smoothing - Comprehensive Examples");
+    console.log("=".repeat(60));
+    console.log();
+
+    example_1_basic_chunked_processing();
+    example_2_chunk_size_comparison();
+    example_3_overlap_strategies();
+    example_4_large_dataset_processing();
+    example_5_outlier_handling();
+    example_6_file_simulation();
+    example_7_benchmark();
+    example_8_merge_strategies();
+    example_9_advanced_options();
+
+    console.log("=== Streaming Smoothing Examples Complete ===");
 }
 
 main();
+
