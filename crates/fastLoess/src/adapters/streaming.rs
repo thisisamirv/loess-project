@@ -244,7 +244,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
 
         // Lazily initialize the processor with parallel callbacks
         if self.processor.is_none() {
-            #[cfg_attr(not(feature = "cpu"), allow(unused_mut))]
             let mut builder = self.config.base.clone();
 
             #[cfg(feature = "cpu")]

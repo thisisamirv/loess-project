@@ -233,12 +233,3 @@ fn build_recursive_sequential<T>(
         2 * v + 1,
     );
 }
-
-// Fallback for non-CPU targets.
-#[cfg(not(feature = "cpu"))]
-pub fn build_kdtree_parallel<T>(points: &[T], dimensions: usize) -> KDTree<T>
-where
-    T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Send + Sync + 'static,
-{
-    KDTree::new(points, dimensions)
-}

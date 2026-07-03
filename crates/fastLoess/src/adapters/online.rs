@@ -208,7 +208,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         }
 
         // Configure parallel callbacks before building
-        #[cfg_attr(not(feature = "cpu"), allow(unused_mut))]
         let mut builder = self.base;
 
         #[cfg(feature = "cpu")]

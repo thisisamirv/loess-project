@@ -356,28 +356,3 @@ pub fn vertex_pass_parallel<T>(
         }
     }
 }
-
-// Sequential fallback (when cpu feature is not enabled)
-#[cfg(not(feature = "cpu"))]
-#[allow(clippy::too_many_arguments)]
-pub fn vertex_pass_parallel<T>(
-    _x: &[T],
-    _y: &[T],
-    _dims: usize,
-    _vertices: &[T],
-    _window_size: usize,
-    _use_robustness: bool,
-    _robustness_weights: &[T],
-    _vertex_data_out: &mut [T],
-    _existing_neighborhoods: Option<&[CachedNeighborhood<T>]>,
-    _output_neighborhoods: &mut Vec<CachedNeighborhood<T>>,
-    _weight_function: WeightFunction,
-    _zero_weight_fallback: ZeroWeightFallback,
-    _polynomial_degree: PolynomialDegree,
-    _distance_metric: &DistanceMetric<T>,
-    _scales: &[T],
-    _boundary_degree_fallback: bool,
-) where
-    T: Float + Send + Sync,
-{
-}

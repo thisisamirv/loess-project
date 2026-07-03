@@ -281,14 +281,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
                         builder.custom_kdtree_builder = Some(build_kdtree_parallel);
                     }
                 }
-                #[cfg(not(feature = "cpu"))]
-                {
-                    // Fallback to sequential if cpu feature is disabled
-                    builder.custom_smooth_pass = None;
-                    builder.custom_cv_pass = None;
-                    builder.custom_interval_pass = None;
-                    builder.custom_vertex_pass = None;
-                }
             }
             Backend::GPU => {
                 // GPU backend not yet supported for LOESS

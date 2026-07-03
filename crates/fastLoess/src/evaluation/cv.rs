@@ -257,24 +257,3 @@ where
         }
     }
 }
-
-// Sequential fallback
-#[cfg(not(feature = "cpu"))]
-pub fn cv_pass_parallel<T>(
-    _x: &[T],
-    _y: &[T],
-    fractions: &[T],
-    _cv_kind: CVKind,
-    _config: &LoessConfig<T>,
-) -> (T, Vec<T>)
-where
-    T: Float + Send + Sync + FloatLinalg + SolverLinalg,
-{
-    // Return first fraction as default if parallel CV not available
-    let best = fractions
-        .first()
-        .copied()
-        .unwrap_or_else(|| T::from(0.67).unwrap());
-    let scores = vec![T::infinity(); fractions.len()];
-    (best, scores)
-}
