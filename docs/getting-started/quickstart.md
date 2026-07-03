@@ -5,20 +5,22 @@ Get up and running with LOESS in minutes.
 
 ## Basic Smoothing
 
+Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example recovers the underlying trend from 100 points of Gaussian noise.
+
 === "R"
 
     ```r
     library(rfastloess)
 
-    # Sample data
-    x <- c(1, 2, 3, 4, 5, 6, 7, 8)
-    y <- c(2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7)
+    # 100-point noisy sine wave
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
 
-    # Smooth the data
-    model <- Loess(fraction = 0.5, iterations = 3)
-    result <- model$fit(x, y)
+    result <- Loess(fraction = 0.3, iterations = 3)$fit(x, y)
 
-    print(result$y)
+    cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
+                result$y[1], sin(x[1])))
     ```
 
 === "Python"
@@ -27,36 +29,38 @@ Get up and running with LOESS in minutes.
     import fastloess as fl
     import numpy as np
 
-    # Sample data
-    x = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
-    y = np.array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7])
+    # 100-point noisy sine wave
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    # Smooth the data
-    result = fl.smooth(x, y, fraction=0.5, iterations=3)
+    result = fl.smooth(x, y, fraction=0.3, iterations=3)
 
-    print("Smoothed values:", result["y"])
+    print(f"First smoothed value: {result['y'][0]:.4f}  (true: {np.sin(x[0]):.4f})")
     ```
 
 === "Rust"
 
     ```rust
     use loess::prelude::*;
+    use std::f64::consts::TAU;
 
     fn main() -> Result<(), LoessError> {
-        // Sample data
-        let x = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
-        let y = vec![2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7];
+        // 100-point noisy sine wave (deterministic)
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().enumerate()
+            .map(|(i, &xi)| xi.sin() + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 0.3)
+            .collect();
 
-        // Build and fit the model
         let model = Loess::new()
-            .fraction(0.5)      // Use 50% of data for each fit
-            .iterations(3)      // 3 robustness iterations
+            .fraction(0.3)
+            .iterations(3)
             .adapter(Batch)
             .build()?;
 
         let result = model.fit(&x, &y)?;
-        
-        println!("{}", result);
+        println!("First smoothed: {:.4}  (true: {:.4})", result.y[0], x[0].sin());
         Ok(())
     }
     ```
@@ -66,72 +70,66 @@ Get up and running with LOESS in minutes.
     ```julia
     using FastLOESS
 
-    # Sample data
-    x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]
-    y = [2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]
+    # 100-point noisy sine wave
+    x = collect(range(0, 2π, length=100))
+    rng = MersenneTwister(42)
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-    # Smooth the data
-    result = smooth(x, y, fraction=0.5, iterations=3)
+    result = fit(Loess(; fraction=0.3, iterations=3), x, y)
 
-    println("Smoothed values: ", result.y)
+    @printf "First smoothed: %.4f  (true: %.4f)\n" result.y[1] sin(x[1])
     ```
 
 === "Node.js"
 
     ```javascript
-    const fastloess = require('fastloess');
+    const { smooth } = require('fastloess');
 
-    // Sample data
-    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
-    const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+    // 100-point noisy sine wave
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    // Smooth the data
-    const result = fastloess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+    const result = smooth(x, y, { fraction: 0.3, iterations: 3 });
 
-    console.log("Smoothed values:", result.y);
+    console.log(`First smoothed: ${result.y[0].toFixed(4)}  (true: ${Math.sin(x[0]).toFixed(4)})`);
     ```
 
 === "WebAssembly"
 
     ```javascript
-    import * as fastloess from 'fastloess-wasm';
+    import { smooth } from 'fastloess-wasm';
 
-    // Sample data
-    const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
-    const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    // Smooth the data
-    const result = fastloess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+    const result = smooth(x, y, { fraction: 0.3, iterations: 3 });
 
-    console.log("Smoothed values:", result.y);
+    console.log(`First smoothed: ${result.y[0].toFixed(4)}`);
     ```
 
 === "C++"
 
     ```cpp
     #include <fastloess.hpp>
+    #include <cmath>
     #include <iostream>
     #include <vector>
 
     int main() {
-        // Sample data
-        std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
-        std::vector<double> y = {2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7};
+        // 100-point noisy sine wave (deterministic)
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + ((i * 7 + 3) % 17 / 17.0 - 0.5) * 0.6;
+        }
 
-        // Smooth the data
-        fastloess::LoessOptions options;
-        options.fraction = 0.5;
-        options.iterations = 3;
-        
-        fastloess::Loess model(options);
-        auto result = model.fit(x, y);
+        auto result = fastloess::smooth(x, y, { .fraction = 0.3, .iterations = 3 });
 
-        // Print smoothed values
-        const auto& y_smooth = result.yVector();
-        std::cout << "Smoothed values: [";
-        for (double val : y_smooth) std::cout << val << ", ";
-        std::cout << "]" << std::endl;
-        
+        std::cout << "First smoothed: " << result.yVector()[0]
+                  << "  (true: " << std::sin(x[0]) << ")\n";
         return 0;
     }
     ```
@@ -431,9 +429,209 @@ LOESS can robustly handle outliers through iterative reweighting:
 
 ---
 
+## Streaming Mode
+
+For datasets too large to fit in memory, stream them in fixed-size chunks with overlap.
+
+=== "R"
+
+    ```r
+    library(rfastloess)
+
+    set.seed(42)
+    x <- seq(0, 10 * pi, length.out = 5000)
+    y <- sin(x / pi) * exp(-x / 30) + rnorm(5000, sd = 0.15)
+
+    # Process in 1 000-point chunks with 100-point overlap
+    model <- StreamingLoess(
+        fraction        = 0.2,
+        chunk_size      = 1000L,
+        overlap         = 100L,
+        merge_strategy  = "weighted_average"
+    )
+
+    chunk_size <- 1000L
+    for (start in seq(1, 4001, by = chunk_size)) {
+        end <- min(start + chunk_size - 1L, length(x))
+        model$process_chunk(x[start:end], y[start:end])
+    }
+    result <- model$finalize()
+    cat(sprintf("Smoothed %d points across %d chunks\n",
+                length(result$y), ceiling(5000 / chunk_size)))
+    ```
+
+=== "Python"
+
+    ```python
+    import fastloess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 10 * np.pi, 5000)
+    y = np.sin(x / np.pi) * np.exp(-x / 30) + rng.normal(0, 0.15, 5000)
+
+    model = fl.StreamingLoess(
+        fraction=0.2,
+        chunk_size=1000,
+        overlap=100,
+        merge_strategy="weighted_average",
+    )
+
+    chunk_size = 1000
+    for start in range(0, 4001, chunk_size):
+        end = min(start + chunk_size, len(x))
+        model.process_chunk(x[start:end], y[start:end])
+    result = model.finalize()
+    print(f"Smoothed {len(result.y)} points in streaming mode")
+    ```
+
+=== "Rust"
+
+    ```rust
+    use loess::prelude::*;
+    use std::f64::consts::PI;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 5_000usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * 10.0 * PI / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().enumerate()
+            .map(|(i, &xi)| (xi / PI).sin() * (-xi / 30.0).exp()
+                           + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 0.15)
+            .collect();
+
+        let mut model = Loess::new()
+            .fraction(0.2)
+            .adapter(Streaming { chunk_size: 1000, overlap: 100, ..Default::default() })
+            .build()?;
+
+        for chunk in x.chunks(1000).zip(y.chunks(1000)) {
+            model.process_chunk(chunk.0, chunk.1)?;
+        }
+        let result = model.finalize()?;
+        println!("Smoothed {} points", result.y.len());
+        Ok(())
+    }
+    ```
+
+=== "Julia"
+
+    ```julia
+    using FastLOESS
+
+    x = collect(range(0, 10π, length=5000))
+    rng = MersenneTwister(42)
+    y = @. sin(x / π) * exp(-x / 30) + randn(rng) * 0.15
+
+    model = StreamingLoess(; fraction=0.2, chunk_size=1000, overlap=100,
+                             merge_strategy="weighted_average")
+
+    chunk_size = 1000
+    for start in 1:chunk_size:4001
+        stop = min(start + chunk_size - 1, length(x))
+        process_chunk(model, x[start:stop], y[start:stop])
+    end
+    result = finalize(model)
+    println("Smoothed $(length(result.y)) points in streaming mode")
+    ```
+
+=== "Node.js"
+
+    ```javascript
+    const { StreamingLoess } = require('fastloess');
+
+    const n = 5000;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 10 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) =>
+        Math.sin(xi / Math.PI) * Math.exp(-xi / 30) +
+        (((i * 7 + 3) % 17) / 17 - 0.5) * 0.3
+    );
+
+    const model = new StreamingLoess(
+        { fraction: 0.2 },
+        { chunkSize: 1000, overlap: 100, mergeStrategy: 'weighted_average' }
+    );
+
+    const chunkSize = 1000;
+    for (let start = 0; start <= 4000; start += chunkSize) {
+        const end = Math.min(start + chunkSize, n);
+        model.processChunk(x.slice(start, end), y.slice(start, end));
+    }
+    const result = model.finalize();
+    console.log(`Smoothed ${result.y.length} points in streaming mode`);
+    ```
+
+=== "WebAssembly"
+
+    ```javascript
+    import { StreamingLoessWasm } from 'fastloess-wasm';
+
+    const n = 5000;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 10 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) =>
+        Math.sin(xi / Math.PI) * Math.exp(-xi / 30) +
+        (((i * 7 + 3) % 17) / 17 - 0.5) * 0.3
+    );
+
+    const model = new StreamingLoessWasm(
+        { fraction: 0.2 },
+        { chunkSize: 1000, overlap: 100, mergeStrategy: 'weighted_average' }
+    );
+
+    const chunkSize = 1000;
+    for (let start = 0; start <= 4000; start += chunkSize) {
+        model.processChunk(x.slice(start, end), y.slice(start, end));
+    }
+    const result = model.finalize();
+    console.log(`Smoothed ${result.y.length} points`);
+    ```
+
+=== "C++"
+
+    ```cpp
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 5000;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 10 * M_PI / (n - 1);
+            y[i] = std::sin(x[i] / M_PI) * std::exp(-x[i] / 30.0)
+                 + ((i * 7 + 3) % 17 / 17.0 - 0.5) * 0.3;
+        }
+
+        fastloess::StreamingOptions opts;
+        opts.chunk_size = 1000;
+        opts.overlap    = 100;
+
+        fastloess::StreamingLoess model({ .fraction = 0.2 }, opts);
+
+        for (int start = 0; start <= 4000; start += 1000) {
+            int end = std::min(start + 1000, n);
+            model.processChunk(
+                std::vector<double>(x.begin() + start, x.begin() + end),
+                std::vector<double>(y.begin() + start, y.begin() + end)
+            );
+        }
+        auto result = model.finalize();
+        std::cout << "Smoothed " << result.yVector().size() << " points\n";
+        return 0;
+    }
+    ```
+
+---
+
 ## Next Steps
 
-- [Concepts](concepts.md) — Understand how LOESS works
-- [Parameters](../user-guide/parameters.md) — All configuration options
-- [Execution Modes](../user-guide/adapters.md) — Batch, Streaming, Online
-- [API](../api/index.md) — Full references
+| Topic | Link |
+| --- | --- |
+| How LOESS works | [Concepts](concepts.md) |
+| All parameters explained | [Parameters](../user-guide/parameters.md) |
+| Batch vs Streaming vs Online | [Execution Modes](../user-guide/adapters.md) |
+| Polynomial degree choices | [Degree](../user-guide/degree.md) |
+| Multivariate smoothing | [Dimensions](../user-guide/dimensions.md) |
+| Edge handling | [Boundary](../user-guide/boundary.md) |
+| Outlier handling in depth | [Robustness](../user-guide/robustness.md) |
+| Full API per language | [API Reference](../api/index.md) |

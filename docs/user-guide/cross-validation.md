@@ -252,11 +252,11 @@ Set a seed for reproducible fold assignments:
 
 ## Comparison
 
-| Method        | Folds | Speed  | Variance | Bias   |
-|---------------|:-----:|:------:|:--------:|:------:|
-| **KFold(5)**  | 5     | Fast   | Moderate | Low    |
-| **KFold(10)** | 10    | Medium | Lower    | Lower  |
-| **LOOCV**     | N     | Slow   | Lowest   | Lowest |
+| Method | Folds | Speed | Variance | Bias |
+| --- | --- | --- | --- | --- |
+| **KFold(5)** | 5 | Fast | Moderate | Low |
+| **KFold(10)** | 10 | Medium | Lower | Lower |
+| **LOOCV** | N | Slow | Lowest | Lowest |
 
 !!! tip "Recommendation"
     Use **5-fold** or **10-fold** CV for most applications. LOOCV is only worth it for small datasets (N < 100).
@@ -392,10 +392,10 @@ The fraction with **lowest CV score** is automatically selected.
 !!! warning "Batch Mode Only"
     Cross-validation is only available in **Batch** mode.
 
-| Feature   | Batch | Streaming | Online |
-|-----------|:-----:|:---------:|:------:|
-| K-Fold CV | ✓     | ✗         | ✗      |
-| LOOCV     | ✓     | ✗         | ✗      |
+| Feature | Batch | Streaming | Online |
+| --- | --- | --- | --- |
+| K-Fold CV | ✓ | ✗ | ✗ |
+| LOOCV | ✓ | ✗ | ✗ |
 
 ---
 

@@ -178,11 +178,11 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 ## Comparison
 
-| Method       | Transition | Aggressiveness | Use Case              |
-|--------------|------------|----------------|-----------------------|
-| **Bisquare** | Smooth     | Moderate       | General purpose       |
-| **Huber**    | Gradual    | Mild           | Preserve influence    |
-| **Talwar**   | Hard       | Strong         | Extreme contamination |
+| Method | Transition | Aggressiveness | Use Case |
+| --- | --- | --- | --- |
+| **Bisquare** | Smooth | Moderate | General purpose |
+| **Huber** | Gradual | Mild | Preserve influence |
+| **Talwar** | Hard | Strong | Extreme contamination |
 
 ---
 
@@ -281,10 +281,10 @@ Use robustness weights to identify potential outliers:
 
 Residuals are scaled before computing robustness weights. Two methods:
 
-| Method  | Description               | Robustness          |
-|---------|---------------------------|---------------------|
-| **MAD** | Median Absolute Deviation | Very robust         |
-| **MAR** | Mean Absolute Residual    | Less robust, faster |
+| Method | Description | Robustness |
+| --- | --- | --- |
+| **MAD** | Median Absolute Deviation | Very robust |
+| **MAR** | Mean Absolute Residual | Less robust, faster |
 
 === "R"
     ```r

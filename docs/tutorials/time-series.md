@@ -47,7 +47,7 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     # Plot
     plt.figure(figsize=(12, 5))
     plt.plot(t, y, "gray", alpha=0.5, label="Observed")
-    plt.plot(t, result["y"], "b-", lwd=2, label="Trend (LOESS)")
+    plt.plot(t, result["y"], "b-", linewidth=2, label="Trend (LOESS)")
     plt.xlabel("Time")
     plt.ylabel("Value")
     plt.legend()
@@ -57,11 +57,14 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
 
 === "Rust"
     ```rust
-    use fastLoess::prelude::*;
-    use ndarray::Array1;
+    use loess::prelude::*;
 
-    let t: Array1<f64> = Array1::linspace(0.0, 100.0, 500);
-    let y: Array1<f64> = /* your data */;
+    let n = 500usize;
+    let t: Vec<f64> = (0..n).map(|i| i as f64 * 100.0 / (n - 1) as f64).collect();
+    let y: Vec<f64> = t.iter().enumerate()
+        .map(|(i, &ti)| 10.0 + 0.5 * ti + 3.0 * (ti / 10.0).sin()
+                      + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 3.0)
+        .collect();
 
     let model = Loess::new()
         .fraction(0.1)
@@ -263,7 +266,7 @@ Remove trend to analyze residual patterns:
     # Plot with uncertainty bands
     plt.figure(figsize=(12, 5))
     plt.plot(t, y, "gray", alpha=0.3)
-    plt.plot(t, result["y"], "b-", lwd=2, label="Trend")
+    plt.plot(t, result["y"], "b-", linewidth=2, label="Trend")
     plt.fill_between(
         t,
         result["prediction_lower"],
@@ -556,8 +559,14 @@ Biological application:
 
 === "Rust"
     ```rust
-    let hours: Array1<f64> = Array1::range(0.0, 24.5, 0.5);
-    let expression: Array1<f64> = /*circadian data*/;
+    use loess::prelude::*;
+    use std::f64::consts::PI;
+
+    let hours: Vec<f64> = (0..49).map(|i| i as f64 * 0.5).collect(); // 0.0..24.0 step 0.5
+    let expression: Vec<f64> = hours.iter().enumerate()
+        .map(|(i, &h)| 100.0 * (1.0 + 0.5 * (h * PI / 12.0).sin())
+                      + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 10.0)
+        .collect();
 
     let model = Loess::new()
         .fraction(0.3)
@@ -634,13 +643,13 @@ Biological application:
 
 ## Choosing Fraction for Time Series
 
-| Data Type             | Recommended Fraction | Rationale                    |
-|-----------------------|----------------------|------------------------------|
-| Daily data (years)    | 0.3–0.5              | Capture annual trends        |
-| Hourly data (days)    | 0.1–0.2              | Capture daily patterns       |
-| Sensor data (minutes) | 0.05–0.1             | Preserve short-term features |
-| Noisy data            | Higher               | Reduce noise impact          |
-| Clean data            | Lower                | Preserve detail              |
+| Data Type | Recommended Fraction | Rationale |
+| --- | --- | --- |
+| Daily data (years) | 0.3–0.5 | Capture annual trends |
+| Hourly data (days) | 0.1–0.2 | Capture daily patterns |
+| Sensor data (minutes) | 0.05–0.1 | Preserve short-term features |
+| Noisy data | Higher | Reduce noise impact |
+| Clean data | Lower | Preserve detail |
 
 ---
 
@@ -648,3 +657,6 @@ Biological application:
 
 - [Real-Time Processing](real-time.md) — For streaming time series
 - [Cross-Validation](../user-guide/cross-validation.md) — Optimal fraction selection
+- [Polynomial Degree](../user-guide/degree.md) — Degree 2 for curved trends
+- [Boundary Handling](../user-guide/boundary.md) — Edge bias in trend extraction
+- [Parameters](../user-guide/parameters.md) — Full parameter reference

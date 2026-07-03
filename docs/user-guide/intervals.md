@@ -9,10 +9,10 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ![Uncertainty Decomposition](../assets/diagrams/intervals_comparison.svg)
 
-| Type           | Represents                 | Width  | Use                       |
-|----------------|----------------------------|--------|---------------------------|
-| **Confidence** | Uncertainty in mean curve  | Narrow | Where is the true trend?  |
-| **Prediction** | Uncertainty for new points | Wide   | Where will new data fall? |
+| Type | Represents | Width | Use |
+| --- | --- | --- | --- |
+| **Confidence** | Uncertainty in mean curve | Narrow | Where is the true trend? |
+| **Prediction** | Uncertainty for new points | Wide | Where will new data fall? |
 
 ---
 
@@ -242,11 +242,11 @@ Request both types simultaneously:
 
 Common levels and their z-values:
 
-| Level | z-value | Interpretation                      |
-|-------|---------|-------------------------------------|
-| 0.90  | 1.645   | 90% of intervals contain true value |
-| 0.95  | 1.960   | 95% of intervals contain true value |
-| 0.99  | 2.576   | 99% of intervals contain true value |
+| Level | z-value | Interpretation |
+| --- | --- | --- |
+| 0.90 | 1.645 | 90% of intervals contain true value |
+| 0.95 | 1.960 | 95% of intervals contain true value |
+| 0.99 | 2.576 | 99% of intervals contain true value |
 
 === "R"
     ```r
@@ -360,8 +360,8 @@ Access standard errors directly (available when intervals are computed):
 !!! warning "Batch Mode Only"
     Confidence and prediction intervals are only available in **Batch** mode. Streaming and Online modes do not support intervals.
 
-| Feature              | Batch | Streaming | Online |
-|----------------------|-------|-----------|--------|
-| Confidence intervals | ✓     | ✗         | ✗      |
-| Prediction intervals | ✓     | ✗         | ✗      |
-| Standard errors      | ✓     | ✗         | ✗      |
+| Feature | Batch | Streaming | Online |
+| --- | --- | --- | --- |
+| Confidence intervals | ✓ | ✗ | ✗ |
+| Prediction intervals | ✓ | ✗ | ✗ |
+| Standard errors | ✓ | ✗ | ✗ |

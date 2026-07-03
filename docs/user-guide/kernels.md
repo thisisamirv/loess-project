@@ -13,15 +13,15 @@ Weight functions (kernels) determine how neighboring points contribute to each l
 
 ## Available Kernels
 
-| Kernel           | Efficiency | Smoothness  | Support   |
-|------------------|:----------:|:-----------:|:---------:|
-| **Tricube**      | 0.998      | Very smooth | Compact   |
-| **Epanechnikov** | 1.000      | Smooth      | Compact   |
-| **Gaussian**     | 0.961      | Infinite    | Unbounded |
-| **Biweight**     | 0.995      | Very smooth | Compact   |
-| **Cosine**       | 0.999      | Smooth      | Compact   |
-| **Triangle**     | 0.989      | Moderate    | Compact   |
-| **Uniform**      | 0.943      | None        | Compact   |
+| Kernel | Efficiency | Smoothness | Support |
+| --- | --- | --- | --- |
+| **Tricube** | 0.998 | Very smooth | Compact |
+| **Epanechnikov** | 1.000 | Smooth | Compact |
+| **Gaussian** | 0.961 | Infinite | Unbounded |
+| **Biweight** | 0.995 | Very smooth | Compact |
+| **Cosine** | 0.999 | Smooth | Compact |
+| **Triangle** | 0.989 | Moderate | Compact |
+| **Uniform** | 0.943 | None | Compact |
 
 **Efficiency** = AMISE relative to Epanechnikov (1.0 = optimal)
 

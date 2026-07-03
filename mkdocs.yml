@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: LOESS Project
 site_description: High-performance LOESS smoothing for Rust, Python, R, Julia, JavaScript, C++, and WebAssembly.
 site_author: Amir Valizadeh
@@ -132,7 +133,12 @@ nav:
       - Parameters: user-guide/parameters.md
       - Execution Modes: user-guide/adapters.md
       - Weight Functions: user-guide/kernels.md
+      - Polynomial Degree: user-guide/degree.md
+      - Multivariate LOESS: user-guide/dimensions.md
+      - Boundary Handling: user-guide/boundary.md
       - Robustness: user-guide/robustness.md
+      - Scaling Methods: user-guide/scaling.md
+      - Merge Strategies: user-guide/merge.md
       - Intervals: user-guide/intervals.md
       - Cross-Validation: user-guide/cross-validation.md
   - API Reference:

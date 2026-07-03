@@ -78,7 +78,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     # Plot
     plt.figure(figsize=(12, 5))
     plt.scatter(positions, observed, s=2, alpha=0.3, label="Observed")
-    plt.plot(positions, result["y"], "b-", lwd=2, label="LOESS smoothed")
+    plt.plot(positions, result["y"], "b-", linewidth=2, label="LOESS smoothed")
     plt.fill_between(
         positions,
         result["confidence_lower"],
@@ -94,11 +94,10 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "Rust"
     ```rust
-    use fastLoess::prelude::*;
-    use ndarray::Array1;
+    use loess::prelude::*;
 
-    let positions: Array1<f64> = /* sorted genomic positions */;
-    let observed: Array1<f64> = /* methylation levels 0-1 */;
+    let positions: Vec<f64> = /* sorted genomic positions */;
+    let observed: Vec<f64> = /* methylation levels 0–1 */;
 
     let model = Loess::new()
         .fraction(0.1)
@@ -238,8 +237,10 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
 === "Rust"
     ```rust
-    let positions: Array1<f64> = Array1::range(0.0, 10000.0, 10.0);
-    let observed: Array1<f64> = /*ChIP-seq counts*/;
+    use loess::prelude::*;
+
+    let positions: Vec<f64> = (0..1000).map(|i| i as f64 * 10.0).collect(); // 0 to 9990 step 10
+    let observed: Vec<f64> = /* ChIP-seq counts */;
 
     let model = Loess::new()
         .fraction(0.05)
@@ -251,10 +252,9 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     let result = model.fit(&positions, &observed)?;
 
     // Find peaks above threshold
-    let threshold = /* compute 75th percentile */;
-    let peak_positions: Vec<f64> = positions
-        .iter()
-        .zip(result.y.iter())
+    let threshold = result.y.iter().copied()
+        .fold(f64::NEG_INFINITY, f64::max) * 0.75;
+    let peak_positions: Vec<f64> = positions.iter().zip(result.y.iter())
         .filter(|(_, &y)| y > threshold)
         .map(|(&p, _)| p)
         .collect();
@@ -336,7 +336,7 @@ For whole-genome data that doesn't fit in memory:
         fraction = 0.05,
         chunk_size = 100000,
         overlap = 10000,
-        merge_strategy = "weighted"
+        merge_strategy = "weighted_average"
     )
     result <- model$process_chunk(positions, coverage)
     final <- model$finalize()
@@ -350,15 +350,15 @@ For whole-genome data that doesn't fit in memory:
         fraction=0.05,
         chunk_size=100000,    # 100kb chunks
         overlap=10000,        # 10kb overlap
-        merge_strategy="weighted"
+        merge_strategy="weighted_average"
     )
     ```
 
 === "Rust"
     ```rust
-    use fastLoess::prelude::*;
+    use loess::prelude::*;
 
-    let model = Loess::new()
+    let mut model = Loess::new()
         .fraction(0.05)
         .iterations(3)
         .adapter(Streaming {
@@ -386,7 +386,7 @@ For whole-genome data that doesn't fit in memory:
         fraction=0.05,
         chunk_size=100000,
         overlap=10000,
-        merge_strategy="weighted"
+        merge_strategy="weighted_average"
     )
     ```
 
@@ -438,12 +438,12 @@ For whole-genome data that doesn't fit in memory:
 
 ## Best Practices for Genomic Data
 
-| Consideration            | Recommendation                      |
-|--------------------------|-------------------------------------|
-| **Fraction**             | 0.05–0.15 (preserve local features) |
-| **Iterations**           | 3–5 (handle sequencing outliers)    |
-| **Large data**           | Use streaming mode                  |
-| **Sparse regions**       | Use `boundary_policy="extend"`      |
+| Consideration | Recommendation |
+| --- | --- |
+| **Fraction** | 0.05–0.15 (preserve local features) |
+| **Iterations** | 3–5 (handle sequencing outliers) |
+| **Large data** | Use streaming mode |
+| **Sparse regions** | Use `boundary_policy="extend"` |
 | **Multiple chromosomes** | Process separately or ensure sorted |
 
 ---
@@ -452,4 +452,7 @@ For whole-genome data that doesn't fit in memory:
 
 - [Concepts](../getting-started/concepts.md) — How LOESS works
 - [Parameters](../user-guide/parameters.md) — All options
+- [Robustness](../user-guide/robustness.md) — Outlier downweighting in depth
+- [Merge Strategies](../user-guide/merge.md) — Streaming chunk reconciliation
+- [Boundary Handling](../user-guide/boundary.md) — Edge handling for sparse regions
 - [Real-Time Processing](real-time.md) — For sequencing runs

@@ -57,18 +57,17 @@ Install the LOESS library for your preferred language.
     [dependencies]
     loess = "1.3"
 
-    # fastLoess (parallel + GPU)
+    # fastLoess (parallel)
     [dependencies]
     fastLoess = { version = "1.3", features = ["cpu"] }
     ```
 
     === "Feature Flags"
 
-    | Crate        | Feature | Description                             |
-    |--------------|---------|-----------------------------------------|
-    | `loess`     | `std`   | Enable standard library (default)       |
-    | `fastLoess` | `cpu`   | Enable CPU parallelism via Rayon        |
-    | `fastLoess` | `gpu`   | Enable GPU acceleration via wgpu (beta) |
+| Crate | Feature | Description |
+| --- | --- | --- |
+| `loess` | `std` | Enable standard library (default) |
+| `fastLoess` | `cpu` | Enable CPU parallelism via Rayon |
 
 === "Julia"
 

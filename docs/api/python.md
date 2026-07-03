@@ -75,72 +75,87 @@ result = online.add_points(x, y)
 
 ### `LoessOptions`
 
-| Field                       | Type          | Default            | Description                           |
-| --------------------------- | ------------- | ------------------ | ------------------------------------- |
-| `fraction`                  | `float`       | `0.67`             | Smoothing fraction (bandwidth)        |
-| `iterations`                | `int`         | `3`                | Number of robustifying iterations     |
-| `delta`                     | `float`       | `None`             | Interpolation distance (None for auto)|
-| `weight_function`           | `str`         | `"tricube"`        | Weight function name                  |
-| `robustness_method`         | `str`         | `"bisquare"`       | Robustness method name                |
-| `scaling_method`            | `str`         | `"mad"`            | Residual scaling method               |
-| `boundary_policy`           | `str`         | `"extend"`         | Boundary handling policy              |
-| `zero_weight_fallback`      | `str`         | `"use_local_mean"` | Zero-weight handling strategy         |
-| `auto_converge`             | `float`       | `None`             | Auto-convergence tolerance            |
-| `confidence_intervals`      | `float`       | `None`             | Confidence level (e.g., 0.95)         |
-| `prediction_intervals`      | `float`       | `None`             | Prediction level (e.g., 0.95)         |
-| `return_diagnostics`        | `bool`        | `False`            | Include diagnostics in result         |
-| `return_residuals`          | `bool`        | `False`            | Include residuals in result           |
-| `return_robustness_weights` | `bool`        | `False`            | Include weights in result             |
-| `parallel`                  | `bool`        | `True`             | Enable parallel execution             |
-| `cv_method`                 | `str`         | `"kfold"`          | Cross-validation method ("kfold")     |
-| `cv_k`                      | `int`         | `5`                | Number of CV folds                    |
-| `cv_fractions`              | `list[float]` | `None`             | Manual fractions for CV grid          |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fraction` | `float` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations` | `int` | `3` | Number of robustifying iterations |
+| `weight_function` | `str` | `"tricube"` | Kernel weight function |
+| `robustness_method` | `str` | `"bisquare"` | Robustness method |
+| `scaling_method` | `str` | `"mad"` | Residual scaling method |
+| `boundary_policy` | `str` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling strategy |
+| `auto_converge` | `float` | `None` | Auto-convergence tolerance |
+| `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95) |
+| `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95) |
+| `return_diagnostics` | `bool` | `False` | Compute RMSE, MAE, R², AIC |
+| `return_residuals` | `bool` | `False` | Include residuals in result |
+| `return_robustness_weights` | `bool` | `False` | Include robustness weights in result |
+| `return_se` | `bool` | `False` | Compute hat-matrix statistics (enp, leverage …) |
+| `parallel` | `bool` | `True` | Enable parallel execution |
+| `degree` | `str` | `"linear"` | Polynomial degree of local fit |
+| `dimensions` | `int` | `1` | Number of predictor dimensions |
+| `distance_metric` | `str` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
+| `surface_mode` | `str` | `"interpolation"` | Surface computation mode |
+| `minkowski_p` | `float` | `2.0` | Minkowski exponent (used when `distance_metric="minkowski"`) |
+| `weighted_metric_weights` | `list[float]` | `None` | Per-dimension weights (used when `distance_metric="weighted"`) |
+| `cv_fractions` | `list[float]` | `None` | Fractions to test for cross-validation |
+| `cv_method` | `str` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
+| `cv_k` | `int` | `5` | Number of folds for k-fold CV |
 
 ### `StreamingOptions` (inherits `LoessOptions`)
 
-| Field            | Type   | Default      | Description                |
-| ---------------- | ------ | ------------ | -------------------------- |
-| `chunk_size`     | `int`  | `5000`       | Data chunk size            |
-| `overlap`        | `int`  | `500`        | Overlap size (-1 for auto) |
-| `merge_strategy` | `str`  | `"weighted"` | Merge strategy for overlap |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `chunk_size` | `int` | `5000` | Data chunk size |
+| `overlap` | `int` | auto (10% of chunk) | Overlap between chunks |
+| `merge_strategy` | `str` | `"weighted_average"` | Strategy for blending overlap: see Merge Strategies |
 
 ### `OnlineOptions` (inherits `LoessOptions`)
 
-| Field             | Type   | Default         | Description                           |
-| ----------------- | ------ | --------------- | ------------------------------------- |
-| `window_capacity` | `int`  | `1000`          | Max window size                       |
-| `min_points`      | `int`  | `2`             | Min points before smoothing           |
-| `update_mode`     | `str`  | `"incremental"` | Update mode ("full" or "incremental") |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `window_capacity` | `int` | `100` | Max points in sliding window |
+| `min_points` | `int` | `2` | Min points before smoothing starts |
+| `update_mode` | `str` | `"full"` | Update mode (`"full"` or `"incremental"`) |
 
 ## Result Structure
 
 ### `LoessResult`
 
-| Field                | Type      | Description               |
-| -------------------- | --------- | ------------------------- |
-| `x`                  | `ndarray` | Smoothed X coordinates    |
-| `y`                  | `ndarray` | Smoothed Y coordinates    |
-| `valid`              | `bool`    | True if result is valid   |
-| `error`              | `str`     | Error message if failed   |
-| `diagnostics`        | `object`  | Diagnostic metrics object |
-| `residuals`          | `ndarray` | Residuals (if requested)  |
-| `confidence_lower`   | `ndarray` | Lower CI bounds           |
-| `confidence_upper`   | `ndarray` | Upper CI bounds           |
-| `prediction_lower`   | `ndarray` | Lower PI bounds           |
-| `prediction_upper`   | `ndarray` | Upper PI bounds           |
-| `robustness_weights` | `ndarray` | Robustness weights        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `ndarray` | Sorted x values |
+| `y` | `ndarray` | Smoothed y values |
+| `fraction_used` | `float` | Fraction used (set or selected by CV) |
+| `iterations_used` | int \| None | Robustness iterations actually performed |
+| `standard_errors` | ndarray \| None | Per-point SE (if `return_se`) |
+| `confidence_lower` | ndarray \| None | Lower confidence bounds |
+| `confidence_upper` | ndarray \| None | Upper confidence bounds |
+| `prediction_lower` | ndarray \| None | Lower prediction bounds |
+| `prediction_upper` | ndarray \| None | Upper prediction bounds |
+| `residuals` | ndarray \| None | Residuals (if `return_residuals`) |
+| `robustness_weights` | ndarray \| None | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | ndarray \| None | CV score per tested fraction |
+| `diagnostics` | Diagnostics \| None | Fit metrics (if `return_diagnostics`) |
+| `enp` | float \| None | Equivalent number of parameters (if `return_se`) |
+| `trace_hat` | float \| None | Trace of hat matrix (if `return_se`) |
+| `delta1` | float \| None | First delta statistic (if `return_se`) |
+| `delta2` | float \| None | Second delta statistic (if `return_se`) |
+| `residual_scale` | float \| None | Residual scale estimate (if `return_se`) |
+| `leverage` | ndarray \| None | Per-point hat-matrix diagonal (if `return_se`) |
+| `dimensions` | `int` | Number of predictor dimensions |
 
 ### `Diagnostics`
 
-| Field          | Type    | Description                 |
-| -------------- | ------- | --------------------------- |
-| `rmse`         | `float` | Root Mean Squared Error     |
-| `mae`          | `float` | Mean Absolute Error         |
-| `r_squared`    | `float` | R-squared                   |
-| `residual_sd`  | `float` | Residual standard deviation |
-| `effective_df` | `float` | Effective degrees of freedom|
-| `aic`          | `float` | AIC                         |
-| `aicc`         | `float` | AICc                        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `rmse` | `float` | Root Mean Squared Error |
+| `mae` | `float` | Mean Absolute Error |
+| `r_squared` | `float` | R-squared |
+| `residual_sd` | `float` | Residual standard deviation |
+| `effective_df` | `float` | Effective degrees of freedom |
+| `aic` | `float` | AIC |
+| `aicc` | `float` | AICc |
 
 ## String Options
 
@@ -179,17 +194,39 @@ result = online.add_points(x, y)
 * `"return_original"`
 * `"return_none"`
 
+### Polynomial Degrees
+
+* `"constant"` (degree 0)
+* `"linear"` (default, degree 1)
+* `"quadratic"` (degree 2)
+* `"cubic"` (degree 3)
+* `"quartic"` (degree 4)
+
+### Distance Metrics
+
+* `"normalized"` (default — scales each dimension by its range)
+* `"euclidean"`
+* `"manhattan"`
+* `"chebyshev"`
+* `"minkowski"` (set `minkowski_p` for custom exponent)
+* `"weighted"` (set `weighted_metric_weights` for per-dimension scaling)
+
+### Surface Modes
+
+* `"interpolation"` (default — faster, uses a spatial grid)
+* `"direct"` (fits every point exactly; slower but more accurate)
+
 ### Merge Strategies (Streaming)
 
-* `"weighted"` (default - weighted average of overlapping chunks)
-* `"average"`
-* `"left"`
-* `"right"`
+* `"weighted_average"` (default — weighted blend of overlapping regions)
+* `"average"` (simple mean of overlapping regions)
+* `"take_first"` (keep values from the earlier chunk)
+* `"take_last"` (keep values from the later chunk)
 
 ### Update Modes (Online)
 
-* `"full"` (default - re-smooth entire window)
-* `"incremental"` (O(1) update using existing fit)
+* `"full"` (default — re-smooth entire window each update)
+* `"incremental"` (faster, O(1) incremental update)
 
 ## Example
 

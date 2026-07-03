@@ -77,79 +77,89 @@ result <- online$add_points(x, y)
 
 ### `LoessOptions`
 
-| Field                       | Type       | Default            | Description                           |
-| --------------------------- | ---------- | ------------------ | ------------------------------------- |
-| `fraction`                  | `numeric`  | `0.67`             | Smoothing fraction (bandwidth)        |
-| `iterations`                | `integer`  | `3`                | Number of robustifying iterations     |
-| `delta`                     | `numeric`  | `NULL`             | Interpolation distance (NULL for auto)|
-| `weight_function`           | `character`| `"tricube"`        | Weight function name                  |
-| `robustness_method`         | `character`| `"bisquare"`       | Robustness method name                |
-| `scaling_method`            | `character`| `"mad"`            | Residual scaling method               |
-| `boundary_policy`           | `character`| `"extend"`         | Boundary handling policy              |
-| `zero_weight_fallback`      | `character`| `"use_local_mean"` | Zero-weight handling strategy         |
-| `auto_converge`             | `numeric`  | `NULL`             | Auto-convergence tolerance            |
-| `confidence_intervals`      | `numeric`  | `NULL`             | Confidence level (e.g., 0.95)         |
-| `prediction_intervals`      | `numeric`  | `NULL`             | Prediction level (e.g., 0.95)         |
-| `return_diagnostics`        | `logical`  | `FALSE`            | Include diagnostics in result         |
-| `return_residuals`          | `logical`  | `FALSE`            | Include residuals in result           |
-| `return_robustness_weights` | `logical`  | `FALSE`            | Include weights in result             |
-| `parallel`                  | `logical`  | `TRUE`             | Enable parallel execution             |
-| `cv_method`                 | `character`| `"kfold"`          | Cross-validation method ("kfold")     |
-| `cv_k`                      | `integer`  | `5`                | Number of CV folds                    |
-| `cv_fractions`              | `numeric`  | `NULL`             | Manual fractions for CV grid          |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fraction` | `numeric` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations` | `integer` | `3` | Number of robustifying iterations |
+| `weight_function` | `character` | `"tricube"` | Kernel weight function |
+| `robustness_method` | `character` | `"bisquare"` | Robustness method |
+| `scaling_method` | `character` | `"mad"` | Residual scaling method |
+| `boundary_policy` | `character` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback` | `character` | `"use_local_mean"` | Zero-weight handling strategy |
+| `auto_converge` | `numeric` | `NULL` | Auto-convergence tolerance |
+| `confidence_intervals` | `numeric` | `NULL` | Confidence level (e.g., 0.95) |
+| `prediction_intervals` | `numeric` | `NULL` | Prediction level (e.g., 0.95) |
+| `return_diagnostics` | `logical` | `FALSE` | Compute RMSE, MAE, R², AIC |
+| `return_residuals` | `logical` | `FALSE` | Include residuals in result |
+| `return_robustness_weights` | `logical` | `FALSE` | Include robustness weights in result |
+| `return_se` | `logical` | `FALSE` | Compute hat-matrix statistics (enp, leverage …) |
+| `parallel` | `logical` | `TRUE` | Enable parallel execution |
+| `degree` | `character` | `"linear"` | Polynomial degree of local fit |
+| `dimensions` | `integer` | `1L` | Number of predictor dimensions |
+| `distance_metric` | `character` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
+| `surface_mode` | `character` | `"interpolation"` | Surface computation mode |
+| `cv_fractions` | `numeric` | `NULL` | Fractions to test for cross-validation |
+| `cv_method` | `character` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
+| `cv_k` | `integer` | `5L` | Number of folds for k-fold CV |
 
 ### `StreamingOptions` (inherits `LoessOptions`)
 
-| Field            | Type       | Default      | Description                |
-| ---------------- | ---------- | ------------ | -------------------------- |
-| `chunk_size`     | `integer`  | `5000`       | Data chunk size            |
-| `overlap`        | `integer`  | `500`        | Overlap size (-1 for auto) |
-| `merge_strategy` | `character`| `"weighted"` | Merge strategy for overlap |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `chunk_size` | `integer` | `5000L` | Data chunk size |
+| `overlap` | `integer` | auto (10% of chunk) | Overlap between chunks (`NULL` for auto) |
+| `merge_strategy` | `character` | `"weighted_average"` | Strategy for blending overlap: see Merge Strategies |
 
 ### `OnlineOptions` (inherits `LoessOptions`)
 
-| Field             | Type       | Default         | Description                           |
-| ----------------- | ---------- | --------------- | ------------------------------------- |
-| `window_capacity` | `integer`  | `1000`          | Max window size                       |
-| `min_points`      | `integer`  | `2`             | Min points before smoothing           |
-| `update_mode`     | `character`| `"incremental"` | Update mode ("full" or "incremental") |
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `window_capacity` | `integer` | `100L` | Max points in sliding window |
+| `min_points` | `integer` | `2L` | Min points before smoothing starts |
+| `update_mode` | `character` | `"full"` | Update mode (`"full"` or `"incremental"`) |
 
 ## Result Structure
 
 ### `LoessResult`
 
-An S3 object containing the smoothing results.
+An S3 list with class `"LoessResult"` containing:
 
-**Supported Methods:**
+**Supported S3 Methods:** `print(result)`, `plot(result)`
 
-* `print(result)`: Summary of fit statistics.
-* `plot(result)`: Plots the smoothed curve (and confidence intervals if available).
-
-| Field                | Type       | Description               |
-| -------------------- | ---------- | ------------------------- |
-| `x`                  | `numeric`  | Smoothed X coordinates    |
-| `y`                  | `numeric`  | Smoothed Y coordinates    |
-| `valid`              | `logical`  | True if result is valid   |
-| `error`              | `character`| Error message if failed   |
-| `diagnostics`        | `list`     | Diagnostic metrics list   |
-| `residuals`          | `numeric`  | Residuals (if requested)  |
-| `confidence_lower`   | `numeric`  | Lower CI bounds           |
-| `confidence_upper`   | `numeric`  | Upper CI bounds           |
-| `prediction_lower`   | `numeric`  | Lower PI bounds           |
-| `prediction_upper`   | `numeric`  | Upper PI bounds           |
-| `robustness_weights` | `numeric`  | Robustness weights        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `numeric` | Sorted x values |
+| `y` | `numeric` | Smoothed y values |
+| `fraction_used` | `numeric` | Fraction used (set or selected by CV) |
+| `iterations_used` | `integer` | Robustness iterations actually performed |
+| `standard_errors` | `numeric` | Per-point SE (if `return_se`) |
+| `confidence_lower` | `numeric` | Lower confidence bounds |
+| `confidence_upper` | `numeric` | Upper confidence bounds |
+| `prediction_lower` | `numeric` | Lower prediction bounds |
+| `prediction_upper` | `numeric` | Upper prediction bounds |
+| `residuals` | `numeric` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `numeric` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `numeric` | CV score per tested fraction |
+| `diagnostics` | `list` | Fit metrics (if `return_diagnostics`) |
+| `enp` | `numeric` | Equivalent number of parameters (if `return_se`) |
+| `trace_hat` | `numeric` | Trace of hat matrix (if `return_se`) |
+| `delta1` | `numeric` | First delta statistic (if `return_se`) |
+| `delta2` | `numeric` | Second delta statistic (if `return_se`) |
+| `residual_scale` | `numeric` | Residual scale estimate (if `return_se`) |
+| `leverage` | `numeric` | Per-point hat-matrix diagonal (if `return_se`) |
+| `dimensions` | `integer` | Number of predictor dimensions |
 
 ### `Diagnostics`
 
-| Field          | Type      | Description                 |
-| -------------- | --------- | --------------------------- |
-| `rmse`         | `numeric` | Root Mean Squared Error     |
-| `mae`          | `numeric` | Mean Absolute Error         |
-| `r_squared`    | `numeric` | R-squared                   |
-| `residual_sd`  | `numeric` | Residual standard deviation |
-| `effective_df` | `numeric` | Effective degrees of freedom|
-| `aic`          | `numeric` | AIC                         |
-| `aicc`         | `numeric` | AICc                        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `rmse` | `numeric` | Root Mean Squared Error |
+| `mae` | `numeric` | Mean Absolute Error |
+| `r_squared` | `numeric` | R-squared |
+| `residual_sd` | `numeric` | Residual standard deviation |
+| `effective_df` | `numeric` | Effective degrees of freedom |
+| `aic` | `numeric` | AIC |
+| `aicc` | `numeric` | AICc |
 
 ## String Options
 
@@ -188,17 +198,38 @@ An S3 object containing the smoothing results.
 * `"return_original"`
 * `"return_none"`
 
+### Polynomial Degrees
+
+* `"constant"` (degree 0)
+* `"linear"` (default, degree 1)
+* `"quadratic"` (degree 2)
+* `"cubic"` (degree 3)
+* `"quartic"` (degree 4)
+
+### Distance Metrics
+
+* `"normalized"` (default — scales each dimension by its range)
+* `"euclidean"`
+* `"manhattan"`
+* `"chebyshev"`
+* `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
+
+### Surface Modes
+
+* `"interpolation"` (default — faster, uses a spatial grid)
+* `"direct"` (fits every point exactly; slower but more accurate)
+
 ### Merge Strategies (Streaming)
 
-* `"weighted"` (default - weighted average of overlapping chunks)
-* `"average"`
-* `"left"`
-* `"right"`
+* `"weighted_average"` (default — weighted blend of overlapping regions)
+* `"average"` (simple mean of overlapping regions)
+* `"take_first"` (keep values from the earlier chunk)
+* `"take_last"` (keep values from the later chunk)
 
 ### Update Modes (Online)
 
-* `"full"` (default - re-smooth entire window)
-* `"incremental"` (O(1) update using existing fit)
+* `"full"` (default — re-smooth entire window each update)
+* `"incremental"` (faster, O(1) incremental update)
 
 ## Example
 

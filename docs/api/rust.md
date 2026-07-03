@@ -80,41 +80,44 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 ### Loess Options
 
-| Method                        | Argument Type          | Default            | Description                           |
-| ----------------------------- | ---------------------- | ------------------ | ------------------------------------- |
-| `fraction(T)`                 | `T: Float`             | `0.67`             | Smoothing fraction (bandwidth)        |
-| `iterations(usize)`           | `usize`                | `3`                | Number of robustifying iterations     |
-| `delta(T)`                    | `T: Float`             | `NaN`              | Interpolation distance (NaN for auto) |
-| `weight_function(...)`        | `WeightFunction`       | `Tricube`          | Weight function enum                  |
-| `robustness_method(...)`      | `RobustnessMethod`     | `Bisquare`         | Robustness method enum                |
-| `scaling_method(...)`         | `ScalingMethod`        | `MAD`              | Residual scaling method enum          |
-| `boundary_policy(...)`        | `BoundaryPolicy`       | `Extend`           | Boundary handling policy enum         |
-| `zero_weight_fallback(...)`   | `ZeroWeightFallback`   | `UseLocalMean`     | Zero-weight handling enum             |
-| `auto_converge(T)`            | `T: Float`             | `NaN`              | Auto-convergence tolerance            |
-| `confidence_intervals(T)`     | `T: Float`             | `NaN`              | Confidence level (e.g., 0.95)         |
-| `prediction_intervals(T)`     | `T: Float`             | `NaN`              | Prediction level (e.g., 0.95)         |
-| `return_diagnostics()`        | -                      | `false`            | Include diagnostics in result         |
-| `return_residuals()`          | -                      | `false`            | Include residuals in result           |
-| `return_robustness_weights()` | -                      | `false`            | Include weights in result             |
-| `parallel(bool)`              | `bool`                 | `true`             | Enable parallel execution             |
-| `cross_validate(...)`         | `impl CrossValidation` | `None`             | CV strategy (`KFold`, `LOOCV`)        |
-| `backend(...)`                | `Backend`              | `CPU`              | `fastLoess` only: `CPU` or `GPU`     |
+| Method | Argument Type | Default | Description |
+| --- | --- | --- | --- |
+| `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
+| `weight_function(...)` | `WeightFunction` | `Tricube` | Kernel weight function enum |
+| `robustness_method(...)` | `RobustnessMethod` | `Bisquare` | Robustness method enum |
+| `scaling_method(...)` | `ScalingMethod` | `MAD` | Residual scaling method enum |
+| `boundary_policy(...)` | `BoundaryPolicy` | `Extend` | Boundary handling policy enum |
+| `zero_weight_fallback(...)` | `ZeroWeightFallback` | `UseLocalMean` | Zero-weight handling enum |
+| `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
+| `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) |
+| `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) |
+| `return_diagnostics()` | — | `false` | Compute RMSE, MAE, R², AIC |
+| `return_residuals()` | — | `false` | Include residuals in result |
+| `return_robustness_weights()` | — | `false` | Include robustness weights in result |
+| `return_se()` | — | `false` | Compute hat-matrix statistics (enp, leverage …) |
+| `parallel(bool)` | `bool` | `true` | Enable parallel execution |
+| `degree(...)` | `PolynomialDegree` | `Linear` | Polynomial degree enum |
+| `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
+| `distance_metric(...)` | `DistanceMetric<T>` | `Normalized` | Distance metric enum |
+| `surface_mode(...)` | `SurfaceMode` | `Interpolation` | Surface computation mode enum |
+| `cross_validate(...)` | `impl CrossValidation` | disabled | CV strategy: `KFold(k, &fractions)` or `LOOCV(&fractions)` |
 
 ### Streaming Options
 
-| Method               | Argument Type   | Default             | Description                |
-| -------------------- | --------------- | ------------------- | -------------------------- |
-| `chunk_size(usize)`  | `usize`         | `5000`              | Data chunk size            |
-| `overlap(usize)`     | `usize`         | `500`               | Overlap size               |
-| `merge_strategy(...)`| `MergeStrategy` | `WeightedAverage`   | Merge strategy enum        |
+| Method | Argument Type | Default | Description |
+| --- | --- | --- | --- |
+| `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
+| `overlap(usize)` | `usize` | auto (10%) | Overlap between chunks |
+| `merge_strategy(...)` | `MergeStrategy` | `WeightedAverage` | Strategy for blending overlap regions |
 
 ### Online Options
 
-| Method                  | Argument Type | Default       | Description                           |
-| ----------------------- | ------------- | ------------- | ------------------------------------- |
-| `window_capacity(usize)`| `usize`       | `1000`        | Max window size                       |
-| `min_points(usize)`     | `usize`       | `2`           | Min points before smoothing           |
-| `update_mode(...)`      | `UpdateMode`  | `Incremental` | Update mode enum                      |
+| Method | Argument Type | Default | Description |
+| --- | --- | --- | --- |
+| `window_capacity(usize)` | `usize` | `100` | Max points in sliding window |
+| `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
+| `update_mode(...)` | `UpdateMode` | `Full` | Update strategy enum |
 
 ## GPU Acceleration
 
@@ -156,18 +159,18 @@ The GPU backend implements almost the entire LOESS pipeline in WGSL compute shad
 
 #### Feature Comparison
 
-| Feature                | CPU          | GPU (fastLoess) | Notes                                     |
-| ---------------------- | ------------ | ---------------- | ----------------------------------------- |
-| Batch Smoothing        | ✅           | ✅               | GPU recommended for N > 10,000            |
-| Streaming/Online       | ✅           | ❌               | GPU optimized for static batch data       |
-| All Weight Functions   | ✅           | ✅               | Identical numerical implementation        |
-| Robustness (Bisquare+) | ✅           | ✅               | Full support for all methods              |
-| Scaling (MAD/MAR/Mean) | ✅           | ✅               | Full support for all methods              |
-| Boundary Policies      | ✅           | ✅               | Extend, Reflect, Zero, NoBoundary         |
-| Auto-Convergence       | ✅           | ✅               | Tolerance checking occurs on GPU          |
-| Intervals & SE         | ✅           | ✅               | Native GPU interval calculation           |
-| Cross-Validation       | ✅           | ✅               | Parallel CV folders on GPU                |
-| Interpolation (Delta)  | ✅           | ✅               | Anchor-based skipping supported           |
+| Feature | CPU | GPU (fastLoess) | Notes |
+| --- | --- | --- | --- |
+| Batch Smoothing | ✅ | ✅ | GPU recommended for N > 10,000 |
+| Streaming/Online | ✅ | ❌ | GPU optimized for static batch data |
+| All Weight Functions | ✅ | ✅ | Identical numerical implementation |
+| Robustness (Bisquare+) | ✅ | ✅ | Full support for all methods |
+| Scaling (MAD/MAR/Mean) | ✅ | ✅ | Full support for all methods |
+| Boundary Policies | ✅ | ✅ | Extend, Reflect, Zero, NoBoundary |
+| Auto-Convergence | ✅ | ✅ | Tolerance checking occurs on GPU |
+| Intervals & SE | ✅ | ✅ | Native GPU interval calculation |
+| Cross-Validation | ✅ | ✅ | Parallel CV folders on GPU |
+| Interpolation (Delta) | ✅ | ✅ | Anchor-based skipping supported |
 
 ### Hardware Requirements
 
@@ -187,31 +190,42 @@ The GPU backend is optimized for large datasets (N > 100,000) and provides paral
 
 ### `LoessResult<T>`
 
-| Field                | Type                     | Description               |
-| -------------------- | ------------------------ | ------------------------- |
-| `x`                  | `Array1<T>`              | Smoothed X coordinates    |
-| `y`                  | `Array1<T>`              | Smoothed Y coordinates    |
-| `fraction_used`      | `T`                      | Actual fraction used      |
-| `residuals`          | `Option<Array1<T>>`      | Residuals (if requested)  |
-| `confidence_lower`   | `Option<Array1<T>>`      | Lower CI bounds           |
-| `confidence_upper`   | `Option<Array1<T>>`      | Upper CI bounds           |
-| `prediction_lower`   | `Option<Array1<T>>`      | Lower PI bounds           |
-| `prediction_upper`   | `Option<Array1<T>>`      | Upper PI bounds           |
-| `robustness_weights` | `Option<Array1<T>>`      | Robustness weights        |
-| `diagnostics`        | `Option<Diagnostics<T>>` | Diagnostic metrics struct |
-| `cv_results`         | `Option<CVResults<T>>`   | Cross-validation results  |
+| Field | Type | Description |
+| --- | --- | --- |
+| `x` | `Vec<T>` | Sorted x values |
+| `y` | `Vec<T>` | Smoothed y values |
+| `fraction_used` | `T` | Fraction used (set or selected by CV) |
+| `iterations_used` | `Option<usize>` | Robustness iterations actually performed |
+| `standard_errors` | `Option<Vec<T>>` | Per-point SE (if `return_se()`) |
+| `confidence_lower` | `Option<Vec<T>>` | Lower confidence bounds |
+| `confidence_upper` | `Option<Vec<T>>` | Upper confidence bounds |
+| `prediction_lower` | `Option<Vec<T>>` | Lower prediction bounds |
+| `prediction_upper` | `Option<Vec<T>>` | Upper prediction bounds |
+| `residuals` | `Option<Vec<T>>` | Residuals (if `return_residuals()`) |
+| `robustness_weights` | `Option<Vec<T>>` | Robustness weights (if `return_robustness_weights()`) |
+| `cv_scores` | `Option<Vec<T>>` | CV score per tested fraction |
+| `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `return_diagnostics()`) |
+| `enp` | `Option<T>` | Equivalent number of parameters (if `return_se()`) |
+| `trace_hat` | `Option<T>` | Trace of hat matrix (if `return_se()`) |
+| `delta1` | `Option<T>` | First delta statistic (if `return_se()`) |
+| `delta2` | `Option<T>` | Second delta statistic (if `return_se()`) |
+| `residual_scale` | `Option<T>` | Residual scale estimate (if `return_se()`) |
+| `leverage` | `Option<Vec<T>>` | Per-point hat-matrix diagonal (if `return_se()`) |
+| `dimensions` | `usize` | Number of predictor dimensions |
+| `polynomial_degree` | `PolynomialDegree` | Polynomial degree used |
+| `distance_metric` | `DistanceMetric<T>` | Distance metric used |
 
 ### `Diagnostics<T>`
 
-| Field          | Type | Description                 |
-| -------------- | ---- | --------------------------- |
-| `rmse`         | `T`  | Root Mean Squared Error     |
-| `mae`          | `T`  | Mean Absolute Error         |
-| `r_squared`    | `T`  | R-squared                   |
-| `residual_sd`  | `T`  | Residual standard deviation |
-| `effective_df` | `T`  | Effective degrees of freedom|
-| `aic`          | `T`  | AIC                         |
-| `aicc`         | `T`  | AICc                        |
+| Field | Type | Description |
+| --- | --- | --- |
+| `rmse` | `T` | Root Mean Squared Error |
+| `mae` | `T` | Mean Absolute Error |
+| `r_squared` | `T` | R-squared |
+| `residual_sd` | `T` | Residual standard deviation |
+| `effective_df` | `T` | Effective degrees of freedom |
+| `aic` | `T` | AIC |
+| `aicc` | `T` | AICc |
 
 ## Enum Options
 
@@ -240,7 +254,7 @@ The GPU backend is optimized for large datasets (N > 100,000) and provides paral
 
 ### ScalingMethod
 
-* `MAD` (default - Median Absolute Deviation)
+* `MAD` (default — Median Absolute Deviation)
 * `MAR` (Median Absolute Residual)
 * `Mean` (Mean Absolute Residual)
 
@@ -250,17 +264,39 @@ The GPU backend is optimized for large datasets (N > 100,000) and provides paral
 * `ReturnOriginal`
 * `ReturnNone`
 
-### MergeStrategy (Streaming)
+### PolynomialDegree
 
-* `WeightedAverage` (default)
-* `Average`
-* `TakeFirst` (Left)
-* `TakeLast` (Right)
+* `Constant` (degree 0)
+* `Linear` (default, degree 1)
+* `Quadratic` (degree 2)
+* `Cubic` (degree 3)
+* `Quartic` (degree 4)
 
-### UpdateMode (Online)
+### DistanceMetric
 
-* `Incremental` (default)
-* `Full`
+* `Normalized` (default — scales each dimension by its range)
+* `Euclidean`
+* `Manhattan`
+* `Chebyshev`
+* `Minkowski(T)` (custom exponent)
+* `Weighted(Vec<T>)` (per-dimension scale weights)
+
+### SurfaceMode
+
+* `Interpolation` (default — faster, uses a spatial grid)
+* `Direct` (fits every point exactly; slower but more accurate)
+
+### MergeStrategy
+
+* `WeightedAverage` (default — weighted blend of overlapping regions)
+* `Average` (simple mean of overlapping regions)
+* `TakeFirst` (keep values from the earlier chunk)
+* `TakeLast` (keep values from the later chunk)
+
+### UpdateMode
+
+* `Full` (default — re-smooth entire window each update)
+* `Incremental` (faster, O(1) incremental update)
 
 ## Example
 

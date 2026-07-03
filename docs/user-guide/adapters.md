@@ -14,11 +14,11 @@ graph LR
     C -->|Yes| F[Online]
 ```
 
-| Mode          | Use Case                | Memory       | Features              |
-|---------------|-------------------------|--------------|-----------------------|
-| **Batch**     | Complete datasets       | Full         | All features          |
-| **Streaming** | Large files (>100K)     | Chunked      | Residuals, robustness |
-| **Online**    | Real-time sensors       | Fixed window | Incremental updates   |
+| Mode | Use Case | Memory | Features |
+| --- | --- | --- | --- |
+| **Batch** | Complete datasets | Full | All features |
+| **Streaming** | Large files (>100K) | Chunked | Residuals, robustness |
+| **Online** | Real-time sensors | Fixed window | Incremental updates |
 
 ---
 
@@ -146,20 +146,20 @@ Process large datasets in chunks with configurable overlap.
 
 ### Parameters
 
-| Parameter        | Default | Description            |
-|------------------|---------|------------------------|
-| `chunk_size`     | 5000    | Points per chunk       |
-| `overlap`        | 500     | Overlap between chunks |
-| `merge_strategy` | Average | How to merge overlaps  |
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `chunk_size` | 5000 | Points per chunk |
+| `overlap` | 500 | Overlap between chunks |
+| `merge_strategy` | Average | How to merge overlaps |
 
 ### Merge Strategies
 
-| Strategy   | Behavior                   |
-|------------|----------------------------|
-| `Average`  | Average overlapping values |
-| `Left`     | Keep left chunk values     |
-| `Right`    | Keep right chunk values    |
-| `Weighted` | Distance-weighted blend    |
+| Strategy | Behavior |
+| --- | --- |
+| `Average` | Average overlapping values |
+| `Left` | Keep left chunk values |
+| `Right` | Keep right chunk values |
+| `Weighted` | Distance-weighted blend |
 
 ### Example
 
@@ -292,18 +292,18 @@ Incremental updates with a sliding window for real-time data.
 
 ### Parameters
 
-| Parameter         | Default     | Description                 |
-|-------------------|-------------|-----------------------------|
-| `window_capacity` | 1000        | Max points in window        |
-| `min_points`      | 2           | Points before output starts |
-| `update_mode`     | Incremental | Update strategy             |
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `window_capacity` | 1000 | Max points in window |
+| `min_points` | 2 | Points before output starts |
+| `update_mode` | Incremental | Update strategy |
 
 ### Update Modes
 
-| Mode          | Behavior                  | Speed         |
-|---------------|---------------------------|---------------|
-| `Incremental` | Update only affected fits | Faster        |
-| `Full`        | Recompute entire window   | More accurate |
+| Mode | Behavior | Speed |
+| --- | --- | --- |
+| `Incremental` | Update only affected fits | Faster |
+| `Full` | Recompute entire window | More accurate |
 
 ### Example
 
@@ -423,16 +423,16 @@ Incremental updates with a sliding window for real-time data.
 
 ## Feature Comparison
 
-| Feature              | Batch | Streaming | Online |
-|----------------------|:-----:|:---------:|:------:|
-| Confidence intervals | ✓     | ✗         | ✗      |
-| Prediction intervals | ✓     | ✗         | ✗      |
-| Cross-validation     | ✓     | ✗         | ✗      |
-| Diagnostics          | ✓     | ✓         | ✗      |
-| Residuals            | ✓     | ✓         | ✓      |
-| Robustness weights   | ✓     | ✓         | ✓      |
-| Parallel execution   | ✓     | ✓         | ✗      |
-| GPU acceleration     | ✓     | ✗         | ✗      |
+| Feature | Batch | Streaming | Online |
+| --- | --- | --- | --- |
+| Confidence intervals | ✓ | ✗ | ✗ |
+| Prediction intervals | ✓ | ✗ | ✗ |
+| Cross-validation | ✓ | ✗ | ✗ |
+| Diagnostics | ✓ | ✓ | ✗ |
+| Residuals | ✓ | ✓ | ✓ |
+| Robustness weights | ✓ | ✓ | ✓ |
+| Parallel execution | ✓ | ✓ | ✗ |
+| GPU acceleration | ✓ | ✗ | ✗ |
 
 ---
 

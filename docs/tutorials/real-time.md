@@ -57,7 +57,7 @@ For true real-time applications where each point must be processed immediately.
 
 === "Rust"
     ```rust
-    use fastLoess::prelude::*;
+    use loess::prelude::*;
 
     let mut processor = Loess::new()
         .fraction(0.3)
@@ -65,7 +65,7 @@ For true real-time applications where each point must be processed immediately.
         .adapter(Online)
         .window_capacity(25)
         .min_points(5)
-        .update_mode(Incremental)
+        .update_mode(UpdateMode::Incremental)
         .build()?;
 
     // Simulate real-time data arrival
@@ -175,7 +175,7 @@ For large datasets that arrive in batches or files.
         fraction = 0.05,
         chunk_size = 10000,
         overlap = 1000,
-        merge_strategy = "weighted"
+        merge_strategy = "weighted_average"
     )
     result <- model$process_chunk(x, y)
     final <- model$finalize()
@@ -199,7 +199,7 @@ For large datasets that arrive in batches or files.
         fraction=0.05,
         chunk_size=10000,
         overlap=1000,
-        merge_strategy="weighted"
+        merge_strategy="weighted_average"
     )
     
     print(f"Processed {len(result['y'])} points")
@@ -212,15 +212,17 @@ For large datasets that arrive in batches or files.
     let mut processor = Loess::new()
         .fraction(0.1)
         .iterations(2)
-        .adapter(Streaming)
-        .chunk_size(5000)
-        .overlap(500)
-        .merge_strategy(Weighted)
+        .adapter(Streaming {
+            chunk_size: 5000,
+            overlap: 500,
+            merge_strategy: MergeStrategy::WeightedAverage,
+            ..Default::default()
+        })
         .build()?;
 
     // Process chunks as they arrive
-    let result1 = processor.process_chunk(&chunk1_x, &chunk1_y)?;
-    let result2 = processor.process_chunk(&chunk2_x, &chunk2_y)?;
+    processor.process_chunk(&chunk1_x, &chunk1_y)?;
+    processor.process_chunk(&chunk2_x, &chunk2_y)?;
 
     // CRITICAL: Get buffered overlap data
     let final_result = processor.finalize()?;
@@ -240,7 +242,7 @@ For large datasets that arrive in batches or files.
         fraction=0.05,
         chunk_size=10000,
         overlap=1000,
-        merge_strategy="weighted"
+        merge_strategy="weighted_average"
     )
     ```
 
@@ -420,33 +422,35 @@ For large datasets that arrive in batches or files.
 
 ### Online Mode
 
-| Parameter         | Guidance                                         |
-|-------------------|--------------------------------------------------|
-| `window_capacity` | Enough history for `fraction` to work            |
-| `min_points`      | 2–5 typically; higher for stability              |
-| `update_mode`     | `"incremental"` for speed, `"full"` for accuracy |
+| Parameter | Guidance |
+| --- | --- |
+| `window_capacity` | Enough history for `fraction` to work |
+| `min_points` | 2–5 typically; higher for stability |
+| `update_mode` | `"incremental"` for speed, `"full"` for accuracy |
 
 ### Streaming Mode
 
-| Parameter        | Guidance                                                  |
-|------------------|-----------------------------------------------------------|
-| `chunk_size`     | Balance memory vs. processing overhead                    |
-| `overlap`        | 10–20% of chunk_size for smooth transitions               |
-| `merge_strategy` | `"weighted"` for best quality, `"average"` for simplicity |
+| Parameter | Guidance |
+| --- | --- |
+| `chunk_size` | Balance memory vs. processing overhead |
+| `overlap` | 10–20% of chunk_size for smooth transitions |
+| `merge_strategy` | `"weighted_average"` for best quality, `"average"` for simplicity |
 
 ---
 
 ## Performance Considerations
 
-| Mode          | Memory         | Latency      | Use Case            |
-|---------------|----------------|--------------|---------------------|
-| **Online**    | Fixed (window) | ~1ms/point   | Sensors, dashboards |
-| **Streaming** | ~chunk_size    | ~100ms/chunk | Large files, ETL    |
-| **Batch**     | Full dataset   | N/A          | Analysis, reports   |
+| Mode | Memory | Latency | Use Case |
+| --- | --- | --- | --- |
+| **Online** | Fixed (window) | ~1ms/point | Sensors, dashboards |
+| **Streaming** | ~chunk_size | ~100ms/chunk | Large files, ETL |
+| **Batch** | Full dataset | N/A | Analysis, reports |
 
 ---
 
 ## See Also
 
 - [Execution Modes](../user-guide/adapters.md) — Detailed mode comparison
+- [Merge Strategies](../user-guide/merge.md) — Chunk reconciliation in depth
+- [Scaling Methods](../user-guide/scaling.md) — Robustness scale estimation
 - [Time Series](time-series.md) — General time series analysis
