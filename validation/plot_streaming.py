@@ -61,7 +61,7 @@ def plot_streaming_comparison():
     )
 
     ax.set_title(
-        "Streaming fastLoess: Comparison of Merge Strategies",
+        "Streaming LOESS: Comparison of Merge Strategies",
         fontsize=14,
         fontweight="bold",
     )
@@ -104,7 +104,7 @@ def plot_online_comparison():
     )
 
     ax.set_title(
-        "Online fastLoess: Incremental Smoothing with Sliding Window",
+        "Online LOESS: Incremental Smoothing with Sliding Window",
         fontsize=14,
         fontweight="bold",
     )

@@ -212,10 +212,10 @@ def plot_gap_handling():
         color="#3b82f6",
         label="Available Data",
     )
-    ax.plot(df["x"], df["y_smooth"], "r-", lw=3, label="fastLoess Interpolation")
+    ax.plot(df["x"], df["y_smooth"], "r-", lw=3, label="LOESS Interpolation")
 
     ax.set_title(
-        "fastLoess Gap Handling (Bridging Missing Regions)",
+        "LOESS Gap Handling (Bridging Missing Regions)",
         fontsize=14,
         fontweight="bold",
     )

@@ -5,24 +5,48 @@ R is the reference implementation (original Cleveland algorithm).
 """
 
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
 
 
+def compare_fitted_values(r_data, loess_data):
+    """Return max difference and RMSE for two fitted-value sequences."""
+    r_fitted = np.array(r_data["result"]["fitted"])
+    loess_fitted = np.array(loess_data["result"]["fitted"])
+
+    diff = np.abs(r_fitted - loess_fitted)
+    max_diff = np.max(diff)
+    rmse = np.sqrt(np.mean(diff**2))
+    return max_diff, rmse
+
+
+def classify_match(max_diff):
+    """Map a maximum absolute difference to a validation status label."""
+    if max_diff < 1e-10:
+        return "EXACT MATCH"
+    if max_diff < 1e-6:
+        return "MATCH"
+    if max_diff < 1e-3:
+        return "CLOSE"
+    return "MISMATCH"
+
+
 def compare_implementations():
+    """Compare JSON outputs from R and fastLoess for each validation scenario."""
     r_dir = Path("output/r")
-    fastLoess_dir = Path("output/fastLoess")
+    loess_dir = Path("output/fastLoess")
 
     if not r_dir.exists():
-        print("Error: R output directory not found. Run R/validate.R first.")
-        return
+        print("Error: R output directory not found. Run R/stats_loess.R first.")
+        return False
 
-    if not fastLoess_dir.exists():
+    if not loess_dir.exists():
         print(
-            "Error: fastLoess output directory not found. Run fastLoess/validate first."
+            "Error: fastLoess output directory not found. Run validate/validate first."
         )
-        return
+        return False
 
     print("=" * 85)
     print("VALIDATION: fastLoess vs R (Reference Implementation)")
@@ -38,39 +62,25 @@ def compare_implementations():
 
     for scenario in scenarios:
         r_file = r_dir / f"{scenario}.json"
-        fastLoess_file = fastLoess_dir / f"{scenario}.json"
+        loess_file = loess_dir / f"{scenario}.json"
 
-        if not fastLoess_file.exists():
+        if not loess_file.exists():
             print(f"{scenario:<30} | {'MISSING':<15} | {'-':<15} | {'-':<15}")
             continue
 
         # Load data
-        with open(r_file) as f:
-            r_data = json.load(f)
-        with open(fastLoess_file) as f:
-            fastLoess_data = json.load(f)
+        with open(r_file, encoding="utf-8") as file_handle:
+            r_data = json.load(file_handle)
+        with open(loess_file, encoding="utf-8") as file_handle:
+            loess_data = json.load(file_handle)
 
-        # Compare fitted values
-        r_fitted = np.array(r_data["result"]["fitted"])
-        fastLoess_fitted = np.array(fastLoess_data["result"]["fitted"])
+        max_diff, rmse = compare_fitted_values(r_data, loess_data)
+        status = classify_match(max_diff)
 
-        diff = np.abs(r_fitted - fastLoess_fitted)
-        max_diff = np.max(diff)
-        rmse = np.sqrt(np.mean(diff**2))
-
-        # Determine status
-        if max_diff < 1e-10:
-            status = "EXACT MATCH"
-            matches.append(scenario)
-        elif max_diff < 1e-6:
-            status = "MATCH"
-            matches.append(scenario)
-        elif max_diff < 1e-3:
-            status = "CLOSE"
-            matches.append(scenario)
-        else:
-            status = "MISMATCH"
+        if status == "MISMATCH":
             mismatches.append(scenario)
+        else:
+            matches.append(scenario)
 
         print(f"{scenario:<30} | {status:<15} | {max_diff:<15.2e} | {rmse:<15.2e}")
 
@@ -89,5 +99,4 @@ def compare_implementations():
 
 
 if __name__ == "__main__":
-    success = compare_implementations()
-    exit(0 if success else 1)
+    sys.exit(0 if compare_implementations() else 1)

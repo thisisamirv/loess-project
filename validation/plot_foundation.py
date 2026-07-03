@@ -51,11 +51,11 @@ def plot_degree_comparison():
         rasterized=True,
     )
     ax1.plot(df["x"], df["y_true"], "k-", lw=1.5, label="True signal", alpha=0.7)
-    ax1.plot(df["x"], df["y_loess"], "b-", lw=2, label="LOESS (Linear)")
-    ax1.plot(df["x"], df["y_fastLoess"], "r-", lw=2, label="fastLoess (Quadratic)")
+    ax1.plot(df["x"], df["y_linear"], "b-", lw=2, label="LOESS (Linear)")
+    ax1.plot(df["x"], df["y_quadratic"], "r-", lw=2, label="LOESS (Quadratic)")
     ax1.set_xlabel("x", fontsize=12)
     ax1.set_ylabel("y", fontsize=12)
-    ax1.set_title("LOESS vs fastLoess: Full View", fontsize=14)
+    ax1.set_title("LOESS: Linear vs Quadratic — Full View", fontsize=14)
     ax1.legend(loc="upper right")
     ax1.grid(True, alpha=0.3)
 
@@ -75,17 +75,17 @@ def plot_degree_comparison():
     ax2.plot(df.loc[mask, "x"], df.loc[mask, "y_true"], "k-", lw=2, label="True signal")
     ax2.plot(
         df.loc[mask, "x"],
-        df.loc[mask, "y_loess"],
+        df.loc[mask, "y_linear"],
         "b-",
         lw=2.5,
         label="LOESS (Linear)",
     )
     ax2.plot(
         df.loc[mask, "x"],
-        df.loc[mask, "y_fastLoess"],
+        df.loc[mask, "y_quadratic"],
         "r-",
         lw=2.5,
-        label="fastLoess (Quadratic)",
+        label="LOESS (Quadratic)",
     )
     ax2.set_xlabel("x", fontsize=12)
     ax2.set_ylabel("y", fontsize=12)
@@ -95,7 +95,7 @@ def plot_degree_comparison():
 
     peak_x = df.loc[df["y_true"].idxmax(), "x"]
     peak_true = df["y_true"].max()
-    peak_loess = df.loc[df["y_true"].idxmax(), "y_loess"]
+    peak_loess = df.loc[df["y_true"].idxmax(), "y_linear"]
 
     ax2.annotate(
         f"Gap = {peak_true - peak_loess:.3f}",
@@ -154,7 +154,7 @@ def plot_fraction_comparison():
             df[f"y_frac_{frac}"],
             color=color,
             lw=2.5,
-            label=f"fastLoess (fraction={frac})",
+            label=f"LOESS (fraction={frac})",
             zorder=3,
         )
 
@@ -177,7 +177,7 @@ def plot_fraction_comparison():
         )
 
     figure.suptitle(
-        "Effect of Fraction Parameter on fastLoess Smoothing",
+        "Effect of Fraction Parameter on LOESS Smoothing",
         fontsize=16,
         fontweight="bold",
         y=1.02,
@@ -214,7 +214,7 @@ def plot_intervals_comparison():
     ax.plot(
         df["x"], df["y_true"], "k--", lw=1.5, label="True Signal", alpha=0.7, zorder=2
     )
-    ax.plot(df["x"], df["y_smooth"], "k-", lw=2.5, label="fastLoess Fit", zorder=5)
+    ax.plot(df["x"], df["y_smooth"], "k-", lw=2.5, label="LOESS Fit", zorder=5)
 
     ax.fill_between(
         x_values,
@@ -348,13 +348,13 @@ def plot_robustness_comparison():
     save_figure(figure, "robustness_comparison.svg")
 
 
-def plot_fast_loess_concept():
+def plot_loess_concept():
     """Visualize the local neighborhood and fit used at one focal point."""
-    if not check_file("fastLoess_concept.csv"):
+    if not check_file("loess_concept.csv"):
         return
-    print("Plotting fastLoess Concept...")
+    print("Plotting LOESS Concept...")
 
-    df = pd.read_csv(get_input_path("fastLoess_concept.csv"))
+    df = pd.read_csv(get_input_path("loess_concept.csv"))
     focus_row = df[df["is_focus"] == 1].iloc[0]
     x0 = focus_row["x"]
     y0_fit = focus_row["y_smooth"]
@@ -399,25 +399,23 @@ def plot_fast_loess_concept():
         label="Fitted Value",
     )
 
-    ax.set_title(
-        f"How fastLoess Works (Focus x={x0:.2f})", fontsize=14, fontweight="bold"
-    )
+    ax.set_title(f"How LOESS Works (Focus x={x0:.2f})", fontsize=14, fontweight="bold")
     ax.legend(loc="upper right")
     ax.grid(True, alpha=0.3)
 
     colorbar = figure.colorbar(scatter, ax=ax)
     colorbar.set_label("Weight", fontsize=10)
 
-    save_figure(figure, "fastLoess_concept.svg")
+    save_figure(figure, "loess_concept.svg")
 
 
-def plot_multivariate_fast_loess():
+def plot_multivariate_loess():
     """Plot the true and smoothed multivariate surfaces side by side."""
-    if not check_file("multivariate_fastLoess.csv"):
+    if not check_file("multivariate_loess.csv"):
         return
-    print("Plotting Multivariate fastLoess...")
+    print("Plotting Multivariate LOESS...")
 
-    df = pd.read_csv(get_input_path("multivariate_fastLoess.csv"))
+    df = pd.read_csv(get_input_path("multivariate_loess.csv"))
     n_x = len(df["x"].unique())
     n_y = len(df["y"].unique())
     x_grid = column_to_numpy(df, "x").reshape(n_x, n_y)
@@ -451,9 +449,9 @@ def plot_multivariate_fast_loess():
         edgecolor="none",
         rasterized=True,
     )
-    ax2.set_title("fastLoess Smoothed")
+    ax2.set_title("LOESS Smoothed")
     ax2.locator_params(nbins=4)
     add_rasterized_colorbar(figure, surf2, ax2)
 
     figure.tight_layout()
-    save_figure(figure, "multivariate_fastLoess.svg", dpi=100)
+    save_figure(figure, "multivariate_loess.svg", dpi=100)

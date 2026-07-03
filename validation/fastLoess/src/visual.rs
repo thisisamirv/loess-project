@@ -32,6 +32,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Output directory: {}", output_dir);
     println!();
 
+    run_degree_comparison()?;
+    println!();
+
     run_fraction_comparison()?;
     println!();
 
@@ -66,6 +69,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     run_zero_weight_fallback_comparison()?;
+    println!();
+
+    run_higher_degree_comparison()?;
+    println!();
+
+    run_multivariate_loess()?;
     println!();
 
     run_streaming_comparison()?;
@@ -884,15 +893,17 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
 
 /// 16. Streaming Comparison
 fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
-    let n = 200;
+    let n = 1000;
+    let chunk_size = 200;
+    let overlap = 80;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
     let mut y_true = Vec::with_capacity(n);
 
     for i in 0..n {
-        let t = (i as f64 / (n - 1) as f64) * 10.0;
-        let signal = (t).sin();
-        let noise = 0.2 * (i as f64 * 7.0).cos();
+        let t = i as f64 / 100.0;
+        let signal = (t).sin() + 0.5 * (t * 2.5).cos();
+        let noise = 0.1 * ((i as f64 * 7.0).sin());
         x.push(t);
         y_true.push(signal);
         y.push(signal + noise);
@@ -901,35 +912,51 @@ fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("16. Streaming Comparison (Strategies)");
     println!("-----------------------------------");
 
-    let strategies = [WeightedAverage, Average, TakeFirst];
-    let mut results = Vec::new();
+    let mut streaming_weighted = Loess::new()
+        .adapter(Streaming)
+        .chunk_size(chunk_size)
+        .overlap(overlap)
+        .merge_strategy(WeightedAverage)
+        .fraction(0.2)
+        .build()?;
 
-    for &strat in &strategies {
-        let mut adapter = Loess::new()
-            .adapter(Streaming)
-            .chunk_size(50)
-            .overlap(10)
-            .merge_strategy(strat)
-            .fraction(0.3)
-            .build()
-            .unwrap();
+    let mut streaming_average = Loess::new()
+        .adapter(Streaming)
+        .chunk_size(chunk_size)
+        .overlap(overlap)
+        .merge_strategy(Average)
+        .fraction(0.2)
+        .build()?;
 
-        // Process in chunks
-        let mut final_y = Vec::new();
-        for chunk_idx in 0..4 {
-            let start = chunk_idx * 50;
-            let end = start + 50;
-            let result = adapter
-                .process_chunk(&x[start..end], &y[start..end])
-                .unwrap();
-            final_y.extend(result.y);
+    let mut streaming_first = Loess::new()
+        .adapter(Streaming)
+        .chunk_size(chunk_size)
+        .overlap(overlap)
+        .merge_strategy(TakeFirst)
+        .fraction(0.2)
+        .build()?;
+
+    let mut y_weighted = Vec::new();
+    let mut y_average = Vec::new();
+    let mut y_first = Vec::new();
+
+    for i in (0..n).step_by(chunk_size) {
+        let end = (i + chunk_size).min(n);
+        let chunk_x = &x[i..end];
+        let chunk_y = &y[i..end];
+
+        y_weighted.extend(streaming_weighted.process_chunk(chunk_x, chunk_y)?.y);
+        y_average.extend(streaming_average.process_chunk(chunk_x, chunk_y)?.y);
+        y_first.extend(streaming_first.process_chunk(chunk_x, chunk_y)?.y);
+
+        if end == n {
+            break;
         }
-        let result = adapter.finalize().unwrap();
-        final_y.extend(result.y);
-
-        results.push(final_y);
-        println!("  Strategy processed: {:?}", strat);
     }
+
+    y_weighted.extend(streaming_weighted.finalize()?.y);
+    y_average.extend(streaming_average.finalize()?.y);
+    y_first.extend(streaming_first.finalize()?.y);
 
     let path = "../output/visual/streaming_comparison.csv";
     let mut file = File::create(path)?;
@@ -938,7 +965,7 @@ fn run_streaming_comparison() -> Result<(), Box<dyn std::error::Error>> {
         writeln!(
             file,
             "{},{},{},{},{},{}",
-            x[i], y_true[i], y[i], results[0][i], results[1][i], results[2][i]
+            x[i], y_true[i], y[i], y_weighted[i], y_average[i], y_first[i]
         )?;
     }
     println!("Results exported to {}", path);
@@ -1016,136 +1043,133 @@ fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
 /// 18. Auto-Convergence Comparison
 fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let n = 200;
+    let chunk_size = 100;
+    let overlap = 20;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
     let mut y_true = Vec::with_capacity(n);
 
     for i in 0..n {
-        let t = i as f64;
-        let signal = (t * 0.1).sin();
-        let noise = 0.2 * (i as f64 * 7.0).cos();
+        let t = i as f64 / 10.0;
+        let signal = (t).sin();
+        let noise = if i % 20 == 0 {
+            2.0
+        } else {
+            0.1 * (i as f64).cos()
+        };
         x.push(t);
         y_true.push(signal);
         y.push(signal + noise);
     }
 
-    println!("18. Auto-Convergence Comparison");
-    println!("-----------------------------");
+    println!("18. Auto-Convergence Comparison (All Adapters)");
+    println!("--------------------------------------------");
 
-    let mut file = File::create("../output/visual/auto_converge_comparison.csv")?;
-    writeln!(
-        file,
-        "x,y_true,y_noisy,y_batch_off,y_batch_on,iter_batch_off,iter_batch_on,y_stream_off,y_stream_on,iter_stream_off,iter_stream_on,y_online_off,y_online_on,iter_online_off,iter_online_on"
-    )?;
+    let iterations = 4;
+    let tolerance = 0.001;
 
-    // --- Batch ---
+    // 1. Batch
     let res_b_off = Loess::new()
-        .iterations(10)
         .fraction(0.3)
+        .iterations(iterations)
         .adapter(Batch)
-        .build()
-        .map_err(|e| format!("Failed to build Batch processor (off): {:?}", e))?
-        .fit(&x, &y)
-        .map_err(|e| format!("Failed to fit Batch (off): {:?}", e))?;
+        .build()?
+        .fit(&x, &y)?;
     let res_b_on = Loess::new()
-        .iterations(10)
         .fraction(0.3)
-        .auto_converge(0.001)
+        .iterations(iterations)
+        .auto_converge(tolerance)
         .adapter(Batch)
-        .build()
-        .unwrap()
-        .fit(&x, &y)
-        .unwrap();
+        .build()?
+        .fit(&x, &y)?;
 
-    // --- Streaming ---
-    let mut ad_s_off = Loess::new()
-        .iterations(10)
+    // 2. Streaming
+    let mut stream_off = Loess::new()
         .fraction(0.3)
+        .iterations(iterations)
+        .chunk_size(chunk_size)
+        .overlap(overlap)
         .adapter(Streaming)
-        .chunk_size(50)
-        .overlap(10)
-        .merge_strategy(WeightedAverage)
-        .build()
-        .unwrap();
-    let mut ad_s_on = Loess::new()
-        .iterations(10)
+        .build()?;
+    let mut stream_on = Loess::new()
         .fraction(0.3)
-        .auto_converge(0.001)
+        .iterations(iterations)
+        .auto_converge(tolerance)
+        .chunk_size(chunk_size)
+        .overlap(overlap)
         .adapter(Streaming)
-        .chunk_size(50)
-        .overlap(10)
-        .merge_strategy(WeightedAverage)
-        .build()
-        .unwrap();
+        .build()?;
 
-    let mut y_s_off = Vec::<f64>::new();
-    let mut y_s_on = Vec::<f64>::new();
-    let mut it_s_off = Vec::<usize>::new();
-    let mut it_s_on = Vec::<usize>::new();
+    let mut y_s_off: Vec<f64> = Vec::new();
+    let mut y_s_on: Vec<f64> = Vec::new();
+    let mut iter_s_off: Vec<usize> = Vec::new();
+    let mut iter_s_on: Vec<usize> = Vec::new();
 
-    for chunk in 0..4 {
-        let r_off = ad_s_off
-            .process_chunk(
-                &x[chunk * 50..(chunk + 1) * 50],
-                &y[chunk * 50..(chunk + 1) * 50],
-            )
-            .unwrap();
-        let r_on = ad_s_on
-            .process_chunk(
-                &x[chunk * 50..(chunk + 1) * 50],
-                &y[chunk * 50..(chunk + 1) * 50],
-            )
-            .unwrap();
-        let n_chunk = r_off.y.len();
-        y_s_off.extend(&r_off.y);
-        y_s_on.extend(&r_on.y);
-        it_s_off.extend(std::iter::repeat(r_off.iterations_used.unwrap_or(0)).take(n_chunk));
-        it_s_on.extend(std::iter::repeat(r_on.iterations_used.unwrap_or(0)).take(n_chunk));
+    for i in (0..n).step_by(chunk_size) {
+        let end = (i + chunk_size).min(n);
+        let out_off = stream_off.process_chunk(&x[i..end], &y[i..end])?;
+        let out_on = stream_on.process_chunk(&x[i..end], &y[i..end])?;
+
+        let n_off = out_off.y.len();
+        let n_on = out_on.y.len();
+        let iters_off = out_off.iterations_used.unwrap_or(0);
+        let iters_on = out_on.iterations_used.unwrap_or(0);
+
+        y_s_off.extend(&out_off.y);
+        y_s_on.extend(&out_on.y);
+        iter_s_off.extend(vec![iters_off; n_off]);
+        iter_s_on.extend(vec![iters_on; n_on]);
+
+        if end == n {
+            break;
+        }
     }
-    let f_off = ad_s_off.finalize().unwrap();
-    let f_on = ad_s_on.finalize().unwrap();
-    let n_f = f_off.y.len();
-    y_s_off.extend(&f_off.y);
-    y_s_on.extend(&f_on.y);
-    it_s_off.extend(std::iter::repeat(f_off.iterations_used.unwrap_or(0)).take(n_f));
-    it_s_on.extend(std::iter::repeat(f_on.iterations_used.unwrap_or(0)).take(n_f));
+    let fin_off = stream_off.finalize()?;
+    let fin_on = stream_on.finalize()?;
+    let n_fin = fin_off.y.len();
+    let iters_fin_off = fin_off.iterations_used.unwrap_or(0);
+    let iters_fin_on = fin_on.iterations_used.unwrap_or(0);
+    y_s_off.extend(&fin_off.y);
+    y_s_on.extend(&fin_on.y);
+    iter_s_off.extend(vec![iters_fin_off; n_fin]);
+    iter_s_on.extend(vec![iters_fin_on; n_fin]);
 
-    // --- Online ---
-    let mut ad_o_off = Loess::new()
-        .iterations(10)
+    // 3. Online
+    let mut online_off = Loess::new()
         .fraction(0.3)
-        .adapter(Online)
+        .iterations(iterations)
         .window_capacity(50)
-        .min_points(10)
         .update_mode(Full)
-        .build()
-        .unwrap();
-    let mut ad_o_on = Loess::new()
-        .iterations(10)
+        .adapter(Online)
+        .build()?;
+    let mut online_on = Loess::new()
         .fraction(0.3)
-        .auto_converge(0.001)
-        .adapter(Online)
+        .iterations(iterations)
+        .auto_converge(tolerance)
         .window_capacity(50)
-        .min_points(10)
         .update_mode(Full)
-        .build()
-        .unwrap();
+        .adapter(Online)
+        .build()?;
 
     let mut y_o_off = Vec::new();
     let mut y_o_on = Vec::new();
-    let mut it_o_off = Vec::new();
-    let mut it_o_on = Vec::new();
+    // Per-point iteration counts not exposed by online adapter; use constant
+    let iter_o_off = vec![0usize; n];
+    let iter_o_on = vec![0usize; n];
 
     for i in 0..n {
-        let r_off = ad_o_off.add_point(&x[i..i + 1], y[i]).unwrap();
-        let r_on = ad_o_on.add_point(&x[i..i + 1], y[i]).unwrap();
-        let o_off = r_off.as_ref();
-        let o_on = r_on.as_ref();
-        y_o_off.push(o_off.map(|o| o.smoothed).unwrap_or(y[i]));
-        y_o_on.push(o_on.map(|o| o.smoothed).unwrap_or(y[i]));
-        it_o_off.push(o_off.and_then(|o| o.iterations_used).unwrap_or(0));
-        it_o_on.push(o_on.and_then(|o| o.iterations_used).unwrap_or(0));
+        let r_off = online_off.add_point(&x[i..i + 1], y[i])?;
+        let r_on = online_on.add_point(&x[i..i + 1], y[i])?;
+        y_o_off.push(r_off.as_ref().map(|o| o.smoothed).unwrap_or(y_true[i]));
+        y_o_on.push(r_on.as_ref().map(|o| o.smoothed).unwrap_or(y_true[i]));
     }
+
+    let path = "../output/visual/auto_converge_comparison.csv";
+    let mut file = File::create(path)?;
+    writeln!(
+        file,
+        "x,y_true,y_noisy,y_batch_off,y_batch_on,y_stream_off,y_stream_on,y_online_off,y_online_on,iter_batch_off,iter_batch_on,iter_stream_off,iter_stream_on,iter_online_off,iter_online_on"
+    )?;
 
     for i in 0..n {
         writeln!(
@@ -1156,19 +1180,228 @@ fn run_auto_converge_comparison() -> Result<(), Box<dyn std::error::Error>> {
             y[i],
             res_b_off.y[i],
             res_b_on.y[i],
-            res_b_off.iterations_used.unwrap_or(0),
-            res_b_on.iterations_used.unwrap_or(0),
             y_s_off[i],
             y_s_on[i],
-            it_s_off[i],
-            it_s_on[i],
             y_o_off[i],
             y_o_on[i],
-            it_o_off[i],
-            it_o_on[i]
+            res_b_off.iterations_used.unwrap_or(0),
+            res_b_on.iterations_used.unwrap_or(0),
+            iter_s_off[i],
+            iter_s_on[i],
+            iter_o_off[i],
+            iter_o_on[i]
         )?;
     }
+    println!("Results exported to {}", path);
+    Ok(())
+}
 
-    println!("Results exported to ../output/visual/auto_converge_comparison.csv");
+/// 1. Degree Comparison (Linear vs Quadratic)
+fn run_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
+    let n = 200;
+    let mut x = Vec::with_capacity(n);
+    let mut y = Vec::with_capacity(n);
+    let mut y_true = Vec::with_capacity(n);
+
+    for i in 0..n {
+        let t = (i as f64 / (n - 1) as f64) * 2.0 * std::f64::consts::PI;
+        let signal = t.sin() + 0.4 * (2.0 * t).cos() + 0.2 * (4.0 * t).sin();
+        let noise = 0.3 * ((i as f64 * 7.0).sin() * (i as f64 * 3.7).cos());
+        x.push(t);
+        y_true.push(signal);
+        y.push(signal + noise);
+    }
+
+    println!("1. Degree Comparison (Linear vs Quadratic)");
+    println!("------------------------------------------");
+
+    let result_linear = Loess::new()
+        .fraction(0.25)
+        .iterations(2)
+        .degree(Linear)
+        .boundary_policy(Reflect)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let result_quadratic = Loess::new()
+        .fraction(0.25)
+        .iterations(2)
+        .degree(Quadratic)
+        .boundary_policy(Reflect)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let rmse_lin: f64 = (result_linear
+        .y
+        .iter()
+        .zip(y_true.iter())
+        .map(|(f, t)| (f - t).powi(2))
+        .sum::<f64>()
+        / n as f64)
+        .sqrt();
+    let rmse_quad: f64 = (result_quadratic
+        .y
+        .iter()
+        .zip(y_true.iter())
+        .map(|(f, t)| (f - t).powi(2))
+        .sum::<f64>()
+        / n as f64)
+        .sqrt();
+    println!("RMSE Linear:    {:.6}", rmse_lin);
+    println!("RMSE Quadratic: {:.6}", rmse_quad);
+
+    let path = "../output/visual/degree_comparison.csv";
+    let mut file = File::create(path)?;
+    writeln!(file, "x,y_true,y_noisy,y_linear,y_quadratic")?;
+    for i in 0..n {
+        writeln!(
+            file,
+            "{},{},{},{},{}",
+            x[i], y_true[i], y[i], result_linear.y[i], result_quadratic.y[i]
+        )?;
+    }
+    println!("Results exported to {}", path);
+    Ok(())
+}
+
+/// 6. Higher Degree Comparison (Quadratic / Cubic / Quartic)
+fn run_higher_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
+    let n = 200;
+    let mut x = Vec::with_capacity(n);
+    let mut y = Vec::with_capacity(n);
+    let mut y_true = Vec::with_capacity(n);
+
+    for i in 0..n {
+        let t = (i as f64 / (n - 1) as f64) * 4.0 * std::f64::consts::PI;
+        let signal = t.sin() + 0.5 * (2.0 * t).sin() + 0.25 * (3.0 * t).cos();
+        let noise = 0.25 * ((i as f64 * 11.0).sin() * (i as f64 * 5.3).cos());
+        x.push(t);
+        y_true.push(signal);
+        y.push(signal + noise);
+    }
+
+    println!("6. Higher Degree Comparison (Quadratic / Cubic / Quartic)");
+    println!("----------------------------------------------------------");
+
+    let degrees = [
+        (Quadratic, "Quadratic"),
+        (Cubic, "Cubic"),
+        (Quartic, "Quartic"),
+    ];
+    let mut results = Vec::new();
+
+    for (deg, name) in &degrees {
+        let result = Loess::new()
+            .fraction(0.25)
+            .iterations(2)
+            .degree(*deg)
+            .boundary_policy(Reflect)
+            .adapter(Batch)
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap();
+        let rmse: f64 = (result
+            .y
+            .iter()
+            .zip(y_true.iter())
+            .map(|(f, t)| (f - t).powi(2))
+            .sum::<f64>()
+            / n as f64)
+            .sqrt();
+        println!("  {} RMSE: {:.6}", name, rmse);
+        results.push(result);
+    }
+
+    let path = "../output/visual/higher_degree_comparison.csv";
+    let mut file = File::create(path)?;
+    writeln!(file, "x,y_true,y_noisy,y_quadratic,y_cubic,y_quartic")?;
+    for i in 0..n {
+        writeln!(
+            file,
+            "{},{},{},{},{},{}",
+            x[i], y_true[i], y[i], results[0].y[i], results[1].y[i], results[2].y[i]
+        )?;
+    }
+    println!("Results exported to {}", path);
+    Ok(())
+}
+
+/// 10. Multivariate LOESS (2-D surface)
+fn run_multivariate_loess() -> Result<(), Box<dyn std::error::Error>> {
+    let grid_n = 25usize; // 25×25 grid = 625 points
+    let mut xs: Vec<[f64; 2]> = Vec::with_capacity(grid_n * grid_n);
+    let mut z_true_vec = Vec::with_capacity(grid_n * grid_n);
+    let mut z_noisy_vec = Vec::with_capacity(grid_n * grid_n);
+    let mut x_flat = Vec::with_capacity(grid_n * grid_n);
+    let mut y_flat = Vec::with_capacity(grid_n * grid_n);
+
+    for xi in 0..grid_n {
+        for yi in 0..grid_n {
+            let xv = (xi as f64 / (grid_n - 1) as f64) * 4.0 - 2.0;
+            let yv = (yi as f64 / (grid_n - 1) as f64) * 4.0 - 2.0;
+            let signal = (xv.powi(2) + yv.powi(2)).sqrt().cos();
+            let noise_seed = (xi * grid_n + yi) as f64;
+            let noise = 0.2 * ((noise_seed * 7.1).sin() * (noise_seed * 3.3).cos());
+            xs.push([xv, yv]);
+            x_flat.push(xv);
+            y_flat.push(yv);
+            z_true_vec.push(signal);
+            z_noisy_vec.push(signal + noise);
+        }
+    }
+
+    println!(
+        "10. Multivariate LOESS (2-D surface, {}×{} grid)",
+        grid_n, grid_n
+    );
+    println!("-----------------------------------------------");
+
+    // Flatten predictor matrix: loess-rs expects &[f64] with dimensions encoded separately.
+    // For 2-D: pass x1 values then x2 values (column-major).
+    let x1: Vec<f64> = xs.iter().map(|p| p[0]).collect();
+    let x2: Vec<f64> = xs.iter().map(|p| p[1]).collect();
+    let mut x_combined = x1.clone();
+    x_combined.extend(&x2);
+
+    let result = Loess::new()
+        .fraction(0.3)
+        .iterations(1)
+        .dimensions(2)
+        .distance_metric(Euclidean)
+        .boundary_policy(NoBoundary)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x_combined, &z_noisy_vec)
+        .unwrap();
+
+    let rmse: f64 = (result
+        .y
+        .iter()
+        .zip(z_true_vec.iter())
+        .map(|(f, t)| (f - t).powi(2))
+        .sum::<f64>()
+        / result.y.len() as f64)
+        .sqrt();
+    println!("RMSE: {:.6}", rmse);
+
+    let path = "../output/visual/multivariate_loess.csv";
+    let mut file = File::create(path)?;
+    writeln!(file, "x,y,z_true,z_smooth")?;
+    for i in 0..result.y.len() {
+        writeln!(
+            file,
+            "{},{},{},{}",
+            x_flat[i], y_flat[i], z_true_vec[i], result.y[i]
+        )?;
+    }
+    println!("Results exported to {}", path);
     Ok(())
 }

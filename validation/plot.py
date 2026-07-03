@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Combined visualization entrypoint for fastLoess examples."""
+"""Combined visualization entrypoint for LOESS validation."""
 
 import os
 import sys
@@ -8,10 +8,10 @@ try:
     from .plot_common import OUTPUT_DIR
     from .plot_foundation import (
         plot_degree_comparison,
-        plot_fast_loess_concept,
         plot_fraction_comparison,
         plot_intervals_comparison,
-        plot_multivariate_fast_loess,
+        plot_loess_concept,
+        plot_multivariate_loess,
         plot_robustness_comparison,
     )
     from .plot_modeling import (
@@ -35,10 +35,10 @@ except ImportError:
     from plot_common import OUTPUT_DIR  # type: ignore
     from plot_foundation import (  # type: ignore
         plot_degree_comparison,
-        plot_fast_loess_concept,
         plot_fraction_comparison,
         plot_intervals_comparison,
-        plot_multivariate_fast_loess,
+        plot_loess_concept,
+        plot_multivariate_loess,
         plot_robustness_comparison,
     )
     from plot_modeling import (  # type: ignore
@@ -67,8 +67,8 @@ def build_plot_targets():
         "fraction": plot_fraction_comparison,
         "intervals": plot_intervals_comparison,
         "robustness": plot_robustness_comparison,
-        "concept": plot_fast_loess_concept,
-        "multivariate": plot_multivariate_fast_loess,
+        "concept": plot_loess_concept,
+        "multivariate": plot_multivariate_loess,
         "kernel": plot_kernel_comparison,
         "robust_method": plot_robust_method_comparison,
         "boundary": plot_boundary_policy_comparison,

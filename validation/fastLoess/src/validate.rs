@@ -72,13 +72,26 @@ fn process_file(input_path: &Path, output_dir: &Path) -> Result<(), Box<dyn Erro
                 .and_then(|v| v.get("surface"))
                 .and_then(|v| v.as_str())
                 == Some("direct");
-        if is_direct { Direct } else { Interpolation }
+        if is_direct {
+            Direct
+        } else {
+            Interpolation
+        }
     } else {
         Interpolation
     };
 
+    let degree = match data.params.degree {
+        0 => Constant,
+        2 => Quadratic,
+        3 => Cubic,
+        4 => Quartic,
+        _ => Linear, // degree 1 is the default
+    };
+
     let model = Loess::new()
         .fraction(data.params.fraction)
+        .degree(degree)
         .iterations(data.params.iterations)
         .boundary_policy(NoBoundary) // R doesn't have boundary extension by default
         .scaling_method(MAR) // Match R's default scaling if applicable, usually MAD/MAR
