@@ -50,3 +50,76 @@ fn test_parallel_cross_validation() {
     );
     assert_abs_diff_eq!(par_res.y[0], seq_res.y[0], epsilon = 1e-10);
 }
+
+/// Runs parallel LOOCV, exercising the `CVKind::LOOCV` arm inside
+/// `evaluate_fraction_cv`.
+#[test]
+fn test_loocv_cross_validation_parallel() {
+    let n = 20;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * 2.0 + 1.0).collect();
+    let fractions = vec![0.3, 0.5, 0.7];
+
+    let res = Loess::new()
+        .cross_validate(LOOCV(&fractions))
+        .adapter(Batch)
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(!res.y.is_empty());
+    assert!(res.fraction_used > 0.0);
+}
+
+/// KFold where fold_size = n / k < 2 triggers the fold-size guard inside
+/// `evaluate_fraction_cv`.
+#[test]
+fn test_kfold_fold_size_less_than_2() {
+    // n=10, k=10 => fold_size = 10/10 = 1 < 2
+    let n = 10;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * 1.5).collect();
+    let fractions = vec![0.3, 0.5];
+
+    let res = Loess::new()
+        .cross_validate(KFold(10, &fractions))
+        .adapter(Batch)
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(!res.y.is_empty());
+}
+
+/// Multi-dimensional (2-D) KFold CV exercises the n-D prediction branch
+/// inside `evaluate_fraction_cv`.
+#[test]
+fn test_multidim_kfold_cv_parallel() {
+    let n = 40;
+    // 2-D input: each observation has (x0, x1)
+    let x: Vec<f64> = (0..n)
+        .flat_map(|i| {
+            let xi = i as f64 / n as f64;
+            vec![xi, (i % 5) as f64 / 5.0]
+        })
+        .collect();
+    let y: Vec<f64> = (0..n).map(|i| i as f64 / n as f64 * 3.0).collect();
+    let fractions = vec![0.4, 0.6];
+
+    let res = Loess::new()
+        .dimensions(2)
+        .cross_validate(KFold(3, &fractions))
+        .adapter(Batch)
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(!res.y.is_empty());
+    assert!(res.fraction_used > 0.0);
+}

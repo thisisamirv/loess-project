@@ -155,7 +155,7 @@ env_args <- function(param_names) {
             integer = as.integer(val),
             character = as.character(val),
             logical = as.logical(val),
-            nullable = if (is.null(val)) Nullable(NULL) else val,
+            nullable = coerce_nullable(val)[[1]],
             val
         )
     })

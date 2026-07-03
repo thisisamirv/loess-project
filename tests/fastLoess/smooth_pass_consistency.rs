@@ -35,3 +35,80 @@ fn test_smooth_pass_consistency_robust() {
     }
     println!("Robust smooth pass consistency (3 iters): OK");
 }
+
+/// Parallel fit with Normalized distance exercises the Normalized arm of
+/// `LoessDistanceCalculator::distance_squared` and `split_distance_squared`.
+#[test]
+fn test_parallel_normalized_distance() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * 1.5).collect();
+
+    let res = Loess::new()
+        .fraction(0.5)
+        .distance_metric(Normalized)
+        .adapter(Batch)
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(!res.y.is_empty());
+}
+
+/// Parallel fit with Manhattan distance.
+#[test]
+fn test_parallel_manhattan_distance() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * 1.5).collect();
+
+    let res = Loess::new()
+        .fraction(0.5)
+        .distance_metric(Manhattan)
+        .adapter(Batch)
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(!res.y.is_empty());
+}
+
+/// Parallel fit with Chebyshev distance.
+#[test]
+fn test_parallel_chebyshev_distance() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * 1.5).collect();
+
+    let res = Loess::new()
+        .fraction(0.5)
+        .distance_metric(Chebyshev)
+        .adapter(Batch)
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(!res.y.is_empty());
+}
+
+/// Parallel fit with Minkowski(3) distance.
+#[test]
+fn test_parallel_minkowski_distance() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * 1.5).collect();
+
+    let res = Loess::new()
+        .fraction(0.5)
+        .distance_metric(Minkowski(3.0))
+        .adapter(Batch)
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(!res.y.is_empty());
+}

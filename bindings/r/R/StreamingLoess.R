@@ -63,10 +63,8 @@ StreamingLoess <- function(
         list(
             handle = handle,
             process_chunk = function(x, y) {
-                if (length(x) != length(y)) {
-                    stop("x and y must have the same length")
-                }
-                handle$process_chunk(as.double(x), as.double(y))
+                args <- validate_common_args(x, y, fraction, iterations)
+                handle$process_chunk(args$x, args$y)
             },
             finalize = function() {
                 handle$finalize()

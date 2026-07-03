@@ -212,9 +212,13 @@ _loess_impl:
 	@echo "=============================================================================="
 	@echo "All $(LOESS_PKG) crate checks completed successfully!"
 
-loess-coverage:
+ensure-llvm-cov:
+	@cargo llvm-cov --version > /dev/null 2>&1 || (echo "Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov && cargo llvm-cov install-llvm-tools)
+
+loess-coverage: ensure-llvm-cov
 	@echo "Running $(LOESS_PKG) coverage..."
-	@cd $(LOESS_DIR) && LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --all-targets --all-features
+	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --workspace --test $(LOESS_PKG) --all-features \
+		--ignore-filename-regex 'crates[/\\]fastLoess[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
 
 loess-clean:
 	@echo "Cleaning $(LOESS_PKG) crate..."
@@ -270,9 +274,10 @@ _fastLoess_impl:
 	@echo "=============================================================================="
 	@echo "All $(FASTLOESS_PKG) crate checks completed successfully!"
 
-fastLoess-coverage:
+fastLoess-coverage: ensure-llvm-cov
 	@echo "Running $(FASTLOESS_PKG) coverage..."
-	@cd $(FASTLOESS_DIR) && LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --all-targets --all-features
+	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --workspace --test $(FASTLOESS_PKG) --all-features \
+		--ignore-filename-regex 'crates[/\\]loess-rs[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
 
 fastLoess-clean:
 	@echo "Cleaning $(FASTLOESS_PKG) crate..."
@@ -323,7 +328,7 @@ _python_impl:
 	@. $(PY_ACTIVATE) && python -m pytest $(PY_TEST_DIR) -q
 	@echo "$(PY_PKG) checks completed successfully!"
 
-python-coverage:
+python-coverage: ensure-llvm-cov
 	@echo "Running $(PY_PKG) coverage..."
 	@cd $(PY_DIR) && LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(PY_PKG) --all-targets
 

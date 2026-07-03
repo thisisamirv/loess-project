@@ -66,10 +66,8 @@ OnlineLoess <- function(
         list(
             handle = handle,
             add_points = function(x, y) {
-                if (length(x) != length(y)) {
-                    stop("x and y must have the same length")
-                }
-                handle$add_points(as.double(x), as.double(y))
+                args <- validate_common_args(x, y, fraction, iterations)
+                handle$add_points(args$x, args$y)
             },
             params = list(
                 fraction = fraction,

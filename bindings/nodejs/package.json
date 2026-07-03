@@ -34,7 +34,7 @@
     },
     "devDependencies": {
         "@napi-rs/cli": "^3.7",
-        "oxlint": "^1.71"
+        "oxlint": "^1.72"
     },
     "engines": {
         "node": ">= 20"

@@ -1147,3 +1147,1350 @@ fn test_wls_nan_handling() {
         "WLS should propagate NaNs if present in data"
     );
 }
+
+// ============================================================================
+// RegressionContext Additional Coverage Tests
+// ============================================================================
+
+/// Helper to build a 1D Neighborhood from x values around a query index.
+fn make_neighborhood_1d(
+    x: &[f64],
+    query_idx: usize,
+    left: usize,
+    right: usize,
+) -> loess_rs::internals::math::neighborhood::Neighborhood<f64> {
+    let x_val = x[query_idx];
+    let mut indices = Vec::new();
+    let mut distances = Vec::new();
+    for i in left..=right {
+        indices.push(i);
+        distances.push((x[i] - x_val).abs());
+    }
+    let max_distance = distances.iter().cloned().fold(0.0f64, f64::max);
+    let max_distance = if max_distance <= f64::EPSILON {
+        1.0
+    } else {
+        max_distance
+    };
+    loess_rs::internals::math::neighborhood::Neighborhood {
+        indices,
+        distances,
+        max_distance,
+    }
+}
+
+/// Test ZeroWeightFallback::UseLocalMean when all robustness weights are 0.
+#[test]
+fn test_context_zero_weight_fallback_use_local_mean() {
+    let x = vec![0.0f64, 1.0, 2.0];
+    let y = vec![10.0f64, 20.0, 30.0];
+    let robustness = vec![0.0f64, 0.0, 0.0]; // all zero => zero-weight path
+
+    let neighborhood = make_neighborhood_1d(&x, 1, 0, 2);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        1,
+        None,
+        &neighborhood,
+        true,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        None,
+    );
+
+    let result = ctx.fit();
+    // UseLocalMean returns unweighted mean of neighbors' y values
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    assert_relative_eq!(val, 20.0, epsilon = 1.0); // roughly the mean
+}
+
+/// Test ZeroWeightFallback::ReturnOriginal when all robustness weights are 0.
+#[test]
+fn test_context_zero_weight_fallback_return_original() {
+    let x = vec![0.0f64, 1.0, 2.0];
+    let y = vec![10.0f64, 99.0, 30.0];
+    let robustness = vec![0.0f64, 0.0, 0.0];
+
+    let neighborhood = make_neighborhood_1d(&x, 1, 0, 2);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        1,
+        None,
+        &neighborhood,
+        true,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::ReturnOriginal,
+        PolynomialDegree::Linear,
+        false,
+        None,
+    );
+
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    // Should return y[query_idx] = y[1] = 99.0
+    assert_relative_eq!(val, 99.0, epsilon = 1e-10);
+}
+
+/// Test ZeroWeightFallback::ReturnNone when all robustness weights are 0.
+#[test]
+fn test_context_zero_weight_fallback_return_none() {
+    let x = vec![0.0f64, 1.0, 2.0];
+    let y = vec![10.0f64, 20.0, 30.0];
+    let robustness = vec![0.0f64, 0.0, 0.0];
+
+    let neighborhood = make_neighborhood_1d(&x, 1, 0, 2);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        1,
+        None,
+        &neighborhood,
+        true,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::ReturnNone,
+        PolynomialDegree::Linear,
+        false,
+        None,
+    );
+
+    let result = ctx.fit();
+    assert!(result.is_none());
+}
+
+/// Test that compute_leverage=true produces a non-zero leverage value.
+#[test]
+fn test_context_compute_leverage() {
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * 2.0 + 1.0).collect();
+    let robustness = vec![1.0f64; 10];
+
+    let neighborhood = make_neighborhood_1d(&x, 5, 0, 9);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        5,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        true, // compute_leverage = true
+        None,
+    );
+
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (_, leverage) = result.unwrap();
+    assert!(leverage >= 0.0);
+    assert!(leverage.is_finite());
+}
+
+/// Test constant polynomial degree in fit().
+#[test]
+fn test_context_constant_degree_fit() {
+    let x = vec![0.0f64, 1.0, 2.0, 3.0, 4.0];
+    let y = vec![5.0f64, 6.0, 7.0, 8.0, 9.0];
+    let robustness = vec![1.0f64; 5];
+
+    let neighborhood = make_neighborhood_1d(&x, 2, 0, 4);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        2,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Constant,
+        false,
+        None,
+    );
+
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    assert!(val.is_finite());
+}
+
+/// Test buffered path in fit().
+#[test]
+fn test_context_fit_with_fitting_buffer() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+
+    let x = vec![0.0f64, 1.0, 2.0, 3.0, 4.0];
+    let y = vec![0.0f64, 2.0, 4.0, 6.0, 8.0]; // y = 2x
+    let robustness = vec![1.0f64; 5];
+
+    let neighborhood = make_neighborhood_1d(&x, 2, 0, 4);
+    let mut buf = FittingBuffer::new(5, 2); // k=5 neighbors, n_coeffs=2 (linear)
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        2,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    assert_relative_eq!(val, 4.0, epsilon = 0.2); // y=2x at x=2
+}
+
+/// Test fit_with_coefficients returns coefficients.
+#[test]
+fn test_context_fit_with_coefficients_linear() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 3.0 * xi + 1.0).collect(); // y = 3x + 1
+    let robustness = vec![1.0f64; 10];
+
+    let neighborhood = make_neighborhood_1d(&x, 5, 0, 9);
+    let mut buf = FittingBuffer::new(10, 2);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        5,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+
+    let coeffs = ctx.fit_with_coefficients();
+    assert!(coeffs.is_some());
+    let coeffs = coeffs.unwrap();
+    // coeffs[0] = intercept (value at query), coeffs[1] = slope
+    assert!(coeffs[0].is_finite());
+    assert!(coeffs[1].is_finite());
+}
+
+/// Test fit with quadratic degree.
+#[test]
+fn test_context_quadratic_fit() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * xi).collect(); // y = x^2
+    let robustness = vec![1.0f64; 10];
+
+    let neighborhood = make_neighborhood_1d(&x, 5, 0, 9);
+    let mut buf = FittingBuffer::new(10, 3); // n_coeffs=3 for quadratic
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        5,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Quadratic,
+        false,
+        Some(&mut buf),
+    );
+
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    // At x=5, y=25
+    assert_relative_eq!(val, 25.0, epsilon = 1.0);
+}
+
+/// Test fit with explicit query_point (not using query_idx).
+#[test]
+fn test_context_explicit_query_point() {
+    let x = vec![0.0f64, 1.0, 2.0, 3.0, 4.0];
+    let y = vec![0.0f64, 2.0, 4.0, 6.0, 8.0];
+    let robustness = vec![1.0f64; 5];
+
+    let neighborhood = make_neighborhood_1d(&x, 2, 0, 4);
+    let query_pt = [2.5f64]; // explicit query point between indices
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        0,
+        Some(&query_pt),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        None,
+    );
+
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    // y = 2x, at x=2.5 expect ~5.0
+    assert_relative_eq!(val, 5.0, epsilon = 0.5);
+}
+
+/// Test fit returns None for empty neighborhood.
+#[test]
+fn test_context_empty_neighborhood() {
+    let x = vec![1.0f64];
+    let y = vec![1.0f64];
+    let robustness = vec![1.0f64];
+    let neighborhood = loess_rs::internals::math::neighborhood::Neighborhood::<f64> {
+        indices: vec![],
+        distances: vec![],
+        max_distance: 0.0,
+    };
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        0,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        None,
+    );
+
+    let result = ctx.fit();
+    assert!(result.is_none());
+}
+
+/// Test fit with zero bandwidth (all x equal).
+#[test]
+fn test_context_zero_bandwidth() {
+    let x = vec![1.0f64, 1.0, 1.0];
+    let y = vec![10.0f64, 20.0, 30.0];
+    let robustness = vec![1.0f64; 3];
+    // max_distance = 0 triggers the zero-bandwidth path
+    let neighborhood = loess_rs::internals::math::neighborhood::Neighborhood::<f64> {
+        indices: vec![0, 1, 2],
+        distances: vec![0.0, 0.0, 0.0],
+        max_distance: 0.0,
+    };
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        1,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        None,
+    );
+
+    let result = ctx.fit();
+    assert!(result.is_some());
+}
+
+/// Test fit_with_coefficients with zero bandwidth falls back to weighted mean.
+#[test]
+fn test_context_fit_with_coefficients_zero_bandwidth() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+
+    let x = vec![1.0f64, 1.0, 1.0];
+    let y = vec![10.0f64, 20.0, 30.0];
+    let robustness = vec![1.0f64; 3];
+    let neighborhood = loess_rs::internals::math::neighborhood::Neighborhood::<f64> {
+        indices: vec![0, 1, 2],
+        distances: vec![0.0, 0.0, 0.0],
+        max_distance: 0.0,
+    };
+    let mut buf = FittingBuffer::new(3, 2);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        1,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+
+    let coeffs = ctx.fit_with_coefficients();
+    assert!(coeffs.is_some());
+    let c = coeffs.unwrap();
+    assert!(c[0].is_finite()); // value at query
+}
+
+// ============================================================================
+// Additional RegressionContext Tests - Polynomial Degree Arms
+// ============================================================================
+
+fn make_nd_neighborhood(
+    x: &[f64],
+    dims: usize,
+    query: &[f64],
+    k: usize,
+) -> loess_rs::internals::math::neighborhood::Neighborhood<f64> {
+    use loess_rs::internals::engine::executor::LoessDistanceCalculator;
+    use loess_rs::internals::math::distance::DistanceMetric;
+    use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood};
+    use loess_rs::internals::primitives::buffer::NeighborhoodSearchBuffer;
+    let scales = vec![1.0f64; dims];
+    let tree = KDTree::new(x, dims);
+    let dist_calc = LoessDistanceCalculator {
+        metric: DistanceMetric::Euclidean,
+        scales: &scales,
+    };
+    let mut buf = NeighborhoodSearchBuffer::new(k);
+    let mut neighborhood = Neighborhood::with_capacity(k);
+    tree.find_k_nearest(query, k, &dist_calc, None, &mut buf, &mut neighborhood);
+    neighborhood
+}
+
+/// Test 1D Cubic polynomial fit() path.
+#[test]
+fn test_context_1d_cubic_fit() {
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * xi * xi).collect(); // y = x^3
+    let robustness = vec![1.0f64; 10];
+    let neighborhood = make_neighborhood_1d(&x, 5, 0, 9);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        5,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Cubic,
+        false,
+        None,
+    );
+    let result = ctx.fit();
+    assert!(result.is_some());
+    assert!(result.unwrap().0.is_finite());
+}
+
+/// Test 2D Quadratic polynomial fit() path.
+#[test]
+fn test_context_2d_quadratic_fit() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    // 10 points in 2D, y = x1^2 + x2^2
+    let pts: Vec<(f64, f64)> = vec![
+        (0.0, 0.0),
+        (1.0, 0.0),
+        (2.0, 0.0),
+        (0.0, 1.0),
+        (1.0, 1.0),
+        (2.0, 1.0),
+        (0.0, 2.0),
+        (1.0, 2.0),
+        (2.0, 2.0),
+        (1.0, 1.0),
+    ];
+    let x: Vec<f64> = pts.iter().flat_map(|&(a, b)| vec![a, b]).collect();
+    let y: Vec<f64> = pts.iter().map(|&(a, b)| a * a + b * b).collect();
+    let n = pts.len();
+    let robustness = vec![1.0f64; n];
+    let query = [1.0f64, 1.0];
+    let neighborhood = make_nd_neighborhood(&x, 2, &query, n);
+    let mut buf = FittingBuffer::new(n, 6); // 6 coeffs for 2D quadratic
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        2,
+        &y,
+        4,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Quadratic,
+        false,
+        Some(&mut buf),
+    );
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    assert!(val.is_finite());
+}
+
+/// Test 3D Linear polynomial fit() path.
+#[test]
+fn test_context_3d_linear_fit() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    // 10 points in 3D, y = x1 + x2 + x3
+    let pts: Vec<(f64, f64, f64)> = vec![
+        (0., 0., 0.),
+        (1., 0., 0.),
+        (0., 1., 0.),
+        (0., 0., 1.),
+        (1., 1., 0.),
+        (1., 0., 1.),
+        (0., 1., 1.),
+        (1., 1., 1.),
+        (2., 0., 0.),
+        (0., 2., 0.),
+    ];
+    let x: Vec<f64> = pts.iter().flat_map(|&(a, b, c)| vec![a, b, c]).collect();
+    let y: Vec<f64> = pts.iter().map(|&(a, b, c)| a + b + c).collect();
+    let n = pts.len();
+    let robustness = vec![1.0f64; n];
+    let query = [1.0f64, 1.0, 1.0];
+    let neighborhood = make_nd_neighborhood(&x, 3, &query, n);
+    let mut buf = FittingBuffer::new(n, 4); // 4 coeffs for 3D linear
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        3,
+        &y,
+        7,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    assert!(val.is_finite());
+}
+
+/// Test generic arm (4D Linear, falls through to GenericTermGenerator).
+#[test]
+fn test_context_4d_linear_fit() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    // 15 points in 4D, y = x1 + x2 + x3 + x4
+    let n = 15usize;
+    let mut x = Vec::with_capacity(n * 4);
+    let mut y = Vec::with_capacity(n);
+    for i in 0..n {
+        let v = i as f64 / (n - 1) as f64;
+        x.extend_from_slice(&[v, v * 0.5, v * 0.3, v * 0.2]);
+        y.push(v + v * 0.5 + v * 0.3 + v * 0.2);
+    }
+    let robustness = vec![1.0f64; n];
+    let query = [0.5f64, 0.25, 0.15, 0.1];
+    let neighborhood = make_nd_neighborhood(&x, 4, &query, n);
+    let mut buf = FittingBuffer::new(n, 5); // 5 coeffs for 4D linear
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        4,
+        &y,
+        7,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    assert!(val.is_finite());
+}
+
+/// Test fit_with_coefficients with 1D Quadratic.
+#[test]
+fn test_context_fit_with_coefficients_1d_quadratic() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * xi).collect();
+    let robustness = vec![1.0f64; 10];
+    let neighborhood = make_neighborhood_1d(&x, 5, 0, 9);
+    let mut buf = FittingBuffer::new(10, 3); // 3 coeffs for 1D quadratic
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        5,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Quadratic,
+        false,
+        Some(&mut buf),
+    );
+    let coeffs = ctx.fit_with_coefficients();
+    assert!(coeffs.is_some());
+    assert!(coeffs.unwrap()[0].is_finite());
+}
+
+/// Test fit_with_coefficients with 1D Cubic.
+#[test]
+fn test_context_fit_with_coefficients_1d_cubic() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    let x: Vec<f64> = (0..12).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * xi * xi).collect();
+    let robustness = vec![1.0f64; 12];
+    let neighborhood = make_neighborhood_1d(&x, 6, 0, 11);
+    let mut buf = FittingBuffer::new(12, 4); // 4 coeffs for 1D cubic
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        6,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Cubic,
+        false,
+        Some(&mut buf),
+    );
+    let coeffs = ctx.fit_with_coefficients();
+    assert!(coeffs.is_some());
+    assert!(coeffs.unwrap()[0].is_finite());
+}
+
+/// Test fit_with_coefficients with 2D Linear.
+#[test]
+fn test_context_fit_with_coefficients_2d_linear() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    let pts: Vec<(f64, f64)> = vec![
+        (0., 0.),
+        (1., 0.),
+        (0., 1.),
+        (1., 1.),
+        (0.5, 0.5),
+        (2., 0.),
+        (0., 2.),
+    ];
+    let x: Vec<f64> = pts.iter().flat_map(|&(a, b)| vec![a, b]).collect();
+    let y: Vec<f64> = pts.iter().map(|&(a, b)| a + 2.0 * b).collect();
+    let n = pts.len();
+    let robustness = vec![1.0f64; n];
+    let query = [0.5f64, 0.5];
+    let neighborhood = make_nd_neighborhood(&x, 2, &query, n);
+    let mut buf = FittingBuffer::new(n, 3); // 3 coeffs for 2D linear
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        2,
+        &y,
+        4,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+    let coeffs = ctx.fit_with_coefficients();
+    assert!(coeffs.is_some());
+    let c = coeffs.unwrap();
+    assert!(c[0].is_finite());
+}
+
+/// Test fit_with_coefficients with 2D Quadratic.
+#[test]
+fn test_context_fit_with_coefficients_2d_quadratic() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    let pts: Vec<(f64, f64)> = vec![
+        (0., 0.),
+        (1., 0.),
+        (2., 0.),
+        (0., 1.),
+        (1., 1.),
+        (2., 1.),
+        (0., 2.),
+        (1., 2.),
+        (2., 2.),
+        (1., 1.),
+    ];
+    let x: Vec<f64> = pts.iter().flat_map(|&(a, b)| vec![a, b]).collect();
+    let y: Vec<f64> = pts.iter().map(|&(a, b)| a * a + b * b).collect();
+    let n = pts.len();
+    let robustness = vec![1.0f64; n];
+    let query = [1.0f64, 1.0];
+    let neighborhood = make_nd_neighborhood(&x, 2, &query, n);
+    let mut buf = FittingBuffer::new(n, 6); // 6 coeffs for 2D quadratic
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        2,
+        &y,
+        4,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Quadratic,
+        false,
+        Some(&mut buf),
+    );
+    let coeffs = ctx.fit_with_coefficients();
+    assert!(coeffs.is_some());
+    let c = coeffs.unwrap();
+    assert!(c[0].is_finite());
+}
+
+/// Test fit_with_coefficients with 2D Cubic.
+#[test]
+fn test_context_fit_with_coefficients_2d_cubic() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    // Need at least 10 points for 2D cubic (10 coefficients)
+    let n = 15usize;
+    let mut x = Vec::new();
+    let mut y = Vec::new();
+    for i in 0..n {
+        let a = (i % 4) as f64;
+        let b = (i / 4) as f64;
+        x.push(a);
+        x.push(b);
+        y.push(a * a * a + b * b * b);
+    }
+    let robustness = vec![1.0f64; n];
+    let query = [1.0f64, 1.0];
+    let neighborhood = make_nd_neighborhood(&x, 2, &query, n);
+    let mut buf = FittingBuffer::new(n, 10); // 10 coeffs for 2D cubic
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        2,
+        &y,
+        4,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Cubic,
+        false,
+        Some(&mut buf),
+    );
+    let coeffs = ctx.fit_with_coefficients();
+    assert!(coeffs.is_some());
+    assert!(coeffs.unwrap()[0].is_finite());
+}
+
+/// Test fit_with_coefficients with 3D Linear.
+#[test]
+fn test_context_fit_with_coefficients_3d_linear() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    let pts: Vec<(f64, f64, f64)> = vec![
+        (0., 0., 0.),
+        (1., 0., 0.),
+        (0., 1., 0.),
+        (0., 0., 1.),
+        (1., 1., 0.),
+        (1., 0., 1.),
+        (0., 1., 1.),
+        (1., 1., 1.),
+        (2., 0., 0.),
+        (0., 2., 0.),
+    ];
+    let x: Vec<f64> = pts.iter().flat_map(|&(a, b, c)| vec![a, b, c]).collect();
+    let y: Vec<f64> = pts.iter().map(|&(a, b, c)| a + b + c).collect();
+    let n = pts.len();
+    let robustness = vec![1.0f64; n];
+    let query = [1.0f64, 1.0, 1.0];
+    let neighborhood = make_nd_neighborhood(&x, 3, &query, n);
+    let mut buf = FittingBuffer::new(n, 4); // 4 coeffs for 3D linear
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        3,
+        &y,
+        7,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+    let coeffs = ctx.fit_with_coefficients();
+    assert!(coeffs.is_some());
+    assert!(coeffs.unwrap()[0].is_finite());
+}
+
+/// Test fit_with_coefficients with 3D Quadratic.
+#[test]
+fn test_context_fit_with_coefficients_3d_quadratic() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    // 3D quadratic: 10 coefficients
+    let n = 20usize;
+    let mut x = Vec::new();
+    let mut y = Vec::new();
+    for i in 0..n {
+        let a = (i % 3) as f64;
+        let b = ((i / 3) % 3) as f64;
+        let c = (i / 9) as f64;
+        x.push(a);
+        x.push(b);
+        x.push(c);
+        y.push(a * a + b * b + c * c);
+    }
+    let robustness = vec![1.0f64; n];
+    let query = [1.0f64, 1.0, 1.0];
+    let neighborhood = make_nd_neighborhood(&x, 3, &query, n);
+    let mut buf = FittingBuffer::new(n, 10); // 10 coeffs for 3D quadratic
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        3,
+        &y,
+        0,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Quadratic,
+        false,
+        Some(&mut buf),
+    );
+    let coeffs = ctx.fit_with_coefficients();
+    assert!(coeffs.is_some());
+    assert!(coeffs.unwrap()[0].is_finite());
+}
+
+/// Test fit_with_coefficients with generic arm (4D Linear).
+#[test]
+fn test_context_fit_with_coefficients_generic_arm() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    let n = 20usize;
+    let dims = 4usize;
+    let mut x = Vec::with_capacity(n * dims);
+    let mut y = Vec::with_capacity(n);
+    for i in 0..n {
+        let v = i as f64 / (n - 1) as f64;
+        x.extend_from_slice(&[v, v * 0.5, v * 0.3, v * 0.2]);
+        y.push(v + v * 0.5 + v * 0.3 + v * 0.2);
+    }
+    let robustness = vec![1.0f64; n];
+    let query = [0.5f64, 0.25, 0.15, 0.1];
+    let neighborhood = make_nd_neighborhood(&x, dims, &query, n);
+    let mut buf = FittingBuffer::new(n, 5); // 5 coeffs for 4D linear
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        dims,
+        &y,
+        9,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+    let coeffs = ctx.fit_with_coefficients();
+    assert!(coeffs.is_some());
+    assert!(coeffs.unwrap()[0].is_finite());
+}
+
+/// Test fit() for 2D Cubic to cover that match arm.
+#[test]
+fn test_context_2d_cubic_fit() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    let n = 15usize;
+    let mut x = Vec::new();
+    let mut y = Vec::new();
+    for i in 0..n {
+        let a = (i % 4) as f64;
+        let b = (i / 4) as f64;
+        x.push(a);
+        x.push(b);
+        y.push(a * a * a + b * b * b);
+    }
+    let robustness = vec![1.0f64; n];
+    let query = [1.0f64, 1.0];
+    let neighborhood = make_nd_neighborhood(&x, 2, &query, n);
+    let mut buf = FittingBuffer::new(n, 10);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        2,
+        &y,
+        4,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Cubic,
+        false,
+        Some(&mut buf),
+    );
+    let result = ctx.fit();
+    assert!(result.is_some());
+    assert!(result.unwrap().0.is_finite());
+}
+
+/// Test fit() for 3D Quadratic to cover that match arm.
+#[test]
+fn test_context_3d_quadratic_fit() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    let n = 20usize;
+    let mut x = Vec::new();
+    let mut y = Vec::new();
+    for i in 0..n {
+        let a = (i % 3) as f64;
+        let b = ((i / 3) % 3) as f64;
+        let c = (i / 9) as f64;
+        x.push(a);
+        x.push(b);
+        x.push(c);
+        y.push(a * a + b * b + c * c);
+    }
+    let robustness = vec![1.0f64; n];
+    let query = [1.0f64, 1.0, 1.0];
+    let neighborhood = make_nd_neighborhood(&x, 3, &query, n);
+    let mut buf = FittingBuffer::new(n, 10);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        3,
+        &y,
+        0,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Quadratic,
+        false,
+        Some(&mut buf),
+    );
+    let result = ctx.fit();
+    assert!(result.is_some());
+    assert!(result.unwrap().0.is_finite());
+}
+
+// ============================================================================
+// fit_with_coefficients without FittingBuffer (non-buffered path)
+// ============================================================================
+
+/// Test fit_with_coefficients when no FittingBuffer is provided.
+///
+/// When `buffer = None`, the function takes the non-buffered else branch and
+/// falls through to the weighted_mean_and_sum fallback.
+#[test]
+fn test_context_fit_with_coefficients_no_buffer() {
+    let x: Vec<f64> = (0..8).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * 2.0).collect();
+    let robustness = vec![1.0f64; x.len()];
+    let neighborhood = make_neighborhood_1d(&x, 4, 0, x.len() - 1);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        3,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        None, // <-- no buffer: exercises the non-buffered fallback
+    );
+
+    let coeffs = ctx.fit_with_coefficients();
+    // Should fall back to weighted_mean_and_sum and return a valid coefficient vector
+    assert!(coeffs.is_some(), "Expected fallback coefficients");
+    let c = coeffs.unwrap();
+    assert!(c[0].is_finite(), "Mean value should be finite");
+}
+
+// ============================================================================
+// fit() for (2, Linear) arm in fit_polynomial_wls_internal
+// ============================================================================
+
+/// Test fit() for 2D Linear to cover that match arm in fit_polynomial_wls_internal.
+#[test]
+fn test_context_2d_linear_fit_via_fit() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    // 8 points in 2D, y = x1 + 2*x2
+    let x = vec![
+        0.0f64, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.2, 0.8, 0.8, 0.2, 0.3, 0.7,
+    ];
+    let y = vec![0.0f64, 1.0, 2.0, 3.0, 1.5, 1.8, 1.2, 1.7];
+    let n = 8;
+    let robustness = vec![1.0f64; n];
+    let query = [0.5f64, 0.5];
+    let neighborhood = make_nd_neighborhood(&x, 2, &query, n);
+    let mut buf = FittingBuffer::new(n, 3); // 3 coeffs for 2D linear
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        2,
+        &y,
+        4,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+    let result = ctx.fit();
+    assert!(result.is_some(), "2D Linear fit() should return Some");
+    assert!(
+        result.unwrap().0.is_finite(),
+        "2D Linear fit() should be finite"
+    );
+}
+
+/// Test fit() for (2, Quadratic) arm in fit_polynomial_wls_internal.
+#[test]
+fn test_context_2d_quadratic_fit_via_fit() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    let x = vec![
+        0.0f64, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.25, 0.75, 0.75, 0.25, 0.0, 0.5, 0.5,
+        0.0,
+    ];
+    let y = vec![0.0f64, 1.0, 2.0, 3.0, 1.5, 1.75, 1.25, 0.5, 1.0];
+    let n = 9;
+    let robustness = vec![1.0f64; n];
+    let query = [0.5f64, 0.5];
+    let neighborhood = make_nd_neighborhood(&x, 2, &query, n);
+    let mut buf = FittingBuffer::new(n, 6);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        2,
+        &y,
+        4,
+        Some(&query),
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Quadratic,
+        false,
+        Some(&mut buf),
+    );
+    let result = ctx.fit();
+    assert!(result.is_some(), "2D Quadratic fit() should return Some");
+    assert!(result.unwrap().0.is_finite());
+}
+
+/// Test weighted_mean_and_sum fallback when all kernel weights are zero.
+///
+/// Forces the sum_w=0 path in weighted_mean_and_sum by using Uniform kernel
+/// with points outside unit range (distance > max_distance, u > 1).
+#[test]
+fn test_context_weighted_mean_zero_sum_fallback() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    // All points are at distance exactly 0 (same location), but we set
+    // max_distance to 0 to force constant-degree path where sum_w might be 0
+    let x = vec![0.5f64, 0.5, 0.5, 0.5];
+    let y = vec![1.0f64, 2.0, 3.0, 4.0];
+    let robustness = vec![0.0f64; 4]; // all robustness = 0 -> w = 0
+    let neighborhood = loess_rs::internals::math::neighborhood::Neighborhood::<f64> {
+        indices: vec![0, 1, 2, 3],
+        distances: vec![0.5, 0.5, 0.5, 0.5],
+        max_distance: 1.0,
+    };
+    let mut buf = FittingBuffer::new(4, 2);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        0,
+        None,
+        &neighborhood,
+        true, // use_robustness = true, all weights = 0
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+    // weight_sum = 0 -> triggers handle_zero_weights_fit path
+    let result = ctx.fit();
+    assert!(result.is_some(), "Should return fallback from zero weights");
+    assert!(
+        result.unwrap().0.is_finite(),
+        "Fallback value should be finite"
+    );
+}
+
+// ============================================================================
+// f32 Monomorphization Coverage
+// ============================================================================
+
+/// Test RegressionContext with f32 type to cover f32 monomorphizations.
+///
+/// The coverage tool counts f32 and f64 versions separately; this test
+/// exercises the main methods with f32 to reach otherwise-uncovered branches.
+#[test]
+fn test_context_f32_fit_and_weighted_mean() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+
+    // 1D f32 linear fit
+    let x: Vec<f32> = (0..8).map(|i| i as f32).collect();
+    let y: Vec<f32> = x.iter().map(|&xi| xi * 2.0 + 1.0).collect();
+    let robustness = vec![1.0f32; x.len()];
+    let neighborhood = loess_rs::internals::math::neighborhood::Neighborhood::<f32> {
+        indices: vec![0, 1, 2, 3, 4, 5, 6, 7],
+        distances: vec![3.0, 2.0, 1.0, 0.0, 1.0, 2.0, 3.0, 4.0],
+        max_distance: 4.0,
+    };
+    let mut buf = FittingBuffer::<f32>::new(8, 2);
+
+    // fit() with f32
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        3,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    assert!(val.is_finite());
+}
+
+/// Test RegressionContext::fit_with_coefficients with f32 type.
+#[test]
+fn test_context_f32_fit_with_coefficients() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+
+    let x: Vec<f32> = (0..6).map(|i| i as f32).collect();
+    let y: Vec<f32> = x.iter().map(|&xi| xi * 3.0).collect();
+    let robustness = vec![1.0f32; x.len()];
+    let neighborhood = loess_rs::internals::math::neighborhood::Neighborhood::<f32> {
+        indices: vec![0, 1, 2, 3, 4, 5],
+        distances: vec![2.5, 1.5, 0.5, 0.5, 1.5, 2.5],
+        max_distance: 2.5,
+    };
+    let mut buf = FittingBuffer::<f32>::new(6, 2);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        2,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+    let coeffs = ctx.fit_with_coefficients();
+    assert!(coeffs.is_some());
+    assert!(coeffs.unwrap()[0].is_finite());
+}
+
+/// Test handle_zero_weights_fit via f32 with UseLocalMean fallback.
+#[test]
+fn test_context_f32_handle_zero_weights() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+
+    let x = vec![0.5f32, 0.5, 0.5];
+    let y = vec![10.0f32, 20.0, 30.0];
+    let robustness = vec![0.0f32; 3]; // zero robustness weights -> weight_sum = 0
+    let neighborhood = loess_rs::internals::math::neighborhood::Neighborhood::<f32> {
+        indices: vec![0, 1, 2],
+        distances: vec![0.5, 0.5, 0.5],
+        max_distance: 1.0,
+    };
+    let mut buf = FittingBuffer::<f32>::new(3, 2);
+
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        0,
+        None,
+        &neighborhood,
+        true,
+        &robustness, // use_robustness = true, all zero -> zero weights
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Linear,
+        false,
+        Some(&mut buf),
+    );
+    let result = ctx.fit();
+    assert!(result.is_some());
+    assert!(result.unwrap().0.is_finite());
+}
+
+/// Test weighted_mean_and_sum else branch via all-boundary distances (f64).
+///
+/// Tricube(1.0) = 0 → sum_w = 0 → else branch computes arithmetic mean.
+#[test]
+fn test_context_weighted_mean_all_boundary_distances_f64() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    let x = vec![0.0f64, 1.0, 2.0, 3.0];
+    let y = vec![10.0f64, 20.0, 30.0, 40.0];
+    let robustness = vec![1.0f64; 4];
+    let neighborhood = loess_rs::internals::math::neighborhood::Neighborhood::<f64> {
+        indices: vec![0, 1, 2, 3],
+        distances: vec![1.0, 1.0, 1.0, 1.0], // all at max_distance: Tricube(1.0)=0
+        max_distance: 1.0,
+    };
+    let mut buf = FittingBuffer::<f64>::new(4, 2);
+    // Constant degree calls weighted_mean_and_sum directly; sum_w=0 → else branch
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        0,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Constant,
+        false,
+        Some(&mut buf),
+    );
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    assert_relative_eq!(val, 25.0f64, epsilon = 1e-10);
+}
+
+/// Test weighted_mean_and_sum else branch for f32 type.
+#[test]
+fn test_context_weighted_mean_all_boundary_distances_f32() {
+    use loess_rs::internals::primitives::buffer::FittingBuffer;
+    let x = vec![0.0f32, 1.0, 2.0, 3.0];
+    let y = vec![10.0f32, 20.0, 30.0, 40.0];
+    let robustness = vec![1.0f32; 4];
+    let neighborhood = loess_rs::internals::math::neighborhood::Neighborhood::<f32> {
+        indices: vec![0, 1, 2, 3],
+        distances: vec![1.0, 1.0, 1.0, 1.0],
+        max_distance: 1.0,
+    };
+    let mut buf = FittingBuffer::<f32>::new(4, 2);
+    let mut ctx = RegressionContext::new(
+        &x,
+        1,
+        &y,
+        0,
+        None,
+        &neighborhood,
+        false,
+        &robustness,
+        WeightFunction::Tricube,
+        ZeroWeightFallback::UseLocalMean,
+        PolynomialDegree::Constant,
+        false,
+        Some(&mut buf),
+    );
+    let result = ctx.fit();
+    assert!(result.is_some());
+    let (val, _) = result.unwrap();
+    assert_relative_eq!(val, 25.0f32, epsilon = 1e-5);
+}

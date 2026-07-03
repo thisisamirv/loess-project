@@ -218,3 +218,81 @@ fn test_error_handling() {
         _ => panic!("Expected MismatchedInputs error"),
     }
 }
+
+/// Calling `finalize()` without any prior `process_chunk()` exercises the
+/// else-branch of `finalize()` that returns an empty `LoessResult`.
+#[test]
+fn test_streaming_finalize_without_chunks() {
+    let mut processor = Loess::new()
+        .fraction(0.3)
+        .adapter(Streaming)
+        .chunk_size(20)
+        .build()
+        .unwrap();
+
+    let res = processor.finalize().unwrap();
+    assert!(res.y.is_empty());
+    assert!(res.x.is_empty());
+}
+
+/// A streaming run with `parallel(true)` exercises the `#[cfg(feature = "cpu")]`
+/// parallel-callback setup inside `process_chunk()`.
+#[test]
+fn test_streaming_parallel_true() {
+    let n = 60;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * 2.0).collect();
+
+    let mut processor = Loess::new()
+        .fraction(0.4)
+        .adapter(Streaming)
+        .chunk_size(30)
+        .overlap(5)
+        .parallel(true)
+        .build()
+        .unwrap();
+
+    let r1 = processor.process_chunk(&x[..30], &y[..30]).unwrap();
+    let r2 = processor.process_chunk(&x[30..], &y[30..]).unwrap();
+    let r3 = processor.finalize().unwrap();
+
+    assert!(r1.x.len() + r2.x.len() + r3.x.len() > 0);
+}
+
+/// Exercises `reset()` on a live streaming processor.
+#[test]
+fn test_streaming_reset_with_processor() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi).collect();
+
+    let mut processor = Loess::new()
+        .fraction(0.4)
+        .adapter(Streaming)
+        .chunk_size(15)
+        .overlap(3)
+        .parallel(false)
+        .build()
+        .unwrap();
+
+    let _ = processor.process_chunk(&x[..15], &y[..15]).unwrap();
+    processor.reset();
+    let _ = processor.process_chunk(&x[..15], &y[..15]).unwrap();
+}
+
+/// Explicitly setting `parallel(true)` on the Online adapter exercises the
+/// `#[cfg(feature = "cpu")]` callback-injection block in `build()`.
+#[test]
+fn test_online_parallel_true() {
+    let mut processor = Loess::new()
+        .adapter(Online)
+        .min_points(3)
+        .window_capacity(15)
+        .parallel(true)
+        .build()
+        .unwrap();
+
+    for i in 0..5i32 {
+        let _ = processor.add_point(&[i as f64], i as f64 * 2.0).unwrap();
+    }
+    let _ = processor.window_size();
+}

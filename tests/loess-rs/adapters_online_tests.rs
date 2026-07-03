@@ -22,8 +22,12 @@ use loess_rs::prelude::*;
 
 use loess_rs::internals::adapters::online::OnlineLoessBuilder;
 use loess_rs::internals::adapters::online::UpdateMode;
+use loess_rs::internals::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
 use loess_rs::internals::algorithms::robustness::RobustnessMethod::{Bisquare, Huber, Talwar};
 use loess_rs::internals::math::boundary::BoundaryPolicy;
+use loess_rs::internals::math::distance::DistanceMetric;
+use loess_rs::internals::math::kernel::WeightFunction;
+use loess_rs::internals::math::scaling::ScalingMethod;
 use loess_rs::internals::primitives::errors::LoessError;
 
 // ============================================================================
@@ -910,4 +914,86 @@ fn test_online_reset_complete() {
     // Should be able to add new points
     let _output = processor.add_point(&[100.0], 200.0).unwrap();
     assert_eq!(processor.window_size(), 1);
+}
+
+// ============================================================================
+// Builder Setter Coverage Tests
+// ============================================================================
+
+/// Test that all optional builder setters can be called without error.
+///
+/// Exercises weight_function, scaling_method, zero_weight_fallback,
+/// polynomial_degree, distance_metric, cell, interpolation_vertices,
+/// boundary_degree_fallback, and auto_converge.
+#[test]
+fn test_online_builder_all_setters() {
+    let result = Loess::<f64>::new()
+        .fraction(0.8)
+        .iterations(1)
+        .surface_mode(Direct)
+        .adapter(Online)
+        .window_capacity(10)
+        .min_points(3)
+        .weight_function(WeightFunction::Epanechnikov)
+        .scaling_method(ScalingMethod::MAR)
+        .zero_weight_fallback(ZeroWeightFallback::UseLocalMean)
+        .polynomial_degree(PolynomialDegree::Linear)
+        .distance_metric(DistanceMetric::Euclidean)
+        .cell(0.15)
+        .interpolation_vertices(50)
+        .boundary_degree_fallback(false)
+        .auto_converge(1e-4)
+        .build();
+
+    assert!(
+        result.is_ok(),
+        "Builder with all optional setters should succeed"
+    );
+
+    let mut processor = result.unwrap();
+    for i in 0..6 {
+        let x = i as f64;
+        let _ = processor.add_point(&[x], 2.0 * x + 1.0);
+    }
+    assert!(processor.window_size() > 0);
+}
+
+/// Test parallel setter on the online builder.
+///
+/// Verifies that the parallel flag can be set without causing a build error.
+#[test]
+fn test_online_builder_parallel_setter() {
+    let result = Loess::<f64>::new()
+        .fraction(0.8)
+        .surface_mode(Direct)
+        .adapter(Online)
+        .window_capacity(10)
+        .min_points(3)
+        .parallel(true)
+        .build();
+
+    assert!(result.is_ok(), "Builder with parallel=true should succeed");
+}
+
+/// Test that dimensions setter propagates through builder.
+///
+/// Verifies that explicitly setting dimensions=1 works identically to default.
+#[test]
+fn test_online_builder_dimensions_setter() {
+    let result = Loess::<f64>::new()
+        .fraction(0.8)
+        .surface_mode(Direct)
+        .adapter(Online)
+        .window_capacity(8)
+        .min_points(3)
+        .dimensions(1)
+        .build();
+
+    assert!(result.is_ok(), "Builder with dimensions=1 should succeed");
+
+    let mut processor = result.unwrap();
+    for i in 0..5 {
+        let _ = processor.add_point(&[i as f64], i as f64 * 3.0);
+    }
+    assert!(processor.window_size() > 0);
 }

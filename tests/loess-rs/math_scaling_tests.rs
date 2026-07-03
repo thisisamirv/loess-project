@@ -206,3 +206,138 @@ fn test_scaling_method_differences_direct() {
         "MAD weights should be zero for these residuals"
     );
 }
+
+// ============================================================================
+// ScalingMethod::MAR Tests
+// ============================================================================
+
+/// Test MAR with basic values.
+#[test]
+fn test_mar_basic() {
+    // MAR = median(|r|) = median([1,2,3,4,5]) = 3
+    let mut data = [1.0f64, 2.0, 3.0, 4.0, 5.0];
+    let mar = ScalingMethod::MAR.compute(&mut data);
+    assert_relative_eq!(mar, 3.0);
+}
+
+/// Test MAR with negative values.
+#[test]
+fn test_mar_negative_values() {
+    // MAR = median(|-4|, |-3|, |-2|, |-1|) = median(4,3,2,1) = 2.5
+    let mut data = [-4.0f64, -3.0, -2.0, -1.0];
+    let mar = ScalingMethod::MAR.compute(&mut data);
+    assert_relative_eq!(mar, 2.5);
+}
+
+/// Test MAR with mixed signs.
+#[test]
+fn test_mar_mixed_signs() {
+    // MAR = median(|-3|, |0|, |3|) = median(3, 0, 3) = 3
+    let mut data = [-3.0f64, 0.0, 3.0];
+    let mar = ScalingMethod::MAR.compute(&mut data);
+    assert_relative_eq!(mar, 3.0);
+}
+
+/// Test MAR with a single value.
+#[test]
+fn test_mar_single_value() {
+    let mut data = [5.0f64];
+    let mar = ScalingMethod::MAR.compute(&mut data);
+    assert_relative_eq!(mar, 5.0);
+}
+
+/// Test MAR with all zeros.
+#[test]
+fn test_mar_all_zeros() {
+    let mut data = [0.0f64, 0.0, 0.0];
+    let mar = ScalingMethod::MAR.compute(&mut data);
+    assert_relative_eq!(mar, 0.0);
+}
+
+/// Test MAR with even-length input.
+#[test]
+fn test_mar_even_length() {
+    // |values| = [1, 2, 3, 4] => median = 2.5
+    let mut data = [1.0f64, 2.0, 3.0, 4.0];
+    let mar = ScalingMethod::MAR.compute(&mut data);
+    assert_relative_eq!(mar, 2.5);
+}
+
+// ============================================================================
+// ScalingMethod::Mean Tests
+// ============================================================================
+
+/// Test Mean with basic values.
+#[test]
+fn test_mean_basic() {
+    // Mean(|1|, |2|, |3|, |4|, |5|) = 15/5 = 3
+    let mut data = [1.0f64, 2.0, 3.0, 4.0, 5.0];
+    let mean = ScalingMethod::Mean.compute(&mut data);
+    assert_relative_eq!(mean, 3.0);
+}
+
+/// Test Mean with negative values (absolute).
+#[test]
+fn test_mean_negative_values() {
+    // Mean(|-2|, |-4|) = (2+4)/2 = 3
+    let mut data = [-2.0f64, -4.0];
+    let mean = ScalingMethod::Mean.compute(&mut data);
+    assert_relative_eq!(mean, 3.0);
+}
+
+/// Test Mean with mixed signs.
+#[test]
+fn test_mean_mixed_signs() {
+    let mut data = [-3.0f64, 0.0, 3.0];
+    let mean = ScalingMethod::Mean.compute(&mut data);
+    assert_relative_eq!(mean, 2.0);
+}
+
+/// Test Mean with a single value.
+#[test]
+fn test_mean_single_value() {
+    let mut data = [7.0f64];
+    let mean = ScalingMethod::Mean.compute(&mut data);
+    assert_relative_eq!(mean, 7.0);
+}
+
+/// Test Mean with all zeros.
+#[test]
+fn test_mean_all_zeros() {
+    let mut data = [0.0f64, 0.0, 0.0];
+    let mean = ScalingMethod::Mean.compute(&mut data);
+    assert_relative_eq!(mean, 0.0);
+}
+
+// ============================================================================
+// Edge Cases: Empty and Single Element
+// ============================================================================
+
+#[test]
+fn test_mad_empty() {
+    let mut data: Vec<f64> = vec![];
+    let mad = ScalingMethod::MAD.compute(&mut data);
+    assert_relative_eq!(mad, 0.0);
+}
+
+#[test]
+fn test_mar_empty() {
+    let mut data: Vec<f64> = vec![];
+    let mar = ScalingMethod::MAR.compute(&mut data);
+    assert_relative_eq!(mar, 0.0);
+}
+
+#[test]
+fn test_mean_empty() {
+    let mut data: Vec<f64> = vec![];
+    let mean = ScalingMethod::Mean.compute(&mut data);
+    assert_relative_eq!(mean, 0.0);
+}
+
+#[test]
+fn test_mad_single_element() {
+    // MAD([x]) = median(|x - x|) = 0
+    let mut data = [42.0f64];
+    let mad = ScalingMethod::MAD.compute(&mut data);
+    assert_relative_eq!(mad, 0.0);
+}

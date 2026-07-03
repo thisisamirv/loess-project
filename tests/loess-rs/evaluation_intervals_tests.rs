@@ -469,3 +469,143 @@ fn test_intervals_degenerate_se() {
     assert!(cuv[0] > clv[0]);
     assert_relative_eq!(cuv[0] - clv[0], 1e-12, epsilon = 1e-15);
 }
+
+// ============================================================================
+// T-Score and Delta-DF Tests
+// ============================================================================
+
+/// Test approximate_t_score for various degrees of freedom.
+///
+/// Verifies that the t-score is always >= z-score and converges for large df.
+#[test]
+fn test_t_score_various_df() {
+    // For large df, t ≈ z
+    let z_95 = IntervalMethod::<f64>::approximate_z_score(0.95).unwrap();
+    let t_large = IntervalMethod::<f64>::approximate_t_score(0.95, 1000.0).unwrap();
+    assert_relative_eq!(t_large, z_95, epsilon = 0.01);
+
+    // For small df > 2, t > z
+    let t_small = IntervalMethod::<f64>::approximate_t_score(0.95, 5.0).unwrap();
+    assert!(t_small > z_95, "t-score should exceed z-score for df=5");
+
+    // For df <= 2, fallback branch: t = z * 1.5
+    let t_degenerate = IntervalMethod::<f64>::approximate_t_score(0.95, 1.0).unwrap();
+    assert_relative_eq!(t_degenerate, z_95 * 1.5, epsilon = 1e-10);
+}
+
+/// Test t_score for f32 type.
+#[test]
+fn test_t_score_f32() {
+    let t = IntervalMethod::<f32>::approximate_t_score(0.95, 10.0).unwrap();
+    assert!(t > 1.5 && t < 5.0, "t-score should be in valid range");
+}
+
+/// Test compute_intervals activates t-score path when delta1 and delta2 are given.
+///
+/// Verifies that the `compute_confidence_intervals_impl` and
+/// `compute_prediction_intervals_impl` functions are exercised with df != None.
+#[test]
+fn test_compute_intervals_with_df() {
+    let ys = vec![5.0f64, 6.0, 7.0];
+    let ses = vec![0.5f64, 0.5, 0.5];
+    let residuals = vec![0.1f64, -0.1, 0.2];
+
+    let estimator = IntervalMethod::confidence(0.95);
+
+    // Provide delta1 and delta2 so df = delta1^2 / delta2 is computed (> 2)
+    let delta1 = Some(10.0f64);
+    let delta2 = Some(3.0f64); // df = 100 / 3 ≈ 33.3 → t-score path
+
+    let result = estimator.compute_intervals(&ys, &ses, &residuals, delta1, delta2);
+    assert!(
+        result.is_ok(),
+        "compute_intervals with delta should succeed"
+    );
+    let (cl, cu, _, _) = result.unwrap();
+    let cl = cl.unwrap();
+    let cu = cu.unwrap();
+    assert_eq!(cl.len(), 3);
+    assert_eq!(cu.len(), 3);
+    for (l, h) in cl.iter().zip(cu.iter()) {
+        assert!(h > l, "upper CI should exceed lower CI");
+        assert!(l.is_finite() && h.is_finite());
+    }
+}
+
+/// Test prediction intervals with df (t-score path in compute_prediction_intervals_impl).
+#[test]
+fn test_prediction_intervals_with_df() {
+    let ys = vec![10.0f64, 12.0, 14.0];
+    let ses = vec![1.0f64, 1.0, 1.0];
+    let residuals = vec![0.5f64, -0.5, 1.0];
+
+    let estimator = IntervalMethod::prediction(0.90);
+
+    let delta1 = Some(6.0f64);
+    let delta2 = Some(2.0f64); // df = 36 / 2 = 18 → t-score path
+
+    let result = estimator.compute_intervals(&ys, &ses, &residuals, delta1, delta2);
+    assert!(result.is_ok());
+    let (_, _, pl, pu) = result.unwrap();
+    let pl = pl.unwrap();
+    let pu = pu.unwrap();
+    assert_eq!(pl.len(), 3);
+    assert_eq!(pu.len(), 3);
+    for (l, h) in pl.iter().zip(pu.iter()) {
+        assert!(h > l, "upper PI should exceed lower PI");
+        assert!(l.is_finite() && h.is_finite());
+    }
+}
+
+/// Test that Default trait creates an interval method with no CI or PI.
+///
+/// The Default impl delegates to the private none() constructor, so this
+/// exercises that code path.
+#[test]
+fn test_interval_method_default_is_none() {
+    let m = IntervalMethod::<f64>::default();
+    assert!(!m.confidence, "default() should have confidence=false");
+    assert!(!m.prediction, "default() should have prediction=false");
+
+    // compute_intervals should return all-None
+    let ys = vec![1.0f64, 2.0, 3.0];
+    let ses = vec![0.1f64, 0.1, 0.1];
+    let residuals = vec![0.01f64, 0.01, 0.01];
+
+    let (cl, cu, pl, pu) = m
+        .compute_intervals(&ys, &ses, &residuals, None, None)
+        .unwrap();
+    assert!(cl.is_none(), "CI lower should be None for default()");
+    assert!(cu.is_none(), "CI upper should be None for default()");
+    assert!(pl.is_none(), "PI lower should be None for default()");
+    assert!(pu.is_none(), "PI upper should be None for default()");
+}
+
+/// Test calculate_residual_sd function via various compute_intervals paths.
+///
+/// Verifies the residual SD is correctly computed from residuals and delta1.
+#[test]
+fn test_residual_sd_via_prediction_intervals() {
+    // With known residuals we can check the PI width is > CI width
+    let ys = vec![0.0f64, 0.0, 0.0];
+    let ses = vec![0.2f64, 0.2, 0.2];
+    let residuals = vec![1.0f64, 2.0, 3.0]; // spread → larger PI
+
+    let ci_estimator = IntervalMethod::confidence(0.95);
+    let pi_estimator = IntervalMethod::prediction(0.95);
+
+    let (ccl, ccu, _, _) = ci_estimator
+        .compute_intervals(&ys, &ses, &residuals, None, None)
+        .unwrap();
+    let (_, _, pcl, pcu) = pi_estimator
+        .compute_intervals(&ys, &ses, &residuals, None, None)
+        .unwrap();
+
+    let ci_width = ccu.unwrap()[0] - ccl.unwrap()[0];
+    let pi_width = pcu.unwrap()[0] - pcl.unwrap()[0];
+
+    assert!(
+        pi_width > ci_width,
+        "Prediction interval should be wider than confidence interval"
+    );
+}

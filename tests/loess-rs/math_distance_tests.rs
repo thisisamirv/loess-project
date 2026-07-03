@@ -468,3 +468,286 @@ fn test_distance_triangle_inequality() {
     // Triangle inequality: d(a,c) <= d(a,b) + d(b,c)
     assert!(ac <= ab + bc + 1e-10);
 }
+
+// ============================================================================
+// Squared Distance Methods Tests
+// ============================================================================
+
+#[test]
+fn test_euclidean_squared_basic() {
+    let a = [0.0f64, 0.0];
+    let b = [3.0f64, 4.0];
+    // sqrt(sq) should equal euclidean
+    let sq = DistanceMetric::euclidean_squared(&a, &b);
+    let eu = DistanceMetric::euclidean(&a, &b);
+    assert_relative_eq!(sq, eu * eu, epsilon = 1e-12);
+    assert_relative_eq!(sq, 25.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_euclidean_squared_f32() {
+    let a = [1.0f32, 2.0, 3.0];
+    let b = [4.0f32, 6.0, 8.0];
+    let sq = DistanceMetric::euclidean_squared(&a, &b);
+    assert_relative_eq!(sq, 50.0f32, epsilon = 1e-5);
+}
+
+#[test]
+fn test_euclidean_squared_high_dim() {
+    // Exercises SIMD path (>= 4 for f64)
+    let a: Vec<f64> = vec![0.0; 8];
+    let b: Vec<f64> = vec![1.0; 8];
+    let sq = DistanceMetric::euclidean_squared(&a, &b);
+    assert_relative_eq!(sq, 8.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_normalized_squared_basic() {
+    let a = [0.0f64, 10.0];
+    let b = [10.0f64, 20.0];
+    let scales = [0.1f64, 0.05];
+    let sq = DistanceMetric::normalized_squared(&a, &b, &scales);
+    let dist = DistanceMetric::normalized(&a, &b, &scales);
+    assert_relative_eq!(sq, dist * dist, epsilon = 1e-12);
+}
+
+#[test]
+fn test_normalized_squared_f32() {
+    let a = [0.0f32, 10.0];
+    let b = [10.0f32, 20.0];
+    let scales = [0.1f32, 0.05];
+    let sq = DistanceMetric::normalized_squared(&a, &b, &scales);
+    assert_relative_eq!(sq, 1.25f32, epsilon = 1e-5);
+}
+
+#[test]
+fn test_normalized_squared_high_dim() {
+    // Exercises f64 SIMD path (8 elements)
+    let a: Vec<f64> = vec![0.0; 8];
+    let b: Vec<f64> = vec![1.0; 8];
+    let scales: Vec<f64> = vec![0.5; 8];
+    let sq = DistanceMetric::normalized_squared(&a, &b, &scales);
+    // each diff=1, scaled=0.5, sq=0.25, sum=2.0
+    assert_relative_eq!(sq, 2.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_weighted_squared_basic() {
+    let a = [1.0f64, 1.0];
+    let b = [2.0f64, 2.0];
+    let weights = [2.0f64, 3.0];
+    // diffs: 1, 1; weighted sq: 2+3 = 5
+    let sq = DistanceMetric::weighted_squared(&a, &b, &weights);
+    let dist = DistanceMetric::weighted(&a, &b, &weights);
+    assert_relative_eq!(sq, dist * dist, epsilon = 1e-12);
+    assert_relative_eq!(sq, 5.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_weighted_squared_f32_simd() {
+    // f32 SIMD path requires >= 8 elements
+    let a: Vec<f32> = vec![0.0; 8];
+    let b: Vec<f32> = vec![1.0; 8];
+    let weights: Vec<f32> = vec![2.0; 8];
+    // each diff=1, weight=2, sq contribution=2, total=16
+    let sq = DistanceMetric::weighted_squared(&a, &b, &weights);
+    assert_relative_eq!(sq, 16.0f32, epsilon = 1e-5);
+}
+
+#[test]
+fn test_weighted_squared_f64_simd() {
+    // f64 SIMD path requires >= 4 elements
+    let a: Vec<f64> = vec![0.0; 4];
+    let b: Vec<f64> = vec![1.0; 4];
+    let weights: Vec<f64> = vec![3.0; 4];
+    let sq = DistanceMetric::weighted_squared(&a, &b, &weights);
+    assert_relative_eq!(sq, 12.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_manhattan_squared_basic() {
+    // manhattan = 7, so squared = 49
+    let a = [1.0f64, 2.0];
+    let b = [4.0f64, 6.0];
+    let sq = DistanceMetric::manhattan_squared(&a, &b);
+    assert_relative_eq!(sq, 49.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_manhattan_squared_f32() {
+    let a = [1.0f32, 2.0];
+    let b = [4.0f32, 6.0];
+    let sq = DistanceMetric::manhattan_squared(&a, &b);
+    assert_relative_eq!(sq, 49.0f32, epsilon = 1e-5);
+}
+
+#[test]
+fn test_chebyshev_squared_basic() {
+    // chebyshev = 5, so squared = 25
+    let a = [1.0f64, 2.0];
+    let b = [4.0f64, 7.0];
+    let sq = DistanceMetric::chebyshev_squared(&a, &b);
+    assert_relative_eq!(sq, 25.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_chebyshev_squared_f32() {
+    let a = [1.0f32, 2.0];
+    let b = [4.0f32, 7.0];
+    let sq = DistanceMetric::chebyshev_squared(&a, &b);
+    assert_relative_eq!(sq, 25.0f32, epsilon = 1e-5);
+}
+
+#[test]
+fn test_minkowski_squared_basic() {
+    let a = [0.0f64, 0.0];
+    let b = [3.0f64, 4.0];
+    let p = 2.0;
+    let sq = DistanceMetric::minkowski_squared(&a, &b, p);
+    // minkowski_p2 = euclidean = 5, squared = 25
+    assert_relative_eq!(sq, 25.0, epsilon = 1e-10);
+}
+
+#[test]
+fn test_minkowski_squared_f32() {
+    let a = [0.0f32, 0.0];
+    let b = [3.0f32, 4.0];
+    let sq = DistanceMetric::minkowski_squared(&a, &b, 2.0f32);
+    assert_relative_eq!(sq, 25.0f32, epsilon = 1e-4);
+}
+
+// ============================================================================
+// simd_distance Module Direct Tests
+// ============================================================================
+
+use loess_rs::internals::math::distance::simd_distance;
+
+#[test]
+fn test_simd_euclidean_sq_f64_simd_path() {
+    // >= 4 elements triggers SIMD
+    let a = [1.0f64, 2.0, 3.0, 4.0];
+    let b = [2.0f64, 3.0, 4.0, 5.0];
+    let sq = simd_distance::euclidean_sq_f64(&a, &b);
+    assert_relative_eq!(sq, 4.0, epsilon = 1e-12); // 4 * 1^2
+}
+
+#[test]
+fn test_simd_euclidean_sq_f32_simd_path() {
+    // >= 8 elements triggers SIMD
+    let a: [f32; 8] = [1.0; 8];
+    let b: [f32; 8] = [2.0; 8];
+    let sq = simd_distance::euclidean_sq_f32(&a, &b);
+    assert_relative_eq!(sq, 8.0f32, epsilon = 1e-5);
+}
+
+#[test]
+fn test_simd_normalized_sq_f64_simd_path() {
+    let a = [0.0f64, 0.0, 0.0, 0.0];
+    let b = [2.0f64, 2.0, 2.0, 2.0];
+    let scales = [0.5f64, 0.5, 0.5, 0.5];
+    let sq = simd_distance::normalized_sq_f64(&a, &b, &scales);
+    // diff=2, scale=0.5 => 1 each, 4 total
+    assert_relative_eq!(sq, 4.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_simd_normalized_sq_f32_simd_path() {
+    let a: [f32; 8] = [0.0; 8];
+    let b: [f32; 8] = [2.0; 8];
+    let scales: [f32; 8] = [0.5; 8];
+    let sq = simd_distance::normalized_sq_f32(&a, &b, &scales);
+    assert_relative_eq!(sq, 8.0f32, epsilon = 1e-5);
+}
+
+#[test]
+fn test_simd_weighted_sq_f64_simd_path() {
+    let a = [0.0f64, 0.0, 0.0, 0.0];
+    let b = [1.0f64, 1.0, 1.0, 1.0];
+    let w = [2.0f64, 2.0, 2.0, 2.0];
+    let sq = simd_distance::weighted_sq_f64(&a, &b, &w);
+    assert_relative_eq!(sq, 8.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_simd_weighted_sq_f32_simd_path() {
+    let a: [f32; 8] = [0.0; 8];
+    let b: [f32; 8] = [1.0; 8];
+    let w: [f32; 8] = [3.0; 8];
+    let sq = simd_distance::weighted_sq_f32(&a, &b, &w);
+    assert_relative_eq!(sq, 24.0f32, epsilon = 1e-5);
+}
+
+#[test]
+fn test_simd_manhattan_f64_simd_path() {
+    let a = [1.0f64, 2.0, 3.0, 4.0];
+    let b = [4.0f64, 1.0, 5.0, 2.0];
+    let result = simd_distance::manhattan_f64(&a, &b);
+    // |3| + |1| + |2| + |2| = 8
+    assert_relative_eq!(result, 8.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_simd_manhattan_f32_simd_path() {
+    let a: [f32; 8] = [1.0; 8];
+    let b: [f32; 8] = [3.0; 8];
+    let result = simd_distance::manhattan_f32(&a, &b);
+    assert_relative_eq!(result, 16.0f32, epsilon = 1e-5);
+}
+
+#[test]
+fn test_simd_chebyshev_f64_simd_path() {
+    let a = [1.0f64, 2.0, 10.0, 4.0];
+    let b = [4.0f64, 5.0, 3.0, 4.0];
+    let result = simd_distance::chebyshev_f64(&a, &b);
+    // diffs: 3, 3, 7, 0 => max = 7
+    assert_relative_eq!(result, 7.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_simd_chebyshev_f32_simd_path() {
+    let a: [f32; 8] = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0];
+    let b: [f32; 8] = [1.0; 8];
+    let result = simd_distance::chebyshev_f32(&a, &b);
+    assert_relative_eq!(result, 99.0f32, epsilon = 1e-5);
+}
+
+#[test]
+fn test_simd_minkowski_f64_general() {
+    // p=3, not 1 or 2
+    let a = [0.0f64, 0.0];
+    let b = [3.0f64, 4.0];
+    let result = simd_distance::minkowski_f64(&a, &b, 3.0);
+    assert_relative_eq!(
+        result,
+        (3.0f64.powi(3) + 4.0f64.powi(3)).powf(1.0 / 3.0),
+        epsilon = 1e-10
+    );
+}
+
+#[test]
+fn test_simd_minkowski_f32_general() {
+    let a = [0.0f32, 0.0];
+    let b = [3.0f32, 4.0];
+    let result = simd_distance::minkowski_f32(&a, &b, 3.0);
+    assert_relative_eq!(
+        result,
+        (3.0f32.powi(3) + 4.0f32.powi(3)).powf(1.0 / 3.0),
+        epsilon = 1e-5
+    );
+}
+
+#[test]
+fn test_simd_minkowski_f64_p1_shortcut() {
+    let a = [1.0f64, 2.0];
+    let b = [4.0f64, 6.0];
+    let result = simd_distance::minkowski_f64(&a, &b, 1.0);
+    assert_relative_eq!(result, 7.0, epsilon = 1e-12);
+}
+
+#[test]
+fn test_simd_minkowski_f32_p2_shortcut() {
+    let a = [0.0f32, 0.0];
+    let b = [3.0f32, 4.0];
+    let result = simd_distance::minkowski_f32(&a, &b, 2.0);
+    assert_relative_eq!(result, 5.0f32, epsilon = 1e-5);
+}
