@@ -115,3 +115,42 @@ test_that("OnlineLoess robustness works", {
     expect_length(result_no_robust$y, length(y))
     expect_length(result_robust$y, length(y))
 })
+
+# ---- Parameter coverage ----
+
+test_that("OnlineLoess: zero_weight_fallback", {
+    x <- as.double(1:50)
+    y <- sin(x / 10)
+
+    for (zwf in c("use_local_mean", "return_original", "return_none")) {
+        ol <- OnlineLoess(fraction = 0.3, window_capacity = 20, zero_weight_fallback = zwf)
+        r <- ol$add_points(x, y)
+        expect_length(r$y, 50)
+    }
+})
+
+test_that("OnlineLoess: degree, distance_metric, surface_mode, return_se", {
+    x <- as.double(seq(0, 10, length.out = 30))
+    y <- sin(x)
+
+    r <- OnlineLoess(
+        fraction = 0.5, window_capacity = 20,
+        degree = "quadratic", distance_metric = "minkowski:3",
+        surface_mode = "direct", return_se = TRUE
+    )$add_points(x, y)
+    expect_length(r$y, 30)
+    # enp may be NULL for online mode (hat matrix only for direct surface)
+    expect_type(r, "list")
+})
+
+test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge, return_robustness_weights", {
+    x <- as.double(seq(0, 10, length.out = 30))
+    y <- sin(x)
+
+    r <- OnlineLoess(
+        fraction = 0.5, window_capacity = 20,
+        scaling_method = "mar", boundary_policy = "reflect",
+        auto_converge = 1e-3, return_robustness_weights = TRUE
+    )$add_points(x, y)
+    expect_length(r$y, 30)
+})

@@ -192,3 +192,51 @@ test_that("Loess parallel execution works", {
     # Results should be nearly identical
     expect_equal(result_serial$y, result_parallel$y, tolerance = 1e-10)
 })
+
+# ---- Parameter coverage ----
+
+test_that("Loess: scaling_method, boundary_policy, zero_weight_fallback, auto_converge", {
+    x <- as.double(1:5)
+    y <- as.double(c(2, 4, 6, 8, 10))
+
+    for (sm in c("mad", "mar", "mean")) {
+        r <- Loess(fraction = 0.5, scaling_method = sm)$fit(x, y)
+        expect_length(r$y, 5)
+    }
+    for (bp in c("extend", "reflect", "zero", "noboundary")) {
+        r <- Loess(fraction = 0.5, boundary_policy = bp)$fit(x, y)
+        expect_length(r$y, 5)
+    }
+    for (zwf in c("use_local_mean", "return_original", "return_none")) {
+        r <- Loess(fraction = 0.5, zero_weight_fallback = zwf)$fit(x, y)
+        expect_length(r$y, 5)
+    }
+    r <- Loess(fraction = 0.5, auto_converge = 1e-4)$fit(x, y)
+    expect_length(r$y, 5)
+})
+
+test_that("Loess: degree, distance_metric, surface_mode", {
+    x <- as.double(1:5)
+    y <- as.double(c(2, 4, 6, 8, 10))
+
+    for (deg in c("constant", "linear", "quadratic")) {
+        r <- Loess(fraction = 0.9, degree = deg)$fit(x, y)
+        expect_length(r$y, 5)
+    }
+    for (dm in c("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:3")) {
+        r <- Loess(fraction = 0.5, distance_metric = dm)$fit(x, y)
+        expect_length(r$y, 5)
+    }
+    r <- Loess(fraction = 0.5, surface_mode = "direct")$fit(x, y)
+    expect_length(r$y, 5)
+})
+
+test_that("Loess: return_se", {
+    x <- as.double(seq(0, 10, length.out = 20))
+    y <- sin(x)
+
+    r <- Loess(fraction = 0.5, return_se = TRUE, surface_mode = "direct")$fit(x, y)
+    expect_true("enp" %in% names(r))
+    expect_true("trace_hat" %in% names(r))
+    expect_true("leverage" %in% names(r))
+})

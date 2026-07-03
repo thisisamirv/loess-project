@@ -102,3 +102,58 @@ test_that("StreamingLoess parallel execution works", {
     # Results should be nearly identical
     expect_equal(result_serial$y, result_parallel$y, tolerance = 1e-8)
 })
+
+# ---- Parameter coverage ----
+
+test_that("StreamingLoess: merge_strategy variants", {
+    set.seed(42)
+    x <- as.double(seq(0, 10, length.out = 500))
+    y <- sin(x) + rnorm(500, sd = 0.1)
+
+    for (ms in c("average", "weighted_average", "take_first", "take_last")) {
+        result <- bulk_stream(x, y,
+            fraction = 0.3, chunk_size = 200, merge_strategy = ms
+        )
+        expect_length(result$y, length(y))
+    }
+})
+
+test_that("StreamingLoess: zero_weight_fallback", {
+    x <- as.double(seq(0, 10, length.out = 200))
+    y <- sin(x)
+    result <- bulk_stream(x, y,
+        fraction = 0.3, chunk_size = 100, zero_weight_fallback = "return_original"
+    )
+    expect_length(result$y, length(y))
+})
+
+test_that("StreamingLoess: return_residuals", {
+    x <- as.double(seq(0, 10, length.out = 200))
+    y <- sin(x)
+    sl <- StreamingLoess(fraction = 0.3, chunk_size = 100, return_residuals = TRUE)
+    sl$process_chunk(x, y)
+    fin <- sl$finalize()
+    expect_type(fin, "list")
+})
+
+test_that("StreamingLoess: degree, distance_metric, surface_mode, return_se", {
+    x <- as.double(seq(0, 10, length.out = 200))
+    y <- sin(x)
+    result <- bulk_stream(x, y,
+        fraction = 0.3, chunk_size = 100,
+        degree = "quadratic", distance_metric = "minkowski:3",
+        surface_mode = "direct", return_se = TRUE
+    )
+    expect_length(result$y, length(y))
+})
+
+test_that("StreamingLoess: scaling_method, boundary_policy, auto_converge, return_robustness_weights", {
+    x <- as.double(seq(0, 10, length.out = 200))
+    y <- sin(x)
+    result <- bulk_stream(x, y,
+        fraction = 0.3, chunk_size = 100,
+        scaling_method = "mean", boundary_policy = "reflect",
+        auto_converge = 1e-3, return_robustness_weights = TRUE
+    )
+    expect_length(result$y, length(y))
+})

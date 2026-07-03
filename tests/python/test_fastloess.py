@@ -383,6 +383,7 @@ class TestDiagnostics:
         result = loess.fit(x, y)
 
         diag = result.diagnostics
+        assert diag is not None
         # Perfect linear data should have very low error
         assert diag.rmse < 0.1
         assert diag.mae < 0.1
@@ -557,6 +558,193 @@ class TestCrossValidation:
         assert result.fraction_used == 0.5
         assert result.cv_scores is not None
         assert len(result.cv_scores) == 1
+
+
+class TestParameterCoverage:
+    """Smoke tests ensuring every constructor parameter is exercised at least once."""
+
+    X5 = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+    Y5 = np.array([2.0, 4.0, 6.0, 8.0, 10.0])
+
+    @staticmethod
+    def _xy20():
+        x = np.linspace(0, 10, 20)
+        return x, np.sin(x)
+
+    # ---- Loess parameter coverage ----------------------------------------
+
+    def test_loess_scaling_methods(self):
+        for sm in ["mad", "mar", "mean"]:
+            r = fastloess.Loess(fraction=0.5, scaling_method=sm).fit(self.X5, self.Y5)
+            assert len(r.y) == 5
+
+    def test_loess_boundary_policies(self):
+        for bp in ["extend", "reflect", "zero", "noboundary"]:
+            r = fastloess.Loess(fraction=0.5, boundary_policy=bp).fit(self.X5, self.Y5)
+            assert len(r.y) == 5
+
+    def test_loess_zero_weight_fallback(self):
+        for zwf in ["use_local_mean", "return_original", "return_none"]:
+            r = fastloess.Loess(fraction=0.5, zero_weight_fallback=zwf).fit(
+                self.X5, self.Y5
+            )
+            assert len(r.y) == 5
+
+    def test_loess_auto_converge(self):
+        r = fastloess.Loess(fraction=0.5, auto_converge=1e-4).fit(self.X5, self.Y5)
+        assert len(r.y) == 5
+
+    def test_loess_polynomial_degrees(self):
+        for deg in ["constant", "linear", "quadratic"]:
+            r = fastloess.Loess(fraction=0.9, degree=deg).fit(self.X5, self.Y5)
+            assert len(r.y) == 5
+
+    def test_loess_distance_metrics(self):
+        x, y = self._xy20()
+        for dm in ["normalized", "euclidean", "manhattan", "chebyshev"]:
+            r = fastloess.Loess(fraction=0.5, distance_metric=dm).fit(x, y)
+            assert len(r.y) == len(x)
+
+    def test_loess_minkowski_p(self):
+        x, y = self._xy20()
+        r = fastloess.Loess(
+            fraction=0.5, distance_metric="minkowski", minkowski_p=3.0
+        ).fit(x, y)
+        assert len(r.y) == len(x)
+
+    def test_loess_weighted_metric(self):
+        x, y = self._xy20()
+        r = fastloess.Loess(
+            fraction=0.5,
+            distance_metric="weighted",
+            weighted_metric_weights=[1.0],
+        ).fit(x, y)
+        assert len(r.y) == len(x)
+
+    def test_loess_return_se(self):
+        x, y = self._xy20()
+        r = fastloess.Loess(fraction=0.5, return_se=True, surface_mode="direct").fit(
+            x, y
+        )
+        assert r.enp is not None
+        assert r.trace_hat is not None
+        assert r.leverage is not None
+
+    # ---- StreamingLoess parameter coverage --------------------------------
+
+    def test_streaming_merge_strategies(self):
+        x = np.linspace(0, 100, 200)
+        y = np.sin(x / 10)
+        for ms in ["average", "weighted_average", "take_first", "take_last"]:
+            s = fastloess.StreamingLoess(
+                fraction=0.3, chunk_size=100, merge_strategy=ms
+            )
+            r1 = s.process_chunk(x, y)
+            r2 = s.finalize()
+            assert len(r1.y) + len(r2.y) == len(x)
+
+    def test_streaming_minkowski_p(self):
+        x = np.linspace(0, 50, 100)
+        y = np.sin(x)
+        s = fastloess.StreamingLoess(
+            fraction=0.3,
+            chunk_size=60,
+            distance_metric="minkowski",
+            minkowski_p=2.5,
+        )
+        r1 = s.process_chunk(x, y)
+        r2 = s.finalize()
+        assert len(r1.y) + len(r2.y) == len(x)
+
+    def test_streaming_weighted_metric(self):
+        x = np.linspace(0, 50, 100)
+        y = np.sin(x)
+        s = fastloess.StreamingLoess(
+            fraction=0.3,
+            chunk_size=60,
+            distance_metric="weighted",
+            weighted_metric_weights=[1.0],
+        )
+        r1 = s.process_chunk(x, y)
+        r2 = s.finalize()
+        assert len(r1.y) + len(r2.y) == len(x)
+
+    def test_streaming_misc_params(self):
+        """Cover: overlap, scaling_method, boundary_policy, auto_converge,
+        return_diagnostics, return_robustness_weights, degree, surface_mode, return_se.
+        """
+        x = np.linspace(0, 100, 200)
+        y = np.sin(x / 10)
+        s = fastloess.StreamingLoess(
+            fraction=0.3,
+            chunk_size=100,
+            overlap=10,
+            scaling_method="mar",
+            boundary_policy="reflect",
+            auto_converge=1e-3,
+            return_diagnostics=True,
+            return_robustness_weights=True,
+            degree="quadratic",
+            surface_mode="direct",
+            return_se=True,
+        )
+        r1 = s.process_chunk(x, y)
+        r2 = s.finalize()
+        assert len(r1.y) + len(r2.y) == len(x)
+
+    # ---- OnlineLoess parameter coverage -----------------------------------
+
+    def test_online_update_modes(self):
+        x = np.arange(20, dtype=float)
+        y = x * 2.0
+        for um in ["full", "incremental"]:
+            o = fastloess.OnlineLoess(fraction=0.5, window_capacity=10, update_mode=um)
+            r = o.add_points(x, y)
+            assert len(r.y) == len(x)
+
+    def test_online_minkowski_p(self):
+        x = np.arange(20, dtype=float)
+        y = x * 2.0
+        o = fastloess.OnlineLoess(
+            fraction=0.5,
+            window_capacity=10,
+            distance_metric="minkowski",
+            minkowski_p=3.0,
+        )
+        r = o.add_points(x, y)
+        assert len(r.y) == len(x)
+
+    def test_online_weighted_metric(self):
+        x = np.arange(20, dtype=float)
+        y = x * 2.0
+        o = fastloess.OnlineLoess(
+            fraction=0.5,
+            window_capacity=10,
+            distance_metric="weighted",
+            weighted_metric_weights=[1.0],
+        )
+        r = o.add_points(x, y)
+        assert len(r.y) == len(x)
+
+    def test_online_misc_params(self):
+        """Cover: auto_converge, return_robustness_weights, degree, scaling_method,
+        boundary_policy, surface_mode, return_se, parallel."""
+        x = np.linspace(0, 10, 30)
+        y = np.sin(x)
+        o = fastloess.OnlineLoess(
+            fraction=0.5,
+            window_capacity=20,
+            degree="quadratic",
+            return_se=True,
+            auto_converge=1e-3,
+            scaling_method="mean",
+            boundary_policy="zero",
+            return_robustness_weights=True,
+            surface_mode="direct",
+            parallel=True,
+        )
+        r = o.add_points(x, y)
+        assert len(r.y) == len(x)
 
 
 if __name__ == "__main__":
