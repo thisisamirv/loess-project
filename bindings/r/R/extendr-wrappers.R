@@ -42,15 +42,15 @@ RStreamingLoess <- new.env(parent = emptyenv())
 RStreamingLoess$new <- function(
   fraction, chunk_size, overlap, iterations,
   weight_function, robustness_method,
-  scaling_method, boundary_policy, auto_converge,
-  return_diagnostics, return_robustness_weights,
-  parallel, degree, dimensions, distance_metric, surface_mode, return_se
+  scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
+  return_diagnostics, return_residuals, return_robustness_weights,
+  merge_strategy, parallel, degree, dimensions, distance_metric, surface_mode, return_se
 ) {
     .Call(
         wrap__RStreamingLoess__new, fraction, chunk_size, overlap, iterations,
         weight_function, robustness_method, scaling_method,
-        boundary_policy, auto_converge, return_diagnostics,
-        return_robustness_weights, parallel,
+        boundary_policy, zero_weight_fallback, auto_converge, return_diagnostics,
+        return_residuals, return_robustness_weights, merge_strategy, parallel,
         degree, dimensions, distance_metric, surface_mode, return_se
     )
 }
@@ -78,14 +78,14 @@ ROnlineLoess <- new.env(parent = emptyenv())
 ROnlineLoess$new <- function(
   fraction, window_capacity, min_points, iterations,
   weight_function, robustness_method,
-  scaling_method, boundary_policy, update_mode,
+  scaling_method, boundary_policy, zero_weight_fallback, update_mode,
   auto_converge, return_robustness_weights,
   parallel, degree, dimensions, distance_metric, surface_mode, return_se
 ) {
     .Call(
         wrap__ROnlineLoess__new, fraction, window_capacity, min_points,
         iterations, weight_function, robustness_method, scaling_method,
-        boundary_policy, update_mode, auto_converge,
+        boundary_policy, zero_weight_fallback, update_mode, auto_converge,
         return_robustness_weights, parallel,
         degree, dimensions, distance_metric, surface_mode, return_se
     )

@@ -17,13 +17,20 @@
 #'   "noboundary".
 #' @param auto_converge Convergence tolerance. NULL disables.
 #' @param return_diagnostics Return fit metrics. Default: FALSE.
+#' @param return_residuals Return residuals. Default: FALSE.
 #' @param return_robustness_weights Return weights. Default: FALSE.
+#' @param zero_weight_fallback Fallback: "use_local_mean", "return_original",
+#'   "return_none". Default: "use_local_mean".
+#' @param merge_strategy Strategy for merging overlapping chunk regions:
+#'   "average", "weighted_average", "take_first", "take_last".
+#'   Default: "weighted_average".
 #' @param parallel Enable parallel processing. Default: TRUE.
 #' @param degree Polynomial degree: "constant", "linear", "quadratic", etc.
 #'   Default: "linear".
 #' @param dimensions Number of predictor dimensions. Default: 1.
-#' @param distance_metric Distance metric: "normalized", "euclidean", etc.
-#'   Default: "normalized".
+#' @param distance_metric Distance metric: "normalized", "euclidean",
+#'   "manhattan", "chebyshev", "minkowski", "weighted".
+#'   Use "minkowski:p" for a custom p value. Default: "normalized".
 #' @param surface_mode Surface mode: "interpolation" or "direct".
 #'   Default: "interpolation".
 #' @param return_se Compute hat-matrix statistics. Default: FALSE.
@@ -48,7 +55,10 @@ StreamingLoess <- function(
     boundary_policy = "extend",
     auto_converge = NULL,
     return_diagnostics = FALSE,
+    return_residuals = FALSE,
     return_robustness_weights = FALSE,
+    zero_weight_fallback = "use_local_mean",
+    merge_strategy = "weighted_average",
     parallel = TRUE,
     degree = "linear",
     dimensions = 1L,

@@ -140,12 +140,19 @@ export interface SmoothOptions {
   degree?: string
   /** Number of predictor dimensions. Default: 1. */
   dimensions?: number
-  /** Distance metric ("normalized", "euclidean", etc.). Default: "normalized". */
+  /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev",
+   * "minkowski", "weighted"). Use "minkowski:p" for a custom p value. Default: "normalized". */
   distanceMetric?: string
   /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
   surfaceMode?: string
   /** Compute hat-matrix statistics (enp, traceHat, etc.). Default: false. */
   returnSe?: boolean
+  /** Exponent for Minkowski distance (default: 2.0, i.e. Euclidean). Only
+   * used when distanceMetric is "minkowski". */
+  minkowskiP?: number
+  /** Per-dimension weights for the weighted distance metric. Only used
+   * when distanceMetric is "weighted". */
+  weightedMetricWeights?: number[]
 }
 
 /** Configuration options for streaming processing. */
@@ -154,6 +161,7 @@ export interface StreamingOptions {
   chunkSize?: number
   /** Header/footer overlap size. Default: 500. */
   overlap?: number
-  /** Strategy for merging chunks (not exposed yet). */
+  /** Strategy for merging overlapping chunk regions: "average",
+   * "weighted_average", "take_first", "take_last". Default: "weighted_average". */
   mergeStrategy?: string
 }

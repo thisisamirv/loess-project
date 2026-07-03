@@ -122,6 +122,7 @@ param_types <- list(
     degree = "character",
     distance_metric = "character",
     surface_mode = "character",
+    merge_strategy = "character",
     # Logical parameters
     return_diagnostics = "logical",
     return_residuals = "logical",
@@ -175,7 +176,7 @@ loess_params <- c(
 online_params <- c(
     "fraction", "window_capacity", "min_points", "iterations",
     "weight_function", "robustness_method", "scaling_method",
-    "boundary_policy", "update_mode", "auto_converge",
+    "boundary_policy", "zero_weight_fallback", "update_mode", "auto_converge",
     "return_robustness_weights", "parallel",
     "degree", "dimensions", "distance_metric", "surface_mode", "return_se"
 )
@@ -183,7 +184,7 @@ online_params <- c(
 streaming_params <- c(
     "fraction", "chunk_size", "overlap", "iterations",
     "weight_function", "robustness_method", "scaling_method",
-    "boundary_policy", "auto_converge", "return_diagnostics",
-    "return_robustness_weights", "parallel",
+    "boundary_policy", "zero_weight_fallback", "auto_converge", "return_diagnostics",
+    "return_residuals", "return_robustness_weights", "merge_strategy", "parallel",
     "degree", "dimensions", "distance_metric", "surface_mode", "return_se"
 )

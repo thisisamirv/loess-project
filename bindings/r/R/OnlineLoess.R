@@ -18,12 +18,15 @@
 #' @param update_mode Update strategy: "incremental".
 #' @param auto_converge Convergence tolerance. NULL disables.
 #' @param return_robustness_weights Return weights. Default: FALSE.
+#' @param zero_weight_fallback Fallback: "use_local_mean", "return_original",
+#'   "return_none". Default: "use_local_mean".
 #' @param parallel Enable parallel processing. Default: TRUE.
 #' @param degree Polynomial degree: "constant", "linear", "quadratic", etc.
 #'   Default: "linear".
 #' @param dimensions Number of predictor dimensions. Default: 1.
-#' @param distance_metric Distance metric: "normalized", "euclidean", etc.
-#'   Default: "normalized".
+#' @param distance_metric Distance metric: "normalized", "euclidean",
+#'   "manhattan", "chebyshev", "minkowski", "weighted".
+#'   Use "minkowski:p" for a custom p value. Default: "normalized".
 #' @param surface_mode Surface mode: "interpolation" or "direct".
 #'   Default: "interpolation".
 #' @param return_se Compute hat-matrix statistics. Default: FALSE.
@@ -49,6 +52,7 @@ OnlineLoess <- function(
     update_mode = "incremental",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
+    zero_weight_fallback = "use_local_mean",
     parallel = FALSE,
     degree = "linear",
     dimensions = 1L,
