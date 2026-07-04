@@ -12,7 +12,7 @@
 
 library(jsonlite)
 
-OUTPUT_DIR <- "output/r/"
+OUTPUT_DIR <- "../output/r/"
 dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
 
 run_scenario <- function(
@@ -106,7 +106,9 @@ main <- function() {
     # 02. Quadratic Degree 2 (degree=2 fits quadratic data exactly)
     data <- generate_data(n = 50, kind = "quadratic", noise = 0.02)
     run_scenario("02_quadratic_deg2", data$x, data$y,
-        frac = 0.4, iter = 0, degree = 2)
+        frac = 0.4, iter = 0, degree = 2,
+        surface = "direct"
+    )
 
     # 03. Sine Standard
     data <- generate_data(n = 100, kind = "sine", noise = 0.1)
@@ -119,7 +121,9 @@ main <- function() {
     # 05. Degree 2 (Quadratic LOESS -- unique to loess, not available in lowess)
     data <- generate_data(n = 100, kind = "quadratic", noise = 0.05)
     run_scenario("05_degree2", data$x, data$y,
-        frac = 0.4, iter = 0, degree = 2)
+        frac = 0.4, iter = 0, degree = 2,
+        surface = "direct"
+    )
 
     # 06. Large Scale
     data <- generate_data(n = 500, kind = "sine")
@@ -139,7 +143,9 @@ main <- function() {
     # 09. Sine Degree 2 (quadratic local fit on sine data)
     data <- generate_data(n = 100, kind = "sine", noise = 0.1)
     run_scenario("09_sine_degree2", data$x, data$y,
-        frac = 0.3, iter = 0, degree = 2)
+        frac = 0.3, iter = 0, degree = 2,
+        surface = "direct"
+    )
 
     # 10. Constant Function
     data <- generate_data(n = 50, kind = "constant")
@@ -181,7 +187,9 @@ main <- function() {
     # 16. Degree 2 Robust (quadratic + bisquare robustness)
     data <- generate_data(n = 100, kind = "sine", outlier_ratio = 0.05)
     run_scenario("16_degree2_robust", data$x, data$y,
-        frac = 0.3, iter = 4, degree = 2)
+        frac = 0.3, iter = 4, degree = 2,
+        surface = "direct"
+    )
 
     # 17. Degree 2 Direct (exact quadratic fit at all points)
     data <- generate_data(n = 100, kind = "sine")

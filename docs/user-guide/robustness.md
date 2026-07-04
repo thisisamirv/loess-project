@@ -14,7 +14,7 @@ Standard LOESS can be biased by outliers. Robustness iterations downweight point
 
 ![Robust vs Standard](../assets/diagrams/robust_vs_standard_loess.svg)
 
-![Robustness Iterations](../assets/diagrams/robustness_comparison.svg)
+![Robustness Iterations](../assets/diagrams/robust_iter_comparison.svg)
 
 ---
 
