@@ -19,8 +19,8 @@ Overlap:            [=====]
 | Strategy | Method | Robustness | Speed |
 | --- | --- | --- | --- |
 | `"average"` | Simple mean of both estimates | Low | Fastest |
-| `"left"` | Left-chunk estimate only | Low | Fastest |
-| `"right"` | Right-chunk estimate only | Low | Fastest |
+| `"take_first"` | Left-chunk estimate only | Low | Fastest |
+| `"take_last"` | Right-chunk estimate only | Low | Fastest |
 | `"weighted_average"` | Distance-weighted mean | High | Moderate |
 
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
@@ -97,7 +97,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 ---
 
-## Left
+## Take First
 
 Keeps only the left-chunk estimate in the overlap zone and discards the right-chunk estimate. Produces a definitive, non-revised output as soon as the right boundary of each chunk is reached.
 
@@ -105,42 +105,42 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 === "R"
     ```r
-    model <- StreamingLoess(merge_strategy = "left")
+    model <- StreamingLoess(merge_strategy = "take_first")
     ```
 
 === "Python"
     ```python
-    model = StreamingLoess(merge_strategy="left")
+    model = StreamingLoess(merge_strategy="take_first")
     ```
 
 === "Rust"
     ```rust
-    .merge_strategy(MergeStrategy::Left)
+    .merge_strategy(MergeStrategy::TakeFirst)
     ```
 
 === "Julia"
     ```julia
-    model = StreamingLoess(; merge_strategy="left")
+    model = StreamingLoess(; merge_strategy="take_first")
     ```
 
 === "Node.js"
     ```javascript
-    { mergeStrategy: "left" }
+    { mergeStrategy: "take_first" }
     ```
 
 === "WebAssembly"
     ```javascript
-    { mergeStrategy: "left" }
+    { mergeStrategy: "take_first" }
     ```
 
 === "C++"
     ```cpp
-    opts.merge_strategy = "left";
+    opts.merge_strategy = "take_first";
     ```
 
 ---
 
-## Right
+## Take Last
 
 Keeps only the right-chunk estimate in the overlap zone. The right chunk sees more of the surrounding data, so its fit can be more accurate near the left boundary of the new chunk.
 
@@ -148,37 +148,37 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 === "R"
     ```r
-    model <- StreamingLoess(merge_strategy = "right")
+    model <- StreamingLoess(merge_strategy = "take_last")
     ```
 
 === "Python"
     ```python
-    model = StreamingLoess(merge_strategy="right")
+    model = StreamingLoess(merge_strategy="take_last")
     ```
 
 === "Rust"
     ```rust
-    .merge_strategy(MergeStrategy::Right)
+    .merge_strategy(MergeStrategy::TakeLast)
     ```
 
 === "Julia"
     ```julia
-    model = StreamingLoess(; merge_strategy="right")
+    model = StreamingLoess(; merge_strategy="take_last")
     ```
 
 === "Node.js"
     ```javascript
-    { mergeStrategy: "right" }
+    { mergeStrategy: "take_last" }
     ```
 
 === "WebAssembly"
     ```javascript
-    { mergeStrategy: "right" }
+    { mergeStrategy: "take_last" }
     ```
 
 === "C++"
     ```cpp
-    opts.merge_strategy = "right";
+    opts.merge_strategy = "take_last";
     ```
 
 ---
@@ -259,8 +259,8 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 | --- | --- |
 | General purpose | `"weighted_average"` |
 | Maximum throughput | `"average"` |
-| Immediate finalised output | `"left"` |
-| Post-processing, right context better | `"right"` |
+| Immediate finalised output | `"take_first"` |
+| Post-processing, right context better | `"take_last"` |
 | Minimising boundary artefacts | `"weighted_average"` |
 
 !!! tip "Overlap size matters"

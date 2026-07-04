@@ -14,6 +14,8 @@ At each target point, LOESS fits a polynomial to the neighbouring data using wei
 | `0` | Constant | Level only | Over-smooth, biased at edges |
 | `1` | Linear | Trend (default) | Rarely overfits |
 | `2` | Quadratic | Curvature | Overfits with small `fraction` |
+| `3` | Cubic | Inflections | Requires larger `fraction` |
+| `4` | Quartic | Fine structure | High variance, rarely needed |
 
 ---
 
@@ -164,6 +166,104 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 ---
 
+## Degree 3 — Local Cubic
+
+$$\hat{y}(x_0) = \arg\min_{a,b,c,d} \sum_i w_i(x_0)\,(y_i - a - b x_i - c x_i^2 - d x_i^3)^2$$
+
+Fits a weighted cubic polynomial. Captures inflection points and S-shaped local behaviour. Requires a substantially larger neighbourhood than degree 2 — use `fraction` ≥ 0.5 and verify visually for overfitting.
+
+**Use when**: Data has clear S-shaped curves or multiple inflection points; `fraction` ≥ 0.5.
+
+=== "R"
+    ```r
+    result <- Loess(degree = 3L, fraction = 0.6)$fit(x, y)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, degree=3, fraction=0.6)
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Loess::new()
+        .degree(PolynomialDegree::Cubic)
+        .fraction(0.6)
+        .adapter(Batch)
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = fit(Loess(; degree=3, fraction=0.6), x, y)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { degree: 3, fraction: 0.6 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { degree: 3, fraction: 0.6 });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastloess::smooth(x, y, { .degree = 3, .fraction = 0.6 });
+    ```
+
+---
+
+## Degree 4 — Local Quartic
+
+$$\hat{y}(x_0) = \arg\min_{a,...,e} \sum_i w_i(x_0)\,(y_i - a - b x_i - \cdots - e x_i^4)^2$$
+
+Fits a weighted quartic polynomial. Rarely needed in practice; only useful for capturing highly oscillatory local structure. Very prone to overfitting — require `fraction` ≥ 0.6 and cross-validate.
+
+**Use when**: Fine oscillatory structure is physically meaningful and the dataset is large; always cross-validate.
+
+=== "R"
+    ```r
+    result <- Loess(degree = 4L, fraction = 0.7)$fit(x, y)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, degree=4, fraction=0.7)
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Loess::new()
+        .degree(PolynomialDegree::Quartic)
+        .fraction(0.7)
+        .adapter(Batch)
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = fit(Loess(; degree=4, fraction=0.7), x, y)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { degree: 4, fraction: 0.7 });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { degree: 4, fraction: 0.7 });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastloess::smooth(x, y, { .degree = 4, .fraction = 0.7 });
+    ```
+
+---
+
 ## Choosing the Right Degree
 
 | Situation | Recommended Degree |
@@ -171,6 +271,8 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 | Monotone trend, general purpose | `1` (default) |
 | Maximum smoothness, speed | `0` |
 | Clear peaks / valleys / inflections | `2` (with `fraction` ≥ 0.4) |
+| S-shaped curves, multiple inflections | `3` (with `fraction` ≥ 0.5) |
+| Fine oscillatory structure (rare) | `4` (with `fraction` ≥ 0.6, cross-validate) |
 | Boundary accuracy is critical | `1` or `2` (not `0`) |
 | Very small dataset (n < 50) | `1` |
 

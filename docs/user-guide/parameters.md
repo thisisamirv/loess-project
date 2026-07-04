@@ -11,6 +11,8 @@ Complete reference for all LOESS configuration options.
 | --- | --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+| **degree** | 1 | 0–4 | Polynomial degree | All |
+| **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
 | **delta** | NULL (auto) | [0, ∞) | Interpolation threshold | All |
 | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
 | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
@@ -26,7 +28,7 @@ Complete reference for all LOESS configuration options.
 | **cv_method** | NULL | method | Auto-select fraction | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **merge_strategy** | `"average"` | 4 options | Merge overlaps | Streaming |
+| **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
 | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
 | **min_points** | 2 | [2, window] | Min before output | Online |
 | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
@@ -37,6 +39,8 @@ Complete reference for all LOESS configuration options.
 | --- | --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+| **degree** | 1 | 0–4 | Polynomial degree | All |
+| **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
 | **delta** | None (auto) | [0, ∞) | Interpolation threshold | All |
 | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
 | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
@@ -52,7 +56,7 @@ Complete reference for all LOESS configuration options.
 | **cv_method** | None | method | Auto-select fraction | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **merge_strategy** | `"average"` | 4 options | Merge overlaps | Streaming |
+| **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
 | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
 | **min_points** | 2 | [2, window] | Min before output | Online |
 | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
@@ -63,6 +67,8 @@ Complete reference for all LOESS configuration options.
 | --- | --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+| **degree** | 1 | 0–4 | Polynomial degree | All |
+| **surface_mode** | `Interpolation` | 2 options | Fit vs interpolate | All |
 | **delta** | auto | [0, ∞) | Interpolation threshold | All |
 | **weight_function** | `Tricube` | 7 options | Distance kernel | All |
 | **robustness_method** | `Bisquare` | 3 options | Outlier weighting | All |
@@ -78,7 +84,7 @@ Complete reference for all LOESS configuration options.
 | **cross_validate** | None | method | Auto-select fraction | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **merge_strategy** | `Average` | 4 options | Merge overlaps | Streaming |
+| **merge_strategy** | `WeightedAverage` | 4 options | Merge overlaps | Streaming |
 | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
 | **min_points** | 2 | [2, window] | Min before output | Online |
 | **update_mode** | `Incremental` | 2 options | Update strategy | Online |
@@ -89,6 +95,8 @@ Complete reference for all LOESS configuration options.
 | --- | --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+| **degree** | 1 | 0–4 | Polynomial degree | All |
+| **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
 | **delta** | `nothing` (auto) | [0, ∞) | Interpolation threshold | All |
 | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
 | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
@@ -104,7 +112,7 @@ Complete reference for all LOESS configuration options.
 | **cv_method** | `nothing` | method | Auto-select fraction | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **merge_strategy** | `"average"` | 4 options | Merge overlaps | Streaming |
+| **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
 | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
 | **min_points** | 2 | [2, window] | Min before output | Online |
 | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
@@ -115,6 +123,8 @@ Complete reference for all LOESS configuration options.
 | --- | --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+| **degree** | 1 | 0–4 | Polynomial degree | All |
+| **surfaceMode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
 | **delta** | auto | [0, ∞) | Interpolation threshold | All |
 | **weightFunction** | `"tricube"` | 7 options | Distance kernel | All |
 | **robustnessMethod** | `"bisquare"` | 3 options | Outlier weighting | All |
@@ -129,7 +139,7 @@ Complete reference for all LOESS configuration options.
 | **predictionIntervals** | null | (0, 1) | PI level | Batch |
 | **chunkSize** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **mergeStrategy** | `"average"` | 4 options | Merge overlaps | Streaming |
+| **mergeStrategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
 | **windowCapacity** | 1000 | [3, ∞) | Max window size | Online |
 | **minPoints** | 2 | [2, window] | Min before output | Online |
 | **updateMode** | `"incremental"` | 2 options | Update strategy | Online |
@@ -140,6 +150,8 @@ Complete reference for all LOESS configuration options.
 | --- | --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+| **degree** | 1 | 0–4 | Polynomial degree | All |
+| **surfaceMode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
 | **delta** | auto | [0, ∞) | Interpolation threshold | All |
 | **weightFunction** | `"tricube"` | 7 options | Distance kernel | All |
 | **robustnessMethod** | `"bisquare"` | 3 options | Outlier weighting | All |
@@ -154,7 +166,7 @@ Complete reference for all LOESS configuration options.
 | **predictionIntervals** | null | (0, 1) | PI level | Batch |
 | **chunkSize** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **mergeStrategy** | `"average"` | 4 options | Merge overlaps | Streaming |
+| **mergeStrategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
 | **windowCapacity** | 1000 | [3, ∞) | Max window size | Online |
 | **minPoints** | 2 | [2, window] | Min before output | Online |
 | **updateMode** | `"incremental"` | 2 options | Update strategy | Online |
@@ -165,6 +177,8 @@ Complete reference for all LOESS configuration options.
 | --- | --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+| **degree** | 1 | 0–4 | Polynomial degree | All |
+| **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
 | **delta** | NAN (auto) | [0, ∞) | Interpolation threshold | All |
 | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
 | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
@@ -179,9 +193,10 @@ Complete reference for all LOESS configuration options.
 | **prediction_intervals** | NAN | (0, 1) | PI level | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | -1 (auto) | [0, chunk) | Overlap between chunks | Streaming |
+| **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
 | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
 | **min_points** | 2 | [2, window] | Min before output | Online |
-| **update_mode** | `"full"` | 2 options | Update strategy | Online |
+| **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
 
 ---
 
@@ -196,7 +211,8 @@ Complete reference for all LOESS configuration options.
 | **zero_weight_fallback** | `"use_local_mean"`, `"return_original"`, `"return_none"` |
 | **boundary_policy** | `"extend"`, `"reflect"`, `"zero"`, `"no_boundary"` |
 | **scaling_method** | `"mad"`, `"mar"`, `"mean"` |
-| **merge_strategy** | `"average"`, `"left"`, `"right"`, `"weighted"` |
+| **surface_mode** | `"interpolation"`, `"direct"` |
+| **merge_strategy** | `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"` |
 | **update_mode** | `"incremental"`, `"full"` |
 
 === "Rust"
@@ -208,7 +224,8 @@ Complete reference for all LOESS configuration options.
 | **zero_weight_fallback** | `UseLocalMean`, `ReturnOriginal`, `ReturnNone` |
 | **boundary_policy** | `Extend`, `Reflect`, `Zero`, `NoBoundary` |
 | **scaling_method** | `MAD`, `MAR`, `Mean` |
-| **merge_strategy** | `Average`, `Left`, `Right`, `Weighted` |
+| **surface_mode** | `Interpolation`, `Direct` |
+| **merge_strategy** | `Average`, `WeightedAverage`, `TakeFirst`, `TakeLast` |
 | **update_mode** | `Incremental`, `Full` |
 
 === "Node.js / WebAssembly"
@@ -220,7 +237,8 @@ Complete reference for all LOESS configuration options.
 | **zeroWeightFallback** | `"use_local_mean"`, `"return_original"`, `"return_none"` |
 | **boundaryPolicy** | `"extend"`, `"reflect"`, `"zero"`, `"no_boundary"` |
 | **scalingMethod** | `"mad"`, `"mar"`, `"mean"` |
-| **mergeStrategy** | `"average"`, `"left"`, `"right"`, `"weighted"` |
+| **surfaceMode** | `"interpolation"`, `"direct"` |
+| **mergeStrategy** | `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"` |
 | **updateMode** | `"incremental"`, `"full"` |
 
 ---
@@ -342,10 +360,77 @@ Polynomial degree for the local regression fits.
 | `0` | Local constant | |
 | `1` | Local linear | Yes |
 | `2` | Local quadratic | |
+| `3` | Local cubic | |
+| `4` | Local quartic | |
 
 Higher degrees capture curvature but can overfit with small fractions. Degree 1 is appropriate for most use cases.
 
 See [Polynomial Degree](degree.md) for a detailed comparison.
+
+---
+
+### surface_mode
+
+Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
+
+| Mode | Behavior | Speed | Accuracy |
+| --- | --- | --- | --- |
+| `Interpolation` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
+| `Direct` | Evaluate at every query point | Slower | Full precision |
+
+=== "R / Python / Julia / Node.js / WebAssembly / C++"
+
+| Mode | String value |
+| --- | --- |
+| Interpolation (default) | `"interpolation"` |
+| Direct | `"direct"` |
+
+=== "Rust"
+
+| Mode | Enum value |
+| --- | --- |
+| Interpolation (default) | `SurfaceMode::Interpolation` |
+| Direct | `SurfaceMode::Direct` |
+
+See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
+
+=== "R"
+    ```r
+    result <- Loess(surface_mode = "direct")$fit(x, y)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.smooth(x, y, surface_mode="direct")
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Loess::new()
+        .surface_mode(SurfaceMode::Direct)
+        .adapter(Batch)
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = smooth(x, y, surface_mode="direct")
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = smooth(x, y, { surfaceMode: "direct" });
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { surfaceMode: "direct" });
+    ```
+
+=== "C++"
+    ```cpp
+    auto result = fastloess::smooth(x, y, { .surface_mode = "direct" });
+    ```
 
 ---
 
@@ -619,16 +704,16 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 | Method | Description | Robustness |
 | --- | --- | --- | --- |
 | `"mad"` | Median Absolute Deviation | Very robust |
-| `"mar"` | Mean Absolute Residual | Less robust, faster |
-| `"mean"` | Mean Absolute Residual | Less robust, faster |
+| `"mar"` | Median Absolute Residual | Robust |
+| `"mean"` | Mean Absolute Residual | Less robust |
 
 === "Rust"
 
 | Method | Description | Robustness |
 | --- | --- | --- | --- |
 | `MAD` | Median Absolute Deviation | Very robust |
-| `MAR` | Mean Absolute Residual | Less robust, faster |
-| `Mean` | Mean Absolute Residual | Less robust, faster |
+| `MAR` | Median Absolute Residual | Robust |
+| `Mean` | Mean Absolute Residual | Less robust |
 
 For example:
 
@@ -1326,15 +1411,15 @@ Optimization strategy for Online mode updates.
 
 | Mode | Description | Speed |
 | --- | --- | --- | --- |
-| `full` | Full update | Slow |
-| `partial` | Partial update | Fast |
+| `full` | Re-smooth entire window | Slow |
+| `incremental` | Update only affected fits | Fast |
 
 === "Rust"
 
 | Mode | Description | Speed |
 | --- | --- | --- | --- |
-| `Full` | Full update | Slow |
-| `Partial` | Partial update | Fast |
+| `Full` | Re-smooth entire window | Slow |
+| `Incremental` | Update only affected fits | Fast |
 
 For example:
 

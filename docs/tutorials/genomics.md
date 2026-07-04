@@ -364,7 +364,7 @@ For whole-genome data that doesn't fit in memory:
         .adapter(Streaming {
             chunk_size: 100_000,
             overlap: 10_000,
-            merge_strategy: Weighted,
+            merge_strategy: WeightedAverage,
         })
         .build()?;
 

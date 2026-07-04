@@ -154,16 +154,16 @@ Process large datasets in chunks with configurable overlap.
 | --- | --- | --- |
 | `chunk_size` | 5000 | Points per chunk |
 | `overlap` | 500 | Overlap between chunks |
-| `merge_strategy` | Average | How to merge overlaps |
+| `merge_strategy` | WeightedAverage | How to merge overlaps |
 
 ### Merge Strategies
 
 | Strategy | Behavior |
 | --- | --- |
 | `Average` | Average overlapping values |
-| `Left` | Keep left chunk values |
-| `Right` | Keep right chunk values |
-| `Weighted` | Distance-weighted blend |
+| `WeightedAverage` | Distance-weighted blend (default) |
+| `TakeFirst` | Keep left chunk values |
+| `TakeLast` | Keep right chunk values |
 
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
 

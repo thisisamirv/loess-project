@@ -15,9 +15,9 @@ where $B$ is the bisquare function and $\hat{\sigma}$ is the scale estimate. A l
 
 | Method | Formula | Robustness | Speed |
 | --- | --- | --- | --- |
-| `"mad"` | Median of \|residuals\| | Very robust | Moderate |
-| `"mar"` | Mean of \|residuals\| | Moderate | Fast |
-| `"mean"` | Mean of residuals² / n | Least robust | Fastest |
+| `"mad"` | Median of \|residuals − median(residuals)\| | Very robust | Moderate |
+| `"mar"` | Median of \|residuals\| | Robust | Fast |
+| `"mean"` | Mean of \|residuals\| | Less robust | Fastest |
 
 ![Scaling Methods Comparison](../assets/diagrams/scaling_comparison.svg)
 
@@ -25,9 +25,9 @@ where $B$ is the bisquare function and $\hat{\sigma}$ is the scale estimate. A l
 
 ## MAD — Median Absolute Deviation (Default)
 
-$$\hat{\sigma} = \text{median}(|r_i|)$$
+$$\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)$$
 
-The median is resistant to extreme outliers, so a few very large residuals do not inflate $\hat{\sigma}$ and cause the algorithm to under-downweight them. This is the standard choice for robust regression.
+First centers residuals at their median, then takes the median of the absolute deviations. Double use of the median makes it highly resistant to extreme outliers. This is the standard choice for robust regression.
 
 **Use when**: Data may contain outliers (default for most applications).
 
@@ -75,13 +75,13 @@ The median is resistant to extreme outliers, so a few very large residuals do no
 
 ---
 
-## MAR — Mean Absolute Residual
+## MAR — Median Absolute Residual
 
-$$\hat{\sigma} = \frac{1}{n}\sum_i |r_i|$$
+$$\hat{\sigma} = \text{median}(|r_i|)$$
 
-Uses the mean rather than the median, so large outliers have some influence on the scale estimate. Faster to compute than MAD (no sort required) and can converge faster when the data are only mildly contaminated.
+Uses the uncentered median — unlike MAD it does not subtract the residual median first. Still robust (median-based) but slightly less resistant than MAD when residuals are systematically shifted. Faster than MAD in practice because it requires only one partial sort.
 
-**Use when**: Data are only mildly non-Gaussian; speed matters more than maximum robustness.
+**Use when**: Speed matters and data have minimal systematic bias in residuals.
 
 === "R"
     ```r
@@ -127,13 +127,13 @@ Uses the mean rather than the median, so large outliers have some influence on t
 
 ---
 
-## Mean — Root Mean Square Residual
+## Mean — Mean Absolute Residual
 
-$$\hat{\sigma} = \sqrt{\frac{1}{n}\sum_i r_i^2}$$
+$$\hat{\sigma} = \frac{1}{n}\sum_i |r_i|$$
 
-Equivalent to the RMSE of the current fit. Sensitive to large residuals (they are squared), which inflates the scale estimate and makes the algorithm more tolerant. Useful when data are believed to be Gaussian and speed is a priority.
+Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier inflates $\hat{\sigma}$, causing the algorithm to under-downweight it. Fastest to compute (no sort required). Useful when data are believed to be clean and speed is a priority.
 
-**Use when**: Clean, near-Gaussian data; iterations used mainly for convergence rather than outlier rejection.
+**Use when**: Clean data with no outliers; maximum computation speed required.
 
 === "R"
     ```r
@@ -184,7 +184,7 @@ Equivalent to the RMSE of the current fit. Sensitive to large residuals (they ar
 | Situation | Recommended Method |
 | --- | --- |
 | General purpose, possible outliers | `"mad"` (default) |
-| Mild contamination, speed preferred | `"mar"` |
-| Clean / Gaussian data | `"mean"` |
+| Robust but faster, low systematic bias | `"mar"` |
+| Clean data, no outliers | `"mean"` |
 
 See [Robustness](robustness.md) for a broader discussion of outlier handling.
