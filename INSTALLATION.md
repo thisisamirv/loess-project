@@ -7,7 +7,7 @@
 > - [R](#r)
 > - [Python](#python)
 > - [Rust (loess)](#rust-loess-no_std-compatible)
-> - [Rust (fastLoess)](#rust-fastloess-parallel--gpu)
+> - [Rust (fastLoess)](#rust-fastloess-parallel)
 > - [Julia](#julia)
 > - [Node.js](#nodejs)
 > - [WebAssembly](#webassembly)
@@ -52,7 +52,7 @@ conda install -c conda-forge fastloess
 loess = "1.1"
 ```
 
-# Rust (fastLoess, parallel + GPU)
+# Rust (fastLoess, parallel)
 
 **From crates.io:**
 

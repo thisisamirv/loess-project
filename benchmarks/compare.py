@@ -33,7 +33,6 @@ def load_all_data(output_dir: Path):
     files = {
         "Rust (CPU)": output_dir / "rust_benchmark_cpu.json",
         "Rust (Serial)": output_dir / "rust_benchmark_cpu_serial.json",
-        "Rust (GPU)": output_dir / "rust_benchmark_gpu.json",
         "R": output_dir / "r_benchmark.json",
     }
 
@@ -79,7 +78,7 @@ def main():
     # Sort names intelligently
     sorted_names = sorted(all_names)
 
-    candidates = ["Rust (Serial)", "Rust (CPU)", "Rust (GPU)"]
+    candidates = ["Rust (Serial)", "Rust (CPU)"]
     baseline_label = "R"
 
     # Get baseline data (R) if available
@@ -87,7 +86,7 @@ def main():
 
     # Table Header
     print(
-        f"{'Name':<20} | {baseline_label:^8} | {'Rust (Serial)':^15} | {'Rust (Parallel)':^15} | {'Rust (GPU)':^15} |"
+        f"{'Name':<20} | {baseline_label:^8} | {'Rust (Serial)':^15} | {'Rust (Parallel)':^15} |"
     )
     print("-" * 105)
 

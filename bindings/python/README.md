@@ -31,7 +31,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 > The `loess-project` contains a complete ecosystem for LOESS smoothing:
 >
 > - **[`loess-rs`](https://crates.io/crates/loess-rs)** - Core single-threaded Rust implementation with `no_std` support
-> - **[`fastLoess`](https://crates.io/crates/fastLoess)** - Parallel CPU and GPU-accelerated Rust wrapper with ndarray integration  
+> - **[`fastLoess`](https://crates.io/crates/fastLoess)** - Parallel Rust wrapper with ndarray integration  
 > - **[`R bindings`](https://thisisamirv.r-universe.dev/rfastloess)** - extendr-based R binding
 > - **[`Python bindings`](https://pypi.org/project/fastloess/)** - PyO3-based Python binding
 > - **[`Julia bindings`](https://juliahub.com/ui/Packages/General/FastLOESS)** - Native Julia binding with C FFI
@@ -131,10 +131,7 @@ A variety of features, supporting a range of use cases:
 | Prediction Intervals | yes           | no           | no           |
 | Cross-Validation     | 2 options     | no           | no           |
 | Parallel Execution   | yes           | no           | no           |
-| GPU Acceleration     | yes*          | no           | no           |
 | `no-std` Support     | yes           | no           | no           |
-
-\* GPU acceleration is currently in beta and may not be available on all platforms.
 
 ## Validation
 
@@ -249,7 +246,7 @@ Loess::new()
     .auto_converge(1e-4)
     .adapter(Batch)
     .parallel(true)             // fastLoess only
-    .backend(CPU)               // fastLoess only: CPU or GPU
+    .backend(CPU)               // fastLoess only
     .build()?;
 
 let result = model.fit(x, y);

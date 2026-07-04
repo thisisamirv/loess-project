@@ -2,7 +2,7 @@
 //!
 //! This module provides the primary user-facing entry point for LOESS with
 //! heavy-duty parallel execution capabilities. It extends the loess API
-//! with adapters that utilize all available CPU cores or GPU hardware.
+//! with adapters that utilize all available CPU cores.
 
 // Imports
 use crate::adapters::batch::ParallelBatchLoessBuilder;

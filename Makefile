@@ -412,7 +412,7 @@ _r_impl:
 	@rm -f $(R_DIR)/src/vendor/fastLoess/Cargo.lock $(R_DIR)/src/vendor/loess-rs/Cargo.lock
 	@rm -f $(R_DIR)/src/vendor/fastLoess/README.md $(R_DIR)/src/vendor/fastLoess/CHANGELOG.md
 	@rm -f $(R_DIR)/src/vendor/loess-rs/README.md $(R_DIR)/src/vendor/loess-rs/CHANGELOG.md
-	@# Step 3: Patch local crates (remove workspace inheritance, strip GPU deps)
+	@# Step 3: Patch local crates (remove workspace inheritance)
 	@dev/patch_vendor_crates.py Cargo.toml $(R_DIR)/src/vendor -q
 	@# Step 4: Create dummy checksum files for local crates
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/loess-rs/.cargo-checksum.json

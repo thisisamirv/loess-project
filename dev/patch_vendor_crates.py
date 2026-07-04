@@ -2,8 +2,7 @@
 """
 Patch vendored Cargo.toml files for R package build.
 
-This script replaces workspace inheritance with concrete values and removes
-GPU dependencies that are not needed for the R binding.
+This script replaces workspace inheritance with concrete values.
 """
 
 import argparse
@@ -79,7 +78,6 @@ def resolve_workspace_dep(dep_name: str, value: Any, workspace: Dict[str, Any]) 
 def patch_crate_toml(
     crate_toml: Path,
     workspace: Dict[str, Any],
-    remove_gpu: bool = False,
     loess_as_path: bool = False,
 ) -> None:
     """Patch a crate's Cargo.toml to remove workspace inheritance."""
@@ -105,16 +103,6 @@ def patch_crate_toml(
         deps_to_remove = []
 
         for dep_name, value in deps.items():
-            # Remove GPU deps if requested
-            if remove_gpu and dep_name in (
-                "wgpu",
-                "bytemuck",
-                "pollster",
-                "futures-intrusive",
-            ):
-                deps_to_remove.append(dep_name)
-                continue
-
             # Handle loess-rs -> path dependency
             if loess_as_path and dep_name == "loess-rs":
                 resolved = resolve_workspace_dep(dep_name, value, workspace)
@@ -134,12 +122,6 @@ def patch_crate_toml(
         dev_deps = data["dev-dependencies"]
         for dep_name, value in dev_deps.items():
             dev_deps[dep_name] = resolve_workspace_dep(dep_name, value, workspace)
-
-    # Patch [features] section - empty GPU feature if needed
-    if remove_gpu and "features" in data:
-        features = data["features"]
-        if "gpu" in features:
-            features["gpu"] = []
 
     # Write back
     tomli_w = load_tomli_w()
@@ -193,7 +175,6 @@ def main() -> int:
         patch_crate_toml(
             fast_loess_toml,
             workspace,
-            remove_gpu=True,
             loess_as_path=True,
         )
 
@@ -205,7 +186,6 @@ def main() -> int:
         patch_crate_toml(
             loess_toml,
             workspace,
-            remove_gpu=False,
             loess_as_path=False,
         )
 

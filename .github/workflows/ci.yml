@@ -89,7 +89,6 @@ jobs:
         run: |
           cargo clippy -p loess --all-targets -- -D warnings
           cargo clippy -p fastLoess --all-targets --features cpu -- -D warnings
-          cargo clippy -p fastLoess --all-targets --features gpu -- -D warnings
 
       - name: "Rust: Lowess Tests"
         run: |
@@ -102,37 +101,16 @@ jobs:
       - name: "Rust: fastLoess Build"
         run: |
           cargo build -p fastLoess --features cpu
-          cargo build -p fastLoess --features gpu
 
       - name: "Rust: fastLoess Tests"
         run: |
-          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-             sudo apt-get update && sudo apt-get install -y libvulkan1 mesa-vulkan-drivers vulkan-tools
-             export GALLIUM_DRIVER=lavapipe
-             export WGPU_BACKEND=vulkan
-             export XDG_RUNTIME_DIR="${RUNNER_TEMP}/xdg-runtime"
-             mkdir -p "$XDG_RUNTIME_DIR"
-             chmod 700 "$XDG_RUNTIME_DIR"
-
-             if [ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]; then
-               export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
-             else
-               export VK_ICD_FILENAMES=$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' | head -n 1)
-             fi
-
-             test -n "$VK_ICD_FILENAMES"
-             vulkaninfo --summary
-             cargo test -q -p loess-project-tests --test fastLoess --features gpu
-          else
-             cargo test -q -p loess-project-tests --test fastLoess --features cpu
-          fi
+          cargo test -q -p loess-project-tests --test fastLoess --features cpu
         shell: bash
 
       - name: "Rust: Documentation"
         run: |
           cargo doc -p loess --no-deps
           cargo doc -p fastLoess --no-deps --features cpu
-          cargo doc -p fastLoess --no-deps --features gpu
         env:
           RUSTDOCFLAGS: -D warnings
 
@@ -346,30 +324,16 @@ jobs:
         with:
           key: make-all-ubuntu-cargo
 
-      - name: Setup GPU and R system dependencies
+      - name: Setup R system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libvulkan1 mesa-vulkan-drivers vulkan-tools
           sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libprotobuf-dev protobuf-compiler libuv1-dev libgit2-dev libssh2-1-dev libmagick++-dev
 
       - name: "make all"
         shell: bash
         env:
           PYTHON: python
-          GALLIUM_DRIVER: lavapipe
-          WGPU_BACKEND: vulkan
-        run: |
-          export XDG_RUNTIME_DIR="${RUNNER_TEMP}/xdg-runtime"
-          mkdir -p "$XDG_RUNTIME_DIR"
-          chmod 700 "$XDG_RUNTIME_DIR"
-          if [ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]; then
-            export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json
-          else
-            export VK_ICD_FILENAMES=$(find /usr/share/vulkan/icd.d -name 'lvp_icd*.json' | head -n 1)
-          fi
-          test -n "$VK_ICD_FILENAMES"
-          vulkaninfo --summary
-          make all
+        run: make all
 
   make-all-macos:
     name: make all (macOS)

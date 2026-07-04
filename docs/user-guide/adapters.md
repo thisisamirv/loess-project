@@ -432,7 +432,6 @@ Incremental updates with a sliding window for real-time data.
 | Residuals | ✓ | ✓ | ✓ |
 | Robustness weights | ✓ | ✓ | ✓ |
 | Parallel execution | ✓ | ✓ | ✗ |
-| GPU acceleration | ✓ | ✗ | ✗ |
 
 ---
 

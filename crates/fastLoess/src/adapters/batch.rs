@@ -7,7 +7,6 @@
 //! ## srrstats Compliance
 //!
 //! @srrstats {G3.0} Rayon-based parallel execution for CPU-bound workloads.
-//! @srrstats {G1.5} GPU backend support via feature flag for accelerated fits.
 
 // Imports
 use crate::engine::executor::{smooth_pass_parallel, vertex_pass_parallel};
@@ -274,13 +273,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
                     builder.custom_vertex_pass = Some(vertex_pass_parallel);
                     builder.custom_kdtree_builder = Some(build_kdtree_parallel);
                 }
-            }
-            Backend::GPU => {
-                // GPU backend not yet supported for LOESS
-                return Err(LoessError::UnsupportedFeature {
-                    adapter: "Batch",
-                    feature: "GPU backend (not yet implemented)",
-                });
             }
         }
 

@@ -69,8 +69,6 @@ def find_criterion_results(criterion_dir: Path) -> Dict[str, List[dict]]:
             clean_category = category[:-9]
         elif category.endswith("_serial"):
             clean_category = category[:-7]
-        elif category.endswith("_gpu"):
-            clean_category = category[:-4]
 
         if category not in results:
             results[category] = []
@@ -165,21 +163,16 @@ def main():
     # Separate results
     cpu_results = {}
     cpu_serial_results = {}
-    gpu_results = {}
 
     for category, benchmarks in results.items():
         if category.endswith("_serial"):
             target_dict = cpu_serial_results
         elif category.endswith("_parallel"):
             target_dict = cpu_results
-        elif category.endswith("_gpu"):
-            target_dict = gpu_results
         else:
             target_dict = cpu_results
 
-        clean_cat = (
-            category.replace("_serial", "").replace("_parallel", "").replace("_gpu", "")
-        )
+        clean_cat = category.replace("_serial", "").replace("_parallel", "")
         if clean_cat not in target_dict:
             target_dict[clean_cat] = []
         target_dict[clean_cat].extend(benchmarks)
@@ -195,7 +188,6 @@ def main():
 
     save_results(cpu_results, "rust_benchmark_cpu.json")
     save_results(cpu_serial_results, "rust_benchmark_cpu_serial.json")
-    save_results(gpu_results, "rust_benchmark_gpu.json")
 
     return 0
 

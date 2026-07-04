@@ -24,20 +24,20 @@ The `loess` project crushes the competition in terms of speed, wether in single-
 
 Speedup relative to Python's `statsmodels.loess` (higher is better):
 
-| Category | statsmodels | R (stats) | Serial | Parallel | GPU |
-| --- | --- | --- | --- | --- | --- |
-| **Clustered** | 163ms | 83× | 203× | **433×** | 32× |
-| **Constant Y** | 134ms | 92× | 212× | **410×** | 18× |
-| **Delta**<br/>(large–none) | 105ms | 2× | 4× | 6× | **16×** |
-| **Extreme Outliers** | 489ms | 106× | 201× | **388×** | 29× |
-| **Financial**<br/>(500–10K) | 106ms | 105× | 252× | **293×** | 12× |
-| **Fraction**<br/>(0.05–0.67) | 221ms | 104× | 228× | **391×** | 22× |
-| **Genomic**<br/>(1K–50K) | 1833ms | 7× | 9× | 20× | **95×** |
-| **High Noise** | 435ms | 133× | 134× | **375×** | 32× |
-| **Iterations**<br/>(0–10) | 204ms | 115× | 224× | **386×** | 18× |
-| **Scale**<br/>(1K–50K) | 1841ms | 264× | 487× | **581×** | 98× |
-| **Scientific**<br/>(500–10K) | 167ms | 109× | 205× | **314×** | 15× |
-| **Scale Large**\*<br/>(100K–2M) | — | — | 1× | **1.4×** | 0.3× |
+| Category | statsmodels | R (stats) | Serial | Parallel |
+| --- | --- | --- | --- | --- |
+| **Clustered** | 163ms | 83× | 203× | **433×** |
+| **Constant Y** | 134ms | 92× | 212× | **410×** |
+| **Delta**<br/>(large–none) | 105ms | 2× | 4× | 6× |
+| **Extreme Outliers** | 489ms | 106× | 201× | **388×** |
+| **Financial**<br/>(500–10K) | 106ms | 105× | 252× | **293×** |
+| **Fraction**<br/>(0.05–0.67) | 221ms | 104× | 228× | **391×** |
+| **Genomic**<br/>(1K–50K) | 1833ms | 7× | 9× | 20× |
+| **High Noise** | 435ms | 133× | 134× | **375×** |
+| **Iterations**<br/>(0–10) | 204ms | 115× | 224× | **386×** |
+| **Scale**<br/>(1K–50K) | 1841ms | 264× | 487× | **581×** |
+| **Scientific**<br/>(500–10K) | 167ms | 109× | 205× | **314×** |
+| **Scale Large**\*<br/>(100K–2M) | — | — | 1× | **1.4×** |
 
 \*Scale Large benchmarks are relative to Serial (statsmodels cannot handle these sizes)
 
@@ -93,10 +93,7 @@ A variety of features, supporting a range of use cases:
 | Prediction Intervals | yes | no | no |
 | Cross-Validation | 2 options | no | no |
 | Parallel Execution | yes | no | no |
-| GPU Acceleration | yes* | no | no |
 | `no-std` Support | yes | no | no |
-
-\* GPU acceleration is currently in beta and may not be available on all platforms.
 
 ## Installation
 
@@ -141,7 +138,7 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
         loess = "0.99"
         ```
 
-    === "fastLoess (parallel + GPU)"
+    === "fastLoess (parallel)"
 
         ```toml
         [dependencies]
@@ -320,7 +317,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 
     ---
 
-    Pure Rust crates with zero-copy ndarray support, parallel execution, and GPU acceleration.
+    Pure Rust crates with zero-copy ndarray support, parallel execution.
 
     [:octicons-arrow-right-24: Rust API](api/rust.md)
 

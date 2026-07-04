@@ -166,7 +166,7 @@ pub type IntervalPassFn<T> = fn(
     &[T],               // scales (normalization scales per dimension)
 ) -> Vec<T>; // standard errors
 
-// Signature for custom iteration batch pass function (GPU acceleration).
+// Signature for custom iteration batch pass function.
 #[doc(hidden)]
 pub type FitPassFn<T> = fn(
     &[T],            // x
@@ -309,7 +309,7 @@ pub struct LoessConfig<T: FloatLinalg + SolverLinalg> {
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
-    // Custom iteration batch pass function for GPU acceleration.
+    // Custom iteration batch pass function.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
@@ -426,7 +426,7 @@ pub struct LoessExecutor<T: FloatLinalg + SolverLinalg> {
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
-    // Custom iteration batch pass function for GPU acceleration.
+    // Custom iteration batch pass function.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
@@ -633,7 +633,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self
     }
 
-    // Set a custom iteration batch pass function for GPU acceleration.
+    // Set a custom iteration batch pass function.
     #[doc(hidden)]
     pub fn custom_fit_pass(mut self, fit_pass_fn: Option<FitPassFn<T>>) -> Self {
         self.custom_fit_pass = fit_pass_fn;
