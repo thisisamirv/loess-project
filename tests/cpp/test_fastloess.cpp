@@ -1,8 +1,12 @@
 #include "../../bindings/cpp/include/fastloess.hpp"
 #include <array>
 #include <cmath>
+#include <cstddef>
+#include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace fastloess;
@@ -170,7 +174,7 @@ void testLoessWithRobustnessWeights() {
 
   auto weights = result.robustnessWeights();
   assertTrue(weights.size() == k_small_count);
-  for (double weight : weights) {
+  for (const double weight : weights) {
     assertTrue(weight >= 0 && weight <= 1, "Weight out of range");
   }
 }
@@ -344,8 +348,8 @@ void testOnlineBasic() {
 
   int points_out = 0;
   for (size_t idx = 0; idx < x_vals.size(); ++idx) {
-    std::vector<double> x_val = {x_vals[idx]};
-    std::vector<double> y_val = {y_vals[idx]};
+    const std::vector<double> x_val = {x_vals[idx]};
+    const std::vector<double> y_val = {y_vals[idx]};
     auto res = online.addPoints(x_val, y_val).value();
     if (!res.yVector().empty()) {
       points_out++;
@@ -362,7 +366,7 @@ void testMismatchedLengths() {
   const std::vector<double> y_vals(k_mismatch_y_arr.begin(),
                                    k_mismatch_y_arr.end());
 
-  LoessOptions opts;
+  const LoessOptions opts;
   Loess loess(opts);
   try {
     loess.fit(x_vals, y_vals).value();
@@ -610,6 +614,11 @@ void testOnlineUpdateModeAndParams() {
 
 } // namespace
 
+// std::ios_base::failure can theoretically propagate through stream I/O even
+// though it never does with default exception masks (goodbit).  Suppress the
+// clang-tidy warning rather than adding no-op exceptions() calls that
+// themselves trigger the same diagnostic on MSVC headers.
+// NOLINTNEXTLINE(bugprone-exception-escape)
 int main() {
   try {
     testBasicSmooth();
@@ -646,6 +655,8 @@ int main() {
     std::cout << "All C++ tests passed!\n";
   } catch (const std::exception &err) {
     std::cerr << "Test failed with exception: " << err.what() << '\n';
+    return 1;
+  } catch (...) {
     return 1;
   }
   return 0;

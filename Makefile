@@ -92,11 +92,17 @@ WASM_TEST_DIR := tests/wasm
 CPP_PKG := fastloess-cpp
 CPP_DIR := bindings/cpp
 CPP_CARGO_TARGET :=
-CPP_LIBRARY_DIR := target/release
+# Use the dedicated release-c profile (panic=abort) so no GCC unwind symbols
+# end up in the static archive or DLL, making the artifact compatible with
+# MSVC, Clang, and GCC consumers without any MinGW runtime dependency.
+CPP_CARGO_PROFILE := --profile release-c
+CPP_LIBRARY_DIR := target/release-c
 
 ifeq ($(OS),Windows_NT)
-	CPP_CARGO_TARGET := --target x86_64-pc-windows-gnu
-	CPP_LIBRARY_DIR := target/x86_64-pc-windows-gnu/release
+	# Build with the MSVC Rust target so the output files (.lib / .dll.lib) are
+	# in MSVC format, readable by MSVC link.exe, Clang, and modern MinGW ld.
+	CPP_CARGO_TARGET := --target x86_64-pc-windows-msvc
+	CPP_LIBRARY_DIR := target/x86_64-pc-windows-msvc/release-c
 endif
 
 # Julia native library paths and symbol scanners
@@ -115,20 +121,24 @@ JL_SHARED_LIB_ABS := $(abspath $(JL_SHARED_LIB))
 
 ifeq ($(HOST_PLATFORM),windows)
 	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/fastloess_cpp.dll
-	CPP_TEST_LIB := $(CPP_LIBRARY_DIR)/libfastloess_cpp.a
+	# MSVC Rust target produces MSVC-format import/static libs (.lib)
+	CPP_TEST_LIB := $(CPP_LIBRARY_DIR)/fastloess_cpp.lib
 	CPP_EXPORT_SCAN := objdump -p $(CPP_SHARED_LIB)
-	CPP_TEST_BUILD := cmake --build .
-	CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./test_fastloess_suite.exe
+	CPP_CMAKE_GENERATOR :=
+	CPP_TEST_BUILD := cmake --build . --config Release
+	CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./Release/test_fastloess_suite.exe
 else ifeq ($(HOST_PLATFORM),macos)
 	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/libfastloess_cpp.dylib
 	CPP_TEST_LIB := $(CPP_SHARED_LIB)
 	CPP_EXPORT_SCAN := nm -gU $(CPP_SHARED_LIB)
+	CPP_CMAKE_GENERATOR :=
 	CPP_TEST_BUILD := make
 	CPP_TEST_RUN := ./test_fastloess_suite
 else
 	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/libfastloess_cpp.so
 	CPP_TEST_LIB := $(CPP_SHARED_LIB)
 	CPP_EXPORT_SCAN := nm -D $(CPP_SHARED_LIB)
+	CPP_CMAKE_GENERATOR :=
 	CPP_TEST_BUILD := make
 	CPP_TEST_RUN := ./test_fastloess_suite
 endif
@@ -137,11 +147,11 @@ CPP_LIBRARY_DIR_ABS := $(abspath $(CPP_LIBRARY_DIR))
 CPP_TEST_LIB_ABS := $(abspath $(CPP_TEST_LIB))
 
 ifeq ($(HOST_PLATFORM),windows)
-	CPP_EXAMPLE_RUN_ENV := PATH="target/release$(PATH_SEPARATOR)$$PATH"
+	CPP_EXAMPLE_RUN_ENV := PATH="$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH"
 else ifeq ($(HOST_PLATFORM),macos)
-	CPP_EXAMPLE_RUN_ENV := DYLD_LIBRARY_PATH=target/release
+	CPP_EXAMPLE_RUN_ENV := DYLD_LIBRARY_PATH=$(CPP_LIBRARY_DIR)
 else
-	CPP_EXAMPLE_RUN_ENV := LD_LIBRARY_PATH=target/release
+	CPP_EXAMPLE_RUN_ENV := LD_LIBRARY_PATH=$(CPP_LIBRARY_DIR)
 endif
 
 # Examples directory
@@ -777,7 +787,7 @@ _cpp_impl:
 	else \
 		echo "cppcheck not found. Skipping static analysis pass."; \
 	fi
-	@cargo build -q -p $(CPP_PKG) --release $(CPP_CARGO_TARGET)
+	@cargo build -q -p $(CPP_PKG) $(CPP_CARGO_PROFILE) $(CPP_CARGO_TARGET)
 	@echo "C header generated at $(CPP_DIR)/include/fastloess.h"
 	@echo "=============================================================================="
 	@echo "2b. cbindgen idempotency check..."
@@ -788,7 +798,7 @@ _cpp_impl:
 	fi
 	@cbindgen --config $(CPP_DIR)/cbindgen.toml --crate $(CPP_PKG) --output $(TEMP)/fastloess_new.h 2>/dev/null && \
 		diff -q $(CPP_DIR)/include/fastloess.h $(TEMP)/fastloess_new.h > /dev/null || \
-		(echo "Error: fastloess.h is stale — run 'cargo build -p $(CPP_PKG) --release $(CPP_CARGO_TARGET)' to regenerate"; exit 1)
+		(echo "Error: fastloess.h is stale — run 'cargo build -p $(CPP_PKG) $(CPP_CARGO_PROFILE) $(CPP_CARGO_TARGET)' to regenerate"; exit 1)
 	@echo "cbindgen header is up-to-date."
 	@echo "=============================================================================="
 	@echo "2c. Symbol export verification..."
@@ -805,7 +815,7 @@ _cpp_impl:
 	@echo "=============================================================================="
 	@rm -rf tests/cpp/build
 	@mkdir -p tests/cpp/build
-	@cd tests/cpp/build && cmake -DFASTLOESS_LIB="$(CPP_TEST_LIB_ABS)" -DFASTLOESS_LIB_DIR="$(CPP_LIBRARY_DIR_ABS)" .. && $(CPP_TEST_BUILD) && $(CPP_TEST_RUN)
+	@cd tests/cpp/build && cmake $(CPP_CMAKE_GENERATOR) -DFASTLOESS_LIB="$(CPP_TEST_LIB_ABS)" -DFASTLOESS_LIB_DIR="$(CPP_LIBRARY_DIR_ABS)" .. && $(CPP_TEST_BUILD) && $(CPP_TEST_RUN)
 	@echo "=============================================================================="
 	@echo "3b. Valgrind memory check..."
 	@echo "=============================================================================="
@@ -905,9 +915,9 @@ examples-cpp:
 	@echo "Running $(CPP_PKG) examples..."
 	@echo "=============================================================================="
 	@mkdir -p $(CPP_DIR)/bin
-	@g++ -O3 $(EXAMPLES_DIR)/cpp/batch_smoothing.cpp -o $(CPP_DIR)/bin/batch_smoothing -I$(CPP_DIR)/include -Ltarget/release -lfastloess_cpp -lpthread -ldl -lm
-	@g++ -O3 $(EXAMPLES_DIR)/cpp/streaming_smoothing.cpp -o $(CPP_DIR)/bin/streaming_smoothing -I$(CPP_DIR)/include -Ltarget/release -lfastloess_cpp -lpthread -ldl -lm
-	@g++ -O3 $(EXAMPLES_DIR)/cpp/online_smoothing.cpp -o $(CPP_DIR)/bin/online_smoothing -I$(CPP_DIR)/include -Ltarget/release -lfastloess_cpp -lpthread -ldl -lm
+	@g++ -O3 $(EXAMPLES_DIR)/cpp/batch_smoothing.cpp -o $(CPP_DIR)/bin/batch_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastloess_cpp -lpthread -ldl -lm
+	@g++ -O3 $(EXAMPLES_DIR)/cpp/streaming_smoothing.cpp -o $(CPP_DIR)/bin/streaming_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastloess_cpp -lpthread -ldl -lm
+	@g++ -O3 $(EXAMPLES_DIR)/cpp/online_smoothing.cpp -o $(CPP_DIR)/bin/online_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastloess_cpp -lpthread -ldl -lm
 	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/batch_smoothing
 	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/streaming_smoothing
 	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/online_smoothing

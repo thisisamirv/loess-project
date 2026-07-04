@@ -373,7 +373,7 @@ int main() {
     // 19. Expected<> error path: hasValue() / error()
     std::cout << "\n--- Expected<> Error Path ---\n";
     {
-      fastloess::LoessOptions err_opts;
+      const fastloess::LoessOptions err_opts;
       const std::vector<double> short_x = {1.0, 2.0, 3.0};
       const std::vector<double> short_y = {1.0, 2.0};
       auto err_exp = fastloess::Loess(err_opts).fit(short_x, short_y);

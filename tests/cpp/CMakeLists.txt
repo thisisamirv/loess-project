@@ -13,7 +13,7 @@ set(FASTLOESS_LIB
     "Path to the compiled fastloess C++ library"
 )
 set(FASTLOESS_LIB_DIR
-    "${CMAKE_SOURCE_DIR}/../../target/release"
+    "${CMAKE_SOURCE_DIR}/../../target/release-c"
     CACHE PATH
     "Directory containing the compiled fastloess C++ library"
 )
