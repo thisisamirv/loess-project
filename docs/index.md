@@ -7,7 +7,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 LOESS is a nonparametric regression method that fits smooth curves through scatter plots. At each point, it fits a weighted polynomial using nearby data, with weights decreasing smoothly with distance. This creates flexible, data-adaptive curves without assuming a global functional form.
 
-![LOESS Smoothing Concept](assets/diagrams/loess_smoothing_concept.svg)
+![LOESS Smoothing Concept](assets/diagrams/loess_concept.svg)
 
 **Key advantages:**
 

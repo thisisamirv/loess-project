@@ -20,6 +20,8 @@ graph LR
 | **Streaming** | Large files (>100K) | Chunked | Residuals, robustness |
 | **Online** | Real-time sensors | Fixed window | Incremental updates |
 
+![Adapter Comparison](../assets/diagrams/adapter_comparison.svg)
+
 ---
 
 ## Batch Adapter
@@ -31,6 +33,8 @@ Standard mode for complete datasets. **Supports all features.**
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
+
+![Gap Handling](../assets/diagrams/gap_handling.svg)
 
 ### Example
 
@@ -161,6 +165,8 @@ Process large datasets in chunks with configurable overlap.
 | `Right` | Keep right chunk values |
 | `Weighted` | Distance-weighted blend |
 
+![Merge Strategies](../assets/diagrams/merge_comparison.svg)
+
 ### Example
 
 === "R"
@@ -289,6 +295,8 @@ Incremental updates with a sliding window for real-time data.
 - Data arrives incrementally (sensors, streams)
 - Need real-time smoothed values
 - Fixed memory budget
+
+![Online Adapter](../assets/diagrams/online_comparison.svg)
 
 ### Parameters
 

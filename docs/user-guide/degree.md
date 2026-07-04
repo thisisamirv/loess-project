@@ -173,3 +173,24 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 | Clear peaks / valleys / inflections | `2` (with `fraction` ≥ 0.4) |
 | Boundary accuracy is critical | `1` or `2` (not `0`) |
 | Very small dataset (n < 50) | `1` |
+
+---
+
+## Higher Degree Effects
+
+![Higher Degree Comparison](../assets/diagrams/higher_degree_comparison.svg)
+
+---
+
+## Surface Mode
+
+The `surface_mode` parameter controls whether LOESS evaluates the local polynomial at every query point or at a sparser grid of vertices with Hermite cubic interpolation in between.
+
+| Mode | Behaviour | Speed | Accuracy |
+| --- | --- | --- | --- |
+| `Interpolation` (default) | Evaluate at anchor vertices, blend via Hermite cubic | Faster | Slight approximation |
+| `Direct` | Evaluate at every query point | Exact | Full precision |
+
+![Surface Mode Comparison](../assets/diagrams/surface_comparison.svg)
+
+![Degree × Interpolation](../assets/diagrams/degree_interpolation_comparison.svg)

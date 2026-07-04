@@ -546,7 +546,7 @@ See [Robustness](robustness.md) for detailed comparison.
 
 Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary.md) for a detailed comparison.
 
-![Boundary Policy](../assets/diagrams/boundary_handling.svg)
+![Boundary Policy](../assets/diagrams/boundary_comparison.svg)
 
 === "R / Python / Julia / Node.js / WebAssembly / C++"
 
@@ -612,6 +612,8 @@ For example:
 
 Method for estimating residual scale during robustness iterations. See [Scaling Methods](scaling.md) for a detailed comparison.
 
+![Scaling Methods](../assets/diagrams/scaling_comparison.svg)
+
 === "R / Python / Julia / Node.js / WebAssembly / C++"
 
 | Method | Description | Robustness |
@@ -668,6 +670,8 @@ For example:
 ### zero_weight_fallback
 
 Behavior when all neighborhood weights are zero.
+
+![Zero-Weight Fallback Policies](../assets/diagrams/zero_weight_comparison.svg)
 
 === "R / Python / Julia / Node.js / WebAssembly / C++"
 
@@ -730,8 +734,6 @@ For example:
 ### auto_converge
 
 Enable early stopping when robustness weights stabilize.
-
-![Auto-Convergence](../assets/diagrams/auto_converge.svg)
 
 === "R"
     ```r

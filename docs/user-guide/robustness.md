@@ -12,7 +12,7 @@ Standard LOESS can be biased by outliers. Robustness iterations downweight point
 4. Refit using combined distance × robustness weights
 5. Repeat steps 2–4
 
-![Robust vs Standard](../assets/diagrams/robust_vs_standard_loess.svg)
+![Robustness Methods](../assets/diagrams/robust_method_comparison.svg)
 
 ![Robustness Iterations](../assets/diagrams/robust_iter_comparison.svg)
 
@@ -281,10 +281,13 @@ Use robustness weights to identify potential outliers:
 
 Residuals are scaled before computing robustness weights. Two methods:
 
-| Method | Description | Robustness |
+| Method | Formula | Robustness |
 | --- | --- | --- |
-| **MAD** | Median Absolute Deviation | Very robust |
-| **MAR** | Mean Absolute Residual | Less robust, faster |
+| **MAD** | `median(\|r − median(r)\|)` | Very robust (default) |
+| **MAR** | `median(\|r\|)` | Robust, uncentered |
+| **Mean** | `mean(\|r\|)` | Less robust, fastest |
+
+![Scaling Methods Comparison](../assets/diagrams/scaling_comparison.svg)
 
 === "R"
     ```r
@@ -331,8 +334,6 @@ Residuals are scaled before computing robustness weights. Two methods:
 ---
 
 ## Auto-Convergence
-
-![Auto-Convergence](../assets/diagrams/auto_converge.svg)
 
 Stop iterations early when weights stabilize:
 

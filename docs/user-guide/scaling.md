@@ -19,6 +19,8 @@ where $B$ is the bisquare function and $\hat{\sigma}$ is the scale estimate. A l
 | `"mar"` | Mean of \|residuals\| | Moderate | Fast |
 | `"mean"` | Mean of residuals² / n | Least robust | Fastest |
 
+![Scaling Methods Comparison](../assets/diagrams/scaling_comparison.svg)
+
 ---
 
 ## MAD — Median Absolute Deviation (Default)

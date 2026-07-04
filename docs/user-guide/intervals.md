@@ -5,9 +5,7 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ## Overview
 
-![Intervals](../assets/diagrams/confidence_vs_prediction_intervals.svg)
-
-![Uncertainty Decomposition](../assets/diagrams/intervals_comparison.svg)
+![Confidence and Prediction Intervals](../assets/diagrams/intervals_comparison.svg)
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
