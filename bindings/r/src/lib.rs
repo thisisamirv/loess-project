@@ -13,11 +13,11 @@ type Result<T> = std::result::Result<T, Error>;
 
 use fastLoess::internals::api::{
     BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
-    ScalingMethod::{self, Mean, MAD, MAR},
+    ScalingMethod::{self, MAD, MAR, Mean},
     SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, Loess as LoessBuilder, LoessResult, Online, Streaming, LOOCV,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, Online, Streaming,
 };
 
 // ============================================================================
@@ -122,7 +122,10 @@ fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
         "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
         "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
         "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
-        _ => Err(Error::Other(format!("Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski", name))),
+        _ => Err(Error::Other(format!(
+            "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski",
+            name
+        ))),
     }
 }
 

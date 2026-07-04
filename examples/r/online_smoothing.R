@@ -23,7 +23,8 @@ example_1_basic_streaming <- function() {
     y <- c(3.1, 5.0, 7.2, 8.9, 11.1, 13.0, 15.2, 16.8, 19.1, 21.0)
 
     model <- OnlineLoess(fraction = 0.5, iterations = 2L,
-                         window_capacity = 5L, return_robustness_weights = FALSE)
+                         window_capacity = 5L,
+                         return_robustness_weights = FALSE)
     result <- model$add_points(x, y)
 
     cat(sprintf("  %8s %12s %12s\n", "X", "Y_obs", "Y_smooth"))
@@ -34,7 +35,7 @@ example_1_basic_streaming <- function() {
 }
 
 # ── Example 2: Real-Time Sensor Data Simulation ───────────────────────────────
-example_2_sensor_data_simulation <- function() {
+example_2_sensor_simulation <- function() {
     cat("Example 2: Real-Time Sensor Data Simulation\n")
     cat("  Simulating temperature sensor with noise...\n")
 
@@ -50,7 +51,7 @@ example_2_sensor_data_simulation <- function() {
     cat(sprintf("  %6s %12s %12s\n", "Hour", "Raw", "Smoothed"))
     for (i in seq_along(result$y)) {
         cat(sprintf("  %6.0f %10.2f degC %10.2f degC\n",
-            result$x[i], temp[i], result$y[i]))
+                    result$x[i], temp[i], result$y[i]))
     }
     cat("\n")
 }
@@ -67,30 +68,32 @@ example_3_outlier_handling <- function() {
                              robustness_method = method,
                              window_capacity = 6L)
         result <- model$add_points(x, y)
-        cat(sprintf("  %s: [%s]\n", method, paste(round(result$y, 1), collapse = ", ")))
+        cat(sprintf("  %s: [%s]\n", method,
+                    paste(round(result$y, 1), collapse = ", ")))
     }
     cat("\n")
 }
 
 # ── Example 4: Window Size Comparison ────────────────────────────────────────
-example_4_window_size_comparison <- function() {
+example_4_window_comparison <- function() {
     cat("Example 4: Window Size Comparison\n")
 
     x <- as.numeric(1:20)
     y <- 2 * x + sin(x * 0.5) * 3
 
     for (w in c(5L, 10L, 15L)) {
-        model <- OnlineLoess(fraction = 0.5, iterations = 2L, window_capacity = w)
+        model <- OnlineLoess(fraction = 0.5, iterations = 2L,
+                             window_capacity = w)
         result <- model$add_points(x, y)
         last5 <- tail(result$y, 5)
         cat(sprintf("  window_capacity=%d: last 5 = [%s]\n",
-            w, paste(round(last5, 2), collapse = ", ")))
+                    w, paste(round(last5, 2), collapse = ", ")))
     }
     cat("\n")
 }
 
 # ── Example 5: Memory-Bounded Processing ──────────────────────────────────────
-example_5_memory_bounded_processing <- function() {
+example_5_memory_bounded <- function() {
     cat("Example 5: Memory-Bounded Processing (Embedded Systems)\n")
 
     total <- 1000L
@@ -104,15 +107,16 @@ example_5_memory_bounded_processing <- function() {
     for (milestone in c(200L, 400L, 600L, 800L, 1000L)) {
         if (milestone <= n_out) {
             cat(sprintf("  Processed: %4d pts | smoothed=%.2f\n",
-                milestone, result$y[milestone]))
+                        milestone, result$y[milestone]))
         }
     }
-    cat(sprintf("  Total: %d, final smoothed: %.2f\n", n_out, tail(result$y, 1)))
+    cat(sprintf("  Total: %d, final smoothed: %.2f\n",
+                n_out, tail(result$y, 1)))
     cat("  Memory: constant (window=20)\n\n")
 }
 
 # ── Example 6: Sliding Window Behavior ───────────────────────────────────────
-example_6_sliding_window_behavior <- function() {
+example_6_sliding_window <- function() {
     cat("Example 6: Sliding Window Behavior\n")
 
     x <- c(1, 2, 3, 4, 5, 6, 7, 8)
@@ -121,14 +125,15 @@ example_6_sliding_window_behavior <- function() {
     model <- OnlineLoess(fraction = 0.6, iterations = 0L, window_capacity = 4L)
     result <- model$add_points(x, y)
 
-    cat(sprintf("  %4s %6s %8s %10s %-22s\n", "Pt", "X", "Y", "Smoothed", "Status"))
+    cat(sprintf("  %4s %6s %8s %10s %-22s\n",
+                "Pt", "X", "Y", "Smoothed", "Status"))
     for (i in seq_along(x)) {
         if (i <= length(result$y)) {
             cat(sprintf("  %4d %6.0f %8.0f %10.2f %-22s\n",
-                i, x[i], y[i], result$y[i], "Window full (sliding)"))
+                        i, x[i], y[i], result$y[i], "Window full (sliding)"))
         } else {
             cat(sprintf("  %4d %6.0f %8.0f %10s %-22s\n",
-                i, x[i], y[i], "-", sprintf("Filling (%d/4)", i)))
+                        i, x[i], y[i], "-", sprintf("Filling (%d/4)", i)))
         }
     }
     cat("  Output starts after window fills (4 pts), then slides.\n\n")
@@ -148,10 +153,10 @@ example_7_benchmark <- function() {
     elapsed_ms <- (proc.time()["elapsed"] - t0) * 1000
 
     cat(sprintf("  %d pts processed in %.2fms (window_capacity=10)\n\n",
-        length(result$y), elapsed_ms))
+                length(result$y), elapsed_ms))
 }
 
-# ── Example 8: Update Modes (Full vs Incremental) and min_points ───────────────
+# ── Example 8: Update Modes (Full vs Incremental) and min_points ──────────────
 example_8_update_modes <- function() {
     cat("Example 8: Update Modes (Full vs Incremental) and min_points\n")
 
@@ -165,7 +170,8 @@ example_8_update_modes <- function() {
             window_capacity = 15L
         )
         result <- model$add_points(x, y)
-        cat(sprintf("  %s: %d pts emitted (out of %d)\n", mode, length(result$y), length(x)))
+        cat(sprintf("  %s: %d pts emitted (out of %d)\n",
+                    mode, length(result$y), length(x)))
     }
 
     # Show fraction_used and iterations_used from the result
@@ -180,7 +186,7 @@ example_8_update_modes <- function() {
 }
 
 # ── Example 9: Advanced Online Options ────────────────────────────────────────
-example_9_advanced_online_options <- function() {
+example_9_online_options <- function() {
     cat("Example 9: Advanced Online Options\n")
 
     x <- as.numeric(0:29)
@@ -213,14 +219,14 @@ main <- function() {
     cat(strrep("=", 60), "\n\n")
 
     example_1_basic_streaming()
-    example_2_sensor_data_simulation()
+    example_2_sensor_simulation()
     example_3_outlier_handling()
-    example_4_window_size_comparison()
-    example_5_memory_bounded_processing()
-    example_6_sliding_window_behavior()
+    example_4_window_comparison()
+    example_5_memory_bounded()
+    example_6_sliding_window()
     example_7_benchmark()
     example_8_update_modes()
-    example_9_advanced_online_options()
+    example_9_online_options()
 
     cat("=== Online Smoothing Examples Complete ===\n")
 }

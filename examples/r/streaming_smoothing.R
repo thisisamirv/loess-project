@@ -40,12 +40,13 @@ process_all <- function(model, x, y, chunk_size, overlap) {
 }
 
 # ── Example 1: Basic Chunked Processing ──────────────────────────────────────
-example_1_basic_chunked_processing <- function() {
+example_1_basic_chunked <- function() {
     cat("Example 1: Basic Chunked Processing\n")
 
     n <- 50L
     d <- make_linear(n)
-    chunk_size <- 15L; overlap <- 5L
+    chunk_size <- 15L
+    overlap <- 5L
 
     model <- StreamingLoess(
         fraction = 0.5, iterations = 2L,
@@ -53,9 +54,11 @@ example_1_basic_chunked_processing <- function() {
         return_residuals = TRUE
     )
 
-    cat(sprintf("  Dataset: %d pts, chunk=%d, overlap=%d\n", n, chunk_size, overlap))
+    cat(sprintf("  Dataset: %d pts, chunk=%d, overlap=%d\n",
+                n, chunk_size, overlap))
 
-    result_x <- numeric(0); result_y <- numeric(0)
+    result_x <- numeric(0)
+    result_y <- numeric(0)
     ci <- 0L
     start <- 1L
     while (start + chunk_size - 1L <= n) {
@@ -65,21 +68,22 @@ example_1_basic_chunked_processing <- function() {
             result_x <- c(result_x, res$x)
             result_y <- c(result_y, res$y)
             cat(sprintf("  Chunk %d: %d pts (x: %.0f..%.0f)\n",
-                ci, length(res$x), res$x[1], res$x[length(res$x)]))
+                        ci, length(res$x), res$x[1], res$x[length(res$x)]))
         }
         ci <- ci + 1L
         start <- start + chunk_size - overlap
     }
     fin <- model$finalize()
     if (length(fin$x) > 0) {
-        result_x <- c(result_x, fin$x); result_y <- c(result_y, fin$y)
+        result_x <- c(result_x, fin$x)
+        result_y <- c(result_y, fin$y)
         cat(sprintf("  Finalize: %d remaining pts\n", length(fin$x)))
     }
     cat(sprintf("  Total: %d/%d\n\n", length(result_y), n))
 }
 
 # ── Example 2: Chunk Size Comparison ─────────────────────────────────────────
-example_2_chunk_size_comparison <- function() {
+example_2_chunk_comparison <- function() {
     cat("Example 2: Chunk Size Comparison\n")
 
     n <- 100L
@@ -96,18 +100,25 @@ example_2_chunk_size_comparison <- function() {
             fraction = 0.5, iterations = 1L,
             chunk_size = cfg$cs, overlap = cfg$ov
         )
-        chunks <- 0L; total <- 0L
+        chunks <- 0L
+        total <- 0L
         start <- 1L
         while (start + cfg$cs - 1L <= n) {
             end <- start + cfg$cs - 1L
             res <- model$process_chunk(d$x[start:end], d$y[start:end])
-            if (length(res$x) > 0) { chunks <- chunks + 1L; total <- total + length(res$x) }
+            if (length(res$x) > 0) {
+                chunks <- chunks + 1L
+                total <- total + length(res$x)
+            }
             start <- start + cfg$cs - cfg$ov
         }
         fin <- model$finalize()
-        if (length(fin$x) > 0) { chunks <- chunks + 1L; total <- total + length(fin$x) }
+        if (length(fin$x) > 0) {
+            chunks <- chunks + 1L
+            total <- total + length(fin$x)
+        }
         cat(sprintf("  %s (size=%d, overlap=%d): chunks=%d, total=%d\n",
-            cfg$label, cfg$cs, cfg$ov, chunks, total))
+                    cfg$label, cfg$cs, cfg$ov, chunks, total))
     }
     cat("\n")
 }
@@ -120,8 +131,11 @@ example_3_overlap_strategies <- function() {
     d <- make_linear(n)
     cs <- 40L
 
-    for (pair in list(c(0L, "No overlap"), c(10L, "10-pt overlap"), c(20L, "20-pt overlap"))) {
-        ov <- as.integer(pair[1]); label <- pair[2]
+    pairs <- list(c(0L, "No overlap"), c(10L, "10-pt overlap"),
+                  c(20L, "20-pt overlap"))
+    for (pair in pairs) {
+        ov <- as.integer(pair[1])
+        label <- pair[2]
         model <- StreamingLoess(fraction = 0.5, chunk_size = cs, overlap = ov)
         total <- 0L
         start <- 1L
@@ -138,26 +152,32 @@ example_3_overlap_strategies <- function() {
 }
 
 # ── Example 4: Large Dataset Processing ──────────────────────────────────────
-example_4_large_dataset_processing <- function() {
+example_4_large_dataset <- function() {
     cat("Example 4: Large Dataset Processing\n")
 
     n <- 10000L
     x <- as.numeric(0:(n - 1))
     y <- sin(x * 0.01) + x * 0.001
 
-    cs <- 500L; ov <- 50L
-    model <- StreamingLoess(fraction = 0.05, iterations = 2L, chunk_size = cs, overlap = ov)
+    cs <- 500L
+    ov <- 50L
+    model <- StreamingLoess(fraction = 0.05, iterations = 2L,
+                            chunk_size = cs, overlap = ov)
 
-    total <- 0L; step <- cs - ov; start <- 1L
+    total <- 0L
+    step <- cs - ov
+    start <- 1L
     while (start + cs - 1L <= n) {
         end <- start + cs - 1L
         res <- model$process_chunk(x[start:end], y[start:end])
         total <- total + length(res$x)
-        if (total > 0L && total %% 2000L < step) cat(sprintf("  Progress: ~%d pts smoothed\n", total))
+        if (total > 0L && total %% 2000L < step)
+            cat(sprintf("  Progress: ~%d pts smoothed\n", total))
         start <- start + step
     }
     total <- total + length(model$finalize()$x)
-    cat(sprintf("  Total: %d/%d, memory: constant (chunk=%d)\n\n", total, n, cs))
+    cat(sprintf("  Total: %d/%d, memory: constant (chunk=%d)\n\n",
+                total, n, cs))
 }
 
 # ── Example 5: Outlier Handling in Streaming Mode ─────────────────────────────
@@ -176,15 +196,18 @@ example_5_outlier_handling <- function() {
             chunk_size = 30L, overlap = 10L,
             return_residuals = TRUE
         )
-        large <- 0L; start <- 1L
+        large <- 0L
+        start <- 1L
         while (start + 29L <= n) {
             end <- start + 29L
             res <- model$process_chunk(x[start:end], y[start:end])
-            if (!is.null(res$residuals)) large <- large + sum(abs(res$residuals) > 10)
+            if (!is.null(res$residuals))
+                large <- large + sum(abs(res$residuals) > 10)
             start <- start + 20L
         }
         fin <- model$finalize()
-        if (!is.null(fin$residuals)) large <- large + sum(abs(fin$residuals) > 10)
+        if (!is.null(fin$residuals))
+            large <- large + sum(abs(fin$residuals) > 10)
         cat(sprintf("  %s: pts with |residual|>10: %d\n", method, large))
     }
     cat("\n")
@@ -195,7 +218,9 @@ example_6_file_simulation <- function() {
     cat("Example 6: File-Based Streaming Simulation\n")
     cat("  Simulating: input.csv -> Smooth -> output.csv\n")
 
-    total_lines <- 200L; cs <- 50L; ov <- 10L
+    total_lines <- 200L
+    cs <- 50L
+    ov <- 10L
     model <- StreamingLoess(
         fraction = 0.5, iterations = 2L, chunk_size = cs, overlap = ov,
         return_residuals = TRUE
@@ -209,11 +234,13 @@ example_6_file_simulation <- function() {
         xc <- as.numeric(start_line:end_line)
         yc <- 2 * xc + 1 + sin(xc * 0.1) * 3
 
-        cat(sprintf("  Reading chunk %d (lines %d..%d)\n", ci - 1L, start_line, end_line))
+        cat(sprintf("  Reading chunk %d (lines %d..%d)\n",
+                    ci - 1L, start_line, end_line))
         res <- model$process_chunk(xc, yc)
         if (length(res$x) > 0) {
             out_count <- out_count + length(res$x)
-            cat(sprintf("    -> Writing %d smoothed pts (total: %d)\n", length(res$x), out_count))
+            cat(sprintf("    -> Writing %d smoothed pts (total: %d)\n",
+                        length(res$x), out_count))
         }
     }
     fin <- model$finalize()
@@ -228,11 +255,15 @@ example_6_file_simulation <- function() {
 example_7_benchmark <- function() {
     cat("Example 7: Benchmark (Sequential Streaming)\n")
 
-    n <- 1000L; cs <- 100L; ov <- 10L
-    model <- StreamingLoess(fraction = 0.5, iterations = 3L, chunk_size = cs, overlap = ov)
+    n <- 1000L
+    cs <- 100L
+    ov <- 10L
+    model <- StreamingLoess(fraction = 0.5, iterations = 3L,
+                            chunk_size = cs, overlap = ov)
 
     t0 <- proc.time()["elapsed"]
-    total <- 0L; start <- 1L
+    total <- 0L
+    start <- 1L
     while (start + cs - 1L <= n) {
         end <- start + cs - 1L
         xc <- as.numeric((start - 1L):(end - 1L))
@@ -243,7 +274,8 @@ example_7_benchmark <- function() {
     total <- total + length(model$finalize()$x)
     elapsed_ms <- (proc.time()["elapsed"] - t0) * 1000
 
-    cat(sprintf("  %d pts in %.2fms (chunk=%d, overlap=%d)\n\n", total, elapsed_ms, cs, ov))
+    cat(sprintf("  %d pts in %.2fms (chunk=%d, overlap=%d)\n\n",
+                total, elapsed_ms, cs, ov))
 }
 
 # ── Example 8: Merge Strategies ──────────────────────────────────────────────
@@ -253,16 +285,19 @@ example_8_merge_strategies <- function() {
     n <- 50L
     d <- make_linear(n)
 
-    for (strategy in c("average", "weighted_average", "take_first", "take_last")) {
+    strategies <- c("average", "weighted_average", "take_first", "take_last")
+    for (strategy in strategies) {
         model <- StreamingLoess(
             fraction = 0.5, iterations = 2L,
             chunk_size = 20L, overlap = 5L,
             merge_strategy = strategy
         )
-        total <- 0L; start <- 1L
+        total <- 0L
+        start <- 1L
         while (start + 19L <= n) {
             end <- start + 19L
-            total <- total + length(model$process_chunk(d$x[start:end], d$y[start:end])$x)
+            res <- model$process_chunk(d$x[start:end], d$y[start:end])
+            total <- total + length(res$x)
             start <- start + 15L
         }
         total <- total + length(model$finalize()$x)
@@ -293,10 +328,12 @@ example_9_advanced_options <- function() {
         chunk_size = 20L, overlap = 5L
     )
 
-    total <- 0L; start <- 1L
+    total <- 0L
+    start <- 1L
     while (start + 19L <= n) {
         end <- start + 19L
-        total <- total + length(model$process_chunk(d$x[start:end], d$y[start:end])$x)
+        res <- model$process_chunk(d$x[start:end], d$y[start:end])
+        total <- total + length(res$x)
         start <- start + 15L
     }
     fin <- model$finalize()
@@ -307,11 +344,14 @@ example_9_advanced_options <- function() {
         cat(sprintf("  standard_errors[1]: %.4f\n", fin$standard_errors[1]))
     if (!is.null(fin$diagnostics)) {
         cat(sprintf("  diagnostics$rmse: %.3f\n", fin$diagnostics$rmse))
-        cat(sprintf("  diagnostics$r_squared: %.3f\n", fin$diagnostics$r_squared))
-        if (!is.nan(fin$diagnostics$aic)) cat(sprintf("  diagnostics$aic: %.3f\n", fin$diagnostics$aic))
+        cat(sprintf("  diagnostics$r_squared: %.3f\n",
+                    fin$diagnostics$r_squared))
+        if (!is.nan(fin$diagnostics$aic))
+            cat(sprintf("  diagnostics$aic: %.3f\n", fin$diagnostics$aic))
     }
     if (!is.null(fin$robustness_weights) && length(fin$robustness_weights) > 0)
-        cat(sprintf("  robustness_weights[1]: %.4f\n", fin$robustness_weights[1]))
+        cat(sprintf("  robustness_weights[1]: %.4f\n",
+                    fin$robustness_weights[1]))
     cat("\n")
 }
 
@@ -321,10 +361,10 @@ main <- function() {
     cat("rfastloess Streaming Smoothing - Comprehensive Examples\n")
     cat(strrep("=", 60), "\n\n")
 
-    example_1_basic_chunked_processing()
-    example_2_chunk_size_comparison()
+    example_1_basic_chunked()
+    example_2_chunk_comparison()
     example_3_overlap_strategies()
-    example_4_large_dataset_processing()
+    example_4_large_dataset()
     example_5_outlier_handling()
     example_6_file_simulation()
     example_7_benchmark()

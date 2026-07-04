@@ -123,7 +123,10 @@ test_that("OnlineLoess: zero_weight_fallback", {
     y <- sin(x / 10)
 
     for (zwf in c("use_local_mean", "return_original", "return_none")) {
-        ol <- OnlineLoess(fraction = 0.3, window_capacity = 20, zero_weight_fallback = zwf)
+        ol <- OnlineLoess(
+            fraction = 0.3, window_capacity = 20,
+            zero_weight_fallback = zwf
+        )
         r <- ol$add_points(x, y)
         expect_length(r$y, 50)
     }
@@ -143,7 +146,7 @@ test_that("OnlineLoess: degree, distance_metric, surface_mode, return_se", {
     expect_type(r, "list")
 })
 
-test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge, return_robustness_weights", {
+test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge", {
     x <- as.double(seq(0, 10, length.out = 30))
     y <- sin(x)
 

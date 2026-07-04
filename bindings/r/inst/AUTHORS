@@ -40,7 +40,7 @@ Package: extendr-macros (0.9.0)
 Authors: 
 License: MIT
 ----------------------------------------
-Package: fastLoess (1.1.2)
+Package: fastLoess (0.9.0)
 Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -56,7 +56,7 @@ Package: libm (0.2.16)
 Authors: Alex Crichton <alex@alexcrichton.com>, Amanieu d'Antras <amanieu@gmail.com>, Jorge Aparicio <japaricious@gmail.com>, Trevor Gross <tg@trevorgross.com>
 License: MIT
 ----------------------------------------
-Package: loess-rs (1.1.1)
+Package: loess-rs (0.9.0)
 Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -132,7 +132,7 @@ Package: readonly (0.2.13)
 Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: rfastloess (1.0.0)
+Package: rfastloess (0.9.0)
 Authors: Amir Valizadeh <thisisamirv@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------

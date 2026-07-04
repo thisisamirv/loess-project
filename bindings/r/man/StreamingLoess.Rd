@@ -15,7 +15,10 @@ StreamingLoess(
     boundary_policy = "extend",
     auto_converge = NULL,
     return_diagnostics = FALSE,
+    return_residuals = FALSE,
     return_robustness_weights = FALSE,
+    zero_weight_fallback = "use_local_mean",
+    merge_strategy = "weighted_average",
     parallel = TRUE,
     degree = "linear",
     dimensions = 1L,
@@ -46,7 +49,16 @@ StreamingLoess(
 
 \item{return_diagnostics}{Return fit metrics. Default: FALSE.}
 
+\item{return_residuals}{Return residuals. Default: FALSE.}
+
 \item{return_robustness_weights}{Return weights. Default: FALSE.}
+
+\item{zero_weight_fallback}{Fallback: "use_local_mean", "return_original",
+"return_none". Default: "use_local_mean".}
+
+\item{merge_strategy}{Strategy for merging overlapping chunk regions:
+"average", "weighted_average", "take_first", "take_last".
+Default: "weighted_average".}
 
 \item{parallel}{Enable parallel processing. Default: TRUE.}
 
@@ -55,8 +67,9 @@ Default: "linear".}
 
 \item{dimensions}{Number of predictor dimensions. Default: 1.}
 
-\item{distance_metric}{Distance metric: "normalized", "euclidean", etc.
-Default: "normalized".}
+\item{distance_metric}{Distance metric: "normalized", "euclidean",
+"manhattan", "chebyshev", "minkowski", "weighted".
+Use "minkowski:p" for a custom p value. Default: "normalized".}
 
 \item{surface_mode}{Surface mode: "interpolation" or "direct".
 Default: "interpolation".}

@@ -16,6 +16,7 @@ OnlineLoess(
     update_mode = "incremental",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
+    zero_weight_fallback = "use_local_mean",
     parallel = FALSE,
     degree = "linear",
     dimensions = 1L,
@@ -48,6 +49,9 @@ OnlineLoess(
 
 \item{return_robustness_weights}{Return weights. Default: FALSE.}
 
+\item{zero_weight_fallback}{Fallback: "use_local_mean", "return_original",
+"return_none". Default: "use_local_mean".}
+
 \item{parallel}{Enable parallel processing. Default: TRUE.}
 
 \item{degree}{Polynomial degree: "constant", "linear", "quadratic", etc.
@@ -55,8 +59,9 @@ Default: "linear".}
 
 \item{dimensions}{Number of predictor dimensions. Default: 1.}
 
-\item{distance_metric}{Distance metric: "normalized", "euclidean", etc.
-Default: "normalized".}
+\item{distance_metric}{Distance metric: "normalized", "euclidean",
+"manhattan", "chebyshev", "minkowski", "weighted".
+Use "minkowski:p" for a custom p value. Default: "normalized".}
 
 \item{surface_mode}{Surface mode: "interpolation" or "direct".
 Default: "interpolation".}

@@ -122,7 +122,8 @@ test_that("StreamingLoess: zero_weight_fallback", {
     x <- as.double(seq(0, 10, length.out = 200))
     y <- sin(x)
     result <- bulk_stream(x, y,
-        fraction = 0.3, chunk_size = 100, zero_weight_fallback = "return_original"
+        fraction = 0.3, chunk_size = 100,
+        zero_weight_fallback = "return_original"
     )
     expect_length(result$y, length(y))
 })
@@ -130,7 +131,10 @@ test_that("StreamingLoess: zero_weight_fallback", {
 test_that("StreamingLoess: return_residuals", {
     x <- as.double(seq(0, 10, length.out = 200))
     y <- sin(x)
-    sl <- StreamingLoess(fraction = 0.3, chunk_size = 100, return_residuals = TRUE)
+    sl <- StreamingLoess(
+        fraction = 0.3, chunk_size = 100,
+        return_residuals = TRUE
+    )
     sl$process_chunk(x, y)
     fin <- sl$finalize()
     expect_type(fin, "list")
@@ -147,7 +151,7 @@ test_that("StreamingLoess: degree, distance_metric, surface_mode, return_se", {
     expect_length(result$y, length(y))
 })
 
-test_that("StreamingLoess: scaling_method, boundary_policy, auto_converge, return_robustness_weights", {
+test_that("StreamingLoess: scaling_method, boundary_policy, auto_converge", {
     x <- as.double(seq(0, 10, length.out = 200))
     y <- sin(x)
     result <- bulk_stream(x, y,

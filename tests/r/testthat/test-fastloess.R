@@ -195,7 +195,7 @@ test_that("Loess parallel execution works", {
 
 # ---- Parameter coverage ----
 
-test_that("Loess: scaling_method, boundary_policy, zero_weight_fallback, auto_converge", {
+test_that("Loess: scaling_method, boundary_policy, zero_weight_fallback", {
     x <- as.double(1:5)
     y <- as.double(c(2, 4, 6, 8, 10))
 
@@ -223,7 +223,10 @@ test_that("Loess: degree, distance_metric, surface_mode", {
         r <- Loess(fraction = 0.9, degree = deg)$fit(x, y)
         expect_length(r$y, 5)
     }
-    for (dm in c("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:3")) {
+    for (dm in c(
+        "normalized", "euclidean", "manhattan",
+        "chebyshev", "minkowski:3"
+    )) {
         r <- Loess(fraction = 0.5, distance_metric = dm)$fit(x, y)
         expect_length(r$y, 5)
     }
@@ -235,7 +238,10 @@ test_that("Loess: return_se", {
     x <- as.double(seq(0, 10, length.out = 20))
     y <- sin(x)
 
-    r <- Loess(fraction = 0.5, return_se = TRUE, surface_mode = "direct")$fit(x, y)
+    r <- Loess(
+        fraction = 0.5, return_se = TRUE,
+        surface_mode = "direct"
+    )$fit(x, y)
     expect_true("enp" %in% names(r))
     expect_true("trace_hat" %in% names(r))
     expect_true("leverage" %in% names(r))
