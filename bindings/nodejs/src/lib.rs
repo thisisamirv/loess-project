@@ -125,7 +125,7 @@ fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
         _ => Err(Error::new(
             Status::InvalidArg,
             format!(
-                "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski",
+                "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski, weighted",
                 name
             ),
         )),
@@ -397,8 +397,10 @@ pub struct SmoothOptions {
     pub degree: Option<String>,
     /// Number of predictor dimensions. Default: 1.
     pub dimensions: Option<u32>,
-    /// Distance metric ("normalized", "euclidean", etc.). Default: "normalized".
+    /// Distance metric ("normalized", "euclidean", "weighted", etc.). Default: "normalized".
     pub distanceMetric: Option<String>,
+    /// Per-dimension weights for the "weighted" distance metric.
+    pub weightedMetricWeights: Option<Vec<f64>>,
     /// Surface mode ("interpolation" or "direct"). Default: "interpolation".
     pub surfaceMode: Option<String>,
     /// Compute hat-matrix statistics (enp, traceHat, etc.). Default: false.
@@ -503,7 +505,12 @@ impl Loess {
                 builder = builder.dimensions(dims as usize);
             }
             if let Some(dm) = &opts.distanceMetric {
-                builder = builder.distance_metric(parse_distance_metric(dm)?);
+                let metric = if dm.to_lowercase() == "weighted" {
+                    DistanceMetric::Weighted(opts.weightedMetricWeights.clone().unwrap_or_default())
+                } else {
+                    parse_distance_metric(dm)?
+                };
+                builder = builder.distance_metric(metric);
             }
             if let Some(sm) = &opts.surfaceMode {
                 builder = builder.surface_mode(parse_surface_mode(sm)?);
@@ -636,7 +643,12 @@ impl StreamingLoess {
                 builder = builder.dimensions(dims as usize);
             }
             if let Some(dm) = opts.distanceMetric {
-                builder = builder.distance_metric(parse_distance_metric(&dm)?);
+                let metric = if dm.to_lowercase() == "weighted" {
+                    DistanceMetric::Weighted(opts.weightedMetricWeights.clone().unwrap_or_default())
+                } else {
+                    parse_distance_metric(&dm)?
+                };
+                builder = builder.distance_metric(metric);
             }
             if let Some(sm) = opts.surfaceMode {
                 builder = builder.surface_mode(parse_surface_mode(&sm)?);
@@ -779,7 +791,11 @@ impl OnlineLoess {
                 builder = builder.dimensions(dimensions);
             }
             if let Some(dm_str) = &opts.distanceMetric {
-                distance_metric = parse_distance_metric(dm_str)?;
+                distance_metric = if dm_str.to_lowercase() == "weighted" {
+                    DistanceMetric::Weighted(opts.weightedMetricWeights.clone().unwrap_or_default())
+                } else {
+                    parse_distance_metric(dm_str)?
+                };
                 builder = builder.distance_metric(distance_metric.clone());
             }
             if let Some(sm) = &opts.surfaceMode {

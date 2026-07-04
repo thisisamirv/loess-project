@@ -677,10 +677,10 @@ fn example_9_advanced_options() -> Result<(), LoessError> {
     total += final_result.x.len();
     println!("  total points: {}", total);
 
-    if let Some(se) = &final_result.standard_errors {
-        if !se.is_empty() {
-            println!("  standard_errors[0]: {:.4}", se[0]);
-        }
+    if let Some(se) = &final_result.standard_errors
+        && !se.is_empty()
+    {
+        println!("  standard_errors[0]: {:.4}", se[0]);
     }
     if let Some(diag) = &final_result.diagnostics {
         println!("  diagnostics.rmse: {:.3}", diag.rmse);
@@ -689,10 +689,10 @@ fn example_9_advanced_options() -> Result<(), LoessError> {
             println!("  diagnostics.aic: {:.3}", aic);
         }
     }
-    if let Some(rw) = &final_result.robustness_weights {
-        if !rw.is_empty() {
-            println!("  robustness_weights[0]: {:.4}", rw[0]);
-        }
+    if let Some(rw) = &final_result.robustness_weights
+        && !rw.is_empty()
+    {
+        println!("  robustness_weights[0]: {:.4}", rw[0]);
     }
 
     println!();

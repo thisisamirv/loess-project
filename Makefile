@@ -27,16 +27,16 @@ PYTHON ?= python
 PYO3_PYTHON ?= $(PYTHON)
 NODE ?= node
 
-# lowess crate
+# loess-rs crate
 LOESS_PKG := loess-rs
 LOESS_DIR := crates/loess-rs
 LOESS_FEATURES := std dev
 LOESS_EXAMPLES := batch_smoothing online_smoothing streaming_smoothing
 
-# fastLowess crate
+# fastLoess crate
 FASTLOESS_PKG := fastLoess
 FASTLOESS_DIR := crates/fastLoess
-FASTLOESS_FEATURES := cpu dev
+FASTLOESS_FEATURES := dev
 FASTLOESS_EXAMPLES := fast_batch_smoothing fast_online_smoothing fast_streaming_smoothing
 
 # Python bindings
@@ -167,12 +167,12 @@ ifeq ($(OS),Windows_NT)
 endif
 
 # ==============================================================================
-# lowess crate
+# loess-rs crate
 # ==============================================================================
 ISOLATE ?= true
 all: ISOLATE := false
 
-lowess:
+loess-rs:
 	@if [ "$(ISOLATE)" = "true" ]; then \
 		$(PYTHON) dev/isolate_cargo.py crates/loess-rs -- "$(MAKE)" _loess_impl; \
 	else \
@@ -240,9 +240,9 @@ loess-clean:
 	@echo "$(LOESS_PKG) clean complete!"
 
 # ==============================================================================
-# fastLowess crate
+# fastLoess crate
 # ==============================================================================
-fastLowess:
+fastLoess:
 	@if [ "$(ISOLATE)" = "true" ]; then \
 		$(PYTHON) dev/isolate_cargo.py crates/fastLoess -- "$(MAKE)" _fastLoess_impl; \
 	else \
@@ -392,7 +392,7 @@ _r_impl:
 	@# Metadata sync disabled by user request
 	@# (Only cleaning up workspace/patch/vendor directives below)
 	@sed -i.bak '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
-	sed -i.bak '/^lowess = { path = "vendor\/lowess" }/d' $(R_DIR)/src/Cargo.toml; \
+	sed -i.bak '/^loess-rs = { path = "vendor\/loess-rs" }/d' $(R_DIR)/src/Cargo.toml; \
 	rm -f $(R_DIR)/src/Cargo.toml.bak; \
 	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
 	echo "" >> $(R_DIR)/src/Cargo.toml
@@ -552,7 +552,7 @@ _julia_impl:
 	CURRENT=$$(grep "^version =" "$$PROJECT_TOML" | cut -d"\"" -f2); \
 	julia -e "using TOML; path = \"$$PROJECT_TOML\"; p = TOML.parsefile(path); if haskey(get(p, \"compat\", Dict()), \"fastloess_jll\"); p[\"compat\"][\"fastloess_jll\"] = \"$$LATEST, $$CURRENT\"; open(path, \"w\") do io; TOML.print(io, p); end; end"; \
 	echo "Modified $$PROJECT_TOML (fastloess_jll = \"$$LATEST, $$CURRENT\") using TOML parser."; \
-	$(MAKE) _julia_checks_internal
+	"$(MAKE)" _julia_checks_internal
 
 _julia_checks_internal:
 	@echo "=============================================================================="
@@ -951,16 +951,16 @@ docs-clean:
 # ==============================================================================
 # All targets
 # ==============================================================================
-all: lowess fastLowess python r julia nodejs wasm cpp check-msrv
+all: loess-rs fastLoess python r julia nodejs wasm cpp check-msrv
 	@echo "All checks completed successfully!"
 
-all-coverage: loess-coverage fastLoess-coverage python-coverage r-coverage
+all-coverage: loess-rs-coverage fastLoess-coverage python-coverage r-coverage
 	@echo "All coverage completed!"
 
-all-clean: r-clean loess-clean fastLoess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean
+all-clean: r-clean loess-rs-clean fastLoess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean
 	@echo "Cleaning project root..."
 	@cargo clean
 	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLoess/target crates/loess-rs/target .vscode tests/.pytest_cache local_*.tar.gz bindings/r/.r-lib bindings/r/docs
 	@echo "All clean completed!"
 
-.PHONY: lowess loess-coverage loess-clean fastLowess fastLoess-coverage fastLoess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean examples examples-loess examples-fastLoess examples-python examples-r examples-julia examples-nodejs examples-cpp
+.PHONY: loess-rs loess-rs-coverage loess-rs-clean fastLoess fastLoess-coverage fastLoess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean examples examples-loess examples-fastLoess examples-python examples-r examples-julia examples-nodejs examples-cpp

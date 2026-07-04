@@ -140,8 +140,10 @@ export interface SmoothOptions {
   degree?: string
   /** Number of predictor dimensions. Default: 1. */
   dimensions?: number
-  /** Distance metric ("normalized", "euclidean", etc.). Default: "normalized". */
+  /** Distance metric ("normalized", "euclidean", "weighted", etc.). Default: "normalized". */
   distanceMetric?: string
+  /** Per-dimension weights for the "weighted" distance metric. */
+  weightedMetricWeights?: Array<number>
   /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
   surfaceMode?: string
   /** Compute hat-matrix statistics (enp, traceHat, etc.). Default: false. */

@@ -89,7 +89,7 @@ def isolate_members(keep_member_key):
                 new_lines.append(line)
                 continue
 
-            # This is a member line (e.g. "crates/lowess",)
+            # This is a member line (e.g. "crates/loess-rs",)
             # We extracting the string inside quotes
             match = re.search(r'"([^"]+)"', stripped)
             if match:
