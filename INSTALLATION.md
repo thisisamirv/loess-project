@@ -49,7 +49,7 @@ conda install -c conda-forge fastloess
 
 ```toml
 [dependencies]
-loess-rs = "1.1"
+loess-rs = "*"
 ```
 
 # Rust (fastLoess, parallel)
@@ -58,7 +58,7 @@ loess-rs = "1.1"
 
 ```toml
 [dependencies]
-fastLoess = { version = "1.1", features = ["dev"] }
+fastLoess = { version = "*", features = ["dev"] }
 ```
 
 # Julia

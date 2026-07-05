@@ -116,14 +116,14 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 
         ```toml
         [dependencies]
-        loess-rs = "0.99"
+        loess-rs = "*"
         ```
 
     === "fastLoess (parallel)"
 
         ```toml
         [dependencies]
-        fastLoess = { version = "0.99", features = ["dev"] }
+        fastLoess = { version = "*", features = ["dev"] }
         ```
 
 === "Julia"
