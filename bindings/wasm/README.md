@@ -57,12 +57,12 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 ## LOESS vs. LOESS
 
-| Feature               | LOESS (This Crate)                | LOESS                          |
-|-----------------------|-----------------------------------|--------------------------------|
-| **Polynomial Degree** | Linear, Quadratic, Cubic, Quartic | Linear (Degree 1)              |
-| **Dimensions**        | Multivariate (n-D support)        | Univariate (1-D only)          |
-| **Flexibility**       | High (Distance metrics)           | Standard                       |
-| **Complexity**        | Higher (Matrix inversion)         | Lower (Weighted average/slope) |
+| Feature | LOESS (This Crate) | LOESS |
+| --- | --- | --- |
+| **Polynomial Degree** | Linear, Quadratic, Cubic, Quartic | Linear (Degree 1) |
+| **Dimensions** | Multivariate (n-D support) | Univariate (1-D only) |
+| **Flexibility** | High (Distance metrics) | Standard |
+| **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
 > [!TIP]
 > **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
@@ -137,11 +137,11 @@ A variety of features, supporting a range of use cases:
 
 All implementations are **numerical twins** of R's `loess`:
 
-| Aspect          | Status         | Details                                       |
-|-----------------|----------------|-----------------------------------------------|
-| **Accuracy**    | ✅ EXACT MATCH | Max diff < 1e-12 across all scenarios         |
-| **Consistency** | ✅ PERFECT     | Multiple scenarios pass with strict tolerance |
-| **Robustness**  | ✅ VERIFIED    | Robust smoothing matches R exactly            |
+| Aspect | Status | Details |
+| --- | --- | --- |
+| **Accuracy** | ✅ EXACT MATCH | Max diff < 1e-12 across all scenarios |
+| **Consistency** | ✅ PERFECT | Multiple scenarios pass with strict tolerance |
+| **Robustness** | ✅ VERIFIED | Robust smoothing matches R exactly |
 
 ## API Reference
 
