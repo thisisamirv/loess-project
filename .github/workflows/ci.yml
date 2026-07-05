@@ -82,12 +82,12 @@ jobs:
       # ========================================================================
       - name: "Rust: Format Check"
         run: |
-          cargo fmt -p loess --all -- --check
+          cargo fmt -p loess-rs --all -- --check
           cargo fmt -p fastLoess --all -- --check
 
       - name: "Rust: Clippy"
         run: |
-          cargo clippy -p loess --all-targets -- -D warnings
+          cargo clippy -p loess-rs --all-targets -- -D warnings
           cargo clippy -p fastLoess --all-targets --features cpu -- -D warnings
 
       - name: "Rust: Lowess Tests"
@@ -109,7 +109,7 @@ jobs:
 
       - name: "Rust: Documentation"
         run: |
-          cargo doc -p loess --no-deps
+          cargo doc -p loess-rs --no-deps
           cargo doc -p fastLoess --no-deps --features cpu
         env:
           RUSTDOCFLAGS: -D warnings
