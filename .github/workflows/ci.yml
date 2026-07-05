@@ -318,6 +318,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libfontconfig1-dev libharfbuzz-dev libfribidi-dev libfreetype6-dev libpng-dev libtiff5-dev libjpeg-dev libprotobuf-dev protobuf-compiler libuv1-dev libgit2-dev libssh2-1-dev libmagick++-dev
 
+      - name: Suppress Third-party Compiler Warnings
+        shell: bash
+        run: |
+          echo "CFLAGS=${CFLAGS:+$CFLAGS }-w"     >> "$GITHUB_ENV"
+          echo "CXXFLAGS=${CXXFLAGS:+$CXXFLAGS }-w" >> "$GITHUB_ENV"
+          mkdir -p ~/.R
+          echo "CFLAGS   += -w" >> ~/.R/Makevars
+          echo "CXXFLAGS += -w" >> ~/.R/Makevars
+
       - name: "make all"
         shell: bash
         env:
