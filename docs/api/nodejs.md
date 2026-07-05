@@ -99,6 +99,11 @@ const result = online.addPoints(x, y);
 | `dimensions` | `number` | `1` | Number of predictor dimensions |
 | `distanceMetric` | `string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `surfaceMode` | `string` | `"interpolation"` | Surface computation mode |
+| `weightedMetricWeights` | `number[]` | `null` | Per-dimension weights (used when `distanceMetric = "weighted"`) |
+| `cell` | `number` | `null` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
+| `interpolationVertices` | `number` | `null` | Number of interpolation vertices |
+| `boundaryDegreeFallback` | `boolean` | `null` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `cvSeed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
 | `cvFractions` | `number[]` | `null` | Fractions to test for cross-validation |
 | `cvMethod` | `string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
 | `cvK` | `number` | `5` | Number of folds for k-fold CV |
@@ -210,6 +215,7 @@ const result = online.addPoints(x, y);
 * `"manhattan"`
 * `"chebyshev"`
 * `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
+* `"weighted"` (set `weightedMetricWeights` for per-dimension scaling)
 
 ### Surface Modes
 

@@ -99,6 +99,10 @@ result = online.add_points(x, y)
 | `surface_mode` | `str` | `"interpolation"` | Surface computation mode |
 | `minkowski_p` | `float` | `2.0` | Minkowski exponent (used when `distance_metric="minkowski"`) |
 | `weighted_metric_weights` | `list[float]` | `None` | Per-dimension weights (used when `distance_metric="weighted"`) |
+| `cell` | `float` | `None` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
+| `interpolation_vertices` | `int` | `None` | Number of interpolation vertices |
+| `boundary_degree_fallback` | `bool` | `None` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `cv_seed` | `int` | `None` | Random seed for cross-validation shuffling (Batch only) |
 | `cv_fractions` | `list[float]` | `None` | Fractions to test for cross-validation |
 | `cv_method` | `str` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
 | `cv_k` | `int` | `5` | Number of folds for k-fold CV |

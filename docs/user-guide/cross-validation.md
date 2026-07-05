@@ -218,18 +218,29 @@ Set a seed for reproducible fold assignments:
     result = fit(Loess(
         cv_method="kfold",
         cv_k=5,
-        cv_fractions=[0.3, 0.5, 0.7]
+        cv_fractions=[0.3, 0.5, 0.7],
+        cv_seed=42
     ), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    // Support coming soon.
+    const result = new Loess({
+        cvMethod: "kfold",
+        cvK: 5,
+        cvFractions: [0.3, 0.5, 0.7],
+        cvSeed: 42
+    }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    // Support coming soon.
+    const result = smooth(x, y, {
+        cvMethod: "kfold",
+        cvK: 5,
+        cvFractions: [0.3, 0.5, 0.7],
+        cvSeed: 42
+    });
     ```
 
 === "C++"
@@ -240,7 +251,7 @@ Set a seed for reproducible fold assignments:
     opts.cv_fractions = {0.3, 0.5, 0.7};
     opts.cv_method = "kfold";
     opts.cv_k = 5;
-    // Note: cv_seed is not yet supported in the C++ binding
+    opts.cv_seed = 42;
 
     fastloess::Loess model(opts);
     auto result = model.fit(x, y).value();

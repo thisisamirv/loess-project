@@ -97,6 +97,11 @@ Expected<LoessResult> addPoints(const std::vector<double> &x, const std::vector<
 | `dimensions` | `int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `surface_mode` | `std::string` | `"interpolation"` | Surface computation mode |
+| `weighted_metric_weights` | `std::vector<double>` | `{}` | Per-dimension weights (used when `distance_metric = "weighted"`) |
+| `cell` | `double` | `NaN` | Cell size for interpolation grid (NaN to use default; smaller → more vertices, higher accuracy) |
+| `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
+| `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = off, 0 = false, 1 = true) |
+| `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (Batch only; 0 = random) |
 | `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation |
 | `cv_method` | `std::string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
 | `cv_k` | `int` | `5` | Number of folds for k-fold CV |
@@ -212,6 +217,7 @@ All accessors are const methods (not public fields):
 * `"manhattan"`
 * `"chebyshev"`
 * `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
+* `"weighted"` (set `weighted_metric_weights` for per-dimension scaling)
 
 ### Surface Modes
 

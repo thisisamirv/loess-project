@@ -64,9 +64,9 @@ Install the LOESS library for your preferred language.
 
     === "Feature Flags"
 
-| Crate | Feature | Description |
-| --- | --- | --- |
-| `loess-rs` | `std` | Enable standard library (default) |
+        | Crate | Feature | Description |
+        | --- | --- | --- |
+        | `loess-rs` | `std` | Enable standard library (default) |
 
 === "Julia"
 

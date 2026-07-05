@@ -102,7 +102,10 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
 | `distance_metric(...)` | `DistanceMetric<T>` | `Normalized` | Distance metric enum |
 | `surface_mode(...)` | `SurfaceMode` | `Interpolation` | Surface computation mode enum |
-| `cross_validate(...)` | `impl CrossValidation` | disabled | CV strategy: `KFold(k, &fractions)` or `LOOCV(&fractions)` |
+| `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
+| `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
+| `boundary_degree_fallback(bool)` | `bool` | disabled | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `cross_validate(...)` | `impl CrossValidation` | disabled | CV strategy: `KFold { k, fractions, seed }` or `LOOCV { fractions }` |
 
 ### Streaming Options
 
@@ -198,6 +201,15 @@ These chained methods configure the builder. They correspond to the "Options Str
 * `ReturnOriginal`
 * `ReturnNone`
 
+### DistanceMetric\<T\>
+
+* `Normalized` (default — scales each dimension by its range)
+* `Euclidean`
+* `Manhattan`
+* `Chebyshev`
+* `Minkowski(T)` — weighted p-norm; use e.g. `Minkowski(3.0)` for a custom p value
+* `Weighted(Vec<T>)` — weighted Euclidean distance; provide a `Vec` of per-dimension scaling weights
+
 ### PolynomialDegree
 
 * `Constant` (degree 0)
@@ -205,6 +217,11 @@ These chained methods configure the builder. They correspond to the "Options Str
 * `Quadratic` (degree 2)
 * `Cubic` (degree 3)
 * `Quartic` (degree 4)
+
+### SurfaceMode
+
+* `Interpolation` (default — faster, uses a spatial grid)
+* `Direct` (fits every point exactly; slower but more accurate)
 
 ### DistanceMetric
 
@@ -214,11 +231,6 @@ These chained methods configure the builder. They correspond to the "Options Str
 * `Chebyshev`
 * `Minkowski(T)` (custom exponent)
 * `Weighted(Vec<T>)` (per-dimension scale weights)
-
-### SurfaceMode
-
-* `Interpolation` (default — faster, uses a spatial grid)
-* `Direct` (fits every point exactly; slower but more accurate)
 
 ### MergeStrategy
 

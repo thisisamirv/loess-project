@@ -99,6 +99,11 @@ result <- online$add_points(x, y)
 | `dimensions` | `integer` | `1L` | Number of predictor dimensions |
 | `distance_metric` | `character` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `surface_mode` | `character` | `"interpolation"` | Surface computation mode |
+| `weighted_metric_weights` | `numeric` | `NULL` | Per-dimension weights (used when `distance_metric = "weighted"`) |
+| `cell` | `numeric` | `NULL` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
+| `interpolation_vertices` | `integer` | `NULL` | Number of interpolation vertices |
+| `boundary_degree_fallback` | `logical` | `NULL` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `cv_seed` | `integer` | `NULL` | Random seed for cross-validation shuffling (Batch only) |
 | `cv_fractions` | `numeric` | `NULL` | Fractions to test for cross-validation |
 | `cv_method` | `character` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
 | `cv_k` | `integer` | `5L` | Number of folds for k-fold CV |
@@ -214,6 +219,7 @@ An S3 list with class `"LoessResult"` containing:
 * `"manhattan"`
 * `"chebyshev"`
 * `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
+* `"weighted"` (set `weighted_metric_weights` for per-dimension scaling)
 
 ### Surface Modes
 

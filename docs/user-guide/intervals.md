@@ -7,6 +7,9 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ![Confidence and Prediction Intervals](../assets/diagrams/intervals_comparison.svg)
 
+!!! note "Adapter support"
+    Confidence and prediction intervals are available in **all three adapters**: Batch, Streaming, and Online.
+
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
 | **Confidence** | Uncertainty in mean curve | Narrow | Where is the true trend? |

@@ -23,17 +23,23 @@ Complete reference for all LOESS configuration options.
     | **custom_weights** | NULL | positive numeric | Per-observation weights | Batch |
     | **return_residuals** | FALSE | logical | Include residuals | All |
     | **return_robustness_weights** | FALSE | logical | Include weights | All |
-    | **return_diagnostics** | FALSE | logical | Include metrics | Batch, Streaming |
-    | **confidence_intervals** | NULL | (0, 1) | CI level | Batch |
-    | **prediction_intervals** | NULL | (0, 1) | PI level | Batch |
+    | **return_diagnostics** | FALSE | logical | Include metrics | All |
+    | **confidence_intervals** | NULL | (0, 1) | CI level | All |
+    | **prediction_intervals** | NULL | (0, 1) | PI level | All |
+    | **weighted_metric_weights** | NULL | numeric | Per-dimension distance weights | All |
+    | **cell** | NULL | (0, ∞) | Interpolation cell size | All |
+    | **interpolation_vertices** | NULL | integer | Interpolation grid vertices | All |
+    | **boundary_degree_fallback** | NULL | logical | Degree fallback at boundaries | All |
     | **cv_method** | NULL | method | Auto-select fraction | Batch |
+    | **cv_k** | 5L | [2, ∞) | K-fold count | Batch |
+    | **cv_fractions** | NULL | numeric | Fractions to evaluate | Batch |
+    | **cv_seed** | NULL | integer | CV fold randomization seed | Batch |
     | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
     | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
     | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
     | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
     | **min_points** | 2 | [2, window] | Min before output | Online |
     | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
-
 === "Python"
 
     | Parameter | Default | Range/Options | Description | Adapter |
@@ -52,17 +58,23 @@ Complete reference for all LOESS configuration options.
     | **custom_weights** | None | positive float | Per-observation weights | Batch |
     | **return_residuals** | False | bool | Include residuals | All |
     | **return_robustness_weights** | False | bool | Include weights | All |
-    | **return_diagnostics** | False | bool | Include metrics | Batch, Streaming |
-    | **confidence_intervals** | None | (0, 1) | CI level | Batch |
-    | **prediction_intervals** | None | (0, 1) | PI level | Batch |
+    | **return_diagnostics** | False | bool | Include metrics | All |
+    | **confidence_intervals** | None | (0, 1) | CI level | All |
+    | **prediction_intervals** | None | (0, 1) | PI level | All |
+    | **weighted_metric_weights** | None | list[float] | Per-dimension distance weights | All |
+    | **cell** | None | (0, ∞) | Interpolation cell size | All |
+    | **interpolation_vertices** | None | int | Interpolation grid vertices | All |
+    | **boundary_degree_fallback** | None | bool | Degree fallback at boundaries | All |
     | **cv_method** | None | method | Auto-select fraction | Batch |
+    | **cv_k** | 5 | [2, ∞) | K-fold count | Batch |
+    | **cv_fractions** | None | list[float] | Fractions to evaluate | Batch |
+    | **cv_seed** | None | int | CV fold randomization seed | Batch |
     | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
     | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
     | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
     | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
     | **min_points** | 2 | [2, window] | Min before output | Online |
     | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
-
 === "Rust"
 
     | Parameter | Default | Range/Options | Description | Adapter |
@@ -81,17 +93,20 @@ Complete reference for all LOESS configuration options.
     | **custom_weights** | — | `Vec<T>` | Per-observation weights | Batch |
     | **return_residuals** | false | bool | Include residuals | All |
     | **return_robustness_weights** | false | bool | Include weights | All |
-    | **return_diagnostics** | false | bool | Include metrics | Batch, Streaming |
-    | **confidence_intervals** | None | (0, 1) | CI level | Batch |
-    | **prediction_intervals** | None | (0, 1) | PI level | Batch |
-    | **cross_validate** | None | method | Auto-select fraction | Batch |
+    | **return_diagnostics** | false | bool | Include metrics | All |
+    | **confidence_intervals** | None | (0, 1) | CI level | All |
+    | **prediction_intervals** | None | (0, 1) | PI level | All |
+    | **distance_metric** | `Normalized` | enum | Distance metric (use `Weighted(weights)` for per-dim) | All |
+    | **cell** | — | `T: Float` | Interpolation cell size | All |
+    | **interpolation_vertices** | — | `usize` | Interpolation grid vertices | All |
+    | **boundary_degree_fallback** | — | `bool` | Degree fallback at boundaries | All |
+    | **cross_validate** | None | method | Auto-select fraction (`KFold` / `LOOCV` both accept `.seed()`) | Batch |
     | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
     | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
     | **merge_strategy** | `WeightedAverage` | 4 options | Merge overlaps | Streaming |
     | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
     | **min_points** | 2 | [2, window] | Min before output | Online |
     | **update_mode** | `Incremental` | 2 options | Update strategy | Online |
-
 === "Julia"
 
     | Parameter | Default | Range/Options | Description | Adapter |
@@ -110,17 +125,23 @@ Complete reference for all LOESS configuration options.
     | **custom_weights** | `nothing` | positive float | Per-observation weights | Batch |
     | **return_residuals** | `false` | bool | Include residuals | All |
     | **return_robustness_weights** | `false` | bool | Include weights | All |
-    | **return_diagnostics** | `false` | bool | Include metrics | Batch, Streaming |
-    | **confidence_intervals** | `nothing` | (0, 1) | CI level | Batch |
-    | **prediction_intervals** | `nothing` | (0, 1) | PI level | Batch |
+    | **return_diagnostics** | `false` | bool | Include metrics | All |
+    | **confidence_intervals** | `nothing` | (0, 1) | CI level | All |
+    | **prediction_intervals** | `nothing` | (0, 1) | PI level | All |
+    | **weighted_metric_weights** | `nothing` | `Vector{Float64}` | Per-dimension distance weights | All |
+    | **cell** | `nothing` | (0, ∞) | Interpolation cell size | All |
+    | **interpolation_vertices** | `nothing` | `Int` | Interpolation grid vertices | All |
+    | **boundary_degree_fallback** | `nothing` | `Bool` | Degree fallback at boundaries | All |
     | **cv_method** | `nothing` | method | Auto-select fraction | Batch |
+    | **cv_k** | 5 | [2, ∞) | K-fold count | Batch |
+    | **cv_fractions** | `nothing` | `Vector{Float64}` | Fractions to evaluate | Batch |
+    | **cv_seed** | `nothing` | `Int` | CV fold randomization seed | Batch |
     | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
     | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
     | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
     | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
     | **min_points** | 2 | [2, window] | Min before output | Online |
     | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
-
 === "Node.js"
 
     | Parameter | Default | Range/Options | Description | Adapter |
@@ -139,16 +160,23 @@ Complete reference for all LOESS configuration options.
     | **customWeights** | null | positive number | Per-observation weights | Batch |
     | **returnResiduals** | false | bool | Include residuals | All |
     | **returnRobustnessWeights** | false | bool | Include weights | All |
-    | **returnDiagnostics** | false | bool | Include metrics | Batch, Streaming |
-    | **confidenceIntervals** | null | (0, 1) | CI level | Batch |
-    | **predictionIntervals** | null | (0, 1) | PI level | Batch |
+    | **returnDiagnostics** | false | bool | Include metrics | All |
+    | **confidenceIntervals** | null | (0, 1) | CI level | All |
+    | **predictionIntervals** | null | (0, 1) | PI level | All |
+    | **weightedMetricWeights** | null | number[] | Per-dimension distance weights | All |
+    | **cell** | null | (0, ∞) | Interpolation cell size | All |
+    | **interpolationVertices** | null | number | Interpolation grid vertices | All |
+    | **boundaryDegreeFallback** | null | boolean | Degree fallback at boundaries | All |
+    | **cvMethod** | null | method | Auto-select fraction | Batch |
+    | **cvK** | 5 | [2, ∞) | K-fold count | Batch |
+    | **cvFractions** | null | number[] | Fractions to evaluate | Batch |
+    | **cvSeed** | null | number | CV fold randomization seed | Batch |
     | **chunkSize** | 5000 | [10, ∞) | Points per chunk | Streaming |
     | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
     | **mergeStrategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
     | **windowCapacity** | 1000 | [3, ∞) | Max window size | Online |
     | **minPoints** | 2 | [2, window] | Min before output | Online |
     | **updateMode** | `"incremental"` | 2 options | Update strategy | Online |
-
 === "WebAssembly"
 
     | Parameter | Default | Range/Options | Description | Adapter |
@@ -167,16 +195,23 @@ Complete reference for all LOESS configuration options.
     | **customWeights** | null | positive number | Per-observation weights | Batch |
     | **returnResiduals** | false | bool | Include residuals | All |
     | **returnRobustnessWeights** | false | bool | Include weights | All |
-    | **returnDiagnostics** | false | bool | Include metrics | Batch, Streaming |
-    | **confidenceIntervals** | null | (0, 1) | CI level | Batch |
-    | **predictionIntervals** | null | (0, 1) | PI level | Batch |
+    | **returnDiagnostics** | false | bool | Include metrics | All |
+    | **confidenceIntervals** | null | (0, 1) | CI level | All |
+    | **predictionIntervals** | null | (0, 1) | PI level | All |
+    | **weightedMetricWeights** | null | number[] | Per-dimension distance weights | All |
+    | **cell** | null | (0, ∞) | Interpolation cell size | All |
+    | **interpolationVertices** | null | number | Interpolation grid vertices | All |
+    | **boundaryDegreeFallback** | null | boolean | Degree fallback at boundaries | All |
+    | **cvMethod** | null | method | Auto-select fraction | Batch |
+    | **cvK** | 5 | [2, ∞) | K-fold count | Batch |
+    | **cvFractions** | null | number[] | Fractions to evaluate | Batch |
+    | **cvSeed** | null | number | CV fold randomization seed | Batch |
     | **chunkSize** | 5000 | [10, ∞) | Points per chunk | Streaming |
     | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
     | **mergeStrategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
     | **windowCapacity** | 1000 | [3, ∞) | Max window size | Online |
     | **minPoints** | 2 | [2, window] | Min before output | Online |
     | **updateMode** | `"incremental"` | 2 options | Update strategy | Online |
-
 === "C++"
 
     | Parameter | Default | Range/Options | Description | Adapter |
@@ -195,9 +230,17 @@ Complete reference for all LOESS configuration options.
     | **custom_weights** | {} | positive double | Per-observation weights | Batch |
     | **return_residuals** | false | bool | Include residuals | All |
     | **return_robustness_weights** | false | bool | Include weights | All |
-    | **return_diagnostics** | false | bool | Include metrics | Batch, Streaming |
-    | **confidence_intervals** | NAN | (0, 1) | CI level | Batch |
-    | **prediction_intervals** | NAN | (0, 1) | PI level | Batch |
+    | **return_diagnostics** | false | bool | Include metrics | All |
+    | **confidence_intervals** | NAN | (0, 1) | CI level | All |
+    | **prediction_intervals** | NAN | (0, 1) | PI level | All |
+    | **weighted_metric_weights** | {} | vector<double> | Per-dimension distance weights | All |
+    | **cell** | NAN | (0, ∞) | Interpolation cell size | All |
+    | **interpolation_vertices** | 0 | int | Interpolation grid vertices | All |
+    | **boundary_degree_fallback** | -1 | int | Degree fallback at boundaries | All |
+    | **cv_method** | — | string | Auto-select fraction | Batch |
+    | **cv_k** | 5 | [2, ∞) | K-fold count | Batch |
+    | **cv_fractions** | {} | vector<double> | Fractions to evaluate | Batch |
+    | **cv_seed** | 0 | uint64 | CV fold randomization seed | Batch |
     | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
     | **overlap** | -1 (auto) | [0, chunk) | Overlap between chunks | Streaming |
     | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
@@ -219,6 +262,7 @@ Complete reference for all LOESS configuration options.
 | **boundary_policy** | `"extend"`, `"reflect"`, `"zero"`, `"noboundary"` |
 | **scaling_method** | `"mad"`, `"mar"`, `"mean"` |
 | **surface_mode** | `"interpolation"`, `"direct"` |
+| **distance_metric** | `"normalized"`, `"euclidean"`, `"manhattan"`, `"chebyshev"`, `"minkowski:p"`, `"weighted"` |
 | **merge_strategy** | `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"` |
 | **update_mode** | `"incremental"`, `"full"` |
 
@@ -232,6 +276,7 @@ Complete reference for all LOESS configuration options.
 | **boundary_policy** | `Extend`, `Reflect`, `Zero`, `NoBoundary` |
 | **scaling_method** | `MAD`, `MAR`, `Mean` |
 | **surface_mode** | `Interpolation`, `Direct` |
+| **distance_metric** | `Normalized`, `Euclidean`, `Manhattan`, `Chebyshev`, `Minkowski(T)`, `Weighted(Vec<T>)` |
 | **merge_strategy** | `Average`, `WeightedAverage`, `TakeFirst`, `TakeLast` |
 | **update_mode** | `Incremental`, `Full` |
 
@@ -245,6 +290,7 @@ Complete reference for all LOESS configuration options.
 | **boundaryPolicy** | `"extend"`, `"reflect"`, `"zero"`, `"noboundary"` |
 | **scalingMethod** | `"mad"`, `"mar"`, `"mean"` |
 | **surfaceMode** | `"interpolation"`, `"direct"` |
+| **distanceMetric** | `"normalized"`, `"euclidean"`, `"manhattan"`, `"chebyshev"`, `"minkowski:p"`, `"weighted"` |
 | **mergeStrategy** | `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"` |
 | **updateMode** | `"incremental"`, `"full"` |
 
@@ -444,6 +490,103 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
 ---
 
+### cell
+
+Cell size for the interpolation grid. Controls the density of anchor vertices when `surface_mode = "interpolation"`. Smaller values produce a finer grid, increasing accuracy at the cost of memory and computation.
+
+- **Default**: `0.2` (20% of x-range per dimension)
+- **Range**: `(0, ∞)` — values close to 0 approach `"direct"` accuracy
+- **Adapter**: All
+
+| `cell` | Grid density | Accuracy | Speed |
+| --- | --- | --- | --- |
+| `0.05` | Very fine | Highest | Slowest |
+| `0.2` | Moderate (default) | High | Fast |
+| `0.5` | Coarse | Lower | Faster |
+
+=== "R"
+    ```r
+    result <- Loess(cell = 0.05)$fit(x, y)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.Loess(cell=0.05).fit(x, y)
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Loess::new().cell(0.05).adapter(Batch).build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = fit(Loess(cell=0.05), x, y)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = new Loess({ cell: 0.05 }).fit(x, y);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { cell: 0.05 });
+    ```
+
+=== "C++"
+    ```cpp
+    fastloess::Loess model({ .cell = 0.05 });
+    auto result = model.fit(x, y).value();
+    ```
+
+---
+
+### interpolation_vertices
+
+Explicitly set the number of anchor vertices for the interpolation grid, overriding the `cell`-based automatic count. Use when you need a precise vertex budget.
+
+- **Default**: auto (derived from `cell` and data range)
+- **Adapter**: All
+
+=== "R"
+    ```r
+    result <- Loess(interpolation_vertices = 50L)$fit(x, y)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.Loess(interpolation_vertices=50).fit(x, y)
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Loess::new().interpolation_vertices(50).adapter(Batch).build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = fit(Loess(interpolation_vertices=50), x, y)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = new Loess({ interpolationVertices: 50 }).fit(x, y);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { interpolationVertices: 50 });
+    ```
+
+=== "C++"
+    ```cpp
+    fastloess::Loess model({ .interpolation_vertices = 50 });
+    auto result = model.fit(x, y).value();
+    ```
+
+---
+
 ### dimensions
 
 Number of predictor variables. Enables multivariate LOESS over an n-dimensional input space.
@@ -455,6 +598,85 @@ Number of predictor variables. Enables multivariate LOESS over an n-dimensional 
 - **3+**: High-dimensional local regression
 
 See [Multivariate LOESS](dimensions.md) for detailed usage and distance metric options.
+
+---
+
+### distance_metric / weighted_metric_weights
+
+Distance metric for neighbourhood calculation. Only meaningful when `dimensions > 1`. The `"weighted"` metric lets you assign per-dimension importance via `weighted_metric_weights`.
+
+| Metric | Description |
+| --- | --- |
+| `"normalized"` | Each dimension scaled to unit range (default) |
+| `"euclidean"` | Raw Euclidean distance |
+| `"manhattan"` | City-block distance |
+| `"chebyshev"` | Maximum coordinate difference |
+| `"minkowski:p"` | Generalised $L_p$ norm — e.g. `"minkowski:3"` |
+| `"weighted"` | Weighted Euclidean — set `weighted_metric_weights` to one weight per dimension |
+
+=== "R"
+    ```r
+    result <- Loess(
+        dimensions = 2L,
+        distance_metric = "weighted",
+        weighted_metric_weights = c(2.0, 0.5)  # x1 twice as important
+    )$fit(x2d, y)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.Loess(
+        dimensions=2,
+        distance_metric="weighted",
+        weighted_metric_weights=[2.0, 0.5]
+    ).fit(x2d, y)
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Loess::new()
+        .dimensions(2)
+        .distance_metric(DistanceMetric::Weighted(vec![2.0, 0.5]))
+        .adapter(Batch)
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = fit(Loess(
+        dimensions=2,
+        distance_metric="weighted",
+        weighted_metric_weights=[2.0, 0.5]
+    ), x2d, y)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = new Loess({
+        dimensions: 2,
+        distanceMetric: "weighted",
+        weightedMetricWeights: [2.0, 0.5]
+    }).fit(x2d, y);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x2d, y, {
+        dimensions: 2,
+        distanceMetric: "weighted",
+        weightedMetricWeights: [2.0, 0.5]
+    });
+    ```
+
+=== "C++"
+    ```cpp
+    fastloess::LoessOptions opts;
+    opts.dimensions = 2;
+    opts.distance_metric = "weighted";
+    opts.weighted_metric_weights = {2.0, 0.5};
+    fastloess::Loess model(opts);
+    auto result = model.fit(x2d, y).value();
+    ```
 
 ---
 
@@ -703,6 +925,58 @@ For example:
 === "C++"
     ```cpp
     fastloess::Loess model({ .boundary_policy = "reflect" });
+    auto result = model.fit(x, y).value();
+    ```
+
+---
+
+### boundary_degree_fallback
+
+When enabled, the polynomial degree is automatically reduced to the highest degree that can be stably estimated for points near the boundary (where the local neighbourhood is one-sided). Prevents numerical failures when `degree ≥ 2` at the edges.
+
+- **Default**: `false`
+- **Adapter**: All
+
+!!! tip
+    Enable this if you observe NaN values or instability at the edges of your data when using `degree = "quadratic"` or higher.
+
+=== "R"
+    ```r
+    result <- Loess(degree = "quadratic", boundary_degree_fallback = TRUE)$fit(x, y)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.Loess(degree="quadratic", boundary_degree_fallback=True).fit(x, y)
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Loess::new()
+        .degree(Quadratic)
+        .boundary_degree_fallback(true)
+        .adapter(Batch)
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = fit(Loess(degree="quadratic", boundary_degree_fallback=true), x, y)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = new Loess({ degree: "quadratic", boundaryDegreeFallback: true }).fit(x, y);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = smooth(x, y, { degree: "quadratic", boundaryDegreeFallback: true });
+    ```
+
+=== "C++"
+    ```cpp
+    fastloess::Loess model({ .degree = "quadratic", .boundary_degree_fallback = 1 });
     auto result = model.fit(x, y).value();
     ```
 

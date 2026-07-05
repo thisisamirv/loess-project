@@ -97,6 +97,11 @@ result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LoessResu
 | `dimensions` | `Int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `String` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `surface_mode` | `String` | `"interpolation"` | Surface computation mode |
+| `weighted_metric_weights` | `Union{Vector{Float64}, Nothing}` | `nothing` | Per-dimension weights (used when `distance_metric = "weighted"`) |
+| `cell` | `Union{Float64, Nothing}` | `nothing` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
+| `interpolation_vertices` | `Union{Int, Nothing}` | `nothing` | Number of interpolation vertices |
+| `boundary_degree_fallback` | `Union{Bool, Nothing}` | `nothing` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling (Batch only) |
 | `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation |
 | `cv_method` | `String` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
 | `cv_k` | `Int` | `5` | Number of folds for k-fold CV |
@@ -207,6 +212,7 @@ result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LoessResu
 * `"manhattan"`
 * `"chebyshev"`
 * `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
+* `"weighted"` (set `weighted_metric_weights` for per-dimension scaling)
 
 ### Surface Modes
 
