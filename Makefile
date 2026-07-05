@@ -99,10 +99,21 @@ CPP_CARGO_PROFILE := --profile release-c
 CPP_LIBRARY_DIR := target/release-c
 
 ifeq ($(OS),Windows_NT)
-	# Build with the MSVC Rust target so the output files (.lib / .dll.lib) are
-	# in MSVC format, readable by MSVC link.exe, Clang, and modern MinGW ld.
-	CPP_CARGO_TARGET := --target x86_64-pc-windows-msvc
-	CPP_LIBRARY_DIR := target/x86_64-pc-windows-msvc/release-c
+	# Detect whether MinGW GCC is the active C++ toolchain (e.g. rtools45, MSYS2).
+	# gcc -dumpmachine reports a mingw triple when MinGW is first in PATH.
+	# Use the GNU Rust target in that case so the static lib uses MinGW ABI
+	# (avoids __chkstk / type_info vtable link errors from MSVC-only symbols).
+	# Otherwise keep the MSVC Rust target for native MSVC builds.
+	_CPP_GCC_MACHINE := $(shell gcc -dumpmachine 2>/dev/null)
+	ifneq ($(findstring mingw,$(_CPP_GCC_MACHINE)),)
+		_CPP_WIN_TOOLCHAIN := mingw
+		CPP_CARGO_TARGET := --target x86_64-pc-windows-gnu
+		CPP_LIBRARY_DIR := target/x86_64-pc-windows-gnu/release-c
+	else
+		_CPP_WIN_TOOLCHAIN := msvc
+		CPP_CARGO_TARGET := --target x86_64-pc-windows-msvc
+		CPP_LIBRARY_DIR := target/x86_64-pc-windows-msvc/release-c
+	endif
 endif
 
 # Julia native library paths and symbol scanners
@@ -121,12 +132,20 @@ JL_SHARED_LIB_ABS := $(abspath $(JL_SHARED_LIB))
 
 ifeq ($(HOST_PLATFORM),windows)
 	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/fastloess_cpp.dll
-	# MSVC Rust target produces MSVC-format import/static libs (.lib)
-	CPP_TEST_LIB := $(CPP_LIBRARY_DIR)/fastloess_cpp.lib
 	CPP_EXPORT_SCAN := objdump -p $(CPP_SHARED_LIB)
-	CPP_CMAKE_GENERATOR :=
-	CPP_TEST_BUILD := cmake --build . --config Release
-	CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./Release/test_fastloess_suite.exe
+	ifeq ($(_CPP_WIN_TOOLCHAIN),mingw)
+		# MinGW: GNU import library (.dll.a); Unix Makefiles puts binary in build dir
+		CPP_TEST_LIB := $(CPP_LIBRARY_DIR)/libfastloess_cpp.dll.a
+		CPP_CMAKE_GENERATOR :=
+		CPP_TEST_BUILD := cmake --build .
+		CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./test_fastloess_suite.exe
+	else
+		# MSVC: import library (.lib); multi-config generator puts binary in Release/
+		CPP_TEST_LIB := $(CPP_LIBRARY_DIR)/fastloess_cpp.lib
+		CPP_CMAKE_GENERATOR :=
+		CPP_TEST_BUILD := cmake --build . --config Release
+		CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./Release/test_fastloess_suite.exe
+	endif
 else ifeq ($(HOST_PLATFORM),macos)
 	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/libfastloess_cpp.dylib
 	CPP_TEST_LIB := $(CPP_SHARED_LIB)
@@ -794,6 +813,10 @@ _cpp_impl:
 		rm -f "$$cppcheck_log"; \
 	else \
 		echo "cppcheck not found. Skipping static analysis pass."; \
+	fi
+	@if [ -n "$(CPP_CARGO_TARGET)" ]; then \
+		_rust_target=$$(echo "$(CPP_CARGO_TARGET)" | sed 's/--target //'); \
+		rustup target add "$$_rust_target" 2>/dev/null || true; \
 	fi
 	@cargo build -q -p $(CPP_PKG) $(CPP_CARGO_PROFILE) $(CPP_CARGO_TARGET)
 	@echo "C header generated at $(CPP_DIR)/include/fastloess.h"
