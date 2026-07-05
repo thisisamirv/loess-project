@@ -62,6 +62,8 @@ pub struct SmoothOptions {
     pub surface_mode: Option<String>,
     #[serde(rename = "returnSe")]
     pub return_se: Option<bool>,
+    #[serde(rename = "customWeights")]
+    pub custom_weights: Option<Vec<f64>>,
 }
 
 #[derive(Deserialize)]
@@ -408,6 +410,9 @@ pub fn smooth(
         }
         if opts.return_se.unwrap_or(false) {
             builder = builder.return_se();
+        }
+        if let Some(cw) = opts.custom_weights {
+            builder = builder.custom_weights(cw);
         }
 
         // Cross-validation

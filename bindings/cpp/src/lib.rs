@@ -345,6 +345,8 @@ pub struct CppLoess {
     cv_fractions: Option<Vec<f64>>,
     cv_method: Option<String>,
     cv_k: usize,
+    // User-defined case weights
+    custom_weights: Option<Vec<f64>>,
 }
 
 /// Opaque handle to a Loess streaming model.
@@ -493,7 +495,30 @@ pub unsafe extern "C" fn cpp_loess_new(
         cv_fractions: cv_fractions_vec,
         cv_method: Some(cv_method_str),
         cv_k: cv_k as usize,
+        custom_weights: None,
     }))
+}
+
+/// Set user-defined case weights for the next fit call.
+///
+/// Weights multiply the local kernel weight: `w_ij = custom_weights[j] * K(d_ij/h) * rob_j`.
+/// Must have the same length as the `y` array passed to `cpp_loess_fit`.
+///
+/// # Safety
+/// ptr must be a valid mutable pointer returned by cpp_loess_new.
+/// weights must be a valid array of length n.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_loess_set_custom_weights(
+    ptr: *mut CppLoess,
+    weights: *const c_double,
+    n: c_ulong,
+) {
+    if ptr.is_null() || weights.is_null() || n == 0 {
+        return;
+    }
+    let loess = unsafe { &mut *ptr };
+    let slice = unsafe { std::slice::from_raw_parts(weights, n as usize) };
+    loess.custom_weights = Some(slice.to_vec());
 }
 
 /// Fit the batch model.
@@ -532,6 +557,10 @@ pub unsafe extern "C" fn cpp_loess_fit(
                 }
                 _ => return error_result("Unknown CV method"),
             }
+        }
+        // Apply custom weights if provided
+        if let Some(ref uw) = loess.custom_weights {
+            builder = builder.custom_weights(uw.clone());
         }
 
         match builder.adapter(Batch).build() {

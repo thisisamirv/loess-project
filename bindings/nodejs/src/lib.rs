@@ -405,6 +405,8 @@ pub struct SmoothOptions {
     pub surfaceMode: Option<String>,
     /// Compute hat-matrix statistics (enp, traceHat, etc.). Default: false.
     pub returnSe: Option<bool>,
+    /// User-defined case weights (same length as x/y). Default: None.
+    pub customWeights: Option<Vec<f64>>,
 }
 
 /// Batch LOESS smoothing.
@@ -517,6 +519,9 @@ impl Loess {
             }
             if opts.returnSe.unwrap_or(false) {
                 builder = builder.return_se();
+            }
+            if let Some(cw) = &opts.customWeights {
+                builder = builder.custom_weights(cw.clone());
             }
 
             // Cross-validation

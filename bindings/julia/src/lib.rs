@@ -377,6 +377,8 @@ pub struct JlLoessConfig {
     distance_metric: DistanceMetric<f64>,
     surface_mode: SurfaceMode,
     return_se: bool,
+    // User-defined case weights
+    custom_weights: Option<Vec<f64>>,
 }
 
 pub struct JlStreamingLoess {
@@ -491,6 +493,7 @@ pub unsafe extern "C" fn jl_loess_new(
             distance_metric: dm,
             surface_mode: surf,
             return_se: return_se != 0,
+            custom_weights: None,
         };
 
         Box::into_raw(Box::new(config))
@@ -500,6 +503,28 @@ pub unsafe extern "C" fn jl_loess_new(
         Ok(ptr) => ptr,
         Err(_) => null_mut(),
     }
+}
+
+/// Set user-defined case weights for the next fit call.
+///
+/// Weights multiply the local kernel weight: `w_ij = custom_weights[j] * K(d_ij/h) * rob_j`.
+/// Must have the same length as the `y` array passed to `jl_loess_fit`.
+///
+/// # Safety
+/// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+/// weights must be a valid array of length n.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_loess_set_custom_weights(
+    config_ptr: *mut JlLoessConfig,
+    weights: *const c_double,
+    n: c_ulong,
+) {
+    if config_ptr.is_null() || weights.is_null() || n == 0 {
+        return;
+    }
+    let config = unsafe { &mut *config_ptr };
+    let slice = unsafe { from_raw_parts(weights, n as usize) };
+    config.custom_weights = Some(slice.to_vec());
 }
 
 /// Fit the Loess model to data.
@@ -564,6 +589,9 @@ pub unsafe extern "C" fn jl_loess_fit(
         builder = builder.surface_mode(config.surface_mode);
         if config.return_se {
             builder = builder.return_se();
+        }
+        if let Some(ref uw) = config.custom_weights {
+            builder = builder.custom_weights(uw.clone());
         }
         if let Some(ref fractions) = config.cv_fractions {
             match config.cv_method.to_lowercase().as_str() {

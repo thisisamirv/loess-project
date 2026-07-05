@@ -228,6 +228,17 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
+    // Set user-defined case weights (one per observation).
+    //
+    // Weights multiply the local kernel weight at each neighborhood point:
+    // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
+    //
+    // Analogous to `weights` in R's `stats::loess`. Must have the same length as `y`.
+    pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
+        self.base = self.base.custom_weights(weights);
+        self
+    }
+
     // Build the batch processor.
     pub fn build(self) -> Result<ParallelBatchLoess<T>, LoessError> {
         // Check for deferred errors from adapter conversion
