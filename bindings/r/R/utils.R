@@ -190,7 +190,7 @@ param_types <- list(
 #' @noRd
 env_args <- function(param_names) {
     env <- parent.frame()
-    lapply(param_names, function(name) {
+    result <- lapply(param_names, function(name) {
         val <- get(name, envir = env)
         type <- param_types[[name]]
         if (is.null(type)) {
@@ -205,6 +205,7 @@ env_args <- function(param_names) {
             val
         )
     })
+    setNames(result, param_names)
 }
 
 #' Parameter names for each Loess constructor

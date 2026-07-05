@@ -528,7 +528,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             .custom_kdtree_builder(config.custom_kdtree_builder)
             .parallel(config.parallel)
             .backend(config.backend);
-        exec.custom_weights = config.custom_weights.clone();
+        if let Some(cw) = config.custom_weights.clone() {
+            exec = exec.custom_weights(cw);
+        }
         exec
     }
 

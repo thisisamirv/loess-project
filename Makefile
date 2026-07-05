@@ -134,11 +134,22 @@ ifeq ($(HOST_PLATFORM),windows)
 	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/fastloess_cpp.dll
 	CPP_EXPORT_SCAN := objdump -p $(CPP_SHARED_LIB)
 	ifeq ($(_CPP_WIN_TOOLCHAIN),mingw)
-		# MinGW: GNU import library (.dll.a); Unix Makefiles puts binary in build dir
+		# MinGW: GNU import library (.dll.a)
 		CPP_TEST_LIB := $(CPP_LIBRARY_DIR)/libfastloess_cpp.dll.a
-		CPP_CMAKE_GENERATOR :=
-		CPP_TEST_BUILD := cmake --build .
-		CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./test_fastloess_suite.exe
+		# Use MinGW Makefiles generator if mingw32-make is available (single-config,
+		# binary lands in the build dir).  Otherwise fall back to the default CMake
+		# generator on this host (typically Visual Studio, multi-config, binary in
+		# Release/ sub-directory).
+		_HAVE_MINGW32_MAKE := $(shell mingw32-make --version 2>/dev/null | head -c 3)
+		ifneq ($(_HAVE_MINGW32_MAKE),)
+			CPP_CMAKE_GENERATOR := -G "MinGW Makefiles"
+			CPP_TEST_BUILD := cmake --build .
+			CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./test_fastloess_suite.exe
+		else
+			CPP_CMAKE_GENERATOR :=
+			CPP_TEST_BUILD := cmake --build . --config Release
+			CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./Release/test_fastloess_suite.exe
+		endif
 	else
 		# MSVC: import library (.lib); multi-config generator puts binary in Release/
 		CPP_TEST_LIB := $(CPP_LIBRARY_DIR)/fastloess_cpp.lib

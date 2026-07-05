@@ -13,7 +13,10 @@ RLoess$new <- function(
     return_diagnostics, return_residuals,
     return_robustness_weights, zero_weight_fallback,
     auto_converge, cv_fractions, cv_method, cv_k, parallel,
-    degree, dimensions, distance_metric, surface_mode, return_se
+    degree, dimensions, distance_metric,
+    weighted_metric_weights,
+    surface_mode, return_se,
+    cell, interpolation_vertices, boundary_degree_fallback, cv_seed
 ) {
     .Call(
         wrap__RLoess__new, fraction, iterations, weight_function,
@@ -21,11 +24,14 @@ RLoess$new <- function(
         confidence_intervals, prediction_intervals, return_diagnostics,
         return_residuals, return_robustness_weights, zero_weight_fallback,
         auto_converge, cv_fractions, cv_method, cv_k, parallel,
-        degree, dimensions, distance_metric, surface_mode, return_se
+        degree, dimensions, distance_metric,
+        weighted_metric_weights,
+        surface_mode, return_se,
+        cell, interpolation_vertices, boundary_degree_fallback, cv_seed
     )
 }
 
-RLoess$fit <- function(x, y) .Call(wrap__RLoess__fit, self, x, y)
+RLoess$fit <- function(x, y, custom_weights = NULL) .Call(wrap__RLoess__fit, self, x, y, custom_weights)
 
 #' @export
 `$.RLoess` <- function(self, name) {
@@ -45,7 +51,9 @@ RStreamingLoess$new <- function(
     scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
     return_diagnostics, return_residuals, return_robustness_weights,
     merge_strategy, parallel, degree, dimensions,
-    distance_metric, surface_mode, return_se
+    distance_metric, weighted_metric_weights, surface_mode, return_se,
+    confidence_intervals, prediction_intervals,
+    cell, interpolation_vertices, boundary_degree_fallback
 ) {
     .Call(
         wrap__RStreamingLoess__new, fraction, chunk_size, overlap, iterations,
@@ -53,7 +61,10 @@ RStreamingLoess$new <- function(
         boundary_policy, zero_weight_fallback,
         auto_converge, return_diagnostics,
         return_residuals, return_robustness_weights, merge_strategy, parallel,
-        degree, dimensions, distance_metric, surface_mode, return_se
+        degree, dimensions, distance_metric,
+        weighted_metric_weights, surface_mode, return_se,
+        confidence_intervals, prediction_intervals,
+        cell, interpolation_vertices, boundary_degree_fallback
     )
 }
 
@@ -82,14 +93,20 @@ ROnlineLoess$new <- function(
     weight_function, robustness_method,
     scaling_method, boundary_policy, zero_weight_fallback, update_mode,
     auto_converge, return_robustness_weights,
-    parallel, degree, dimensions, distance_metric, surface_mode, return_se
+    parallel, degree, dimensions, distance_metric,
+    weighted_metric_weights, surface_mode, return_se,
+    confidence_intervals, prediction_intervals,
+    cell, interpolation_vertices, boundary_degree_fallback
 ) {
     .Call(
         wrap__ROnlineLoess__new, fraction, window_capacity, min_points,
         iterations, weight_function, robustness_method, scaling_method,
         boundary_policy, zero_weight_fallback, update_mode, auto_converge,
         return_robustness_weights, parallel,
-        degree, dimensions, distance_metric, surface_mode, return_se
+        degree, dimensions, distance_metric,
+        weighted_metric_weights, surface_mode, return_se,
+        confidence_intervals, prediction_intervals,
+        cell, interpolation_vertices, boundary_degree_fallback
     )
 }
 

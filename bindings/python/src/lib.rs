@@ -945,6 +945,7 @@ impl PyLoess {
     // -------
     // LoessResult
     //     Smoothed values and optional diagnostics.
+    #[pyo3(signature = (x, y, custom_weights=None))]
     fn fit<'py>(
         &self,
         py: Python<'py>,

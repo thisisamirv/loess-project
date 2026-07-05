@@ -433,8 +433,34 @@ impl Loess {
 
     // Fit the model.
     #[napi]
-    pub fn fit(&self, x: Float64Array, y: Float64Array) -> Result<LoessResultObj> {
-        let builder = self.create_builder()?;
+    pub fn fit(
+        &self,
+        x: Float64Array,
+        y: Float64Array,
+        fit_opts: Option<SmoothOptions>,
+    ) -> Result<LoessResultObj> {
+        let mut builder = self.create_builder()?;
+        if let Some(ref opts) = fit_opts
+            && let Some(cw) = &opts.customWeights
+        {
+            if cw.len() != y.as_ref().len() {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    format!(
+                        "customWeights length ({}) must match y length ({})",
+                        cw.len(),
+                        y.as_ref().len()
+                    ),
+                ));
+            }
+            if cw.iter().any(|&w| w < 0.0) {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    "customWeights must be non-negative".to_string(),
+                ));
+            }
+            builder = builder.custom_weights(cw.clone());
+        }
         let model = builder
             .adapter(Batch)
             .build()
@@ -449,8 +475,34 @@ impl Loess {
 
     // Fit the model asynchronously.
     #[napi(js_name = "fitAsync")]
-    pub fn fit_async(&self, x: Float64Array, y: Float64Array) -> Result<AsyncTask<LoessTask>> {
-        let builder = self.create_builder()?;
+    pub fn fit_async(
+        &self,
+        x: Float64Array,
+        y: Float64Array,
+        fit_opts: Option<SmoothOptions>,
+    ) -> Result<AsyncTask<LoessTask>> {
+        let mut builder = self.create_builder()?;
+        if let Some(ref opts) = fit_opts
+            && let Some(cw) = &opts.customWeights
+        {
+            if cw.len() != y.as_ref().len() {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    format!(
+                        "customWeights length ({}) must match y length ({})",
+                        cw.len(),
+                        y.as_ref().len()
+                    ),
+                ));
+            }
+            if cw.iter().any(|&w| w < 0.0) {
+                return Err(Error::new(
+                    Status::InvalidArg,
+                    "customWeights must be non-negative".to_string(),
+                ));
+            }
+            builder = builder.custom_weights(cw.clone());
+        }
         let x_vec = x.as_ref().to_vec();
         let y_vec = y.as_ref().to_vec();
 

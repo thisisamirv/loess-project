@@ -8,7 +8,9 @@ test_that("RLoess generated accessors dispatch fit methods", {
         0.3, 1L, "tricube", "bisquare", "mad", "extend",
         null_value, null_value, FALSE, FALSE, FALSE, "use_local_mean",
         null_value, null_value, "kfold", 5L, FALSE,
-        "linear", 1L, "normalized", "interpolation", FALSE
+        "linear", 1L, "normalized",
+        null_value, "interpolation", FALSE,
+        null_value, null_value, null_value, null_value
     )
 
     x <- as.double(1:10)
@@ -26,7 +28,9 @@ test_that("RStreamingLoess generated accessors dispatch chunked methods", {
     handle <- RStreamingLoess$new(
         0.3, 10L, null_value, 1L, "tricube", "bisquare", "mad",
         "extend", "use_local_mean", null_value, FALSE, FALSE, FALSE,
-        "average", FALSE, "linear", 1L, "normalized", "interpolation", FALSE
+        "average", FALSE, "linear", 1L, "normalized",
+        null_value, "interpolation", FALSE,
+        null_value, null_value, null_value, null_value, null_value
     )
 
     x <- as.double(1:10)
@@ -44,12 +48,16 @@ test_that("ROnlineLoess generated accessors dispatch add_points", {
     handle_dollar <- ROnlineLoess$new(
         0.3, 20L, 3L, 1L, "tricube", "bisquare", "mad",
         "extend", "use_local_mean", "incremental", null_value, FALSE, FALSE,
-        "linear", 1L, "normalized", "interpolation", FALSE
+        "linear", 1L, "normalized",
+        null_value, "interpolation", FALSE,
+        null_value, null_value, null_value, null_value, null_value
     )
     handle_bracket <- ROnlineLoess$new(
         0.3, 20L, 3L, 1L, "tricube", "bisquare", "mad",
         "extend", "use_local_mean", "incremental", null_value, FALSE, FALSE,
-        "linear", 1L, "normalized", "interpolation", FALSE
+        "linear", 1L, "normalized",
+        null_value, "interpolation", FALSE,
+        null_value, null_value, null_value, null_value, null_value
     )
 
     x <- as.double(1:10)

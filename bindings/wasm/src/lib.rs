@@ -62,7 +62,6 @@ pub struct SmoothOptions {
     pub surface_mode: Option<String>,
     #[serde(rename = "returnSe")]
     pub return_se: Option<bool>,
-    #[serde(rename = "customWeights")]
     pub custom_weights: Option<Vec<f64>>,
     // Per-dimension weights for the "weighted" distance metric.
     #[serde(rename = "weightedMetricWeights")]
@@ -88,7 +87,6 @@ pub struct StreamingOptions {
     pub overlap: Option<usize>,
     #[serde(rename = "mergeStrategy")]
     pub merge_strategy: Option<String>,
-    #[serde(rename = "customWeights")]
     pub custom_weights: Option<Vec<f64>>,
 }
 
@@ -100,7 +98,6 @@ pub struct OnlineOptions {
     pub min_points: Option<usize>,
     #[serde(rename = "updateMode")]
     pub update_mode: Option<String>,
-    #[serde(rename = "customWeights")]
     pub custom_weights: Option<Vec<f64>>,
 }
 
@@ -477,6 +474,16 @@ pub fn smooth(
             builder = builder.return_se();
         }
         if let Some(cw) = opts.custom_weights {
+            if cw.len() != y.length() as usize {
+                return Err(JsValue::from_str(&format!(
+                    "custom_weights length ({}) must match y length ({})",
+                    cw.len(),
+                    y.length()
+                )));
+            }
+            if cw.iter().any(|&w| w < 0.0) {
+                return Err(JsValue::from_str("custom_weights must be non-negative"));
+            }
             builder = builder.custom_weights(cw);
         }
         if let Some(c) = opts.cell {

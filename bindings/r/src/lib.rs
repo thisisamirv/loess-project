@@ -13,11 +13,11 @@ type Result<T> = std::result::Result<T, Error>;
 
 use fastLoess::internals::api::{
     BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
-    ScalingMethod::{self, Mean, MAD, MAR},
+    ScalingMethod::{self, MAD, MAR, Mean},
     SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, Loess as LoessBuilder, LoessResult, Online, Streaming, LOOCV,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, Online, Streaming,
 };
 
 // Helper Functions

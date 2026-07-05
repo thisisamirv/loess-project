@@ -410,10 +410,10 @@ pub struct JlOnlineLoess {
 
 // Loess (Batch) C API
 
-// Create a new Loess configuration.
-//
-// # Safety
-// The returned pointer must be freed with jl_loess_free.
+/// Create a new Loess configuration.
+///
+/// # Safety
+/// The returned pointer must be freed with jl_loess_free.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_new(
     fraction: c_double,
@@ -523,14 +523,14 @@ pub unsafe extern "C" fn jl_loess_new(
     }
 }
 
-// Set user-defined case weights for the next fit call.
-//
-// Weights multiply the local kernel weight: `w_ij = custom_weights[j] * K(d_ij/h) * rob_j`.
-// Must have the same length as the `y` array passed to `jl_loess_fit`.
-//
-// # Safety
-// config_ptr must be a valid mutable pointer returned by jl_loess_new.
-// weights must be a valid array of length n.
+/// Set user-defined case weights for the next fit call.
+///
+/// Weights multiply the local kernel weight: `w_ij = custom_weights[j] * K(d_ij/h) * rob_j`.
+/// Must have the same length as the `y` array passed to `jl_loess_fit`.
+///
+/// # Safety
+/// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+/// weights must be a valid array of length n.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_set_custom_weights(
     config_ptr: *mut JlLoessConfig,
@@ -545,11 +545,11 @@ pub unsafe extern "C" fn jl_loess_set_custom_weights(
     config.custom_weights = Some(slice.to_vec());
 }
 
-// Fit the Loess model to data.
-//
-// # Safety
-// config_ptr must be a valid pointer returned by jl_loess_new.
-// x and y must be valid arrays of length n.
+/// Fit the Loess model to data.
+///
+/// # Safety
+/// config_ptr must be a valid pointer returned by jl_loess_new.
+/// x and y must be valid arrays of length n.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_fit(
     config_ptr: *const JlLoessConfig,
@@ -571,7 +571,7 @@ pub unsafe extern "C" fn jl_loess_fit(
         }
 
         // For multi-dimensional LOESS, x has n * dimensions elements (row-major flat).
-        let x_n = n as usize * (config.dimensions as usize).max(1);
+        let x_n = n as usize * config.dimensions.max(1);
         let x_slice = unsafe { from_raw_parts(x, x_n) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
@@ -661,10 +661,10 @@ pub unsafe extern "C" fn jl_loess_fit(
     }
 }
 
-// Free the LoessResult.
-//
-// # Safety
-// `result` must be a valid pointer to a `JlLoessResult` struct.
+/// Free the LoessResult.
+///
+/// # Safety
+/// `result` must be a valid pointer to a `JlLoessResult` struct.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_free_result(result: *mut JlLoessResult) {
     if result.is_null() {
@@ -704,10 +704,10 @@ pub unsafe extern "C" fn jl_loess_free_result(result: *mut JlLoessResult) {
     }
 }
 
-// Free the Loess configuration.
-//
-// # Safety
-// `ptr` must be a valid pointer to a `JlLoessConfig` struct.
+/// Free the Loess configuration.
+///
+/// # Safety
+/// `ptr` must be a valid pointer to a `JlLoessConfig` struct.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_free(ptr: *mut JlLoessConfig) {
     if !ptr.is_null() {
@@ -715,11 +715,11 @@ pub unsafe extern "C" fn jl_loess_free(ptr: *mut JlLoessConfig) {
     }
 }
 
-// Set the distance metric to Weighted with per-dimension weights.
-//
-// # Safety
-// config_ptr must be a valid mutable pointer returned by jl_loess_new.
-// weights must be a valid array of length n (number of predictor dimensions).
+/// Set the distance metric to Weighted with per-dimension weights.
+///
+/// # Safety
+/// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+/// weights must be a valid array of length n (number of predictor dimensions).
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_set_weighted_metric(
     config_ptr: *mut JlLoessConfig,
@@ -734,10 +734,10 @@ pub unsafe extern "C" fn jl_loess_set_weighted_metric(
     config.distance_metric = DistanceMetric::Weighted(slice.to_vec());
 }
 
-// Set the interpolation cell size (default 0.2). Smaller values give more vertices.
-//
-// # Safety
-// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+/// Set the interpolation cell size (default 0.2). Smaller values give more vertices.
+///
+/// # Safety
+/// config_ptr must be a valid mutable pointer returned by jl_loess_new.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_set_cell(config_ptr: *mut JlLoessConfig, cell: c_double) {
     if config_ptr.is_null() {
@@ -746,10 +746,10 @@ pub unsafe extern "C" fn jl_loess_set_cell(config_ptr: *mut JlLoessConfig, cell:
     unsafe { (*config_ptr).cell = Some(cell) };
 }
 
-// Set the maximum number of interpolation vertices.
-//
-// # Safety
-// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+/// Set the maximum number of interpolation vertices.
+///
+/// # Safety
+/// config_ptr must be a valid mutable pointer returned by jl_loess_new.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_set_interpolation_vertices(
     config_ptr: *mut JlLoessConfig,
@@ -761,10 +761,10 @@ pub unsafe extern "C" fn jl_loess_set_interpolation_vertices(
     unsafe { (*config_ptr).interpolation_vertices = Some(vertices as usize) };
 }
 
-// Set whether to apply boundary degree fallback (default: true).
-//
-// # Safety
-// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+/// Set whether to apply boundary degree fallback (default: true).
+///
+/// # Safety
+/// config_ptr must be a valid mutable pointer returned by jl_loess_new.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_set_boundary_degree_fallback(
     config_ptr: *mut JlLoessConfig,
@@ -776,10 +776,10 @@ pub unsafe extern "C" fn jl_loess_set_boundary_degree_fallback(
     unsafe { (*config_ptr).boundary_degree_fallback = Some(enabled != 0) };
 }
 
-// Set the random seed for reproducible K-fold cross-validation splits.
-//
-// # Safety
-// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+/// Set the random seed for reproducible K-fold cross-validation splits.
+///
+/// # Safety
+/// config_ptr must be a valid mutable pointer returned by jl_loess_new.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, seed: c_ulong) {
     if config_ptr.is_null() {
@@ -790,10 +790,10 @@ pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, se
 
 // StreamingLoess C API
 
-// Create a new StreamingLoess processor.
-//
-// # Safety
-// Pointers must be valid null-terminated strings or null.
+/// Create a new StreamingLoess processor.
+///
+/// # Safety
+/// Pointers must be valid null-terminated strings or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_streaming_loess_new(
     fraction: c_double,
@@ -943,10 +943,10 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
     }
 }
 
-// Process a chunk of data.
-//
-// # Safety
-// `ptr` must be a valid pointer. `x` and `y` must be valid arrays of length `n`.
+/// Process a chunk of data.
+///
+/// # Safety
+/// `ptr` must be a valid pointer. `x` and `y` must be valid arrays of length `n`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
     ptr: *mut JlStreamingLoess,
@@ -984,10 +984,10 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
     }
 }
 
-// Finalize streaming and return remaining data.
-//
-// # Safety
-// `ptr` must be a valid pointer.
+/// Finalize streaming and return remaining data.
+///
+/// # Safety
+/// `ptr` must be a valid pointer.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_streaming_loess_finalize(ptr: *mut JlStreamingLoess) -> JlLoessResult {
     let result = catch_unwind(|| {
@@ -1008,10 +1008,10 @@ pub unsafe extern "C" fn jl_streaming_loess_finalize(ptr: *mut JlStreamingLoess)
     }
 }
 
-// Free the StreamingLoess processor.
-//
-// # Safety
-// `ptr` must be a valid pointer or null.
+/// Free the StreamingLoess processor.
+///
+/// # Safety
+/// `ptr` must be a valid pointer or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_streaming_loess_free(ptr: *mut JlStreamingLoess) {
     if !ptr.is_null() {
@@ -1021,10 +1021,10 @@ pub unsafe extern "C" fn jl_streaming_loess_free(ptr: *mut JlStreamingLoess) {
 
 // OnlineLoess C API
 
-// Create a new OnlineLoess processor.
-//
-// # Safety
-// Pointers must be valid null-terminated strings or null.
+/// Create a new OnlineLoess processor.
+///
+/// # Safety
+/// Pointers must be valid null-terminated strings or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_online_loess_new(
     fraction: c_double,
@@ -1170,10 +1170,10 @@ pub unsafe extern "C" fn jl_online_loess_new(
     }
 }
 
-// Add points to the online processor.
-//
-// # Safety
-// `ptr` must be a valid pointer. `x` and `y` must be valid arrays of length `n`.
+/// Add points to the online processor.
+///
+/// # Safety
+/// `ptr` must be a valid pointer. `x` and `y` must be valid arrays of length `n`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_online_loess_add_points(
     ptr: *mut JlOnlineLoess,
@@ -1241,10 +1241,10 @@ pub unsafe extern "C" fn jl_online_loess_add_points(
     }
 }
 
-// Free the OnlineLoess processor.
-//
-// # Safety
-// `ptr` must be a valid pointer or null.
+/// Free the OnlineLoess processor.
+///
+/// # Safety
+/// `ptr` must be a valid pointer or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_online_loess_free(ptr: *mut JlOnlineLoess) {
     if !ptr.is_null() {

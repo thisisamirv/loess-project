@@ -282,6 +282,22 @@ if (!nativeBinding) {
 
 const { Loess, StreamingLoess, OnlineLoess, LoessResultObj } = nativeBinding
 
+// Normalize customWeights: accept Float64Array in addition to Array<number>.
+function normalizeWeights(opts) {
+    if (opts != null && opts.customWeights instanceof Float64Array) {
+        return Object.assign({}, opts, { customWeights: Array.from(opts.customWeights) })
+    }
+    return opts
+}
+const _loessFit = Loess.prototype.fit
+Loess.prototype.fit = function (x, y, fitOpts) {
+    return _loessFit.call(this, x, y, normalizeWeights(fitOpts))
+}
+const _loessFitAsync = Loess.prototype.fitAsync
+Loess.prototype.fitAsync = function (x, y, fitOpts) {
+    return _loessFitAsync.call(this, x, y, normalizeWeights(fitOpts))
+}
+
 module.exports.Loess = Loess
 module.exports.StreamingLoess = StreamingLoess
 module.exports.OnlineLoess = OnlineLoess

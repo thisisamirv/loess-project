@@ -404,10 +404,10 @@ pub struct CppOnlineLoess {
     prediction_intervals: f64,
 }
 
-// C++ wrapper constructor.
-//
-// # Safety
-// Pointers must be valid null-terminated strings or null. Arrays must be valid.
+/// C++ wrapper constructor.
+///
+/// # Safety
+/// Pointers must be valid null-terminated strings or null. Arrays must be valid.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_new(
     fraction: c_double,
@@ -543,14 +543,14 @@ pub unsafe extern "C" fn cpp_loess_new(
     }))
 }
 
-// Set user-defined case weights for the next fit call.
-//
-// Weights multiply the local kernel weight: `w_ij = custom_weights[j] * K(d_ij/h) * rob_j`.
-// Must have the same length as the `y` array passed to `cpp_loess_fit`.
-//
-// # Safety
-// ptr must be a valid mutable pointer returned by cpp_loess_new.
-// weights must be a valid array of length n.
+/// Set user-defined case weights for the next fit call.
+///
+/// Weights multiply the local kernel weight: `w_ij = custom_weights[j] * K(d_ij/h) * rob_j`.
+/// Must have the same length as the `y` array passed to `cpp_loess_fit`.
+///
+/// # Safety
+/// ptr must be a valid mutable pointer returned by cpp_loess_new.
+/// weights must be a valid array of length n.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_set_custom_weights(
     ptr: *mut CppLoess,
@@ -565,10 +565,10 @@ pub unsafe extern "C" fn cpp_loess_set_custom_weights(
     loess.custom_weights = Some(slice.to_vec());
 }
 
-// Set the weighted distance metric with per-dimension weights.
-//
-// # Safety
-// ptr must be valid. weights must be a valid array of length n.
+/// Set the weighted distance metric with per-dimension weights.
+///
+/// # Safety
+/// ptr must be valid. weights must be a valid array of length n.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_set_weighted_metric(
     ptr: *mut CppLoess,
@@ -587,10 +587,10 @@ pub unsafe extern "C" fn cpp_loess_set_weighted_metric(
     }
 }
 
-// Set interpolation cell size (default 0.2).
-//
-// # Safety
-// ptr must be valid.
+/// Set interpolation cell size (default 0.2).
+///
+/// # Safety
+/// ptr must be valid.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_set_cell(ptr: *mut CppLoess, cell: c_double) {
     if !ptr.is_null() {
@@ -598,10 +598,10 @@ pub unsafe extern "C" fn cpp_loess_set_cell(ptr: *mut CppLoess, cell: c_double) 
     }
 }
 
-// Set max interpolation vertices.
-//
-// # Safety
-// ptr must be valid.
+/// Set max interpolation vertices.
+///
+/// # Safety
+/// ptr must be valid.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_set_interpolation_vertices(
     ptr: *mut CppLoess,
@@ -612,10 +612,10 @@ pub unsafe extern "C" fn cpp_loess_set_interpolation_vertices(
     }
 }
 
-// Set boundary degree fallback (default: true).
-//
-// # Safety
-// ptr must be valid.
+/// Set boundary degree fallback (default: true).
+///
+/// # Safety
+/// ptr must be valid.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_set_boundary_degree_fallback(
     ptr: *mut CppLoess,
@@ -626,10 +626,10 @@ pub unsafe extern "C" fn cpp_loess_set_boundary_degree_fallback(
     }
 }
 
-// Set CV seed for reproducible K-fold splits.
-//
-// # Safety
-// ptr must be valid.
+/// Set CV seed for reproducible K-fold splits.
+///
+/// # Safety
+/// ptr must be valid.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_set_cv_seed(ptr: *mut CppLoess, seed: c_ulong) {
     if !ptr.is_null() {
@@ -849,10 +849,10 @@ pub unsafe extern "C" fn cpp_online_set_prediction_intervals(
     }
 }
 
-// Fit the batch model.
-//
-// # Safety
-// `ptr` must be a valid CppLoess pointer. `x` and `y` must be valid arrays of length `n`.
+/// Fit the batch model.
+///
+/// # Safety
+/// `ptr` must be a valid CppLoess pointer. `x` and `y` must be valid arrays of length `n`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_fit(
     ptr: *mut CppLoess,
@@ -917,10 +917,10 @@ pub unsafe extern "C" fn cpp_loess_fit(
     }
 }
 
-// Free batch model.
-//
-// # Safety
-// `ptr` must be a valid pointer returned by `cpp_loess_new` or null.
+/// Free batch model.
+///
+/// # Safety
+/// `ptr` must be a valid pointer returned by `cpp_loess_new` or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_free(ptr: *mut CppLoess) {
     if !ptr.is_null() {
@@ -928,10 +928,10 @@ pub unsafe extern "C" fn cpp_loess_free(ptr: *mut CppLoess) {
     }
 }
 
-// Create a new Streaming Loess model.
-//
-// # Safety
-// Pointers must be valid null-terminated strings or null.
+/// Create a new Streaming Loess model.
+///
+/// # Safety
+/// Pointers must be valid null-terminated strings or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_streaming_new(
     fraction: c_double,
@@ -1062,11 +1062,11 @@ pub unsafe extern "C" fn cpp_streaming_new(
     }))
 }
 
+/// Process a chunk of data.
+///
+/// # Safety
+/// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
 #[unsafe(no_mangle)]
-// Process a chunk of data.
-//
-// # Safety
-// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
 pub unsafe extern "C" fn cpp_streaming_process(
     ptr: *mut CppStreamingLoess,
     x: *const c_double,
@@ -1127,11 +1127,11 @@ pub unsafe extern "C" fn cpp_streaming_process(
     }
 }
 
+/// Finalize the streaming process.
+///
+/// # Safety
+/// `ptr` must be valid.
 #[unsafe(no_mangle)]
-// Finalize the streaming process.
-//
-// # Safety
-// `ptr` must be valid.
 pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLoess) -> CppLoessResult {
     if ptr.is_null() {
         return error_result("Model pointer is null");
@@ -1147,21 +1147,21 @@ pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLoess) -> 
     }
 }
 
+/// Free streaming model.
+///
+/// # Safety
+/// `ptr` must be valid or null.
 #[unsafe(no_mangle)]
-// Free streaming model.
-//
-// # Safety
-// `ptr` must be valid or null.
 pub unsafe extern "C" fn cpp_streaming_free(ptr: *mut CppStreamingLoess) {
     if !ptr.is_null() {
         let _ = Box::from_raw(ptr);
     }
 }
 
-// Create a new Online Loess model.
-//
-// # Safety
-// Pointers must be valid null-terminated strings or null.
+/// Create a new Online Loess model.
+///
+/// # Safety
+/// Pointers must be valid null-terminated strings or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_online_new(
     fraction: c_double,
@@ -1290,11 +1290,11 @@ pub unsafe extern "C" fn cpp_online_new(
     }))
 }
 
+/// Add points to online model.
+///
+/// # Safety
+/// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
 #[unsafe(no_mangle)]
-// Add points to online model.
-//
-// # Safety
-// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
 pub unsafe extern "C" fn cpp_online_add_points(
     ptr: *mut CppOnlineLoess,
     x: *const c_double,
@@ -1385,21 +1385,21 @@ pub unsafe extern "C" fn cpp_online_add_points(
     }
 }
 
+/// Free online model.
+///
+/// # Safety
+/// `ptr` must be valid or null.
 #[unsafe(no_mangle)]
-// Free online model.
-//
-// # Safety
-// `ptr` must be valid or null.
 pub unsafe extern "C" fn cpp_online_free(ptr: *mut CppOnlineLoess) {
     if !ptr.is_null() {
         let _ = Box::from_raw(ptr);
     }
 }
 
-// Free a CppLoessResult.
-//
-// # Safety
-// `result` must be a valid pointer to a CppLoessResult struct.
+/// Free a CppLoessResult.
+///
+/// # Safety
+/// `result` must be a valid pointer to a CppLoessResult struct.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_free_result(result: *mut CppLoessResult) {
     if result.is_null() {
