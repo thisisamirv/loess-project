@@ -59,7 +59,7 @@ Install the LOESS library for your preferred language.
 
     # fastLoess (parallel)
     [dependencies]
-    fastLoess = { version = "*", features = ["dev"] }
+    fastLoess = "*"
     ```
 
     === "Feature Flags"

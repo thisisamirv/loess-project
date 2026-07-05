@@ -58,7 +58,7 @@ loess-rs = "*"
 
 ```toml
 [dependencies]
-fastLoess = { version = "*", features = ["dev"] }
+fastLoess = "*"
 ```
 
 # Julia

@@ -123,7 +123,7 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 
         ```toml
         [dependencies]
-        fastLoess = { version = "*", features = ["dev"] }
+        fastLoess = "*"
         ```
 
 === "Julia"
