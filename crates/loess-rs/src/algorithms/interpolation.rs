@@ -99,6 +99,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         polynomial_degree: PolynomialDegree,
         distance_metric: &DistanceMetric<T>,
         boundary_degree_fallback: bool,
+        custom_weights: Option<&[T]>,
     ) -> Self
     where
         D: PointDistance<T>,
@@ -219,6 +220,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
                 distance_metric,
                 scales,
                 boundary_degree_fallback,
+                custom_weights,
             );
         } else {
             for v_idx in 0..vertices.len() / dimensions {
@@ -314,6 +316,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         scales: &[T],
         robustness_weights: &[T],
         boundary_degree_fallback: bool,
+        custom_weights: Option<&[T]>,
     ) where
         F: FnMut(&[T], &Neighborhood<T>, &mut FittingBuffer<T>, PolynomialDegree) -> Option<Vec<T>>,
     {
@@ -356,6 +359,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
                 distance_metric,
                 scales,
                 boundary_degree_fallback,
+                custom_weights,
             );
         } else {
             for (v_idx, cached) in self.vertex_neighborhoods.iter().enumerate() {

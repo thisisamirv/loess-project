@@ -747,5 +747,59 @@ class TestParameterCoverage:
         assert len(r.y) == len(x)
 
 
+class TestCustomWeights:
+    """Tests for the custom_weights parameter."""
+
+    X = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
+    Y_LINEAR = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
+
+    def test_custom_weights_zero_outlier_reduces_error(self):
+        """Zeroing the weight on an outlier should improve the fit."""
+        y_outlier = np.array([1.0, 2.0, 3.0, 100.0, 5.0, 6.0, 7.0])
+        w_zero = np.array([1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0])
+
+        loess = fastloess.Loess(fraction=0.6)
+        result_no_w = loess.fit(self.X, y_outlier)
+        result_w = loess.fit(self.X, y_outlier, custom_weights=w_zero)
+
+        # With zero weight on the outlier the non-outlier points should be
+        # closer to the true linear values
+        non_outlier = [0, 1, 2, 4, 5, 6]
+        err_no_w = np.mean(
+            np.abs(result_no_w.y[non_outlier] - self.Y_LINEAR[non_outlier])
+        )
+        err_w = np.mean(np.abs(result_w.y[non_outlier] - self.Y_LINEAR[non_outlier]))
+        assert err_w < err_no_w
+
+    def test_custom_weights_uniform_equals_no_weights(self):
+        """Uniform custom weights should produce the same result as no weights."""
+        y = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
+        w_uniform = np.ones(len(y))
+
+        loess = fastloess.Loess(fraction=0.6)
+        result_no_w = loess.fit(self.X, y)
+        result_w = loess.fit(self.X, y, custom_weights=w_uniform)
+
+        np.testing.assert_allclose(result_w.y, result_no_w.y, rtol=1e-6)
+
+    def test_custom_weights_wrong_length_raises(self):
+        """Weights with wrong length should raise an error."""
+        y = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
+        w_bad = np.array([1.0, 1.0, 1.0])
+
+        loess = fastloess.Loess(fraction=0.6)
+        with pytest.raises((ValueError, RuntimeError)):
+            loess.fit(self.X, y, custom_weights=w_bad)
+
+    def test_custom_weights_negative_raises(self):
+        """Negative weights should raise an error."""
+        y = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])
+        w_neg = np.array([1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0])
+
+        loess = fastloess.Loess(fraction=0.6)
+        with pytest.raises((ValueError, RuntimeError)):
+            loess.fit(self.X, y, custom_weights=w_neg)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

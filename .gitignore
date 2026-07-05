@@ -59,6 +59,7 @@ compile_commands.json
 *.swp
 *.swo
 *~
+*.todo
 
 # OS / System
 .DS_Store

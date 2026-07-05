@@ -122,6 +122,7 @@ pub fn smooth_pass_parallel<T>(
     polynomial_degree: PolynomialDegree,
     distance_metric: &DistanceMetric<T>,
     scales: &[T],
+    custom_weights: Option<&[T]>,
 ) where
     T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Sync + 'static,
 {
@@ -181,6 +182,10 @@ pub fn smooth_pass_parallel<T>(
                     Some(fitting_buffer),
                 );
 
+                if let Some(uw) = custom_weights {
+                    context = context.with_custom_weights(uw);
+                }
+
                 if let Some((val, _)) = context.fit() {
                     val
                 } else {
@@ -213,6 +218,7 @@ pub fn vertex_pass_parallel<T>(
     distance_metric: &DistanceMetric<T>,
     scales: &[T],
     boundary_degree_fallback: bool,
+    custom_weights: Option<&[T]>,
 ) where
     T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Sync + 'static,
 {
@@ -324,6 +330,10 @@ pub fn vertex_pass_parallel<T>(
                     false, // compute_leverage
                     Some(fitting_buffer),
                 );
+
+                if let Some(uw) = custom_weights {
+                    context = context.with_custom_weights(uw);
+                }
 
                 let coeffs = context.fit_with_coefficients().unwrap_or_else(|| {
                     let mean =

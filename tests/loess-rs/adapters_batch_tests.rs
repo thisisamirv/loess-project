@@ -837,3 +837,177 @@ fn test_batch_duplicate_x_values() {
         assert!(val.is_finite());
     }
 }
+
+// ============================================================================
+// Custom Weights Tests
+// ============================================================================
+
+// Zero weight on an outlier reduces its influence on the fit
+#[test]
+fn test_batch_custom_weights_zero_weight_reduces_influence() {
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|v| v * 2.0).collect();
+    y[5] = 100.0; // large outlier
+
+    let result_no_weights = Loess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let mut weights = vec![1.0_f64; 10];
+    weights[5] = 0.0;
+
+    let result_zero_weight = Loess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .custom_weights(weights)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let true_val = 5.0 * 2.0;
+    let err_no_w = (result_no_weights.y[5] - true_val).abs();
+    let err_zero_w = (result_zero_weight.y[5] - true_val).abs();
+
+    assert!(
+        err_zero_w < err_no_w,
+        "zeroing outlier weight should bring fit[5] closer to the true line \
+         (err_no_weights={err_no_w:.2}, err_zero_weight={err_zero_w:.2})"
+    );
+}
+
+// Uniform weights equal to 1 produce the same result as no weights
+#[test]
+fn test_batch_custom_weights_uniform_equals_no_weights() {
+    let x: Vec<f64> = (0..20).map(|i| i as f64 * 0.5).collect();
+    let y: Vec<f64> = x.iter().map(|v| v.sin()).collect();
+    let weights = vec![1.0_f64; 20];
+
+    let result_no_w = Loess::new()
+        .fraction(0.4)
+        .iterations(2)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let result_unit_w = Loess::new()
+        .fraction(0.4)
+        .iterations(2)
+        .custom_weights(weights)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    for (a, b) in result_no_w.y.iter().zip(result_unit_w.y.iter()) {
+        assert_relative_eq!(a, b, max_relative = 1e-10, epsilon = 1e-12);
+    }
+}
+
+// High weight on a point pulls the fit toward it
+#[test]
+fn test_batch_custom_weights_high_weight_pulls_fit() {
+    let x: Vec<f64> = (0..15).map(|i| i as f64).collect();
+    let mut y = vec![0.0_f64; 15];
+    y[7] = 10.0; // spike
+
+    let mut weights = vec![1.0_f64; 15];
+    weights[7] = 100.0;
+
+    let result_high = Loess::new()
+        .fraction(0.6)
+        .iterations(0)
+        .custom_weights(weights)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let result_equal = Loess::new()
+        .fraction(0.6)
+        .iterations(0)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(
+        result_high.y[7] > result_equal.y[7],
+        "high weight at spike should pull fit up at that point \
+         (high={:.3}, equal={:.3})",
+        result_high.y[7],
+        result_equal.y[7]
+    );
+}
+
+// custom_weights works alongside robustness iterations
+#[test]
+fn test_batch_custom_weights_with_robustness() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|v| v * 0.5 + (v * 0.3).sin()).collect();
+    let weights: Vec<f64> = x.iter().map(|v| 1.0 + 0.1 * v).collect();
+
+    let result = Loess::new()
+        .fraction(0.4)
+        .iterations(3)
+        .custom_weights(weights)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("custom_weights + robustness iterations should succeed");
+
+    assert_eq!(result.y.len(), 30);
+    assert!(result.y.iter().all(|v| v.is_finite()));
+}
+
+// Wrong-length weights are rejected at fit time
+#[test]
+fn test_batch_custom_weights_wrong_length_rejected() {
+    use loess_rs::internals::primitives::errors::LoessError;
+
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let y = vec![1.0_f64; 10];
+    let weights = vec![1.0_f64; 7]; // wrong length
+
+    let result = Loess::new()
+        .fraction(0.5)
+        .custom_weights(weights)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y);
+
+    assert!(
+        matches!(result, Err(LoessError::InvalidInput(_))),
+        "wrong-length weights should produce InvalidInput error"
+    );
+}
+
+// Duplicate custom_weights call is caught at build time
+#[test]
+fn test_batch_custom_weights_duplicate_detected() {
+    use loess_rs::internals::primitives::errors::LoessError;
+
+    let result = Loess::new()
+        .custom_weights(vec![1.0, 1.0, 1.0])
+        .custom_weights(vec![2.0, 2.0, 2.0])
+        .adapter(Batch)
+        .build();
+
+    assert!(
+        matches!(result, Err(LoessError::DuplicateParameter { .. })),
+        "setting custom_weights twice should produce DuplicateParameter error"
+    );
+}

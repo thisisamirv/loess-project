@@ -43,6 +43,9 @@ constexpr int k_iterations3 = 3;
 constexpr int k_iterations2 = 2;
 constexpr int k_cv_k = 3;
 constexpr int k_overlap_size = 3;
+constexpr double k_fraction_six_tenths = 0.6;
+constexpr double k_epsilon_1e6 = 1e-6;
+constexpr size_t k_seven_count = 7;
 
 // ── Test fixture data ──────────────────────────────────────────────────────
 // Constexpr arrays: literals in constexpr initializers are not magic numbers.
@@ -517,6 +520,66 @@ void testLoessWeightFunctions() {
   }
 }
 
+void testLoessCustomWeights() {
+  std::cout << "Running testLoessCustomWeights...\n";
+
+  const std::vector<double> x_vals = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+  const std::vector<double> y_true = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
+  const std::vector<double> y_outlier = {1.0, 2.0, 3.0, 100.0, 5.0, 6.0, 7.0};
+
+  // Zero weight on outlier should reduce error on non-outlier points
+  {
+    const std::vector<double> w_zero = {1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0};
+    LoessOptions opts;
+    opts.fraction = k_fraction_six_tenths;
+    Loess loess(opts);
+    auto r_no_w = loess.fit(x_vals, y_outlier).value();
+    auto r_w = loess.fit(x_vals, y_outlier, w_zero).value();
+
+    const std::vector<size_t> non_outlier = {0, 1, 2, 4, 5, 6};
+    double err_no_w = 0.0;
+    double err_w = 0.0;
+    for (size_t idx : non_outlier) {
+      err_no_w += std::abs(r_no_w.yVector()[idx] - y_true[idx]);
+      err_w += std::abs(r_w.yVector()[idx] - y_true[idx]);
+    }
+    assertTrue(err_w < err_no_w, "zero weight on outlier should reduce error");
+  }
+
+  // Uniform weights should produce the same result as no weights
+  {
+    const std::vector<double> w_uniform(x_vals.size(), 1.0);
+    LoessOptions opts;
+    opts.fraction = k_fraction_six_tenths;
+    Loess loess(opts);
+    auto r_no_w = loess.fit(x_vals, y_true).value();
+    auto r_w = loess.fit(x_vals, y_true, w_uniform).value();
+    for (size_t idx = 0; idx < r_no_w.yVector().size(); ++idx) {
+      assertApprox(r_w.yVector()[idx], r_no_w.yVector()[idx], k_epsilon_1e6);
+    }
+  }
+
+  // Wrong-length weights should produce an error result
+  {
+    const std::vector<double> w_bad = {1.0, 1.0, 1.0};
+    LoessOptions opts;
+    opts.fraction = k_fraction_six_tenths;
+    Loess loess(opts);
+    auto res = loess.fit(x_vals, y_true, w_bad);
+    assertTrue(!res.hasValue(), "wrong-length weights should return error");
+  }
+
+  // Negative weights should produce an error result
+  {
+    const std::vector<double> w_neg = {1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    LoessOptions opts;
+    opts.fraction = k_fraction_six_tenths;
+    Loess loess(opts);
+    auto res = loess.fit(x_vals, y_true, w_neg);
+    assertTrue(!res.hasValue(), "negative weights should return error");
+  }
+}
+
 void testLoessRobustnessMethods() {
   std::cout << "Running testLoessRobustnessMethods...\n";
   auto data = makeLinear30();
@@ -646,6 +709,7 @@ int main() {
     testLoessDistanceMetrics();
     testLoessSurfaceModeAndReturnSe();
     testLoessWeightFunctions();
+    testLoessCustomWeights();
     testLoessRobustnessMethods();
     testLoessCrossValidation();
     testStreamingMergeStrategies();

@@ -167,3 +167,47 @@ test('WASM online: update mode via options', () => {
     }
     assert.ok(lastVal !== undefined && lastVal !== null);
 });
+
+test('WASM custom weights: zero on outlier reduces error', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5, 6, 7]);
+    const yOutlier = new Float64Array([1, 2, 3, 100, 5, 6, 7]);
+    const yTrue = [1, 2, 3, 4, 5, 6, 7];
+    const wZero = [1, 1, 1, 0, 1, 1, 1];
+
+    const rNoW = fastloess.smooth(x, yOutlier, { fraction: 0.6 });
+    const rW = fastloess.smooth(x, yOutlier, { fraction: 0.6, custom_weights: wZero });
+
+    const nonOutlier = [0, 1, 2, 4, 5, 6];
+    const errNoW = nonOutlier.reduce((s, i) => s + Math.abs(rNoW.y[i] - yTrue[i]), 0) / nonOutlier.length;
+    const errW = nonOutlier.reduce((s, i) => s + Math.abs(rW.y[i] - yTrue[i]), 0) / nonOutlier.length;
+    assert.ok(errW < errNoW, `expected ${errW} < ${errNoW}`);
+});
+
+test('WASM custom weights: uniform equals no weights', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5, 6, 7]);
+    const y = new Float64Array([1, 2, 3, 4, 5, 6, 7]);
+    const wUniform = [1, 1, 1, 1, 1, 1, 1];
+
+    const rNoW = fastloess.smooth(x, y, { fraction: 0.6 });
+    const rW = fastloess.smooth(x, y, { fraction: 0.6, custom_weights: wUniform });
+
+    for (let i = 0; i < rNoW.y.length; i++) {
+        assert.ok(Math.abs(rW.y[i] - rNoW.y[i]) < 1e-6, `mismatch at index ${i}`);
+    }
+});
+
+test('WASM custom weights: wrong length throws', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5, 6, 7]);
+    const y = new Float64Array([1, 2, 3, 4, 5, 6, 7]);
+    const wBad = [1, 1, 1];
+
+    assert.throws(() => fastloess.smooth(x, y, { fraction: 0.6, custom_weights: wBad }));
+});
+
+test('WASM custom weights: negative weight throws', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5, 6, 7]);
+    const y = new Float64Array([1, 2, 3, 4, 5, 6, 7]);
+    const wNeg = [1, -1, 1, 1, 1, 1, 1];
+
+    assert.throws(() => fastloess.smooth(x, y, { fraction: 0.6, custom_weights: wNeg }));
+});

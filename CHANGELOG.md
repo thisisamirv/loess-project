@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.9
 
+### Added
+
+**Monorepo:**
+
+- Added the option to pass custom weights by the user to the algorithm.
+
 ### Changed
 
 **Monorepo:**

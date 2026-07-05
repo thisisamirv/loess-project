@@ -246,3 +246,49 @@ test_that("Loess: return_se", {
     expect_true("trace_hat" %in% names(r))
     expect_true("leverage" %in% names(r))
 })
+
+test_that("Loess: custom_weights zero on outlier reduces error", {
+    x <- as.double(c(1, 2, 3, 4, 5, 6, 7))
+    y_true <- as.double(c(1, 2, 3, 4, 5, 6, 7))
+    y_outlier <- as.double(c(1, 2, 3, 100, 5, 6, 7))
+    w_zero <- as.double(c(1, 1, 1, 0, 1, 1, 1))
+
+    loess <- Loess(fraction = 0.6)
+    r_no_w <- loess$fit(x, y_outlier)
+    r_w <- loess$fit(x, y_outlier, custom_weights = w_zero)
+
+    non_outlier <- c(1, 2, 3, 5, 6, 7)
+    err_no_w <- mean(abs(r_no_w$y[non_outlier] - y_true[non_outlier]))
+    err_w <- mean(abs(r_w$y[non_outlier] - y_true[non_outlier]))
+    expect_lt(err_w, err_no_w)
+})
+
+test_that("Loess: uniform custom_weights equal no weights", {
+    x <- as.double(c(1, 2, 3, 4, 5, 6, 7))
+    y <- as.double(c(1, 2, 3, 4, 5, 6, 7))
+    w_uniform <- rep(1.0, 7)
+
+    loess <- Loess(fraction = 0.6)
+    r_no_w <- loess$fit(x, y)
+    r_w <- loess$fit(x, y, custom_weights = w_uniform)
+
+    expect_equal(r_w$y, r_no_w$y, tolerance = 1e-6)
+})
+
+test_that("Loess: custom_weights wrong length raises error", {
+    x <- as.double(c(1, 2, 3, 4, 5, 6, 7))
+    y <- as.double(c(1, 2, 3, 4, 5, 6, 7))
+    w_bad <- as.double(c(1, 1, 1))
+
+    loess <- Loess(fraction = 0.6)
+    expect_error(loess$fit(x, y, custom_weights = w_bad))
+})
+
+test_that("Loess: negative custom_weights raises error", {
+    x <- as.double(c(1, 2, 3, 4, 5, 6, 7))
+    y <- as.double(c(1, 2, 3, 4, 5, 6, 7))
+    w_neg <- as.double(c(1, -1, 1, 1, 1, 1, 1))
+
+    loess <- Loess(fraction = 0.6)
+    expect_error(loess$fit(x, y, custom_weights = w_neg))
+})

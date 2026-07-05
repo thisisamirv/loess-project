@@ -87,7 +87,8 @@ fn test_build_simple_1d() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     assert!(surface.vertex_data.len() >= 4); // At least 2 vertices * 2 values each
@@ -154,7 +155,8 @@ fn test_build_simple_2d() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     // Initial cell has 4 vertices (2^2)
@@ -210,7 +212,8 @@ fn test_interpolate_1d_linear() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     // Test points
@@ -269,7 +272,8 @@ fn test_interpolate_2d_bilinear() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     // Evaluate at center (1, 1) -> 2(1) + 3(1) + 1 = 6
@@ -333,7 +337,8 @@ fn test_adaptive_subdivision() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     // Should have more than just the initial 2 vertices
@@ -391,7 +396,8 @@ fn test_interpolate_boundary_clamping() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     // Far outside right (should be clamped to upper bound value)
@@ -450,7 +456,8 @@ fn test_fitter_fallback() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     // Should use mean (2.0)
@@ -510,7 +517,8 @@ fn test_refit_values_1d() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     // Refit fitter: constant 99.0
@@ -538,6 +546,7 @@ fn test_refit_values_1d() {
         &[], // scales
         &robustness_weights,
         true, // boundary_degree_fallback
+        None, // custom_weights
     );
 
     // After refit, all vertices should hold 99.0 so evaluate returns ~99.0
@@ -590,7 +599,8 @@ fn test_refit_values_fallback_to_mean() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     // Refit with None-returning fitter — should fall back to global mean (5.0)
@@ -617,7 +627,8 @@ fn test_refit_values_fallback_to_mean() {
         &DistanceMetric::default(),
         &[],
         &robustness_weights,
-        false, // boundary_degree_fallback disabled
+        false, // boundary_degree_fallback disabled
+        None, // custom_weights
     );
 
     // Fallback to mean: y mean = 5.0
@@ -678,7 +689,8 @@ fn test_interpolation_fallback_single_vertex() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     // Should evaluate without panic (uses fallback_interpolation if < 2 vertices)
@@ -745,7 +757,8 @@ fn test_interpolation_surface_f32() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     // Evaluate at a few points — exercises hermite_phi0/1, hermite_psi0/1 for f32
@@ -804,7 +817,8 @@ fn test_refit_values_f32() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
+        None, // custom_weights
     );
 
     let refit_fitter = |_: &[f32],
@@ -830,7 +844,8 @@ fn test_refit_values_f32() {
         &DistanceMetric::default(),
         &[],
         &robustness_weights,
-        true,
+        true,
+        None, // custom_weights
     );
 
     let val = surface.evaluate(&[1.5f32]);

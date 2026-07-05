@@ -154,6 +154,7 @@ fn test_config_custom() {
         interpolation_vertices: None,
         cell: Some(0.2),
         boundary_degree_fallback: true,
+        custom_weights: None,
     };
 
     assert_eq!(config.fraction, Some(0.5));
@@ -359,6 +360,7 @@ fn test_config_f32() {
         interpolation_vertices: None,
         cell: Some(0.2),
         boundary_degree_fallback: true,
+        custom_weights: None,
     };
 
     assert_eq!(config.fraction, Some(0.5f32));
@@ -423,6 +425,7 @@ fn test_executor_convergence_zero_tolerance() {
         interpolation_vertices: None,
         cell: Some(0.2),
         boundary_degree_fallback: true,
+        custom_weights: None,
     };
 
     let output = LoessExecutor::run_with_config(&x, &y, config);

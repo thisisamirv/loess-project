@@ -421,3 +421,62 @@ fn test_validate_max_float() {
     let res = Validator::validate_inputs(&x, &y, 1);
     assert!(res.is_ok(), "Max finite float values should be accepted");
 }
+
+// ============================================================================
+// Custom Weights Validation Tests
+// ============================================================================
+
+// Negative weight is rejected
+#[test]
+fn test_custom_weights_negative_rejected() {
+    let result = Validator::validate_custom_weights(&[-1.0_f64, 1.0, 1.0], 3);
+    assert!(
+        matches!(result, Err(LoessError::InvalidInput(_))),
+        "negative weight should produce InvalidInput error"
+    );
+}
+
+// NaN weight is rejected
+#[test]
+fn test_custom_weights_nan_rejected() {
+    let result = Validator::validate_custom_weights(&[1.0_f64, f64::NAN, 1.0], 3);
+    assert!(
+        matches!(result, Err(LoessError::InvalidInput(_))),
+        "NaN weight should produce InvalidInput error"
+    );
+}
+
+// Infinite weight is rejected
+#[test]
+fn test_custom_weights_inf_rejected() {
+    let result = Validator::validate_custom_weights(&[1.0_f64, f64::INFINITY, 1.0], 3);
+    assert!(
+        matches!(result, Err(LoessError::InvalidInput(_))),
+        "infinite weight should produce InvalidInput error"
+    );
+}
+
+// Length mismatch is rejected
+#[test]
+fn test_custom_weights_length_mismatch_rejected() {
+    let result = Validator::validate_custom_weights(&[1.0_f64, 1.0, 1.0], 5);
+    assert!(
+        matches!(result, Err(LoessError::InvalidInput(_))),
+        "wrong-length weights should produce InvalidInput error"
+    );
+}
+
+// Zero weights are allowed (observation is excluded)
+#[test]
+fn test_custom_weights_zero_allowed() {
+    let result = Validator::validate_custom_weights(&[0.0_f64, 0.0, 0.0], 3);
+    assert!(result.is_ok(), "all-zero weights are valid per validator");
+}
+
+// Valid weights pass
+#[test]
+fn test_custom_weights_valid_passes() {
+    let weights = [0.5_f64, 1.0, 2.0, 0.0, 10.0];
+    let result = Validator::validate_custom_weights(&weights, 5);
+    assert!(result.is_ok(), "valid weights should pass validation");
+}

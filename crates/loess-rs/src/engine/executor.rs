@@ -136,6 +136,7 @@ pub type SmoothPassFn<T> = fn(
     PolynomialDegree,   // polynomial_degree
     &DistanceMetric<T>, // distance_metric
     &[T],               // scales (normalization scales per dimension)
+    Option<&[T]>,       // custom_weights (per-observation user weights)
 );
 
 // Signature for custom cross-validation pass function
@@ -196,8 +197,9 @@ pub type VertexPassFn<T> = fn(
     ZeroWeightFallback,
     PolynomialDegree,
     &DistanceMetric<T>,
-    &[T], // scales
-    bool, // boundary_degree_fallback
+    &[T],         // scales
+    bool,         // boundary_degree_fallback
+    Option<&[T]>, // custom_weights (per-observation user weights)
 );
 
 // Signature for custom KD-tree builder function.
@@ -834,9 +836,10 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 
         // Expand custom weights to the augmented (boundary-padded) data space.
         // Boundary points are assigned the weight of their nearest original point.
-        let custom_weights_aug: Option<Vec<T>> = self.custom_weights.as_ref().map(|uw| {
-            mapping.iter().map(|&orig_idx| uw[orig_idx]).collect()
-        });
+        let custom_weights_aug: Option<Vec<T>> = self
+            .custom_weights
+            .as_ref()
+            .map(|uw| mapping.iter().map(|&orig_idx| uw[orig_idx]).collect());
 
         let mut new_workspace;
         let workspace = if let Some(ws) = workspace {
@@ -966,6 +969,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 self.polynomial_degree,
                 &self.distance_metric,
                 self.boundary_degree_fallback,
+                custom_weights_aug.as_deref(),
             );
             _surface_opt = Some(surface);
 
@@ -999,6 +1003,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     self.polynomial_degree,
                     &self.distance_metric,
                     &scales_local,
+                    custom_weights_aug.as_deref(),
                 );
                 // Mark cache as invalid since we bypassed the internal method
                 workspace.executor_buffer.neighborhood_cache.is_valid = false;
@@ -1135,6 +1140,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                             &scales_local,
                             &workspace.executor_buffer.robustness_weights,
                             self.boundary_degree_fallback,
+                            custom_weights_aug.as_deref(),
                         );
 
                         // Re-evaluate at data points using original x (not augmented)
@@ -1164,6 +1170,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                             self.polynomial_degree,
                             &self.distance_metric,
                             &scales_local,
+                            custom_weights_aug.as_deref(),
                         );
                     } else {
                         // Use cached neighborhoods to skip KD-tree searches
