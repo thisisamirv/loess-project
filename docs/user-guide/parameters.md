@@ -7,196 +7,196 @@ Complete reference for all LOESS configuration options.
 
 === "R"
 
-| Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- |
-| **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-| **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-| **degree** | 1 | 0–4 | Polynomial degree | All |
-| **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-| **delta** | NULL (auto) | [0, ∞) | Interpolation threshold | All |
-| **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
-| **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
-| **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-| **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
-| **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
-| **auto_converge** | NULL | tolerance | Early stopping | All |
-| **return_residuals** | FALSE | logical | Include residuals | All |
-| **return_robustness_weights** | FALSE | logical | Include weights | All |
-| **return_diagnostics** | FALSE | logical | Include metrics | Batch, Streaming |
-| **confidence_intervals** | NULL | (0, 1) | CI level | Batch |
-| **prediction_intervals** | NULL | (0, 1) | PI level | Batch |
-| **cv_method** | NULL | method | Auto-select fraction | Batch |
-| **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
-| **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-| **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
-| **min_points** | 2 | [2, window] | Min before output | Online |
-| **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
+    | Parameter | Default | Range/Options | Description | Adapter |
+    | --- | --- | --- | --- | --- |
+    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
+    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+    | **degree** | 1 | 0–4 | Polynomial degree | All |
+    | **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
+    | **delta** | NULL (auto) | [0, ∞) | Interpolation threshold | All |
+    | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
+    | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
+    | **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
+    | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
+    | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
+    | **auto_converge** | NULL | tolerance | Early stopping | All |
+    | **return_residuals** | FALSE | logical | Include residuals | All |
+    | **return_robustness_weights** | FALSE | logical | Include weights | All |
+    | **return_diagnostics** | FALSE | logical | Include metrics | Batch, Streaming |
+    | **confidence_intervals** | NULL | (0, 1) | CI level | Batch |
+    | **prediction_intervals** | NULL | (0, 1) | PI level | Batch |
+    | **cv_method** | NULL | method | Auto-select fraction | Batch |
+    | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
+    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
+    | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
+    | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
+    | **min_points** | 2 | [2, window] | Min before output | Online |
+    | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
 
 === "Python"
 
-| Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- |
-| **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-| **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-| **degree** | 1 | 0–4 | Polynomial degree | All |
-| **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-| **delta** | None (auto) | [0, ∞) | Interpolation threshold | All |
-| **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
-| **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
-| **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-| **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
-| **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
-| **auto_converge** | None | tolerance | Early stopping | All |
-| **return_residuals** | False | bool | Include residuals | All |
-| **return_robustness_weights** | False | bool | Include weights | All |
-| **return_diagnostics** | False | bool | Include metrics | Batch, Streaming |
-| **confidence_intervals** | None | (0, 1) | CI level | Batch |
-| **prediction_intervals** | None | (0, 1) | PI level | Batch |
-| **cv_method** | None | method | Auto-select fraction | Batch |
-| **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
-| **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-| **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
-| **min_points** | 2 | [2, window] | Min before output | Online |
-| **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
+    | Parameter | Default | Range/Options | Description | Adapter |
+    | --- | --- | --- | --- | --- |
+    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
+    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+    | **degree** | 1 | 0–4 | Polynomial degree | All |
+    | **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
+    | **delta** | None (auto) | [0, ∞) | Interpolation threshold | All |
+    | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
+    | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
+    | **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
+    | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
+    | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
+    | **auto_converge** | None | tolerance | Early stopping | All |
+    | **return_residuals** | False | bool | Include residuals | All |
+    | **return_robustness_weights** | False | bool | Include weights | All |
+    | **return_diagnostics** | False | bool | Include metrics | Batch, Streaming |
+    | **confidence_intervals** | None | (0, 1) | CI level | Batch |
+    | **prediction_intervals** | None | (0, 1) | PI level | Batch |
+    | **cv_method** | None | method | Auto-select fraction | Batch |
+    | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
+    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
+    | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
+    | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
+    | **min_points** | 2 | [2, window] | Min before output | Online |
+    | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
 
 === "Rust"
 
-| Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- |
-| **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-| **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-| **degree** | 1 | 0–4 | Polynomial degree | All |
-| **surface_mode** | `Interpolation` | 2 options | Fit vs interpolate | All |
-| **delta** | auto | [0, ∞) | Interpolation threshold | All |
-| **weight_function** | `Tricube` | 7 options | Distance kernel | All |
-| **robustness_method** | `Bisquare` | 3 options | Outlier weighting | All |
-| **zero_weight_fallback** | `UseLocalMean` | 3 options | Zero-weight behavior | All |
-| **boundary_policy** | `Extend` | 4 options | Edge handling | All |
-| **scaling_method** | `MAD` | 3 options | Scale estimation | All |
-| **auto_converge** | None | tolerance | Early stopping | All |
-| **return_residuals** | false | bool | Include residuals | All |
-| **return_robustness_weights** | false | bool | Include weights | All |
-| **return_diagnostics** | false | bool | Include metrics | Batch, Streaming |
-| **confidence_intervals** | None | (0, 1) | CI level | Batch |
-| **prediction_intervals** | None | (0, 1) | PI level | Batch |
-| **cross_validate** | None | method | Auto-select fraction | Batch |
-| **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
-| **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **merge_strategy** | `WeightedAverage` | 4 options | Merge overlaps | Streaming |
-| **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
-| **min_points** | 2 | [2, window] | Min before output | Online |
-| **update_mode** | `Incremental` | 2 options | Update strategy | Online |
+    | Parameter | Default | Range/Options | Description | Adapter |
+    | --- | --- | --- | --- | --- |
+    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
+    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+    | **degree** | 1 | 0–4 | Polynomial degree | All |
+    | **surface_mode** | `Interpolation` | 2 options | Fit vs interpolate | All |
+    | **delta** | auto | [0, ∞) | Interpolation threshold | All |
+    | **weight_function** | `Tricube` | 7 options | Distance kernel | All |
+    | **robustness_method** | `Bisquare` | 3 options | Outlier weighting | All |
+    | **zero_weight_fallback** | `UseLocalMean` | 3 options | Zero-weight behavior | All |
+    | **boundary_policy** | `Extend` | 4 options | Edge handling | All |
+    | **scaling_method** | `MAD` | 3 options | Scale estimation | All |
+    | **auto_converge** | None | tolerance | Early stopping | All |
+    | **return_residuals** | false | bool | Include residuals | All |
+    | **return_robustness_weights** | false | bool | Include weights | All |
+    | **return_diagnostics** | false | bool | Include metrics | Batch, Streaming |
+    | **confidence_intervals** | None | (0, 1) | CI level | Batch |
+    | **prediction_intervals** | None | (0, 1) | PI level | Batch |
+    | **cross_validate** | None | method | Auto-select fraction | Batch |
+    | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
+    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
+    | **merge_strategy** | `WeightedAverage` | 4 options | Merge overlaps | Streaming |
+    | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
+    | **min_points** | 2 | [2, window] | Min before output | Online |
+    | **update_mode** | `Incremental` | 2 options | Update strategy | Online |
 
 === "Julia"
 
-| Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- |
-| **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-| **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-| **degree** | 1 | 0–4 | Polynomial degree | All |
-| **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-| **delta** | `nothing` (auto) | [0, ∞) | Interpolation threshold | All |
-| **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
-| **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
-| **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-| **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
-| **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
-| **auto_converge** | `nothing` | tolerance | Early stopping | All |
-| **return_residuals** | `false` | bool | Include residuals | All |
-| **return_robustness_weights** | `false` | bool | Include weights | All |
-| **return_diagnostics** | `false` | bool | Include metrics | Batch, Streaming |
-| **confidence_intervals** | `nothing` | (0, 1) | CI level | Batch |
-| **prediction_intervals** | `nothing` | (0, 1) | PI level | Batch |
-| **cv_method** | `nothing` | method | Auto-select fraction | Batch |
-| **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
-| **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-| **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
-| **min_points** | 2 | [2, window] | Min before output | Online |
-| **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
+    | Parameter | Default | Range/Options | Description | Adapter |
+    | --- | --- | --- | --- | --- |
+    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
+    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+    | **degree** | 1 | 0–4 | Polynomial degree | All |
+    | **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
+    | **delta** | `nothing` (auto) | [0, ∞) | Interpolation threshold | All |
+    | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
+    | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
+    | **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
+    | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
+    | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
+    | **auto_converge** | `nothing` | tolerance | Early stopping | All |
+    | **return_residuals** | `false` | bool | Include residuals | All |
+    | **return_robustness_weights** | `false` | bool | Include weights | All |
+    | **return_diagnostics** | `false` | bool | Include metrics | Batch, Streaming |
+    | **confidence_intervals** | `nothing` | (0, 1) | CI level | Batch |
+    | **prediction_intervals** | `nothing` | (0, 1) | PI level | Batch |
+    | **cv_method** | `nothing` | method | Auto-select fraction | Batch |
+    | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
+    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
+    | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
+    | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
+    | **min_points** | 2 | [2, window] | Min before output | Online |
+    | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
 
 === "Node.js"
 
-| Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- |
-| **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-| **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-| **degree** | 1 | 0–4 | Polynomial degree | All |
-| **surfaceMode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-| **delta** | auto | [0, ∞) | Interpolation threshold | All |
-| **weightFunction** | `"tricube"` | 7 options | Distance kernel | All |
-| **robustnessMethod** | `"bisquare"` | 3 options | Outlier weighting | All |
-| **zeroWeightFallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-| **boundaryPolicy** | `"extend"` | 4 options | Edge handling | All |
-| **scalingMethod** | `"mad"` | 3 options | Scale estimation | All |
-| **autoConverge** | null | tolerance | Early stopping | All |
-| **returnResiduals** | false | bool | Include residuals | All |
-| **returnRobustnessWeights** | false | bool | Include weights | All |
-| **returnDiagnostics** | false | bool | Include metrics | Batch, Streaming |
-| **confidenceIntervals** | null | (0, 1) | CI level | Batch |
-| **predictionIntervals** | null | (0, 1) | PI level | Batch |
-| **chunkSize** | 5000 | [10, ∞) | Points per chunk | Streaming |
-| **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **mergeStrategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-| **windowCapacity** | 1000 | [3, ∞) | Max window size | Online |
-| **minPoints** | 2 | [2, window] | Min before output | Online |
-| **updateMode** | `"incremental"` | 2 options | Update strategy | Online |
+    | Parameter | Default | Range/Options | Description | Adapter |
+    | --- | --- | --- | --- | --- |
+    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
+    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+    | **degree** | 1 | 0–4 | Polynomial degree | All |
+    | **surfaceMode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
+    | **delta** | auto | [0, ∞) | Interpolation threshold | All |
+    | **weightFunction** | `"tricube"` | 7 options | Distance kernel | All |
+    | **robustnessMethod** | `"bisquare"` | 3 options | Outlier weighting | All |
+    | **zeroWeightFallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
+    | **boundaryPolicy** | `"extend"` | 4 options | Edge handling | All |
+    | **scalingMethod** | `"mad"` | 3 options | Scale estimation | All |
+    | **autoConverge** | null | tolerance | Early stopping | All |
+    | **returnResiduals** | false | bool | Include residuals | All |
+    | **returnRobustnessWeights** | false | bool | Include weights | All |
+    | **returnDiagnostics** | false | bool | Include metrics | Batch, Streaming |
+    | **confidenceIntervals** | null | (0, 1) | CI level | Batch |
+    | **predictionIntervals** | null | (0, 1) | PI level | Batch |
+    | **chunkSize** | 5000 | [10, ∞) | Points per chunk | Streaming |
+    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
+    | **mergeStrategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
+    | **windowCapacity** | 1000 | [3, ∞) | Max window size | Online |
+    | **minPoints** | 2 | [2, window] | Min before output | Online |
+    | **updateMode** | `"incremental"` | 2 options | Update strategy | Online |
 
 === "WebAssembly"
 
-| Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- |
-| **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-| **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-| **degree** | 1 | 0–4 | Polynomial degree | All |
-| **surfaceMode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-| **delta** | auto | [0, ∞) | Interpolation threshold | All |
-| **weightFunction** | `"tricube"` | 7 options | Distance kernel | All |
-| **robustnessMethod** | `"bisquare"` | 3 options | Outlier weighting | All |
-| **zeroWeightFallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-| **boundaryPolicy** | `"extend"` | 4 options | Edge handling | All |
-| **scalingMethod** | `"mad"` | 3 options | Scale estimation | All |
-| **autoConverge** | null | tolerance | Early stopping | All |
-| **returnResiduals** | false | bool | Include residuals | All |
-| **returnRobustnessWeights** | false | bool | Include weights | All |
-| **returnDiagnostics** | false | bool | Include metrics | Batch, Streaming |
-| **confidenceIntervals** | null | (0, 1) | CI level | Batch |
-| **predictionIntervals** | null | (0, 1) | PI level | Batch |
-| **chunkSize** | 5000 | [10, ∞) | Points per chunk | Streaming |
-| **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-| **mergeStrategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-| **windowCapacity** | 1000 | [3, ∞) | Max window size | Online |
-| **minPoints** | 2 | [2, window] | Min before output | Online |
-| **updateMode** | `"incremental"` | 2 options | Update strategy | Online |
+    | Parameter | Default | Range/Options | Description | Adapter |
+    | --- | --- | --- | --- | --- |
+    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
+    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+    | **degree** | 1 | 0–4 | Polynomial degree | All |
+    | **surfaceMode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
+    | **delta** | auto | [0, ∞) | Interpolation threshold | All |
+    | **weightFunction** | `"tricube"` | 7 options | Distance kernel | All |
+    | **robustnessMethod** | `"bisquare"` | 3 options | Outlier weighting | All |
+    | **zeroWeightFallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
+    | **boundaryPolicy** | `"extend"` | 4 options | Edge handling | All |
+    | **scalingMethod** | `"mad"` | 3 options | Scale estimation | All |
+    | **autoConverge** | null | tolerance | Early stopping | All |
+    | **returnResiduals** | false | bool | Include residuals | All |
+    | **returnRobustnessWeights** | false | bool | Include weights | All |
+    | **returnDiagnostics** | false | bool | Include metrics | Batch, Streaming |
+    | **confidenceIntervals** | null | (0, 1) | CI level | Batch |
+    | **predictionIntervals** | null | (0, 1) | PI level | Batch |
+    | **chunkSize** | 5000 | [10, ∞) | Points per chunk | Streaming |
+    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
+    | **mergeStrategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
+    | **windowCapacity** | 1000 | [3, ∞) | Max window size | Online |
+    | **minPoints** | 2 | [2, window] | Min before output | Online |
+    | **updateMode** | `"incremental"` | 2 options | Update strategy | Online |
 
 === "C++"
 
-| Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- |
-| **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-| **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-| **degree** | 1 | 0–4 | Polynomial degree | All |
-| **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-| **delta** | NAN (auto) | [0, ∞) | Interpolation threshold | All |
-| **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
-| **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
-| **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-| **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
-| **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
-| **auto_converge** | NAN | tolerance | Early stopping | All |
-| **return_residuals** | false | bool | Include residuals | All |
-| **return_robustness_weights** | false | bool | Include weights | All |
-| **return_diagnostics** | false | bool | Include metrics | Batch, Streaming |
-| **confidence_intervals** | NAN | (0, 1) | CI level | Batch |
-| **prediction_intervals** | NAN | (0, 1) | PI level | Batch |
-| **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
-| **overlap** | -1 (auto) | [0, chunk) | Overlap between chunks | Streaming |
-| **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-| **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
-| **min_points** | 2 | [2, window] | Min before output | Online |
-| **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
+    | Parameter | Default | Range/Options | Description | Adapter |
+    | --- | --- | --- | --- | --- |
+    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
+    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+    | **degree** | 1 | 0–4 | Polynomial degree | All |
+    | **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
+    | **delta** | NAN (auto) | [0, ∞) | Interpolation threshold | All |
+    | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
+    | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
+    | **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
+    | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
+    | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
+    | **auto_converge** | NAN | tolerance | Early stopping | All |
+    | **return_residuals** | false | bool | Include residuals | All |
+    | **return_robustness_weights** | false | bool | Include weights | All |
+    | **return_diagnostics** | false | bool | Include metrics | Batch, Streaming |
+    | **confidence_intervals** | NAN | (0, 1) | CI level | Batch |
+    | **prediction_intervals** | NAN | (0, 1) | PI level | Batch |
+    | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
+    | **overlap** | -1 (auto) | [0, chunk) | Overlap between chunks | Streaming |
+    | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
+    | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
+    | **min_points** | 2 | [2, window] | Min before output | Online |
+    | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
 
 ---
 
