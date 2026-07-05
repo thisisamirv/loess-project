@@ -68,9 +68,8 @@ jobs:
           version: "1.11"
 
       - name: Install wasm-pack
-        uses: jetli/wasm-pack-action@v0.4.0
-        with:
-          version: "v0.15.0"
+        shell: bash
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -304,9 +303,7 @@ jobs:
           version: "1.11"
 
       - name: Install wasm-pack
-        uses: jetli/wasm-pack-action@v0.4.0
-        with:
-          version: "v0.15.0"
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -372,9 +369,7 @@ jobs:
           version: "1.11"
 
       - name: Install wasm-pack
-        uses: jetli/wasm-pack-action@v0.4.0
-        with:
-          version: "v0.15.0"
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
@@ -432,9 +427,8 @@ jobs:
           version: "1.11"
 
       - name: Install wasm-pack
-        uses: jetli/wasm-pack-action@v0.4.0
-        with:
-          version: "v0.15.0"
+        shell: bash
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Cache dependencies
         uses: Swatinem/rust-cache@v2
