@@ -29,13 +29,6 @@ export LoessResult, Diagnostics
 
 import Base: finalize
 
-# Try to import JLL package first
-try
-	using fastloess_jll
-catch e
-	# JLL not available, will use fallback
-end
-
 # Library name varies by platform
 const LIBNAME =
 	Sys.iswindows() ? "fastloess_jl.dll" :
@@ -50,20 +43,7 @@ function find_library()
 		return lib
 	end
 
-	# Option 2: Use JLL package if available (for registered package)
-	if @isdefined(fastloess_jll)
-		try
-			if hasproperty(fastloess_jll, :libfastloess_jl)
-				lib = fastloess_jll.libfastloess_jl
-				@info "Using fastloess_jll library: $lib"
-				return lib
-			end
-		catch e
-			@warn "Failed to load from fastloess_jll" exception = e
-		end
-	end
-
-	# Option 3: Check relative paths (development mode)
+	# Option 2: Check relative paths (development mode)
 	# Path: julia/src/fastloess.jl -> julia/ -> bindings/julia/ -> bindings/ -> loess-project/
 	src_dir = @__DIR__                        # julia/src/
 	julia_dir = dirname(src_dir)              # julia/
