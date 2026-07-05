@@ -106,7 +106,8 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
 
 === "Julia"
     ```julia
-    # x is an (n, 2) matrix
+    # x is an (n, 2) matrix of predictors
+    x2d = hcat(lat, lon)
     result = fit(Loess(; dimensions=2, fraction=0.3), x2d, z)
     ```
 
@@ -158,6 +159,8 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 
 === "Julia"
     ```julia
+    # x is an (n, 3) matrix of predictors
+    x3d = hcat(x1, x2, x3)
     result = fit(Loess(; dimensions=3, fraction=0.5), x3d, y)
     ```
 

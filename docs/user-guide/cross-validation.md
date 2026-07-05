@@ -70,7 +70,6 @@ Split data into K folds, train on K-1, validate on 1.
     ), x, y)
 
     println("Selected fraction: ", result.fraction_used)
-    println("CV scores: ", result.cv_scores)
     ```
 
 === "Node.js"
@@ -219,8 +218,7 @@ Set a seed for reproducible fold assignments:
     result = fit(Loess(
         cv_method="kfold",
         cv_k=5,
-        cv_fractions=[0.3, 0.5, 0.7],
-        cv_seed=42
+        cv_fractions=[0.3, 0.5, 0.7]
     ), x, y)
     ```
 

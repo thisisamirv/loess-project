@@ -196,12 +196,10 @@ Remove trend to analyze residual patterns:
 
 === "Node.js"
     ```javascript
-    const fl = require('fastloess');
-
-    const result = fl.Loess({ 
-        fraction: 0.3, 
-        iterations: 3, 
-        returnResiduals: true 
+    const result = new fl.Loess({
+        fraction: 0.3,
+        iterations: 3,
+        returnResiduals: true
     }).fit(t, y);
 
     const trend = result.y;

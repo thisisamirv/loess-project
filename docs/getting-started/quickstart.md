@@ -338,6 +338,7 @@ LOESS can robustly handle outliers through iterative reweighting:
 === "Julia"
 
     ```julia
+    x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     y_with_outlier = [2.0, 4.0, 6.0, 50.0, 10.0, 12.0]
 
     result = fit(Loess(

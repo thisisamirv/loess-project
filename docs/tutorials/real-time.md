@@ -88,13 +88,13 @@ For true real-time applications where each point must be processed immediately.
     temperatures = 20.0 .+ 5.0 .* sin.(times ./ 10.0) .+ randn(100)
 
     # Process with online mode
-    result = smooth_online(
-        times, temperatures,
+    model = OnlineLoess(
         fraction=0.3,
         window_capacity=25,
         min_points=5,
         update_mode="incremental"
     )
+    result = add_points(model, times, temperatures)
 
     println("Smoothed temperatures: ", result.y)
     ```
@@ -235,7 +235,7 @@ For large datasets that arrive in batches or files.
     using FastLOESS
 
     # Large dataset
-    x = collect(range(0, 100000, step=1))
+    x = collect(0.0:1.0:100000.0)
     y = sin.(x ./ 1000) .+ randn(length(x)) .* 0.1
 
     # Streaming mode handles everything internally

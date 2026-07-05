@@ -48,7 +48,7 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 === "Julia"
     ```julia
-    result = fit(Loess(; degree=0, fraction=0.5), x, y)
+    result = fit(Loess(; degree="constant", fraction=0.5), x, y)
     ```
 
 === "Node.js"
@@ -98,7 +98,7 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 === "Julia"
     ```julia
-    result = fit(Loess(; degree=1, fraction=0.5), x, y)
+    result = fit(Loess(; degree="linear", fraction=0.5), x, y)
     ```
 
 === "Node.js"
@@ -148,7 +148,7 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 === "Julia"
     ```julia
-    result = fit(Loess(; degree=2, fraction=0.5), x, y)
+    result = fit(Loess(; degree="quadratic", fraction=0.5), x, y)
     ```
 
 === "Node.js"
@@ -198,7 +198,7 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 === "Julia"
     ```julia
-    result = fit(Loess(; degree=3, fraction=0.6), x, y)
+    result = fit(Loess(; degree="cubic", fraction=0.6), x, y)
     ```
 
 === "Node.js"
@@ -248,7 +248,7 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 === "Julia"
     ```julia
-    result = fit(Loess(; degree=4, fraction=0.7), x, y)
+    result = fit(Loess(; degree="quartic", fraction=0.7), x, y)
     ```
 
 === "Node.js"

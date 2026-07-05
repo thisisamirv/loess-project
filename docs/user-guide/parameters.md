@@ -485,7 +485,8 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 
 === "Julia"
     ```julia
-    result = fit(Loess(delta=0.05), x, y)
+    # delta is not exposed in the Julia binding; use fraction to control bandwidth
+    result = fit(Loess(fraction=0.05), x, y)
     ```
 
 === "Node.js"
@@ -931,7 +932,7 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     ```julia
     weights = ones(length(y))
     weights[5] = 0.0  # Exclude 5th point
-    result = fit(Loess(custom_weights=weights), x, y)
+    result = fit(Loess(), x, y; custom_weights=weights)
     ```
 
 === "Node.js"
