@@ -171,7 +171,14 @@ jobs:
           apt-get update
           apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev
       - name: Suppress Third-party Compiler Warnings
+        shell: bash
         run: |
+          # Append -w to env-level flags so libsass (which uses its own
+          # Makefile reading CXXFLAGS from env) also gets the suppression.
+          echo "CFLAGS=${CFLAGS:+$CFLAGS }-w"     >> "$GITHUB_ENV"
+          echo "CXXFLAGS=${CXXFLAGS:+$CXXFLAGS }-w" >> "$GITHUB_ENV"
+          # Also write to R user Makevars as a belt-and-suspenders fallback
+          # for packages compiled through R's standard make infrastructure.
           mkdir -p ~/.R
           echo "CFLAGS   += -w" >> ~/.R/Makevars
           echo "CXXFLAGS += -w" >> ~/.R/Makevars
