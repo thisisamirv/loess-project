@@ -170,6 +170,11 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev
+      - name: Suppress Third-party Compiler Warnings
+        run: |
+          mkdir -p ~/.R
+          echo "CFLAGS   += -w" >> ~/.R/Makevars
+          echo "CXXFLAGS += -w" >> ~/.R/Makevars
       - name: Install R Dependencies
         run: |
           export R_LIBS_USER="$RUNNER_TEMP/Library"
