@@ -497,6 +497,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             interpolation_vertices: self.config.interpolation_vertices,
             cell: self.config.cell,
             boundary_degree_fallback: self.config.boundary_degree_fallback,
+            custom_weights: None,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++

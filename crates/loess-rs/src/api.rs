@@ -134,6 +134,11 @@ pub struct LoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     // Set to `false` to match R's loess behavior exactly.
     pub boundary_degree_fallback: Option<bool>,
 
+    // User-defined case weights (one per observation).
+    // When provided, multiplies each local kernel weight: `w_ij = custom_weights[j] * K(d_ij/h)`.
+    // Must have the same length as `y`. Only used in Batch mode.
+    pub custom_weights: Option<Vec<T>>,
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -212,6 +217,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             cell: None,
             interpolation_vertices: None,
             boundary_degree_fallback: None,
+            custom_weights: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
@@ -491,6 +497,23 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self
     }
 
+    // Set User-defined case weights (one per observation).
+    //
+    // Weights multiply the local kernel weight at each neighborhood point:
+    // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
+    //
+    // Higher weights increase the influence of the corresponding observation
+    // on nearby local fits — analogous to `weights` in R's `stats::loess`.
+    //
+    // Must have the same length as `y`. Only applied in Batch mode.
+    pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
+        if self.custom_weights.is_some() {
+            self.duplicate_param = Some("custom_weights");
+        }
+        self.custom_weights = Some(weights);
+        self
+    }
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -616,6 +639,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         }
         if let Some(bdf) = builder.boundary_degree_fallback {
             result.boundary_degree_fallback = bdf;
+        }
+        if let Some(uw) = builder.custom_weights {
+            result.custom_weights = Some(uw);
         }
 
         // ++++++++++++++++++++++++++++++++++++++

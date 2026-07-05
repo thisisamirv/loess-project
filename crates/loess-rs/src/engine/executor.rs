@@ -294,6 +294,12 @@ pub struct LoessConfig<T: FloatLinalg + SolverLinalg> {
     // unstable extrapolation. Set to `false` to match R's loess behavior exactly.
     pub boundary_degree_fallback: bool,
 
+    // User-defined case weights (one per observation).
+    // When provided, each weight multiplies the kernel weight in the local WLS:
+    // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
+    // Must have the same length as `y`. Only supported for Batch mode.
+    pub custom_weights: Option<Vec<T>>,
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -354,6 +360,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Defau
             interpolation_vertices: None,
             cell: None,
             boundary_degree_fallback: true,
+            custom_weights: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
@@ -410,6 +417,9 @@ pub struct LoessExecutor<T: FloatLinalg + SolverLinalg> {
 
     // Whether to reduce polynomial degree to Linear at boundary vertices during interpolation.
     pub boundary_degree_fallback: bool,
+
+    // User-defined case weights (one per observation). See `LoessConfig::custom_weights`.
+    pub custom_weights: Option<Vec<T>>,
 
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
@@ -475,6 +485,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             interpolation_vertices: None,
             cell: None,
             boundary_degree_fallback: true,
+            custom_weights: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
@@ -489,7 +500,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // Create a new executor from a `LoessConfig`.
     pub fn from_config(config: &LoessConfig<T>) -> Self {
         let default_frac = T::from(0.67).unwrap_or_else(|| T::from(0.5).unwrap());
-        Self::new()
+        let mut exec = Self::new()
             .fraction(config.fraction.unwrap_or(default_frac))
             .iterations(config.iterations)
             .weight_function(config.weight_function)
@@ -514,7 +525,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             .custom_vertex_pass(config.custom_vertex_pass)
             .custom_kdtree_builder(config.custom_kdtree_builder)
             .parallel(config.parallel)
-            .backend(config.backend)
+            .backend(config.backend);
+        exec.custom_weights = config.custom_weights.clone();
+        exec
     }
 
     // Set the smoothing fraction (bandwidth).
@@ -601,12 +614,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self
     }
 
-    // ++++++++++++++++++++++++++++++++++++++
-    // +               DEV                  +
-    // ++++++++++++++++++++++++++++++++++++++
+    // Set User-defined case weights (one per observation).
+    pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
+        self.custom_weights = Some(weights);
+        self
+    }
 
-    // Set a custom smooth pass function (e.g., for parallelization).
-    #[doc(hidden)]
     pub fn custom_smooth_pass(mut self, smooth_pass_fn: Option<SmoothPassFn<T>>) -> Self {
         self.custom_smooth_pass = smooth_pass_fn;
         self
@@ -819,6 +832,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         let n_total = ay.len();
         let is_augmented = n_total > n;
 
+        // Expand custom weights to the augmented (boundary-padded) data space.
+        // Boundary points are assigned the weight of their nearest original point.
+        let custom_weights_aug: Option<Vec<T>> = self.custom_weights.as_ref().map(|uw| {
+            mapping.iter().map(|&orig_idx| uw[orig_idx]).collect()
+        });
+
         let mut new_workspace;
         let workspace = if let Some(ws) = workspace {
             ws.ensure_capacity(n_total, dims, window_size, n_coeffs);
@@ -917,6 +936,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     false, // compute_leverage
                     Some(fb),
                 );
+                if let Some(ref uw) = custom_weights_aug {
+                    context = context.with_custom_weights(uw);
+                }
                 context.fit_with_coefficients()
             };
 
@@ -999,6 +1021,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     None, // No leverage collection during initial fit
                     Some(&mut workspace.executor_buffer.neighborhood_cache.entries), // Populate cache
                     None, // Not using cache yet
+                    custom_weights_aug.as_deref(),
                 );
                 workspace.executor_buffer.neighborhood_cache.is_valid = true;
             }
@@ -1092,6 +1115,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                                     false, // compute_leverage
                                     Some(fb),
                                 );
+                                if let Some(ref uw) = custom_weights_aug {
+                                    context = context.with_custom_weights(uw);
+                                }
                                 context.fit_with_coefficients()
                             };
 
@@ -1170,6 +1196,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                             None,      // No leverage collection during robustness iterations
                             None,      // Not populating cache
                             cache_ref, // Use cached neighborhoods
+                            custom_weights_aug.as_deref(),
                         );
                     }
                 }
@@ -1211,6 +1238,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     Some(&mut leverages),
                     None,      // Not populating cache
                     cache_ref, // Use cached neighborhoods
+                    custom_weights_aug.as_deref(),
                 );
                 Some(leverages)
             } else {
@@ -1417,6 +1445,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         mut leverage_out: Option<&mut Vec<T>>,
         mut populate_cache: Option<&mut Vec<CachedNeighborhood<T>>>,
         cached_neighborhoods: Option<&[CachedNeighborhood<T>]>,
+        custom_weights: Option<&[T]>,
     ) where
         T: Float + Debug + Send + Sync + 'static,
     {
@@ -1484,6 +1513,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 compute_leverage,
                 Some(fitting_buffer),
             );
+            if let Some(uw) = custom_weights {
+                context = context.with_custom_weights(uw);
+            }
 
             if let Some((val, lev)) = context.fit() {
                 y_smooth[i] = val;

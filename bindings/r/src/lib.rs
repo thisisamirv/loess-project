@@ -13,11 +13,11 @@ type Result<T> = std::result::Result<T, Error>;
 
 use fastLoess::internals::api::{
     BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
-    ScalingMethod::{self, MAD, MAR, Mean},
+    ScalingMethod::{self, Mean, MAD, MAR},
     SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, Online, Streaming,
+    Batch, KFold, Loess as LoessBuilder, LoessResult, Online, Streaming, LOOCV,
 };
 
 // ============================================================================
@@ -268,11 +268,16 @@ impl RLoess {
         Ok(Self { builder, parallel })
     }
 
-    /// Fit the model to data
-    fn fit(&self, x: &[f64], y: &[f64]) -> Result<List> {
-        let result = self
-            .builder
-            .clone()
+    /// Fit the model to data, with optional user-defined case weights.
+    ///
+    /// `weights` must be the same length as `y`. Each weight multiplies the local
+    /// kernel weight for that observation: analogous to `weights` in `stats::loess`.
+    fn fit(&self, x: &[f64], y: &[f64], weights: Nullable<Vec<f64>>) -> Result<List> {
+        let mut builder = self.builder.clone();
+        if let NotNull(w) = weights {
+            builder = builder.custom_weights(w);
+        }
+        let result = builder
             .adapter(Batch)
             .parallel(self.parallel)
             .build()

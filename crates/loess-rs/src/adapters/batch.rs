@@ -151,6 +151,9 @@ pub struct BatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     // Parallel execution hint.
     #[doc(hidden)]
     pub parallel: Option<bool>,
+
+    // User-defined case weights (one per observation).
+    pub custom_weights: Option<Vec<T>>,
 }
 
 impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Default
@@ -200,6 +203,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
             custom_kdtree_builder: None,
             parallel: None,
             backend: None,
+            custom_weights: None,
         }
     }
 
@@ -286,6 +290,17 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
     // Set to `false` to match R's loess behavior exactly.
     pub fn boundary_degree_fallback(mut self, enabled: bool) -> Self {
         self.boundary_degree_fallback = enabled;
+        self
+    }
+
+    // Set User-defined case weights (one per observation).
+    //
+    // Weights multiply the local kernel weight at each neighborhood point:
+    // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
+    //
+    // Analogous to `weights` in R's `stats::loess`. Must have the same length as `y`.
+    pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
+        self.custom_weights = Some(weights);
         self
     }
 
@@ -451,6 +466,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     pub fn fit(self, x: &[T], y: &[T]) -> Result<LoessResult<T>, LoessError> {
         Validator::validate_inputs(x, y, self.config.dimensions)?;
 
+        // Validate custom_weights length if provided
+        if let Some(ref uw) = self.config.custom_weights {
+            Validator::validate_custom_weights(uw, y.len())?;
+        }
+
         // KD-Tree handles unsorted data natively - no need to sort
 
         // Check grid resolution only for interpolation mode
@@ -492,6 +512,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             interpolation_vertices: self.config.interpolation_vertices,
             cell: self.config.cell,
             boundary_degree_fallback: self.config.boundary_degree_fallback,
+            custom_weights: self.config.custom_weights,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++

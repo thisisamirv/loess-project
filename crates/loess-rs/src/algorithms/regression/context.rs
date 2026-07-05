@@ -51,6 +51,9 @@ pub struct RegressionContext<'a, T: FloatLinalg + SolverLinalg> {
     pub compute_leverage: bool,
     // Persistent buffer for reuse
     pub buffer: Option<&'a mut FittingBuffer<T>>,
+    // User-defined case weights (indexed by data position in the augmented array).
+    // When Some, these are multiplied into the kernel weight: w = user_w * kernel_w * robustness_w.
+    pub custom_weights: Option<&'a [T]>,
     _phantom: PhantomData<T>,
 }
 
@@ -86,8 +89,15 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
             polynomial_degree,
             compute_leverage,
             buffer,
+            custom_weights: None,
             _phantom: PhantomData,
         }
+    }
+
+    // Set User-defined case weights (indexed by data position).
+    pub fn with_custom_weights(mut self, weights: &'a [T]) -> Self {
+        self.custom_weights = Some(weights);
+        self
     }
 
     // Returns the (predicted value, leverage) at the query point.
@@ -141,10 +151,11 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
                 let dist = self.neighborhood.distances[i];
                 let u = dist / max_distance;
                 let kernel_w = self.weight_function.compute_weight(u);
+                let user_w = self.custom_weights.map_or(T::one(), |uw| uw[neighbor_idx]);
                 let w = if self.use_robustness {
-                    kernel_w * self.robustness_weights[neighbor_idx]
+                    kernel_w * user_w * self.robustness_weights[neighbor_idx]
                 } else {
-                    kernel_w
+                    kernel_w * user_w
                 };
                 weights.push(w);
             }
@@ -175,10 +186,11 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
                 let dist = self.neighborhood.distances[i];
                 let u = dist / max_distance;
                 let kernel_w = self.weight_function.compute_weight(u);
+                let user_w = self.custom_weights.map_or(T::one(), |uw| uw[neighbor_idx]);
                 let w = if self.use_robustness {
-                    kernel_w * self.robustness_weights[neighbor_idx]
+                    kernel_w * user_w * self.robustness_weights[neighbor_idx]
                 } else {
-                    kernel_w
+                    kernel_w * user_w
                 };
                 weights.push(w);
             }
@@ -242,10 +254,11 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
                 let dist = self.neighborhood.distances[i];
                 let u = dist / max_distance;
                 let kernel_w = self.weight_function.compute_weight(u);
+                let user_w = self.custom_weights.map_or(T::one(), |uw| uw[neighbor_idx]);
                 let w = if self.use_robustness {
-                    kernel_w * self.robustness_weights[neighbor_idx]
+                    kernel_w * user_w * self.robustness_weights[neighbor_idx]
                 } else {
-                    kernel_w
+                    kernel_w * user_w
                 };
                 weights.push(w);
             }
@@ -490,10 +503,11 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
             let dist = self.neighborhood.distances[i];
             let u = dist / bandwidth;
             let kernel_w = self.weight_function.compute_weight(u);
+            let user_w = self.custom_weights.map_or(T::one(), |uw| uw[idx]);
             let w = if self.use_robustness {
-                kernel_w * self.robustness_weights[idx]
+                kernel_w * user_w * self.robustness_weights[idx]
             } else {
-                kernel_w
+                kernel_w * user_w
             };
             sum_wy = sum_wy + w * self.y[idx];
             sum_w = sum_w + w;

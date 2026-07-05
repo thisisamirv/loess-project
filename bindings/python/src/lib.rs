@@ -880,10 +880,14 @@ impl PyLoess {
         py: Python<'py>,
         x: PyReadonlyArray1<'py, f64>,
         y: PyReadonlyArray1<'py, f64>,
+        custom_weights: Option<PyReadonlyArray1<'py, f64>>,
     ) -> PyResult<PyLoessResult> {
         // 1. Copy data (Must be done with GIL)
         let x_vec = x.as_slice().map_err(to_py_error)?.to_vec();
         let y_vec = y.as_slice().map_err(to_py_error)?.to_vec();
+        let uw_vec: Option<Vec<f64>> = custom_weights
+            .map(|uw| uw.as_slice().map(|s| s.to_vec()).map_err(to_py_error))
+            .transpose()?;
 
         // Used for builder configuration
         let params = self.clone();
@@ -904,6 +908,10 @@ impl PyLoess {
             builder = builder.dimensions(params.dimensions);
             builder = builder.distance_metric(params.distance_metric);
             builder = builder.surface_mode(params.surface_mode);
+
+            if let Some(uw) = uw_vec {
+                builder = builder.custom_weights(uw);
+            }
             if params.return_se {
                 builder = builder.return_se();
             }

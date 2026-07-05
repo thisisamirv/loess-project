@@ -99,9 +99,9 @@ Loess <- function(
     structure(
         list(
             handle = handle,
-            fit = function(x, y) {
+            fit = function(x, y, weights = NULL) {
                 args <- validate_common_args(x, y, fraction, iterations)
-                handle$fit(args$x, args$y)
+                handle$fit(args$x, args$y, weights)
             },
             params = list(
                 fraction = fraction,
