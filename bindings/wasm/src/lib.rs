@@ -337,12 +337,12 @@ impl LoessResultWasm {
     }
 }
 
-/// Fit the LOESS model to data.
-///
-/// @param {Float64Array} x - X coordinates.
-/// @param {Float64Array} y - Y coordinates.
-/// @param {any} [options] - Configuration object.
-/// @returns {LoessResultWasm} The result of the smoothing.
+// Fit the LOESS model to data.
+//
+// @param {Float64Array} x - X coordinates.
+// @param {Float64Array} y - Y coordinates.
+// @param {any} [options] - Configuration object.
+// @returns {LoessResultWasm} The result of the smoothing.
 #[wasm_bindgen]
 pub fn smooth(
     x: &Float64Array,
@@ -452,7 +452,7 @@ pub fn smooth(
     Ok(LoessResultWasm { inner: result })
 }
 
-/// Streaming LOESS smoother.
+// Streaming LOESS smoother.
 #[wasm_bindgen]
 pub struct StreamingLoessWasm {
     inner: ParallelStreamingLoess<f64>,
@@ -460,7 +460,7 @@ pub struct StreamingLoessWasm {
 
 #[wasm_bindgen]
 impl StreamingLoessWasm {
-    /// Create a new streaming smoother.
+    // Create a new streaming smoother.
     #[wasm_bindgen(constructor)]
     pub fn new(options: JsValue, streaming_opts: JsValue) -> Result<StreamingLoessWasm, JsValue> {
         let mut builder = LoessBuilder::new();
@@ -598,7 +598,7 @@ impl StreamingLoessWasm {
     }
 }
 
-/// Online LOESS smoother.
+// Online LOESS smoother.
 #[wasm_bindgen]
 pub struct OnlineLoessWasm {
     inner: ParallelOnlineLoess<f64>,
@@ -606,7 +606,7 @@ pub struct OnlineLoessWasm {
 
 #[wasm_bindgen]
 impl OnlineLoessWasm {
-    /// Create a new online smoother.
+    // Create a new online smoother.
     #[wasm_bindgen(constructor)]
     pub fn new(options: JsValue, online_opts: JsValue) -> Result<OnlineLoessWasm, JsValue> {
         let mut builder = LoessBuilder::new();

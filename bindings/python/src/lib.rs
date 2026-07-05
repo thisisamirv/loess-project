@@ -17,16 +17,14 @@ use ::fastLoess::prelude::{
     Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
 };
 
-// ============================================================================
 // Helper Functions
-// ============================================================================
 
-/// Convert a LoessError to a PyErr
+// Convert a LoessError to a PyErr
 fn to_py_error(e: impl Display) -> PyErr {
     PyValueError::new_err(e.to_string())
 }
 
-/// Parse weight function from string
+// Parse weight function from string
 fn parse_weight_function(name: &str) -> PyResult<WeightFunction> {
     match name.to_lowercase().as_str() {
         "tricube" => Ok(WeightFunction::Tricube),
@@ -43,7 +41,7 @@ fn parse_weight_function(name: &str) -> PyResult<WeightFunction> {
     }
 }
 
-/// Parse robustness method from string
+// Parse robustness method from string
 fn parse_robustness_method(name: &str) -> PyResult<RobustnessMethod> {
     match name.to_lowercase().as_str() {
         "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
@@ -56,7 +54,7 @@ fn parse_robustness_method(name: &str) -> PyResult<RobustnessMethod> {
     }
 }
 
-/// Parse zero weight fallback from string
+// Parse zero weight fallback from string
 fn parse_zero_weight_fallback(name: &str) -> PyResult<ZeroWeightFallback> {
     match name.to_lowercase().as_str() {
         "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
@@ -69,7 +67,7 @@ fn parse_zero_weight_fallback(name: &str) -> PyResult<ZeroWeightFallback> {
     }
 }
 
-/// Parse boundary policy from string
+// Parse boundary policy from string
 fn parse_boundary_policy(name: &str) -> PyResult<BoundaryPolicy> {
     match name.to_lowercase().as_str() {
         "extend" | "pad" => Ok(BoundaryPolicy::Extend),
@@ -83,7 +81,7 @@ fn parse_boundary_policy(name: &str) -> PyResult<BoundaryPolicy> {
     }
 }
 
-/// Parse scaling method from string
+// Parse scaling method from string
 fn parse_scaling_method(name: &str) -> PyResult<ScalingMethod> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
@@ -96,7 +94,7 @@ fn parse_scaling_method(name: &str) -> PyResult<ScalingMethod> {
     }
 }
 
-/// Parse polynomial degree from string
+// Parse polynomial degree from string
 fn parse_polynomial_degree(name: &str) -> PyResult<PolynomialDegree> {
     match name.to_lowercase().as_str() {
         "constant" | "0" => Ok(PolynomialDegree::Constant),
@@ -111,7 +109,7 @@ fn parse_polynomial_degree(name: &str) -> PyResult<PolynomialDegree> {
     }
 }
 
-/// Build a distance metric from a name, optional Minkowski p, and optional weights.
+// Build a distance metric from a name, optional Minkowski p, and optional weights.
 fn build_distance_metric(
     name: &str,
     minkowski_p: f64,
@@ -145,7 +143,7 @@ fn build_distance_metric(
     }
 }
 
-/// Parse merge strategy from string
+// Parse merge strategy from string
 fn parse_merge_strategy(name: &str) -> PyResult<MergeStrategy> {
     match name.to_lowercase().as_str() {
         "average" | "mean" => Ok(MergeStrategy::Average),
@@ -159,7 +157,7 @@ fn parse_merge_strategy(name: &str) -> PyResult<MergeStrategy> {
     }
 }
 
-/// Parse surface mode from string
+// Parse surface mode from string
 fn parse_surface_mode(name: &str) -> PyResult<SurfaceMode> {
     match name.to_lowercase().as_str() {
         "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
@@ -171,7 +169,7 @@ fn parse_surface_mode(name: &str) -> PyResult<SurfaceMode> {
     }
 }
 
-/// Parse update mode from string
+// Parse update mode from string
 fn parse_update_mode(name: &str) -> PyResult<UpdateMode> {
     match name.to_lowercase().as_str() {
         "full" | "resmooth" => Ok(UpdateMode::Full),
@@ -183,39 +181,37 @@ fn parse_update_mode(name: &str) -> PyResult<UpdateMode> {
     }
 }
 
-// ============================================================================
 // Python Classes
-// ============================================================================
 
-/// Diagnostic statistics for LOESS fit quality.
+// Diagnostic statistics for LOESS fit quality.
 #[pyclass(name = "Diagnostics", from_py_object)]
 #[derive(Clone)]
 pub struct PyDiagnostics {
-    /// Root Mean Squared Error
+    // Root Mean Squared Error
     #[pyo3(get)]
     pub rmse: f64,
 
-    /// Mean Absolute Error
+    // Mean Absolute Error
     #[pyo3(get)]
     pub mae: f64,
 
-    /// R-squared (coefficient of determination)
+    // R-squared (coefficient of determination)
     #[pyo3(get)]
     pub r_squared: f64,
 
-    /// Akaike Information Criterion
+    // Akaike Information Criterion
     #[pyo3(get)]
     pub aic: Option<f64>,
 
-    /// Corrected AIC
+    // Corrected AIC
     #[pyo3(get)]
     pub aicc: Option<f64>,
 
-    /// Effective degrees of freedom
+    // Effective degrees of freedom
     #[pyo3(get)]
     pub effective_df: Option<f64>,
 
-    /// Residual standard deviation
+    // Residual standard deviation
     #[pyo3(get)]
     pub residual_sd: f64,
 }
@@ -230,7 +226,7 @@ impl PyDiagnostics {
     }
 }
 
-/// Result from LOESS smoothing.
+// Result from LOESS smoothing.
 #[pyclass(name = "LoessResult")]
 pub struct PyLoessResult {
     inner: LoessResult<f64>,
@@ -238,19 +234,19 @@ pub struct PyLoessResult {
 
 #[pymethods]
 impl PyLoessResult {
-    /// Sorted x values
+    // Sorted x values
     #[getter]
     fn x<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<f64>> {
         PyArray1::from_vec(py, self.inner.x.clone())
     }
 
-    /// Smoothed y values
+    // Smoothed y values
     #[getter]
     fn y<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<f64>> {
         PyArray1::from_vec(py, self.inner.y.clone())
     }
 
-    /// Standard errors (if computed)
+    // Standard errors (if computed)
     #[getter]
     fn standard_errors<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -259,7 +255,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    /// Lower confidence interval bounds
+    // Lower confidence interval bounds
     #[getter]
     fn confidence_lower<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -268,7 +264,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    /// Upper confidence interval bounds
+    // Upper confidence interval bounds
     #[getter]
     fn confidence_upper<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -277,7 +273,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    /// Lower prediction interval bounds
+    // Lower prediction interval bounds
     #[getter]
     fn prediction_lower<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -286,7 +282,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    /// Upper prediction interval bounds
+    // Upper prediction interval bounds
     #[getter]
     fn prediction_upper<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -295,7 +291,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    /// Residuals (original y - smoothed y)
+    // Residuals (original y - smoothed y)
     #[getter]
     fn residuals<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -304,7 +300,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    /// Robustness weights from final iteration
+    // Robustness weights from final iteration
     #[getter]
     fn robustness_weights<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -313,7 +309,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    /// Diagnostic metrics
+    // Diagnostic metrics
     #[getter]
     fn diagnostics(&self) -> Option<PyDiagnostics> {
         self.inner.diagnostics.as_ref().map(|d| PyDiagnostics {
@@ -327,19 +323,19 @@ impl PyLoessResult {
         })
     }
 
-    /// Number of iterations performed
+    // Number of iterations performed
     #[getter]
     fn iterations_used(&self) -> Option<usize> {
         self.inner.iterations_used
     }
 
-    /// Fraction used for smoothing
+    // Fraction used for smoothing
     #[getter]
     fn fraction_used(&self) -> f64 {
         self.inner.fraction_used
     }
 
-    /// CV scores for tested fractions
+    // CV scores for tested fractions
     #[getter]
     fn cv_scores<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -348,37 +344,37 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    /// Equivalent number of parameters (hat-matrix stat, if return_se was set)
+    // Equivalent number of parameters (hat-matrix stat, if return_se was set)
     #[getter]
     fn enp(&self) -> Option<f64> {
         self.inner.enp
     }
 
-    /// Trace of hat matrix (if return_se was set)
+    // Trace of hat matrix (if return_se was set)
     #[getter]
     fn trace_hat(&self) -> Option<f64> {
         self.inner.trace_hat
     }
 
-    /// First delta statistic (if return_se was set)
+    // First delta statistic (if return_se was set)
     #[getter]
     fn delta1(&self) -> Option<f64> {
         self.inner.delta1
     }
 
-    /// Second delta statistic (if return_se was set)
+    // Second delta statistic (if return_se was set)
     #[getter]
     fn delta2(&self) -> Option<f64> {
         self.inner.delta2
     }
 
-    /// Residual scale estimate (if return_se was set)
+    // Residual scale estimate (if return_se was set)
     #[getter]
     fn residual_scale(&self) -> Option<f64> {
         self.inner.residual_scale
     }
 
-    /// Per-point leverage / hat-matrix diagonal (if return_se was set)
+    // Per-point leverage / hat-matrix diagonal (if return_se was set)
     #[getter]
     fn leverage<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -387,7 +383,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    /// Number of predictor dimensions
+    // Number of predictor dimensions
     #[getter]
     fn dimensions(&self) -> usize {
         self.inner.dimensions
@@ -402,11 +398,9 @@ impl PyLoessResult {
     }
 }
 
-// ============================================================================
 // Python Classes - Stateful Adapters
-// ============================================================================
 
-/// Streaming LOESS processor for incremental chunk-based smoothing.
+// Streaming LOESS processor for incremental chunk-based smoothing.
 #[pyclass(name = "StreamingLoess")]
 pub struct PyStreamingLoess {
     inner: Mutex<ParallelStreamingLoess<f64>>,
@@ -525,7 +519,7 @@ impl PyStreamingLoess {
         })
     }
 
-    /// Process a chunk of data.
+    // Process a chunk of data.
     fn process_chunk<'py>(
         &self,
         py: Python<'py>,
@@ -546,7 +540,7 @@ impl PyStreamingLoess {
         Ok(PyLoessResult { inner: result })
     }
 
-    /// Finalize smoothing and return remaining buffered data.
+    // Finalize smoothing and return remaining buffered data.
     fn finalize(&self, py: Python<'_>) -> PyResult<PyLoessResult> {
         let result = py.detach(move || {
             self.inner
@@ -560,7 +554,7 @@ impl PyStreamingLoess {
     }
 }
 
-/// Online LOESS processor for real-time data streams.
+// Online LOESS processor for real-time data streams.
 #[pyclass(name = "OnlineLoess")]
 pub struct PyOnlineLoess {
     inner: Mutex<ParallelOnlineLoess<f64>>,
@@ -673,7 +667,7 @@ impl PyOnlineLoess {
         })
     }
 
-    /// Add a single point and return smoothed value if enough points are available.
+    // Add a single point and return smoothed value if enough points are available.
     fn update(&self, x: f64, y: f64) -> PyResult<Option<f64>> {
         let mut inner = self
             .inner
@@ -683,7 +677,7 @@ impl PyOnlineLoess {
         Ok(result.map(|o| o.smoothed))
     }
 
-    /// Add multiple points.
+    // Add multiple points.
     fn add_points<'py>(
         &self,
         py: Python<'py>,
@@ -736,10 +730,10 @@ impl PyOnlineLoess {
     }
 }
 
-/// Batch LOESS processor with configurable parameters.
-///
-/// This class allows you to configure LOESS parameters once and then
-/// call `fit()` multiple times with different datasets.
+// Batch LOESS processor with configurable parameters.
+//
+// This class allows you to configure LOESS parameters once and then
+// call `fit()` multiple times with different datasets.
 #[pyclass(name = "Loess", from_py_object)]
 #[derive(Clone)]
 pub struct PyLoess {
@@ -862,19 +856,19 @@ impl PyLoess {
         })
     }
 
-    /// Fit LOESS model to data.
-    ///
-    /// Parameters
-    /// ----------
-    /// x : array_like
-    ///     Independent variable values.
-    /// y : array_like
-    ///     Dependent variable values.
-    ///
-    /// Returns
-    /// -------
-    /// LoessResult
-    ///     Smoothed values and optional diagnostics.
+    // Fit LOESS model to data.
+    //
+    // Parameters
+    // ----------
+    // x : array_like
+    //     Independent variable values.
+    // y : array_like
+    //     Dependent variable values.
+    //
+    // Returns
+    // -------
+    // LoessResult
+    //     Smoothed values and optional diagnostics.
     fn fit<'py>(
         &self,
         py: Python<'py>,
@@ -981,9 +975,7 @@ impl PyLoess {
     }
 }
 
-// ============================================================================
 // Module Registration
-// ============================================================================
 
 #[pymodule]
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {

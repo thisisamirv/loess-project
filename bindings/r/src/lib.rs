@@ -20,11 +20,9 @@ use fastLoess::prelude::{
     Batch, KFold, Loess as LoessBuilder, LoessResult, Online, Streaming, LOOCV,
 };
 
-// ============================================================================
 // Helper Functions
-// ============================================================================
 
-/// Parse weight function from string
+// Parse weight function from string
 fn parse_weight_function(name: &str) -> Result<WeightFunction> {
     match name.to_lowercase().as_str() {
         "tricube" => Ok(WeightFunction::Tricube),
@@ -41,7 +39,7 @@ fn parse_weight_function(name: &str) -> Result<WeightFunction> {
     }
 }
 
-/// Parse robustness method from string
+// Parse robustness method from string
 fn parse_robustness_method(name: &str) -> Result<RobustnessMethod> {
     match name.to_lowercase().as_str() {
         "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
@@ -54,7 +52,7 @@ fn parse_robustness_method(name: &str) -> Result<RobustnessMethod> {
     }
 }
 
-/// Parse zero weight fallback from string
+// Parse zero weight fallback from string
 fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback> {
     match name.to_lowercase().as_str() {
         "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
@@ -67,7 +65,7 @@ fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback> {
     }
 }
 
-/// Parse boundary policy from string
+// Parse boundary policy from string
 fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy> {
     match name.to_lowercase().as_str() {
         "extend" | "pad" => Ok(BoundaryPolicy::Extend),
@@ -81,7 +79,7 @@ fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy> {
     }
 }
 
-/// Parse scaling method from string
+// Parse scaling method from string
 fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
@@ -94,7 +92,7 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
     }
 }
 
-/// Parse polynomial degree from string
+// Parse polynomial degree from string
 fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree> {
     match name.to_lowercase().as_str() {
         "constant" | "0" => Ok(PolynomialDegree::Constant),
@@ -106,7 +104,7 @@ fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree> {
     }
 }
 
-/// Parse distance metric from string
+// Parse distance metric from string
 fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
     let lower = name.to_lowercase();
     // Handle "minkowski:p" inline format
@@ -129,7 +127,7 @@ fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
     }
 }
 
-/// Parse surface mode from string
+// Parse surface mode from string
 fn parse_surface_mode(name: &str) -> Result<SurfaceMode> {
     match name.to_lowercase().as_str() {
         "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
@@ -138,7 +136,7 @@ fn parse_surface_mode(name: &str) -> Result<SurfaceMode> {
     }
 }
 
-/// Parse update mode from string
+// Parse update mode from string
 fn parse_update_mode(name: &str) -> Result<UpdateMode> {
     match name.to_lowercase().as_str() {
         "full" | "resmooth" => Ok(UpdateMode::Full),
@@ -150,7 +148,7 @@ fn parse_update_mode(name: &str) -> Result<UpdateMode> {
     }
 }
 
-/// Parse merge strategy from string
+// Parse merge strategy from string
 fn parse_merge_strategy(name: &str) -> Result<MergeStrategy> {
     match name.to_lowercase().as_str() {
         "average" | "mean" => Ok(MergeStrategy::Average),
@@ -164,9 +162,7 @@ fn parse_merge_strategy(name: &str) -> Result<MergeStrategy> {
     }
 }
 
-// ============================================================================
 // Stateful API: Loess
-// ============================================================================
 
 #[extendr]
 pub struct RLoess {
@@ -176,7 +172,7 @@ pub struct RLoess {
 
 #[extendr]
 impl RLoess {
-    /// Create a new Loess model
+    // Create a new Loess model
     #[allow(clippy::too_many_arguments)]
     fn new(
         fraction: f64,
@@ -268,10 +264,10 @@ impl RLoess {
         Ok(Self { builder, parallel })
     }
 
-    /// Fit the model to data, with optional user-defined case weights.
-    ///
-    /// `custom_weights` must be the same length as `y`. Each weight multiplies the
-    /// local kernel weight: analogous to `weights` in `stats::loess`.
+    // Fit the model to data, with optional user-defined case weights.
+    //
+    // `custom_weights` must be the same length as `y`. Each weight multiplies the
+    // local kernel weight: analogous to `weights` in `stats::loess`.
     fn fit(&self, x: &[f64], y: &[f64], custom_weights: Nullable<Vec<f64>>) -> Result<List> {
         let mut builder = self.builder.clone();
         if let NotNull(w) = custom_weights {
@@ -289,9 +285,7 @@ impl RLoess {
     }
 }
 
-// ============================================================================
 // Stateful API: StreamingLoess
-// ============================================================================
 
 #[extendr]
 pub struct RStreamingLoess {
@@ -406,9 +400,7 @@ impl RStreamingLoess {
     }
 }
 
-// ============================================================================
 // Stateful API: OnlineLoess
-// ============================================================================
 
 #[extendr]
 pub struct ROnlineLoess {
@@ -534,9 +526,7 @@ impl ROnlineLoess {
     }
 }
 
-// ============================================================================
 // Helper: Convert LoessResult to R List
-// ============================================================================
 
 fn loess_result_to_list(result: LoessResult<f64>) -> Result<List> {
     let mut list_items: Vec<(&str, Robj)> = vec![
@@ -612,9 +602,7 @@ fn loess_result_to_list(result: LoessResult<f64>) -> Result<List> {
     Ok(list)
 }
 
-// ============================================================================
 // Module Registration
-// ============================================================================
 
 extendr_module! {
     mod rfastloess;

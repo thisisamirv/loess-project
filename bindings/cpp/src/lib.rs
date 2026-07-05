@@ -20,38 +20,38 @@ use fastLoess::prelude::{
     Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
 };
 
-/// Result struct that can be passed across FFI boundary.
-/// All arrays are allocated by Rust and must be freed by Rust.
+// Result struct that can be passed across FFI boundary.
+// All arrays are allocated by Rust and must be freed by Rust.
 #[repr(C)]
 pub struct CppLoessResult {
-    /// Sorted x values (length = n)
+    // Sorted x values (length = n)
     pub x: *mut c_double,
-    /// Smoothed y values (length = n)
+    // Smoothed y values (length = n)
     pub y: *mut c_double,
-    /// Number of data points
+    // Number of data points
     pub n: c_ulong,
 
-    /// Standard errors (NULL if not computed)
+    // Standard errors (NULL if not computed)
     pub standard_errors: *mut c_double,
-    /// Lower confidence bounds (NULL if not computed)
+    // Lower confidence bounds (NULL if not computed)
     pub confidence_lower: *mut c_double,
-    /// Upper confidence bounds (NULL if not computed)
+    // Upper confidence bounds (NULL if not computed)
     pub confidence_upper: *mut c_double,
-    /// Lower prediction bounds (NULL if not computed)
+    // Lower prediction bounds (NULL if not computed)
     pub prediction_lower: *mut c_double,
-    /// Upper prediction bounds (NULL if not computed)
+    // Upper prediction bounds (NULL if not computed)
     pub prediction_upper: *mut c_double,
-    /// Residuals (NULL if not computed)
+    // Residuals (NULL if not computed)
     pub residuals: *mut c_double,
-    /// Robustness weights (NULL if not computed)
+    // Robustness weights (NULL if not computed)
     pub robustness_weights: *mut c_double,
 
-    /// Fraction used for smoothing
+    // Fraction used for smoothing
     pub fraction_used: c_double,
-    /// Number of iterations performed (-1 if not available)
+    // Number of iterations performed (-1 if not available)
     pub iterations_used: c_int,
 
-    /// Diagnostics (NaN if not computed)
+    // Diagnostics (NaN if not computed)
     pub rmse: c_double,
     pub mae: c_double,
     pub r_squared: c_double,
@@ -60,18 +60,18 @@ pub struct CppLoessResult {
     pub effective_df: c_double,
     pub residual_sd: c_double,
 
-    /// Hat-matrix statistics (NaN / NULL if not computed; set return_se = 1 to enable)
+    // Hat-matrix statistics (NaN / NULL if not computed; set return_se = 1 to enable)
     pub enp: c_double,
     pub trace_hat: c_double,
     pub delta1: c_double,
     pub delta2: c_double,
     pub residual_scale: c_double,
-    /// Per-point leverage / hat-matrix diagonal (NULL if not computed, length = n)
+    // Per-point leverage / hat-matrix diagonal (NULL if not computed, length = n)
     pub leverage: *mut c_double,
-    /// Number of predictor dimensions used
+    // Number of predictor dimensions used
     pub dimensions: c_int,
 
-    /// Error message (NULL if no error)
+    // Error message (NULL if no error)
     pub error: *mut c_char,
 }
 
@@ -109,7 +109,7 @@ impl Default for CppLoessResult {
     }
 }
 
-/// Convert a Vec<f64> to a raw pointer.
+// Convert a Vec<f64> to a raw pointer.
 fn vec_to_ptr(v: Vec<f64>) -> *mut c_double {
     let mut boxed = v.into_boxed_slice();
     let ptr = boxed.as_mut_ptr();
@@ -117,7 +117,7 @@ fn vec_to_ptr(v: Vec<f64>) -> *mut c_double {
     ptr
 }
 
-/// Convert an optional Vec<f64> to a raw pointer.
+// Convert an optional Vec<f64> to a raw pointer.
 fn opt_vec_to_ptr(v: Option<Vec<f64>>) -> *mut c_double {
     match v {
         Some(vec) => vec_to_ptr(vec),
@@ -125,7 +125,7 @@ fn opt_vec_to_ptr(v: Option<Vec<f64>>) -> *mut c_double {
     }
 }
 
-/// Create an error result with the given message.
+// Create an error result with the given message.
 fn error_result(msg: &str) -> CppLoessResult {
     let mut result = CppLoessResult::default();
     let c_string = std::ffi::CString::new(msg).unwrap_or_default();
@@ -133,7 +133,7 @@ fn error_result(msg: &str) -> CppLoessResult {
     result
 }
 
-/// Parse a C string safely.
+// Parse a C string safely.
 unsafe fn parse_c_str(s: *const c_char, default: &str) -> &str {
     if s.is_null() {
         default
@@ -142,7 +142,7 @@ unsafe fn parse_c_str(s: *const c_char, default: &str) -> &str {
     }
 }
 
-/// Parse weight function from string.
+// Parse weight function from string.
 fn parse_weight_function(name: &str) -> Result<WeightFunction, String> {
     match name.to_lowercase().as_str() {
         "tricube" => Ok(WeightFunction::Tricube),
@@ -159,7 +159,7 @@ fn parse_weight_function(name: &str) -> Result<WeightFunction, String> {
     }
 }
 
-/// Parse robustness method from string.
+// Parse robustness method from string.
 fn parse_robustness_method(name: &str) -> Result<RobustnessMethod, String> {
     match name.to_lowercase().as_str() {
         "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
@@ -172,7 +172,7 @@ fn parse_robustness_method(name: &str) -> Result<RobustnessMethod, String> {
     }
 }
 
-/// Parse zero weight fallback from string.
+// Parse zero weight fallback from string.
 fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback, String> {
     match name.to_lowercase().as_str() {
         "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
@@ -185,7 +185,7 @@ fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback, String> 
     }
 }
 
-/// Parse boundary policy from string.
+// Parse boundary policy from string.
 fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy, String> {
     match name.to_lowercase().as_str() {
         "extend" | "pad" => Ok(BoundaryPolicy::Extend),
@@ -199,7 +199,7 @@ fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy, String> {
     }
 }
 
-/// Parse scaling method from string.
+// Parse scaling method from string.
 fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
@@ -212,7 +212,7 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
     }
 }
 
-/// Parse update mode from string.
+// Parse update mode from string.
 fn parse_update_mode(name: &str) -> Result<UpdateMode, String> {
     match name.to_lowercase().as_str() {
         "full" | "resmooth" => Ok(UpdateMode::Full),
@@ -224,7 +224,7 @@ fn parse_update_mode(name: &str) -> Result<UpdateMode, String> {
     }
 }
 
-/// Parse merge strategy from string.
+// Parse merge strategy from string.
 fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
     match name.to_lowercase().as_str() {
         "average" | "mean" => Ok(MergeStrategy::Average),
@@ -238,7 +238,7 @@ fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
     }
 }
 
-/// Parse polynomial degree from string.
+// Parse polynomial degree from string.
 fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree, String> {
     match name.to_lowercase().as_str() {
         "constant" | "0" => Ok(PolynomialDegree::Constant),
@@ -253,7 +253,7 @@ fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree, String> {
     }
 }
 
-/// Parse surface mode from string.
+// Parse surface mode from string.
 fn parse_surface_mode(name: &str) -> Result<SurfaceMode, String> {
     match name.to_lowercase().as_str() {
         "direct" => Ok(SurfaceMode::Direct),
@@ -265,7 +265,7 @@ fn parse_surface_mode(name: &str) -> Result<SurfaceMode, String> {
     }
 }
 
-/// Parse distance metric from string.
+// Parse distance metric from string.
 fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>, String> {
     match name.to_lowercase().as_str() {
         "euclidean" => Ok(DistanceMetric::Euclidean),
@@ -338,7 +338,7 @@ impl From<LoessResult<f64>> for CppLoessResult {
     }
 }
 
-/// Opaque handle to a Loess batch model.
+// Opaque handle to a Loess batch model.
 pub struct CppLoess {
     builder: Option<LoessBuilder<f64>>,
     // Store CV options to apply lazily because of lifetime constraints
@@ -349,14 +349,14 @@ pub struct CppLoess {
     custom_weights: Option<Vec<f64>>,
 }
 
-/// Opaque handle to a Loess streaming model.
+// Opaque handle to a Loess streaming model.
 pub struct CppStreamingLoess {
     builder: LoessBuilder<f64>,
     streaming_opts: Option<(usize, usize, MergeStrategy)>,
     model: Option<ParallelStreamingLoess<f64>>,
 }
 
-/// Opaque handle to a Loess online model.
+// Opaque handle to a Loess online model.
 pub struct CppOnlineLoess {
     builder: LoessBuilder<f64>,
     online_opts: Option<(usize, usize, UpdateMode)>,
@@ -364,10 +364,10 @@ pub struct CppOnlineLoess {
     dimensions: usize,
 }
 
-/// C++ wrapper constructor.
-///
-/// # Safety
-/// Pointers must be valid null-terminated strings or null. Arrays must be valid.
+// C++ wrapper constructor.
+//
+// # Safety
+// Pointers must be valid null-terminated strings or null. Arrays must be valid.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_new(
     fraction: c_double,
@@ -499,14 +499,14 @@ pub unsafe extern "C" fn cpp_loess_new(
     }))
 }
 
-/// Set user-defined case weights for the next fit call.
-///
-/// Weights multiply the local kernel weight: `w_ij = custom_weights[j] * K(d_ij/h) * rob_j`.
-/// Must have the same length as the `y` array passed to `cpp_loess_fit`.
-///
-/// # Safety
-/// ptr must be a valid mutable pointer returned by cpp_loess_new.
-/// weights must be a valid array of length n.
+// Set user-defined case weights for the next fit call.
+//
+// Weights multiply the local kernel weight: `w_ij = custom_weights[j] * K(d_ij/h) * rob_j`.
+// Must have the same length as the `y` array passed to `cpp_loess_fit`.
+//
+// # Safety
+// ptr must be a valid mutable pointer returned by cpp_loess_new.
+// weights must be a valid array of length n.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_set_custom_weights(
     ptr: *mut CppLoess,
@@ -521,10 +521,10 @@ pub unsafe extern "C" fn cpp_loess_set_custom_weights(
     loess.custom_weights = Some(slice.to_vec());
 }
 
-/// Fit the batch model.
-///
-/// # Safety
-/// `ptr` must be a valid CppLoess pointer. `x` and `y` must be valid arrays of length `n`.
+// Fit the batch model.
+//
+// # Safety
+// `ptr` must be a valid CppLoess pointer. `x` and `y` must be valid arrays of length `n`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_fit(
     ptr: *mut CppLoess,
@@ -575,10 +575,10 @@ pub unsafe extern "C" fn cpp_loess_fit(
     }
 }
 
-/// Free batch model.
-///
-/// # Safety
-/// `ptr` must be a valid pointer returned by `cpp_loess_new` or null.
+// Free batch model.
+//
+// # Safety
+// `ptr` must be a valid pointer returned by `cpp_loess_new` or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_free(ptr: *mut CppLoess) {
     if !ptr.is_null() {
@@ -586,10 +586,10 @@ pub unsafe extern "C" fn cpp_loess_free(ptr: *mut CppLoess) {
     }
 }
 
-/// Create a new Streaming Loess model.
-///
-/// # Safety
-/// Pointers must be valid null-terminated strings or null.
+// Create a new Streaming Loess model.
+//
+// # Safety
+// Pointers must be valid null-terminated strings or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_streaming_new(
     fraction: c_double,
@@ -715,10 +715,10 @@ pub unsafe extern "C" fn cpp_streaming_new(
 }
 
 #[unsafe(no_mangle)]
-/// Process a chunk of data.
-///
-/// # Safety
-/// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
+// Process a chunk of data.
+//
+// # Safety
+// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
 pub unsafe extern "C" fn cpp_streaming_process(
     ptr: *mut CppStreamingLoess,
     x: *const c_double,
@@ -763,10 +763,10 @@ pub unsafe extern "C" fn cpp_streaming_process(
 }
 
 #[unsafe(no_mangle)]
-/// Finalize the streaming process.
-///
-/// # Safety
-/// `ptr` must be valid.
+// Finalize the streaming process.
+//
+// # Safety
+// `ptr` must be valid.
 pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLoess) -> CppLoessResult {
     if ptr.is_null() {
         return error_result("Model pointer is null");
@@ -783,20 +783,20 @@ pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLoess) -> 
 }
 
 #[unsafe(no_mangle)]
-/// Free streaming model.
-///
-/// # Safety
-/// `ptr` must be valid or null.
+// Free streaming model.
+//
+// # Safety
+// `ptr` must be valid or null.
 pub unsafe extern "C" fn cpp_streaming_free(ptr: *mut CppStreamingLoess) {
     if !ptr.is_null() {
         let _ = Box::from_raw(ptr);
     }
 }
 
-/// Create a new Online Loess model.
-///
-/// # Safety
-/// Pointers must be valid null-terminated strings or null.
+// Create a new Online Loess model.
+//
+// # Safety
+// Pointers must be valid null-terminated strings or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_online_new(
     fraction: c_double,
@@ -912,10 +912,10 @@ pub unsafe extern "C" fn cpp_online_new(
 }
 
 #[unsafe(no_mangle)]
-/// Add points to online model.
-///
-/// # Safety
-/// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
+// Add points to online model.
+//
+// # Safety
+// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
 pub unsafe extern "C" fn cpp_online_add_points(
     ptr: *mut CppOnlineLoess,
     x: *const c_double,
@@ -990,20 +990,20 @@ pub unsafe extern "C" fn cpp_online_add_points(
 }
 
 #[unsafe(no_mangle)]
-/// Free online model.
-///
-/// # Safety
-/// `ptr` must be valid or null.
+// Free online model.
+//
+// # Safety
+// `ptr` must be valid or null.
 pub unsafe extern "C" fn cpp_online_free(ptr: *mut CppOnlineLoess) {
     if !ptr.is_null() {
         let _ = Box::from_raw(ptr);
     }
 }
 
-/// Free a CppLoessResult.
-///
-/// # Safety
-/// `result` must be a valid pointer to a CppLoessResult struct.
+// Free a CppLoessResult.
+//
+// # Safety
+// `result` must be a valid pointer to a CppLoessResult struct.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_free_result(result: *mut CppLoessResult) {
     if result.is_null() {

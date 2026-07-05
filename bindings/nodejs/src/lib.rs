@@ -16,7 +16,7 @@ use ::fastLoess::prelude::{
     Streaming,
 };
 
-/// Parse weight function from string
+// Parse weight function from string
 fn parse_weight_function(name: &str) -> Result<WeightFunction> {
     match name.to_lowercase().as_str() {
         "tricube" => Ok(WeightFunction::Tricube),
@@ -33,7 +33,7 @@ fn parse_weight_function(name: &str) -> Result<WeightFunction> {
     }
 }
 
-/// Parse robustness method from string
+// Parse robustness method from string
 fn parse_robustness_method(name: &str) -> Result<RobustnessMethod> {
     match name.to_lowercase().as_str() {
         "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
@@ -46,7 +46,7 @@ fn parse_robustness_method(name: &str) -> Result<RobustnessMethod> {
     }
 }
 
-/// Parse zero weight fallback from string
+// Parse zero weight fallback from string
 fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback> {
     match name.to_lowercase().as_str() {
         "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
@@ -59,7 +59,7 @@ fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback> {
     }
 }
 
-/// Parse boundary policy from string
+// Parse boundary policy from string
 fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy> {
     match name.to_lowercase().as_str() {
         "extend" | "pad" => Ok(BoundaryPolicy::Extend),
@@ -73,7 +73,7 @@ fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy> {
     }
 }
 
-/// Parse scaling method from string
+// Parse scaling method from string
 fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
     match name.to_lowercase().as_str() {
         "mad" => Ok(MAD),
@@ -89,7 +89,7 @@ fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
     }
 }
 
-/// Parse polynomial degree from string
+// Parse polynomial degree from string
 fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree> {
     match name.to_lowercase().as_str() {
         "constant" | "0" => Ok(PolynomialDegree::Constant),
@@ -104,7 +104,7 @@ fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree> {
     }
 }
 
-/// Parse distance metric from string
+// Parse distance metric from string
 fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
     // Handle "minkowski:p" inline format
     if let Some(p_str) = name.to_lowercase().strip_prefix("minkowski:") {
@@ -132,7 +132,7 @@ fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
     }
 }
 
-/// Parse merge strategy from string
+// Parse merge strategy from string
 fn parse_merge_strategy(name: &str) -> Result<MergeStrategy> {
     match name.to_lowercase().as_str() {
         "average" | "mean" => Ok(MergeStrategy::Average),
@@ -149,7 +149,7 @@ fn parse_merge_strategy(name: &str) -> Result<MergeStrategy> {
     }
 }
 
-/// Parse surface mode from string
+// Parse surface mode from string
 fn parse_surface_mode(name: &str) -> Result<SurfaceMode> {
     match name.to_lowercase().as_str() {
         "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
@@ -161,7 +161,7 @@ fn parse_surface_mode(name: &str) -> Result<SurfaceMode> {
     }
 }
 
-/// Parse update mode from string
+// Parse update mode from string
 fn parse_update_mode(name: &str) -> Result<UpdateMode> {
     match name.to_lowercase().as_str() {
         "full" | "resmooth" => Ok(UpdateMode::Full),
@@ -173,26 +173,26 @@ fn parse_update_mode(name: &str) -> Result<UpdateMode> {
     }
 }
 
-/// Diagnostic statistics for the LOESS fit.
+// Diagnostic statistics for the LOESS fit.
 #[napi(object)]
 pub struct Diagnostics {
-    /// Root Mean Squared Error.
+    // Root Mean Squared Error.
     pub rmse: f64,
-    /// Mean Absolute Error.
+    // Mean Absolute Error.
     pub mae: f64,
-    /// R-squared (coefficient of determination).
+    // R-squared (coefficient of determination).
     pub rSquared: f64,
-    /// Akaike Information Criterion (if computed).
+    // Akaike Information Criterion (if computed).
     pub aic: Option<f64>,
-    /// Corrected AIC (if computed).
+    // Corrected AIC (if computed).
     pub aicc: Option<f64>,
-    /// Effective degrees of freedom (if computed).
+    // Effective degrees of freedom (if computed).
     pub effectiveDf: Option<f64>,
-    /// Residual standard deviation.
+    // Residual standard deviation.
     pub residualSd: f64,
 }
 
-/// Result of a LOESS fit.
+// Result of a LOESS fit.
 #[napi]
 pub struct LoessResultObj {
     inner: LoessResult<f64>,
@@ -200,19 +200,19 @@ pub struct LoessResultObj {
 
 #[napi]
 impl LoessResultObj {
-    /// Get the sorted x values.
+    // Get the sorted x values.
     #[napi(getter)]
     pub fn get_x(&self) -> Float64Array {
         Float64Array::from(self.inner.x.as_slice())
     }
 
-    /// Get the smoothed y values.
+    // Get the smoothed y values.
     #[napi(getter)]
     pub fn get_y(&self) -> Float64Array {
         Float64Array::from(self.inner.y.as_slice())
     }
 
-    /// Get residuals (if requested).
+    // Get residuals (if requested).
     #[napi(getter)]
     pub fn get_residuals(&self) -> Option<Float64Array> {
         self.inner
@@ -221,7 +221,7 @@ impl LoessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
-    /// Get standard errors (if requested/computed).
+    // Get standard errors (if requested/computed).
     #[napi(getter)]
     pub fn get_standard_errors(&self) -> Option<Float64Array> {
         self.inner
@@ -230,7 +230,7 @@ impl LoessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
-    /// Get lower confidence bounds (if requested).
+    // Get lower confidence bounds (if requested).
     #[napi(getter)]
     pub fn get_confidence_lower(&self) -> Option<Float64Array> {
         self.inner
@@ -239,7 +239,7 @@ impl LoessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
-    /// Get upper confidence bounds (if requested).
+    // Get upper confidence bounds (if requested).
     #[napi(getter)]
     pub fn get_confidence_upper(&self) -> Option<Float64Array> {
         self.inner
@@ -248,7 +248,7 @@ impl LoessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
-    /// Get lower prediction bounds (if requested).
+    // Get lower prediction bounds (if requested).
     #[napi(getter)]
     pub fn get_prediction_lower(&self) -> Option<Float64Array> {
         self.inner
@@ -257,7 +257,7 @@ impl LoessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
-    /// Get upper prediction bounds (if requested).
+    // Get upper prediction bounds (if requested).
     #[napi(getter)]
     pub fn get_prediction_upper(&self) -> Option<Float64Array> {
         self.inner
@@ -266,7 +266,7 @@ impl LoessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
-    /// Get robustness weights (if requested).
+    // Get robustness weights (if requested).
     #[napi(getter)]
     pub fn get_robustness_weights(&self) -> Option<Float64Array> {
         self.inner
@@ -275,7 +275,7 @@ impl LoessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
-    /// Get diagnostics (if requested).
+    // Get diagnostics (if requested).
     #[napi(getter)]
     pub fn get_diagnostics(&self) -> Option<Diagnostics> {
         self.inner.diagnostics.as_ref().map(|d| Diagnostics {
@@ -289,7 +289,7 @@ impl LoessResultObj {
         })
     }
 
-    /// Get cross-validation scores (if CV was performed).
+    // Get cross-validation scores (if CV was performed).
     #[napi(getter)]
     pub fn get_cv_scores(&self) -> Option<Float64Array> {
         self.inner
@@ -298,49 +298,49 @@ impl LoessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
-    /// Get the fraction used for smoothing.
+    // Get the fraction used for smoothing.
     #[napi(getter)]
     pub fn get_fraction_used(&self) -> f64 {
         self.inner.fraction_used
     }
 
-    /// Get the number of iterations performed.
+    // Get the number of iterations performed.
     #[napi(getter)]
     pub fn get_iterations_used(&self) -> Option<u32> {
         self.inner.iterations_used.map(|i| i as u32)
     }
 
-    /// Get equivalent number of parameters (hat-matrix stat, if return_se was set).
+    // Get equivalent number of parameters (hat-matrix stat, if return_se was set).
     #[napi(getter)]
     pub fn get_enp(&self) -> Option<f64> {
         self.inner.enp
     }
 
-    /// Get trace of hat matrix (if return_se was set).
+    // Get trace of hat matrix (if return_se was set).
     #[napi(getter)]
     pub fn get_trace_hat(&self) -> Option<f64> {
         self.inner.trace_hat
     }
 
-    /// Get first delta statistic (if return_se was set).
+    // Get first delta statistic (if return_se was set).
     #[napi(getter)]
     pub fn get_delta1(&self) -> Option<f64> {
         self.inner.delta1
     }
 
-    /// Get second delta statistic (if return_se was set).
+    // Get second delta statistic (if return_se was set).
     #[napi(getter)]
     pub fn get_delta2(&self) -> Option<f64> {
         self.inner.delta2
     }
 
-    /// Get residual scale estimate (if return_se was set).
+    // Get residual scale estimate (if return_se was set).
     #[napi(getter)]
     pub fn get_residual_scale(&self) -> Option<f64> {
         self.inner.residual_scale
     }
 
-    /// Get per-point leverage / hat-matrix diagonal (if return_se was set).
+    // Get per-point leverage / hat-matrix diagonal (if return_se was set).
     #[napi(getter)]
     pub fn get_leverage(&self) -> Option<Float64Array> {
         self.inner
@@ -349,67 +349,67 @@ impl LoessResultObj {
             .map(|v| Float64Array::from(v.as_slice()))
     }
 
-    /// Get number of predictor dimensions.
+    // Get number of predictor dimensions.
     #[napi(getter)]
     pub fn get_dimensions(&self) -> u32 {
         self.inner.dimensions as u32
     }
 }
 
-/// Configuration options for LOESS smoothing.
+// Configuration options for LOESS smoothing.
 #[napi(object)]
 pub struct SmoothOptions {
-    /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
+    // Smoothing fraction (0 < fraction <= 1). Default: 0.67.
     pub fraction: Option<f64>,
-    /// Number of robustness iterations. Default: 3.
+    // Number of robustness iterations. Default: 3.
     pub iterations: Option<u32>,
-    /// Weight function ("tricube", "gaussian", etc.). Default: "tricube".
+    // Weight function ("tricube", "gaussian", etc.). Default: "tricube".
     pub weightFunction: Option<String>,
-    /// Robustness method ("bisquare", "huber"). Default: "bisquare".
+    // Robustness method ("bisquare", "huber"). Default: "bisquare".
     pub robustnessMethod: Option<String>,
-    /// Fallback strategy when weights are zero ("use_local_mean").
+    // Fallback strategy when weights are zero ("use_local_mean").
     pub zeroWeightFallback: Option<String>,
-    /// Boundary handling ("extend", "reflect"). Default: "extend".
+    // Boundary handling ("extend", "reflect"). Default: "extend".
     pub boundaryPolicy: Option<String>,
-    /// Scaling method ("mad", "mar", "mean"). Default: "mad".
+    // Scaling method ("mad", "mar", "mean"). Default: "mad".
     pub scalingMethod: Option<String>,
-    /// Auto-convergence tolerance. Default: None.
+    // Auto-convergence tolerance. Default: None.
     pub autoConverge: Option<f64>,
-    /// Return residuals in result. Default: false.
+    // Return residuals in result. Default: false.
     pub returnResiduals: Option<bool>,
-    /// Return robustness weights in result. Default: false.
+    // Return robustness weights in result. Default: false.
     pub returnRobustnessWeights: Option<bool>,
-    /// Return diagnostics (RMSE, etc.). Default: false.
+    // Return diagnostics (RMSE, etc.). Default: false.
     pub returnDiagnostics: Option<bool>,
-    /// Calculate confidence intervals (e.g., 0.95). Default: None.
+    // Calculate confidence intervals (e.g., 0.95). Default: None.
     pub confidenceIntervals: Option<f64>,
-    /// Calculate prediction intervals. Default: None.
+    // Calculate prediction intervals. Default: None.
     pub predictionIntervals: Option<f64>,
-    /// Fractions to use for cross-validation.
+    // Fractions to use for cross-validation.
     pub cvFractions: Option<Vec<f64>>,
-    /// CV method ("loocv", "kfold"). Default: "kfold".
+    // CV method ("loocv", "kfold"). Default: "kfold".
     pub cvMethod: Option<String>,
-    /// Number of folds for K-Fold CV. Default: 5.
+    // Number of folds for K-Fold CV. Default: 5.
     pub cvK: Option<u32>,
-    /// Enable parallel execution. Default: true.
+    // Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
-    /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
+    // Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
     pub degree: Option<String>,
-    /// Number of predictor dimensions. Default: 1.
+    // Number of predictor dimensions. Default: 1.
     pub dimensions: Option<u32>,
-    /// Distance metric ("normalized", "euclidean", "weighted", etc.). Default: "normalized".
+    // Distance metric ("normalized", "euclidean", "weighted", etc.). Default: "normalized".
     pub distanceMetric: Option<String>,
-    /// Per-dimension weights for the "weighted" distance metric.
+    // Per-dimension weights for the "weighted" distance metric.
     pub weightedMetricWeights: Option<Vec<f64>>,
-    /// Surface mode ("interpolation" or "direct"). Default: "interpolation".
+    // Surface mode ("interpolation" or "direct"). Default: "interpolation".
     pub surfaceMode: Option<String>,
-    /// Compute hat-matrix statistics (enp, traceHat, etc.). Default: false.
+    // Compute hat-matrix statistics (enp, traceHat, etc.). Default: false.
     pub returnSe: Option<bool>,
-    /// User-defined case weights (same length as x/y). Default: None.
+    // User-defined case weights (same length as x/y). Default: None.
     pub customWeights: Option<Vec<f64>>,
 }
 
-/// Batch LOESS smoothing.
+// Batch LOESS smoothing.
 #[napi]
 pub struct Loess {
     options: Option<SmoothOptions>,
@@ -417,13 +417,13 @@ pub struct Loess {
 
 #[napi]
 impl Loess {
-    /// Create a new batch LOESS smoother.
+    // Create a new batch LOESS smoother.
     #[napi(constructor)]
     pub fn new(options: Option<SmoothOptions>) -> Self {
         Self { options }
     }
 
-    /// Fit the model.
+    // Fit the model.
     #[napi]
     pub fn fit(&self, x: Float64Array, y: Float64Array) -> Result<LoessResultObj> {
         let builder = self.create_builder()?;
@@ -439,7 +439,7 @@ impl Loess {
         Ok(LoessResultObj { inner: result })
     }
 
-    /// Fit the model asynchronously.
+    // Fit the model asynchronously.
     #[napi(js_name = "fitAsync")]
     pub fn fit_async(&self, x: Float64Array, y: Float64Array) -> Result<AsyncTask<LoessTask>> {
         let builder = self.create_builder()?;
@@ -577,18 +577,18 @@ impl Task for LoessTask {
     }
 }
 
-/// Configuration options for streaming processing.
+// Configuration options for streaming processing.
 #[napi(object)]
 pub struct StreamingOptions {
-    /// Size of each data chunk. Default: 5000.
+    // Size of each data chunk. Default: 5000.
     pub chunkSize: Option<u32>,
-    /// Header/footer overlap size. Default: 500.
+    // Header/footer overlap size. Default: 500.
     pub overlap: Option<u32>,
-    /// Strategy for merging chunk overlaps ("average", "weighted_average", "take_first", "take_last").
+    // Strategy for merging chunk overlaps ("average", "weighted_average", "take_first", "take_last").
     pub mergeStrategy: Option<String>,
 }
 
-/// Streaming LOESS smoother for large datasets.
+// Streaming LOESS smoother for large datasets.
 #[napi]
 pub struct StreamingLoess {
     inner: ParallelStreamingLoess<f64>,
@@ -596,7 +596,7 @@ pub struct StreamingLoess {
 
 #[napi]
 impl StreamingLoess {
-    /// Create a new streaming LOESS smoother.
+    // Create a new streaming LOESS smoother.
     #[napi(constructor)]
     pub fn new(
         options: Option<SmoothOptions>,
@@ -690,7 +690,7 @@ impl StreamingLoess {
         Ok(StreamingLoess { inner: model })
     }
 
-    /// Process a chunk of data.
+    // Process a chunk of data.
     #[napi]
     pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResultObj> {
         let result: LoessResult<f64> = self
@@ -700,7 +700,7 @@ impl StreamingLoess {
         Ok(LoessResultObj { inner: result })
     }
 
-    /// Finalize the stream and return remaining data.
+    // Finalize the stream and return remaining data.
     #[napi]
     pub fn finalize(&mut self) -> Result<LoessResultObj> {
         let result: LoessResult<f64> = self
@@ -711,18 +711,18 @@ impl StreamingLoess {
     }
 }
 
-/// Configuration options for online processing.
+// Configuration options for online processing.
 #[napi(object)]
 pub struct OnlineOptions {
-    /// Maximum number of points to keep in the window. Default: 100.
+    // Maximum number of points to keep in the window. Default: 100.
     pub windowCapacity: Option<u32>,
-    /// Minimum points required before smoothing starts. Default: 2.
+    // Minimum points required before smoothing starts. Default: 2.
     pub minPoints: Option<u32>,
-    /// Update mode ("full", "incremental"). Default: "full".
+    // Update mode ("full", "incremental"). Default: "full".
     pub updateMode: Option<String>,
 }
 
-/// Online LOESS smoother for real-time data.
+// Online LOESS smoother for real-time data.
 #[napi]
 pub struct OnlineLoess {
     inner: ParallelOnlineLoess<f64>,
@@ -734,7 +734,7 @@ pub struct OnlineLoess {
 
 #[napi]
 impl OnlineLoess {
-    /// Create a new online LOESS smoother.
+    // Create a new online LOESS smoother.
     #[napi(constructor)]
     pub fn new(options: Option<SmoothOptions>, online_opts: Option<OnlineOptions>) -> Result<Self> {
         let mut builder = LoessBuilder::new();
@@ -863,7 +863,7 @@ impl OnlineLoess {
         })
     }
 
-    /// Add new points to the window and get smoothed values.
+    // Add new points to the window and get smoothed values.
     #[napi]
     pub fn add_points(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResultObj> {
         let x_slice = x.as_ref();
