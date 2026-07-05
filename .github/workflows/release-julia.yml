@@ -44,7 +44,7 @@ jobs:
             echo "✅ YGGDRASIL_TOKEN is configured."
           fi
 
-      - name: Checkout Source (Lowess Project)
+      - name: Checkout Source (Loess Project)
         uses: actions/checkout@v6
         with:
           path: loess-project

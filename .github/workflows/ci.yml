@@ -90,7 +90,7 @@ jobs:
           cargo clippy -p loess-rs --all-targets -- -D warnings
           cargo clippy -p fastLoess --all-targets --features dev -- -D warnings
 
-      - name: "Rust: Lowess Tests"
+      - name: "Rust: Loess Tests"
         run: |
           cargo test -q -p loess-project-tests --test loess-rs
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
