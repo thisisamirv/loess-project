@@ -381,6 +381,7 @@ pub struct JlLoessConfig {
 
 pub struct JlStreamingLoess {
     inner: ParallelStreamingLoess<f64>,
+    dimensions: usize,
 }
 
 pub struct JlOnlineLoess {
@@ -548,7 +549,9 @@ pub unsafe extern "C" fn jl_loess_fit(
             return error_result("Array length must be greater than 0");
         }
 
-        let x_slice = unsafe { from_raw_parts(x, n as usize) };
+        // For multi-dimensional LOESS, x has n * dimensions elements (row-major flat).
+        let x_n = n as usize * (config.dimensions as usize).max(1);
+        let x_slice = unsafe { from_raw_parts(x, x_n) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
         let mut builder = LoessBuilder::<f64>::new();
@@ -774,7 +777,10 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
             Err(_) => return null_mut(),
         };
 
-        Box::into_raw(Box::new(JlStreamingLoess { inner: processor }))
+        Box::into_raw(Box::new(JlStreamingLoess {
+            inner: processor,
+            dimensions: (dimensions as usize).max(1),
+        }))
     });
 
     match result {
@@ -807,7 +813,9 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
             return error_result("Array length must be greater than 0");
         }
 
-        let x_slice = unsafe { from_raw_parts(x, n as usize) };
+        // For multi-dimensional chunks, x has n * dimensions elements (row-major flat).
+        let x_n = n as usize * processor.dimensions.max(1);
+        let x_slice = unsafe { from_raw_parts(x, x_n) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
         match processor.inner.process_chunk(x_slice, y_slice) {
@@ -985,12 +993,15 @@ pub unsafe extern "C" fn jl_online_loess_add_points(
             return error_result("Array length must be greater than 0");
         }
 
-        let x_slice = unsafe { from_raw_parts(x, n as usize) };
+        // For multi-dimensional data, x has n * dimensions elements (row-major flat).
+        let d = processor.dimensions.max(1);
+        let x_n = n as usize * d;
+        let x_slice = unsafe { from_raw_parts(x, x_n) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
         let mut smoothed = Vec::with_capacity(y_slice.len());
-        for (&xi, &yi) in x_slice.iter().zip(y_slice.iter()) {
-            match processor.inner.add_point(std::slice::from_ref(&xi), yi) {
+        for (xi_chunk, &yi) in x_slice.chunks(d).zip(y_slice.iter()) {
+            match processor.inner.add_point(xi_chunk, yi) {
                 Ok(output) => smoothed.push(output.as_ref().map_or(yi, |o| o.smoothed)),
                 Err(e) => return error_result(&e.to_string()),
             }

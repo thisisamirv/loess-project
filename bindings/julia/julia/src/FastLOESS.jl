@@ -460,6 +460,59 @@ function fit(
 end
 
 """
+	fit(l::Loess, x::Matrix{Float64}, y::Vector{Float64}; custom_weights=nothing) -> LoessResult
+
+Fit the LOESS model to multivariate data.
+
+The matrix `x` has shape `(n, d)` where `n` is the number of observations and `d` is
+the number of predictor dimensions (must match `l.dimensions`). Julia matrices are
+column-major; this method converts them to the row-major layout expected by the C
+library before calling the underlying routine.
+
+# Arguments
+- `l::Loess`: LOESS model (configured with `dimensions=d`).
+- `x::Matrix{Float64}`: Predictor matrix of shape `(n, d)`.
+- `y::Vector{Float64}`: Response values of length `n`.
+
+# Keyword Arguments
+- `custom_weights::Union{Vector{Float64}, Nothing} = nothing`: Per-observation weights.
+"""
+function fit(
+	l::Loess,
+	x::Matrix{Float64},
+	y::Vector{Float64};
+	custom_weights::Union{Vector{Float64}, Nothing} = nothing,
+)
+	n = size(x, 1)
+	if n != length(y)
+		throw(ArgumentError("x and y must have the same length"))
+	end
+
+	# Convert (n, d) column-major Julia matrix to row-major flat vector for the C FFI
+	x_flat = vec(permutedims(x))  # shape (d, n) then flatten → [p1_d1, p1_d2, p2_d1, …]
+
+	if custom_weights !== nothing
+		if length(custom_weights) != n
+			throw(ArgumentError("custom_weights must have the same length as y"))
+		end
+		@ccall libfastloess.jl_loess_set_custom_weights(
+			l.handle::Ptr{Cvoid},
+			custom_weights::Ptr{Cdouble},
+			Culong(n)::Culong,
+		)::Cvoid
+	end
+
+	c_result = @ccall libfastloess.jl_loess_fit(
+		l.handle::Ptr{Cvoid},
+		x_flat::Ptr{Cdouble},
+		y::Ptr{Cdouble},
+		Culong(n)::Culong,
+	)::CJlLoessResult
+
+	return convert_result(c_result)
+end
+
+"""
 	StreamingLoess(; kwargs...)
 
 Stateful streaming LOESS smoother.
