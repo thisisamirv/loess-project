@@ -298,25 +298,25 @@ function Base.append!(a::LoessResult, b::LoessResult)
 	append!(a.y, b.y)
 
 	if a.standard_errors !== nothing && b.standard_errors !== nothing
-		append!(a.standard_errors, b.standard_errors)
+		append!(a.standard_errors::Vector{Float64}, b.standard_errors::Vector{Float64})
 	end
 	if a.confidence_lower !== nothing && b.confidence_lower !== nothing
-		append!(a.confidence_lower, b.confidence_lower)
+		append!(a.confidence_lower::Vector{Float64}, b.confidence_lower::Vector{Float64})
 	end
 	if a.confidence_upper !== nothing && b.confidence_upper !== nothing
-		append!(a.confidence_upper, b.confidence_upper)
+		append!(a.confidence_upper::Vector{Float64}, b.confidence_upper::Vector{Float64})
 	end
 	if a.prediction_lower !== nothing && b.prediction_lower !== nothing
-		append!(a.prediction_lower, b.prediction_lower)
+		append!(a.prediction_lower::Vector{Float64}, b.prediction_lower::Vector{Float64})
 	end
 	if a.prediction_upper !== nothing && b.prediction_upper !== nothing
-		append!(a.prediction_upper, b.prediction_upper)
+		append!(a.prediction_upper::Vector{Float64}, b.prediction_upper::Vector{Float64})
 	end
 	if a.residuals !== nothing && b.residuals !== nothing
-		append!(a.residuals, b.residuals)
+		append!(a.residuals::Vector{Float64}, b.residuals::Vector{Float64})
 	end
 	if a.robustness_weights !== nothing && b.robustness_weights !== nothing
-		append!(a.robustness_weights, b.robustness_weights)
+		append!(a.robustness_weights::Vector{Float64}, b.robustness_weights::Vector{Float64})
 	end
 
 	# Update fraction_used and iterations_used if they differ?
