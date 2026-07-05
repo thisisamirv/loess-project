@@ -8,7 +8,7 @@ Complete reference for all LOESS configuration options.
 === "R"
 
 | Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
 | **degree** | 1 | 0–4 | Polynomial degree | All |
@@ -36,7 +36,7 @@ Complete reference for all LOESS configuration options.
 === "Python"
 
 | Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
 | **degree** | 1 | 0–4 | Polynomial degree | All |
@@ -64,7 +64,7 @@ Complete reference for all LOESS configuration options.
 === "Rust"
 
 | Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
 | **degree** | 1 | 0–4 | Polynomial degree | All |
@@ -92,7 +92,7 @@ Complete reference for all LOESS configuration options.
 === "Julia"
 
 | Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
 | **degree** | 1 | 0–4 | Polynomial degree | All |
@@ -120,7 +120,7 @@ Complete reference for all LOESS configuration options.
 === "Node.js"
 
 | Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
 | **degree** | 1 | 0–4 | Polynomial degree | All |
@@ -147,7 +147,7 @@ Complete reference for all LOESS configuration options.
 === "WebAssembly"
 
 | Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
 | **degree** | 1 | 0–4 | Polynomial degree | All |
@@ -174,7 +174,7 @@ Complete reference for all LOESS configuration options.
 === "C++"
 
 | Parameter | Default | Range/Options | Description | Adapter |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
 | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
 | **degree** | 1 | 0–4 | Polynomial degree | All |
@@ -205,7 +205,7 @@ Complete reference for all LOESS configuration options.
 === "R / Python / Julia / C++"
 
 | Parameter | Available Options |
-| --- | --- | --- |
+| --- | --- |
 | **weight_function** | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
 | **robustness_method** | `"bisquare"`, `"huber"`, `"talwar"` |
 | **zero_weight_fallback** | `"use_local_mean"`, `"return_original"`, `"return_none"` |
@@ -218,7 +218,7 @@ Complete reference for all LOESS configuration options.
 === "Rust"
 
 | Parameter | Available Options |
-| --- | --- | --- |
+| --- | --- |
 | **weight_function** | `Tricube`, `Epanechnikov`, `Gaussian`, `Biweight`, `Cosine`, `Triangle`, `Uniform` |
 | **robustness_method** | `Bisquare`, `Huber`, `Talwar` |
 | **zero_weight_fallback** | `UseLocalMean`, `ReturnOriginal`, `ReturnNone` |
@@ -231,7 +231,7 @@ Complete reference for all LOESS configuration options.
 === "Node.js / WebAssembly"
 
 | Parameter | Available Options |
-| --- | --- | --- |
+| --- | --- |
 | **weightFunction** | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
 | **robustnessMethod** | `"bisquare"`, `"huber"`, `"talwar"` |
 | **zeroWeightFallback** | `"use_local_mean"`, `"return_original"`, `"return_none"` |
@@ -355,13 +355,13 @@ Polynomial degree for the local regression fits.
 
 ![Degree Comparison](../assets/diagrams/degree_comparison.svg)
 
-| Degree | Fit Type | Default? |
-| --- | --- | --- |
-| `0` | Local constant | |
-| `1` | Local linear | Yes |
-| `2` | Local quadratic | |
-| `3` | Local cubic | |
-| `4` | Local quartic | |
+| Degree | Fit Type |
+| --- | --- |
+| `0` | Local constant |
+| `1` | Local linear (Default) |
+| `2` | Local quadratic |
+| `3` | Local cubic |
+| `4` | Local quartic |
 
 Higher degrees capture curvature but can overfit with small fractions. Degree 1 is appropriate for most use cases.
 
@@ -502,7 +502,7 @@ Distance weighting kernel for local fits.
 === "R / Python / Julia / Node.js / WebAssembly / C++"
 
 | Kernel | Efficiency | Smoothness |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `"tricube"` | 0.998 | Very smooth |
 | `"epanechnikov"` | 1.000 | Smooth |
 | `"gaussian"` | 0.961 | Infinite |
@@ -514,7 +514,7 @@ Distance weighting kernel for local fits.
 === "Rust"
 
 | Kernel | Efficiency | Smoothness |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `Tricube` | 0.998 | Very smooth |
 | `Epanechnikov` | 1.000 | Smooth |
 | `Gaussian` | 0.961 | Infinite |
@@ -572,7 +572,7 @@ Method for downweighting outliers during iterative refinement.
 === "R / Python / Julia / Node.js / WebAssembly / C++"
 
 | Method | Behavior | Use Case |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `"bisquare"` | Smooth downweighting | General-purpose |
 | `"huber"` | Linear beyond threshold | Moderate outliers |
 | `"talwar"` | Hard threshold (0 or 1) | Extreme contamination |
@@ -580,7 +580,7 @@ Method for downweighting outliers during iterative refinement.
 === "Rust"
 
 | Method | Behavior | Use Case |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `Bisquare` | Smooth downweighting | General-purpose |
 | `Huber` | Linear beyond threshold | Moderate outliers |
 | `Talwar` | Hard threshold (0 or 1) | Extreme contamination |
@@ -636,7 +636,7 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 === "R / Python / Julia / Node.js / WebAssembly / C++"
 
 | Policy | Behavior | Use Case |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `"extend"` | Pad with first/last values | Most cases (default) |
 | `"reflect"` | Mirror data at boundaries | Periodic/symmetric data |
 | `"zero"` | Pad with zeros | Data approaches zero |
@@ -645,7 +645,7 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 === "Rust"
 
 | Policy | Behavior | Use Case |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `Extend` | Pad with first/last values | Most cases (default) |
 | `Reflect` | Mirror data at boundaries | Periodic/symmetric data |
 | `Zero` | Pad with zeros | Data approaches zero |
@@ -702,7 +702,7 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 === "R / Python / Julia / Node.js / WebAssembly / C++"
 
 | Method | Description | Robustness |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `"mad"` | Median Absolute Deviation | Very robust |
 | `"mar"` | Median Absolute Residual | Robust |
 | `"mean"` | Mean Absolute Residual | Less robust |
@@ -710,7 +710,7 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 === "Rust"
 
 | Method | Description | Robustness |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `MAD` | Median Absolute Deviation | Very robust |
 | `MAR` | Median Absolute Residual | Robust |
 | `Mean` | Mean Absolute Residual | Less robust |
@@ -761,7 +761,7 @@ Behavior when all neighborhood weights are zero.
 === "R / Python / Julia / Node.js / WebAssembly / C++"
 
 | Option | Behavior |
-| --- | --- | --- |
+| --- | --- |
 | `"use_local_mean"` | Use mean of neighborhood (default) |
 | `"return_original"` | Return original y value |
 | `"return_none"` | Return NaN |
@@ -769,7 +769,7 @@ Behavior when all neighborhood weights are zero.
 === "Rust"
 
 | Option | Behavior |
-| --- | --- | --- | --- |
+| --- | --- |
 | `UseLocalMean` | Use mean of neighborhood (default) |
 | `ReturnOriginal` | Return original y value |
 | `ReturnNone` | Return NaN |
@@ -1251,7 +1251,7 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 === "R / Python / Julia / Node.js / WebAssembly / C++"
 
 | Strategy | Description | Robustness |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `"average"` | Average of overlapping chunks | Fastest, least robust |
 | `"left"` | Left chunk | Fastest, least robust |
 | `"right"` | Right chunk | Fastest, least robust |
@@ -1260,7 +1260,7 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 === "Rust"
 
 | Strategy | Description | Robustness |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `Average` | Average of overlapping chunks | Fastest, least robust |
 | `Left` | Left chunk | Fastest, least robust |
 | `Right` | Right chunk | Fastest, least robust |
@@ -1410,14 +1410,14 @@ Optimization strategy for Online mode updates.
 === "R / Python / Julia / Node.js / WebAssembly / C++"
 
 | Mode | Description | Speed |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `full` | Re-smooth entire window | Slow |
 | `incremental` | Update only affected fits | Fast |
 
 === "Rust"
 
 | Mode | Description | Speed |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | `Full` | Re-smooth entire window | Slow |
 | `Incremental` | Update only affected fits | Fast |
 

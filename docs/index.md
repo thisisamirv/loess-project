@@ -61,7 +61,7 @@ R's `loess` does not apply boundary padding, which can lead to:
 A variety of features, supporting a range of use cases:
 
 | Feature | This package | R (stats) |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | Kernel | 7 options | only Tricube |
 | Robustness Weighting | 3 options | only Huber |
 | Scale Estimation | 2 options | only MAR |
