@@ -125,7 +125,7 @@ jobs:
             # This ensures we build with the latest local changes
             mkdir -p bindings/r/src/vendor
             cp -rvL crates/fastLoess bindings/r/src/vendor/
-            cp -rvL crates/loess bindings/r/src/vendor/
+            cp -rvL crates/loess-rs bindings/r/src/vendor/
 
             # Clean up target/locks from vendored sources
             rm -rf bindings/r/src/vendor/*/target

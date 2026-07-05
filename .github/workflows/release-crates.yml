@@ -16,14 +16,14 @@ jobs:
       - name: Install Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Publish 'loess' crate
+      - name: Publish 'loess-rs' crate
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         run: |
-          echo "Publishing loess crate..."
-          cargo publish -p loess --token $CARGO_REGISTRY_TOKEN
+          echo "Publishing loess-rs crate..."
+          cargo publish -p loess-rs --token $CARGO_REGISTRY_TOKEN
 
-      # Adding a delay to ensure crates.io index propagates the new 'loess' version
+      # Adding a delay to ensure crates.io index propagates the new 'loess-rs' version
       # before 'fastLoess' tries to depend on it.
       - name: Wait for Index Propagation
         run: sleep 60
