@@ -200,7 +200,7 @@ struct CJlLoessResult
 end
 
 function ptr_to_vector(ptr::Ptr{Cdouble}, n::Int)
-	if ptr == C_NULL
+	if ptr == Ptr{Cdouble}(C_NULL)
 		return nothing
 	end
 	return unsafe_wrap(Array, ptr, n, own = false) |> copy
@@ -208,8 +208,8 @@ end
 
 function convert_result(c_result::CJlLoessResult)
 	# Check for error
-	if c_result.error != C_NULL
-		error_msg = unsafe_string(c_result.error)
+	if c_result.error != Ptr{Cchar}(C_NULL)
+		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
 		# Free the result before throwing
 		@ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
 		error("fastloess error: $error_msg")

@@ -628,6 +628,7 @@ _julia_checks_internal:
 	julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="$(JL_DIR)/julia"); \
 		Pkg.add("JET"); using JET, FastLOESS; \
 		report = JET.report_package(FastLOESS); \
+		show(stderr, MIME("text/plain"), report); println(stderr); \
 		if length(JET.get_reports(report)) > 0; @error "JET found type errors"; exit(1); end'
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
