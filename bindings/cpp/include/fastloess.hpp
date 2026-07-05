@@ -395,14 +395,24 @@ public:
     return *this;
   }
 
+  /// @param custom_weights Per-observation weights (empty = no weights). Each
+  /// weight
+  ///   multiplies the local kernel weight: w_ij = custom_weights[j] * K(d_ij/h)
+  ///   * rob_j. Analogous to the `weights` argument in R's `stats::loess`.
   Expected<LoessResult> fit(const std::vector<double> &x_values,
-                            const std::vector<double> &y_values) {
+                            const std::vector<double> &y_values,
+                            const std::vector<double> &custom_weights = {}) {
     if (x_values.size() != y_values.size()) {
       return Expected<LoessResult>::makeError(
           "x and y must have the same length");
     }
     if (x_values.empty()) {
       return Expected<LoessResult>::makeError("Input arrays must not be empty");
+    }
+    if (!custom_weights.empty()) {
+      cpp_loess_set_custom_weights(
+          ptr_, custom_weights.data(),
+          static_cast<unsigned long>(custom_weights.size()));
     }
 
     auto result = cpp_loess_fit(ptr_, x_values.data(), y_values.data(),

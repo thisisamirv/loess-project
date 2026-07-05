@@ -173,6 +173,7 @@ def smooth(
     return_se: bool = False,
     minkowski_p: float = 2.0,
     weighted_metric_weights: Sequence[float] | None = None,
+    custom_weights: ArrayLike | None = None,
 ) -> LoessResult:
     """LOESS smoothing with the batch adapter.
 
@@ -233,6 +234,10 @@ def smooth(
         Exponent for Minkowski distance (default: 2.0, i.e. Euclidean).
     weighted_metric_weights : sequence of float, optional
         Per-dimension weights for the weighted distance metric.
+    custom_weights : array_like, optional
+        Per-observation weights (same length as y). Each weight multiplies the
+        local kernel weight: w_ij = custom_weights[j] * K(d_ij/h) * rob_j.
+        Analogous to the ``weights`` argument in R's ``stats::loess``.
 
     Returns
     -------
@@ -445,8 +450,25 @@ class Loess:
         """Initialize the batch LOESS processor."""
         ...
 
-    def fit(self, x: ArrayLike, y: ArrayLike) -> LoessResult:
-        """Fit LOESS model to data."""
+    def fit(
+        self,
+        x: ArrayLike,
+        y: ArrayLike,
+        custom_weights: ArrayLike | None = None,
+    ) -> LoessResult:
+        """Fit LOESS model to data.
+
+        Parameters
+        ----------
+        x : array_like
+            Predictor values.
+        y : array_like
+            Response values.
+        custom_weights : array_like, optional
+            Per-observation weights (same length as y). Each weight multiplies the
+            local kernel weight: w_ij = custom_weights[j] * K(d_ij/h) * rob_j.
+            Analogous to the ``weights`` argument in R's ``stats::loess``.
+        """
         ...
 
 class StreamingLoess:

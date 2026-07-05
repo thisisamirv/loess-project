@@ -411,14 +411,41 @@ mutable struct Loess
 end
 
 """
-	fit(l::Loess, x, y) -> LoessResult
+	fit(l::Loess, x, y; custom_weights=nothing) -> LoessResult
 
 Fit the LOESS model to data.
+
+# Arguments
+- `l::Loess`: LOESS model.
+- `x::Vector{Float64}`: Predictor values.
+- `y::Vector{Float64}`: Response values.
+
+# Keyword Arguments
+- `custom_weights::Union{Vector{Float64}, Nothing} = nothing`: Per-observation weights
+  (same length as `y`). Each weight multiplies the local kernel weight:
+  `w_ij = custom_weights[j] * K(d_ij/h) * rob_j`. Analogous to the `weights` argument
+  in R's `stats::loess`. `nothing` disables custom weighting.
 """
-function fit(l::Loess, x::Vector{Float64}, y::Vector{Float64})
+function fit(
+	l::Loess,
+	x::Vector{Float64},
+	y::Vector{Float64};
+	custom_weights::Union{Vector{Float64}, Nothing} = nothing,
+)
 	n = length(x)
 	if n != length(y)
 		throw(ArgumentError("x and y must have the same length"))
+	end
+
+	if custom_weights !== nothing
+		if length(custom_weights) != n
+			throw(ArgumentError("custom_weights must have the same length as y"))
+		end
+		@ccall libfastloess.jl_loess_set_custom_weights(
+			l.handle::Ptr{Cvoid},
+			custom_weights::Ptr{Cdouble},
+			Culong(n)::Culong,
+		)::Cvoid
 	end
 
 	c_result = @ccall libfastloess.jl_loess_fit(

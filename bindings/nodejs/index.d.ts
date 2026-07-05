@@ -2,160 +2,162 @@
 /* eslint-disable */
 /** Batch LOESS smoothing. */
 export declare class Loess {
-  /** Create a new batch LOESS smoother. */
-  constructor(options?: SmoothOptions | undefined | null)
-  /** Fit the model. */
-  fit(x: Float64Array, y: Float64Array): LoessResultObj
-  /** Fit the model asynchronously. */
-  fitAsync(x: Float64Array, y: Float64Array): Promise<unknown>
+    /** Create a new batch LOESS smoother. */
+    constructor(options?: SmoothOptions | undefined | null)
+    /** Fit the model. */
+    fit(x: Float64Array, y: Float64Array): LoessResultObj
+    /** Fit the model asynchronously. */
+    fitAsync(x: Float64Array, y: Float64Array): Promise<unknown>
 }
 
 /** Result of a LOESS fit. */
 export declare class LoessResultObj {
-  /** Get the sorted x values. */
-  get x(): Float64Array
-  /** Get the smoothed y values. */
-  get y(): Float64Array
-  /** Get residuals (if requested). */
-  get residuals(): Float64Array | null
-  /** Get standard errors (if requested/computed). */
-  get standardErrors(): Float64Array | null
-  /** Get lower confidence bounds (if requested). */
-  get confidenceLower(): Float64Array | null
-  /** Get upper confidence bounds (if requested). */
-  get confidenceUpper(): Float64Array | null
-  /** Get lower prediction bounds (if requested). */
-  get predictionLower(): Float64Array | null
-  /** Get upper prediction bounds (if requested). */
-  get predictionUpper(): Float64Array | null
-  /** Get robustness weights (if requested). */
-  get robustnessWeights(): Float64Array | null
-  /** Get diagnostics (if requested). */
-  get diagnostics(): Diagnostics | null
-  /** Get cross-validation scores (if CV was performed). */
-  get cvScores(): Float64Array | null
-  /** Get the fraction used for smoothing. */
-  get fractionUsed(): number
-  /** Get the number of iterations performed. */
-  get iterationsUsed(): number | null
-  /** Get equivalent number of parameters (hat-matrix stat, if return_se was set). */
-  get enp(): number | null
-  /** Get trace of hat matrix (if return_se was set). */
-  get traceHat(): number | null
-  /** Get first delta statistic (if return_se was set). */
-  get delta1(): number | null
-  /** Get second delta statistic (if return_se was set). */
-  get delta2(): number | null
-  /** Get residual scale estimate (if return_se was set). */
-  get residualScale(): number | null
-  /** Get per-point leverage / hat-matrix diagonal (if return_se was set). */
-  get leverage(): Float64Array | null
-  /** Get number of predictor dimensions. */
-  get dimensions(): number
+    /** Get the sorted x values. */
+    get x(): Float64Array
+    /** Get the smoothed y values. */
+    get y(): Float64Array
+    /** Get residuals (if requested). */
+    get residuals(): Float64Array | null
+    /** Get standard errors (if requested/computed). */
+    get standardErrors(): Float64Array | null
+    /** Get lower confidence bounds (if requested). */
+    get confidenceLower(): Float64Array | null
+    /** Get upper confidence bounds (if requested). */
+    get confidenceUpper(): Float64Array | null
+    /** Get lower prediction bounds (if requested). */
+    get predictionLower(): Float64Array | null
+    /** Get upper prediction bounds (if requested). */
+    get predictionUpper(): Float64Array | null
+    /** Get robustness weights (if requested). */
+    get robustnessWeights(): Float64Array | null
+    /** Get diagnostics (if requested). */
+    get diagnostics(): Diagnostics | null
+    /** Get cross-validation scores (if CV was performed). */
+    get cvScores(): Float64Array | null
+    /** Get the fraction used for smoothing. */
+    get fractionUsed(): number
+    /** Get the number of iterations performed. */
+    get iterationsUsed(): number | null
+    /** Get equivalent number of parameters (hat-matrix stat, if return_se was set). */
+    get enp(): number | null
+    /** Get trace of hat matrix (if return_se was set). */
+    get traceHat(): number | null
+    /** Get first delta statistic (if return_se was set). */
+    get delta1(): number | null
+    /** Get second delta statistic (if return_se was set). */
+    get delta2(): number | null
+    /** Get residual scale estimate (if return_se was set). */
+    get residualScale(): number | null
+    /** Get per-point leverage / hat-matrix diagonal (if return_se was set). */
+    get leverage(): Float64Array | null
+    /** Get number of predictor dimensions. */
+    get dimensions(): number
 }
 
 /** Online LOESS smoother for real-time data. */
 export declare class OnlineLoess {
-  /** Create a new online LOESS smoother. */
-  constructor(options?: SmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
-  /** Add new points to the window and get smoothed values. */
-  addPoints(x: Float64Array, y: Float64Array): LoessResultObj
+    /** Create a new online LOESS smoother. */
+    constructor(options?: SmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
+    /** Add new points to the window and get smoothed values. */
+    addPoints(x: Float64Array, y: Float64Array): LoessResultObj
 }
 
 /** Streaming LOESS smoother for large datasets. */
 export declare class StreamingLoess {
-  /** Create a new streaming LOESS smoother. */
-  constructor(options?: SmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
-  /** Process a chunk of data. */
-  processChunk(x: Float64Array, y: Float64Array): LoessResultObj
-  /** Finalize the stream and return remaining data. */
-  finalize(): LoessResultObj
+    /** Create a new streaming LOESS smoother. */
+    constructor(options?: SmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
+    /** Process a chunk of data. */
+    processChunk(x: Float64Array, y: Float64Array): LoessResultObj
+    /** Finalize the stream and return remaining data. */
+    finalize(): LoessResultObj
 }
 
 /** Diagnostic statistics for the LOESS fit. */
 export interface Diagnostics {
-  /** Root Mean Squared Error. */
-  rmse: number
-  /** Mean Absolute Error. */
-  mae: number
-  /** R-squared (coefficient of determination). */
-  rSquared: number
-  /** Akaike Information Criterion (if computed). */
-  aic?: number
-  /** Corrected AIC (if computed). */
-  aicc?: number
-  /** Effective degrees of freedom (if computed). */
-  effectiveDf?: number
-  /** Residual standard deviation. */
-  residualSd: number
+    /** Root Mean Squared Error. */
+    rmse: number
+    /** Mean Absolute Error. */
+    mae: number
+    /** R-squared (coefficient of determination). */
+    rSquared: number
+    /** Akaike Information Criterion (if computed). */
+    aic?: number
+    /** Corrected AIC (if computed). */
+    aicc?: number
+    /** Effective degrees of freedom (if computed). */
+    effectiveDf?: number
+    /** Residual standard deviation. */
+    residualSd: number
 }
 
 /** Configuration options for online processing. */
 export interface OnlineOptions {
-  /** Maximum number of points to keep in the window. Default: 100. */
-  windowCapacity?: number
-  /** Minimum points required before smoothing starts. Default: 2. */
-  minPoints?: number
-  /** Update mode ("full", "incremental"). Default: "full". */
-  updateMode?: string
+    /** Maximum number of points to keep in the window. Default: 100. */
+    windowCapacity?: number
+    /** Minimum points required before smoothing starts. Default: 2. */
+    minPoints?: number
+    /** Update mode ("full", "incremental"). Default: "full". */
+    updateMode?: string
 }
 
 /** Configuration options for LOESS smoothing. */
 export interface SmoothOptions {
-  /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
-  fraction?: number
-  /** Number of robustness iterations. Default: 3. */
-  iterations?: number
-  /** Weight function ("tricube", "gaussian", etc.). Default: "tricube". */
-  weightFunction?: string
-  /** Robustness method ("bisquare", "huber"). Default: "bisquare". */
-  robustnessMethod?: string
-  /** Fallback strategy when weights are zero ("use_local_mean"). */
-  zeroWeightFallback?: string
-  /** Boundary handling ("extend", "reflect"). Default: "extend". */
-  boundaryPolicy?: string
-  /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
-  scalingMethod?: string
-  /** Auto-convergence tolerance. Default: None. */
-  autoConverge?: number
-  /** Return residuals in result. Default: false. */
-  returnResiduals?: boolean
-  /** Return robustness weights in result. Default: false. */
-  returnRobustnessWeights?: boolean
-  /** Return diagnostics (RMSE, etc.). Default: false. */
-  returnDiagnostics?: boolean
-  /** Calculate confidence intervals (e.g., 0.95). Default: None. */
-  confidenceIntervals?: number
-  /** Calculate prediction intervals. Default: None. */
-  predictionIntervals?: number
-  /** Fractions to use for cross-validation. */
-  cvFractions?: Array<number>
-  /** CV method ("loocv", "kfold"). Default: "kfold". */
-  cvMethod?: string
-  /** Number of folds for K-Fold CV. Default: 5. */
-  cvK?: number
-  /** Enable parallel execution. Default: true. */
-  parallel?: boolean
-  /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
-  degree?: string
-  /** Number of predictor dimensions. Default: 1. */
-  dimensions?: number
-  /** Distance metric ("normalized", "euclidean", "weighted", etc.). Default: "normalized". */
-  distanceMetric?: string
-  /** Per-dimension weights for the "weighted" distance metric. */
-  weightedMetricWeights?: Array<number>
-  /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
-  surfaceMode?: string
-  /** Compute hat-matrix statistics (enp, traceHat, etc.). Default: false. */
-  returnSe?: boolean
+    /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+    fraction?: number
+    /** Number of robustness iterations. Default: 3. */
+    iterations?: number
+    /** Weight function ("tricube", "gaussian", etc.). Default: "tricube". */
+    weightFunction?: string
+    /** Robustness method ("bisquare", "huber"). Default: "bisquare". */
+    robustnessMethod?: string
+    /** Fallback strategy when weights are zero ("use_local_mean"). */
+    zeroWeightFallback?: string
+    /** Boundary handling ("extend", "reflect"). Default: "extend". */
+    boundaryPolicy?: string
+    /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+    scalingMethod?: string
+    /** Auto-convergence tolerance. Default: None. */
+    autoConverge?: number
+    /** Return residuals in result. Default: false. */
+    returnResiduals?: boolean
+    /** Return robustness weights in result. Default: false. */
+    returnRobustnessWeights?: boolean
+    /** Return diagnostics (RMSE, etc.). Default: false. */
+    returnDiagnostics?: boolean
+    /** Calculate confidence intervals (e.g., 0.95). Default: None. */
+    confidenceIntervals?: number
+    /** Calculate prediction intervals. Default: None. */
+    predictionIntervals?: number
+    /** Fractions to use for cross-validation. */
+    cvFractions?: Array<number>
+    /** CV method ("loocv", "kfold"). Default: "kfold". */
+    cvMethod?: string
+    /** Number of folds for K-Fold CV. Default: 5. */
+    cvK?: number
+    /** Enable parallel execution. Default: true. */
+    parallel?: boolean
+    /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
+    degree?: string
+    /** Number of predictor dimensions. Default: 1. */
+    dimensions?: number
+    /** Distance metric ("normalized", "euclidean", "weighted", etc.). Default: "normalized". */
+    distanceMetric?: string
+    /** Per-dimension weights for the "weighted" distance metric. */
+    weightedMetricWeights?: Array<number>
+    /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
+    surfaceMode?: string
+    /** Compute hat-matrix statistics (enp, traceHat, etc.). Default: false. */
+    returnSe?: boolean
+    /** User-defined case weights, one per observation (same length as x/y). Default: none. */
+    customWeights?: Array<number>
 }
 
 /** Configuration options for streaming processing. */
 export interface StreamingOptions {
-  /** Size of each data chunk. Default: 5000. */
-  chunkSize?: number
-  /** Header/footer overlap size. Default: 500. */
-  overlap?: number
-  /** Strategy for merging chunk overlaps ("average", "weighted_average", "take_first", "take_last"). */
-  mergeStrategy?: string
+    /** Size of each data chunk. Default: 5000. */
+    chunkSize?: number
+    /** Header/footer overlap size. Default: 500. */
+    overlap?: number
+    /** Strategy for merging chunk overlaps ("average", "weighted_average", "take_first", "take_last"). */
+    mergeStrategy?: string
 }
