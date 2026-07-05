@@ -172,7 +172,136 @@
 //! # Result::<(), LoessError>::Ok(())
 //! ```
 //!
-//! ### ndarray Integration
+//! ## Builder Arguments
+//!
+//! All builder methods return `Self` and can be chained. Finalize the builder with
+//! `.adapter(Batch|Streaming|Online).build()`.
+//!
+//! ### Core Smoothing
+//!
+//! - **`fraction(f: T)`** — Smoothing bandwidth: fraction of the data used for each local
+//!   fit (range `(0, 1]`). Smaller → more local and jagged; larger → smoother.
+//!   Default: `0.75`.
+//!
+//! - **`iterations(n: usize)`** — Number of robustness (IRLS) iterations for outlier
+//!   resistance. `0` disables robustness weighting. Default: `3`.
+//!
+//! - **`degree(d: PolynomialDegree)`** — Degree of the local polynomial fitted at each point.
+//!   - `Constant` (0): weighted mean — fastest, least flexible
+//!   - `Linear` (1, **default**): standard LOESS — good balance of speed and accuracy
+//!   - `Quadratic` (2): better for curved regions
+//!   - `Cubic` (3) / `Quartic` (4): higher flexibility, more expensive
+//!
+//! - **`weight_function(wf: WeightFunction)`** — Kernel function for distance-based local
+//!   weighting. Options: `Tricube` (**default**), `Epanechnikov`, `Biweight`, `Gaussian`,
+//!   `Triangle`, `Cosine`, `Uniform`.
+//!
+//! - **`robustness_method(rm: RobustnessMethod)`** — Downweighting method applied to
+//!   outliers during robustness iterations. Options: `Bisquare` (**default**), `Huber`,
+//!   `Talwar`.
+//!
+//! - **`scaling_method(sm: ScalingMethod)`** — Residual scale estimator used in robustness
+//!   weighting. Options: `MAD` (**default**), `MAR`, `Mean`.
+//!
+//! - **`custom_weights(w: Vec<T>)`** — Per-observation case weights applied as
+//!   `w_ij = custom_weights[j] × K(d_ij / h)`. Higher values increase the influence of an
+//!   observation on nearby local fits (analogous to `weights` in R's `stats::loess`).
+//!   Must have the same length as `y`. Applied in Batch mode (both serial and parallel).
+//!
+//! ### Parallelism
+//!
+//! - **`parallel(enabled: bool)`** — Enable multi-threaded parallel execution via Rayon
+//!   (default: `true` for `Batch`). Set to `false` for single-threaded deterministic output.
+//!
+//! ### Surface Evaluation
+//!
+//! - **`surface_mode(m: SurfaceMode)`** — How the fitted surface is evaluated.
+//!   - `Interpolation` (**default**): fits at a sparse grid of vertices then interpolates —
+//!     fast for large datasets.
+//!   - `Direct`: fits exactly at every data point — exact but O(n²).
+//!
+//! - **`cell(c: T)`** — Cell size for the interpolation vertex grid (default: `0.2`).
+//!   Smaller → more vertices, higher accuracy, slower.
+//!
+//! - **`interpolation_vertices(n: usize)`** — Hard cap on the number of interpolation
+//!   vertices regardless of `cell`.
+//!
+//! - **`boundary_degree_fallback(enabled: bool)`** — When `true` (**default**), vertices
+//!   outside the tight data range use a `Linear` fit to avoid unstable extrapolation.
+//!   Set to `false` to match R's `stats::loess` behavior exactly.
+//!
+//! ### Neighborhood & Distance
+//!
+//! - **`dimensions(n: usize)`** — Number of predictor dimensions (default: `1`).
+//!
+//! - **`distance_metric(m: DistanceMetric<T>)`** — Distance metric for neighbor selection.
+//!   - `Normalized` (**default**): each dimension scaled to `[0, 1]`
+//!   - `Euclidean`: standard L² distance
+//!   - `Manhattan`: L¹ distance
+//!   - `Chebyshev`: L∞ (max) distance
+//!   - `Minkowski(p)`: Lᵖ distance for arbitrary `p`
+//!   - `Weighted(w)`: dimension-weighted Euclidean
+//!
+//! ### Boundary Handling
+//!
+//! - **`boundary_policy(p: BoundaryPolicy)`** — How query points outside the observed data
+//!   range are handled. Options: `Extend` (**default**), `Reflect`, `Zero`, `NoBoundary`.
+//!
+//! - **`zero_weight_fallback(p: ZeroWeightFallback)`** — Fallback when all neighbors of a
+//!   point have zero weight (degenerate neighborhood).
+//!   - `UseLocalMean` (**default**): return the weighted mean of nearby values
+//!   - `ReturnOriginal`: return the raw `y` value
+//!   - `ReturnNone`: return `NaN`
+//!
+//! ### Convergence
+//!
+//! - **`auto_converge(tol: T)`** — Stop robustness iterations early when the relative change
+//!   in fitted values falls below `tol`. Disabled by default.
+//!
+//! ### Output Options
+//!
+//! - **`return_diagnostics()`** — Include fit-quality diagnostics in the result (RMSE, MAE,
+//!   R², AIC, effective degrees of freedom, residual SD, etc.).
+//!
+//! - **`return_residuals()`** — Include raw residuals `r_i = y_i − ŷ_i` in the result.
+//!
+//! - **`return_robustness_weights()`** — Include the final robustness weights `w_i`.
+//!
+//! - **`return_se()`** — Compute standard errors, hat-matrix trace, and effective number of
+//!   parameters. Required for confidence/prediction intervals.
+//!
+//! - **`confidence_intervals(level: T)`** — Enable confidence intervals at the given coverage
+//!   level (e.g., `0.95`). Requires `return_se()` to also be set.
+//!
+//! - **`prediction_intervals(level: T)`** — Enable prediction intervals at the given coverage
+//!   level. Requires `return_se()` to also be set.
+//!
+//! ### Cross-Validation
+//!
+//! - **`cross_validate(config: CVConfig<T>)`** — Automatically select the best bandwidth
+//!   via cross-validation. Provide one of:
+//!   - `KFold(k, &[fractions])` — k-fold CV over the given candidate fractions
+//!   - `LOOCV(&[fractions])` — leave-one-out CV over the given candidate fractions
+//!   - Chain `.seed(s)` on either for reproducible fold splits.
+//!
+//! ### Adapter-Specific Options
+//!
+//! **Streaming** (`.adapter(Streaming)`):
+//!
+//! - **`chunk_size(n: usize)`** — Number of points processed per streaming chunk.
+//! - **`overlap(n: usize)`** — Point overlap between consecutive chunks for smooth boundaries.
+//! - **`merge_strategy(s: MergeStrategy)`** — How overlapping region fits are combined.
+//!   Options: `Average`, `WeightedAverage`, `TakeFirst`, `TakeLast`.
+//!
+//! **Online** (`.adapter(Online)`):
+//!
+//! - **`window_capacity(n: usize)`** — Maximum points kept in the sliding window.
+//! - **`min_points(n: usize)`** — Minimum points required before returning a fit.
+//! - **`update_mode(m: UpdateMode)`** — Window update strategy.
+//!   - `Full` (**default**): full refit on every update
+//!   - `Incremental`: lightweight incremental update
+//!
+//! ## ndarray Integration
 //!
 //! `fastLoess` supports [ndarray](https://docs.rs/ndarray) natively, allowing for zero-copy
 //! data passing and efficient numerical operations.

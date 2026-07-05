@@ -42,7 +42,7 @@ $$w(u) = (1 - |u|^3)^3$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="tricube")
+    result = fl.Loess(weight_function="tricube").fit(x, y)
     ```
 
 === "Rust"
@@ -55,12 +55,12 @@ $$w(u) = (1 - |u|^3)^3$$
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="tricube")
+    result = fit(Loess(weight_function="tricube"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "tricube" });
+    const result = new Loess({ weightFunction: "tricube" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -70,7 +70,8 @@ $$w(u) = (1 - |u|^3)^3$$
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .weight_function = "tricube" });
+    fastloess::Loess model({ .weight_function = "tricube" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -90,7 +91,7 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="epanechnikov")
+    result = fl.Loess(weight_function="epanechnikov").fit(x, y)
     ```
 
 === "Rust"
@@ -103,12 +104,12 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="epanechnikov")
+    result = fit(Loess(weight_function="epanechnikov"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "epanechnikov" });
+    const result = new Loess({ weightFunction: "epanechnikov" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -118,7 +119,8 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .weight_function = "epanechnikov" });
+    fastloess::Loess model({ .weight_function = "epanechnikov" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -138,7 +140,7 @@ $$w(u) = \exp(-u^2/2)$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="gaussian")
+    result = fl.Loess(weight_function="gaussian").fit(x, y)
     ```
 
 === "Rust"
@@ -151,12 +153,12 @@ $$w(u) = \exp(-u^2/2)$$
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="gaussian")
+    result = fit(Loess(weight_function="gaussian"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "gaussian" });
+    const result = new Loess({ weightFunction: "gaussian" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -166,7 +168,8 @@ $$w(u) = \exp(-u^2/2)$$
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .weight_function = "gaussian" });
+    fastloess::Loess model({ .weight_function = "gaussian" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -186,7 +189,7 @@ $$w(u) = (1 - u^2)^2$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="biweight")
+    result = fl.Loess(weight_function="biweight").fit(x, y)
     ```
 
 === "Rust"
@@ -199,12 +202,12 @@ $$w(u) = (1 - u^2)^2$$
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="biweight")
+    result = fit(Loess(weight_function="biweight"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "biweight" });
+    const result = new Loess({ weightFunction: "biweight" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -214,7 +217,8 @@ $$w(u) = (1 - u^2)^2$$
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .weight_function = "biweight" });
+    fastloess::Loess model({ .weight_function = "biweight" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -234,7 +238,7 @@ $$w(u) = \cos(\pi u / 2)$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="cosine")
+    result = fl.Loess(weight_function="cosine").fit(x, y)
     ```
 
 === "Rust"
@@ -247,12 +251,12 @@ $$w(u) = \cos(\pi u / 2)$$
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="cosine")
+    result = fit(Loess(weight_function="cosine"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "cosine" });
+    const result = new Loess({ weightFunction: "cosine" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -262,7 +266,8 @@ $$w(u) = \cos(\pi u / 2)$$
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .weight_function = "cosine" });
+    fastloess::Loess model({ .weight_function = "cosine" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -282,7 +287,7 @@ $$w(u) = 1 - |u|$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="triangle")
+    result = fl.Loess(weight_function="triangle").fit(x, y)
     ```
 
 === "Rust"
@@ -295,12 +300,12 @@ $$w(u) = 1 - |u|$$
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="triangle")
+    result = fit(Loess(weight_function="triangle"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "triangle" });
+    const result = new Loess({ weightFunction: "triangle" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -310,7 +315,8 @@ $$w(u) = 1 - |u|$$
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .weight_function = "triangle" });
+    fastloess::Loess model({ .weight_function = "triangle" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -330,7 +336,7 @@ $$w(u) = 1$$
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="uniform")
+    result = fl.Loess(weight_function="uniform").fit(x, y)
     ```
 
 === "Rust"
@@ -343,12 +349,12 @@ $$w(u) = 1$$
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="uniform")
+    result = fit(Loess(weight_function="uniform"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "uniform" });
+    const result = new Loess({ weightFunction: "uniform" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -358,7 +364,8 @@ $$w(u) = 1$$
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .weight_function = "uniform" });
+    fastloess::Loess model({ .weight_function = "uniform" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---

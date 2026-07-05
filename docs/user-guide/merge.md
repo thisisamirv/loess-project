@@ -53,12 +53,10 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 === "Rust"
     ```rust
     let model = Loess::new()
-        .adapter(Streaming {
-            merge_strategy: MergeStrategy::Average,
-            chunk_size: 5000,
-            overlap: 500,
-            ..Default::default()
-        })
+        .adapter(Streaming)
+        .merge_strategy(Average)
+        .chunk_size(5000)
+        .overlap(500)
         .build()?;
     ```
 
@@ -92,7 +90,9 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
     opts.merge_strategy = "average";
     opts.chunk_size = 5000;
     opts.overlap = 500;
-    auto result = fastloess::streaming(x, y, opts);
+    fastloess::StreamingLoess stream(opts);
+    (void)stream.processChunk(x, y);
+    auto result = stream.finalize().value();
     ```
 
 ---
@@ -115,7 +115,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 === "Rust"
     ```rust
-    .merge_strategy(MergeStrategy::TakeFirst)
+    .merge_strategy(TakeFirst)
     ```
 
 === "Julia"
@@ -158,7 +158,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 === "Rust"
     ```rust
-    .merge_strategy(MergeStrategy::TakeLast)
+    .merge_strategy(TakeLast)
     ```
 
 === "Julia"
@@ -213,12 +213,10 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "Rust"
     ```rust
-    .adapter(Streaming {
-        merge_strategy: MergeStrategy::WeightedAverage,
-        chunk_size: 5000,
-        overlap: 500,
-        ..Default::default()
-    })
+    .adapter(Streaming)
+    .merge_strategy(WeightedAverage)
+    .chunk_size(5000)
+    .overlap(500)
     ```
 
 === "Julia"

@@ -204,7 +204,7 @@ Install the LOESS library for your preferred language.
     x = np.array([1.0, 2.0, 3.0])
     y = np.array([2.0, 4.0, 6.0])
     
-    result = fl.smooth(x, y)
+    result = fl.Loess().fit(x, y)
     print("Installed successfully!")
     ```
 
@@ -233,7 +233,7 @@ Install the LOESS library for your preferred language.
     x = [1.0, 2.0, 3.0]
     y = [2.0, 4.0, 6.0]
     
-    result = smooth(x, y)
+    result = fit(Loess(), x, y)
     println("Installed successfully!")
     ```
 
@@ -245,7 +245,7 @@ Install the LOESS library for your preferred language.
     const x = new Float64Array([1.0, 2.0, 3.0]);
     const y = new Float64Array([2.0, 4.0, 6.0]);
     
-    const result = fl.smooth(x, y);
+    const result = new fl.Loess().fit(x, y);
     console.log("Installed successfully!");
     ```
 
@@ -276,7 +276,7 @@ Install the LOESS library for your preferred language.
         std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
 
         fastloess::Loess model;
-        auto result = model.fit(x, y);
+        model.fit(x, y).value();
 
         std::cout << "Installed successfully!" << std::endl;
         return 0;

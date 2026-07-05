@@ -85,6 +85,7 @@ result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LoessResu
 | `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance (NaN to disable) |
+| `custom_weights` | `Vector{Float64}` | `Float64[]` | Per-observation case weights (Batch only) |
 | `confidence_intervals` | `Float64` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
 | `prediction_intervals` | `Float64` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) |
 | `return_diagnostics` | `Bool` | `false` | Compute RMSE, MAE, R², AIC |
@@ -235,12 +236,8 @@ y = sin.(x) .+ randn(100) .* 0.2
 # Configure model
 model = Loess(fraction=0.3, iterations=3)
 
-# Fit data
+# Fit data (throws on error)
 result = fit(model, x, y)
 
-if !isempty(result.error)
-    println("Error: ", result.error)
-else
-    println("Smoothed Y: ", result.y)
-end
+println("Smoothed Y: ", result.y)
 ```

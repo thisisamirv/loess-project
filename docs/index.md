@@ -201,7 +201,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
     y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-    result = fl.smooth(x, y, fraction=0.5, iterations=3)
+    result = fl.Loess(fraction=0.5, iterations=3).fit(x, y)
     print(result["y"])
     ```
 
@@ -231,7 +231,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     x = [1.0, 2.0, 3.0, 4.0, 5.0]
     y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-    result = smooth(x, y, fraction=0.5, iterations=3)
+    result = fit(Loess(fraction=0.5, iterations=3), x, y)
     println(result.y)
     ```
 
@@ -243,7 +243,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
 
-    const result = fl.smooth(x, y, { fraction: 0.5, iterations: 3 });
+    const result = new fl.Loess({ fraction: 0.5, iterations: 3 }).fit(x, y);
     console.log(result.y);
     ```
 
@@ -275,7 +275,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
         options.iterations = 3;
 
         fastloess::Loess model(options);
-        auto result = model.fit(x, y);
+        auto result = model.fit(x, y).value();
 
         for (const auto& val : result.yVector()) {
             std::cout << val << " ";

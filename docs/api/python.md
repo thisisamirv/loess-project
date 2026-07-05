@@ -85,6 +85,7 @@ result = online.add_points(x, y)
 | `boundary_policy` | `str` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `float` | `None` | Auto-convergence tolerance |
+| `custom_weights` | `list[float]` | `None` | Per-observation case weights (Batch only) |
 | `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95) |
 | `return_diagnostics` | `bool` | `False` | Compute RMSE, MAE, R², AIC |
@@ -231,7 +232,7 @@ result = online.add_points(x, y)
 ## Example
 
 ```python
-import fastloess import Loess
+from fastloess import Loess
 import numpy as np
 
 x = np.linspace(0, 10, 100)

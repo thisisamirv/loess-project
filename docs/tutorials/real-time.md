@@ -150,11 +150,14 @@ For true real-time applications where each point must be processed immediately.
     opts.min_points = 5;
     opts.update_mode = "incremental";
 
-    auto result = fastloess::online(times, temperatures, opts);
+    fastloess::OnlineLoess model(opts);
+    auto result = model.addPoints(times, temperatures).value();
 
     // Result contains smoothed values
-    for (size_t i = 0; i < result.size(); ++i) {
-        std::cout << "Time " << result.x(i) << ": " << result.y(i) << std::endl;
+    const auto& x_vals = result.xVector();
+    const auto& y_vals = result.yVector();
+    for (size_t i = 0; i < x_vals.size(); ++i) {
+        std::cout << "Time " << x_vals[i] << ": " << y_vals[i] << std::endl;
     }
     ```
 
@@ -194,13 +197,14 @@ For large datasets that arrive in batches or files.
     x = np.arange(total_points, dtype=float)
     y = np.sin(x / 1000) + np.random.normal(0, 0.1, total_points)
     
-    result = fl.smooth_streaming(
-        x, y,
+    model = fl.StreamingLoess(
         fraction=0.05,
         chunk_size=10000,
         overlap=1000,
         merge_strategy="weighted_average"
     )
+    model.process_chunk(x, y)
+    result = model.finalize()
     
     print(f"Processed {len(result['y'])} points")
     ```
@@ -212,12 +216,10 @@ For large datasets that arrive in batches or files.
     let mut processor = Loess::new()
         .fraction(0.1)
         .iterations(2)
-        .adapter(Streaming {
-            chunk_size: 5000,
-            overlap: 500,
-            merge_strategy: MergeStrategy::WeightedAverage,
-            ..Default::default()
-        })
+        .adapter(Streaming)
+        .chunk_size(5000)
+        .overlap(500)
+        .merge_strategy(WeightedAverage)
         .build()?;
 
     // Process chunks as they arrive
@@ -237,13 +239,14 @@ For large datasets that arrive in batches or files.
     y = sin.(x ./ 1000) .+ randn(length(x)) .* 0.1
 
     # Streaming mode handles everything internally
-    result = smooth_streaming(
-        x, y,
+    model = StreamingLoess(
         fraction=0.05,
         chunk_size=10000,
         overlap=1000,
         merge_strategy="weighted_average"
     )
+    process_chunk(model, x, y)
+    result = finalize(model)
     ```
 
 === "Node.js"
@@ -288,9 +291,11 @@ For large datasets that arrive in batches or files.
     opts.chunk_size = 5000;
     opts.overlap = 500;
 
-    auto result = fastloess::streaming(x, y, opts);
+    fastloess::StreamingLoess stream(opts);
+    (void)stream.processChunk(x, y);
+    auto result = stream.finalize().value();
 
-    std::cout << "Processed " << result.size() << " points" << std::endl;
+    std::cout << "Processed " << result.yVector().size() << " points" << std::endl;
     ```
 
 !!! warning "Always call finalize()"
@@ -347,7 +352,7 @@ For large datasets that arrive in batches or files.
             data_y = data_y[-window_capacity:]
         
         if len(data_x) >= 5:
-            result = fl.smooth(np.array(data_x), np.array(data_y), fraction=0.4)
+            result = fl.Loess(fraction=0.4).fit(np.array(data_x), np.array(data_y))
             current_smoothed = result["y"][-1]
     ```
 
@@ -370,7 +375,7 @@ For large datasets that arrive in batches or files.
         if (dataX.length >= 5) {
             const xArr = new Float64Array(dataX);
             const yArr = new Float64Array(dataY);
-            const result = fl.smooth(xArr, yArr, { fraction: 0.4 });
+            const result = new fl.Loess({ fraction: 0.4 }).fit(xArr, yArr);
             const currentSmoothed = result.y[result.y.length - 1];
         }
     }
@@ -411,8 +416,9 @@ For large datasets that arrive in batches or files.
             windowY.erase(windowY.begin());
         }
 
-        auto result = fastloess::smooth(windowX, windowY, { .fraction = 0.4 });
-        const auto smoothed = result.y.back();
+        fastloess::Loess model({ .fraction = 0.4 });
+        auto result = model.fit(windowX, windowY).value();
+        const auto smoothed = result.yVector().back();
     }
     ```
 

@@ -31,7 +31,7 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, fraction=0.5, confidence_intervals=0.95)
+    result = fl.Loess(fraction=0.5, confidence_intervals=0.95).fit(x, y)
 
     print("Smoothed:", result["y"])
     print("CI Lower:", result["confidence_lower"])
@@ -63,7 +63,7 @@ Estimate uncertainty in the smoothed curve itself.
     ```julia
     using FastLOESS
 
-    result = smooth(x, y, fraction=0.5, confidence_intervals=0.95)
+    result = fit(Loess(fraction=0.5, confidence_intervals=0.95), x, y)
 
     for i in 1:length(result.y)
         println("x=$(result.x[i]): y=$(result.y[i]) [$(result.confidence_lower[i]), $(result.confidence_upper[i])]")
@@ -72,7 +72,7 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { fraction: 0.5, confidenceIntervals: 0.95 });
+    const result = new fl.Loess({ fraction: 0.5, confidenceIntervals: 0.95 }).fit(x, y);
 
     result.y.forEach((y, i) => {
         console.log(`x=${result.x[i]}: y=${y} [${result.confidenceLower[i]}, ${result.confidenceUpper[i]}]`);
@@ -92,10 +92,8 @@ Estimate uncertainty in the smoothed curve itself.
     ```cpp
     #include "fastloess.hpp"
 
-    auto result = fastloess::smooth(x, y, {
-        .fraction = 0.5,
-        .confidence_intervals = 0.95
-    });
+    fastloess::Loess model({ .fraction = 0.5, .confidence_intervals = 0.95 });
+    auto result = model.fit(x, y).value();
 
     auto ci_lower = result.confidenceLower();
     auto ci_upper = result.confidenceUpper();
@@ -121,7 +119,7 @@ Estimate where new observations might fall.
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, fraction=0.5, prediction_intervals=0.95)
+    result = fl.Loess(fraction=0.5, prediction_intervals=0.95).fit(x, y)
 
     print("PI Lower:", result["prediction_lower"])
     print("PI Upper:", result["prediction_upper"])
@@ -144,14 +142,14 @@ Estimate where new observations might fall.
 
 === "Julia"
     ```julia
-    result = smooth(x, y, fraction=0.5, prediction_intervals=0.95)
+    result = fit(Loess(fraction=0.5, prediction_intervals=0.95), x, y)
 
     println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { fraction: 0.5, predictionIntervals: 0.95 });
+    const result = new fl.Loess({ fraction: 0.5, predictionIntervals: 0.95 }).fit(x, y);
     console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
     ```
 
@@ -163,7 +161,8 @@ Estimate where new observations might fall.
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .fraction = 0.5, .prediction_intervals = 0.95 });
+    fastloess::Loess model({ .fraction = 0.5, .prediction_intervals = 0.95 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -183,12 +182,11 @@ Request both types simultaneously:
 
 === "Python"
     ```python
-    result = fl.smooth(
-        x, y,
+    result = fl.Loess(
         fraction=0.5,
         confidence_intervals=0.95,
         prediction_intervals=0.95
-    )
+    ).fit(x, y)
     ```
 
 === "Rust"
@@ -203,21 +201,20 @@ Request both types simultaneously:
 
 === "Julia"
     ```julia
-    result = smooth(
-        x, y,
+    result = fit(Loess(
         fraction=0.5,
         confidence_intervals=0.95,
         prediction_intervals=0.95
-    )
+    ), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, {
+    const result = new fl.Loess({
         fraction: 0.5,
         confidenceIntervals: 0.95,
         predictionIntervals: 0.95
-    });
+    }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -231,7 +228,8 @@ Request both types simultaneously:
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95 });
+    fastloess::Loess model({ .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -255,7 +253,7 @@ Common levels and their z-values:
 === "Python"
     ```python
     # 90% confidence interval (narrower)
-    result = fl.smooth(x, y, confidence_intervals=0.90)
+    result = fl.Loess(confidence_intervals=0.90).fit(x, y)
     ```
 
 === "Rust"
@@ -270,13 +268,13 @@ Common levels and their z-values:
 === "Julia"
     ```julia
     # 99% confidence interval
-    result = smooth(x, y, confidence_intervals=0.99)
+    result = fit(Loess(confidence_intervals=0.99), x, y)
     ```
 
 === "Node.js"
     ```javascript
     // 99% confidence interval
-    const result = smooth(x, y, { confidenceIntervals: 0.99 });
+    const result = new fl.Loess({ confidenceIntervals: 0.99 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -287,7 +285,8 @@ Common levels and their z-values:
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .confidence_intervals = 0.99 });
+    fastloess::Loess model({ .confidence_intervals = 0.99 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -299,38 +298,38 @@ Access standard errors directly (available when intervals are computed):
 === "R"
     ```r
     result <- Loess(confidence_intervals = 0.95)$fit(x, y)
-    print(result$std_err)
+    print(result$standard_errors)
     ```
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, confidence_intervals=0.95)
-    print("Standard errors:", result["std_err"])
+    result = fl.Loess(confidence_intervals=0.95).fit(x, y)
+    print("Standard errors:", result["standard_errors"])
     ```
 
 === "Rust"
     ```rust
     let result = model.fit(&x, &y)?;
 
-    if let Some(std_err) = &result.std_err {
-        for (i, &se) in std_err.iter().enumerate() {
-            println!("Point {}: SE = {:.4}", i, se);
+    if let Some(se) = &result.standard_errors {
+        for (i, &se_val) in se.iter().enumerate() {
+            println!("Point {}: SE = {:.4}", i, se_val);
         }
     }
     ```
 
 === "Julia"
     ```julia
-    result = smooth(x, y, confidence_intervals=0.95)
+    result = fit(Loess(confidence_intervals=0.95), x, y)
 
-    for (i, se) in enumerate(result.std_err)
+    for (i, se) in enumerate(result.standard_errors)
         println("Point $i: SE = $se")
     end
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { confidenceIntervals: 0.95 });
+    const result = new fl.Loess({ confidenceIntervals: 0.95 }).fit(x, y);
 
     result.standardErrors.forEach((se, i) => {
         console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
@@ -348,7 +347,8 @@ Access standard errors directly (available when intervals are computed):
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .confidence_intervals = 0.95 });
+    fastloess::Loess model({ .confidence_intervals = 0.95 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---

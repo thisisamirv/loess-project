@@ -19,11 +19,11 @@ explicit Loess(const LoessOptions &options = {})
 **Methods:**
 
 ```cpp
-LoessResult fit(const std::vector<double> &x, const std::vector<double> &y)
+Expected<LoessResult> fit(const std::vector<double> &x, const std::vector<double> &y)
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
-* Returns a `LoessResult` object containing the smoothed values and optional diagnostics.
+* Returns an `Expected<LoessResult>` — call `.hasValue()` to check for errors, `.value()` to unwrap (throws `LoessError` on failure).
 
 ### `fastloess::StreamingLoess`
 
@@ -40,13 +40,13 @@ explicit StreamingLoess(const StreamingOptions &options = {})
 **Methods:**
 
 ```cpp
-LoessResult process_chunk(const std::vector<double> &x, const std::vector<double> &y)
+Expected<LoessResult> processChunk(const std::vector<double> &x, const std::vector<double> &y)
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```cpp
-LoessResult finalize()
+Expected<LoessResult> finalize()
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.
@@ -66,7 +66,7 @@ explicit OnlineLoess(const OnlineOptions &options = {})
 **Methods:**
 
 ```cpp
-LoessResult add_points(const std::vector<double> &x, const std::vector<double> &y)
+Expected<LoessResult> addPoints(const std::vector<double> &x, const std::vector<double> &y)
 ```
 
 * Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
@@ -85,6 +85,7 @@ LoessResult add_points(const std::vector<double> &x, const std::vector<double> &
 | `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
+| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights (Batch only) |
 | `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
 | `prediction_intervals` | `double` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) |
 | `return_diagnostics` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
@@ -147,15 +148,17 @@ A RAII wrapper around the C result struct `fastloess_CppLoessResult`.
 
 ### `fastloess::Diagnostics`
 
-| Field | Type | Description |
+All accessors are const methods (not public fields):
+
+| Method | Return Type | Description |
 | --- | --- | --- |
-| `rmse` | `double` | Root Mean Squared Error |
-| `mae` | `double` | Mean Absolute Error |
-| `r_squared` | `double` | R-squared |
-| `residual_sd` | `double` | Residual standard deviation |
-| `effective_df` | `double` | Effective degrees of freedom |
-| `aic` | `double` | AIC |
-| `aicc` | `double` | AICc |
+| `rmse()` | `double` | Root Mean Squared Error |
+| `mae()` | `double` | Mean Absolute Error |
+| `rSquared()` | `double` | R-squared |
+| `residualSd()` | `double` | Residual standard deviation |
+| `effectiveDf()` | `double` | Effective degrees of freedom |
+| `aic()` | `double` | AIC |
+| `aicc()` | `double` | AICc |
 
 ## String Options
 
@@ -241,10 +244,10 @@ int main() {
     opts.fraction = 0.5;
     
     fastloess::Loess model(opts);
-    auto result = model.fit(x, y);
+    auto expected = model.fit(x, y);
 
-    if (result.valid()) {
-        auto y_hat = result.yVector();
+    if (expected.hasValue()) {
+        auto y_hat = expected.value().yVector();
         for (double val : y_hat) {
             std::cout << val << " ";
         }

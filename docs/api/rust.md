@@ -90,6 +90,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `boundary_policy(...)` | `BoundaryPolicy` | `Extend` | Boundary handling policy enum |
 | `zero_weight_fallback(...)` | `ZeroWeightFallback` | `UseLocalMean` | Zero-weight handling enum |
 | `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
+| `custom_weights(Vec<T>)` | `Vec<T>` | disabled | Per-observation case weights (Batch only) |
 | `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) |
 | `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) |
 | `return_diagnostics()` | — | `false` | Compute RMSE, MAE, R², AIC |

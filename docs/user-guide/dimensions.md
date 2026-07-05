@@ -38,7 +38,7 @@ Single predictor. No configuration required.
 
     x = np.linspace(0, 10, 200)
     y = np.sin(x) + np.random.normal(0, 0.2, 200)
-    result = fl.smooth(x, y, fraction=0.3)
+    result = fl.Loess(fraction=0.3).fit(x, y)
     ```
 
 === "Rust"
@@ -57,7 +57,7 @@ Single predictor. No configuration required.
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { fraction: 0.3 });
+    const result = new Loess({ fraction: 0.3 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -67,7 +67,8 @@ Single predictor. No configuration required.
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .fraction = 0.3 });
+    fastloess::Loess model({ .fraction = 0.3 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -90,7 +91,7 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
 
     # x is an (n, 2) array
     x2d = np.column_stack([lat, lon])
-    result = fl.smooth(x2d, z, dimensions=2, fraction=0.3)
+    result = fl.Loess(dimensions=2, fraction=0.3).fit(x2d, z)
     ```
 
 === "Rust"
@@ -112,7 +113,7 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
 === "Node.js"
     ```javascript
     // x is a flat Float64Array of length n*2, row-major
-    const result = smooth(x2d, z, { dimensions: 2, fraction: 0.3 });
+    const result = new Loess({ dimensions: 2, fraction: 0.3 }).fit(x2d, z);
     ```
 
 === "WebAssembly"
@@ -123,7 +124,8 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
 === "C++"
     ```cpp
     // x is an (n × 2) row-major matrix
-    auto result = fastloess::smooth(x2d, z, { .dimensions = 2, .fraction = 0.3 });
+    fastloess::Loess model({ .dimensions = 2, .fraction = 0.3 });
+    auto result = model.fit(x2d, z).value();
     ```
 
 ---
@@ -141,7 +143,7 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 === "Python"
     ```python
     x3d = np.column_stack([x1, x2, x3])   # (n, 3)
-    result = fl.smooth(x3d, y, dimensions=3, fraction=0.5)
+    result = fl.Loess(dimensions=3, fraction=0.5).fit(x3d, y)
     ```
 
 === "Rust"
@@ -161,7 +163,7 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 
 === "Node.js"
     ```javascript
-    const result = smooth(x3d, y, { dimensions: 3, fraction: 0.5 });
+    const result = new Loess({ dimensions: 3, fraction: 0.5 }).fit(x3d, y);
     ```
 
 === "WebAssembly"
@@ -171,7 +173,8 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x3d, y, { .dimensions = 3, .fraction = 0.5 });
+    fastloess::Loess model({ .dimensions = 3, .fraction = 0.5 });
+    auto result = model.fit(x3d, y).value();
     ```
 
 ---

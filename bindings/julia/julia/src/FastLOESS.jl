@@ -5,10 +5,11 @@ High-performance LOESS (Locally Estimated Scatterplot Smoothing) for Julia.
 
 Provides bindings to the fastloess Rust library for fast, robust LOESS smoothing.
 
-# Main Functions
-- `smooth(x, y; kwargs...)`: Batch LOESS smoothing
-- `smooth_streaming(x, y; kwargs...)`: Streaming mode for large datasets
-- `smooth_online(x, y; kwargs...)`: Online mode with sliding window
+# Main API
+- `Loess(; kwargs...)`: Configure batch LOESS
+- `fit(model, x, y)`: Fit and return results
+- `StreamingLoess(; kwargs...)` / `process_chunk` / `finalize`: Streaming mode
+- `OnlineLoess(; kwargs...)` / `add_points`: Online sliding-window mode
 
 # Example
 ```julia
@@ -17,7 +18,7 @@ using FastLOESS
 x = collect(1.0:0.1:10.0)
 y = sin.(x) .+ 0.1 .* randn(length(x))
 
-result = smooth(x, y, fraction=0.3)
+result = fit(Loess(fraction=0.3), x, y)
 println("Smoothed values: ", result.y)
 ```
 """

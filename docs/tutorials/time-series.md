@@ -42,7 +42,7 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     y = trend + noise
 
     # Extract trend with LOESS
-    result = fl.smooth(t, y, fraction=0.1, iterations=3)
+    result = fl.Loess(fraction=0.1, iterations=3).fit(t, y)
 
     # Plot
     plt.figure(figsize=(12, 5))
@@ -85,7 +85,7 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     y = trend_true .+ randn(500) .* 3.0
 
     # Extract trend
-    result = smooth(t, y, fraction=0.1, iterations=3)
+    result = fit(Loess(fraction=0.1, iterations=3), t, y)
 
     println("Extracted trend points: ", length(result.y))
     ```
@@ -95,10 +95,10 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     const fl = require('fastloess');
 
     // t and y are your time series arrays (Float64Array)
-    const result = fl.smooth(t, y, { 
+    const result = fl.Loess({ 
         fraction: 0.1, 
         iterations: 3 
-    });
+    }).fit(t, y);
 
     console.log("Extracted trend:", result.y);
     ```
@@ -122,12 +122,13 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     std::vector<double> t = /* time points */;
     std::vector<double> y = /* values */;
 
-    auto result = fastloess::smooth(t, y, {
+    fastloess::Loess basic_model({
         .fraction = 0.1,
         .iterations = 3
     });
+    auto basic_result = basic_model.fit(t, y).value();
 
-    // Trend in result.yVector()
+    // Trend in basic_result.yVector()
     ```
 
 ---
@@ -151,7 +152,7 @@ Remove trend to analyze residual patterns:
 === "Python"
     ```python
     # Smooth to get trend
-    result = fl.smooth(t, y, fraction=0.3, iterations=3, return_residuals=True)
+    result = fl.Loess(fraction=0.3, iterations=3, return_residuals=True).fit(t, y)
 
     trend = result["y"]
     detrended = result["residuals"]
@@ -185,7 +186,7 @@ Remove trend to analyze residual patterns:
 === "Julia"
     ```julia
     # Smooth to get trend and residuals
-    result = smooth(t, y, fraction=0.3, iterations=3, return_residuals=true)
+    result = fit(Loess(fraction=0.3, iterations=3, return_residuals=true), t, y)
 
     trend = result.y
     detrended = result.residuals
@@ -197,11 +198,11 @@ Remove trend to analyze residual patterns:
     ```javascript
     const fl = require('fastloess');
 
-    const result = fl.smooth(t, y, { 
+    const result = fl.Loess({ 
         fraction: 0.3, 
         iterations: 3, 
         returnResiduals: true 
-    });
+    }).fit(t, y);
 
     const trend = result.y;
     const detrended = result.residuals;
@@ -224,11 +225,12 @@ Remove trend to analyze residual patterns:
     ```cpp
     #include "fastloess.hpp"
 
-    auto result = fastloess::smooth(t, y, {
+    fastloess::Loess model({
         .fraction = 0.3,
         .iterations = 3,
         .return_residuals = true
     });
+    auto result = model.fit(t, y).value();
 
     auto trend = result.yVector();
     auto detrended = result.residuals();
@@ -255,13 +257,12 @@ Remove trend to analyze residual patterns:
 
 === "Python"
     ```python
-    result = fl.smooth(
-        t, y,
+    result = fl.Loess(
         fraction=0.2,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95
-    )
+    ).fit(t, y)
 
     # Plot with uncertainty bands
     plt.figure(figsize=(12, 5))
@@ -292,13 +293,12 @@ Remove trend to analyze residual patterns:
 
 === "Julia"
     ```julia
-    result = smooth(
-        t, y,
+    result = fit(Loess(
         fraction=0.2,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95
-    )
+    ), t, y)
 
     # Intervals are available in result.prediction_lower/upper
     println("First point 95% PI: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
@@ -308,11 +308,11 @@ Remove trend to analyze residual patterns:
     ```javascript
     const fl = require('fastloess');
 
-    const result = fl.smooth(t, y, {
+    const result = fl.Loess({
         fraction: 0.2,
         iterations: 3,
         predictionIntervals: 0.95
-    });
+    }).fit(t, y);
 
     console.log(`95% PI: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
     ```
@@ -327,21 +327,22 @@ Remove trend to analyze residual patterns:
         predictionIntervals: 0.95
     });
 
-    // Access result.predictionLower and result.predictionUpper
+    // Access result.predictionLower() and result.predictionUpper()
     ```
 
 === "C++"
     ```cpp
     #include "fastloess.hpp"
 
-    auto result = fastloess::smooth(t, y, {
+    fastloess::Loess forecast_model({
         .fraction = 0.2,
         .iterations = 3,
         .confidence_intervals = 0.95,
         .prediction_intervals = 0.95
     });
+    auto result = forecast_model.fit(t, y).value();
 
-    // Access result.predictionLower and result.predictionUpper
+    // Access result.predictionLower() and result.predictionUpper()
     ```
 
 ---
@@ -365,7 +366,7 @@ LOESS naturally handles irregular time sampling:
     y_irregular = 10 + t_irregular * 0.3 + np.random.normal(0, 2, 200)
 
     # LOESS handles this seamlessly
-    result = fl.smooth(t_irregular, y_irregular, fraction=0.2)
+    result = fl.Loess(fraction=0.2).fit(t_irregular, y_irregular)
     ```
 
 === "Rust"
@@ -389,7 +390,7 @@ LOESS naturally handles irregular time sampling:
     y_irregular = 10.0 .+ t_irregular .* 0.3 .+ randn(200) .* 2.0
 
     # LOESS handles this seamlessly
-    result = smooth(t_irregular, y_irregular, fraction=0.2)
+    result = fit(Loess(fraction=0.2), t_irregular, y_irregular)
     ```
 
 === "Node.js"
@@ -397,7 +398,7 @@ LOESS naturally handles irregular time sampling:
     const fl = require('fastloess');
 
     // No special handling needed for irregular spacing
-    const result = fl.smooth(tIrregular, yIrregular, { fraction: 0.2 });
+    const result = fl.Loess({ fraction: 0.2 }).fit(tIrregular, yIrregular);
     ```
 
 === "WebAssembly"
@@ -411,9 +412,8 @@ LOESS naturally handles irregular time sampling:
     ```cpp
     #include "fastloess.hpp"
 
-    auto result = fastloess::smooth(tIrregular, yIrregular, {
-        .fraction = 0.2,
-    });
+    fastloess::Loess missing_model({ .fraction = 0.2 });
+    auto result = missing_model.fit(tIrregular, yIrregular).value();
     ```
 
 ---
@@ -444,7 +444,7 @@ Use different fractions to extract features at different scales:
     plt.plot(t, y, "gray", alpha=0.3, label="Data")
     
     for f in fractions:
-        result = fl.smooth(t, y, fraction=f)
+        result = fl.Loess(fraction=f).fit(t, y)
         plt.plot(t, result["y"], label=f"fraction={f}")
     
     plt.legend()
@@ -469,7 +469,7 @@ Use different fractions to extract features at different scales:
     ```julia
     fractions = [0.05, 0.2, 0.5]
 
-    results = [smooth(t, y, fraction=f) for f in fractions]
+    results = [fit(Loess(fraction=f), t, y) for f in fractions]
     # results[i].y contains smoothed values for each fraction
     ```
 
@@ -479,7 +479,7 @@ Use different fractions to extract features at different scales:
 
     const scales = [0.05, 0.2, 0.5];
     const trends = scales.map(f => {
-        return fl.smooth(t, y, { fraction: f }).y;
+        return fl.Loess({ fraction: f }).fit(t, y).y;
     });
     ```
 
@@ -500,7 +500,8 @@ Use different fractions to extract features at different scales:
     std::vector<double> scales = {0.05, 0.2, 0.5};
     std::vector<std::vector<double>> trends;
     for (auto f : scales) {
-        auto result = fastloess::smooth(t, y, { .fraction = f });
+        fastloess::Loess scale_model({ .fraction = f });
+        auto result = scale_model.fit(t, y).value();
         trends.push_back(result.yVector());
     }
     ```
@@ -546,13 +547,12 @@ Biological application:
     hours = np.arange(0, 24.5, 0.5)
     expression = 100 * (1 + 0.5 * np.sin(hours * np.pi / 12)) + np.random.normal(0, 10, len(hours))
 
-    result = fl.smooth(
-        hours, expression,
+    result = fl.Loess(
         fraction=0.3,
         iterations=3,
         confidence_intervals=0.95,
         return_diagnostics=True
-    )
+    ).fit(hours, expression)
 
     print(f"R²: {result['diagnostics']['r_squared']:.3f}")
     ```
@@ -589,13 +589,12 @@ Biological application:
     hours = collect(range(0, 24, step=0.5))
     expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hours)) .* 10.0
 
-    result = smooth(
-        hours, expression,
+    result = fit(Loess(
         fraction=0.3,
         iterations=3,
         confidence_intervals=0.95,
         return_diagnostics=true
-    )
+    ), hours, expression)
 
     println("R²: ", result.diagnostics.r_squared)
     ```
@@ -604,11 +603,11 @@ Biological application:
     ```javascript
     const fl = require('fastloess');
 
-    const result = fl.smooth(hours, expression, {
+    const result = new fl.Loess({
         fraction: 0.3,
         iterations: 3,
         returnDiagnostics: true
-    });
+    }).fit(hours, expression);
 
     console.log(`R²: ${result.diagnostics.rSquared.toFixed(3)}`);
     ```
@@ -630,13 +629,14 @@ Biological application:
     ```cpp
     #include "fastloess.hpp"
 
-    auto result = fastloess::smooth(hours, expression, {
+    fastloess::Loess gene_model({
         .fraction = 0.3,
         .iterations = 3,
         .return_diagnostics = true
     });
+    auto result = gene_model.fit(hours, expression).value();
 
-    std::cout << "R²: " << result.diagnostics.r_squared << std::endl;
+    std::cout << "R²: " << result.diagnostics().rSquared() << std::endl;
     ```
 
 ---

@@ -38,14 +38,14 @@ First centers residuals at their median, then takes the median of the absolute d
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=3, scaling_method="mad")
+    result = fl.Loess(iterations=3, scaling_method="mad").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
         .iterations(3)
-        .scaling_method(ScalingMethod::MAD)
+        .scaling_method(MAD)
         .adapter(Batch)
         .build()?;
     ```
@@ -57,7 +57,7 @@ First centers residuals at their median, then takes the median of the absolute d
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, scalingMethod: "mad" });
+    const result = new Loess({ iterations: 3, scalingMethod: "mad" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -67,10 +67,8 @@ First centers residuals at their median, then takes the median of the absolute d
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, {
-        .iterations = 3,
-        .scaling_method = "mad"
-    });
+    fastloess::Loess model({ .iterations = 3, .scaling_method = "mad" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -90,14 +88,14 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=3, scaling_method="mar")
+    result = fl.Loess(iterations=3, scaling_method="mar").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
         .iterations(3)
-        .scaling_method(ScalingMethod::MAR)
+        .scaling_method(MAR)
         .adapter(Batch)
         .build()?;
     ```
@@ -109,7 +107,7 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, scalingMethod: "mar" });
+    const result = new Loess({ iterations: 3, scalingMethod: "mar" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -119,10 +117,8 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, {
-        .iterations = 3,
-        .scaling_method = "mar"
-    });
+    fastloess::Loess model({ .iterations = 3, .scaling_method = "mar" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -142,14 +138,14 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=3, scaling_method="mean")
+    result = fl.Loess(iterations=3, scaling_method="mean").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
         .iterations(3)
-        .scaling_method(ScalingMethod::Mean)
+        .scaling_method(Mean)
         .adapter(Batch)
         .build()?;
     ```
@@ -161,7 +157,7 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, scalingMethod: "mean" });
+    const result = new Loess({ iterations: 3, scalingMethod: "mean" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -171,10 +167,8 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, {
-        .iterations = 3,
-        .scaling_method = "mean"
-    });
+    fastloess::Loess model({ .iterations = 3, .scaling_method = "mean" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---

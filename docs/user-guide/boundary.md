@@ -14,7 +14,7 @@ Standard LOESS neighbourhoods become asymmetric at the boundaries: fewer points 
 | `"extend"` | Repeat first / last value | Most datasets (default) |
 | `"reflect"` | Mirror data at boundaries | Periodic or symmetric data |
 | `"zero"` | Pad with zeros | Data known to approach zero |
-| `"no_boundary"` | No padding (Cleveland original) | Reproducing reference behaviour |
+| `"noboundary"` | No padding (Cleveland original) | Reproducing reference behaviour |
 
 ---
 
@@ -31,13 +31,13 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, boundary_policy="extend")
+    result = fl.Loess(boundary_policy="extend").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .boundary_policy(BoundaryPolicy::Extend)
+        .boundary_policy(Extend)
         .adapter(Batch)
         .build()?;
     ```
@@ -49,7 +49,7 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { boundaryPolicy: "extend" });
+    const result = new Loess({ boundaryPolicy: "extend" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -59,7 +59,8 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .boundary_policy = "extend" });
+    fastloess::Loess model({ .boundary_policy = "extend" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -77,13 +78,13 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, boundary_policy="reflect")
+    result = fl.Loess(boundary_policy="reflect").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .boundary_policy(BoundaryPolicy::Reflect)
+        .boundary_policy(Reflect)
         .adapter(Batch)
         .build()?;
     ```
@@ -95,7 +96,7 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { boundaryPolicy: "reflect" });
+    const result = new Loess({ boundaryPolicy: "reflect" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -105,7 +106,8 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .boundary_policy = "reflect" });
+    fastloess::Loess model({ .boundary_policy = "reflect" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -123,13 +125,13 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, boundary_policy="zero")
+    result = fl.Loess(boundary_policy="zero").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .boundary_policy(BoundaryPolicy::Zero)
+        .boundary_policy(Zero)
         .adapter(Batch)
         .build()?;
     ```
@@ -141,7 +143,7 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { boundaryPolicy: "zero" });
+    const result = new Loess({ boundaryPolicy: "zero" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -151,7 +153,8 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .boundary_policy = "zero" });
+    fastloess::Loess model({ .boundary_policy = "zero" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -167,40 +170,41 @@ Applies no padding. Each local fit uses only the points that are actually availa
 
 === "R"
     ```r
-    result <- Loess(boundary_policy = "no_boundary")$fit(x, y)
+    result <- Loess(boundary_policy = "noboundary")$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, boundary_policy="no_boundary")
+    result = fl.Loess(boundary_policy="noboundary").fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .boundary_policy(BoundaryPolicy::NoBoundary)
+        .boundary_policy(NoBoundary)
         .adapter(Batch)
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; boundary_policy="no_boundary"), x, y)
+    result = fit(Loess(; boundary_policy="noboundary"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { boundaryPolicy: "no_boundary" });
+    const result = new Loess({ boundaryPolicy: "noboundary" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { boundaryPolicy: "no_boundary" });
+    const result = smooth(x, y, { boundaryPolicy: "noboundary" });
     ```
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .boundary_policy = "no_boundary" });
+    fastloess::Loess model({ .boundary_policy = "noboundary" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -212,4 +216,4 @@ Applies no padding. Each local fit uses only the points that are actually availa
 | General purpose | `"extend"` (default) |
 | Periodic signal (angle, day-of-year) | `"reflect"` |
 | Signal known to be zero at boundaries | `"zero"` |
-| Replicating original Cleveland behaviour | `"no_boundary"` |
+| Replicating original Cleveland behaviour | `"noboundary"` |

@@ -55,23 +55,23 @@ node examples/nodejs/online_smoothing.js
 ## Quick Start
 
 ```javascript
-const { smooth } = require('fastloess');
+const { Loess } = require('fastloess');
 
 // Generate sample data
 const x = Array.from({ length: 100 }, (_, i) => i * 0.1);
 const y = x.map(xi => Math.sin(xi) + Math.random() * 0.2);
 
 // Basic smoothing
-const result = smooth(x, y, { fraction: 0.3 });
+const result = new Loess({ fraction: 0.3 }).fit(x, y);
 console.log('Smoothed values:', result.y);
 
 // With options
-const resultWithOptions = smooth(x, y, {
+const resultWithOptions = new Loess({
     fraction: 0.3,
     iterations: 3,
     confidenceIntervals: 0.95,
     returnDiagnostics: true
-});
+}).fit(x, y);
 
 console.log('R²:', resultWithOptions.diagnostics.rSquared);
 ```
@@ -81,13 +81,13 @@ console.log('R²:', resultWithOptions.diagnostics.rSquared);
 The package includes TypeScript definitions:
 
 ```typescript
-import { smooth, SmoothOptions, LoessResult } from 'fastloess';
+import { Loess, LoessResult } from 'fastloess';
 
-const options: SmoothOptions = {
+const options = {
     fraction: 0.3,
     iterations: 3,
     confidenceIntervals: 0.95
 };
 
-const result: LoessResult = smooth(x, y, options);
+const result: LoessResult = new Loess(options).fit(x, y);
 ```

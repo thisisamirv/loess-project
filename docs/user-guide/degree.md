@@ -34,13 +34,13 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, degree=0, fraction=0.5)
+    result = fl.Loess(degree=0, fraction=0.5).fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .degree(PolynomialDegree::Constant)
+        .degree(Constant)
         .fraction(0.5)
         .adapter(Batch)
         .build()?;
@@ -53,7 +53,7 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { degree: 0, fraction: 0.5 });
+    const result = new Loess({ degree: 0, fraction: 0.5 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -63,7 +63,8 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .degree = 0, .fraction = 0.5 });
+    fastloess::Loess model({ .degree = 0, .fraction = 0.5 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -83,13 +84,13 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, degree=1, fraction=0.5)
+    result = fl.Loess(degree=1, fraction=0.5).fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .degree(PolynomialDegree::Linear)
+        .degree(Linear)
         .fraction(0.5)
         .adapter(Batch)
         .build()?;
@@ -102,7 +103,7 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { degree: 1, fraction: 0.5 });
+    const result = new Loess({ degree: 1, fraction: 0.5 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -112,7 +113,8 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .degree = 1, .fraction = 0.5 });
+    fastloess::Loess model({ .degree = 1, .fraction = 0.5 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -132,13 +134,13 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, degree=2, fraction=0.5)
+    result = fl.Loess(degree=2, fraction=0.5).fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .degree(PolynomialDegree::Quadratic)
+        .degree(Quadratic)
         .fraction(0.5)
         .adapter(Batch)
         .build()?;
@@ -151,7 +153,7 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { degree: 2, fraction: 0.5 });
+    const result = new Loess({ degree: 2, fraction: 0.5 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -161,7 +163,8 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .degree = 2, .fraction = 0.5 });
+    fastloess::Loess model({ .degree = 2, .fraction = 0.5 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -181,13 +184,13 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, degree=3, fraction=0.6)
+    result = fl.Loess(degree=3, fraction=0.6).fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .degree(PolynomialDegree::Cubic)
+        .degree(Cubic)
         .fraction(0.6)
         .adapter(Batch)
         .build()?;
@@ -200,7 +203,7 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { degree: 3, fraction: 0.6 });
+    const result = new Loess({ degree: 3, fraction: 0.6 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -210,7 +213,8 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .degree = 3, .fraction = 0.6 });
+    fastloess::Loess model({ .degree = 3, .fraction = 0.6 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -230,13 +234,13 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, degree=4, fraction=0.7)
+    result = fl.Loess(degree=4, fraction=0.7).fit(x, y)
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .degree(PolynomialDegree::Quartic)
+        .degree(Quartic)
         .fraction(0.7)
         .adapter(Batch)
         .build()?;
@@ -249,7 +253,7 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { degree: 4, fraction: 0.7 });
+    const result = new Loess({ degree: 4, fraction: 0.7 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -259,7 +263,8 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .degree = 4, .fraction = 0.7 });
+    fastloess::Loess model({ .degree = 4, .fraction = 0.7 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---

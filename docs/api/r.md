@@ -87,6 +87,7 @@ result <- online$add_points(x, y)
 | `boundary_policy` | `character` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `character` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `numeric` | `NULL` | Auto-convergence tolerance |
+| `custom_weights` | `numeric` | `NULL` | Per-observation case weights (Batch only) |
 | `confidence_intervals` | `numeric` | `NULL` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `numeric` | `NULL` | Prediction level (e.g., 0.95) |
 | `return_diagnostics` | `logical` | `FALSE` | Compute RMSE, MAE, R², AIC |

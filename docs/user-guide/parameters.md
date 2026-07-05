@@ -20,6 +20,7 @@ Complete reference for all LOESS configuration options.
     | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
     | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
     | **auto_converge** | NULL | tolerance | Early stopping | All |
+    | **custom_weights** | NULL | positive numeric | Per-observation weights | Batch |
     | **return_residuals** | FALSE | logical | Include residuals | All |
     | **return_robustness_weights** | FALSE | logical | Include weights | All |
     | **return_diagnostics** | FALSE | logical | Include metrics | Batch, Streaming |
@@ -48,6 +49,7 @@ Complete reference for all LOESS configuration options.
     | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
     | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
     | **auto_converge** | None | tolerance | Early stopping | All |
+    | **custom_weights** | None | positive float | Per-observation weights | Batch |
     | **return_residuals** | False | bool | Include residuals | All |
     | **return_robustness_weights** | False | bool | Include weights | All |
     | **return_diagnostics** | False | bool | Include metrics | Batch, Streaming |
@@ -76,6 +78,7 @@ Complete reference for all LOESS configuration options.
     | **boundary_policy** | `Extend` | 4 options | Edge handling | All |
     | **scaling_method** | `MAD` | 3 options | Scale estimation | All |
     | **auto_converge** | None | tolerance | Early stopping | All |
+    | **custom_weights** | — | `Vec<T>` | Per-observation weights | Batch |
     | **return_residuals** | false | bool | Include residuals | All |
     | **return_robustness_weights** | false | bool | Include weights | All |
     | **return_diagnostics** | false | bool | Include metrics | Batch, Streaming |
@@ -104,6 +107,7 @@ Complete reference for all LOESS configuration options.
     | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
     | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
     | **auto_converge** | `nothing` | tolerance | Early stopping | All |
+    | **custom_weights** | `nothing` | positive float | Per-observation weights | Batch |
     | **return_residuals** | `false` | bool | Include residuals | All |
     | **return_robustness_weights** | `false` | bool | Include weights | All |
     | **return_diagnostics** | `false` | bool | Include metrics | Batch, Streaming |
@@ -132,6 +136,7 @@ Complete reference for all LOESS configuration options.
     | **boundaryPolicy** | `"extend"` | 4 options | Edge handling | All |
     | **scalingMethod** | `"mad"` | 3 options | Scale estimation | All |
     | **autoConverge** | null | tolerance | Early stopping | All |
+    | **customWeights** | null | positive number | Per-observation weights | Batch |
     | **returnResiduals** | false | bool | Include residuals | All |
     | **returnRobustnessWeights** | false | bool | Include weights | All |
     | **returnDiagnostics** | false | bool | Include metrics | Batch, Streaming |
@@ -159,6 +164,7 @@ Complete reference for all LOESS configuration options.
     | **boundaryPolicy** | `"extend"` | 4 options | Edge handling | All |
     | **scalingMethod** | `"mad"` | 3 options | Scale estimation | All |
     | **autoConverge** | null | tolerance | Early stopping | All |
+    | **customWeights** | null | positive number | Per-observation weights | Batch |
     | **returnResiduals** | false | bool | Include residuals | All |
     | **returnRobustnessWeights** | false | bool | Include weights | All |
     | **returnDiagnostics** | false | bool | Include metrics | Batch, Streaming |
@@ -186,6 +192,7 @@ Complete reference for all LOESS configuration options.
     | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
     | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
     | **auto_converge** | NAN | tolerance | Early stopping | All |
+    | **custom_weights** | {} | positive double | Per-observation weights | Batch |
     | **return_residuals** | false | bool | Include residuals | All |
     | **return_robustness_weights** | false | bool | Include weights | All |
     | **return_diagnostics** | false | bool | Include metrics | Batch, Streaming |
@@ -209,7 +216,7 @@ Complete reference for all LOESS configuration options.
 | **weight_function** | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
 | **robustness_method** | `"bisquare"`, `"huber"`, `"talwar"` |
 | **zero_weight_fallback** | `"use_local_mean"`, `"return_original"`, `"return_none"` |
-| **boundary_policy** | `"extend"`, `"reflect"`, `"zero"`, `"no_boundary"` |
+| **boundary_policy** | `"extend"`, `"reflect"`, `"zero"`, `"noboundary"` |
 | **scaling_method** | `"mad"`, `"mar"`, `"mean"` |
 | **surface_mode** | `"interpolation"`, `"direct"` |
 | **merge_strategy** | `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"` |
@@ -235,7 +242,7 @@ Complete reference for all LOESS configuration options.
 | **weightFunction** | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
 | **robustnessMethod** | `"bisquare"`, `"huber"`, `"talwar"` |
 | **zeroWeightFallback** | `"use_local_mean"`, `"return_original"`, `"return_none"` |
-| **boundaryPolicy** | `"extend"`, `"reflect"`, `"zero"`, `"no_boundary"` |
+| **boundaryPolicy** | `"extend"`, `"reflect"`, `"zero"`, `"noboundary"` |
 | **scalingMethod** | `"mad"`, `"mar"`, `"mean"` |
 | **surfaceMode** | `"interpolation"`, `"direct"` |
 | **mergeStrategy** | `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"` |
@@ -265,7 +272,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, fraction=0.3)
+    result = fl.Loess(fraction=0.3).fit(x, y)
     ```
 
 === "Rust"
@@ -278,12 +285,12 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 === "Julia"
     ```julia
-    result = smooth(x, y, fraction=0.3)
+    result = fit(Loess(fraction=0.3), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { fraction: 0.3 });
+    const result = new Loess({ fraction: 0.3 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -293,7 +300,8 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .fraction = 0.3 });
+    fastloess::Loess model({ .fraction = 0.3 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -316,7 +324,7 @@ Number of robustness iterations for outlier resistance.
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=5)
+    result = fl.Loess(iterations=5).fit(x, y)
     ```
 
 === "Rust"
@@ -329,12 +337,12 @@ Number of robustness iterations for outlier resistance.
 
 === "Julia"
     ```julia
-    result = smooth(x, y, iterations=5)
+    result = fit(Loess(iterations=5), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 5 });
+    const result = new Loess({ iterations: 5 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -344,7 +352,8 @@ Number of robustness iterations for outlier resistance.
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .iterations = 5 });
+    fastloess::Loess model({ .iterations = 5 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -401,7 +410,7 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, surface_mode="direct")
+    result = fl.Loess(surface_mode="direct").fit(x, y)
     ```
 
 === "Rust"
@@ -414,12 +423,12 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
 === "Julia"
     ```julia
-    result = smooth(x, y, surface_mode="direct")
+    result = fit(Loess(surface_mode="direct"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { surfaceMode: "direct" });
+    const result = new Loess({ surfaceMode: "direct" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -429,7 +438,8 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .surface_mode = "direct" });
+    fastloess::Loess model({ .surface_mode = "direct" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -462,7 +472,7 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, delta=0.05)
+    result = fl.Loess(delta=0.05).fit(x, y)
     ```
 
 === "Rust"
@@ -475,12 +485,12 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 
 === "Julia"
     ```julia
-    result = smooth(x, y, delta=0.05)
+    result = fit(Loess(delta=0.05), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { delta: 0.05 });
+    const result = new Loess({ delta: 0.05 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -490,7 +500,8 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .delta = 0.05 });
+    fastloess::Loess model({ .delta = 0.05 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -532,7 +543,7 @@ See [Weight Functions](kernels.md) for detailed comparison.
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, weight_function="epanechnikov")
+    result = fl.Loess(weight_function="epanechnikov").fit(x, y)
     ```
 
 === "Rust"
@@ -545,12 +556,12 @@ See [Weight Functions](kernels.md) for detailed comparison.
 
 === "Julia"
     ```julia
-    result = smooth(x, y, weight_function="epanechnikov")
+    result = fit(Loess(weight_function="epanechnikov"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "epanechnikov" });
+    const result = new Loess({ weightFunction: "epanechnikov" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -560,7 +571,8 @@ See [Weight Functions](kernels.md) for detailed comparison.
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .weight_function = "epanechnikov" });
+    fastloess::Loess model({ .weight_function = "epanechnikov" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -594,7 +606,7 @@ See [Robustness](robustness.md) for detailed comparison.
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, robustness_method="talwar")
+    result = fl.Loess(robustness_method="talwar").fit(x, y)
     ```
 
 === "Rust"
@@ -607,12 +619,12 @@ See [Robustness](robustness.md) for detailed comparison.
 
 === "Julia"
     ```julia
-    result = smooth(x, y, robustness_method="talwar")
+    result = fit(Loess(robustness_method="talwar"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { robustnessMethod: "talwar" });
+    const result = new Loess({ robustnessMethod: "talwar" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -622,7 +634,8 @@ See [Robustness](robustness.md) for detailed comparison.
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .robustness_method = "talwar" });
+    fastloess::Loess model({ .robustness_method = "talwar" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -640,7 +653,7 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 | `"extend"` | Pad with first/last values | Most cases (default) |
 | `"reflect"` | Mirror data at boundaries | Periodic/symmetric data |
 | `"zero"` | Pad with zeros | Data approaches zero |
-| `"no_boundary"` | No padding | Original Cleveland behavior |
+| `"noboundary"` | No padding | Original Cleveland behavior |
 
 === "Rust"
 
@@ -660,7 +673,7 @@ For example:
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, boundary_policy="reflect")
+    result = fl.Loess(boundary_policy="reflect").fit(x, y)
     ```
 
 === "Rust"
@@ -673,12 +686,12 @@ For example:
 
 === "Julia"
     ```julia
-    result = smooth(x, y, boundary_policy="reflect")
+    result = fit(Loess(boundary_policy="reflect"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { boundaryPolicy: "reflect" });
+    const result = new Loess({ boundaryPolicy: "reflect" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -688,7 +701,8 @@ For example:
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .boundary_policy = "reflect" });
+    fastloess::Loess model({ .boundary_policy = "reflect" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -724,7 +738,7 @@ For example:
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, scaling_method="mad")
+    result = fl.Loess(scaling_method="mad").fit(x, y)
     ```
 
 === "Rust"
@@ -737,17 +751,18 @@ For example:
 
 === "Julia"
     ```julia
-    result = smooth(x, y, scaling_method="mad")
+    result = fit(Loess(scaling_method="mad"), x, y)
     ```
 
 === "Node.js / WebAssembly"
     ```javascript
-    const result = smooth(x, y, { scalingMethod: "mad" });
+    const result = new Loess({ scalingMethod: "mad" }).fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .scaling_method = "mad" });
+    fastloess::Loess model({ .scaling_method = "mad" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -783,7 +798,7 @@ For example:
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, zero_weight_fallback="use_local_mean")
+    result = fl.Loess(zero_weight_fallback="use_local_mean").fit(x, y)
     ```
 
 === "Rust"
@@ -796,12 +811,12 @@ For example:
 
 === "Julia"
     ```julia
-    result = smooth(x, y, zero_weight_fallback="use_local_mean")
+    result = fit(Loess(zero_weight_fallback="use_local_mean"), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { zeroWeightFallback: "use_local_mean" });
+    const result = new Loess({ zeroWeightFallback: "use_local_mean" }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -811,7 +826,8 @@ For example:
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .zero_weight_fallback = "use_local_mean" });
+    fastloess::Loess model({ .zero_weight_fallback = "use_local_mean" });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -827,7 +843,7 @@ Enable early stopping when robustness weights stabilize.
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=20, auto_converge=1e-6)
+    result = fl.Loess(iterations=20, auto_converge=1e-6).fit(x, y)
     ```
 
 === "Rust"
@@ -841,12 +857,12 @@ Enable early stopping when robustness weights stabilize.
 
 === "Julia"
     ```julia
-    result = smooth(x, y, iterations=20, auto_converge=1e-6)
+    result = fit(Loess(iterations=20, auto_converge=1e-6), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 20, autoConverge: 1e-6 });
+    const result = new Loess({ iterations: 20, autoConverge: 1e-6 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -856,7 +872,88 @@ Enable early stopping when robustness weights stabilize.
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .iterations = 20, .auto_converge = 1e-6 });
+    fastloess::Loess model({ .iterations = 20, .auto_converge = 1e-6 });
+    auto result = model.fit(x, y).value();
+    ```
+
+---
+
+### custom_weights
+
+Per-observation case weights that scale each point's contribution to nearby local fits.
+Equivalent to the `weights` argument in R's `stats::loess`.
+
+**Formula:** `w_ij = custom_weights[j] × K(d_ij / h) × robustness_j`
+
+where `K` is the distance kernel and `robustness_j` is the robustness weight (if `iterations > 0`).
+
+| Value | Effect |
+| --- | --- |
+| `1.0` for all | Equivalent to no weights (uniform) |
+| `0.0` | Excludes the observation from all local fits |
+| `> 1.0` | Increases the observation's influence |
+| `0 < v < 1.0` | Reduces the observation's influence |
+
+!!! note "Batch only"
+    `custom_weights` is applied in **Batch** mode only. It is ignored in Streaming and Online modes.
+
+!!! warning "Length must match y"
+    The weights vector must have the same length as `y`. A mismatch returns an error.
+
+=== "R"
+    ```r
+    # Downweight an outlier at index 5
+    weights <- rep(1, length(y))
+    weights[5] <- 0
+    result <- Loess(custom_weights = weights)$fit(x, y)
+    ```
+
+=== "Python"
+    ```python
+    import numpy as np
+    weights = np.ones(len(y))
+    weights[4] = 0  # Exclude 5th point
+    result = fl.Loess(custom_weights=weights.tolist()).fit(x, y)
+    ```
+
+=== "Rust"
+    ```rust
+    let mut weights = vec![1.0f64; y.len()];
+    weights[4] = 0.0; // Exclude 5th point
+    let model = Loess::new()
+        .custom_weights(weights)
+        .adapter(Batch)
+        .build()?;
+    let result = model.fit(&x, &y)?;
+    ```
+
+=== "Julia"
+    ```julia
+    weights = ones(length(y))
+    weights[5] = 0.0  # Exclude 5th point
+    result = fit(Loess(custom_weights=weights), x, y)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const weights = new Array(y.length).fill(1);
+    weights[4] = 0; // Exclude 5th point
+    const result = new Loess({ customWeights: weights }).fit(x, y);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const weights = new Array(y.length).fill(1);
+    weights[4] = 0; // Exclude 5th point
+    const result = smooth(x, y, { customWeights: weights });
+    ```
+
+=== "C++"
+    ```cpp
+    std::vector<double> weights(y.size(), 1.0);
+    weights[4] = 0.0; // Exclude 5th point
+    fastloess::Loess model({ .custom_weights = weights });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -875,7 +972,7 @@ Include residuals (`y - smoothed`) in the output.
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, return_residuals=True)
+    result = fl.Loess(return_residuals=True).fit(x, y)
     print(result["residuals"])
     ```
 
@@ -894,13 +991,13 @@ Include residuals (`y - smoothed`) in the output.
 
 === "Julia"
     ```julia
-    result = smooth(x, y, return_residuals=true)
+    result = fit(Loess(return_residuals=true), x, y)
     println(result.residuals)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { returnResiduals: true });
+    const result = new Loess({ returnResiduals: true }).fit(x, y);
     console.log(result.residuals);
     ```
 
@@ -912,7 +1009,8 @@ Include residuals (`y - smoothed`) in the output.
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .return_residuals = true });
+    fastloess::Loess model({ .return_residuals = true });
+    auto result = model.fit(x, y).value();
     auto residuals = result.residuals();
     ```
 
@@ -940,7 +1038,7 @@ Include fit quality metrics (Batch and Streaming only).
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, return_diagnostics=True)
+    result = fl.Loess(return_diagnostics=True).fit(x, y)
     print(f"R²: {result['diagnostics']['r_squared']:.4f}")
     ```
 
@@ -960,13 +1058,13 @@ Include fit quality metrics (Batch and Streaming only).
 
 === "Julia"
     ```julia
-    result = smooth(x, y, return_diagnostics=true)
+    result = fit(Loess(return_diagnostics=true), x, y)
     println("R²: ", result.diagnostics.r_squared)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { returnDiagnostics: true });
+    const result = new Loess({ returnDiagnostics: true }).fit(x, y);
     console.log("R²:", result.diagnostics.rSquared);
     ```
 
@@ -978,9 +1076,10 @@ Include fit quality metrics (Batch and Streaming only).
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, { .return_diagnostics = true });
+    fastloess::Loess model({ .return_diagnostics = true });
+    auto result = model.fit(x, y).value();
     auto diag = result.diagnostics();
-    std::cout << "R²: " << diag.r_squared << std::endl;
+    std::cout << "R²: " << diag.rSquared() << std::endl;
     ```
 
 ---
@@ -997,7 +1096,7 @@ Include final robustness weights (useful for outlier detection).
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, iterations=3, return_robustness_weights=True)
+    result = fl.Loess(iterations=3, return_robustness_weights=True).fit(x, y)
     outliers = [i for i, w in enumerate(result["robustness_weights"]) if w < 0.5]
     ```
 
@@ -1015,13 +1114,13 @@ Include final robustness weights (useful for outlier detection).
 
 === "Julia"
     ```julia
-    result = smooth(x, y, iterations=3, return_robustness_weights=true)
+    result = fit(Loess(iterations=3, return_robustness_weights=true), x, y)
     # Points with result.robustness_weights < 0.5 are likely outliers
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, returnRobustnessWeights: true });
+    const result = new Loess({ iterations: 3, returnRobustnessWeights: true }).fit(x, y);
     // result.robustnessWeights contains outlier weights
     ```
 
@@ -1033,10 +1132,8 @@ Include final robustness weights (useful for outlier detection).
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, {
-        .iterations = 3,
-        .return_robustness_weights = true
-    });
+    fastloess::Loess model({ .iterations = 3, .return_robustness_weights = true });
+    auto result = model.fit(x, y).value();
     auto weights = result.robustnessWeights();
     ```
 
@@ -1055,7 +1152,7 @@ See [Intervals](intervals.md) for detailed usage.
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, confidence_intervals=0.95, prediction_intervals=0.95)
+    result = fl.Loess(confidence_intervals=0.95, prediction_intervals=0.95).fit(x, y)
     ```
 
 === "Rust"
@@ -1069,12 +1166,12 @@ See [Intervals](intervals.md) for detailed usage.
 
 === "Julia"
     ```julia
-    result = smooth(x, y, confidence_intervals=0.95, prediction_intervals=0.95)
+    result = fit(Loess(confidence_intervals=0.95, prediction_intervals=0.95), x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = smooth(x, y, { confidenceIntervals: 0.95, predictionIntervals: 0.95 });
+    const result = new Loess({ confidenceIntervals: 0.95, predictionIntervals: 0.95 }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -1084,10 +1181,8 @@ See [Intervals](intervals.md) for detailed usage.
 
 === "C++"
     ```cpp
-    auto result = fastloess::smooth(x, y, {
-        .confidence_intervals = 0.95,
-        .prediction_intervals = 0.95
-    });
+    fastloess::Loess model({ .confidence_intervals = 0.95, .prediction_intervals = 0.95 });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -1110,7 +1205,7 @@ Selection strategy for automated parameter tuning.
 
 === "Python"
     ```python
-    result = fl.smooth(x, y, cv_method="kfold", cv_k=5)
+    result = fl.Loess(cv_method="kfold", cv_k=5).fit(x, y)
     ```
 
 === "Rust"
@@ -1123,7 +1218,7 @@ Selection strategy for automated parameter tuning.
 
 === "Julia"
     ```julia
-    result = smooth(x, y, cv_method="kfold", cv_k=5)
+    result = fit(Loess(cv_method="kfold", cv_k=5), x, y)
     ```
 
 === "Node.js"
@@ -1159,22 +1254,24 @@ Points per chunk in Streaming mode.
 
 === "Python"
     ```python
-    result = fl.smooth_streaming(x, y, chunk_size=10000)
+    model = fl.StreamingLoess(chunk_size=10000)
+    model.process_chunk(x, y)
+    result = model.finalize()
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .adapter(Streaming {
-            chunk_size: 10000,
-            ..Default::default()
-        })
+        .adapter(Streaming)
+        .chunk_size(10000)
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth_streaming(x, y, chunk_size=10000)
+    model = StreamingLoess(chunk_size=10000)
+    process_chunk(model, x, y)
+    result = finalize(model)
     ```
 
 === "Node.js"
@@ -1191,7 +1288,9 @@ Points per chunk in Streaming mode.
     ```cpp
     fastloess::StreamingOptions opts;
     opts.chunk_size = 10000;
-    auto result = fastloess::streaming(x, y, opts);
+    fastloess::StreamingLoess stream(opts);
+    (void)stream.processChunk(x, y);
+    auto result = stream.finalize().value();
     ```
 
 ---
@@ -1207,22 +1306,24 @@ Overlap between chunks in Streaming mode.
 
 === "Python"
     ```python
-    result = fl.smooth_streaming(x, y, overlap=1000)
+    model = fl.StreamingLoess(overlap=1000)
+    model.process_chunk(x, y)
+    result = model.finalize()
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .adapter(Streaming {
-            overlap: 1000,
-            ..Default::default()
-        })
+        .adapter(Streaming)
+        .overlap(1000)
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth_streaming(x, y, overlap=1000)
+    model = StreamingLoess(overlap=1000)
+    process_chunk(model, x, y)
+    result = finalize(model)
     ```
 
 === "Node.js"
@@ -1239,7 +1340,9 @@ Overlap between chunks in Streaming mode.
     ```cpp
     fastloess::StreamingOptions opts;
     opts.overlap = 1000;
-    auto result = fastloess::streaming(x, y, opts);
+    fastloess::StreamingLoess stream(opts);
+    (void)stream.processChunk(x, y);
+    auto result = stream.finalize().value();
     ```
 
 ---
@@ -1253,60 +1356,64 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 | Strategy | Description | Robustness |
 | --- | --- | --- |
 | `"average"` | Average of overlapping chunks | Fastest, least robust |
-| `"left"` | Left chunk | Fastest, least robust |
-| `"right"` | Right chunk | Fastest, least robust |
-| `"weighted"` | Weighted average of overlapping chunks | Most robust |
+| `"take_first"` | Left chunk only | Fastest, least robust |
+| `"take_last"` | Right chunk only | Fastest, least robust |
+| `"weighted_average"` | Weighted average of overlapping chunks | Most robust |
 
 === "Rust"
 
 | Strategy | Description | Robustness |
 | --- | --- | --- |
 | `Average` | Average of overlapping chunks | Fastest, least robust |
-| `Left` | Left chunk | Fastest, least robust |
-| `Right` | Right chunk | Fastest, least robust |
-| `Weighted` | Weighted average of overlapping chunks | Most robust |
+| `TakeFirst` | Left chunk only | Fastest, least robust |
+| `TakeLast` | Right chunk only | Fastest, least robust |
+| `WeightedAverage` | Weighted average of overlapping chunks | Most robust |
 
 For example:
 
 === "R"
     ```r
-    result <- StreamingLoess(merge_strategy = "weighted")$process_chunk(x, y)
+    result <- StreamingLoess(merge_strategy = "weighted_average")$process_chunk(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.smooth_streaming(x, y, merge_strategy="weighted")
+    model = fl.StreamingLoess(merge_strategy="weighted_average")
+    model.process_chunk(x, y)
+    result = model.finalize()
     ```
 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .adapter(Streaming {
-            merge_strategy: Weighted,
-            ..Default::default()
-        })
+        .adapter(Streaming)
+        .merge_strategy(WeightedAverage)
         .build()?;
     ```
 
 === "Julia"
     ```julia
-    result = smooth_streaming(x, y, merge_strategy="weighted")
+    model = StreamingLoess(merge_strategy="weighted_average")
+    process_chunk(model, x, y)
+    result = finalize(model)
     ```
 
 === "Node.js"
     ```javascript
-    const processor = new StreamingLoess({}, { mergeStrategy: "weighted" });
+    const processor = new StreamingLoess({}, { mergeStrategy: "weighted_average" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLoessWasm({}, { mergeStrategy: "weighted" });
+    const processor = new StreamingLoessWasm({}, { mergeStrategy: "weighted_average" });
     ```
 
 === "C++"
     ```cpp
     // merge_strategy is handled internally in C++
-    auto result = fastloess::streaming(x, y);
+    fastloess::StreamingLoess stream({});
+    (void)stream.processChunk(x, y);
+    auto result = stream.finalize().value();
     ```
 
 ---
@@ -1322,7 +1429,8 @@ Maximum points held in memory for Online mode.
 
 === "Python"
     ```python
-    result = fl.smooth_online(x, y, window_capacity=500)
+    model = fl.OnlineLoess(window_capacity=500)
+    result = model.add_points(x, y)
     ```
 
 === "Rust"
@@ -1335,7 +1443,8 @@ Maximum points held in memory for Online mode.
 
 === "Julia"
     ```julia
-    result = smooth_online(x, y, window_capacity=500)
+    model = OnlineLoess(window_capacity=500)
+    result = add_points(model, x, y)
     ```
 
 === "Node.js"
@@ -1352,7 +1461,8 @@ Maximum points held in memory for Online mode.
     ```cpp
     fastloess::OnlineOptions opts;
     opts.window_capacity = 500;
-    auto result = fastloess::online(x, y, opts);
+    fastloess::OnlineLoess model(opts);
+    auto result = model.addPoints(x, y).value();
     ```
 
 ---
@@ -1368,7 +1478,8 @@ Minimum points required before Online filter starts producing outputs.
 
 === "Python"
     ```python
-    result = fl.smooth_online(x, y, min_points=10)
+    model = fl.OnlineLoess(min_points=10)
+    result = model.add_points(x, y)
     ```
 
 === "Rust"
@@ -1381,7 +1492,8 @@ Minimum points required before Online filter starts producing outputs.
 
 === "Julia"
     ```julia
-    result = smooth_online(x, y, min_points=10)
+    model = OnlineLoess(min_points=10)
+    result = add_points(model, x, y)
     ```
 
 === "Node.js"
@@ -1398,7 +1510,8 @@ Minimum points required before Online filter starts producing outputs.
     ```cpp
     fastloess::OnlineOptions opts;
     opts.min_points = 10;
-    auto result = fastloess::online(x, y, opts);
+    fastloess::OnlineLoess model(opts);
+    auto result = model.addPoints(x, y).value();
     ```
 
 ---
@@ -1430,7 +1543,8 @@ For example:
 
 === "Python"
     ```python
-    result = fl.smooth_online(x, y, update_mode="full")
+    model = fl.OnlineLoess(update_mode="full")
+    result = model.add_points(x, y)
     ```
 
 === "Rust"
@@ -1443,7 +1557,8 @@ For example:
 
 === "Julia"
     ```julia
-    result = smooth_online(x, y, update_mode="full")
+    model = OnlineLoess(update_mode="full")
+    result = add_points(model, x, y)
     ```
 
 === "Node.js"
@@ -1460,5 +1575,6 @@ For example:
     ```cpp
     fastloess::OnlineOptions opts;
     opts.update_mode = "full";
-    auto result = fastloess::online(x, y, opts);
+    fastloess::OnlineLoess model(opts);
+    auto result = model.addPoints(x, y).value();
     ```

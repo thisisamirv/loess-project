@@ -53,15 +53,14 @@ Standard mode for complete datasets. **Supports all features.**
 
 === "Python"
     ```python
-    result = fl.smooth(
-        x, y,
+    result = fl.Loess(
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=True,
         parallel=True
-    )
+    ).fit(x, y)
     ```
 
 === "Rust"
@@ -85,28 +84,27 @@ Standard mode for complete datasets. **Supports all features.**
     ```julia
     using FastLOESS
 
-    result = smooth(
-        x, y,
+    result = fit(Loess(
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=true,
         parallel=true
-    )
+    ), x, y)
     ```
 
 === "Node.js"
     ```javascript
     const fastloess = require('fastloess');
 
-    const result = fastloess.smooth(x, y, {
+    const result = new fastloess.Loess({
         fraction: 0.5,
         iterations: 3,
         confidenceIntervals: 0.95,
         predictionIntervals: 0.95,
         returnDiagnostics: true
-    });
+    }).fit(x, y);
     ```
 
 === "WebAssembly"
@@ -126,7 +124,7 @@ Standard mode for complete datasets. **Supports all features.**
     ```cpp
     #include "fastloess.hpp"
 
-    auto result = fastloess::smooth(x, y, {
+    fastloess::Loess model({
         .fraction = 0.5,
         .iterations = 3,
         .confidence_intervals = 0.95,
@@ -134,6 +132,7 @@ Standard mode for complete datasets. **Supports all features.**
         .return_diagnostics = true,
         .parallel = true
     });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
@@ -184,14 +183,15 @@ Process large datasets in chunks with configurable overlap.
 
 === "Python"
     ```python
-    result = fl.smooth_streaming(
-        x, y,
+    model = fl.StreamingLoess(
         fraction=0.3,
         iterations=2,
         chunk_size=5000,
         overlap=500,
         merge_strategy="average"
     )
+    model.process_chunk(x, y)
+    result = model.finalize()
     ```
 
 === "Rust"
@@ -222,14 +222,15 @@ Process large datasets in chunks with configurable overlap.
     ```julia
     using FastLOESS
 
-    result = smooth_streaming(
-        x, y,
+    model = StreamingLoess(
         fraction=0.3,
         iterations=2,
         chunk_size=5000,
         overlap=500,
         merge_strategy="average"
     )
+    process_chunk(model, x, y)
+    result = finalize(model)
     ```
 
 === "Node.js"
@@ -252,9 +253,9 @@ Process large datasets in chunks with configurable overlap.
 
 === "WebAssembly"
     ```javascript
-    import { StreamingLoess } from 'fastloess-wasm';
+    import { StreamingLoessWasm } from 'fastloess-wasm';
 
-    const processor = new StreamingLoess(
+    const processor = new StreamingLoessWasm(
         { fraction: 0.3, iterations: 2 },
         { chunkSize: 5000, overlap: 500 }
     );
@@ -278,7 +279,9 @@ Process large datasets in chunks with configurable overlap.
     opts.chunk_size = 5000;
     opts.overlap = 500;
 
-    auto result = fastloess::streaming(x, y, opts);
+    fastloess::StreamingLoess stream(opts);
+    (void)stream.processChunk(x, y);
+    auto result = stream.finalize().value();
     ```
 
 ---
@@ -329,14 +332,14 @@ Incremental updates with a sliding window for real-time data.
 
 === "Python"
     ```python
-    result = fl.smooth_online(
-        x, y,
+    model = fl.OnlineLoess(
         fraction=0.2,
         iterations=1,
         window_capacity=100,
         min_points=5,
         update_mode="incremental"
     )
+    result = model.add_points(x, y)
 
     # result contains smoothed values for all points
     print(result["y"])
@@ -367,14 +370,14 @@ Incremental updates with a sliding window for real-time data.
     ```julia
     using FastLOESS
 
-    result = smooth_online(
-        x, y,
+    model = OnlineLoess(
         fraction=0.2,
         iterations=1,
         window_capacity=100,
         min_points=5,
         update_mode="incremental"
     )
+    result = add_points(model, x, y)
     ```
 
 === "Node.js"
@@ -397,9 +400,9 @@ Incremental updates with a sliding window for real-time data.
 
 === "WebAssembly"
     ```javascript
-    import { OnlineLoess } from 'fastloess-wasm';
+    import { OnlineLoessWasm } from 'fastloess-wasm';
 
-    const processor = new OnlineLoess(
+    const processor = new OnlineLoessWasm(
         { fraction: 0.2, iterations: 1 },
         { windowCapacity: 100, minPoints: 5, updateMode: "incremental" }
     );
@@ -424,7 +427,8 @@ Incremental updates with a sliding window for real-time data.
     opts.min_points = 5;
     opts.update_mode = "incremental";
 
-    auto result = fastloess::online(x, y, opts);
+    fastloess::OnlineLoess model(opts);
+    auto result = model.addPoints(x, y).value();
     ```
 
 ---

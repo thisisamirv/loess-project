@@ -68,12 +68,11 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     observed = np.clip(observed, 0, 1)  # Methylation is 0-1
 
     # Smooth with LOESS
-    result = fl.smooth(
-        positions, observed,
+    result = fl.Loess(
         fraction=0.1,           # Small fraction for local detail
         iterations=3,           # Robustness for outliers
         confidence_intervals=0.95
-    )
+    ).fit(positions, observed)
 
     # Plot
     plt.figure(figsize=(12, 5))
@@ -116,12 +115,11 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     using FastLOESS
 
     # positions and observed are your methylation data
-    result = smooth(
-        positions, observed,
+    result = fit(Loess(
         fraction=0.1,
         iterations=3,
         confidence_intervals=0.95
-    )
+    ), positions, observed)
 
     # Smoothed profile in result.y
     # CI bounds in result.confidence_lower/upper
@@ -132,11 +130,11 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     const fl = require('fastloess');
 
     // positions and observed are your methylation data (Float64Array)
-    const result = fl.smooth(positions, observed, {
+    const result = new fl.Loess({
         fraction: 0.1,
         iterations: 3,
         confidenceIntervals: 0.95
-    });
+    }).fit(positions, observed);
 
     // Smoothed profile in result.y
     // CI bounds in result.confidenceLower/Upper
@@ -162,11 +160,8 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     #include "fastloess.hpp"
 
     // positions and observed are std::vector<double>
-    auto result = fastloess::smooth(positions, observed, {
-        .fraction = 0.1,
-        .iterations = 3,
-        .confidence_intervals = 0.95
-    });
+    fastloess::Loess model({ .fraction = 0.1, .iterations = 3, .confidence_intervals = 0.95 });
+    auto result = model.fit(positions, observed).value();
 
     // Smoothed profile in result.yVector()
     // CI bounds in result.confidenceLower()/result.confidenceUpper()
@@ -222,12 +217,11 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     observed = np.random.poisson(true_signal)  # Poisson noise
 
     # Smooth with robustness for sporadic high counts
-    result = fl.smooth(
-        positions, observed.astype(float),
+    result = fl.Loess(
         fraction=0.05,   # Very local smoothing
         iterations=5,    # Strong robustness
         return_residuals=True
-    )
+    ).fit(positions, observed.astype(float))
 
     # Identify peaks (smoothed signal significantly above background)
     threshold = np.percentile(result["y"], 75)
@@ -265,11 +259,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     using FastLOESS
 
     # positions and observed are your ChIP-seq data
-    result = smooth(
-        positions, observed,
-        fraction=0.05,
-        iterations=5
-    )
+    result = fit(Loess(fraction=0.05, iterations=5), positions, observed)
 
     # Find peaks above 75th percentile
     threshold = quantile(result.y, 0.75)
@@ -281,10 +271,10 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     ```javascript
     const fl = require('fastloess');
 
-    const result = fl.smooth(positions, observed, {
+    const result = new fl.Loess({
         fraction: 0.05,
         iterations: 5
-    });
+    }).fit(positions, observed);
 
     // Identify peaks above threshold
     const smoothed = result.y;
@@ -310,16 +300,16 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     ```cpp
     #include "fastloess.hpp"
 
-    auto result = fastloess::smooth(positions, observed, {
-        .fraction = 0.05,
-        .iterations = 5
-    });
+    fastloess::Loess model({ .fraction = 0.05, .iterations = 5 });
+    auto result = model.fit(positions, observed).value();
 
     // Find peaks above threshold
     std::vector<double> peaks;
-    for (size_t i = 0; i < result.size(); ++i) {
-        if (result.y(i) > 25.0) {
-            peaks.push_back(result.x(i));
+    const auto& y_vals = result.yVector();
+    const auto& x_vals = result.xVector();
+    for (size_t i = 0; i < y_vals.size(); ++i) {
+        if (y_vals[i] > 25.0) {
+            peaks.push_back(x_vals[i]);
         }
     }
     ```
@@ -345,13 +335,14 @@ For whole-genome data that doesn't fit in memory:
 === "Python"
     ```python
     # Process chromosome-by-chromosome or in chunks
-    result = fl.smooth_streaming(
-        positions, coverage,
+    model = fl.StreamingLoess(
         fraction=0.05,
         chunk_size=100000,    # 100kb chunks
         overlap=10000,        # 10kb overlap
         merge_strategy="weighted_average"
     )
+    model.process_chunk(positions, coverage)
+    result = model.finalize()
     ```
 
 === "Rust"
@@ -361,12 +352,11 @@ For whole-genome data that doesn't fit in memory:
     let mut model = Loess::new()
         .fraction(0.05)
         .iterations(3)
-        .adapter(Streaming {
-            chunk_size: 100_000,
-            overlap: 10_000,
-            merge_strategy: WeightedAverage,
-        })
-        .build()?;
+        .adapter(Streaming)
+        .chunk_size(100_000)
+        .overlap(10_000)
+        .merge_strategy(WeightedAverage)
+        .build()?;;
 
     // Process chunks from file or stream
     let mut processor = model.processor();
@@ -381,13 +371,14 @@ For whole-genome data that doesn't fit in memory:
     using FastLOESS
 
     # coverage and positions are chromosome-scale vectors
-    result = smooth_streaming(
-        positions, coverage,
+    model = StreamingLoess(
         fraction=0.05,
         chunk_size=100000,
         overlap=10000,
         merge_strategy="weighted_average"
     )
+    process_chunk(model, positions, coverage)
+    result = finalize(model)
     ```
 
 === "Node.js"
@@ -427,11 +418,14 @@ For whole-genome data that doesn't fit in memory:
     #include "fastloess.hpp"
 
     // coverage and positions are chromosome-scale vectors
-    auto result = fastloess::smooth_streaming(
-        positions, coverage,
-        { .fraction = 0.05, .iterations = 3 },
-        { .chunk_size = 100000, .overlap = 10000 }
-    );
+    fastloess::StreamingOptions s_opts;
+    s_opts.fraction = 0.05;
+    s_opts.iterations = 3;
+    s_opts.chunk_size = 100000;
+    s_opts.overlap = 10000;
+    fastloess::StreamingLoess stream(s_opts);
+    (void)stream.processChunk(positions, coverage);
+    auto result = stream.finalize().value();
     ```
 
 ---

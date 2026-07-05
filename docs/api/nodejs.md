@@ -87,6 +87,7 @@ const result = online.addPoints(x, y);
 | `boundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
 | `zeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling strategy |
 | `autoConverge` | `number` | `null` | Auto-convergence tolerance |
+| `customWeights` | `number[]` | `null` | Per-observation case weights (Batch only) |
 | `confidenceIntervals` | `number` | `null` | Confidence level (e.g., 0.95) |
 | `predictionIntervals` | `number` | `null` | Prediction level (e.g., 0.95) |
 | `returnDiagnostics` | `boolean` | `false` | Compute RMSE, MAE, R², AIC |
@@ -180,7 +181,7 @@ const result = online.addPoints(x, y);
 * `"extend"` (default - linear extrapolation)
 * `"reflect"`
 * `"zero"`
-* `"noBoundary"`
+* `"noboundary"`
 
 ### Scaling Methods
 
@@ -190,9 +191,9 @@ const result = online.addPoints(x, y);
 
 ### Zero Weight Fallback
 
-* `"useLocalMean"` (default)
-* `"returnOriginal"`
-* `"returnNone"`
+* `"use_local_mean"` (default)
+* `"return_original"`
+* `"return_none"`
 
 ### Polynomial Degrees
 

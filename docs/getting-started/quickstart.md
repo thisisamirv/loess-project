@@ -34,7 +34,7 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     x = np.linspace(0, 2 * np.pi, 100)
     y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    result = fl.smooth(x, y, fraction=0.3, iterations=3)
+    result = fl.Loess(fraction=0.3, iterations=3).fit(x, y)
 
     print(f"First smoothed value: {result['y'][0]:.4f}  (true: {np.sin(x[0]):.4f})")
     ```
@@ -83,14 +83,14 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Node.js"
 
     ```javascript
-    const { smooth } = require('fastloess');
+    const { Loess } = require('fastloess');
 
     // 100-point noisy sine wave
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    const result = smooth(x, y, { fraction: 0.3, iterations: 3 });
+    const result = new Loess({ fraction: 0.3, iterations: 3 }).fit(x, y);
 
     console.log(`First smoothed: ${result.y[0].toFixed(4)}  (true: ${Math.sin(x[0]).toFixed(4)})`);
     ```
@@ -126,7 +126,8 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
             y[i] = std::sin(x[i]) + ((i * 7 + 3) % 17 / 17.0 - 0.5) * 0.6;
         }
 
-        auto result = fastloess::smooth(x, y, { .fraction = 0.3, .iterations = 3 });
+        fastloess::Loess model({ .fraction = 0.3, .iterations = 3 });
+        auto result = model.fit(x, y).value();
 
         std::cout << "First smoothed: " << result.yVector()[0]
                   << "  (true: " << std::sin(x[0]) << ")\n";
@@ -158,14 +159,13 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Python"
 
     ```python
-    result = fl.smooth(
-        x, y,
+    result = fl.Loess(
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=True
-    )
+    ).fit(x, y)
 
     print("Smoothed:", result["y"])
     print("CI Lower:", result["confidence_lower"])
@@ -198,14 +198,13 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Julia"
 
     ```julia
-    result = smooth(
-        x, y,
+    result = fit(Loess(
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=true
-    )
+    ), x, y)
 
     println("Smoothed: ", result.y)
     println("CI Lower: ", result.confidence_lower)
@@ -216,13 +215,13 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Node.js"
 
     ```javascript
-    const result = fastloess.smooth(x, y, {
+    const result = new fastloess.Loess({
         fraction: 0.5,
         iterations: 3,
         confidenceIntervals: 0.95,
         predictionIntervals: 0.95,
         returnDiagnostics: true
-    });
+    }).fit(x, y);
 
     console.log("Smoothed:", result.y);
     console.log("CI Lower:", result.confidenceLower);
@@ -256,7 +255,7 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     options.return_diagnostics = true;
 
     fastloess::Loess model(options);
-    auto result = model.fit(x, y);
+    auto result = model.fit(x, y).value();
 
     // Access standard C++ vectors
     auto lower = result.confidenceLower();
@@ -297,13 +296,12 @@ LOESS can robustly handle outliers through iterative reweighting:
     ```python
     y_with_outlier = np.array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0])
 
-    result = fl.smooth(
-        x, y_with_outlier,
+    result = fl.Loess(
         fraction=0.5,
         iterations=5,
         robustness_method="bisquare",
         return_robustness_weights=True
-    )
+    ).fit(x, y_with_outlier)
 
     # Check which points were downweighted
     for i, w in enumerate(result["robustness_weights"]):
@@ -342,13 +340,12 @@ LOESS can robustly handle outliers through iterative reweighting:
     ```julia
     y_with_outlier = [2.0, 4.0, 6.0, 50.0, 10.0, 12.0]
 
-    result = smooth(
-        x, y_with_outlier,
+    result = fit(Loess(
         fraction=0.5,
         iterations=5,
         robustness_method="bisquare",
         return_robustness_weights=true
-    )
+    ), x, y_with_outlier)
 
     # Check which points were downweighted
     for (i, w) in enumerate(result.robustness_weights)
@@ -365,12 +362,12 @@ LOESS can robustly handle outliers through iterative reweighting:
 
     const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
 
-    const result = fl.smooth(x, yWithOutlier, {
+    const result = new fl.Loess({
         fraction: 0.5,
         iterations: 5,
         robustnessMethod: "bisquare",
         returnRobustnessWeights: true
-    });
+    }).fit(x, yWithOutlier);
 
     // Outliers will have low robustness weights
     result.robustnessWeights.forEach((w, i) => {
@@ -416,7 +413,7 @@ LOESS can robustly handle outliers through iterative reweighting:
     options.return_robustness_weights = true;
 
     fastloess::Loess model(options);
-    auto result = model.fit(x, y_outlier);
+    auto result = model.fit(x, y_outlier).value();
 
     // Check weights
     auto weights = result.robustnessWeights();
@@ -501,8 +498,10 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 
         let mut model = Loess::new()
             .fraction(0.2)
-            .adapter(Streaming { chunk_size: 1000, overlap: 100, ..Default::default() })
-            .build()?;
+            .adapter(Streaming)
+            .chunk_size(1000)
+            .overlap(100)
+            .build()?;;
 
         for chunk in x.chunks(1000).zip(y.chunks(1000)) {
             model.process_chunk(chunk.0, chunk.1)?;
@@ -603,10 +602,11 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
         }
 
         fastloess::StreamingOptions opts;
+        opts.fraction   = 0.2;
         opts.chunk_size = 1000;
         opts.overlap    = 100;
 
-        fastloess::StreamingLoess model({ .fraction = 0.2 }, opts);
+        fastloess::StreamingLoess model(opts);
 
         for (int start = 0; start <= 4000; start += 1000) {
             int end = std::min(start + 1000, n);
@@ -615,7 +615,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
                 std::vector<double>(y.begin() + start, y.begin() + end)
             );
         }
-        auto result = model.finalize();
+        auto result = model.finalize().value();
         std::cout << "Smoothed " << result.yVector().size() << " points\n";
         return 0;
     }
