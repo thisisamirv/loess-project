@@ -113,7 +113,9 @@ jobs:
         shell: bash
         run: |
           mkdir -p target/release
+          mkdir -p target/release-c
           cp target/x86_64-unknown-linux-gnu/release/libfastloess_cpp.so target/release/libfastloess_cpp.so
+          cp target/x86_64-unknown-linux-gnu/release/libfastloess_cpp.so target/release-c/libfastloess_cpp.so
 
       - name: C++ Binding Tests (ASAN)
         shell: bash
