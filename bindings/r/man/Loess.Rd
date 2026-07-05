@@ -30,55 +30,72 @@ Loess(
 )
 }
 \arguments{
-\item{fraction}{Smoothing fraction (0 to 1). Default: 0.67.}
+\item{fraction}{Smoothing fraction (between 0 and 1).}
 
-\item{iterations}{Robustness iterations. Default: 3.}
+\item{iterations}{Number of robustness iterations (non-negative integer).
+Default: 3.}
 
-\item{weight_function}{Kernel name. Default: "tricube".}
+\item{weight_function}{Kernel weight function. One of \code{"tricube"}
+(default), \code{"gaussian"}, \code{"uniform"}, \code{"cosine"},
+\code{"epanechnikov"}, \code{"biweight"}, \code{"triangle"}.}
 
-\item{robustness_method}{Method: "bisquare", "huber", "talwar".}
+\item{robustness_method}{Outlier downweighting method: \code{"bisquare"}
+(default), \code{"huber"}, or \code{"talwar"}.}
 
-\item{scaling_method}{Scale estimation: "mad", "mar", "mean".}
+\item{scaling_method}{Residual scale estimation for robustness weights:
+\code{"mad"} (default), \code{"mar"}, or \code{"mean"}.}
 
-\item{boundary_policy}{Edge handling: "extend", "reflect", "zero",
-"noboundary".}
+\item{boundary_policy}{Boundary handling strategy: \code{"extend"}
+(default), \code{"reflect"}, \code{"zero"}, or \code{"noboundary"}.}
 
-\item{confidence_intervals}{Confidence level (e.g., 0.95). NULL disables.}
+\item{confidence_intervals}{Confidence level for confidence intervals
+(e.g., 0.95). \code{NULL} (default) disables confidence intervals.}
 
-\item{prediction_intervals}{Prediction level (e.g., 0.95). NULL disables.}
+\item{prediction_intervals}{Confidence level for prediction intervals
+(e.g., 0.95). \code{NULL} (default) disables prediction intervals.}
 
-\item{return_diagnostics}{Return fit metrics. Default: FALSE.}
+\item{return_diagnostics}{Logical; if \code{TRUE}, return fit-quality
+metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.}
 
-\item{return_residuals}{Return residuals. Default: FALSE.}
+\item{return_residuals}{Logical; if \code{TRUE}, return residuals in the
+result. Default: \code{FALSE}.}
 
-\item{return_robustness_weights}{Return weights. Default: FALSE.}
+\item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
+robustness weights. Default: \code{FALSE}.}
 
-\item{zero_weight_fallback}{Fallback: "use_local_mean", "return_original",
-"return_none".}
+\item{zero_weight_fallback}{Fallback policy when all robustness weights drop
+to zero: \code{"use_local_mean"} (default), \code{"return_original"}, or
+\code{"return_none"}.}
 
-\item{auto_converge}{Convergence tolerance. NULL disables.}
+\item{auto_converge}{Convergence tolerance for early stopping of robustness
+iterations. \code{NULL} (default) disables early stopping.}
 
-\item{cv_fractions}{Fractions for cross-validation. NULL disables.}
+\item{cv_fractions}{Numeric vector of candidate fractions for
+cross-validation. \code{NULL} (default) disables CV.}
 
-\item{cv_method}{CV method: "kfold", "loocv".}
+\item{cv_method}{Cross-validation method: \code{"kfold"} (default) or
+\code{"loocv"}.}
 
-\item{cv_k}{Folds for k-fold CV. Default: 5.}
+\item{cv_k}{Number of folds for k-fold CV. Default: 5.}
 
-\item{parallel}{Enable parallel processing. Default: TRUE.}
+\item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
 
-\item{degree}{Polynomial degree: "constant", "linear", "quadratic", etc.
-Default: "linear".}
+\item{degree}{Local polynomial degree: \code{"constant"}, \code{"linear"}
+(default), \code{"quadratic"}, \code{"cubic"}, or \code{"quartic"}.}
 
 \item{dimensions}{Number of predictor dimensions. Default: 1.}
 
-\item{distance_metric}{Distance metric: "normalized", "euclidean", etc.
-Default: "normalized".}
+\item{distance_metric}{Distance metric for neighbourhood computation:
+\code{"normalized"} (default), \code{"euclidean"}, \code{"manhattan"},
+\code{"chebyshev"}, \code{"minkowski"}, or \code{"weighted"}.
+Use \code{"minkowski:p"} to set a custom \emph{p} value.}
 
-\item{surface_mode}{Surface mode: "interpolation" or "direct".
-Default: "interpolation".}
+\item{surface_mode}{Surface evaluation mode: \code{"interpolation"}
+(default) or \code{"direct"}.}
 
-\item{return_se}{Compute hat-matrix statistics (enp, leverage, etc.).
-Default: FALSE.}
+\item{return_se}{Logical; if \code{TRUE}, compute hat-matrix statistics
+(effective degrees of freedom, leverage, standard errors).
+Default: \code{FALSE}.}
 }
 \value{
 A Loess object.

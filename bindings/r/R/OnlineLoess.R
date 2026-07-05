@@ -6,30 +6,11 @@
 #' @srrstats {G2.0} Input validation for fraction, window_capacity, min_points.
 #' @srrstats {G1.6} Sliding window for incremental updates.
 #'
-#' @param fraction Smoothing fraction.
-#' @param window_capacity Max points in sliding window.
-#' @param min_points Minimum points before smoothing.
-#' @param iterations Robustness iterations.
-#' @param weight_function Kernel name. Default: "tricube".
-#' @param robustness_method Method: "bisquare", "huber", "talwar".
-#' @param scaling_method Scale estimation: "mad", "mar", "mean".
-#' @param boundary_policy Edge handling: "extend", "reflect", "zero",
-#'   "noboundary".
-#' @param update_mode Update strategy: "incremental".
-#' @param auto_converge Convergence tolerance. NULL disables.
-#' @param return_robustness_weights Return weights. Default: FALSE.
-#' @param zero_weight_fallback Fallback: "use_local_mean", "return_original",
-#'   "return_none". Default: "use_local_mean".
-#' @param parallel Enable parallel processing. Default: TRUE.
-#' @param degree Polynomial degree: "constant", "linear", "quadratic", etc.
-#'   Default: "linear".
-#' @param dimensions Number of predictor dimensions. Default: 1.
-#' @param distance_metric Distance metric: "normalized", "euclidean",
-#'   "manhattan", "chebyshev", "minkowski", "weighted".
-#'   Use "minkowski:p" for a custom p value. Default: "normalized".
-#' @param surface_mode Surface mode: "interpolation" or "direct".
-#'   Default: "interpolation".
-#' @param return_se Compute hat-matrix statistics. Default: FALSE.
+#' @inheritParams Loess
+#' @param window_capacity Maximum number of points kept in the sliding window.
+#' @param min_points Minimum number of points required before smoothing begins.
+#' @param update_mode Window update strategy. Currently only
+#'   \code{"incremental"} is supported.
 #'
 #' @return An OnlineLoess object.
 #' @examples

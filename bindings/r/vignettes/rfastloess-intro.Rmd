@@ -3,9 +3,8 @@ title: "Introduction to rfastloess"
 author: "Amir Valizadeh"
 date: "`r Sys.Date()`"
 output:
-  BiocStyle::html_document:
+  rmarkdown::html_document:
     toc: true
-    pagetitle: "Introduction to rfastloess"
 vignette: >
   %\VignetteIndexEntry{Introduction to rfastloess}
   %\VignetteEngine{knitr::rmarkdown}
@@ -99,11 +98,11 @@ lines(result_robust$x, result_robust$confidence_upper, col = "blue", lty = 2)
 
 ## Main Classes
 
-| Class              | Use Case                             |
-|--------------------|--------------------------------------|
-| `Loess`           | Primary interface - batch processing |
-| `StreamingLoess`  | Large datasets (>100K points)        |
-| `OnlineLoess`     | Real-time data streams               |
+| Class | Use Case |
+| --- | --- |
+| `Loess` | Primary interface - batch processing |
+| `StreamingLoess` | Large datasets (>100K points) |
+| `OnlineLoess` | Real-time data streams |
 
 ## Learn More
 

@@ -6,34 +6,13 @@
 #' @srrstats {G2.0} Input validation for fraction, chunk_size.
 #' @srrstats {G1.6} Memory-efficient streaming for large datasets.
 #'
-#' @param fraction Smoothing fraction.
-#' @param chunk_size Points per chunk.
-#' @param overlap Overlap between chunks.
-#' @param iterations Robustness iterations.
-#' @param weight_function Kernel name. Default: "tricube".
-#' @param robustness_method Method: "bisquare", "huber", "talwar".
-#' @param scaling_method Scale estimation: "mad", "mar", "mean".
-#' @param boundary_policy Edge handling: "extend", "reflect", "zero",
-#'   "noboundary".
-#' @param auto_converge Convergence tolerance. NULL disables.
-#' @param return_diagnostics Return fit metrics. Default: FALSE.
-#' @param return_residuals Return residuals. Default: FALSE.
-#' @param return_robustness_weights Return weights. Default: FALSE.
-#' @param zero_weight_fallback Fallback: "use_local_mean", "return_original",
-#'   "return_none". Default: "use_local_mean".
-#' @param merge_strategy Strategy for merging overlapping chunk regions:
-#'   "average", "weighted_average", "take_first", "take_last".
-#'   Default: "weighted_average".
-#' @param parallel Enable parallel processing. Default: TRUE.
-#' @param degree Polynomial degree: "constant", "linear", "quadratic", etc.
-#'   Default: "linear".
-#' @param dimensions Number of predictor dimensions. Default: 1.
-#' @param distance_metric Distance metric: "normalized", "euclidean",
-#'   "manhattan", "chebyshev", "minkowski", "weighted".
-#'   Use "minkowski:p" for a custom p value. Default: "normalized".
-#' @param surface_mode Surface mode: "interpolation" or "direct".
-#'   Default: "interpolation".
-#' @param return_se Compute hat-matrix statistics. Default: FALSE.
+#' @inheritParams Loess
+#' @param chunk_size Number of data points per processing chunk.
+#' @param overlap Number of overlapping points between consecutive chunks.
+#'   `NULL` uses the default (10% of `chunk_size`).
+#' @param merge_strategy Strategy for reconciling overlapping chunk regions:
+#'   \code{"weighted_average"} (default), \code{"average"},
+#'   \code{"take_first"}, or \code{"take_last"}.
 #'
 #' @return A StreamingLoess object.
 #' @examples

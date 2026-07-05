@@ -48,6 +48,67 @@ validate_common_args <- function(x, y, fraction, iterations) {
     )
 }
 
+#' Validate the fraction parameter
+#' @noRd
+validate_fraction <- function(fraction) {
+    if (!is.numeric(fraction) || length(fraction) != 1 || is.na(fraction)) {
+        stop("fraction must be a single numeric value")
+    }
+    if (fraction < 0 || fraction > 1) {
+        stop("fraction must be between 0 and 1")
+    }
+}
+
+#' Validate the iterations parameter (optional)
+#' @noRd
+validate_iterations <- function(iterations) {
+    if (is.null(iterations)) {
+        return(invisible(NULL))
+    }
+    cond1 <- !is.numeric(iterations)
+    cond2 <- length(iterations) != 1
+    cond3 <- is.na(iterations)
+    if (cond1 || cond2 || cond3) {
+        stop("iterations must be a single numeric value")
+    }
+    if (iterations < 0) {
+        stop("iterations must be a non-negative integer")
+    }
+}
+
+#' Validate the window_capacity parameter (optional)
+#' @noRd
+validate_window_capacity <- function(window_capacity) {
+    if (is.null(window_capacity)) {
+        return(invisible(NULL))
+    }
+    if (window_capacity <= 0) {
+        stop("window_capacity must be a positive integer")
+    }
+}
+
+#' Validate the min_points parameter (optional)
+#' @noRd
+validate_min_points <- function(min_points) {
+    if (is.null(min_points)) {
+        return(invisible(NULL))
+    }
+    if (min_points < 0) {
+        stop("min_points must be a non-negative integer")
+    }
+}
+
+#' Validate the chunk_size parameter (optional)
+#' @noRd
+validate_chunk_size <- function(chunk_size) {
+    if (is.null(chunk_size)) {
+        return(invisible(NULL))
+    }
+    if (chunk_size <= 0) {
+        stop("chunk_size must be a positive integer")
+    }
+}
+
 #' Validate constructor parameters
 #'
 #' @param fraction Smoothing fraction
@@ -63,32 +124,11 @@ validate_params <- function(
     min_points = NULL,
     chunk_size = NULL
 ) {
-    if (!is.numeric(fraction) || length(fraction) != 1 || is.na(fraction)) {
-        stop("fraction must be a single numeric value")
-    }
-    if (fraction < 0 || fraction > 1) {
-        stop("fraction must be between 0 and 1")
-    }
-    iter_invalid <- !is.null(iterations) && (
-        !is.numeric(iterations) ||
-            length(iterations) != 1 ||
-            is.na(iterations)
-    )
-    if (iter_invalid) {
-        stop("iterations must be a single numeric value")
-    }
-    if (!is.null(iterations) && iterations < 0) {
-        stop("iterations must be a non-negative integer")
-    }
-    if (!is.null(window_capacity) && window_capacity <= 0) {
-        stop("window_capacity must be a positive integer")
-    }
-    if (!is.null(min_points) && min_points < 0) {
-        stop("min_points must be a non-negative integer")
-    }
-    if (!is.null(chunk_size) && chunk_size <= 0) {
-        stop("chunk_size must be a positive integer")
-    }
+    validate_fraction(fraction)
+    validate_iterations(iterations)
+    validate_window_capacity(window_capacity)
+    validate_min_points(min_points)
+    validate_chunk_size(chunk_size)
 }
 
 #' Coerce optional values to Nullable

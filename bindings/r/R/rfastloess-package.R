@@ -36,6 +36,5 @@
 #' lines(result$x, result$y, col = "red", lwd = 2)
 #'
 #' @useDynLib rfastloess, .registration = TRUE
-#' @importFrom stats smooth
-#' @importFrom BiocGenerics normalize
+#' @importFrom graphics lines
 "_PACKAGE"

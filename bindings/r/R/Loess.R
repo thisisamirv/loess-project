@@ -14,34 +14,51 @@
 #' @srrstats {RE4.11} Goodness-of-fit metrics via return_diagnostics.
 #' @srrstats {RE5.0} O(n) scaling documented in README.
 #'
-#' @param fraction Smoothing fraction (0 to 1). Default: 0.67.
-#' @param iterations Robustness iterations. Default: 3.
-#' @param weight_function Kernel name. Default: "tricube".
-#' @param robustness_method Method: "bisquare", "huber", "talwar".
-#' @param scaling_method Scale estimation: "mad", "mar", "mean".
-#' @param boundary_policy Edge handling: "extend", "reflect", "zero",
-#'   "noboundary".
-#' @param confidence_intervals Confidence level (e.g., 0.95). NULL disables.
-#' @param prediction_intervals Prediction level (e.g., 0.95). NULL disables.
-#' @param return_diagnostics Return fit metrics. Default: FALSE.
-#' @param return_residuals Return residuals. Default: FALSE.
-#' @param return_robustness_weights Return weights. Default: FALSE.
-#' @param zero_weight_fallback Fallback: "use_local_mean", "return_original",
-#'   "return_none".
-#' @param auto_converge Convergence tolerance. NULL disables.
-#' @param cv_fractions Fractions for cross-validation. NULL disables.
-#' @param cv_method CV method: "kfold", "loocv".
-#' @param cv_k Folds for k-fold CV. Default: 5.
-#' @param parallel Enable parallel processing. Default: TRUE.
-#' @param degree Polynomial degree: "constant", "linear", "quadratic", etc.
-#'   Default: "linear".
+#' @param fraction Smoothing fraction (between 0 and 1).
+#' @param iterations Number of robustness iterations (non-negative integer).
+#'   Default: 3.
+#' @param weight_function Kernel weight function. One of \code{"tricube"}
+#'   (default), \code{"gaussian"}, \code{"uniform"}, \code{"cosine"},
+#'   \code{"epanechnikov"}, \code{"biweight"}, \code{"triangle"}.
+#' @param robustness_method Outlier downweighting method: \code{"bisquare"}
+#'   (default), \code{"huber"}, or \code{"talwar"}.
+#' @param scaling_method Residual scale estimation for robustness weights:
+#'   \code{"mad"} (default), \code{"mar"}, or \code{"mean"}.
+#' @param boundary_policy Boundary handling strategy: \code{"extend"}
+#'   (default), \code{"reflect"}, \code{"zero"}, or \code{"noboundary"}.
+#' @param auto_converge Convergence tolerance for early stopping of robustness
+#'   iterations. \code{NULL} (default) disables early stopping.
+#' @param return_diagnostics Logical; if \code{TRUE}, return fit-quality
+#'   metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.
+#' @param return_residuals Logical; if \code{TRUE}, return residuals in the
+#'   result. Default: \code{FALSE}.
+#' @param return_robustness_weights Logical; if \code{TRUE}, return per-point
+#'   robustness weights. Default: \code{FALSE}.
+#' @param zero_weight_fallback Fallback policy when all robustness weights drop
+#'   to zero: \code{"use_local_mean"} (default), \code{"return_original"}, or
+#'   \code{"return_none"}.
+#' @param parallel Logical; enable parallel processing. Default: \code{TRUE}.
+#' @param degree Local polynomial degree: \code{"constant"}, \code{"linear"}
+#'   (default), \code{"quadratic"}, \code{"cubic"}, or \code{"quartic"}.
 #' @param dimensions Number of predictor dimensions. Default: 1.
-#' @param distance_metric Distance metric: "normalized", "euclidean", etc.
-#'   Default: "normalized".
-#' @param surface_mode Surface mode: "interpolation" or "direct".
-#'   Default: "interpolation".
-#' @param return_se Compute hat-matrix statistics (enp, leverage, etc.).
-#'   Default: FALSE.
+#' @param distance_metric Distance metric for neighbourhood computation:
+#'   \code{"normalized"} (default), \code{"euclidean"}, \code{"manhattan"},
+#'   \code{"chebyshev"}, \code{"minkowski"}, or \code{"weighted"}.
+#'   Use \code{"minkowski:p"} to set a custom \emph{p} value.
+#' @param surface_mode Surface evaluation mode: \code{"interpolation"}
+#'   (default) or \code{"direct"}.
+#' @param return_se Logical; if \code{TRUE}, compute hat-matrix statistics
+#'   (effective degrees of freedom, leverage, standard errors).
+#'   Default: \code{FALSE}.
+#' @param confidence_intervals Confidence level for confidence intervals
+#'   (e.g., 0.95). \code{NULL} (default) disables confidence intervals.
+#' @param prediction_intervals Confidence level for prediction intervals
+#'   (e.g., 0.95). \code{NULL} (default) disables prediction intervals.
+#' @param cv_fractions Numeric vector of candidate fractions for
+#'   cross-validation. \code{NULL} (default) disables CV.
+#' @param cv_method Cross-validation method: \code{"kfold"} (default) or
+#'   \code{"loocv"}.
+#' @param cv_k Number of folds for k-fold CV. Default: 5.
 #'
 #' @return A Loess object.
 #' @examples
@@ -78,7 +95,6 @@ Loess <- function(
 ) {
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLoess$new, env_args(loess_params))
-
     # Return a wrapper that coerces inputs for methods
     structure(
         list(

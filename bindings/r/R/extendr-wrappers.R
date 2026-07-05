@@ -44,12 +44,14 @@ RStreamingLoess$new <- function(
     weight_function, robustness_method,
     scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
     return_diagnostics, return_residuals, return_robustness_weights,
-    merge_strategy, parallel, degree, dimensions, distance_metric, surface_mode, return_se
+    merge_strategy, parallel, degree, dimensions,
+    distance_metric, surface_mode, return_se
 ) {
     .Call(
         wrap__RStreamingLoess__new, fraction, chunk_size, overlap, iterations,
         weight_function, robustness_method, scaling_method,
-        boundary_policy, zero_weight_fallback, auto_converge, return_diagnostics,
+        boundary_policy, zero_weight_fallback,
+        auto_converge, return_diagnostics,
         return_residuals, return_robustness_weights, merge_strategy, parallel,
         degree, dimensions, distance_metric, surface_mode, return_se
     )
