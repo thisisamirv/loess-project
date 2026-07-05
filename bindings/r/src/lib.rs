@@ -270,11 +270,11 @@ impl RLoess {
 
     /// Fit the model to data, with optional user-defined case weights.
     ///
-    /// `weights` must be the same length as `y`. Each weight multiplies the local
-    /// kernel weight for that observation: analogous to `weights` in `stats::loess`.
-    fn fit(&self, x: &[f64], y: &[f64], weights: Nullable<Vec<f64>>) -> Result<List> {
+    /// `custom_weights` must be the same length as `y`. Each weight multiplies the
+    /// local kernel weight: analogous to `weights` in `stats::loess`.
+    fn fit(&self, x: &[f64], y: &[f64], custom_weights: Nullable<Vec<f64>>) -> Result<List> {
         let mut builder = self.builder.clone();
-        if let NotNull(w) = weights {
+        if let NotNull(w) = custom_weights {
             builder = builder.custom_weights(w);
         }
         let result = builder
