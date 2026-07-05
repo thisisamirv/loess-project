@@ -225,12 +225,12 @@ _loess_impl:
 ensure-llvm-cov:
 	@cargo llvm-cov --version > /dev/null 2>&1 || (echo "Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov && cargo llvm-cov install-llvm-tools)
 
-loess-coverage: ensure-llvm-cov
+loess-rs-coverage: ensure-llvm-cov
 	@echo "Running $(LOESS_PKG) coverage..."
 	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --workspace --test $(LOESS_PKG) --all-features \
 		--ignore-filename-regex 'crates[/\\]fastLoess[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
 
-loess-clean:
+loess-rs-clean:
 	@echo "Cleaning $(LOESS_PKG) crate..."
 	@cargo clean -p $(LOESS_PKG)
 	@rm -rf $(LOESS_DIR)/coverage_html
@@ -848,10 +848,10 @@ cpp-clean:
 # ==============================================================================
 # Examples
 # ==============================================================================
-examples: examples-loess examples-fastLoess examples-python examples-r examples-julia examples-nodejs examples-cpp
+examples: examples-loess-rs examples-fastLoess examples-python examples-r examples-julia examples-nodejs examples-cpp
 	@echo "All examples completed successfully!"
 
-examples-loess:
+examples-loess-rs:
 	@echo "Running $(LOESS_PKG) examples..."
 	@echo "=============================================================================="
 	@echo "Running examples (no-default-features)..."
@@ -970,4 +970,4 @@ all-clean: r-clean loess-rs-clean fastLoess-clean python-clean julia-clean nodej
 	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLoess/target crates/loess-rs/target .vscode tests/.pytest_cache local_*.tar.gz bindings/r/.r-lib bindings/r/docs
 	@echo "All clean completed!"
 
-.PHONY: loess-rs loess-rs-coverage loess-rs-clean fastLoess fastLoess-coverage fastLoess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean examples examples-loess examples-fastLoess examples-python examples-r examples-julia examples-nodejs examples-cpp
+.PHONY: loess-rs loess-rs-coverage loess-rs-clean fastLoess fastLoess-coverage fastLoess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean examples examples-loess-rs examples-fastLoess examples-python examples-r examples-julia examples-nodejs examples-cpp
