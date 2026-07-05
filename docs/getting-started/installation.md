@@ -53,21 +53,20 @@ Install the LOESS library for your preferred language.
     === "From crates.io"
 
     ```toml
-    # loess (no_std compatible)
+    # loess-rs (no_std compatible)
     [dependencies]
-    loess = "1.3"
+    loess-rs = "1.3"
 
     # fastLoess (parallel)
     [dependencies]
-    fastLoess = { version = "1.3", features = ["cpu"] }
+    fastLoess = { version = "1.3", features = ["dev"] }
     ```
 
     === "Feature Flags"
 
 | Crate | Feature | Description |
 | --- | --- | --- |
-| `loess` | `std` | Enable standard library (default) |
-| `fastLoess` | `cpu` | Enable CPU parallelism via Rayon |
+| `loess-rs` | `std` | Enable standard library (default) |
 
 === "Julia"
 
@@ -212,7 +211,7 @@ Install the LOESS library for your preferred language.
 === "Rust"
 
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
     
     fn main() -> Result<(), LoessError> {
         let x = vec![1.0, 2.0, 3.0];

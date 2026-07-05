@@ -94,7 +94,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "Rust"
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
 
     let positions: Vec<f64> = /* sorted genomic positions */;
     let observed: Vec<f64> = /* methylation levels 0–1 */;
@@ -237,7 +237,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
 === "Rust"
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
 
     let positions: Vec<f64> = (0..1000).map(|i| i as f64 * 10.0).collect(); // 0 to 9990 step 10
     let observed: Vec<f64> = /* ChIP-seq counts */;
@@ -356,7 +356,7 @@ For whole-genome data that doesn't fit in memory:
 
 === "Rust"
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
 
     let mut model = Loess::new()
         .fraction(0.05)

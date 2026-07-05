@@ -1,6 +1,6 @@
-# fastLoess & loess Rust API Reference
+# fastLoess & loess-rs Rust API Reference
 
-The Rust bindings provide the core implementation and high-performance extensions. The API uses a Builder pattern consistent across both the `loess` (pure Rust) and `fastLoess` (accelerated) crates.
+The Rust bindings provide the core implementation and high-performance extensions. The API uses a Builder pattern consistent across both the `loess-rs` (pure Rust) and `fastLoess` (accelerated) crates.
 
 ## Structs & Usage
 

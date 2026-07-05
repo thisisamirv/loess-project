@@ -73,13 +73,13 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 ### Speed
 
-The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **200-327x faster** than Python's `statsmodels.loess` and **2-3x faster** than R's `loess`.
+The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **2-3x faster** than R's `loess`.
 
 For more details on the performance comparison, see the [BENCHMARKS](https://github.com/thisisamirv/loess-project/blob/main/BENCHMARKS.md) file.
 
 ### Robustness
 
-This implementation is *more robust* than R's `loess` and Python's `statsmodels` due to two key design choices:
+This implementation is *more robust* than R's `loess` due to two key design choices:
 
 **MAD-Based Scale Estimation:**
 
@@ -89,7 +89,7 @@ For robustness weight calculations, this crate uses *Median Absolute Deviation (
 s = median(|r_i - median(r)|)
 ```
 
-In contrast, `statsmodels` and R's `loess` uses the median of absolute residuals (MAR):
+In contrast, R's `loess` uses the median of absolute residuals (MAR):
 
 ```text
 s = median(|r_i|)
@@ -108,7 +108,7 @@ This crate applies a range of different *boundary policies* at dataset edges:
 - **Zero**: Pads with zeros (useful for signal processing).
 - **NoBoundary**: Original Cleveland behavior
 
-`statsmodels` and R's `loess` do not apply boundary padding, which can lead to:
+R's `loess` does not apply boundary padding, which can lead to:
 
 - Biased estimates near boundaries due to asymmetric local neighborhoods.
 - Increased variance at the edges of the smoothed curve.
@@ -117,21 +117,21 @@ This crate applies a range of different *boundary policies* at dataset edges:
 
 A variety of features, supporting a range of use cases:
 
-| Feature              | This package  | statsmodels  | R (stats)    |
-|----------------------|:-------------:|:------------:|:------------:|
-| Kernel               | 7 options     | only Tricube | only Tricube |
-| Robustness Weighting | 3 options     | only Huber   | only Huber   |
-| Scale Estimation     | 2 options     | only MAR     | only MAR     |
-| Boundary Padding     | 4 options     | no padding   | no padding   |
-| Zero Weight Fallback | 3 options     | no           | no           |
-| Auto Convergence     | yes           | no           | no           |
-| Online Mode          | yes           | no           | no           |
-| Streaming Mode       | yes           | no           | no           |
-| Confidence Intervals | yes           | no           | no           |
-| Prediction Intervals | yes           | no           | no           |
-| Cross-Validation     | 2 options     | no           | no           |
-| Parallel Execution   | yes           | no           | no           |
-| `no-std` Support     | yes           | no           | no           |
+| Feature              | This package  | R (stats)    |
+|----------------------|:-------------:|:------------:|
+| Kernel               | 7 options     | only Tricube |
+| Robustness Weighting | 3 options     | only Huber   |
+| Scale Estimation     | 2 options     | only MAR     |
+| Boundary Padding     | 4 options     | no padding   |
+| Zero Weight Fallback | 3 options     | no           |
+| Auto Convergence     | yes           | no           |
+| Online Mode          | yes           | no           |
+| Streaming Mode       | yes           | no           |
+| Confidence Intervals | yes           | no           |
+| Prediction Intervals | yes           | no           |
+| Cross-Validation     | 2 options     | no           |
+| Parallel Execution   | yes           | no           |
+| `no-std` Support     | yes           | no           |
 
 
 ## Validation

@@ -6,7 +6,7 @@
 >
 > - [R](#r)
 > - [Python](#python)
-> - [Rust (loess)](#rust-loess-no_std-compatible)
+> - [Rust (loess-rs)](#rust-loess-rs-no_std-compatible)
 > - [Rust (fastLoess)](#rust-fastloess-parallel)
 > - [Julia](#julia)
 > - [Node.js](#nodejs)
@@ -43,13 +43,13 @@ pip install fastloess
 conda install -c conda-forge fastloess
 ```
 
-# Rust (loess, no_std compatible)
+# Rust (loess-rs, no_std compatible)
 
 **From crates.io:**
 
 ```toml
 [dependencies]
-loess = "1.1"
+loess-rs = "1.1"
 ```
 
 # Rust (fastLoess, parallel)
@@ -58,7 +58,7 @@ loess = "1.1"
 
 ```toml
 [dependencies]
-fastLoess = { version = "1.1", features = ["cpu"] }
+fastLoess = { version = "1.1", features = ["dev"] }
 ```
 
 # Julia

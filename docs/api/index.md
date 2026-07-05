@@ -25,7 +25,7 @@ Language-specific API documentation.
 
     ---
 
-    `loess` and `fastLoess` crate documentation
+    `loess-rs` and `fastLoess` crate documentation
 
     [:octicons-arrow-right-24: Rust API](rust.md)
 

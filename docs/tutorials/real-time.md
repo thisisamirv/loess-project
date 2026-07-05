@@ -57,7 +57,7 @@ For true real-time applications where each point must be processed immediately.
 
 === "Rust"
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
 
     let mut processor = Loess::new()
         .fraction(0.3)

@@ -57,7 +57,7 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
 
 === "Rust"
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
 
     let n = 500usize;
     let t: Vec<f64> = (0..n).map(|i| i as f64 * 100.0 / (n - 1) as f64).collect();
@@ -559,7 +559,7 @@ Biological application:
 
 === "Rust"
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
     use std::f64::consts::PI;
 
     let hours: Vec<f64> = (0..49).map(|i| i as f64 * 0.5).collect(); // 0.0..24.0 step 0.5

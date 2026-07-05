@@ -235,7 +235,7 @@ fn test_streaming_finalize_without_chunks() {
     assert!(res.x.is_empty());
 }
 
-/// A streaming run with `parallel(true)` exercises the `#[cfg(feature = "cpu")]`
+/// A streaming run with `parallel(true)` exercises the `#[cfg(feature = "dev")]`
 /// parallel-callback setup inside `process_chunk()`.
 #[test]
 fn test_streaming_parallel_true() {
@@ -280,7 +280,7 @@ fn test_streaming_reset_with_processor() {
 }
 
 /// Explicitly setting `parallel(true)` on the Online adapter exercises the
-/// `#[cfg(feature = "cpu")]` callback-injection block in `build()`.
+/// `#[cfg(feature = "dev")]` callback-injection block in `build()`.
 #[test]
 fn test_online_parallel_true() {
     let mut processor = Loess::new()

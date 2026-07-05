@@ -20,32 +20,13 @@ LOESS is a nonparametric regression method that fits smooth curves through scatt
 
 ### Speed
 
-The `loess` project crushes the competition in terms of speed, wether in single-threaded or multi-threaded parallel execution.
+The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **2-3x faster** than R's `loess`.
 
-Speedup relative to Python's `statsmodels.loess` (higher is better):
-
-| Category | statsmodels | R (stats) | Serial | Parallel |
-| --- | --- | --- | --- | --- |
-| **Clustered** | 163ms | 83× | 203× | **433×** |
-| **Constant Y** | 134ms | 92× | 212× | **410×** |
-| **Delta**<br/>(large–none) | 105ms | 2× | 4× | 6× |
-| **Extreme Outliers** | 489ms | 106× | 201× | **388×** |
-| **Financial**<br/>(500–10K) | 106ms | 105× | 252× | **293×** |
-| **Fraction**<br/>(0.05–0.67) | 221ms | 104× | 228× | **391×** |
-| **Genomic**<br/>(1K–50K) | 1833ms | 7× | 9× | 20× |
-| **High Noise** | 435ms | 133× | 134× | **375×** |
-| **Iterations**<br/>(0–10) | 204ms | 115× | 224× | **386×** |
-| **Scale**<br/>(1K–50K) | 1841ms | 264× | 487× | **581×** |
-| **Scientific**<br/>(500–10K) | 167ms | 109× | 205× | **314×** |
-| **Scale Large**\*<br/>(100K–2M) | — | — | 1× | **1.4×** |
-
-\*Scale Large benchmarks are relative to Serial (statsmodels cannot handle these sizes)
-
-*The numbers are the average across a range of scenarios for each category (e.g., Delta from none, to small, medium, and large).*
+For detailed benchmark comparisons, see the [BENCHMARKS](https://github.com/thisisamirv/loess-project/blob/main/BENCHMARKS.md) file.
 
 ### Robustness
 
-This implementation is *more robust* than R's `loess` and Python's `statsmodels` due to two key design choices:
+This implementation is *more robust* than R's `loess` due to two key design choices:
 
 **MAD-Based Scale Estimation:**
 
@@ -53,7 +34,7 @@ For robustness weight calculations, this crate uses *Median Absolute Deviation (
 
 $$s = \text{median}(|r_i - \text{median}(r)|)$$
 
-In contrast, `statsmodels` and R's `loess` uses the median of absolute residuals (MAR):
+In contrast, R's `loess` uses the median of absolute residuals (MAR):
 
 $$s = \text{median}(|r_i|)$$
 
@@ -70,7 +51,7 @@ This crate applies a range of different *boundary policies* at dataset edges:
 - **Zero**: Pads with zeros (useful for signal processing).
 - **NoBoundary**: Original Cleveland behavior
 
-`statsmodels` and R's `loess` do not apply boundary padding, which can lead to:
+R's `loess` does not apply boundary padding, which can lead to:
 
 - Biased estimates near boundaries due to asymmetric local neighborhoods.
 - Increased variance at the edges of the smoothed curve.
@@ -79,21 +60,21 @@ This crate applies a range of different *boundary policies* at dataset edges:
 
 A variety of features, supporting a range of use cases:
 
-| Feature | This package | statsmodels | R (stats) |
+| Feature | This package | R (stats) |
 | --- | --- | --- | --- |
-| Kernel | 7 options | only Tricube | only Tricube |
-| Robustness Weighting | 3 options | only Huber | only Huber |
-| Scale Estimation | 2 options | only MAR | only MAR |
-| Boundary Padding | 4 options | no padding | no padding |
-| Zero Weight Fallback | 3 options | no | no |
-| Auto Convergence | yes | no | no |
-| Online Mode | yes | no | no |
-| Streaming Mode | yes | no | no |
-| Confidence Intervals | yes | no | no |
-| Prediction Intervals | yes | no | no |
-| Cross-Validation | 2 options | no | no |
-| Parallel Execution | yes | no | no |
-| `no-std` Support | yes | no | no |
+| Kernel | 7 options | only Tricube |
+| Robustness Weighting | 3 options | only Huber |
+| Scale Estimation | 2 options | only MAR |
+| Boundary Padding | 4 options | no padding |
+| Zero Weight Fallback | 3 options | no |
+| Auto Convergence | yes | no |
+| Online Mode | yes | no |
+| Streaming Mode | yes | no |
+| Confidence Intervals | yes | no |
+| Prediction Intervals | yes | no |
+| Cross-Validation | 2 options | no |
+| Parallel Execution | yes | no |
+| `no-std` Support | yes | no |
 
 ## Installation
 
@@ -131,18 +112,18 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 
     Add the crate to your `Cargo.toml`:
 
-    === "loess (no_std compatible)"
+    === "loess-rs (no_std compatible)"
 
         ```toml
         [dependencies]
-        loess = "0.99"
+        loess-rs = "0.99"
         ```
 
     === "fastLoess (parallel)"
 
         ```toml
         [dependencies]
-        fastLoess = { version = "0.99", features = ["cpu"] }
+        fastLoess = { version = "0.99", features = ["dev"] }
         ```
 
 === "Julia"
@@ -227,7 +208,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 === "Rust"
 
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
 
     let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];

@@ -80,9 +80,9 @@ The project is organized as a Cargo workspace with separate targets for each com
 
 ```bash
 # loess-rs crate (core algorithms)
-make loess          # Format, lint, build, test, examples
-make loess-coverage # Run coverage
-make loess-clean    # Clean build artifacts
+make loess-rs          # Format, lint, build, test, examples
+make loess-rs-coverage # Run coverage
+make loess-rs-clean    # Clean build artifacts
 
 # fastLoess crate (high-level API with adapters)
 make fastLoess          # Format, lint, build, test, examples
@@ -108,7 +108,7 @@ make r-clean    # Clean build artifacts
 ### Full Workspace
 
 ```bash
-make all       # Run checks for all components (loess, fastLoess, python, r)
+make all       # Run checks for all components (loess-rs, fastLoess, python, r)
 make all-clean # Clean all build artifacts
 make docs      # Build MkDocs documentation
 make docs-serve # Serve documentation locally

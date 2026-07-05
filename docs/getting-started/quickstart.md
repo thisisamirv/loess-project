@@ -42,7 +42,7 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Rust"
 
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
     use std::f64::consts::TAU;
 
     fn main() -> Result<(), LoessError> {
@@ -176,7 +176,7 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Rust"
 
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
 
     let model = Loess::new()
         .fraction(0.5)
@@ -488,7 +488,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 === "Rust"
 
     ```rust
-    use loess::prelude::*;
+    use loess_rs::prelude::*;
     use std::f64::consts::PI;
 
     fn main() -> Result<(), LoessError> {
