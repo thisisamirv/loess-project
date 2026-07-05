@@ -55,9 +55,9 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 ---
 
-## LOESS vs. LOESS
+## LOESS vs. LOWESS
 
-| Feature | LOESS (This Crate) | LOESS |
+| Feature | LOESS (This Crate) | LOWESS |
 | --- | --- | --- |
 | **Polynomial Degree** | Linear, Quadratic, Cubic, Quartic | Linear (Degree 1) |
 | **Dimensions** | Multivariate (n-D support) | Univariate (1-D only) |
@@ -65,7 +65,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
 > [!TIP]
-> **Note:** For a **LOESS** implementation, use [`loess-project`](https://github.com/thisisamirv/loess-project).
+> **Note:** For a **LOWESS** implementation, use [`lowess-project`](https://github.com/thisisamirv/lowess-project).
 
 ---
 
@@ -121,7 +121,7 @@ A variety of features, supporting a range of use cases:
 |----------------------|:-------------:|:------------:|
 | Kernel               | 7 options     | only Tricube |
 | Robustness Weighting | 3 options     | only Huber   |
-| Scale Estimation     | 2 options     | only MAR     |
+| Scale Estimation     | 3 options     | only MAR     |
 | Boundary Padding     | 4 options     | no padding   |
 | Zero Weight Fallback | 3 options     | no           |
 | Auto Convergence     | yes           | no           |

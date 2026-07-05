@@ -64,7 +64,7 @@ A variety of features, supporting a range of use cases:
 | --- | --- | --- |
 | Kernel | 7 options | only Tricube |
 | Robustness Weighting | 3 options | only Huber |
-| Scale Estimation | 2 options | only MAR |
+| Scale Estimation | 3 options | only MAR |
 | Boundary Padding | 4 options | no padding |
 | Zero Weight Fallback | 3 options | no |
 | Auto Convergence | yes | no |
