@@ -226,6 +226,9 @@ function convert_result(c_result::CJlLoessResult)
         error("fastloess error: result arrays are null")
     end
 
+    x = x::Vector{Float64}
+    y = y::Vector{Float64}
+
     standard_errors = ptr_to_vector(c_result.standard_errors, n)
     confidence_lower = ptr_to_vector(c_result.confidence_lower, n)
     confidence_upper = ptr_to_vector(c_result.confidence_upper, n)
@@ -388,7 +391,7 @@ mutable struct Loess
         surface_mode::String = "interpolation",
         return_se::Bool = false,
     )
-        cv_ptr = isempty(cv_fractions) ? C_NULL : pointer(cv_fractions)
+        cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
         cv_len = length(cv_fractions)
 
         handle = @ccall libfastloess.jl_loess_new(
