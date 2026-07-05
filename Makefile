@@ -974,6 +974,10 @@ docs-serve:
 	@if [ ! -d "$(DOCS_VENV)" ]; then $(PYTHON) -m venv $(DOCS_VENV); fi
 	@. $(DOCS_VENV)/$(if $(filter $(HOST_PLATFORM),windows),Scripts,bin)/activate && pip install -q -r docs/requirements.txt && mkdocs serve
 
+docs-test:
+	@echo "Running doc snippet tests..."
+	$(PYTHON) dev/verify_snippets.py
+
 docs-clean:
 	@echo "Cleaning documentation build..."
 	@rm -rf site/ $(DOCS_VENV)/
@@ -994,4 +998,4 @@ all-clean: r-clean loess-rs-clean fastLoess-clean python-clean julia-clean nodej
 	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLoess/target crates/loess-rs/target .vscode tests/.pytest_cache local_*.tar.gz bindings/r/.r-lib bindings/r/docs
 	@echo "All clean completed!"
 
-.PHONY: loess-rs loess-rs-coverage loess-rs-clean fastLoess fastLoess-coverage fastLoess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-clean all all-coverage all-clean examples examples-loess-rs examples-fastLoess examples-python examples-r examples-julia examples-nodejs examples-cpp
+.PHONY: loess-rs loess-rs-coverage loess-rs-clean fastLoess fastLoess-coverage fastLoess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-test docs-clean all all-coverage all-clean examples examples-loess-rs examples-fastLoess examples-python examples-r examples-julia examples-nodejs examples-cpp
