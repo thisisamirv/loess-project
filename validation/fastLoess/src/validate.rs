@@ -72,11 +72,7 @@ fn process_file(input_path: &Path, output_dir: &Path) -> Result<(), Box<dyn Erro
                 .and_then(|v| v.get("surface"))
                 .and_then(|v| v.as_str())
                 == Some("direct");
-        if is_direct {
-            Direct
-        } else {
-            Interpolation
-        }
+        if is_direct { Direct } else { Interpolation }
     } else {
         Interpolation
     };
