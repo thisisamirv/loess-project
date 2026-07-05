@@ -78,7 +78,7 @@ jobs:
             --target x86_64-unknown-linux-gnu \
             -p loess-project-tests \
             --test fastLoess \
-            --features cpu
+            --features dev
 
       - name: Build Native Bindings (ASAN)
         env:

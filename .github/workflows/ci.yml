@@ -88,7 +88,7 @@ jobs:
       - name: "Rust: Clippy"
         run: |
           cargo clippy -p loess-rs --all-targets -- -D warnings
-          cargo clippy -p fastLoess --all-targets --features cpu -- -D warnings
+          cargo clippy -p fastLoess --all-targets --features dev -- -D warnings
 
       - name: "Rust: Lowess Tests"
         run: |
@@ -100,17 +100,17 @@ jobs:
 
       - name: "Rust: fastLoess Build"
         run: |
-          cargo build -p fastLoess --features cpu
+          cargo build -p fastLoess --features dev
 
       - name: "Rust: fastLoess Tests"
         run: |
-          cargo test -q -p loess-project-tests --test fastLoess --features cpu
+          cargo test -q -p loess-project-tests --test fastLoess --features dev
         shell: bash
 
       - name: "Rust: Documentation"
         run: |
           cargo doc -p loess-rs --no-deps
-          cargo doc -p fastLoess --no-deps --features cpu
+          cargo doc -p fastLoess --no-deps --features dev
         env:
           RUSTDOCFLAGS: -D warnings
 
@@ -119,7 +119,7 @@ jobs:
           for example in examples/loess/*.rs examples/fastLoess/*.rs; do
             name=$(basename "$example" .rs)
             echo "Running example: $name"
-            cargo run -p examples --example "$name" --features cpu
+            cargo run -p examples --example "$name" --features dev
           done
         shell: bash
 
