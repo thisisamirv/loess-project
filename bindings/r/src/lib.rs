@@ -120,8 +120,9 @@ fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
         "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
         "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
         "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
+        "weighted" => Ok(DistanceMetric::Weighted(Vec::new())),
         _ => Err(Error::Other(format!(
-            "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski",
+            "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski, weighted",
             name
         ))),
     }
@@ -195,8 +196,13 @@ impl RLoess {
         degree: &str,
         dimensions: i32,
         distance_metric: &str,
+        weighted_metric_weights: Nullable<Vec<f64>>,
         surface_mode: &str,
         return_se: bool,
+        cell: Nullable<f64>,
+        interpolation_vertices: Nullable<i32>,
+        boundary_degree_fallback: Nullable<bool>,
+        cv_seed: Nullable<i32>,
     ) -> Result<Self> {
         let wf = parse_weight_function(weight_function)?;
         let rm = parse_robustness_method(robustness_method)?;
@@ -233,7 +239,15 @@ impl RLoess {
         }
 
         let deg = parse_polynomial_degree(degree)?;
-        let dm = parse_distance_metric(distance_metric)?;
+        let dm = if distance_metric.to_lowercase() == "weighted" {
+            let w = match weighted_metric_weights {
+                NotNull(v) => v,
+                Null => Vec::new(),
+            };
+            DistanceMetric::Weighted(w)
+        } else {
+            parse_distance_metric(distance_metric)?
+        };
         let surf = parse_surface_mode(surface_mode)?;
         builder = builder.degree(deg);
         builder = builder.dimensions(dimensions as usize);
@@ -242,15 +256,32 @@ impl RLoess {
         if return_se {
             builder = builder.return_se();
         }
+        if let NotNull(c) = cell {
+            builder = builder.cell(c);
+        }
+        if let NotNull(v) = interpolation_vertices {
+            builder = builder.interpolation_vertices(v as usize);
+        }
+        if let NotNull(bdf) = boundary_degree_fallback {
+            builder = builder.boundary_degree_fallback(bdf);
+        }
 
         // Cross-validation if fractions are provided
         if let NotNull(fractions) = cv_fractions {
+            let seed = match cv_seed {
+                NotNull(s) => Some(s as u64),
+                Null => None,
+            };
             match cv_method.to_lowercase().as_str() {
                 "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    builder = builder.cross_validate(LOOCV(&fractions));
+                    let cv = LOOCV(&fractions);
+                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                    builder = builder.cross_validate(cv);
                 }
                 "kfold" | "k_fold" | "k-fold" => {
-                    builder = builder.cross_validate(KFold(cv_k as usize, &fractions));
+                    let cv = KFold(cv_k as usize, &fractions);
+                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                    builder = builder.cross_validate(cv);
                 }
                 _ => {
                     return Err(Error::Other(format!(
@@ -316,8 +347,14 @@ impl RStreamingLoess {
         degree: &str,
         dimensions: i32,
         distance_metric: &str,
+        weighted_metric_weights: Nullable<Vec<f64>>,
         surface_mode: &str,
         return_se: bool,
+        confidence_intervals: Nullable<f64>,
+        prediction_intervals: Nullable<f64>,
+        cell: Nullable<f64>,
+        interpolation_vertices: Nullable<i32>,
+        boundary_degree_fallback: Nullable<bool>,
     ) -> Result<Self> {
         let chunk_size = chunk_size as usize;
         let overlap_size = match overlap {
@@ -342,7 +379,15 @@ impl RStreamingLoess {
         builder = builder.zero_weight_fallback(zwf);
 
         let deg = parse_polynomial_degree(degree)?;
-        let dm = parse_distance_metric(distance_metric)?;
+        let dm = if distance_metric.to_lowercase() == "weighted" {
+            let w = match weighted_metric_weights {
+                NotNull(v) => v,
+                Null => Vec::new(),
+            };
+            DistanceMetric::Weighted(w)
+        } else {
+            parse_distance_metric(distance_metric)?
+        };
         let surf = parse_surface_mode(surface_mode)?;
         builder = builder.degree(deg);
         builder = builder.dimensions(dimensions as usize);
@@ -353,6 +398,21 @@ impl RStreamingLoess {
         }
         if return_residuals {
             builder = builder.return_residuals();
+        }
+        if let NotNull(cl) = confidence_intervals {
+            builder = builder.confidence_intervals(cl);
+        }
+        if let NotNull(pl) = prediction_intervals {
+            builder = builder.prediction_intervals(pl);
+        }
+        if let NotNull(c) = cell {
+            builder = builder.cell(c);
+        }
+        if let NotNull(v) = interpolation_vertices {
+            builder = builder.interpolation_vertices(v as usize);
+        }
+        if let NotNull(bdf) = boundary_degree_fallback {
+            builder = builder.boundary_degree_fallback(bdf);
         }
 
         let mut s_builder = builder.adapter(Streaming);
@@ -432,8 +492,14 @@ impl ROnlineLoess {
         degree: &str,
         dimensions: i32,
         distance_metric: &str,
+        weighted_metric_weights: Nullable<Vec<f64>>,
         surface_mode: &str,
         return_se: bool,
+        confidence_intervals: Nullable<f64>,
+        prediction_intervals: Nullable<f64>,
+        cell: Nullable<f64>,
+        interpolation_vertices: Nullable<i32>,
+        boundary_degree_fallback: Nullable<bool>,
     ) -> Result<Self> {
         let wf = parse_weight_function(weight_function)?;
         let rm = parse_robustness_method(robustness_method)?;
@@ -452,7 +518,15 @@ impl ROnlineLoess {
         builder = builder.zero_weight_fallback(zwf);
 
         let deg = parse_polynomial_degree(degree)?;
-        let dm = parse_distance_metric(distance_metric)?;
+        let dm = if distance_metric.to_lowercase() == "weighted" {
+            let w = match weighted_metric_weights {
+                NotNull(v) => v,
+                Null => Vec::new(),
+            };
+            DistanceMetric::Weighted(w)
+        } else {
+            parse_distance_metric(distance_metric)?
+        };
         let surf = parse_surface_mode(surface_mode)?;
         let configured_dimensions = dimensions as usize;
         builder = builder.degree(deg);
@@ -461,6 +535,21 @@ impl ROnlineLoess {
         builder = builder.surface_mode(surf);
         if return_se {
             builder = builder.return_se();
+        }
+        if let NotNull(cl) = confidence_intervals {
+            builder = builder.confidence_intervals(cl);
+        }
+        if let NotNull(pl) = prediction_intervals {
+            builder = builder.prediction_intervals(pl);
+        }
+        if let NotNull(c) = cell {
+            builder = builder.cell(c);
+        }
+        if let NotNull(v) = interpolation_vertices {
+            builder = builder.interpolation_vertices(v as usize);
+        }
+        if let NotNull(bdf) = boundary_degree_fallback {
+            builder = builder.boundary_degree_fallback(bdf);
         }
 
         let mut o_builder = builder.adapter(Online);

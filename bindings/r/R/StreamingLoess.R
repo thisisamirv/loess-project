@@ -43,7 +43,13 @@ StreamingLoess <- function(
     dimensions = 1L,
     distance_metric = "normalized",
     surface_mode = "interpolation",
-    return_se = FALSE
+    return_se = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL
 ) {
     validate_params(fraction = fraction, chunk_size = chunk_size)
     handle <- do.call(RStreamingLoess$new, env_args(streaming_params))

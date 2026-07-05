@@ -174,7 +174,12 @@ param_types <- list(
     confidence_intervals = "nullable",
     prediction_intervals = "nullable",
     auto_converge = "nullable",
-    cv_fractions = "nullable"
+    cv_fractions = "nullable",
+    weighted_metric_weights = "nullable",
+    cell = "nullable",
+    interpolation_vertices = "nullable",
+    boundary_degree_fallback = "nullable",
+    cv_seed = "nullable"
 )
 
 #' Build args from parent environment
@@ -210,7 +215,9 @@ loess_params <- c(
     "prediction_intervals", "return_diagnostics", "return_residuals",
     "return_robustness_weights", "zero_weight_fallback", "auto_converge",
     "cv_fractions", "cv_method", "cv_k", "parallel",
-    "degree", "dimensions", "distance_metric", "surface_mode", "return_se"
+    "degree", "dimensions", "distance_metric", "surface_mode", "return_se",
+    "weighted_metric_weights", "cell", "interpolation_vertices",
+    "boundary_degree_fallback", "cv_seed"
 )
 
 online_params <- c(
@@ -218,7 +225,10 @@ online_params <- c(
     "weight_function", "robustness_method", "scaling_method",
     "boundary_policy", "zero_weight_fallback", "update_mode", "auto_converge",
     "return_robustness_weights", "parallel",
-    "degree", "dimensions", "distance_metric", "surface_mode", "return_se"
+    "degree", "dimensions", "distance_metric", "surface_mode", "return_se",
+    "confidence_intervals", "prediction_intervals",
+    "weighted_metric_weights", "cell", "interpolation_vertices",
+    "boundary_degree_fallback"
 )
 
 streaming_params <- c(
@@ -227,5 +237,8 @@ streaming_params <- c(
     "boundary_policy", "zero_weight_fallback", "auto_converge",
     "return_diagnostics", "return_residuals", "return_robustness_weights",
     "merge_strategy", "parallel",
-    "degree", "dimensions", "distance_metric", "surface_mode", "return_se"
+    "degree", "dimensions", "distance_metric", "surface_mode", "return_se",
+    "confidence_intervals", "prediction_intervals",
+    "weighted_metric_weights", "cell", "interpolation_vertices",
+    "boundary_degree_fallback"
 )

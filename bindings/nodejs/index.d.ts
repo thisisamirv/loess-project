@@ -150,6 +150,14 @@ export interface SmoothOptions {
     returnSe?: boolean
     /** User-defined case weights, one per observation (same length as x/y). Default: none. */
     customWeights?: Array<number>
+    /** Cell size tuning parameter for the interpolation grid. Default: none. */
+    cell?: number
+    /** Number of interpolation vertices. Default: none. */
+    interpolationVertices?: number
+    /** Fall back to lower polynomial degree at boundaries when higher degrees fail. Default: none. */
+    boundaryDegreeFallback?: boolean
+    /** Seed for the cross-validation random number generator. Default: none. */
+    cvSeed?: number
 }
 
 /** Configuration options for streaming processing. */

@@ -407,6 +407,14 @@ pub struct SmoothOptions {
     pub returnSe: Option<bool>,
     // User-defined case weights (same length as x/y). Default: None.
     pub customWeights: Option<Vec<f64>>,
+    // Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy.
+    pub cell: Option<f64>,
+    // Maximum number of interpolation vertices.
+    pub interpolationVertices: Option<u32>,
+    // Reduce polynomial degree to linear at boundary vertices (default true).
+    pub boundaryDegreeFallback: Option<bool>,
+    // Random seed for reproducible K-fold cross-validation splits.
+    pub cvSeed: Option<u32>,
 }
 
 // Batch LOESS smoothing.
@@ -523,18 +531,32 @@ impl Loess {
             if let Some(cw) = &opts.customWeights {
                 builder = builder.custom_weights(cw.clone());
             }
+            if let Some(c) = opts.cell {
+                builder = builder.cell(c);
+            }
+            if let Some(v) = opts.interpolationVertices {
+                builder = builder.interpolation_vertices(v as usize);
+            }
+            if let Some(bdf) = opts.boundaryDegreeFallback {
+                builder = builder.boundary_degree_fallback(bdf);
+            }
 
             // Cross-validation
             if let Some(fractions) = &opts.cvFractions {
                 let method = opts.cvMethod.as_deref().unwrap_or("kfold");
                 let k = opts.cvK.unwrap_or(5) as usize;
+                let seed = opts.cvSeed.map(|s| s as u64);
 
                 match method.to_lowercase().as_str() {
                     "simple" | "loo" | "loocv" | "leave_one_out" => {
-                        builder = builder.cross_validate(LOOCV(fractions));
+                        let cv = LOOCV(fractions);
+                        let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                        builder = builder.cross_validate(cv);
                     }
                     "kfold" | "k_fold" | "k-fold" => {
-                        builder = builder.cross_validate(KFold(k, fractions));
+                        let cv = KFold(k, fractions);
+                        let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                        builder = builder.cross_validate(cv);
                     }
                     _ => {
                         return Err(Error::new(
@@ -660,6 +682,18 @@ impl StreamingLoess {
             }
             if opts.returnSe.unwrap_or(false) {
                 builder = builder.return_se();
+            }
+            if let Some(cw) = opts.customWeights {
+                builder = builder.custom_weights(cw);
+            }
+            if let Some(c) = opts.cell {
+                builder = builder.cell(c);
+            }
+            if let Some(v) = opts.interpolationVertices {
+                builder = builder.interpolation_vertices(v as usize);
+            }
+            if let Some(bdf) = opts.boundaryDegreeFallback {
+                builder = builder.boundary_degree_fallback(bdf);
             }
         }
 
@@ -809,16 +843,33 @@ impl OnlineLoess {
             if opts.returnSe.unwrap_or(false) {
                 builder = builder.return_se();
             }
+            if let Some(cw) = &opts.customWeights {
+                builder = builder.custom_weights(cw.clone());
+            }
+            if let Some(c) = opts.cell {
+                builder = builder.cell(c);
+            }
+            if let Some(v) = opts.interpolationVertices {
+                builder = builder.interpolation_vertices(v as usize);
+            }
+            if let Some(bdf) = opts.boundaryDegreeFallback {
+                builder = builder.boundary_degree_fallback(bdf);
+            }
             // Cross-validation
             if let Some(fractions) = &opts.cvFractions {
                 let method = opts.cvMethod.as_deref().unwrap_or("kfold");
                 let k = opts.cvK.unwrap_or(5) as usize;
+                let seed = opts.cvSeed.map(|s| s as u64);
                 match method.to_lowercase().as_str() {
                     "simple" | "loo" | "loocv" | "leave_one_out" => {
-                        builder = builder.cross_validate(LOOCV(fractions));
+                        let cv = LOOCV(fractions);
+                        let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                        builder = builder.cross_validate(cv);
                     }
                     "kfold" | "k_fold" | "k-fold" => {
-                        builder = builder.cross_validate(KFold(k, fractions));
+                        let cv = KFold(k, fractions);
+                        let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                        builder = builder.cross_validate(cv);
                     }
                     _ => {
                         return Err(Error::new(

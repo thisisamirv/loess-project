@@ -64,6 +64,20 @@ pub struct SmoothOptions {
     pub return_se: Option<bool>,
     #[serde(rename = "customWeights")]
     pub custom_weights: Option<Vec<f64>>,
+    // Per-dimension weights for the "weighted" distance metric.
+    #[serde(rename = "weightedMetricWeights")]
+    pub weighted_metric_weights: Option<Vec<f64>>,
+    // Interpolation cell size (default 0.2). Smaller values → more vertices, higher accuracy.
+    pub cell: Option<f64>,
+    // Hard cap on the number of interpolation vertices.
+    #[serde(rename = "interpolationVertices")]
+    pub interpolation_vertices: Option<usize>,
+    // Reduce polynomial degree to linear at boundary vertices (default true).
+    #[serde(rename = "boundaryDegreeFallback")]
+    pub boundary_degree_fallback: Option<bool>,
+    // Random seed for reproducible K-fold cross-validation splits.
+    #[serde(rename = "cvSeed")]
+    pub cv_seed: Option<u64>,
 }
 
 #[derive(Deserialize)]
@@ -74,6 +88,8 @@ pub struct StreamingOptions {
     pub overlap: Option<usize>,
     #[serde(rename = "mergeStrategy")]
     pub merge_strategy: Option<String>,
+    #[serde(rename = "customWeights")]
+    pub custom_weights: Option<Vec<f64>>,
 }
 
 #[derive(Deserialize)]
@@ -84,6 +100,8 @@ pub struct OnlineOptions {
     pub min_points: Option<usize>,
     #[serde(rename = "updateMode")]
     pub update_mode: Option<String>,
+    #[serde(rename = "customWeights")]
+    pub custom_weights: Option<Vec<f64>>,
 }
 
 fn parse_weight_function(name: &str) -> Result<WeightFunction, JsValue> {
@@ -179,8 +197,9 @@ fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>, JsValue> {
         "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
         "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
         "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
+        "weighted" => Ok(DistanceMetric::Weighted(Vec::new())),
         _ => Err(JsValue::from_str(&format!(
-            "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski",
+            "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski, weighted",
             name
         ))),
     }
@@ -335,6 +354,44 @@ impl LoessResultWasm {
     pub fn iterations_used(&self) -> Option<u32> {
         self.inner.iterations_used.map(|i| i as u32)
     }
+
+    #[wasm_bindgen(getter)]
+    pub fn enp(&self) -> Option<f64> {
+        self.inner.enp
+    }
+
+    #[wasm_bindgen(getter, js_name = traceHat)]
+    pub fn trace_hat(&self) -> Option<f64> {
+        self.inner.trace_hat
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn delta1(&self) -> Option<f64> {
+        self.inner.delta1
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn delta2(&self) -> Option<f64> {
+        self.inner.delta2
+    }
+
+    #[wasm_bindgen(getter, js_name = residualScale)]
+    pub fn residual_scale(&self) -> Option<f64> {
+        self.inner.residual_scale
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn leverage(&self) -> Option<Float64Array> {
+        self.inner
+            .leverage
+            .as_ref()
+            .map(|v| unsafe { Float64Array::view(v) })
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn dimensions(&self) -> u32 {
+        self.inner.dimensions as u32
+    }
 }
 
 // Fit the LOESS model to data.
@@ -402,8 +459,16 @@ pub fn smooth(
         if let Some(dim) = opts.dimensions {
             builder = builder.dimensions(dim);
         }
-        if let Some(dm) = opts.distance_metric {
-            builder = builder.distance_metric(parse_distance_metric(&dm)?);
+        {
+            let weighted_weights = opts.weighted_metric_weights.clone().unwrap_or_default();
+            if let Some(dm) = opts.distance_metric {
+                let metric = if dm.to_lowercase() == "weighted" {
+                    DistanceMetric::Weighted(weighted_weights)
+                } else {
+                    parse_distance_metric(&dm)?
+                };
+                builder = builder.distance_metric(metric);
+            }
         }
         if let Some(sm_val) = opts.surface_mode {
             builder = builder.surface_mode(parse_surface_mode(&sm_val)?);
@@ -414,18 +479,32 @@ pub fn smooth(
         if let Some(cw) = opts.custom_weights {
             builder = builder.custom_weights(cw);
         }
+        if let Some(c) = opts.cell {
+            builder = builder.cell(c);
+        }
+        if let Some(v) = opts.interpolation_vertices {
+            builder = builder.interpolation_vertices(v);
+        }
+        if let Some(bdf) = opts.boundary_degree_fallback {
+            builder = builder.boundary_degree_fallback(bdf);
+        }
 
         // Cross-validation
         if let Some(fractions) = opts.cv_fractions {
             let method = opts.cv_method.as_deref().unwrap_or("kfold");
             let k = opts.cv_k.unwrap_or(5) as usize;
+            let seed = opts.cv_seed;
 
             match method.to_lowercase().as_str() {
                 "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    builder = builder.cross_validate(LOOCV(&fractions));
+                    let cv = LOOCV(&fractions);
+                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                    builder = builder.cross_validate(cv);
                 }
                 "kfold" | "k_fold" | "k-fold" => {
-                    builder = builder.cross_validate(KFold(k, &fractions));
+                    let cv = KFold(k, &fractions);
+                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                    builder = builder.cross_validate(cv);
                 }
                 _ => {
                     return Err(JsValue::from_str(&format!(
@@ -516,8 +595,16 @@ impl StreamingLoessWasm {
             if let Some(dim) = opts.dimensions {
                 builder = builder.dimensions(dim);
             }
-            if let Some(dm) = opts.distance_metric {
-                builder = builder.distance_metric(parse_distance_metric(&dm)?);
+            {
+                let weighted_weights = opts.weighted_metric_weights.clone().unwrap_or_default();
+                if let Some(dm) = opts.distance_metric {
+                    let metric = if dm.to_lowercase() == "weighted" {
+                        DistanceMetric::Weighted(weighted_weights)
+                    } else {
+                        parse_distance_metric(&dm)?
+                    };
+                    builder = builder.distance_metric(metric);
+                }
             }
             if let Some(sm_val) = opts.surface_mode {
                 builder = builder.surface_mode(parse_surface_mode(&sm_val)?);
@@ -525,16 +612,33 @@ impl StreamingLoessWasm {
             if opts.return_se.unwrap_or(false) {
                 builder = builder.return_se();
             }
+            if let Some(cw) = opts.custom_weights {
+                builder = builder.custom_weights(cw);
+            }
+            if let Some(c) = opts.cell {
+                builder = builder.cell(c);
+            }
+            if let Some(v) = opts.interpolation_vertices {
+                builder = builder.interpolation_vertices(v);
+            }
+            if let Some(bdf) = opts.boundary_degree_fallback {
+                builder = builder.boundary_degree_fallback(bdf);
+            }
             // Cross-validation
             if let Some(fractions) = opts.cv_fractions {
                 let method = opts.cv_method.as_deref().unwrap_or("kfold");
                 let k = opts.cv_k.unwrap_or(5) as usize;
+                let seed = opts.cv_seed;
                 match method.to_lowercase().as_str() {
                     "simple" | "loo" | "loocv" | "leave_one_out" => {
-                        builder = builder.cross_validate(LOOCV(&fractions));
+                        let cv = LOOCV(&fractions);
+                        let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                        builder = builder.cross_validate(cv);
                     }
                     "kfold" | "k_fold" | "k-fold" => {
-                        builder = builder.cross_validate(KFold(k, &fractions));
+                        let cv = KFold(k, &fractions);
+                        let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                        builder = builder.cross_validate(cv);
                     }
                     _ => {
                         return Err(JsValue::from_str(&format!(
@@ -560,6 +664,9 @@ impl StreamingLoessWasm {
             }
             if let Some(ms) = sopts.merge_strategy {
                 merge_strategy = parse_merge_strategy(&ms)?;
+            }
+            if let Some(cw) = sopts.custom_weights {
+                builder = builder.custom_weights(cw);
             }
         }
 
@@ -662,14 +769,37 @@ impl OnlineLoessWasm {
             if let Some(dim) = opts.dimensions {
                 builder = builder.dimensions(dim);
             }
-            if let Some(dm) = opts.distance_metric {
-                builder = builder.distance_metric(parse_distance_metric(&dm)?);
+            if let Some(dim) = opts.dimensions {
+                builder = builder.dimensions(dim);
+            }
+            {
+                let weighted_weights = opts.weighted_metric_weights.clone().unwrap_or_default();
+                if let Some(dm) = opts.distance_metric {
+                    let metric = if dm.to_lowercase() == "weighted" {
+                        DistanceMetric::Weighted(weighted_weights)
+                    } else {
+                        parse_distance_metric(&dm)?
+                    };
+                    builder = builder.distance_metric(metric);
+                }
             }
             if let Some(sm_val) = opts.surface_mode {
                 builder = builder.surface_mode(parse_surface_mode(&sm_val)?);
             }
             if opts.return_se.unwrap_or(false) {
                 builder = builder.return_se();
+            }
+            if let Some(cw) = opts.custom_weights {
+                builder = builder.custom_weights(cw);
+            }
+            if let Some(c) = opts.cell {
+                builder = builder.cell(c);
+            }
+            if let Some(v) = opts.interpolation_vertices {
+                builder = builder.interpolation_vertices(v);
+            }
+            if let Some(bdf) = opts.boundary_degree_fallback {
+                builder = builder.boundary_degree_fallback(bdf);
             }
         }
 
@@ -687,6 +817,9 @@ impl OnlineLoessWasm {
             }
             if let Some(um) = oopts.update_mode {
                 update_mode = parse_update_mode(&um)?;
+            }
+            if let Some(cw) = oopts.custom_weights {
+                builder = builder.custom_weights(cw);
             }
         }
 

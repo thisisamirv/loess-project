@@ -147,6 +147,7 @@ struct LoessResult
 	residual_scale::Union{Float64, Nothing}
 	leverage::Union{Vector{Float64}, Nothing}
 	dimensions::Int
+	cv_scores::Union{Vector{Float64}, Nothing}
 end
 
 # C FFI result struct (must match Rust definition)
@@ -177,6 +178,8 @@ struct CJlLoessResult
 	residual_scale::Cdouble
 	leverage::Ptr{Cdouble}
 	dimensions::Cint
+	cv_scores::Ptr{Cdouble}
+	cv_scores_len::Culong
 	error::Ptr{Cchar}
 end
 
@@ -241,6 +244,12 @@ function convert_result(c_result::CJlLoessResult)
 		nothing
 	end
 
+	cv_scores = if c_result.cv_scores != Ptr{Cdouble}(C_NULL) && c_result.cv_scores_len > 0
+		unsafe_wrap(Array, c_result.cv_scores, Int(c_result.cv_scores_len), own = false) |> copy
+	else
+		nothing
+	end
+
 	result = LoessResult(
 		x,
 		y,
@@ -261,6 +270,7 @@ function convert_result(c_result::CJlLoessResult)
 		residual_scale,
 		leverage,
 		Int(c_result.dimensions),
+		cv_scores,
 	)
 
 	# Free the C result
@@ -369,8 +379,13 @@ mutable struct Loess
 		degree::String = "linear",
 		dimensions::Int = 1,
 		distance_metric::String = "normalized",
+		weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing,
 		surface_mode::String = "interpolation",
 		return_se::Bool = false,
+		cell::Union{Float64, Nothing} = nothing,
+		interpolation_vertices::Union{Int, Nothing} = nothing,
+		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
+		cv_seed::Union{Int, Nothing} = nothing,
 	)
 		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
@@ -403,6 +418,34 @@ mutable struct Loess
 
 		if handle == C_NULL
 			error("Failed to create Loess configuration")
+		end
+
+		# Apply optional overrides via setters
+		if weighted_metric_weights !== nothing
+			n_w = length(weighted_metric_weights)
+			@ccall libfastloess.jl_loess_set_weighted_metric(
+				handle::Ptr{Cvoid},
+				weighted_metric_weights::Ptr{Cdouble},
+				Culong(n_w)::Culong,
+			)::Cvoid
+		end
+		if cell !== nothing
+			@ccall libfastloess.jl_loess_set_cell(handle::Ptr{Cvoid}, cell::Cdouble)::Cvoid
+		end
+		if interpolation_vertices !== nothing
+			@ccall libfastloess.jl_loess_set_interpolation_vertices(
+				handle::Ptr{Cvoid}, Culong(interpolation_vertices)::Culong,
+			)::Cvoid
+		end
+		if boundary_degree_fallback !== nothing
+			@ccall libfastloess.jl_loess_set_boundary_degree_fallback(
+				handle::Ptr{Cvoid}, Cint(boundary_degree_fallback)::Cint,
+			)::Cvoid
+		end
+		if cv_seed !== nothing
+			@ccall libfastloess.jl_loess_set_cv_seed(
+				handle::Ptr{Cvoid}, Culong(cv_seed)::Culong,
+			)::Cvoid
 		end
 
 		obj = new(handle)
@@ -536,10 +579,21 @@ Stateful streaming LOESS smoother.
 - `dimensions::Int = 1`: Number of predictor dimensions
 - `distance_metric::String = "normalized"`: Distance metric ("normalized", "euclidean",
   "manhattan", "chebyshev", "minkowski"). Use "minkowski:p" for a custom p value.
+  Pass `distance_metric = "weighted"` together with `weighted_metric_weights` to use
+  per-dimension weights.
 - `surface_mode::String = "interpolation"`: Surface mode
 - `return_se::Bool = false`: Compute hat-matrix statistics
 - `merge_strategy::String = "weighted_average"`: Strategy for merging overlapping chunk regions:
   "average", "weighted_average", "take_first", "take_last"
+- `confidence_intervals::Float64 = NaN`: Confidence level (e.g. 0.95). NaN disables CI.
+- `prediction_intervals::Float64 = NaN`: Prediction level (e.g. 0.95). NaN disables PI.
+- `weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing`: Per-dimension
+  weights for the "weighted" distance metric.
+- `cell::Union{Float64, Nothing} = nothing`: Cell size tuning parameter for the
+  interpolation grid.
+- `interpolation_vertices::Union{Int, Nothing} = nothing`: Number of interpolation vertices.
+- `boundary_degree_fallback::Union{Bool, Nothing} = nothing`: Fall back to lower polynomial
+  degree at boundaries when higher degrees fail.
 """
 mutable struct StreamingLoess
 	handle::Ptr{Cvoid}
@@ -565,7 +619,24 @@ mutable struct StreamingLoess
 		surface_mode::String = "interpolation",
 		return_se::Bool = false,
 		merge_strategy::String = "weighted_average",
+		confidence_intervals::Float64 = NaN,
+		prediction_intervals::Float64 = NaN,
+		weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing,
+		cell::Union{Float64, Nothing} = nothing,
+		interpolation_vertices::Union{Int, Nothing} = nothing,
+		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
 	)
+		# Resolve weighted metric arguments
+		wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
+			weighted_metric_weights, Culong(length(weighted_metric_weights))
+		else
+			C_NULL, Culong(0)
+		end
+		cell_val = isnothing(cell) ? NaN : Float64(cell)
+		iv_val = isnothing(interpolation_vertices) ? Cint(-1) : Cint(interpolation_vertices)
+		bdf_val = isnothing(boundary_degree_fallback) ? Cint(-1) :
+				  (boundary_degree_fallback ? Cint(1) : Cint(0))
+
 		handle = @ccall libfastloess.jl_streaming_loess_new(
 			fraction::Cdouble,
 			Cint(chunk_size)::Cint,
@@ -587,6 +658,13 @@ mutable struct StreamingLoess
 			distance_metric::Cstring,
 			surface_mode::Cstring,
 			Cint(return_se)::Cint,
+			confidence_intervals::Cdouble,
+			prediction_intervals::Cdouble,
+			cell_val::Cdouble,
+			iv_val::Cint,
+			bdf_val::Cint,
+			wm_ptr::Ptr{Cdouble},
+			wm_len::Culong,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -659,8 +737,21 @@ Stateful online LOESS smoother.
 - `dimensions::Int = 1`: Number of predictor dimensions
 - `distance_metric::String = "normalized"`: Distance metric ("normalized", "euclidean",
   "manhattan", "chebyshev", "minkowski"). Use "minkowski:p" for a custom p value.
+  Pass `distance_metric = "weighted"` together with `weighted_metric_weights` to use
+  per-dimension weights.
 - `surface_mode::String = "interpolation"`: Surface mode
 - `return_se::Bool = false`: Compute hat-matrix statistics
+- `return_diagnostics::Bool = false`: Compute diagnostics (RMSE, MAE, R², etc.)
+- `return_residuals::Bool = false`: Include residuals in the result
+- `confidence_intervals::Float64 = NaN`: Confidence level (e.g. 0.95). NaN disables CI.
+- `prediction_intervals::Float64 = NaN`: Prediction level (e.g. 0.95). NaN disables PI.
+- `weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing`: Per-dimension
+  weights for the "weighted" distance metric.
+- `cell::Union{Float64, Nothing} = nothing`: Cell size tuning parameter for the
+  interpolation grid.
+- `interpolation_vertices::Union{Int, Nothing} = nothing`: Number of interpolation vertices.
+- `boundary_degree_fallback::Union{Bool, Nothing} = nothing`: Fall back to lower polynomial
+  degree at boundaries when higher degrees fail.
 """
 mutable struct OnlineLoess
 	handle::Ptr{Cvoid}
@@ -677,6 +768,8 @@ mutable struct OnlineLoess
 		update_mode::String = "full",
 		auto_converge::Float64 = NaN,
 		return_robustness_weights::Bool = false,
+		return_diagnostics::Bool = false,
+		return_residuals::Bool = false,
 		zero_weight_fallback::String = "use_local_mean",
 		parallel::Bool = false,
 		degree::String = "linear",
@@ -684,7 +777,24 @@ mutable struct OnlineLoess
 		distance_metric::String = "normalized",
 		surface_mode::String = "interpolation",
 		return_se::Bool = false,
+		confidence_intervals::Float64 = NaN,
+		prediction_intervals::Float64 = NaN,
+		weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing,
+		cell::Union{Float64, Nothing} = nothing,
+		interpolation_vertices::Union{Int, Nothing} = nothing,
+		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
 	)
+		# Resolve weighted metric arguments
+		wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
+			weighted_metric_weights, Culong(length(weighted_metric_weights))
+		else
+			C_NULL, Culong(0)
+		end
+		cell_val = isnothing(cell) ? NaN : Float64(cell)
+		iv_val = isnothing(interpolation_vertices) ? Cint(-1) : Cint(interpolation_vertices)
+		bdf_val = isnothing(boundary_degree_fallback) ? Cint(-1) :
+				  (boundary_degree_fallback ? Cint(1) : Cint(0))
+
 		handle = @ccall libfastloess.jl_online_loess_new(
 			fraction::Cdouble,
 			Cint(window_capacity)::Cint,
@@ -697,6 +807,8 @@ mutable struct OnlineLoess
 			update_mode::Cstring,
 			auto_converge::Cdouble,
 			Cint(return_robustness_weights)::Cint,
+			Cint(return_diagnostics)::Cint,
+			Cint(return_residuals)::Cint,
 			zero_weight_fallback::Cstring,
 			Cint(parallel)::Cint,
 			degree::Cstring,
@@ -704,6 +816,13 @@ mutable struct OnlineLoess
 			distance_metric::Cstring,
 			surface_mode::Cstring,
 			Cint(return_se)::Cint,
+			confidence_intervals::Cdouble,
+			prediction_intervals::Cdouble,
+			cell_val::Cdouble,
+			iv_val::Cint,
+			bdf_val::Cint,
+			wm_ptr::Ptr{Cdouble},
+			wm_len::Culong,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL

@@ -10,6 +10,7 @@
 #define FASTLOESS_HPP
 
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <stdexcept>
 #include <string>
@@ -130,6 +131,19 @@ struct LoessOptions {
   std::vector<double> cv_fractions;
   std::string cv_method = "kfold";
   int cv_k = detail::k_default_cv_k;
+
+  // Advanced / tuning options
+  /// Per-dimension weights for the \"weighted\" distance metric.
+  std::vector<double> weighted_metric_weights;
+  /// Cell size tuning parameter for the interpolation grid (NaN = library
+  /// default).
+  double cell = NAN;
+  /// Number of interpolation vertices (0 = library default).
+  int interpolation_vertices = 0;
+  /// -1 = unset (library default), 0 = false, 1 = true.
+  int boundary_degree_fallback = -1;
+  /// Seed for cross-validation RNG (0 = unset / random).
+  uint64_t cv_seed = 0;
 };
 
 /**
@@ -342,6 +356,15 @@ public:
     return {};
   }
 
+  /// Cross-validation scores per tested fraction (empty if CV not performed)
+  std::vector<double> cvScores() const {
+    if (result_.cv_scores != nullptr && result_.cv_scores_len > 0) {
+      return std::vector<double>(result_.cv_scores,
+                                 result_.cv_scores + result_.cv_scores_len);
+    }
+    return {};
+  }
+
   /// Get diagnostics
   Diagnostics diagnostics() const { return Diagnostics(result_); }
 
@@ -369,6 +392,25 @@ public:
         options.degree.c_str(), options.dimensions,
         options.distance_metric.c_str(), options.surface_mode.c_str(),
         options.return_se ? 1 : 0);
+    if (!options.weighted_metric_weights.empty()) {
+      cpp_loess_set_weighted_metric(
+          ptr_, options.weighted_metric_weights.data(),
+          static_cast<unsigned long>(options.weighted_metric_weights.size()));
+    }
+    if (!std::isnan(options.cell)) {
+      cpp_loess_set_cell(ptr_, options.cell);
+    }
+    if (options.interpolation_vertices > 0) {
+      cpp_loess_set_interpolation_vertices(
+          ptr_, static_cast<unsigned long>(options.interpolation_vertices));
+    }
+    if (options.boundary_degree_fallback >= 0) {
+      cpp_loess_set_boundary_degree_fallback(ptr_,
+                                             options.boundary_degree_fallback);
+    }
+    if (options.cv_seed > 0) {
+      cpp_loess_set_cv_seed(ptr_, static_cast<unsigned long>(options.cv_seed));
+    }
   }
 
   ~Loess() {
@@ -448,6 +490,30 @@ public:
         options.merge_strategy.c_str(), options.degree.c_str(),
         options.dimensions, options.distance_metric.c_str(),
         options.surface_mode.c_str(), options.return_se ? 1 : 0);
+    if (!options.weighted_metric_weights.empty()) {
+      cpp_streaming_set_weighted_metric(
+          ptr_, options.weighted_metric_weights.data(),
+          static_cast<unsigned long>(options.weighted_metric_weights.size()));
+    }
+    if (!std::isnan(options.cell)) {
+      cpp_streaming_set_cell(ptr_, options.cell);
+    }
+    if (options.interpolation_vertices > 0) {
+      cpp_streaming_set_interpolation_vertices(
+          ptr_, static_cast<unsigned long>(options.interpolation_vertices));
+    }
+    if (options.boundary_degree_fallback >= 0) {
+      cpp_streaming_set_boundary_degree_fallback(
+          ptr_, options.boundary_degree_fallback);
+    }
+    if (!std::isnan(options.confidence_intervals)) {
+      cpp_streaming_set_confidence_intervals(ptr_,
+                                             options.confidence_intervals);
+    }
+    if (!std::isnan(options.prediction_intervals)) {
+      cpp_streaming_set_prediction_intervals(ptr_,
+                                             options.prediction_intervals);
+    }
   }
 
   ~StreamingLoess() {
@@ -524,11 +590,35 @@ public:
         options.robustness_method.c_str(), options.scaling_method.c_str(),
         options.boundary_policy.c_str(),
         options.return_robustness_weights ? 1 : 0,
+        options.return_diagnostics ? 1 : 0,
+        options.return_residuals ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.parallel ? 1 : 0, options.window_capacity, options.min_points,
         options.update_mode.c_str(), options.degree.c_str(), options.dimensions,
         options.distance_metric.c_str(), options.surface_mode.c_str(),
         options.return_se ? 1 : 0);
+    if (!options.weighted_metric_weights.empty()) {
+      cpp_online_set_weighted_metric(
+          ptr_, options.weighted_metric_weights.data(),
+          static_cast<unsigned long>(options.weighted_metric_weights.size()));
+    }
+    if (!std::isnan(options.cell)) {
+      cpp_online_set_cell(ptr_, options.cell);
+    }
+    if (options.interpolation_vertices > 0) {
+      cpp_online_set_interpolation_vertices(
+          ptr_, static_cast<unsigned long>(options.interpolation_vertices));
+    }
+    if (options.boundary_degree_fallback >= 0) {
+      cpp_online_set_boundary_degree_fallback(ptr_,
+                                              options.boundary_degree_fallback);
+    }
+    if (!std::isnan(options.confidence_intervals)) {
+      cpp_online_set_confidence_intervals(ptr_, options.confidence_intervals);
+    }
+    if (!std::isnan(options.prediction_intervals)) {
+      cpp_online_set_prediction_intervals(ptr_, options.prediction_intervals);
+    }
   }
 
   ~OnlineLoess() {

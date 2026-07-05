@@ -11,6 +11,10 @@
 #' @param min_points Minimum number of points required before smoothing begins.
 #' @param update_mode Window update strategy. Currently only
 #'   \code{"incremental"} is supported.
+#' @param confidence_intervals Confidence level for confidence intervals
+#'   (e.g., 0.95). \code{NULL} (default) disables confidence intervals.
+#' @param prediction_intervals Confidence level for prediction intervals
+#'   (e.g., 0.95). \code{NULL} (default) disables prediction intervals.
 #'
 #' @return An OnlineLoess object.
 #' @examples
@@ -39,7 +43,13 @@ OnlineLoess <- function(
     dimensions = 1L,
     distance_metric = "normalized",
     surface_mode = "interpolation",
-    return_se = FALSE
+    return_se = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL
 ) {
     validate_params(
         fraction = fraction, window_capacity = window_capacity,

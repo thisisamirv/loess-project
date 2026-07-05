@@ -70,6 +70,9 @@ pub struct JlLoessResult {
     pub leverage: *mut c_double,
     // Number of predictor dimensions used
     pub dimensions: c_int,
+    // Cross-validation scores (NULL if not computed, length = cv_scores_len)
+    pub cv_scores: *mut c_double,
+    pub cv_scores_len: c_ulong,
 
     // Error message (NULL if no error)
     pub error: *mut c_char,
@@ -104,6 +107,8 @@ impl Default for JlLoessResult {
             residual_scale: f64::NAN,
             leverage: null_mut(),
             dimensions: 1,
+            cv_scores: null_mut(),
+            cv_scores_len: 0,
             error: null_mut(),
         }
     }
@@ -281,8 +286,9 @@ fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>, String> {
         "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
         "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
         "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
+        "weighted" => Ok(DistanceMetric::Weighted(Vec::new())),
         _ => Err(format!(
-            "Unknown distance metric: {}. Valid: euclidean, normalized, manhattan, chebyshev, minkowski",
+            "Unknown distance metric: {}. Valid: euclidean, normalized, manhattan, chebyshev, minkowski, weighted",
             name
         )),
     }
@@ -342,6 +348,12 @@ fn loess_result_to_jl(result: LoessResult<f64>) -> JlLoessResult {
         residual_scale: result.residual_scale.unwrap_or(f64::NAN),
         leverage: opt_vec_to_ptr(result.leverage),
         dimensions: result.dimensions as c_int,
+        cv_scores: opt_vec_to_ptr(result.cv_scores.clone()),
+        cv_scores_len: result
+            .cv_scores
+            .as_ref()
+            .map(|v| v.len() as c_ulong)
+            .unwrap_or(0),
         error: null_mut(),
     }
 }
@@ -377,6 +389,11 @@ pub struct JlLoessConfig {
     return_se: bool,
     // User-defined case weights
     custom_weights: Option<Vec<f64>>,
+    // Interpolation and advanced options
+    cell: Option<f64>,
+    interpolation_vertices: Option<usize>,
+    boundary_degree_fallback: Option<bool>,
+    cv_seed: Option<u64>,
 }
 
 pub struct JlStreamingLoess {
@@ -491,6 +508,10 @@ pub unsafe extern "C" fn jl_loess_new(
             surface_mode: surf,
             return_se: return_se != 0,
             custom_weights: None,
+            cell: None,
+            interpolation_vertices: None,
+            boundary_degree_fallback: None,
+            cv_seed: None,
         };
 
         Box::into_raw(Box::new(config))
@@ -592,13 +613,27 @@ pub unsafe extern "C" fn jl_loess_fit(
         if let Some(ref uw) = config.custom_weights {
             builder = builder.custom_weights(uw.clone());
         }
+        if let Some(c) = config.cell {
+            builder = builder.cell(c);
+        }
+        if let Some(v) = config.interpolation_vertices {
+            builder = builder.interpolation_vertices(v);
+        }
+        if let Some(bdf) = config.boundary_degree_fallback {
+            builder = builder.boundary_degree_fallback(bdf);
+        }
         if let Some(ref fractions) = config.cv_fractions {
+            let seed = config.cv_seed;
             match config.cv_method.to_lowercase().as_str() {
                 "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    builder = builder.cross_validate(LOOCV(fractions));
+                    let cv = LOOCV(fractions);
+                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                    builder = builder.cross_validate(cv);
                 }
                 "kfold" | "k_fold" | "k-fold" => {
-                    builder = builder.cross_validate(KFold(config.cv_k, fractions));
+                    let cv = KFold(config.cv_k, fractions);
+                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
+                    builder = builder.cross_validate(cv);
                 }
                 _ => {
                     return error_result(&format!(
@@ -656,6 +691,13 @@ pub unsafe extern "C" fn jl_loess_free_result(result: *mut JlLoessResult) {
     if !res.leverage.is_null() {
         let _ = Vec::from_raw_parts(res.leverage, n, n);
     }
+    if !res.cv_scores.is_null() {
+        let _ = Vec::from_raw_parts(
+            res.cv_scores,
+            res.cv_scores_len as usize,
+            res.cv_scores_len as usize,
+        );
+    }
 
     if !res.error.is_null() {
         let _ = std::ffi::CString::from_raw(res.error);
@@ -671,6 +713,79 @@ pub unsafe extern "C" fn jl_loess_free(ptr: *mut JlLoessConfig) {
     if !ptr.is_null() {
         let _ = Box::from_raw(ptr);
     }
+}
+
+// Set the distance metric to Weighted with per-dimension weights.
+//
+// # Safety
+// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+// weights must be a valid array of length n (number of predictor dimensions).
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_loess_set_weighted_metric(
+    config_ptr: *mut JlLoessConfig,
+    weights: *const c_double,
+    n: c_ulong,
+) {
+    if config_ptr.is_null() || weights.is_null() || n == 0 {
+        return;
+    }
+    let config = unsafe { &mut *config_ptr };
+    let slice = unsafe { from_raw_parts(weights, n as usize) };
+    config.distance_metric = DistanceMetric::Weighted(slice.to_vec());
+}
+
+// Set the interpolation cell size (default 0.2). Smaller values give more vertices.
+//
+// # Safety
+// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_loess_set_cell(config_ptr: *mut JlLoessConfig, cell: c_double) {
+    if config_ptr.is_null() {
+        return;
+    }
+    unsafe { (*config_ptr).cell = Some(cell) };
+}
+
+// Set the maximum number of interpolation vertices.
+//
+// # Safety
+// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_loess_set_interpolation_vertices(
+    config_ptr: *mut JlLoessConfig,
+    vertices: c_ulong,
+) {
+    if config_ptr.is_null() {
+        return;
+    }
+    unsafe { (*config_ptr).interpolation_vertices = Some(vertices as usize) };
+}
+
+// Set whether to apply boundary degree fallback (default: true).
+//
+// # Safety
+// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_loess_set_boundary_degree_fallback(
+    config_ptr: *mut JlLoessConfig,
+    enabled: c_int,
+) {
+    if config_ptr.is_null() {
+        return;
+    }
+    unsafe { (*config_ptr).boundary_degree_fallback = Some(enabled != 0) };
+}
+
+// Set the random seed for reproducible K-fold cross-validation splits.
+//
+// # Safety
+// config_ptr must be a valid mutable pointer returned by jl_loess_new.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, seed: c_ulong) {
+    if config_ptr.is_null() {
+        return;
+    }
+    unsafe { (*config_ptr).cv_seed = Some(seed as u64) };
 }
 
 // StreamingLoess C API
@@ -702,6 +817,14 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
     distance_metric: *const c_char,
     surface_mode: *const c_char,
     return_se: c_int,
+    // Advanced options
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
+    cell: c_double,
+    interpolation_vertices: c_int,
+    boundary_degree_fallback: c_int,
+    weighted_metric_weights: *const c_double,
+    weighted_metric_weights_len: c_ulong,
 ) -> *mut JlStreamingLoess {
     let result = catch_unwind(|| {
         let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
@@ -739,20 +862,51 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
         if return_se != 0 {
             builder = builder.return_se();
         }
+        if !confidence_intervals.is_nan() {
+            builder = builder.confidence_intervals(confidence_intervals);
+        }
+        if !prediction_intervals.is_nan() {
+            builder = builder.prediction_intervals(prediction_intervals);
+        }
 
         // Apply LOESS-specific options
         let deg_str = unsafe { parse_c_str(degree, "linear") };
-        let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
         let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
         let deg = unwrap_or_return_null!(parse_polynomial_degree(deg_str));
-        let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
         let surf = unwrap_or_return_null!(parse_surface_mode(surf_str));
         builder = builder.degree(deg);
         if dimensions > 0 {
             builder = builder.dimensions(dimensions as usize);
         }
-        builder = builder.distance_metric(dm);
+
+        // Distance metric (weighted takes precedence over the name-string)
+        if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
+            let w = unsafe {
+                std::slice::from_raw_parts(
+                    weighted_metric_weights,
+                    weighted_metric_weights_len as usize,
+                )
+                .to_vec()
+            };
+            builder = builder.distance_metric(DistanceMetric::Weighted(w));
+        } else {
+            let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
+            let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
+            builder = builder.distance_metric(dm);
+        }
+
         builder = builder.surface_mode(surf);
+
+        // Advanced tuning
+        if !cell.is_nan() {
+            builder = builder.cell(cell);
+        }
+        if interpolation_vertices > 0 {
+            builder = builder.interpolation_vertices(interpolation_vertices as usize);
+        }
+        if boundary_degree_fallback >= 0 {
+            builder = builder.boundary_degree_fallback(boundary_degree_fallback != 0);
+        }
 
         let chunk_size_usize = chunk_size as usize;
         let overlap_size = if overlap < 0 {
@@ -884,6 +1038,8 @@ pub unsafe extern "C" fn jl_online_loess_new(
     update_mode: *const c_char,
     auto_converge: c_double,
     return_robustness_weights: c_int,
+    return_diagnostics: c_int,
+    return_residuals: c_int,
     zero_weight_fallback: *const c_char,
     parallel: c_int,
     // LOESS-specific options
@@ -892,6 +1048,14 @@ pub unsafe extern "C" fn jl_online_loess_new(
     distance_metric: *const c_char,
     surface_mode: *const c_char,
     return_se: c_int,
+    // Advanced options
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
+    cell: c_double,
+    interpolation_vertices: c_int,
+    boundary_degree_fallback: c_int,
+    weighted_metric_weights: *const c_double,
+    weighted_metric_weights_len: c_ulong,
 ) -> *mut JlOnlineLoess {
     let result = catch_unwind(|| {
         let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
@@ -919,6 +1083,18 @@ pub unsafe extern "C" fn jl_online_loess_new(
         if return_se != 0 {
             builder = builder.return_se();
         }
+        if return_diagnostics != 0 {
+            builder = builder.return_diagnostics();
+        }
+        if return_residuals != 0 {
+            builder = builder.return_residuals();
+        }
+        if !confidence_intervals.is_nan() {
+            builder = builder.confidence_intervals(confidence_intervals);
+        }
+        if !prediction_intervals.is_nan() {
+            builder = builder.prediction_intervals(prediction_intervals);
+        }
 
         let mut o_builder = builder.adapter(Online);
         o_builder = o_builder.window_capacity(window_capacity as usize);
@@ -928,10 +1104,8 @@ pub unsafe extern "C" fn jl_online_loess_new(
 
         // Apply LOESS-specific options
         let deg_str = unsafe { parse_c_str(degree, "linear") };
-        let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
         let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
         let deg = unwrap_or_return_null!(parse_polynomial_degree(deg_str));
-        let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
         let surf = unwrap_or_return_null!(parse_surface_mode(surf_str));
         let configured_dimensions = if dimensions > 0 {
             dimensions as usize
@@ -940,8 +1114,35 @@ pub unsafe extern "C" fn jl_online_loess_new(
         };
         o_builder = o_builder.polynomial_degree(deg);
         o_builder = o_builder.dimensions(configured_dimensions);
-        o_builder = o_builder.distance_metric(dm);
+
+        // Distance metric (weighted takes precedence over the name-string)
+        if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
+            let w = unsafe {
+                std::slice::from_raw_parts(
+                    weighted_metric_weights,
+                    weighted_metric_weights_len as usize,
+                )
+                .to_vec()
+            };
+            o_builder = o_builder.distance_metric(DistanceMetric::Weighted(w));
+        } else {
+            let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
+            let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
+            o_builder = o_builder.distance_metric(dm);
+        }
+
         o_builder = o_builder.surface_mode(surf);
+
+        // Advanced tuning
+        if !cell.is_nan() {
+            o_builder = o_builder.cell(cell);
+        }
+        if interpolation_vertices > 0 {
+            o_builder = o_builder.interpolation_vertices(interpolation_vertices as usize);
+        }
+        if boundary_degree_fallback >= 0 {
+            o_builder = o_builder.boundary_degree_fallback(boundary_degree_fallback != 0);
+        }
 
         if !auto_converge.is_nan() {
             o_builder = o_builder.auto_converge(auto_converge);

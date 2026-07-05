@@ -59,6 +59,18 @@
 #' @param cv_method Cross-validation method: \code{"kfold"} (default) or
 #'   \code{"loocv"}.
 #' @param cv_k Number of folds for k-fold CV. Default: 5.
+#' @param weighted_metric_weights Numeric vector of per-dimension weights used
+#'   when \code{distance_metric = "weighted"}. Length must equal
+#'   \code{dimensions}. \code{NULL} (default) uses equal weights.
+#' @param cell Cell size tuning parameter for the interpolation grid.
+#'   \code{NULL} (default) uses the library default.
+#' @param interpolation_vertices Number of vertices in the interpolation grid.
+#'   \code{NULL} (default) uses the library default.
+#' @param boundary_degree_fallback Logical; if \code{TRUE}, fall back to lower
+#'   polynomial degree at boundaries when fitting at the requested degree
+#'   fails. \code{NULL} (default) uses the library default.
+#' @param cv_seed Integer seed for the cross-validation random number
+#'   generator. \code{NULL} (default) uses a random seed.
 #'
 #' @return A Loess object.
 #' @examples
@@ -91,7 +103,12 @@ Loess <- function(
     dimensions = 1L,
     distance_metric = "normalized",
     surface_mode = "interpolation",
-    return_se = FALSE
+    return_se = FALSE,
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL,
+    cv_seed = NULL
 ) {
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLoess$new, env_args(loess_params))
