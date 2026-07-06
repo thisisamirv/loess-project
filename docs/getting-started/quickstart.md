@@ -272,6 +272,7 @@ LOESS can robustly handle outliers through iterative reweighting:
 === "R"
 
     ```r
+    x_out <- 1:6
     y_with_outlier <- c(2, 4, 6, 50, 10, 12)
 
     model <- Loess(
@@ -280,7 +281,7 @@ LOESS can robustly handle outliers through iterative reweighting:
         robustness_method = "bisquare",
         return_robustness_weights = TRUE
     )
-    result <- model$fit(x, y_with_outlier)
+    result <- model$fit(x_out, y_with_outlier)
 
     # Check downweighted points
     weights <- result$robustness_weights

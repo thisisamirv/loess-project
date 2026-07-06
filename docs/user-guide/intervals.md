@@ -113,6 +113,7 @@ Estimate where new observations might fall.
     result <- Loess(fraction = 0.5, prediction_intervals = 0.95)$fit(x, y)
 
     # Wider than confidence intervals
+    plot(x, y, type = "n")
     polygon(
         c(result$x, rev(result$x)),
         c(result$prediction_lower, rev(result$prediction_upper)),

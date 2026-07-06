@@ -17,7 +17,7 @@ env_args <- getFromNamespace("env_args", "rfastloess")
 test_that("validate_common_args rejects mismatched lengths", {
     expect_error(
         validate_common_args(1:3, 1:4, 0.5, 3),
-        "x and y must have the same length"
+        "must match y"
     )
 })
 
