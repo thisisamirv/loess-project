@@ -297,7 +297,7 @@ const _SMOOTH_OPTION_KEYS = new Set([
     'returnResiduals', 'returnRobustnessWeights', 'returnDiagnostics',
     'confidenceIntervals', 'predictionIntervals', 'cvFractions', 'cvMethod',
     'cvK', 'parallel', 'degree', 'dimensions', 'distanceMetric',
-    'weightedMetricWeights', 'surfaceMode', 'returnSe', 'customWeights',
+    'weightedMetricWeights', 'surfaceMode', 'returnSe',
     'cell', 'interpolationVertices', 'boundaryDegreeFallback', 'cvSeed',
 ])
 
@@ -318,11 +318,11 @@ function _validateOptions(opts, validKeys, typeName) {
 }
 
 // Normalize customWeights: accept Float64Array in addition to Array<number>.
-function _normalizeWeights(opts) {
-    if (opts != null && opts.customWeights instanceof Float64Array) {
-        return Object.assign({}, opts, { customWeights: Array.from(opts.customWeights) })
+function _normalizeCustomWeights(cw) {
+    if (cw instanceof Float64Array) {
+        return Array.from(cw)
     }
-    return opts
+    return cw
 }
 
 // ---------------------------------------------------------------------------
@@ -332,17 +332,15 @@ function _normalizeWeights(opts) {
 class Loess extends _NativeLoess {
     constructor(opts) {
         _validateOptions(opts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
-        super(_normalizeWeights(opts))
+        super(opts)
     }
 
-    fit(x, y, fitOpts) {
-        _validateOptions(fitOpts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
-        return super.fit(x, y, _normalizeWeights(fitOpts))
+    fit(x, y, customWeights) {
+        return super.fit(x, y, _normalizeCustomWeights(customWeights))
     }
 
-    fitAsync(x, y, fitOpts) {
-        _validateOptions(fitOpts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
-        return super.fitAsync(x, y, _normalizeWeights(fitOpts))
+    fitAsync(x, y, customWeights) {
+        return super.fitAsync(x, y, _normalizeCustomWeights(customWeights))
     }
 }
 
@@ -350,7 +348,7 @@ class StreamingLoess extends _NativeStreamingLoess {
     constructor(opts, streamingOpts) {
         _validateOptions(opts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
         _validateOptions(streamingOpts, _STREAMING_OPTION_KEYS, 'StreamingOptions')
-        super(_normalizeWeights(opts), streamingOpts)
+        super(opts, streamingOpts)
     }
 }
 
@@ -358,7 +356,7 @@ class OnlineLoess extends _NativeOnlineLoess {
     constructor(opts, onlineOpts) {
         _validateOptions(opts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
         _validateOptions(onlineOpts, _ONLINE_OPTION_KEYS, 'OnlineOptions')
-        super(_normalizeWeights(opts), onlineOpts)
+        super(opts, onlineOpts)
     }
 }
 

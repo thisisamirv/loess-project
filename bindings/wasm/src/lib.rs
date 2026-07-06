@@ -62,8 +62,6 @@ pub struct SmoothOptions {
     pub surface_mode: Option<String>,
     #[serde(rename = "returnSe")]
     pub return_se: Option<bool>,
-    #[serde(rename = "customWeights")]
-    pub custom_weights: Option<Vec<f64>>,
     // Per-dimension weights for the "weighted" distance metric.
     #[serde(rename = "weightedMetricWeights")]
     pub weighted_metric_weights: Option<Vec<f64>>,
@@ -88,8 +86,6 @@ pub struct StreamingOptions {
     pub overlap: Option<usize>,
     #[serde(rename = "mergeStrategy")]
     pub merge_strategy: Option<String>,
-    #[serde(rename = "customWeights")]
-    pub custom_weights: Option<Vec<f64>>,
 }
 
 #[derive(Deserialize)]
@@ -100,8 +96,6 @@ pub struct OnlineOptions {
     pub min_points: Option<usize>,
     #[serde(rename = "updateMode")]
     pub update_mode: Option<String>,
-    #[serde(rename = "customWeights")]
-    pub custom_weights: Option<Vec<f64>>,
 }
 
 fn parse_weight_function(name: &str) -> Result<WeightFunction, JsValue> {
@@ -409,12 +403,12 @@ impl Loess {
     }
 
     /// Fit the model to data and return smoothed values.
-    pub fn fit(&self, x: &Float64Array, y: &Float64Array) -> Result<LoessResult, JsValue> {
-        smooth(x, y, self.options.clone())
+    pub fn fit(&self, x: &Float64Array, y: &Float64Array, custom_weights: Option<Box<[f64]>>) -> Result<LoessResult, JsValue> {
+        smooth(x, y, self.options.clone(), custom_weights.map(|b| b.to_vec()))
     }
 }
 
-fn smooth(x: &Float64Array, y: &Float64Array, options: JsValue) -> Result<LoessResult, JsValue> {
+fn smooth(x: &Float64Array, y: &Float64Array, options: JsValue, custom_weights: Option<Vec<f64>>) -> Result<LoessResult, JsValue> {
     let mut builder = LoessBuilder::new();
 
     if !options.is_undefined() && !options.is_null() {
@@ -485,7 +479,7 @@ fn smooth(x: &Float64Array, y: &Float64Array, options: JsValue) -> Result<LoessR
         if opts.return_se.unwrap_or(false) {
             builder = builder.return_se();
         }
-        if let Some(cw) = opts.custom_weights {
+        if let Some(cw) = custom_weights {
             if cw.len() != y.length() as usize {
                 return Err(JsValue::from_str(&format!(
                     "custom_weights length ({}) must match y length ({})",
@@ -631,9 +625,6 @@ impl StreamingLoess {
             if opts.return_se.unwrap_or(false) {
                 builder = builder.return_se();
             }
-            if let Some(cw) = opts.custom_weights {
-                builder = builder.custom_weights(cw);
-            }
             if let Some(c) = opts.cell {
                 builder = builder.cell(c);
             }
@@ -683,9 +674,6 @@ impl StreamingLoess {
             }
             if let Some(ms) = sopts.merge_strategy {
                 merge_strategy = parse_merge_strategy(&ms)?;
-            }
-            if let Some(cw) = sopts.custom_weights {
-                builder = builder.custom_weights(cw);
             }
         }
 
@@ -808,9 +796,6 @@ impl OnlineLoess {
             if opts.return_se.unwrap_or(false) {
                 builder = builder.return_se();
             }
-            if let Some(cw) = opts.custom_weights {
-                builder = builder.custom_weights(cw);
-            }
             if let Some(c) = opts.cell {
                 builder = builder.cell(c);
             }
@@ -836,9 +821,6 @@ impl OnlineLoess {
             }
             if let Some(um) = oopts.update_mode {
                 update_mode = parse_update_mode(&um)?;
-            }
-            if let Some(cw) = oopts.custom_weights {
-                builder = builder.custom_weights(cw);
             }
         }
 

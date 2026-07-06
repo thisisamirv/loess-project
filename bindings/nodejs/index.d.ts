@@ -2,8 +2,8 @@
 /* eslint-disable */
 export declare class Loess {
     constructor(options?: SmoothOptions | undefined | null)
-    fit(x: Float64Array, y: Float64Array, fitOpts?: SmoothOptions | undefined | null): LoessResult
-    fitAsync(x: Float64Array, y: Float64Array, fitOpts?: SmoothOptions | undefined | null): Promise<unknown>
+    fit(x: Float64Array, y: Float64Array, customWeights?: Array<number> | undefined | null): LoessResult
+    fitAsync(x: Float64Array, y: Float64Array, customWeights?: Array<number> | undefined | null): Promise<unknown>
 }
 
 export declare class LoessResult {
@@ -80,7 +80,6 @@ export interface SmoothOptions {
     weightedMetricWeights?: Array<number>
     surfaceMode?: string
     returnSe?: boolean
-    customWeights?: Array<number>
     cell?: number
     interpolationVertices?: number
     boundaryDegreeFallback?: boolean

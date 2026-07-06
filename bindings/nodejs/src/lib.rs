@@ -405,8 +405,6 @@ pub struct SmoothOptions {
     pub surfaceMode: Option<String>,
     // Compute hat-matrix statistics (enp, traceHat, etc.). Default: false.
     pub returnSe: Option<bool>,
-    // User-defined case weights (same length as x/y). Default: None.
-    pub customWeights: Option<Vec<f64>>,
     // Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy.
     pub cell: Option<f64>,
     // Maximum number of interpolation vertices.
@@ -437,12 +435,10 @@ impl Loess {
         &self,
         x: Float64Array,
         y: Float64Array,
-        fit_opts: Option<SmoothOptions>,
+        custom_weights: Option<Vec<f64>>,
     ) -> Result<LoessResult> {
         let mut builder = self.create_builder()?;
-        if let Some(ref opts) = fit_opts
-            && let Some(cw) = &opts.customWeights
-        {
+        if let Some(cw) = custom_weights {
             if cw.len() != y.as_ref().len() {
                 return Err(Error::new(
                     Status::InvalidArg,
@@ -459,7 +455,7 @@ impl Loess {
                     "customWeights must be non-negative".to_string(),
                 ));
             }
-            builder = builder.custom_weights(cw.clone());
+            builder = builder.custom_weights(cw);
         }
         let model = builder
             .adapter(Batch)
@@ -479,12 +475,10 @@ impl Loess {
         &self,
         x: Float64Array,
         y: Float64Array,
-        fit_opts: Option<SmoothOptions>,
+        custom_weights: Option<Vec<f64>>,
     ) -> Result<AsyncTask<LoessTask>> {
         let mut builder = self.create_builder()?;
-        if let Some(ref opts) = fit_opts
-            && let Some(cw) = &opts.customWeights
-        {
+        if let Some(cw) = custom_weights {
             if cw.len() != y.as_ref().len() {
                 return Err(Error::new(
                     Status::InvalidArg,
@@ -501,7 +495,7 @@ impl Loess {
                     "customWeights must be non-negative".to_string(),
                 ));
             }
-            builder = builder.custom_weights(cw.clone());
+            builder = builder.custom_weights(cw);
         }
         let x_vec = x.as_ref().to_vec();
         let y_vec = y.as_ref().to_vec();
@@ -579,9 +573,6 @@ impl Loess {
             }
             if opts.returnSe.unwrap_or(false) {
                 builder = builder.return_se();
-            }
-            if let Some(cw) = &opts.customWeights {
-                builder = builder.custom_weights(cw.clone());
             }
             if let Some(c) = opts.cell {
                 builder = builder.cell(c);
@@ -734,9 +725,6 @@ impl StreamingLoess {
             }
             if opts.returnSe.unwrap_or(false) {
                 builder = builder.return_se();
-            }
-            if let Some(cw) = opts.customWeights {
-                builder = builder.custom_weights(cw);
             }
             if let Some(c) = opts.cell {
                 builder = builder.cell(c);
@@ -894,9 +882,6 @@ impl OnlineLoess {
             }
             if opts.returnSe.unwrap_or(false) {
                 builder = builder.return_se();
-            }
-            if let Some(cw) = &opts.customWeights {
-                builder = builder.custom_weights(cw.clone());
             }
             if let Some(c) = opts.cell {
                 builder = builder.cell(c);
