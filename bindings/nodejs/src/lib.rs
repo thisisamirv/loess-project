@@ -12,8 +12,8 @@ use ::fastLoess::internals::api::{
     ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessError, LoessResult, MAD, MAR, Online,
-    Streaming,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessError, LoessResult as InnerLoessResult, MAD,
+    MAR, Online, Streaming,
 };
 
 // Parse weight function from string
@@ -194,12 +194,12 @@ pub struct Diagnostics {
 
 // Result of a LOESS fit.
 #[napi]
-pub struct LoessResultObj {
-    inner: LoessResult<f64>,
+pub struct LoessResult {
+    inner: InnerLoessResult<f64>,
 }
 
 #[napi]
-impl LoessResultObj {
+impl LoessResult {
     // Get the sorted x values.
     #[napi(getter)]
     pub fn get_x(&self) -> Float64Array {
@@ -440,7 +440,7 @@ impl Loess {
         x: Float64Array,
         y: Float64Array,
         fit_opts: Option<SmoothOptions>,
-    ) -> Result<LoessResultObj> {
+    ) -> Result<LoessResult> {
         let mut builder = self.create_builder()?;
         if let Some(ref opts) = fit_opts
             && let Some(cw) = &opts.customWeights
@@ -472,7 +472,7 @@ impl Loess {
             .fit(x.as_ref(), y.as_ref())
             .map_err(|e: LoessError| Error::new(Status::GenericFailure, e.to_string()))?;
 
-        Ok(LoessResultObj { inner: result })
+        Ok(LoessResult { inner: result })
     }
 
     // Fit the model asynchronously.
@@ -634,8 +634,8 @@ pub struct LoessTask {
 }
 
 impl Task for LoessTask {
-    type Output = LoessResult<f64>;
-    type JsValue = LoessResultObj;
+    type Output = InnerLoessResult<f64>;
+    type JsValue = LoessResult;
 
     fn compute(&mut self) -> Result<Self::Output> {
         let model = self
@@ -651,7 +651,7 @@ impl Task for LoessTask {
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> Result<Self::JsValue> {
-        Ok(LoessResultObj { inner: output })
+        Ok(LoessResult { inner: output })
     }
 }
 
@@ -784,22 +784,22 @@ impl StreamingLoess {
 
     // Process a chunk of data.
     #[napi]
-    pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResultObj> {
-        let result: LoessResult<f64> = self
+    pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResult> {
+        let result: InnerLoessResult<f64> = self
             .inner
             .process_chunk(x.as_ref(), y.as_ref())
             .map_err(|e: LoessError| Error::new(Status::GenericFailure, e.to_string()))?;
-        Ok(LoessResultObj { inner: result })
+        Ok(LoessResult { inner: result })
     }
 
     // Finalize the stream and return remaining data.
     #[napi]
-    pub fn finalize(&mut self) -> Result<LoessResultObj> {
-        let result: LoessResult<f64> = self
+    pub fn finalize(&mut self) -> Result<LoessResult> {
+        let result: InnerLoessResult<f64> = self
             .inner
             .finalize()
             .map_err(|e: LoessError| Error::new(Status::GenericFailure, e.to_string()))?;
-        Ok(LoessResultObj { inner: result })
+        Ok(LoessResult { inner: result })
     }
 }
 
@@ -974,7 +974,7 @@ impl OnlineLoess {
 
     // Add new points to the window and get smoothed values.
     #[napi]
-    pub fn add_points(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResultObj> {
+    pub fn add_points(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResult> {
         let x_slice = x.as_ref();
         let y_slice = y.as_ref();
         let x_vec = x_slice.to_vec();
@@ -988,7 +988,7 @@ impl OnlineLoess {
             smoothed.push(output.as_ref().map_or(yi, |o| o.smoothed));
         }
 
-        let inner_result = LoessResult {
+        let inner_result = InnerLoessResult {
             x: x_vec,
             y: smoothed,
             dimensions: self.dimensions,
@@ -1013,7 +1013,7 @@ impl OnlineLoess {
             leverage: None,
         };
 
-        Ok(LoessResultObj {
+        Ok(LoessResult {
             inner: inner_result,
         })
     }

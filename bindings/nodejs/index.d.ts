@@ -2,11 +2,11 @@
 /* eslint-disable */
 export declare class Loess {
   constructor(options?: SmoothOptions | undefined | null)
-  fit(x: Float64Array, y: Float64Array, fitOpts?: SmoothOptions | undefined | null): LoessResultObj
+  fit(x: Float64Array, y: Float64Array, fitOpts?: SmoothOptions | undefined | null): LoessResult
   fitAsync(x: Float64Array, y: Float64Array, fitOpts?: SmoothOptions | undefined | null): Promise<unknown>
 }
 
-export declare class LoessResultObj {
+export declare class LoessResult {
   get x(): Float64Array
   get y(): Float64Array
   get residuals(): Float64Array | null
@@ -31,13 +31,13 @@ export declare class LoessResultObj {
 
 export declare class OnlineLoess {
   constructor(options?: SmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
-  addPoints(x: Float64Array, y: Float64Array): LoessResultObj
+  addPoints(x: Float64Array, y: Float64Array): LoessResult
 }
 
 export declare class StreamingLoess {
   constructor(options?: SmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
-  processChunk(x: Float64Array, y: Float64Array): LoessResultObj
-  finalize(): LoessResultObj
+  processChunk(x: Float64Array, y: Float64Array): LoessResult
+  finalize(): LoessResult
 }
 
 export interface Diagnostics {
