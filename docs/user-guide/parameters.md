@@ -462,7 +462,7 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 === "Rust"
     ```rust
     let model = Loess::new()
-        .surface_mode(SurfaceMode::Direct)
+        .surface_mode(Direct)
         .adapter(Batch)
         .build()?;
     ```
@@ -636,7 +636,7 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
     ```rust
     let model = Loess::new()
         .dimensions(2)
-        .distance_metric(DistanceMetric::Weighted(vec![2.0, 0.5]))
+        .distance_metric(Weighted(vec![2.0, 0.5]))
         .adapter(Batch)
         .build()?;
     ```
