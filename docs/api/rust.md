@@ -13,12 +13,13 @@ Standard in-memory smoothing.
 **Constructor:**
 
 ```rust
-let builder = Loess::new().adapter(Batch); // Batch is default
+let model = Loess::<f64>::new().adapter(Batch).build()?;
 ```
 
 **Methods:**
 
 ```rust
+let model = Loess::new().adapter(Batch).build()?;
 let result = model.fit(&x, &y)?;
 ```
 
@@ -32,18 +33,21 @@ Streaming mode for large datasets.
 **Constructor:**
 
 ```rust
-let mut processor = Loess::new().adapter(Streaming);
+let mut processor = Loess::<f64>::new().adapter(Streaming).build()?;
 ```
 
 **Methods:**
 
 ```rust
+let mut processor = Loess::new().adapter(Streaming).build()?;
 let result = processor.process_chunk(&x, &y)?;
 ```
 
 * Processes a chunk of data. Returns `LoessResult<T>` with partial results.
 
 ```rust
+let mut processor = Loess::new().adapter(Streaming).build()?;
+processor.process_chunk(&x_chunk, &y_chunk)?;
 let final_result = processor.finalize()?;
 ```
 
@@ -56,19 +60,21 @@ Online mode for real-time data.
 **Constructor:**
 
 ```rust
-let mut processor = Loess::new().adapter(Online);
+let mut processor = Loess::<f64>::new().adapter(Online).build()?;
 ```
 
 **Methods:**
 
 ```rust
-let output = processor.add_point(x, y)?;
+let mut processor = Loess::new().adapter(Online).build()?;
+let output = processor.add_point(&[x[0]], y[0])?;
 ```
 
 * Adds a single point `(x, y)` to the window.
 * Returns `Result<Option<OnlineOutput<T>>, LoessError>`.
 
 ```rust
+let mut processor = Loess::<f64>::new().adapter(Online).build()?;
 processor.reset();
 ```
 
@@ -247,23 +253,13 @@ These chained methods configure the builder. They correspond to the "Options Str
 ## Example
 
 ```rust
-use fastLoess::prelude::*;
-use ndarray::array;
+let model = Loess::new()
+    .fraction(0.5)
+    .iterations(3)
+    .adapter(Batch)
+    .build()?;
 
-fn main() -> Result<(), LoessError> {
-    let x = array![1.0, 2.0, 3.0, 4.0, 5.0];
-    let y = array![2.1, 4.0, 6.2, 8.0, 10.1];
+let result = model.fit(&x, &y)?;
 
-    // Configure model
-    let model = Loess::new()
-        .fraction(0.5)
-        .iterations(3)
-        .build()?;
-
-    // Fit data
-    let result = model.fit(&x, &y)?;
-
-    println!("Smoothed Y: {:?}", result.y);
-    Ok(())
-}
+println!("Smoothed Y: {:?}", result.y);
 ```

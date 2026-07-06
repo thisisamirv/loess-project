@@ -57,24 +57,21 @@ For true real-time applications where each point must be processed immediately.
 
 === "Rust"
     ```rust
-    use loess_rs::prelude::*;
-
     let mut processor = Loess::new()
         .fraction(0.3)
         .iterations(1)
         .adapter(Online)
         .window_capacity(25)
         .min_points(5)
-        .update_mode(UpdateMode::Incremental)
+        .update_mode(Incremental)
         .build()?;
 
-    // Simulate real-time data arrival
     for i in 0..100 {
-        let x = i as f64;
-        let y = 20.0 + 5.0 * (x / 10.0).sin() + rand::random::<f64>();
-        
-        if let Some(output) = processor.add_point(x, y)? {
-            println!("Time {}: smoothed = {:.2}", x, output.smoothed);
+        let xi = i as f64;
+        let yi = 20.0 + 5.0 * (xi / 10.0).sin() + (xi * 1.7).sin() * 0.5;
+
+        if let Some(output) = processor.add_point(&[xi], yi)? {
+            println!("Time {}: smoothed = {:.2}", xi, output.smoothed);
         }
     }
     ```
@@ -211,14 +208,12 @@ For large datasets that arrive in batches or files.
 
 === "Rust"
     ```rust
-    use fastLoess::prelude::*;
-
     let mut processor = Loess::new()
         .fraction(0.1)
         .iterations(2)
         .adapter(Streaming)
-        .chunk_size(5000)
-        .overlap(500)
+        .chunk_size(50)
+        .overlap(10)
         .merge_strategy(WeightedAverage)
         .build()?;
 

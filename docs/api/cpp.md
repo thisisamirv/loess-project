@@ -11,7 +11,9 @@ The `Loess` class allows configuring the LOESS parameters once and fitting multi
 **Constructor:**
 
 ```cpp
-explicit Loess(const LoessOptions &options = {})
+fastloess::LoessOptions opts;
+opts.fraction = 0.5;
+fastloess::Loess model(opts);
 ```
 
 * `options`: A `LoessOptions` struct containing configuration parameters.
@@ -19,7 +21,8 @@ explicit Loess(const LoessOptions &options = {})
 **Methods:**
 
 ```cpp
-Expected<LoessResult> fit(const std::vector<double> &x, const std::vector<double> &y)
+fastloess::Loess model;
+auto result = model.fit(x, y).value();
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
@@ -32,7 +35,9 @@ The `StreamingLoess` class processes data in chunks, suitable for very large dat
 **Constructor:**
 
 ```cpp
-explicit StreamingLoess(const StreamingOptions &options = {})
+fastloess::StreamingOptions opts;
+opts.chunk_size = 5;
+fastloess::StreamingLoess model(opts);
 ```
 
 * `options`: A `StreamingOptions` struct (inherits from `LoessOptions`) with additional `chunk_size` and `overlap` parameters.
@@ -40,13 +45,20 @@ explicit StreamingLoess(const StreamingOptions &options = {})
 **Methods:**
 
 ```cpp
-Expected<LoessResult> processChunk(const std::vector<double> &x, const std::vector<double> &y)
+fastloess::StreamingOptions opts;
+opts.chunk_size = 10;
+fastloess::StreamingLoess model(opts);
+auto result = model.processChunk(x, y).value();
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```cpp
-Expected<LoessResult> finalize()
+fastloess::StreamingOptions opts;
+opts.chunk_size = 10;
+fastloess::StreamingLoess model(opts);
+model.processChunk(x, y);
+auto result = model.finalize().value();
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.
@@ -58,7 +70,9 @@ The `OnlineLoess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```cpp
-explicit OnlineLoess(const OnlineOptions &options = {})
+fastloess::OnlineOptions opts;
+opts.window_capacity = 10;
+fastloess::OnlineLoess model(opts);
 ```
 
 * `options`: An `OnlineOptions` struct (inherits from `LoessOptions`) with `window_capacity`, `min_points`, and `update_mode`.
@@ -66,7 +80,10 @@ explicit OnlineLoess(const OnlineOptions &options = {})
 **Methods:**
 
 ```cpp
-Expected<LoessResult> addPoints(const std::vector<double> &x, const std::vector<double> &y)
+fastloess::OnlineOptions opts;
+opts.window_capacity = 10;
+fastloess::OnlineLoess model(opts);
+auto result = model.addPoints(x, y).value();
 ```
 
 * Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).

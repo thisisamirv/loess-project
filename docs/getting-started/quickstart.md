@@ -314,6 +314,7 @@ LOESS can robustly handle outliers through iterative reweighting:
 
     ```rust
     // Data with an outlier at position 3
+    let x = vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
     let y_with_outlier = vec![2.0, 4.0, 6.0, 50.0, 10.0, 12.0];  // 50.0 is outlier
 
     let model = Loess::new()

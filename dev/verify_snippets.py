@@ -9,6 +9,10 @@ Usage
     python dev/verify_snippets.py --lang python      # Python only
     python dev/verify_snippets.py --lang nodejs      # Node.js only
     python dev/verify_snippets.py --lang julia       # Julia only
+    python dev/verify_snippets.py --lang r           # R only
+    python dev/verify_snippets.py --lang wasm        # WebAssembly only
+    python dev/verify_snippets.py --lang rust        # Rust only
+    python dev/verify_snippets.py --lang cpp         # C++ only
     python dev/verify_snippets.py --file docs/api/python.md
     python dev/verify_snippets.py --dry-run          # list snippets, don't run
     python dev/verify_snippets.py --verbose          # show snippet source on failure
@@ -281,10 +285,182 @@ _NODEJS_PREAMBLE = textwrap.dedent("""\
     // -------------------------------------------------------------------------
 """)
 
+_R_PREAMBLE = textwrap.dedent("""\
+    # --- snippet preamble ----------------------------------------------------
+    suppressMessages({{
+        .libPaths(c(
+            normalizePath(file.path(
+                Sys.getenv("LOESS_REPO_ROOT", "{repo_root}"),
+                "bindings", "r", ".r-lib"
+            ), mustWork = FALSE),
+            .libPaths()
+        ))
+        library(rfastloess)
+    }})
+    set.seed(42)
+    n  <- 100L
+    x  <- seq(0, 10, length.out = n)
+    y  <- sin(x) + rnorm(n, sd = 0.1)
+
+    t            <- x
+    t_irregular  <- x
+    y_irregular  <- y
+    positions    <- x
+    observed     <- y
+    times        <- x
+    temperatures <- y
+    hours        <- x
+    expression   <- y
+    coverage     <- abs(y) * 10 + 5
+
+    lat <- x; lon <- x * 0.5
+    x1  <- x; x2 <- x * 0.5; x3 <- x * 0.25
+    z   <- sin(x) + cos(x * 0.5)
+    x2d <- as.vector(rbind(x, x * 0.5))   # row-major flat: (2*n,)
+    x3d <- as.vector(rbind(x, x * 0.5, x * 0.25))  # row-major flat: (3*n,)
+
+    y_with_outlier        <- y
+    y_with_outlier[[50L]] <- 100
+    weights <- rep(1, n)
+
+    chunk1_x <- x[seq_len(50)]; chunk1_y <- y[seq_len(50)]
+    chunk2_x <- x[51:100];      chunk2_y <- y[51:100]
+    x_chunk  <- x[seq_len(50)]; y_chunk  <- y[seq_len(50)]
+    data_x   <- x[seq_len(30)]
+    data_y   <- y[seq_len(30)]
+    # -------------------------------------------------------------------------
+""").format(repo_root=str(REPO_ROOT).replace("\\", "/"))
+
+_WASM_PKG_DIR = REPO_ROOT / "bindings" / "wasm" / "pkg"
+
+_WASM_PREAMBLE = textwrap.dedent("""\
+    // --- snippet preamble (WASM) ---------------------------------------------
+    'use strict';
+    const _wasmPkg = (() => {{
+        const candidates = [
+            '{wasm_pkg}/fastloess_wasm.js',
+        ];
+        for (const c of candidates) {{
+            try {{ return require(c); }} catch (_) {{}}
+        }}
+        return null;
+    }})();
+    if (!_wasmPkg) {{ console.error('WASM pkg not found — skip'); process.exit(0); }}
+    const {{ smooth, StreamingLoessWasm, OnlineLoessWasm }} = _wasmPkg;
+    const fastloess = _wasmPkg;
+
+    const _n = 100;
+    const x = new Float64Array(_n).map((_, i) => i * 0.1);
+    const y = new Float64Array(x.map(xi => Math.sin(xi) + (Math.random() - 0.5) * 0.2));
+
+    const z = new Float64Array(y.map((yi, i) => yi + Math.cos(x[i] * 0.5)));
+    const weights = new Float64Array(_n).fill(1.0);
+    // row-major flat 2D: [x0,x0*0.5, x1,x1*0.5, ...]
+    const x2d = new Float64Array(_n * 2);
+    for (let i = 0; i < _n; i++) {{ x2d[i*2] = x[i]; x2d[i*2+1] = x[i]*0.5; }}
+    // row-major flat 3D: [x0,x0*0.5,x0*0.25, x1,...]
+    const x3d = new Float64Array(_n * 3);
+    for (let i = 0; i < _n; i++) {{ x3d[i*3] = x[i]; x3d[i*3+1] = x[i]*0.5; x3d[i*3+2] = x[i]*0.25; }}
+    const xChunk = x.slice(0, 50);
+    const yChunk = y.slice(0, 50);
+    // -------------------------------------------------------------------------
+""").format(wasm_pkg=str(_WASM_PKG_DIR).replace("\\", "/"))
+
+# Rust snippets are wrapped: top + snippet + bottom
+_RUST_PREAMBLE_TOP = textwrap.dedent("""\
+    #[allow(unused_imports, ambiguous_glob_reexports)]
+    use loess_rs::prelude::*;
+
+    #[allow(dead_code, unused_variables)]
+    fn _run() -> Result<(), Box<dyn std::error::Error>> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 / 10.0).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
+        let t = x.clone();
+        let weights: Vec<f64> = vec![1.0; n];
+        let lat = x.clone();
+        let lon: Vec<f64> = x.iter().map(|&xi| xi * 0.5).collect();
+        let x2d: Vec<f64> = x.iter().chain(lon.iter()).copied().collect();
+        let x3: Vec<f64> = x.iter().map(|&xi| xi * 0.25).collect();
+        let x3d: Vec<f64> = x.iter().chain(lon.iter()).chain(x3.iter()).copied().collect();
+        let z: Vec<f64> = x.iter().map(|&xi| xi.sin() + (xi * 0.5).cos()).collect();
+        let x_chunk: Vec<f64> = x[..50].to_vec();
+        let y_chunk: Vec<f64> = y[..50].to_vec();
+        let chunk1_x = x_chunk.clone();
+        let chunk1_y = y_chunk.clone();
+        let chunk2_x: Vec<f64> = x[50..].to_vec();
+        let chunk2_y: Vec<f64> = y[50..].to_vec();
+        let t_irregular = t.clone();
+        let y_irregular = y.clone();
+        let y_with_outlier: Vec<f64> = { let mut v = y.clone(); v[50] = 100.0; v };
+        let _ = (&t, &weights, &lat, &lon, &x2d, &x3, &x3d, &z,
+                  &x_chunk, &y_chunk, &chunk1_x, &chunk1_y, &chunk2_x, &chunk2_y,
+                  &t_irregular, &y_irregular, &y_with_outlier);
+
+""")
+
+_RUST_PREAMBLE_BOTTOM = textwrap.dedent("""\
+        Ok(())
+    }
+
+    fn main() {
+        if let Err(e) = _run() {
+            eprintln!("Error: {}", e);
+            std::process::exit(1);
+        }
+    }
+""")
+
+# Fixed temp project for Rust snippets (reuses Cargo artifacts)
+_RUST_SNIPPET_DIR = REPO_ROOT / "target" / "doc-snippet-runner"
+
+# C++ snippets are wrapped: preamble top + snippet + bottom
+_CPP_PREAMBLE_TOP = textwrap.dedent("""\
+    #include "fastloess.hpp"
+    #include <cmath>
+    #include <cstdlib>
+    #include <iostream>
+    #include <vector>
+
+    using namespace fastloess;
+
+    static void _run() {
+        const size_t n = 100;
+        std::vector<double> x(n), y(n);
+        for (size_t i = 0; i < n; ++i) {
+            x[i] = static_cast<double>(i) / 10.0;
+            y[i] = std::sin(x[i]);
+        }
+        auto x_chunk = std::vector<double>(x.begin(), x.begin() + 50);
+        auto y_chunk = std::vector<double>(y.begin(), y.begin() + 50);
+        // row-major flat 2D: [x0,x0*0.5, x1,x1*0.5, ...]
+        std::vector<double> x2d;
+        x2d.reserve(n * 2);
+        for (size_t i = 0; i < n; ++i) { x2d.push_back(x[i]); x2d.push_back(x[i] * 0.5); }
+        (void)x_chunk; (void)y_chunk; (void)x2d;
+
+""")
+
+_CPP_PREAMBLE_BOTTOM = textwrap.dedent("""\
+    }
+
+    int main() {
+        try {
+            _run();
+        } catch (const std::exception& e) {
+            std::cerr << "Error: " << e.what() << "\\n";
+            return 1;
+        }
+        return 0;
+    }
+""")
+
 PREAMBLES: dict[str, str] = {
     "python": _PYTHON_PREAMBLE,
     "julia": _JULIA_PREAMBLE,
     "nodejs": _NODEJS_PREAMBLE,
+    "r": _R_PREAMBLE,
+    "wasm": _WASM_PREAMBLE,
 }
 
 # ---------------------------------------------------------------------------
@@ -428,6 +604,54 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         if ": SmoothOptions" in code or ": LoessResult" in code:
             return "TypeScript (not Node.js)"
 
+    if runner == "r":
+        # Skip install/devtools snippets
+        if re.search(r"\binstall\.packages\b|\bdevtools::", code):
+            return "package installation snippet"
+        # Skip if no actual R statements (e.g., pure output blocks)
+        if not any(c in code for c in ["<-", "=", "(", "library"]):
+            return "no executable R statements"
+        # Multi-dim input (x2d/x3d) requires a package rebuild to work correctly
+        if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*=\s*[23]\b", code):
+            return "multi-dim R (needs package rebuild)"
+
+    if runner == "wasm":
+        # Skip ES-module import syntax (wasm runner uses CJS require)
+        if re.search(r"\bimport\s+\{", code):
+            return "ES module import (not supported in CJS runner)"
+
+    if runner == "rust":
+        # Skip snippets that are complete programs (have their own fn main)
+        if re.search(r"\bfn\s+main\s*\(", code):
+            return "defines own fn main"
+        # Skip snippets that look like TOML config (Cargo.toml examples)
+        if code.strip().startswith("[") and "=" in code and "fn " not in code:
+            return "TOML/config snippet"
+        # Skip snippets with no actual Rust statements
+        if not any(c in code for c in ["let ", "use ", "fn ", "::", "Loess", "build"]):
+            return "no executable Rust statements"
+        # Build-only snippets can't infer generic type without a .fit() call
+        if (
+            re.search(r"\.adapter\(", code)
+            and not any(
+                s in code
+                for s in [".fit(", ".add_points(", ".add_point(", ".process_chunk("]
+            )
+            and "Loess::<" not in code
+        ):
+            return "build-only snippet (type T unresolvable without usage)"
+
+    if runner == "cpp":
+        # Skip snippets that define their own main
+        if re.search(r"\bint\s+main\s*\(", code):
+            return "defines own int main"
+        # Skip pure output / comment blocks
+        if not any(c in code for c in [";", "{", "Loess", "smooth", "auto ", "std::"]):
+            return "no executable C++ statements"
+        # Multi-dim (x2d/x3d) requires binding validation fix
+        if re.search(r"\bx2d\b|\bx3d\b", code):
+            return "multi-dim C++ (validation bug - needs binding fix)"
+
     return None
 
 
@@ -467,6 +691,14 @@ _NODEJS_PREAMBLE_VARS: frozenset = frozenset(
         "yArr",
         "windowX",
         "windowY",
+        # multi-dim / WASM shared vars
+        "x2d",
+        "x3d",
+        "smooth",
+        "StreamingLoessWasm",
+        "OnlineLoessWasm",
+        "xChunk",
+        "yChunk",
     }
 )
 
@@ -496,9 +728,17 @@ def _strip_nodejs_redeclarations(code: str) -> str:
 
         # Detect lines to strip
         strip_line = False
+        # Strip require() imports from either package name
         if re.match(
-            r"""(?:const|let|var)\s+\S.*=\s*require\(\s*['"]fastloess['"]\s*\)""", s
+            r"""(?:const|let|var)\s+\S.*=\s*require\(\s*['"]fastloess(?:-wasm)?['"]\s*\)""",
+            s,
         ):
+            strip_line = True
+        # Strip ES module imports from fastloess packages
+        elif re.match(r"""import\s+.*\bfrom\s+['"]fastloess(?:-wasm)?['"]""", s):
+            strip_line = True
+        # Strip `await init()` — WASM preamble initialises synchronously via require
+        elif re.match(r"""await\s+init\s*\(""", s):
             strip_line = True
         elif re.match(
             r"""(?:const|let|var)\s+\{[^}]+\}\s*=\s*(?:fl|fastloess)\s*;?\s*$""", s
@@ -690,10 +930,373 @@ def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
         os.unlink(tmp)
 
 
+def run_r(snippet: Snippet, timeout: int) -> RunResult:
+    code = PREAMBLES["r"] + snippet.code
+    with tempfile.NamedTemporaryFile(
+        suffix=".R", mode="w", delete=False, encoding="utf-8"
+    ) as f:
+        f.write(code)
+        tmp = f.name
+
+    rscript = _find_exe("Rscript")
+    if rscript is None:
+        os.unlink(tmp)
+        return RunResult(
+            snippet=snippet,
+            runner="r",
+            skipped=True,
+            skip_reason="Rscript not found in PATH",
+        )
+
+    try:
+        t0 = time.monotonic()
+        proc = subprocess.run(
+            [rscript, "--vanilla", tmp],
+            capture_output=True,
+            timeout=timeout,
+            text=True,
+            env={**os.environ, "LOESS_REPO_ROOT": str(REPO_ROOT)},
+        )
+        dur = time.monotonic() - t0
+        return RunResult(
+            snippet=snippet,
+            runner="r",
+            passed=(proc.returncode == 0),
+            duration=dur,
+            stdout=proc.stdout,
+            stderr=proc.stderr,
+            returncode=proc.returncode,
+        )
+    except subprocess.TimeoutExpired:
+        return RunResult(
+            snippet=snippet,
+            runner="r",
+            passed=False,
+            duration=timeout,
+            stderr=f"Timed out after {timeout}s",
+        )
+    finally:
+        os.unlink(tmp)
+
+
+def run_wasm(snippet: Snippet, timeout: int) -> RunResult:
+    # WASM snippets run in Node.js with the pre-built wasm pkg
+    if not _WASM_PKG_DIR.exists():
+        return RunResult(
+            snippet=snippet,
+            runner="wasm",
+            skipped=True,
+            skip_reason="bindings/wasm/pkg/ not built (run 'make wasm' first)",
+        )
+
+    code = PREAMBLES["wasm"] + _strip_nodejs_redeclarations(snippet.code)
+    with tempfile.NamedTemporaryFile(
+        suffix=".js", mode="w", delete=False, encoding="utf-8"
+    ) as f:
+        f.write(code)
+        tmp = f.name
+
+    node_bin = _find_exe("node")
+    if node_bin is None:
+        os.unlink(tmp)
+        return RunResult(
+            snippet=snippet,
+            runner="wasm",
+            skipped=True,
+            skip_reason="node not found in PATH",
+        )
+
+    try:
+        t0 = time.monotonic()
+        proc = subprocess.run(
+            [node_bin, tmp],
+            capture_output=True,
+            timeout=timeout,
+            text=True,
+            cwd=str(_WASM_PKG_DIR),
+        )
+        dur = time.monotonic() - t0
+        return RunResult(
+            snippet=snippet,
+            runner="wasm",
+            passed=(proc.returncode == 0),
+            duration=dur,
+            stdout=proc.stdout,
+            stderr=proc.stderr,
+            returncode=proc.returncode,
+        )
+    except subprocess.TimeoutExpired:
+        return RunResult(
+            snippet=snippet,
+            runner="wasm",
+            passed=False,
+            duration=timeout,
+            stderr=f"Timed out after {timeout}s",
+        )
+    finally:
+        os.unlink(tmp)
+
+
+def _ensure_rust_snippet_project() -> bool:
+    """Create the persistent temp Cargo project for Rust snippet execution.
+
+    Returns True if the project is ready, False on error.
+    """
+    _RUST_SNIPPET_DIR.mkdir(parents=True, exist_ok=True)
+    cargo_toml = _RUST_SNIPPET_DIR / "Cargo.toml"
+    if not cargo_toml.exists():
+        # [workspace] prevents Cargo from merging this into the parent workspace
+        loess_rs_path = str(REPO_ROOT / "crates" / "loess-rs").replace("\\", "/")
+        fastloess_path = str(REPO_ROOT / "crates" / "fastLoess").replace("\\", "/")
+        cargo_toml.write_text(
+            textwrap.dedent(f"""\
+                [workspace]
+
+                [package]
+                name = "doc-snippet"
+                version = "0.1.0"
+                edition = "2021"
+
+                [[bin]]
+                name = "doc-snippet"
+                path = "src/main.rs"
+
+                [dependencies]
+                loess-rs  = {{ path = "{loess_rs_path}", features = ["std"] }}
+                fastLoess = {{ path = "{fastloess_path}" }}
+            """),
+            encoding="utf-8",
+        )
+    src_dir = _RUST_SNIPPET_DIR / "src"
+    src_dir.mkdir(exist_ok=True)
+    return True
+
+
+def run_rust(snippet: Snippet, timeout: int) -> RunResult:
+    cargo_bin = _find_exe("cargo")
+    if cargo_bin is None:
+        return RunResult(
+            snippet=snippet,
+            runner="rust",
+            skipped=True,
+            skip_reason="cargo not found in PATH",
+        )
+
+    _ensure_rust_snippet_project()
+
+    # Strip leading use declarations from snippet (preamble provides them)
+    code_lines = snippet.code.splitlines()
+    filtered: list[str] = []
+    for line in code_lines:
+        # Keep use statements but they'll be duplicates — Rust ignores them
+        filtered.append(line)
+
+    code_body = "\n".join(filtered)
+    main_rs = (
+        _RUST_PREAMBLE_TOP
+        + "    "
+        + code_body.replace("\n", "\n    ")
+        + "\n"
+        + _RUST_PREAMBLE_BOTTOM
+    )
+
+    main_path = _RUST_SNIPPET_DIR / "src" / "main.rs"
+    main_path.write_text(main_rs, encoding="utf-8")
+
+    # Share the parent workspace's target dir to reuse compiled deps
+    target_dir = str(REPO_ROOT / "target" / "doc-snippet-target")
+
+    try:
+        t0 = time.monotonic()
+        proc = subprocess.run(
+            [
+                cargo_bin,
+                "run",
+                "--manifest-path",
+                str(_RUST_SNIPPET_DIR / "Cargo.toml"),
+                "--target-dir",
+                target_dir,
+                "--quiet",
+            ],
+            capture_output=True,
+            timeout=timeout,
+            text=True,
+            cwd=str(REPO_ROOT),
+        )
+        dur = time.monotonic() - t0
+        return RunResult(
+            snippet=snippet,
+            runner="rust",
+            passed=(proc.returncode == 0),
+            duration=dur,
+            stdout=proc.stdout,
+            stderr=proc.stderr,
+            returncode=proc.returncode,
+        )
+    except subprocess.TimeoutExpired:
+        return RunResult(
+            snippet=snippet,
+            runner="rust",
+            passed=False,
+            duration=timeout,
+            stderr=f"Timed out after {timeout}s",
+        )
+
+
+def _find_cpp_compiler() -> Optional[str]:
+    for name in ("g++", "clang++", "c++"):
+        exe = _find_exe(name)
+        if exe:
+            return exe
+    return None
+
+
+def _find_cpp_library() -> Optional[Path]:
+    """Return the path to the built fastloess_cpp shared/static library, or None."""
+    candidates = [
+        # MinGW targets on Windows (Makefile uses these when GCC is available)
+        REPO_ROOT / "target" / "x86_64-pc-windows-gnu" / "release-c",
+        REPO_ROOT / "target" / "aarch64-pc-windows-gnu" / "release-c",
+        # Default release-c (MSVC on Windows, native on Unix)
+        REPO_ROOT / "target" / "release-c",
+        REPO_ROOT / "target" / "debug",
+    ]
+    lib_names = [
+        "fastloess_cpp.dll",
+        "fastloess_cpp.lib",
+        "libfastloess_cpp.so",
+        "libfastloess_cpp.dylib",
+        "libfastloess_cpp.a",
+    ]
+    seen: set[Path] = set()
+    for d in candidates:
+        if d in seen:
+            continue
+        seen.add(d)
+        if not d.exists():
+            continue
+        for name in lib_names:
+            if (d / name).exists():
+                return d
+    return None
+
+
+def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
+    compiler = _find_cpp_compiler()
+    if compiler is None:
+        return RunResult(
+            snippet=snippet,
+            runner="cpp",
+            skipped=True,
+            skip_reason="no C++ compiler (g++/clang++) found in PATH",
+        )
+
+    lib_dir = _find_cpp_library()
+    if lib_dir is None:
+        return RunResult(
+            snippet=snippet,
+            runner="cpp",
+            skipped=True,
+            skip_reason="fastloess_cpp library not built (run 'make cpp' first)",
+        )
+
+    include_dir = str(REPO_ROOT / "bindings" / "cpp" / "include")
+    lib_dir_str = str(lib_dir)
+
+    code = (
+        _CPP_PREAMBLE_TOP
+        + "    "
+        + snippet.code.replace("\n", "\n    ")
+        + "\n"
+        + _CPP_PREAMBLE_BOTTOM
+    )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        src = os.path.join(tmpdir, "snippet.cpp")
+        exe = os.path.join(tmpdir, "snippet.exe" if os.name == "nt" else "snippet")
+        with open(src, "w", encoding="utf-8") as f:
+            f.write(code)
+
+        compile_cmd = [
+            compiler,
+            "-std=c++17",
+            "-O0",
+            f"-I{include_dir}",
+            f"-L{lib_dir_str}",
+            src,
+            "-o",
+            exe,
+            "-lfastloess_cpp",
+        ]
+
+        try:
+            t0 = time.monotonic()
+            cproc = subprocess.run(
+                compile_cmd,
+                capture_output=True,
+                timeout=60,
+                text=True,
+            )
+            if cproc.returncode != 0:
+                dur = time.monotonic() - t0
+                return RunResult(
+                    snippet=snippet,
+                    runner="cpp",
+                    passed=False,
+                    duration=dur,
+                    stdout=cproc.stdout,
+                    stderr=cproc.stderr,
+                    returncode=cproc.returncode,
+                )
+
+            # Set library search path and run
+            env = dict(os.environ)
+            if os.name == "nt":
+                env["PATH"] = lib_dir_str + os.pathsep + env.get("PATH", "")
+            elif sys.platform == "darwin":
+                env["DYLD_LIBRARY_PATH"] = (
+                    lib_dir_str + os.pathsep + env.get("DYLD_LIBRARY_PATH", "")
+                )
+            else:
+                env["LD_LIBRARY_PATH"] = (
+                    lib_dir_str + os.pathsep + env.get("LD_LIBRARY_PATH", "")
+                )
+
+            rproc = subprocess.run(
+                [exe],
+                capture_output=True,
+                timeout=timeout,
+                text=True,
+                env=env,
+            )
+            dur = time.monotonic() - t0
+            return RunResult(
+                snippet=snippet,
+                runner="cpp",
+                passed=(rproc.returncode == 0),
+                duration=dur,
+                stdout=rproc.stdout,
+                stderr=rproc.stderr,
+                returncode=rproc.returncode,
+            )
+        except subprocess.TimeoutExpired:
+            return RunResult(
+                snippet=snippet,
+                runner="cpp",
+                passed=False,
+                duration=timeout,
+                stderr=f"Timed out after {timeout}s",
+            )
+
+
 _RUNNERS = {
     "python": run_python,
     "julia": run_julia,
     "nodejs": run_nodejs,
+    "r": run_r,
+    "wasm": run_wasm,
+    "rust": run_rust,
+    "cpp": run_cpp,
 }
 
 
@@ -729,7 +1332,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     )
     parser.add_argument(
         "--lang",
-        choices=["python", "julia", "nodejs", "all"],
+        choices=["python", "julia", "nodejs", "r", "wasm", "rust", "cpp", "all"],
         default="all",
         help="Which language runner to use (default: all)",
     )
@@ -763,7 +1366,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     args = parser.parse_args(argv)
 
     active_runners: set[str] = (
-        {"python", "julia", "nodejs"} if args.lang == "all" else {args.lang}
+        {"python", "julia", "nodejs", "r", "wasm", "rust", "cpp"}
+        if args.lang == "all"
+        else {args.lang}
     )
 
     # Detect best Python executable

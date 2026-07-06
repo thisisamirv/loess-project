@@ -93,10 +93,8 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "Rust"
     ```rust
-    use loess_rs::prelude::*;
-
-    let positions: Vec<f64> = /* sorted genomic positions */;
-    let observed: Vec<f64> = /* methylation levels 0–1 */;
+    let positions = x.clone();
+    let observed = y.clone();
 
     let model = Loess::new()
         .fraction(0.1)
@@ -231,10 +229,8 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
 === "Rust"
     ```rust
-    use loess_rs::prelude::*;
-
-    let positions: Vec<f64> = (0..1000).map(|i| i as f64 * 10.0).collect(); // 0 to 9990 step 10
-    let observed: Vec<f64> = /* ChIP-seq counts */;
+    let positions: Vec<f64> = (0..1000).map(|i| i as f64 *10.0).collect(); // 0 to 9990 step 10
+    let observed: Vec<f64> = positions.iter().map(|&p| (p / 1000.0).sin().abs()* 100.0 + 10.0).collect();
 
     let model = Loess::new()
         .fraction(0.05)
@@ -347,22 +343,16 @@ For whole-genome data that doesn't fit in memory:
 
 === "Rust"
     ```rust
-    use loess_rs::prelude::*;
-
-    let mut model = Loess::new()
+    let mut processor = Loess::new()
         .fraction(0.05)
         .iterations(3)
         .adapter(Streaming)
-        .chunk_size(100_000)
-        .overlap(10_000)
+        .chunk_size(50)
+        .overlap(10)
         .merge_strategy(WeightedAverage)
-        .build()?;;
+        .build()?;
 
-    // Process chunks from file or stream
-    let mut processor = model.processor();
-    for chunk in chromosome_chunks {
-        processor.process_chunk(&chunk.positions, &chunk.coverage)?;
-    }
+    processor.process_chunk(&x_chunk, &y_chunk)?;
     let result = processor.finalize()?;
     ```
 

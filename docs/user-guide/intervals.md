@@ -312,6 +312,10 @@ Access standard errors directly (available when intervals are computed):
 
 === "Rust"
     ```rust
+    let model = Loess::new()
+        .confidence_intervals(0.95)
+        .adapter(Batch)
+        .build()?;
     let result = model.fit(&x, &y)?;
 
     if let Some(se) = &result.standard_errors {

@@ -196,26 +196,20 @@ Process large datasets in chunks with configurable overlap.
 
 === "Rust"
     ```rust
-    use fastLoess::prelude::*;
-
     let mut processor = Loess::new()
         .fraction(0.3)
         .iterations(2)
         .adapter(Streaming)
-        .chunk_size(5000)
-        .overlap(500)
+        .chunk_size(50)
+        .overlap(10)
         .merge_strategy(Average)
         .build()?;
 
-    // Process chunks (e.g., from a file reader)
-    for (chunk_x, chunk_y) in data_chunks {
-        let result = processor.process_chunk(&chunk_x, &chunk_y)?;
-        write_output(&result.y);
-    }
+    let result = processor.process_chunk(&x_chunk, &y_chunk)?;
+    println!("Chunk processed: {} points", result.y.len());
 
-    // IMPORTANT: Get remaining buffered data
     let final_result = processor.finalize()?;
-    write_output(&final_result.y);
+    println!("Final: {} points", final_result.y.len());
     ```
 
 === "Julia"
@@ -347,8 +341,6 @@ Incremental updates with a sliding window for real-time data.
 
 === "Rust"
     ```rust
-    use fastLoess::prelude::*;
-
     let mut processor = Loess::new()
         .fraction(0.2)
         .iterations(1)
@@ -358,9 +350,8 @@ Incremental updates with a sliding window for real-time data.
         .update_mode(Incremental)
         .build()?;
 
-    // Process points as they arrive
-    for (x, y) in sensor_stream {
-        if let Some(output) = processor.add_point(x, y)? {
+    for i in 0..x.len() {
+        if let Some(output) = processor.add_point(&[x[i]], y[i])? {
             println!("Smoothed: {:.2}", output.smoothed);
         }
     }

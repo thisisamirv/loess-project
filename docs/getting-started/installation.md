@@ -191,7 +191,7 @@ Install the LOESS library for your preferred language.
     x <- c(1, 2, 3)
     y <- c(2, 4, 6)
     
-    result <- fastloess(x, y)
+    result <- Loess()$fit(x, y)
     print("Installed successfully!")
     ```
 

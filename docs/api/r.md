@@ -11,7 +11,7 @@ The `Loess` class allows configuring the LOESS parameters once and fitting multi
 **Constructor:**
 
 ```r
-model <- Loess(...)
+model <- Loess(fraction = 0.5)
 ```
 
 * `...`: Arguments corresponding to `LoessOptions` fields.
@@ -19,6 +19,7 @@ model <- Loess(...)
 **Methods:**
 
 ```r
+model <- Loess()
 result <- model$fit(x, y)
 ```
 
@@ -34,7 +35,7 @@ The `StreamingLoess` class processes data in chunks, suitable for very large dat
 **Constructor:**
 
 ```r
-stream <- StreamingLoess(...)
+stream <- StreamingLoess(chunk_size = 10L)
 ```
 
 * `...`: Arguments corresponding to `LoessOptions` and `StreamingOptions` fields.
@@ -42,12 +43,15 @@ stream <- StreamingLoess(...)
 **Methods:**
 
 ```r
+stream <- StreamingLoess(chunk_size = 10L)
 partial_result <- stream$process_chunk(x, y)
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```r
+stream <- StreamingLoess(chunk_size = 10L)
+stream$process_chunk(x, y)
 final_result <- stream$finalize()
 ```
 
@@ -60,7 +64,7 @@ The `OnlineLoess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```r
-online <- OnlineLoess(...)
+online <- OnlineLoess(window_capacity = 10L)
 ```
 
 * `...`: Arguments corresponding to `LoessOptions` and `OnlineOptions` fields.
@@ -68,6 +72,7 @@ online <- OnlineLoess(...)
 **Methods:**
 
 ```r
+online <- OnlineLoess(window_capacity = 10L)
 result <- online$add_points(x, y)
 ```
 

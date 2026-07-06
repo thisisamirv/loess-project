@@ -24,8 +24,11 @@
 #' @srrstats {G2.16} Inf/NaN validation in input vectors.
 #' @srrstats {G3.0} Tolerance-based comparisons used in robustness weights.
 validate_common_args <- function(x, y, fraction, iterations) {
-    if (length(x) != length(y)) {
-        stop("x and y must have the same length")
+    # For multi-dimensional input, x is a flat vector of length n * d.
+    # Accept if length(x) is a positive multiple of length(y).
+    n_y <- length(y)
+    if (length(x) == 0 || n_y == 0 || length(x) %% n_y != 0) {
+        stop("x and y must have the same length (or x must be a multiple of y for multi-dim input)")
     }
     if (length(x) < 3) {
         stop("At least 3 data points are required")

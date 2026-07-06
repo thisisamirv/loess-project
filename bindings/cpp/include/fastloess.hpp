@@ -444,9 +444,10 @@ public:
   Expected<LoessResult> fit(const std::vector<double> &x_values,
                             const std::vector<double> &y_values,
                             const std::vector<double> &custom_weights = {}) {
-    if (x_values.size() != y_values.size()) {
+    if (y_values.empty() || x_values.empty() ||
+        x_values.size() % y_values.size() != 0) {
       return Expected<LoessResult>::makeError(
-          "x and y must have the same length");
+          "x length must be a non-zero multiple of y length");
     }
     if (x_values.empty()) {
       return Expected<LoessResult>::makeError("Input arrays must not be empty");
@@ -543,7 +544,8 @@ public:
     if (expect_finalized_) {
       return Expected<LoessResult>::makeError("Model already finalized");
     }
-    if (x_values.size() != y_values.size()) {
+    if (y_values.empty() || x_values.empty() ||
+        x_values.size() % y_values.size() != 0) {
       return Expected<LoessResult>::makeError("x and y length mismatch");
     }
 
@@ -590,8 +592,7 @@ public:
         options.robustness_method.c_str(), options.scaling_method.c_str(),
         options.boundary_policy.c_str(),
         options.return_robustness_weights ? 1 : 0,
-        options.return_diagnostics ? 1 : 0,
-        options.return_residuals ? 1 : 0,
+        options.return_diagnostics ? 1 : 0, options.return_residuals ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.parallel ? 1 : 0, options.window_capacity, options.min_points,
         options.update_mode.c_str(), options.degree.c_str(), options.dimensions,
@@ -645,7 +646,8 @@ public:
 
   Expected<LoessResult> addPoints(const std::vector<double> &x_values,
                                   const std::vector<double> &y_values) {
-    if (x_values.size() != y_values.size()) {
+    if (y_values.empty() || x_values.empty() ||
+        x_values.size() % y_values.size() != 0) {
       return Expected<LoessResult>::makeError("x and y length mismatch");
     }
 

@@ -370,9 +370,6 @@ LOESS naturally handles irregular time sampling:
 === "Rust"
     ```rust
     // Irregular sampling - no special handling needed
-    let t_irregular: Array1<f64> = /*sorted irregular times */;
-    let y_irregular: Array1<f64> = /* corresponding values*/;
-
     let model = Loess::new()
         .fraction(0.2)
         .adapter(Batch)

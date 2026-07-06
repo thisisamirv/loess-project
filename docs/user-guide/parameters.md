@@ -1131,7 +1131,7 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     # Downweight an outlier at index 5
     weights <- rep(1, length(y))
     weights[5] <- 0
-    result <- Loess(custom_weights = weights)$fit(x, y)
+    result <- Loess()$fit(x, y, custom_weights = weights)
     ```
 
 === "Python"
@@ -1176,10 +1176,10 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
 
 === "C++"
     ```cpp
-    std::vector<double> weights(y.size(), 1.0);
-    weights[4] = 0.0; // Exclude 5th point
-    fastloess::Loess model({ .custom_weights = weights });
-    auto result = model.fit(x, y).value();
+    std::vector<double> custom_weights(y.size(), 1.0);
+    custom_weights[4] = 0.0; // Exclude 5th point
+    fastloess::Loess model;
+    auto result = model.fit(x, y, custom_weights).value();
     ```
 
 ---
@@ -1459,10 +1459,12 @@ Selection strategy for automated parameter tuning.
 
 === "C++"
     ```cpp
-    auto model = fastloess::Loess::new()
-        .cross_validate(fastloess::KFold(5, {0.1, 0.3, 0.5}))
-        .adapter(fastloess::Batch)
-        .build();
+    fastloess::Loess model({
+        .cv_fractions = {0.1, 0.3, 0.5},
+        .cv_method = "kfold",
+        .cv_k = 5
+    });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
