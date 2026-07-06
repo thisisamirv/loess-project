@@ -680,56 +680,6 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 
 ---
 
-### delta
-
-Interpolation optimization threshold. Points within `delta` distance reuse the previous fit.
-
-- **Default**: 1% of x-range (Batch), 0.0 (Streaming/Online)
-- **Effect**: Higher values = faster but less accurate
-
-=== "R"
-    ```r
-    result <- Loess(delta = 0.05)$fit(x, y)
-    ```
-
-=== "Python"
-    ```python
-    # delta is not exposed in the Python binding; use fraction or cell to control smoothing
-    result = fl.Loess(fraction=0.3).fit(x, y)
-    ```
-
-=== "Rust"
-    ```rust
-    let model = Loess::new()
-        .delta(0.05)
-        .adapter(Batch)
-        .build()?;
-    ```
-
-=== "Julia"
-    ```julia
-    # delta is not exposed in the Julia binding; use fraction to control bandwidth
-    result = fit(Loess(fraction=0.05), x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const result = new Loess({ delta: 0.05 }).fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const result = smooth(x, y, { delta: 0.05 });
-    ```
-
-=== "C++"
-    ```cpp
-    fastloess::Loess model({ .delta = 0.05 });
-    auto result = model.fit(x, y).value();
-    ```
-
----
-
 ### weight_function
 
 Distance weighting kernel for local fits.

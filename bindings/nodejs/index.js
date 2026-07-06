@@ -280,22 +280,87 @@ if (!nativeBinding) {
     }
 }
 
-const { Loess, StreamingLoess, OnlineLoess, LoessResultObj } = nativeBinding
+const {
+    Loess: _NativeLoess,
+    StreamingLoess: _NativeStreamingLoess,
+    OnlineLoess: _NativeOnlineLoess,
+    LoessResultObj,
+} = nativeBinding
+
+// ---------------------------------------------------------------------------
+// Option key validation
+// ---------------------------------------------------------------------------
+
+const _SMOOTH_OPTION_KEYS = new Set([
+    'fraction', 'iterations', 'weightFunction', 'robustnessMethod',
+    'zeroWeightFallback', 'boundaryPolicy', 'scalingMethod', 'autoConverge',
+    'returnResiduals', 'returnRobustnessWeights', 'returnDiagnostics',
+    'confidenceIntervals', 'predictionIntervals', 'cvFractions', 'cvMethod',
+    'cvK', 'parallel', 'degree', 'dimensions', 'distanceMetric',
+    'weightedMetricWeights', 'surfaceMode', 'returnSe', 'customWeights',
+    'cell', 'interpolationVertices', 'boundaryDegreeFallback', 'cvSeed',
+    'minkowskiP',
+])
+
+const _STREAMING_OPTION_KEYS = new Set(['chunkSize', 'overlap', 'mergeStrategy'])
+
+const _ONLINE_OPTION_KEYS = new Set(['windowCapacity', 'minPoints', 'updateMode'])
+
+function _validateOptions(opts, validKeys, typeName) {
+    if (opts == null) return
+    for (const key of Object.keys(opts)) {
+        if (!validKeys.has(key)) {
+            throw new TypeError(
+                `Unknown ${typeName} key: "${key}". ` +
+                `Valid keys: ${[...validKeys].sort().join(', ')}`
+            )
+        }
+    }
+}
 
 // Normalize customWeights: accept Float64Array in addition to Array<number>.
-function normalizeWeights(opts) {
+function _normalizeWeights(opts) {
     if (opts != null && opts.customWeights instanceof Float64Array) {
         return Object.assign({}, opts, { customWeights: Array.from(opts.customWeights) })
     }
     return opts
 }
-const _loessFit = Loess.prototype.fit
-Loess.prototype.fit = function (x, y, fitOpts) {
-    return _loessFit.call(this, x, y, normalizeWeights(fitOpts))
+
+// ---------------------------------------------------------------------------
+// Wrapper classes: validate options, then delegate to native implementation
+// ---------------------------------------------------------------------------
+
+class Loess extends _NativeLoess {
+    constructor(opts) {
+        _validateOptions(opts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
+        super(_normalizeWeights(opts))
+    }
+
+    fit(x, y, fitOpts) {
+        _validateOptions(fitOpts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
+        return super.fit(x, y, _normalizeWeights(fitOpts))
+    }
+
+    fitAsync(x, y, fitOpts) {
+        _validateOptions(fitOpts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
+        return super.fitAsync(x, y, _normalizeWeights(fitOpts))
+    }
 }
-const _loessFitAsync = Loess.prototype.fitAsync
-Loess.prototype.fitAsync = function (x, y, fitOpts) {
-    return _loessFitAsync.call(this, x, y, normalizeWeights(fitOpts))
+
+class StreamingLoess extends _NativeStreamingLoess {
+    constructor(opts, streamingOpts) {
+        _validateOptions(opts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
+        _validateOptions(streamingOpts, _STREAMING_OPTION_KEYS, 'StreamingOptions')
+        super(_normalizeWeights(opts), streamingOpts)
+    }
+}
+
+class OnlineLoess extends _NativeOnlineLoess {
+    constructor(opts, onlineOpts) {
+        _validateOptions(opts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
+        _validateOptions(onlineOpts, _ONLINE_OPTION_KEYS, 'OnlineOptions')
+        super(_normalizeWeights(opts), onlineOpts)
+    }
 }
 
 module.exports.Loess = Loess

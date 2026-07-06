@@ -85,6 +85,7 @@ export interface SmoothOptions {
   interpolationVertices?: number
   boundaryDegreeFallback?: boolean
   cvSeed?: number
+  minkowskiP?: number
 }
 
 export interface StreamingOptions {

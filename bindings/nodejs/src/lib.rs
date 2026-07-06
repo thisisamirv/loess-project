@@ -415,6 +415,8 @@ pub struct SmoothOptions {
     pub boundaryDegreeFallback: Option<bool>,
     // Random seed for reproducible K-fold cross-validation splits.
     pub cvSeed: Option<u32>,
+    // p-norm exponent for Minkowski distance (used when distanceMetric is "minkowski"). Default: 2.0.
+    pub minkowskiP: Option<f64>,
 }
 
 // Batch LOESS smoothing.
@@ -569,6 +571,8 @@ impl Loess {
             if let Some(dm) = &opts.distanceMetric {
                 let metric = if dm.to_lowercase() == "weighted" {
                     DistanceMetric::Weighted(opts.weightedMetricWeights.clone().unwrap_or_default())
+                } else if dm.to_lowercase() == "minkowski" {
+                    DistanceMetric::Minkowski(opts.minkowskiP.unwrap_or(2.0))
                 } else {
                     parse_distance_metric(dm)?
                 };
@@ -724,6 +728,8 @@ impl StreamingLoess {
             if let Some(dm) = opts.distanceMetric {
                 let metric = if dm.to_lowercase() == "weighted" {
                     DistanceMetric::Weighted(opts.weightedMetricWeights.clone().unwrap_or_default())
+                } else if dm.to_lowercase() == "minkowski" {
+                    DistanceMetric::Minkowski(opts.minkowskiP.unwrap_or(2.0))
                 } else {
                     parse_distance_metric(&dm)?
                 };
