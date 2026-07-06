@@ -119,9 +119,9 @@ For true real-time applications where each point must be processed immediately.
 
 === "WebAssembly"
     ```javascript
-    import { OnlineLoessWasm } from 'fastloess-wasm';
+    import { OnlineLoess } from 'fastloess-wasm';
 
-    const processor = new OnlineLoessWasm(
+    const processor = new OnlineLoess(
         { fraction: 0.3, iterations: 1 },
         { windowCapacity: 25, minPoints: 5, updateMode: "incremental" }
     );
@@ -263,9 +263,9 @@ For large datasets that arrive in batches or files.
 
 === "WebAssembly"
     ```javascript
-    import { StreamingLoessWasm } from 'fastloess-wasm';
+    import { StreamingLoess } from 'fastloess-wasm';
 
-    const processor = new StreamingLoessWasm(
+    const processor = new StreamingLoess(
         { fraction: 0.1, iterations: 2 },
         { chunkSize: 5000, overlap: 500 }
     );
@@ -378,7 +378,7 @@ For large datasets that arrive in batches or files.
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
     // Sliding window logic
     for (const point of stream) {

@@ -59,7 +59,7 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustnessMethod: "bisquare" });
+    const result = new Loess({ iterations: 3, robustnessMethod: "bisquare" }).fit(x, y);
     ```
 
 === "C++"
@@ -109,7 +109,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustnessMethod: "huber" });
+    const result = new Loess({ iterations: 3, robustnessMethod: "huber" }).fit(x, y);
     ```
 
 === "C++"
@@ -159,7 +159,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, robustnessMethod: "talwar" });
+    const result = new Loess({ iterations: 3, robustnessMethod: "talwar" }).fit(x, y);
     ```
 
 === "C++"
@@ -245,7 +245,7 @@ Use robustness weights to identify potential outliers:
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 5, returnRobustnessWeights: true });
+    const result = new Loess({ iterations: 5, returnRobustnessWeights: true }).fit(x, y);
 
     result.robustnessWeights.forEach((w, i) => {
         if (w < 0.5) {
@@ -312,7 +312,7 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, scalingMethod: "mad" });
+    const result = new Loess({ iterations: 3, scalingMethod: "mad" }).fit(x, y);
     ```
 
 === "C++"
@@ -361,7 +361,7 @@ Stop iterations early when weights stabilize:
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 10, autoConverge: 1e-6 });
+    const result = new Loess({ iterations: 10, autoConverge: 1e-6 }).fit(x, y);
     ```
 
 === "C++"

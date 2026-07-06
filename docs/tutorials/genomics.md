@@ -140,14 +140,14 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
     // positions and observed are your methylation data (Float64Array)
-    const result = smooth(positions, observed, {
+    const result = new Loess({
         fraction: 0.1,
         iterations: 3,
         confidenceIntervals: 0.95
-    });
+    }).fit(positions, observed);
 
     // Smoothed profile in result.y
     // CI bounds in result.confidenceLower/Upper
@@ -280,12 +280,12 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
-    const result = smooth(positions, observed, {
+    const result = new Loess({
         fraction: 0.05,
         iterations: 5
-    });
+    }).fit(positions, observed);
 
     // Find peaks
     const smoothed = result.y;
@@ -389,9 +389,9 @@ For whole-genome data that doesn't fit in memory:
 
 === "WebAssembly"
     ```javascript
-    import { StreamingLoessWasm } from 'fastloess-wasm';
+    import { StreamingLoess } from 'fastloess-wasm';
 
-    const processor = new StreamingLoessWasm(
+    const processor = new StreamingLoess(
         { fraction: 0.05, iterations: 3 },
         { chunkSize: 100000, overlap: 10000 }
     );

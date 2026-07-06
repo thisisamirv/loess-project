@@ -54,7 +54,7 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { boundaryPolicy: "extend" });
+    const result = new Loess({ boundaryPolicy: "extend" }).fit(x, y);
     ```
 
 === "C++"
@@ -101,7 +101,7 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { boundaryPolicy: "reflect" });
+    const result = new Loess({ boundaryPolicy: "reflect" }).fit(x, y);
     ```
 
 === "C++"
@@ -148,7 +148,7 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { boundaryPolicy: "zero" });
+    const result = new Loess({ boundaryPolicy: "zero" }).fit(x, y);
     ```
 
 === "C++"
@@ -198,7 +198,7 @@ Applies no padding. Each local fit uses only the points that are actually availa
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { boundaryPolicy: "noboundary" });
+    const result = new Loess({ boundaryPolicy: "noboundary" }).fit(x, y);
     ```
 
 === "C++"

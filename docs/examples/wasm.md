@@ -73,16 +73,16 @@ async function main() {
     const y = Float64Array.from(x, xi => Math.sin(xi) + Math.random() * 0.2);
 
     // Basic smoothing
-    const result = smooth(x, y, { fraction: 0.3 });
+    const result = new Loess({ fraction: 0.3 }).fit(x, y);
     console.log('Smoothed values:', result.y);
 
     // With options
-    const resultWithOptions = smooth(x, y, {
+    const resultWithOptions = new Loess({
         fraction: 0.3,
         iterations: 3,
         confidenceIntervals: 0.95,
         returnDiagnostics: true
-    });
+    }).fit(x, y);
 
     console.log('R²:', resultWithOptions.diagnostics.rSquared);
 }
@@ -96,7 +96,7 @@ main();
 const { smooth } = require('fastloess-wasm');
 
 // Same API as browser
-const result = smooth(x, y, { fraction: 0.3 });
+const result = new Loess({ fraction: 0.3 }).fit(x, y);
 ```
 
 ## Features

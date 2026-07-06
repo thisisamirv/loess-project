@@ -98,13 +98,13 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "WebAssembly"
 
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    const result = smooth(x, y, { fraction: 0.3, iterations: 3 });
+    const result = new Loess({ fraction: 0.3, iterations: 3 }).fit(x, y);
 
     console.log(`First smoothed: ${result.y[0].toFixed(4)}`);
     ```
@@ -232,14 +232,14 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "WebAssembly"
 
     ```javascript
-    import * as fastloess from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
     // Sample data
     const x = new Float64Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]);
     const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
 
     // Smooth the data
-    const result = fastloess.smooth(x, y, { fraction: 0.5, iterations: 3 });
+    const result = new Loess({ fraction: 0.5, iterations: 3 }).fit(x, y);
 
     console.log("Smoothed values:", result.y);
     ```
@@ -384,17 +384,17 @@ LOESS can robustly handle outliers through iterative reweighting:
 === "WebAssembly"
 
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
     // Data with an outlier at position 3
     const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
 
-    const result = smooth(x, yWithOutlier, {
+    const result = new Loess({
         fraction: 0.5,
         iterations: 5,
         robustnessMethod: "bisquare",
         returnRobustnessWeights: true
-    });
+    }).fit(x, yWithOutlier);
 
     // Outliers will have low robustness weights
     result.robustnessWeights.forEach((w, i) => {
@@ -567,7 +567,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 === "WebAssembly"
 
     ```javascript
-    import { StreamingLoessWasm } from 'fastloess-wasm';
+    import { StreamingLoess } from 'fastloess-wasm';
 
     const n = 5000;
     const x = Float64Array.from({ length: n }, (_, i) => i * 10 * Math.PI / (n - 1));
@@ -576,7 +576,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
         (((i * 7 + 3) % 17) / 17 - 0.5) * 0.3
     );
 
-    const model = new StreamingLoessWasm(
+    const model = new StreamingLoess(
         { fraction: 0.2 },
         { chunkSize: 1000, overlap: 100, mergeStrategy: 'weighted_average' }
     );

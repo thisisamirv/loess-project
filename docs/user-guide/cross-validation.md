@@ -86,11 +86,11 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, {
+    const result = new Loess({
         cvMethod: "kfold",
         cvK: 5,
         cvFractions: [0.2, 0.3, 0.5, 0.7]
-    });
+    }).fit(x, y);
 
     console.log("Selected fraction:", result.fractionUsed);
     console.log("CV scores:", result.cvScores);
@@ -160,10 +160,10 @@ Each point is held out once. Most thorough but slowest.
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, {
+    const result = new Loess({
         cvMethod: "loocv",
         cvFractions: [0.2, 0.3, 0.5, 0.7]
-    });
+    }).fit(x, y);
     ```
 
 === "C++"
@@ -235,12 +235,12 @@ Set a seed for reproducible fold assignments:
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, {
+    const result = new Loess({
         cvMethod: "kfold",
         cvK: 5,
         cvFractions: [0.3, 0.5, 0.7],
         cvSeed: 42
-    });
+    }).fit(x, y);
     ```
 
 === "C++"
@@ -362,11 +362,11 @@ Lower MSE indicates better fit on held-out data.
 === "WebAssembly"
     ```javascript
     // Example output
-    const result = smooth(x, y, {
+    const result = new Loess({
         cvMethod: "kfold",
         cvK: 5,
         cvFractions: [0.1, 0.3, 0.5, 0.7]
-    });
+    }).fit(x, y);
 
     // Fraction  | CV Score (MSE)
     // 0.1       | 0.0542  ← Undersmoothed

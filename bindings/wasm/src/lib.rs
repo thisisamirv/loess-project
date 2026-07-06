@@ -17,7 +17,7 @@ use ::fastLoess::internals::api::{
     SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, Online, Streaming,
+    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult as InnerLoessResult, Online, Streaming,
 };
 
 #[derive(Deserialize)]
@@ -249,12 +249,12 @@ pub struct Diagnostics {
 }
 
 #[wasm_bindgen]
-pub struct LoessResultWasm {
-    inner: LoessResult<f64>,
+pub struct LoessResult {
+    inner: InnerLoessResult<f64>,
 }
 
 #[wasm_bindgen]
-impl LoessResultWasm {
+impl LoessResult {
     #[wasm_bindgen(getter)]
     pub fn x(&self) -> Float64Array {
         unsafe { Float64Array::view(&self.inner.x) }
@@ -391,18 +391,27 @@ impl LoessResultWasm {
     }
 }
 
-// Fit the LOESS model to data.
-//
-// @param {Float64Array} x - X coordinates.
-// @param {Float64Array} y - Y coordinates.
-// @param {any} [options] - Configuration object.
-// @returns {LoessResultWasm} The result of the smoothing.
+// Batch LOESS smoother.
 #[wasm_bindgen]
-pub fn smooth(
-    x: &Float64Array,
-    y: &Float64Array,
+pub struct Loess {
     options: JsValue,
-) -> Result<LoessResultWasm, JsValue> {
+}
+
+#[wasm_bindgen]
+impl Loess {
+    /// Create a new `Loess` model with the given options.
+    #[wasm_bindgen(constructor)]
+    pub fn new(options: JsValue) -> Loess {
+        Loess { options }
+    }
+
+    /// Fit the model to data and return smoothed values.
+    pub fn fit(&self, x: &Float64Array, y: &Float64Array) -> Result<LoessResult, JsValue> {
+        smooth(x, y, self.options.clone())
+    }
+}
+
+fn smooth(x: &Float64Array, y: &Float64Array, options: JsValue) -> Result<LoessResult, JsValue> {
     let mut builder = LoessBuilder::new();
 
     if !options.is_undefined() && !options.is_null() {
@@ -535,20 +544,20 @@ pub fn smooth(
         .fit(&x_vec, &y_vec)
         .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
-    Ok(LoessResultWasm { inner: result })
+    Ok(LoessResult { inner: result })
 }
 
 // Streaming LOESS smoother.
 #[wasm_bindgen]
-pub struct StreamingLoessWasm {
+pub struct StreamingLoess {
     inner: ParallelStreamingLoess<f64>,
 }
 
 #[wasm_bindgen]
-impl StreamingLoessWasm {
+impl StreamingLoess {
     // Create a new streaming smoother.
     #[wasm_bindgen(constructor)]
-    pub fn new(options: JsValue, streaming_opts: JsValue) -> Result<StreamingLoessWasm, JsValue> {
+    pub fn new(options: JsValue, streaming_opts: JsValue) -> Result<StreamingLoess, JsValue> {
         let mut builder = LoessBuilder::new();
 
         if !options.is_undefined() && !options.is_null() {
@@ -685,7 +694,7 @@ impl StreamingLoessWasm {
             .build()
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
-        Ok(StreamingLoessWasm { inner: model })
+        Ok(StreamingLoess { inner: model })
     }
 
     #[wasm_bindgen(js_name = processChunk)]
@@ -693,36 +702,36 @@ impl StreamingLoessWasm {
         &mut self,
         x: &Float64Array,
         y: &Float64Array,
-    ) -> Result<LoessResultWasm, JsValue> {
+    ) -> Result<LoessResult, JsValue> {
         let x_vec = x.to_vec();
         let y_vec = y.to_vec();
         let result: ::fastLoess::prelude::LoessResult<f64> = self
             .inner
             .process_chunk(&x_vec, &y_vec)
             .map_err(|e: ::fastLoess::prelude::LoessError| JsValue::from_str(&e.to_string()))?;
-        Ok(LoessResultWasm { inner: result })
+        Ok(LoessResult { inner: result })
     }
 
-    pub fn finalize(&mut self) -> Result<LoessResultWasm, JsValue> {
+    pub fn finalize(&mut self) -> Result<LoessResult, JsValue> {
         let result: ::fastLoess::prelude::LoessResult<f64> = self
             .inner
             .finalize()
             .map_err(|e: ::fastLoess::prelude::LoessError| JsValue::from_str(&e.to_string()))?;
-        Ok(LoessResultWasm { inner: result })
+        Ok(LoessResult { inner: result })
     }
 }
 
 // Online LOESS smoother.
 #[wasm_bindgen]
-pub struct OnlineLoessWasm {
+pub struct OnlineLoess {
     inner: ParallelOnlineLoess<f64>,
 }
 
 #[wasm_bindgen]
-impl OnlineLoessWasm {
+impl OnlineLoess {
     // Create a new online smoother.
     #[wasm_bindgen(constructor)]
-    pub fn new(options: JsValue, online_opts: JsValue) -> Result<OnlineLoessWasm, JsValue> {
+    pub fn new(options: JsValue, online_opts: JsValue) -> Result<OnlineLoess, JsValue> {
         let mut builder = LoessBuilder::new();
 
         if !options.is_undefined() && !options.is_null() {
@@ -838,7 +847,7 @@ impl OnlineLoessWasm {
             .build()
             .map_err(|e| JsValue::from_str(&e.to_string()))?;
 
-        Ok(OnlineLoessWasm { inner: model })
+        Ok(OnlineLoess { inner: model })
     }
 
     pub fn update(&mut self, x: f64, y: f64) -> Result<Option<f64>, JsValue> {

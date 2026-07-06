@@ -346,7 +346,7 @@ _WASM_PREAMBLE = textwrap.dedent("""\
         return null;
     }})();
     if (!_wasmPkg) {{ console.error('WASM pkg not found — skip'); process.exit(0); }}
-    const {{ smooth, StreamingLoessWasm, OnlineLoessWasm }} = _wasmPkg;
+    const {{ Loess, StreamingLoess, OnlineLoess }} = _wasmPkg;
     const fastloess = _wasmPkg;
 
     const _n = 100;
@@ -734,9 +734,6 @@ _NODEJS_PREAMBLE_VARS: frozenset = frozenset(
         # multi-dim / WASM shared vars
         "x2d",
         "x3d",
-        "smooth",
-        "StreamingLoessWasm",
-        "OnlineLoessWasm",
         "xChunk",
         "yChunk",
     }

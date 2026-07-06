@@ -62,7 +62,7 @@ Single predictor. No configuration required.
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { fraction: 0.3 });
+    const result = new Loess({ fraction: 0.3 }).fit(x, y);
     ```
 
 === "C++"
@@ -119,7 +119,7 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x2d, z, { dimensions: 2, fraction: 0.3 });
+    const result = new Loess({ dimensions: 2, fraction: 0.3 }).fit(x2d, z);
     ```
 
 === "C++"
@@ -174,7 +174,7 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x3d, y, { dimensions: 3, fraction: 0.5 });
+    const result = new Loess({ dimensions: 3, fraction: 0.5 }).fit(x3d, y);
     ```
 
 === "C++"

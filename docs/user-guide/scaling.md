@@ -62,7 +62,7 @@ First centers residuals at their median, then takes the median of the absolute d
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, scalingMethod: "mad" });
+    const result = new Loess({ iterations: 3, scalingMethod: "mad" }).fit(x, y);
     ```
 
 === "C++"
@@ -112,7 +112,7 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, scalingMethod: "mar" });
+    const result = new Loess({ iterations: 3, scalingMethod: "mar" }).fit(x, y);
     ```
 
 === "C++"
@@ -162,7 +162,7 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, scalingMethod: "mean" });
+    const result = new Loess({ iterations: 3, scalingMethod: "mean" }).fit(x, y);
     ```
 
 === "C++"

@@ -341,7 +341,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { fraction: 0.3 });
+    const result = new Loess({ fraction: 0.3 }).fit(x, y);
     ```
 
 === "C++"
@@ -393,7 +393,7 @@ Number of robustness iterations for outlier resistance.
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 5 });
+    const result = new Loess({ iterations: 5 }).fit(x, y);
     ```
 
 === "C++"
@@ -479,7 +479,7 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { surfaceMode: "direct" });
+    const result = new Loess({ surfaceMode: "direct" }).fit(x, y);
     ```
 
 === "C++"
@@ -531,7 +531,7 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { cell: 0.05 });
+    const result = new Loess({ cell: 0.05 }).fit(x, y);
     ```
 
 === "C++"
@@ -576,7 +576,7 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { interpolationVertices: 50 });
+    const result = new Loess({ interpolationVertices: 50 }).fit(x, y);
     ```
 
 === "C++"
@@ -661,11 +661,11 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x2d, y, {
+    const result = new Loess({
         dimensions: 2,
         distanceMetric: "weighted",
         weightedMetricWeights: [2.0, 0.5]
-    });
+    }).fit(x2d, y);
     ```
 
 === "C++"
@@ -740,7 +740,7 @@ See [Weight Functions](kernels.md) for detailed comparison.
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "epanechnikov" });
+    const result = new Loess({ weightFunction: "epanechnikov" }).fit(x, y);
     ```
 
 === "C++"
@@ -803,7 +803,7 @@ See [Robustness](robustness.md) for detailed comparison.
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { robustnessMethod: "talwar" });
+    const result = new Loess({ robustnessMethod: "talwar" }).fit(x, y);
     ```
 
 === "C++"
@@ -870,7 +870,7 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { boundaryPolicy: "reflect" });
+    const result = new Loess({ boundaryPolicy: "reflect" }).fit(x, y);
     ```
 
 === "C++"
@@ -922,7 +922,7 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { degree: "quadratic", boundaryDegreeFallback: true });
+    const result = new Loess({ degree: "quadratic", boundaryDegreeFallback: true }).fit(x, y);
     ```
 
 === "C++"
@@ -1047,7 +1047,7 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { zeroWeightFallback: "use_local_mean" });
+    const result = new Loess({ zeroWeightFallback: "use_local_mean" }).fit(x, y);
     ```
 
 === "C++"
@@ -1093,7 +1093,7 @@ Enable early stopping when robustness weights stabilize.
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 20, autoConverge: 1e-6 });
+    const result = new Loess({ iterations: 20, autoConverge: 1e-6 }).fit(x, y);
     ```
 
 === "C++"
@@ -1171,7 +1171,7 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     ```javascript
     const weights = new Array(y.length).fill(1);
     weights[4] = 0; // Exclude 5th point
-    const result = smooth(x, y, { customWeights: weights });
+    const result = new Loess({ customWeights: weights }).fit(x, y);
     ```
 
 === "C++"
@@ -1229,7 +1229,7 @@ Include residuals (`y - smoothed`) in the output.
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { returnResiduals: true });
+    const result = new Loess({ returnResiduals: true }).fit(x, y);
     console.log(result.residuals);
     ```
 
@@ -1296,7 +1296,7 @@ Include fit quality metrics (Batch and Streaming only).
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { returnDiagnostics: true });
+    const result = new Loess({ returnDiagnostics: true }).fit(x, y);
     console.log("R²:", result.diagnostics.rSquared);
     ```
 
@@ -1352,7 +1352,7 @@ Include final robustness weights (useful for outlier detection).
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { iterations: 3, returnRobustnessWeights: true });
+    const result = new Loess({ iterations: 3, returnRobustnessWeights: true }).fit(x, y);
     // result.robustnessWeights contains outlier weights
     ```
 
@@ -1402,7 +1402,7 @@ See [Intervals](intervals.md) for detailed usage.
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { confidenceIntervals: 0.95, predictionIntervals: 0.95 });
+    const result = new Loess({ confidenceIntervals: 0.95, predictionIntervals: 0.95 }).fit(x, y);
     ```
 
 === "C++"
@@ -1509,7 +1509,7 @@ Points per chunk in Streaming mode.
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLoessWasm({}, { chunkSize: 10000 });
+    const processor = new StreamingLoess({}, { chunkSize: 10000 });
     ```
 
 === "C++"
@@ -1561,7 +1561,7 @@ Overlap between chunks in Streaming mode.
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLoessWasm({}, { overlap: 1000 });
+    const processor = new StreamingLoess({}, { overlap: 1000 });
     ```
 
 === "C++"
@@ -1633,7 +1633,7 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLoessWasm({}, { mergeStrategy: "weighted_average" });
+    const processor = new StreamingLoess({}, { mergeStrategy: "weighted_average" });
     ```
 
 === "C++"
@@ -1682,7 +1682,7 @@ Maximum points held in memory for Online mode.
 
 === "WebAssembly"
     ```javascript
-    const processor = new OnlineLoessWasm({}, { windowCapacity: 500 });
+    const processor = new OnlineLoess({}, { windowCapacity: 500 });
     ```
 
 === "C++"
@@ -1731,7 +1731,7 @@ Minimum points required before Online filter starts producing outputs.
 
 === "WebAssembly"
     ```javascript
-    const processor = new OnlineLoessWasm({}, { minPoints: 10 });
+    const processor = new OnlineLoess({}, { minPoints: 10 });
     ```
 
 === "C++"
@@ -1796,7 +1796,7 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    const processor = new OnlineLoessWasm({}, { updateMode: "full" });
+    const processor = new OnlineLoess({}, { updateMode: "full" });
     ```
 
 === "C++"

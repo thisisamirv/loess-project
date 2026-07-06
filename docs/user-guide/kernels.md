@@ -65,7 +65,7 @@ $$w(u) = (1 - |u|^3)^3$$
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "tricube" });
+    const result = new Loess({ weightFunction: "tricube" }).fit(x, y);
     ```
 
 === "C++"
@@ -114,7 +114,7 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "epanechnikov" });
+    const result = new Loess({ weightFunction: "epanechnikov" }).fit(x, y);
     ```
 
 === "C++"
@@ -163,7 +163,7 @@ $$w(u) = \exp(-u^2/2)$$
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "gaussian" });
+    const result = new Loess({ weightFunction: "gaussian" }).fit(x, y);
     ```
 
 === "C++"
@@ -212,7 +212,7 @@ $$w(u) = (1 - u^2)^2$$
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "biweight" });
+    const result = new Loess({ weightFunction: "biweight" }).fit(x, y);
     ```
 
 === "C++"
@@ -261,7 +261,7 @@ $$w(u) = \cos(\pi u / 2)$$
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "cosine" });
+    const result = new Loess({ weightFunction: "cosine" }).fit(x, y);
     ```
 
 === "C++"
@@ -310,7 +310,7 @@ $$w(u) = 1 - |u|$$
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "triangle" });
+    const result = new Loess({ weightFunction: "triangle" }).fit(x, y);
     ```
 
 === "C++"
@@ -359,7 +359,7 @@ $$w(u) = 1$$
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { weightFunction: "uniform" });
+    const result = new Loess({ weightFunction: "uniform" }).fit(x, y);
     ```
 
 === "C++"

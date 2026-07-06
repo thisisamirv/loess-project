@@ -19,14 +19,14 @@ const result = smooth(x, y, options);
 * `options`: An object containing `LoessOptions` fields.
 * Returns: A `LoessResult` object.
 
-### `StreamingLoessWasm`
+### `StreamingLoess`
 
-The `StreamingLoessWasm` class processes data in chunks, suitable for very large datasets or streaming applications.
+The `StreamingLoess` class processes data in chunks, suitable for very large datasets or streaming applications.
 
 **Constructor:**
 
 ```javascript
-const stream = new StreamingLoessWasm(options, streamingOptions);
+const stream = new StreamingLoess(options, streamingOptions);
 ```
 
 * `options`: An object containing `LoessOptions` fields.
@@ -46,14 +46,14 @@ const finalResult = stream.finalize();
 
 * Finalizes the smoothing process and returns any remaining buffered results.
 
-### `OnlineLoessWasm`
+### `OnlineLoess`
 
-The `OnlineLoessWasm` class updates the model incrementally with new data points.
+The `OnlineLoess` class updates the model incrementally with new data points.
 
 **Constructor:**
 
 ```javascript
-const online = new OnlineLoessWasm(options, onlineOptions);
+const online = new OnlineLoess(options, onlineOptions);
 ```
 
 * `options`: An object containing `LoessOptions` fields.
@@ -125,7 +125,7 @@ const smoothed = online.update(x, y);
 
 ### `LoessResult`
 
-> **Note:** `LoessResultWasm` exposes `x`, `y`, `fractionUsed`, `iterationsUsed`, `standardErrors`, `confidenceLower/Upper`, `predictionLower/Upper`, `residuals`, `robustnessWeights`, `cvScores`, and `diagnostics`.
+> **Note:** `LoessResult` exposes `x`, `y`, `fractionUsed`, `iterationsUsed`, `standardErrors`, `confidenceLower/Upper`, `predictionLower/Upper`, `residuals`, `robustnessWeights`, `cvScores`, and `diagnostics`.
 > Hat-matrix statistics (`enp`, `traceHat`, `delta1`, `delta2`, `residualScale`, `leverage`) are not yet exposed by the WASM binding; use the Node.js or Rust binding for those.
 
 | Field | Type | Description |
@@ -238,7 +238,7 @@ const x = new Float64Array([1, 2, 3, 4, 5]);
 const y = new Float64Array([2.1, 4.0, 6.2, 8.0, 10.1]);
 
 // Fit data
-const result = smooth(x, y, { fraction: 0.5 });
+const result = new Loess({ fraction: 0.5 }).fit(x, y);
 
 console.log("Smoothed Y:", result.y);
 ```

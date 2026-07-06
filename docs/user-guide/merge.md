@@ -77,7 +77,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLoessWasm(
+    const processor = new StreamingLoess(
         {},
         { mergeStrategy: "average", chunkSize: 5000, overlap: 500 }
     );
@@ -245,7 +245,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLoessWasm(
+    const processor = new StreamingLoess(
         {},
         { mergeStrategy: "weighted_average", chunkSize: 5000, overlap: 500 }
     );

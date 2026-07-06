@@ -252,13 +252,12 @@ Install the LOESS library for your preferred language.
 === "WebAssembly"
 
     ```javascript
-    import init, { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
     async function verify() {
-        await init();
         const x = new Float64Array([1.0, 2.0, 3.0]);
         const y = new Float64Array([2.0, 4.0, 6.0]);
-        const result = smooth(x, y);
+        const result = new Loess({}).fit(x, y);
         console.log("Installed successfully!");
     }
     verify();

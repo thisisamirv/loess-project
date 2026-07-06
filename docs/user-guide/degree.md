@@ -58,7 +58,7 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { degree: "constant", fraction: 0.5 });
+    const result = new Loess({ degree: "constant", fraction: 0.5 }).fit(x, y);
     ```
 
 === "C++"
@@ -111,7 +111,7 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { degree: "linear", fraction: 0.5 });
+    const result = new Loess({ degree: "linear", fraction: 0.5 }).fit(x, y);
     ```
 
 === "C++"
@@ -164,7 +164,7 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { degree: "quadratic", fraction: 0.5 });
+    const result = new Loess({ degree: "quadratic", fraction: 0.5 }).fit(x, y);
     ```
 
 === "C++"
@@ -217,7 +217,7 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { degree: "cubic", fraction: 0.6 });
+    const result = new Loess({ degree: "cubic", fraction: 0.6 }).fit(x, y);
     ```
 
 === "C++"
@@ -270,7 +270,7 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 === "WebAssembly"
     ```javascript
-    const result = smooth(x, y, { degree: "quartic", fraction: 0.7 });
+    const result = new Loess({ degree: "quartic", fraction: 0.7 }).fit(x, y);
     ```
 
 === "C++"

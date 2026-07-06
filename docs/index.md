@@ -255,7 +255,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
 
-    const result = smooth(x, y, { fraction: 0.5, iterations: 3 });
+    const result = new Loess({ fraction: 0.5, iterations: 3 }).fit(x, y);
     console.log(result.y);
     ```
 

@@ -109,15 +109,15 @@ Standard mode for complete datasets. **Supports all features.**
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
-    const result = smooth(x, y, {
+    const result = new Loess({
         fraction: 0.5,
         iterations: 3,
         confidenceIntervals: 0.95,
         predictionIntervals: 0.95,
         returnDiagnostics: true
-    });
+    }).fit(x, y);
     ```
 
 === "C++"
@@ -247,9 +247,9 @@ Process large datasets in chunks with configurable overlap.
 
 === "WebAssembly"
     ```javascript
-    import { StreamingLoessWasm } from 'fastloess-wasm';
+    import { StreamingLoess } from 'fastloess-wasm';
 
-    const processor = new StreamingLoessWasm(
+    const processor = new StreamingLoess(
         { fraction: 0.3, iterations: 2 },
         { chunkSize: 5000, overlap: 500 }
     );
@@ -391,9 +391,9 @@ Incremental updates with a sliding window for real-time data.
 
 === "WebAssembly"
     ```javascript
-    import { OnlineLoessWasm } from 'fastloess-wasm';
+    import { OnlineLoess } from 'fastloess-wasm';
 
-    const processor = new OnlineLoessWasm(
+    const processor = new OnlineLoess(
         { fraction: 0.2, iterations: 1 },
         { windowCapacity: 100, minPoints: 5, updateMode: "incremental" }
     );

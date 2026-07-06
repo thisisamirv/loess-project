@@ -105,12 +105,12 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
-    const result = smooth(t, y, { 
+    const result = new Loess({ 
         fraction: 0.1, 
         iterations: 3 
-    });
+    }).fit(t, y);
 
     // Trend values in result.y
     ```
@@ -203,13 +203,13 @@ Remove trend to analyze residual patterns:
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
-    const result = smooth(t, y, { 
+    const result = new Loess({ 
         fraction: 0.3, 
         iterations: 3, 
         returnResiduals: true 
-    });
+    }).fit(t, y);
 
     // Access result.y (trend) and result.residuals (detrended)
     ```
@@ -312,13 +312,13 @@ Remove trend to analyze residual patterns:
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
-    const result = smooth(t, y, {
+    const result = new Loess({
         fraction: 0.2,
         iterations: 3,
         predictionIntervals: 0.95
-    });
+    }).fit(t, y);
 
     // Access result.predictionLower() and result.predictionUpper()
     ```
@@ -393,9 +393,9 @@ LOESS naturally handles irregular time sampling:
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
-    const result = smooth(tIrregular, yIrregular, { fraction: 0.2 });
+    const result = new Loess({ fraction: 0.2 }).fit(tIrregular, yIrregular);
     ```
 
 === "C++"
@@ -475,10 +475,10 @@ Use different fractions to extract features at different scales:
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
     const trends = [0.05, 0.2, 0.5].map(f => {
-        const result = smooth(t, y, { fraction: f });
+        const result = new Loess({ fraction: f }).fit(t, y);
         return result.y;
     });
     ```
@@ -604,13 +604,13 @@ Biological application:
 
 === "WebAssembly"
     ```javascript
-    import { smooth } from 'fastloess-wasm';
+    import { Loess } from 'fastloess-wasm';
 
-    const result = smooth(hours, expression, {
+    const result = new Loess({
         fraction: 0.3,
         iterations: 3,
         returnDiagnostics: true
-    });
+    }).fit(hours, expression);
 
     console.log("R²:", result.diagnostics.rSquared);
     ```
