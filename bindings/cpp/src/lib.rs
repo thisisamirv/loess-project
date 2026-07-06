@@ -852,24 +852,26 @@ pub unsafe extern "C" fn cpp_online_set_prediction_intervals(
 /// Fit the batch model.
 ///
 /// # Safety
-/// `ptr` must be a valid CppLoess pointer. `x` and `y` must be valid arrays of length `n`.
+/// `ptr` must be a valid CppLoess pointer. `x` must be a valid array of length `x_n`
+/// (= n_observations * dimensions), `y` must be a valid array of length `y_n` (= n_observations).
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_fit(
     ptr: *mut CppLoess,
     x: *const c_double,
+    x_n: c_ulong,
     y: *const c_double,
-    n: c_ulong,
+    y_n: c_ulong,
 ) -> CppLoessResult {
     if ptr.is_null() {
         return error_result("Model pointer is null");
     }
-    if x.is_null() || y.is_null() || n == 0 {
+    if x.is_null() || y.is_null() || x_n == 0 || y_n == 0 {
         return error_result("Invalid data inputs");
     }
 
     let loess = &mut *ptr;
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    let y_slice = std::slice::from_raw_parts(y, n as usize);
+    let x_slice = std::slice::from_raw_parts(x, x_n as usize);
+    let y_slice = std::slice::from_raw_parts(y, y_n as usize);
 
     if let Some(mut builder) = loess.builder.clone() {
         // Apply CV options if present
@@ -1065,23 +1067,25 @@ pub unsafe extern "C" fn cpp_streaming_new(
 /// Process a chunk of data.
 ///
 /// # Safety
-/// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
+/// `ptr` must be valid. `x` must be a valid array of length `x_n` (= n_observations * dimensions),
+/// `y` must be a valid array of length `y_n` (= n_observations).
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_streaming_process(
     ptr: *mut CppStreamingLoess,
     x: *const c_double,
+    x_n: c_ulong,
     y: *const c_double,
-    n: c_ulong,
+    y_n: c_ulong,
 ) -> CppLoessResult {
     if ptr.is_null() {
         return error_result("Model pointer is null");
     }
     let loess = &mut *ptr;
-    if x.is_null() || y.is_null() || n == 0 {
+    if x.is_null() || y.is_null() || x_n == 0 || y_n == 0 {
         return error_result("Invalid data inputs");
     }
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    let y_slice = std::slice::from_raw_parts(y, n as usize);
+    let x_slice = std::slice::from_raw_parts(x, x_n as usize);
+    let y_slice = std::slice::from_raw_parts(y, y_n as usize);
 
     if loess.model.is_none()
         && let Some((cs, ov, ms)) = loess.streaming_opts
@@ -1293,23 +1297,25 @@ pub unsafe extern "C" fn cpp_online_new(
 /// Add points to online model.
 ///
 /// # Safety
-/// `ptr` must be valid. `x` and `y` must be valid arrays of length `n`.
+/// `ptr` must be valid. `x` must be a valid array of length `x_n` (= n_observations * dimensions),
+/// `y` must be a valid array of length `y_n` (= n_observations).
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_online_add_points(
     ptr: *mut CppOnlineLoess,
     x: *const c_double,
+    x_n: c_ulong,
     y: *const c_double,
-    n: c_ulong,
+    y_n: c_ulong,
 ) -> CppLoessResult {
     if ptr.is_null() {
         return error_result("Model pointer is null");
     }
     let loess = &mut *ptr;
-    if x.is_null() || y.is_null() || n == 0 {
+    if x.is_null() || y.is_null() || x_n == 0 || y_n == 0 {
         return error_result("Invalid data inputs");
     }
-    let x_slice = std::slice::from_raw_parts(x, n as usize);
-    let y_slice = std::slice::from_raw_parts(y, n as usize);
+    let x_slice = std::slice::from_raw_parts(x, x_n as usize);
+    let y_slice = std::slice::from_raw_parts(y, y_n as usize);
 
     if loess.model.is_none()
         && let Some((wc, mp, um)) = loess.online_opts

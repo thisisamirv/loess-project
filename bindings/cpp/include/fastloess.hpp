@@ -390,8 +390,10 @@ public:
         static_cast<unsigned long>(options.cv_fractions.size()),
         options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0,
         options.degree.c_str(), options.dimensions,
-        options.distance_metric.c_str(), options.surface_mode.c_str(),
-        options.return_se ? 1 : 0);
+        options.weighted_metric_weights.empty()
+            ? options.distance_metric.c_str()
+            : nullptr,
+        options.surface_mode.c_str(), options.return_se ? 1 : 0);
     if (!options.weighted_metric_weights.empty()) {
       cpp_loess_set_weighted_metric(
           ptr_, options.weighted_metric_weights.data(),
@@ -458,8 +460,9 @@ public:
           static_cast<unsigned long>(custom_weights.size()));
     }
 
-    auto result = cpp_loess_fit(ptr_, x_values.data(), y_values.data(),
-                                static_cast<unsigned long>(x_values.size()));
+    auto result = cpp_loess_fit(
+        ptr_, x_values.data(), static_cast<unsigned long>(x_values.size()),
+        y_values.data(), static_cast<unsigned long>(y_values.size()));
 
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
@@ -489,7 +492,10 @@ public:
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.parallel ? 1 : 0, options.chunk_size, options.overlap,
         options.merge_strategy.c_str(), options.degree.c_str(),
-        options.dimensions, options.distance_metric.c_str(),
+        options.dimensions,
+        options.weighted_metric_weights.empty()
+            ? options.distance_metric.c_str()
+            : nullptr,
         options.surface_mode.c_str(), options.return_se ? 1 : 0);
     if (!options.weighted_metric_weights.empty()) {
       cpp_streaming_set_weighted_metric(
@@ -549,9 +555,9 @@ public:
       return Expected<LoessResult>::makeError("x and y length mismatch");
     }
 
-    auto result =
-        cpp_streaming_process(ptr_, x_values.data(), y_values.data(),
-                              static_cast<unsigned long>(x_values.size()));
+    auto result = cpp_streaming_process(
+        ptr_, x_values.data(), static_cast<unsigned long>(x_values.size()),
+        y_values.data(), static_cast<unsigned long>(y_values.size()));
 
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
@@ -596,8 +602,10 @@ public:
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.parallel ? 1 : 0, options.window_capacity, options.min_points,
         options.update_mode.c_str(), options.degree.c_str(), options.dimensions,
-        options.distance_metric.c_str(), options.surface_mode.c_str(),
-        options.return_se ? 1 : 0);
+        options.weighted_metric_weights.empty()
+            ? options.distance_metric.c_str()
+            : nullptr,
+        options.surface_mode.c_str(), options.return_se ? 1 : 0);
     if (!options.weighted_metric_weights.empty()) {
       cpp_online_set_weighted_metric(
           ptr_, options.weighted_metric_weights.data(),
@@ -651,9 +659,9 @@ public:
       return Expected<LoessResult>::makeError("x and y length mismatch");
     }
 
-    auto result =
-        cpp_online_add_points(ptr_, x_values.data(), y_values.data(),
-                              static_cast<unsigned long>(x_values.size()));
+    auto result = cpp_online_add_points(
+        ptr_, x_values.data(), static_cast<unsigned long>(x_values.size()),
+        y_values.data(), static_cast<unsigned long>(y_values.size()));
 
     if (result.error != nullptr) {
       const std::string error_msg(result.error);

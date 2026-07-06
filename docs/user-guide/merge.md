@@ -136,7 +136,9 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 === "C++"
     ```cpp
-    opts.merge_strategy = "take_first";
+    fastloess::StreamingOptions s_opts;
+    s_opts.merge_strategy = "take_first";
+    fastloess::StreamingLoess model(s_opts);
     ```
 
 ---
@@ -180,7 +182,9 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 === "C++"
     ```cpp
-    opts.merge_strategy = "take_last";
+    fastloess::StreamingOptions s_opts;
+    s_opts.merge_strategy = "take_last";
+    fastloess::StreamingLoess model(s_opts);
     ```
 
 ---
@@ -249,7 +253,9 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "C++"
     ```cpp
-    opts.merge_strategy = "weighted_average";
+    fastloess::StreamingOptions s_opts;
+    s_opts.merge_strategy = "weighted_average";
+    fastloess::StreamingLoess model(s_opts);
     ```
 
 ---

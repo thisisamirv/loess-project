@@ -63,7 +63,10 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 === "C++"
     ```cpp
-    fastloess::Loess model({ .degree = 0, .fraction = 0.5 });
+    fastloess::LoessOptions deg0_opts;
+    deg0_opts.degree = "constant";
+    deg0_opts.fraction = 0.5;
+    fastloess::Loess model(deg0_opts);
     auto result = model.fit(x, y).value();
     ```
 
@@ -113,7 +116,10 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 === "C++"
     ```cpp
-    fastloess::Loess model({ .degree = 1, .fraction = 0.5 });
+    fastloess::LoessOptions deg1_opts;
+    deg1_opts.degree = "linear";
+    deg1_opts.fraction = 0.5;
+    fastloess::Loess model(deg1_opts);
     auto result = model.fit(x, y).value();
     ```
 
@@ -163,7 +169,10 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 === "C++"
     ```cpp
-    fastloess::Loess model({ .degree = 2, .fraction = 0.5 });
+    fastloess::LoessOptions deg2_opts;
+    deg2_opts.degree = "quadratic";
+    deg2_opts.fraction = 0.5;
+    fastloess::Loess model(deg2_opts);
     auto result = model.fit(x, y).value();
     ```
 
@@ -213,7 +222,10 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 === "C++"
     ```cpp
-    fastloess::Loess model({ .degree = 3, .fraction = 0.6 });
+    fastloess::LoessOptions deg3_opts;
+    deg3_opts.degree = "cubic";
+    deg3_opts.fraction = 0.6;
+    fastloess::Loess model(deg3_opts);
     auto result = model.fit(x, y).value();
     ```
 
@@ -263,7 +275,10 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 === "C++"
     ```cpp
-    fastloess::Loess model({ .degree = 4, .fraction = 0.7 });
+    fastloess::LoessOptions deg4_opts;
+    deg4_opts.degree = "quartic";
+    deg4_opts.fraction = 0.7;
+    fastloess::Loess model(deg4_opts);
     auto result = model.fit(x, y).value();
     ```
 

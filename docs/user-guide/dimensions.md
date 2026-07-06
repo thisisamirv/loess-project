@@ -125,7 +125,10 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
 === "C++"
     ```cpp
     // x is an (n × 2) row-major matrix
-    fastloess::Loess model({ .dimensions = 2, .fraction = 0.3 });
+    fastloess::LoessOptions d2_opts;
+    d2_opts.dimensions = 2;
+    d2_opts.fraction = 0.3;
+    fastloess::Loess model(d2_opts);
     auto result = model.fit(x2d, z).value();
     ```
 
@@ -176,7 +179,10 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 
 === "C++"
     ```cpp
-    fastloess::Loess model({ .dimensions = 3, .fraction = 0.5 });
+    fastloess::LoessOptions d3_opts;
+    d3_opts.dimensions = 3;
+    d3_opts.fraction = 0.5;
+    fastloess::Loess model(d3_opts);
     auto result = model.fit(x3d, y).value();
     ```
 

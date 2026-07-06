@@ -117,15 +117,10 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
-
-    std::vector<double> t = /* time points */;
-    std::vector<double> y = /* values */;
-
-    fastloess::Loess basic_model({
-        .fraction = 0.1,
-        .iterations = 3
-    });
+    fastloess::LoessOptions trend_opts;
+    trend_opts.fraction = 0.1;
+    trend_opts.iterations = 3;
+    fastloess::Loess basic_model(trend_opts);
     auto basic_result = basic_model.fit(t, y).value();
 
     // Trend in basic_result.yVector()

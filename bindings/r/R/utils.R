@@ -28,7 +28,7 @@ validate_common_args <- function(x, y, fraction, iterations) {
     # Accept if length(x) is a positive multiple of length(y).
     n_y <- length(y)
     if (length(x) == 0 || n_y == 0 || length(x) %% n_y != 0) {
-        stop("x and y must have the same length (or x must be a multiple of y for multi-dim input)")
+        stop("x must match y's length or be its multiple for multi-dim input")
     }
     if (length(x) < 3) {
         stop("At least 3 data points are required")

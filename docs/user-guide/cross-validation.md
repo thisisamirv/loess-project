@@ -377,19 +377,18 @@ Lower MSE indicates better fit on held-out data.
 
 === "C++"
     ```cpp
-    // Example output
-    auto model = fastloess::Loess::new()
-        .cross_validate(fastloess::KFold(5, {0.1, 0.3, 0.5, 0.7}))
-        .adapter(fastloess::Batch)
-        .build()?;
+    fastloess::LoessOptions cv_opts;
+    cv_opts.cv_fractions = {0.1, 0.3, 0.5, 0.7};
+    cv_opts.cv_method = "kfold";
+    cv_opts.cv_k = 5;
+    fastloess::Loess model(cv_opts);
+    auto result = model.fit(x, y).value();
 
-    auto result = model.fit(&x, &y)?;
-
-    // Fraction  | CV Score (MSE)
-    // 0.1       | 0.0542  ← Undersmoothed
-    // 0.3       | 0.0231  ← Best
-    // 0.5       | 0.0298
-    // 0.7       | 0.0412  ← Oversmoothed
+    // Fraction with lowest CV score is automatically selected.
+    // 0.1 → 0.0542  ← Undersmoothed
+    // 0.3 → 0.0231  ← Best
+    // 0.5 → 0.0298
+    // 0.7 → 0.0412  ← Oversmoothed
     ```
 
 The fraction with **lowest CV score** is automatically selected.

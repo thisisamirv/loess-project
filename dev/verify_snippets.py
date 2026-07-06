@@ -416,6 +416,7 @@ _RUST_SNIPPET_DIR = REPO_ROOT / "target" / "doc-snippet-runner"
 
 # C++ snippets are wrapped: preamble top + snippet + bottom
 _CPP_PREAMBLE_TOP = textwrap.dedent("""\
+    #define _USE_MATH_DEFINES
     #include "fastloess.hpp"
     #include <cmath>
     #include <cstdlib>
@@ -437,7 +438,49 @@ _CPP_PREAMBLE_TOP = textwrap.dedent("""\
         std::vector<double> x2d;
         x2d.reserve(n * 2);
         for (size_t i = 0; i < n; ++i) { x2d.push_back(x[i]); x2d.push_back(x[i] * 0.5); }
-        (void)x_chunk; (void)y_chunk; (void)x2d;
+        // row-major flat 3D: [x0,x0*0.5,x0*0.25, ...]
+        std::vector<double> x3d;
+        x3d.reserve(n * 3);
+        for (size_t i = 0; i < n; ++i) { x3d.push_back(x[i]); x3d.push_back(x[i] * 0.5); x3d.push_back(x[i] * 0.25); }
+        // z as a second response variable (same length as y)
+        std::vector<double> z(n);
+        for (size_t i = 0; i < n; ++i) { z[i] = std::cos(x[i]); }
+        // genomics data
+        std::vector<double> positions(n), observed(n), coverage(n);
+        for (size_t i = 0; i < n; ++i) {
+            positions[i] = static_cast<double>(i) * 1000.0;
+            observed[i] = 5.0 + std::sin(x[i]);
+            coverage[i] = 20.0 + std::cos(x[i]);
+        }
+        // sensor / time-series data
+        std::vector<double> times(n), temperatures(n);
+        for (size_t i = 0; i < n; ++i) {
+            times[i] = static_cast<double>(i) * 0.1;
+            temperatures[i] = 20.0 + std::sin(times[i]);
+        }
+        // irregular time series
+        std::vector<double> tIrregular(50), yIrregular(50);
+        for (size_t i = 0; i < 50; ++i) {
+            tIrregular[i] = static_cast<double>(i) * 2.0 + 0.3 * static_cast<double>(i % 3);
+            yIrregular[i] = 10.0 + tIrregular[i] * 0.3 + std::sin(tIrregular[i]);
+        }
+        // gene expression / hours data
+        std::vector<double> hours(49), expression(49);
+        for (size_t i = 0; i < 49; ++i) {
+            hours[i] = static_cast<double>(i) * 0.5;
+            expression[i] = 100.0 * (1.0 + 0.5 * std::sin(hours[i] * M_PI / 12.0));
+        }
+        // t as alias for x (time axis)
+        const auto& t = x;
+        // sliding window accumulators
+        std::vector<double> windowX, windowY;
+        (void)x_chunk; (void)y_chunk; (void)x2d; (void)x3d; (void)z;
+        (void)positions; (void)observed; (void)coverage;
+        (void)times; (void)temperatures;
+        (void)tIrregular; (void)yIrregular;
+        (void)hours; (void)expression;
+        (void)windowX; (void)windowY;
+        (void)t;
 
 """)
 
@@ -648,9 +691,6 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # Skip pure output / comment blocks
         if not any(c in code for c in [";", "{", "Loess", "smooth", "auto ", "std::"]):
             return "no executable C++ statements"
-        # Multi-dim (x2d/x3d) requires binding validation fix
-        if re.search(r"\bx2d\b|\bx3d\b", code):
-            return "multi-dim C++ (validation bug - needs binding fix)"
 
     return None
 
@@ -1203,10 +1243,15 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
     include_dir = str(REPO_ROOT / "bindings" / "cpp" / "include")
     lib_dir_str = str(lib_dir)
 
+    # Strip redundant includes that are already in the preamble
+    cpp_code = snippet.code
+    for inc in ('#include "fastloess.hpp"', "#include <fastloess.hpp>"):
+        cpp_code = cpp_code.replace(inc + "\n", "").replace(inc, "")
+
     code = (
         _CPP_PREAMBLE_TOP
         + "    "
-        + snippet.code.replace("\n", "\n    ")
+        + cpp_code.strip().replace("\n", "\n    ")
         + "\n"
         + _CPP_PREAMBLE_BOTTOM
     )

@@ -399,21 +399,23 @@ For large datasets that arrive in batches or files.
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    // Sliding window over times/temperatures (skip until window has ≥2 points)
+    for (size_t i = 0; i < times.size(); ++i) {
+        windowX.push_back(times[i]);
+        windowY.push_back(temperatures[i]);
 
-    // Sliding window logic
-    for (const auto& point : stream) {
-        windowX.push_back(point.x);
-        windowY.push_back(point.y);
-        
         if (windowX.size() > 50) {
             windowX.erase(windowX.begin());
             windowY.erase(windowY.begin());
         }
+        if (windowX.size() < 2) continue;
 
-        fastloess::Loess model({ .fraction = 0.4 });
+        fastloess::LoessOptions sw_opts;
+        sw_opts.fraction = 0.4;
+        fastloess::Loess model(sw_opts);
         auto result = model.fit(windowX, windowY).value();
         const auto smoothed = result.yVector().back();
+        (void)smoothed;
     }
     ```
 

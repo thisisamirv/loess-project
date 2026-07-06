@@ -406,7 +406,8 @@ LOESS can robustly handle outliers through iterative reweighting:
 === "C++"
 
     ```cpp
-    // Data with an outlier
+    // Data with an outlier at index 3
+    std::vector<double> x_out = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
     std::vector<double> y_outlier = {2.0, 4.0, 6.0, 50.0, 10.0, 12.0};
 
     fastloess::LoessOptions options;
@@ -416,7 +417,7 @@ LOESS can robustly handle outliers through iterative reweighting:
     options.return_robustness_weights = true;
 
     fastloess::Loess model(options);
-    auto result = model.fit(x, y_outlier).value();
+    auto result = model.fit(x_out, y_outlier).value();
 
     // Check weights
     auto weights = result.robustnessWeights();
