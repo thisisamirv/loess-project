@@ -785,7 +785,7 @@ pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, se
     if config_ptr.is_null() {
         return;
     }
-    unsafe { (*config_ptr).cv_seed = Some(seed as u64) };
+    unsafe { (*config_ptr).cv_seed = Some(u64::from(seed)) };
 }
 
 // StreamingLoess C API

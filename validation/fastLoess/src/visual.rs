@@ -131,8 +131,8 @@ fn run_fraction_comparison() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap();
 
         let mut mse = 0.0;
-        for i in 0..n {
-            let error = result.y[i] - y_true[i];
+        for (i, &y_t) in y_true.iter().enumerate().take(n) {
+            let error = result.y[i] - y_t;
             mse += error * error;
         }
         let rmse = (mse / n as f64).sqrt();
@@ -302,9 +302,9 @@ fn run_robust_iter_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut mse_nr = 0.0;
     let mut mse_r = 0.0;
-    for i in 0..n {
-        let err_nr = result_non_robust.y[i] - y_true[i];
-        let err_r = result_robust.y[i] - y_true[i];
+    for (i, &y_t) in y_true.iter().enumerate().take(n) {
+        let err_nr = result_non_robust.y[i] - y_t;
+        let err_r = result_robust.y[i] - y_t;
         mse_nr += err_nr * err_nr;
         mse_r += err_r * err_r;
     }
@@ -520,7 +520,7 @@ fn run_robust_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // Random outliers — xorshift64 gives a good uniform distribution.
-    let mut seed: u64 = 0xdeadbeef_cafe_f00d;
+    let mut seed: u64 = 0xdead_beef_cafe_f00d;
     let mut rng = || -> f64 {
         seed ^= seed << 13;
         seed ^= seed >> 7;
@@ -1056,7 +1056,7 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
         let signal = (pi * t / 5.0).sin();
         let noise = 0.05 * (2.0 * rng() - 1.0);
         // Alternating spike in anomalous zone x ∈ [4, 6]
-        let in_zone = t >= 4.0 && t <= 6.0;
+        let in_zone = (4.0..=6.0_f64).contains(&t);
         let spike = if in_zone && i % 2 == 0 { 6.0 } else { 0.0 };
         x.push(t);
         y_true.push(signal);
@@ -1067,7 +1067,7 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
     println!("------------------------------------");
 
     let make_fit = |fallback| {
-        let fit = Loess::new()
+        Loess::new()
             .iterations(2) // 1 OLS + 1 WLS — fallback fires before IRLS can propagate
             .fraction(0.10)
             .surface_mode(Direct)
@@ -1079,8 +1079,7 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
             .build()
             .unwrap()
             .fit(&x, &y)
-            .unwrap();
-        fit
+            .unwrap()
     };
 
     let fit_lm = make_fit(UseLocalMean);

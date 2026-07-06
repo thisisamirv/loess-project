@@ -1162,9 +1162,9 @@ fn make_neighborhood_1d(
     let x_val = x[query_idx];
     let mut indices = Vec::new();
     let mut distances = Vec::new();
-    for i in left..=right {
+    for (i, &xi) in x.iter().enumerate().take(right + 1).skip(left) {
         indices.push(i);
-        distances.push((x[i] - x_val).abs());
+        distances.push((xi - x_val).abs());
     }
     let max_distance = distances.iter().cloned().fold(0.0f64, f64::max);
     let max_distance = if max_distance <= f64::EPSILON {

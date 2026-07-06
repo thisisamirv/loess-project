@@ -264,7 +264,7 @@ fn test_streaming_parallel_true() {
 #[test]
 fn test_streaming_reset_with_processor() {
     let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
-    let y: Vec<f64> = x.iter().map(|&xi| xi).collect();
+    let y: Vec<f64> = x.to_vec();
 
     let mut processor = Loess::new()
         .fraction(0.4)
