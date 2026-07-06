@@ -4,7 +4,7 @@ use js_sys::Float64Array;
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen]
+#[wasm_bindgen(js_name = "initPanicHook")]
 pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
 }
@@ -403,12 +403,28 @@ impl Loess {
     }
 
     /// Fit the model to data and return smoothed values.
-    pub fn fit(&self, x: &Float64Array, y: &Float64Array, custom_weights: Option<Box<[f64]>>) -> Result<LoessResult, JsValue> {
-        smooth(x, y, self.options.clone(), custom_weights.map(|b| b.to_vec()))
+    #[allow(non_snake_case)]
+    pub fn fit(
+        &self,
+        x: &Float64Array,
+        y: &Float64Array,
+        customWeights: Option<Box<[f64]>>,
+    ) -> Result<LoessResult, JsValue> {
+        smooth(
+            x,
+            y,
+            self.options.clone(),
+            customWeights.map(|b| b.to_vec()),
+        )
     }
 }
 
-fn smooth(x: &Float64Array, y: &Float64Array, options: JsValue, custom_weights: Option<Vec<f64>>) -> Result<LoessResult, JsValue> {
+fn smooth(
+    x: &Float64Array,
+    y: &Float64Array,
+    options: JsValue,
+    custom_weights: Option<Vec<f64>>,
+) -> Result<LoessResult, JsValue> {
     let mut builder = LoessBuilder::new();
 
     if !options.is_undefined() && !options.is_null() {
@@ -554,7 +570,8 @@ pub struct StreamingLoess {
 impl StreamingLoess {
     // Create a new streaming smoother.
     #[wasm_bindgen(constructor)]
-    pub fn new(options: JsValue, streaming_opts: JsValue) -> Result<StreamingLoess, JsValue> {
+    #[allow(non_snake_case)]
+    pub fn new(options: JsValue, streamingOpts: JsValue) -> Result<StreamingLoess, JsValue> {
         let mut builder = LoessBuilder::new();
 
         if !options.is_undefined() && !options.is_null() {
@@ -664,8 +681,8 @@ impl StreamingLoess {
         let mut overlap = 500;
         let mut merge_strategy = MergeStrategy::WeightedAverage;
 
-        if !streaming_opts.is_undefined() && !streaming_opts.is_null() {
-            let sopts: StreamingOptions = serde_wasm_bindgen::from_value(streaming_opts)?;
+        if !streamingOpts.is_undefined() && !streamingOpts.is_null() {
+            let sopts: StreamingOptions = serde_wasm_bindgen::from_value(streamingOpts)?;
             if let Some(cs) = sopts.chunk_size {
                 chunk_size = cs;
             }
@@ -722,7 +739,8 @@ pub struct OnlineLoess {
 impl OnlineLoess {
     // Create a new online smoother.
     #[wasm_bindgen(constructor)]
-    pub fn new(options: JsValue, online_opts: JsValue) -> Result<OnlineLoess, JsValue> {
+    #[allow(non_snake_case)]
+    pub fn new(options: JsValue, onlineOpts: JsValue) -> Result<OnlineLoess, JsValue> {
         let mut builder = LoessBuilder::new();
 
         if !options.is_undefined() && !options.is_null() {
@@ -811,8 +829,8 @@ impl OnlineLoess {
         let mut min_points = 2;
         let mut update_mode = UpdateMode::Full;
 
-        if !online_opts.is_undefined() && !online_opts.is_null() {
-            let oopts: OnlineOptions = serde_wasm_bindgen::from_value(online_opts)?;
+        if !onlineOpts.is_undefined() && !onlineOpts.is_null() {
+            let oopts: OnlineOptions = serde_wasm_bindgen::from_value(onlineOpts)?;
             if let Some(wc) = oopts.window_capacity {
                 window_capacity = wc;
             }
@@ -835,6 +853,7 @@ impl OnlineLoess {
         Ok(OnlineLoess { inner: model })
     }
 
+    #[wasm_bindgen(js_name = "addPoints")]
     pub fn add_points(
         &mut self,
         xs: &Float64Array,
