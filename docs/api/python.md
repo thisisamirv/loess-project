@@ -97,7 +97,6 @@ result = online.add_points(x, y)
 | `dimensions` | `int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `str` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `surface_mode` | `str` | `"interpolation"` | Surface computation mode |
-| `minkowski_p` | `float` | `2.0` | Minkowski exponent (used when `distance_metric="minkowski"`) |
 | `weighted_metric_weights` | `list[float]` | `None` | Per-dimension weights (used when `distance_metric="weighted"`) |
 | `cell` | `float` | `None` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `None` | Number of interpolation vertices |
@@ -213,7 +212,7 @@ result = online.add_points(x, y)
 * `"euclidean"`
 * `"manhattan"`
 * `"chebyshev"`
-* `"minkowski"` (set `minkowski_p` for custom exponent)
+* `"minkowski"` (use `"minkowski:p"` string for custom exponent, e.g. `"minkowski:3"`)
 * `"weighted"` (set `weighted_metric_weights` for per-dimension scaling)
 
 ### Surface Modes

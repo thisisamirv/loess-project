@@ -62,6 +62,7 @@ pub struct SmoothOptions {
     pub surface_mode: Option<String>,
     #[serde(rename = "returnSe")]
     pub return_se: Option<bool>,
+    #[serde(rename = "customWeights")]
     pub custom_weights: Option<Vec<f64>>,
     // Per-dimension weights for the "weighted" distance metric.
     #[serde(rename = "weightedMetricWeights")]
@@ -87,6 +88,7 @@ pub struct StreamingOptions {
     pub overlap: Option<usize>,
     #[serde(rename = "mergeStrategy")]
     pub merge_strategy: Option<String>,
+    #[serde(rename = "customWeights")]
     pub custom_weights: Option<Vec<f64>>,
 }
 
@@ -98,6 +100,7 @@ pub struct OnlineOptions {
     pub min_points: Option<usize>,
     #[serde(rename = "updateMode")]
     pub update_mode: Option<String>,
+    #[serde(rename = "customWeights")]
     pub custom_weights: Option<Vec<f64>>,
 }
 
@@ -850,11 +853,21 @@ impl OnlineLoess {
         Ok(OnlineLoess { inner: model })
     }
 
-    pub fn update(&mut self, x: f64, y: f64) -> Result<Option<f64>, JsValue> {
-        let result = self
-            .inner
-            .add_point(std::slice::from_ref(&x), y)
-            .map_err(|e: ::fastLoess::prelude::LoessError| JsValue::from_str(&e.to_string()))?;
-        Ok(result.as_ref().map(|o| o.smoothed))
+    pub fn add_points(
+        &mut self,
+        xs: &Float64Array,
+        ys: &Float64Array,
+    ) -> Result<Vec<f64>, JsValue> {
+        let xs_vec: Vec<f64> = xs.to_vec();
+        let ys_vec: Vec<f64> = ys.to_vec();
+        let mut results = Vec::with_capacity(ys_vec.len());
+        for (&xi, &yi) in xs_vec.iter().zip(ys_vec.iter()) {
+            let result = self
+                .inner
+                .add_point(std::slice::from_ref(&xi), yi)
+                .map_err(|e: ::fastLoess::prelude::LoessError| JsValue::from_str(&e.to_string()))?;
+            results.push(result.as_ref().map_or(yi, |o| o.smoothed));
+        }
+        Ok(results)
     }
 }

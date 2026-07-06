@@ -109,10 +109,9 @@ fn parse_polynomial_degree(name: &str) -> PyResult<PolynomialDegree> {
     }
 }
 
-// Build a distance metric from a name, optional Minkowski p, and optional weights.
+// Build a distance metric from a name and optional weights.
 fn build_distance_metric(
     name: &str,
-    minkowski_p: f64,
     weighted_metric_weights: Option<&[f64]>,
 ) -> PyResult<DistanceMetric<f64>> {
     let lower = name.to_lowercase();
@@ -127,7 +126,7 @@ fn build_distance_metric(
         "euclidean" | "euclid" => Ok(DistanceMetric::Euclidean),
         "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
         "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
-        "minkowski" => Ok(DistanceMetric::Minkowski(minkowski_p)),
+        "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
         "weighted" => {
             let weights = weighted_metric_weights.ok_or_else(|| {
                 PyValueError::new_err(
@@ -428,7 +427,6 @@ impl PyStreamingLoess {
         degree="linear",
         dimensions=1usize,
         distance_metric="normalized",
-        minkowski_p=2.0f64,
         weighted_metric_weights=None,
         surface_mode="interpolation",
         return_se=false,
@@ -458,7 +456,6 @@ impl PyStreamingLoess {
         degree: &str,
         dimensions: usize,
         distance_metric: &str,
-        minkowski_p: f64,
         weighted_metric_weights: Option<Vec<f64>>,
         surface_mode: &str,
         return_se: bool,
@@ -475,11 +472,7 @@ impl PyStreamingLoess {
         let bp = parse_boundary_policy(boundary_policy)?;
         let ms = parse_merge_strategy(merge_strategy)?;
         let deg = parse_polynomial_degree(degree)?;
-        let dm = build_distance_metric(
-            distance_metric,
-            minkowski_p,
-            weighted_metric_weights.as_deref(),
-        )?;
+        let dm = build_distance_metric(distance_metric, weighted_metric_weights.as_deref())?;
         let surf = parse_surface_mode(surface_mode)?;
 
         let mut builder = LoessBuilder::<f64>::new();
@@ -610,7 +603,6 @@ impl PyOnlineLoess {
         degree="linear",
         dimensions=1usize,
         distance_metric="normalized",
-        minkowski_p=2.0f64,
         weighted_metric_weights=None,
         surface_mode="interpolation",
         return_se=false,
@@ -640,7 +632,6 @@ impl PyOnlineLoess {
         degree: &str,
         dimensions: usize,
         distance_metric: &str,
-        minkowski_p: f64,
         weighted_metric_weights: Option<Vec<f64>>,
         surface_mode: &str,
         return_se: bool,
@@ -659,11 +650,7 @@ impl PyOnlineLoess {
         let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
         let um = parse_update_mode(update_mode)?;
         let deg = parse_polynomial_degree(degree)?;
-        let dm = build_distance_metric(
-            distance_metric,
-            minkowski_p,
-            weighted_metric_weights.as_deref(),
-        )?;
+        let dm = build_distance_metric(distance_metric, weighted_metric_weights.as_deref())?;
         let surf = parse_surface_mode(surface_mode)?;
 
         let mut builder = LoessBuilder::<f64>::new();
@@ -725,16 +712,6 @@ impl PyOnlineLoess {
             degree: deg,
             distance_metric: dm,
         })
-    }
-
-    // Add a single point and return smoothed value if enough points are available.
-    fn update(&self, x: f64, y: f64) -> PyResult<Option<f64>> {
-        let mut inner = self
-            .inner
-            .lock()
-            .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?;
-        let result = inner.add_point(&[x], y).map_err(to_py_error)?;
-        Ok(result.map(|o| o.smoothed))
     }
 
     // Add multiple points.
@@ -849,7 +826,6 @@ impl PyLoess {
         degree="linear",
         dimensions=1usize,
         distance_metric="normalized",
-        minkowski_p=2.0f64,
         weighted_metric_weights=None,
         surface_mode="interpolation",
         return_se=false,
@@ -880,7 +856,6 @@ impl PyLoess {
         degree: &str,
         dimensions: usize,
         distance_metric: &str,
-        minkowski_p: f64,
         weighted_metric_weights: Option<Vec<f64>>,
         surface_mode: &str,
         return_se: bool,
@@ -895,11 +870,7 @@ impl PyLoess {
         let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
         let bp = parse_boundary_policy(boundary_policy)?;
         let deg = parse_polynomial_degree(degree)?;
-        let dm = build_distance_metric(
-            distance_metric,
-            minkowski_p,
-            weighted_metric_weights.as_deref(),
-        )?;
+        let dm = build_distance_metric(distance_metric, weighted_metric_weights.as_deref())?;
         let surf = parse_surface_mode(surface_mode)?;
 
         Ok(PyLoess {

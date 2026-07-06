@@ -228,7 +228,7 @@ online_params <- c(
     "fraction", "window_capacity", "min_points", "iterations",
     "weight_function", "robustness_method", "scaling_method",
     "boundary_policy", "zero_weight_fallback", "update_mode", "auto_converge",
-    "return_robustness_weights", "parallel",
+    "return_robustness_weights", "return_diagnostics", "return_residuals", "parallel",
     "degree", "dimensions", "distance_metric", "surface_mode", "return_se",
     "confidence_intervals", "prediction_intervals",
     "weighted_metric_weights", "cell", "interpolation_vertices",

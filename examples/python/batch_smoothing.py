@@ -275,10 +275,8 @@ def example_13_distance_metrics():
         result = Loess(fraction=0.5, distance_metric=metric).fit(x, y)
         print(f"  {metric}: y[0]={result.y[0]:.3f}")
 
-    # Minkowski with custom p via the dedicated minkowski_p parameter
-    result_mink = Loess(fraction=0.5, distance_metric="minkowski", minkowski_p=3.0).fit(
-        x, y
-    )
+    # Minkowski with custom p via the "minkowski:p" string format
+    result_mink = Loess(fraction=0.5, distance_metric="minkowski:3").fit(x, y)
     print(f"  minkowski(p=3): y[0]={result_mink.y[0]:.3f}")
     print()
 

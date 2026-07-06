@@ -165,14 +165,13 @@ test('SmoothOptions: distanceMetric variants', () => {
     }
 });
 
-test('SmoothOptions: minkowskiP', () => {
+test('SmoothOptions: minkowski via string format', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const y = new Float64Array([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
     const r = new fastloess.Loess({
         fraction: 0.5,
-        distanceMetric: 'minkowski',
-        minkowskiP: 3,
+        distanceMetric: 'minkowski:3',
     }).fit(x, y);
     assert.strictEqual(r.y.length, 10);
 });

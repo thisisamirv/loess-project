@@ -607,9 +607,7 @@ class TestParameterCoverage:
 
     def test_loess_minkowski_p(self):
         x, y = self._xy20()
-        r = fastloess.Loess(
-            fraction=0.5, distance_metric="minkowski", minkowski_p=3.0
-        ).fit(x, y)
+        r = fastloess.Loess(fraction=0.5, distance_metric="minkowski:3.0").fit(x, y)
         assert len(r.y) == len(x)
 
     def test_loess_weighted_metric(self):
@@ -649,8 +647,7 @@ class TestParameterCoverage:
         s = fastloess.StreamingLoess(
             fraction=0.3,
             chunk_size=60,
-            distance_metric="minkowski",
-            minkowski_p=2.5,
+            distance_metric="minkowski:2.5",
         )
         r1 = s.process_chunk(x, y)
         r2 = s.finalize()
@@ -708,8 +705,7 @@ class TestParameterCoverage:
         o = fastloess.OnlineLoess(
             fraction=0.5,
             window_capacity=10,
-            distance_metric="minkowski",
-            minkowski_p=3.0,
+            distance_metric="minkowski:3.0",
         )
         r = o.add_points(x, y)
         assert len(r.y) == len(x)

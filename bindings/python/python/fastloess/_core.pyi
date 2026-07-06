@@ -171,7 +171,6 @@ def smooth(
     distance_metric: str = "normalized",
     surface_mode: str = "interpolation",
     return_se: bool = False,
-    minkowski_p: float = 2.0,
     weighted_metric_weights: Sequence[float] | None = None,
     custom_weights: ArrayLike | None = None,
 ) -> LoessResult:
@@ -230,8 +229,6 @@ def smooth(
         Surface mode: "interpolation" or "direct" (default: "interpolation").
     return_se : bool, optional
         Compute hat-matrix statistics (enp, trace_hat, etc.) (default: False).
-    minkowski_p : float, optional
-        Exponent for Minkowski distance (default: 2.0, i.e. Euclidean).
     weighted_metric_weights : sequence of float, optional
         Per-dimension weights for the weighted distance metric.
     custom_weights : array_like, optional
@@ -269,7 +266,6 @@ def smooth_streaming(
     surface_mode: str = "interpolation",
     return_se: bool = False,
     merge_strategy: str = "weighted_average",
-    minkowski_p: float = 2.0,
     weighted_metric_weights: Sequence[float] | None = None,
 ) -> LoessResult:
     """Streaming LOESS for large datasets.
@@ -323,8 +319,6 @@ def smooth_streaming(
     merge_strategy : str, optional
         Strategy for merging overlapping chunk regions: "average",
         "weighted_average", "take_first", "take_last" (default: "weighted_average").
-    minkowski_p : float, optional
-        Exponent for Minkowski distance (default: 2.0).
     weighted_metric_weights : sequence of float, optional
         Per-dimension weights for the weighted distance metric.
 
@@ -356,7 +350,6 @@ def smooth_online(
     distance_metric: str = "normalized",
     surface_mode: str = "interpolation",
     return_se: bool = False,
-    minkowski_p: float = 2.0,
     weighted_metric_weights: Sequence[float] | None = None,
 ) -> LoessResult:
     """Online LOESS with sliding window.
@@ -405,8 +398,6 @@ def smooth_online(
         Surface mode (default: "interpolation").
     return_se : bool, optional
         Compute hat-matrix statistics (default: False).
-    minkowski_p : float, optional
-        Exponent for Minkowski distance (default: 2.0).
     weighted_metric_weights : sequence of float, optional
         Per-dimension weights for the weighted distance metric.
 
@@ -444,7 +435,6 @@ class Loess:
         distance_metric: str = "normalized",
         surface_mode: str = "interpolation",
         return_se: bool = False,
-        minkowski_p: float = 2.0,
         weighted_metric_weights: Sequence[float] | None = None,
     ) -> None:
         """Initialize the batch LOESS processor."""
@@ -496,7 +486,6 @@ class StreamingLoess:
         surface_mode: str = "interpolation",
         return_se: bool = False,
         merge_strategy: str = "weighted_average",
-        minkowski_p: float = 2.0,
         weighted_metric_weights: Sequence[float] | None = None,
     ) -> None:
         """Initialize the streaming processor."""
@@ -533,14 +522,9 @@ class OnlineLoess:
         distance_metric: str = "normalized",
         surface_mode: str = "interpolation",
         return_se: bool = False,
-        minkowski_p: float = 2.0,
         weighted_metric_weights: Sequence[float] | None = None,
     ) -> None:
         """Initialize the online processor."""
-        ...
-
-    def update(self, x: float, y: float) -> float | None:
-        """Add a single point and return smoothed value if available."""
         ...
 
     def add_points(self, x: ArrayLike, y: ArrayLike) -> LoessResult:

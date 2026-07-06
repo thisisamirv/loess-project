@@ -12,9 +12,10 @@
    8. Update modes (Full vs Incremental) and minPoints
    9. Advanced online options
 
-  Note: OnlineLoessWasm.update(x, y) returns Option<f64> — just the
-  smoothed scalar value (or null when buffering). For full OnlineOutput
-  fields (std_error, residual, robustness_weight), use the Node.js binding.
+  Note: OnlineLoessWasm.add_points(xs, ys) takes Float64Arrays and returns
+  a Float64Array of smoothed values. Points before min_points is reached
+  fall back to the raw y value. For full OnlineOutput fields (std_error,
+  residual, robustness_weight), use the Node.js binding.
 -->
 <!DOCTYPE html>
 <html>
@@ -52,6 +53,11 @@
         function log(msg) { out.innerText += msg + "\n"; console.log(msg); }
         function clearLog() { out.innerText = ""; }
 
+        // Convenience wrapper: add a single point and return its smoothed value.
+        function addPoint(model, x, y) {
+            return model.add_points(new Float64Array([x]), new Float64Array([y]))[0];
+        }
+
         // ── Example 1: Basic Incremental Processing ───────────────────────────
         function example_1_basic_streaming() {
             log("Example 1: Basic Incremental Processing");
@@ -63,9 +69,8 @@
             );
             log(`  ${"X".padStart(8)} ${"Y_obs".padStart(12)} ${"Y_smooth".padStart(12)}`);
             for (const [x, y] of data) {
-                const smoothed = model.update(x, y);
-                const s = smoothed != null ? smoothed.toFixed(2) : "(buffering)";
-                log(`  ${x.toFixed(2).padStart(8)} ${y.toFixed(2).padStart(12)} ${s.padStart(12)}`);
+                const smoothed = addPoint(model, x, y);
+                log(`  ${x.toFixed(2).padStart(8)} ${y.toFixed(2).padStart(12)} ${smoothed.toFixed(2).padStart(12)}`);
             }
             log("");
         }
@@ -81,12 +86,8 @@
             log(`  ${"Hour".padStart(6)} ${"Raw".padStart(12)} ${"Smoothed".padStart(12)}`);
             for (let hour = 0; hour < 24; hour++) {
                 const temp = 20 + 5 * Math.sin(hour * Math.PI / 12) + ((hour * 7) % 11) * 0.3 - 1.5;
-                const s = model.update(hour, temp);
-                if (s != null) {
-                    log(`  ${hour.toString().padStart(6)} ${temp.toFixed(2).padStart(12)}°C ${s.toFixed(2).padStart(12)}°C`);
-                } else {
-                    log(`  ${hour.toString().padStart(6)} ${temp.toFixed(2).padStart(12)}°C ${"(warming up)".padStart(13)}`);
-                }
+                const s = addPoint(model, hour, temp);
+                log(`  ${hour.toString().padStart(6)} ${temp.toFixed(2).padStart(12)}°C ${s.toFixed(2).padStart(12)}°C`);
             }
             log("");
         }
@@ -103,8 +104,7 @@
                 );
                 const smoothed = [];
                 for (const [x, y] of data) {
-                    const s = model.update(x, y);
-                    if (s != null) smoothed.push(s.toFixed(1));
+                    smoothed.push(addPoint(model, x, y).toFixed(1));
                 }
                 log(`  ${method}: [${smoothed.join(', ')}]`);
             }
@@ -118,7 +118,7 @@
             for (const w of [5, 10, 15]) {
                 const model = new OnlineLoessWasm({ fraction: 0.5, iterations: 2 }, { windowCapacity: w });
                 const smoothed = [];
-                for (const [x, y] of data) { const s = model.update(x, y); if (s != null) smoothed.push(s); }
+                for (const [x, y] of data) { smoothed.push(addPoint(model, x, y)); }
                 const last5 = smoothed.slice(-5).map(v => v.toFixed(2));
                 log(`  windowCapacity=${w}: last 5 = [${last5.join(', ')}]`);
             }
@@ -132,8 +132,8 @@
             const model = new OnlineLoessWasm({ fraction: 0.3, iterations: 1 }, { windowCapacity: 20 });
             let count = 0, last = 0;
             for (let i = 0; i < total; i++) {
-                const s = model.update(i, 2 * i + Math.sin(i * 0.1) * 5 + ((i % 7) - 3) * 0.5);
-                if (s != null) { count++; last = s; if (count % 200 === 0) log(`  Processed: ${count} pts | smoothed=${last.toFixed(2)}`); }
+                const s = addPoint(model, i, 2 * i + Math.sin(i * 0.1) * 5 + ((i % 7) - 3) * 0.5);
+                count++; last = s; if (count % 200 === 0) log(`  Processed: ${count} pts | smoothed=${last.toFixed(2)}`);
             }
             log(`  Total: ${count}, final smoothed: ${last.toFixed(2)}`);
             log(`  Memory: constant (window=20)`);
@@ -147,12 +147,8 @@
             const model = new OnlineLoessWasm({ fraction: 0.6, iterations: 0 }, { windowCapacity: 4 });
             log(`  ${"Pt".padStart(4)} ${"X".padStart(4)} ${"Y".padStart(6)} ${"Smoothed".padStart(10)} Status`);
             data.forEach(([x, y], i) => {
-                const s = model.update(x, y);
-                if (s != null) {
-                    log(`  ${(i + 1).toString().padStart(4)} ${x.toString().padStart(4)} ${y.toString().padStart(6)} ${s.toFixed(2).padStart(10)} Window full (sliding)`);
-                } else {
-                    log(`  ${(i + 1).toString().padStart(4)} ${x.toString().padStart(4)} ${y.toString().padStart(6)} ${"-".padStart(10)} Filling (${i + 1}/4)`);
-                }
+                const s = addPoint(model, x, y);
+                log(`  ${(i + 1).toString().padStart(4)} ${x.toString().padStart(4)} ${y.toString().padStart(6)} ${s.toFixed(2).padStart(10)} Sliding window`);
             });
             log("  Output starts after window fills, then slides.");
             log("");
@@ -166,16 +162,14 @@
             const t0 = performance.now();
             let count = 0;
             for (let i = 0; i < n; i++) {
-                const s = model.update(i, Math.sin(i * 0.1) + Math.cos(i * 0.01));
-                if (s != null) count++;
+                addPoint(model, i, Math.sin(i * 0.1) + Math.cos(i * 0.01));
+                count++;
             }
             log(`  ${count} pts in ${(performance.now() - t0).toFixed(2)}ms (windowCapacity=10)`);
             log("");
         }
 
         // ── Example 8: Update Modes (Full vs Incremental) and minPoints ───────
-        // Note: update() returns Option<f64> (smoothed scalar only).
-        // Full OnlineOutput fields (std_error etc.) are available via Node.js binding.
         function example_8_update_modes() {
             log("Example 8: Update Modes (Full vs Incremental) and minPoints");
             const data = Array.from({ length: 30 }, (_, i) => [i, 2 * i + 1]);
@@ -184,16 +178,16 @@
                     { fraction: 0.5, iterations: 2 },
                     { windowCapacity: 15, minPoints: 5, updateMode: mode }
                 );
-                let emitted = 0;
-                for (const [x, y] of data) { if (model.update(x, y) != null) emitted++; }
-                log(`  ${mode}: ${emitted} pts emitted (out of ${data.length})`);
+                let lastVal;
+                for (const [x, y] of data) { lastVal = addPoint(model, x, y); }
+                log(`  ${mode}: last smoothed = ${lastVal.toFixed(3)} (${data.length} pts processed)`);
             }
-            // Show effect of minPoints
+            // Show effect of minPoints: early points return raw y until min_points reached
             for (const mp of [2, 5, 10]) {
                 const model = new OnlineLoessWasm({ fraction: 0.5 }, { windowCapacity: 15, minPoints: mp });
-                let emitted = 0;
-                for (const [x, y] of data) { if (model.update(x, y) != null) emitted++; }
-                log(`  minPoints=${mp}: ${emitted} pts emitted`);
+                let lastVal;
+                for (const [x, y] of data) { lastVal = addPoint(model, x, y); }
+                log(`  minPoints=${mp}: last smoothed = ${lastVal.toFixed(3)}`);
             }
             log("");
         }
@@ -211,9 +205,9 @@
                 },
                 { windowCapacity: 15, minPoints: 5 }
             );
-            let emitted = 0, last = null;
-            for (const [x, y] of data) { const s = model.update(x, y); if (s != null) { emitted++; last = s; } }
-            log(`  emitted: ${emitted}, last smoothed: ${last != null ? last.toFixed(3) : "N/A"}`);
+            let lastVal;
+            for (const [x, y] of data) { lastVal = addPoint(model, x, y); }
+            log(`  emitted: ${data.length}, last smoothed: ${lastVal != null ? lastVal.toFixed(3) : "N/A"}`);
             log("");
         }
 

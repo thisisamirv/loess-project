@@ -299,7 +299,6 @@ const _SMOOTH_OPTION_KEYS = new Set([
     'cvK', 'parallel', 'degree', 'dimensions', 'distanceMetric',
     'weightedMetricWeights', 'surfaceMode', 'returnSe', 'customWeights',
     'cell', 'interpolationVertices', 'boundaryDegreeFallback', 'cvSeed',
-    'minkowskiP',
 ])
 
 const _STREAMING_OPTION_KEYS = new Set(['chunkSize', 'overlap', 'mergeStrategy'])

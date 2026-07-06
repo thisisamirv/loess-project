@@ -9,8 +9,9 @@
 #' @inheritParams Loess
 #' @param window_capacity Maximum number of points kept in the sliding window.
 #' @param min_points Minimum number of points required before smoothing begins.
-#' @param update_mode Window update strategy. Currently only
-#'   \code{"incremental"} is supported.
+#' @param update_mode Window update strategy: \code{"full"} (default) re-smooths
+#'   all window points after each addition, \code{"incremental"} updates only the
+#'   newest point.
 #' @param confidence_intervals Confidence level for confidence intervals
 #'   (e.g., 0.95). \code{NULL} (default) disables confidence intervals.
 #' @param prediction_intervals Confidence level for prediction intervals
@@ -34,9 +35,11 @@ OnlineLoess <- function(
     robustness_method = "bisquare",
     scaling_method = "mad",
     boundary_policy = "extend",
-    update_mode = "incremental",
+    update_mode = "full",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
     zero_weight_fallback = "use_local_mean",
     parallel = FALSE,
     degree = "linear",
