@@ -107,10 +107,10 @@ void testBasicSmooth() {
   auto result = loess.fit(x_vals, y_vals).value();
 
   assertTrue(result.valid(), "Result should be valid");
-  assertTrue(result.y_vector().size() == k_small_count,
+  assertTrue(result.yVector().size() == k_small_count,
              "Output length mismatch");
-  assertTrue(result.x_vector().size() == k_small_count, "X length mismatch");
-  assertApprox(result.fraction_used(), k_fraction_half);
+  assertTrue(result.xVector().size() == k_small_count, "X length mismatch");
+  assertApprox(result.fractionUsed(), k_fraction_half);
 }
 
 void testBasicSmoothSerial() {
@@ -126,7 +126,7 @@ void testBasicSmoothSerial() {
   auto result = loess.fit(x_vals, y_vals).value();
 
   assertTrue(result.valid());
-  assertTrue(result.y_vector().size() == k_small_count);
+  assertTrue(result.yVector().size() == k_small_count);
 }
 
 void testLoessWithDiagnostics() {
@@ -144,7 +144,7 @@ void testLoessWithDiagnostics() {
   auto diag = result.diagnostics();
   assertTrue(diag.rmse() >= 0, "RMSE negative");
   assertTrue(diag.mae() >= 0, "MAE negative");
-  assertTrue(diag.r_squared() >= 0 && diag.r_squared() <= 1, "R2 out of range");
+  assertTrue(diag.rSquared() >= 0 && diag.rSquared() <= 1, "R2 out of range");
 }
 
 void testLoessWithResiduals() {
@@ -175,7 +175,7 @@ void testLoessWithRobustnessWeights() {
   Loess loess(opts);
   auto result = loess.fit(x_vals, y_vals).value();
 
-  auto weights = result.robustness_weights();
+  auto weights = result.robustnessWeights();
   assertTrue(weights.size() == k_small_count);
   for (const double weight : weights) {
     assertTrue(weight >= 0 && weight <= 1, "Weight out of range");
@@ -199,8 +199,8 @@ void testLoessWithConfidenceIntervals() {
   Loess loess(opts);
   auto result = loess.fit(x_vals, y_vals).value();
 
-  auto conf_lower = result.confidence_lower();
-  auto conf_upper = result.confidence_upper();
+  auto conf_lower = result.confidenceLower();
+  auto conf_upper = result.confidenceUpper();
   assertTrue(conf_lower.size() == k_twenty_count);
   assertTrue(conf_upper.size() == k_twenty_count);
   for (size_t idx = 0; idx < k_twenty_count; ++idx) {
@@ -225,8 +225,8 @@ void testLoessWithPredictionIntervals() {
   Loess loess(opts);
   auto result = loess.fit(x_vals, y_vals).value();
 
-  assertTrue(result.prediction_lower().size() == k_twenty_count);
-  assertTrue(result.prediction_upper().size() == k_twenty_count);
+  assertTrue(result.predictionLower().size() == k_twenty_count);
+  assertTrue(result.predictionUpper().size() == k_twenty_count);
 }
 
 void testLoessReuse() {
@@ -245,8 +245,8 @@ void testLoessReuse() {
   auto result1 = loess.fit(x_vals1, y_vals1).value();
   auto result2 = loess.fit(x_vals2, y_vals2).value();
 
-  assertTrue(result1.y_vector().size() == k_small_count);
-  assertTrue(result2.y_vector().size() == k_small_count);
+  assertTrue(result1.yVector().size() == k_small_count);
+  assertTrue(result2.yVector().size() == k_small_count);
 }
 
 // ── Streaming LOESS tests ──────────────────────────────────────────────────
@@ -266,10 +266,10 @@ void testStreamingReturnsAllPoints() {
   opts.chunk_size = k_chunk_large; // > k_hundred_count
   StreamingLoess stream(opts);
 
-  auto val1 = stream.process_chunk(x_vals, y_vals).value();
+  auto val1 = stream.processChunk(x_vals, y_vals).value();
   auto val2 = stream.finalize().value();
 
-  assertTrue(val1.y_vector().size() + val2.y_vector().size() == k_hundred_count,
+  assertTrue(val1.yVector().size() + val2.yVector().size() == k_hundred_count,
              "Total points mismatch");
 }
 
@@ -289,7 +289,7 @@ void testStreamingBasic() {
   opts.chunk_size = k_chunk_small;
   StreamingLoess stream(opts);
 
-  auto chunk_result = stream.process_chunk(x_vals, y_vals).value();
+  auto chunk_result = stream.processChunk(x_vals, y_vals).value();
   auto final_result = stream.finalize().value();
   (void)chunk_result;
   (void)final_result;
@@ -311,13 +311,13 @@ void testStreamingAccuracy() {
   sopts.fraction = k_fraction_half;
   sopts.chunk_size = k_chunk_small;
   StreamingLoess stream(sopts);
-  auto val1 = stream.process_chunk(x_vals, y_vals).value();
+  auto val1 = stream.processChunk(x_vals, y_vals).value();
   auto val2 = stream.finalize().value();
 
   std::vector<double> stream_y;
-  auto y_vec1 = val1.y_vector();
+  auto y_vec1 = val1.yVector();
   stream_y.insert(stream_y.end(), y_vec1.begin(), y_vec1.end());
-  auto y_vec2 = val2.y_vector();
+  auto y_vec2 = val2.yVector();
   stream_y.insert(stream_y.end(), y_vec2.begin(), y_vec2.end());
 
   // Batch
@@ -325,7 +325,7 @@ void testStreamingAccuracy() {
   bopts.fraction = k_fraction_half;
   Loess batch(bopts);
   auto bres = batch.fit(x_vals, y_vals).value();
-  auto batch_y = bres.y_vector();
+  auto batch_y = bres.yVector();
 
   assertTrue(stream_y.size() == batch_y.size());
   for (size_t idx = 0; idx < k_two_hundred_count; ++idx) {
@@ -353,8 +353,8 @@ void testOnlineBasic() {
   for (size_t idx = 0; idx < x_vals.size(); ++idx) {
     const std::vector<double> x_val = {x_vals[idx]};
     const std::vector<double> y_val = {y_vals[idx]};
-    auto res = online.add_points(x_val, y_val).value();
-    if (!res.y_vector().empty()) {
+    auto res = online.addPoints(x_val, y_val).value();
+    if (!res.yVector().empty()) {
       points_out++;
     }
   }
@@ -378,9 +378,9 @@ void testMismatchedLengths() {
     (void)err; // expected: mismatched lengths throw
   }
 
-  // Also test checking has_value()
+  // Also test checking hasValue()
   auto res = loess.fit(x_vals, y_vals);
-  assertTrue(!res.has_value());
+  assertTrue(!res.hasValue());
   assertTrue(!res.error().empty());
 }
 
@@ -408,7 +408,7 @@ void testLoessScalingMethods() {
     opts.scaling_method = method;
     Loess loess(opts);
     auto res = loess.fit(x_vals, y_vals).value();
-    assertTrue(res.y_vector().size() == k_thirty_count, method);
+    assertTrue(res.yVector().size() == k_thirty_count, method);
   }
 }
 
@@ -423,7 +423,7 @@ void testLoessBoundaryPolicies() {
     opts.boundary_policy = policy;
     Loess loess(opts);
     auto res = loess.fit(x_vals, y_vals).value();
-    assertTrue(res.y_vector().size() == k_thirty_count, policy);
+    assertTrue(res.yVector().size() == k_thirty_count, policy);
   }
 }
 
@@ -439,7 +439,7 @@ void testLoessZeroWeightFallback() {
     opts.zero_weight_fallback = fallback_name;
     Loess loess(opts);
     auto res = loess.fit(x_vals, y_vals).value();
-    assertTrue(res.y_vector().size() == k_thirty_count, fallback_name);
+    assertTrue(res.yVector().size() == k_thirty_count, fallback_name);
   }
 }
 
@@ -453,7 +453,7 @@ void testLoessAutoConverge() {
   opts.auto_converge = k_auto_converge_tol;
   Loess loess(opts);
   auto res = loess.fit(x_vals, y_vals).value();
-  assertTrue(res.y_vector().size() == k_thirty_count);
+  assertTrue(res.yVector().size() == k_thirty_count);
 }
 
 void testLoessPolynomialDegrees() {
@@ -467,7 +467,7 @@ void testLoessPolynomialDegrees() {
     opts.degree = deg;
     Loess loess(opts);
     auto res = loess.fit(x_vals, y_vals).value();
-    assertTrue(res.y_vector().size() == k_thirty_count, deg);
+    assertTrue(res.yVector().size() == k_thirty_count, deg);
   }
 }
 
@@ -482,7 +482,7 @@ void testLoessDistanceMetrics() {
     opts.distance_metric = metric;
     Loess loess(opts);
     auto res = loess.fit(x_vals, y_vals).value();
-    assertTrue(res.y_vector().size() == k_thirty_count, metric);
+    assertTrue(res.yVector().size() == k_thirty_count, metric);
   }
 }
 
@@ -497,9 +497,9 @@ void testLoessSurfaceModeAndReturnSe() {
   opts.return_se = true;
   Loess loess(opts);
   auto res = loess.fit(x_vals, y_vals).value();
-  assertTrue(res.y_vector().size() == k_thirty_count);
+  assertTrue(res.yVector().size() == k_thirty_count);
   assertTrue(!std::isnan(res.enp()), "enp should be set with return_se+direct");
-  auto std_errors = res.standard_errors();
+  auto std_errors = res.standardErrors();
   assertTrue(std_errors.size() == k_thirty_count,
              "Standard errors should be populated");
 }
@@ -516,7 +516,7 @@ void testLoessWeightFunctions() {
     opts.weight_function = weight_fn;
     Loess loess(opts);
     auto res = loess.fit(x_vals, y_vals).value();
-    assertTrue(res.y_vector().size() == k_thirty_count, weight_fn);
+    assertTrue(res.yVector().size() == k_thirty_count, weight_fn);
   }
 }
 
@@ -540,8 +540,8 @@ void testLoessCustomWeights() {
     double err_no_w = 0.0;
     double err_w = 0.0;
     for (size_t idx : non_outlier) {
-      err_no_w += std::abs(r_no_w.y_vector()[idx] - y_true[idx]);
-      err_w += std::abs(r_w.y_vector()[idx] - y_true[idx]);
+      err_no_w += std::abs(r_no_w.yVector()[idx] - y_true[idx]);
+      err_w += std::abs(r_w.yVector()[idx] - y_true[idx]);
     }
     assertTrue(err_w < err_no_w, "zero weight on outlier should reduce error");
   }
@@ -554,8 +554,8 @@ void testLoessCustomWeights() {
     Loess loess(opts);
     auto r_no_w = loess.fit(x_vals, y_true).value();
     auto r_w = loess.fit(x_vals, y_true, w_uniform).value();
-    for (size_t idx = 0; idx < r_no_w.y_vector().size(); ++idx) {
-      assertApprox(r_w.y_vector()[idx], r_no_w.y_vector()[idx], k_epsilon_1e6);
+    for (size_t idx = 0; idx < r_no_w.yVector().size(); ++idx) {
+      assertApprox(r_w.yVector()[idx], r_no_w.yVector()[idx], k_epsilon_1e6);
     }
   }
 
@@ -566,7 +566,7 @@ void testLoessCustomWeights() {
     opts.fraction = k_fraction_six_tenths;
     Loess loess(opts);
     auto res = loess.fit(x_vals, y_true, w_bad);
-    assertTrue(!res.has_value(), "wrong-length weights should return error");
+    assertTrue(!res.hasValue(), "wrong-length weights should return error");
   }
 
   // Negative weights should produce an error result
@@ -576,7 +576,7 @@ void testLoessCustomWeights() {
     opts.fraction = k_fraction_six_tenths;
     Loess loess(opts);
     auto res = loess.fit(x_vals, y_true, w_neg);
-    assertTrue(!res.has_value(), "negative weights should return error");
+    assertTrue(!res.hasValue(), "negative weights should return error");
   }
 }
 
@@ -592,7 +592,7 @@ void testLoessRobustnessMethods() {
     opts.robustness_method = robustness_m;
     Loess loess(opts);
     auto res = loess.fit(x_vals, y_vals).value();
-    assertTrue(res.y_vector().size() == k_thirty_count, robustness_m);
+    assertTrue(res.yVector().size() == k_thirty_count, robustness_m);
   }
 }
 
@@ -621,9 +621,9 @@ void testStreamingMergeStrategies() {
     opts.chunk_size = k_chunk_half;
     opts.merge_strategy = merge_strat;
     StreamingLoess stream(opts);
-    auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
+    auto chunk_res = stream.processChunk(x_vals, y_vals).value();
     auto final_res = stream.finalize().value();
-    assertTrue(chunk_res.y_vector().size() + final_res.y_vector().size() ==
+    assertTrue(chunk_res.yVector().size() + final_res.yVector().size() ==
                    k_thirty_count,
                merge_strat);
   }
@@ -645,9 +645,9 @@ void testStreamingOverlapAndParams() {
   opts.surface_mode = "direct";
   opts.return_se = true;
   StreamingLoess stream(opts);
-  auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
+  auto chunk_res = stream.processChunk(x_vals, y_vals).value();
   auto final_res = stream.finalize().value();
-  assertTrue(chunk_res.y_vector().size() + final_res.y_vector().size() ==
+  assertTrue(chunk_res.yVector().size() + final_res.yVector().size() ==
              k_thirty_count);
 }
 
@@ -670,9 +670,9 @@ void testOnlineUpdateModeAndParams() {
     x_vals[i] = static_cast<double>(i);
     y_vals[i] = k_linear_slope * x_vals[i];
   }
-  auto res = online.add_points(x_vals, y_vals).value();
+  auto res = online.addPoints(x_vals, y_vals).value();
   assertTrue(res.valid() ||
-             res.y_vector().empty()); // may be empty until min_points reached
+             res.yVector().empty()); // may be empty until min_points reached
 }
 
 } // namespace

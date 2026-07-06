@@ -76,14 +76,14 @@ int main() {
       const std::vector<double> x_sample = {x_values[point_index]};
       const std::vector<double> y_sample = {y_values[point_index]};
 
-      auto res = model.add_points(x_sample, y_sample).value();
+      auto res = model.addPoints(x_sample, y_sample).value();
       total_emitted += res.size();
 
       if (point_index > 0 && point_index % k_progress_interval == 0 &&
           res.size() > 0) {
         std::cout << "  t=" << point_index
                   << " original=" << y_values[point_index]
-                  << " smoothed=" << res.y_value(res.size() - 1) << '\n';
+                  << " smoothed=" << res.yValue(res.size() - 1) << '\n';
       }
     }
 
@@ -103,7 +103,7 @@ int main() {
       for (size_t point_index = 0; point_index < point_count; ++point_index) {
         const std::vector<double> x_s = {x_values[point_index]};
         const std::vector<double> y_s = {y_values[point_index]};
-        auto res_i = inc_model.add_points(x_s, y_s).value();
+        auto res_i = inc_model.addPoints(x_s, y_s).value();
         inc_emitted += res_i.size();
       }
       std::cout << "  incremental mode total emitted: " << inc_emitted << '\n';
@@ -126,7 +126,7 @@ int main() {
       for (size_t point_index = 0; point_index < point_count; ++point_index) {
         const std::vector<double> x_s = {x_values[point_index]};
         const std::vector<double> y_s = {y_values[point_index]};
-        auto res_a = adv_model.add_points(x_s, y_s).value();
+        auto res_a = adv_model.addPoints(x_s, y_s).value();
         adv_emitted += res_a.size();
       }
       std::cout << "  advanced online total emitted: " << adv_emitted << '\n';

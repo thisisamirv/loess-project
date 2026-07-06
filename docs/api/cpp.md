@@ -26,7 +26,7 @@ auto result = model.fit(x, y).value();
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
-* Returns an `Expected<LoessResult>` — call `.has_value()` to check for errors, `.value()` to unwrap (throws `LoessError` on failure).
+* Returns an `Expected<LoessResult>` — call `.hasValue()` to check for errors, `.value()` to unwrap (throws `LoessError` on failure).
 
 ### `fastloess::StreamingLoess`
 
@@ -48,7 +48,7 @@ fastloess::StreamingLoess model(opts);
 fastloess::StreamingOptions opts;
 opts.chunk_size = 10;
 fastloess::StreamingLoess model(opts);
-auto result = model.process_chunk(x, y).value();
+auto result = model.processChunk(x, y).value();
 ```
 
 * Processes a chunk of data. Returns partial results.
@@ -57,7 +57,7 @@ auto result = model.process_chunk(x, y).value();
 fastloess::StreamingOptions opts;
 opts.chunk_size = 10;
 fastloess::StreamingLoess model(opts);
-model.process_chunk(x, y);
+model.processChunk(x, y);
 auto result = model.finalize().value();
 ```
 
@@ -83,7 +83,7 @@ fastloess::OnlineLoess model(opts);
 fastloess::OnlineOptions opts;
 opts.window_capacity = 10;
 fastloess::OnlineLoess model(opts);
-auto result = model.add_points(x, y).value();
+auto result = model.addPoints(x, y).value();
 ```
 
 * Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
@@ -147,24 +147,24 @@ A RAII wrapper around the C result struct `fastloess_CppLoessResult`.
 
 | Method | Return Type | Description |
 | --- | --- | --- |
-| `x_vector()` | `std::vector<double>` | Sorted x values |
-| `y_vector()` | `std::vector<double>` | Smoothed y values |
-| `fraction_used()` | `double` | Fraction used (set or selected by CV) |
-| `iterations_used()` | `int` | Robustness iterations actually performed |
-| `standard_errors()` | `std::vector<double>` | Per-point SE (if `return_se`) |
-| `confidence_lower()` | `std::vector<double>` | Lower confidence bounds |
-| `confidence_upper()` | `std::vector<double>` | Upper confidence bounds |
-| `prediction_lower()` | `std::vector<double>` | Lower prediction bounds |
-| `prediction_upper()` | `std::vector<double>` | Upper prediction bounds |
+| `xVector()` | `std::vector<double>` | Sorted x values |
+| `yVector()` | `std::vector<double>` | Smoothed y values |
+| `fractionUsed()` | `double` | Fraction used (set or selected by CV) |
+| `iterationsUsed()` | `int` | Robustness iterations actually performed |
+| `standardErrors()` | `std::vector<double>` | Per-point SE (if `return_se`) |
+| `confidenceLower()` | `std::vector<double>` | Lower confidence bounds |
+| `confidenceUpper()` | `std::vector<double>` | Upper confidence bounds |
+| `predictionLower()` | `std::vector<double>` | Lower prediction bounds |
+| `predictionUpper()` | `std::vector<double>` | Upper prediction bounds |
 | `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`) |
-| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`) |
-| `cv_scores()` | `std::vector<double>` | CV score per tested fraction |
+| `robustnessWeights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`) |
+| `cvScores()` | `std::vector<double>` | CV score per tested fraction |
 | `diagnostics()` | `Diagnostics` | Fit metrics (if `return_diagnostics`) |
 | `enp()` | `double` | Equivalent number of parameters (if `return_se`) |
-| `trace_hat()` | `double` | Trace of hat matrix (if `return_se`) |
+| `traceHat()` | `double` | Trace of hat matrix (if `return_se`) |
 | `delta1()` | `double` | First delta statistic (if `return_se`) |
 | `delta2()` | `double` | Second delta statistic (if `return_se`) |
-| `residual_scale()` | `double` | Residual scale estimate (if `return_se`) |
+| `residualScale()` | `double` | Residual scale estimate (if `return_se`) |
 | `leverage()` | `std::vector<double>` | Per-point hat-matrix diagonal (if `return_se`) |
 | `dimensions()` | `int` | Number of predictor dimensions |
 
@@ -176,9 +176,9 @@ All accessors are const methods (not public fields):
 | --- | --- | --- |
 | `rmse()` | `double` | Root Mean Squared Error |
 | `mae()` | `double` | Mean Absolute Error |
-| `r_squared()` | `double` | R-squared |
-| `residual_sd()` | `double` | Residual standard deviation |
-| `effective_df()` | `double` | Effective degrees of freedom |
+| `rSquared()` | `double` | R-squared |
+| `residualSd()` | `double` | Residual standard deviation |
+| `effectiveDf()` | `double` | Effective degrees of freedom |
 | `aic()` | `double` | AIC |
 | `aicc()` | `double` | AICc |
 
@@ -269,8 +269,8 @@ int main() {
     fastloess::Loess model(opts);
     auto expected = model.fit(x, y);
 
-    if (expected.has_value()) {
-        auto y_hat = expected.value().y_vector();
+    if (expected.hasValue()) {
+        auto y_hat = expected.value().yVector();
         for (double val : y_hat) {
             std::cout << val << " ";
         }

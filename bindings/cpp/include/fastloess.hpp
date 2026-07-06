@@ -49,11 +49,11 @@ public:
 
   // Error constructor
   struct ErrorTag {};
-  static Expected make_error(std::string msg) {
+  static Expected makeError(std::string msg) {
     return Expected(std::move(msg), ErrorTag{});
   }
 
-  bool has_value() const { return has_val_; }
+  bool hasValue() const { return has_val_; }
 
   explicit operator bool() const { return has_val_; }
 
@@ -176,15 +176,15 @@ public:
         aic_(result.aic), aicc_(result.aicc),
         effective_df_(result.effective_df), residual_sd_(result.residual_sd) {}
 
-  bool has_value() const { return !std::isnan(rmse_); }
+  bool hasValue() const { return !std::isnan(rmse_); }
 
   double rmse() const { return rmse_; }
   double mae() const { return mae_; }
-  double r_squared() const { return r_squared_; }
+  double rSquared() const { return r_squared_; }
   double aic() const { return aic_; }
   double aicc() const { return aicc_; }
-  double effective_df() const { return effective_df_; }
-  double residual_sd() const { return residual_sd_; }
+  double effectiveDf() const { return effective_df_; }
+  double residualSd() const { return residual_sd_; }
 
 private:
   double rmse_ = NAN;
@@ -245,18 +245,18 @@ public:
   }
 
   /// Access x value at index
-  double x_value(size_t index) const { return result_.x[index]; }
+  double xValue(size_t index) const { return result_.x[index]; }
 
   /// Access smoothed y value at index
-  double y_value(size_t index) const { return result_.y[index]; }
+  double yValue(size_t index) const { return result_.y[index]; }
 
   /// Get x values as vector
-  std::vector<double> x_vector() const {
+  std::vector<double> xVector() const {
     return std::vector<double>(result_.x, result_.x + result_.n);
   }
 
   /// Get smoothed y values as vector
-  std::vector<double> y_vector() const {
+  std::vector<double> yVector() const {
     return std::vector<double>(result_.y, result_.y + result_.n);
   }
 
@@ -270,7 +270,7 @@ public:
   }
 
   /// Get standard errors (empty if not computed)
-  std::vector<double> standard_errors() const {
+  std::vector<double> standardErrors() const {
     if (result_.standard_errors != nullptr) {
       return std::vector<double>(result_.standard_errors,
                                  result_.standard_errors + result_.n);
@@ -279,7 +279,7 @@ public:
   }
 
   /// Get confidence interval lower bounds
-  std::vector<double> confidence_lower() const {
+  std::vector<double> confidenceLower() const {
     if (result_.confidence_lower != nullptr) {
       return std::vector<double>(result_.confidence_lower,
                                  result_.confidence_lower + result_.n);
@@ -288,7 +288,7 @@ public:
   }
 
   /// Get confidence interval upper bounds
-  std::vector<double> confidence_upper() const {
+  std::vector<double> confidenceUpper() const {
     if (result_.confidence_upper != nullptr) {
       return std::vector<double>(result_.confidence_upper,
                                  result_.confidence_upper + result_.n);
@@ -297,7 +297,7 @@ public:
   }
 
   /// Get prediction interval lower bounds
-  std::vector<double> prediction_lower() const {
+  std::vector<double> predictionLower() const {
     if (result_.prediction_lower != nullptr) {
       return std::vector<double>(result_.prediction_lower,
                                  result_.prediction_lower + result_.n);
@@ -306,7 +306,7 @@ public:
   }
 
   /// Get prediction interval upper bounds
-  std::vector<double> prediction_upper() const {
+  std::vector<double> predictionUpper() const {
     if (result_.prediction_upper != nullptr) {
       return std::vector<double>(result_.prediction_upper,
                                  result_.prediction_upper + result_.n);
@@ -315,7 +315,7 @@ public:
   }
 
   /// Get robustness weights (empty if not computed)
-  std::vector<double> robustness_weights() const {
+  std::vector<double> robustnessWeights() const {
     if (result_.robustness_weights != nullptr) {
       return std::vector<double>(result_.robustness_weights,
                                  result_.robustness_weights + result_.n);
@@ -324,10 +324,10 @@ public:
   }
 
   /// Fraction used for smoothing
-  double fraction_used() const { return result_.fraction_used; }
+  double fractionUsed() const { return result_.fraction_used; }
 
   /// Number of iterations performed (-1 if not available)
-  int iterations_used() const { return result_.iterations_used; }
+  int iterationsUsed() const { return result_.iterations_used; }
 
   /// Number of predictor dimensions used
   int dimensions() const { return result_.dimensions; }
@@ -336,7 +336,7 @@ public:
   double enp() const { return result_.enp; }
 
   /// Trace of hat matrix (NaN if not computed)
-  double trace_hat() const { return result_.trace_hat; }
+  double traceHat() const { return result_.trace_hat; }
 
   /// Delta1 for SE/CI computation (NaN if not computed)
   double delta1() const { return result_.delta1; }
@@ -345,7 +345,7 @@ public:
   double delta2() const { return result_.delta2; }
 
   /// Residual scale estimate (NaN if not computed)
-  double residual_scale() const { return result_.residual_scale; }
+  double residualScale() const { return result_.residual_scale; }
 
   /// Per-point leverage / hat-matrix diagonal (empty if not computed)
   std::vector<double> leverage() const {
@@ -357,7 +357,7 @@ public:
   }
 
   /// Cross-validation scores per tested fraction (empty if CV not performed)
-  std::vector<double> cv_scores() const {
+  std::vector<double> cvScores() const {
     if (result_.cv_scores != nullptr && result_.cv_scores_len > 0) {
       return std::vector<double>(result_.cv_scores,
                                  result_.cv_scores + result_.cv_scores_len);
@@ -448,11 +448,11 @@ public:
                             const std::vector<double> &custom_weights = {}) {
     if (y_values.empty() || x_values.empty() ||
         x_values.size() % y_values.size() != 0) {
-      return Expected<LoessResult>::make_error(
+      return Expected<LoessResult>::makeError(
           "x length must be a non-zero multiple of y length");
     }
     if (x_values.empty()) {
-      return Expected<LoessResult>::make_error(
+      return Expected<LoessResult>::makeError(
           "Input arrays must not be empty");
     }
     if (!custom_weights.empty()) {
@@ -468,7 +468,7 @@ public:
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
       cpp_loess_free_result(&result);
-      return Expected<LoessResult>::make_error(error_msg);
+      return Expected<LoessResult>::makeError(error_msg);
     }
 
     return Expected<LoessResult>(LoessResult(result));
@@ -546,14 +546,14 @@ public:
     return *this;
   }
 
-  Expected<LoessResult> process_chunk(const std::vector<double> &x_values,
-                                      const std::vector<double> &y_values) {
+  Expected<LoessResult> processChunk(const std::vector<double> &x_values,
+                                     const std::vector<double> &y_values) {
     if (expect_finalized_) {
-      return Expected<LoessResult>::make_error("Model already finalized");
+      return Expected<LoessResult>::makeError("Model already finalized");
     }
     if (y_values.empty() || x_values.empty() ||
         x_values.size() % y_values.size() != 0) {
-      return Expected<LoessResult>::make_error("x and y length mismatch");
+      return Expected<LoessResult>::makeError("x and y length mismatch");
     }
 
     auto result = cpp_streaming_process(
@@ -563,14 +563,14 @@ public:
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
       cpp_loess_free_result(&result);
-      return Expected<LoessResult>::make_error(error_msg);
+      return Expected<LoessResult>::makeError(error_msg);
     }
     return Expected<LoessResult>(LoessResult(result));
   }
 
   Expected<LoessResult> finalize() {
     if (expect_finalized_) {
-      return Expected<LoessResult>::make_error("Model already finalized");
+      return Expected<LoessResult>::makeError("Model already finalized");
     }
     expect_finalized_ = true;
 
@@ -578,7 +578,7 @@ public:
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
       cpp_loess_free_result(&result);
-      return Expected<LoessResult>::make_error(error_msg);
+      return Expected<LoessResult>::makeError(error_msg);
     }
     return Expected<LoessResult>(LoessResult(result));
   }
@@ -653,11 +653,11 @@ public:
     return *this;
   }
 
-  Expected<LoessResult> add_points(const std::vector<double> &x_values,
-                                   const std::vector<double> &y_values) {
+  Expected<LoessResult> addPoints(const std::vector<double> &x_values,
+                                  const std::vector<double> &y_values) {
     if (y_values.empty() || x_values.empty() ||
         x_values.size() % y_values.size() != 0) {
-      return Expected<LoessResult>::make_error("x and y length mismatch");
+      return Expected<LoessResult>::makeError("x and y length mismatch");
     }
 
     auto result = cpp_online_add_points(
@@ -667,7 +667,7 @@ public:
     if (result.error != nullptr) {
       const std::string error_msg(result.error);
       cpp_loess_free_result(&result);
-      return Expected<LoessResult>::make_error(error_msg);
+      return Expected<LoessResult>::makeError(error_msg);
     }
     return Expected<LoessResult>(LoessResult(result));
   }
