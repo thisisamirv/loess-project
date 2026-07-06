@@ -112,7 +112,7 @@ Install the LOESS library for your preferred language.
 
     ```html
     <script type="module">
-      import { smooth } from "https://cdn.jsdelivr.net/npm/fastloess-wasm@0.99/index.js";
+      import { Loess } from "https://cdn.jsdelivr.net/npm/fastloess-wasm@<version>/index.js";
     </script>
     ```
 

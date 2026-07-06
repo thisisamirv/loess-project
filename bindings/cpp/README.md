@@ -45,7 +45,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 > [!NOTE]
 >
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See [INSTALLATION.md](https://github.com/thisisamirv/loess-project/blob/main/INSTALLATION.md) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://loess.readthedocs.io/getting-started/installation/) for detailed installation instructions.
 
 ## Documentation
 

@@ -1178,8 +1178,8 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     ```cpp
     std::vector<double> custom_weights(y.size(), 1.0);
     custom_weights[4] = 0.0; // Exclude 5th point
-    fastloess::Loess model;
-    auto result = model.fit(x, y, custom_weights).value();
+    fastloess::Loess model({ .custom_weights = custom_weights });
+    auto result = model.fit(x, y).value();
     ```
 
 ---
