@@ -781,6 +781,7 @@ pub unsafe extern "C" fn jl_loess_set_boundary_degree_fallback(
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
 #[unsafe(no_mangle)]
+#[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Linux/macOS
 pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, seed: c_ulong) {
     if config_ptr.is_null() {
         return;
