@@ -87,7 +87,7 @@ int main() {
                   static_cast<std::ptrdiff_t>(current_chunk_len),
                   y_chunk.begin());
 
-      auto res = model.processChunk(x_chunk, y_chunk).value();
+      auto res = model.process_chunk(x_chunk, y_chunk).value();
       total_processed += res.size();
 
       if (chunk_start % k_progress_interval == 0) {
@@ -104,8 +104,8 @@ int main() {
     // Show sample of final results
     if (final_res.size() > 0) {
       std::cout << "\nSample from final chunk:\n";
-      std::cout << "  x=" << final_res.xValue(0)
-                << " y=" << final_res.yValue(0) << '\n';
+      std::cout << "  x=" << final_res.x_value(0)
+                << " y=" << final_res.y_value(0) << '\n';
     }
 
     // Merge strategy variants
@@ -120,7 +120,7 @@ int main() {
                                     x_values.begin() + k_overlap);
       const std::vector<double> y_s(y_values.begin(),
                                     y_values.begin() + k_overlap);
-      auto ms_r1 = ms_model.processChunk(x_s, y_s).value();
+      auto ms_r1 = ms_model.process_chunk(x_s, y_s).value();
       auto ms_r2 = ms_model.finalize().value();
       std::cout << "  merge_strategy=" << strat
                 << "  total=" << ms_r1.size() + ms_r2.size() << '\n';
@@ -147,7 +147,7 @@ int main() {
       const std::vector<double> a_y(
           y_values.begin(),
           y_values.begin() + static_cast<std::ptrdiff_t>(k_chunk_size));
-      auto adv_r1 = adv_model.processChunk(a_x, a_y).value();
+      auto adv_r1 = adv_model.process_chunk(a_x, a_y).value();
       auto adv_r2 = adv_model.finalize().value();
       std::cout << "  total points: " << adv_r1.size() + adv_r2.size() << '\n';
     }
