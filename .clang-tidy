@@ -11,6 +11,8 @@ CheckOptions:
     value: camelBack
   - key: readability-identifier-naming.FunctionIgnoredRegexp
     value: "^(cpp_.*|R_init_.*|register_extendr_.*)$"
+  - key: readability-identifier-naming.MethodCase
+    value: lower_case
   - key: readability-identifier-length.IgnoredParameterNames
     value: "^(x|y|n)$"
   - key: readability-identifier-naming.ParameterIgnoredRegexp
