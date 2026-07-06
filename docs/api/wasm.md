@@ -4,19 +4,26 @@ The WebAssembly bindings provide a high-performance interface to the core Rust l
 
 ## Classes and Functions
 
-### `smooth`
+### `Loess`
 
-The `smooth` function is the main entry point for batch smoothing.
+The `Loess` class is the main entry point for batch smoothing.
 
-**Signature:**
+**Constructor:**
 
 ```javascript
-const result = smooth(x, y, options);
+const model = new Loess(options);
+```
+
+* `options`: An object containing `LoessOptions` fields.
+
+**Methods:**
+
+```javascript
+const result = model.fit(x, y);
 ```
 
 * `x`: `Float64Array` of input x values.
 * `y`: `Float64Array` of input y values.
-* `options`: An object containing `LoessOptions` fields.
 * Returns: A `LoessResult` object.
 
 ### `StreamingLoess`
@@ -230,7 +237,7 @@ const smoothed = online.update(x, y);
 ## Example
 
 ```javascript
-import init, { smooth } from 'fastloess-wasm';
+import init, { Loess } from 'fastloess-wasm';
 
 await init();
 

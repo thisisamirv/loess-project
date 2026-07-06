@@ -390,9 +390,9 @@ For large datasets that arrive in batches or files.
             windowY.shift();
         }
 
-        const result = smooth(new Float64Array(windowX), new Float64Array(windowY), { 
+        const result = new Loess({ 
             fraction: 0.4 
-        });
+        }).fit(new Float64Array(windowX), new Float64Array(windowY));
         const smoothed = result.y[result.y.length - 1];
     }
     ```

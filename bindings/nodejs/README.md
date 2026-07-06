@@ -350,7 +350,7 @@ result.cvScores
 **WebAssembly:**
 
 ```javascript
-smooth(x, y, {
+new Loess({
     fraction: 0.5,
     iterations: 3,
     delta: 0.01,
@@ -368,7 +368,7 @@ smooth(x, y, {
     cvK: 5,
     autoConverge: 1e-4,
     parallel: true
-})
+}).fit(x, y)
 
 // Result structure:
 result.x,
