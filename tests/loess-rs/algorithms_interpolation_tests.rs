@@ -87,7 +87,7 @@ fn test_build_simple_1d() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -155,7 +155,7 @@ fn test_build_simple_2d() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -212,7 +212,7 @@ fn test_interpolate_1d_linear() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -272,7 +272,7 @@ fn test_interpolate_2d_bilinear() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -337,7 +337,7 @@ fn test_adaptive_subdivision() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -396,7 +396,7 @@ fn test_interpolate_boundary_clamping() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -456,7 +456,7 @@ fn test_fitter_fallback() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -517,7 +517,7 @@ fn test_refit_values_1d() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -599,7 +599,7 @@ fn test_refit_values_fallback_to_mean() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -627,8 +627,8 @@ fn test_refit_values_fallback_to_mean() {
         &DistanceMetric::default(),
         &[],
         &robustness_weights,
-        false, // boundary_degree_fallback disabled
-        None, // custom_weights
+        false, // boundary_degree_fallback disabled
+        None,  // custom_weights
     );
 
     // Fallback to mean: y mean = 5.0
@@ -689,7 +689,7 @@ fn test_interpolation_fallback_single_vertex() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -757,7 +757,7 @@ fn test_interpolation_surface_f32() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -817,7 +817,7 @@ fn test_refit_values_f32() {
         ZeroWeightFallback::default(),
         PolynomialDegree::default(),
         &DistanceMetric::default(),
-        true,
+        true,
         None, // custom_weights
     );
 
@@ -844,7 +844,7 @@ fn test_refit_values_f32() {
         &DistanceMetric::default(),
         &[],
         &robustness_weights,
-        true,
+        true,
         None, // custom_weights
     );
 
