@@ -77,11 +77,11 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     # Plot
     plt.figure(figsize=(12, 5))
     plt.scatter(positions, observed, s=2, alpha=0.3, label="Observed")
-    plt.plot(positions, result["y"], "b-", linewidth=2, label="LOESS smoothed")
+    plt.plot(positions, result.y, "b-", linewidth=2, label="LOESS smoothed")
     plt.fill_between(
         positions,
-        result["confidence_lower"],
-        result["confidence_upper"],
+        result.confidence_lower,
+        result.confidence_upper,
         alpha=0.2, label="95% CI"
     )
     plt.xlabel("Genomic Position (bp)")
@@ -204,7 +204,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     ```python
     # Simulate ChIP-seq coverage with peaks
     np.random.seed(123)
-    positions = np.arange(0, 10000, 10)
+    positions = np.arange(0, 10000, 10, dtype=float)
     n = len(positions)
 
     # Background + peaks
@@ -224,8 +224,8 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     ).fit(positions, observed.astype(float))
 
     # Identify peaks (smoothed signal significantly above background)
-    threshold = np.percentile(result["y"], 75)
-    peaks = positions[result["y"] > threshold]
+    threshold = np.percentile(result.y, 75)
+    peaks = positions[result.y > threshold]
     print(f"Peak regions: {peaks}")
     ```
 

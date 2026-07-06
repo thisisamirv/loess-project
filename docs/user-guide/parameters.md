@@ -694,7 +694,8 @@ Interpolation optimization threshold. Points within `delta` distance reuse the p
 
 === "Python"
     ```python
-    result = fl.Loess(delta=0.05).fit(x, y)
+    # delta is not exposed in the Python binding; use fraction or cell to control smoothing
+    result = fl.Loess(fraction=0.3).fit(x, y)
     ```
 
 === "Rust"
@@ -1188,7 +1189,7 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     import numpy as np
     weights = np.ones(len(y))
     weights[4] = 0  # Exclude 5th point
-    result = fl.Loess(custom_weights=weights.tolist()).fit(x, y)
+    result = fl.Loess().fit(x, y, custom_weights=weights)
     ```
 
 === "Rust"
@@ -1248,7 +1249,7 @@ Include residuals (`y - smoothed`) in the output.
 === "Python"
     ```python
     result = fl.Loess(return_residuals=True).fit(x, y)
-    print(result["residuals"])
+    print(result.residuals)
     ```
 
 === "Rust"
@@ -1314,7 +1315,7 @@ Include fit quality metrics (Batch and Streaming only).
 === "Python"
     ```python
     result = fl.Loess(return_diagnostics=True).fit(x, y)
-    print(f"R²: {result['diagnostics']['r_squared']:.4f}")
+    print(f"R²: {result.diagnostics.r_squared:.4f}")
     ```
 
 === "Rust"
@@ -1372,7 +1373,7 @@ Include final robustness weights (useful for outlier detection).
 === "Python"
     ```python
     result = fl.Loess(iterations=3, return_robustness_weights=True).fit(x, y)
-    outliers = [i for i, w in enumerate(result["robustness_weights"]) if w < 0.5]
+    outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
     ```
 
 === "Rust"

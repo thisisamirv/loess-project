@@ -197,7 +197,7 @@ Use robustness weights to identify potential outliers:
     ```python
     result = fl.Loess(iterations=5, return_robustness_weights=True).fit(x, y)
 
-    for i, w in enumerate(result["robustness_weights"]):
+    for i, w in enumerate(result.robustness_weights):
         if w < 0.5:
             print(f"Potential outlier at index {i}: weight = {w:.3f}")
     ```

@@ -34,7 +34,7 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 === "Python"
     ```python
-    result = fl.Loess(degree=0, fraction=0.5).fit(x, y)
+    result = fl.Loess(degree="constant", fraction=0.5).fit(x, y)
     ```
 
 === "Rust"
@@ -84,7 +84,7 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 === "Python"
     ```python
-    result = fl.Loess(degree=1, fraction=0.5).fit(x, y)
+    result = fl.Loess(degree="linear", fraction=0.5).fit(x, y)
     ```
 
 === "Rust"
@@ -134,7 +134,7 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 === "Python"
     ```python
-    result = fl.Loess(degree=2, fraction=0.5).fit(x, y)
+    result = fl.Loess(degree="quadratic", fraction=0.5).fit(x, y)
     ```
 
 === "Rust"
@@ -184,7 +184,7 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 === "Python"
     ```python
-    result = fl.Loess(degree=3, fraction=0.6).fit(x, y)
+    result = fl.Loess(degree="cubic", fraction=0.6).fit(x, y)
     ```
 
 === "Rust"
@@ -234,7 +234,7 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 === "Python"
     ```python
-    result = fl.Loess(degree=4, fraction=0.7).fit(x, y)
+    result = fl.Loess(degree="quartic", fraction=0.7).fit(x, y)
     ```
 
 === "Rust"

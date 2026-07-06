@@ -202,7 +202,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
     result = fl.Loess(fraction=0.5, iterations=3).fit(x, y)
-    print(result["y"])
+    print(result.y)
     ```
 
 === "Rust"

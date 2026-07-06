@@ -36,8 +36,8 @@ Split data into K folds, train on K-1, validate on 1.
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
     ).fit(x, y)
 
-    print(f"Selected fraction: {result['fraction_used']}")
-    print(f"CV scores: {result['cv_scores']}")
+    print(f"Selected fraction: {result.fraction_used}")
+    print(f"CV scores: {result.cv_scores}")
     ```
 
 === "Rust"

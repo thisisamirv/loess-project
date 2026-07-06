@@ -165,10 +165,13 @@ _PYTHON_PREAMBLE = textwrap.dedent("""\
     expression = y.copy()
     coverage = np.abs(y.copy()) * 10 + 5
 
-    # Multivariate
-    x2d = np.column_stack([x, x * 0.5])
-    x3d = np.column_stack([x, x * 0.5, x * 0.25])
+    # Multivariate input variables (lat/lon/x1/x2/x3 for dimensions.md examples)
+    lat = x.copy(); lon = x * 0.5
+    x1 = x.copy(); x2 = x * 0.5; x3 = x * 0.25
     z = np.sin(x) + np.cos(x * 0.5)
+    # Python binding requires flattened 1D for multi-dim input
+    x2d = np.column_stack([x, x * 0.5]).ravel()    # (200,) flat row-major
+    x3d = np.column_stack([x, x * 0.5, x * 0.25]).ravel()  # (300,) flat
 
     # Outlier / weight examples
     y_with_outlier = y.copy();  y_with_outlier[50] = 100.0
@@ -178,10 +181,18 @@ _PYTHON_PREAMBLE = textwrap.dedent("""\
     chunk_size, overlap = 50, 10
     chunk1_x, chunk1_y = x[:50].copy(), y[:50].copy()
     chunk2_x, chunk2_y = x[50:].copy(), y[50:].copy()
+    x_chunk, y_chunk = x[:50].copy(), y[:50].copy()
 
     # Sliding-window examples
     data_x = list(x[:30])
     data_y = list(y[:30])
+
+    # API doc pseudocode helpers
+    fastloess = fl   # allow docs that use bare "fastloess.X(...)"
+    kwargs = {'fraction': 0.3}
+    model = fl.Loess()
+    stream = fl.StreamingLoess()
+    online = fl.OnlineLoess()
 
     # -------------------------------------------------------------------------
 """)

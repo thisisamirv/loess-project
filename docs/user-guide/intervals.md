@@ -36,9 +36,9 @@ Estimate uncertainty in the smoothed curve itself.
     ```python
     result = fl.Loess(fraction=0.5, confidence_intervals=0.95).fit(x, y)
 
-    print("Smoothed:", result["y"])
-    print("CI Lower:", result["confidence_lower"])
-    print("CI Upper:", result["confidence_upper"])
+    print("Smoothed:", result.y)
+    print("CI Lower:", result.confidence_lower)
+    print("CI Upper:", result.confidence_upper)
     ```
 
 === "Rust"
@@ -124,8 +124,8 @@ Estimate where new observations might fall.
     ```python
     result = fl.Loess(fraction=0.5, prediction_intervals=0.95).fit(x, y)
 
-    print("PI Lower:", result["prediction_lower"])
-    print("PI Upper:", result["prediction_upper"])
+    print("PI Lower:", result.prediction_lower)
+    print("PI Upper:", result.prediction_upper)
     ```
 
 === "Rust"
@@ -307,7 +307,7 @@ Access standard errors directly (available when intervals are computed):
 === "Python"
     ```python
     result = fl.Loess(confidence_intervals=0.95).fit(x, y)
-    print("Standard errors:", result["standard_errors"])
+    print("Standard errors:", result.standard_errors)
     ```
 
 === "Rust"

@@ -89,8 +89,8 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     import numpy as np
     import fastloess as fl
 
-    # x is an (n, 2) array
-    x2d = np.column_stack([lat, lon])
+    # x is an (n, 2) array flattened to 1D (Python binding requires flat input)
+    x2d = np.column_stack([lat, lon]).ravel()
     result = fl.Loess(dimensions=2, fraction=0.3).fit(x2d, z)
     ```
 
@@ -143,7 +143,7 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 
 === "Python"
     ```python
-    x3d = np.column_stack([x1, x2, x3])   # (n, 3)
+    x3d = np.column_stack([x1, x2, x3]).ravel()   # (n*3,) flat
     result = fl.Loess(dimensions=3, fraction=0.5).fit(x3d, y)
     ```
 

@@ -47,7 +47,7 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     # Plot
     plt.figure(figsize=(12, 5))
     plt.plot(t, y, "gray", alpha=0.5, label="Observed")
-    plt.plot(t, result["y"], "b-", linewidth=2, label="Trend (LOESS)")
+    plt.plot(t, result.y, "b-", linewidth=2, label="Trend (LOESS)")
     plt.xlabel("Time")
     plt.ylabel("Value")
     plt.legend()
@@ -154,8 +154,8 @@ Remove trend to analyze residual patterns:
     # Smooth to get trend
     result = fl.Loess(fraction=0.3, iterations=3, return_residuals=True).fit(t, y)
 
-    trend = result["y"]
-    detrended = result["residuals"]
+    trend = result.y
+    detrended = result.residuals
 
     # Analyze residuals for seasonality, etc.
     plt.figure(figsize=(12, 4))
@@ -265,11 +265,11 @@ Remove trend to analyze residual patterns:
     # Plot with uncertainty bands
     plt.figure(figsize=(12, 5))
     plt.plot(t, y, "gray", alpha=0.3)
-    plt.plot(t, result["y"], "b-", linewidth=2, label="Trend")
+    plt.plot(t, result.y, "b-", linewidth=2, label="Trend")
     plt.fill_between(
         t,
-        result["prediction_lower"],
-        result["prediction_upper"],
+        result.prediction_lower,
+        result.prediction_upper,
         alpha=0.2, color="blue", label="95% Prediction"
     )
     plt.legend()
@@ -443,7 +443,7 @@ Use different fractions to extract features at different scales:
     
     for f in fractions:
         result = fl.Loess(fraction=f).fit(t, y)
-        plt.plot(t, result["y"], label=f"fraction={f}")
+        plt.plot(t, result.y, label=f"fraction={f}")
     
     plt.legend()
     plt.title("Multi-Scale LOESS")
@@ -552,7 +552,7 @@ Biological application:
         return_diagnostics=True
     ).fit(hours, expression)
 
-    print(f"R²: {result['diagnostics']['r_squared']:.3f}")
+    print(f"R²: {result.diagnostics.r_squared:.3f}")
     ```
 
 === "Rust"

@@ -39,20 +39,20 @@ For true real-time applications where each point must be processed immediately.
     # Simulate sensor readings arriving over time
     np.random.seed(42)
     n_readings = 100
-    times = np.arange(n_readings)
+    times = np.arange(n_readings, dtype=float)
     temperatures = 20 + 5 * np.sin(times / 10) + np.random.normal(0, 1, n_readings)
 
     # Process with online mode
-    result = fl.smooth_online(
-        times, temperatures,
+    online = fl.OnlineLoess(
         fraction=0.3,
         window_capacity=25,    # Keep last 25 points
         min_points=5,          # Wait for 5 points before output
         update_mode="incremental"
     )
+    result = online.add_points(times, temperatures)
 
     # Result contains smoothed values for each valid point
-    print("Smoothed temperatures:", result["y"])
+    print("Smoothed temperatures:", result.y)
     ```
 
 === "Rust"
@@ -206,7 +206,7 @@ For large datasets that arrive in batches or files.
     model.process_chunk(x, y)
     result = model.finalize()
     
-    print(f"Processed {len(result['y'])} points")
+    print(f"Processed {len(result.y)} points")
     ```
 
 === "Rust"
@@ -352,8 +352,8 @@ For large datasets that arrive in batches or files.
             data_y = data_y[-window_capacity:]
         
         if len(data_x) >= 5:
-            result = fl.Loess(fraction=0.4).fit(np.array(data_x), np.array(data_y))
-            current_smoothed = result["y"][-1]
+            result = fl.Loess(fraction=0.4).fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
+            current_smoothed = result.y[-1]
     ```
 
 === "Node.js"

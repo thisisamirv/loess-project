@@ -342,7 +342,7 @@ Incremental updates with a sliding window for real-time data.
     result = model.add_points(x, y)
 
     # result contains smoothed values for all points
-    print(result["y"])
+    print(result.y)
     ```
 
 === "Rust"

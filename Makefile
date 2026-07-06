@@ -997,7 +997,7 @@ docs-clean:
 # ==============================================================================
 # All targets
 # ==============================================================================
-all: loess-rs fastLoess python r julia nodejs wasm cpp check-msrv
+all: loess-rs fastLoess python r julia nodejs wasm cpp check-msrv docs-test
 	@echo "All checks completed successfully!"
 
 all-coverage: loess-rs-coverage fastLoess-coverage python-coverage r-coverage

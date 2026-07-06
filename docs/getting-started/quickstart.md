@@ -36,7 +36,7 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 
     result = fl.Loess(fraction=0.3, iterations=3).fit(x, y)
 
-    print(f"First smoothed value: {result['y'][0]:.4f}  (true: {np.sin(x[0]):.4f})")
+    print(f"First smoothed value: {result.y[0]:.4f}  (true: {np.sin(x[0]):.4f})")
     ```
 
 === "Rust"
@@ -167,10 +167,10 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
         return_diagnostics=True
     ).fit(x, y)
 
-    print("Smoothed:", result["y"])
-    print("CI Lower:", result["confidence_lower"])
-    print("CI Upper:", result["confidence_upper"])
-    print("R²:", result["diagnostics"]["r_squared"])
+    print("Smoothed:", result.y)
+    print("CI Lower:", result.confidence_lower)
+    print("CI Upper:", result.confidence_upper)
+    print("R²:", result.diagnostics.r_squared)
     ```
 
 === "Rust"
@@ -294,6 +294,7 @@ LOESS can robustly handle outliers through iterative reweighting:
 === "Python"
 
     ```python
+    x_out = np.linspace(1, 6, 6)
     y_with_outlier = np.array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0])
 
     result = fl.Loess(
@@ -301,10 +302,10 @@ LOESS can robustly handle outliers through iterative reweighting:
         iterations=5,
         robustness_method="bisquare",
         return_robustness_weights=True
-    ).fit(x, y_with_outlier)
+    ).fit(x_out, y_with_outlier)
 
     # Check which points were downweighted
-    for i, w in enumerate(result["robustness_weights"]):
+    for i, w in enumerate(result.robustness_weights):
         if w < 0.5:
             print(f"Point {i} is likely an outlier (weight: {w:.3f})")
     ```

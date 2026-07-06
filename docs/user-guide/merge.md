@@ -110,6 +110,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 === "Python"
     ```python
+    from fastloess import StreamingLoess
     model = StreamingLoess(merge_strategy="take_first")
     ```
 
@@ -153,6 +154,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 === "Python"
     ```python
+    from fastloess import StreamingLoess
     model = StreamingLoess(merge_strategy="take_last")
     ```
 
@@ -204,6 +206,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "Python"
     ```python
+    from fastloess import StreamingLoess
     model = StreamingLoess(
         merge_strategy="weighted_average",
         chunk_size=5000,
