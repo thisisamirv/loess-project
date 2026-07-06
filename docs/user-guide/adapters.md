@@ -153,16 +153,16 @@ Process large datasets in chunks with configurable overlap.
 | --- | --- | --- |
 | `chunk_size` | 5000 | Points per chunk |
 | `overlap` | 500 | Overlap between chunks |
-| `merge_strategy` | WeightedAverage | How to merge overlaps |
+| `merge_strategy` | `"weighted_average"` | How to merge overlaps |
 
 ### Merge Strategies
 
 | Strategy | Behavior |
 | --- | --- |
-| `Average` | Average overlapping values |
-| `WeightedAverage` | Distance-weighted blend (default) |
-| `TakeFirst` | Keep left chunk values |
-| `TakeLast` | Keep right chunk values |
+| `"average"` | Average overlapping values |
+| `"weighted_average"` | Distance-weighted blend (default) |
+| `"take_first"` | Keep left chunk values |
+| `"take_last"` | Keep right chunk values |
 
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
 
@@ -301,14 +301,14 @@ Incremental updates with a sliding window for real-time data.
 | --- | --- | --- |
 | `window_capacity` | 1000 | Max points in window |
 | `min_points` | 2 | Points before output starts |
-| `update_mode` | Incremental | Update strategy |
+| `update_mode` | `"incremental"` | Update strategy |
 
 ### Update Modes
 
 | Mode | Behavior | Speed |
 | --- | --- | --- |
-| `Incremental` | Update only affected fits | Faster |
-| `Full` | Recompute entire window | More accurate |
+| `"incremental"` | Update only affected fits | Faster |
+| `"full"` | Recompute entire window | More accurate |
 
 ### Example
 

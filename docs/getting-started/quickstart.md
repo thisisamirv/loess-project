@@ -321,7 +321,7 @@ LOESS can robustly handle outliers through iterative reweighting:
     let model = Loess::new()
         .fraction(0.5)
         .iterations(5)                    // More iterations for outliers
-        .robustness_method(Bisquare)      // Default, smooth downweighting
+        .robustness_method("bisquare")   // Default, smooth downweighting
         .return_robustness_weights()      // See which points were downweighted
         .adapter(Batch)
         .build()?;

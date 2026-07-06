@@ -25,8 +25,8 @@ fn test_prelude_imports() {
     let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     let y = vec![2.0, 4.0, 6.0, 8.0, 10.0];
 
-    // Verify Loess (LoessBuilder), Adapter variants, and Result are useable
-    let result = Loess::new().adapter(Batch).build().unwrap().fit(&x, &y);
+    // Verify primary entrypoint and result types are usable
+    let result = Loess::new().build().unwrap().fit(&x, &y);
 
     assert!(result.is_ok(), "Basic fit should work with prelude imports");
 }
@@ -36,9 +36,9 @@ fn test_prelude_imports() {
 /// Verifies that RobustnessMethod enum is exported.
 #[test]
 fn test_prelude_robustness_method() {
-    let _ = Loess::<f64>::new().robustness_method(Bisquare);
-    let _ = Loess::<f64>::new().robustness_method(Huber);
-    let _ = Loess::<f64>::new().robustness_method(Talwar);
+    let _ = Loess::<f64>::new().robustness_method("bisquare");
+    let _ = Loess::<f64>::new().robustness_method("huber");
+    let _ = Loess::<f64>::new().robustness_method("talwar");
 }
 
 /// Test WeightFunction is available.
@@ -46,19 +46,24 @@ fn test_prelude_robustness_method() {
 /// Verifies that WeightFunction enum is exported.
 #[test]
 fn test_prelude_weight_function() {
-    let _ = Loess::<f64>::new().weight_function(Tricube);
-    let _ = Loess::<f64>::new().weight_function(Epanechnikov);
-    let _ = Loess::<f64>::new().weight_function(Gaussian);
-    let _ = Loess::<f64>::new().weight_function(Biweight);
+    let _ = Loess::<f64>::new().weight_function("tricube");
+    let _ = Loess::<f64>::new().weight_function("epanechnikov");
+    let _ = Loess::<f64>::new().weight_function("gaussian");
+    let _ = Loess::<f64>::new().weight_function("biweight");
 }
 
 /// Test CrossValidationStrategy is available.
 ///
-/// Verifies that CrossValidationStrategy enum is exported.
+/// Verifies string-based cross-validation builder API is available.
 #[test]
 fn test_prelude_cross_validation() {
-    let _ = Loess::<f64>::new().cross_validate(KFold(5, &[0.5]));
-    let _ = Loess::<f64>::new().cross_validate(LOOCV(&[0.5]));
+    let _ = Loess::<f64>::new()
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.5]);
+    let _ = Loess::<f64>::new()
+        .cv_method("loocv")
+        .cv_fractions(vec![0.5]);
 }
 
 /// Test ZeroWeightFallback is available.
@@ -66,31 +71,27 @@ fn test_prelude_cross_validation() {
 /// Verifies that ZeroWeightFallback enum is exported.
 #[test]
 fn test_prelude_zero_weight_fallback() {
-    let _ = Loess::<f64>::new().zero_weight_fallback(UseLocalMean);
-    let _ = Loess::<f64>::new().zero_weight_fallback(ReturnOriginal);
-    let _ = Loess::<f64>::new().zero_weight_fallback(ReturnNone);
+    let _ = Loess::<f64>::new().zero_weight_fallback("use_local_mean");
+    let _ = Loess::<f64>::new().zero_weight_fallback("return_original");
+    let _ = Loess::<f64>::new().zero_weight_fallback("return_none");
 }
 
-/// Test adapter types are available.
+/// Test mode entry points are available.
 ///
-/// Verifies that all adapter types are exported.
+/// Verifies that Loess/StreamingLoess/OnlineLoess constructors are exported.
 #[test]
 fn test_prelude_adapters() {
     let x = vec![1.0, 2.0, 3.0];
     let y = vec![2.0, 4.0, 6.0];
 
-    // Batch adapter
-    let _ = Loess::<f64>::new()
-        .adapter(Batch)
-        .build()
-        .unwrap()
-        .fit(&x, &y);
+    // Batch mode
+    let _ = Loess::<f64>::new().build().unwrap().fit(&x, &y);
 
-    // Streaming adapter
-    let _ = Loess::<f64>::new().adapter(Streaming).build();
+    // Streaming mode
+    let _ = StreamingLoess::<f64>::new().build();
 
-    // Online adapter
-    let _ = Loess::<f64>::new().adapter(Online).build();
+    // Online mode
+    let _ = OnlineLoess::<f64>::new().build();
 }
 
 /// Test complete workflow with prelude.
@@ -104,12 +105,11 @@ fn test_prelude_complete_workflow() {
     let result = Loess::<f64>::new()
         .fraction(0.5)
         .iterations(3)
-        .robustness_method(Bisquare)
-        .weight_function(Tricube)
+        .robustness_method("bisquare")
+        .weight_function("tricube")
         .confidence_intervals(0.95)
         .return_diagnostics()
         .return_residuals()
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -130,11 +130,7 @@ fn test_prelude_error_handling() {
     let x: Vec<f64> = vec![];
     let y: Vec<f64> = vec![];
 
-    let result = Loess::<f64>::new()
-        .adapter(Batch)
-        .build()
-        .unwrap()
-        .fit(&x, &y);
+    let result = Loess::<f64>::new().build().unwrap().fit(&x, &y);
 
     // Should be able to match on error types from prelude
     assert!(result.is_err());

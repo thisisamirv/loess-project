@@ -11,7 +11,6 @@ fn test_standard_batch_sequential() {
 
     // Sequential fit
     let res = Loess::new()
-        .adapter(Batch)
         .parallel(false)
         .build()
         .unwrap()
@@ -31,7 +30,6 @@ fn test_standard_batch_parallel() {
 
     // Parallel fit works for simple cases without iterations/intervals
     let res = Loess::new()
-        .adapter(Batch)
         .parallel(true)
         .build()
         .unwrap()
@@ -50,7 +48,6 @@ fn test_ndarray_integration() {
 
     // Fit with ndarray
     let res = Loess::new()
-        .adapter(Batch)
         .parallel(true)
         .build()
         .unwrap()
@@ -78,9 +75,8 @@ fn test_robustness() {
     let res = Loess::new()
         .fraction(0.5)
         .iterations(5)
-        .robustness_method(Bisquare)
-        .surface_mode(Direct)
-        .adapter(Batch)
+        .robustness_method("bisquare")
+        .surface_mode("direct")
         .parallel(true)
         .build()
         .unwrap()
@@ -108,9 +104,8 @@ fn test_streaming_adapter() {
     let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi).collect();
 
-    let mut processor = Loess::new()
+    let mut processor = StreamingLoess::new()
         .fraction(0.2)
-        .adapter(Streaming)
         .chunk_size(20)
         .overlap(5)
         .parallel(false) // NOTE: Running sequentially
@@ -153,8 +148,7 @@ fn test_streaming_adapter() {
 
 #[test]
 fn test_online_adapter() {
-    let mut processor = Loess::new()
-        .adapter(Online)
+    let mut processor = OnlineLoess::new()
         .min_points(3)
         .window_capacity(10)
         .build()
@@ -184,7 +178,6 @@ fn test_consistency() {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + (xi / 10.0).exp()).collect();
 
     let seq_res = Loess::new()
-        .adapter(Batch)
         .parallel(false)
         .build()
         .unwrap()
@@ -192,7 +185,6 @@ fn test_consistency() {
         .unwrap();
 
     let par_res = Loess::new()
-        .adapter(Batch)
         .parallel(true)
         .build()
         .unwrap()
@@ -209,7 +201,7 @@ fn test_error_handling() {
     let x = vec![1.0, 2.0, 3.0];
     let y_short = vec![1.0, 2.0];
 
-    let model = Loess::new().adapter(Batch).build().unwrap();
+    let model = Loess::new().build().unwrap();
 
     let err = model.fit(&x, &y_short);
     assert!(err.is_err());
@@ -224,9 +216,8 @@ fn test_error_handling() {
 /// else-branch of `finalize()` that returns an empty `LoessResult`.
 #[test]
 fn test_streaming_finalize_without_chunks() {
-    let mut processor = Loess::new()
+    let mut processor = StreamingLoess::new()
         .fraction(0.3)
-        .adapter(Streaming)
         .chunk_size(20)
         .build()
         .unwrap();
@@ -244,9 +235,8 @@ fn test_streaming_parallel_true() {
     let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| xi * 2.0).collect();
 
-    let mut processor = Loess::new()
+    let mut processor = StreamingLoess::new()
         .fraction(0.4)
-        .adapter(Streaming)
         .chunk_size(30)
         .overlap(5)
         .parallel(true)
@@ -266,9 +256,8 @@ fn test_streaming_reset_with_processor() {
     let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
     let y: Vec<f64> = x.to_vec();
 
-    let mut processor = Loess::new()
+    let mut processor = StreamingLoess::new()
         .fraction(0.4)
-        .adapter(Streaming)
         .chunk_size(15)
         .overlap(3)
         .parallel(false)
@@ -284,8 +273,7 @@ fn test_streaming_reset_with_processor() {
 /// `#[cfg(feature = "dev")]` callback-injection block in `build()`.
 #[test]
 fn test_online_parallel_true() {
-    let mut processor = Loess::new()
-        .adapter(Online)
+    let mut processor = OnlineLoess::new()
         .min_points(3)
         .window_capacity(15)
         .parallel(true)
@@ -313,7 +301,6 @@ fn test_custom_weights_parallel_matches_sequential() {
         .fraction(0.4)
         .iterations(2)
         .custom_weights(weights.clone())
-        .adapter(Batch)
         .parallel(false)
         .build()
         .unwrap()
@@ -324,7 +311,6 @@ fn test_custom_weights_parallel_matches_sequential() {
         .fraction(0.4)
         .iterations(2)
         .custom_weights(weights)
-        .adapter(Batch)
         .parallel(true)
         .build()
         .unwrap()
@@ -350,7 +336,6 @@ fn test_custom_weights_zero_weight_parallel() {
     let result_no_w = Loess::new()
         .fraction(0.5)
         .iterations(0)
-        .adapter(Batch)
         .parallel(true)
         .build()
         .unwrap()
@@ -361,7 +346,6 @@ fn test_custom_weights_zero_weight_parallel() {
         .fraction(0.5)
         .iterations(0)
         .custom_weights(weights)
-        .adapter(Batch)
         .parallel(true)
         .build()
         .unwrap()

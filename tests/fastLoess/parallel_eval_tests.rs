@@ -13,11 +13,11 @@ fn test_parallel_cross_validation() {
     // Sequential CV with Direct surface mode
     let seq_res = Loess::new()
         .iterations(0)
-        .surface_mode(Direct)
+        .surface_mode("direct")
         .cv_method("kfold")
         .cv_k(5)
         .cv_fractions(fractions.clone())
-        .adapter(Batch)
+        
         .parallel(false)
         .build()
         .unwrap()
@@ -27,11 +27,11 @@ fn test_parallel_cross_validation() {
     // Parallel CV with Direct surface mode
     let par_res = Loess::new()
         .iterations(0)
-        .surface_mode(Direct)
+        .surface_mode("direct")
         .cv_method("kfold")
         .cv_k(5)
         .cv_fractions(fractions.clone())
-        .adapter(Batch)
+        
         .parallel(true)
         .build()
         .unwrap()
@@ -67,7 +67,7 @@ fn test_loocv_cross_validation_parallel() {
     let res = Loess::new()
         .cv_method("loocv")
         .cv_fractions(fractions)
-        .adapter(Batch)
+        
         .parallel(true)
         .build()
         .unwrap()
@@ -92,7 +92,7 @@ fn test_kfold_fold_size_less_than_2() {
         .cv_method("kfold")
         .cv_k(10)
         .cv_fractions(fractions)
-        .adapter(Batch)
+        
         .parallel(true)
         .build()
         .unwrap()
@@ -122,7 +122,7 @@ fn test_multidim_kfold_cv_parallel() {
         .cv_method("kfold")
         .cv_k(3)
         .cv_fractions(fractions)
-        .adapter(Batch)
+        
         .parallel(true)
         .build()
         .unwrap()

@@ -1,6 +1,6 @@
 #![cfg(feature = "dev")]
 
-use loess_rs::internals::api::{Adapter, BoundaryPolicy, LoessBuilder as Loess, WeightFunction};
+use loess_rs::internals::api::{Batch, Loess};
 use loess_rs::internals::math::boundary::BoundaryPolicy as BoundaryPolicyInternal;
 
 #[test]
@@ -13,13 +13,13 @@ fn test_boundary_policy_comparison() {
     let base_builder = Loess::new()
         .fraction(0.8)
         .iterations(0)
-        .weight_function(WeightFunction::Uniform);
+        .weight_function("uniform");
 
     // Fit with standard Extend (default)
     let res_extend = base_builder
         .clone()
-        .boundary_policy(BoundaryPolicy::Extend)
-        .adapter(Adapter::Batch)
+        .boundary_policy("extend")
+        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -28,8 +28,8 @@ fn test_boundary_policy_comparison() {
     // Fit with Reflect
     let res_reflect = base_builder
         .clone()
-        .boundary_policy(BoundaryPolicy::Reflect)
-        .adapter(Adapter::Batch)
+        .boundary_policy("reflect")
+        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -38,8 +38,8 @@ fn test_boundary_policy_comparison() {
     // Fit with Zero
     let res_zero = base_builder
         .clone()
-        .boundary_policy(BoundaryPolicy::Zero)
-        .adapter(Adapter::Batch)
+        .boundary_policy("zero")
+        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -61,9 +61,9 @@ fn test_boundary_policy_zero_effect() {
     let res_zero = Loess::new()
         .fraction(0.8)
         .iterations(0)
-        .weight_function(WeightFunction::Uniform)
-        .boundary_policy(BoundaryPolicy::Zero)
-        .adapter(Adapter::Batch)
+        .weight_function("uniform")
+        .boundary_policy("zero")
+        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)

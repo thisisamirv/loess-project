@@ -12,7 +12,7 @@ fn test_parallel_kdtree_large_dataset() {
 
     let res = Loess::new()
         .fraction(0.05)
-        .adapter(Batch)
+        
         .parallel(true)
         .build()
         .unwrap()
@@ -33,8 +33,8 @@ fn test_parallel_interpolation_mode() {
 
     let res = Loess::new()
         .fraction(0.3)
-        .surface_mode(Interpolation)
-        .adapter(Batch)
+        .surface_mode("interpolation")
+        
         .parallel(true)
         .build()
         .unwrap()
@@ -54,8 +54,8 @@ fn test_parallel_interpolation_large_dataset() {
 
     let res = Loess::new()
         .fraction(0.05)
-        .surface_mode(Interpolation)
-        .adapter(Batch)
+        .surface_mode("interpolation")
+        
         .parallel(true)
         .build()
         .unwrap()

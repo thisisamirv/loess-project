@@ -19,6 +19,7 @@
 use approx::assert_relative_eq;
 use loess_rs::prelude::*;
 
+use loess_rs::internals::api::Batch;
 use loess_rs::internals::engine::validator::Validator;
 use loess_rs::internals::evaluation::intervals::IntervalMethod;
 use loess_rs::internals::primitives::errors::LoessError;

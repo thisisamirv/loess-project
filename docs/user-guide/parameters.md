@@ -28,7 +28,7 @@ Complete reference for all LOESS configuration options.
 | **return_diagnostics** | Logical false | logical | Include metrics | All |
 | **confidence_intervals** | Null value | (0, 1) | CI level | Batch |
 | **prediction_intervals** | Null value | (0, 1) | PI level | Batch |
-| **distance_metric** | `"normalized"` | enum | Distance metric | All |
+| **distance_metric** | `"normalized"` | string option | Distance metric | All |
 | **weighted_metric_weights** | Null value | numeric | Per-dimension distance weights | All |
 | **cell** | Null value | (0, ∞) | Interpolation cell size | All |
 | **interpolation_vertices** | Null value | integer | Interpolation grid vertices | All |
@@ -45,8 +45,9 @@ Complete reference for all LOESS configuration options.
 | **min_points** | 2 | [2, window] | Min before output | Online |
 | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
 
-!!! note "Rust enum variants"
-    Typed enum variants are also accepted in Rust — e.g., `Tricube`, `Bisquare`, `Extend`, `WeightedAverage`. Import them via `use fastLoess::prelude::*;`. Strings and enum variants are interchangeable for all options. For the weighted distance metric, use `.distance_metric("weighted").weighted_metric_weights(vec![...])`.
+!!! note "Rust option values"
+    In Rust, pass option-like parameters as strings (case-insensitive), e.g. `"tricube"`, `"bisquare"`, `"extend"`, `"weighted_average"`.
+    For the weighted distance metric, use `.distance_metric("weighted").weighted_metric_weights(vec![...])`.
 
 ---
 

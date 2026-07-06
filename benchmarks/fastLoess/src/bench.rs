@@ -32,7 +32,6 @@ fn bench_scalability(c: &mut Criterion) {
             let model = Loess::new()
                 .fraction(0.3)
                 .parallel(false)
-                .adapter(Batch)
                 .build()
                 .unwrap();
             b.iter(|| model.clone().fit(black_box(&x), black_box(&y)).unwrap());
@@ -43,7 +42,6 @@ fn bench_scalability(c: &mut Criterion) {
             let model = Loess::new()
                 .fraction(0.3)
                 .parallel(true)
-                .adapter(Batch)
                 .build()
                 .unwrap();
             b.iter(|| model.clone().fit(black_box(&x), black_box(&y)).unwrap());
@@ -62,7 +60,6 @@ fn bench_parameters(c: &mut Criterion) {
             let model = Loess::new()
                 .fraction(0.3)
                 .iterations(i)
-                .adapter(Batch)
                 .build()
                 .unwrap();
             b.iter(|| model.clone().fit(black_box(&x), black_box(&y)).unwrap());
@@ -72,7 +69,7 @@ fn bench_parameters(c: &mut Criterion) {
     // Fraction Effect
     for frac in [0.1, 0.3, 0.7].iter() {
         group.bench_with_input(BenchmarkId::new("fraction", frac), frac, |b, &f| {
-            let model = Loess::new().fraction(f).adapter(Batch).build().unwrap();
+            let model = Loess::new().fraction(f).build().unwrap();
             b.iter(|| model.clone().fit(black_box(&x), black_box(&y)).unwrap());
         });
     }

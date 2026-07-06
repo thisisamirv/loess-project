@@ -349,7 +349,7 @@ For whole-genome data that doesn't fit in memory:
         .adapter(Streaming)
         .chunk_size(50)
         .overlap(10)
-        .merge_strategy(WeightedAverage)
+        .merge_strategy("weighted_average")
         .build()?;
 
     processor.process_chunk(&x_chunk, &y_chunk)?;

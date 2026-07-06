@@ -53,11 +53,10 @@ fn example_1_basic_chunked_processing() -> Result<(), LoessError> {
         .map(|&xi| 2.0 * xi + 1.0 + (xi * 0.3).sin() * 2.0)
         .collect();
 
-    let mut processor = Loess::new()
+    let mut processor = StreamingLoess::new()
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
-        .adapter(Streaming)
         .chunk_size(15) // Process 15 points per chunk
         .overlap(5) // 5 points overlap between chunks
         .build()?;
@@ -144,10 +143,9 @@ fn example_2_chunk_size_comparison() -> Result<(), LoessError> {
             description, chunk_size, overlap
         );
 
-        let mut processor = Loess::new()
+        let mut processor = StreamingLoess::new()
             .fraction(0.5)
             .iterations(1)
-            .adapter(Streaming)
             .chunk_size(chunk_size)
             .overlap(overlap)
             .build()?;
@@ -227,10 +225,9 @@ fn example_3_overlap_strategies() -> Result<(), LoessError> {
     for (overlap, description) in overlap_configs {
         println!("{}", description);
 
-        let mut processor = Loess::new()
+        let mut processor = StreamingLoess::new()
             .fraction(0.5)
             .iterations(2)
-            .adapter(Streaming)
             .chunk_size(chunk_size)
             .overlap(overlap)
             .build()?;
@@ -288,11 +285,10 @@ fn example_4_large_dataset_processing() -> Result<(), LoessError> {
     println!("Processing {} data points in streaming mode...", n);
     println!("(Simulating a dataset too large for memory)\n");
 
-    let mut processor = Loess::new()
+    let mut processor = StreamingLoess::new()
         .fraction(0.3)
         .iterations(2)
         .return_residuals()
-        .adapter(Streaming)
         .chunk_size(500) // Process 500 points at a time
         .overlap(50) // 50 points overlap
         .build()?;
@@ -394,12 +390,11 @@ fn example_5_outlier_handling() -> Result<(), LoessError> {
     for method in methods {
         println!("Using {} robustness:", method);
 
-        let mut processor = Loess::new()
+        let mut processor = StreamingLoess::new()
             .fraction(0.5)
             .iterations(5) // More iterations for better outlier handling
             .robustness_method(method)
             .return_residuals()
-            .adapter(Streaming)
             .chunk_size(30)
             .overlap(10)
             .build()?;
@@ -459,11 +454,10 @@ fn example_6_file_simulation() -> Result<(), LoessError> {
     let total_lines = 200;
     println!("Input file: {} data points", total_lines);
 
-    let mut processor = Loess::new()
+    let mut processor = StreamingLoess::new()
         .fraction(0.5)
         .iterations(2)
         .return_residuals()
-        .adapter(Streaming)
         .chunk_size(50)
         .overlap(10)
         .build()?;
@@ -560,10 +554,9 @@ fn example_7_benchmark() -> Result<(), LoessError> {
 
     let start = std::time::Instant::now();
 
-    let mut processor = Loess::new()
+    let mut processor = StreamingLoess::new()
         .fraction(0.5)
         .iterations(3)
-        .adapter(Streaming)
         .chunk_size(100) // Process 100 points per chunk
         .overlap(10) // 10 points overlap
         .build()?;
@@ -611,11 +604,10 @@ fn example_8_merge_strategies() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
 
     for strategy in ["average", "weighted_average", "take_first", "take_last"] {
-        let mut processor = Loess::new()
+        let mut processor = StreamingLoess::new()
             .fraction(0.5)
             .iterations(2)
             .merge_strategy(strategy)
-            .adapter(Streaming)
             .chunk_size(20)
             .overlap(5)
             .build()?;
@@ -648,7 +640,7 @@ fn example_9_advanced_options() -> Result<(), LoessError> {
     let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
 
-    let mut processor = Loess::new()
+    let mut processor = StreamingLoess::new()
         .fraction(0.5)
         .iterations(2)
         .degree("quadratic")
@@ -661,7 +653,6 @@ fn example_9_advanced_options() -> Result<(), LoessError> {
         .return_diagnostics()
         .return_robustness_weights()
         .auto_converge(1e-3_f64)
-        .adapter(Streaming)
         .chunk_size(20)
         .overlap(5)
         .build()?;

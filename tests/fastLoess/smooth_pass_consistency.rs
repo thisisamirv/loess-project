@@ -12,7 +12,7 @@ fn test_smooth_pass_consistency_robust() {
     let seq_res = Loess::new()
         .fraction(0.3)
         .iterations(3)
-        .adapter(Batch)
+        
         .parallel(false)
         .build()
         .unwrap()
@@ -23,7 +23,7 @@ fn test_smooth_pass_consistency_robust() {
     let par_res = Loess::new()
         .fraction(0.3)
         .iterations(3)
-        .adapter(Batch)
+        
         .parallel(true)
         .build()
         .unwrap()
@@ -45,8 +45,8 @@ fn test_parallel_normalized_distance() {
 
     let res = Loess::new()
         .fraction(0.5)
-        .distance_metric(Normalized)
-        .adapter(Batch)
+        .distance_metric("normalized")
+        
         .parallel(true)
         .build()
         .unwrap()
@@ -64,8 +64,8 @@ fn test_parallel_manhattan_distance() {
 
     let res = Loess::new()
         .fraction(0.5)
-        .distance_metric(Manhattan)
-        .adapter(Batch)
+        .distance_metric("manhattan")
+        
         .parallel(true)
         .build()
         .unwrap()
@@ -83,8 +83,8 @@ fn test_parallel_chebyshev_distance() {
 
     let res = Loess::new()
         .fraction(0.5)
-        .distance_metric(Chebyshev)
-        .adapter(Batch)
+        .distance_metric("chebyshev")
+        
         .parallel(true)
         .build()
         .unwrap()
@@ -102,8 +102,8 @@ fn test_parallel_minkowski_distance() {
 
     let res = Loess::new()
         .fraction(0.5)
-        .distance_metric(Minkowski(3.0))
-        .adapter(Batch)
+        .distance_metric("minkowski:3.0")
+        
         .parallel(true)
         .build()
         .unwrap()

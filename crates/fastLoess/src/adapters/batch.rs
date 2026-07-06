@@ -24,7 +24,7 @@ use loess_rs::internals::algorithms::regression::PolynomialDegree;
 use loess_rs::internals::algorithms::regression::SolverLinalg;
 use loess_rs::internals::algorithms::regression::ZeroWeightFallback;
 use loess_rs::internals::algorithms::robustness::RobustnessMethod;
-use loess_rs::internals::api::SurfaceMode;
+use loess_rs::internals::engine::executor::SurfaceMode;
 use loess_rs::internals::engine::output::LoessResult;
 use loess_rs::internals::evaluation::cv::CVKind;
 use loess_rs::internals::math::boundary::BoundaryPolicy;

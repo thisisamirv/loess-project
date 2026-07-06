@@ -54,7 +54,6 @@ fn example_1_basic_smoothing() -> Result<(), LoessError> {
     let model = Loess::new()
         .fraction(0.5) // Use 50% of data for each local fit
         .iterations(3) // 3 robustness iterations
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -95,7 +94,6 @@ fn example_2_robust_with_outliers() -> Result<(), LoessError> {
         .robustness_method("bisquare")
         .return_residuals()
         .return_robustness_weights()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -154,7 +152,6 @@ fn example_3_uncertainty_quantification() -> Result<(), LoessError> {
         .iterations(3)
         .confidence_intervals(0.95) // 95% confidence intervals
         .prediction_intervals(0.95) // 95% prediction intervals
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -196,9 +193,10 @@ fn example_4_cross_validation() -> Result<(), LoessError> {
 
     // Test multiple fractions and select the best one
     let model = Loess::new()
-        .cross_validate(KFold(5, &[0.2, 0.3, 0.5, 0.7]))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
         .iterations(2)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -247,7 +245,6 @@ fn example_5_complete_diagnostics() -> Result<(), LoessError> {
         .return_diagnostics()
         .return_residuals()
         .return_robustness_weights()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -302,7 +299,6 @@ fn example_6_different_kernels() -> Result<(), LoessError> {
         let model = Loess::new()
             .fraction(0.5)
             .weight_function(kernel)
-            .adapter(Batch)
             .build()?;
 
         let result = model.fit(&x, &y)?;
@@ -353,7 +349,6 @@ fn example_7_robustness_methods() -> Result<(), LoessError> {
             .iterations(5)
             .robustness_method(method)
             .return_robustness_weights()
-            .adapter(Batch)
             .build()?;
 
         let result = model.fit(&x, &y)?;
@@ -411,7 +406,7 @@ fn example_8_benchmark() -> Result<(), LoessError> {
         .collect();
 
     let start = Instant::now();
-    let model = Loess::new().adapter(Batch).build()?;
+    let model = Loess::new().build()?;
 
     let result = model.fit(&x, &y)?;
     let duration = start.elapsed();
@@ -436,7 +431,6 @@ fn example_9_scaling_methods() -> Result<(), LoessError> {
         let model = Loess::new()
             .fraction(0.5)
             .scaling_method(method)
-            .adapter(Batch)
             .build()?;
         let result = model.fit(&x, &y)?;
         println!("  {}: y[0]={:.3}", method, result.y[0]);
@@ -458,7 +452,6 @@ fn example_10_boundary_policies() -> Result<(), LoessError> {
         let model = Loess::new()
             .fraction(0.5)
             .boundary_policy(policy)
-            .adapter(Batch)
             .build()?;
         let result = model.fit(&x, &y)?;
         println!(
@@ -485,7 +478,6 @@ fn example_11_zero_weight_fallback() -> Result<(), LoessError> {
         let model = Loess::new()
             .fraction(0.5)
             .zero_weight_fallback(fallback)
-            .adapter(Batch)
             .build()?;
         let result = model.fit(&x, &y)?;
         println!("  {}: y[0]={:.3}", fallback, result.y[0]);
@@ -508,7 +500,6 @@ fn example_12_polynomial_degrees() -> Result<(), LoessError> {
             .fraction(0.5)
             .iterations(2)
             .degree(deg)
-            .adapter(Batch)
             .build()?;
         let result = model.fit(&x, &y)?;
         println!(
@@ -533,7 +524,6 @@ fn example_13_distance_metrics() -> Result<(), LoessError> {
         let model = Loess::new()
             .fraction(0.5)
             .distance_metric(metric)
-            .adapter(Batch)
             .build()?;
         let result = model.fit(&x, &y)?;
         println!("  {}: y[0]={:.3}", metric, result.y[0]);
@@ -543,7 +533,6 @@ fn example_13_distance_metrics() -> Result<(), LoessError> {
     let model = Loess::new()
         .fraction(0.5)
         .distance_metric("minkowski:3")
-        .adapter(Batch)
         .build()?;
     let result = model.fit(&x, &y)?;
     println!(
@@ -556,7 +545,6 @@ fn example_13_distance_metrics() -> Result<(), LoessError> {
         .fraction(0.5)
         .distance_metric("weighted")
         .weighted_metric_weights(vec![1.0_f64])
-        .adapter(Batch)
         .build()?;
     let result = model.fit(&x, &y)?;
     println!("  Weighted([1.0]): y[0]={:.3}", result.y[0]);
@@ -582,7 +570,6 @@ fn example_14_surface_modes_and_se() -> Result<(), LoessError> {
         .return_se()
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .build()?
         .fit(&x, &y)?;
 
@@ -622,7 +609,6 @@ fn example_14_surface_modes_and_se() -> Result<(), LoessError> {
         .fraction(0.5)
         .surface_mode("interpolation")
         .return_se()
-        .adapter(Batch)
         .build()?
         .fit(&x, &y)?;
 
@@ -648,7 +634,6 @@ fn example_15_additional_kernels() -> Result<(), LoessError> {
         let model = Loess::new()
             .fraction(0.5)
             .weight_function(kernel)
-            .adapter(Batch)
             .build()?;
         let result = model.fit(&x, &y)?;
         print!("  {}: [", kernel);
@@ -678,8 +663,8 @@ fn example_16_loocv_and_auto_converge() -> Result<(), LoessError> {
 
     // Leave-one-out cross-validation
     let result_loocv = Loess::new()
-        .cross_validate(LOOCV(&[0.3_f64, 0.5, 0.7]))
-        .adapter(Batch)
+        .cv_method("loocv")
+        .cv_fractions(vec![0.3_f64, 0.5, 0.7])
         .build()?
         .fit(&x, &y)?;
     println!("  LOOCV selected fraction: {}", result_loocv.fraction_used);
@@ -689,8 +674,10 @@ fn example_16_loocv_and_auto_converge() -> Result<(), LoessError> {
 
     // KFold with reproducible seed
     let result_seeded = Loess::new()
-        .cross_validate(KFold(5, &[0.2_f64, 0.4, 0.6]).seed(42))
-        .adapter(Batch)
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.2_f64, 0.4, 0.6])
+        .cv_seed(42)
         .build()?
         .fit(&x, &y)?;
     println!(
@@ -705,7 +692,6 @@ fn example_16_loocv_and_auto_converge() -> Result<(), LoessError> {
     let result_ac = Loess::new()
         .fraction(0.5)
         .auto_converge(1e-4_f64)
-        .adapter(Batch)
         .build()?
         .fit(&x, &y)?;
     println!(
@@ -729,7 +715,6 @@ fn example_17_interpolation_tuning() -> Result<(), LoessError> {
     let r_default = Loess::new()
         .fraction(0.5)
         .surface_mode("interpolation")
-        .adapter(Batch)
         .build()?
         .fit(&x, &y)?;
     println!("  Default cell (0.2): y[0]={:.3}", r_default.y[0]);
@@ -739,7 +724,6 @@ fn example_17_interpolation_tuning() -> Result<(), LoessError> {
         .fraction(0.5)
         .surface_mode("interpolation")
         .cell(0.05_f64)
-        .adapter(Batch)
         .build()?
         .fit(&x, &y)?;
     println!("  cell=0.05 (finer): y[0]={:.3}", r_fine.y[0]);
@@ -749,7 +733,6 @@ fn example_17_interpolation_tuning() -> Result<(), LoessError> {
         .fraction(0.5)
         .surface_mode("interpolation")
         .interpolation_vertices(20)
-        .adapter(Batch)
         .build()?
         .fit(&x, &y)?;
     println!("  interpolation_vertices=20: y[0]={:.3}", r_verts.y[0]);
@@ -759,7 +742,6 @@ fn example_17_interpolation_tuning() -> Result<(), LoessError> {
         .fraction(0.5)
         .surface_mode("interpolation")
         .boundary_degree_fallback(false)
-        .adapter(Batch)
         .build()?
         .fit(&x, &y)?;
     println!(

@@ -12,43 +12,52 @@ use std::vec::Vec;
 
 // External dependencies
 use core::fmt::Debug;
+use core::marker::PhantomData;
 
 // Internal dependencies
 use crate::adapters::batch::BatchLoessBuilder;
 use crate::adapters::online::OnlineLoessBuilder;
+use crate::adapters::online::UpdateMode;
+use crate::adapters::streaming::MergeStrategy;
 use crate::adapters::streaming::StreamingLoessBuilder;
-use crate::algorithms::regression::SolverLinalg;
+use crate::algorithms::regression::{PolynomialDegree, SolverLinalg, ZeroWeightFallback};
+use crate::algorithms::robustness::RobustnessMethod;
+use crate::engine::executor::SurfaceMode;
 use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
 use crate::evaluation::cv::{CVConfig, CVKind};
 use crate::evaluation::intervals::IntervalMethod;
+use crate::math::boundary::BoundaryPolicy;
 use crate::math::distance::DistanceLinalg;
+use crate::math::distance::DistanceMetric;
+use crate::math::kernel::WeightFunction;
 use crate::math::linalg::FloatLinalg;
-use crate::parse::IntoEnum;
+use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 
-// Publicly re-exported types
-pub use crate::adapters::online::UpdateMode;
-pub use crate::adapters::streaming::MergeStrategy;
-pub use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
-pub use crate::algorithms::robustness::RobustnessMethod;
-pub use crate::engine::executor::SurfaceMode;
+// Publicly re-exported non-enum API types
 pub use crate::engine::output::LoessResult;
 pub use crate::evaluation::cv::{KFold, LOOCV};
-pub use crate::math::boundary::BoundaryPolicy;
-pub use crate::math::distance::DistanceMetric;
-pub use crate::math::kernel::WeightFunction;
-pub use crate::math::scaling::ScalingMethod;
 pub use crate::primitives::errors::LoessError;
 
-// Marker types for selecting execution adapters.
-#[allow(non_snake_case)]
-pub mod Adapter {
-    pub use super::{Batch, Online, Streaming};
-}
+// Mode markers — zero-sized types that select which processor build() produces.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct BatchMode;
+#[derive(Debug, Clone, Copy, Default)]
+pub struct StreamingMode;
+#[derive(Debug, Clone, Copy, Default)]
+pub struct OnlineMode;
+
+// Convenience type aliases: entry points that mirror the bindings API.
+pub type Loess<T = f64> = LoessBuilder<T, BatchMode>;
+pub type StreamingLoess<T = f64> = LoessBuilder<T, StreamingMode>;
+pub type OnlineLoess<T = f64> = LoessBuilder<T, OnlineMode>;
 
 // Fluent builder for configuring LOESS parameters and execution modes.
 #[derive(Debug, Clone)]
-pub struct LoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> {
+pub struct LoessBuilder<
+    T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync,
+    Mode = BatchMode,
+> {
     // Smoothing fraction (0..1].
     pub fraction: Option<T>,
 
@@ -179,10 +188,14 @@ pub struct LoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     // Parse errors from string-accepting builder methods; reported together by `build()`.
     #[doc(hidden)]
     pub parse_errors: Vec<LoessError>,
+
+    // Zero-sized mode marker — selects which processor build() produces.
+    #[doc(hidden)]
+    pub _mode: PhantomData<Mode>,
 }
 
-impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Default
-    for LoessBuilder<T>
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync, Mode: Default> Default
+    for LoessBuilder<T, Mode>
 {
     fn default() -> Self {
         Self::new()
@@ -190,17 +203,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Defau
 }
 
 #[allow(private_bounds)]
-impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLinalg>
-    LoessBuilder<T>
+impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLinalg, Mode: Default>
+    LoessBuilder<T, Mode>
 {
-    // Select an execution adapter to transition to an execution builder.
-    pub fn adapter<A>(self, _adapter: A) -> A::Output
-    where
-        A: LoessAdapter<T>,
-    {
-        A::convert(self)
-    }
-
     // Create a new builder with default settings.
     pub fn new() -> Self {
         Self {
@@ -243,15 +248,16 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             parallel: None,
             duplicate_param: None,
             parse_errors: Vec::new(),
+            _mode: PhantomData,
         }
     }
 
     // Set behavior for handling zero-weight neighborhoods.
-    pub fn zero_weight_fallback(mut self, policy: impl IntoEnum<ZeroWeightFallback>) -> Self {
+    pub fn zero_weight_fallback(mut self, policy: impl AsRef<str>) -> Self {
         if self.zero_weight_fallback.is_some() {
             self.duplicate_param = Some("zero_weight_fallback");
         }
-        match policy.into_enum() {
+        match policy.as_ref().parse() {
             Ok(p) => self.zero_weight_fallback = Some(p),
             Err(e) => self.parse_errors.push(e),
         }
@@ -259,11 +265,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
+    pub fn boundary_policy(mut self, policy: impl AsRef<str>) -> Self {
         if self.boundary_policy.is_some() {
             self.duplicate_param = Some("boundary_policy");
         }
-        match policy.into_enum() {
+        match policy.as_ref().parse() {
             Ok(p) => self.boundary_policy = Some(p),
             Err(e) => self.parse_errors.push(e),
         }
@@ -271,11 +277,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the merging strategy for overlapping chunks (Streaming only).
-    pub fn merge_strategy(mut self, strategy: impl IntoEnum<MergeStrategy>) -> Self {
+    pub fn merge_strategy(mut self, strategy: impl AsRef<str>) -> Self {
         if self.merge_strategy.is_some() {
             self.duplicate_param = Some("merge_strategy");
         }
-        match strategy.into_enum() {
+        match strategy.as_ref().parse() {
             Ok(s) => self.merge_strategy = Some(s),
             Err(e) => self.parse_errors.push(e),
         }
@@ -283,11 +289,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the incremental update mode (Online only).
-    pub fn update_mode(mut self, mode: impl IntoEnum<UpdateMode>) -> Self {
+    pub fn update_mode(mut self, mode: impl AsRef<str>) -> Self {
         if self.update_mode.is_some() {
             self.duplicate_param = Some("update_mode");
         }
-        match mode.into_enum() {
+        match mode.as_ref().parse() {
             Ok(m) => self.update_mode = Some(m),
             Err(e) => self.parse_errors.push(e),
         }
@@ -349,11 +355,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
+    pub fn weight_function(mut self, wf: impl AsRef<str>) -> Self {
         if self.weight_function.is_some() {
             self.duplicate_param = Some("weight_function");
         }
-        match wf.into_enum() {
+        match wf.as_ref().parse() {
             Ok(w) => self.weight_function = Some(w),
             Err(e) => self.parse_errors.push(e),
         }
@@ -361,11 +367,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the robustness weighting method.
-    pub fn robustness_method(mut self, rm: impl IntoEnum<RobustnessMethod>) -> Self {
+    pub fn robustness_method(mut self, rm: impl AsRef<str>) -> Self {
         if self.robustness_method.is_some() {
             self.duplicate_param = Some("robustness_method");
         }
-        match rm.into_enum() {
+        match rm.as_ref().parse() {
             Ok(r) => self.robustness_method = Some(r),
             Err(e) => self.parse_errors.push(e),
         }
@@ -373,11 +379,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the residual scaling method (MAR/MAD).
-    pub fn scaling_method(mut self, sm: impl IntoEnum<ScalingMethod>) -> Self {
+    pub fn scaling_method(mut self, sm: impl AsRef<str>) -> Self {
         if self.scaling_method.is_some() {
             self.duplicate_param = Some("scaling_method");
         }
-        match sm.into_enum() {
+        match sm.as_ref().parse() {
             Ok(s) => self.scaling_method = Some(s),
             Err(e) => self.parse_errors.push(e),
         }
@@ -499,16 +505,13 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 
     // Set the polynomial degree for local regression.
     //
-    // - `Constant` (degree 0): Weighted mean - fastest, least flexible
-    // - `Linear` (degree 1, default): Standard LOESS - good balance
-    // - `Quadratic` (degree 2): Better for curved regions
-    // - `Cubic` (degree 3): Higher flexibility for complex surfaces
-    // - `Quartic` (degree 4): Maximum flexibility, most expensive
-    pub fn degree(mut self, degree: impl IntoEnum<PolynomialDegree>) -> Self {
+    // Accepts case-insensitive strings:
+    // "constant", "linear", "quadratic", "cubic", "quartic".
+    pub fn degree(mut self, degree: impl AsRef<str>) -> Self {
         if self.polynomial_degree.is_some() {
             self.duplicate_param = Some("degree");
         }
-        match degree.into_enum() {
+        match degree.as_ref().parse() {
             Ok(d) => self.polynomial_degree = Some(d),
             Err(e) => self.parse_errors.push(e),
         }
@@ -525,11 +528,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the distance metric for nD neighborhood computation.
-    pub fn distance_metric(mut self, metric: impl IntoEnum<DistanceMetric<T>>) -> Self {
+    pub fn distance_metric(mut self, metric: impl AsRef<str>) -> Self
+    where
+        T: core::str::FromStr,
+    {
         if self.distance_metric.is_some() {
             self.duplicate_param = Some("distance_metric");
         }
-        match metric.into_enum() {
+        match metric.as_ref().parse() {
             Ok(m) => self.distance_metric = Some(m),
             Err(e) => self.parse_errors.push(e),
         }
@@ -537,11 +543,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the surface evaluation mode (Interpolation or Direct).
-    pub fn surface_mode(mut self, mode: impl IntoEnum<SurfaceMode>) -> Self {
+    pub fn surface_mode(mut self, mode: impl AsRef<str>) -> Self {
         if self.surface_mode.is_some() {
             self.duplicate_param = Some("surface_mode");
         }
-        match mode.into_enum() {
+        match mode.as_ref().parse() {
             Ok(m) => self.surface_mode = Some(m),
             Err(e) => self.parse_errors.push(e),
         }
@@ -636,13 +642,61 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 }
 
-// Trait for transitioning from a generic builder to an execution builder.
+// BatchMode build: produces a serial in-memory BatchLoess processor.
+#[allow(private_bounds)]
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static>
+    LoessBuilder<T, BatchMode>
+{
+    pub fn build(self) -> Result<crate::adapters::batch::BatchLoess<T>, LoessError> {
+        Batch::convert(self).build()
+    }
+}
+
+// Low-level adapter dispatch — used by bindings/internals, not the public API.
+//
+// Allows transitioning from any LoessBuilder<T, Mode> to a specialized execution
+// builder for cases where the mode cannot be expressed statically (e.g. FFI glue
+// that selects Batch / Streaming / Online at runtime based on user input).
+#[allow(private_bounds)]
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static, Mode: Default>
+    LoessBuilder<T, Mode>
+{
+    #[doc(hidden)]
+    pub fn adapter<A>(self, _adapter: A) -> A::Output
+    where
+        A: LoessAdapter<T>,
+    {
+        A::convert(self)
+    }
+}
+
+// StreamingMode build: produces a serial StreamingLoess processor.
+#[allow(private_bounds)]
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static>
+    LoessBuilder<T, StreamingMode>
+{
+    pub fn build(self) -> Result<crate::adapters::streaming::StreamingLoess<T>, LoessError> {
+        Streaming::convert(self).build()
+    }
+}
+
+// OnlineMode build: produces a serial OnlineLoess processor.
+#[allow(private_bounds)]
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static>
+    LoessBuilder<T, OnlineMode>
+{
+    pub fn build(self) -> Result<crate::adapters::online::OnlineLoess<T>, LoessError> {
+        Online::convert(self).build()
+    }
+}
+
+// Trait for transitioning a LoessBuilder into a specialized execution builder.
 pub trait LoessAdapter<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> {
     // The output execution builder.
     type Output;
 
-    // Convert a generic [`LoessBuilder`] into a specialized execution builder.
-    fn convert(builder: LoessBuilder<T>) -> Self::Output;
+    // Convert a [`LoessBuilder`] (any mode) into a specialized execution builder.
+    fn convert<Mode>(builder: LoessBuilder<T, Mode>) -> Self::Output;
 }
 
 // Marker for in-memory batch processing.
@@ -654,7 +708,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
 {
     type Output = BatchLoessBuilder<T>;
 
-    fn convert(builder: LoessBuilder<T>) -> Self::Output {
+    fn convert<Mode>(builder: LoessBuilder<T, Mode>) -> Self::Output {
         let mut result = BatchLoessBuilder::default();
 
         if let Some(fraction) = builder.fraction {
@@ -764,7 +818,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
 {
     type Output = StreamingLoessBuilder<T>;
 
-    fn convert(builder: LoessBuilder<T>) -> Self::Output {
+    fn convert<Mode>(builder: LoessBuilder<T, Mode>) -> Self::Output {
         let mut result = StreamingLoessBuilder::default();
 
         // Override with user-provided values
@@ -871,7 +925,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
 {
     type Output = OnlineLoessBuilder<T>;
 
-    fn convert(builder: LoessBuilder<T>) -> Self::Output {
+    fn convert<Mode>(builder: LoessBuilder<T, Mode>) -> Self::Output {
         let mut result = OnlineLoessBuilder::default();
 
         // Override with user-provided values

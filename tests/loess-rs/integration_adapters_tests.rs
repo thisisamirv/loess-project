@@ -1,3 +1,4 @@
+use loess_rs::internals::api::{Batch, Online, Streaming};
 use loess_rs::prelude::*;
 
 // ============================================================================
@@ -17,7 +18,7 @@ fn test_batch_2d_quadratic() {
         .collect();
 
     let result = Loess::new()
-        .degree(Quadratic)
+        .degree("quadratic")
         .dimensions(2)
         .fraction(0.5)
         .adapter(Batch)
@@ -45,7 +46,7 @@ fn test_streaming_2d_linear_with_residuals() {
         .collect();
 
     let mut processor = Loess::new()
-        .degree(Linear)
+        .degree("linear")
         .dimensions(2)
         .fraction(0.3)
         .return_residuals()
@@ -72,7 +73,7 @@ fn test_online_3d_constant() {
     let y: Vec<f64> = vec![10.0; 50];
 
     let mut model = Loess::new()
-        .degree(Constant)
+        .degree("constant")
         .dimensions(3)
         .fraction(0.5)
         .adapter(Online)
@@ -101,7 +102,7 @@ fn test_batch_cubic_1d() {
     let y: Vec<f64> = x.iter().map(|v| v.powi(3)).collect();
 
     let result = Loess::new()
-        .degree(Cubic)
+        .degree("cubic")
         .fraction(0.6)
         .adapter(Batch)
         .build()
@@ -118,7 +119,7 @@ fn test_batch_quartic_1d() {
     let y: Vec<f64> = x.iter().map(|v| v.powi(4)).collect();
 
     let result = Loess::new()
-        .degree(Quartic)
+        .degree("quartic")
         .fraction(0.7)
         .adapter(Batch)
         .build()
@@ -142,8 +143,8 @@ fn test_streaming_robust_outliers() {
     y[51] = -1000.0;
 
     let mut processor = Loess::new()
-        .degree(Linear)
-        .robustness_method(Bisquare)
+        .degree("linear")
+        .robustness_method("bisquare")
         .iterations(2)
         .return_robustness_weights()
         .adapter(Streaming)
@@ -165,7 +166,7 @@ fn test_streaming_robust_outliers() {
 #[test]
 fn test_online_robust_outliers() {
     let mut model = Loess::new()
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .iterations(1)
         .adapter(Online)
         .window_capacity(10)
@@ -189,7 +190,7 @@ fn test_batch_f32_2d() {
     let y: Vec<f32> = vec![0.0, 1.0, 0.0];
 
     let result = Loess::<f32>::new()
-        .degree(Linear)
+        .degree("linear")
         .dimensions(2)
         .adapter(Batch)
         .build()

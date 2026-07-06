@@ -22,10 +22,11 @@ use approx::assert_relative_eq;
 
 use loess_rs::internals::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
 use loess_rs::internals::algorithms::robustness::RobustnessMethod;
-use loess_rs::internals::api::{BoundaryPolicy, DistanceMetric};
 use loess_rs::internals::engine::executor::{
     ExecutorOutput, LoessConfig, LoessExecutor, SurfaceMode,
 };
+use loess_rs::internals::math::boundary::BoundaryPolicy;
+use loess_rs::internals::math::distance::DistanceMetric;
 use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::scaling::ScalingMethod;
 

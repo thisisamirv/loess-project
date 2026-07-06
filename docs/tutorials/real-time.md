@@ -63,7 +63,7 @@ For true real-time applications where each point must be processed immediately.
         .adapter(Online)
         .window_capacity(25)
         .min_points(5)
-        .update_mode(Incremental)
+        .update_mode("incremental")
         .build()?;
 
     for i in 0..100 {
@@ -214,7 +214,7 @@ For large datasets that arrive in batches or files.
         .adapter(Streaming)
         .chunk_size(50)
         .overlap(10)
-        .merge_strategy(WeightedAverage)
+        .merge_strategy("weighted_average")
         .build()?;
 
     // Process chunks as they arrive

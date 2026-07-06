@@ -22,6 +22,7 @@ use loess_rs::prelude::*;
 use num_traits::float::Float;
 
 use loess_rs::internals::adapters::batch::BatchLoessBuilder;
+use loess_rs::internals::api::{Batch, KFold, LOOCV};
 use loess_rs::internals::math::boundary::BoundaryPolicy;
 
 // ============================================================================
@@ -85,7 +86,7 @@ fn test_batch_with_robustness_weights() {
     let result = Loess::new()
         .fraction(0.5)
         .iterations(5)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .return_robustness_weights()
         .interpolation_vertices(30)
         .adapter(Batch)
@@ -496,8 +497,8 @@ fn test_batch_all_features_combined() {
     let result = Loess::new()
         .fraction(0.5)
         .iterations(3)
-        .weight_function(Tricube)
-        .robustness_method(Bisquare)
+        .weight_function("tricube")
+        .robustness_method("bisquare")
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .return_diagnostics()
@@ -607,7 +608,7 @@ fn test_batch_all_identical_y() {
         .fraction(0.5)
         .iterations(3)
         .interpolation_vertices(30)
-        .surface_mode(Direct)
+        .surface_mode("direct")
         .adapter(Batch)
         .build()
         .unwrap()

@@ -12,13 +12,12 @@ use std::panic::catch_unwind;
 use std::ptr;
 use std::slice::from_raw_parts;
 
+use fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
 use fastLoess::internals::api::{
     BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
     ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
-use fastLoess::prelude::{
-    Batch, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
-};
+use fastLoess::prelude::LoessResult;
 
 // Result struct that can be passed across FFI boundary.
 // All arrays are allocated by Rust and must be freed by Rust.
@@ -207,8 +206,8 @@ fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy, String> {
 // Parse scaling method from string.
 fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
     match name.to_lowercase().as_str() {
-        "mad" => Ok(MAD),
-        "mar" => Ok(MAR),
+        "mad" => Ok(ScalingMethod::MAD),
+        "mar" => Ok(ScalingMethod::MAR),
         "mean" => Ok(ScalingMethod::Mean),
         _ => Err(format!(
             "Unknown scaling method: {}. Valid: mad, mar, mean",
@@ -408,7 +407,7 @@ pub struct JlOnlineLoess {
     dimensions: usize,
 }
 
-// Loess (Batch) C API
+// Loess () C API
 
 /// Create a new Loess configuration.
 ///
@@ -578,11 +577,36 @@ pub unsafe extern "C" fn jl_loess_fit(
         let mut builder = LoessBuilder::<f64>::new();
         builder = builder.fraction(config.fraction);
         builder = builder.iterations(config.iterations);
-        builder = builder.weight_function(config.weight_function);
-        builder = builder.robustness_method(config.robustness_method);
-        builder = builder.scaling_method(config.scaling_method);
-        builder = builder.zero_weight_fallback(config.zero_weight_fallback);
-        builder = builder.boundary_policy(config.boundary_policy);
+        builder = builder.weight_function(match config.weight_function {
+            WeightFunction::Tricube => "tricube",
+            WeightFunction::Epanechnikov => "epanechnikov",
+            WeightFunction::Gaussian => "gaussian",
+            WeightFunction::Uniform => "uniform",
+            WeightFunction::Biweight => "biweight",
+            WeightFunction::Triangle => "triangle",
+            WeightFunction::Cosine => "cosine",
+        });
+        builder = builder.robustness_method(match config.robustness_method {
+            RobustnessMethod::Bisquare => "bisquare",
+            RobustnessMethod::Huber => "huber",
+            RobustnessMethod::Talwar => "talwar",
+        });
+        builder = builder.scaling_method(match config.scaling_method {
+            ScalingMethod::MAD => "mad",
+            ScalingMethod::MAR => "mar",
+            ScalingMethod::Mean => "mean",
+        });
+        builder = builder.zero_weight_fallback(match config.zero_weight_fallback {
+            ZeroWeightFallback::UseLocalMean => "use_local_mean",
+            ZeroWeightFallback::ReturnOriginal => "return_original",
+            ZeroWeightFallback::ReturnNone => "return_none",
+        });
+        builder = builder.boundary_policy(match config.boundary_policy {
+            BoundaryPolicy::Extend => "extend",
+            BoundaryPolicy::Reflect => "reflect",
+            BoundaryPolicy::Zero => "zero",
+            BoundaryPolicy::NoBoundary => "noboundary",
+        });
         builder = builder.parallel(config.parallel);
 
         if let Some(cl) = config.confidence_intervals {
@@ -603,10 +627,31 @@ pub unsafe extern "C" fn jl_loess_fit(
         if let Some(tol) = config.auto_converge {
             builder = builder.auto_converge(tol);
         }
-        builder = builder.degree(config.degree);
+        builder = builder.degree(match config.degree {
+            PolynomialDegree::Constant => "constant",
+            PolynomialDegree::Linear => "linear",
+            PolynomialDegree::Quadratic => "quadratic",
+            PolynomialDegree::Cubic => "cubic",
+            PolynomialDegree::Quartic => "quartic",
+        });
         builder = builder.dimensions(config.dimensions);
-        builder = builder.distance_metric(config.distance_metric.clone());
-        builder = builder.surface_mode(config.surface_mode);
+        builder = match &config.distance_metric {
+            DistanceMetric::Normalized => builder.distance_metric("normalized"),
+            DistanceMetric::Euclidean => builder.distance_metric("euclidean"),
+            DistanceMetric::Manhattan => builder.distance_metric("manhattan"),
+            DistanceMetric::Chebyshev => builder.distance_metric("chebyshev"),
+            DistanceMetric::Minkowski(p) => {
+                let m = format!("minkowski:{}", p);
+                builder.distance_metric(&m)
+            }
+            DistanceMetric::Weighted(w) => builder
+                .distance_metric("weighted")
+                .weighted_metric_weights(w.clone()),
+        };
+        builder = builder.surface_mode(match config.surface_mode {
+            SurfaceMode::Interpolation => "interpolation",
+            SurfaceMode::Direct => "direct",
+        });
         if config.return_se {
             builder = builder.return_se();
         }
@@ -628,13 +673,17 @@ pub unsafe extern "C" fn jl_loess_fit(
                 "simple" | "loo" | "loocv" | "leave_one_out" => {
                     builder = builder.cv_method("loocv");
                     builder = builder.cv_fractions(fractions.clone());
-                    if let Some(s) = seed { builder = builder.cv_seed(s); }
+                    if let Some(s) = seed {
+                        builder = builder.cv_seed(s);
+                    }
                 }
                 "kfold" | "k_fold" | "k-fold" => {
                     builder = builder.cv_method("kfold");
                     builder = builder.cv_k(config.cv_k);
                     builder = builder.cv_fractions(fractions.clone());
-                    if let Some(s) = seed { builder = builder.cv_seed(s); }
+                    if let Some(s) = seed {
+                        builder = builder.cv_seed(s);
+                    }
                 }
                 _ => {
                     return error_result(&format!(
@@ -836,21 +885,21 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
         let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
         let ms_str = unsafe { parse_c_str(merge_strategy, "weighted_average") };
 
-        let wf = unwrap_or_return_null!(parse_weight_function(wf_str));
-        let rm = unwrap_or_return_null!(parse_robustness_method(rm_str));
-        let sm = unwrap_or_return_null!(parse_scaling_method(sm_str));
-        let bp = unwrap_or_return_null!(parse_boundary_policy(bp_str));
-        let zwf = unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
+        unwrap_or_return_null!(parse_weight_function(wf_str));
+        unwrap_or_return_null!(parse_robustness_method(rm_str));
+        unwrap_or_return_null!(parse_scaling_method(sm_str));
+        unwrap_or_return_null!(parse_boundary_policy(bp_str));
+        unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
         let ms = unwrap_or_return_null!(parse_merge_strategy(ms_str));
 
         let mut builder = LoessBuilder::<f64>::new();
         builder = builder.fraction(fraction);
         builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.zero_weight_fallback(zwf);
-        builder = builder.boundary_policy(bp);
+        builder = builder.weight_function(wf_str);
+        builder = builder.robustness_method(rm_str);
+        builder = builder.scaling_method(sm_str);
+        builder = builder.zero_weight_fallback(zwf_str);
+        builder = builder.boundary_policy(bp_str);
 
         if return_diagnostics != 0 {
             builder = builder.return_diagnostics();
@@ -874,9 +923,9 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
         // Apply LOESS-specific options
         let deg_str = unsafe { parse_c_str(degree, "linear") };
         let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
-        let deg = unwrap_or_return_null!(parse_polynomial_degree(deg_str));
-        let surf = unwrap_or_return_null!(parse_surface_mode(surf_str));
-        builder = builder.degree(deg);
+        unwrap_or_return_null!(parse_polynomial_degree(deg_str));
+        unwrap_or_return_null!(parse_surface_mode(surf_str));
+        builder = builder.degree(deg_str);
         if dimensions > 0 {
             builder = builder.dimensions(dimensions as usize);
         }
@@ -890,14 +939,20 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
                 )
                 .to_vec()
             };
-            builder = builder.distance_metric(DistanceMetric::Weighted(w));
+            builder = builder.distance_metric("weighted");
+            builder = builder.weighted_metric_weights(w);
         } else {
             let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
             let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
-            builder = builder.distance_metric(dm);
+            if dm_str.eq_ignore_ascii_case("weighted") {
+                builder = builder.distance_metric("weighted");
+            } else {
+                let _ = dm;
+                builder = builder.distance_metric(dm_str);
+            }
         }
 
-        builder = builder.surface_mode(surf);
+        builder = builder.surface_mode(surf_str);
 
         // Advanced tuning
         if !cell.is_nan() {
@@ -986,7 +1041,7 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
     }
 }
 
-/// Finalize streaming and return remaining data.
+/// Finalize and return remaining data.
 ///
 /// # Safety
 /// `ptr` must be a valid pointer.
@@ -1067,21 +1122,21 @@ pub unsafe extern "C" fn jl_online_loess_new(
         let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
         let um_str = unsafe { parse_c_str(update_mode, "full") };
 
-        let wf = unwrap_or_return_null!(parse_weight_function(wf_str));
-        let rm = unwrap_or_return_null!(parse_robustness_method(rm_str));
-        let sm = unwrap_or_return_null!(parse_scaling_method(sm_str));
-        let bp = unwrap_or_return_null!(parse_boundary_policy(bp_str));
-        let zwf = unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
+        unwrap_or_return_null!(parse_weight_function(wf_str));
+        unwrap_or_return_null!(parse_robustness_method(rm_str));
+        unwrap_or_return_null!(parse_scaling_method(sm_str));
+        unwrap_or_return_null!(parse_boundary_policy(bp_str));
+        unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
         let um = unwrap_or_return_null!(parse_update_mode(um_str));
 
         let mut builder = LoessBuilder::<f64>::new();
         builder = builder.fraction(fraction);
         builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.zero_weight_fallback(zwf);
-        builder = builder.boundary_policy(bp);
+        builder = builder.weight_function(wf_str);
+        builder = builder.robustness_method(rm_str);
+        builder = builder.scaling_method(sm_str);
+        builder = builder.zero_weight_fallback(zwf_str);
+        builder = builder.boundary_policy(bp_str);
         if return_se != 0 {
             builder = builder.return_se();
         }
@@ -1107,14 +1162,14 @@ pub unsafe extern "C" fn jl_online_loess_new(
         // Apply LOESS-specific options
         let deg_str = unsafe { parse_c_str(degree, "linear") };
         let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
-        let deg = unwrap_or_return_null!(parse_polynomial_degree(deg_str));
-        let surf = unwrap_or_return_null!(parse_surface_mode(surf_str));
+        unwrap_or_return_null!(parse_polynomial_degree(deg_str));
+        unwrap_or_return_null!(parse_surface_mode(surf_str));
         let configured_dimensions = if dimensions > 0 {
             dimensions as usize
         } else {
             1
         };
-        o_builder = o_builder.polynomial_degree(deg);
+        o_builder = o_builder.polynomial_degree(deg_str);
         o_builder = o_builder.dimensions(configured_dimensions);
 
         // Distance metric (weighted takes precedence over the name-string)
@@ -1126,14 +1181,20 @@ pub unsafe extern "C" fn jl_online_loess_new(
                 )
                 .to_vec()
             };
-            o_builder = o_builder.distance_metric(DistanceMetric::Weighted(w));
+            o_builder = o_builder.distance_metric("weighted");
+            o_builder = o_builder.weighted_metric_weights(w);
         } else {
             let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
             let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
-            o_builder = o_builder.distance_metric(dm);
+            if dm_str.eq_ignore_ascii_case("weighted") {
+                o_builder = o_builder.distance_metric("weighted");
+            } else {
+                let _ = dm;
+                o_builder = o_builder.distance_metric(dm_str);
+            }
         }
 
-        o_builder = o_builder.surface_mode(surf);
+        o_builder = o_builder.surface_mode(surf_str);
 
         // Advanced tuning
         if !cell.is_nan() {
@@ -1172,7 +1233,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
     }
 }
 
-/// Add points to the online processor.
+/// Add points to the processor.
 ///
 /// # Safety
 /// `ptr` must be a valid pointer. `x` and `y` must be valid arrays of length `n`.

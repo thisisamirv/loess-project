@@ -31,7 +31,6 @@
 //! let model = Loess::new()
 //!     .fraction(0.5)      // Use 50% of data for each local fit
 //!     .iterations(3)      // 3 robustness iterations
-//!     .adapter(Batch)
 //!     .build()?;
 //!
 //! // Fit the model to the data
@@ -68,18 +67,18 @@
 //! let model = Loess::new()
 //!     .fraction(0.5)                                   // Use 50% of data for each local fit
 //!     .iterations(3)                                   // 3 robustness iterations
-//!     .degree(Linear)                                  // Polynomial degree (Linear default)
+//!     .degree("linear")                               // Polynomial degree (case-insensitive)
 //!     .dimensions(1)                                   // Number of dimensions
-//!     .distance_metric(Euclidean)                      // Distance metric
-//!     .weight_function(Tricube)                        // Kernel function
-//!     .robustness_method(Bisquare)                     // Outlier handling
-//!     .surface_mode(Interpolation)                     // Surface evaluation mode
-//!     .boundary_policy(Extend)                         // Boundary handling
+//!     .distance_metric("euclidean")                   // Distance metric
+//!     .weight_function("tricube")                     // Kernel function
+//!     .robustness_method("bisquare")                  // Outlier handling
+//!     .surface_mode("interpolation")                  // Surface evaluation mode
+//!     .boundary_policy("extend")                       // Boundary handling
 //!     .boundary_degree_fallback(true)                  // Boundary degree fallback
-//!     .scaling_method(MAD)                             // Scaling method
+//!     .scaling_method("mad")                          // Scaling method
 //!     .cell(0.2)                                       // Interpolation cell size
 //!     .interpolation_vertices(1000)                    // Maximum vertices for interpolation
-//!     .zero_weight_fallback(UseLocalMean)              // Fallback policy
+//!     .zero_weight_fallback("use_local_mean")         // Fallback policy
 //!     .auto_converge(1e-6)                             // Auto-convergence threshold
 //!     .confidence_intervals(0.95)                      // 95% confidence intervals
 //!     .prediction_intervals(0.95)                      // 95% prediction intervals
@@ -87,8 +86,10 @@
 //!     .return_residuals()                              // Include residuals
 //!     .return_robustness_weights()                     // Include robustness weights
 //!     .return_se()                                     // Enable standard error computation
-//!     .cross_validate(KFold(5, &[0.3, 0.7]).seed(123)) // K-fold CV with 5 folds and 2 fraction options
-//!     .adapter(Batch)                                  // Batch adapter
+//!     .cv_method("kfold")                              // Case-insensitive: "kfold" or "loocv"
+//!     .cv_k(5)                                          // Number of folds for k-fold CV
+//!     .cv_fractions(vec![0.3, 0.7])                     // Candidate fractions to evaluate
+//!     .cv_seed(123)                                     // Reproducible fold split
 //!     .build()?;
 //!
 //! let result = model.fit(&x, &y)?;
@@ -138,7 +139,7 @@
 //! # let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 //! # let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
 //!
-//! let model = Loess::new().adapter(Batch).build()?;
+//! let model = Loess::new().build()?;
 //!
 //! let result = model.fit(&x, &y)?;
 //! // or to be more explicit:
@@ -153,7 +154,7 @@
 //! # let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 //! # let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
 //!
-//! let model = Loess::new().adapter(Batch).build()?;
+//! let model = Loess::new().build()?;
 //!
 //! match model.fit(&x, &y) {
 //!     Ok(result) => {
@@ -171,7 +172,7 @@
 //! ## Builder Arguments
 //!
 //! All builder methods return `Self` and can be chained. Finalize the builder with
-//! `.adapter(Batch|Streaming|Online).build()`.
+//! `build()`.
 //!
 //! ### Core Smoothing
 //!
@@ -271,15 +272,19 @@
 //!
 //! ### Cross-Validation
 //!
-//! - **`cross_validate(config: CVConfig<T>)`** — Automatically select the best bandwidth
-//!   via cross-validation. Provide one of:
-//!   - `KFold(k, &[fractions])` — k-fold CV over the given candidate fractions
-//!   - `LOOCV(&[fractions])` — leave-one-out CV over the given candidate fractions
-//!   - Chain `.seed(s)` on either for reproducible fold splits.
+//! - **`cv_method(m: &str)`** — Cross-validation method, string-based and case-insensitive:
+//!   - `"kfold"`
+//!   - `"loocv"`
+//!
+//! - **`cv_k(k: usize)`** — Number of folds for `"kfold"` mode (default: `5`).
+//!
+//! - **`cv_fractions(f: Vec<T>)`** — Candidate fractions to evaluate during CV.
+//!
+//! - **`cv_seed(s: u64)`** — Optional seed for reproducible fold splitting.
 //!
 //! ### Adapter-Specific Options
 //!
-//! **Streaming** (`.adapter(Streaming)`):
+//! **StreamingLoess** (`StreamingLoess::new()`):
 //!
 //! - **`chunk_size(n: usize)`** — Number of points processed per streaming chunk.
 //! - **`overlap(n: usize)`** — Point overlap between consecutive chunks for smooth boundaries.
@@ -287,7 +292,7 @@
 //!   Options: `Average` / `"average"`, `WeightedAverage` / `"weighted_average"`,
 //!   `TakeFirst` / `"take_first"`, `TakeLast` / `"take_last"`.
 //!
-//! **Online** (`.adapter(Online)`):
+//! **OnlineLoess** (`OnlineLoess::new()`):
 //!
 //! - **`window_capacity(n: usize)`** — Maximum points kept in the sliding window.
 //! - **`min_points(n: usize)`** — Minimum points required before returning a fit.
@@ -319,7 +324,6 @@
 //!     let model = Loess::new()
 //!         .fraction(0.5)
 //!         .iterations(2)      // Fewer iterations for speed
-//!         .adapter(Batch)
 //!         .build()?;
 //!
 //!     // Fit the model
@@ -386,25 +390,9 @@ mod adapters;
 // High-level fluent API for LOESS smoothing.
 mod api;
 
-// String-to-enum conversion trait for builder methods (sealed; pub(crate) only).
-pub(crate) mod parse;
-
 // Standard LOESS prelude.
 pub mod prelude {
-    pub use crate::api::{
-        Adapter::{Batch, Online, Streaming},
-        BoundaryPolicy::{Extend, NoBoundary, Reflect, Zero},
-        DistanceMetric::{Chebyshev, Euclidean, Manhattan, Minkowski, Normalized, Weighted},
-        KFold, LOOCV, LoessBuilder as Loess, LoessError, LoessResult,
-        MergeStrategy::{Average, TakeFirst, TakeLast, WeightedAverage},
-        PolynomialDegree::{Constant, Cubic, Linear, Quadratic, Quartic},
-        RobustnessMethod::{Bisquare, Huber, Talwar},
-        ScalingMethod::{MAD, MAR, Mean},
-        SurfaceMode::{Direct, Interpolation},
-        UpdateMode::{Full, Incremental},
-        WeightFunction::{Biweight, Cosine, Epanechnikov, Gaussian, Triangle, Tricube, Uniform},
-        ZeroWeightFallback::{ReturnNone, ReturnOriginal, UseLocalMean},
-    };
+    pub use crate::api::{Loess, LoessError, LoessResult, OnlineLoess, StreamingLoess};
 }
 
 // Internal modules for development and testing.

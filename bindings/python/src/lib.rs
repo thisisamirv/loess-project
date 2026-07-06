@@ -7,15 +7,14 @@ use pyo3::prelude::*;
 use std::fmt::Display;
 use std::sync::Mutex;
 
+use ::fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::{
     BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
     ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
-use ::fastLoess::prelude::{
-    Batch, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
-};
+use ::fastLoess::prelude::LoessResult;
 
 // Helper Functions
 
@@ -84,8 +83,8 @@ fn parse_boundary_policy(name: &str) -> PyResult<BoundaryPolicy> {
 // Parse scaling method from string
 fn parse_scaling_method(name: &str) -> PyResult<ScalingMethod> {
     match name.to_lowercase().as_str() {
-        "mad" => Ok(MAD),
-        "mar" => Ok(MAR),
+        "mad" => Ok(ScalingMethod::MAD),
+        "mar" => Ok(ScalingMethod::MAR),
         "mean" => Ok(ScalingMethod::Mean),
         _ => Err(PyValueError::new_err(format!(
             "Unknown scaling method: {}. Valid options: mad, mar, mean",
@@ -177,6 +176,43 @@ fn parse_update_mode(name: &str) -> PyResult<UpdateMode> {
             "Unknown update mode: {}. Valid options: full, incremental",
             name
         ))),
+    }
+}
+
+fn degree_to_name(degree: PolynomialDegree) -> &'static str {
+    match degree {
+        PolynomialDegree::Constant => "constant",
+        PolynomialDegree::Linear => "linear",
+        PolynomialDegree::Quadratic => "quadratic",
+        PolynomialDegree::Cubic => "cubic",
+        PolynomialDegree::Quartic => "quartic",
+    }
+}
+
+fn surface_mode_to_name(surface_mode: SurfaceMode) -> &'static str {
+    match surface_mode {
+        SurfaceMode::Interpolation => "interpolation",
+        SurfaceMode::Direct => "direct",
+    }
+}
+
+fn apply_distance_metric(
+    mut builder: LoessBuilder<f64>,
+    distance_metric: &DistanceMetric<f64>,
+) -> LoessBuilder<f64> {
+    match distance_metric {
+        DistanceMetric::Normalized => builder.distance_metric("normalized"),
+        DistanceMetric::Euclidean => builder.distance_metric("euclidean"),
+        DistanceMetric::Manhattan => builder.distance_metric("manhattan"),
+        DistanceMetric::Chebyshev => builder.distance_metric("chebyshev"),
+        DistanceMetric::Minkowski(p) => {
+            let metric = format!("minkowski:{}", p);
+            builder.distance_metric(&metric)
+        }
+        DistanceMetric::Weighted(weights) => {
+            builder = builder.distance_metric("weighted");
+            builder.weighted_metric_weights(weights.clone())
+        }
     }
 }
 
@@ -399,7 +435,7 @@ impl PyLoessResult {
 
 // Python Classes - Stateful Adapters
 
-// Streaming LOESS processor for incremental chunk-based smoothing.
+// LOESS processor for incremental chunk-based smoothing.
 #[pyclass(name = "StreamingLoess")]
 pub struct PyStreamingLoess {
     inner: Mutex<ParallelStreamingLoess<f64>>,
@@ -465,28 +501,28 @@ impl PyStreamingLoess {
         confidence_intervals: Option<f64>,
         prediction_intervals: Option<f64>,
     ) -> PyResult<Self> {
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
+        parse_weight_function(weight_function)?;
+        parse_robustness_method(robustness_method)?;
+        parse_scaling_method(scaling_method)?;
+        parse_zero_weight_fallback(zero_weight_fallback)?;
+        parse_boundary_policy(boundary_policy)?;
         let ms = parse_merge_strategy(merge_strategy)?;
-        let deg = parse_polynomial_degree(degree)?;
+        parse_polynomial_degree(degree)?;
         let dm = build_distance_metric(distance_metric, weighted_metric_weights.as_deref())?;
-        let surf = parse_surface_mode(surface_mode)?;
+        parse_surface_mode(surface_mode)?;
 
         let mut builder = LoessBuilder::<f64>::new();
         builder = builder.fraction(fraction);
         builder = builder.iterations(iterations);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.zero_weight_fallback(zwf);
-        builder = builder.boundary_policy(bp);
-        builder = builder.degree(deg);
+        builder = builder.weight_function(weight_function);
+        builder = builder.robustness_method(robustness_method);
+        builder = builder.scaling_method(scaling_method);
+        builder = builder.zero_weight_fallback(zero_weight_fallback);
+        builder = builder.boundary_policy(boundary_policy);
+        builder = builder.degree(degree);
         builder = builder.dimensions(dimensions);
-        builder = builder.distance_metric(dm);
-        builder = builder.surface_mode(surf);
+        builder = apply_distance_metric(builder, &dm);
+        builder = builder.surface_mode(surface_mode);
         if return_se {
             builder = builder.return_se();
         }
@@ -572,7 +608,7 @@ impl PyStreamingLoess {
     }
 }
 
-// Online LOESS processor for real-time data streams.
+// LOESS processor for real-time data streams.
 #[pyclass(name = "OnlineLoess")]
 pub struct PyOnlineLoess {
     inner: Mutex<ParallelOnlineLoess<f64>>,
@@ -643,28 +679,28 @@ impl PyOnlineLoess {
         confidence_intervals: Option<f64>,
         prediction_intervals: Option<f64>,
     ) -> PyResult<Self> {
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
-        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
+        parse_weight_function(weight_function)?;
+        parse_robustness_method(robustness_method)?;
+        parse_scaling_method(scaling_method)?;
+        parse_boundary_policy(boundary_policy)?;
+        parse_zero_weight_fallback(zero_weight_fallback)?;
         let um = parse_update_mode(update_mode)?;
         let deg = parse_polynomial_degree(degree)?;
         let dm = build_distance_metric(distance_metric, weighted_metric_weights.as_deref())?;
-        let surf = parse_surface_mode(surface_mode)?;
+        parse_surface_mode(surface_mode)?;
 
         let mut builder = LoessBuilder::<f64>::new();
         builder = builder.fraction(fraction);
         builder = builder.iterations(iterations);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.zero_weight_fallback(zwf);
-        builder = builder.boundary_policy(bp);
-        builder = builder.degree(deg);
+        builder = builder.weight_function(weight_function);
+        builder = builder.robustness_method(robustness_method);
+        builder = builder.scaling_method(scaling_method);
+        builder = builder.zero_weight_fallback(zero_weight_fallback);
+        builder = builder.boundary_policy(boundary_policy);
+        builder = builder.degree(degree);
         builder = builder.dimensions(dimensions);
-        builder = builder.distance_metric(dm.clone());
-        builder = builder.surface_mode(surf);
+        builder = apply_distance_metric(builder, &dm);
+        builder = builder.surface_mode(surface_mode);
         if return_se {
             builder = builder.return_se();
         }
@@ -767,7 +803,7 @@ impl PyOnlineLoess {
     }
 }
 
-// Batch LOESS processor with configurable parameters.
+// LOESS processor with configurable parameters.
 //
 // This class allows you to configure LOESS parameters once and then
 // call `fit()` multiple times with different datasets.
@@ -939,17 +975,42 @@ impl PyLoess {
             let mut builder = LoessBuilder::<f64>::new();
             builder = builder.fraction(params.fraction);
             builder = builder.iterations(params.iterations);
-            builder = builder.weight_function(params.weight_function);
-            builder = builder.robustness_method(params.robustness_method);
-            builder = builder.scaling_method(params.scaling_method);
-            builder = builder.zero_weight_fallback(params.zero_weight_fallback);
-            builder = builder.boundary_policy(params.boundary_policy);
+            builder = builder.weight_function(match params.weight_function {
+                WeightFunction::Tricube => "tricube",
+                WeightFunction::Epanechnikov => "epanechnikov",
+                WeightFunction::Gaussian => "gaussian",
+                WeightFunction::Uniform => "uniform",
+                WeightFunction::Biweight => "biweight",
+                WeightFunction::Triangle => "triangle",
+                WeightFunction::Cosine => "cosine",
+            });
+            builder = builder.robustness_method(match params.robustness_method {
+                RobustnessMethod::Bisquare => "bisquare",
+                RobustnessMethod::Huber => "huber",
+                RobustnessMethod::Talwar => "talwar",
+            });
+            builder = builder.scaling_method(match params.scaling_method {
+                ScalingMethod::MAD => "mad",
+                ScalingMethod::MAR => "mar",
+                ScalingMethod::Mean => "mean",
+            });
+            builder = builder.zero_weight_fallback(match params.zero_weight_fallback {
+                ZeroWeightFallback::UseLocalMean => "use_local_mean",
+                ZeroWeightFallback::ReturnOriginal => "return_original",
+                ZeroWeightFallback::ReturnNone => "return_none",
+            });
+            builder = builder.boundary_policy(match params.boundary_policy {
+                BoundaryPolicy::Extend => "extend",
+                BoundaryPolicy::Reflect => "reflect",
+                BoundaryPolicy::Zero => "zero",
+                BoundaryPolicy::NoBoundary => "noboundary",
+            });
             builder = builder.parallel(params.parallel);
 
-            builder = builder.degree(params.degree);
+            builder = builder.degree(degree_to_name(params.degree));
             builder = builder.dimensions(params.dimensions);
-            builder = builder.distance_metric(params.distance_metric);
-            builder = builder.surface_mode(params.surface_mode);
+            builder = apply_distance_metric(builder, &params.distance_metric);
+            builder = builder.surface_mode(surface_mode_to_name(params.surface_mode));
 
             if let Some(uw) = uw_vec {
                 builder = builder.custom_weights(uw);
@@ -999,13 +1060,17 @@ impl PyLoess {
                     "simple" | "loo" | "loocv" | "leave_one_out" => {
                         builder = builder.cv_method("loocv");
                         builder = builder.cv_fractions(fractions.clone());
-                        if let Some(s) = seed { builder = builder.cv_seed(s); }
+                        if let Some(s) = seed {
+                            builder = builder.cv_seed(s);
+                        }
                     }
                     "kfold" | "k_fold" | "k-fold" => {
                         builder = builder.cv_method("kfold");
                         builder = builder.cv_k(params.cv_k);
                         builder = builder.cv_fractions(fractions.clone());
-                        if let Some(s) = seed { builder = builder.cv_seed(s); }
+                        if let Some(s) = seed {
+                            builder = builder.cv_seed(s);
+                        }
                     }
                     _ => {
                         return Err(format!(

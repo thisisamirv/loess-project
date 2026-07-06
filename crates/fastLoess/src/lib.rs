@@ -33,7 +33,6 @@
 //! let model = Loess::new()
 //!     .fraction(0.5)      // Use 50% of data for each local fit
 //!     .iterations(3)      // 3 robustness iterations
-//!     .adapter(Batch)     // Parallel by default
 //!     .build()?;
 //!
 //! // Fit the model to the data
@@ -71,18 +70,18 @@
 //! let model = Loess::new()
 //!     .fraction(0.5)                                   // Use 50% of data for each local fit
 //!     .iterations(3)                                   // 3 robustness iterations
-//!     .degree(Linear)                                  // Polynomial degree (Linear default)
+//!     .degree("linear")                               // Polynomial degree (case-insensitive)
 //!     .dimensions(1)                                   // Number of dimensions
-//!     .distance_metric(Euclidean)                      // Distance metric
-//!     .weight_function(Tricube)                        // Kernel function
-//!     .robustness_method(Bisquare)                     // Outlier handling
-//!     .surface_mode(Interpolation)                     // Surface evaluation mode
-//!     .boundary_policy(Extend)                         // Boundary handling
+//!     .distance_metric("euclidean")                   // Distance metric
+//!     .weight_function("tricube")                     // Kernel function
+//!     .robustness_method("bisquare")                  // Outlier handling
+//!     .surface_mode("interpolation")                  // Surface evaluation mode
+//!     .boundary_policy("extend")                       // Boundary handling
 //!     .boundary_degree_fallback(true)                  // Boundary degree fallback
-//!     .scaling_method(MAD)                             // Scaling method
+//!     .scaling_method("mad")                          // Scaling method
 //!     .cell(0.2)                                       // Interpolation cell size
 //!     .interpolation_vertices(1000)                    // Maximum vertices for interpolation
-//!     .zero_weight_fallback(UseLocalMean)              // Fallback policy
+//!     .zero_weight_fallback("use_local_mean")         // Fallback policy
 //!     .auto_converge(1e-6)                             // Auto-convergence threshold
 //!     .confidence_intervals(0.95)                      // 95% confidence intervals
 //!     .prediction_intervals(0.95)                      // 95% prediction intervals
@@ -94,7 +93,6 @@
 //!     .cv_k(5)                                         // 5 folds
 //!     .cv_fractions(vec![0.3, 0.7])                    // Candidate fractions
 //!     .cv_seed(123)                                    // Reproducible fold splits
-//!     .adapter(Batch)                                  // Batch adapter
 //!     .parallel(true)                                  // Enable parallel execution
 //!     .build()?;
 //!
@@ -145,7 +143,7 @@
 //! # let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 //! # let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
 //!
-//! let model = Loess::new().adapter(Batch).build()?;
+//! let model = Loess::new().build()?;
 //!
 //! let result = model.fit(&x, &y)?;
 //! // or to be more explicit:
@@ -160,7 +158,7 @@
 //! # let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
 //! # let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
 //!
-//! let model = Loess::new().adapter(Batch).build()?;
+//! let model = Loess::new().build()?;
 //!
 //! match model.fit(&x, &y) {
 //!     Ok(result) => {
@@ -178,7 +176,7 @@
 //! ## Builder Arguments
 //!
 //! All builder methods return `Self` and can be chained. Finalize the builder with
-//! `.adapter(Batch|Streaming|Online).build()`.
+//! `build()`.
 //!
 //! ### Core Smoothing
 //!
@@ -298,7 +296,7 @@
 //!
 //! ### Adapter-Specific Options
 //!
-//! **Streaming** (`.adapter(Streaming)`):
+//! **StreamingLoess** (`StreamingLoess::new()`):
 //!
 //! - **`chunk_size(n: usize)`** — Number of points processed per streaming chunk.
 //! - **`overlap(n: usize)`** — Point overlap between consecutive chunks for smooth boundaries.
@@ -306,7 +304,7 @@
 //!   Options: `Average` / `"average"`, `WeightedAverage` / `"weighted_average"`,
 //!   `TakeFirst` / `"take_first"`, `TakeLast` / `"take_last"`.
 //!
-//! **Online** (`.adapter(Online)`):
+//! **OnlineLoess** (`OnlineLoess::new()`):
 //!
 //! - **`window_capacity(n: usize)`** — Maximum points kept in the sliding window.
 //! - **`min_points(n: usize)`** — Minimum points required before returning a fit.
@@ -327,7 +325,7 @@
 //! let x = Array1::from_vec((0..100).map(|i| i as f64 * 0.1).collect());
 //! let y = Array1::from_elem(100, 1.0); // Replace with real data
 //!
-//! let model = Loess::new().adapter(Batch).build()?;
+//! let model = Loess::new().build()?;
 //!
 //! // fit() accepts &Array1<f64>, &[f64], or Vec<f64>
 //! let result = model.fit(&x, &y)?;
@@ -383,20 +381,7 @@ pub(crate) mod parse;
 
 // Standard fastLoess prelude.
 pub mod prelude {
-    pub use crate::api::{
-        Adapter::{Batch, Online, Streaming},
-        BoundaryPolicy::{Extend, NoBoundary, Reflect, Zero},
-        DistanceMetric::{Chebyshev, Euclidean, Manhattan, Minkowski, Normalized},
-        LoessBuilder as Loess, LoessError, LoessResult,
-        MergeStrategy::{Average, TakeFirst, TakeLast, WeightedAverage},
-        PolynomialDegree::{Constant, Cubic, Linear, Quadratic, Quartic},
-        RobustnessMethod::{Bisquare, Huber, Talwar},
-        ScalingMethod::{MAD, MAR, Mean},
-        SurfaceMode::{Direct, Interpolation},
-        UpdateMode::{Full, Incremental},
-        WeightFunction::{Biweight, Cosine, Epanechnikov, Gaussian, Triangle, Tricube, Uniform},
-        ZeroWeightFallback::{ReturnNone, ReturnOriginal, UseLocalMean},
-    };
+    pub use crate::api::{Loess, LoessError, LoessResult, OnlineLoess, StreamingLoess};
 }
 
 // Internal modules for development and testing.

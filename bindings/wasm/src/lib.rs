@@ -9,6 +9,7 @@ pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
+use ::fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::{
@@ -16,9 +17,7 @@ use ::fastLoess::internals::api::{
     ScalingMethod::{self, MAD, MAR, Mean},
     SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
-use ::fastLoess::prelude::{
-    Batch, Loess as LoessBuilder, LoessResult as InnerLoessResult, Online, Streaming,
-};
+use ::fastLoess::prelude::LoessResult as InnerLoessResult;
 
 #[derive(Deserialize)]
 pub struct SmoothOptions {
@@ -355,7 +354,7 @@ impl LoessResult {
     }
 }
 
-// Batch LOESS smoother.
+// LOESS smoother.
 #[wasm_bindgen]
 pub struct Loess {
     options: JsValue,
@@ -392,7 +391,7 @@ fn smooth(
     options: JsValue,
     custom_weights: Option<Vec<f64>>,
 ) -> Result<LoessResult, JsValue> {
-    let mut builder = LoessBuilder::new();
+    let mut builder = LoessBuilder::<f64>::new();
 
     if !options.is_undefined() && !options.is_null() {
         let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
@@ -404,19 +403,24 @@ fn smooth(
             builder = builder.iterations(iter);
         }
         if let Some(wf) = opts.weight_function {
-            builder = builder.weight_function(parse_weight_function(&wf)?);
+            parse_weight_function(&wf)?;
+            builder = builder.weight_function(&wf);
         }
         if let Some(rm) = opts.robustness_method {
-            builder = builder.robustness_method(parse_robustness_method(&rm)?);
+            parse_robustness_method(&rm)?;
+            builder = builder.robustness_method(&rm);
         }
         if let Some(zw) = opts.zero_weight_fallback {
-            builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&zw)?);
+            parse_zero_weight_fallback(&zw)?;
+            builder = builder.zero_weight_fallback(&zw);
         }
         if let Some(bp) = opts.boundary_policy {
-            builder = builder.boundary_policy(parse_boundary_policy(&bp)?);
+            parse_boundary_policy(&bp)?;
+            builder = builder.boundary_policy(&bp);
         }
         if let Some(sm) = opts.scaling_method {
-            builder = builder.scaling_method(parse_scaling_method(&sm)?);
+            parse_scaling_method(&sm)?;
+            builder = builder.scaling_method(&sm);
         }
         if let Some(ac) = opts.auto_converge {
             builder = builder.auto_converge(ac);
@@ -440,7 +444,8 @@ fn smooth(
             builder = builder.parallel(par);
         }
         if let Some(deg) = opts.degree {
-            builder = builder.degree(parse_polynomial_degree(&deg)?);
+            parse_polynomial_degree(&deg)?;
+            builder = builder.degree(&deg);
         }
         if let Some(dim) = opts.dimensions {
             builder = builder.dimensions(dim);
@@ -448,16 +453,18 @@ fn smooth(
         {
             let weighted_weights = opts.weighted_metric_weights.clone().unwrap_or_default();
             if let Some(dm) = opts.distance_metric {
-                let metric = if dm.to_lowercase() == "weighted" {
-                    DistanceMetric::Weighted(weighted_weights)
+                if dm.eq_ignore_ascii_case("weighted") {
+                    builder = builder.distance_metric("weighted");
+                    builder = builder.weighted_metric_weights(weighted_weights);
                 } else {
-                    parse_distance_metric(&dm)?
-                };
-                builder = builder.distance_metric(metric);
+                    parse_distance_metric(&dm)?;
+                    builder = builder.distance_metric(&dm);
+                }
             }
         }
         if let Some(sm_val) = opts.surface_mode {
-            builder = builder.surface_mode(parse_surface_mode(&sm_val)?);
+            parse_surface_mode(&sm_val)?;
+            builder = builder.surface_mode(&sm_val);
         }
         if opts.return_se.unwrap_or(false) {
             builder = builder.return_se();
@@ -495,13 +502,17 @@ fn smooth(
                 "simple" | "loo" | "loocv" | "leave_one_out" => {
                     builder = builder.cv_method("loocv");
                     builder = builder.cv_fractions(fractions);
-                    if let Some(s) = seed { builder = builder.cv_seed(s); }
+                    if let Some(s) = seed {
+                        builder = builder.cv_seed(s);
+                    }
                 }
                 "kfold" | "k_fold" | "k-fold" => {
                     builder = builder.cv_method("kfold");
                     builder = builder.cv_k(k);
                     builder = builder.cv_fractions(fractions);
-                    if let Some(s) = seed { builder = builder.cv_seed(s); }
+                    if let Some(s) = seed {
+                        builder = builder.cv_seed(s);
+                    }
                 }
                 _ => {
                     return Err(JsValue::from_str(&format!(
@@ -528,7 +539,7 @@ fn smooth(
     Ok(LoessResult { inner: result })
 }
 
-// Streaming LOESS smoother.
+// LOESS smoother.
 #[wasm_bindgen]
 pub struct StreamingLoess {
     inner: ParallelStreamingLoess<f64>,
@@ -536,11 +547,11 @@ pub struct StreamingLoess {
 
 #[wasm_bindgen]
 impl StreamingLoess {
-    // Create a new streaming smoother.
+    // Create a new smoother.
     #[wasm_bindgen(constructor)]
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, streamingOpts: JsValue) -> Result<StreamingLoess, JsValue> {
-        let mut builder = LoessBuilder::new();
+        let mut builder = LoessBuilder::<f64>::new();
 
         if !options.is_undefined() && !options.is_null() {
             let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
@@ -552,19 +563,24 @@ impl StreamingLoess {
                 builder = builder.iterations(iter);
             }
             if let Some(wf) = opts.weight_function {
-                builder = builder.weight_function(parse_weight_function(&wf)?);
+                parse_weight_function(&wf)?;
+                builder = builder.weight_function(&wf);
             }
             if let Some(rm) = opts.robustness_method {
-                builder = builder.robustness_method(parse_robustness_method(&rm)?);
+                parse_robustness_method(&rm)?;
+                builder = builder.robustness_method(&rm);
             }
             if let Some(zw) = opts.zero_weight_fallback {
-                builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&zw)?);
+                parse_zero_weight_fallback(&zw)?;
+                builder = builder.zero_weight_fallback(&zw);
             }
             if let Some(bp) = opts.boundary_policy {
-                builder = builder.boundary_policy(parse_boundary_policy(&bp)?);
+                parse_boundary_policy(&bp)?;
+                builder = builder.boundary_policy(&bp);
             }
             if let Some(sm) = opts.scaling_method {
-                builder = builder.scaling_method(parse_scaling_method(&sm)?);
+                parse_scaling_method(&sm)?;
+                builder = builder.scaling_method(&sm);
             }
             if let Some(ac) = opts.auto_converge {
                 builder = builder.auto_converge(ac);
@@ -588,7 +604,8 @@ impl StreamingLoess {
                 builder = builder.parallel(par);
             }
             if let Some(deg) = opts.degree {
-                builder = builder.degree(parse_polynomial_degree(&deg)?);
+                parse_polynomial_degree(&deg)?;
+                builder = builder.degree(&deg);
             }
             if let Some(dim) = opts.dimensions {
                 builder = builder.dimensions(dim);
@@ -596,16 +613,18 @@ impl StreamingLoess {
             {
                 let weighted_weights = opts.weighted_metric_weights.clone().unwrap_or_default();
                 if let Some(dm) = opts.distance_metric {
-                    let metric = if dm.to_lowercase() == "weighted" {
-                        DistanceMetric::Weighted(weighted_weights)
+                    if dm.eq_ignore_ascii_case("weighted") {
+                        builder = builder.distance_metric("weighted");
+                        builder = builder.weighted_metric_weights(weighted_weights);
                     } else {
-                        parse_distance_metric(&dm)?
-                    };
-                    builder = builder.distance_metric(metric);
+                        parse_distance_metric(&dm)?;
+                        builder = builder.distance_metric(&dm);
+                    }
                 }
             }
             if let Some(sm_val) = opts.surface_mode {
-                builder = builder.surface_mode(parse_surface_mode(&sm_val)?);
+                parse_surface_mode(&sm_val)?;
+                builder = builder.surface_mode(&sm_val);
             }
             if opts.return_se.unwrap_or(false) {
                 builder = builder.return_se();
@@ -628,13 +647,17 @@ impl StreamingLoess {
                     "simple" | "loo" | "loocv" | "leave_one_out" => {
                         builder = builder.cv_method("loocv");
                         builder = builder.cv_fractions(fractions);
-                        if let Some(s) = seed { builder = builder.cv_seed(s); }
+                        if let Some(s) = seed {
+                            builder = builder.cv_seed(s);
+                        }
                     }
                     "kfold" | "k_fold" | "k-fold" => {
                         builder = builder.cv_method("kfold");
                         builder = builder.cv_k(k);
                         builder = builder.cv_fractions(fractions);
-                        if let Some(s) = seed { builder = builder.cv_seed(s); }
+                        if let Some(s) = seed {
+                            builder = builder.cv_seed(s);
+                        }
                     }
                     _ => {
                         return Err(JsValue::from_str(&format!(
@@ -698,7 +721,7 @@ impl StreamingLoess {
     }
 }
 
-// Online LOESS smoother.
+// LOESS smoother.
 #[wasm_bindgen]
 pub struct OnlineLoess {
     inner: ParallelOnlineLoess<f64>,
@@ -706,11 +729,11 @@ pub struct OnlineLoess {
 
 #[wasm_bindgen]
 impl OnlineLoess {
-    // Create a new online smoother.
+    // Create a new smoother.
     #[wasm_bindgen(constructor)]
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, onlineOpts: JsValue) -> Result<OnlineLoess, JsValue> {
-        let mut builder = LoessBuilder::new();
+        let mut builder = LoessBuilder::<f64>::new();
 
         if !options.is_undefined() && !options.is_null() {
             let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
@@ -722,19 +745,24 @@ impl OnlineLoess {
                 builder = builder.iterations(iter);
             }
             if let Some(wf) = opts.weight_function {
-                builder = builder.weight_function(parse_weight_function(&wf)?);
+                parse_weight_function(&wf)?;
+                builder = builder.weight_function(&wf);
             }
             if let Some(rm) = opts.robustness_method {
-                builder = builder.robustness_method(parse_robustness_method(&rm)?);
+                parse_robustness_method(&rm)?;
+                builder = builder.robustness_method(&rm);
             }
             if let Some(zw) = opts.zero_weight_fallback {
-                builder = builder.zero_weight_fallback(parse_zero_weight_fallback(&zw)?);
+                parse_zero_weight_fallback(&zw)?;
+                builder = builder.zero_weight_fallback(&zw);
             }
             if let Some(bp) = opts.boundary_policy {
-                builder = builder.boundary_policy(parse_boundary_policy(&bp)?);
+                parse_boundary_policy(&bp)?;
+                builder = builder.boundary_policy(&bp);
             }
             if let Some(sm) = opts.scaling_method {
-                builder = builder.scaling_method(parse_scaling_method(&sm)?);
+                parse_scaling_method(&sm)?;
+                builder = builder.scaling_method(&sm);
             }
             if let Some(ac) = opts.auto_converge {
                 builder = builder.auto_converge(ac);
@@ -758,7 +786,8 @@ impl OnlineLoess {
                 builder = builder.parallel(par);
             }
             if let Some(deg) = opts.degree {
-                builder = builder.degree(parse_polynomial_degree(&deg)?);
+                parse_polynomial_degree(&deg)?;
+                builder = builder.degree(&deg);
             }
             if let Some(dim) = opts.dimensions {
                 builder = builder.dimensions(dim);
@@ -769,16 +798,18 @@ impl OnlineLoess {
             {
                 let weighted_weights = opts.weighted_metric_weights.clone().unwrap_or_default();
                 if let Some(dm) = opts.distance_metric {
-                    let metric = if dm.to_lowercase() == "weighted" {
-                        DistanceMetric::Weighted(weighted_weights)
+                    if dm.eq_ignore_ascii_case("weighted") {
+                        builder = builder.distance_metric("weighted");
+                        builder = builder.weighted_metric_weights(weighted_weights);
                     } else {
-                        parse_distance_metric(&dm)?
-                    };
-                    builder = builder.distance_metric(metric);
+                        parse_distance_metric(&dm)?;
+                        builder = builder.distance_metric(&dm);
+                    }
                 }
             }
             if let Some(sm_val) = opts.surface_mode {
-                builder = builder.surface_mode(parse_surface_mode(&sm_val)?);
+                parse_surface_mode(&sm_val)?;
+                builder = builder.surface_mode(&sm_val);
             }
             if opts.return_se.unwrap_or(false) {
                 builder = builder.return_se();

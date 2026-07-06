@@ -10,15 +10,14 @@ use std::ffi::CStr;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::ptr;
 
+use fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
 use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use fastLoess::internals::api::{
     BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
     ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
-use fastLoess::prelude::{
-    Batch, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
-};
+use fastLoess::prelude::LoessResult;
 
 // Result struct that can be passed across FFI boundary.
 // All arrays are allocated by Rust and must be freed by Rust.
@@ -207,8 +206,8 @@ fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy, String> {
 // Parse scaling method from string.
 fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
     match name.to_lowercase().as_str() {
-        "mad" => Ok(MAD),
-        "mar" => Ok(MAR),
+        "mad" => Ok(ScalingMethod::MAD),
+        "mar" => Ok(ScalingMethod::MAR),
         "mean" => Ok(ScalingMethod::Mean),
         _ => Err(format!(
             "Unknown scaling method: {}. Valid: mad, mar, mean",
@@ -359,7 +358,7 @@ impl From<LoessResult<f64>> for CppLoessResult {
     }
 }
 
-// Opaque handle to a Loess batch model.
+// Opaque handle to a Loess model.
 pub struct CppLoess {
     builder: Option<LoessBuilder<f64>>,
     // Store CV options to apply lazily because of lifetime constraints
@@ -375,7 +374,7 @@ pub struct CppLoess {
     cv_seed: Option<u64>,
 }
 
-// Opaque handle to a Loess streaming model.
+// Opaque handle to a Loess model.
 pub struct CppStreamingLoess {
     builder: LoessBuilder<f64>,
     streaming_opts: Option<(usize, usize, MergeStrategy)>,
@@ -389,7 +388,7 @@ pub struct CppStreamingLoess {
     weighted_metric: Option<Vec<f64>>,
 }
 
-// Opaque handle to a Loess online model.
+// Opaque handle to a Loess model.
 pub struct CppOnlineLoess {
     builder: LoessBuilder<f64>,
     online_opts: Option<(usize, usize, UpdateMode)>,
@@ -441,35 +440,35 @@ pub unsafe extern "C" fn cpp_loess_new(
     let bp_str = parse_c_str(boundary_policy, "extend");
     let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
 
-    let wf = match parse_weight_function(wf_str) {
-        Ok(v) => v,
+    match parse_weight_function(wf_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let rm = match parse_robustness_method(rm_str) {
-        Ok(v) => v,
+    match parse_robustness_method(rm_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let sm = match parse_scaling_method(sm_str) {
-        Ok(v) => v,
+    match parse_scaling_method(sm_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let bp = match parse_boundary_policy(bp_str) {
-        Ok(v) => v,
+    match parse_boundary_policy(bp_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let zwf = match parse_zero_weight_fallback(zwf_str) {
-        Ok(v) => v,
+    match parse_zero_weight_fallback(zwf_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
 
-    let mut builder = LoessBuilder::<f64>::new();
+    let mut builder: LoessBuilder<f64> = LoessBuilder::new();
     builder = builder.fraction(fraction);
     builder = builder.iterations(iterations as usize);
-    builder = builder.weight_function(wf);
-    builder = builder.robustness_method(rm);
-    builder = builder.scaling_method(sm);
-    builder = builder.zero_weight_fallback(zwf);
-    builder = builder.boundary_policy(bp);
+    builder = builder.weight_function(wf_str);
+    builder = builder.robustness_method(rm_str);
+    builder = builder.scaling_method(sm_str);
+    builder = builder.zero_weight_fallback(zwf_str);
+    builder = builder.boundary_policy(bp_str);
     builder = builder.parallel(parallel != 0);
 
     if !confidence_intervals.is_nan() {
@@ -505,7 +504,7 @@ pub unsafe extern "C" fn cpp_loess_new(
     if !degree.is_null() {
         let deg_str = parse_c_str(degree, "linear");
         match parse_polynomial_degree(deg_str) {
-            Ok(d) => builder = builder.degree(d),
+            Ok(_) => builder = builder.degree(deg_str),
             Err(_) => return ptr::null_mut(),
         }
     }
@@ -514,15 +513,19 @@ pub unsafe extern "C" fn cpp_loess_new(
     }
     if !distance_metric.is_null() {
         let dm_str = parse_c_str(distance_metric, "normalized");
-        match parse_distance_metric(dm_str) {
-            Ok(m) => builder = builder.distance_metric(m),
-            Err(_) => return ptr::null_mut(),
+        if dm_str.eq_ignore_ascii_case("weighted") {
+            builder = builder.distance_metric("weighted");
+        } else {
+            match parse_distance_metric(dm_str) {
+                Ok(_) => builder = builder.distance_metric(dm_str),
+                Err(_) => return ptr::null_mut(),
+            }
         }
     }
     if !surface_mode.is_null() {
         let sm_str = parse_c_str(surface_mode, "interpolation");
         match parse_surface_mode(sm_str) {
-            Ok(s) => builder = builder.surface_mode(s),
+            Ok(_) => builder = builder.surface_mode(sm_str),
             Err(_) => return ptr::null_mut(),
         }
     }
@@ -581,9 +584,11 @@ pub unsafe extern "C" fn cpp_loess_set_weighted_metric(
     let loess = unsafe { &mut *ptr };
     let slice = unsafe { std::slice::from_raw_parts(weights, n as usize) };
     if let Some(ref mut builder) = loess.builder {
+        let weights = slice.to_vec();
         *builder = builder
             .clone()
-            .distance_metric(DistanceMetric::Weighted(slice.to_vec()));
+            .distance_metric("weighted")
+            .weighted_metric_weights(weights);
     }
 }
 
@@ -637,9 +642,9 @@ pub unsafe extern "C" fn cpp_loess_set_cv_seed(ptr: *mut CppLoess, seed: c_ulong
     }
 }
 
-// Streaming model setters (must be called before the first process_chunk).
+// model setters (must be called before the first process_chunk).
 
-/// Set weighted-metric weights for a streaming model.
+/// Set weighted-metric weights for a model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppStreamingLoess` pointer. `weights` must be a
@@ -661,7 +666,7 @@ pub unsafe extern "C" fn cpp_streaming_set_weighted_metric(
     loess.weighted_metric = Some(w);
 }
 
-/// Set cell tuning parameter for a streaming model.
+/// Set cell tuning parameter for a model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppStreamingLoess` pointer.
@@ -675,7 +680,7 @@ pub unsafe extern "C" fn cpp_streaming_set_cell(ptr: *mut CppStreamingLoess, cel
     }
 }
 
-/// Set number of interpolation vertices for a streaming model.
+/// Set number of interpolation vertices for a model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppStreamingLoess` pointer.
@@ -692,7 +697,7 @@ pub unsafe extern "C" fn cpp_streaming_set_interpolation_vertices(
     }
 }
 
-/// Enable or disable boundary degree fallback for a streaming model.
+/// Enable or disable boundary degree fallback for a model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppStreamingLoess` pointer.
@@ -709,7 +714,7 @@ pub unsafe extern "C" fn cpp_streaming_set_boundary_degree_fallback(
     }
 }
 
-/// Set confidence interval level for a streaming model.
+/// Set confidence interval level for a model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppStreamingLoess` pointer.
@@ -726,7 +731,7 @@ pub unsafe extern "C" fn cpp_streaming_set_confidence_intervals(
     }
 }
 
-/// Set prediction interval level for a streaming model.
+/// Set prediction interval level for a model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppStreamingLoess` pointer.
@@ -743,9 +748,9 @@ pub unsafe extern "C" fn cpp_streaming_set_prediction_intervals(
     }
 }
 
-// Online model setters (must be called before the first add_points).
+// model setters (must be called before the first add_points).
 
-/// Set weighted-metric weights for an online model.
+/// Set weighted-metric weights for an model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer. `weights` must be a
@@ -767,7 +772,7 @@ pub unsafe extern "C" fn cpp_online_set_weighted_metric(
     loess.weighted_metric = Some(w);
 }
 
-/// Set cell tuning parameter for an online model.
+/// Set cell tuning parameter for an model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
@@ -781,7 +786,7 @@ pub unsafe extern "C" fn cpp_online_set_cell(ptr: *mut CppOnlineLoess, cell: c_d
     }
 }
 
-/// Set number of interpolation vertices for an online model.
+/// Set number of interpolation vertices for an model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
@@ -798,7 +803,7 @@ pub unsafe extern "C" fn cpp_online_set_interpolation_vertices(
     }
 }
 
-/// Enable or disable boundary degree fallback for an online model.
+/// Enable or disable boundary degree fallback for an model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
@@ -815,7 +820,7 @@ pub unsafe extern "C" fn cpp_online_set_boundary_degree_fallback(
     }
 }
 
-/// Set confidence interval level for an online model.
+/// Set confidence interval level for an model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
@@ -832,7 +837,7 @@ pub unsafe extern "C" fn cpp_online_set_confidence_intervals(
     }
 }
 
-/// Set prediction interval level for an online model.
+/// Set prediction interval level for an model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
@@ -849,7 +854,7 @@ pub unsafe extern "C" fn cpp_online_set_prediction_intervals(
     }
 }
 
-/// Fit the batch model.
+/// Fit the model.
 ///
 /// # Safety
 /// `ptr` must be a valid CppLoess pointer. `x` must be a valid array of length `x_n`
@@ -883,13 +888,17 @@ pub unsafe extern "C" fn cpp_loess_fit(
                 "simple" | "loo" | "loocv" | "leave_one_out" => {
                     builder = builder.cv_method("loocv");
                     builder = builder.cv_fractions(fractions.clone());
-                    if let Some(s) = seed { builder = builder.cv_seed(s); }
+                    if let Some(s) = seed {
+                        builder = builder.cv_seed(s);
+                    }
                 }
                 "kfold" | "k_fold" | "k-fold" => {
                     builder = builder.cv_method("kfold");
                     builder = builder.cv_k(loess.cv_k);
                     builder = builder.cv_fractions(fractions.clone());
-                    if let Some(s) = seed { builder = builder.cv_seed(s); }
+                    if let Some(s) = seed {
+                        builder = builder.cv_seed(s);
+                    }
                 }
                 _ => return error_result("Unknown CV method"),
             }
@@ -920,7 +929,7 @@ pub unsafe extern "C" fn cpp_loess_fit(
     }
 }
 
-/// Free batch model.
+/// Free model.
 ///
 /// # Safety
 /// `ptr` must be a valid pointer returned by `cpp_loess_new` or null.
@@ -931,7 +940,7 @@ pub unsafe extern "C" fn cpp_loess_free(ptr: *mut CppLoess) {
     }
 }
 
-/// Create a new Streaming Loess model.
+/// Create a new Loess model.
 ///
 /// # Safety
 /// Pointers must be valid null-terminated strings or null.
@@ -949,7 +958,7 @@ pub unsafe extern "C" fn cpp_streaming_new(
     zero_weight_fallback: *const c_char,
     auto_converge: c_double,
     parallel: c_int,
-    // Streaming opts
+    // opts
     chunk_size: c_int,
     overlap: c_int,
     merge_strategy: *const c_char,
@@ -967,24 +976,24 @@ pub unsafe extern "C" fn cpp_streaming_new(
     let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
     let ms_str = parse_c_str(merge_strategy, "weighted");
 
-    let wf = match parse_weight_function(wf_str) {
-        Ok(v) => v,
+    match parse_weight_function(wf_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let rm = match parse_robustness_method(rm_str) {
-        Ok(v) => v,
+    match parse_robustness_method(rm_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let sm = match parse_scaling_method(sm_str) {
-        Ok(v) => v,
+    match parse_scaling_method(sm_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let bp = match parse_boundary_policy(bp_str) {
-        Ok(v) => v,
+    match parse_boundary_policy(bp_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let zwf = match parse_zero_weight_fallback(zwf_str) {
-        Ok(v) => v,
+    match parse_zero_weight_fallback(zwf_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
     let ms = match parse_merge_strategy(ms_str) {
@@ -992,14 +1001,14 @@ pub unsafe extern "C" fn cpp_streaming_new(
         Err(_) => return ptr::null_mut(),
     };
 
-    let mut builder = LoessBuilder::<f64>::new();
+    let mut builder: LoessBuilder<f64> = LoessBuilder::new();
     builder = builder.fraction(fraction);
     builder = builder.iterations(iterations as usize);
-    builder = builder.weight_function(wf);
-    builder = builder.robustness_method(rm);
-    builder = builder.scaling_method(sm);
-    builder = builder.zero_weight_fallback(zwf);
-    builder = builder.boundary_policy(bp);
+    builder = builder.weight_function(wf_str);
+    builder = builder.robustness_method(rm_str);
+    builder = builder.scaling_method(sm_str);
+    builder = builder.zero_weight_fallback(zwf_str);
+    builder = builder.boundary_policy(bp_str);
     builder = builder.parallel(parallel != 0);
 
     if return_diagnostics != 0 {
@@ -1027,7 +1036,7 @@ pub unsafe extern "C" fn cpp_streaming_new(
     if !degree.is_null() {
         let deg_str = parse_c_str(degree, "linear");
         match parse_polynomial_degree(deg_str) {
-            Ok(d) => builder = builder.degree(d),
+            Ok(_) => builder = builder.degree(deg_str),
             Err(_) => return ptr::null_mut(),
         }
     }
@@ -1036,15 +1045,19 @@ pub unsafe extern "C" fn cpp_streaming_new(
     }
     if !distance_metric.is_null() {
         let dm_str = parse_c_str(distance_metric, "normalized");
-        match parse_distance_metric(dm_str) {
-            Ok(m) => builder = builder.distance_metric(m),
-            Err(_) => return ptr::null_mut(),
+        if dm_str.eq_ignore_ascii_case("weighted") {
+            builder = builder.distance_metric("weighted");
+        } else {
+            match parse_distance_metric(dm_str) {
+                Ok(_) => builder = builder.distance_metric(dm_str),
+                Err(_) => return ptr::null_mut(),
+            }
         }
     }
     if !surface_mode.is_null() {
         let sm_str = parse_c_str(surface_mode, "interpolation");
         match parse_surface_mode(sm_str) {
-            Ok(s) => builder = builder.surface_mode(s),
+            Ok(_) => builder = builder.surface_mode(sm_str),
             Err(_) => return ptr::null_mut(),
         }
     }
@@ -1093,7 +1106,8 @@ pub unsafe extern "C" fn cpp_streaming_process(
     {
         let mut b = loess.builder.clone();
         if let Some(wm) = loess.weighted_metric.clone() {
-            b = b.distance_metric(DistanceMetric::Weighted(wm));
+            b = b.distance_metric("weighted");
+            b = b.weighted_metric_weights(wm);
         }
         if let Some(c) = loess.cell {
             b = b.cell(c);
@@ -1128,11 +1142,11 @@ pub unsafe extern "C" fn cpp_streaming_process(
             Err(e) => error_result(&e.to_string()),
         }
     } else {
-        error_result("Streaming model initialization failed")
+        error_result(" model initialization failed")
     }
 }
 
-/// Finalize the streaming process.
+/// Finalize the process.
 ///
 /// # Safety
 /// `ptr` must be valid.
@@ -1148,11 +1162,11 @@ pub unsafe extern "C" fn cpp_streaming_finalize(ptr: *mut CppStreamingLoess) -> 
             Err(e) => error_result(&e.to_string()),
         }
     } else {
-        error_result("Streaming model not initialized")
+        error_result(" model not initialized")
     }
 }
 
-/// Free streaming model.
+/// Free model.
 ///
 /// # Safety
 /// `ptr` must be valid or null.
@@ -1163,7 +1177,7 @@ pub unsafe extern "C" fn cpp_streaming_free(ptr: *mut CppStreamingLoess) {
     }
 }
 
-/// Create a new Online Loess model.
+/// Create a new Loess model.
 ///
 /// # Safety
 /// Pointers must be valid null-terminated strings or null.
@@ -1181,7 +1195,7 @@ pub unsafe extern "C" fn cpp_online_new(
     zero_weight_fallback: *const c_char,
     auto_converge: c_double,
     parallel: c_int,
-    // Online opts
+    // opts
     window_capacity: c_int,
     min_points: c_int,
     update_mode: *const c_char,
@@ -1199,24 +1213,24 @@ pub unsafe extern "C" fn cpp_online_new(
     let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
     let um_str = parse_c_str(update_mode, "full");
 
-    let wf = match parse_weight_function(wf_str) {
-        Ok(v) => v,
+    match parse_weight_function(wf_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let rm = match parse_robustness_method(rm_str) {
-        Ok(v) => v,
+    match parse_robustness_method(rm_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let sm = match parse_scaling_method(sm_str) {
-        Ok(v) => v,
+    match parse_scaling_method(sm_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let bp = match parse_boundary_policy(bp_str) {
-        Ok(v) => v,
+    match parse_boundary_policy(bp_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
-    let zwf = match parse_zero_weight_fallback(zwf_str) {
-        Ok(v) => v,
+    match parse_zero_weight_fallback(zwf_str) {
+        Ok(_) => (),
         Err(_) => return ptr::null_mut(),
     };
     let um = match parse_update_mode(um_str) {
@@ -1224,14 +1238,14 @@ pub unsafe extern "C" fn cpp_online_new(
         Err(_) => return ptr::null_mut(),
     };
 
-    let mut builder = LoessBuilder::<f64>::new();
+    let mut builder: LoessBuilder<f64> = LoessBuilder::new();
     builder = builder.fraction(fraction);
     builder = builder.iterations(iterations as usize);
-    builder = builder.weight_function(wf);
-    builder = builder.robustness_method(rm);
-    builder = builder.scaling_method(sm);
-    builder = builder.zero_weight_fallback(zwf);
-    builder = builder.boundary_policy(bp);
+    builder = builder.weight_function(wf_str);
+    builder = builder.robustness_method(rm_str);
+    builder = builder.scaling_method(sm_str);
+    builder = builder.zero_weight_fallback(zwf_str);
+    builder = builder.boundary_policy(bp_str);
     builder = builder.parallel(parallel != 0);
 
     if return_robustness_weights != 0 {
@@ -1253,21 +1267,25 @@ pub unsafe extern "C" fn cpp_online_new(
     if !degree.is_null() {
         let deg_str = parse_c_str(degree, "linear");
         match parse_polynomial_degree(deg_str) {
-            Ok(d) => builder = builder.degree(d),
+            Ok(_) => builder = builder.degree(deg_str),
             Err(_) => return ptr::null_mut(),
         }
     }
     if !distance_metric.is_null() {
         let dm_str = parse_c_str(distance_metric, "normalized");
-        match parse_distance_metric(dm_str) {
-            Ok(m) => builder = builder.distance_metric(m),
-            Err(_) => return ptr::null_mut(),
+        if dm_str.eq_ignore_ascii_case("weighted") {
+            builder = builder.distance_metric("weighted");
+        } else {
+            match parse_distance_metric(dm_str) {
+                Ok(_) => builder = builder.distance_metric(dm_str),
+                Err(_) => return ptr::null_mut(),
+            }
         }
     }
     if !surface_mode.is_null() {
         let sm_str = parse_c_str(surface_mode, "interpolation");
         match parse_surface_mode(sm_str) {
-            Ok(s) => builder = builder.surface_mode(s),
+            Ok(_) => builder = builder.surface_mode(sm_str),
             Err(_) => return ptr::null_mut(),
         }
     }
@@ -1295,7 +1313,7 @@ pub unsafe extern "C" fn cpp_online_new(
     }))
 }
 
-/// Add points to online model.
+/// Add points to model.
 ///
 /// # Safety
 /// `ptr` must be valid. `x` must be a valid array of length `x_n` (= n_observations * dimensions),
@@ -1323,7 +1341,8 @@ pub unsafe extern "C" fn cpp_online_add_points(
     {
         let mut b = loess.builder.clone();
         if let Some(wm) = loess.weighted_metric.clone() {
-            b = b.distance_metric(DistanceMetric::Weighted(wm));
+            b = b.distance_metric("weighted");
+            b = b.weighted_metric_weights(wm);
         }
         if let Some(c) = loess.cell {
             b = b.cell(c);
@@ -1353,7 +1372,7 @@ pub unsafe extern "C" fn cpp_online_add_points(
     }
 
     if let Some(model) = &mut loess.model {
-        // The new LOESS online API processes one point at a time via add_point.
+        // The new LOESS API processes one point at a time via add_point.
         let mut smoothed = Vec::with_capacity(y_slice.len());
         for (&xi, &yi) in x_slice.iter().zip(y_slice.iter()) {
             match model.add_point(std::slice::from_ref(&xi), yi) {
@@ -1388,11 +1407,11 @@ pub unsafe extern "C" fn cpp_online_add_points(
         };
         result.into()
     } else {
-        error_result("Online model initialization failed")
+        error_result(" model initialization failed")
     }
 }
 
-/// Free online model.
+/// Free model.
 ///
 /// # Safety
 /// `ptr` must be valid or null.

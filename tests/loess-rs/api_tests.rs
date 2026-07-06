@@ -24,15 +24,15 @@
 use approx::assert_relative_eq;
 use std::fmt::Write;
 
-use loess_rs::internals::algorithms::regression::ZeroWeightFallback;
+use loess_rs::internals::algorithms::regression::PolynomialDegree;
 use loess_rs::internals::algorithms::robustness::RobustnessMethod;
 use loess_rs::internals::api::{
-    Batch, DistanceMetric, KFold, LOOCV, LoessBuilder as Loess, Online, PolynomialDegree, Streaming,
+    Batch, KFold, LOOCV, Loess, Online, OnlineLoess, Streaming, StreamingLoess,
 };
 use loess_rs::internals::engine::output::LoessResult;
 use loess_rs::internals::engine::validator::Validator;
 use loess_rs::internals::evaluation::diagnostics::Diagnostics;
-use loess_rs::internals::math::kernel::WeightFunction;
+use loess_rs::internals::math::distance::DistanceMetric;
 use loess_rs::internals::primitives::errors::LoessError;
 
 // ============================================================================
@@ -273,7 +273,7 @@ fn test_robustness_bisquare() {
         .iterations(5)
         .return_residuals()
         .return_robustness_weights()
-        .robustness_method(RobustnessMethod::Bisquare)
+        .robustness_method("bisquare")
         .adapter(Batch)
         .build()
         .unwrap()
@@ -307,7 +307,7 @@ fn test_robustness_huber() {
         .iterations(5)
         .return_residuals()
         .return_robustness_weights()
-        .robustness_method(RobustnessMethod::Huber)
+        .robustness_method("huber")
         .adapter(Batch)
         .build()
         .unwrap()
@@ -340,7 +340,7 @@ fn test_robustness_talwar() {
         .iterations(5)
         .return_residuals()
         .return_robustness_weights()
-        .robustness_method(RobustnessMethod::Talwar)
+        .robustness_method("talwar")
         .adapter(Batch)
         .build()
         .unwrap()
@@ -682,9 +682,10 @@ fn test_cross_validate_loocv() {
 /// Verifies that options are passed to streaming adapter.
 #[test]
 fn test_zero_weight_fallback_propagates_streaming() {
-    let base = Loess::<f64>::new().zero_weight_fallback(ZeroWeightFallback::ReturnOriginal);
-
-    let sb = base.adapter(Streaming).chunk_size(10).overlap(2);
+    let sb = StreamingLoess::<f64>::new()
+        .zero_weight_fallback("return_original")
+        .chunk_size(10)
+        .overlap(2);
     let mut runner = sb.build().expect("streaming builder build ok");
 
     let x = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
@@ -700,7 +701,7 @@ fn test_zero_weight_fallback_propagates_streaming() {
 /// Verifies that streaming adapter can build with default values.
 #[test]
 fn test_streaming_builds_with_defaults() {
-    let sb = Loess::<f64>::new().adapter(Streaming);
+    let sb = StreamingLoess::<f64>::new();
     assert!(sb.build().is_ok());
 }
 
@@ -709,7 +710,7 @@ fn test_streaming_builds_with_defaults() {
 /// Verifies that online adapter can build with default values.
 #[test]
 fn test_online_builds_with_defaults() {
-    let ob = Loess::<f64>::new().adapter(Online);
+    let ob = OnlineLoess::<f64>::new();
     assert!(ob.build().is_ok());
 }
 
@@ -718,9 +719,11 @@ fn test_online_builds_with_defaults() {
 /// Verifies that options are correctly passed to streaming mode.
 #[test]
 fn test_streaming_propagates_options() {
-    let base = Loess::<f64>::new().fraction(1.0).iterations(0);
-
-    let sb = base.adapter(Streaming).overlap(2).chunk_size(10);
+    let sb = StreamingLoess::<f64>::new()
+        .fraction(1.0)
+        .iterations(0)
+        .overlap(2)
+        .chunk_size(10);
     let mut runner = sb.build().expect("streaming builder build ok");
 
     let x = vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0];
@@ -736,8 +739,10 @@ fn test_streaming_propagates_options() {
 /// Verifies that options are correctly passed to online mode.
 #[test]
 fn test_online_propagates_options() {
-    let base = Loess::<f64>::new().fraction(1.0).iterations(0);
-    let ob = base.adapter(Online).window_capacity(5);
+    let ob = OnlineLoess::<f64>::new()
+        .fraction(1.0)
+        .iterations(0)
+        .window_capacity(5);
     let mut online = ob.build().expect("online builder build ok");
 
     assert_eq!(online.add_point(&[0.0], 1.0).expect("ok"), None);
@@ -829,8 +834,8 @@ fn test_builder_all_parameters_set() {
     let result = Loess::new()
         .fraction(0.4)
         .iterations(3)
-        .weight_function(WeightFunction::Tricube)
-        .robustness_method(RobustnessMethod::Bisquare)
+        .weight_function("tricube")
+        .robustness_method("bisquare")
         .return_se()
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
@@ -986,7 +991,7 @@ fn test_zero_iterations_with_robustness_method() {
     let (x, y) = linear_series(15, 2.0, 1.0);
 
     // With zero iterations, robustness method shouldn't matter
-    let methods = vec![RobustnessMethod::Huber, RobustnessMethod::Talwar];
+    let methods = vec!["huber", "talwar"];
 
     for method in methods {
         let result = Loess::new()
@@ -1098,7 +1103,7 @@ fn test_adapter_transition_preserves_common_params() {
     let builder = Loess::new()
         .fraction(0.6)
         .iterations(3)
-        .robustness_method(RobustnessMethod::Huber);
+        .robustness_method("huber");
 
     // Use with Batch
     let result = builder

@@ -21,6 +21,7 @@ use num_traits::Float;
 use loess_rs::internals::algorithms::regression::{
     PolynomialDegree, RegressionContext, SolverLinalg, ZeroWeightFallback,
 };
+use loess_rs::internals::api::{Batch, Streaming};
 use loess_rs::internals::math::distance::DistanceMetric;
 use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
@@ -771,7 +772,7 @@ fn test_nd_linear_2d_high_level() {
     let result = Loess::new()
         .dimensions(2)
         .fraction(0.8)
-        .degree(Linear)
+        .degree("linear")
         .interpolation_vertices(100)
         .adapter(Batch)
         .build()
@@ -817,7 +818,7 @@ fn test_nd_quadratic_2d_high_level() {
     let result = Loess::new()
         .dimensions(2)
         .fraction(1.0) // Use all points for better fit on simple quadratic
-        .degree(Quadratic)
+        .degree("quadratic")
         .interpolation_vertices(100)
         .adapter(Batch)
         .build()
@@ -852,7 +853,7 @@ fn test_nd_linear_3d_high_level() {
     let result = Loess::new()
         .dimensions(3)
         .fraction(0.5)
-        .degree(Linear)
+        .degree("linear")
         .interpolation_vertices(1331)
         .adapter(Batch)
         .build()
@@ -877,7 +878,7 @@ fn test_nd_distance_metrics() {
     // Euclidean
     let res_e = builder
         .clone()
-        .distance_metric(Euclidean)
+        .distance_metric("euclidean")
         .interpolation_vertices(100)
         .adapter(Batch)
         .build()
@@ -886,7 +887,7 @@ fn test_nd_distance_metrics() {
         .unwrap();
 
     // Manually if possible, but here we just check it runs
-    assert_eq!(res_e.distance_metric, Euclidean);
+    assert_eq!(res_e.distance_metric, DistanceMetric::Euclidean);
 }
 
 #[test]
@@ -932,7 +933,7 @@ fn test_nd_streaming_2d() {
     let mut model = Loess::new()
         .dimensions(2)
         .fraction(0.5)
-        .degree(Linear)
+        .degree("linear")
         .overlap(5)
         .chunk_size(10)
         .interpolation_vertices(121)
@@ -960,7 +961,7 @@ fn test_nd_intervals() {
     let result = Loess::new()
         .dimensions(2)
         .fraction(1.0)
-        .degree(Linear)
+        .degree("linear")
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .interpolation_vertices(100)
@@ -1014,8 +1015,8 @@ fn test_nd_boundary_reflect() {
     let res_no_pad = Loess::new()
         .dimensions(2)
         .fraction(0.5)
-        .degree(Linear)
-        .boundary_policy(Extend)
+        .degree("linear")
+        .boundary_policy("extend")
         .interpolation_vertices(121)
         .adapter(Batch)
         .build()
@@ -1027,8 +1028,8 @@ fn test_nd_boundary_reflect() {
     let res_reflect = Loess::new()
         .dimensions(2)
         .fraction(0.5)
-        .degree(Linear)
-        .boundary_policy(Reflect)
+        .degree("linear")
+        .boundary_policy("reflect")
         .interpolation_vertices(121)
         .adapter(Batch)
         .build()

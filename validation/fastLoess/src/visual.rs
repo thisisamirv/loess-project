@@ -123,8 +123,7 @@ fn run_fraction_comparison() -> Result<(), Box<dyn std::error::Error>> {
         let result = Loess::new()
             .fraction(frac)
             .iterations(2)
-            .boundary_policy(Reflect)
-            .adapter(Batch)
+            .boundary_policy("reflect")
             .build()
             .unwrap()
             .fit(&x, &y)
@@ -182,8 +181,7 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .fraction(0.3)
         .iterations(2)
         .confidence_intervals(0.95)
-        .boundary_policy(Reflect)
-        .adapter(Batch)
+        .boundary_policy("reflect")
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -194,8 +192,7 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .fraction(0.3)
         .iterations(2)
         .prediction_intervals(0.95)
-        .boundary_policy(Reflect)
-        .adapter(Batch)
+        .boundary_policy("reflect")
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -284,7 +281,6 @@ fn run_robust_iter_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let result_non_robust = Loess::new()
         .fraction(0.25)
         .iterations(0)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -294,7 +290,6 @@ fn run_robust_iter_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let result_robust = Loess::new()
         .fraction(0.25)
         .iterations(6)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -351,7 +346,6 @@ fn run_loess_concept() -> Result<(), Box<dyn std::error::Error>> {
     let result = Loess::new()
         .fraction(fraction)
         .iterations(0)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -453,34 +447,33 @@ fn run_kernel_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("--------------------");
 
     let kernels = [
-        Tricube,
-        Gaussian,
-        Uniform,
-        Cosine,
-        Epanechnikov,
-        Biweight,
-        Triangle,
+        "tricube",
+        "gaussian",
+        "uniform",
+        "cosine",
+        "epanechnikov",
+        "biweight",
+        "triangle",
     ];
     let mut results = Vec::new();
 
-    for &kernel in &kernels {
+    for kernel in &kernels {
         let result = Loess::new()
             .weight_function(kernel)
             .fraction(0.3)
-            .adapter(Batch)
             .build()
             .unwrap()
             .fit(&x, &y)
             .unwrap();
         results.push(result);
-        println!("  Kernel processed: {}", kernel.name());
+        println!("  Kernel processed: {}", kernel);
     }
 
     let path = "../output/visual/kernel_comparison.csv";
     let mut file = File::create(path)?;
     write!(file, "x,y_true,y_noisy")?;
     for kernel in &kernels {
-        write!(file, ",y_{}", kernel.name().to_lowercase())?;
+        write!(file, ",y_{}", kernel)?;
     }
     writeln!(file)?;
 
@@ -552,22 +545,21 @@ fn run_robust_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("8. Robustness Method Comparison");
     println!("-------------------------------");
 
-    let methods = [Bisquare, Huber, Talwar];
+    let methods = ["bisquare", "huber", "talwar"];
     let mut results = Vec::new();
 
-    for &method in &methods {
+    for method in &methods {
         let result = Loess::new()
             .robustness_method(method)
-            .scaling_method(Mean)
+            .scaling_method("mean")
             .iterations(5)
             .fraction(0.35)
-            .adapter(Batch)
             .build()
             .unwrap()
             .fit(&x, &y)
             .unwrap();
         results.push(result);
-        println!("  Method processed: {:?}", method);
+        println!("  Method processed: {}", method);
     }
 
     // Print RMSE for each method
@@ -617,20 +609,19 @@ fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("9. Boundary Policy Comparison");
     println!("-----------------------------");
 
-    let policies = [NoBoundary, Extend, Reflect];
+    let policies = ["noboundary", "extend", "reflect"];
     let mut results = Vec::new();
 
-    for &policy in &policies {
+    for policy in &policies {
         let result = Loess::new()
-            .boundary_policy(policy)
+            .boundary_policy(*policy)
             .fraction(0.4) // Larger fraction highlights boundary bias
-            .adapter(Batch)
             .build()
             .unwrap()
             .fit(&x, &y)
             .unwrap();
         results.push(result);
-        println!("  Policy processed: {:?}", policy);
+        println!("  Policy processed: {}", policy);
     }
 
     let path = "../output/visual/boundary_comparison.csv";
@@ -670,7 +661,6 @@ fn run_gap_handling() -> Result<(), Box<dyn std::error::Error>> {
 
     let result = Loess::new()
         .fraction(0.3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -725,7 +715,6 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let loocv_result = Loess::new()
         .cv_method("loocv")
         .cv_fractions(candidate_fractions.to_vec())
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -738,7 +727,6 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
         .cv_k(5)
         .cv_fractions(candidate_fractions.to_vec())
         .cv_seed(42)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -748,7 +736,6 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
     // 3. No CV (Fixed bad fraction - too large, over-smoothing)
     let fixed_result = Loess::new()
         .fraction(0.8) // Over-smoothing deliberately
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -814,9 +801,8 @@ fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
     // Direct: evaluates the local polynomial at every one of the n points.
     let result_direct = Loess::new()
-        .surface_mode(Direct)
+        .surface_mode("direct")
         .fraction(0.3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -826,10 +812,9 @@ fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
     // only computed at these vertices; all other x-values are obtained via
     // Hermite cubic blending, introducing a small but measurable error.
     let result_interp = Loess::new()
-        .surface_mode(Interpolation)
+        .surface_mode("interpolation")
         .cell(0.5)
         .fraction(0.3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -905,7 +890,6 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let result_none = Loess::new()
         .iterations(0)
         .fraction(0.3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -913,10 +897,9 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
     // MAR: tight threshold (≈ clean noise level) → rejects both outlier tiers.
     let result_mar = Loess::new()
-        .scaling_method(MAR)
+        .scaling_method("mar")
         .iterations(5)
         .fraction(0.3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -925,10 +908,9 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
     // MAD (default): centers on median residual first → same tight threshold as
     // MAR for this data (median(r) ≈ 0 since 60 % clean dominates).
     let result_mad = Loess::new()
-        .scaling_method(MAD)
+        .scaling_method("mad")
         .iterations(5)
         .fraction(0.3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -937,10 +919,9 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
     // Mean (MAE): extreme outliers inflate the scale → looser threshold →
     // moderate outliers partially retained → fit between MAR and None.
     let result_mean = Loess::new()
-        .scaling_method(Mean)
+        .scaling_method("mean")
         .iterations(5)
         .fraction(0.3)
-        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -1070,25 +1051,24 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
     println!("15. Zero Weight Fallback Comparison");
     println!("------------------------------------");
 
-    let make_fit = |fallback| {
+    let make_fit = |fallback: &str| {
         Loess::new()
             .iterations(2) // 1 OLS + 1 WLS — fallback fires before IRLS can propagate
             .fraction(0.10)
-            .surface_mode(Direct)
-            .robustness_method(Talwar)
+            .surface_mode("direct")
+            .robustness_method("talwar")
             .zero_weight_fallback(fallback)
-            .boundary_policy(NoBoundary)
+            .boundary_policy("noboundary")
             .return_robustness_weights()
-            .adapter(Batch)
             .build()
             .unwrap()
             .fit(&x, &y)
             .unwrap()
     };
 
-    let fit_lm = make_fit(UseLocalMean);
-    let fit_ro = make_fit(ReturnOriginal);
-    let fit_rn = make_fit(ReturnNone);
+    let fit_lm = make_fit("use_local_mean");
+    let fit_ro = make_fit("return_original");
+    let fit_rn = make_fit("return_none");
 
     // Report how many points were driven to zero robustness weight
     if let Some(ref rw) = fit_lm.robustness_weights {
@@ -1168,27 +1148,24 @@ fn run_merge_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("16. Streaming Comparison (Strategies)");
     println!("-----------------------------------");
 
-    let mut streaming_weighted = Loess::new()
-        .adapter(Streaming)
+    let mut streaming_weighted = StreamingLoess::new()
         .chunk_size(chunk_size)
         .overlap(overlap)
-        .merge_strategy(WeightedAverage)
+        .merge_strategy("weighted_average")
         .fraction(0.8)
         .build()?;
 
-    let mut streaming_average = Loess::new()
-        .adapter(Streaming)
+    let mut streaming_average = StreamingLoess::new()
         .chunk_size(chunk_size)
         .overlap(overlap)
-        .merge_strategy(Average)
+        .merge_strategy("average")
         .fraction(0.8)
         .build()?;
 
-    let mut streaming_first = Loess::new()
-        .adapter(Streaming)
+    let mut streaming_first = StreamingLoess::new()
         .chunk_size(chunk_size)
         .overlap(overlap)
-        .merge_strategy(TakeFirst)
+        .merge_strategy("take_first")
         .fraction(0.8)
         .build()?;
 
@@ -1266,21 +1243,19 @@ fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("------------------------------");
 
     // 1. Small window — fast/responsive but noisier
-    let mut adapter_small = Loess::new()
-        .adapter(Online)
+    let mut adapter_small = OnlineLoess::new()
         .window_capacity(30)
         .min_points(10)
-        .update_mode(Incremental)
+        .update_mode("incremental")
         .fraction(0.9)
         .build()
         .unwrap();
 
     // 2. Large window — smooth but slow to adapt (lags behind at shifts)
-    let mut adapter_large = Loess::new()
-        .adapter(Online)
+    let mut adapter_large = OnlineLoess::new()
         .window_capacity(300)
         .min_points(10)
-        .update_mode(Full)
+        .update_mode("full")
         .fraction(0.3)
         .iterations(3)
         .build()
@@ -1348,37 +1323,33 @@ fn run_adapter_comparison() -> Result<(), Box<dyn std::error::Error>> {
     // 1. Batch
     let res_b_off = Loess::new()
         .fraction(frac)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .iterations(iterations)
-        .adapter(Batch)
         .build()?
         .fit(&x, &y)?;
     let res_b_on = Loess::new()
         .fraction(frac)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .iterations(iterations)
         .auto_converge(tolerance)
-        .adapter(Batch)
         .build()?
         .fit(&x, &y)?;
 
     // 2. Streaming
-    let mut stream_off = Loess::new()
+    let mut stream_off = StreamingLoess::new()
         .fraction(frac)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .iterations(iterations)
         .chunk_size(chunk_size)
         .overlap(overlap)
-        .adapter(Streaming)
         .build()?;
-    let mut stream_on = Loess::new()
+    let mut stream_on = StreamingLoess::new()
         .fraction(frac)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .iterations(iterations)
         .auto_converge(tolerance)
         .chunk_size(chunk_size)
         .overlap(overlap)
-        .adapter(Streaming)
         .build()?;
 
     let mut y_s_off: Vec<f64> = Vec::new();
@@ -1416,22 +1387,20 @@ fn run_adapter_comparison() -> Result<(), Box<dyn std::error::Error>> {
     iter_s_on.extend(vec![iters_fin_on; n_fin]);
 
     // 3. Online
-    let mut online_off = Loess::new()
+    let mut online_off = OnlineLoess::new()
         .fraction(frac)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .iterations(iterations)
         .window_capacity(50)
-        .update_mode(Full)
-        .adapter(Online)
+        .update_mode("full")
         .build()?;
-    let mut online_on = Loess::new()
+    let mut online_on = OnlineLoess::new()
         .fraction(frac)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .iterations(iterations)
         .auto_converge(tolerance)
         .window_capacity(50)
-        .update_mode(Full)
-        .adapter(Online)
+        .update_mode("full")
         .build()?;
 
     let mut y_o_off = Vec::new();
@@ -1501,9 +1470,8 @@ fn run_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let result_linear = Loess::new()
         .fraction(0.25)
         .iterations(2)
-        .degree(Linear)
-        .boundary_policy(Reflect)
-        .adapter(Batch)
+        .degree("linear")
+        .boundary_policy("reflect")
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -1512,9 +1480,8 @@ fn run_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let result_quadratic = Loess::new()
         .fraction(0.25)
         .iterations(2)
-        .degree(Quadratic)
-        .boundary_policy(Reflect)
-        .adapter(Batch)
+        .degree("quadratic")
+        .boundary_policy("reflect")
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -1597,22 +1564,16 @@ fn run_higher_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
     println!("6. Higher Degree Comparison (Linear / Quadratic / Cubic / Quartic)");
     println!("--------------------------------------------------------------------");
 
-    let degrees = [
-        (Linear, "Linear"),
-        (Quadratic, "Quadratic"),
-        (Cubic, "Cubic"),
-        (Quartic, "Quartic"),
-    ];
+    let degrees = ["linear", "quadratic", "cubic", "quartic"];
     let mut results = Vec::new();
 
-    for (deg, name) in &degrees {
+    for &name in &degrees {
         let result = Loess::new()
             .fraction(0.40)
             .iterations(0)
-            .degree(*deg)
-            .surface_mode(Direct)
-            .boundary_policy(NoBoundary)
-            .adapter(Batch)
+            .degree(name)
+            .surface_mode("direct")
+            .boundary_policy("noboundary")
             .build()
             .unwrap()
             .fit(&x, &y)
@@ -1694,9 +1655,8 @@ fn run_multivariate_loess() -> Result<(), Box<dyn std::error::Error>> {
         .fraction(0.15)
         .iterations(1)
         .dimensions(2)
-        .distance_metric(Euclidean)
-        .boundary_policy(NoBoundary)
-        .adapter(Batch)
+        .distance_metric("euclidean")
+        .boundary_policy("noboundary")
         .build()
         .unwrap()
         .fit(&x_combined, &z_noisy_vec)
@@ -1745,10 +1705,10 @@ fn run_degree_interpolation_comparison() -> Result<(), Box<dyn std::error::Error
     println!("---------------------------------");
 
     let degrees = [
-        (Linear, "Linear"),
-        (Quadratic, "Quadratic"),
-        (Cubic, "Cubic"),
-        (Quartic, "Quartic"),
+        ("linear", "Linear"),
+        ("quadratic", "Quadratic"),
+        ("cubic", "Cubic"),
+        ("quartic", "Quartic"),
     ];
 
     let mut results: Vec<(Vec<f64>, Vec<f64>)> = Vec::new();
@@ -1756,15 +1716,13 @@ fn run_degree_interpolation_comparison() -> Result<(), Box<dyn std::error::Error
         let direct = Loess::new()
             .fraction(0.3)
             .degree(*deg)
-            .surface_mode(Direct)
-            .adapter(Batch)
+            .surface_mode("direct")
             .build()?
             .fit(&x, &y_noisy)?;
         let interp = Loess::new()
             .fraction(0.3)
             .degree(*deg)
-            .surface_mode(Interpolation)
-            .adapter(Batch)
+            .surface_mode("interpolation")
             .build()?
             .fit(&x, &y_noisy)?;
         let max_diff = direct

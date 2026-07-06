@@ -86,48 +86,48 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 ### Loess Options
 
-| Method | Argument Type | Default | Description |
-| --- | --- | --- | --- |
-| `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
-| `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
-| `weight_function(...)` | `weight_function` | `Tricube` | Kernel weight function enum |
-| `robustness_method(...)` | `robustness_method` | `Bisquare` | Robustness method enum |
-| `scaling_method(...)` | `scaling_method` | `MAD` | Residual scaling method enum |
-| `boundary_policy(...)` | `boundary_policy` | `Extend` | Boundary handling policy enum |
-| `zero_weight_fallback(...)` | `zero_weight_fallback` | `UseLocalMean` | Zero-weight handling enum |
-| `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
-| `custom_weights(Vec<T>)` | `Vec<T>` | disabled | Per-observation case weights (Batch only) |
-| `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) |
-| `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) |
-| `return_diagnostics()` | — | `false` | Compute RMSE, MAE, R², AIC |
-| `return_residuals()` | — | `false` | Include residuals in result |
-| `return_robustness_weights()` | — | `false` | Include robustness weights in result |
-| `return_se()` | — | `false` | Compute hat-matrix statistics (enp, leverage …) |
-| `parallel(bool)` | `bool` | `true` | Enable parallel execution |
-| `degree(...)` | `PolynomialDegree` | `Linear` | Polynomial degree enum |
-| `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
-| `distance_metric(...)` | `distance_metric<T>` | `Normalized` | Distance metric enum |
-| `surface_mode(...)` | `surface_mode` | `Interpolation` | Surface computation mode enum |
-| `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
-| `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
-| `boundary_degree_fallback(bool)` | `bool` | disabled | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cross_validate(...)` | `impl CrossValidation` | disabled | CV strategy: `KFold { k, fractions, seed }` or `LOOCV { fractions }` |
+| Method | Default | Description |
+| --- | --- | --- |
+| `fraction(T)` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations(usize)` | `3` | Number of robustifying iterations |
+| `weight_function(...)` | `"tricube"` | Kernel weight function |
+| `robustness_method(...)` | `"bisquare"` | Robustness method |
+| `scaling_method(...)` | `"mad"` | Residual scaling method |
+| `boundary_policy(...)` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback(...)` | `"use_local_mean"` | Zero-weight handling |
+| `auto_converge(T)` | disabled | Auto-convergence tolerance |
+| `custom_weights(Vec<T>)` | disabled | Per-observation case weights (Batch only) |
+| `confidence_intervals(T)` | disabled | Confidence level (e.g., 0.95) |
+| `prediction_intervals(T)` | disabled | Prediction level (e.g., 0.95) |
+| `return_diagnostics()` | `false` | Compute RMSE, MAE, R², AIC |
+| `return_residuals()` | `false` | Include residuals in result |
+| `return_robustness_weights()` | `false` | Include robustness weights in result |
+| `return_se()` | `false` | Compute hat-matrix statistics (enp, leverage …) |
+| `parallel(bool)` | `true` | Enable parallel execution |
+| `degree(...)` | `"linear"` | Polynomial degree |
+| `dimensions(usize)` | `1` | Number of predictor dimensions |
+| `distance_metric(...)` | `"normalized"` | Distance metric |
+| `surface_mode(...)` | `"interpolation"` | Surface computation mode |
+| `cell(T)` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
+| `interpolation_vertices(usize)` | disabled | Number of interpolation vertices |
+| `boundary_degree_fallback(bool)` | disabled | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `cross_validate(...)` | disabled | CV strategy: `KFold { k, fractions, seed }` or `LOOCV { fractions }` |
 
 ### Streaming Options
 
-| Method | Argument Type | Default | Description |
-| --- | --- | --- | --- |
-| `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
-| `overlap(usize)` | `usize` | auto (10%) | Overlap between chunks |
-| `merge_strategy(...)` | `merge_strategy` | `WeightedAverage` | Strategy for blending overlap regions |
+| Method | Default | Description |
+| --- | --- | --- |
+| `chunk_size(usize)` | `5000` | Data chunk size |
+| `overlap(usize)` | auto (10%) | Overlap between chunks |
+| `merge_strategy(...)` | `"weighted_average"` | Strategy for blending overlap regions |
 
 ### Online Options
 
-| Method | Argument Type | Default | Description |
-| --- | --- | --- | --- |
-| `window_capacity(usize)` | `usize` | `100` | Max points in sliding window |
-| `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
-| `update_mode(...)` | `update_mode` | `Full` | Update strategy enum |
+| Method | Default | Description |
+| --- | --- | --- |
+| `window_capacity(usize)` | `100` | Max points in sliding window |
+| `min_points(usize)` | `2` | Min points before smoothing starts |
+| `update_mode(...)` | `"full"` | Update strategy |
 
 ## Result Structure
 
@@ -170,85 +170,76 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `aic` | `T` | AIC |
 | `aicc` | `T` | AICc |
 
-## Enum Options
+## String Options
 
 ### weight_function
 
-* `Tricube` (default)
-* `Epanechnikov`
-* `Gaussian`
-* `Uniform`
-* `Biweight`
-* `Triangle`
-* `Cosine`
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
+* `"cosine"`
 
 ### robustness_method
 
-* `Bisquare` (default)
-* `Huber`
-* `Talwar`
+* `"bisquare"` (default; alias: `"biweight"`)
+* `"huber"`
+* `"talwar"`
 
 ### boundary_policy
 
-* `Extend` (default - linear extrapolation)
-* `Reflect`
-* `Zero`
-* `NoBoundary`
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
+* `"zero"` (alias: `"none"`)
+* `"noboundary"`
 
 ### scaling_method
 
-* `MAD` (default — Median Absolute Deviation)
-* `MAR` (Median Absolute Residual)
-* `Mean` (Mean Absolute Residual)
+* `"mad"` (default — Median Absolute Deviation)
+* `"mar"` (Median Absolute Residual)
+* `"mean"` (Mean Absolute Residual)
 
 ### zero_weight_fallback
 
-* `UseLocalMean` (default)
-* `ReturnOriginal`
-* `ReturnNone`
-
-### distance_metric\<T\>
-
-* `Normalized` (default — scales each dimension by its range)
-* `Euclidean`
-* `Manhattan`
-* `Chebyshev`
-* `Minkowski(T)` — weighted p-norm; use e.g. `Minkowski(3.0)` for a custom p value
-* `Weighted(Vec<T>)` — weighted Euclidean distance; provide a `Vec` of per-dimension scaling weights
-
-### PolynomialDegree
-
-* `Constant` (degree 0)
-* `Linear` (default, degree 1)
-* `Quadratic` (degree 2)
-* `Cubic` (degree 3)
-* `Quartic` (degree 4)
-
-### surface_mode
-
-* `Interpolation` (default — faster, uses a spatial grid)
-* `Direct` (fits every point exactly; slower but more accurate)
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (aliases: `"none"`, `"nan"`)
 
 ### distance_metric
 
-* `Normalized` (default — scales each dimension by its range)
-* `Euclidean`
-* `Manhattan`
-* `Chebyshev`
-* `Minkowski(T)` (custom exponent)
-* `Weighted(Vec<T>)` (per-dimension scale weights)
+* `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+* `"euclidean"` (alias: `"euclid"`)
+* `"manhattan"` (alias: `"l1"`)
+* `"chebyshev"` (alias: `"linf"`)
+* `"minkowski"` or `"minkowski:p"` for a custom exponent
+* `"weighted"` plus `.weighted_metric_weights(vec![...])`
+
+### PolynomialDegree
+
+* `"constant"` or `"0"` (degree 0)
+* `"linear"` or `"1"` (default, degree 1)
+* `"quadratic"` or `"2"` (degree 2)
+* `"cubic"` or `"3"` (degree 3)
+* `"quartic"` or `"4"` (degree 4)
+
+### surface_mode
+
+* `"interpolation"` (default; alias: `"interp"`)
+* `"direct"` (fits every point exactly; slower but more accurate)
 
 ### merge_strategy
 
-* `WeightedAverage` (default — weighted blend of overlapping regions)
-* `Average` (simple mean of overlapping regions)
-* `TakeFirst` (keep values from the earlier chunk)
-* `TakeLast` (keep values from the later chunk)
+* `"weighted_average"` (default — weighted blend of overlapping regions)
+* `"average"` (simple mean of overlapping regions)
+* `"take_first"` (keep values from the earlier chunk)
+* `"take_last"` (keep values from the later chunk)
 
 ### update_mode
 
-* `Full` (default — re-smooth entire window each update)
-* `Incremental` (faster, O(1) incremental update)
+* `"full"` (default — re-smooth entire window each update)
+* `"incremental"` (faster, O(1) incremental update)
 
 ## Example
 
