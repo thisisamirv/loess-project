@@ -1,3 +1,3 @@
 # Contributing to rfastloess
 
-For contribution guidelines, please refer to the [CONTRIBUTING.md](https://github.com/thisisamirv/loess-project/blob/main/CONTRIBUTING.md) file in the root directory.
+For contribution guidelines, please see the [Contributing Guide](https://loess.readthedocs.io/contributing/) in the docs.

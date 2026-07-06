@@ -75,7 +75,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **2-3x faster** than R's `loess`.
 
-For more details on the performance comparison, see the [BENCHMARKS](https://github.com/thisisamirv/loess-project/blob/main/BENCHMARKS.md) file.
+For more details on the performance comparison, see the [Benchmarks](https://loess.readthedocs.io/benchmarks/) page.
 
 ### Robustness
 
@@ -431,7 +431,11 @@ result.cv_scores()
 
 ## Contributing
 
-Contributions are welcome! Please see the [CONTRIBUTING.md](https://github.com/thisisamirv/loess-project/blob/main/CONTRIBUTING.md) file for more information.
+Contributions are welcome! Please see the [Contributing Guide](https://loess.readthedocs.io/contributing/) for more information.
+
+## Changelog
+
+See the [Changelog](https://loess.readthedocs.io/changelog/) for a history of changes.
 
 ## License
 
