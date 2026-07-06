@@ -194,7 +194,7 @@ Remove trend to analyze residual patterns:
     const result = new fl.Loess({
         fraction: 0.3,
         iterations: 3,
-        returnResiduals: true
+        return_residuals: true
     }).fit(t, y);
 
     const trend = result.y;
@@ -208,7 +208,7 @@ Remove trend to analyze residual patterns:
     const result = new Loess({ 
         fraction: 0.3, 
         iterations: 3, 
-        returnResiduals: true 
+        return_residuals: true 
     }).fit(t, y);
 
     // Access result.y (trend) and result.residuals (detrended)
@@ -304,7 +304,7 @@ Remove trend to analyze residual patterns:
     const result = fl.Loess({
         fraction: 0.2,
         iterations: 3,
-        predictionIntervals: 0.95
+        prediction_intervals: 0.95
     }).fit(t, y);
 
     console.log(`95% PI: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
@@ -317,7 +317,7 @@ Remove trend to analyze residual patterns:
     const result = new Loess({
         fraction: 0.2,
         iterations: 3,
-        predictionIntervals: 0.95
+        prediction_intervals: 0.95
     }).fit(t, y);
 
     // Access result.predictionLower() and result.predictionUpper()
@@ -596,10 +596,10 @@ Biological application:
     const result = new fl.Loess({
         fraction: 0.3,
         iterations: 3,
-        returnDiagnostics: true
+        return_diagnostics: true
     }).fit(hours, expression);
 
-    console.log(`R²: ${result.diagnostics.rSquared.toFixed(3)}`);
+    console.log(`R²: ${result.diagnostics.r_squared.toFixed(3)}`);
     ```
 
 === "WebAssembly"
@@ -609,10 +609,10 @@ Biological application:
     const result = new Loess({
         fraction: 0.3,
         iterations: 3,
-        returnDiagnostics: true
+        return_diagnostics: true
     }).fit(hours, expression);
 
-    console.log("R²:", result.diagnostics.rSquared);
+    console.log("R²:", result.diagnostics.r_squared);
     ```
 
 === "C++"
@@ -626,7 +626,7 @@ Biological application:
     });
     auto result = gene_model.fit(hours, expression).value();
 
-    std::cout << "R²: " << result.diagnostics().rSquared() << std::endl;
+    std::cout << "R²: " << result.diagnostics().r_squared() << std::endl;
     ```
 
 ---

@@ -23,6 +23,7 @@ use std::vec::Vec;
 // External dependencies
 use core::cmp::Ordering::Equal;
 use core::fmt::Debug;
+use core::str::FromStr;
 use num_traits::Float;
 
 // Internal dependencies
@@ -43,6 +44,7 @@ use crate::primitives::backend::Backend;
 use crate::primitives::buffer::{
     CachedNeighborhood, FittingBuffer, LoessBuffer, NeighborhoodSearchBuffer,
 };
+use crate::primitives::errors::LoessError;
 use crate::primitives::window::Window;
 
 // Standard LOESS distance calculator.
@@ -117,6 +119,22 @@ pub enum SurfaceMode {
 
     // Use direct per-point fitting for maximum accuracy.
     Direct,
+}
+
+impl FromStr for SurfaceMode {
+    type Err = LoessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
+            "direct" => Ok(SurfaceMode::Direct),
+            _ => Err(LoessError::InvalidOption {
+                option: "surface_mode",
+                value: s.to_string(),
+                valid: "interpolation, direct",
+            }),
+        }
+    }
 }
 
 // Signature for custom smooth pass function

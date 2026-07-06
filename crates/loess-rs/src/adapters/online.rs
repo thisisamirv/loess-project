@@ -45,6 +45,22 @@ pub enum UpdateMode {
     Incremental,
 }
 
+impl core::str::FromStr for UpdateMode {
+    type Err = LoessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "full" | "resmooth" => Ok(UpdateMode::Full),
+            "incremental" | "single" => Ok(UpdateMode::Incremental),
+            _ => Err(LoessError::InvalidOption {
+                option: "update_mode",
+                value: s.to_string(),
+                valid: "full, incremental",
+            }),
+        }
+    }
+}
+
 // Builder for online LOESS processor.
 #[derive(Debug, Clone)]
 pub struct OnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {

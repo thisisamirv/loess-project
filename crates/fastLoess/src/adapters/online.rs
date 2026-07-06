@@ -9,18 +9,17 @@
 //! @srrstats {G1.6} Sliding window with optional parallel re-smoothing.
 //! @srrstats {G2.1} Configurable min_points threshold before smoothing starts.
 
-// Imports
-use crate::engine::executor::{smooth_pass_parallel, vertex_pass_parallel};
-use crate::evaluation::cv::cv_pass_parallel;
-use crate::evaluation::intervals::interval_pass_parallel;
-
 // External dependencies
 use num_traits::Float;
 use std::fmt::Debug;
 use std::result::Result;
 
 // Internal dependencies
+use crate::engine::executor::{smooth_pass_parallel, vertex_pass_parallel};
+use crate::evaluation::cv::cv_pass_parallel;
+use crate::evaluation::intervals::interval_pass_parallel;
 use crate::math::neighborhood::build_kdtree_parallel;
+use crate::parse::IntoEnum;
 
 // Export dependencies from loess-rs crate
 use loess_rs::internals::adapters::online::{OnlineLoessBuilder, OnlineOutput, UpdateMode};
@@ -43,6 +42,10 @@ use loess_rs::internals::primitives::errors::LoessError;
 pub struct ParallelOnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     // Base builder from the loess-rs crate
     pub base: OnlineLoessBuilder<T>,
+    // Parse errors from string-accepting builder methods; reported together by `build()`.
+    pub(crate) parse_errors: Vec<LoessError>,
+    // Pending weighted distance metric weights (applied at build time).
+    pub(crate) weighted_metric_weights: Option<Vec<T>>,
 }
 
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Default
@@ -61,7 +64,11 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         let mut base = OnlineLoessBuilder::default();
         // Default to false for online (latency-sensitive)
         base.parallel = Some(false);
-        Self { base }
+        Self {
+            base,
+            parse_errors: Vec::new(),
+            weighted_metric_weights: None,
+        }
     }
 
     // Set parallel execution mode.
@@ -89,38 +96,62 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     }
 
     // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: WeightFunction) -> Self {
-        self.base.weight_function = wf;
+    #[allow(private_bounds)]
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
+        match wf.into_enum() {
+            Ok(w) => self.base.weight_function = w,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the robustness method for outlier handling.
-    pub fn robustness_method(mut self, method: RobustnessMethod) -> Self {
-        self.base.robustness_method = method;
+    #[allow(private_bounds)]
+    pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.robustness_method = m,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the residual scaling method (MAR/MAD).
-    pub fn scaling_method(mut self, method: ScalingMethod) -> Self {
-        self.base.scaling_method = method;
+    #[allow(private_bounds)]
+    pub fn scaling_method(mut self, method: impl IntoEnum<ScalingMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.scaling_method = m,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the zero-weight fallback policy.
-    pub fn zero_weight_fallback(mut self, fallback: ZeroWeightFallback) -> Self {
-        self.base.zero_weight_fallback = fallback;
+    #[allow(private_bounds)]
+    pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
+        match fallback.into_enum() {
+            Ok(f) => self.base.zero_weight_fallback = f,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
-        self.base.boundary_policy = policy;
+    #[allow(private_bounds)]
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(p) => self.base.boundary_policy = p,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the polynomial degree.
-    pub fn polynomial_degree(mut self, degree: PolynomialDegree) -> Self {
-        self.base.polynomial_degree = degree;
+    #[allow(private_bounds)]
+    pub fn polynomial_degree(mut self, degree: impl IntoEnum<PolynomialDegree>) -> Self {
+        match degree.into_enum() {
+            Ok(d) => self.base.polynomial_degree = d,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
@@ -131,14 +162,22 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     }
 
     // Set the distance metric.
-    pub fn distance_metric(mut self, metric: DistanceMetric<T>) -> Self {
-        self.base.distance_metric = metric;
+    #[allow(private_bounds)]
+    pub fn distance_metric(mut self, metric: impl IntoEnum<DistanceMetric<T>>) -> Self {
+        match metric.into_enum() {
+            Ok(m) => self.base.distance_metric = m,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the surface evaluation mode (Direct or Interpolation).
-    pub fn surface_mode(mut self, mode: SurfaceMode) -> Self {
-        self.base.surface_mode = mode;
+    #[allow(private_bounds)]
+    pub fn surface_mode(mut self, mode: impl IntoEnum<SurfaceMode>) -> Self {
+        match mode.into_enum() {
+            Ok(m) => self.base.surface_mode = m,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
@@ -191,13 +230,41 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     }
 
     // Set the update mode (Incremental/Full).
-    pub fn update_mode(mut self, mode: UpdateMode) -> Self {
-        self.base.update_mode = mode;
+    #[allow(private_bounds)]
+    pub fn update_mode(mut self, mode: impl IntoEnum<UpdateMode>) -> Self {
+        match mode.into_enum() {
+            Ok(m) => self.base.update_mode = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set per-dimension weights for the `"weighted"` distance metric.
+    pub fn weighted_metric_weights(mut self, weights: Vec<T>) -> Self {
+        self.weighted_metric_weights = Some(weights);
         self
     }
 
     // Build the online processor.
-    pub fn build(self) -> Result<ParallelOnlineLoess<T>, LoessError> {
+    pub fn build(mut self) -> Result<ParallelOnlineLoess<T>, LoessError> {
+        // Check for parse errors from string builder methods
+        if !self.parse_errors.is_empty() {
+            return Err(LoessError::ParseErrors(self.parse_errors));
+        }
+
+        // Apply weighted_metric_weights
+        if let Some(weights) = self.weighted_metric_weights.take() {
+            self.base.distance_metric = DistanceMetric::Weighted(weights);
+        } else if let DistanceMetric::Weighted(ref w) = self.base.distance_metric {
+            if w.is_empty() {
+                return Err(LoessError::InvalidOption {
+                    option: "distance_metric",
+                    value: "weighted".to_string(),
+                    valid: "use .weighted_metric_weights(vec![...]) to supply per-dimension weights",
+                });
+            }
+        }
+
         // Check for deferred errors from adapter conversion
         if let Some(ref err) = self.base.deferred_error {
             return Err(err.clone());

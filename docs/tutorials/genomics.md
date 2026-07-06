@@ -131,7 +131,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     const result = new fl.Loess({
         fraction: 0.1,
         iterations: 3,
-        confidenceIntervals: 0.95
+        confidence_intervals: 0.95
     }).fit(positions, observed);
 
     // Smoothed profile in result.y
@@ -146,7 +146,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     const result = new Loess({
         fraction: 0.1,
         iterations: 3,
-        confidenceIntervals: 0.95
+        confidence_intervals: 0.95
     }).fit(positions, observed);
 
     // Smoothed profile in result.y
@@ -377,7 +377,7 @@ For whole-genome data that doesn't fit in memory:
 
     const processor = new StreamingLoess(
         { fraction: 0.05, iterations: 3 },
-        { chunkSize: 100000, overlap: 10000 }
+        { chunk_size: 100000, overlap: 10000 }
     );
 
     // Process genomic chunks from stream or file
@@ -393,7 +393,7 @@ For whole-genome data that doesn't fit in memory:
 
     const processor = new StreamingLoess(
         { fraction: 0.05, iterations: 3 },
-        { chunkSize: 100000, overlap: 10000 }
+        { chunk_size: 100000, overlap: 10000 }
     );
 
     // Process chunks

@@ -723,7 +723,8 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
     // 1. LOOCV
     let loocv_result = Loess::new()
-        .cross_validate(LOOCV(&candidate_fractions))
+        .cv_method("loocv")
+        .cv_fractions(candidate_fractions.to_vec())
         .adapter(Batch)
         .build()
         .unwrap()
@@ -733,7 +734,10 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
     // 2. K-Fold (5 folds)
     let kfold_result = Loess::new()
-        .cross_validate(KFold(5, &candidate_fractions).seed(42))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(candidate_fractions.to_vec())
+        .cv_seed(42)
         .adapter(Batch)
         .build()
         .unwrap()

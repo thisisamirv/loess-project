@@ -17,7 +17,7 @@ use fastLoess::internals::api::{
     ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
+    Batch, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
 };
 
 // Result struct that can be passed across FFI boundary.
@@ -626,14 +626,15 @@ pub unsafe extern "C" fn jl_loess_fit(
             let seed = config.cv_seed;
             match config.cv_method.to_lowercase().as_str() {
                 "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    let cv = LOOCV(fractions);
-                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
-                    builder = builder.cross_validate(cv);
+                    builder = builder.cv_method("loocv");
+                    builder = builder.cv_fractions(fractions.clone());
+                    if let Some(s) = seed { builder = builder.cv_seed(s); }
                 }
                 "kfold" | "k_fold" | "k-fold" => {
-                    let cv = KFold(config.cv_k, fractions);
-                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
-                    builder = builder.cross_validate(cv);
+                    builder = builder.cv_method("kfold");
+                    builder = builder.cv_k(config.cv_k);
+                    builder = builder.cv_fractions(fractions.clone());
+                    if let Some(s) = seed { builder = builder.cv_seed(s); }
                 }
                 _ => {
                     return error_result(&format!(

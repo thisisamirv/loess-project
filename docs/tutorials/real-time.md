@@ -102,7 +102,7 @@ For true real-time applications where each point must be processed immediately.
 
     const processor = new OnlineLoess(
         { fraction: 0.3, iterations: 1 },
-        { windowCapacity: 25, minPoints: 5, updateMode: "incremental" }
+        { window_capacity: 25, min_points: 5, update_mode: "incremental" }
     );
 
     // Simulate real-time data arrival
@@ -123,7 +123,7 @@ For true real-time applications where each point must be processed immediately.
 
     const processor = new OnlineLoess(
         { fraction: 0.3, iterations: 1 },
-        { windowCapacity: 25, minPoints: 5, updateMode: "incremental" }
+        { window_capacity: 25, min_points: 5, update_mode: "incremental" }
     );
 
     // Simulate real-time data arrival
@@ -250,7 +250,7 @@ For large datasets that arrive in batches or files.
 
     const processor = new StreamingLoess(
         { fraction: 0.1, iterations: 2 },
-        { chunkSize: 5000, overlap: 500 }
+        { chunk_size: 5000, overlap: 500 }
     );
 
     // Process chunks
@@ -267,7 +267,7 @@ For large datasets that arrive in batches or files.
 
     const processor = new StreamingLoess(
         { fraction: 0.1, iterations: 2 },
-        { chunkSize: 5000, overlap: 500 }
+        { chunk_size: 5000, overlap: 500 }
     );
 
     // Process chunks as they arrive
@@ -355,14 +355,14 @@ For large datasets that arrive in batches or files.
     ```javascript
     const fl = require('fastloess');
 
-    const windowCapacity = 50;
+    const window_capacity = 50;
     let dataX = [], dataY = [];
 
     for (let i = 0; i < 200; i++) {
         dataX.push(i);
         dataY.push(25.0 + 10 * Math.sin(i / 20) + Math.random() * 4 - 2);
 
-        if (dataX.length > windowCapacity) {
+        if (dataX.length > window_capacity) {
             dataX.shift();
             dataY.shift();
         }

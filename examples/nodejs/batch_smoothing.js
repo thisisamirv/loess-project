@@ -20,7 +20,7 @@ const fastloess = require('../../bindings/nodejs');
  * 14. Surface modes and standard errors
  * 15. Additional weight functions
  * 16. LOOCV and auto-converge
- * 17. Interpolation tuning (surfaceMode effects)
+ * 17. Interpolation tuning (surface_mode effects)
  */
 
 function makeLinear(n) {
@@ -54,9 +54,9 @@ function example_2_robust_with_outliers() {
     const result = new fastloess.Loess({
         fraction: 0.5,
         iterations: 5,
-        robustnessMethod: "bisquare",
-        returnRobustnessWeights: true,
-        returnResiduals: true,
+        robustness_method: "bisquare",
+        return_robustness_weights: true,
+        return_residuals: true,
     }).fit(x, y);
 
     const weights = result.robustnessWeights;
@@ -81,8 +81,8 @@ function example_3_uncertainty_quantification() {
     const result = new fastloess.Loess({
         fraction: 0.5,
         iterations: 3,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
     }).fit(x, y);
 
     const cLow = result.confidenceLower;
@@ -118,7 +118,7 @@ function example_4_cross_validation() {
         cvMethod: "kfold",
         cvK: 5,
         iterations: 2,
-        returnDiagnostics: true,
+        return_diagnostics: true,
     }).fit(x, y);
 
     console.log(`  Selected fraction: ${result.fractionUsed}`);
@@ -143,11 +143,11 @@ function example_5_complete_diagnostics() {
     const result = new fastloess.Loess({
         fraction: 0.5,
         iterations: 3,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
-        returnDiagnostics: true,
-        returnResiduals: true,
-        returnRobustnessWeights: true,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
+        return_diagnostics: true,
+        return_residuals: true,
+        return_robustness_weights: true,
     }).fit(x, y);
 
     const diag = result.diagnostics;
@@ -155,11 +155,11 @@ function example_5_complete_diagnostics() {
         console.log("  Diagnostics:");
         console.log(`    RMSE:        ${diag.rmse.toFixed(6)}`);
         console.log(`    MAE:         ${diag.mae.toFixed(6)}`);
-        console.log(`    R²:          ${diag.rSquared.toFixed(6)}`);
-        console.log(`    Residual SD: ${diag.residualSd.toFixed(6)}`);
+        console.log(`    R²:          ${diag.r_squared.toFixed(6)}`);
+        console.log(`    Residual SD: ${diag.residual_sd.toFixed(6)}`);
         if (diag.aic != null) console.log(`    AIC:         ${diag.aic.toFixed(2)}`);
         if (diag.aicc != null) console.log(`    AICc:        ${diag.aicc.toFixed(2)}`);
-        if (diag.effectiveDf != null) console.log(`    Eff. DF:     ${diag.effectiveDf.toFixed(2)}`);
+        if (diag.effective_df != null) console.log(`    Eff. DF:     ${diag.effective_df.toFixed(2)}`);
     }
     console.log(`  Smoothed[0]: ${result.y[0].toFixed(5)}`);
     if (result.residuals) console.log(`  residuals[0]: ${result.residuals[0].toFixed(5)}`);
@@ -175,7 +175,7 @@ function example_6_different_kernels() {
     const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
 
     for (const kernel of ["tricube", "epanechnikov", "gaussian", "biweight"]) {
-        const result = new fastloess.Loess({ fraction: 0.5, weightFunction: kernel }).fit(x, y);
+        const result = new fastloess.Loess({ fraction: 0.5, weight_function: kernel }).fit(x, y);
         console.log(`  ${kernel}: [${Array.from(result.y).map(v => v.toFixed(3)).join(', ')}]`);
     }
     console.log();
@@ -192,8 +192,8 @@ function example_7_robustness_methods() {
         const result = new fastloess.Loess({
             fraction: 0.5,
             iterations: 5,
-            robustnessMethod: method,
-            returnRobustnessWeights: true,
+            robustness_method: method,
+            return_robustness_weights: true,
         }).fit(x, y);
         const wStr = result.robustnessWeights
             ? Array.from(result.robustnessWeights).map(v => v.toFixed(3)).join(', ')
@@ -233,7 +233,7 @@ function example_9_scaling_methods() {
     const { x, y } = makeLinear(20);
 
     for (const method of ["mar", "mad", "mean"]) {
-        const result = new fastloess.Loess({ fraction: 0.5, scalingMethod: method }).fit(x, y);
+        const result = new fastloess.Loess({ fraction: 0.5, scaling_method: method }).fit(x, y);
         console.log(`  ${method}: y[0]=${result.y[0].toFixed(3)}`);
     }
     console.log();
@@ -246,7 +246,7 @@ function example_10_boundary_policies() {
     const { x, y } = makeLinear(30);
 
     for (const policy of ["extend", "reflect", "zero", "noboundary"]) {
-        const result = new fastloess.Loess({ fraction: 0.5, boundaryPolicy: policy }).fit(x, y);
+        const result = new fastloess.Loess({ fraction: 0.5, boundary_policy: policy }).fit(x, y);
         console.log(
             `  ${policy}: first=${result.y[0].toFixed(2)}, last=${result.y[result.y.length - 1].toFixed(2)}`
         );
@@ -261,7 +261,7 @@ function example_11_zero_weight_fallback() {
     const { x, y } = makeLinear(20);
 
     for (const fb of ["use_local_mean", "return_original", "return_none"]) {
-        const result = new fastloess.Loess({ fraction: 0.5, zeroWeightFallback: fb }).fit(x, y);
+        const result = new fastloess.Loess({ fraction: 0.5, zero_weight_fallback: fb }).fit(x, y);
         console.log(`  ${fb}: y[0]=${result.y[0].toFixed(3)}`);
     }
     console.log();
@@ -293,12 +293,12 @@ function example_13_distance_metrics() {
     const { x, y } = makeLinear(20);
 
     for (const metric of ["euclidean", "normalized", "manhattan", "chebyshev"]) {
-        const result = new fastloess.Loess({ fraction: 0.5, distanceMetric: metric }).fit(x, y);
+        const result = new fastloess.Loess({ fraction: 0.5, distance_metric: metric }).fit(x, y);
         console.log(`  ${metric}: y[0]=${result.y[0].toFixed(3)}`);
     }
 
     // Minkowski with custom p via "minkowski:p" format
-    const rMink = new fastloess.Loess({ fraction: 0.5, distanceMetric: "minkowski:3" }).fit(x, y);
+    const rMink = new fastloess.Loess({ fraction: 0.5, distance_metric: "minkowski:3" }).fit(x, y);
     console.log(`  minkowski(p=3): y[0]=${rMink.y[0].toFixed(3)}`);
 
     console.log();
@@ -313,13 +313,13 @@ function example_14_surface_modes_and_se() {
     // Direct surface — fits every point exactly; SE fields fully populated
     const rDirect = new fastloess.Loess({
         fraction: 0.5,
-        surfaceMode: "direct",
+        surface_mode: "direct",
         returnSe: true,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
     }).fit(x, y);
 
-    console.log("  surfaceMode=direct:");
+    console.log("  surface_mode=direct:");
     console.log(`    confidenceLower non-null: ${rDirect.confidenceLower != null}`);
     console.log(`    predictionLower non-null: ${rDirect.predictionLower != null}`);
     if (rDirect.standardErrors) console.log(`    standardErrors[0]: ${rDirect.standardErrors[0].toFixed(4)}`);
@@ -333,11 +333,11 @@ function example_14_surface_modes_and_se() {
     // Interpolation surface — faster, approximate
     const rInterp = new fastloess.Loess({
         fraction: 0.5,
-        surfaceMode: "interpolation",
+        surface_mode: "interpolation",
         returnSe: true,
     }).fit(x, y);
 
-    console.log("  surfaceMode=interpolation:");
+    console.log("  surface_mode=interpolation:");
     console.log(`    y[0]: ${rInterp.y[0].toFixed(3)}`);
     if (rInterp.standardErrors) console.log(`    standardErrors[0]: ${rInterp.standardErrors[0].toFixed(4)}`);
     console.log();
@@ -351,7 +351,7 @@ function example_15_additional_kernels() {
     const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
 
     for (const kernel of ["uniform", "triangle", "cosine"]) {
-        const result = new fastloess.Loess({ fraction: 0.5, weightFunction: kernel }).fit(x, y);
+        const result = new fastloess.Loess({ fraction: 0.5, weight_function: kernel }).fit(x, y);
         console.log(`  ${kernel}: [${Array.from(result.y).map(v => v.toFixed(3)).join(', ')}]`);
     }
     console.log();
@@ -393,15 +393,15 @@ function example_16_loocv_and_auto_converge() {
     // Auto-converge: stop robustness iterations when change < tolerance
     const rAc = new fastloess.Loess({
         fraction: 0.5,
-        autoConverge: 1e-4,
+        auto_converge: 1e-4,
     }).fit(x, y);
-    console.log(`  autoConverge=1e-4: iterationsUsed=${rAc.iterationsUsed}`);
+    console.log(`  auto_converge=1e-4: iterationsUsed=${rAc.iterationsUsed}`);
     console.log();
 }
 
-// ── Example 17: Interpolation Tuning (surfaceMode effects) ───────────────────
+// ── Example 17: Interpolation Tuning (surface_mode effects) ───────────────────
 function example_17_interpolation_tuning() {
-    console.log("Example 17: Interpolation Tuning (surfaceMode effects)");
+    console.log("Example 17: Interpolation Tuning (surface_mode effects)");
 
     const n = 50;
     const { x, y } = makeLinear(n);
@@ -409,27 +409,27 @@ function example_17_interpolation_tuning() {
     // Default (interpolation) — fastest, uses a spatial grid
     const rInterp = new fastloess.Loess({
         fraction: 0.5,
-        surfaceMode: "interpolation",
+        surface_mode: "interpolation",
     }).fit(x, y);
     console.log(`  interpolation: y[0]=${rInterp.y[0].toFixed(3)}, y[-1]=${rInterp.y[n - 1].toFixed(3)}`);
 
     // Direct — fits every point exactly, more accurate but slower
     const rDirect = new fastloess.Loess({
         fraction: 0.5,
-        surfaceMode: "direct",
+        surface_mode: "direct",
     }).fit(x, y);
     console.log(`  direct:        y[0]=${rDirect.y[0].toFixed(3)}, y[-1]=${rDirect.y[n - 1].toFixed(3)}`);
 
     // Fraction sweep with direct surface
     for (const frac of [0.2, 0.5, 0.8]) {
-        const r = new fastloess.Loess({ fraction: frac, surfaceMode: "direct" }).fit(x, y);
+        const r = new fastloess.Loess({ fraction: frac, surface_mode: "direct" }).fit(x, y);
         console.log(`  direct fraction=${frac}: y[0]=${r.y[0].toFixed(3)}`);
     }
 
     // Interpolation + SE for hat-matrix statistics
     const rSe = new fastloess.Loess({
         fraction: 0.5,
-        surfaceMode: "interpolation",
+        surface_mode: "interpolation",
         returnSe: true,
     }).fit(x, y);
     if (rSe.enp != null) console.log(`  interpolation+SE enp: ${rSe.enp.toFixed(3)}`);

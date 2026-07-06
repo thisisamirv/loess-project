@@ -90,7 +90,10 @@
 //!     .return_residuals()                              // Include residuals
 //!     .return_robustness_weights()                     // Include robustness weights
 //!     .return_se()                                     // Enable standard error computation
-//!     .cross_validate(KFold(5, &[0.3, 0.7]).seed(123)) // K-fold CV with 5 folds and 2 fraction options
+//!     .cv_method("kfold")                              // K-fold cross-validation
+//!     .cv_k(5)                                         // 5 folds
+//!     .cv_fractions(vec![0.3, 0.7])                    // Candidate fractions
+//!     .cv_seed(123)                                    // Reproducible fold splits
 //!     .adapter(Batch)                                  // Batch adapter
 //!     .parallel(true)                                  // Enable parallel execution
 //!     .build()?;
@@ -187,21 +190,22 @@
 //!   resistance. `0` disables robustness weighting. Default: `3`.
 //!
 //! - **`degree(d: PolynomialDegree)`** — Degree of the local polynomial fitted at each point.
-//!   - `Constant` (0): weighted mean — fastest, least flexible
-//!   - `Linear` (1, **default**): standard LOESS — good balance of speed and accuracy
-//!   - `Quadratic` (2): better for curved regions
-//!   - `Cubic` (3) / `Quartic` (4): higher flexibility, more expensive
+//!   - `Constant` / `"constant"` (0): weighted mean — fastest, least flexible
+//!   - `Linear` / `"linear"` (1, **default**): standard LOESS — good balance of speed and accuracy
+//!   - `Quadratic` / `"quadratic"` (2): better for curved regions
+//!   - `Cubic` / `"cubic"` (3) / `Quartic` / `"quartic"` (4): higher flexibility, more expensive
 //!
 //! - **`weight_function(wf: WeightFunction)`** — Kernel function for distance-based local
-//!   weighting. Options: `Tricube` (**default**), `Epanechnikov`, `Biweight`, `Gaussian`,
-//!   `Triangle`, `Cosine`, `Uniform`.
+//!   weighting. Options: `Tricube` / `"tricube"` (**default**), `Epanechnikov` / `"epanechnikov"`,
+//!   `Biweight` / `"biweight"`, `Gaussian` / `"gaussian"`, `Triangle` / `"triangle"`,
+//!   `Cosine` / `"cosine"`, `Uniform` / `"uniform"`.
 //!
 //! - **`robustness_method(rm: RobustnessMethod)`** — Downweighting method applied to
-//!   outliers during robustness iterations. Options: `Bisquare` (**default**), `Huber`,
-//!   `Talwar`.
+//!   outliers during robustness iterations. Options: `Bisquare` / `"bisquare"` (**default**),
+//!   `Huber` / `"huber"`, `Talwar` / `"talwar"`.
 //!
 //! - **`scaling_method(sm: ScalingMethod)`** — Residual scale estimator used in robustness
-//!   weighting. Options: `MAD` (**default**), `MAR`, `Mean`.
+//!   weighting. Options: `MAD` / `"mad"` (**default**), `MAR` / `"mar"`, `Mean` / `"mean"`.
 //!
 //! - **`custom_weights(w: Vec<T>)`** — Per-observation case weights applied as
 //!   `w_ij = custom_weights[j] × K(d_ij / h)`. Higher values increase the influence of an
@@ -216,9 +220,9 @@
 //! ### Surface Evaluation
 //!
 //! - **`surface_mode(m: SurfaceMode)`** — How the fitted surface is evaluated.
-//!   - `Interpolation` (**default**): fits at a sparse grid of vertices then interpolates —
+//!   - `Interpolation` / `"interpolation"` (**default**): fits at a sparse grid of vertices then interpolates —
 //!     fast for large datasets.
-//!   - `Direct`: fits exactly at every data point — exact but O(n²).
+//!   - `Direct` / `"direct"`: fits exactly at every data point — exact but O(n²).
 //!
 //! - **`cell(c: T)`** — Cell size for the interpolation vertex grid (default: `0.2`).
 //!   Smaller → more vertices, higher accuracy, slower.
@@ -235,23 +239,27 @@
 //! - **`dimensions(n: usize)`** — Number of predictor dimensions (default: `1`).
 //!
 //! - **`distance_metric(m: DistanceMetric<T>)`** — Distance metric for neighbor selection.
-//!   - `Normalized` (**default**): each dimension scaled to `[0, 1]`
-//!   - `Euclidean`: standard L² distance
-//!   - `Manhattan`: L¹ distance
-//!   - `Chebyshev`: L∞ (max) distance
-//!   - `Minkowski(p)`: Lᵖ distance for arbitrary `p`
-//!   - `Weighted(w)`: dimension-weighted Euclidean
+//!   - `Normalized` / `"normalized"` (**default**): each dimension scaled to `[0, 1]`
+//!   - `Euclidean` / `"euclidean"`: standard L² distance
+//!   - `Manhattan` / `"manhattan"`: L¹ distance
+//!   - `Chebyshev` / `"chebyshev"`: L∞ (max) distance
+//!   - `Minkowski(p)` / `"minkowski:p"`: Lᵖ distance for arbitrary `p`
+//!   - `"weighted"`: dimension-weighted Euclidean — use together with `weighted_metric_weights`
+//!
+//! - **`weighted_metric_weights(weights: Vec<T>)`** — Per-dimension scale factors for the
+//!   `"weighted"` metric. Must be used together with `.distance_metric("weighted")`.
 //!
 //! ### Boundary Handling
 //!
 //! - **`boundary_policy(p: BoundaryPolicy)`** — How query points outside the observed data
-//!   range are handled. Options: `Extend` (**default**), `Reflect`, `Zero`, `NoBoundary`.
+//!   range are handled. Options: `Extend` / `"extend"` (**default**), `Reflect` / `"reflect"`,
+//!   `Zero` / `"zero"`, `NoBoundary` / `"noboundary"`.
 //!
 //! - **`zero_weight_fallback(p: ZeroWeightFallback)`** — Fallback when all neighbors of a
 //!   point have zero weight (degenerate neighborhood).
-//!   - `UseLocalMean` (**default**): return the weighted mean of nearby values
-//!   - `ReturnOriginal`: return the raw `y` value
-//!   - `ReturnNone`: return `NaN`
+//!   - `UseLocalMean` / `"use_local_mean"` (**default**): return the weighted mean of nearby values
+//!   - `ReturnOriginal` / `"return_original"`: return the raw `y` value
+//!   - `ReturnNone` / `"return_none"`: return `NaN`
 //!
 //! ### Convergence
 //!
@@ -278,11 +286,15 @@
 //!
 //! ### Cross-Validation
 //!
-//! - **`cross_validate(config: CVConfig<T>)`** — Automatically select the best bandwidth
-//!   via cross-validation. Provide one of:
-//!   - `KFold(k, &[fractions])` — k-fold CV over the given candidate fractions
-//!   - `LOOCV(&[fractions])` — leave-one-out CV over the given candidate fractions
-//!   - Chain `.seed(s)` on either for reproducible fold splits.
+//! - **`cv_method(method: &str)`** — Select the cross-validation strategy:
+//!   - `"kfold"` — k-fold CV (use `cv_k` to set k, default 5)
+//!   - `"loocv"` — leave-one-out CV
+//!
+//! - **`cv_k(k: usize)`** — Number of folds for K-fold CV (default: `5`).
+//!
+//! - **`cv_fractions(fractions: Vec<T>)`** — Candidate smoothing fractions to evaluate.
+//!
+//! - **`cv_seed(seed: u64)`** — Random seed for reproducible K-fold fold assignment.
 //!
 //! ### Adapter-Specific Options
 //!
@@ -291,15 +303,16 @@
 //! - **`chunk_size(n: usize)`** — Number of points processed per streaming chunk.
 //! - **`overlap(n: usize)`** — Point overlap between consecutive chunks for smooth boundaries.
 //! - **`merge_strategy(s: MergeStrategy)`** — How overlapping region fits are combined.
-//!   Options: `Average`, `WeightedAverage`, `TakeFirst`, `TakeLast`.
+//!   Options: `Average` / `"average"`, `WeightedAverage` / `"weighted_average"`,
+//!   `TakeFirst` / `"take_first"`, `TakeLast` / `"take_last"`.
 //!
 //! **Online** (`.adapter(Online)`):
 //!
 //! - **`window_capacity(n: usize)`** — Maximum points kept in the sliding window.
 //! - **`min_points(n: usize)`** — Minimum points required before returning a fit.
 //! - **`update_mode(m: UpdateMode)`** — Window update strategy.
-//!   - `Full` (**default**): full refit on every update
-//!   - `Incremental`: lightweight incremental update
+//!   - `Full` / `"full"` (**default**): full refit on every update
+//!   - `Incremental` / `"incremental"`: lightweight incremental update
 //!
 //! ## ndarray Integration
 //!
@@ -365,13 +378,16 @@ pub mod api;
 // Input data handling.
 pub mod input;
 
+// String-to-enum conversion trait for parallel builder methods (sealed; pub(crate) only).
+pub(crate) mod parse;
+
 // Standard fastLoess prelude.
 pub mod prelude {
     pub use crate::api::{
         Adapter::{Batch, Online, Streaming},
         BoundaryPolicy::{Extend, NoBoundary, Reflect, Zero},
-        DistanceMetric::{Chebyshev, Euclidean, Manhattan, Minkowski, Normalized, Weighted},
-        KFold, LOOCV, LoessBuilder as Loess, LoessError, LoessResult,
+        DistanceMetric::{Chebyshev, Euclidean, Manhattan, Minkowski, Normalized},
+        LoessBuilder as Loess, LoessError, LoessResult,
         MergeStrategy::{Average, TakeFirst, TakeLast, WeightedAverage},
         PolynomialDegree::{Constant, Cubic, Linear, Quadratic, Quartic},
         RobustnessMethod::{Bisquare, Huber, Talwar},

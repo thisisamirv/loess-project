@@ -5,254 +5,52 @@ Complete reference for all LOESS configuration options.
 
 ## Quick Reference
 
-=== "R"
+!!! note "Language-specific values"
+    **Null value** — R: `NULL` · Python: `None` · Rust: `None` · Julia: `nothing` · Node.js/WASM: `null` · C++: `NAN` (floats), `0` (integers), `{}` (vectors)
 
-    | Parameter | Default | Range/Options | Description | Adapter |
-    | --- | --- | --- | --- | --- |
-    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-    | **degree** | 1 | 0–4 | Polynomial degree | All |
-    | **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-    | **delta** | NULL (auto) | [0, ∞) | Interpolation threshold | All |
-    | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
-    | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
-    | **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-    | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
-    | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
-    | **auto_converge** | NULL | tolerance | Early stopping | All |
-    | **custom_weights** | NULL | positive numeric | Per-observation weights | Batch |
-    | **return_residuals** | FALSE | logical | Include residuals | All |
-    | **return_robustness_weights** | FALSE | logical | Include weights | All |
-    | **return_diagnostics** | FALSE | logical | Include metrics | All |
-    | **confidence_intervals** | NULL | (0, 1) | CI level | All |
-    | **prediction_intervals** | NULL | (0, 1) | PI level | All |
-    | **weighted_metric_weights** | NULL | numeric | Per-dimension distance weights | All |
-    | **cell** | NULL | (0, ∞) | Interpolation cell size | All |
-    | **interpolation_vertices** | NULL | integer | Interpolation grid vertices | All |
-    | **boundary_degree_fallback** | NULL | logical | Degree fallback at boundaries | All |
-    | **cv_method** | NULL | method | Auto-select fraction | Batch |
-    | **cv_k** | 5L | [2, ∞) | K-fold count | Batch |
-    | **cv_fractions** | NULL | numeric | Fractions to evaluate | Batch |
-    | **cv_seed** | NULL | integer | CV fold randomization seed | Batch |
-    | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
-    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-    | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-    | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
-    | **min_points** | 2 | [2, window] | Min before output | Online |
-    | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
-=== "Python"
+    **Logical false** — R uses `FALSE`, Python uses `False`, and Rust, Julia, Node.js, WASM, and C++ use`false`.
 
-    | Parameter | Default | Range/Options | Description | Adapter |
-    | --- | --- | --- | --- | --- |
-    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-    | **degree** | 1 | 0–4 | Polynomial degree | All |
-    | **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-    | **delta** | None (auto) | [0, ∞) | Interpolation threshold | All |
-    | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
-    | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
-    | **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-    | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
-    | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
-    | **auto_converge** | None | tolerance | Early stopping | All |
-    | **custom_weights** | None | positive float | Per-observation weights | Batch |
-    | **return_residuals** | False | bool | Include residuals | All |
-    | **return_robustness_weights** | False | bool | Include weights | All |
-    | **return_diagnostics** | False | bool | Include metrics | All |
-    | **confidence_intervals** | None | (0, 1) | CI level | All |
-    | **prediction_intervals** | None | (0, 1) | PI level | All |
-    | **weighted_metric_weights** | None | list[float] | Per-dimension distance weights | All |
-    | **cell** | None | (0, ∞) | Interpolation cell size | All |
-    | **interpolation_vertices** | None | int | Interpolation grid vertices | All |
-    | **boundary_degree_fallback** | None | bool | Degree fallback at boundaries | All |
-    | **cv_method** | None | method | Auto-select fraction | Batch |
-    | **cv_k** | 5 | [2, ∞) | K-fold count | Batch |
-    | **cv_fractions** | None | list[float] | Fractions to evaluate | Batch |
-    | **cv_seed** | None | int | CV fold randomization seed | Batch |
-    | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
-    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-    | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-    | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
-    | **min_points** | 2 | [2, window] | Min before output | Online |
-    | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
-=== "Rust"
+| Parameter | Default | Range/Options | Description | Adapter |
+| --- | --- | --- | --- | --- |
+| **fraction** | 0.67 | (0, 1] | Smoothing span | All |
+| **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+| **degree** | 1 | 0–4 | Polynomial degree | All |
+| **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
+| **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
+| **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
+| **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
+| **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
+| **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
+| **auto_converge** | Null value | tolerance | Early stopping | All |
+| **custom_weights** | Null value | positive | Per-observation weights | Batch |
+| **return_residuals** | Logical false | logical | Include residuals | All |
+| **return_robustness_weights** | Logical false | logical | Include weights | All |
+| **return_diagnostics** | Logical false | logical | Include metrics | All |
+| **confidence_intervals** | Null value | (0, 1) | CI level | Batch |
+| **prediction_intervals** | Null value | (0, 1) | PI level | Batch |
+| **distance_metric** | `"normalized"` | enum | Distance metric | All |
+| **weighted_metric_weights** | Null value | numeric | Per-dimension distance weights | All |
+| **cell** | Null value | (0, ∞) | Interpolation cell size | All |
+| **interpolation_vertices** | Null value | integer | Interpolation grid vertices | All |
+| **boundary_degree_fallback** | Logical false | logical | Degree fallback at boundaries | All |
+| **cv_method** | Null value | method | Auto-select fraction | Batch |
+| **cv_k** | 5 | [2, ∞) | K-fold count | Batch |
+| **cv_fractions** | Null value | numeric | Fractions to evaluate | Batch |
+| **cv_seed** | Null value | integer | CV fold randomization seed | Batch |
+| **cross_validate** | — | method | Auto-select fraction (`cv_method` + `cv_k` + `cv_fractions` + `cv_seed`) | Batch |
+| **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
+| **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
+| **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
+| **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
+| **min_points** | 2 | [2, window] | Min before output | Online |
+| **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
 
-    | Parameter | Default | Range/Options | Description | Adapter |
-    | --- | --- | --- | --- | --- |
-    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-    | **degree** | 1 | 0–4 | Polynomial degree | All |
-    | **surface_mode** | `Interpolation` | 2 options | Fit vs interpolate | All |
-    | **delta** | auto | [0, ∞) | Interpolation threshold | All |
-    | **weight_function** | `Tricube` | 7 options | Distance kernel | All |
-    | **robustness_method** | `Bisquare` | 3 options | Outlier weighting | All |
-    | **zero_weight_fallback** | `UseLocalMean` | 3 options | Zero-weight behavior | All |
-    | **boundary_policy** | `Extend` | 4 options | Edge handling | All |
-    | **scaling_method** | `MAD` | 3 options | Scale estimation | All |
-    | **auto_converge** | None | tolerance | Early stopping | All |
-    | **custom_weights** | — | `Vec<T>` | Per-observation weights | Batch |
-    | **return_residuals** | false | bool | Include residuals | All |
-    | **return_robustness_weights** | false | bool | Include weights | All |
-    | **return_diagnostics** | false | bool | Include metrics | All |
-    | **confidence_intervals** | None | (0, 1) | CI level | All |
-    | **prediction_intervals** | None | (0, 1) | PI level | All |
-    | **distance_metric** | `Normalized` | enum | Distance metric (use `Weighted(weights)` for per-dim) | All |
-    | **cell** | — | `T: Float` | Interpolation cell size | All |
-    | **interpolation_vertices** | — | `usize` | Interpolation grid vertices | All |
-    | **boundary_degree_fallback** | — | `bool` | Degree fallback at boundaries | All |
-    | **cross_validate** | None | method | Auto-select fraction (`KFold` / `LOOCV` both accept `.seed()`) | Batch |
-    | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
-    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-    | **merge_strategy** | `WeightedAverage` | 4 options | Merge overlaps | Streaming |
-    | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
-    | **min_points** | 2 | [2, window] | Min before output | Online |
-    | **update_mode** | `Incremental` | 2 options | Update strategy | Online |
-=== "Julia"
-
-    | Parameter | Default | Range/Options | Description | Adapter |
-    | --- | --- | --- | --- | --- |
-    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-    | **degree** | 1 | 0–4 | Polynomial degree | All |
-    | **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-    | **delta** | `nothing` (auto) | [0, ∞) | Interpolation threshold | All |
-    | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
-    | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
-    | **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-    | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
-    | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
-    | **auto_converge** | `nothing` | tolerance | Early stopping | All |
-    | **custom_weights** | `nothing` | positive float | Per-observation weights | Batch |
-    | **return_residuals** | `false` | bool | Include residuals | All |
-    | **return_robustness_weights** | `false` | bool | Include weights | All |
-    | **return_diagnostics** | `false` | bool | Include metrics | All |
-    | **confidence_intervals** | `nothing` | (0, 1) | CI level | All |
-    | **prediction_intervals** | `nothing` | (0, 1) | PI level | All |
-    | **weighted_metric_weights** | `nothing` | `Vector{Float64}` | Per-dimension distance weights | All |
-    | **cell** | `nothing` | (0, ∞) | Interpolation cell size | All |
-    | **interpolation_vertices** | `nothing` | `Int` | Interpolation grid vertices | All |
-    | **boundary_degree_fallback** | `nothing` | `Bool` | Degree fallback at boundaries | All |
-    | **cv_method** | `nothing` | method | Auto-select fraction | Batch |
-    | **cv_k** | 5 | [2, ∞) | K-fold count | Batch |
-    | **cv_fractions** | `nothing` | `Vector{Float64}` | Fractions to evaluate | Batch |
-    | **cv_seed** | `nothing` | `Int` | CV fold randomization seed | Batch |
-    | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
-    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-    | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-    | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
-    | **min_points** | 2 | [2, window] | Min before output | Online |
-    | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
-=== "Node.js"
-
-    | Parameter | Default | Range/Options | Description | Adapter |
-    | --- | --- | --- | --- | --- |
-    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-    | **degree** | 1 | 0–4 | Polynomial degree | All |
-    | **surfaceMode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-    | **delta** | auto | [0, ∞) | Interpolation threshold | All |
-    | **weightFunction** | `"tricube"` | 7 options | Distance kernel | All |
-    | **robustnessMethod** | `"bisquare"` | 3 options | Outlier weighting | All |
-    | **zeroWeightFallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-    | **boundaryPolicy** | `"extend"` | 4 options | Edge handling | All |
-    | **scalingMethod** | `"mad"` | 3 options | Scale estimation | All |
-    | **autoConverge** | null | tolerance | Early stopping | All |
-    | **customWeights** | null | positive number | Per-observation weights | Batch |
-    | **returnResiduals** | false | bool | Include residuals | All |
-    | **returnRobustnessWeights** | false | bool | Include weights | All |
-    | **returnDiagnostics** | false | bool | Include metrics | All |
-    | **confidenceIntervals** | null | (0, 1) | CI level | All |
-    | **predictionIntervals** | null | (0, 1) | PI level | All |
-    | **weightedMetricWeights** | null | number[] | Per-dimension distance weights | All |
-    | **cell** | null | (0, ∞) | Interpolation cell size | All |
-    | **interpolationVertices** | null | number | Interpolation grid vertices | All |
-    | **boundaryDegreeFallback** | null | boolean | Degree fallback at boundaries | All |
-    | **cvMethod** | null | method | Auto-select fraction | Batch |
-    | **cvK** | 5 | [2, ∞) | K-fold count | Batch |
-    | **cvFractions** | null | number[] | Fractions to evaluate | Batch |
-    | **cvSeed** | null | number | CV fold randomization seed | Batch |
-    | **chunkSize** | 5000 | [10, ∞) | Points per chunk | Streaming |
-    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-    | **mergeStrategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-    | **windowCapacity** | 1000 | [3, ∞) | Max window size | Online |
-    | **minPoints** | 2 | [2, window] | Min before output | Online |
-    | **updateMode** | `"incremental"` | 2 options | Update strategy | Online |
-=== "WebAssembly"
-
-    | Parameter | Default | Range/Options | Description | Adapter |
-    | --- | --- | --- | --- | --- |
-    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-    | **degree** | 1 | 0–4 | Polynomial degree | All |
-    | **surfaceMode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-    | **delta** | auto | [0, ∞) | Interpolation threshold | All |
-    | **weightFunction** | `"tricube"` | 7 options | Distance kernel | All |
-    | **robustnessMethod** | `"bisquare"` | 3 options | Outlier weighting | All |
-    | **zeroWeightFallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-    | **boundaryPolicy** | `"extend"` | 4 options | Edge handling | All |
-    | **scalingMethod** | `"mad"` | 3 options | Scale estimation | All |
-    | **autoConverge** | null | tolerance | Early stopping | All |
-    | **customWeights** | null | positive number | Per-observation weights | Batch |
-    | **returnResiduals** | false | bool | Include residuals | All |
-    | **returnRobustnessWeights** | false | bool | Include weights | All |
-    | **returnDiagnostics** | false | bool | Include metrics | All |
-    | **confidenceIntervals** | null | (0, 1) | CI level | All |
-    | **predictionIntervals** | null | (0, 1) | PI level | All |
-    | **weightedMetricWeights** | null | number[] | Per-dimension distance weights | All |
-    | **cell** | null | (0, ∞) | Interpolation cell size | All |
-    | **interpolationVertices** | null | number | Interpolation grid vertices | All |
-    | **boundaryDegreeFallback** | null | boolean | Degree fallback at boundaries | All |
-    | **cvMethod** | null | method | Auto-select fraction | Batch |
-    | **cvK** | 5 | [2, ∞) | K-fold count | Batch |
-    | **cvFractions** | null | number[] | Fractions to evaluate | Batch |
-    | **cvSeed** | null | number | CV fold randomization seed | Batch |
-    | **chunkSize** | 5000 | [10, ∞) | Points per chunk | Streaming |
-    | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
-    | **mergeStrategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-    | **windowCapacity** | 1000 | [3, ∞) | Max window size | Online |
-    | **minPoints** | 2 | [2, window] | Min before output | Online |
-    | **updateMode** | `"incremental"` | 2 options | Update strategy | Online |
-=== "C++"
-
-    | Parameter | Default | Range/Options | Description | Adapter |
-    | --- | --- | --- | --- | --- |
-    | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
-    | **iterations** | 3 | [0, 1000] | Robustness iterations | All |
-    | **degree** | 1 | 0–4 | Polynomial degree | All |
-    | **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
-    | **delta** | NAN (auto) | [0, ∞) | Interpolation threshold | All |
-    | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
-    | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
-    | **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
-    | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
-    | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
-    | **auto_converge** | NAN | tolerance | Early stopping | All |
-    | **custom_weights** | {} | positive double | Per-observation weights | Batch |
-    | **return_residuals** | false | bool | Include residuals | All |
-    | **return_robustness_weights** | false | bool | Include weights | All |
-    | **return_diagnostics** | false | bool | Include metrics | All |
-    | **confidence_intervals** | NAN | (0, 1) | CI level | All |
-    | **prediction_intervals** | NAN | (0, 1) | PI level | All |
-    | **weighted_metric_weights** | {} | vector<double> | Per-dimension distance weights | All |
-    | **cell** | NAN | (0, ∞) | Interpolation cell size | All |
-    | **interpolation_vertices** | 0 | int | Interpolation grid vertices | All |
-    | **boundary_degree_fallback** | -1 | int | Degree fallback at boundaries | All |
-    | **cv_method** | — | string | Auto-select fraction | Batch |
-    | **cv_k** | 5 | [2, ∞) | K-fold count | Batch |
-    | **cv_fractions** | {} | vector<double> | Fractions to evaluate | Batch |
-    | **cv_seed** | 0 | uint64 | CV fold randomization seed | Batch |
-    | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
-    | **overlap** | -1 (auto) | [0, chunk) | Overlap between chunks | Streaming |
-    | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
-    | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
-    | **min_points** | 2 | [2, window] | Min before output | Online |
-    | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
+!!! note "Rust enum variants"
+    Typed enum variants are also accepted in Rust — e.g., `Tricube`, `Bisquare`, `Extend`, `WeightedAverage`. Import them via `use fastLoess::prelude::*;`. Strings and enum variants are interchangeable for all options. For the weighted distance metric, use `.distance_metric("weighted").weighted_metric_weights(vec![...])`.
 
 ---
 
 ## Parameter Options Summary
-
-=== "R / Python / Julia / C++"
 
 | Parameter | Available Options |
 | --- | --- |
@@ -265,34 +63,6 @@ Complete reference for all LOESS configuration options.
 | **distance_metric** | `"normalized"`, `"euclidean"`, `"manhattan"`, `"chebyshev"`, `"minkowski:p"`, `"weighted"` |
 | **merge_strategy** | `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"` |
 | **update_mode** | `"incremental"`, `"full"` |
-
-=== "Rust"
-
-| Parameter | Available Options |
-| --- | --- |
-| **weight_function** | `Tricube`, `Epanechnikov`, `Gaussian`, `Biweight`, `Cosine`, `Triangle`, `Uniform` |
-| **robustness_method** | `Bisquare`, `Huber`, `Talwar` |
-| **zero_weight_fallback** | `UseLocalMean`, `ReturnOriginal`, `ReturnNone` |
-| **boundary_policy** | `Extend`, `Reflect`, `Zero`, `NoBoundary` |
-| **scaling_method** | `MAD`, `MAR`, `Mean` |
-| **surface_mode** | `Interpolation`, `Direct` |
-| **distance_metric** | `Normalized`, `Euclidean`, `Manhattan`, `Chebyshev`, `Minkowski(T)`, `Weighted(Vec<T>)` |
-| **merge_strategy** | `Average`, `WeightedAverage`, `TakeFirst`, `TakeLast` |
-| **update_mode** | `Incremental`, `Full` |
-
-=== "Node.js / WebAssembly"
-
-| Parameter | Available Options |
-| --- | --- |
-| **weightFunction** | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
-| **robustnessMethod** | `"bisquare"`, `"huber"`, `"talwar"` |
-| **zeroWeightFallback** | `"use_local_mean"`, `"return_original"`, `"return_none"` |
-| **boundaryPolicy** | `"extend"`, `"reflect"`, `"zero"`, `"noboundary"` |
-| **scalingMethod** | `"mad"`, `"mar"`, `"mean"` |
-| **surfaceMode** | `"interpolation"`, `"direct"` |
-| **distanceMetric** | `"normalized"`, `"euclidean"`, `"manhattan"`, `"chebyshev"`, `"minkowski:p"`, `"weighted"` |
-| **mergeStrategy** | `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"` |
-| **updateMode** | `"incremental"`, `"full"` |
 
 ---
 
@@ -430,22 +200,8 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 
 | Mode | Behavior | Speed | Accuracy |
 | --- | --- | --- | --- |
-| `Interpolation` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
-| `Direct` | Evaluate at every query point | Slower | Full precision |
-
-=== "R / Python / Julia / Node.js / WebAssembly / C++"
-
-| Mode | String value |
-| --- | --- |
-| Interpolation (default) | `"interpolation"` |
-| Direct | `"direct"` |
-
-=== "Rust"
-
-| Mode | Enum value |
-| --- | --- |
-| Interpolation (default) | `SurfaceMode::Interpolation` |
-| Direct | `SurfaceMode::Direct` |
+| `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
+| `"direct"` | Evaluate at every query point | Slower | Full precision |
 
 See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
@@ -462,7 +218,7 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 === "Rust"
     ```rust
     let model = Loess::new()
-        .surface_mode(Direct)
+        .surface_mode("direct")
         .adapter(Batch)
         .build()?;
     ```
@@ -474,12 +230,12 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ surfaceMode: "direct" }).fit(x, y);
+    const result = new Loess({ surface_mode: "direct" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ surfaceMode: "direct" }).fit(x, y);
+    const result = new Loess({ surface_mode: "direct" }).fit(x, y);
     ```
 
 === "C++"
@@ -571,12 +327,12 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ interpolationVertices: 50 }).fit(x, y);
+    const result = new Loess({ interpolation_vertices: 50 }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ interpolationVertices: 50 }).fit(x, y);
+    const result = new Loess({ interpolation_vertices: 50 }).fit(x, y);
     ```
 
 === "C++"
@@ -636,7 +392,8 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
     ```rust
     let model = Loess::new()
         .dimensions(2)
-        .distance_metric(Weighted(vec![2.0, 0.5]))
+        .distance_metric("weighted")
+        .weighted_metric_weights(vec![2.0, 0.5])
         .adapter(Batch)
         .build()?;
     ```
@@ -654,8 +411,8 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
     ```javascript
     const result = new Loess({
         dimensions: 2,
-        distanceMetric: "weighted",
-        weightedMetricWeights: [2.0, 0.5]
+        distance_metric: "weighted",
+        weighted_metric_weights: [2.0, 0.5]
     }).fit(x2d, y);
     ```
 
@@ -663,8 +420,8 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
     ```javascript
     const result = new Loess({
         dimensions: 2,
-        distanceMetric: "weighted",
-        weightedMetricWeights: [2.0, 0.5]
+        distance_metric: "weighted",
+        weighted_metric_weights: [2.0, 0.5]
     }).fit(x2d, y);
     ```
 
@@ -684,8 +441,6 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 
 Distance weighting kernel for local fits.
 
-=== "R / Python / Julia / Node.js / WebAssembly / C++"
-
 | Kernel | Efficiency | Smoothness |
 | --- | --- | --- |
 | `"tricube"` | 0.998 | Very smooth |
@@ -695,18 +450,6 @@ Distance weighting kernel for local fits.
 | `"cosine"` | 0.999 | Smooth |
 | `"triangle"` | 0.989 | Moderate |
 | `"uniform"` | 0.943 | None |
-
-=== "Rust"
-
-| Kernel | Efficiency | Smoothness |
-| --- | --- | --- |
-| `Tricube` | 0.998 | Very smooth |
-| `Epanechnikov` | 1.000 | Smooth |
-| `Gaussian` | 0.961 | Infinite |
-| `Biweight` | 0.995 | Very smooth |
-| `Cosine` | 0.999 | Smooth |
-| `Triangle` | 0.989 | Moderate |
-| `Uniform` | 0.943 | None |
 
 See [Weight Functions](kernels.md) for detailed comparison.
 
@@ -723,7 +466,7 @@ See [Weight Functions](kernels.md) for detailed comparison.
 === "Rust"
     ```rust
     let model = Loess::new()
-        .weight_function(Epanechnikov)
+        .weight_function("epanechnikov")
         .adapter(Batch)
         .build()?;
     ```
@@ -735,12 +478,12 @@ See [Weight Functions](kernels.md) for detailed comparison.
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ weightFunction: "epanechnikov" }).fit(x, y);
+    const result = new Loess({ weight_function: "epanechnikov" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ weightFunction: "epanechnikov" }).fit(x, y);
+    const result = new Loess({ weight_function: "epanechnikov" }).fit(x, y);
     ```
 
 === "C++"
@@ -755,21 +498,11 @@ See [Weight Functions](kernels.md) for detailed comparison.
 
 Method for downweighting outliers during iterative refinement.
 
-=== "R / Python / Julia / Node.js / WebAssembly / C++"
-
 | Method | Behavior | Use Case |
 | --- | --- | --- |
 | `"bisquare"` | Smooth downweighting | General-purpose |
 | `"huber"` | Linear beyond threshold | Moderate outliers |
 | `"talwar"` | Hard threshold (0 or 1) | Extreme contamination |
-
-=== "Rust"
-
-| Method | Behavior | Use Case |
-| --- | --- | --- |
-| `Bisquare` | Smooth downweighting | General-purpose |
-| `Huber` | Linear beyond threshold | Moderate outliers |
-| `Talwar` | Hard threshold (0 or 1) | Extreme contamination |
 
 See [Robustness](robustness.md) for detailed comparison.
 
@@ -786,7 +519,7 @@ See [Robustness](robustness.md) for detailed comparison.
 === "Rust"
     ```rust
     let model = Loess::new()
-        .robustness_method(Talwar)
+        .robustness_method("talwar")
         .adapter(Batch)
         .build()?;
     ```
@@ -798,12 +531,12 @@ See [Robustness](robustness.md) for detailed comparison.
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ robustnessMethod: "talwar" }).fit(x, y);
+    const result = new Loess({ robustness_method: "talwar" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ robustnessMethod: "talwar" }).fit(x, y);
+    const result = new Loess({ robustness_method: "talwar" }).fit(x, y);
     ```
 
 === "C++"
@@ -820,23 +553,12 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 
 ![Boundary Policy](../assets/diagrams/boundary_comparison.svg)
 
-=== "R / Python / Julia / Node.js / WebAssembly / C++"
-
 | Policy | Behavior | Use Case |
 | --- | --- | --- |
 | `"extend"` | Pad with first/last values | Most cases (default) |
 | `"reflect"` | Mirror data at boundaries | Periodic/symmetric data |
 | `"zero"` | Pad with zeros | Data approaches zero |
 | `"noboundary"` | No padding | Original Cleveland behavior |
-
-=== "Rust"
-
-| Policy | Behavior | Use Case |
-| --- | --- | --- |
-| `Extend` | Pad with first/last values | Most cases (default) |
-| `Reflect` | Mirror data at boundaries | Periodic/symmetric data |
-| `Zero` | Pad with zeros | Data approaches zero |
-| `NoBoundary` | No padding | Original Cleveland behavior |
 
 For example:
 
@@ -853,7 +575,7 @@ For example:
 === "Rust"
     ```rust
     let model = Loess::new()
-        .boundary_policy(Reflect)
+        .boundary_policy("reflect")
         .adapter(Batch)
         .build()?;
     ```
@@ -865,12 +587,12 @@ For example:
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ boundaryPolicy: "reflect" }).fit(x, y);
+    const result = new Loess({ boundary_policy: "reflect" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ boundaryPolicy: "reflect" }).fit(x, y);
+    const result = new Loess({ boundary_policy: "reflect" }).fit(x, y);
     ```
 
 === "C++"
@@ -904,7 +626,7 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 === "Rust"
     ```rust
     let model = Loess::new()
-        .degree(Quadratic)
+        .degree("quadratic")
         .boundary_degree_fallback(true)
         .adapter(Batch)
         .build()?;
@@ -917,12 +639,12 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ degree: "quadratic", boundaryDegreeFallback: true }).fit(x, y);
+    const result = new Loess({ degree: "quadratic", boundary_degree_fallback: true }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ degree: "quadratic", boundaryDegreeFallback: true }).fit(x, y);
+    const result = new Loess({ degree: "quadratic", boundary_degree_fallback: true }).fit(x, y);
     ```
 
 === "C++"
@@ -939,21 +661,11 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 
 ![Scaling Methods](../assets/diagrams/scaling_comparison.svg)
 
-=== "R / Python / Julia / Node.js / WebAssembly / C++"
-
 | Method | Description | Robustness |
 | --- | --- | --- |
 | `"mad"` | Median Absolute Deviation | Very robust |
 | `"mar"` | Median Absolute Residual | Robust |
 | `"mean"` | Mean Absolute Residual | Less robust |
-
-=== "Rust"
-
-| Method | Description | Robustness |
-| --- | --- | --- |
-| `MAD` | Median Absolute Deviation | Very robust |
-| `MAR` | Median Absolute Residual | Robust |
-| `Mean` | Mean Absolute Residual | Less robust |
 
 For example:
 
@@ -970,7 +682,7 @@ For example:
 === "Rust"
     ```rust
     let model = Loess::new()
-        .scaling_method(MAD)
+        .scaling_method("mad")
         .adapter(Batch)
         .build()?;
     ```
@@ -982,7 +694,7 @@ For example:
 
 === "Node.js / WebAssembly"
     ```javascript
-    const result = new Loess({ scalingMethod: "mad" }).fit(x, y);
+    const result = new Loess({ scaling_method: "mad" }).fit(x, y);
     ```
 
 === "C++"
@@ -999,21 +711,11 @@ Behavior when all neighborhood weights are zero.
 
 ![Zero-Weight Fallback Policies](../assets/diagrams/zero_weight_comparison.svg)
 
-=== "R / Python / Julia / Node.js / WebAssembly / C++"
-
 | Option | Behavior |
 | --- | --- |
 | `"use_local_mean"` | Use mean of neighborhood (default) |
 | `"return_original"` | Return original y value |
 | `"return_none"` | Return NaN |
-
-=== "Rust"
-
-| Option | Behavior |
-| --- | --- |
-| `UseLocalMean` | Use mean of neighborhood (default) |
-| `ReturnOriginal` | Return original y value |
-| `ReturnNone` | Return NaN |
 
 For example:
 
@@ -1030,7 +732,7 @@ For example:
 === "Rust"
     ```rust
     let model = Loess::new()
-        .zero_weight_fallback(UseLocalMean)
+        .zero_weight_fallback("use_local_mean")
         .adapter(Batch)
         .build()?;
     ```
@@ -1042,12 +744,12 @@ For example:
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ zeroWeightFallback: "use_local_mean" }).fit(x, y);
+    const result = new Loess({ zero_weight_fallback: "use_local_mean" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ zeroWeightFallback: "use_local_mean" }).fit(x, y);
+    const result = new Loess({ zero_weight_fallback: "use_local_mean" }).fit(x, y);
     ```
 
 === "C++"
@@ -1088,12 +790,12 @@ Enable early stopping when robustness weights stabilize.
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 20, autoConverge: 1e-6 }).fit(x, y);
+    const result = new Loess({ iterations: 20, auto_converge: 1e-6 }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 20, autoConverge: 1e-6 }).fit(x, y);
+    const result = new Loess({ iterations: 20, auto_converge: 1e-6 }).fit(x, y);
     ```
 
 === "C++"
@@ -1164,14 +866,14 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     ```javascript
     const weights = new Array(y.length).fill(1);
     weights[4] = 0; // Exclude 5th point
-    const result = new Loess({ customWeights: weights }).fit(x, y);
+    const result = new Loess({ custom_weights: weights }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
     const weights = new Array(y.length).fill(1);
     weights[4] = 0; // Exclude 5th point
-    const result = new Loess({ customWeights: weights }).fit(x, y);
+    const result = new Loess({ custom_weights: weights }).fit(x, y);
     ```
 
 === "C++"
@@ -1223,13 +925,13 @@ Include residuals (`y - smoothed`) in the output.
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ returnResiduals: true }).fit(x, y);
+    const result = new Loess({ return_residuals: true }).fit(x, y);
     console.log(result.residuals);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ returnResiduals: true }).fit(x, y);
+    const result = new Loess({ return_residuals: true }).fit(x, y);
     console.log(result.residuals);
     ```
 
@@ -1290,14 +992,14 @@ Include fit quality metrics (Batch and Streaming only).
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ returnDiagnostics: true }).fit(x, y);
-    console.log("R²:", result.diagnostics.rSquared);
+    const result = new Loess({ return_diagnostics: true }).fit(x, y);
+    console.log("R²:", result.diagnostics.r_squared);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ returnDiagnostics: true }).fit(x, y);
-    console.log("R²:", result.diagnostics.rSquared);
+    const result = new Loess({ return_diagnostics: true }).fit(x, y);
+    console.log("R²:", result.diagnostics.r_squared);
     ```
 
 === "C++"
@@ -1305,7 +1007,7 @@ Include fit quality metrics (Batch and Streaming only).
     fastloess::Loess model({ .return_diagnostics = true });
     auto result = model.fit(x, y).value();
     auto diag = result.diagnostics();
-    std::cout << "R²: " << diag.rSquared() << std::endl;
+    std::cout << "R²: " << diag.r_squared() << std::endl;
     ```
 
 ---
@@ -1346,13 +1048,13 @@ Include final robustness weights (useful for outlier detection).
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 3, returnRobustnessWeights: true }).fit(x, y);
+    const result = new Loess({ iterations: 3, return_robustness_weights: true }).fit(x, y);
     // result.robustnessWeights contains outlier weights
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 3, returnRobustnessWeights: true }).fit(x, y);
+    const result = new Loess({ iterations: 3, return_robustness_weights: true }).fit(x, y);
     // result.robustnessWeights contains outlier weights
     ```
 
@@ -1397,12 +1099,12 @@ See [Intervals](intervals.md) for detailed usage.
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ confidenceIntervals: 0.95, predictionIntervals: 0.95 }).fit(x, y);
+    const result = new Loess({ confidence_intervals: 0.95, prediction_intervals: 0.95 }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ confidenceIntervals: 0.95, predictionIntervals: 0.95 }).fit(x, y);
+    const result = new Loess({ confidence_intervals: 0.95, prediction_intervals: 0.95 }).fit(x, y);
     ```
 
 === "C++"
@@ -1437,7 +1139,9 @@ Selection strategy for automated parameter tuning.
 === "Rust"
     ```rust
     let model = Loess::new()
-        .cross_validate(KFold(5, &[0.1, 0.3, 0.5]))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.1, 0.3, 0.5])
         .adapter(Batch)
         .build()?;
     ```
@@ -1504,12 +1208,12 @@ Points per chunk in Streaming mode.
 
 === "Node.js"
     ```javascript
-    const processor = new StreamingLoess({}, { chunkSize: 10000 });
+    const processor = new StreamingLoess({}, { chunk_size: 10000 });
     ```
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLoess({}, { chunkSize: 10000 });
+    const processor = new StreamingLoess({}, { chunk_size: 10000 });
     ```
 
 === "C++"
@@ -1579,23 +1283,12 @@ Overlap between chunks in Streaming mode.
 
 Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a detailed comparison.
 
-=== "R / Python / Julia / Node.js / WebAssembly / C++"
-
 | Strategy | Description | Robustness |
 | --- | --- | --- |
 | `"average"` | Average of overlapping chunks | Fastest, least robust |
 | `"take_first"` | Left chunk only | Fastest, least robust |
 | `"take_last"` | Right chunk only | Fastest, least robust |
 | `"weighted_average"` | Weighted average of overlapping chunks | Most robust |
-
-=== "Rust"
-
-| Strategy | Description | Robustness |
-| --- | --- | --- |
-| `Average` | Average of overlapping chunks | Fastest, least robust |
-| `TakeFirst` | Left chunk only | Fastest, least robust |
-| `TakeLast` | Right chunk only | Fastest, least robust |
-| `WeightedAverage` | Weighted average of overlapping chunks | Most robust |
 
 For example:
 
@@ -1615,7 +1308,7 @@ For example:
     ```rust
     let model = Loess::new()
         .adapter(Streaming)
-        .merge_strategy(WeightedAverage)
+        .merge_strategy("weighted_average")
         .build()?;
     ```
 
@@ -1628,12 +1321,12 @@ For example:
 
 === "Node.js"
     ```javascript
-    const processor = new StreamingLoess({}, { mergeStrategy: "weighted_average" });
+    const processor = new StreamingLoess({}, { merge_strategy: "weighted_average" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const processor = new StreamingLoess({}, { mergeStrategy: "weighted_average" });
+    const processor = new StreamingLoess({}, { merge_strategy: "weighted_average" });
     ```
 
 === "C++"
@@ -1677,12 +1370,12 @@ Maximum points held in memory for Online mode.
 
 === "Node.js"
     ```javascript
-    const processor = new OnlineLoess({}, { windowCapacity: 500 });
+    const processor = new OnlineLoess({}, { window_capacity: 500 });
     ```
 
 === "WebAssembly"
     ```javascript
-    const processor = new OnlineLoess({}, { windowCapacity: 500 });
+    const processor = new OnlineLoess({}, { window_capacity: 500 });
     ```
 
 === "C++"
@@ -1726,12 +1419,12 @@ Minimum points required before Online filter starts producing outputs.
 
 === "Node.js"
     ```javascript
-    const processor = new OnlineLoess({}, { minPoints: 10 });
+    const processor = new OnlineLoess({}, { min_points: 10 });
     ```
 
 === "WebAssembly"
     ```javascript
-    const processor = new OnlineLoess({}, { minPoints: 10 });
+    const processor = new OnlineLoess({}, { min_points: 10 });
     ```
 
 === "C++"
@@ -1748,19 +1441,10 @@ Minimum points required before Online filter starts producing outputs.
 
 Optimization strategy for Online mode updates.
 
-=== "R / Python / Julia / Node.js / WebAssembly / C++"
-
 | Mode | Description | Speed |
 | --- | --- | --- |
-| `full` | Re-smooth entire window | Slow |
-| `incremental` | Update only affected fits | Fast |
-
-=== "Rust"
-
-| Mode | Description | Speed |
-| --- | --- | --- |
-| `Full` | Re-smooth entire window | Slow |
-| `Incremental` | Update only affected fits | Fast |
+| `"full"` | Re-smooth entire window | Slow |
+| `"incremental"` | Update only affected fits | Fast |
 
 For example:
 
@@ -1779,7 +1463,7 @@ For example:
     ```rust
     let model = Loess::new()
         .adapter(Online)
-        .update_mode(Full)
+        .update_mode("full")
         .build()?;
     ```
 
@@ -1791,12 +1475,12 @@ For example:
 
 === "Node.js"
     ```javascript
-    const processor = new OnlineLoess({}, { updateMode: "full" });
+    const processor = new OnlineLoess({}, { update_mode: "full" });
     ```
 
 === "WebAssembly"
     ```javascript
-    const processor = new OnlineLoess({}, { updateMode: "full" });
+    const processor = new OnlineLoess({}, { update_mode: "full" });
     ```
 
 === "C++"

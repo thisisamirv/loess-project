@@ -83,7 +83,7 @@ int main() {
     }
     auto& result = expected.value();
 
-    std::cout << "R²: " << result.diagnostics().rSquared() << std::endl;
+    std::cout << "R²: " << result.diagnostics().r_squared() << std::endl;
 
     // Access smoothed values
     auto smoothed = result.yVector();

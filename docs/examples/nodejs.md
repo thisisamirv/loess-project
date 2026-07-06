@@ -69,11 +69,11 @@ console.log('Smoothed values:', result.y);
 const resultWithOptions = new Loess({
     fraction: 0.3,
     iterations: 3,
-    confidenceIntervals: 0.95,
-    returnDiagnostics: true
+    confidence_intervals: 0.95,
+    return_diagnostics: true
 }).fit(x, y);
 
-console.log('R²:', resultWithOptions.diagnostics.rSquared);
+console.log('R²:', resultWithOptions.diagnostics.r_squared);
 ```
 
 ## TypeScript Support
@@ -86,7 +86,7 @@ import { Loess, LoessResult } from 'fastloess';
 const options = {
     fraction: 0.3,
     iterations: 3,
-    confidenceIntervals: 0.95
+    confidence_intervals: 0.95
 };
 
 const result: LoessResult = new Loess(options).fit(x, y);

@@ -54,7 +54,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
     ```rust
     let model = Loess::new()
         .adapter(Streaming)
-        .merge_strategy(Average)
+        .merge_strategy("average")
         .chunk_size(5000)
         .overlap(500)
         .build()?;
@@ -70,7 +70,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
     ```javascript
     const processor = new StreamingLoess(
         {},
-        { mergeStrategy: "average", chunkSize: 5000, overlap: 500 }
+        { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
     );
     const result = processor.processChunk(xChunk, yChunk);
     ```
@@ -79,7 +79,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
     ```javascript
     const processor = new StreamingLoess(
         {},
-        { mergeStrategy: "average", chunkSize: 5000, overlap: 500 }
+        { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
     );
     const result = processor.processChunk(xChunk, yChunk);
     ```
@@ -116,7 +116,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 === "Rust"
     ```rust
-    .merge_strategy(TakeFirst)
+    .merge_strategy("take_first")
     ```
 
 === "Julia"
@@ -126,12 +126,12 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 === "Node.js"
     ```javascript
-    { mergeStrategy: "take_first" }
+    { merge_strategy: "take_first" }
     ```
 
 === "WebAssembly"
     ```javascript
-    { mergeStrategy: "take_first" }
+    { merge_strategy: "take_first" }
     ```
 
 === "C++"
@@ -162,7 +162,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 === "Rust"
     ```rust
-    .merge_strategy(TakeLast)
+    .merge_strategy("take_last")
     ```
 
 === "Julia"
@@ -172,12 +172,12 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 === "Node.js"
     ```javascript
-    { mergeStrategy: "take_last" }
+    { merge_strategy: "take_last" }
     ```
 
 === "WebAssembly"
     ```javascript
-    { mergeStrategy: "take_last" }
+    { merge_strategy: "take_last" }
     ```
 
 === "C++"
@@ -221,7 +221,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 === "Rust"
     ```rust
     .adapter(Streaming)
-    .merge_strategy(WeightedAverage)
+    .merge_strategy("weighted_average")
     .chunk_size(5000)
     .overlap(500)
     ```
@@ -239,7 +239,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
     ```javascript
     const processor = new StreamingLoess(
         {},
-        { mergeStrategy: "weighted_average", chunkSize: 5000, overlap: 500 }
+        { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
     );
     ```
 
@@ -247,7 +247,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
     ```javascript
     const processor = new StreamingLoess(
         {},
-        { mergeStrategy: "weighted_average", chunkSize: 5000, overlap: 500 }
+        { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
     );
     ```
 

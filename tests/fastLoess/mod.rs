@@ -4,3 +4,4 @@ mod parallel_eval_tests;
 mod parallel_executor_tests;
 mod parallel_interval_tests;
 mod smooth_pass_consistency;
+mod string_option_tests;

@@ -75,7 +75,7 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "Node.js"
     ```javascript
-    const result = new fl.Loess({ fraction: 0.5, confidenceIntervals: 0.95 }).fit(x, y);
+    const result = new fl.Loess({ fraction: 0.5, confidence_intervals: 0.95 }).fit(x, y);
 
     result.y.forEach((y, i) => {
         console.log(`x=${result.x[i]}: y=${y} [${result.confidenceLower[i]}, ${result.confidenceUpper[i]}]`);
@@ -84,7 +84,7 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ fraction: 0.5, confidenceIntervals: 0.95 }).fit(x, y);
+    const result = new Loess({ fraction: 0.5, confidence_intervals: 0.95 }).fit(x, y);
 
     result.y.forEach((y, i) => {
         console.log(`x=${result.x[i]}: y=${y} [${result.confidenceLower[i]}, ${result.confidenceUpper[i]}]`);
@@ -153,13 +153,13 @@ Estimate where new observations might fall.
 
 === "Node.js"
     ```javascript
-    const result = new fl.Loess({ fraction: 0.5, predictionIntervals: 0.95 }).fit(x, y);
+    const result = new fl.Loess({ fraction: 0.5, prediction_intervals: 0.95 }).fit(x, y);
     console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ fraction: 0.5, predictionIntervals: 0.95 }).fit(x, y);
+    const result = new Loess({ fraction: 0.5, prediction_intervals: 0.95 }).fit(x, y);
     console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
     ```
 
@@ -216,8 +216,8 @@ Request both types simultaneously:
     ```javascript
     const result = new fl.Loess({
         fraction: 0.5,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95
     }).fit(x, y);
     ```
 
@@ -225,8 +225,8 @@ Request both types simultaneously:
     ```javascript
     const result = new Loess({
         fraction: 0.5,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95
     }).fit(x, y);
     ```
 
@@ -278,13 +278,13 @@ Common levels and their z-values:
 === "Node.js"
     ```javascript
     // 99% confidence interval
-    const result = new fl.Loess({ confidenceIntervals: 0.99 }).fit(x, y);
+    const result = new fl.Loess({ confidence_intervals: 0.99 }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
     // 99% confidence interval
-    const result = new Loess({ confidenceIntervals: 0.99 }).fit(x, y);
+    const result = new Loess({ confidence_intervals: 0.99 }).fit(x, y);
     ```
 
 === "C++"
@@ -337,7 +337,7 @@ Access standard errors directly (available when intervals are computed):
 
 === "Node.js"
     ```javascript
-    const result = new fl.Loess({ confidenceIntervals: 0.95 }).fit(x, y);
+    const result = new fl.Loess({ confidence_intervals: 0.95 }).fit(x, y);
 
     result.standardErrors.forEach((se, i) => {
         console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
@@ -346,7 +346,7 @@ Access standard errors directly (available when intervals are computed):
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ confidenceIntervals: 0.95 }).fit(x, y);
+    const result = new Loess({ confidence_intervals: 0.95 }).fit(x, y);
 
     result.standardErrors.forEach((se, i) => {
         console.log(`Point ${i}: SE = ${se.toFixed(4)}`);

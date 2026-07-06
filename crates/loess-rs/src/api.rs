@@ -23,6 +23,7 @@ use crate::evaluation::cv::{CVConfig, CVKind};
 use crate::evaluation::intervals::IntervalMethod;
 use crate::math::distance::DistanceLinalg;
 use crate::math::linalg::FloatLinalg;
+use crate::parse::IntoEnum;
 use crate::primitives::backend::Backend;
 
 // Publicly re-exported types
@@ -139,6 +140,15 @@ pub struct LoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     // Must have the same length as `y`. Only used in Batch mode.
     pub custom_weights: Option<Vec<T>>,
 
+    // CV method string for string-based cross-validation API ("kfold" or "loocv").
+    pub cv_method_str: Option<String>,
+
+    // K value for K-fold CV (default: 5).
+    pub cv_k_val: usize,
+
+    // Per-dimension scale weights for the "weighted" distance metric.
+    pub weighted_metric_weights: Option<Vec<T>>,
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -165,6 +175,10 @@ pub struct LoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     // Tracks if any parameter was set multiple times (for validation).
     #[doc(hidden)]
     pub duplicate_param: Option<&'static str>,
+
+    // Parse errors from string-accepting builder methods; reported together by `build()`.
+    #[doc(hidden)]
+    pub parse_errors: Vec<LoessError>,
 }
 
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Default
@@ -175,6 +189,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Defau
     }
 }
 
+#[allow(private_bounds)]
 impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLinalg>
     LoessBuilder<T>
 {
@@ -218,48 +233,64 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             interpolation_vertices: None,
             boundary_degree_fallback: None,
             custom_weights: None,
+            cv_method_str: None,
+            cv_k_val: 5,
+            weighted_metric_weights: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
             backend: None,
             parallel: None,
             duplicate_param: None,
+            parse_errors: Vec::new(),
         }
     }
 
     // Set behavior for handling zero-weight neighborhoods.
-    pub fn zero_weight_fallback(mut self, policy: ZeroWeightFallback) -> Self {
+    pub fn zero_weight_fallback(mut self, policy: impl IntoEnum<ZeroWeightFallback>) -> Self {
         if self.zero_weight_fallback.is_some() {
             self.duplicate_param = Some("zero_weight_fallback");
         }
-        self.zero_weight_fallback = Some(policy);
+        match policy.into_enum() {
+            Ok(p) => self.zero_weight_fallback = Some(p),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
         if self.boundary_policy.is_some() {
             self.duplicate_param = Some("boundary_policy");
         }
-        self.boundary_policy = Some(policy);
+        match policy.into_enum() {
+            Ok(p) => self.boundary_policy = Some(p),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the merging strategy for overlapping chunks (Streaming only).
-    pub fn merge_strategy(mut self, strategy: MergeStrategy) -> Self {
+    pub fn merge_strategy(mut self, strategy: impl IntoEnum<MergeStrategy>) -> Self {
         if self.merge_strategy.is_some() {
             self.duplicate_param = Some("merge_strategy");
         }
-        self.merge_strategy = Some(strategy);
+        match strategy.into_enum() {
+            Ok(s) => self.merge_strategy = Some(s),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the incremental update mode (Online only).
-    pub fn update_mode(mut self, mode: UpdateMode) -> Self {
+    pub fn update_mode(mut self, mode: impl IntoEnum<UpdateMode>) -> Self {
         if self.update_mode.is_some() {
             self.duplicate_param = Some("update_mode");
         }
-        self.update_mode = Some(mode);
+        match mode.into_enum() {
+            Ok(m) => self.update_mode = Some(m),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
@@ -318,29 +349,38 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: WeightFunction) -> Self {
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
         if self.weight_function.is_some() {
             self.duplicate_param = Some("weight_function");
         }
-        self.weight_function = Some(wf);
+        match wf.into_enum() {
+            Ok(w) => self.weight_function = Some(w),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the robustness weighting method.
-    pub fn robustness_method(mut self, rm: RobustnessMethod) -> Self {
+    pub fn robustness_method(mut self, rm: impl IntoEnum<RobustnessMethod>) -> Self {
         if self.robustness_method.is_some() {
             self.duplicate_param = Some("robustness_method");
         }
-        self.robustness_method = Some(rm);
+        match rm.into_enum() {
+            Ok(r) => self.robustness_method = Some(r),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the residual scaling method (MAR/MAD).
-    pub fn scaling_method(mut self, sm: ScalingMethod) -> Self {
+    pub fn scaling_method(mut self, sm: impl IntoEnum<ScalingMethod>) -> Self {
         if self.scaling_method.is_some() {
             self.duplicate_param = Some("scaling_method");
         }
-        self.scaling_method = Some(sm);
+        match sm.into_enum() {
+            Ok(s) => self.scaling_method = Some(s),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
@@ -397,6 +437,39 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self
     }
 
+    // Set the cross-validation method: `"kfold"` or `"loocv"`.
+    pub fn cv_method(mut self, method: &str) -> Self {
+        self.cv_method_str = Some(method.to_string());
+        self
+    }
+
+    // Set the number of folds for K-fold cross-validation (default: 5).
+    pub fn cv_k(mut self, k: usize) -> Self {
+        self.cv_k_val = k;
+        self
+    }
+
+    // Set the candidate fractions to evaluate during cross-validation.
+    pub fn cv_fractions(mut self, fractions: Vec<T>) -> Self {
+        if self.cv_fractions.is_some() {
+            self.duplicate_param = Some("cv_fractions");
+        }
+        self.cv_fractions = Some(fractions);
+        self
+    }
+
+    // Set the random seed for reproducible K-fold fold splitting.
+    pub fn cv_seed(mut self, seed: u64) -> Self {
+        self.cv_seed = Some(seed);
+        self
+    }
+
+    // Set per-dimension weights for the `"weighted"` distance metric.
+    pub fn weighted_metric_weights(mut self, weights: Vec<T>) -> Self {
+        self.weighted_metric_weights = Some(weights);
+        self
+    }
+
     // Enable automatic convergence detection based on relative change.
     pub fn auto_converge(mut self, tolerance: T) -> Self {
         if self.auto_converge.is_some() {
@@ -431,11 +504,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // - `Quadratic` (degree 2): Better for curved regions
     // - `Cubic` (degree 3): Higher flexibility for complex surfaces
     // - `Quartic` (degree 4): Maximum flexibility, most expensive
-    pub fn degree(mut self, degree: PolynomialDegree) -> Self {
+    pub fn degree(mut self, degree: impl IntoEnum<PolynomialDegree>) -> Self {
         if self.polynomial_degree.is_some() {
             self.duplicate_param = Some("degree");
         }
-        self.polynomial_degree = Some(degree);
+        match degree.into_enum() {
+            Ok(d) => self.polynomial_degree = Some(d),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
@@ -449,20 +525,26 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the distance metric for nD neighborhood computation.
-    pub fn distance_metric(mut self, metric: DistanceMetric<T>) -> Self {
+    pub fn distance_metric(mut self, metric: impl IntoEnum<DistanceMetric<T>>) -> Self {
         if self.distance_metric.is_some() {
             self.duplicate_param = Some("distance_metric");
         }
-        self.distance_metric = Some(metric);
+        match metric.into_enum() {
+            Ok(m) => self.distance_metric = Some(m),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the surface evaluation mode (Interpolation or Direct).
-    pub fn surface_mode(mut self, mode: SurfaceMode) -> Self {
+    pub fn surface_mode(mut self, mode: impl IntoEnum<SurfaceMode>) -> Self {
         if self.surface_mode.is_some() {
             self.duplicate_param = Some("surface_mode");
         }
-        self.surface_mode = Some(mode);
+        match mode.into_enum() {
+            Ok(m) => self.surface_mode = Some(m),
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
@@ -665,6 +747,10 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
 
         result.duplicate_param = builder.duplicate_param;
 
+        if !builder.parse_errors.is_empty() {
+            result.deferred_error = Some(LoessError::ParseErrors(builder.parse_errors));
+        }
+
         result
     }
 }
@@ -768,6 +854,10 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         }
         result.duplicate_param = builder.duplicate_param;
 
+        if !builder.parse_errors.is_empty() {
+            result.deferred_error = Some(LoessError::ParseErrors(builder.parse_errors));
+        }
+
         result
     }
 }
@@ -867,6 +957,10 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
             result.parallel = Some(p);
         }
         result.duplicate_param = builder.duplicate_param;
+
+        if !builder.parse_errors.is_empty() {
+            result.deferred_error = Some(LoessError::ParseErrors(builder.parse_errors));
+        }
 
         result
     }

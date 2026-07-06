@@ -218,15 +218,15 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     const result = new fastloess.Loess({
         fraction: 0.5,
         iterations: 3,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
-        returnDiagnostics: true
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
+        return_diagnostics: true
     }).fit(x, y);
 
     console.log("Smoothed:", result.y);
     console.log("CI Lower:", result.confidenceLower);
     console.log("CI Upper:", result.confidenceUpper);
-    console.log("R²:", result.diagnostics.rSquared);
+    console.log("R²:", result.diagnostics.r_squared);
     ```
 
 === "WebAssembly"
@@ -260,7 +260,7 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     // Access standard C++ vectors
     auto lower = result.confidenceLower();
     auto upper = result.confidenceUpper();
-    double r2 = result.diagnostics().rSquared();
+    double r2 = result.diagnostics().r_squared();
     ```
 
 ---
@@ -369,8 +369,8 @@ LOESS can robustly handle outliers through iterative reweighting:
     const result = new fl.Loess({
         fraction: 0.5,
         iterations: 5,
-        robustnessMethod: "bisquare",
-        returnRobustnessWeights: true
+        robustness_method: "bisquare",
+        return_robustness_weights: true
     }).fit(x, yWithOutlier);
 
     // Outliers will have low robustness weights
@@ -392,8 +392,8 @@ LOESS can robustly handle outliers through iterative reweighting:
     const result = new Loess({
         fraction: 0.5,
         iterations: 5,
-        robustnessMethod: "bisquare",
-        returnRobustnessWeights: true
+        robustness_method: "bisquare",
+        return_robustness_weights: true
     }).fit(x, yWithOutlier);
 
     // Outliers will have low robustness weights
@@ -552,12 +552,12 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 
     const model = new StreamingLoess(
         { fraction: 0.2 },
-        { chunkSize: 1000, overlap: 100, mergeStrategy: 'weighted_average' }
+        { chunk_size: 1000, overlap: 100, merge_strategy: 'weighted_average' }
     );
 
-    const chunkSize = 1000;
-    for (let start = 0; start <= 4000; start += chunkSize) {
-        const end = Math.min(start + chunkSize, n);
+    const chunk_size = 1000;
+    for (let start = 0; start <= 4000; start += chunk_size) {
+        const end = Math.min(start + chunk_size, n);
         model.processChunk(x.slice(start, end), y.slice(start, end));
     }
     const result = model.finalize();
@@ -578,11 +578,11 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 
     const model = new StreamingLoess(
         { fraction: 0.2 },
-        { chunkSize: 1000, overlap: 100, mergeStrategy: 'weighted_average' }
+        { chunk_size: 1000, overlap: 100, merge_strategy: 'weighted_average' }
     );
 
-    const chunkSize = 1000;
-    for (let start = 0; start <= 4000; start += chunkSize) {
+    const chunk_size = 1000;
+    for (let start = 0; start <= 4000; start += chunk_size) {
         model.processChunk(x.slice(start, end), y.slice(start, end));
     }
     const result = model.finalize();

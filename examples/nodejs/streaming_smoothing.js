@@ -28,20 +28,20 @@ function example_1_basic_chunked_processing() {
 
     const n = 50;
     const { x, y } = makeLinear(n);
-    const chunkSize = 15;
+    const chunk_size = 15;
     const overlap = 5;
 
     const streamer = new fastloess.StreamingLoess(
-        { fraction: 0.5, iterations: 2, returnResiduals: true },
-        { chunkSize, overlap }
+        { fraction: 0.5, iterations: 2, return_residuals: true },
+        { chunk_size, overlap }
     );
 
-    console.log(`  Dataset: ${n} points, chunk=${chunkSize}, overlap=${overlap}`);
+    console.log(`  Dataset: ${n} points, chunk=${chunk_size}, overlap=${overlap}`);
 
     let totalProcessed = 0;
     let chunkIdx = 0;
-    for (let start = 0; start < n; start += chunkSize - overlap) {
-        const end = Math.min(start + chunkSize, n);
+    for (let start = 0; start < n; start += chunk_size - overlap) {
+        const end = Math.min(start + chunk_size, n);
         const res = streamer.processChunk(x.subarray(start, end), y.subarray(start, end));
         if (res.x.length > 0) {
             totalProcessed += res.x.length;
@@ -65,20 +65,20 @@ function example_2_chunk_size_comparison() {
     const n = 100;
     const { x, y } = makeLinear(n);
 
-    for (const [chunkSize, overlap, label] of [[20, 5, "Small"], [50, 10, "Medium"], [80, 15, "Large"]]) {
+    for (const [chunk_size, overlap, label] of [[20, 5, "Small"], [50, 10, "Medium"], [80, 15, "Large"]]) {
         const streamer = new fastloess.StreamingLoess(
             { fraction: 0.5, iterations: 1 },
-            { chunkSize, overlap }
+            { chunk_size, overlap }
         );
         let chunks = 0, total = 0;
-        for (let start = 0; start < n; start += chunkSize - overlap) {
-            const end = Math.min(start + chunkSize, n);
+        for (let start = 0; start < n; start += chunk_size - overlap) {
+            const end = Math.min(start + chunk_size, n);
             const res = streamer.processChunk(x.subarray(start, end), y.subarray(start, end));
             if (res.x.length > 0) { chunks++; total += res.x.length; }
         }
         const fin = streamer.finalize();
         if (fin.x.length > 0) { chunks++; total += fin.x.length; }
-        console.log(`  ${label} (size=${chunkSize}, overlap=${overlap}): chunks=${chunks}, total=${total}`);
+        console.log(`  ${label} (size=${chunk_size}, overlap=${overlap}): chunks=${chunks}, total=${total}`);
     }
     console.log();
 }
@@ -91,16 +91,16 @@ function example_3_overlap_strategies() {
     const { x, y } = makeLinear(n);
 
     for (const [overlap, label] of [[0, "No overlap"], [10, "10-pt overlap"], [20, "20-pt overlap"]]) {
-        const chunkSize = 40;
+        const chunk_size = 40;
         const streamer = new fastloess.StreamingLoess(
             { fraction: 0.5 },
-            { chunkSize, overlap }
+            { chunk_size, overlap }
         );
         let total = 0;
-        const step = chunkSize - overlap;
+        const step = chunk_size - overlap;
         // Feed only full-size chunks; finalize() handles remaining data
-        for (let start = 0; start + chunkSize <= n; start += step) {
-            const res = streamer.processChunk(x.subarray(start, start + chunkSize), y.subarray(start, start + chunkSize));
+        for (let start = 0; start + chunk_size <= n; start += step) {
+            const res = streamer.processChunk(x.subarray(start, start + chunk_size), y.subarray(start, start + chunk_size));
             total += res.x.length;
         }
         total += streamer.finalize().x.length;
@@ -118,18 +118,18 @@ function example_4_large_dataset_processing() {
     const y = new Float64Array(n);
     for (let i = 0; i < n; i++) { x[i] = i; y[i] = Math.sin(i * 0.01) + i * 0.001; }
 
-    const chunkSize = 500;
+    const chunk_size = 500;
     const overlap = 50;
 
     const streamer = new fastloess.StreamingLoess(
         { fraction: 0.05, iterations: 2 },
-        { chunkSize, overlap }
+        { chunk_size, overlap }
     );
 
     let total = 0;
-    const step = chunkSize - overlap;
+    const step = chunk_size - overlap;
     for (let start = 0; start < n; start += step) {
-        const end = Math.min(start + chunkSize, n);
+        const end = Math.min(start + chunk_size, n);
         const res = streamer.processChunk(x.subarray(start, end), y.subarray(start, end));
         total += res.x.length;
         if (total > 0 && total % 2000 < step) {
@@ -138,7 +138,7 @@ function example_4_large_dataset_processing() {
     }
     total += streamer.finalize().x.length;
     console.log(`  Total processed: ${total}/${n}`);
-    console.log(`  Memory efficiency: constant (chunk=${chunkSize})`);
+    console.log(`  Memory efficiency: constant (chunk=${chunk_size})`);
     console.log();
 }
 
@@ -157,8 +157,8 @@ function example_5_outlier_handling() {
 
     for (const method of ["bisquare", "huber", "talwar"]) {
         const streamer = new fastloess.StreamingLoess(
-            { fraction: 0.5, iterations: 5, robustnessMethod: method, returnResiduals: true },
-            { chunkSize: 30, overlap: 10 }
+            { fraction: 0.5, iterations: 5, robustness_method: method, return_residuals: true },
+            { chunk_size: 30, overlap: 10 }
         );
         let largeResiduals = 0;
         for (let start = 0; start < n; start += 20) {
@@ -183,18 +183,18 @@ function example_6_file_simulation() {
     console.log("  Simulating: Read from input.csv -> Smooth -> Write to output.csv");
 
     const totalLines = 200;
-    const chunkSize = 50;
+    const chunk_size = 50;
     const overlap = 10;
 
     const streamer = new fastloess.StreamingLoess(
-        { fraction: 0.5, iterations: 2, returnResiduals: true },
-        { chunkSize, overlap }
+        { fraction: 0.5, iterations: 2, return_residuals: true },
+        { chunk_size, overlap }
     );
 
     let outputLines = 0;
-    for (let ci = 0; ci < Math.ceil(totalLines / (chunkSize - overlap)); ci++) {
-        const start = ci * (chunkSize - overlap);
-        const end = Math.min(start + chunkSize, totalLines);
+    for (let ci = 0; ci < Math.ceil(totalLines / (chunk_size - overlap)); ci++) {
+        const start = ci * (chunk_size - overlap);
+        const end = Math.min(start + chunk_size, totalLines);
 
         // Simulate reading a chunk from a file
         const xChunk = new Float64Array(end - start);
@@ -226,19 +226,19 @@ function example_7_benchmark() {
     console.log("Example 7: Benchmark (Sequential Streaming)");
 
     const n = 1000;
-    const chunkSize = 100;
+    const chunk_size = 100;
     const overlap = 10;
 
     const streamer = new fastloess.StreamingLoess(
         { fraction: 0.5, iterations: 3 },
-        { chunkSize, overlap }
+        { chunk_size, overlap }
     );
 
     const t0 = process.hrtime.bigint();
     let total = 0;
-    const step = chunkSize - overlap;
+    const step = chunk_size - overlap;
     for (let start = 0; start < n; start += step) {
-        const end = Math.min(start + chunkSize, n);
+        const end = Math.min(start + chunk_size, n);
         const xc = new Float64Array(end - start);
         const yc = new Float64Array(end - start);
         for (let j = 0; j < end - start; j++) {
@@ -251,7 +251,7 @@ function example_7_benchmark() {
     const ms = Number(process.hrtime.bigint() - t0) / 1e6;
 
     console.log(`  ${total} points in ${ms.toFixed(2)}ms`);
-    console.log(`  chunk=${chunkSize}, overlap=${overlap}`);
+    console.log(`  chunk=${chunk_size}, overlap=${overlap}`);
     console.log();
 }
 
@@ -265,7 +265,7 @@ function example_8_merge_strategies() {
     for (const strategy of ["average", "weighted_average", "take_first", "take_last"]) {
         const streamer = new fastloess.StreamingLoess(
             { fraction: 0.5, iterations: 2 },
-            { chunkSize: 20, overlap: 5, mergeStrategy: strategy }
+            { chunk_size: 20, overlap: 5, merge_strategy: strategy }
         );
         let total = 0;
         for (let start = 0; start < n; start += 15) {
@@ -290,17 +290,17 @@ function example_9_advanced_options() {
             fraction: 0.5,
             iterations: 2,
             degree: "quadratic",
-            scalingMethod: "mar",
-            boundaryPolicy: "reflect",
-            zeroWeightFallback: "return_original",
-            distanceMetric: "manhattan",
-            surfaceMode: "direct",
+            scaling_method: "mar",
+            boundary_policy: "reflect",
+            zero_weight_fallback: "return_original",
+            distance_metric: "manhattan",
+            surface_mode: "direct",
             returnSe: true,
-            returnDiagnostics: true,
-            returnRobustnessWeights: true,
-            autoConverge: 1e-3,
+            return_diagnostics: true,
+            return_robustness_weights: true,
+            auto_converge: 1e-3,
         },
-        { chunkSize: 20, overlap: 5 }
+        { chunk_size: 20, overlap: 5 }
     );
 
     let total = 0;
@@ -317,7 +317,7 @@ function example_9_advanced_options() {
     }
     if (fin.diagnostics) {
         console.log(`  diagnostics.rmse: ${fin.diagnostics.rmse.toFixed(3)}`);
-        console.log(`  diagnostics.rSquared: ${fin.diagnostics.rSquared.toFixed(3)}`);
+        console.log(`  diagnostics.r_squared: ${fin.diagnostics.r_squared.toFixed(3)}`);
         if (fin.diagnostics.aic != null) console.log(`  diagnostics.aic: ${fin.diagnostics.aic.toFixed(3)}`);
     }
     if (fin.robustnessWeights && fin.robustnessWeights.length > 0) {

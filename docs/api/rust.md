@@ -90,11 +90,11 @@ These chained methods configure the builder. They correspond to the "Options Str
 | --- | --- | --- | --- |
 | `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
-| `weight_function(...)` | `WeightFunction` | `Tricube` | Kernel weight function enum |
-| `robustness_method(...)` | `RobustnessMethod` | `Bisquare` | Robustness method enum |
-| `scaling_method(...)` | `ScalingMethod` | `MAD` | Residual scaling method enum |
-| `boundary_policy(...)` | `BoundaryPolicy` | `Extend` | Boundary handling policy enum |
-| `zero_weight_fallback(...)` | `ZeroWeightFallback` | `UseLocalMean` | Zero-weight handling enum |
+| `weight_function(...)` | `weight_function` | `Tricube` | Kernel weight function enum |
+| `robustness_method(...)` | `robustness_method` | `Bisquare` | Robustness method enum |
+| `scaling_method(...)` | `scaling_method` | `MAD` | Residual scaling method enum |
+| `boundary_policy(...)` | `boundary_policy` | `Extend` | Boundary handling policy enum |
+| `zero_weight_fallback(...)` | `zero_weight_fallback` | `UseLocalMean` | Zero-weight handling enum |
 | `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
 | `custom_weights(Vec<T>)` | `Vec<T>` | disabled | Per-observation case weights (Batch only) |
 | `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) |
@@ -106,8 +106,8 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `degree(...)` | `PolynomialDegree` | `Linear` | Polynomial degree enum |
 | `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
-| `distance_metric(...)` | `DistanceMetric<T>` | `Normalized` | Distance metric enum |
-| `surface_mode(...)` | `SurfaceMode` | `Interpolation` | Surface computation mode enum |
+| `distance_metric(...)` | `distance_metric<T>` | `Normalized` | Distance metric enum |
+| `surface_mode(...)` | `surface_mode` | `Interpolation` | Surface computation mode enum |
 | `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
 | `boundary_degree_fallback(bool)` | `bool` | disabled | Fall back to lower polynomial degree at boundaries when higher degrees fail |
@@ -119,7 +119,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | --- | --- | --- | --- |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | auto (10%) | Overlap between chunks |
-| `merge_strategy(...)` | `MergeStrategy` | `WeightedAverage` | Strategy for blending overlap regions |
+| `merge_strategy(...)` | `merge_strategy` | `WeightedAverage` | Strategy for blending overlap regions |
 
 ### Online Options
 
@@ -127,7 +127,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | --- | --- | --- | --- |
 | `window_capacity(usize)` | `usize` | `100` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
-| `update_mode(...)` | `UpdateMode` | `Full` | Update strategy enum |
+| `update_mode(...)` | `update_mode` | `Full` | Update strategy enum |
 
 ## Result Structure
 
@@ -156,7 +156,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `leverage` | `Option<Vec<T>>` | Per-point hat-matrix diagonal (if `return_se()`) |
 | `dimensions` | `usize` | Number of predictor dimensions |
 | `polynomial_degree` | `PolynomialDegree` | Polynomial degree used |
-| `distance_metric` | `DistanceMetric<T>` | Distance metric used |
+| `distance_metric` | `distance_metric<T>` | Distance metric used |
 
 ### `Diagnostics<T>`
 
@@ -172,7 +172,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 ## Enum Options
 
-### WeightFunction
+### weight_function
 
 * `Tricube` (default)
 * `Epanechnikov`
@@ -182,32 +182,32 @@ These chained methods configure the builder. They correspond to the "Options Str
 * `Triangle`
 * `Cosine`
 
-### RobustnessMethod
+### robustness_method
 
 * `Bisquare` (default)
 * `Huber`
 * `Talwar`
 
-### BoundaryPolicy
+### boundary_policy
 
 * `Extend` (default - linear extrapolation)
 * `Reflect`
 * `Zero`
 * `NoBoundary`
 
-### ScalingMethod
+### scaling_method
 
 * `MAD` (default — Median Absolute Deviation)
 * `MAR` (Median Absolute Residual)
 * `Mean` (Mean Absolute Residual)
 
-### ZeroWeightFallback
+### zero_weight_fallback
 
 * `UseLocalMean` (default)
 * `ReturnOriginal`
 * `ReturnNone`
 
-### DistanceMetric\<T\>
+### distance_metric\<T\>
 
 * `Normalized` (default — scales each dimension by its range)
 * `Euclidean`
@@ -224,12 +224,12 @@ These chained methods configure the builder. They correspond to the "Options Str
 * `Cubic` (degree 3)
 * `Quartic` (degree 4)
 
-### SurfaceMode
+### surface_mode
 
 * `Interpolation` (default — faster, uses a spatial grid)
 * `Direct` (fits every point exactly; slower but more accurate)
 
-### DistanceMetric
+### distance_metric
 
 * `Normalized` (default — scales each dimension by its range)
 * `Euclidean`
@@ -238,14 +238,14 @@ These chained methods configure the builder. They correspond to the "Options Str
 * `Minkowski(T)` (custom exponent)
 * `Weighted(Vec<T>)` (per-dimension scale weights)
 
-### MergeStrategy
+### merge_strategy
 
 * `WeightedAverage` (default — weighted blend of overlapping regions)
 * `Average` (simple mean of overlapping regions)
 * `TakeFirst` (keep values from the earlier chunk)
 * `TakeLast` (keep values from the later chunk)
 
-### UpdateMode
+### update_mode
 
 * `Full` (default — re-smooth entire window each update)
 * `Incremental` (faster, O(1) incremental update)

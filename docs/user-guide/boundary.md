@@ -37,7 +37,7 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 === "Rust"
     ```rust
     let model = Loess::new()
-        .boundary_policy(Extend)
+        .boundary_policy("extend")
         .adapter(Batch)
         .build()?;
     ```
@@ -49,12 +49,12 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ boundaryPolicy: "extend" }).fit(x, y);
+    const result = new Loess({ boundary_policy: "extend" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ boundaryPolicy: "extend" }).fit(x, y);
+    const result = new Loess({ boundary_policy: "extend" }).fit(x, y);
     ```
 
 === "C++"
@@ -84,7 +84,7 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 === "Rust"
     ```rust
     let model = Loess::new()
-        .boundary_policy(Reflect)
+        .boundary_policy("reflect")
         .adapter(Batch)
         .build()?;
     ```
@@ -96,12 +96,12 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ boundaryPolicy: "reflect" }).fit(x, y);
+    const result = new Loess({ boundary_policy: "reflect" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ boundaryPolicy: "reflect" }).fit(x, y);
+    const result = new Loess({ boundary_policy: "reflect" }).fit(x, y);
     ```
 
 === "C++"
@@ -131,7 +131,7 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 === "Rust"
     ```rust
     let model = Loess::new()
-        .boundary_policy(Zero)
+        .boundary_policy("zero")
         .adapter(Batch)
         .build()?;
     ```
@@ -143,12 +143,12 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ boundaryPolicy: "zero" }).fit(x, y);
+    const result = new Loess({ boundary_policy: "zero" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ boundaryPolicy: "zero" }).fit(x, y);
+    const result = new Loess({ boundary_policy: "zero" }).fit(x, y);
     ```
 
 === "C++"
@@ -181,7 +181,7 @@ Applies no padding. Each local fit uses only the points that are actually availa
 === "Rust"
     ```rust
     let model = Loess::new()
-        .boundary_policy(NoBoundary)
+        .boundary_policy("noboundary")
         .adapter(Batch)
         .build()?;
     ```
@@ -193,12 +193,12 @@ Applies no padding. Each local fit uses only the points that are actually availa
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ boundaryPolicy: "noboundary" }).fit(x, y);
+    const result = new Loess({ boundary_policy: "noboundary" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ boundaryPolicy: "noboundary" }).fit(x, y);
+    const result = new Loess({ boundary_policy: "noboundary" }).fit(x, y);
     ```
 
 === "C++"

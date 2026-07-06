@@ -40,7 +40,7 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 === "Rust"
     ```rust
     let model = Loess::new()
-        .degree(Constant)
+        .degree("constant")
         .fraction(0.5)
         .adapter(Batch)
         .build()?;
@@ -93,7 +93,7 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 === "Rust"
     ```rust
     let model = Loess::new()
-        .degree(Linear)
+        .degree("linear")
         .fraction(0.5)
         .adapter(Batch)
         .build()?;
@@ -146,7 +146,7 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 === "Rust"
     ```rust
     let model = Loess::new()
-        .degree(Quadratic)
+        .degree("quadratic")
         .fraction(0.5)
         .adapter(Batch)
         .build()?;
@@ -199,7 +199,7 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 === "Rust"
     ```rust
     let model = Loess::new()
-        .degree(Cubic)
+        .degree("cubic")
         .fraction(0.6)
         .adapter(Batch)
         .build()?;
@@ -252,7 +252,7 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 === "Rust"
     ```rust
     let model = Loess::new()
-        .degree(Quartic)
+        .degree("quartic")
         .fraction(0.7)
         .adapter(Batch)
         .build()?;
@@ -310,8 +310,8 @@ The `surface_mode` parameter controls whether LOESS evaluates the local polynomi
 
 | Mode | Behaviour | Speed | Accuracy |
 | --- | --- | --- | --- |
-| `Interpolation` (default) | Evaluate at anchor vertices, blend via Hermite cubic | Faster | Slight approximation |
-| `Direct` | Evaluate at every query point | Exact | Full precision |
+| `"interpolation"` (default) | Evaluate at anchor vertices, blend via Hermite cubic | Faster | Slight approximation |
+| `"direct"` | Evaluate at every query point | Exact | Full precision |
 
 ![Surface Mode Comparison](../assets/diagrams/surface_comparison.svg)
 

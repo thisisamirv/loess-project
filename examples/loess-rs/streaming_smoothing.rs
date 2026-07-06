@@ -389,10 +389,10 @@ fn example_5_outlier_handling() -> Result<(), LoessError> {
     println!("Dataset: {} points with 3 outliers", n);
     println!("Testing robustness methods:\n");
 
-    let methods = vec![(Bisquare, "Bisquare"), (Huber, "Huber"), (Talwar, "Talwar")];
+    let methods = ["bisquare", "huber", "talwar"];
 
-    for (method, name) in methods {
-        println!("Using {} robustness:", name);
+    for method in methods {
+        println!("Using {} robustness:", method);
 
         let mut processor = Loess::new()
             .fraction(0.5)
@@ -610,7 +610,7 @@ fn example_8_merge_strategies() -> Result<(), LoessError> {
     let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
 
-    for strategy in [Average, WeightedAverage, TakeFirst, TakeLast] {
+    for strategy in ["average", "weighted_average", "take_first", "take_last"] {
         let mut processor = Loess::new()
             .fraction(0.5)
             .iterations(2)
@@ -629,7 +629,7 @@ fn example_8_merge_strategies() -> Result<(), LoessError> {
         }
         let final_result = processor.finalize()?;
         total += final_result.x.len();
-        println!("  {:?}: total={}", strategy, total);
+        println!("  {}: total={}", strategy, total);
     }
 
     println!();
@@ -651,12 +651,12 @@ fn example_9_advanced_options() -> Result<(), LoessError> {
     let mut processor = Loess::new()
         .fraction(0.5)
         .iterations(2)
-        .degree(Quadratic)
-        .scaling_method(MAR)
-        .boundary_policy(Reflect)
-        .zero_weight_fallback(ReturnOriginal)
-        .distance_metric(Manhattan)
-        .surface_mode(Direct)
+        .degree("quadratic")
+        .scaling_method("mar")
+        .boundary_policy("reflect")
+        .zero_weight_fallback("return_original")
+        .distance_metric("manhattan")
+        .surface_mode("direct")
         .return_se()
         .return_diagnostics()
         .return_robustness_weights()

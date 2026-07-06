@@ -9,7 +9,7 @@ test('batch smoothing', () => {
 
     const model = new fastloess.Loess({
         fraction: 0.3,
-        returnDiagnostics: true
+        return_diagnostics: true
     });
 
     const result = model.fit(x, y);
@@ -23,7 +23,7 @@ test('streaming smoothing', () => {
     const streamer = new fastloess.StreamingLoess({
         fraction: 0.3
     }, {
-        chunkSize: 10,
+        chunk_size: 10,
         overlap: 2
     });
 
@@ -41,8 +41,8 @@ test('online smoothing', () => {
     const online = new fastloess.OnlineLoess({
         fraction: 0.5
     }, {
-        windowCapacity: 10,
-        minPoints: 2
+        window_capacity: 10,
+        min_points: 2
     });
 
     let lastVal = null;
@@ -65,10 +65,10 @@ test('options parsing', () => {
     const y = new Float64Array([2, 4, 6, 8, 10]);
 
     const model = new fastloess.Loess({
-        weightFunction: 'tricube',
-        robustnessMethod: 'bisquare',
-        boundaryPolicy: 'extend',
-        scalingMethod: 'mad'
+        weight_function: 'tricube',
+        robustness_method: 'bisquare',
+        boundary_policy: 'extend',
+        scaling_method: 'mad'
     });
 
     const result = model.fit(x, y);
@@ -97,16 +97,16 @@ test('async batch smoothing', async () => {
 
 // ---- Parameter coverage tests ----
 
-test('SmoothOptions: iterations, zeroWeightFallback, returnResiduals, returnRobustnessWeights', () => {
+test('SmoothOptions: iterations, zero_weight_fallback, return_residuals, return_robustness_weights', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);
 
     const model = new fastloess.Loess({
         fraction: 0.7,
         iterations: 5,
-        zeroWeightFallback: 'return_original',
-        returnResiduals: true,
-        returnRobustnessWeights: true,
+        zero_weight_fallback: 'return_original',
+        return_residuals: true,
+        return_robustness_weights: true,
     });
     const result = model.fit(x, y);
 
@@ -114,14 +114,14 @@ test('SmoothOptions: iterations, zeroWeightFallback, returnResiduals, returnRobu
     assert.ok(result.robustnessWeights !== null);
 });
 
-test('SmoothOptions: confidenceIntervals, predictionIntervals', () => {
+test('SmoothOptions: confidence_intervals, prediction_intervals', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const y = new Float64Array([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
     const model = new fastloess.Loess({
         fraction: 0.5,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
     });
     const result = model.fit(x, y);
 
@@ -135,7 +135,7 @@ test('SmoothOptions: returnSe', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const y = new Float64Array([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
-    const model = new fastloess.Loess({ fraction: 0.5, returnSe: true, surfaceMode: 'direct' });
+    const model = new fastloess.Loess({ fraction: 0.5, returnSe: true, surface_mode: 'direct' });
     const result = model.fit(x, y);
 
     assert.ok(result.enp !== null);
@@ -143,7 +143,7 @@ test('SmoothOptions: returnSe', () => {
     assert.ok(result.leverage !== null);
 });
 
-test('SmoothOptions: degree, surfaceMode', () => {
+test('SmoothOptions: degree, surface_mode', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([1, 4, 9, 16, 25]);
 
@@ -151,16 +151,16 @@ test('SmoothOptions: degree, surfaceMode', () => {
         const r = new fastloess.Loess({ fraction: 0.9, degree }).fit(x, y);
         assert.strictEqual(r.y.length, 5);
     }
-    const r2 = new fastloess.Loess({ fraction: 0.5, surfaceMode: 'direct' }).fit(x, y);
+    const r2 = new fastloess.Loess({ fraction: 0.5, surface_mode: 'direct' }).fit(x, y);
     assert.strictEqual(r2.y.length, 5);
 });
 
-test('SmoothOptions: distanceMetric variants', () => {
+test('SmoothOptions: distance_metric variants', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const y = new Float64Array([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
     for (const dm of ['normalized', 'euclidean', 'manhattan', 'chebyshev']) {
-        const r = new fastloess.Loess({ fraction: 0.5, distanceMetric: dm }).fit(x, y);
+        const r = new fastloess.Loess({ fraction: 0.5, distance_metric: dm }).fit(x, y);
         assert.strictEqual(r.y.length, 10);
     }
 });
@@ -171,7 +171,7 @@ test('SmoothOptions: minkowski via string format', () => {
 
     const r = new fastloess.Loess({
         fraction: 0.5,
-        distanceMetric: 'minkowski:3',
+        distance_metric: 'minkowski:3',
     }).fit(x, y);
     assert.strictEqual(r.y.length, 10);
 });
@@ -182,19 +182,19 @@ test('SmoothOptions: weightedMetricWeights', () => {
 
     const r = new fastloess.Loess({
         fraction: 0.5,
-        distanceMetric: 'weighted',
+        distance_metric: 'weighted',
         weightedMetricWeights: [1.0],
     }).fit(x, y);
     assert.strictEqual(r.y.length, 10);
 });
 
-test('SmoothOptions: autoConverge, parallel', () => {
+test('SmoothOptions: auto_converge, parallel', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);
 
     const r = new fastloess.Loess({
         fraction: 0.5,
-        autoConverge: 1e-4,
+        auto_converge: 1e-4,
         parallel: false,
     }).fit(x, y);
     assert.strictEqual(r.y.length, 5);
@@ -213,14 +213,14 @@ test('SmoothOptions: cvFractions, cvMethod, cvK', () => {
     assert.strictEqual(r.cvScores.length, 3);
 });
 
-test('StreamingOptions: mergeStrategy', () => {
+test('StreamingOptions: merge_strategy', () => {
     const x = new Float64Array(Array.from({ length: 40 }, (_, i) => i));
     const y = new Float64Array(Array.from({ length: 40 }, (_, i) => i * 2));
 
     for (const ms of ['average', 'weighted_average', 'take_first', 'take_last']) {
         const s = new fastloess.StreamingLoess(
             { fraction: 0.3 },
-            { chunkSize: 20, overlap: 2, mergeStrategy: ms }
+            { chunk_size: 20, overlap: 2, merge_strategy: ms }
         );
         s.processChunk(x, y);
         const r = s.finalize();
@@ -228,14 +228,14 @@ test('StreamingOptions: mergeStrategy', () => {
     }
 });
 
-test('OnlineOptions: updateMode', () => {
+test('OnlineOptions: update_mode', () => {
     const x = new Float64Array(Array.from({ length: 15 }, (_, i) => i));
     const y = new Float64Array(Array.from({ length: 15 }, (_, i) => i * 2));
 
     for (const um of ['full', 'incremental']) {
         const o = new fastloess.OnlineLoess(
             { fraction: 0.5 },
-            { windowCapacity: 10, minPoints: 3, updateMode: um }
+            { window_capacity: 10, min_points: 3, update_mode: um }
         );
         const r = o.addPoints(x, y);
         assert.ok(r.y.length > 0);

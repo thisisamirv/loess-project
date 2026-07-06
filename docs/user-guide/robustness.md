@@ -42,7 +42,7 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
     ```rust
     let model = Loess::new()
         .iterations(3)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .adapter(Batch)
         .build()?;
     ```
@@ -54,12 +54,12 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 3, robustnessMethod: "bisquare" }).fit(x, y);
+    const result = new Loess({ iterations: 3, robustness_method: "bisquare" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 3, robustnessMethod: "bisquare" }).fit(x, y);
+    const result = new Loess({ iterations: 3, robustness_method: "bisquare" }).fit(x, y);
     ```
 
 === "C++"
@@ -92,7 +92,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
     ```rust
     let model = Loess::new()
         .iterations(3)
-        .robustness_method(Huber)
+        .robustness_method("huber")
         .adapter(Batch)
         .build()?;
     ```
@@ -104,12 +104,12 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 3, robustnessMethod: "huber" }).fit(x, y);
+    const result = new Loess({ iterations: 3, robustness_method: "huber" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 3, robustnessMethod: "huber" }).fit(x, y);
+    const result = new Loess({ iterations: 3, robustness_method: "huber" }).fit(x, y);
     ```
 
 === "C++"
@@ -142,7 +142,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
     ```rust
     let model = Loess::new()
         .iterations(3)
-        .robustness_method(Talwar)
+        .robustness_method("talwar")
         .adapter(Batch)
         .build()?;
     ```
@@ -154,12 +154,12 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 3, robustnessMethod: "talwar" }).fit(x, y);
+    const result = new Loess({ iterations: 3, robustness_method: "talwar" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 3, robustnessMethod: "talwar" }).fit(x, y);
+    const result = new Loess({ iterations: 3, robustness_method: "talwar" }).fit(x, y);
     ```
 
 === "C++"
@@ -234,7 +234,7 @@ Use robustness weights to identify potential outliers:
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 5, returnRobustnessWeights: true }).fit(x, y);
+    const result = new Loess({ iterations: 5, return_robustness_weights: true }).fit(x, y);
 
     result.robustnessWeights.forEach((w, i) => {
         if (w < 0.5) {
@@ -245,7 +245,7 @@ Use robustness weights to identify potential outliers:
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 5, returnRobustnessWeights: true }).fit(x, y);
+    const result = new Loess({ iterations: 5, return_robustness_weights: true }).fit(x, y);
 
     result.robustnessWeights.forEach((w, i) => {
         if (w < 0.5) {
@@ -295,7 +295,7 @@ Residuals are scaled before computing robustness weights. Two methods:
     ```rust
     let model = Loess::new()
         .iterations(3)
-        .scaling_method(MAD)  // Default
+        .scaling_method("mad")  // Default
         .adapter(Batch)
         .build()?;
     ```
@@ -307,12 +307,12 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 3, scalingMethod: "mad" }).fit(x, y);
+    const result = new Loess({ iterations: 3, scaling_method: "mad" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 3, scalingMethod: "mad" }).fit(x, y);
+    const result = new Loess({ iterations: 3, scaling_method: "mad" }).fit(x, y);
     ```
 
 === "C++"
@@ -356,12 +356,12 @@ Stop iterations early when weights stabilize:
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 10, autoConverge: 1e-6 }).fit(x, y);
+    const result = new Loess({ iterations: 10, auto_converge: 1e-6 }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 10, autoConverge: 1e-6 }).fit(x, y);
+    const result = new Loess({ iterations: 10, auto_converge: 1e-6 }).fit(x, y);
     ```
 
 === "C++"

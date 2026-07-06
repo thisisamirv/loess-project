@@ -73,7 +73,7 @@ const smoothed = online.update(x, y);
 ```
 
 * Adds a **single** point `(x, y)` to the sliding window.
-* Returns `number | null` — the smoothed value for the current point, or `null` if the window has fewer than `minPoints`.
+* Returns `number | null` — the smoothed value for the current point, or `null` if the window has fewer than `min_points`.
 
 > **Note:** For batch addition of multiple points, call `update()` in a loop. There is no `addPoints()` equivalent in the WASM binding.
 
@@ -85,48 +85,48 @@ const smoothed = online.update(x, y);
 | --- | --- | --- | --- |
 | `fraction` | `number` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations` | `number` | `3` | Number of robustifying iterations |
-| `weightFunction` | `string` | `"tricube"` | Kernel weight function |
-| `robustnessMethod` | `string` | `"bisquare"` | Robustness method |
-| `scalingMethod` | `string` | `"mad"` | Residual scaling method |
-| `boundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
-| `zeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling strategy |
-| `autoConverge` | `number` | `null` | Auto-convergence tolerance |
-| `customWeights` | `number[]` | `null` | Per-observation case weights (Batch only) |
-| `confidenceIntervals` | `number` | `null` | Confidence level (e.g., 0.95) |
-| `predictionIntervals` | `number` | `null` | Prediction level (e.g., 0.95) |
-| `returnDiagnostics` | `boolean` | `false` | Compute RMSE, MAE, R², AIC |
-| `returnResiduals` | `boolean` | `false` | Include residuals in result |
-| `returnRobustnessWeights` | `boolean` | `false` | Include robustness weights in result |
-| `returnSe` | `boolean` | `false` | Compute hat-matrix statistics (enp, leverage …) |
+| `weight_function` | `string` | `"tricube"` | Kernel weight function |
+| `robustness_method` | `string` | `"bisquare"` | Robustness method |
+| `scaling_method` | `string` | `"mad"` | Residual scaling method |
+| `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling strategy |
+| `auto_converge` | `number` | `null` | Auto-convergence tolerance |
+| `custom_weights` | `number[]` | `null` | Per-observation case weights (Batch only) |
+| `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
+| `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
+| `return_diagnostics` | `boolean` | `false` | Compute RMSE, MAE, R², AIC |
+| `return_residuals` | `boolean` | `false` | Include residuals in result |
+| `return_robustness_weights` | `boolean` | `false` | Include robustness weights in result |
+| `return_se` | `boolean` | `false` | Compute hat-matrix statistics (enp, leverage …) |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
 | `degree` | `string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `number` | `1` | Number of predictor dimensions |
-| `distanceMetric` | `string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
-| `surfaceMode` | `string` | `"interpolation"` | Surface computation mode |
-| `weightedMetricWeights` | `number[]` | `null` | Per-dimension weights (used when `distanceMetric = "weighted"`) |
+| `distance_metric` | `string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
+| `surface_mode` | `string` | `"interpolation"` | Surface computation mode |
+| `weighted_metric_weights` | `number[]` | `null` | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `cell` | `number` | `null` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
-| `interpolationVertices` | `number` | `null` | Number of interpolation vertices |
-| `boundaryDegreeFallback` | `boolean` | `null` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cvSeed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
-| `cvFractions` | `number[]` | `null` | Fractions to test for cross-validation |
-| `cvMethod` | `string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
+| `interpolation_vertices` | `number` | `null` | Number of interpolation vertices |
+| `boundary_degree_fallback` | `boolean` | `null` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
+| `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation |
+| `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
 | `cvK` | `number` | `5` | Number of folds for k-fold CV |
 
 ### `StreamingOptions`
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `chunkSize` | `number` | `5000` | Data chunk size |
+| `chunk_size` | `number` | `5000` | Data chunk size |
 | `overlap` | `number` | auto (10% of chunk) | Overlap between chunks |
-| `mergeStrategy` | `string` | `"weighted_average"` | Strategy for blending overlap: see Merge Strategies |
+| `merge_strategy` | `string` | `"weighted_average"` | Strategy for blending overlap: see Merge Strategies |
 
 ### `OnlineOptions`
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `windowCapacity` | `number` | `100` | Max points in sliding window |
-| `minPoints` | `number` | `2` | Min points before smoothing starts |
-| `updateMode` | `string` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `window_capacity` | `number` | `100` | Max points in sliding window |
+| `min_points` | `number` | `2` | Min points before smoothing starts |
+| `update_mode` | `string` | `"full"` | Update mode (`"full"` or `"incremental"`) |
 
 ## Result Structure
 
@@ -141,15 +141,15 @@ const smoothed = online.update(x, y);
 | `y` | `Float64Array` | Smoothed y values |
 | `fractionUsed` | `number` | Fraction used (set or selected by CV) |
 | `iterationsUsed` | number \| null | Robustness iterations actually performed |
-| `standardErrors` | Float64Array \| null | Per-point SE (if `returnSe`) |
+| `standardErrors` | Float64Array \| null | Per-point SE (if `return_se`) |
 | `confidenceLower` | Float64Array \| null | Lower confidence bounds |
 | `confidenceUpper` | Float64Array \| null | Upper confidence bounds |
 | `predictionLower` | Float64Array \| null | Lower prediction bounds |
 | `predictionUpper` | Float64Array \| null | Upper prediction bounds |
-| `residuals` | Float64Array \| null | Residuals (if `returnResiduals`) |
-| `robustnessWeights` | Float64Array \| null | Robustness weights (if `returnRobustnessWeights`) |
+| `residuals` | Float64Array \| null | Residuals (if `return_residuals`) |
+| `robustnessWeights` | Float64Array \| null | Robustness weights (if `return_robustness_weights`) |
 | `cvScores` | Float64Array \| null | CV score per tested fraction |
-| `diagnostics` | Diagnostics \| null | Fit metrics (if `returnDiagnostics`) |
+| `diagnostics` | Diagnostics \| null | Fit metrics (if `return_diagnostics`) |
 
 ### `Diagnostics`
 
@@ -157,9 +157,9 @@ const smoothed = online.update(x, y);
 | --- | --- | --- |
 | `rmse` | `number` | Root Mean Squared Error |
 | `mae` | `number` | Mean Absolute Error |
-| `rSquared` | `number` | R-squared |
-| `residualSd` | `number` | Residual standard deviation |
-| `effectiveDf` | `number` | Effective degrees of freedom |
+| `r_squared` | `number` | R-squared |
+| `residual_sd` | `number` | Residual standard deviation |
+| `effective_df` | `number` | Effective degrees of freedom |
 | `aic` | `number` | AIC |
 | `aicc` | `number` | AICc |
 
@@ -215,7 +215,7 @@ const smoothed = online.update(x, y);
 * `"manhattan"`
 * `"chebyshev"`
 * `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
-* `"weighted"` (set `weightedMetricWeights` for per-dimension scaling)
+* `"weighted"` (set `weighted_metric_weights` for per-dimension scaling)
 
 ### Surface Modes
 

@@ -101,9 +101,9 @@ Standard mode for complete datasets. **Supports all features.**
     const result = new fastloess.Loess({
         fraction: 0.5,
         iterations: 3,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
-        returnDiagnostics: true
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
+        return_diagnostics: true
     }).fit(x, y);
     ```
 
@@ -114,9 +114,9 @@ Standard mode for complete datasets. **Supports all features.**
     const result = new Loess({
         fraction: 0.5,
         iterations: 3,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
-        returnDiagnostics: true
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
+        return_diagnostics: true
     }).fit(x, y);
     ```
 
@@ -202,7 +202,7 @@ Process large datasets in chunks with configurable overlap.
         .adapter(Streaming)
         .chunk_size(50)
         .overlap(10)
-        .merge_strategy(Average)
+        .merge_strategy("average")
         .build()?;
 
     let result = processor.process_chunk(&x_chunk, &y_chunk)?;
@@ -233,7 +233,7 @@ Process large datasets in chunks with configurable overlap.
 
     const processor = new StreamingLoess(
         { fraction: 0.3, iterations: 2 },
-        { chunkSize: 5000, overlap: 500 }
+        { chunk_size: 5000, overlap: 500 }
     );
 
     // Process chunks
@@ -251,7 +251,7 @@ Process large datasets in chunks with configurable overlap.
 
     const processor = new StreamingLoess(
         { fraction: 0.3, iterations: 2 },
-        { chunkSize: 5000, overlap: 500 }
+        { chunk_size: 5000, overlap: 500 }
     );
 
     // Process chunks
@@ -347,7 +347,7 @@ Incremental updates with a sliding window for real-time data.
         .adapter(Online)
         .window_capacity(100)
         .min_points(5)
-        .update_mode(Incremental)
+        .update_mode("incremental")
         .build()?;
 
     for i in 0..x.len() {
@@ -377,7 +377,7 @@ Incremental updates with a sliding window for real-time data.
 
     const processor = new OnlineLoess(
         { fraction: 0.2, iterations: 1 },
-        { windowCapacity: 100, minPoints: 5, updateMode: "incremental" }
+        { window_capacity: 100, min_points: 5, update_mode: "incremental" }
     );
 
     // Add points
@@ -395,7 +395,7 @@ Incremental updates with a sliding window for real-time data.
 
     const processor = new OnlineLoess(
         { fraction: 0.2, iterations: 1 },
-        { windowCapacity: 100, minPoints: 5, updateMode: "incremental" }
+        { window_capacity: 100, min_points: 5, update_mode: "incremental" }
     );
 
     // Add points

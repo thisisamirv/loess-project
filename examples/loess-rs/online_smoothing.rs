@@ -130,7 +130,7 @@ fn example_2_sensor_data_simulation() -> Result<(), LoessError> {
     let mut processor = Loess::new()
         .fraction(0.4)
         .iterations(3) // More iterations for noisy sensor data
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .return_residuals()
         .adapter(Online)
         .window_capacity(12) // Half-day window
@@ -203,7 +203,7 @@ fn example_3_outlier_handling() -> Result<(), LoessError> {
     let mut processor = Loess::new()
         .fraction(0.5)
         .iterations(5)
-        .robustness_method(Bisquare)
+        .robustness_method("bisquare")
         .return_residuals()
         .adapter(Online)
         .window_capacity(6)
@@ -225,7 +225,7 @@ fn example_3_outlier_handling() -> Result<(), LoessError> {
     let mut processor = Loess::new()
         .fraction(0.5)
         .iterations(5)
-        .robustness_method(Talwar)
+        .robustness_method("talwar")
         .return_residuals()
         .adapter(Online)
         .window_capacity(6)
@@ -506,7 +506,7 @@ fn example_8_update_modes() -> Result<(), LoessError> {
 
     let data: Vec<(f64, f64)> = (0..30).map(|i| (i as f64, 2.0 * i as f64 + 1.0)).collect();
 
-    for mode in [Full, Incremental] {
+    for mode in ["full", "incremental"] {
         let mut processor = Loess::new()
             .fraction(0.5)
             .iterations(2)
@@ -523,7 +523,7 @@ fn example_8_update_modes() -> Result<(), LoessError> {
             }
         }
         println!(
-            "  {:?}: {} points emitted (out of {})",
+            "  {}: {} points emitted (out of {})",
             mode,
             emitted,
             data.len()
@@ -580,11 +580,11 @@ fn example_9_advanced_online_options() -> Result<(), LoessError> {
     let mut processor = Loess::new()
         .fraction(0.5)
         .iterations(2)
-        .degree(Quadratic)
-        .scaling_method(MAR)
-        .boundary_policy(Reflect)
-        .zero_weight_fallback(ReturnOriginal)
-        .distance_metric(Chebyshev)
+        .degree("quadratic")
+        .scaling_method("mar")
+        .boundary_policy("reflect")
+        .zero_weight_fallback("return_original")
+        .distance_metric("chebyshev")
         .auto_converge(1e-3_f64)
         .return_se()
         .return_residuals()

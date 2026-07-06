@@ -48,7 +48,7 @@ $$w(u) = (1 - |u|^3)^3$$
 === "Rust"
     ```rust
     let model = Loess::new()
-        .weight_function(Tricube)
+        .weight_function("tricube")
         .adapter(Batch)
         .build()?;
     ```
@@ -60,12 +60,12 @@ $$w(u) = (1 - |u|^3)^3$$
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ weightFunction: "tricube" }).fit(x, y);
+    const result = new Loess({ weight_function: "tricube" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ weightFunction: "tricube" }).fit(x, y);
+    const result = new Loess({ weight_function: "tricube" }).fit(x, y);
     ```
 
 === "C++"
@@ -97,7 +97,7 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 === "Rust"
     ```rust
     let model = Loess::new()
-        .weight_function(Epanechnikov)
+        .weight_function("epanechnikov")
         .adapter(Batch)
         .build()?;
     ```
@@ -109,12 +109,12 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ weightFunction: "epanechnikov" }).fit(x, y);
+    const result = new Loess({ weight_function: "epanechnikov" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ weightFunction: "epanechnikov" }).fit(x, y);
+    const result = new Loess({ weight_function: "epanechnikov" }).fit(x, y);
     ```
 
 === "C++"
@@ -146,7 +146,7 @@ $$w(u) = \exp(-u^2/2)$$
 === "Rust"
     ```rust
     let model = Loess::new()
-        .weight_function(Gaussian)
+        .weight_function("gaussian")
         .adapter(Batch)
         .build()?;
     ```
@@ -158,12 +158,12 @@ $$w(u) = \exp(-u^2/2)$$
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ weightFunction: "gaussian" }).fit(x, y);
+    const result = new Loess({ weight_function: "gaussian" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ weightFunction: "gaussian" }).fit(x, y);
+    const result = new Loess({ weight_function: "gaussian" }).fit(x, y);
     ```
 
 === "C++"
@@ -195,7 +195,7 @@ $$w(u) = (1 - u^2)^2$$
 === "Rust"
     ```rust
     let model = Loess::new()
-        .weight_function(Biweight)
+        .weight_function("biweight")
         .adapter(Batch)
         .build()?;
     ```
@@ -207,12 +207,12 @@ $$w(u) = (1 - u^2)^2$$
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ weightFunction: "biweight" }).fit(x, y);
+    const result = new Loess({ weight_function: "biweight" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ weightFunction: "biweight" }).fit(x, y);
+    const result = new Loess({ weight_function: "biweight" }).fit(x, y);
     ```
 
 === "C++"
@@ -244,7 +244,7 @@ $$w(u) = \cos(\pi u / 2)$$
 === "Rust"
     ```rust
     let model = Loess::new()
-        .weight_function(Cosine)
+        .weight_function("cosine")
         .adapter(Batch)
         .build()?;
     ```
@@ -256,12 +256,12 @@ $$w(u) = \cos(\pi u / 2)$$
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ weightFunction: "cosine" }).fit(x, y);
+    const result = new Loess({ weight_function: "cosine" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ weightFunction: "cosine" }).fit(x, y);
+    const result = new Loess({ weight_function: "cosine" }).fit(x, y);
     ```
 
 === "C++"
@@ -293,7 +293,7 @@ $$w(u) = 1 - |u|$$
 === "Rust"
     ```rust
     let model = Loess::new()
-        .weight_function(Triangle)
+        .weight_function("triangle")
         .adapter(Batch)
         .build()?;
     ```
@@ -305,12 +305,12 @@ $$w(u) = 1 - |u|$$
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ weightFunction: "triangle" }).fit(x, y);
+    const result = new Loess({ weight_function: "triangle" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ weightFunction: "triangle" }).fit(x, y);
+    const result = new Loess({ weight_function: "triangle" }).fit(x, y);
     ```
 
 === "C++"
@@ -342,7 +342,7 @@ $$w(u) = 1$$
 === "Rust"
     ```rust
     let model = Loess::new()
-        .weight_function(Uniform)
+        .weight_function("uniform")
         .adapter(Batch)
         .build()?;
     ```
@@ -354,12 +354,12 @@ $$w(u) = 1$$
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ weightFunction: "uniform" }).fit(x, y);
+    const result = new Loess({ weight_function: "uniform" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ weightFunction: "uniform" }).fit(x, y);
+    const result = new Loess({ weight_function: "uniform" }).fit(x, y);
     ```
 
 === "C++"

@@ -26,7 +26,7 @@ use loess_rs::internals::algorithms::regression::ZeroWeightFallback;
 use loess_rs::internals::algorithms::robustness::RobustnessMethod;
 use loess_rs::internals::api::SurfaceMode;
 use loess_rs::internals::engine::output::LoessResult;
-use loess_rs::internals::evaluation::cv::{CVConfig, CVKind};
+use loess_rs::internals::evaluation::cv::CVKind;
 use loess_rs::internals::math::boundary::BoundaryPolicy;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::distance::DistanceMetric;
@@ -39,12 +39,21 @@ use loess_rs::internals::primitives::errors::LoessError;
 // Internal dependencies
 use crate::input::LoessInput;
 use crate::math::neighborhood::build_kdtree_parallel;
+use crate::parse::IntoEnum;
 
 // Builder for batch LOESS processor with parallel support.
 #[derive(Debug, Clone)]
 pub struct ParallelBatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     // Base builder from the loess-rs crate
     pub base: BatchLoessBuilder<T>,
+    // Parse errors from string-accepting builder methods; reported together by `build()`.
+    pub(crate) parse_errors: Vec<LoessError>,
+    // Pending weighted distance metric weights (applied at build time).
+    pub(crate) weighted_metric_weights: Option<Vec<T>>,
+    // CV method string ("kfold" or "loocv"), applied at build time.
+    pub(crate) cv_method_str: Option<String>,
+    // K value for K-fold CV (default 5).
+    pub(crate) cv_k_val: usize,
 }
 
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Default
@@ -67,7 +76,13 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     fn new() -> Self {
         let mut base = BatchLoessBuilder::default();
         base.parallel = Some(true); // Default to parallel in fastLoess
-        Self { base }
+        Self {
+            base,
+            parse_errors: Vec::new(),
+            weighted_metric_weights: None,
+            cv_method_str: None,
+            cv_k_val: 5,
+        }
     }
 
     // Set parallel execution mode.
@@ -95,38 +110,62 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     }
 
     // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: WeightFunction) -> Self {
-        self.base.weight_function = wf;
+    #[allow(private_bounds)]
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
+        match wf.into_enum() {
+            Ok(w) => self.base.weight_function = w,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the robustness method for outlier handling.
-    pub fn robustness_method(mut self, method: RobustnessMethod) -> Self {
-        self.base.robustness_method = method;
+    #[allow(private_bounds)]
+    pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.robustness_method = m,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the residual scaling method (MAR/MAD).
-    pub fn scaling_method(mut self, method: ScalingMethod) -> Self {
-        self.base.scaling_method = method;
+    #[allow(private_bounds)]
+    pub fn scaling_method(mut self, method: impl IntoEnum<ScalingMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.scaling_method = m,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the zero-weight fallback policy.
-    pub fn zero_weight_fallback(mut self, fallback: ZeroWeightFallback) -> Self {
-        self.base.zero_weight_fallback = fallback;
+    #[allow(private_bounds)]
+    pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
+        match fallback.into_enum() {
+            Ok(f) => self.base.zero_weight_fallback = f,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: BoundaryPolicy) -> Self {
-        self.base.boundary_policy = policy;
+    #[allow(private_bounds)]
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(p) => self.base.boundary_policy = p,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the polynomial degree.
-    pub fn polynomial_degree(mut self, degree: PolynomialDegree) -> Self {
-        self.base.polynomial_degree = degree;
+    #[allow(private_bounds)]
+    pub fn polynomial_degree(mut self, degree: impl IntoEnum<PolynomialDegree>) -> Self {
+        match degree.into_enum() {
+            Ok(d) => self.base.polynomial_degree = d,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
@@ -137,14 +176,22 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     }
 
     // Set the distance metric.
-    pub fn distance_metric(mut self, metric: DistanceMetric<T>) -> Self {
-        self.base.distance_metric = metric;
+    #[allow(private_bounds)]
+    pub fn distance_metric(mut self, metric: impl IntoEnum<DistanceMetric<T>>) -> Self {
+        match metric.into_enum() {
+            Ok(m) => self.base.distance_metric = m,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
     // Set the surface evaluation mode (Direct or Interpolation).
-    pub fn surface_mode(mut self, mode: SurfaceMode) -> Self {
-        self.base.surface_mode = mode;
+    #[allow(private_bounds)]
+    pub fn surface_mode(mut self, mode: impl IntoEnum<SurfaceMode>) -> Self {
+        match mode.into_enum() {
+            Ok(m) => self.base.surface_mode = m,
+            Err(e) => self.parse_errors.push(e),
+        }
         self
     }
 
@@ -202,23 +249,37 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // Enable cross-validation using the specified configuration.
-    pub fn cross_validate(mut self, config: CVConfig<'_, T>) -> Self {
-        self.base.cv_fractions = Some(config.fractions().to_vec());
-        self.base.cv_kind = Some(config.kind());
-        self.base.cv_seed = config.get_seed();
+    // Set the cross-validation method: `"kfold"` or `"loocv"`.
+    pub fn cv_method(mut self, method: &str) -> Self {
+        self.cv_method_str = Some(method.to_string());
         self
     }
 
-    // Set the random seed for reproducible cross-validation.
+    // Set the number of folds for K-fold cross-validation (default: 5).
+    pub fn cv_k(mut self, k: usize) -> Self {
+        self.cv_k_val = k;
+        self
+    }
+
+    // Set the candidate fractions to evaluate during cross-validation.
+    pub fn cv_fractions(mut self, fractions: Vec<T>) -> Self {
+        self.base.cv_fractions = Some(fractions);
+        self
+    }
+
+    // Set the random seed for reproducible cross-validation fold splitting.
     pub fn cv_seed(mut self, seed: u64) -> Self {
         self.base.cv_seed = Some(seed);
         self
     }
 
-    // Set the cross-validation method.
-    pub fn cv_kind(mut self, method: CVKind) -> Self {
-        self.base.cv_kind = Some(method);
+    // Set per-dimension weights for the `"weighted"` distance metric.
+    //
+    // Calling this method selects the weighted Euclidean metric and supplies
+    // the weight vector (one entry per predictor dimension). Must be combined
+    // with `.distance_metric("weighted")` or called on its own.
+    pub fn weighted_metric_weights(mut self, weights: Vec<T>) -> Self {
+        self.weighted_metric_weights = Some(weights);
         self
     }
 
@@ -240,7 +301,44 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     }
 
     // Build the batch processor.
-    pub fn build(self) -> Result<ParallelBatchLoess<T>, LoessError> {
+    pub fn build(mut self) -> Result<ParallelBatchLoess<T>, LoessError> {
+        // Check for parse errors from string builder methods
+        if !self.parse_errors.is_empty() {
+            return Err(LoessError::ParseErrors(self.parse_errors));
+        }
+
+        // Apply weighted_metric_weights: override distance_metric with Weighted(weights).
+        // If distance_metric("weighted") was called without weighted_metric_weights(), error.
+        if let Some(weights) = self.weighted_metric_weights.take() {
+            self.base.distance_metric = DistanceMetric::Weighted(weights);
+        } else if let DistanceMetric::Weighted(ref w) = self.base.distance_metric {
+            if w.is_empty() {
+                return Err(LoessError::InvalidOption {
+                    option: "distance_metric",
+                    value: "weighted".to_string(),
+                    valid: "use .weighted_metric_weights(vec![...]) to supply per-dimension weights",
+                });
+            }
+        }
+
+        // Apply CV method string to base.cv_kind.
+        if let Some(ref method_str) = self.cv_method_str {
+            let lower = method_str.to_lowercase();
+            let kind = match lower.as_str() {
+                "kfold" | "k_fold" | "k-fold" => Ok(CVKind::KFold(self.cv_k_val)),
+                "loocv" | "loo_cv" | "loo-cv" => Ok(CVKind::LOOCV),
+                _ => Err(LoessError::InvalidOption {
+                    option: "cv_method",
+                    value: method_str.clone(),
+                    valid: "kfold, loocv",
+                }),
+            };
+            match kind {
+                Ok(k) => self.base.cv_kind = Some(k),
+                Err(e) => return Err(e),
+            }
+        }
+
         // Check for deferred errors from adapter conversion
         if let Some(ref err) = self.base.deferred_error {
             return Err(err.clone());

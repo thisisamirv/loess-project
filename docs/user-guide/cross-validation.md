@@ -75,9 +75,9 @@ Split data into K folds, train on K-1, validate on 1.
 === "Node.js"
     ```javascript
     const result = new Loess({
-        cvMethod: "kfold",
+        cv_method: "kfold",
         cvK: 5,
-        cvFractions: [0.2, 0.3, 0.5, 0.7]
+        cv_fractions: [0.2, 0.3, 0.5, 0.7]
     }).fit(x, y);
 
     console.log("Selected fraction:", result.fractionUsed);
@@ -87,9 +87,9 @@ Split data into K folds, train on K-1, validate on 1.
 === "WebAssembly"
     ```javascript
     const result = new Loess({
-        cvMethod: "kfold",
+        cv_method: "kfold",
         cvK: 5,
-        cvFractions: [0.2, 0.3, 0.5, 0.7]
+        cv_fractions: [0.2, 0.3, 0.5, 0.7]
     }).fit(x, y);
 
     console.log("Selected fraction:", result.fractionUsed);
@@ -153,16 +153,16 @@ Each point is held out once. Most thorough but slowest.
 === "Node.js"
     ```javascript
     const result = new Loess({
-        cvMethod: "loocv",
-        cvFractions: [0.2, 0.3, 0.5, 0.7]
+        cv_method: "loocv",
+        cv_fractions: [0.2, 0.3, 0.5, 0.7]
     }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
     const result = new Loess({
-        cvMethod: "loocv",
-        cvFractions: [0.2, 0.3, 0.5, 0.7]
+        cv_method: "loocv",
+        cv_fractions: [0.2, 0.3, 0.5, 0.7]
     }).fit(x, y);
     ```
 
@@ -226,20 +226,20 @@ Set a seed for reproducible fold assignments:
 === "Node.js"
     ```javascript
     const result = new Loess({
-        cvMethod: "kfold",
+        cv_method: "kfold",
         cvK: 5,
-        cvFractions: [0.3, 0.5, 0.7],
-        cvSeed: 42
+        cv_fractions: [0.3, 0.5, 0.7],
+        cv_seed: 42
     }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
     const result = new Loess({
-        cvMethod: "kfold",
+        cv_method: "kfold",
         cvK: 5,
-        cvFractions: [0.3, 0.5, 0.7],
-        cvSeed: 42
+        cv_fractions: [0.3, 0.5, 0.7],
+        cv_seed: 42
     }).fit(x, y);
     ```
 
@@ -347,9 +347,9 @@ Lower MSE indicates better fit on held-out data.
     ```javascript
     // Example output
     const result = new Loess({
-        cvMethod: "kfold",
+        cv_method: "kfold",
         cvK: 5,
-        cvFractions: [0.1, 0.3, 0.5, 0.7]
+        cv_fractions: [0.1, 0.3, 0.5, 0.7]
     }).fit(x, y);
 
     // Fraction  | CV Score (MSE)
@@ -363,9 +363,9 @@ Lower MSE indicates better fit on held-out data.
     ```javascript
     // Example output
     const result = new Loess({
-        cvMethod: "kfold",
+        cv_method: "kfold",
         cvK: 5,
-        cvFractions: [0.1, 0.3, 0.5, 0.7]
+        cv_fractions: [0.1, 0.3, 0.5, 0.7]
     }).fit(x, y);
 
     // Fraction  | CV Score (MSE)

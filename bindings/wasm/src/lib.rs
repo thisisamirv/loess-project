@@ -17,84 +17,51 @@ use ::fastLoess::internals::api::{
     SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult as InnerLoessResult, Online, Streaming,
+    Batch, Loess as LoessBuilder, LoessResult as InnerLoessResult, Online, Streaming,
 };
 
 #[derive(Deserialize)]
 pub struct SmoothOptions {
     pub fraction: Option<f64>,
     pub iterations: Option<usize>,
-    #[serde(rename = "weightFunction")]
     pub weight_function: Option<String>,
-    #[serde(rename = "robustnessMethod")]
     pub robustness_method: Option<String>,
-    #[serde(rename = "zeroWeightFallback")]
     pub zero_weight_fallback: Option<String>,
-    #[serde(rename = "boundaryPolicy")]
     pub boundary_policy: Option<String>,
-    #[serde(rename = "scalingMethod")]
     pub scaling_method: Option<String>,
-    #[serde(rename = "autoConverge")]
     pub auto_converge: Option<f64>,
-    #[serde(rename = "returnResiduals")]
     pub return_residuals: Option<bool>,
-    #[serde(rename = "returnRobustnessWeights")]
     pub return_robustness_weights: Option<bool>,
-    #[serde(rename = "returnDiagnostics")]
     pub return_diagnostics: Option<bool>,
-    #[serde(rename = "confidenceIntervals")]
     pub confidence_intervals: Option<f64>,
-    #[serde(rename = "predictionIntervals")]
     pub prediction_intervals: Option<f64>,
-    #[serde(rename = "parallel")]
     pub parallel: Option<bool>,
-    #[serde(rename = "cvFractions")]
     pub cv_fractions: Option<Vec<f64>>,
-    #[serde(rename = "cvMethod")]
     pub cv_method: Option<String>,
-    #[serde(rename = "cvK")]
     pub cv_k: Option<u32>,
     pub degree: Option<String>,
     pub dimensions: Option<usize>,
-    #[serde(rename = "distanceMetric")]
     pub distance_metric: Option<String>,
-    #[serde(rename = "surfaceMode")]
     pub surface_mode: Option<String>,
-    #[serde(rename = "returnSe")]
     pub return_se: Option<bool>,
-    // Per-dimension weights for the "weighted" distance metric.
-    #[serde(rename = "weightedMetricWeights")]
     pub weighted_metric_weights: Option<Vec<f64>>,
-    // Interpolation cell size (default 0.2). Smaller values → more vertices, higher accuracy.
     pub cell: Option<f64>,
-    // Hard cap on the number of interpolation vertices.
-    #[serde(rename = "interpolationVertices")]
     pub interpolation_vertices: Option<usize>,
-    // Reduce polynomial degree to linear at boundary vertices (default true).
-    #[serde(rename = "boundaryDegreeFallback")]
     pub boundary_degree_fallback: Option<bool>,
-    // Random seed for reproducible K-fold cross-validation splits.
-    #[serde(rename = "cvSeed")]
     pub cv_seed: Option<u64>,
 }
 
 #[derive(Deserialize)]
 pub struct StreamingOptions {
-    #[serde(rename = "chunkSize")]
     pub chunk_size: Option<usize>,
-    #[serde(rename = "overlap")]
     pub overlap: Option<usize>,
-    #[serde(rename = "mergeStrategy")]
     pub merge_strategy: Option<String>,
 }
 
 #[derive(Deserialize)]
 pub struct OnlineOptions {
-    #[serde(rename = "windowCapacity")]
     pub window_capacity: Option<usize>,
-    #[serde(rename = "minPoints")]
     pub min_points: Option<usize>,
-    #[serde(rename = "updateMode")]
     pub update_mode: Option<String>,
 }
 
@@ -526,14 +493,15 @@ fn smooth(
 
             match method.to_lowercase().as_str() {
                 "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    let cv = LOOCV(&fractions);
-                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
-                    builder = builder.cross_validate(cv);
+                    builder = builder.cv_method("loocv");
+                    builder = builder.cv_fractions(fractions);
+                    if let Some(s) = seed { builder = builder.cv_seed(s); }
                 }
                 "kfold" | "k_fold" | "k-fold" => {
-                    let cv = KFold(k, &fractions);
-                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
-                    builder = builder.cross_validate(cv);
+                    builder = builder.cv_method("kfold");
+                    builder = builder.cv_k(k);
+                    builder = builder.cv_fractions(fractions);
+                    if let Some(s) = seed { builder = builder.cv_seed(s); }
                 }
                 _ => {
                     return Err(JsValue::from_str(&format!(
@@ -658,14 +626,15 @@ impl StreamingLoess {
                 let seed = opts.cv_seed;
                 match method.to_lowercase().as_str() {
                     "simple" | "loo" | "loocv" | "leave_one_out" => {
-                        let cv = LOOCV(&fractions);
-                        let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
-                        builder = builder.cross_validate(cv);
+                        builder = builder.cv_method("loocv");
+                        builder = builder.cv_fractions(fractions);
+                        if let Some(s) = seed { builder = builder.cv_seed(s); }
                     }
                     "kfold" | "k_fold" | "k-fold" => {
-                        let cv = KFold(k, &fractions);
-                        let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
-                        builder = builder.cross_validate(cv);
+                        builder = builder.cv_method("kfold");
+                        builder = builder.cv_k(k);
+                        builder = builder.cv_fractions(fractions);
+                        if let Some(s) = seed { builder = builder.cv_seed(s); }
                     }
                     _ => {
                         return Err(JsValue::from_str(&format!(

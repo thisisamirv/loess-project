@@ -14,7 +14,7 @@ use ::fastLoess::internals::api::{
     ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
 };
 use ::fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
+    Batch, Loess as LoessBuilder, LoessResult, MAD, MAR, Online, Streaming,
 };
 
 // Helper Functions
@@ -997,14 +997,15 @@ impl PyLoess {
                 let seed = params.cv_seed;
                 match params.cv_method.to_lowercase().as_str() {
                     "simple" | "loo" | "loocv" | "leave_one_out" => {
-                        let cv = LOOCV(fractions);
-                        let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
-                        builder = builder.cross_validate(cv);
+                        builder = builder.cv_method("loocv");
+                        builder = builder.cv_fractions(fractions.clone());
+                        if let Some(s) = seed { builder = builder.cv_seed(s); }
                     }
                     "kfold" | "k_fold" | "k-fold" => {
-                        let cv = KFold(params.cv_k, fractions);
-                        let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
-                        builder = builder.cross_validate(cv);
+                        builder = builder.cv_method("kfold");
+                        builder = builder.cv_k(params.cv_k);
+                        builder = builder.cv_fractions(fractions.clone());
+                        if let Some(s) = seed { builder = builder.cv_seed(s); }
                     }
                     _ => {
                         return Err(format!(

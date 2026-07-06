@@ -45,7 +45,7 @@ First centers residuals at their median, then takes the median of the absolute d
     ```rust
     let model = Loess::new()
         .iterations(3)
-        .scaling_method(MAD)
+        .scaling_method("mad")
         .adapter(Batch)
         .build()?;
     ```
@@ -57,12 +57,12 @@ First centers residuals at their median, then takes the median of the absolute d
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 3, scalingMethod: "mad" }).fit(x, y);
+    const result = new Loess({ iterations: 3, scaling_method: "mad" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 3, scalingMethod: "mad" }).fit(x, y);
+    const result = new Loess({ iterations: 3, scaling_method: "mad" }).fit(x, y);
     ```
 
 === "C++"
@@ -95,7 +95,7 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
     ```rust
     let model = Loess::new()
         .iterations(3)
-        .scaling_method(MAR)
+        .scaling_method("mar")
         .adapter(Batch)
         .build()?;
     ```
@@ -107,12 +107,12 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 3, scalingMethod: "mar" }).fit(x, y);
+    const result = new Loess({ iterations: 3, scaling_method: "mar" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 3, scalingMethod: "mar" }).fit(x, y);
+    const result = new Loess({ iterations: 3, scaling_method: "mar" }).fit(x, y);
     ```
 
 === "C++"
@@ -145,7 +145,7 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
     ```rust
     let model = Loess::new()
         .iterations(3)
-        .scaling_method(Mean)
+        .scaling_method("mean")
         .adapter(Batch)
         .build()?;
     ```
@@ -157,12 +157,12 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 3, scalingMethod: "mean" }).fit(x, y);
+    const result = new Loess({ iterations: 3, scaling_method: "mean" }).fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 3, scalingMethod: "mean" }).fit(x, y);
+    const result = new Loess({ iterations: 3, scaling_method: "mean" }).fit(x, y);
     ```
 
 === "C++"

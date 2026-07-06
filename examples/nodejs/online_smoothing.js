@@ -11,7 +11,7 @@ const fastloess = require('../../bindings/nodejs');
  *  5. Memory-bounded processing (embedded systems)
  *  6. Sliding window behavior
  *  7. Benchmark (sequential online)
- *  8. Update modes (Full vs Incremental) and minPoints
+ *  8. Update modes (Full vs Incremental) and min_points
  *  9. Advanced online options
  */
 
@@ -25,8 +25,8 @@ function example_1_basic_streaming() {
     ];
 
     const model = new fastloess.OnlineLoess(
-        { fraction: 0.5, iterations: 2, returnResiduals: true },
-        { windowCapacity: 5 }
+        { fraction: 0.5, iterations: 2, return_residuals: true },
+        { window_capacity: 5 }
     );
 
     console.log(`  ${"X".padStart(8)} ${"Y_obs".padStart(12)} ${"Y_smooth".padStart(12)}`);
@@ -48,8 +48,8 @@ function example_2_sensor_data_simulation() {
 
     const n = 24; // 24 hours
     const model = new fastloess.OnlineLoess(
-        { fraction: 0.4, iterations: 3, robustnessMethod: "bisquare", returnResiduals: true },
-        { windowCapacity: 12 }
+        { fraction: 0.4, iterations: 3, robustness_method: "bisquare", return_residuals: true },
+        { window_capacity: 12 }
     );
 
     console.log(`  ${"Hour".padStart(6)} ${"Raw".padStart(12)} ${"Smoothed".padStart(12)}`);
@@ -85,8 +85,8 @@ function example_3_outlier_handling() {
 
     for (const method of ["bisquare", "talwar"]) {
         const model = new fastloess.OnlineLoess(
-            { fraction: 0.5, iterations: 5, robustnessMethod: method, returnResiduals: true },
-            { windowCapacity: 6 }
+            { fraction: 0.5, iterations: 5, robustness_method: method, return_residuals: true },
+            { window_capacity: 6 }
         );
         const smoothed = [];
         for (const [x, y] of data) {
@@ -110,7 +110,7 @@ function example_4_window_size_comparison() {
     for (const windowSize of [5, 10, 15]) {
         const model = new fastloess.OnlineLoess(
             { fraction: 0.5, iterations: 2 },
-            { windowCapacity: windowSize }
+            { window_capacity: windowSize }
         );
         const smoothed = [];
         for (const [x, y] of data) {
@@ -118,7 +118,7 @@ function example_4_window_size_comparison() {
             if (res.y.length > 0) smoothed.push(res.y[0]);
         }
         const last5 = smoothed.slice(-5).map(v => v.toFixed(2));
-        console.log(`  windowCapacity=${windowSize}: last 5 = [${last5.join(', ')}]`);
+        console.log(`  window_capacity=${windowSize}: last 5 = [${last5.join(', ')}]`);
     }
     console.log();
 }
@@ -130,7 +130,7 @@ function example_5_memory_bounded_processing() {
     const total = 1000;
     const model = new fastloess.OnlineLoess(
         { fraction: 0.3, iterations: 1 },
-        { windowCapacity: 20 }
+        { window_capacity: 20 }
     );
 
     let count = 0;
@@ -158,8 +158,8 @@ function example_6_sliding_window_behavior() {
 
     const data = [[1, 2], [2, 4], [3, 6], [4, 8], [5, 10], [6, 12], [7, 14], [8, 16]];
     const model = new fastloess.OnlineLoess(
-        { fraction: 0.6, iterations: 0, returnResiduals: true },
-        { windowCapacity: 4 }
+        { fraction: 0.6, iterations: 0, return_residuals: true },
+        { window_capacity: 4 }
     );
 
     console.log(`  ${"Pt".padStart(4)} ${"X".padStart(6)} ${"Y".padStart(8)} ${"Smoothed".padStart(10)} ${"Status".padStart(22)}`);
@@ -182,7 +182,7 @@ function example_7_benchmark() {
     const n = 1000;
     const model = new fastloess.OnlineLoess(
         { fraction: 0.5, iterations: 3 },
-        { windowCapacity: 10 }
+        { window_capacity: 10 }
     );
 
     const t0 = process.hrtime.bigint();
@@ -196,20 +196,20 @@ function example_7_benchmark() {
     const ms = Number(process.hrtime.bigint() - t0) / 1e6;
 
     console.log(`  ${count} pts processed in ${ms.toFixed(2)}ms`);
-    console.log(`  windowCapacity=10`);
+    console.log(`  window_capacity=10`);
     console.log();
 }
 
-// ── Example 8: Update Modes (Full vs Incremental) and minPoints ───────────────
+// ── Example 8: Update Modes (Full vs Incremental) and min_points ───────────────
 function example_8_update_modes() {
-    console.log("Example 8: Update Modes (Full vs Incremental) and minPoints");
+    console.log("Example 8: Update Modes (Full vs Incremental) and min_points");
 
     const data = Array.from({ length: 30 }, (_, i) => [i, 2 * i + 1]);
 
     for (const mode of ["full", "incremental"]) {
         const model = new fastloess.OnlineLoess(
             { fraction: 0.5, iterations: 2 },
-            { windowCapacity: 15, minPoints: 5, updateMode: mode }
+            { window_capacity: 15, min_points: 5, update_mode: mode }
         );
         let emitted = 0;
         for (const [x, y] of data) {
@@ -221,8 +221,8 @@ function example_8_update_modes() {
 
     // Show fractionUsed and iterationsUsed from the returned LoessResultObj
     const model = new fastloess.OnlineLoess(
-        { fraction: 0.5, iterations: 2, returnResiduals: true, returnRobustnessWeights: true },
-        { windowCapacity: 10, minPoints: 3 }
+        { fraction: 0.5, iterations: 2, return_residuals: true, return_robustness_weights: true },
+        { window_capacity: 10, min_points: 3 }
     );
     let lastRes = null;
     for (const [x, y] of data) {
@@ -247,15 +247,15 @@ function example_9_advanced_online_options() {
             fraction: 0.5,
             iterations: 2,
             degree: "quadratic",
-            scalingMethod: "mar",
-            boundaryPolicy: "reflect",
-            zeroWeightFallback: "return_original",
-            distanceMetric: "chebyshev",
-            autoConverge: 1e-3,
-            returnResiduals: true,
-            returnRobustnessWeights: true,
+            scaling_method: "mar",
+            boundary_policy: "reflect",
+            zero_weight_fallback: "return_original",
+            distance_metric: "chebyshev",
+            auto_converge: 1e-3,
+            return_residuals: true,
+            return_robustness_weights: true,
         },
-        { windowCapacity: 15, minPoints: 5 }
+        { window_capacity: 15, min_points: 5 }
     );
 
     let emitted = 0;

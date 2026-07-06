@@ -30,7 +30,6 @@ pub use loess_rs::internals::algorithms::robustness::RobustnessMethod;
 pub use loess_rs::internals::api::{LoessAdapter, LoessBuilder};
 pub use loess_rs::internals::engine::executor::SurfaceMode;
 pub use loess_rs::internals::engine::output::LoessResult;
-pub use loess_rs::internals::evaluation::cv::{KFold, LOOCV};
 pub use loess_rs::internals::math::boundary::BoundaryPolicy;
 pub use loess_rs::internals::math::distance::DistanceMetric;
 pub use loess_rs::internals::math::kernel::WeightFunction;
@@ -56,13 +55,23 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'sta
     fn convert(builder: LoessBuilder<T>) -> Self::Output {
         // Determine parallel mode: user choice OR default to true for fastLoess Batch
         let parallel = builder.parallel.unwrap_or(true);
+        // Extract fastLoess-specific fields before the base convert consumes the builder
+        let weighted_metric_weights = builder.weighted_metric_weights.clone();
+        let cv_method_str = builder.cv_method_str.clone();
+        let cv_k_val = builder.cv_k_val;
 
         // Delegate to base implementation to create base builder
         let mut base = <BaseBatch as LoessAdapter<T>>::convert(builder);
         base.parallel = Some(parallel);
 
         // Wrap with extension fields
-        ParallelBatchLoessBuilder { base }
+        ParallelBatchLoessBuilder {
+            base,
+            parse_errors: Vec::new(),
+            weighted_metric_weights,
+            cv_method_str,
+            cv_k_val,
+        }
     }
 }
 
@@ -78,13 +87,19 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'sta
     fn convert(builder: LoessBuilder<T>) -> Self::Output {
         // Determine parallel mode: user choice OR default to true for fastLoess Streaming
         let parallel = builder.parallel.unwrap_or(true);
+        // Extract fastLoess-specific fields before the base convert consumes the builder
+        let weighted_metric_weights = builder.weighted_metric_weights.clone();
 
         // Delegate to base implementation to create base builder
         let mut base = <BaseStreaming as LoessAdapter<T>>::convert(builder);
         base.parallel = Some(parallel);
 
         // Wrap with extension fields
-        ParallelStreamingLoessBuilder { base }
+        ParallelStreamingLoessBuilder {
+            base,
+            parse_errors: Vec::new(),
+            weighted_metric_weights,
+        }
     }
 }
 
@@ -100,12 +115,18 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'sta
     fn convert(builder: LoessBuilder<T>) -> Self::Output {
         // Determine parallel mode: user choice OR default to false for fastLoess Online
         let parallel = builder.parallel.unwrap_or(false);
+        // Extract fastLoess-specific fields before the base convert consumes the builder
+        let weighted_metric_weights = builder.weighted_metric_weights.clone();
 
         // Delegate to base implementation to create base builder
         let mut base = <BaseOnline as LoessAdapter<T>>::convert(builder);
         base.parallel = Some(parallel);
 
         // Wrap with extension fields
-        ParallelOnlineLoessBuilder { base }
+        ParallelOnlineLoessBuilder {
+            base,
+            parse_errors: Vec::new(),
+            weighted_metric_weights,
+        }
     }
 }

@@ -6,10 +6,14 @@
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
 use alloc::string::String;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::error::Error;
 #[cfg(feature = "std")]
 use std::string::String;
+#[cfg(feature = "std")]
+use std::vec::Vec;
 
 // External dependencies
 use core::fmt::{Display, Formatter, Result};
@@ -119,6 +123,21 @@ pub enum LoessError {
         // Whether the limit was explicitly provided by the user.
         limit_provided: bool,
     },
+
+    // An invalid string value was passed for a configuration option.
+    InvalidOption {
+        // The name of the configuration option.
+        option: &'static str,
+        // The invalid value that was provided.
+        value: String,
+        // Comma-separated list of valid values for the option.
+        valid: &'static str,
+    },
+
+    // Multiple invalid string option values were passed to the builder.
+    //
+    // Collects all parse errors from string builder methods and reports them together at `build()`.
+    ParseErrors(Vec<LoessError>),
 }
 
 impl Display for LoessError {
@@ -211,6 +230,16 @@ impl Display for LoessError {
                         "Insufficient vertices: {cell_desc} requires ~{required} vertices, but {limit_desc} is too small"
                     )
                 }
+            }
+            Self::InvalidOption { option, value, valid } => {
+                write!(f, "Invalid value '{value}' for '{option}'. Valid options: {valid}")
+            }
+            Self::ParseErrors(errors) => {
+                write!(f, "Multiple configuration errors ({} total):", errors.len())?;
+                for (i, e) in errors.iter().enumerate() {
+                    write!(f, " [{i}] {e}")?;
+                }
+                Ok(())
             }
         }
     }

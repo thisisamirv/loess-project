@@ -43,51 +43,51 @@ export declare class StreamingLoess {
 export interface Diagnostics {
     rmse: number
     mae: number
-    rSquared: number
+    r_squared: number
     aic?: number
     aicc?: number
-    effectiveDf?: number
-    residualSd: number
+    effective_df?: number
+    residual_sd: number
 }
 
 export interface OnlineOptions {
-    windowCapacity?: number
-    minPoints?: number
-    updateMode?: string
+    window_capacity?: number
+    min_points?: number
+    update_mode?: string
 }
 
 export interface SmoothOptions {
     fraction?: number
     iterations?: number
-    weightFunction?: string
-    robustnessMethod?: string
-    zeroWeightFallback?: string
-    boundaryPolicy?: string
-    scalingMethod?: string
-    autoConverge?: number
-    returnResiduals?: boolean
-    returnRobustnessWeights?: boolean
-    returnDiagnostics?: boolean
-    confidenceIntervals?: number
-    predictionIntervals?: number
-    cvFractions?: Array<number>
-    cvMethod?: string
-    cvK?: number
+    weight_function?: string
+    robustness_method?: string
+    zero_weight_fallback?: string
+    boundary_policy?: string
+    scaling_method?: string
+    auto_converge?: number
+    return_residuals?: boolean
+    return_robustness_weights?: boolean
+    return_diagnostics?: boolean
+    confidence_intervals?: number
+    prediction_intervals?: number
+    cv_fractions?: Array<number>
+    cv_method?: string
+    cv_k?: number
     parallel?: boolean
     degree?: string
     dimensions?: number
-    distanceMetric?: string
-    weightedMetricWeights?: Array<number>
-    surfaceMode?: string
-    returnSe?: boolean
+    distance_metric?: string
+    weighted_metric_weights?: Array<number>
+    surface_mode?: string
+    return_se?: boolean
     cell?: number
-    interpolationVertices?: number
-    boundaryDegreeFallback?: boolean
-    cvSeed?: number
+    interpolation_vertices?: number
+    boundary_degree_fallback?: boolean
+    cv_seed?: number
 }
 
 export interface StreamingOptions {
-    chunkSize?: number
+    chunk_size?: number
     overlap?: number
-    mergeStrategy?: string
+    merge_strategy?: string
 }
