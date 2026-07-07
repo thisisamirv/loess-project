@@ -485,7 +485,12 @@ using FastLOESS
             xlong = collect(range(0, 100, length = 200))
             ylong = sin.(xlong ./ 10)
             for ms ∈ ["average", "weighted_average", "take_first", "take_last"]
-                s = StreamingLoess(fraction = 0.3, chunk_size = 100, merge_strategy = ms)
+                s = StreamingLoess(
+                    fraction = 0.3,
+                    chunk_size = 100,
+                    overlap = 20,
+                    merge_strategy = ms,
+                )
                 r1 = process_chunk(s, xlong, ylong)
                 r2 = finalize(s)
                 @test length(r1.y) + length(r2.y) == 200
@@ -498,6 +503,7 @@ using FastLOESS
             s = StreamingLoess(
                 fraction = 0.3,
                 chunk_size = 60,
+                overlap = 10,
                 distance_metric = "minkowski:2.5",
             )
             r1 = process_chunk(s, xlong, ylong)

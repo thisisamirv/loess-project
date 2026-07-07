@@ -29,21 +29,13 @@ fn bench_scalability(c: &mut Criterion) {
 
         // CPU Serial
         group.bench_with_input(BenchmarkId::new("cpu_serial", size), size, |b, _| {
-            let model = Loess::new()
-                .fraction(0.3)
-                .parallel(false)
-                .build()
-                .unwrap();
+            let model = Loess::new().fraction(0.3).parallel(false).build().unwrap();
             b.iter(|| model.clone().fit(black_box(&x), black_box(&y)).unwrap());
         });
 
         // CPU Parallel
         group.bench_with_input(BenchmarkId::new("cpu_parallel", size), size, |b, _| {
-            let model = Loess::new()
-                .fraction(0.3)
-                .parallel(true)
-                .build()
-                .unwrap();
+            let model = Loess::new().fraction(0.3).parallel(true).build().unwrap();
             b.iter(|| model.clone().fit(black_box(&x), black_box(&y)).unwrap());
         });
     }
@@ -57,11 +49,7 @@ fn bench_parameters(c: &mut Criterion) {
     // Iterations Effect
     for iters in [0, 1, 4, 10].iter() {
         group.bench_with_input(BenchmarkId::new("iterations", iters), iters, |b, &i| {
-            let model = Loess::new()
-                .fraction(0.3)
-                .iterations(i)
-                .build()
-                .unwrap();
+            let model = Loess::new().fraction(0.3).iterations(i).build().unwrap();
             b.iter(|| model.clone().fit(black_box(&x), black_box(&y)).unwrap());
         });
     }

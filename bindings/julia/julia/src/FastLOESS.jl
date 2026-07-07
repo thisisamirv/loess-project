@@ -32,47 +32,47 @@ import Base: finalize
 
 # Library name varies by platform
 const LIBNAME =
-	Sys.iswindows() ? "fastloess_jl.dll" :
-	Sys.isapple() ? "libfastloess_jl.dylib" : "libfastloess_jl.so"
+    Sys.iswindows() ? "fastloess_jl.dll" :
+    Sys.isapple() ? "libfastloess_jl.dylib" : "libfastloess_jl.so"
 
 # Try to load from JLL package first, fall back to local build
 function find_library()
-	# Option 1: Check environment variable (PRIORITY)
-	if haskey(ENV, "FASTLOESS_LIB")
-		lib = ENV["FASTLOESS_LIB"]
-		@info "Using library from FASTLOESS_LIB: $lib"
-		return lib
-	end
+    # Option 1: Check environment variable (PRIORITY)
+    if haskey(ENV, "FASTLOESS_LIB")
+        lib = ENV["FASTLOESS_LIB"]
+        @info "Using library from FASTLOESS_LIB: $lib"
+        return lib
+    end
 
-	# Option 2: Check relative paths (development mode)
-	# Path: julia/src/fastloess.jl -> julia/ -> bindings/julia/ -> bindings/ -> loess-project/
-	src_dir = @__DIR__                        # julia/src/
-	julia_dir = dirname(src_dir)              # julia/
-	bindings_julia_dir = dirname(julia_dir)   # bindings/julia/
-	bindings_dir = dirname(bindings_julia_dir)# bindings/
-	workspace_root = dirname(bindings_dir)    # loess-project/
+    # Option 2: Check relative paths (development mode)
+    # Path: julia/src/fastloess.jl -> julia/ -> bindings/julia/ -> bindings/ -> loess-project/
+    src_dir = @__DIR__                        # julia/src/
+    julia_dir = dirname(src_dir)              # julia/
+    bindings_julia_dir = dirname(julia_dir)   # bindings/julia/
+    bindings_dir = dirname(bindings_julia_dir)# bindings/
+    workspace_root = dirname(bindings_dir)    # loess-project/
 
-	candidates = [
-		# Workspace root target (most common for workspace members)
-		joinpath(workspace_root, "target", "release", LIBNAME),
-		joinpath(workspace_root, "target", "debug", LIBNAME),
-		# Local target (if built standalone)
-		joinpath(bindings_julia_dir, "target", "release", LIBNAME),
-		joinpath(bindings_julia_dir, "target", "debug", LIBNAME),
-		# Same directory as module
-		joinpath(julia_dir, LIBNAME),
-	]
+    candidates = [
+        # Workspace root target (most common for workspace members)
+        joinpath(workspace_root, "target", "release", LIBNAME),
+        joinpath(workspace_root, "target", "debug", LIBNAME),
+        # Local target (if built standalone)
+        joinpath(bindings_julia_dir, "target", "release", LIBNAME),
+        joinpath(bindings_julia_dir, "target", "debug", LIBNAME),
+        # Same directory as module
+        joinpath(julia_dir, LIBNAME),
+    ]
 
-	for path ∈ candidates
-		if isfile(path)
-			@info "Using local library: $path"
-			return path
-		end
-	end
+    for path ∈ candidates
+        if isfile(path)
+            @info "Using local library: $path"
+            return path
+        end
+    end
 
-	# Fall back to system path
-	@warn "Library not found in JLL or local paths, falling back to system path"
-	return LIBNAME
+    # Fall back to system path
+    @warn "Library not found in JLL or local paths, falling back to system path"
+    return LIBNAME
 end
 
 const libfastloess = find_library()
@@ -92,13 +92,13 @@ Diagnostic statistics for LOESS fit quality.
 - `residual_sd::Float64`: Residual standard deviation
 """
 struct Diagnostics
-	rmse::Float64
-	mae::Float64
-	r_squared::Float64
-	aic::Float64
-	aicc::Float64
-	effective_df::Float64
-	residual_sd::Float64
+    rmse::Float64
+    mae::Float64
+    r_squared::Float64
+    aic::Float64
+    aicc::Float64
+    effective_df::Float64
+    residual_sd::Float64
 end
 
 """
@@ -128,26 +128,26 @@ Result from LOESS smoothing.
 - `dimensions::Int`: Number of predictor dimensions
 """
 struct LoessResult
-	x::Vector{Float64}
-	y::Vector{Float64}
-	standard_errors::Union{Vector{Float64}, Nothing}
-	confidence_lower::Union{Vector{Float64}, Nothing}
-	confidence_upper::Union{Vector{Float64}, Nothing}
-	prediction_lower::Union{Vector{Float64}, Nothing}
-	prediction_upper::Union{Vector{Float64}, Nothing}
-	residuals::Union{Vector{Float64}, Nothing}
-	robustness_weights::Union{Vector{Float64}, Nothing}
-	fraction_used::Float64
-	iterations_used::Int
-	diagnostics::Union{Diagnostics, Nothing}
-	enp::Union{Float64, Nothing}
-	trace_hat::Union{Float64, Nothing}
-	delta1::Union{Float64, Nothing}
-	delta2::Union{Float64, Nothing}
-	residual_scale::Union{Float64, Nothing}
-	leverage::Union{Vector{Float64}, Nothing}
-	dimensions::Int
-	cv_scores::Union{Vector{Float64}, Nothing}
+    x::Vector{Float64}
+    y::Vector{Float64}
+    standard_errors::Union{Vector{Float64},Nothing}
+    confidence_lower::Union{Vector{Float64},Nothing}
+    confidence_upper::Union{Vector{Float64},Nothing}
+    prediction_lower::Union{Vector{Float64},Nothing}
+    prediction_upper::Union{Vector{Float64},Nothing}
+    residuals::Union{Vector{Float64},Nothing}
+    robustness_weights::Union{Vector{Float64},Nothing}
+    fraction_used::Float64
+    iterations_used::Int
+    diagnostics::Union{Diagnostics,Nothing}
+    enp::Union{Float64,Nothing}
+    trace_hat::Union{Float64,Nothing}
+    delta1::Union{Float64,Nothing}
+    delta2::Union{Float64,Nothing}
+    residual_scale::Union{Float64,Nothing}
+    leverage::Union{Vector{Float64},Nothing}
+    dimensions::Int
+    cv_scores::Union{Vector{Float64},Nothing}
 end
 
 """
@@ -163,150 +163,150 @@ Result from a single `add_point` call.
 - `iterations_used::Union{Int, Nothing}`: Number of robustness iterations
 """
 struct OnlineOutput
-	smoothed::Float64
-	std_error::Union{Float64, Nothing}
-	residual::Union{Float64, Nothing}
-	robustness_weight::Union{Float64, Nothing}
-	iterations_used::Union{Int, Nothing}
+    smoothed::Float64
+    std_error::Union{Float64,Nothing}
+    residual::Union{Float64,Nothing}
+    robustness_weight::Union{Float64,Nothing}
+    iterations_used::Union{Int,Nothing}
 end
 
 # C FFI struct for per-point online output (must match Rust definition).
 struct CJlOnlineOutput
-	has_value::Cint
-	smoothed::Cdouble
-	std_error::Cdouble
-	residual::Cdouble
-	robustness_weight::Cdouble
-	iterations_used::Cint
+    has_value::Cint
+    smoothed::Cdouble
+    std_error::Cdouble
+    residual::Cdouble
+    robustness_weight::Cdouble
+    iterations_used::Cint
 end
 
 # C FFI result struct (must match Rust definition)
 struct CJlLoessResult
-	x::Ptr{Cdouble}
-	y::Ptr{Cdouble}
-	n::Culong
-	standard_errors::Ptr{Cdouble}
-	confidence_lower::Ptr{Cdouble}
-	confidence_upper::Ptr{Cdouble}
-	prediction_lower::Ptr{Cdouble}
-	prediction_upper::Ptr{Cdouble}
-	residuals::Ptr{Cdouble}
-	robustness_weights::Ptr{Cdouble}
-	fraction_used::Cdouble
-	iterations_used::Cint
-	rmse::Cdouble
-	mae::Cdouble
-	r_squared::Cdouble
-	aic::Cdouble
-	aicc::Cdouble
-	effective_df::Cdouble
-	residual_sd::Cdouble
-	enp::Cdouble
-	trace_hat::Cdouble
-	delta1::Cdouble
-	delta2::Cdouble
-	residual_scale::Cdouble
-	leverage::Ptr{Cdouble}
-	dimensions::Cint
-	cv_scores::Ptr{Cdouble}
-	cv_scores_len::Culong
-	error::Ptr{Cchar}
+    x::Ptr{Cdouble}
+    y::Ptr{Cdouble}
+    n::Culong
+    standard_errors::Ptr{Cdouble}
+    confidence_lower::Ptr{Cdouble}
+    confidence_upper::Ptr{Cdouble}
+    prediction_lower::Ptr{Cdouble}
+    prediction_upper::Ptr{Cdouble}
+    residuals::Ptr{Cdouble}
+    robustness_weights::Ptr{Cdouble}
+    fraction_used::Cdouble
+    iterations_used::Cint
+    rmse::Cdouble
+    mae::Cdouble
+    r_squared::Cdouble
+    aic::Cdouble
+    aicc::Cdouble
+    effective_df::Cdouble
+    residual_sd::Cdouble
+    enp::Cdouble
+    trace_hat::Cdouble
+    delta1::Cdouble
+    delta2::Cdouble
+    residual_scale::Cdouble
+    leverage::Ptr{Cdouble}
+    dimensions::Cint
+    cv_scores::Ptr{Cdouble}
+    cv_scores_len::Culong
+    error::Ptr{Cchar}
 end
 
 function ptr_to_vector(ptr::Ptr{Cdouble}, n::Int)
-	if ptr == Ptr{Cdouble}(C_NULL)
-		return nothing
-	end
-	return unsafe_wrap(Array, ptr, n, own = false) |> copy
+    if ptr == Ptr{Cdouble}(C_NULL)
+        return nothing
+    end
+    return unsafe_wrap(Array, ptr, n, own = false) |> copy
 end
 
 function convert_result(c_result::CJlLoessResult)
-	# Check for error
-	if c_result.error != Ptr{Cchar}(C_NULL)
-		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
-		# Free the result before throwing
-		@ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
-		error("fastloess error: $error_msg")
-	end
+    # Check for error
+    if c_result.error != Ptr{Cchar}(C_NULL)
+        error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
+        # Free the result before throwing
+        @ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
+        error("fastloess error: $error_msg")
+    end
 
-	n = Int(c_result.n)
+    n = Int(c_result.n)
 
-	# Extract arrays
-	x = ptr_to_vector(c_result.x, n)
-	y = ptr_to_vector(c_result.y, n)
+    # Extract arrays
+    x = ptr_to_vector(c_result.x, n)
+    y = ptr_to_vector(c_result.y, n)
 
-	if x === nothing || y === nothing
-		@ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
-		error("fastloess error: result arrays are null")
-	end
+    if x === nothing || y === nothing
+        @ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
+        error("fastloess error: result arrays are null")
+    end
 
-	x = x::Vector{Float64}
-	y = y::Vector{Float64}
+    x = x::Vector{Float64}
+    y = y::Vector{Float64}
 
-	standard_errors = ptr_to_vector(c_result.standard_errors, n)
-	confidence_lower = ptr_to_vector(c_result.confidence_lower, n)
-	confidence_upper = ptr_to_vector(c_result.confidence_upper, n)
-	prediction_lower = ptr_to_vector(c_result.prediction_lower, n)
-	prediction_upper = ptr_to_vector(c_result.prediction_upper, n)
-	residuals = ptr_to_vector(c_result.residuals, n)
-	robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
+    standard_errors = ptr_to_vector(c_result.standard_errors, n)
+    confidence_lower = ptr_to_vector(c_result.confidence_lower, n)
+    confidence_upper = ptr_to_vector(c_result.confidence_upper, n)
+    prediction_lower = ptr_to_vector(c_result.prediction_lower, n)
+    prediction_upper = ptr_to_vector(c_result.prediction_upper, n)
+    residuals = ptr_to_vector(c_result.residuals, n)
+    robustness_weights = ptr_to_vector(c_result.robustness_weights, n)
 
-	# Extract hat-matrix statistics
-	enp = isnan(c_result.enp) ? nothing : c_result.enp
-	trace_hat = isnan(c_result.trace_hat) ? nothing : c_result.trace_hat
-	delta1 = isnan(c_result.delta1) ? nothing : c_result.delta1
-	delta2 = isnan(c_result.delta2) ? nothing : c_result.delta2
-	residual_scale = isnan(c_result.residual_scale) ? nothing : c_result.residual_scale
-	leverage = ptr_to_vector(c_result.leverage, n)
+    # Extract hat-matrix statistics
+    enp = isnan(c_result.enp) ? nothing : c_result.enp
+    trace_hat = isnan(c_result.trace_hat) ? nothing : c_result.trace_hat
+    delta1 = isnan(c_result.delta1) ? nothing : c_result.delta1
+    delta2 = isnan(c_result.delta2) ? nothing : c_result.delta2
+    residual_scale = isnan(c_result.residual_scale) ? nothing : c_result.residual_scale
+    leverage = ptr_to_vector(c_result.leverage, n)
 
-	# Extract diagnostics
-	diagnostics = if !isnan(c_result.rmse)
-		Diagnostics(
-			c_result.rmse,
-			c_result.mae,
-			c_result.r_squared,
-			c_result.aic,
-			c_result.aicc,
-			c_result.effective_df,
-			c_result.residual_sd,
-		)
-	else
-		nothing
-	end
+    # Extract diagnostics
+    diagnostics = if !isnan(c_result.rmse)
+        Diagnostics(
+            c_result.rmse,
+            c_result.mae,
+            c_result.r_squared,
+            c_result.aic,
+            c_result.aicc,
+            c_result.effective_df,
+            c_result.residual_sd,
+        )
+    else
+        nothing
+    end
 
-	cv_scores = if c_result.cv_scores != Ptr{Cdouble}(C_NULL) && c_result.cv_scores_len > 0
-		unsafe_wrap(Array, c_result.cv_scores, Int(c_result.cv_scores_len), own = false) |> copy
-	else
-		nothing
-	end
+    cv_scores = if c_result.cv_scores != Ptr{Cdouble}(C_NULL) && c_result.cv_scores_len > 0
+        unsafe_wrap(Array, c_result.cv_scores, Int(c_result.cv_scores_len), own = false) |> copy
+    else
+        nothing
+    end
 
-	result = LoessResult(
-		x,
-		y,
-		standard_errors,
-		confidence_lower,
-		confidence_upper,
-		prediction_lower,
-		prediction_upper,
-		residuals,
-		robustness_weights,
-		c_result.fraction_used,
-		Int(c_result.iterations_used),
-		diagnostics,
-		enp,
-		trace_hat,
-		delta1,
-		delta2,
-		residual_scale,
-		leverage,
-		Int(c_result.dimensions),
-		cv_scores,
-	)
+    result = LoessResult(
+        x,
+        y,
+        standard_errors,
+        confidence_lower,
+        confidence_upper,
+        prediction_lower,
+        prediction_upper,
+        residuals,
+        robustness_weights,
+        c_result.fraction_used,
+        Int(c_result.iterations_used),
+        diagnostics,
+        enp,
+        trace_hat,
+        delta1,
+        delta2,
+        residual_scale,
+        leverage,
+        Int(c_result.dimensions),
+        cv_scores,
+    )
 
-	# Free the C result
-	@ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
+    # Free the C result
+    @ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
 
-	return result
+    return result
 end
 
 """
@@ -315,38 +315,38 @@ end
 Append the results from `b` to `a`. This modifies `a` in place.
 """
 function Base.append!(a::LoessResult, b::LoessResult)
-	append!(a.x, b.x)
-	append!(a.y, b.y)
+    append!(a.x, b.x)
+    append!(a.y, b.y)
 
-	if a.standard_errors !== nothing && b.standard_errors !== nothing
-		append!(a.standard_errors::Vector{Float64}, b.standard_errors::Vector{Float64})
-	end
-	if a.confidence_lower !== nothing && b.confidence_lower !== nothing
-		append!(a.confidence_lower::Vector{Float64}, b.confidence_lower::Vector{Float64})
-	end
-	if a.confidence_upper !== nothing && b.confidence_upper !== nothing
-		append!(a.confidence_upper::Vector{Float64}, b.confidence_upper::Vector{Float64})
-	end
-	if a.prediction_lower !== nothing && b.prediction_lower !== nothing
-		append!(a.prediction_lower::Vector{Float64}, b.prediction_lower::Vector{Float64})
-	end
-	if a.prediction_upper !== nothing && b.prediction_upper !== nothing
-		append!(a.prediction_upper::Vector{Float64}, b.prediction_upper::Vector{Float64})
-	end
-	if a.residuals !== nothing && b.residuals !== nothing
-		append!(a.residuals::Vector{Float64}, b.residuals::Vector{Float64})
-	end
-	if a.robustness_weights !== nothing && b.robustness_weights !== nothing
-		append!(
-			a.robustness_weights::Vector{Float64},
-			b.robustness_weights::Vector{Float64},
-		)
-	end
+    if a.standard_errors !== nothing && b.standard_errors !== nothing
+        append!(a.standard_errors::Vector{Float64}, b.standard_errors::Vector{Float64})
+    end
+    if a.confidence_lower !== nothing && b.confidence_lower !== nothing
+        append!(a.confidence_lower::Vector{Float64}, b.confidence_lower::Vector{Float64})
+    end
+    if a.confidence_upper !== nothing && b.confidence_upper !== nothing
+        append!(a.confidence_upper::Vector{Float64}, b.confidence_upper::Vector{Float64})
+    end
+    if a.prediction_lower !== nothing && b.prediction_lower !== nothing
+        append!(a.prediction_lower::Vector{Float64}, b.prediction_lower::Vector{Float64})
+    end
+    if a.prediction_upper !== nothing && b.prediction_upper !== nothing
+        append!(a.prediction_upper::Vector{Float64}, b.prediction_upper::Vector{Float64})
+    end
+    if a.residuals !== nothing && b.residuals !== nothing
+        append!(a.residuals::Vector{Float64}, b.residuals::Vector{Float64})
+    end
+    if a.robustness_weights !== nothing && b.robustness_weights !== nothing
+        append!(
+            a.robustness_weights::Vector{Float64},
+            b.robustness_weights::Vector{Float64},
+        )
+    end
 
-	# Update fraction_used and iterations_used if they differ?
-	# Streaming usually keeps them constant. We'll keep a's values.
+    # Update fraction_used and iterations_used if they differ?
+    # Streaming usually keeps them constant. We'll keep a's values.
 
-	return a
+    return a
 end
 
 
@@ -389,105 +389,105 @@ result = fit(l, x, y)
 ```
 """
 mutable struct Loess
-	handle::Ptr{Cvoid}
+    handle::Ptr{Cvoid}
 
-	function Loess(;
-		fraction::Float64 = 0.67,
-		iterations::Int = 3,
-		weight_function::String = "tricube",
-		robustness_method::String = "bisquare",
-		scaling_method::String = "mad",
-		boundary_policy::String = "extend",
-		confidence_intervals::Float64 = NaN,
-		prediction_intervals::Float64 = NaN,
-		return_diagnostics::Bool = false,
-		return_residuals::Bool = false,
-		return_robustness_weights::Bool = false,
-		zero_weight_fallback::String = "use_local_mean",
-		auto_converge::Float64 = NaN,
-		cv_fractions::Vector{Float64} = Float64[],
-		cv_method::String = "kfold",
-		cv_k::Int = 5,
-		parallel::Bool = true,
-		degree::String = "linear",
-		dimensions::Int = 1,
-		distance_metric::String = "normalized",
-		weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing,
-		surface_mode::String = "interpolation",
-		return_se::Bool = false,
-		cell::Union{Float64, Nothing} = nothing,
-		interpolation_vertices::Union{Int, Nothing} = nothing,
-		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
-		cv_seed::Union{Int, Nothing} = nothing,
-	)
-		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
-		cv_len = length(cv_fractions)
+    function Loess(;
+        fraction::Float64 = 0.67,
+        iterations::Int = 3,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        confidence_intervals::Float64 = NaN,
+        prediction_intervals::Float64 = NaN,
+        return_diagnostics::Bool = false,
+        return_residuals::Bool = false,
+        return_robustness_weights::Bool = false,
+        zero_weight_fallback::String = "use_local_mean",
+        auto_converge::Float64 = NaN,
+        cv_fractions::Vector{Float64} = Float64[],
+        cv_method::String = "kfold",
+        cv_k::Int = 5,
+        parallel::Bool = true,
+        degree::String = "linear",
+        dimensions::Int = 1,
+        distance_metric::String = "normalized",
+        weighted_metric_weights::Union{Vector{Float64},Nothing} = nothing,
+        surface_mode::String = "interpolation",
+        return_se::Bool = false,
+        cell::Union{Float64,Nothing} = nothing,
+        interpolation_vertices::Union{Int,Nothing} = nothing,
+        boundary_degree_fallback::Union{Bool,Nothing} = nothing,
+        cv_seed::Union{Int,Nothing} = nothing,
+    )
+        cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
+        cv_len = length(cv_fractions)
 
-		handle = @ccall libfastloess.jl_loess_new(
-			fraction::Cdouble,
-			Cint(iterations)::Cint,
-			weight_function::Cstring,
-			robustness_method::Cstring,
-			scaling_method::Cstring,
-			boundary_policy::Cstring,
-			confidence_intervals::Cdouble,
-			prediction_intervals::Cdouble,
-			Cint(return_diagnostics)::Cint,
-			Cint(return_residuals)::Cint,
-			Cint(return_robustness_weights)::Cint,
-			zero_weight_fallback::Cstring,
-			auto_converge::Cdouble,
-			cv_ptr::Ptr{Cdouble},
-			Culong(cv_len)::Culong,
-			cv_method::Cstring,
-			Cint(cv_k)::Cint,
-			Cint(parallel)::Cint,
-			degree::Cstring,
-			Cint(dimensions)::Cint,
-			distance_metric::Cstring,
-			surface_mode::Cstring,
-			Cint(return_se)::Cint,
-		)::Ptr{Cvoid}
+        handle = @ccall libfastloess.jl_loess_new(
+            fraction::Cdouble,
+            Cint(iterations)::Cint,
+            weight_function::Cstring,
+            robustness_method::Cstring,
+            scaling_method::Cstring,
+            boundary_policy::Cstring,
+            confidence_intervals::Cdouble,
+            prediction_intervals::Cdouble,
+            Cint(return_diagnostics)::Cint,
+            Cint(return_residuals)::Cint,
+            Cint(return_robustness_weights)::Cint,
+            zero_weight_fallback::Cstring,
+            auto_converge::Cdouble,
+            cv_ptr::Ptr{Cdouble},
+            Culong(cv_len)::Culong,
+            cv_method::Cstring,
+            Cint(cv_k)::Cint,
+            Cint(parallel)::Cint,
+            degree::Cstring,
+            Cint(dimensions)::Cint,
+            distance_metric::Cstring,
+            surface_mode::Cstring,
+            Cint(return_se)::Cint,
+        )::Ptr{Cvoid}
 
-		if handle == C_NULL
-			error("Failed to create Loess configuration")
-		end
+        if handle == C_NULL
+            error("Failed to create Loess configuration")
+        end
 
-		# Apply optional overrides via setters
-		if weighted_metric_weights !== nothing
-			n_w = length(weighted_metric_weights)
-			@ccall libfastloess.jl_loess_set_weighted_metric(
-				handle::Ptr{Cvoid},
-				weighted_metric_weights::Ptr{Cdouble},
-				Culong(n_w)::Culong,
-			)::Cvoid
-		end
-		if cell !== nothing
-			@ccall libfastloess.jl_loess_set_cell(handle::Ptr{Cvoid}, cell::Cdouble)::Cvoid
-		end
-		if interpolation_vertices !== nothing
-			@ccall libfastloess.jl_loess_set_interpolation_vertices(
-				handle::Ptr{Cvoid},
-				Culong(interpolation_vertices)::Culong,
-			)::Cvoid
-		end
-		if boundary_degree_fallback !== nothing
-			@ccall libfastloess.jl_loess_set_boundary_degree_fallback(
-				handle::Ptr{Cvoid},
-				Cint(boundary_degree_fallback)::Cint,
-			)::Cvoid
-		end
-		if cv_seed !== nothing
-			@ccall libfastloess.jl_loess_set_cv_seed(
-				handle::Ptr{Cvoid},
-				Culong(cv_seed)::Culong,
-			)::Cvoid
-		end
+        # Apply optional overrides via setters
+        if weighted_metric_weights !== nothing
+            n_w = length(weighted_metric_weights)
+            @ccall libfastloess.jl_loess_set_weighted_metric(
+                handle::Ptr{Cvoid},
+                weighted_metric_weights::Ptr{Cdouble},
+                Culong(n_w)::Culong,
+            )::Cvoid
+        end
+        if cell !== nothing
+            @ccall libfastloess.jl_loess_set_cell(handle::Ptr{Cvoid}, cell::Cdouble)::Cvoid
+        end
+        if interpolation_vertices !== nothing
+            @ccall libfastloess.jl_loess_set_interpolation_vertices(
+                handle::Ptr{Cvoid},
+                Culong(interpolation_vertices)::Culong,
+            )::Cvoid
+        end
+        if boundary_degree_fallback !== nothing
+            @ccall libfastloess.jl_loess_set_boundary_degree_fallback(
+                handle::Ptr{Cvoid},
+                Cint(boundary_degree_fallback)::Cint,
+            )::Cvoid
+        end
+        if cv_seed !== nothing
+            @ccall libfastloess.jl_loess_set_cv_seed(
+                handle::Ptr{Cvoid},
+                Culong(cv_seed)::Culong,
+            )::Cvoid
+        end
 
-		obj = new(handle)
-		finalizer(x -> @ccall(libfastloess.jl_loess_free(x.handle::Ptr{Cvoid})::Cvoid), obj)
-		return obj
-	end
+        obj = new(handle)
+        finalizer(x -> @ccall(libfastloess.jl_loess_free(x.handle::Ptr{Cvoid})::Cvoid), obj)
+        return obj
+    end
 end
 
 """
@@ -507,35 +507,35 @@ Fit the LOESS model to data.
   in R's `stats::loess`. `nothing` disables custom weighting.
 """
 function fit(
-	l::Loess,
-	x::Vector{Float64},
-	y::Vector{Float64};
-	custom_weights::Union{Vector{Float64}, Nothing} = nothing,
+    l::Loess,
+    x::Vector{Float64},
+    y::Vector{Float64};
+    custom_weights::Union{Vector{Float64},Nothing} = nothing,
 )
-	n = length(x)
-	if n != length(y)
-		throw(ArgumentError("x and y must have the same length"))
-	end
+    n = length(x)
+    if n != length(y)
+        throw(ArgumentError("x and y must have the same length"))
+    end
 
-	if custom_weights !== nothing
-		if length(custom_weights) != n
-			throw(ArgumentError("custom_weights must have the same length as y"))
-		end
-		@ccall libfastloess.jl_loess_set_custom_weights(
-			l.handle::Ptr{Cvoid},
-			custom_weights::Ptr{Cdouble},
-			Culong(n)::Culong,
-		)::Cvoid
-	end
+    if custom_weights !== nothing
+        if length(custom_weights) != n
+            throw(ArgumentError("custom_weights must have the same length as y"))
+        end
+        @ccall libfastloess.jl_loess_set_custom_weights(
+            l.handle::Ptr{Cvoid},
+            custom_weights::Ptr{Cdouble},
+            Culong(n)::Culong,
+        )::Cvoid
+    end
 
-	c_result = @ccall libfastloess.jl_loess_fit(
-		l.handle::Ptr{Cvoid},
-		x::Ptr{Cdouble},
-		y::Ptr{Cdouble},
-		Culong(n)::Culong,
-	)::CJlLoessResult
+    c_result = @ccall libfastloess.jl_loess_fit(
+        l.handle::Ptr{Cvoid},
+        x::Ptr{Cdouble},
+        y::Ptr{Cdouble},
+        Culong(n)::Culong,
+    )::CJlLoessResult
 
-	return convert_result(c_result)
+    return convert_result(c_result)
 end
 
 """
@@ -557,38 +557,38 @@ library before calling the underlying routine.
 - `custom_weights::Union{Vector{Float64}, Nothing} = nothing`: Per-observation weights.
 """
 function fit(
-	l::Loess,
-	x::Matrix{Float64},
-	y::Vector{Float64};
-	custom_weights::Union{Vector{Float64}, Nothing} = nothing,
+    l::Loess,
+    x::Matrix{Float64},
+    y::Vector{Float64};
+    custom_weights::Union{Vector{Float64},Nothing} = nothing,
 )
-	n = size(x, 1)
-	if n != length(y)
-		throw(ArgumentError("x and y must have the same length"))
-	end
+    n = size(x, 1)
+    if n != length(y)
+        throw(ArgumentError("x and y must have the same length"))
+    end
 
-	# Convert (n, d) column-major Julia matrix to row-major flat vector for the C FFI
-	x_flat = vec(permutedims(x))  # shape (d, n) then flatten → [p1_d1, p1_d2, p2_d1, …]
+    # Convert (n, d) column-major Julia matrix to row-major flat vector for the C FFI
+    x_flat = vec(permutedims(x))  # shape (d, n) then flatten → [p1_d1, p1_d2, p2_d1, …]
 
-	if custom_weights !== nothing
-		if length(custom_weights) != n
-			throw(ArgumentError("custom_weights must have the same length as y"))
-		end
-		@ccall libfastloess.jl_loess_set_custom_weights(
-			l.handle::Ptr{Cvoid},
-			custom_weights::Ptr{Cdouble},
-			Culong(n)::Culong,
-		)::Cvoid
-	end
+    if custom_weights !== nothing
+        if length(custom_weights) != n
+            throw(ArgumentError("custom_weights must have the same length as y"))
+        end
+        @ccall libfastloess.jl_loess_set_custom_weights(
+            l.handle::Ptr{Cvoid},
+            custom_weights::Ptr{Cdouble},
+            Culong(n)::Culong,
+        )::Cvoid
+    end
 
-	c_result = @ccall libfastloess.jl_loess_fit(
-		l.handle::Ptr{Cvoid},
-		x_flat::Ptr{Cdouble},
-		y::Ptr{Cdouble},
-		Culong(n)::Culong,
-	)::CJlLoessResult
+    c_result = @ccall libfastloess.jl_loess_fit(
+        l.handle::Ptr{Cvoid},
+        x_flat::Ptr{Cdouble},
+        y::Ptr{Cdouble},
+        Culong(n)::Culong,
+    )::CJlLoessResult
 
-	return convert_result(c_result)
+    return convert_result(c_result)
 end
 
 """
@@ -632,89 +632,89 @@ Stateful streaming LOESS smoother.
   degree at boundaries when higher degrees fail.
 """
 mutable struct StreamingLoess
-	handle::Ptr{Cvoid}
+    handle::Ptr{Cvoid}
 
-	function StreamingLoess(;
-		fraction::Float64 = 0.67,
-		chunk_size::Int = 5000,
-		overlap::Int = 500,
-		iterations::Int = 3,
-		weight_function::String = "tricube",
-		robustness_method::String = "bisquare",
-		scaling_method::String = "mad",
-		boundary_policy::String = "extend",
-		auto_converge::Float64 = NaN,
-		return_diagnostics::Bool = false,
-		return_residuals::Bool = false,
-		return_robustness_weights::Bool = false,
-		zero_weight_fallback::String = "use_local_mean",
-		parallel::Bool = true,
-		degree::String = "linear",
-		dimensions::Int = 1,
-		distance_metric::String = "normalized",
-		surface_mode::String = "interpolation",
-		return_se::Bool = false,
-		merge_strategy::String = "weighted_average",
-		confidence_intervals::Float64 = NaN,
-		prediction_intervals::Float64 = NaN,
-		weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing,
-		cell::Union{Float64, Nothing} = nothing,
-		interpolation_vertices::Union{Int, Nothing} = nothing,
-		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
-	)
-		# Resolve weighted metric arguments
-		wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
-			weighted_metric_weights, Culong(length(weighted_metric_weights))
-		else
-			C_NULL, Culong(0)
-		end
-		cell_val = isnothing(cell) ? NaN : Float64(cell)
-		iv_val = isnothing(interpolation_vertices) ? Cint(-1) : Cint(interpolation_vertices)
-		bdf_val =
-			isnothing(boundary_degree_fallback) ? Cint(-1) :
-			(boundary_degree_fallback ? Cint(1) : Cint(0))
+    function StreamingLoess(;
+        fraction::Float64 = 0.67,
+        chunk_size::Int = 5000,
+        overlap::Int = 500,
+        iterations::Int = 3,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        auto_converge::Float64 = NaN,
+        return_diagnostics::Bool = false,
+        return_residuals::Bool = false,
+        return_robustness_weights::Bool = false,
+        zero_weight_fallback::String = "use_local_mean",
+        parallel::Bool = true,
+        degree::String = "linear",
+        dimensions::Int = 1,
+        distance_metric::String = "normalized",
+        surface_mode::String = "interpolation",
+        return_se::Bool = false,
+        merge_strategy::String = "weighted_average",
+        confidence_intervals::Float64 = NaN,
+        prediction_intervals::Float64 = NaN,
+        weighted_metric_weights::Union{Vector{Float64},Nothing} = nothing,
+        cell::Union{Float64,Nothing} = nothing,
+        interpolation_vertices::Union{Int,Nothing} = nothing,
+        boundary_degree_fallback::Union{Bool,Nothing} = nothing,
+    )
+        # Resolve weighted metric arguments
+        wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
+            weighted_metric_weights, Culong(length(weighted_metric_weights))
+        else
+            C_NULL, Culong(0)
+        end
+        cell_val = isnothing(cell) ? NaN : Float64(cell)
+        iv_val = isnothing(interpolation_vertices) ? Cint(-1) : Cint(interpolation_vertices)
+        bdf_val =
+            isnothing(boundary_degree_fallback) ? Cint(-1) :
+            (boundary_degree_fallback ? Cint(1) : Cint(0))
 
-		handle = @ccall libfastloess.jl_streaming_loess_new(
-			fraction::Cdouble,
-			Cint(chunk_size)::Cint,
-			Cint(overlap)::Cint,
-			Cint(iterations)::Cint,
-			weight_function::Cstring,
-			robustness_method::Cstring,
-			scaling_method::Cstring,
-			boundary_policy::Cstring,
-			auto_converge::Cdouble,
-			Cint(return_diagnostics)::Cint,
-			Cint(return_residuals)::Cint,
-			Cint(return_robustness_weights)::Cint,
-			zero_weight_fallback::Cstring,
-			merge_strategy::Cstring,
-			Cint(parallel)::Cint,
-			degree::Cstring,
-			Cint(dimensions)::Cint,
-			distance_metric::Cstring,
-			surface_mode::Cstring,
-			Cint(return_se)::Cint,
-			confidence_intervals::Cdouble,
-			prediction_intervals::Cdouble,
-			cell_val::Cdouble,
-			iv_val::Cint,
-			bdf_val::Cint,
-			wm_ptr::Ptr{Cdouble},
-			wm_len::Culong,
-		)::Ptr{Cvoid}
+        handle = @ccall libfastloess.jl_streaming_loess_new(
+            fraction::Cdouble,
+            Cint(chunk_size)::Cint,
+            Cint(overlap)::Cint,
+            Cint(iterations)::Cint,
+            weight_function::Cstring,
+            robustness_method::Cstring,
+            scaling_method::Cstring,
+            boundary_policy::Cstring,
+            auto_converge::Cdouble,
+            Cint(return_diagnostics)::Cint,
+            Cint(return_residuals)::Cint,
+            Cint(return_robustness_weights)::Cint,
+            zero_weight_fallback::Cstring,
+            merge_strategy::Cstring,
+            Cint(parallel)::Cint,
+            degree::Cstring,
+            Cint(dimensions)::Cint,
+            distance_metric::Cstring,
+            surface_mode::Cstring,
+            Cint(return_se)::Cint,
+            confidence_intervals::Cdouble,
+            prediction_intervals::Cdouble,
+            cell_val::Cdouble,
+            iv_val::Cint,
+            bdf_val::Cint,
+            wm_ptr::Ptr{Cdouble},
+            wm_len::Culong,
+        )::Ptr{Cvoid}
 
-		if handle == C_NULL
-			error("Failed to create StreamingLoess")
-		end
+        if handle == C_NULL
+            error("Failed to create StreamingLoess")
+        end
 
-		obj = new(handle)
-		finalizer(
-			x -> @ccall(libfastloess.jl_streaming_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
-			obj,
-		)
-		return obj
-	end
+        obj = new(handle)
+        finalizer(
+            x -> @ccall(libfastloess.jl_streaming_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
+            obj,
+        )
+        return obj
+    end
 end
 
 """
@@ -723,19 +723,19 @@ end
 Process a chunk of data.
 """
 function process_chunk(s::StreamingLoess, x::Vector{Float64}, y::Vector{Float64})
-	n = length(x)
-	if n != length(y)
-		throw(ArgumentError("x and y must have the same length"))
-	end
+    n = length(x)
+    if n != length(y)
+        throw(ArgumentError("x and y must have the same length"))
+    end
 
-	c_result = @ccall libfastloess.jl_streaming_loess_process_chunk(
-		s.handle::Ptr{Cvoid},
-		x::Ptr{Cdouble},
-		y::Ptr{Cdouble},
-		Culong(n)::Culong,
-	)::CJlLoessResult
+    c_result = @ccall libfastloess.jl_streaming_loess_process_chunk(
+        s.handle::Ptr{Cvoid},
+        x::Ptr{Cdouble},
+        y::Ptr{Cdouble},
+        Culong(n)::Culong,
+    )::CJlLoessResult
 
-	return convert_result(c_result)
+    return convert_result(c_result)
 end
 
 """
@@ -744,11 +744,11 @@ end
 Finalize streaming and return remaining buffered data.
 """
 function finalize(s::StreamingLoess)
-	c_result = @ccall libfastloess.jl_streaming_loess_finalize(
-		s.handle::Ptr{Cvoid},
-	)::CJlLoessResult
+    c_result = @ccall libfastloess.jl_streaming_loess_finalize(
+        s.handle::Ptr{Cvoid},
+    )::CJlLoessResult
 
-	return convert_result(c_result)
+    return convert_result(c_result)
 end
 
 """
@@ -792,89 +792,89 @@ Stateful online LOESS smoother.
   degree at boundaries when higher degrees fail.
 """
 mutable struct OnlineLoess
-	handle::Ptr{Cvoid}
+    handle::Ptr{Cvoid}
 
-	function OnlineLoess(;
-		fraction::Float64 = 0.67,
-		window_capacity::Int = 1000,
-		min_points::Int = 3,
-		iterations::Int = 3,
-		weight_function::String = "tricube",
-		robustness_method::String = "bisquare",
-		scaling_method::String = "mad",
-		boundary_policy::String = "extend",
-		update_mode::String = "full",
-		auto_converge::Float64 = NaN,
-		return_robustness_weights::Bool = false,
-		return_diagnostics::Bool = false,
-		return_residuals::Bool = false,
-		zero_weight_fallback::String = "use_local_mean",
-		parallel::Bool = false,
-		degree::String = "linear",
-		dimensions::Int = 1,
-		distance_metric::String = "normalized",
-		surface_mode::String = "interpolation",
-		return_se::Bool = false,
-		confidence_intervals::Float64 = NaN,
-		prediction_intervals::Float64 = NaN,
-		weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing,
-		cell::Union{Float64, Nothing} = nothing,
-		interpolation_vertices::Union{Int, Nothing} = nothing,
-		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
-	)
-		# Resolve weighted metric arguments
-		wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
-			weighted_metric_weights, Culong(length(weighted_metric_weights))
-		else
-			C_NULL, Culong(0)
-		end
-		cell_val = isnothing(cell) ? NaN : Float64(cell)
-		iv_val = isnothing(interpolation_vertices) ? Cint(-1) : Cint(interpolation_vertices)
-		bdf_val =
-			isnothing(boundary_degree_fallback) ? Cint(-1) :
-			(boundary_degree_fallback ? Cint(1) : Cint(0))
+    function OnlineLoess(;
+        fraction::Float64 = 0.67,
+        window_capacity::Int = 1000,
+        min_points::Int = 3,
+        iterations::Int = 3,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        update_mode::String = "full",
+        auto_converge::Float64 = NaN,
+        return_robustness_weights::Bool = false,
+        return_diagnostics::Bool = false,
+        return_residuals::Bool = false,
+        zero_weight_fallback::String = "use_local_mean",
+        parallel::Bool = false,
+        degree::String = "linear",
+        dimensions::Int = 1,
+        distance_metric::String = "normalized",
+        surface_mode::String = "interpolation",
+        return_se::Bool = false,
+        confidence_intervals::Float64 = NaN,
+        prediction_intervals::Float64 = NaN,
+        weighted_metric_weights::Union{Vector{Float64},Nothing} = nothing,
+        cell::Union{Float64,Nothing} = nothing,
+        interpolation_vertices::Union{Int,Nothing} = nothing,
+        boundary_degree_fallback::Union{Bool,Nothing} = nothing,
+    )
+        # Resolve weighted metric arguments
+        wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
+            weighted_metric_weights, Culong(length(weighted_metric_weights))
+        else
+            C_NULL, Culong(0)
+        end
+        cell_val = isnothing(cell) ? NaN : Float64(cell)
+        iv_val = isnothing(interpolation_vertices) ? Cint(-1) : Cint(interpolation_vertices)
+        bdf_val =
+            isnothing(boundary_degree_fallback) ? Cint(-1) :
+            (boundary_degree_fallback ? Cint(1) : Cint(0))
 
-		handle = @ccall libfastloess.jl_online_loess_new(
-			fraction::Cdouble,
-			Cint(window_capacity)::Cint,
-			Cint(min_points)::Cint,
-			Cint(iterations)::Cint,
-			weight_function::Cstring,
-			robustness_method::Cstring,
-			scaling_method::Cstring,
-			boundary_policy::Cstring,
-			update_mode::Cstring,
-			auto_converge::Cdouble,
-			Cint(return_robustness_weights)::Cint,
-			Cint(return_diagnostics)::Cint,
-			Cint(return_residuals)::Cint,
-			zero_weight_fallback::Cstring,
-			Cint(parallel)::Cint,
-			degree::Cstring,
-			Cint(dimensions)::Cint,
-			distance_metric::Cstring,
-			surface_mode::Cstring,
-			Cint(return_se)::Cint,
-			confidence_intervals::Cdouble,
-			prediction_intervals::Cdouble,
-			cell_val::Cdouble,
-			iv_val::Cint,
-			bdf_val::Cint,
-			wm_ptr::Ptr{Cdouble},
-			wm_len::Culong,
-		)::Ptr{Cvoid}
+        handle = @ccall libfastloess.jl_online_loess_new(
+            fraction::Cdouble,
+            Cint(window_capacity)::Cint,
+            Cint(min_points)::Cint,
+            Cint(iterations)::Cint,
+            weight_function::Cstring,
+            robustness_method::Cstring,
+            scaling_method::Cstring,
+            boundary_policy::Cstring,
+            update_mode::Cstring,
+            auto_converge::Cdouble,
+            Cint(return_robustness_weights)::Cint,
+            Cint(return_diagnostics)::Cint,
+            Cint(return_residuals)::Cint,
+            zero_weight_fallback::Cstring,
+            Cint(parallel)::Cint,
+            degree::Cstring,
+            Cint(dimensions)::Cint,
+            distance_metric::Cstring,
+            surface_mode::Cstring,
+            Cint(return_se)::Cint,
+            confidence_intervals::Cdouble,
+            prediction_intervals::Cdouble,
+            cell_val::Cdouble,
+            iv_val::Cint,
+            bdf_val::Cint,
+            wm_ptr::Ptr{Cdouble},
+            wm_len::Culong,
+        )::Ptr{Cvoid}
 
-		if handle == C_NULL
-			error("Failed to create OnlineLoess")
-		end
+        if handle == C_NULL
+            error("Failed to create OnlineLoess")
+        end
 
-		obj = new(handle)
-		finalizer(
-			x -> @ccall(libfastloess.jl_online_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
-			obj,
-		)
-		return obj
-	end
+        obj = new(handle)
+        finalizer(
+            x -> @ccall(libfastloess.jl_online_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
+            obj,
+        )
+        return obj
+    end
 end
 
 """
@@ -885,23 +885,23 @@ Returns `nothing` while the window is still filling (fewer than `min_points`
 have been seen), and an `OnlineOutput` once smoothing begins.
 """
 function add_point(o::OnlineLoess, x::Float64, y::Float64)
-	c_result = @ccall libfastloess.jl_online_loess_add_point(
-		o.handle::Ptr{Cvoid},
-		x::Cdouble,
-		y::Cdouble,
-	)::CJlOnlineOutput
+    c_result = @ccall libfastloess.jl_online_loess_add_point(
+        o.handle::Ptr{Cvoid},
+        x::Cdouble,
+        y::Cdouble,
+    )::CJlOnlineOutput
 
-	if c_result.has_value == 0
-		return nothing
-	end
+    if c_result.has_value == 0
+        return nothing
+    end
 
-	return OnlineOutput(
-		c_result.smoothed,
-		isnan(c_result.std_error) ? nothing : c_result.std_error,
-		isnan(c_result.residual) ? nothing : c_result.residual,
-		isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
-		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
-	)
+    return OnlineOutput(
+        c_result.smoothed,
+        isnan(c_result.std_error) ? nothing : c_result.std_error,
+        isnan(c_result.residual) ? nothing : c_result.residual,
+        isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
+        c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
+    )
 end
 
 end # module FastLOESS

@@ -198,14 +198,14 @@ fn error_result_from(err: shared_parse::BindingError) -> JlLoessResult {
 
 fn map_invalid_arg_result<T, E: ToString>(
     result: std::result::Result<T, E>,
-) -> std::result::Result<T, JlLoessResult> {
-    shared_parse::map_invalid_arg(result).map_err(error_result_from)
+) -> std::result::Result<T, Box<JlLoessResult>> {
+    shared_parse::map_invalid_arg(result).map_err(|e| Box::new(error_result_from(e)))
 }
 
 fn map_runtime_result<T, E: ToString>(
     result: std::result::Result<T, E>,
-) -> std::result::Result<T, JlLoessResult> {
-    shared_parse::map_runtime(result).map_err(error_result_from)
+) -> std::result::Result<T, Box<JlLoessResult>> {
+    shared_parse::map_runtime(result).map_err(|e| Box::new(error_result_from(e)))
 }
 
 // Parse a C string safely.
@@ -532,7 +532,7 @@ pub unsafe extern "C" fn jl_loess_fit(
                 },
             )) {
                 Ok(v) => v,
-                Err(e) => return e,
+                Err(e) => return *e,
             };
 
         if let Some(ref uw) = config.custom_weights {
@@ -541,12 +541,12 @@ pub unsafe extern "C" fn jl_loess_fit(
 
         let model = match map_runtime_result(builder.adapter(Batch).build()) {
             Ok(m) => m,
-            Err(e) => return e,
+            Err(e) => return *e,
         };
 
         let result = match map_runtime_result(model.fit(x_slice, y_slice)) {
             Ok(r) => r,
-            Err(e) => return e,
+            Err(e) => return *e,
         };
 
         loess_result_to_jl(result)
@@ -884,7 +884,7 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
 
         match map_runtime_result(processor.inner.process_chunk(x_slice, y_slice)) {
             Ok(r) => loess_result_to_jl(r),
-            Err(e) => e,
+            Err(e) => *e,
         }
     });
 
@@ -908,7 +908,7 @@ pub unsafe extern "C" fn jl_streaming_loess_finalize(ptr: *mut JlStreamingLoess)
 
         match map_runtime_result(processor.inner.finalize()) {
             Ok(r) => loess_result_to_jl(r),
-            Err(e) => e,
+            Err(e) => *e,
         }
     });
 
@@ -1002,46 +1002,45 @@ pub unsafe extern "C" fn jl_online_loess_new(
             1
         };
 
-        let (builder, _) =
-            match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
-                LoessBuilder::<f64>::new(),
-                shared_parse::BuilderOptionSet {
-                    fraction: Some(fraction),
-                    iterations: Some(iterations as usize),
-                    weight_function: Some(wf_str),
-                    robustness_method: Some(rm_str),
-                    zero_weight_fallback: Some(zwf_str),
-                    boundary_policy: Some(bp_str),
-                    scaling_method: Some(sm_str),
-                    auto_converge: None,
-                    return_residuals: return_residuals != 0,
-                    return_robustness_weights: false,
-                    return_diagnostics: return_diagnostics != 0,
-                    confidence_intervals: (!confidence_intervals.is_nan())
-                        .then_some(confidence_intervals),
-                    prediction_intervals: (!prediction_intervals.is_nan())
-                        .then_some(prediction_intervals),
-                    parallel: None,
-                    degree: Some(deg_str),
-                    dimensions: Some(configured_dimensions),
-                    distance_metric: Some(metric_name),
-                    weighted_metric_weights: weighted_metric,
-                    surface_mode: Some(surf_str),
-                    return_se: return_se != 0,
-                    cell: (!cell.is_nan()).then_some(cell),
-                    interpolation_vertices: (interpolation_vertices > 0)
-                        .then_some(interpolation_vertices as usize),
-                    boundary_degree_fallback: (boundary_degree_fallback >= 0)
-                        .then_some(boundary_degree_fallback != 0),
-                    cv_fractions: None,
-                    cv_method: None,
-                    cv_k: None,
-                    cv_seed: None,
-                },
-            )) {
-                Ok(v) => v,
-                Err(e) => return null_with_last_error(&e.message),
-            };
+        let (builder, _) = match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
+            LoessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations as usize),
+                weight_function: Some(wf_str),
+                robustness_method: Some(rm_str),
+                zero_weight_fallback: Some(zwf_str),
+                boundary_policy: Some(bp_str),
+                scaling_method: Some(sm_str),
+                auto_converge: None,
+                return_residuals: return_residuals != 0,
+                return_robustness_weights: false,
+                return_diagnostics: return_diagnostics != 0,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
+                parallel: None,
+                degree: Some(deg_str),
+                dimensions: Some(configured_dimensions),
+                distance_metric: Some(metric_name),
+                weighted_metric_weights: weighted_metric,
+                surface_mode: Some(surf_str),
+                return_se: return_se != 0,
+                cell: (!cell.is_nan()).then_some(cell),
+                interpolation_vertices: (interpolation_vertices > 0)
+                    .then_some(interpolation_vertices as usize),
+                boundary_degree_fallback: (boundary_degree_fallback >= 0)
+                    .then_some(boundary_degree_fallback != 0),
+                cv_fractions: None,
+                cv_method: None,
+                cv_k: None,
+                cv_seed: None,
+            },
+        )) {
+            Ok(v) => v,
+            Err(e) => return null_with_last_error(&e.message),
+        };
 
         let mut o_builder = builder.adapter(Online);
         o_builder = o_builder.window_capacity(window_capacity as usize);
@@ -1061,9 +1060,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
             Err(e) => return null_with_last_error(&e.message),
         };
 
-        Box::into_raw(Box::new(JlOnlineLoess {
-            inner: processor,
-        }))
+        Box::into_raw(Box::new(JlOnlineLoess { inner: processor }))
     });
 
     match result {
