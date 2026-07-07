@@ -7,7 +7,7 @@ use ::fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
 use ::fastLoess::binding_support as shared_parse;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
-use ::fastLoess::internals::api::{DistanceMetric, MergeStrategy, PolynomialDegree, UpdateMode};
+use ::fastLoess::internals::api::{MergeStrategy, UpdateMode};
 use ::fastLoess::prelude::LoessResult as InnerLoessResult;
 
 fn to_napi_error(err: shared_parse::BindingError) -> Error {
@@ -43,6 +43,21 @@ pub struct Diagnostics {
     pub effective_df: Option<f64>,
     // Residual standard deviation.
     pub residual_sd: f64,
+}
+
+// Result of a single online update step.
+#[napi(object)]
+pub struct OnlineOutput {
+    // Smoothed value for the latest point.
+    pub smoothed: f64,
+    // Standard error (if computed).
+    pub std_error: Option<f64>,
+    // Residual y − smoothed (if computed).
+    pub residual: Option<f64>,
+    // Robustness weight for the latest point (if computed).
+    pub robustness_weight: Option<f64>,
+    // Number of robustness iterations performed (if applicable).
+    pub iterations_used: Option<u32>,
 }
 
 // Result of a LOESS fit.
@@ -537,11 +552,6 @@ pub struct OnlineOptions {
 #[napi]
 pub struct OnlineLoess {
     inner: ParallelOnlineLoess<f64>,
-    dimensions: usize,
-    degree: PolynomialDegree,
-    distance_metric: DistanceMetric<f64>,
-    fraction_used: f64,
-    iterations_used: Option<usize>,
 }
 
 #[napi]
@@ -550,64 +560,41 @@ impl OnlineLoess {
     #[napi(constructor)]
     pub fn new(options: Option<SmoothOptions>, online_opts: Option<OnlineOptions>) -> Result<Self> {
         let mut builder = LoessBuilder::<f64>::new();
-        let mut dimensions = 1usize;
-        let mut degree = PolynomialDegree::Linear;
-        let mut distance_metric = DistanceMetric::Normalized;
-        let mut fraction_used = 0.67f64;
-        let mut iterations_used = None;
 
         if let Some(opts) = options {
-            if let Some(f) = opts.fraction {
-                fraction_used = f;
-            }
-            if let Some(i) = opts.iterations {
-                iterations_used = Some(i as usize);
-            }
-            if let Some(dims) = opts.dimensions {
-                dimensions = dims as usize;
-            }
-
-            let (configured_builder, applied) =
-                map_invalid_arg(shared_parse::apply_builder_options(
-                    builder,
-                    shared_parse::BuilderOptionSet {
-                        fraction: opts.fraction,
-                        iterations: opts.iterations.map(|v| v as usize),
-                        weight_function: opts.weight_function.as_deref(),
-                        robustness_method: opts.robustness_method.as_deref(),
-                        zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
-                        boundary_policy: opts.boundary_policy.as_deref(),
-                        scaling_method: opts.scaling_method.as_deref(),
-                        auto_converge: opts.auto_converge,
-                        return_residuals: opts.return_residuals.unwrap_or(false),
-                        return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                        return_diagnostics: opts.return_diagnostics.unwrap_or(false),
-                        confidence_intervals: opts.confidence_intervals,
-                        prediction_intervals: opts.prediction_intervals,
-                        parallel: opts.parallel,
-                        degree: opts.degree.as_deref(),
-                        dimensions: opts.dimensions.map(|v| v as usize),
-                        distance_metric: opts.distance_metric.as_deref(),
-                        weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
-                        surface_mode: opts.surface_mode.as_deref(),
-                        return_se: opts.return_se.unwrap_or(false),
-                        cell: opts.cell,
-                        interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
-                        boundary_degree_fallback: opts.boundary_degree_fallback,
-                        cv_fractions: opts.cv_fractions.as_deref(),
-                        cv_method: opts.cv_method.as_deref(),
-                        cv_k: opts.cv_k.map(|v| v as usize),
-                        cv_seed: opts.cv_seed.map(|s| s as u64),
-                    },
-                ))?;
+            let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+                builder,
+                shared_parse::BuilderOptionSet {
+                    fraction: opts.fraction,
+                    iterations: opts.iterations.map(|v| v as usize),
+                    weight_function: opts.weight_function.as_deref(),
+                    robustness_method: opts.robustness_method.as_deref(),
+                    zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                    boundary_policy: opts.boundary_policy.as_deref(),
+                    scaling_method: opts.scaling_method.as_deref(),
+                    auto_converge: opts.auto_converge,
+                    return_residuals: opts.return_residuals.unwrap_or(false),
+                    return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                    return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                    confidence_intervals: opts.confidence_intervals,
+                    prediction_intervals: opts.prediction_intervals,
+                    parallel: opts.parallel,
+                    degree: opts.degree.as_deref(),
+                    dimensions: opts.dimensions.map(|v| v as usize),
+                    distance_metric: opts.distance_metric.as_deref(),
+                    weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
+                    surface_mode: opts.surface_mode.as_deref(),
+                    return_se: opts.return_se.unwrap_or(false),
+                    cell: opts.cell,
+                    interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
+                    boundary_degree_fallback: opts.boundary_degree_fallback,
+                    cv_fractions: opts.cv_fractions.as_deref(),
+                    cv_method: opts.cv_method.as_deref(),
+                    cv_k: opts.cv_k.map(|v| v as usize),
+                    cv_seed: opts.cv_seed.map(|s| s as u64),
+                },
+            ))?;
             builder = configured_builder;
-
-            if let Some(parsed_degree) = applied.degree {
-                degree = parsed_degree;
-            }
-            if let Some(parsed_distance) = applied.distance_metric {
-                distance_metric = parsed_distance;
-            }
         }
 
         let mut window_capacity = 100;
@@ -635,42 +622,23 @@ impl OnlineLoess {
                 .build(),
         )?;
 
-        Ok(OnlineLoess {
-            inner: model,
-            dimensions,
-            degree,
-            distance_metric,
-            fraction_used,
-            iterations_used,
-        })
+        Ok(OnlineLoess { inner: model })
     }
 
-    // Add new points to the window and get smoothed values.
-    #[napi(js_name = "add_points")]
-    pub fn add_points(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResult> {
-        let x_slice = x.as_ref();
-        let y_slice = y.as_ref();
-        let metadata = shared_parse::OnlineResultMetadata {
-            dimensions: self.dimensions,
-            degree: self.degree,
-            distance_metric: self.distance_metric.clone(),
-            fraction_used: self.fraction_used,
-            iterations_used: self.iterations_used,
-        };
-
-        let inner_result: InnerLoessResult<f64> =
-            map_invalid_arg(shared_parse::online_add_points_to_result(
-                x_slice,
-                y_slice,
-                &metadata,
-                |xi_chunk, yi| {
-                    let output = self.inner.add_point(xi_chunk, yi)?;
-                    Ok(output.map(|o| o.smoothed))
-                },
-            ))?;
-
-        Ok(LoessResult {
-            inner: inner_result,
-        })
+    // Add a single point and return its smoothed value, or null if the window
+    // is not yet full enough to produce a result.
+    #[napi]
+    pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<OnlineOutput>> {
+        let output = self
+            .inner
+            .add_point(&[x], y)
+            .map_err(|e| to_napi_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
+        Ok(output.map(|o| OnlineOutput {
+            smoothed: o.smoothed,
+            std_error: o.std_error,
+            residual: o.residual,
+            robustness_weight: o.robustness_weight,
+            iterations_used: o.iterations_used.map(|i| i as u32),
+        }))
     }
 }

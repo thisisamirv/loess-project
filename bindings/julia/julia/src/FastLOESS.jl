@@ -9,7 +9,7 @@ Provides bindings to the fastloess Rust library for fast, robust LOESS smoothing
 - `Loess(; kwargs...)`: Configure batch LOESS
 - `fit(model, x, y)`: Fit and return results
 - `StreamingLoess(; kwargs...)` / `process_chunk` / `finalize`: Streaming mode
-- `OnlineLoess(; kwargs...)` / `add_points`: Online sliding-window mode
+- `OnlineLoess(; kwargs...)` / `add_point`: Online sliding-window mode
 
 # Example
 ```julia
@@ -25,8 +25,8 @@ println("Smoothed values: ", result.y)
 module FastLOESS
 
 export Loess, StreamingLoess, OnlineLoess
-export fit, process_chunk, finalize, add_points
-export LoessResult, Diagnostics
+export fit, process_chunk, finalize, add_point
+export LoessResult, OnlineOutput, Diagnostics
 
 import Base: finalize
 
@@ -148,6 +148,36 @@ struct LoessResult
 	leverage::Union{Vector{Float64}, Nothing}
 	dimensions::Int
 	cv_scores::Union{Vector{Float64}, Nothing}
+end
+
+"""
+	OnlineOutput
+
+Result from a single `add_point` call.
+
+# Fields
+- `smoothed::Float64`: Smoothed value for the latest point
+- `std_error::Union{Float64, Nothing}`: Standard error (if computed)
+- `residual::Union{Float64, Nothing}`: Residual y − smoothed (if computed)
+- `robustness_weight::Union{Float64, Nothing}`: Robustness weight (if computed)
+- `iterations_used::Union{Int, Nothing}`: Number of robustness iterations
+"""
+struct OnlineOutput
+	smoothed::Float64
+	std_error::Union{Float64, Nothing}
+	residual::Union{Float64, Nothing}
+	robustness_weight::Union{Float64, Nothing}
+	iterations_used::Union{Int, Nothing}
+end
+
+# C FFI struct for per-point online output (must match Rust definition).
+struct CJlOnlineOutput
+	has_value::Cint
+	smoothed::Cdouble
+	std_error::Cdouble
+	residual::Cdouble
+	robustness_weight::Cdouble
+	iterations_used::Cint
 end
 
 # C FFI result struct (must match Rust definition)
@@ -848,24 +878,30 @@ mutable struct OnlineLoess
 end
 
 """
-	add_points(o::OnlineLoess, x, y) -> LoessResult
+	add_point(o::OnlineLoess, x, y) -> Union{OnlineOutput, Nothing}
 
-Add points to the online processor.
+Add a single point to the online processor and return its smoothed value.
+Returns `nothing` while the window is still filling (fewer than `min_points`
+have been seen), and an `OnlineOutput` once smoothing begins.
 """
-function add_points(o::OnlineLoess, x::Vector{Float64}, y::Vector{Float64})
-	n = length(x)
-	if n != length(y)
-		throw(ArgumentError("x and y must have the same length"))
+function add_point(o::OnlineLoess, x::Float64, y::Float64)
+	c_result = @ccall libfastloess.jl_online_loess_add_point(
+		o.handle::Ptr{Cvoid},
+		x::Cdouble,
+		y::Cdouble,
+	)::CJlOnlineOutput
+
+	if c_result.has_value == 0
+		return nothing
 	end
 
-	c_result = @ccall libfastloess.jl_online_loess_add_points(
-		o.handle::Ptr{Cvoid},
-		x::Ptr{Cdouble},
-		y::Ptr{Cdouble},
-		Culong(n)::Culong,
-	)::CJlLoessResult
-
-	return convert_result(c_result)
+	return OnlineOutput(
+		c_result.smoothed,
+		isnan(c_result.std_error) ? nothing : c_result.std_error,
+		isnan(c_result.residual) ? nothing : c_result.residual,
+		isnan(c_result.robustness_weight) ? nothing : c_result.robustness_weight,
+		c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
+	)
 end
 
 end # module FastLOESS

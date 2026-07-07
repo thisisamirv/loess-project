@@ -319,7 +319,10 @@ Incremental updates with a sliding window for real-time data.
         min_points = 5,
         update_mode = "incremental"
     )
-    result <- model$add_points(x, y)
+    for (i in seq_along(x)) {
+        result <- model$add_point(x[i], y[i])
+        if (!is.null(result)) cat(result$smoothed, "\n")
+    }
     ```
 
 === "Python"
@@ -331,10 +334,10 @@ Incremental updates with a sliding window for real-time data.
         min_points=5,
         update_mode="incremental"
     )
-    result = model.add_points(x, y)
-
-    # result contains smoothed values for all points
-    print(result.y)
+    for xi, yi in zip(x, y):
+        result = model.add_point(float(xi), float(yi))
+        if result is not None:
+            print(result.smoothed)
     ```
 
 === "Rust"
@@ -365,7 +368,12 @@ Incremental updates with a sliding window for real-time data.
         min_points=5,
         update_mode="incremental"
     )
-    result = add_points(model, x, y)
+    for i in eachindex(x)
+        result = add_point(model, x[i], y[i])
+        if result !== nothing
+            println(result.smoothed)
+        end
+    end
     ```
 
 === "Node.js"
@@ -379,9 +387,9 @@ Incremental updates with a sliding window for real-time data.
 
     // Add points
     for (const [x, y] of sensorStream) {
-        const smoothed = processor.update(x, y);
-        if (smoothed !== null) {
-            console.log(`Smoothed: ${smoothed.toFixed(2)}`);
+        const res = processor.add_point(x, y);
+        if (res !== null) {
+            console.log(`Smoothed: ${res.smoothed.toFixed(2)}`);
         }
     }
     ```
@@ -397,9 +405,9 @@ Incremental updates with a sliding window for real-time data.
 
     // Add points
     for (const [x, y] of sensorStream) {
-        const smoothed = processor.update(x, y);
-        if (smoothed !== null) {
-            console.log(`Smoothed: ${smoothed.toFixed(2)}`);
+        const res = processor.add_point(x, y);
+        if (res !== undefined) {
+            console.log(`Smoothed: ${res.smoothed.toFixed(2)}`);
         }
     }
     ```
@@ -416,7 +424,11 @@ Incremental updates with a sliding window for real-time data.
     opts.update_mode = "incremental";
 
     fastloess::OnlineLoess model(opts);
-    auto result = model.add_points(x, y).value();
+    for (size_t i = 0; i < x.size(); ++i) {
+        auto out = model.add_point(x[i], y[i]).value();
+        if (out.has_value())
+            std::cout << out.smoothed() << std::endl;
+    }
     ```
 
 ---

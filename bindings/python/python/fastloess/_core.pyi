@@ -43,6 +43,34 @@ class Diagnostics:
         """Residual standard deviation."""
         ...
 
+class OnlineOutput:
+    """Result from a single add_point() call."""
+
+    @property
+    def smoothed(self) -> float:
+        """Smoothed value for the latest point."""
+        ...
+
+    @property
+    def std_error(self) -> float | None:
+        """Standard error (None if not computed)."""
+        ...
+
+    @property
+    def residual(self) -> float | None:
+        """Residual y − smoothed (None if not computed)."""
+        ...
+
+    @property
+    def robustness_weight(self) -> float | None:
+        """Robustness weight (None if not computed)."""
+        ...
+
+    @property
+    def iterations_used(self) -> int | None:
+        """Number of robustness iterations performed."""
+        ...
+
 class LoessResult:
     """Result from LOESS smoothing."""
 
@@ -527,6 +555,6 @@ class OnlineLoess:
         """Initialize the online processor."""
         ...
 
-    def add_points(self, x: ArrayLike, y: ArrayLike) -> LoessResult:
-        """Add multiple points and return smoothed results."""
+    def add_point(self, x: float, y: float) -> OnlineOutput | None:
+        """Add a single point and return its smoothed value, or None if the window is still filling."""
         ...

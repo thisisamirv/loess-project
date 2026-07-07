@@ -73,17 +73,16 @@ int main() {
 
     size_t total_emitted = 0;
     for (size_t point_index = 0; point_index < point_count; ++point_index) {
-      const std::vector<double> x_sample = {x_values[point_index]};
-      const std::vector<double> y_sample = {y_values[point_index]};
+      auto res =
+          model.add_point(x_values[point_index], y_values[point_index]).value();
 
-      auto res = model.add_points(x_sample, y_sample).value();
-      total_emitted += res.size();
-
-      if (point_index > 0 && point_index % k_progress_interval == 0 &&
-          res.size() > 0) {
-        std::cout << "  t=" << point_index
-                  << " original=" << y_values[point_index]
-                  << " smoothed=" << res.y_value(res.size() - 1) << '\n';
+      if (res.has_value()) {
+        total_emitted++;
+        if (point_index > 0 && point_index % k_progress_interval == 0) {
+          std::cout << "  t=" << point_index
+                    << " original=" << y_values[point_index]
+                    << " smoothed=" << res.smoothed() << '\n';
+        }
       }
     }
 
@@ -101,10 +100,12 @@ int main() {
       fastloess::OnlineLoess inc_model(inc_opts);
       size_t inc_emitted = 0;
       for (size_t point_index = 0; point_index < point_count; ++point_index) {
-        const std::vector<double> x_s = {x_values[point_index]};
-        const std::vector<double> y_s = {y_values[point_index]};
-        auto res_i = inc_model.add_points(x_s, y_s).value();
-        inc_emitted += res_i.size();
+        auto res_i =
+            inc_model.add_point(x_values[point_index], y_values[point_index])
+                .value();
+        if (res_i.has_value()) {
+          inc_emitted++;
+        }
       }
       std::cout << "  incremental mode total emitted: " << inc_emitted << '\n';
     }
@@ -124,10 +125,12 @@ int main() {
       fastloess::OnlineLoess adv_model(adv_opts);
       size_t adv_emitted = 0;
       for (size_t point_index = 0; point_index < point_count; ++point_index) {
-        const std::vector<double> x_s = {x_values[point_index]};
-        const std::vector<double> y_s = {y_values[point_index]};
-        auto res_a = adv_model.add_points(x_s, y_s).value();
-        adv_emitted += res_a.size();
+        auto res_a =
+            adv_model.add_point(x_values[point_index], y_values[point_index])
+                .value();
+        if (res_a.has_value()) {
+          adv_emitted++;
+        }
       }
       std::cout << "  advanced online total emitted: " << adv_emitted << '\n';
     }

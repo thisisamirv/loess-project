@@ -66,10 +66,10 @@ online = fastloess.OnlineLoess(**kwargs)
 **Methods:**
 
 ```python
-result = online.add_points(x, y)
+result = online.add_point(x, y)  # returns OnlineOutput | None
 ```
 
-* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+* Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `None` while the window is still filling.
 
 ## Options Structures
 
@@ -124,6 +124,18 @@ result = online.add_points(x, y)
 | `parallel` | `bool` | `False` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
+
+### `OnlineOutput`
+
+Returned by `add_point()` once the window has enough points (`None` until then).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `smoothed` | `float` | Smoothed value for the latest point |
+| `std_error` | `float \| None` | Standard error (if requested) |
+| `residual` | `float \| None` | Residual y − smoothed (if requested) |
+| `robustness_weight` | `float \| None` | Robustness weight (if requested) |
+| `iterations_used` | `int \| None` | Robustness iterations performed |
 
 ### `LoessResult`
 

@@ -457,22 +457,31 @@ impl ROnlineLoess {
         })
     }
 
-    fn add_points(&mut self, x: &[f64], y: &[f64]) -> Result<List> {
-        let metadata = shared_parse::OnlineResultMetadata {
-            dimensions: self.dimensions,
-            degree: self.degree,
-            distance_metric: self.distance_metric.clone(),
-            fraction_used: self.fraction,
-            iterations_used: Some(self.iterations),
-        };
+    fn add_point(&mut self, x: f64, y: f64) -> Result<Nullable<List>> {
+        let output = self
+            .inner
+            .add_point(&[x], y)
+            .map_err(|e| to_r_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
 
-        let result = shared_parse::online_add_points_to_result(x, y, &metadata, |xi_chunk, yi| {
-            let output = self.inner.add_point(xi_chunk, yi)?;
-            Ok(output.map(|o| o.smoothed))
-        })
-        .map_err(|e| to_r_error(shared_parse::BindingError::invalid_arg(e)))?;
-
-        loess_result_to_list(result)
+        match output {
+            None => Ok(Null),
+            Some(o) => {
+                let mut items: Vec<(&str, Robj)> = vec![("smoothed", o.smoothed.into_robj())];
+                if let Some(se) = o.std_error {
+                    items.push(("std_error", se.into_robj()));
+                }
+                if let Some(res) = o.residual {
+                    items.push(("residual", res.into_robj()));
+                }
+                if let Some(rw) = o.robustness_weight {
+                    items.push(("robustness_weight", rw.into_robj()));
+                }
+                if let Some(iters) = o.iterations_used {
+                    items.push(("iterations_used", (iters as i32).into_robj()));
+                }
+                Ok(NotNull(List::from_pairs(items)))
+            }
+        }
     }
 }
 

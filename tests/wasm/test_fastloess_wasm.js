@@ -50,14 +50,16 @@ test('WASM online smoothing', () => {
         minPoints: 2
     });
 
-    let lastResult;
+    let lastSmoothed;
     for (let i = 0; i < 10; i++) {
-        lastResult = online.add_points(new Float64Array([i]), new Float64Array([i * 2]));
+        const res = online.add_point(i, i * 2);
+        if (res !== undefined) {
+            lastSmoothed = res.smoothed;
+        }
     }
 
-    // lastResult[0] should be a number after enough points
-    assert.ok(lastResult[0] !== undefined && lastResult[0] !== null);
-    assert.ok(Math.abs(lastResult[0] - 18) < 1.0);
+    assert.ok(lastSmoothed !== undefined && lastSmoothed !== null);
+    assert.ok(Math.abs(lastSmoothed - 18) < 1.0);
 });
 
 test('WASM options parsing', () => {
@@ -161,11 +163,14 @@ test('WASM online: update mode via options', () => {
         { windowCapacity: 10, minPoints: 2 }
     );
 
-    let lastResult;
+    let lastSmoothed;
     for (let i = 0; i < 10; i++) {
-        lastResult = online.add_points(new Float64Array([i]), new Float64Array([i * 2]));
+        const res = online.add_point(i, i * 2);
+        if (res !== undefined) {
+            lastSmoothed = res.smoothed;
+        }
     }
-    assert.ok(lastResult[0] !== undefined && lastResult[0] !== null);
+    assert.ok(lastSmoothed !== undefined && lastSmoothed !== null);
 });
 
 test('WASM custom weights: zero on outlier reduces error', () => {

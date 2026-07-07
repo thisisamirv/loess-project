@@ -31,11 +31,8 @@ function example_1_basic_streaming() {
 
     console.log(`  ${"X".padStart(8)} ${"Y_obs".padStart(12)} ${"Y_smooth".padStart(12)}`);
     for (const [x, y] of data) {
-        const res = model.add_points(
-            new Float64Array([x]),
-            new Float64Array([y])
-        );
-        const smoothed = res.y.length > 0 ? res.y[0].toFixed(2) : "(buffering)";
+        const res = model.add_point(x, y);
+        const smoothed = res !== null ? res.smoothed.toFixed(2) : "(buffering)";
         console.log(`  ${x.toFixed(2).padStart(8)} ${y.toFixed(2).padStart(12)} ${smoothed.padStart(12)}`);
     }
     console.log();
@@ -59,10 +56,10 @@ function example_2_sensor_data_simulation() {
         const noise = ((hour * 7) % 11) * 0.3 - 1.5;
         const temp = baseTemp + cycle + noise;
 
-        const res = model.add_points(new Float64Array([hour]), new Float64Array([temp]));
-        if (res.y.length > 0) {
+        const res = model.add_point(hour, temp);
+        if (res !== null) {
             console.log(
-                `  ${hour.toString().padStart(6)} ${temp.toFixed(2).padStart(12)}°C ${res.y[0].toFixed(2).padStart(12)}°C`
+                `  ${hour.toString().padStart(6)} ${temp.toFixed(2).padStart(12)}°C ${res.smoothed.toFixed(2).padStart(12)}°C`
             );
         } else {
             console.log(`  ${hour.toString().padStart(6)} ${temp.toFixed(2).padStart(12)}°C ${"(warming up)".padStart(13)}`);
@@ -90,8 +87,8 @@ function example_3_outlier_handling() {
         );
         const smoothed = [];
         for (const [x, y] of data) {
-            const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
-            if (res.y.length > 0) smoothed.push(res.y[0].toFixed(1));
+            const res = model.add_point(x, y);
+            if (res !== null) smoothed.push(res.smoothed.toFixed(1));
         }
         console.log(`  ${method}: [${smoothed.join(', ')}]`);
     }
@@ -114,8 +111,8 @@ function example_4_window_size_comparison() {
         );
         const smoothed = [];
         for (const [x, y] of data) {
-            const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
-            if (res.y.length > 0) smoothed.push(res.y[0]);
+            const res = model.add_point(x, y);
+            if (res !== null) smoothed.push(res.smoothed);
         }
         const last5 = smoothed.slice(-5).map(v => v.toFixed(2));
         console.log(`  window_capacity=${windowSize}: last 5 = [${last5.join(', ')}]`);
@@ -138,10 +135,10 @@ function example_5_memory_bounded_processing() {
     for (let i = 0; i < total; i++) {
         const x = i;
         const y = 2 * x + Math.sin(x * 0.1) * 5 + ((i % 7) - 3) * 0.5;
-        const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
-        if (res.y.length > 0) {
+        const res = model.add_point(x, y);
+        if (res !== null) {
             count++;
-            lastSmoothed = res.y[0];
+            lastSmoothed = res.smoothed;
             if (count % 200 === 0) {
                 console.log(`  Processed: ${count.toString().padStart(4)} pts | smoothed=${lastSmoothed.toFixed(2)}`);
             }
@@ -164,9 +161,9 @@ function example_6_sliding_window_behavior() {
 
     console.log(`  ${"Pt".padStart(4)} ${"X".padStart(6)} ${"Y".padStart(8)} ${"Smoothed".padStart(10)} ${"Status".padStart(22)}`);
     data.forEach(([x, y], i) => {
-        const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
-        if (res.y.length > 0) {
-            console.log(`  ${(i + 1).toString().padStart(4)} ${x.toFixed(0).padStart(6)} ${y.toFixed(0).padStart(8)} ${res.y[0].toFixed(2).padStart(10)} ${"Window full (sliding)".padStart(22)}`);
+        const res = model.add_point(x, y);
+        if (res !== null) {
+            console.log(`  ${(i + 1).toString().padStart(4)} ${x.toFixed(0).padStart(6)} ${y.toFixed(0).padStart(8)} ${res.smoothed.toFixed(2).padStart(10)} ${"Window full (sliding)".padStart(22)}`);
         } else {
             console.log(`  ${(i + 1).toString().padStart(4)} ${x.toFixed(0).padStart(6)} ${y.toFixed(0).padStart(8)} ${"-".padStart(10)} ${`Filling (${i + 1}/4)`.padStart(22)}`);
         }
@@ -190,8 +187,8 @@ function example_7_benchmark() {
     for (let i = 0; i < n; i++) {
         const x = i;
         const y = Math.sin(x * 0.1) + Math.cos(x * 0.01);
-        const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
-        if (res.y.length > 0) count++;
+        const res = model.add_point(x, y);
+        if (res !== null) count++;
     }
     const ms = Number(process.hrtime.bigint() - t0) / 1e6;
 
@@ -213,25 +210,26 @@ function example_8_update_modes() {
         );
         let emitted = 0;
         for (const [x, y] of data) {
-            const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
-            if (res.y.length > 0) emitted++;
+            const res = model.add_point(x, y);
+            if (res !== null) emitted++;
         }
         console.log(`  ${mode}: ${emitted} points emitted (out of ${data.length})`);
     }
 
-    // Show fractionUsed and iterationsUsed from the returned LoessResultObj
+    // Show iterations_used from the returned OnlineOutput
     const model = new fastloess.OnlineLoess(
         { fraction: 0.5, iterations: 2, return_residuals: true, return_robustness_weights: true },
         { window_capacity: 10, min_points: 3 }
     );
-    let lastRes = null;
+    let lastSmoothed = null;
+    let lastIterations = null;
     for (const [x, y] of data) {
-        const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
-        if (res.y.length > 0) lastRes = res;
+        const res = model.add_point(x, y);
+        if (res !== null) { lastSmoothed = res.smoothed; lastIterations = res.iterationsUsed; }
     }
-    if (lastRes) {
-        console.log(`  last smoothed: ${lastRes.y[0].toFixed(3)}`);
-        console.log(`  fractionUsed: ${lastRes.fractionUsed}`);
+    if (lastSmoothed !== null) {
+        console.log(`  last smoothed: ${lastSmoothed.toFixed(3)}`);
+        if (lastIterations !== null) console.log(`  iterations_used: ${lastIterations}`);
     }
     console.log();
 }
@@ -259,16 +257,15 @@ function example_9_advanced_online_options() {
     );
 
     let emitted = 0;
-    let lastRes = null;
+    let lastSmoothed = null;
     for (const [x, y] of data) {
-        const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
-        if (res.y.length > 0) { emitted++; lastRes = res; }
+        const res = model.add_point(x, y);
+        if (res !== null) { emitted++; lastSmoothed = res.smoothed; }
     }
 
     console.log(`  emitted: ${emitted}`);
-    if (lastRes) {
-        console.log(`  last smoothed: ${lastRes.y[0].toFixed(3)}`);
-        console.log(`  fractionUsed: ${lastRes.fractionUsed}`);
+    if (lastSmoothed !== null) {
+        console.log(`  last smoothed: ${lastSmoothed.toFixed(3)}`);
     }
     console.log();
 }

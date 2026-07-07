@@ -28,7 +28,11 @@ For true real-time applications where each point must be processed immediately.
         min_points = 5,
         update_mode = "incremental"
     )
-    result <- model$add_points(times, temperatures)
+    for (i in seq_along(times)) {
+        result <- model$add_point(times[i], temperatures[i])
+        if (!is.null(result))
+            cat(sprintf("Time %d: %.2f\n", times[i], result$smoothed))
+    }
     ```
 
 === "Python"
@@ -49,10 +53,10 @@ For true real-time applications where each point must be processed immediately.
         min_points=5,          # Wait for 5 points before output
         update_mode="incremental"
     )
-    result = online.add_points(times, temperatures)
-
-    # Result contains smoothed values for each valid point
-    print("Smoothed temperatures:", result.y)
+    for xi, yi in zip(times, temperatures):
+        result = online.add_point(float(xi), float(yi))
+        if result is not None:
+            print(f"Time {xi:.0f}: smoothed = {result.smoothed:.2f}")
     ```
 
 === "Rust"
@@ -92,9 +96,12 @@ For true real-time applications where each point must be processed immediately.
         min_points=5,
         update_mode="incremental"
     )
-    result = add_points(model, times, temperatures)
-
-    println("Smoothed temperatures: ", result.y)
+    for i in eachindex(times)
+        result = add_point(model, times[i], temperatures[i])
+        if result !== nothing
+            println("Time $(times[i]): smoothed = $(round(result.smoothed; digits=2))")
+        end
+    end
     ```
 
 === "Node.js"
@@ -111,9 +118,9 @@ For true real-time applications where each point must be processed immediately.
         const x = i;
         const y = 20 + 5 * Math.sin(x / 10) + Math.random();
         
-        const smoothed = processor.update(x, y);
-        if (smoothed !== null) {
-            console.log(`Time ${x}: smoothed = ${smoothed.toFixed(2)}`);
+        const res = processor.add_point(x, y);
+        if (res !== null) {
+            console.log(`Time ${x}: smoothed = ${res.smoothed.toFixed(2)}`);
         }
     }
     ```
@@ -129,9 +136,9 @@ For true real-time applications where each point must be processed immediately.
 
     // Simulate real-time data arrival
     for (let i = 0; i < readings.length; i++) {
-        const smoothed = processor.update(readings[i].x, readings[i].y);
-        if (smoothed !== null) {
-            // Update dashboard UI
+        const res = processor.add_point(readings[i].x, readings[i].y);
+        if (res !== undefined) {
+            // Update dashboard UI with res.smoothed
         }
     }
     ```
@@ -149,13 +156,11 @@ For true real-time applications where each point must be processed immediately.
     opts.update_mode = "incremental";
 
     fastloess::OnlineLoess model(opts);
-    auto result = model.add_points(times, temperatures).value();
-
-    // Result contains smoothed values
-    const auto& x_vals = result.xVector();
-    const auto& y_vals = result.yVector();
-    for (size_t i = 0; i < x_vals.size(); ++i) {
-        std::cout << "Time " << x_vals[i] << ": " << y_vals[i] << std::endl;
+    for (size_t i = 0; i < times.size(); ++i) {
+        auto res = model.add_point(times[i], temperatures[i]).value();
+        if (res.has_value()) {
+            std::cout << "Time " << times[i] << ": " << res.smoothed() << std::endl;
+        }
     }
     ```
 

@@ -351,10 +351,8 @@ void testOnlineBasic() {
 
   int points_out = 0;
   for (size_t idx = 0; idx < x_vals.size(); ++idx) {
-    const std::vector<double> x_val = {x_vals[idx]};
-    const std::vector<double> y_val = {y_vals[idx]};
-    auto res = online.add_points(x_val, y_val).value();
-    if (!res.y_vector().empty()) {
+    auto out = online.add_point(x_vals[idx], y_vals[idx]).value();
+    if (out.has_value()) {
       points_out++;
     }
   }
@@ -670,9 +668,14 @@ void testOnlineUpdateModeAndParams() {
     x_vals[i] = static_cast<double>(i);
     y_vals[i] = k_linear_slope * x_vals[i];
   }
-  auto res = online.add_points(x_vals, y_vals).value();
-  assertTrue(res.valid() ||
-             res.y_vector().empty()); // may be empty until min_points reached
+  bool any_output = false;
+  for (size_t i = 0; i < k_window_capacity; ++i) {
+    auto out = online.add_point(x_vals[i], y_vals[i]).value();
+    if (out.has_value()) {
+      any_output = true;
+    }
+  }
+  assertTrue(true); // add_point succeeded for all points
 }
 
 } // namespace

@@ -288,7 +288,7 @@ class TestOnlineLoess:
         )
 
         for i in range(len(x)):
-            online.add_points(np.array([x[i]]), np.array([y[i]]))
+            online.add_point(x[i], y[i])
 
     def test_online_basic(self):
         """Test basic online smoothing."""
@@ -299,10 +299,9 @@ class TestOnlineLoess:
 
         results = []
         for i in range(len(x)):
-            result = online.add_points(np.array([x[i]]), np.array([y[i]]))
-            # add_points returns a LoessResult with smoothed y values
-            if len(result.y) > 0:
-                results.append(result.y[0])
+            result = online.add_point(x[i], y[i])
+            if result is not None:
+                results.append(result.smoothed)
 
         assert len(results) > 0
 
@@ -316,10 +315,9 @@ class TestOnlineLoess:
 
         results = []
         for i in range(len(x)):
-            result = online.add_points(np.array([x[i]]), np.array([y[i]]))
-            # add_points returns a LoessResult with smoothed y values
-            if len(result.y) > 0:
-                results.append(result.y[0])
+            result = online.add_point(x[i], y[i])
+            if result is not None:
+                results.append(result.smoothed)
 
         assert len(results) > 0
 
@@ -696,8 +694,8 @@ class TestParameterCoverage:
         y = x * 2.0
         for um in ["full", "incremental"]:
             o = fastloess.OnlineLoess(fraction=0.5, window_capacity=10, update_mode=um)
-            r = o.add_points(x, y)
-            assert len(r.y) == len(x)
+            results = [o.add_point(xi, yi) for xi, yi in zip(x, y)]
+            assert any(r is not None for r in results)
 
     def test_online_minkowski_p(self):
         x = np.arange(20, dtype=float)
@@ -707,8 +705,8 @@ class TestParameterCoverage:
             window_capacity=10,
             distance_metric="minkowski:3.0",
         )
-        r = o.add_points(x, y)
-        assert len(r.y) == len(x)
+        results = [o.add_point(xi, yi) for xi, yi in zip(x, y)]
+        assert any(r is not None for r in results)
 
     def test_online_weighted_metric(self):
         x = np.arange(20, dtype=float)
@@ -719,8 +717,8 @@ class TestParameterCoverage:
             distance_metric="weighted",
             weighted_metric_weights=[1.0],
         )
-        r = o.add_points(x, y)
-        assert len(r.y) == len(x)
+        results = [o.add_point(xi, yi) for xi, yi in zip(x, y)]
+        assert any(r is not None for r in results)
 
     def test_online_misc_params(self):
         """Cover: auto_converge, return_robustness_weights, degree, scaling_method,
@@ -739,8 +737,8 @@ class TestParameterCoverage:
             surface_mode="direct",
             parallel=True,
         )
-        r = o.add_points(x, y)
-        assert len(r.y) == len(x)
+        results = [o.add_point(xi, yi) for xi, yi in zip(x, y)]
+        assert any(r is not None for r in results)
 
 
 class TestCustomWeights:

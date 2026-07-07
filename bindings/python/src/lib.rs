@@ -1,7 +1,8 @@
 //! Python bindings for fastLoess.
 
 #![allow(non_snake_case)]
-use numpy::{PyArray1, PyReadonlyArray1};
+use numpy::PyArray1;
+use numpy::PyReadonlyArray1;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -422,15 +423,33 @@ impl PyStreamingLoess {
     }
 }
 
+// Result from a single online update step.
+#[pyclass(name = "OnlineOutput", from_py_object)]
+#[derive(Clone)]
+pub struct PyOnlineOutput {
+    #[pyo3(get)]
+    pub smoothed: f64,
+    #[pyo3(get)]
+    pub std_error: Option<f64>,
+    #[pyo3(get)]
+    pub residual: Option<f64>,
+    #[pyo3(get)]
+    pub robustness_weight: Option<f64>,
+    #[pyo3(get)]
+    pub iterations_used: Option<usize>,
+}
+
+#[pymethods]
+impl PyOnlineOutput {
+    fn __repr__(&self) -> String {
+        format!("OnlineOutput(smoothed={:.4})", self.smoothed)
+    }
+}
+
 // LOESS processor for real-time data streams.
 #[pyclass(name = "OnlineLoess")]
 pub struct PyOnlineLoess {
     inner: Mutex<ParallelOnlineLoess<f64>>,
-    fraction: f64,
-    iterations: usize,
-    dimensions: usize,
-    degree: PolynomialDegree,
-    distance_metric: DistanceMetric<f64>,
 }
 
 #[pymethods]
@@ -494,7 +513,7 @@ impl PyOnlineLoess {
         prediction_intervals: Option<f64>,
     ) -> PyResult<Self> {
         let um = map_invalid_arg(shared_parse::parse_update_mode(update_mode))?;
-        let (builder, applied) = map_invalid_arg(shared_parse::apply_builder_options(
+        let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -527,17 +546,6 @@ impl PyOnlineLoess {
             },
         ))?;
 
-        let deg = applied.degree.ok_or_else(|| {
-            to_py_error(shared_parse::BindingError::invalid_arg(
-                shared_parse::required_option_message("degree"),
-            ))
-        })?;
-        let dm = applied.distance_metric.ok_or_else(|| {
-            to_py_error(shared_parse::BindingError::invalid_arg(
-                shared_parse::required_option_message("distance_metric"),
-            ))
-        })?;
-
         let mut online_builder = builder.adapter(Online);
         online_builder = online_builder.window_capacity(window_capacity);
         online_builder = online_builder.min_points(min_points);
@@ -554,51 +562,27 @@ impl PyOnlineLoess {
         let processor = map_runtime(online_builder.build())?;
         Ok(PyOnlineLoess {
             inner: Mutex::new(processor),
-            fraction,
-            iterations,
-            dimensions,
-            degree: deg,
-            distance_metric: dm,
         })
     }
 
-    // Add multiple points.
-    fn add_points<'py>(
-        &self,
-        py: Python<'py>,
-        x: PyReadonlyArray1<'py, f64>,
-        y: PyReadonlyArray1<'py, f64>,
-    ) -> PyResult<PyLoessResult> {
-        let x_slice = x.as_slice().map_err(to_py_invalid_arg_error)?;
-        let y_slice = y.as_slice().map_err(to_py_invalid_arg_error)?;
-        let metadata = shared_parse::OnlineResultMetadata {
-            dimensions: self.dimensions,
-            degree: self.degree,
-            distance_metric: self.distance_metric.clone(),
-            fraction_used: self.fraction,
-            iterations_used: Some(self.iterations),
-        };
-
+    // Add a single point and return its smoothed value, or None if the window
+    // is not yet full enough to produce a result.
+    fn add_point(&self, x: f64, y: f64) -> PyResult<Option<PyOnlineOutput>> {
         let mut inner = self.inner.lock().map_err(|e| {
             to_py_error(shared_parse::BindingError::runtime(
                 shared_parse::mutex_poisoned_message(&e.to_string()),
             ))
         })?;
-        let inner_result = shared_parse::online_add_points_to_result(
-            x_slice,
-            y_slice,
-            &metadata,
-            |xi_chunk, yi| {
-                let output = inner.add_point(xi_chunk, yi)?;
-                Ok(output.map(|o| o.smoothed))
-            },
-        )
-        .map_err(|e| to_py_error(shared_parse::BindingError::invalid_arg(e)))?;
-        let _ = py;
-
-        Ok(PyLoessResult {
-            inner: inner_result,
-        })
+        let output = inner
+            .add_point(&[x], y)
+            .map_err(|e| to_py_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
+        Ok(output.map(|o| PyOnlineOutput {
+            smoothed: o.smoothed,
+            std_error: o.std_error,
+            residual: o.residual,
+            robustness_weight: o.robustness_weight,
+            iterations_used: o.iterations_used,
+        }))
     }
 }
 
@@ -843,6 +827,7 @@ impl PyLoess {
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyLoessResult>()?;
     m.add_class::<PyDiagnostics>()?;
+    m.add_class::<PyOnlineOutput>()?;
     m.add_class::<PyLoess>()?;
     m.add_class::<PyStreamingLoess>()?;
     m.add_class::<PyOnlineLoess>()?;

@@ -47,12 +47,10 @@ test('online smoothing', () => {
 
     let lastVal = null;
     for (let i = 0; i < 10; i++) {
-        const xArr = new Float64Array([i]);
-        const yArr = new Float64Array([i * 2]);
-        const res = online.add_points(xArr, yArr);
+        const res = online.add_point(i, i * 2);
 
-        if (res.y.length > 0) {
-            lastVal = res.y[0];
+        if (res !== null) {
+            lastVal = res.smoothed;
         }
     }
 
@@ -229,16 +227,20 @@ test('StreamingOptions: merge_strategy', () => {
 });
 
 test('OnlineOptions: update_mode', () => {
-    const x = new Float64Array(Array.from({ length: 15 }, (_, i) => i));
-    const y = new Float64Array(Array.from({ length: 15 }, (_, i) => i * 2));
+    const x = Array.from({ length: 15 }, (_, i) => i);
+    const y = Array.from({ length: 15 }, (_, i) => i * 2);
 
     for (const um of ['full', 'incremental']) {
         const o = new fastloess.OnlineLoess(
             { fraction: 0.5 },
             { window_capacity: 10, min_points: 3, update_mode: um }
         );
-        const r = o.add_points(x, y);
-        assert.ok(r.y.length > 0);
+        let hasResult = false;
+        for (let i = 0; i < x.length; i++) {
+            const r = o.add_point(x[i], y[i]);
+            if (r !== null) hasResult = true;
+        }
+        assert.ok(hasResult);
     }
 });
 

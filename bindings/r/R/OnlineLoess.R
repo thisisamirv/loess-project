@@ -22,9 +22,10 @@
 #' model <- OnlineLoess(fraction = 0.2, window_capacity = 20)
 #' x <- 1:50
 #' y <- sin(x * 0.1) + rnorm(50, 0, 0.1)
-#' result <- model$add_points(x, y)
-#' plot(x, y)
-#' lines(x, result$y, col = "red")
+#' for (i in seq_along(x)) {
+#'   result <- model$add_point(x[i], y[i])
+#'   if (!is.null(result)) cat("smoothed:", result$smoothed, "\n")
+#' }
 #' @export
 OnlineLoess <- function(
     fraction = 0.67,
@@ -63,9 +64,8 @@ OnlineLoess <- function(
     structure(
         list(
             handle = handle,
-            add_points = function(x, y) {
-                args <- validate_common_args(x, y, fraction, iterations)
-                handle$add_points(args$x, args$y)
+            add_point = function(x, y) {
+                handle$add_point(as.double(x), as.double(y))
             },
             params = list(
                 fraction = fraction,

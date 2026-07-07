@@ -15,6 +15,15 @@
 
 library(rfastloess)
 
+# Helper: feed all (x, y) pairs through add_point one at a time.
+# Returns a named list with $smoothed (numeric vector, NA where window not full).
+add_all_points <- function(model, x, y) {
+    results <- lapply(seq_along(x), function(i) model$add_point(x[i], y[i]))
+    list(
+        smoothed = sapply(results, function(r) if (is.null(r)) NA_real_ else r$smoothed)
+    )
+}
+
 # ── Example 1: Basic Incremental Processing ──────────────────────────────────
 example_1_basic_streaming <- function() {
     cat("Example 1: Basic Incremental Processing\n")
@@ -22,14 +31,17 @@ example_1_basic_streaming <- function() {
     x <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     y <- c(3.1, 5.0, 7.2, 8.9, 11.1, 13.0, 15.2, 16.8, 19.1, 21.0)
 
-    model <- OnlineLoess(fraction = 0.5, iterations = 2L,
-                         window_capacity = 5L,
-                         return_robustness_weights = FALSE)
-    result <- model$add_points(x, y)
+    model <- OnlineLoess(
+        fraction = 0.5, iterations = 2L,
+        window_capacity = 5L,
+        return_robustness_weights = FALSE
+    )
+    result <- add_all_points(model, x, y)
 
     cat(sprintf("  %8s %12s %12s\n", "X", "Y_obs", "Y_smooth"))
-    for (i in seq_along(result$y)) {
-        cat(sprintf("  %8.2f %12.2f %12.2f\n", result$x[i], y[i], result$y[i]))
+    for (i in seq_along(y)) {
+        smoothed <- if (is.na(result$smoothed[i])) "(buffering)" else sprintf("%.2f", result$smoothed[i])
+        cat(sprintf("  %8.2f %12.2f %12s\n", x[i], y[i], smoothed))
     }
     cat("\n")
 }
@@ -43,15 +55,17 @@ example_2_sensor_simulation <- function() {
     hours <- as.numeric(0:(n - 1))
     temp <- 20 + 5 * sin(hours * pi / 12) + ((hours * 7) %% 11) * 0.3 - 1.5
 
-    model <- OnlineLoess(fraction = 0.4, iterations = 3L,
-                         robustness_method = "bisquare",
-                         window_capacity = 12L)
-    result <- model$add_points(hours, temp)
+    model <- OnlineLoess(
+        fraction = 0.4, iterations = 3L,
+        robustness_method = "bisquare",
+        window_capacity = 12L
+    )
+    result <- add_all_points(model, hours, temp)
 
     cat(sprintf("  %6s %12s %12s\n", "Hour", "Raw", "Smoothed"))
-    for (i in seq_along(result$y)) {
-        cat(sprintf("  %6.0f %10.2f degC %10.2f degC\n",
-                    result$x[i], temp[i], result$y[i]))
+    for (i in seq_along(hours)) {
+        smoothed <- if (is.na(result$smoothed[i])) "(warming up)" else sprintf("%.2f degC", result$smoothed[i])
+        cat(sprintf("  %6.0f %10.2f degC %s\n", hours[i], temp[i], smoothed))
     }
     cat("\n")
 }
@@ -64,12 +78,14 @@ example_3_outlier_handling <- function() {
     y <- c(2.0, 4.1, 5.9, 25.0, 10.1, 12.0, 14.1, 50.0, 18.0, 20.1)
 
     for (method in c("bisquare", "talwar")) {
-        model <- OnlineLoess(fraction = 0.5, iterations = 5L,
-                             robustness_method = method,
-                             window_capacity = 6L)
-        result <- model$add_points(x, y)
-        cat(sprintf("  %s: [%s]\n", method,
-                    paste(round(result$y, 1), collapse = ", ")))
+        model <- OnlineLoess(
+            fraction = 0.5, iterations = 5L,
+            robustness_method = method,
+            window_capacity = 6L
+        )
+        result <- add_all_points(model, x, y)
+        valid <- result$smoothed[!is.na(result$smoothed)]
+        cat(sprintf("  %s: [%s]\n", method, paste(round(valid, 1), collapse = ", ")))
     }
     cat("\n")
 }
@@ -82,12 +98,17 @@ example_4_window_comparison <- function() {
     y <- 2 * x + sin(x * 0.5) * 3
 
     for (w in c(5L, 10L, 15L)) {
-        model <- OnlineLoess(fraction = 0.5, iterations = 2L,
-                             window_capacity = w)
-        result <- model$add_points(x, y)
-        last5 <- tail(result$y, 5)
-        cat(sprintf("  window_capacity=%d: last 5 = [%s]\n",
-                    w, paste(round(last5, 2), collapse = ", ")))
+        model <- OnlineLoess(
+            fraction = 0.5, iterations = 2L,
+            window_capacity = w
+        )
+        result <- add_all_points(model, x, y)
+        valid <- result$smoothed[!is.na(result$smoothed)]
+        last5 <- tail(valid, 5)
+        cat(sprintf(
+            "  window_capacity=%d: last 5 = [%s]\n",
+            w, paste(round(last5, 2), collapse = ", ")
+        ))
     }
     cat("\n")
 }
@@ -101,17 +122,22 @@ example_5_memory_bounded <- function() {
     y <- 2 * x + sin(x * 0.1) * 5 + ((0:(total - 1)) %% 7 - 3) * 0.5
 
     model <- OnlineLoess(fraction = 0.3, iterations = 1L, window_capacity = 20L)
-    result <- model$add_points(x, y)
+    result <- add_all_points(model, x, y)
 
-    n_out <- length(result$y)
+    valid_smoothed <- result$smoothed[!is.na(result$smoothed)]
+    n_out <- length(valid_smoothed)
     for (milestone in c(200L, 400L, 600L, 800L, 1000L)) {
         if (milestone <= n_out) {
-            cat(sprintf("  Processed: %4d pts | smoothed=%.2f\n",
-                        milestone, result$y[milestone]))
+            cat(sprintf(
+                "  Processed: %4d pts | smoothed=%.2f\n",
+                milestone, valid_smoothed[milestone]
+            ))
         }
     }
-    cat(sprintf("  Total: %d, final smoothed: %.2f\n",
-                n_out, tail(result$y, 1)))
+    cat(sprintf(
+        "  Total smoothed: %d, final: %.2f\n",
+        n_out, tail(valid_smoothed, 1)
+    ))
     cat("  Memory: constant (window=20)\n\n")
 }
 
@@ -123,17 +149,23 @@ example_6_sliding_window <- function() {
     y <- c(2, 4, 6, 8, 10, 12, 14, 16)
 
     model <- OnlineLoess(fraction = 0.6, iterations = 0L, window_capacity = 4L)
-    result <- model$add_points(x, y)
+    result <- add_all_points(model, x, y)
 
-    cat(sprintf("  %4s %6s %8s %10s %-22s\n",
-                "Pt", "X", "Y", "Smoothed", "Status"))
+    cat(sprintf(
+        "  %4s %6s %8s %10s %-22s\n",
+        "Pt", "X", "Y", "Smoothed", "Status"
+    ))
     for (i in seq_along(x)) {
-        if (i <= length(result$y)) {
-            cat(sprintf("  %4d %6.0f %8.0f %10.2f %-22s\n",
-                        i, x[i], y[i], result$y[i], "Window full (sliding)"))
+        if (!is.na(result$smoothed[i])) {
+            cat(sprintf(
+                "  %4d %6.0f %8.0f %10.2f %-22s\n",
+                i, x[i], y[i], result$smoothed[i], "Window full (sliding)"
+            ))
         } else {
-            cat(sprintf("  %4d %6.0f %8.0f %10s %-22s\n",
-                        i, x[i], y[i], "-", sprintf("Filling (%d/4)", i)))
+            cat(sprintf(
+                "  %4d %6.0f %8.0f %10s %-22s\n",
+                i, x[i], y[i], "-", sprintf("Filling (%d/4)", i)
+            ))
         }
     }
     cat("  Output starts after window fills (4 pts), then slides.\n\n")
@@ -149,11 +181,14 @@ example_7_benchmark <- function() {
 
     t0 <- proc.time()["elapsed"]
     model <- OnlineLoess(fraction = 0.5, iterations = 3L, window_capacity = 10L)
-    result <- model$add_points(x, y)
+    result <- add_all_points(model, x, y)
     elapsed_ms <- (proc.time()["elapsed"] - t0) * 1000
 
-    cat(sprintf("  %d pts processed in %.2fms (window_capacity=10)\n\n",
-                length(result$y), elapsed_ms))
+    valid <- result$smoothed[!is.na(result$smoothed)]
+    cat(sprintf(
+        "  %d pts processed in %.2fms (window_capacity=10)\n\n",
+        length(valid), elapsed_ms
+    ))
 }
 
 # ── Example 8: Update Modes (Full vs Incremental) and min_points ──────────────
@@ -169,19 +204,22 @@ example_8_update_modes <- function() {
             update_mode = mode, min_points = 5L,
             window_capacity = 15L
         )
-        result <- model$add_points(x, y)
-        cat(sprintf("  %s: %d pts emitted (out of %d)\n",
-                    mode, length(result$y), length(x)))
+        result <- add_all_points(model, x, y)
+        valid <- result$smoothed[!is.na(result$smoothed)]
+        cat(sprintf(
+            "  %s: %d pts emitted (out of %d)\n",
+            mode, length(valid), length(x)
+        ))
     }
 
-    # Show fraction_used and iterations_used from the result
-    model <- OnlineLoess(fraction = 0.5, iterations = 2L,
-                         window_capacity = 10L, min_points = 3L)
-    result <- model$add_points(x, y)
-    cat(sprintf("  last smoothed: %.3f\n", tail(result$y, 1)))
-    cat(sprintf("  fraction_used: %g\n", result$fraction_used))
-    if (!is.null(result$iterations_used))
-        cat(sprintf("  iterations_used: %d\n", result$iterations_used))
+    # Show last smoothed value
+    model <- OnlineLoess(
+        fraction = 0.5, iterations = 2L,
+        window_capacity = 10L, min_points = 3L
+    )
+    result <- add_all_points(model, x, y)
+    valid <- result$smoothed[!is.na(result$smoothed)]
+    if (length(valid) > 0) cat(sprintf("  last smoothed: %.3f\n", tail(valid, 1)))
     cat("\n")
 }
 
@@ -205,10 +243,10 @@ example_9_online_options <- function() {
         window_capacity = 15L
     )
 
-    result <- model$add_points(x, y)
-    cat(sprintf("  emitted: %d\n", length(result$y)))
-    cat(sprintf("  last smoothed: %.3f\n", tail(result$y, 1)))
-    cat(sprintf("  fraction_used: %g\n", result$fraction_used))
+    result <- add_all_points(model, x, y)
+    valid <- result$smoothed[!is.na(result$smoothed)]
+    cat(sprintf("  emitted: %d\n", length(valid)))
+    if (length(valid) > 0) cat(sprintf("  last smoothed: %.3f\n", tail(valid, 1)))
     cat("\n")
 }
 

@@ -19,6 +19,15 @@ import numpy as np
 from fastloess import OnlineLoess
 
 
+def add_all_points(model, x, y):
+    """Feed all (x, y) pairs through add_point; return array of smoothed values (np.nan when None)."""
+    smoothed = []
+    for xi, yi in zip(x, y):
+        r = model.add_point(float(xi), float(yi))
+        smoothed.append(r.smoothed if r is not None else float("nan"))
+    return np.array(smoothed)
+
+
 # ── Example 1: Basic Incremental Processing ──────────────────────────────────
 def example_1_basic_streaming():
     print("Example 1: Basic Incremental Processing")
@@ -27,11 +36,12 @@ def example_1_basic_streaming():
     y = np.array([3.1, 5.0, 7.2, 8.9, 11.1, 13.0, 15.2, 16.8, 19.1, 21.0])
 
     model = OnlineLoess(fraction=0.5, iterations=2, window_capacity=5)
-    result = model.add_points(x, y)
+    smoothed = add_all_points(model, x, y)
 
     print(f"  {'X':>8} {'Y_obs':>12} {'Y_smooth':>12}")
-    for i in range(len(result.y)):
-        print(f"  {result.x[i]:8.2f} {y[i]:12.2f} {result.y[i]:12.2f}")
+    for i in range(len(x)):
+        sv = f"{smoothed[i]:12.2f}" if not np.isnan(smoothed[i]) else "  (buffering)"
+        print(f"  {x[i]:8.2f} {y[i]:12.2f} {sv}")
     print()
 
 
@@ -46,11 +56,16 @@ def example_2_sensor_data_simulation():
     model = OnlineLoess(
         fraction=0.4, iterations=3, robustness_method="bisquare", window_capacity=12
     )
-    result = model.add_points(hours, temp)
+    smoothed = add_all_points(model, hours, temp)
 
     print(f"  {'Hour':>6} {'Raw':>12} {'Smoothed':>12}")
-    for i in range(len(result.y)):
-        print(f"  {result.x[i]:6.0f} {temp[i]:10.2f}°C {result.y[i]:10.2f}°C")
+    for i in range(len(hours)):
+        sv = (
+            f"{smoothed[i]:10.2f}\u00b0C"
+            if not np.isnan(smoothed[i])
+            else "  (warming up)"
+        )
+        print(f"  {hours[i]:6.0f} {temp[i]:10.2f}\u00b0C {sv}")
     print()
 
 
@@ -65,8 +80,9 @@ def example_3_outlier_handling():
         model = OnlineLoess(
             fraction=0.5, iterations=5, robustness_method=method, window_capacity=6
         )
-        result = model.add_points(x, y)
-        print(f"  {method}: [{', '.join(f'{v:.1f}' for v in result.y)}]")
+        smoothed = add_all_points(model, x, y)
+        valid = smoothed[~np.isnan(smoothed)]
+        print(f"  {method}: [{', '.join(f'{v:.1f}' for v in valid)}]")
     print()
 
 
@@ -79,8 +95,9 @@ def example_4_window_size_comparison():
 
     for w in [5, 10, 15]:
         model = OnlineLoess(fraction=0.5, iterations=2, window_capacity=w)
-        result = model.add_points(x, y)
-        last5 = result.y[-5:]
+        smoothed = add_all_points(model, x, y)
+        valid = smoothed[~np.isnan(smoothed)]
+        last5 = valid[-5:]
         print(
             f"  window_capacity={w}: last 5 = [{', '.join(f'{v:.2f}' for v in last5)}]"
         )
@@ -96,15 +113,19 @@ def example_5_memory_bounded_processing():
     y = 2 * x + np.sin(x * 0.1) * 5 + (np.arange(total) % 7 - 3) * 0.5
 
     model = OnlineLoess(fraction=0.3, iterations=1, window_capacity=20)
-    result = model.add_points(x, y)
 
-    n_out = len(result.y)
+    t0 = time.perf_counter()
+    smoothed = add_all_points(model, x, y)
+    ms = (time.perf_counter() - t0) * 1000
+
+    valid = smoothed[~np.isnan(smoothed)]
+    n_out = len(valid)
     for milestone in [200, 400, 600, 800, 1000]:
         if milestone <= n_out:
             print(
-                f"  Processed: {milestone:4d} pts | smoothed={result.y[milestone - 1]:.2f}"
+                f"  Processed: {milestone:4d} pts | smoothed={valid[milestone - 1]:.2f}"
             )
-    print(f"  Total: {n_out}, final smoothed: {result.y[-1]:.2f}")
+    print(f"  Total: {n_out}, final smoothed: {valid[-1]:.2f} ({ms:.1f} ms)")
     print("  Memory: constant (window=20)")
     print()
 
@@ -116,14 +137,14 @@ def example_6_sliding_window_behavior():
     x = np.array([1, 2, 3, 4, 5, 6, 7, 8], dtype=float)
     y = np.array([2, 4, 6, 8, 10, 12, 14, 16], dtype=float)
 
-    # Use .update() to process point-by-point to show buffering behaviour
+    # Use add_point() directly to show buffering behaviour
     model = OnlineLoess(fraction=0.6, iterations=0, window_capacity=4)
     print(f"  {'Pt':>4} {'X':>4} {'Y':>6} {'Smoothed':>10} Status")
     for i, (xi, yi) in enumerate(zip(x, y), 1):
-        smoothed = model.update(xi, yi)
-        if smoothed is not None:
+        r = model.add_point(float(xi), float(yi))
+        if r is not None:
             print(
-                f"  {i:4d} {xi:4.0f} {yi:6.0f} {smoothed:10.2f} Window full (sliding)"
+                f"  {i:4d} {xi:4.0f} {yi:6.0f} {r.smoothed:10.2f} Window full (sliding)"
             )
         else:
             print(f"  {i:4d} {xi:4.0f} {yi:6.0f} {'-':>10} Filling ({i}/4)")
@@ -142,10 +163,11 @@ def example_7_benchmark():
     model = OnlineLoess(fraction=0.5, iterations=3, window_capacity=10)
 
     t0 = time.perf_counter()
-    result = model.add_points(x, y)
+    smoothed = add_all_points(model, x, y)
     ms = (time.perf_counter() - t0) * 1000
 
-    print(f"  {len(result.y)} pts processed in {ms:.2f}ms (window_capacity=10)")
+    valid = smoothed[~np.isnan(smoothed)]
+    print(f"  {len(valid)} pts processed in {ms:.2f}ms (window_capacity=10)")
     print()
 
 
@@ -164,16 +186,16 @@ def example_8_update_modes():
             min_points=5,
             window_capacity=15,
         )
-        result = model.add_points(x, y)
-        print(f"  {mode}: {len(result.y)} pts emitted (out of {len(x)})")
+        smoothed = add_all_points(model, x, y)
+        valid = smoothed[~np.isnan(smoothed)]
+        print(f"  {mode}: {len(valid)} pts emitted (out of {len(x)})")
 
-    # Show fraction_used and iterations_used from LoessResult
+    # Show last smoothed value from the per-point API
     model = OnlineLoess(fraction=0.5, iterations=2, window_capacity=10, min_points=3)
-    result = model.add_points(x, y)
-    print(f"  last smoothed: {result.y[-1]:.3f}")
-    print(f"  fraction_used: {result.fraction_used}")
-    if result.iterations_used is not None:
-        print(f"  iterations_used: {result.iterations_used}")
+    smoothed = add_all_points(model, x, y)
+    valid = smoothed[~np.isnan(smoothed)]
+    if len(valid) > 0:
+        print(f"  last smoothed: {valid[-1]:.3f}")
     print()
 
 
@@ -197,10 +219,11 @@ def example_9_advanced_online_options():
         min_points=5,
         window_capacity=15,
     )
-    result = model.add_points(x, y)
-    print(f"  emitted: {len(result.y)}")
-    print(f"  last smoothed: {result.y[-1]:.3f}")
-    print(f"  fraction_used: {result.fraction_used}")
+    result = add_all_points(model, x, y)
+    valid = result[~np.isnan(result)]
+    print(f"  emitted: {len(valid)}")
+    if len(valid) > 0:
+        print(f"  last smoothed: {valid[-1]:.3f}")
     print()
 
 

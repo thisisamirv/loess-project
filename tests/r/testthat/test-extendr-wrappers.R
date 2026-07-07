@@ -43,16 +43,9 @@ test_that("RStreamingLoess generated accessors dispatch chunked methods", {
 })
 
 
-test_that("ROnlineLoess generated accessors dispatch add_points", {
+test_that("ROnlineLoess generated accessors dispatch add_point", {
     null_value <- Nullable(NULL)
-    handle_dollar <- ROnlineLoess$new(
-        0.3, 20L, 3L, 1L, "tricube", "bisquare", "mad",
-        "extend", "use_local_mean", "incremental", null_value, FALSE, FALSE,
-        "linear", 1L, "normalized",
-        null_value, "interpolation", FALSE,
-        null_value, null_value, null_value, null_value, null_value
-    )
-    handle_bracket <- ROnlineLoess$new(
+    handle <- ROnlineLoess$new(
         0.3, 20L, 3L, 1L, "tricube", "bisquare", "mad",
         "extend", "use_local_mean", "incremental", null_value, FALSE, FALSE,
         "linear", 1L, "normalized",
@@ -62,9 +55,10 @@ test_that("ROnlineLoess generated accessors dispatch add_points", {
 
     x <- as.double(1:10)
     y <- as.double(cos(x))
-    result_dollar <- handle_dollar$add_points(x, y)
-    result_bracket <- handle_bracket[["add_points"]](x, y)
 
-    expect_length(result_dollar$y, length(y))
-    expect_identical(result_dollar$y, result_bracket$y)
+    results <- lapply(seq_along(x), function(i) handle$add_point(x[i], y[i]))
+    non_null <- Filter(Negate(is.null), results)
+
+    expect_true(length(non_null) > 0)
+    expect_true(all(sapply(non_null, function(r) "smoothed" %in% names(r))))
 })

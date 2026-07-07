@@ -246,10 +246,10 @@ using FastLOESS
             y = collect(Float64, 2:2:20)
 
             online = OnlineLoess(fraction = 0.5, window_capacity = 10, min_points = 3)
-            result = add_points(online, x, y)
+            results = [add_point(online, x[i], y[i]) for i ∈ eachindex(x)]
 
-            @test length(result.y) == length(x)
-            @test result isa LoessResult
+            @test any(r !== nothing for r ∈ results)
+            @test all(r === nothing || r isa OnlineOutput for r ∈ results)
         end
 
         @testset "with noise" begin
@@ -258,9 +258,9 @@ using FastLOESS
             y = 2 .* x .+ randn(50)
 
             online = OnlineLoess(fraction = 0.3, window_capacity = 20, min_points = 5)
-            result = add_points(online, x, y)
+            results = [add_point(online, x[i], y[i]) for i ∈ eachindex(x)]
 
-            @test length(result.y) == length(x)
+            @test any(r !== nothing for r ∈ results)
         end
 
         @testset "update modes" begin
@@ -268,17 +268,17 @@ using FastLOESS
             y = 20.0 .+ 5.0 .* sin.(x .* 0.1)
 
             o1 = OnlineLoess(fraction = 0.3, window_capacity = 50, update_mode = "full")
-            result_full = add_points(o1, x, y)
+            results_full = [add_point(o1, x[i], y[i]) for i ∈ eachindex(x)]
 
             o2 = OnlineLoess(
                 fraction = 0.3,
                 window_capacity = 50,
                 update_mode = "incremental",
             )
-            result_inc = add_points(o2, x, y)
+            results_inc = [add_point(o2, x[i], y[i]) for i ∈ eachindex(x)]
 
-            @test length(result_full.y) == length(x)
-            @test length(result_inc.y) == length(x)
+            @test any(r !== nothing for r ∈ results_full)
+            @test any(r !== nothing for r ∈ results_inc)
         end
     end
 
@@ -533,8 +533,8 @@ using FastLOESS
             yo = xo .* 2.0
             for um ∈ ["full", "incremental"]
                 o = OnlineLoess(fraction = 0.5, window_capacity = 10, update_mode = um)
-                r = add_points(o, xo, yo)
-                @test length(r.y) == 20
+                results = [add_point(o, xo[i], yo[i]) for i ∈ eachindex(xo)]
+                @test any(r !== nothing for r ∈ results)
             end
         end
 
@@ -546,8 +546,8 @@ using FastLOESS
                 window_capacity = 10,
                 distance_metric = "minkowski:3",
             )
-            r = add_points(o, xo, yo)
-            @test length(r.y) == 20
+            results = [add_point(o, xo[i], yo[i]) for i ∈ eachindex(xo)]
+            @test any(r !== nothing for r ∈ results)
         end
 
         @testset "OnlineLoess: misc params" begin
@@ -565,8 +565,8 @@ using FastLOESS
                 zero_weight_fallback = "return_none",
                 surface_mode = "direct",
             )
-            r = add_points(o, xo, yo)
-            @test length(r.y) == 30
+            results = [add_point(o, xo[i], yo[i]) for i ∈ eachindex(xo)]
+            @test any(r !== nothing for r ∈ results)
         end
     end
 

@@ -85,10 +85,14 @@ fastloess::OnlineLoess model(opts);
 fastloess::OnlineOptions opts;
 opts.window_capacity = 10;
 fastloess::OnlineLoess model(opts);
-auto result = model.add_points(x, y).value();
+auto result = model.add_point(x, y).value();
+// result.has_value() == false while window fills
+if (result.has_value()) {
+    double smoothed = result.smoothed();
+}
 ```
 
-* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+* Adds a single point to the sliding window. Returns `Expected<OnlineOutput>` — check `result.has_value()` to see whether the window is ready.
 
 ## Options Structures
 
@@ -143,6 +147,19 @@ auto result = model.add_points(x, y).value();
 | `parallel` | `bool` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
+
+### `fastloess::OnlineOutput`
+
+Returned (inside `Expected`) by `add_point()`. Check `has_value()` before reading fields.
+
+| Method | Return Type | Description |
+| --- | --- | --- |
+| `has_value()` | `bool` | `false` while window fills; `true` when output is ready |
+| `smoothed()` | `double` | Smoothed value for the latest point |
+| `std_error()` | `double` | Standard error (NaN if not computed) |
+| `residual()` | `double` | Residual y − smoothed (NaN if not computed) |
+| `robustness_weight()` | `double` | Robustness weight (NaN if not computed) |
+| `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |
 
 ### `fastloess::LoessResult`
 

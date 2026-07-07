@@ -12,10 +12,9 @@
    8. Update modes (Full vs Incremental) and minPoints
    9. Advanced online options
 
-  Note: OnlineLoessWasm.add_points(xs, ys) takes Float64Arrays and returns
-  a Float64Array of smoothed values. Points before min_points is reached
-  fall back to the raw y value. For full OnlineOutput fields (std_error,
-  residual, robustness_weight), use the Node.js binding.
+  add_point(x, y) returns an OnlineOutput once the window has enough points,
+  or undefined while filling. The helper below returns the smoothed value or
+  falls back to the raw y value while the window is still filling.
 -->
 <!DOCTYPE html>
 <html>
@@ -53,9 +52,11 @@
         function log(msg) { out.innerText += msg + "\n"; console.log(msg); }
         function clearLog() { out.innerText = ""; }
 
-        // Convenience wrapper: add a single point and return its smoothed value.
+        // add_point() returns OnlineOutput (with .smoothed) or undefined while filling.
+        // This helper returns smoothed or falls back to raw y.
         function addPoint(model, x, y) {
-            return model.add_points(new Float64Array([x]), new Float64Array([y]))[0];
+            const result = model.add_point(x, y);
+            return result !== undefined ? result.smoothed : y;
         }
 
         // ── Example 1: Basic Incremental Processing ───────────────────────────

@@ -29,9 +29,17 @@ export declare class LoessResult {
     get dimensions(): number
 }
 
+export interface OnlineOutput {
+    smoothed: number
+    stdError?: number
+    residual?: number
+    robustnessWeight?: number
+    iterationsUsed?: number
+}
+
 export declare class OnlineLoess {
     constructor(options?: SmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
-    add_points(x: Float64Array, y: Float64Array): LoessResult
+    add_point(x: number, y: number): OnlineOutput | null
 }
 
 export declare class StreamingLoess {

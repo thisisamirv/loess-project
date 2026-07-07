@@ -39,12 +39,10 @@ test_that("OnlineLoess rejects invalid inputs", {
         "min_points must be a non-negative integer"
     )
 
-    # Mismatched lengths at add_points time
+    # add_point accepts scalar x and y without error
     ol <- OnlineLoess(fraction = 0.5)
-    expect_error(
-        ol$add_points(as.double(1:7), as.double(1:5)),
-        "must match y"
-    )
+    result <- ol$add_point(1.0, 2.0)
+    expect_true(is.null(result) || "smoothed" %in% names(result))
 })
 
 test_that("StreamingLoess rejects invalid inputs", {

@@ -17,8 +17,8 @@ use fastLoess::binding_support as shared_parse;
 use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use fastLoess::internals::api::{
-    BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
-    ScalingMethod, UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, MergeStrategy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction,
+    ZeroWeightFallback,
 };
 use fastLoess::prelude::LoessResult;
 
@@ -98,6 +98,22 @@ pub extern "C" fn cpp_last_error_message() -> *const c_char {
             ptr::null()
         }
     })
+}
+
+// Per-point result from an online update, passed across the FFI boundary.
+// has_value = 1 means the window is ready and smoothed is valid; 0 means the
+// window is still filling (caller should treat it as no output yet).
+// Non-computed optional fields use f64::NAN (for floats) or -1 (for int).
+// error = NULL if no error, otherwise points to a null-terminated error string.
+#[repr(C)]
+pub struct CppOnlineOutput {
+    pub has_value: c_int,
+    pub smoothed: c_double,
+    pub std_error: c_double,
+    pub residual: c_double,
+    pub robustness_weight: c_double,
+    pub iterations_used: c_int,
+    pub error: *mut c_char, // NULL if no error
 }
 
 // Result struct that can be passed across FFI boundary.
@@ -351,11 +367,6 @@ pub struct CppStreamingLoess {
 // Opaque handle to a Loess model.
 pub struct CppOnlineLoess {
     model: Option<ParallelOnlineLoess<f64>>,
-    fraction: f64,
-    iterations: usize,
-    dimensions: usize,
-    degree: PolynomialDegree,
-    distance_metric: DistanceMetric<f64>,
 }
 
 fn setter_unsupported_eager_lifecycle(name: &str) {
@@ -1197,7 +1208,7 @@ pub unsafe extern "C" fn cpp_online_new(
             .unwrap_or(false)
             && weighted_metric_weights_slice.is_none();
 
-        let (mut builder, applied) = match shared_parse::apply_builder_options(
+        let (mut builder, _) = match shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -1245,15 +1256,6 @@ pub unsafe extern "C" fn cpp_online_new(
             builder = builder.prediction_intervals(prediction_intervals);
         }
 
-        let degree = applied.degree.unwrap_or(PolynomialDegree::Linear);
-        let distance_metric = if weighted_without_weights {
-            DistanceMetric::Weighted(Vec::new())
-        } else {
-            applied
-                .distance_metric
-                .unwrap_or(DistanceMetric::Normalized)
-        };
-
         let model = match shared_parse::map_runtime(
             builder
                 .clone()
@@ -1267,75 +1269,86 @@ pub unsafe extern "C" fn cpp_online_new(
             Err(e) => return null_with_error(&e.message),
         };
 
-        Box::into_raw(Box::new(CppOnlineLoess {
-            model: Some(model),
-            fraction,
-            iterations: iterations as usize,
-            dimensions: configured_dimensions,
-            degree,
-            distance_metric,
-        }))
+        Box::into_raw(Box::new(CppOnlineLoess { model: Some(model) }))
     })
 }
 
-/// Add points to model.
+/// Add a single point to the model and return its smoothed value.
+/// `has_value = 0` in the result means the window is still filling.
 ///
 /// # Safety
-/// `ptr` must be valid. `x` must be a valid array of length `x_n` (= n_observations * dimensions),
-/// `y` must be a valid array of length `y_n` (= n_observations).
+/// `ptr` must be a valid `CppOnlineLoess` pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn cpp_online_add_points(
+pub unsafe extern "C" fn cpp_online_add_point(
     ptr: *mut CppOnlineLoess,
-    x: *const c_double,
-    x_n: c_ulong,
-    y: *const c_double,
-    y_n: c_ulong,
-) -> CppLoessResult {
-    with_panic_result(|| {
+    x: c_double,
+    y: c_double,
+) -> CppOnlineOutput {
+    let make_error = |msg: &str| -> CppOnlineOutput {
+        let c_string = shared_parse::to_cstring_lossy(msg);
+        CppOnlineOutput {
+            has_value: 0,
+            smoothed: f64::NAN,
+            std_error: f64::NAN,
+            residual: f64::NAN,
+            robustness_weight: f64::NAN,
+            iterations_used: -1,
+            error: c_string.into_raw(),
+        }
+    };
+
+    match catch_unwind(AssertUnwindSafe(|| {
         if ptr.is_null() {
-            return error_result(shared_parse::MODEL_POINTER_IS_NULL);
+            return make_error(shared_parse::MODEL_POINTER_IS_NULL);
         }
-        let loess = &mut *ptr;
-        if x.is_null() || y.is_null() || x_n == 0 || y_n == 0 {
-            return error_result(shared_parse::INVALID_DATA_INPUTS);
-        }
-        let x_slice = std::slice::from_raw_parts(x, x_n as usize);
-        let y_slice = std::slice::from_raw_parts(y, y_n as usize);
-        let d = loess.dimensions.max(1);
-        if x_slice.len() != y_slice.len() * d {
-            return error_result(&shared_parse::dims_mismatch_message(
-                x_slice.len(),
-                y_slice.len(),
-                d,
-            ));
-        }
+        let loess = unsafe { &mut *ptr };
 
         if let Some(model) = &mut loess.model {
-            let metadata = shared_parse::OnlineResultMetadata {
-                dimensions: loess.dimensions,
-                degree: loess.degree,
-                distance_metric: loess.distance_metric.clone(),
-                fraction_used: loess.fraction,
-                iterations_used: Some(loess.iterations),
-            };
-
-            let result = match shared_parse::online_add_points_to_result(
-                x_slice,
-                y_slice,
-                &metadata,
-                |xi_chunk, yi| {
-                    let output = model.add_point(xi_chunk, yi)?;
-                    Ok(output.map(|o| o.smoothed))
+            match model.add_point(&[x], y) {
+                Err(e) => make_error(&e.to_string()),
+                Ok(None) => CppOnlineOutput {
+                    has_value: 0,
+                    smoothed: f64::NAN,
+                    std_error: f64::NAN,
+                    residual: f64::NAN,
+                    robustness_weight: f64::NAN,
+                    iterations_used: -1,
+                    error: ptr::null_mut(),
                 },
-            ) {
-                Ok(r) => r,
-                Err(e) => return error_result(&e),
-            };
-            result.into()
+                Ok(Some(o)) => CppOnlineOutput {
+                    has_value: 1,
+                    smoothed: o.smoothed,
+                    std_error: o.std_error.unwrap_or(f64::NAN),
+                    residual: o.residual.unwrap_or(f64::NAN),
+                    robustness_weight: o.robustness_weight.unwrap_or(f64::NAN),
+                    iterations_used: o.iterations_used.map(|i| i as c_int).unwrap_or(-1),
+                    error: ptr::null_mut(),
+                },
+            }
         } else {
-            error_result("Model initialization failed")
+            make_error("Model initialization failed")
         }
-    })
+    })) {
+        Ok(v) => v,
+        Err(_) => make_error(shared_parse::panic_fallback_message()),
+    }
+}
+
+/// Free the error string in a CppOnlineOutput (call only when error != NULL).
+///
+/// # Safety
+/// `output` must be a valid pointer and `output->error` must have been allocated by Rust.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_online_free_output(output: *mut CppOnlineOutput) {
+    with_panic_void(|| {
+        if !output.is_null() {
+            let out = unsafe { &mut *output };
+            if !out.error.is_null() {
+                let _ = CString::from_raw(out.error);
+                out.error = ptr::null_mut();
+            }
+        }
+    });
 }
 
 /// Free model.

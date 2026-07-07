@@ -74,10 +74,10 @@ online <- OnlineLoess(window_capacity = 10L)
 
 ```r
 online <- OnlineLoess(window_capacity = 10L)
-result <- online$add_points(x, y)
+result <- online$add_point(x, y)  # returns list or NULL
 ```
 
-* Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
+* Adds a single point to the sliding window. Returns a named list (`$smoothed`, `$residual`, …) once the window has enough points, or `NULL` while still filling.
 
 ## Options Structures
 
@@ -132,6 +132,18 @@ result <- online$add_points(x, y)
 | `parallel` | `logical` | `FALSE` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
+
+### `OnlineOutput` (named list)
+
+Returned by `add_point()` once the window has enough points (`NULL` until then).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `smoothed` | `numeric` | Smoothed value for the latest point |
+| `std_error` | `numeric` (optional) | Standard error (if requested) |
+| `residual` | `numeric` (optional) | Residual y − smoothed (if requested) |
+| `robustness_weight` | `numeric` (optional) | Robustness weight (if requested) |
+| `iterations_used` | `integer` (optional) | Robustness iterations performed |
 
 ### `LoessResult`
 

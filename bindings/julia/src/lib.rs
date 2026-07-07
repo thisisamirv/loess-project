@@ -61,6 +61,19 @@ pub extern "C" fn jl_last_error_message() -> *const c_char {
     })
 }
 
+// Per-point result from an online update, passed across the FFI boundary.
+// has_value = 1 means the window is ready and smoothed is valid; 0 means
+// the window is still filling (all other fields are undefined in that case).
+#[repr(C)]
+pub struct JlOnlineOutput {
+    pub has_value: c_int,
+    pub smoothed: c_double,
+    pub std_error: c_double,         // f64::NAN when not computed
+    pub residual: c_double,          // f64::NAN when not computed
+    pub robustness_weight: c_double, // f64::NAN when not computed
+    pub iterations_used: c_int,      // -1 when not computed
+}
+
 // Result struct that can be passed across FFI boundary.
 // All arrays are allocated by Rust and must be freed by Rust.
 #[repr(C)]
@@ -313,11 +326,6 @@ pub struct JlStreamingLoess {
 
 pub struct JlOnlineLoess {
     inner: ParallelOnlineLoess<f64>,
-    fraction: f64,
-    iterations: usize,
-    dimensions: usize,
-    degree: PolynomialDegree,
-    distance_metric: DistanceMetric<f64>,
 }
 
 // Loess () C API
@@ -994,7 +1002,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
             1
         };
 
-        let (builder, applied) =
+        let (builder, _) =
             match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
                 LoessBuilder::<f64>::new(),
                 shared_parse::BuilderOptionSet {
@@ -1035,11 +1043,6 @@ pub unsafe extern "C" fn jl_online_loess_new(
                 Err(e) => return null_with_last_error(&e.message),
             };
 
-        let degree = applied.degree.unwrap_or(PolynomialDegree::Linear);
-        let distance_metric = applied
-            .distance_metric
-            .unwrap_or(DistanceMetric::Normalized);
-
         let mut o_builder = builder.adapter(Online);
         o_builder = o_builder.window_capacity(window_capacity as usize);
         o_builder = o_builder.min_points(min_points as usize);
@@ -1060,11 +1063,6 @@ pub unsafe extern "C" fn jl_online_loess_new(
 
         Box::into_raw(Box::new(JlOnlineLoess {
             inner: processor,
-            fraction,
-            iterations: iterations as usize,
-            dimensions: configured_dimensions,
-            degree,
-            distance_metric,
         }))
     });
 
@@ -1077,63 +1075,70 @@ pub unsafe extern "C" fn jl_online_loess_new(
     }
 }
 
-/// Add points to the processor.
+/// Add a single point to the processor and return the smoothed value for that
+/// point, or a result with `has_value = 0` if the window is still filling.
 ///
 /// # Safety
-/// `ptr` must be a valid pointer. `x` and `y` must be valid arrays of length `n`.
+/// `ptr` must be a valid pointer.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn jl_online_loess_add_points(
+pub unsafe extern "C" fn jl_online_loess_add_point(
     ptr: *mut JlOnlineLoess,
-    x: *const c_double,
-    y: *const c_double,
-    n: c_ulong,
-) -> JlLoessResult {
+    x: c_double,
+    y: c_double,
+) -> JlOnlineOutput {
     let result = catch_unwind(|| {
         if ptr.is_null() {
-            return error_result(shared_parse::PROCESSOR_POINTER_IS_NULL);
+            set_last_error_message(shared_parse::PROCESSOR_POINTER_IS_NULL);
+            return JlOnlineOutput {
+                has_value: 0,
+                smoothed: f64::NAN,
+                std_error: f64::NAN,
+                residual: f64::NAN,
+                robustness_weight: f64::NAN,
+                iterations_used: -1,
+            };
         }
         let processor = unsafe { &mut *ptr };
 
-        if x.is_null() || y.is_null() {
-            return error_result(shared_parse::XY_ARRAYS_MUST_NOT_BE_NULL);
-        }
-        if n == 0 {
-            return error_result(shared_parse::ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO);
-        }
-
-        // For multi-dimensional data, x has n * dimensions elements (row-major flat).
-        let d = processor.dimensions.max(1);
-        let x_n = n as usize * d;
-        let x_slice = unsafe { from_raw_parts(x, x_n) };
-        let y_slice = unsafe { from_raw_parts(y, n as usize) };
-
-        let metadata = shared_parse::OnlineResultMetadata {
-            dimensions: processor.dimensions,
-            degree: processor.degree,
-            distance_metric: processor.distance_metric.clone(),
-            fraction_used: processor.fraction,
-            iterations_used: Some(processor.iterations),
-        };
-
-        let result = match map_invalid_arg_result(shared_parse::online_add_points_to_result(
-            x_slice,
-            y_slice,
-            &metadata,
-            |xi_chunk, yi| {
-                let output = processor.inner.add_point(xi_chunk, yi)?;
-                Ok(output.map(|o| o.smoothed))
+        match processor.inner.add_point(&[x], y) {
+            Err(e) => {
+                set_last_error_message(&e.to_string());
+                JlOnlineOutput {
+                    has_value: 0,
+                    smoothed: f64::NAN,
+                    std_error: f64::NAN,
+                    residual: f64::NAN,
+                    robustness_weight: f64::NAN,
+                    iterations_used: -1,
+                }
+            }
+            Ok(None) => JlOnlineOutput {
+                has_value: 0,
+                smoothed: f64::NAN,
+                std_error: f64::NAN,
+                residual: f64::NAN,
+                robustness_weight: f64::NAN,
+                iterations_used: -1,
             },
-        )) {
-            Ok(r) => r,
-            Err(e) => return e,
-        };
-        loess_result_to_jl(result)
+            Ok(Some(o)) => JlOnlineOutput {
+                has_value: 1,
+                smoothed: o.smoothed,
+                std_error: o.std_error.unwrap_or(f64::NAN),
+                residual: o.residual.unwrap_or(f64::NAN),
+                robustness_weight: o.robustness_weight.unwrap_or(f64::NAN),
+                iterations_used: o.iterations_used.map(|i| i as c_int).unwrap_or(-1),
+            },
+        }
     });
 
-    match result {
-        Ok(res) => res,
-        Err(_) => error_result(shared_parse::panic_fallback_message()),
-    }
+    result.unwrap_or(JlOnlineOutput {
+        has_value: 0,
+        smoothed: f64::NAN,
+        std_error: f64::NAN,
+        residual: f64::NAN,
+        robustness_weight: f64::NAN,
+        iterations_used: -1,
+    })
 }
 
 /// Free the OnlineLoess processor.

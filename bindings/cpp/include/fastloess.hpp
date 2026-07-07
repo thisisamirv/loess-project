@@ -12,6 +12,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -562,6 +563,51 @@ private:
 };
 
 /**
+ * @brief Result of a single online update step.
+ *
+ * Call has_value() to check if the window is ready.  When false, the window
+ * is still filling and no smoothed estimate is available yet.  All optional
+ * fields are NaN when not computed.
+ */
+class OnlineOutput {
+public:
+  /// True when the window has enough points to produce a smoothed estimate.
+  bool has_value() const { return has_value_; }
+
+  /// Smoothed value for the latest point (valid only when has_value() == true).
+  double smoothed() const { return smoothed_; }
+
+  /// Standard error (NaN if not computed).
+  double std_error() const { return std_error_; }
+
+  /// Residual y − smoothed (NaN if not computed).
+  double residual() const { return residual_; }
+
+  /// Robustness weight for the latest point (NaN if not computed).
+  double robustness_weight() const { return robustness_weight_; }
+
+  /// Number of robustness iterations performed (−1 if not applicable).
+  int iterations_used() const { return iterations_used_; }
+
+private:
+  friend class OnlineLoess;
+  template <typename U> friend class Expected;
+  OnlineOutput() = default; ///< Constructs an empty (has_value==false) instance.
+  explicit OnlineOutput(const fastloess_CppOnlineOutput &raw)
+      : has_value_(raw.has_value != 0), smoothed_(raw.smoothed),
+        std_error_(raw.std_error), residual_(raw.residual),
+        robustness_weight_(raw.robustness_weight),
+        iterations_used_(raw.iterations_used) {}
+
+  bool has_value_ = false;
+  double smoothed_ = 0.0;
+  double std_error_ = std::numeric_limits<double>::quiet_NaN();
+  double residual_ = std::numeric_limits<double>::quiet_NaN();
+  double robustness_weight_ = std::numeric_limits<double>::quiet_NaN();
+  int iterations_used_ = -1;
+};
+
+/**
  * @brief Online LOESS model.
  */
 class OnlineLoess {
@@ -611,23 +657,15 @@ public:
     return *this;
   }
 
-  Expected<LoessResult> add_points(const std::vector<double> &x_values,
-                                   const std::vector<double> &y_values) {
-    if (y_values.empty() || x_values.empty() ||
-        x_values.size() % y_values.size() != 0) {
-      return Expected<LoessResult>::make_error("x and y length mismatch");
-    }
+  Expected<OnlineOutput> add_point(double x, double y) {
+    auto raw = cpp_online_add_point(ptr_, x, y);
 
-    auto result = cpp_online_add_points(
-        ptr_, x_values.data(), static_cast<unsigned long>(x_values.size()),
-        y_values.data(), static_cast<unsigned long>(y_values.size()));
-
-    if (result.error != nullptr) {
-      const std::string error_msg(result.error);
-      cpp_loess_free_result(&result);
-      return Expected<LoessResult>::make_error(error_msg);
+    if (raw.error != nullptr) {
+      const std::string error_msg(raw.error);
+      cpp_online_free_output(&raw);
+      return Expected<OnlineOutput>::make_error(error_msg);
     }
-    return Expected<LoessResult>(LoessResult(result));
+    return Expected<OnlineOutput>(OnlineOutput(raw));
   }
 
 private:

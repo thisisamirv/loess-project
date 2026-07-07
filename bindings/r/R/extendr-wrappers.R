@@ -110,8 +110,8 @@ ROnlineLoess$new <- function(
     )
 }
 
-ROnlineLoess$add_points <- function(x, y) {
-    .Call(wrap__ROnlineLoess__add_points, self, x, y)
+ROnlineLoess$add_point <- function(x, y) {
+    .Call(wrap__ROnlineLoess__add_point, self, x, y)
 }
 
 #' @export

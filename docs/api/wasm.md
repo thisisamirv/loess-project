@@ -71,12 +71,10 @@ const online = new OnlineLoess(options, onlineOptions);
 **Methods:**
 
 ```javascript
-const result = online.add_points(xs, ys);
+const result = online.add_point(x, y);  // returns OnlineOutput | undefined
 ```
 
-* `xs`: `Float64Array` of x values to add.
-* `ys`: `Float64Array` of y values to add.
-* Returns a `LoessResult` containing the smoothed values for all points currently in the window.
+* Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `undefined` while the window is still filling.
 
 ## Options Structures
 
@@ -131,6 +129,18 @@ const result = online.add_points(xs, ys);
 | `parallel` | `boolean` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
+
+### `OnlineOutput`
+
+Returned by `add_point()` once the window has enough points (`undefined` until then).
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `smoothed` | `number` | Smoothed value for the latest point |
+| `stdError` | `number \| undefined` | Standard error (if requested) |
+| `residual` | `number \| undefined` | Residual y − smoothed (if requested) |
+| `robustnessWeight` | `number \| undefined` | Robustness weight (if requested) |
+| `iterationsUsed` | `number \| undefined` | Robustness iterations performed |
 
 ### `LoessResult`
 

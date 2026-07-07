@@ -1380,13 +1380,14 @@ Maximum points held in memory for Online mode.
 
 === "R"
     ```r
-    result <- OnlineLoess(window_capacity = 500)$add_points(x, y)
+    model <- OnlineLoess(window_capacity = 500)
+    result <- model$add_point(x[1], y[1])  # NULL until window fills
     ```
 
 === "Python"
     ```python
     model = fl.OnlineLoess(window_capacity=500)
-    result = model.add_points(x, y)
+    result = model.add_point(x[0], y[0])  # None until window fills
     ```
 
 === "Rust"
@@ -1399,7 +1400,7 @@ Maximum points held in memory for Online mode.
 === "Julia"
     ```julia
     model = OnlineLoess(window_capacity=500)
-    result = add_points(model, x, y)
+    result = add_point(model, x[1], y[1])  # nothing until window fills
     ```
 
 === "Node.js"
@@ -1417,7 +1418,8 @@ Maximum points held in memory for Online mode.
     fastloess::OnlineOptions opts;
     opts.window_capacity = 500;
     fastloess::OnlineLoess model(opts);
-    auto result = model.add_points(x, y).value();
+    auto out = model.add_point(x, y).value();
+    // out.has_value() == false until window fills
     ```
 
 ---
@@ -1428,13 +1430,14 @@ Minimum points required before Online filter starts producing outputs.
 
 === "R"
     ```r
-    result <- OnlineLoess(min_points = 10)$add_points(x, y)
+    model <- OnlineLoess(min_points = 10)
+    result <- model$add_point(x[1], y[1])  # NULL until 10 points seen
     ```
 
 === "Python"
     ```python
     model = fl.OnlineLoess(min_points=10)
-    result = model.add_points(x, y)
+    result = model.add_point(x[0], y[0])  # None until 10 points seen
     ```
 
 === "Rust"
@@ -1447,7 +1450,7 @@ Minimum points required before Online filter starts producing outputs.
 === "Julia"
     ```julia
     model = OnlineLoess(min_points=10)
-    result = add_points(model, x, y)
+    result = add_point(model, x[1], y[1])  # nothing until 10 points seen
     ```
 
 === "Node.js"
@@ -1465,7 +1468,8 @@ Minimum points required before Online filter starts producing outputs.
     fastloess::OnlineOptions opts;
     opts.min_points = 10;
     fastloess::OnlineLoess model(opts);
-    auto result = model.add_points(x, y).value();
+    auto out = model.add_point(x, y).value();
+    // out.has_value() == false until min_points reached
     ```
 
 ---
@@ -1483,13 +1487,14 @@ For example:
 
 === "R"
     ```r
-    result <- OnlineLoess(update_mode = "full")$add_points(x, y)
+    model <- OnlineLoess(update_mode = "full")
+    result <- model$add_point(x[1], y[1])
     ```
 
 === "Python"
     ```python
     model = fl.OnlineLoess(update_mode="full")
-    result = model.add_points(x, y)
+    result = model.add_point(x[0], y[0])
     ```
 
 === "Rust"
@@ -1502,7 +1507,7 @@ For example:
 === "Julia"
     ```julia
     model = OnlineLoess(update_mode="full")
-    result = add_points(model, x, y)
+    result = add_point(model, x[1], y[1])
     ```
 
 === "Node.js"
@@ -1520,5 +1525,5 @@ For example:
     fastloess::OnlineOptions opts;
     opts.update_mode = "full";
     fastloess::OnlineLoess model(opts);
-    auto result = model.add_points(x, y).value();
+    auto out = model.add_point(x, y).value();
     ```

@@ -13,7 +13,7 @@ use ::fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
 use ::fastLoess::binding_support as shared_parse;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
-use ::fastLoess::internals::api::{DistanceMetric, MergeStrategy, PolynomialDegree, UpdateMode};
+use ::fastLoess::internals::api::{MergeStrategy, UpdateMode};
 use ::fastLoess::prelude::LoessResult as InnerLoessResult;
 
 fn to_js_error(err: shared_parse::BindingError) -> JsValue {
@@ -85,6 +85,44 @@ pub struct Diagnostics {
     pub effective_df: Option<f64>,
     #[wasm_bindgen(js_name = residualSd)]
     pub residual_sd: f64,
+}
+
+// Result of a single online update step.
+#[wasm_bindgen]
+pub struct OnlineOutput {
+    smoothed: f64,
+    std_error: Option<f64>,
+    residual: Option<f64>,
+    robustness_weight: Option<f64>,
+    iterations_used: Option<usize>,
+}
+
+#[wasm_bindgen]
+impl OnlineOutput {
+    #[wasm_bindgen(getter)]
+    pub fn smoothed(&self) -> f64 {
+        self.smoothed
+    }
+
+    #[wasm_bindgen(getter, js_name = "stdError")]
+    pub fn std_error(&self) -> Option<f64> {
+        self.std_error
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn residual(&self) -> Option<f64> {
+        self.residual
+    }
+
+    #[wasm_bindgen(getter, js_name = "robustnessWeight")]
+    pub fn robustness_weight(&self) -> Option<f64> {
+        self.robustness_weight
+    }
+
+    #[wasm_bindgen(getter, js_name = "iterationsUsed")]
+    pub fn iterations_used(&self) -> Option<u32> {
+        self.iterations_used.map(|i| i as u32)
+    }
 }
 
 #[wasm_bindgen]
@@ -436,11 +474,6 @@ impl StreamingLoess {
 #[wasm_bindgen]
 pub struct OnlineLoess {
     inner: ParallelOnlineLoess<f64>,
-    dimensions: usize,
-    degree: PolynomialDegree,
-    distance_metric: DistanceMetric<f64>,
-    fraction_used: f64,
-    iterations_used: Option<usize>,
 }
 
 #[wasm_bindgen]
@@ -450,64 +483,42 @@ impl OnlineLoess {
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, onlineOpts: JsValue) -> Result<OnlineLoess, JsValue> {
         let mut builder = LoessBuilder::<f64>::new();
-        let mut dimensions = 1usize;
-        let mut degree = PolynomialDegree::Linear;
-        let mut distance_metric = DistanceMetric::Normalized;
-        let mut fraction_used = 0.67f64;
-        let mut iterations_used = None;
 
         if !options.is_undefined() && !options.is_null() {
             let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
-            if let Some(d) = opts.dimensions {
-                dimensions = d.max(1);
-            }
-            if let Some(f) = opts.fraction {
-                fraction_used = f;
-            }
-            if let Some(i) = opts.iterations {
-                iterations_used = Some(i);
-            }
-
-            let (configured_builder, applied) =
-                map_invalid_arg(shared_parse::apply_builder_options(
-                    builder,
-                    shared_parse::BuilderOptionSet {
-                        fraction: opts.fraction,
-                        iterations: opts.iterations,
-                        weight_function: opts.weight_function.as_deref(),
-                        robustness_method: opts.robustness_method.as_deref(),
-                        zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
-                        boundary_policy: opts.boundary_policy.as_deref(),
-                        scaling_method: opts.scaling_method.as_deref(),
-                        auto_converge: opts.auto_converge,
-                        return_residuals: opts.return_residuals.unwrap_or(false),
-                        return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                        return_diagnostics: opts.return_diagnostics.unwrap_or(false),
-                        confidence_intervals: opts.confidence_intervals,
-                        prediction_intervals: opts.prediction_intervals,
-                        parallel: opts.parallel,
-                        degree: opts.degree.as_deref(),
-                        dimensions: opts.dimensions,
-                        distance_metric: opts.distance_metric.as_deref(),
-                        weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
-                        surface_mode: opts.surface_mode.as_deref(),
-                        return_se: opts.return_se.unwrap_or(false),
-                        cell: opts.cell,
-                        interpolation_vertices: opts.interpolation_vertices,
-                        boundary_degree_fallback: opts.boundary_degree_fallback,
-                        cv_fractions: None,
-                        cv_method: None,
-                        cv_k: None,
-                        cv_seed: None,
-                    },
-                ))?;
+            let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+                builder,
+                shared_parse::BuilderOptionSet {
+                    fraction: opts.fraction,
+                    iterations: opts.iterations,
+                    weight_function: opts.weight_function.as_deref(),
+                    robustness_method: opts.robustness_method.as_deref(),
+                    zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                    boundary_policy: opts.boundary_policy.as_deref(),
+                    scaling_method: opts.scaling_method.as_deref(),
+                    auto_converge: opts.auto_converge,
+                    return_residuals: opts.return_residuals.unwrap_or(false),
+                    return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                    return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                    confidence_intervals: opts.confidence_intervals,
+                    prediction_intervals: opts.prediction_intervals,
+                    parallel: opts.parallel,
+                    degree: opts.degree.as_deref(),
+                    dimensions: opts.dimensions,
+                    distance_metric: opts.distance_metric.as_deref(),
+                    weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
+                    surface_mode: opts.surface_mode.as_deref(),
+                    return_se: opts.return_se.unwrap_or(false),
+                    cell: opts.cell,
+                    interpolation_vertices: opts.interpolation_vertices,
+                    boundary_degree_fallback: opts.boundary_degree_fallback,
+                    cv_fractions: None,
+                    cv_method: None,
+                    cv_k: None,
+                    cv_seed: None,
+                },
+            ))?;
             builder = configured_builder;
-            if let Some(parsed_degree) = applied.degree {
-                degree = parsed_degree;
-            }
-            if let Some(parsed_distance) = applied.distance_metric {
-                distance_metric = parsed_distance;
-            }
         }
 
         let mut window_capacity = 100;
@@ -536,42 +547,20 @@ impl OnlineLoess {
                 .build(),
         )?;
 
-        Ok(OnlineLoess {
-            inner: model,
-            dimensions,
-            degree,
-            distance_metric,
-            fraction_used,
-            iterations_used,
-        })
+        Ok(OnlineLoess { inner: model })
     }
 
-    #[wasm_bindgen(js_name = "add_points")]
-    pub fn add_points(
-        &mut self,
-        xs: &Float64Array,
-        ys: &Float64Array,
-    ) -> Result<LoessResult, JsValue> {
-        let xs_vec: Vec<f64> = xs.to_vec();
-        let ys_vec: Vec<f64> = ys.to_vec();
-        let metadata = shared_parse::OnlineResultMetadata {
-            dimensions: self.dimensions,
-            degree: self.degree,
-            distance_metric: self.distance_metric.clone(),
-            fraction_used: self.fraction_used,
-            iterations_used: self.iterations_used,
-        };
-
-        let inner = map_invalid_arg(shared_parse::online_add_points_to_result(
-            &xs_vec,
-            &ys_vec,
-            &metadata,
-            |x, y| {
-                let out = self.inner.add_point(x, y)?;
-                Ok(out.map(|v| v.smoothed))
-            },
-        ))?;
-
-        Ok(LoessResult { inner })
+    // Add a single point and return its smoothed value, or undefined if the
+    // window is not yet full enough to produce a result.
+    #[wasm_bindgen(js_name = "add_point")]
+    pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<OnlineOutput>, JsValue> {
+        let output = map_invalid_arg(self.inner.add_point(&[x], y))?;
+        Ok(output.map(|o| OnlineOutput {
+            smoothed: o.smoothed,
+            std_error: o.std_error,
+            residual: o.residual,
+            robustness_weight: o.robustness_weight,
+            iterations_used: o.iterations_used,
+        }))
     }
 }
