@@ -83,7 +83,7 @@ result = add_point(online, x::Float64, y::Float64) :: Union{OnlineOutput, Nothin
 | `robustness_method` | `String` | `"bisquare"` | Robustness method |
 | `scaling_method` | `String` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling strategy |
+| `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance (NaN to disable) |
 | `custom_weights` | `Union{Vector{Float64}, Nothing}` | `nothing` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 | `confidence_intervals` | `Float64` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
@@ -96,30 +96,30 @@ result = add_point(online, x::Float64, y::Float64) :: Union{OnlineOutput, Nothin
 | `degree` | `String` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `Int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `String` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
-| `surface_mode` | `String` | `"interpolation"` | Surface computation mode |
 | `weighted_metric_weights` | `Union{Vector{Float64}, Nothing}` | `nothing` | Per-dimension weights (used when `distance_metric = "weighted"`) |
+| `surface_mode` | `String` | `"interpolation"` | Surface computation mode |
 | `cell` | `Union{Float64, Nothing}` | `nothing` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `Union{Int, Nothing}` | `nothing` | Number of interpolation vertices |
 | `boundary_degree_fallback` | `Union{Bool, Nothing}` | `nothing` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling (Batch only) |
-| `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation (Batch only) |
 | `cv_method` | `String` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
 | `cv_k` | `Int` | `5` | Number of folds for k-fold CV (Batch only) |
+| `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation (Batch only) |
+| `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling (Batch only) |
 
 ### `StreamingOptions` (inherits `LoessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `chunk_size` | `Int` | `5000` | Data chunk size |
-| `overlap` | `Int` | `auto (-1)` | Overlap between chunks (-1 for auto 10%) |
-| `merge_strategy` | `String` | `"weighted_average"` | Strategy for blending overlap: see Merge Strategies |
+| `overlap` | `Int` | `500` | Overlap between chunks |
+| `merge_strategy` | `String` | `"weighted_average"` | Strategy for blending overlap regions |
 
 ### `OnlineOptions` (inherits `LoessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `window_capacity` | `Int` | `100` | Max points in sliding window |
-| `min_points` | `Int` | `2` | Min points before smoothing starts |
+| `window_capacity` | `Int` | `1000` | Max points in sliding window |
+| `min_points` | `Int` | `3` | Min points before smoothing starts |
 | `update_mode` | `String` | `"full"` | Update mode (`"full"` or `"incremental"`) |
 | `parallel` | `Bool` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 

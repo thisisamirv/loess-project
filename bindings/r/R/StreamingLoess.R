@@ -9,7 +9,6 @@
 #' @inheritParams Loess
 #' @param chunk_size Number of data points per processing chunk.
 #' @param overlap Number of overlapping points between consecutive chunks.
-#'   `NULL` uses the default (10% of `chunk_size`).
 #' @param merge_strategy Strategy for reconciling overlapping chunk regions:
 #'   \code{"weighted_average"} (default), \code{"average"},
 #'   \code{"take_first"}, or \code{"take_last"}.
@@ -26,7 +25,7 @@
 StreamingLoess <- function(
     fraction = 0.67,
     chunk_size = 5000L,
-    overlap = NULL,
+    overlap = 500L,
     iterations = 3L,
     weight_function = "tricube",
     robustness_method = "bisquare",

@@ -521,8 +521,8 @@ impl OnlineLoess {
             builder = configured_builder;
         }
 
-        let mut window_capacity = 100;
-        let mut min_points = 2;
+        let mut window_capacity = 1000;
+        let mut min_points = 3;
         let mut update_mode = UpdateMode::Full;
 
         if !onlineOpts.is_undefined() && !onlineOpts.is_null() {

@@ -599,7 +599,7 @@ Stateful streaming LOESS smoother.
 # Keyword Arguments
 - `fraction::Float64 = 0.67`: Smoothing fraction
 - `chunk_size::Int = 5000`: Size of each processing chunk
-- `overlap::Int = -1`: Overlap between chunks (-1 for auto = 10% of chunk_size)
+- `overlap::Int = 500`: Overlap between chunks
 - `iterations::Int = 3`: Number of robustness iterations
 - `weight_function::String = "tricube"`: Kernel function
 - `robustness_method::String = "bisquare"`: Robustness method
@@ -637,7 +637,7 @@ mutable struct StreamingLoess
 	function StreamingLoess(;
 		fraction::Float64 = 0.67,
 		chunk_size::Int = 5000,
-		overlap::Int = -1,
+		overlap::Int = 500,
 		iterations::Int = 3,
 		weight_function::String = "tricube",
 		robustness_method::String = "bisquare",
@@ -758,8 +758,8 @@ Stateful online LOESS smoother.
 
 # Keyword Arguments
 - `fraction::Float64 = 0.67`: Smoothing fraction
-- `window_capacity::Int = 100`: Maximum points to retain in window
-- `min_points::Int = 2`: Minimum points before smoothing starts
+- `window_capacity::Int = 1000`: Maximum points to retain in window
+- `min_points::Int = 3`: Minimum points before smoothing starts
 - `iterations::Int = 3`: Number of robustness iterations
 - `weight_function::String = "tricube"`: Kernel function
 - `robustness_method::String = "bisquare"`: Robustness method
@@ -796,8 +796,8 @@ mutable struct OnlineLoess
 
 	function OnlineLoess(;
 		fraction::Float64 = 0.67,
-		window_capacity::Int = 100,
-		min_points::Int = 2,
+		window_capacity::Int = 1000,
+		min_points::Int = 3,
 		iterations::Int = 3,
 		weight_function::String = "tricube",
 		robustness_method::String = "bisquare",

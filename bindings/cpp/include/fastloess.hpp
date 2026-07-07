@@ -27,6 +27,7 @@ namespace detail {
 constexpr double k_default_fraction = 0.67;
 constexpr int k_default_cv_k = 5;
 constexpr int k_default_chunk_size = 5000;
+constexpr int k_default_overlap = 500;
 constexpr int k_default_window_capacity = 1000;
 } // namespace detail
 
@@ -152,8 +153,9 @@ struct LoessOptions {
  */
 struct StreamingOptions : public LoessOptions {
   int chunk_size = detail::k_default_chunk_size;
-  int overlap = -1;                        ///< -1 for auto
-  std::string merge_strategy = "weighted_average"; ///< weighted_average, average, take_first, take_last
+  int overlap = detail::k_default_overlap;
+  std::string merge_strategy =
+      "weighted_average"; ///< weighted_average, average, take_first, take_last
 };
 
 /**
@@ -163,7 +165,7 @@ struct OnlineOptions : public LoessOptions {
   bool parallel = false; ///< online LOESS fits one point at a time; parallelism
                          ///< rarely helps
   int window_capacity = detail::k_default_window_capacity;
-  int min_points = 2;
+  int min_points = 3;
   std::string update_mode = "full";
 };
 
@@ -592,7 +594,8 @@ public:
 private:
   friend class OnlineLoess;
   template <typename U> friend class Expected;
-  OnlineOutput() = default; ///< Constructs an empty (has_value==false) instance.
+  OnlineOutput() =
+      default; ///< Constructs an empty (has_value==false) instance.
   explicit OnlineOutput(const fastloess_CppOnlineOutput &raw)
       : has_value_(raw.has_value != 0), smoothed_(raw.smoothed),
         std_error_(raw.std_error), residual_(raw.residual),

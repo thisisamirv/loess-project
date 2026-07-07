@@ -91,7 +91,7 @@ result <- online$add_point(x, y)  # returns list or NULL
 | `robustness_method` | `character` | `"bisquare"` | Robustness method |
 | `scaling_method` | `character` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `character` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `character` | `"use_local_mean"` | Zero-weight handling strategy |
+| `zero_weight_fallback` | `character` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `numeric` | `NULL` | Auto-convergence tolerance |
 | `custom_weights` | `numeric` | `NULL` | Per-observation case weights — passed to `$fit()`, not the constructor (Batch only) |
 | `confidence_intervals` | `numeric` | `NULL` | Confidence level (e.g., 0.95) |
@@ -104,30 +104,30 @@ result <- online$add_point(x, y)  # returns list or NULL
 | `degree` | `character` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `integer` | `1L` | Number of predictor dimensions |
 | `distance_metric` | `character` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
-| `surface_mode` | `character` | `"interpolation"` | Surface computation mode |
 | `weighted_metric_weights` | `numeric` | `NULL` | Per-dimension weights (used when `distance_metric = "weighted"`) |
+| `surface_mode` | `character` | `"interpolation"` | Surface computation mode |
 | `cell` | `numeric` | `NULL` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `integer` | `NULL` | Number of interpolation vertices |
 | `boundary_degree_fallback` | `logical` | `NULL` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cv_seed` | `integer` | `NULL` | Random seed for cross-validation shuffling (Batch only) |
-| `cv_fractions` | `numeric` | `NULL` | Fractions to test for cross-validation (Batch only) |
 | `cv_method` | `character` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
 | `cv_k` | `integer` | `5L` | Number of folds for k-fold CV (Batch only) |
+| `cv_fractions` | `numeric` | `NULL` | Fractions to test for cross-validation (Batch only) |
+| `cv_seed` | `integer` | `NULL` | Random seed for cross-validation shuffling (Batch only) |
 
 ### `StreamingOptions` (inherits `LoessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `chunk_size` | `integer` | `5000L` | Data chunk size |
-| `overlap` | `integer` | auto (10% of chunk) | Overlap between chunks (`NULL` for auto) |
-| `merge_strategy` | `character` | `"weighted_average"` | Strategy for blending overlap: see Merge Strategies |
+| `overlap` | `integer` | `500L` | Overlap between chunks |
+| `merge_strategy` | `character` | `"weighted_average"` | Strategy for blending overlap regions |
 
 ### `OnlineOptions` (inherits `LoessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `window_capacity` | `integer` | `100L` | Max points in sliding window |
-| `min_points` | `integer` | `2L` | Min points before smoothing starts |
+| `window_capacity` | `integer` | `1000L` | Max points in sliding window |
+| `min_points` | `integer` | `3L` | Min points before smoothing starts |
 | `update_mode` | `character` | `"full"` | Update mode (`"full"` or `"incremental"`) |
 | `parallel` | `logical` | `FALSE` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 

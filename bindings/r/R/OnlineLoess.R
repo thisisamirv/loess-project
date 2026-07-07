@@ -29,8 +29,8 @@
 #' @export
 OnlineLoess <- function(
     fraction = 0.67,
-    window_capacity = 100L,
-    min_points = 2L,
+    window_capacity = 1000L,
+    min_points = 3L,
     iterations = 3L,
     weight_function = "tricube",
     robustness_method = "bisquare",

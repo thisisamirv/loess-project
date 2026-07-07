@@ -106,7 +106,7 @@ if (result.has_value()) {
 | `robustness_method` | `std::string` | `"bisquare"` | Robustness method |
 | `scaling_method` | `std::string` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
+| `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
 | `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 | `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
@@ -119,30 +119,30 @@ if (result.has_value()) {
 | `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
-| `surface_mode` | `std::string` | `"interpolation"` | Surface computation mode |
 | `weighted_metric_weights` | `std::vector<double>` | `{}` | Per-dimension weights (used when `distance_metric = "weighted"`) |
+| `surface_mode` | `std::string` | `"interpolation"` | Surface computation mode |
 | `cell` | `double` | `NaN` | Cell size for interpolation grid (NaN to use default; smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
 | `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = unset/library default, 0 = false, 1 = true) |
+| `cv_method` | `std::string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_k` | `int` | `5` | Number of folds for k-fold CV (Batch only) |
+| `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (Batch only; 0 = random) |
-| `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation |
-| `cv_method` | `std::string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
-| `cv_k` | `int` | `5` | Number of folds for k-fold CV |
 
 ### `StreamingOptions` (inherits `LoessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `chunk_size` | `int` | `5000` | Data chunk size |
-| `overlap` | `int` | `-1` (auto) | Overlap between chunks (-1 for auto 10%) |
-| `merge_strategy` | `std::string` | `"weighted_average"` | Strategy for blending overlap: see Merge Strategies |
+| `overlap` | `int` | `500` | Overlap between chunks |
+| `merge_strategy` | `std::string` | `"weighted_average"` | Strategy for blending overlap regions |
 
 ### `OnlineOptions` (inherits `LoessOptions`)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
-| `min_points` | `int` | `2` | Min points before smoothing starts |
+| `min_points` | `int` | `3` | Min points before smoothing starts |
 | `update_mode` | `std::string` | `"full"` | Update mode (`"full"` or `"incremental"`) |
 | `parallel` | `bool` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
