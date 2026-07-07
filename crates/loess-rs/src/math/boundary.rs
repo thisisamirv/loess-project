@@ -48,8 +48,8 @@ impl FromStr for BoundaryPolicy {
         match s.to_lowercase().as_str() {
             "extend" | "pad" => Ok(BoundaryPolicy::Extend),
             "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-            "zero" | "none" => Ok(BoundaryPolicy::Zero),
-            "noboundary" => Ok(BoundaryPolicy::NoBoundary),
+            "zero" => Ok(BoundaryPolicy::Zero),
+            "noboundary" | "none" => Ok(BoundaryPolicy::NoBoundary),
             _ => Err(LoessError::InvalidOption {
                 option: "boundary_policy",
                 value: s.to_string(),

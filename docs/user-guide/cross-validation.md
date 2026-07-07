@@ -45,8 +45,9 @@ Split data into K folds, train on K-1, validate on 1.
     use fastLoess::prelude::*;
 
     let model = Loess::new()
-        .cross_validate(KFold(5, &[0.2, 0.3, 0.5, 0.7]))  // 5 folds, 4 fractions
-        .adapter(Batch)
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -137,8 +138,8 @@ Each point is held out once. Most thorough but slowest.
 === "Rust"
     ```rust
     let model = Loess::new()
-        .cross_validate(LOOCV(&[0.2, 0.3, 0.5, 0.7]))
-        .adapter(Batch)
+        .cv_method("loocv")
+        .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
         .build()?;
     ```
 
@@ -208,8 +209,10 @@ Set a seed for reproducible fold assignments:
 === "Rust"
     ```rust
     let model = Loess::new()
-        .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(42))
-        .adapter(Batch)
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.3, 0.5, 0.7])
+        .cv_seed(42)
         .build()?;
     ```
 
@@ -317,8 +320,9 @@ Lower MSE indicates better fit on held-out data.
     ```rust
     // Example output
     let model = Loess::new()
-        .cross_validate(KFold(5, &[0.1, 0.3, 0.5, 0.7]))
-        .adapter(Batch)
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.1, 0.3, 0.5, 0.7])
         .build()?;
 
     let result = model.fit(&x, &y)?;

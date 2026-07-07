@@ -45,7 +45,6 @@ Single predictor. No configuration required.
     ```rust
     let model = Loess::new()
         .fraction(0.3)
-        .adapter(Batch)
         .build()?;
     let result = model.fit(&x, &y)?;
     ```
@@ -99,7 +98,6 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     let model = Loess::new()
         .dimensions(2)
         .fraction(0.3)
-        .adapter(Batch)
         .build()?;
     let result = model.fit(&x2d, &z)?;
     ```
@@ -155,7 +153,6 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
     let model = Loess::new()
         .dimensions(3)
         .fraction(0.5)
-        .adapter(Batch)
         .build()?;
     let result = model.fit(&x3d, &y)?;
     ```

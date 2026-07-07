@@ -49,7 +49,6 @@ $$w(u) = (1 - |u|^3)^3$$
     ```rust
     let model = Loess::new()
         .weight_function("tricube")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -98,7 +97,6 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
     ```rust
     let model = Loess::new()
         .weight_function("epanechnikov")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -147,7 +145,6 @@ $$w(u) = \exp(-u^2/2)$$
     ```rust
     let model = Loess::new()
         .weight_function("gaussian")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -196,7 +193,6 @@ $$w(u) = (1 - u^2)^2$$
     ```rust
     let model = Loess::new()
         .weight_function("biweight")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -245,7 +241,6 @@ $$w(u) = \cos(\pi u / 2)$$
     ```rust
     let model = Loess::new()
         .weight_function("cosine")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -294,7 +289,6 @@ $$w(u) = 1 - |u|$$
     ```rust
     let model = Loess::new()
         .weight_function("triangle")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -343,7 +337,6 @@ $$w(u) = 1$$
     ```rust
     let model = Loess::new()
         .weight_function("uniform")
-        .adapter(Batch)
         .build()?;
     ```
 

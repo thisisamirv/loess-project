@@ -178,7 +178,7 @@
 //!
 //! - **`fraction(f: T)`** — Smoothing bandwidth: fraction of the data used for each local
 //!   fit (range `(0, 1]`). Smaller → more local and jagged; larger → smoother.
-//!   Default: `0.75`.
+//!   Default: `0.67`.
 //!
 //! - **`iterations(n: usize)`** — Number of robustness (IRLS) iterations for outlier
 //!   resistance. `0` disables robustness weighting. Default: `3`.

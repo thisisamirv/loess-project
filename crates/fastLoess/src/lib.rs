@@ -182,28 +182,27 @@
 //!
 //! - **`fraction(f: T)`** — Smoothing bandwidth: fraction of the data used for each local
 //!   fit (range `(0, 1]`). Smaller → more local and jagged; larger → smoother.
-//!   Default: `0.75`.
+//!   Default: `0.67`.
 //!
 //! - **`iterations(n: usize)`** — Number of robustness (IRLS) iterations for outlier
 //!   resistance. `0` disables robustness weighting. Default: `3`.
 //!
-//! - **`degree(d: PolynomialDegree)`** — Degree of the local polynomial fitted at each point.
-//!   - `Constant` / `"constant"` (0): weighted mean — fastest, least flexible
-//!   - `Linear` / `"linear"` (1, **default**): standard LOESS — good balance of speed and accuracy
-//!   - `Quadratic` / `"quadratic"` (2): better for curved regions
-//!   - `Cubic` / `"cubic"` (3) / `Quartic` / `"quartic"` (4): higher flexibility, more expensive
+//! - **`degree(d: &str)`** — Degree of the local polynomial fitted at each point.
+//!   - `"constant"` (0): weighted mean — fastest, least flexible
+//!   - `"linear"` (1, **default**): standard LOESS — good balance of speed and accuracy
+//!   - `"quadratic"` (2): better for curved regions
+//!   - `"cubic"` (3) / `"quartic"` (4): higher flexibility, more expensive
 //!
-//! - **`weight_function(wf: WeightFunction)`** — Kernel function for distance-based local
-//!   weighting. Options: `Tricube` / `"tricube"` (**default**), `Epanechnikov` / `"epanechnikov"`,
-//!   `Biweight` / `"biweight"`, `Gaussian` / `"gaussian"`, `Triangle` / `"triangle"`,
-//!   `Cosine` / `"cosine"`, `Uniform` / `"uniform"`.
+//! - **`weight_function(wf: &str)`** — Kernel function for distance-based local
+//!   weighting. Options: `"tricube"` (**default**), `"epanechnikov"`, `"biweight"`,
+//!   `"gaussian"`, `"triangle"`, `"cosine"`, `"uniform"`.
 //!
-//! - **`robustness_method(rm: RobustnessMethod)`** — Downweighting method applied to
-//!   outliers during robustness iterations. Options: `Bisquare` / `"bisquare"` (**default**),
-//!   `Huber` / `"huber"`, `Talwar` / `"talwar"`.
+//! - **`robustness_method(rm: &str)`** — Downweighting method applied to
+//!   outliers during robustness iterations. Options: `"bisquare"` (**default**),
+//!   `"huber"`, `"talwar"`.
 //!
-//! - **`scaling_method(sm: ScalingMethod)`** — Residual scale estimator used in robustness
-//!   weighting. Options: `MAD` / `"mad"` (**default**), `MAR` / `"mar"`, `Mean` / `"mean"`.
+//! - **`scaling_method(sm: &str)`** — Residual scale estimator used in robustness
+//!   weighting. Options: `"mad"` (**default**), `"mar"`, `"mean"`.
 //!
 //! - **`custom_weights(w: Vec<T>)`** — Per-observation case weights applied as
 //!   `w_ij = custom_weights[j] × K(d_ij / h)`. Higher values increase the influence of an
@@ -217,10 +216,10 @@
 //!
 //! ### Surface Evaluation
 //!
-//! - **`surface_mode(m: SurfaceMode)`** — How the fitted surface is evaluated.
-//!   - `Interpolation` / `"interpolation"` (**default**): fits at a sparse grid of vertices then interpolates —
+//! - **`surface_mode(m: &str)`** — How the fitted surface is evaluated.
+//!   - `"interpolation"` (**default**): fits at a sparse grid of vertices then interpolates —
 //!     fast for large datasets.
-//!   - `Direct` / `"direct"`: fits exactly at every data point — exact but O(n²).
+//!   - `"direct"`: fits exactly at every data point — exact but O(n²).
 //!
 //! - **`cell(c: T)`** — Cell size for the interpolation vertex grid (default: `0.2`).
 //!   Smaller → more vertices, higher accuracy, slower.
@@ -236,12 +235,12 @@
 //!
 //! - **`dimensions(n: usize)`** — Number of predictor dimensions (default: `1`).
 //!
-//! - **`distance_metric(m: DistanceMetric<T>)`** — Distance metric for neighbor selection.
-//!   - `Normalized` / `"normalized"` (**default**): each dimension scaled to `[0, 1]`
-//!   - `Euclidean` / `"euclidean"`: standard L² distance
-//!   - `Manhattan` / `"manhattan"`: L¹ distance
-//!   - `Chebyshev` / `"chebyshev"`: L∞ (max) distance
-//!   - `Minkowski(p)` / `"minkowski:p"`: Lᵖ distance for arbitrary `p`
+//! - **`distance_metric(m: &str)`** — Distance metric for neighbor selection.
+//!   - `"normalized"` (**default**): each dimension scaled to `[0, 1]`
+//!   - `"euclidean"`: standard L² distance
+//!   - `"manhattan"`: L¹ distance
+//!   - `"chebyshev"`: L∞ (max) distance
+//!   - `"minkowski:p"`: Lᵖ distance for arbitrary `p`
 //!   - `"weighted"`: dimension-weighted Euclidean — use together with `weighted_metric_weights`
 //!
 //! - **`weighted_metric_weights(weights: Vec<T>)`** — Per-dimension scale factors for the
@@ -249,15 +248,14 @@
 //!
 //! ### Boundary Handling
 //!
-//! - **`boundary_policy(p: BoundaryPolicy)`** — How query points outside the observed data
-//!   range are handled. Options: `Extend` / `"extend"` (**default**), `Reflect` / `"reflect"`,
-//!   `Zero` / `"zero"`, `NoBoundary` / `"noboundary"`.
+//! - **`boundary_policy(p: &str)`** — How query points outside the observed data
+//!   range are handled. Options: `"extend"` (**default**), `"reflect"`, `"zero"`, `"noboundary"`.
 //!
-//! - **`zero_weight_fallback(p: ZeroWeightFallback)`** — Fallback when all neighbors of a
+//! - **`zero_weight_fallback(p: &str)`** — Fallback when all neighbors of a
 //!   point have zero weight (degenerate neighborhood).
-//!   - `UseLocalMean` / `"use_local_mean"` (**default**): return the weighted mean of nearby values
-//!   - `ReturnOriginal` / `"return_original"`: return the raw `y` value
-//!   - `ReturnNone` / `"return_none"`: return `NaN`
+//!   - `"use_local_mean"` (**default**): return the weighted mean of nearby values
+//!   - `"return_original"`: return the raw `y` value
+//!   - `"return_none"`: return `NaN`
 //!
 //! ### Convergence
 //!
@@ -300,17 +298,16 @@
 //!
 //! - **`chunk_size(n: usize)`** — Number of points processed per streaming chunk.
 //! - **`overlap(n: usize)`** — Point overlap between consecutive chunks for smooth boundaries.
-//! - **`merge_strategy(s: MergeStrategy)`** — How overlapping region fits are combined.
-//!   Options: `Average` / `"average"`, `WeightedAverage` / `"weighted_average"`,
-//!   `TakeFirst` / `"take_first"`, `TakeLast` / `"take_last"`.
+//! - **`merge_strategy(s: &str)`** — How overlapping region fits are combined.
+//!   Options: `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"`.
 //!
 //! **OnlineLoess** (`OnlineLoess::new()`):
 //!
 //! - **`window_capacity(n: usize)`** — Maximum points kept in the sliding window.
 //! - **`min_points(n: usize)`** — Minimum points required before returning a fit.
-//! - **`update_mode(m: UpdateMode)`** — Window update strategy.
-//!   - `Full` / `"full"` (**default**): full refit on every update
-//!   - `Incremental` / `"incremental"`: lightweight incremental update
+//! - **`update_mode(m: &str)`** — Window update strategy.
+//!   - `"full"` (**default**): full refit on every update
+//!   - `"incremental"`: lightweight incremental update
 //!
 //! ## ndarray Integration
 //!

@@ -48,7 +48,6 @@ Estimate uncertainty in the smoothed curve itself.
     let model = Loess::new()
         .fraction(0.5)
         .confidence_intervals(0.95)  // 95% CI
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -134,7 +133,6 @@ Estimate where new observations might fall.
     let model = Loess::new()
         .fraction(0.5)
         .prediction_intervals(0.95)  // 95% PI
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -199,7 +197,6 @@ Request both types simultaneously:
         .fraction(0.5)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -265,7 +262,6 @@ Common levels and their z-values:
     // 99% confidence interval
     let model = Loess::new()
         .confidence_intervals(0.99)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -315,7 +311,6 @@ Access standard errors directly (available when intervals are computed):
     ```rust
     let model = Loess::new()
         .confidence_intervals(0.95)
-        .adapter(Batch)
         .build()?;
     let result = model.fit(&x, &y)?;
 

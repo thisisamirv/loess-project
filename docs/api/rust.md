@@ -1,10 +1,10 @@
 # fastLoess & loess-rs Rust API Reference
 
-The Rust bindings provide the core implementation and high-performance extensions. The API uses a Builder pattern consistent across both the `loess-rs` (pure Rust) and `fastLoess` (accelerated) crates.
+The Rust crates provide the core implementation and high-performance extensions. The API uses a builder pattern, but `fastLoess` exposes distinct batch, streaming, and online entry types.
 
 ## Structs & Usage
 
-Unlike other bindings which have distinct classes, Rust uses a single `Loess` builder that produces different model types based on the configured `.adapter()`.
+For `fastLoess`, use `Loess` for batch mode, `StreamingLoess` for chunked processing, and `OnlineLoess` for sliding-window updates.
 
 ### `Loess` (Batch)
 
@@ -13,60 +13,60 @@ Standard in-memory smoothing.
 **Constructor:**
 
 ```rust
-let model = Loess::<f64>::new().adapter(Batch).build()?;
+let model = Loess::new().build()?;
 ```
 
 **Methods:**
 
 ```rust
-let model = Loess::new().adapter(Batch).build()?;
+let model = Loess::new().build()?;
 let result = model.fit(&x, &y)?;
 ```
 
 * Fits the model to the provided `x` and `y` arrays.
 * Returns `Result<LoessResult<T>, LoessError>`.
 
-### `Loess` (Streaming)
+### `StreamingLoess`
 
 Streaming mode for large datasets.
 
 **Constructor:**
 
 ```rust
-let mut processor = Loess::<f64>::new().adapter(Streaming).build()?;
+let mut processor = StreamingLoess::new().build()?;
 ```
 
 **Methods:**
 
 ```rust
-let mut processor = Loess::new().adapter(Streaming).build()?;
+let mut processor = StreamingLoess::new().build()?;
 let result = processor.process_chunk(&x, &y)?;
 ```
 
 * Processes a chunk of data. Returns `LoessResult<T>` with partial results.
 
 ```rust
-let mut processor = Loess::new().adapter(Streaming).build()?;
+let mut processor = StreamingLoess::new().build()?;
 processor.process_chunk(&x_chunk, &y_chunk)?;
 let final_result = processor.finalize()?;
 ```
 
 * Finalizes processing and returns remaining buffered results.
 
-### `Loess` (Online)
+### `OnlineLoess`
 
 Online mode for real-time data.
 
 **Constructor:**
 
 ```rust
-let mut processor = Loess::<f64>::new().adapter(Online).build()?;
+let mut processor = OnlineLoess::new().build()?;
 ```
 
 **Methods:**
 
 ```rust
-let mut processor = Loess::new().adapter(Online).build()?;
+let mut processor = OnlineLoess::new().build()?;
 let output = processor.add_point(&[x[0]], y[0])?;
 ```
 
@@ -74,7 +74,7 @@ let output = processor.add_point(&[x[0]], y[0])?;
 * Returns `Result<Option<OnlineOutput<T>>, LoessError>`.
 
 ```rust
-let mut processor = Loess::<f64>::new().adapter(Online).build()?;
+let mut processor = OnlineLoess::new().build()?;
 processor.reset();
 ```
 
@@ -111,7 +111,10 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `cell(T)` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | disabled | Number of interpolation vertices |
 | `boundary_degree_fallback(bool)` | disabled | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cross_validate(...)` | disabled | CV strategy: `KFold { k, fractions, seed }` or `LOOCV { fractions }` |
+| `cv_method(...)` | disabled | Cross-validation method |
+| `cv_k(...)` | disabled | Number of folds for K-fold cross-validation |
+| `cv_fractions(...)` | disabled | Candidate fractions to evaluate during cross-validation |
+| `cv_seed(...)` | disabled | Random seed for reproducible fold assignments |
 
 ### Streaming Options
 
@@ -155,8 +158,8 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `residual_scale` | `Option<T>` | Residual scale estimate (if `return_se()`) |
 | `leverage` | `Option<Vec<T>>` | Per-point hat-matrix diagonal (if `return_se()`) |
 | `dimensions` | `usize` | Number of predictor dimensions |
-| `polynomial_degree` | `PolynomialDegree` | Polynomial degree used |
-| `distance_metric` | `distance_metric<T>` | Distance metric used |
+| `polynomial_degree` | `PolynomialDegree` (internal) | Polynomial degree used; implements `Display` (e.g. `"linear"`) |
+| `distance_metric` | `DistanceMetric<T>` (internal) | Distance metric used; implements `Display` (e.g. `"normalized"`) |
 
 ### `Diagnostics<T>`
 
@@ -170,7 +173,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `aic` | `T` | AIC |
 | `aicc` | `T` | AICc |
 
-## String Options
+## Options
 
 ### weight_function
 
@@ -192,20 +195,20 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 * `"extend"` (default; alias: `"pad"`)
 * `"reflect"` (alias: `"mirror"`)
-* `"zero"` (alias: `"none"`)
-* `"noboundary"`
+* `"zero"`
+* `"noboundary"` (alias: `"none"`)
 
 ### scaling_method
 
-* `"mad"` (default — Median Absolute Deviation)
-* `"mar"` (Median Absolute Residual)
-* `"mean"` (Mean Absolute Residual)
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
 ### zero_weight_fallback
 
 * `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
 * `"return_original"` (alias: `"original"`)
-* `"return_none"` (aliases: `"none"`, `"nan"`)
+* `"return_none"` (alias: `"none"`)
 
 ### distance_metric
 
@@ -214,9 +217,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 * `"manhattan"` (alias: `"l1"`)
 * `"chebyshev"` (alias: `"linf"`)
 * `"minkowski"` or `"minkowski:p"` for a custom exponent
-* `"weighted"` plus `.weighted_metric_weights(vec![...])`
+* `"weighted"` plus `.weighted_metric_weights(vec![...])` (alias: `"weighted_euclidean"`)
 
-### PolynomialDegree
+### degree
 
 * `"constant"` or `"0"` (degree 0)
 * `"linear"` or `"1"` (default, degree 1)
@@ -226,20 +229,20 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 ### surface_mode
 
-* `"interpolation"` (default; alias: `"interp"`)
+* `"interpolation"` (default)
 * `"direct"` (fits every point exactly; slower but more accurate)
 
 ### merge_strategy
 
-* `"weighted_average"` (default — weighted blend of overlapping regions)
-* `"average"` (simple mean of overlapping regions)
-* `"take_first"` (keep values from the earlier chunk)
-* `"take_last"` (keep values from the later chunk)
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
 ### update_mode
 
-* `"full"` (default — re-smooth entire window each update)
-* `"incremental"` (faster, O(1) incremental update)
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 
@@ -247,7 +250,6 @@ These chained methods configure the builder. They correspond to the "Options Str
 let model = Loess::new()
     .fraction(0.5)
     .iterations(3)
-    .adapter(Batch)
     .build()?;
 
 let result = model.fit(&x, &y)?;

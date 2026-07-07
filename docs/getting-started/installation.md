@@ -211,13 +211,13 @@ Install the LOESS library for your preferred language.
 === "Rust"
 
     ```rust
-    use loess_rs::prelude::*;
+    use fastLoess::prelude::*;
     
     fn main() -> Result<(), LoessError> {
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![2.0, 4.0, 6.0];
         
-        let model = Loess::new().adapter(Batch).build()?;
+        let model = Loess::new().build()?;
         let result = model.fit(&x, &y)?;
         
         println!("Installed successfully!");

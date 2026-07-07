@@ -52,8 +52,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .adapter(Streaming)
+    let model = StreamingLoess::new()
         .merge_strategy("average")
         .chunk_size(5000)
         .overlap(500)
@@ -220,10 +219,11 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "Rust"
     ```rust
-    .adapter(Streaming)
+    let model = StreamingLoess::new()
     .merge_strategy("weighted_average")
     .chunk_size(5000)
     .overlap(500)
+    .build()?;
     ```
 
 === "Julia"

@@ -57,7 +57,7 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
 
 === "Rust"
     ```rust
-    use loess_rs::prelude::*;
+    use fastLoess::prelude::*;
 
     let n = 500usize;
     let t: Vec<f64> = (0..n).map(|i| i as f64 * 100.0 / (n - 1) as f64).collect();
@@ -69,7 +69,6 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     let model = Loess::new()
         .fraction(0.1)
         .iterations(3)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&t, &y)?;
@@ -170,7 +169,6 @@ Remove trend to analyze residual patterns:
         .fraction(0.3)
         .iterations(3)
         .return_residuals()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&t, &y)?;
@@ -277,7 +275,6 @@ Remove trend to analyze residual patterns:
         .iterations(3)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&t, &y)?;
@@ -367,7 +364,6 @@ LOESS naturally handles irregular time sampling:
     // Irregular sampling - no special handling needed
     let model = Loess::new()
         .fraction(0.2)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&t_irregular, &y_irregular)?;
@@ -448,7 +444,6 @@ Use different fractions to extract features at different scales:
     for f in fractions {
         let model = Loess::new()
             .fraction(f)
-            .adapter(Batch)
             .build()?;
         let result = model.fit(&t, &y)?;
         // Store or plot result.y for each scale
@@ -549,7 +544,7 @@ Biological application:
 
 === "Rust"
     ```rust
-    use loess_rs::prelude::*;
+    use fastLoess::prelude::*;
     use std::f64::consts::PI;
 
     let hours: Vec<f64> = (0..49).map(|i| i as f64 * 0.5).collect(); // 0.0..24.0 step 0.5
@@ -563,7 +558,6 @@ Biological application:
         .iterations(3)
         .confidence_intervals(0.95)
         .return_diagnostics()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&hours, &expression)?;

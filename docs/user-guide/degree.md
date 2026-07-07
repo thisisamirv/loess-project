@@ -42,7 +42,6 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
     let model = Loess::new()
         .degree("constant")
         .fraction(0.5)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -95,7 +94,6 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
     let model = Loess::new()
         .degree("linear")
         .fraction(0.5)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -148,7 +146,6 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
     let model = Loess::new()
         .degree("quadratic")
         .fraction(0.5)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -201,7 +198,6 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
     let model = Loess::new()
         .degree("cubic")
         .fraction(0.6)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -254,7 +250,6 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
     let model = Loess::new()
         .degree("quartic")
         .fraction(0.7)
-        .adapter(Batch)
         .build()?;
     ```
 

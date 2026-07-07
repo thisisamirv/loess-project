@@ -43,7 +43,6 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
     let model = Loess::new()
         .iterations(3)
         .robustness_method("bisquare")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -93,7 +92,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
     let model = Loess::new()
         .iterations(3)
         .robustness_method("huber")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -143,7 +141,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
     let model = Loess::new()
         .iterations(3)
         .robustness_method("talwar")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -207,7 +204,6 @@ Use robustness weights to identify potential outliers:
     let model = Loess::new()
         .iterations(5)
         .return_robustness_weights()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -296,7 +292,6 @@ Residuals are scaled before computing robustness weights. Two methods:
     let model = Loess::new()
         .iterations(3)
         .scaling_method("mad")  // Default
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -345,7 +340,6 @@ Stop iterations early when weights stabilize:
     let model = Loess::new()
         .iterations(10)           // Maximum iterations
         .auto_converge(1e-6)      // Stop when change < 1e-6
-        .adapter(Batch)
         .build()?;
     ```
 

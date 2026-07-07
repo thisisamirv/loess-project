@@ -457,8 +457,8 @@ impl StreamingLoess {
                     return_residuals: opts.return_residuals.unwrap_or(false),
                     return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
                     return_diagnostics: opts.return_diagnostics.unwrap_or(false),
-                    confidence_intervals: None,
-                    prediction_intervals: None,
+                    confidence_intervals: opts.confidence_intervals,
+                    prediction_intervals: opts.prediction_intervals,
                     parallel: opts.parallel,
                     degree: opts.degree.as_deref(),
                     dimensions: opts.dimensions.map(|v| v as usize),
@@ -469,10 +469,10 @@ impl StreamingLoess {
                     cell: opts.cell,
                     interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
                     boundary_degree_fallback: opts.boundary_degree_fallback,
-                    cv_fractions: None,
-                    cv_method: None,
-                    cv_k: None,
-                    cv_seed: None,
+                    cv_fractions: opts.cv_fractions.as_deref(),
+                    cv_method: opts.cv_method.as_deref(),
+                    cv_k: opts.cv_k.map(|v| v as usize),
+                    cv_seed: opts.cv_seed.map(|s| s as u64),
                 },
             ))?;
             builder = configured_builder;
@@ -553,7 +553,7 @@ impl OnlineLoess {
         let mut dimensions = 1usize;
         let mut degree = PolynomialDegree::Linear;
         let mut distance_metric = DistanceMetric::Normalized;
-        let mut fraction_used = 0.2f64;
+        let mut fraction_used = 0.67f64;
         let mut iterations_used = None;
 
         if let Some(opts) = options {

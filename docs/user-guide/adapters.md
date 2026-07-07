@@ -73,7 +73,6 @@ Standard mode for complete datasets. **Supports all features.**
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .return_diagnostics()
-        .adapter(Batch)
         .parallel(true)
         .build()?;
 
@@ -196,10 +195,9 @@ Process large datasets in chunks with configurable overlap.
 
 === "Rust"
     ```rust
-    let mut processor = Loess::new()
+    let mut processor = StreamingLoess::new()
         .fraction(0.3)
         .iterations(2)
-        .adapter(Streaming)
         .chunk_size(50)
         .overlap(10)
         .merge_strategy("average")
@@ -341,10 +339,9 @@ Incremental updates with a sliding window for real-time data.
 
 === "Rust"
     ```rust
-    let mut processor = Loess::new()
+    let mut processor = OnlineLoess::new()
         .fraction(0.2)
         .iterations(1)
-        .adapter(Online)
         .window_capacity(100)
         .min_points(5)
         .update_mode("incremental")

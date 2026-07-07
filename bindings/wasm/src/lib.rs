@@ -453,7 +453,7 @@ impl OnlineLoess {
         let mut dimensions = 1usize;
         let mut degree = PolynomialDegree::Linear;
         let mut distance_metric = DistanceMetric::Normalized;
-        let mut fraction_used = 0.2f64;
+        let mut fraction_used = 0.67f64;
         let mut iterations_used = None;
 
         if !options.is_undefined() && !options.is_null() {

@@ -44,6 +44,12 @@ fn null_with_last_error<T>(msg: &str) -> *mut T {
     null_mut()
 }
 
+fn setter_unsupported_constructor_only(name: &str) {
+    set_last_error_message(&format!(
+        "{name} is not supported: configure model options in jl_loess_new"
+    ));
+}
+
 #[unsafe(no_mangle)]
 pub extern "C" fn jl_last_error_message() -> *const c_char {
     JL_LAST_ERROR.with(|slot| {
@@ -598,7 +604,9 @@ pub unsafe extern "C" fn jl_loess_free(ptr: *mut JlLoessConfig) {
     }
 }
 
-/// Set the distance metric to Weighted with per-dimension weights.
+/// Legacy setter retained for ABI compatibility.
+///
+/// Configure this in `jl_loess_new` instead.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
@@ -609,27 +617,36 @@ pub unsafe extern "C" fn jl_loess_set_weighted_metric(
     weights: *const c_double,
     n: c_ulong,
 ) {
-    if config_ptr.is_null() || weights.is_null() || n == 0 {
+    if config_ptr.is_null() {
+        set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
         return;
     }
-    let config = unsafe { &mut *config_ptr };
-    let slice = unsafe { from_raw_parts(weights, n as usize) };
-    config.distance_metric = DistanceMetric::Weighted(slice.to_vec());
+    if weights.is_null() || n == 0 {
+        set_last_error_message(shared_parse::INVALID_DATA_INPUTS);
+        return;
+    }
+    setter_unsupported_constructor_only("jl_loess_set_weighted_metric");
 }
 
-/// Set the interpolation cell size (default 0.2). Smaller values give more vertices.
+/// Legacy setter retained for ABI compatibility.
+///
+/// Configure this in `jl_loess_new` instead.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_set_cell(config_ptr: *mut JlLoessConfig, cell: c_double) {
+    let _ = cell;
     if config_ptr.is_null() {
+        set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
         return;
     }
-    unsafe { (*config_ptr).cell = Some(cell) };
+    setter_unsupported_constructor_only("jl_loess_set_cell");
 }
 
-/// Set the maximum number of interpolation vertices.
+/// Legacy setter retained for ABI compatibility.
+///
+/// Configure this in `jl_loess_new` instead.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
@@ -638,13 +655,17 @@ pub unsafe extern "C" fn jl_loess_set_interpolation_vertices(
     config_ptr: *mut JlLoessConfig,
     vertices: c_ulong,
 ) {
+    let _ = vertices;
     if config_ptr.is_null() {
+        set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
         return;
     }
-    unsafe { (*config_ptr).interpolation_vertices = Some(vertices as usize) };
+    setter_unsupported_constructor_only("jl_loess_set_interpolation_vertices");
 }
 
-/// Set whether to apply boundary degree fallback (default: true).
+/// Legacy setter retained for ABI compatibility.
+///
+/// Configure this in `jl_loess_new` instead.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
@@ -653,23 +674,29 @@ pub unsafe extern "C" fn jl_loess_set_boundary_degree_fallback(
     config_ptr: *mut JlLoessConfig,
     enabled: c_int,
 ) {
+    let _ = enabled;
     if config_ptr.is_null() {
+        set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
         return;
     }
-    unsafe { (*config_ptr).boundary_degree_fallback = Some(enabled != 0) };
+    setter_unsupported_constructor_only("jl_loess_set_boundary_degree_fallback");
 }
 
-/// Set the random seed for reproducible K-fold cross-validation splits.
+/// Legacy setter retained for ABI compatibility.
+///
+/// Configure this in `jl_loess_new` instead.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
 #[unsafe(no_mangle)]
 #[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Linux/macOS
 pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, seed: c_ulong) {
+    let _ = seed;
     if config_ptr.is_null() {
+        set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
         return;
     }
-    unsafe { (*config_ptr).cv_seed = Some(u64::from(seed)) };
+    setter_unsupported_constructor_only("jl_loess_set_cv_seed");
 }
 
 // StreamingLoess C API

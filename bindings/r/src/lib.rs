@@ -42,6 +42,15 @@ fn require_positive_usize(name: &str, value: i32) -> Result<usize> {
     Ok(value as usize)
 }
 
+fn require_non_negative_usize(name: &str, value: i32) -> Result<usize> {
+    if value < 0 {
+        return Err(to_r_error(shared_parse::BindingError::invalid_arg(
+            format!("{} must be greater than or equal to 0", name),
+        )));
+    }
+    Ok(value as usize)
+}
+
 fn optional_positive_usize(name: &str, value: Nullable<i32>) -> Result<Option<usize>> {
     match value {
         NotNull(v) => Ok(Some(require_positive_usize(name, v)?)),
@@ -102,7 +111,7 @@ impl RLoess {
             NotNull(s) => Some(s as u64),
             Null => None,
         };
-        let iterations = require_positive_usize("iterations", iterations)?;
+        let iterations = require_non_negative_usize("iterations", iterations)?;
         let dimensions = require_positive_usize("dimensions", dimensions)?;
         let cv_k = require_positive_usize("cv_k", cv_k)?;
         let interpolation_vertices =
@@ -220,7 +229,7 @@ impl RStreamingLoess {
             NotNull(o) => require_positive_usize("overlap", o)?,
             Null => (chunk_size / 10).min(chunk_size.saturating_sub(10)).max(1),
         };
-        let iterations = require_positive_usize("iterations", iterations)?;
+        let iterations = require_non_negative_usize("iterations", iterations)?;
         let dimensions = require_positive_usize("dimensions", dimensions)?;
         let interpolation_vertices =
             optional_positive_usize("interpolation_vertices", interpolation_vertices)?;
@@ -363,7 +372,7 @@ impl ROnlineLoess {
             Null => None,
         };
         let configured_dimensions = require_positive_usize("dimensions", dimensions)?;
-        let iterations = require_positive_usize("iterations", iterations)?;
+        let iterations = require_non_negative_usize("iterations", iterations)?;
         let window_capacity = require_positive_usize("window_capacity", window_capacity)?;
         let min_points = require_positive_usize("min_points", min_points)?;
         let interpolation_vertices =

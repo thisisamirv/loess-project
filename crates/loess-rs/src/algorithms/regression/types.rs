@@ -249,7 +249,7 @@ impl FromStr for ZeroWeightFallback {
         match s.to_lowercase().as_str() {
             "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
             "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-            "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
+            "return_none" | "none" => Ok(ZeroWeightFallback::ReturnNone),
             _ => Err(LoessError::InvalidOption {
                 option: "zero_weight_fallback",
                 value: s.to_string(),

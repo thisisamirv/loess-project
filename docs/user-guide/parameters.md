@@ -96,7 +96,6 @@ The proportion of data used for each local fit. **Most important parameter.**
     ```rust
     let model = Loess::new()
         .fraction(0.3)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -148,7 +147,6 @@ Number of robustness iterations for outlier resistance.
     ```rust
     let model = Loess::new()
         .iterations(5)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -220,7 +218,6 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
     ```rust
     let model = Loess::new()
         .surface_mode("direct")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -273,7 +270,7 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
 
 === "Rust"
     ```rust
-    let model = Loess::new().cell(0.05).adapter(Batch).build()?;
+    let model = Loess::new().cell(0.05).build()?;
     ```
 
 === "Julia"
@@ -318,7 +315,7 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 
 === "Rust"
     ```rust
-    let model = Loess::new().interpolation_vertices(50).adapter(Batch).build()?;
+    let model = Loess::new().interpolation_vertices(50).build()?;
     ```
 
 === "Julia"
@@ -395,7 +392,6 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
         .dimensions(2)
         .distance_metric("weighted")
         .weighted_metric_weights(vec![2.0, 0.5])
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -468,7 +464,6 @@ See [Weight Functions](kernels.md) for detailed comparison.
     ```rust
     let model = Loess::new()
         .weight_function("epanechnikov")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -521,7 +516,6 @@ See [Robustness](robustness.md) for detailed comparison.
     ```rust
     let model = Loess::new()
         .robustness_method("talwar")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -577,7 +571,6 @@ For example:
     ```rust
     let model = Loess::new()
         .boundary_policy("reflect")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -629,7 +622,6 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
     let model = Loess::new()
         .degree("quadratic")
         .boundary_degree_fallback(true)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -684,7 +676,6 @@ For example:
     ```rust
     let model = Loess::new()
         .scaling_method("mad")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -734,7 +725,6 @@ For example:
     ```rust
     let model = Loess::new()
         .zero_weight_fallback("use_local_mean")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -780,7 +770,6 @@ Enable early stopping when robustness weights stabilize.
     let model = Loess::new()
         .iterations(20)           // Maximum
         .auto_converge(1e-6)      // Stop when change < 1e-6
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -851,7 +840,6 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     weights[4] = 0.0; // Exclude 5th point
     let model = Loess::new()
         .custom_weights(weights)
-        .adapter(Batch)
         .build()?;
     let result = model.fit(&x, &y)?;
     ```
@@ -909,7 +897,6 @@ Include residuals (`y - smoothed`) in the output.
     ```rust
     let model = Loess::new()
         .return_residuals()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -975,7 +962,6 @@ Include fit quality metrics (Batch and Streaming only).
     ```rust
     let model = Loess::new()
         .return_diagnostics()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -1034,7 +1020,6 @@ Include final robustness weights (useful for outlier detection).
     let model = Loess::new()
         .iterations(3)
         .return_robustness_weights()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -1089,7 +1074,6 @@ See [Intervals](intervals.md) for detailed usage.
     let model = Loess::new()
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -1143,7 +1127,6 @@ Selection strategy for automated parameter tuning.
         .cv_method("kfold")
         .cv_k(5)
         .cv_fractions(vec![0.1, 0.3, 0.5])
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -1194,8 +1177,7 @@ Points per chunk in Streaming mode.
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .adapter(Streaming)
+    let model = StreamingLoess::new()
         .chunk_size(10000)
         .build()?;
     ```
@@ -1246,8 +1228,7 @@ Overlap between chunks in Streaming mode.
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .adapter(Streaming)
+    let model = StreamingLoess::new()
         .overlap(1000)
         .build()?;
     ```
@@ -1307,8 +1288,7 @@ For example:
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .adapter(Streaming)
+    let model = StreamingLoess::new()
         .merge_strategy("weighted_average")
         .build()?;
     ```
@@ -1357,8 +1337,7 @@ Maximum points held in memory for Online mode.
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .adapter(Online)
+    let model = OnlineLoess::new()
         .window_capacity(500)
         .build()?;
     ```
@@ -1406,8 +1385,7 @@ Minimum points required before Online filter starts producing outputs.
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .adapter(Online)
+    let model = OnlineLoess::new()
         .min_points(10)
         .build()?;
     ```
@@ -1462,8 +1440,7 @@ For example:
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .adapter(Online)
+    let model = OnlineLoess::new()
         .update_mode("full")
         .build()?;
     ```

@@ -42,7 +42,7 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Rust"
 
     ```rust
-    use loess_rs::prelude::*;
+    use fastLoess::prelude::*;
     use std::f64::consts::TAU;
 
     fn main() -> Result<(), LoessError> {
@@ -56,7 +56,6 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
         let model = Loess::new()
             .fraction(0.3)
             .iterations(3)
-            .adapter(Batch)
             .build()?;
 
         let result = model.fit(&x, &y)?;
@@ -176,7 +175,7 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Rust"
 
     ```rust
-    use loess_rs::prelude::*;
+    use fastLoess::prelude::*;
 
     let model = Loess::new()
         .fraction(0.5)
@@ -184,7 +183,6 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
         .confidence_intervals(0.95)  // 95% CI
         .prediction_intervals(0.95)  // 95% PI
         .return_diagnostics()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -272,12 +270,15 @@ LOESS can robustly handle outliers through iterative reweighting:
 === "R"
 
     ```r
-    x_out <- 1:6
-    y_with_outlier <- c(2, 4, 6, 50, 10, 12)
+    use fastLoess::prelude::*;
+    use std::f64::consts::PI;
 
+    let mut model = StreamingLoess::new()
+    y_with_outlier <- c(2, 4, 6, 50, 10, 12)
+        .iterations(3)
     model <- Loess(
         fraction = 0.5,
-        iterations = 5,
+        .build()?;
         robustness_method = "bisquare",
         return_robustness_weights = TRUE
     )
@@ -323,7 +324,6 @@ LOESS can robustly handle outliers through iterative reweighting:
         .iterations(5)                    // More iterations for outliers
         .robustness_method("bisquare")   // Default, smooth downweighting
         .return_robustness_weights()      // See which points were downweighted
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y_with_outlier)?;
@@ -437,12 +437,11 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 
 === "R"
 
-    ```r
+    let model = Loess::new()
     library(rfastloess)
 
     set.seed(42)
     x <- seq(0, 10 * pi, length.out = 5000)
-    y <- sin(x / pi) * exp(-x / 30) + rnorm(5000, sd = 0.15)
 
     # Process in 1 000-point chunks with 100-point overlap
     model <- StreamingLoess(
@@ -490,7 +489,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 === "Rust"
 
     ```rust
-    use loess_rs::prelude::*;
+    use fastLoess::prelude::*;
     use std::f64::consts::PI;
 
     fn main() -> Result<(), LoessError> {
@@ -501,9 +500,8 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
                            + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 0.15)
             .collect();
 
-        let mut model = Loess::new()
+        let mut model = StreamingLoess::new()
             .fraction(0.2)
-            .adapter(Streaming)
             .chunk_size(1000)
             .overlap(100)
             .build()?;;

@@ -268,7 +268,7 @@ pub struct PyStreamingLoess {
 impl PyStreamingLoess {
     #[new]
     #[pyo3(signature = (
-        fraction=0.3,
+        fraction=0.67,
         chunk_size=5000,
         overlap=None,
         iterations=3,
@@ -437,7 +437,7 @@ pub struct PyOnlineLoess {
 impl PyOnlineLoess {
     #[new]
     #[pyo3(signature = (
-        fraction=0.2,
+        fraction=0.67,
         window_capacity=100,
         min_points=2,
         iterations=3,

@@ -208,7 +208,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 === "Rust"
 
     ```rust
-    use loess_rs::prelude::*;
+    use fastLoess::prelude::*;
 
     let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
     let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
@@ -216,7 +216,6 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     let model = Loess::new()
         .fraction(0.5)
         .iterations(3)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&x, &y)?;

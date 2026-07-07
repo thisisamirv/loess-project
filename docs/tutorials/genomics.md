@@ -100,7 +100,6 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
         .fraction(0.1)
         .iterations(3)
         .confidence_intervals(0.95)
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&positions, &observed)?;
@@ -236,7 +235,6 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
         .fraction(0.05)
         .iterations(5)
         .return_residuals()
-        .adapter(Batch)
         .build()?;
 
     let result = model.fit(&positions, &observed)?;
@@ -343,10 +341,9 @@ For whole-genome data that doesn't fit in memory:
 
 === "Rust"
     ```rust
-    let mut processor = Loess::new()
+    let mut processor = StreamingLoess::new()
         .fraction(0.05)
         .iterations(3)
-        .adapter(Streaming)
         .chunk_size(50)
         .overlap(10)
         .merge_strategy("weighted_average")

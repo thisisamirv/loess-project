@@ -36,9 +36,9 @@ impl FromStr for ScalingMethod {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "mar" => Ok(ScalingMethod::MAR),
-            "mad" => Ok(ScalingMethod::MAD),
-            "mean" => Ok(ScalingMethod::Mean),
+            "mar" | "median_absolute_residual" => Ok(ScalingMethod::MAR),
+            "mad" | "median_absolute_deviation" => Ok(ScalingMethod::MAD),
+            "mean" | "mean_absolute_residual" => Ok(ScalingMethod::Mean),
             _ => Err(LoessError::InvalidOption {
                 option: "scaling_method",
                 value: s.to_string(),

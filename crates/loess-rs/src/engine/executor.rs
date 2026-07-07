@@ -126,7 +126,7 @@ impl FromStr for SurfaceMode {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.to_lowercase().as_str() {
-            "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
+            "interpolation" => Ok(SurfaceMode::Interpolation),
             "direct" => Ok(SurfaceMode::Direct),
             _ => Err(LoessError::InvalidOption {
                 option: "surface_mode",

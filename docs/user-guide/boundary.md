@@ -38,7 +38,6 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
     ```rust
     let model = Loess::new()
         .boundary_policy("extend")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -85,7 +84,6 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
     ```rust
     let model = Loess::new()
         .boundary_policy("reflect")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -132,7 +130,6 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
     ```rust
     let model = Loess::new()
         .boundary_policy("zero")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -182,7 +179,6 @@ Applies no padding. Each local fit uses only the points that are actually availa
     ```rust
     let model = Loess::new()
         .boundary_policy("noboundary")
-        .adapter(Batch)
         .build()?;
     ```
 

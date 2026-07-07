@@ -46,7 +46,6 @@ First centers residuals at their median, then takes the median of the absolute d
     let model = Loess::new()
         .iterations(3)
         .scaling_method("mad")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -96,7 +95,6 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
     let model = Loess::new()
         .iterations(3)
         .scaling_method("mar")
-        .adapter(Batch)
         .build()?;
     ```
 
@@ -146,7 +144,6 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
     let model = Loess::new()
         .iterations(3)
         .scaling_method("mean")
-        .adapter(Batch)
         .build()?;
     ```
 

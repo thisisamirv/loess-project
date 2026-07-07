@@ -346,13 +346,6 @@ pub struct CppLoess {
 // Opaque handle to a Loess model.
 pub struct CppStreamingLoess {
     model: Option<ParallelStreamingLoess<f64>>,
-    // Advanced options applied at lazy-build time
-    cell: Option<f64>,
-    interpolation_vertices: Option<usize>,
-    boundary_degree_fallback: Option<bool>,
-    confidence_intervals: f64,
-    prediction_intervals: f64,
-    weighted_metric: Option<Vec<f64>>,
 }
 
 // Opaque handle to a Loess model.
@@ -363,13 +356,12 @@ pub struct CppOnlineLoess {
     dimensions: usize,
     degree: PolynomialDegree,
     distance_metric: DistanceMetric<f64>,
-    // Advanced options applied at lazy-build time
-    cell: Option<f64>,
-    interpolation_vertices: Option<usize>,
-    boundary_degree_fallback: Option<bool>,
-    weighted_metric: Option<Vec<f64>>,
-    confidence_intervals: f64,
-    prediction_intervals: f64,
+}
+
+fn setter_unsupported_eager_lifecycle(name: &str) {
+    set_last_error(&format!(
+        "{name} is not supported: streaming/online models are eagerly initialized at construction"
+    ));
 }
 
 /// C++ wrapper constructor.
@@ -402,6 +394,12 @@ pub unsafe extern "C" fn cpp_loess_new(
     distance_metric: *const c_char,
     surface_mode: *const c_char,
     return_se: c_int,
+    // Advanced options
+    cell: c_double,
+    interpolation_vertices: c_int,
+    boundary_degree_fallback: c_int,
+    weighted_metric_weights: *const c_double,
+    weighted_metric_weights_len: c_ulong,
 ) -> *mut CppLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -440,8 +438,24 @@ pub unsafe extern "C" fn cpp_loess_new(
         };
 
         let cv_method_str = parse_c_str(cv_method, "kfold").to_string();
+        let cv_k_usize = cv_k.max(2) as usize;
+        let weighted_metric_weights_slice =
+            if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
+                Some(std::slice::from_raw_parts(
+                    weighted_metric_weights,
+                    weighted_metric_weights_len as usize,
+                ))
+            } else {
+                None
+            };
+        let distance_metric_str =
+            (!distance_metric.is_null()).then_some(parse_c_str(distance_metric, "normalized"));
+        let weighted_without_weights = distance_metric_str
+            .map(|v| v.eq_ignore_ascii_case("weighted"))
+            .unwrap_or(false)
+            && weighted_metric_weights_slice.is_none();
 
-        let (builder, _) = match shared_parse::apply_builder_options(
+        let (mut builder, _) = match shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -462,35 +476,42 @@ pub unsafe extern "C" fn cpp_loess_new(
                 parallel: Some(parallel != 0),
                 degree: (!degree.is_null()).then_some(parse_c_str(degree, "linear")),
                 dimensions: (dimensions > 0).then_some(dimensions as usize),
-                distance_metric: (!distance_metric.is_null())
-                    .then_some(parse_c_str(distance_metric, "normalized")),
-                weighted_metric_weights: None,
+                distance_metric: distance_metric_str
+                    .filter(|v| !v.eq_ignore_ascii_case("weighted")),
+                weighted_metric_weights: weighted_metric_weights_slice,
                 surface_mode: (!surface_mode.is_null())
                     .then_some(parse_c_str(surface_mode, "interpolation")),
                 return_se: return_se != 0,
-                cell: None,
-                interpolation_vertices: None,
-                boundary_degree_fallback: None,
+                cell: (!cell.is_nan()).then_some(cell),
+                interpolation_vertices: (interpolation_vertices > 0)
+                    .then_some(interpolation_vertices as usize),
+                boundary_degree_fallback: (boundary_degree_fallback >= 0)
+                    .then_some(boundary_degree_fallback != 0),
                 cv_fractions: cv_fractions_vec.as_deref(),
                 cv_method: Some(cv_method_str.as_str()),
-                cv_k: Some(cv_k.max(2) as usize),
+                cv_k: Some(cv_k_usize),
                 cv_seed: None,
             },
         ) {
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
+        if weighted_without_weights {
+            builder = builder.distance_metric("weighted");
+        }
 
         Box::into_raw(Box::new(CppLoess {
             builder: Some(builder),
             cv_fractions: cv_fractions_vec,
             cv_method: Some(cv_method_str),
-            cv_k: cv_k as usize,
+            cv_k: cv_k_usize,
             cv_seed: None,
             custom_weights: None,
-            cell: None,
-            interpolation_vertices: None,
-            boundary_degree_fallback: None,
+            cell: (!cell.is_nan()).then_some(cell),
+            interpolation_vertices: (interpolation_vertices > 0)
+                .then_some(interpolation_vertices as usize),
+            boundary_degree_fallback: (boundary_degree_fallback >= 0)
+                .then_some(boundary_degree_fallback != 0),
         }))
     })
 }
@@ -508,7 +529,9 @@ pub unsafe extern "C" fn cpp_loess_set_cv_seed(ptr: *mut CppLoess, seed: c_ulong
     });
 }
 
-// model setters (must be called before the first process_chunk).
+// Legacy model setters retained for ABI compatibility.
+// Streaming/online models are eagerly initialized at construction, so these setters
+// are unsupported and now report this through the last-error channel.
 
 /// Set weighted-metric weights for a model.
 ///
@@ -522,15 +545,15 @@ pub unsafe extern "C" fn cpp_streaming_set_weighted_metric(
     n: c_ulong,
 ) {
     with_panic_void(|| {
-        if ptr.is_null() || weights.is_null() || n == 0 {
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        let loess = &mut *ptr;
-        if loess.model.is_some() {
+        if weights.is_null() || n == 0 {
+            set_last_error(shared_parse::INVALID_DATA_INPUTS);
             return;
         }
-        let w = std::slice::from_raw_parts(weights, n as usize).to_vec();
-        loess.weighted_metric = Some(w);
+        setter_unsupported_eager_lifecycle("cpp_streaming_set_weighted_metric");
     });
 }
 
@@ -541,12 +564,12 @@ pub unsafe extern "C" fn cpp_streaming_set_weighted_metric(
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_streaming_set_cell(ptr: *mut CppStreamingLoess, cell: c_double) {
     with_panic_void(|| {
-        if !ptr.is_null() {
-            let loess = &mut *ptr;
-            if loess.model.is_none() {
-                loess.cell = Some(cell);
-            }
+        let _ = cell;
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return;
         }
+        setter_unsupported_eager_lifecycle("cpp_streaming_set_cell");
     });
 }
 
@@ -560,12 +583,12 @@ pub unsafe extern "C" fn cpp_streaming_set_interpolation_vertices(
     vertices: c_ulong,
 ) {
     with_panic_void(|| {
-        if !ptr.is_null() {
-            let loess = &mut *ptr;
-            if loess.model.is_none() {
-                loess.interpolation_vertices = Some(vertices as usize);
-            }
+        let _ = vertices;
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return;
         }
+        setter_unsupported_eager_lifecycle("cpp_streaming_set_interpolation_vertices");
     });
 }
 
@@ -579,12 +602,12 @@ pub unsafe extern "C" fn cpp_streaming_set_boundary_degree_fallback(
     enabled: c_int,
 ) {
     with_panic_void(|| {
-        if !ptr.is_null() {
-            let loess = &mut *ptr;
-            if loess.model.is_none() {
-                loess.boundary_degree_fallback = Some(enabled != 0);
-            }
+        let _ = enabled;
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return;
         }
+        setter_unsupported_eager_lifecycle("cpp_streaming_set_boundary_degree_fallback");
     });
 }
 
@@ -598,12 +621,12 @@ pub unsafe extern "C" fn cpp_streaming_set_confidence_intervals(
     level: c_double,
 ) {
     with_panic_void(|| {
-        if !ptr.is_null() {
-            let loess = &mut *ptr;
-            if loess.model.is_none() {
-                loess.confidence_intervals = level;
-            }
+        let _ = level;
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return;
         }
+        setter_unsupported_eager_lifecycle("cpp_streaming_set_confidence_intervals");
     });
 }
 
@@ -617,16 +640,18 @@ pub unsafe extern "C" fn cpp_streaming_set_prediction_intervals(
     level: c_double,
 ) {
     with_panic_void(|| {
-        if !ptr.is_null() {
-            let loess = &mut *ptr;
-            if loess.model.is_none() {
-                loess.prediction_intervals = level;
-            }
+        let _ = level;
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return;
         }
+        setter_unsupported_eager_lifecycle("cpp_streaming_set_prediction_intervals");
     });
 }
 
-// model setters (must be called before the first add_points).
+// Legacy model setters retained for ABI compatibility.
+// Streaming/online models are eagerly initialized at construction, so these setters
+// are unsupported and now report this through the last-error channel.
 
 /// Set weighted-metric weights for an model.
 ///
@@ -640,15 +665,15 @@ pub unsafe extern "C" fn cpp_online_set_weighted_metric(
     n: c_ulong,
 ) {
     with_panic_void(|| {
-        if ptr.is_null() || weights.is_null() || n == 0 {
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
             return;
         }
-        let loess = &mut *ptr;
-        if loess.model.is_some() {
+        if weights.is_null() || n == 0 {
+            set_last_error(shared_parse::INVALID_DATA_INPUTS);
             return;
         }
-        let w = std::slice::from_raw_parts(weights, n as usize).to_vec();
-        loess.weighted_metric = Some(w);
+        setter_unsupported_eager_lifecycle("cpp_online_set_weighted_metric");
     });
 }
 
@@ -659,12 +684,12 @@ pub unsafe extern "C" fn cpp_online_set_weighted_metric(
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_online_set_cell(ptr: *mut CppOnlineLoess, cell: c_double) {
     with_panic_void(|| {
-        if !ptr.is_null() {
-            let loess = &mut *ptr;
-            if loess.model.is_none() {
-                loess.cell = Some(cell);
-            }
+        let _ = cell;
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return;
         }
+        setter_unsupported_eager_lifecycle("cpp_online_set_cell");
     });
 }
 
@@ -678,12 +703,12 @@ pub unsafe extern "C" fn cpp_online_set_interpolation_vertices(
     vertices: c_ulong,
 ) {
     with_panic_void(|| {
-        if !ptr.is_null() {
-            let loess = &mut *ptr;
-            if loess.model.is_none() {
-                loess.interpolation_vertices = Some(vertices as usize);
-            }
+        let _ = vertices;
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return;
         }
+        setter_unsupported_eager_lifecycle("cpp_online_set_interpolation_vertices");
     });
 }
 
@@ -697,12 +722,12 @@ pub unsafe extern "C" fn cpp_online_set_boundary_degree_fallback(
     enabled: c_int,
 ) {
     with_panic_void(|| {
-        if !ptr.is_null() {
-            let loess = &mut *ptr;
-            if loess.model.is_none() {
-                loess.boundary_degree_fallback = Some(enabled != 0);
-            }
+        let _ = enabled;
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return;
         }
+        setter_unsupported_eager_lifecycle("cpp_online_set_boundary_degree_fallback");
     });
 }
 
@@ -716,12 +741,12 @@ pub unsafe extern "C" fn cpp_online_set_confidence_intervals(
     level: c_double,
 ) {
     with_panic_void(|| {
-        if !ptr.is_null() {
-            let loess = &mut *ptr;
-            if loess.model.is_none() {
-                loess.confidence_intervals = level;
-            }
+        let _ = level;
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return;
         }
+        setter_unsupported_eager_lifecycle("cpp_online_set_confidence_intervals");
     });
 }
 
@@ -735,12 +760,12 @@ pub unsafe extern "C" fn cpp_online_set_prediction_intervals(
     level: c_double,
 ) {
     with_panic_void(|| {
-        if !ptr.is_null() {
-            let loess = &mut *ptr;
-            if loess.model.is_none() {
-                loess.prediction_intervals = level;
-            }
+        let _ = level;
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return;
         }
+        setter_unsupported_eager_lifecycle("cpp_online_set_prediction_intervals");
     });
 }
 
@@ -849,6 +874,14 @@ pub unsafe extern "C" fn cpp_streaming_new(
     distance_metric: *const c_char,
     surface_mode: *const c_char,
     return_se: c_int,
+    // Advanced options
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
+    cell: c_double,
+    interpolation_vertices: c_int,
+    boundary_degree_fallback: c_int,
+    weighted_metric_weights: *const c_double,
+    weighted_metric_weights_len: c_ulong,
 ) -> *mut CppStreamingLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -896,9 +929,19 @@ pub unsafe extern "C" fn cpp_streaming_new(
             (!surface_mode.is_null()).then_some(parse_c_str(surface_mode, "interpolation"));
         let distance_metric_str =
             (!distance_metric.is_null()).then_some(parse_c_str(distance_metric, "normalized"));
+        let weighted_metric_weights_slice =
+            if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
+                Some(std::slice::from_raw_parts(
+                    weighted_metric_weights,
+                    weighted_metric_weights_len as usize,
+                ))
+            } else {
+                None
+            };
         let weighted_without_weights = distance_metric_str
             .map(|v| v.eq_ignore_ascii_case("weighted"))
-            .unwrap_or(false);
+            .unwrap_or(false)
+            && weighted_metric_weights_slice.is_none();
 
         let (mut builder, _) = match shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -921,12 +964,14 @@ pub unsafe extern "C" fn cpp_streaming_new(
                 dimensions: (dimensions > 0).then_some(dimensions as usize),
                 distance_metric: distance_metric_str
                     .filter(|v| !v.eq_ignore_ascii_case("weighted")),
-                weighted_metric_weights: None,
+                weighted_metric_weights: weighted_metric_weights_slice,
                 surface_mode: surface_mode_str,
                 return_se: return_se != 0,
-                cell: None,
-                interpolation_vertices: None,
-                boundary_degree_fallback: None,
+                cell: (!cell.is_nan()).then_some(cell),
+                interpolation_vertices: (interpolation_vertices > 0)
+                    .then_some(interpolation_vertices as usize),
+                boundary_degree_fallback: (boundary_degree_fallback >= 0)
+                    .then_some(boundary_degree_fallback != 0),
                 cv_fractions: None,
                 cv_method: None,
                 cv_k: None,
@@ -938,6 +983,12 @@ pub unsafe extern "C" fn cpp_streaming_new(
         };
         if weighted_without_weights {
             builder = builder.distance_metric("weighted");
+        }
+        if !confidence_intervals.is_nan() {
+            builder = builder.confidence_intervals(confidence_intervals);
+        }
+        if !prediction_intervals.is_nan() {
+            builder = builder.prediction_intervals(prediction_intervals);
         }
 
         let model = match shared_parse::map_runtime(
@@ -953,15 +1004,7 @@ pub unsafe extern "C" fn cpp_streaming_new(
             Err(e) => return null_with_error(&e.message),
         };
 
-        Box::into_raw(Box::new(CppStreamingLoess {
-            model: Some(model),
-            cell: None,
-            interpolation_vertices: None,
-            boundary_degree_fallback: None,
-            confidence_intervals: f64::NAN,
-            prediction_intervals: f64::NAN,
-            weighted_metric: None,
-        }))
+        Box::into_raw(Box::new(CppStreamingLoess { model: Some(model) }))
     })
 }
 
@@ -1063,6 +1106,14 @@ pub unsafe extern "C" fn cpp_online_new(
     distance_metric: *const c_char,
     surface_mode: *const c_char,
     return_se: c_int,
+    // Advanced options
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
+    cell: c_double,
+    interpolation_vertices: c_int,
+    boundary_degree_fallback: c_int,
+    weighted_metric_weights: *const c_double,
+    weighted_metric_weights_len: c_ulong,
 ) -> *mut CppOnlineLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -1108,9 +1159,19 @@ pub unsafe extern "C" fn cpp_online_new(
             (!surface_mode.is_null()).then_some(parse_c_str(surface_mode, "interpolation"));
         let distance_metric_str =
             (!distance_metric.is_null()).then_some(parse_c_str(distance_metric, "normalized"));
+        let weighted_metric_weights_slice =
+            if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
+                Some(std::slice::from_raw_parts(
+                    weighted_metric_weights,
+                    weighted_metric_weights_len as usize,
+                ))
+            } else {
+                None
+            };
         let weighted_without_weights = distance_metric_str
             .map(|v| v.eq_ignore_ascii_case("weighted"))
-            .unwrap_or(false);
+            .unwrap_or(false)
+            && weighted_metric_weights_slice.is_none();
 
         let (mut builder, applied) = match shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -1133,12 +1194,14 @@ pub unsafe extern "C" fn cpp_online_new(
                 dimensions: (dimensions > 0).then_some(configured_dimensions),
                 distance_metric: distance_metric_str
                     .filter(|v| !v.eq_ignore_ascii_case("weighted")),
-                weighted_metric_weights: None,
+                weighted_metric_weights: weighted_metric_weights_slice,
                 surface_mode: surface_mode_str,
                 return_se: return_se != 0,
-                cell: None,
-                interpolation_vertices: None,
-                boundary_degree_fallback: None,
+                cell: (!cell.is_nan()).then_some(cell),
+                interpolation_vertices: (interpolation_vertices > 0)
+                    .then_some(interpolation_vertices as usize),
+                boundary_degree_fallback: (boundary_degree_fallback >= 0)
+                    .then_some(boundary_degree_fallback != 0),
                 cv_fractions: None,
                 cv_method: None,
                 cv_k: None,
@@ -1150,6 +1213,12 @@ pub unsafe extern "C" fn cpp_online_new(
         };
         if weighted_without_weights {
             builder = builder.distance_metric("weighted");
+        }
+        if !confidence_intervals.is_nan() {
+            builder = builder.confidence_intervals(confidence_intervals);
+        }
+        if !prediction_intervals.is_nan() {
+            builder = builder.prediction_intervals(prediction_intervals);
         }
 
         let degree = applied.degree.unwrap_or(PolynomialDegree::Linear);
@@ -1181,12 +1250,6 @@ pub unsafe extern "C" fn cpp_online_new(
             dimensions: configured_dimensions,
             degree,
             distance_metric,
-            cell: None,
-            interpolation_vertices: None,
-            boundary_degree_fallback: None,
-            weighted_metric: None,
-            confidence_intervals: f64::NAN,
-            prediction_intervals: f64::NAN,
         }))
     })
 }

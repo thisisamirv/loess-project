@@ -57,10 +57,11 @@ For true real-time applications where each point must be processed immediately.
 
 === "Rust"
     ```rust
-    let mut processor = Loess::new()
+    use fastLoess::prelude::*;
+
+    let mut processor = OnlineLoess::new()
         .fraction(0.3)
         .iterations(1)
-        .adapter(Online)
         .window_capacity(25)
         .min_points(5)
         .update_mode("incremental")
@@ -208,10 +209,11 @@ For large datasets that arrive in batches or files.
 
 === "Rust"
     ```rust
-    let mut processor = Loess::new()
+    use fastLoess::prelude::*;
+
+    let mut processor = StreamingLoess::new()
         .fraction(0.1)
         .iterations(2)
-        .adapter(Streaming)
         .chunk_size(50)
         .overlap(10)
         .merge_strategy("weighted_average")
