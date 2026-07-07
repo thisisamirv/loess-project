@@ -81,8 +81,8 @@ Split data into K folds, train on K-1, validate on 1.
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
     }).fit(x, y);
 
-    console.log("Selected fraction:", result.fractionUsed);
-    console.log("CV scores:", result.cvScores);
+    console.log("Selected fraction:", result.fraction_used);
+    console.log("CV scores:", result.cv_scores);
     ```
 
 === "WebAssembly"
@@ -93,8 +93,8 @@ Split data into K folds, train on K-1, validate on 1.
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
     }).fit(x, y);
 
-    console.log("Selected fraction:", result.fractionUsed);
-    console.log("CV scores:", result.cvScores);
+    console.log("Selected fraction:", result.fraction_used);
+    console.log("CV scores:", result.cv_scores);
     ```
 
 === "C++"

@@ -135,15 +135,15 @@ const result = online.add_point(x, y);  // returns OnlineOutput | null
 
 ### `OnlineOutput`
 
-Returned by `add_point()` once the window has enough points (`null` until then). Field names are camelCase per JavaScript conventions.
+Returned by `add_point()` once the window has enough points (`null` until then).
 
 | Field | Type | Description |
 | --- | --- | --- |
 | `smoothed` | `number` | Smoothed value for the latest point |
-| `stdError` | `number \| null` | Standard error (if requested) |
+| `std_error` | `number \| null` | Standard error (if requested) |
 | `residual` | `number \| null` | Residual y − smoothed (if requested) |
-| `robustnessWeight` | `number \| null` | Robustness weight (if requested) |
-| `iterationsUsed` | `number \| null` | Robustness iterations performed |
+| `robustness_weight` | `number \| null` | Robustness weight (if requested) |
+| `iterations_used` | `number \| null` | Robustness iterations performed |
 
 ### `LoessResult`
 
@@ -151,22 +151,22 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 | --- | --- | --- |
 | `x` | `Float64Array` | Sorted x values |
 | `y` | `Float64Array` | Smoothed y values |
-| `fractionUsed` | `number` | Fraction used (set or selected by CV) |
-| `iterationsUsed` | number \| null | Robustness iterations actually performed |
-| `standardErrors` | Float64Array \| null | Per-point SE (if `return_se`) |
-| `confidenceLower` | Float64Array \| null | Lower confidence bounds |
-| `confidenceUpper` | Float64Array \| null | Upper confidence bounds |
-| `predictionLower` | Float64Array \| null | Lower prediction bounds |
-| `predictionUpper` | Float64Array \| null | Upper prediction bounds |
+| `fraction_used` | `number` | Fraction used (set or selected by CV) |
+| `iterations_used` | number \| null | Robustness iterations actually performed |
+| `standard_errors` | Float64Array \| null | Per-point SE (if `return_se`) |
+| `confidence_lower` | Float64Array \| null | Lower confidence bounds |
+| `confidence_upper` | Float64Array \| null | Upper confidence bounds |
+| `prediction_lower` | Float64Array \| null | Lower prediction bounds |
+| `prediction_upper` | Float64Array \| null | Upper prediction bounds |
 | `residuals` | Float64Array \| null | Residuals (if `return_residuals`) |
-| `robustnessWeights` | Float64Array \| null | Robustness weights (if `return_robustness_weights`) |
-| `cvScores` | Float64Array \| null | CV score per tested fraction |
+| `robustness_weights` | Float64Array \| null | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | Float64Array \| null | CV score per tested fraction |
 | `diagnostics` | Diagnostics \| null | Fit metrics (if `return_diagnostics`) |
 | `enp` | number \| null | Equivalent number of parameters (if `return_se`) |
-| `traceHat` | number \| null | Trace of hat matrix (if `return_se`) |
+| `trace_hat` | number \| null | Trace of hat matrix (if `return_se`) |
 | `delta1` | number \| null | First delta statistic (if `return_se`) |
 | `delta2` | number \| null | Second delta statistic (if `return_se`) |
-| `residualScale` | number \| null | Residual scale estimate (if `return_se`) |
+| `residual_scale` | number \| null | Residual scale estimate (if `return_se`) |
 | `leverage` | Float64Array \| null | Per-point hat-matrix diagonal (if `return_se`) |
 | `dimensions` | `number` | Number of predictor dimensions |
 

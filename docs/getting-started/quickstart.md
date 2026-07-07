@@ -224,8 +224,8 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     }).fit(x, y);
 
     console.log("Smoothed:", result.y);
-    console.log("CI Lower:", result.confidenceLower);
-    console.log("CI Upper:", result.confidenceUpper);
+    console.log("CI Lower:", result.confidence_lower);
+    console.log("CI Upper:", result.confidence_upper);
     console.log("R²:", result.diagnostics.r_squared);
     ```
 
@@ -372,7 +372,7 @@ LOESS can robustly handle outliers through iterative reweighting:
     }).fit(x, yWithOutlier);
 
     // Outliers will have low robustness weights
-    result.robustnessWeights.forEach((w, i) => {
+    result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
             console.log(`Point ${i} is likely an outlier (weight: ${w.toFixed(3)})`);
         }
@@ -395,7 +395,7 @@ LOESS can robustly handle outliers through iterative reweighting:
     }).fit(x, yWithOutlier);
 
     // Outliers will have low robustness weights
-    result.robustnessWeights.forEach((w, i) => {
+    result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
             console.log(`Point ${i} is likely an outlier (weight: ${w.toFixed(3)})`);
         }

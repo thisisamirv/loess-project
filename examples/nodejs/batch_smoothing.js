@@ -15,7 +15,7 @@ const fastloess = require('../../bindings/nodejs');
  *  9. Scaling methods (MAR, MAD, Mean)
  * 10. Boundary policies
  * 11. Zero-weight fallback strategies
- * 12. Polynomial degrees + iterationsUsed
+ * 12. Polynomial degrees + iterations_used
  * 13. Distance metrics
  * 14. Surface modes and standard errors
  * 15. Additional weight functions
@@ -39,7 +39,7 @@ function example_1_basic_smoothing() {
 
     const result = new fastloess.Loess({ fraction: 0.5, iterations: 3 }).fit(x, y);
 
-    console.log(`  fractionUsed=${result.fractionUsed}`);
+    console.log(`  fraction_used=${result.fraction_used}`);
     console.log(`  Smoothed: [${Array.from(result.y).map(v => v.toFixed(3)).join(', ')}]`);
     console.log();
 }
@@ -59,7 +59,7 @@ function example_2_robust_with_outliers() {
         return_residuals: true,
     }).fit(x, y);
 
-    const weights = result.robustnessWeights;
+    const weights = result.robustness_weights;
     if (weights) {
         for (let i = 0; i < weights.length; i++) {
             if (weights[i] < 0.5) {
@@ -85,10 +85,10 @@ function example_3_uncertainty_quantification() {
         prediction_intervals: 0.95,
     }).fit(x, y);
 
-    const cLow = result.confidenceLower;
-    const cHigh = result.confidenceUpper;
-    const pLow = result.predictionLower;
-    const pHigh = result.predictionUpper;
+    const cLow = result.confidence_lower;
+    const cHigh = result.confidence_upper;
+    const pLow = result.prediction_lower;
+    const pHigh = result.prediction_upper;
 
     console.log("  x\t  y_smooth\t  conf[low, high]\t  pred[low, high]");
     for (let i = 0; i < result.y.length; i++) {
@@ -114,15 +114,15 @@ function example_4_cross_validation() {
     }
 
     const result = new fastloess.Loess({
-        cvFractions: [0.2, 0.3, 0.5, 0.7],
-        cvMethod: "kfold",
-        cvK: 5,
+        cv_fractions: [0.2, 0.3, 0.5, 0.7],
+        cv_method: "kfold",
+        cv_k: 5,
         iterations: 2,
         return_diagnostics: true,
     }).fit(x, y);
 
-    console.log(`  Selected fraction: ${result.fractionUsed}`);
-    const scores = result.cvScores;
+    console.log(`  Selected fraction: ${result.fraction_used}`);
+    const scores = result.cv_scores;
     if (scores) {
         const fracs = [0.2, 0.3, 0.5, 0.7];
         console.log("  CV Scores (RMSE per fraction):");
@@ -163,7 +163,7 @@ function example_5_complete_diagnostics() {
     }
     console.log(`  Smoothed[0]: ${result.y[0].toFixed(5)}`);
     if (result.residuals) console.log(`  residuals[0]: ${result.residuals[0].toFixed(5)}`);
-    if (result.robustnessWeights) console.log(`  robWeight[0]: ${result.robustnessWeights[0].toFixed(4)}`);
+    if (result.robustness_weights) console.log(`  robWeight[0]: ${result.robustness_weights[0].toFixed(4)}`);
     console.log();
 }
 
@@ -195,8 +195,8 @@ function example_7_robustness_methods() {
             robustness_method: method,
             return_robustness_weights: true,
         }).fit(x, y);
-        const wStr = result.robustnessWeights
-            ? Array.from(result.robustnessWeights).map(v => v.toFixed(3)).join(', ')
+        const wStr = result.robustness_weights
+            ? Array.from(result.robustness_weights).map(v => v.toFixed(3)).join(', ')
             : 'N/A';
         console.log(`  ${method}:`);
         console.log(`    Smoothed: [${Array.from(result.y).map(v => v.toFixed(2)).join(', ')}]`);
@@ -222,7 +222,7 @@ function example_8_benchmark() {
     const ms = Number(process.hrtime.bigint() - t0) / 1e6;
 
     console.log(`  ${n} points in ${ms.toFixed(2)}ms`);
-    console.log(`  fractionUsed=${result.fractionUsed}, y[0]=${result.y[0].toFixed(4)}`);
+    console.log(`  fraction_used=${result.fraction_used}, y[0]=${result.y[0].toFixed(4)}`);
     console.log();
 }
 
@@ -267,7 +267,7 @@ function example_11_zero_weight_fallback() {
     console.log();
 }
 
-// ── Example 12: Polynomial Degrees + iterationsUsed ──────────────────────────
+// ── Example 12: Polynomial Degrees + iterations_used ──────────────────────────
 function example_12_polynomial_degrees() {
     console.log("Example 12: Polynomial Degrees");
 
@@ -280,7 +280,7 @@ function example_12_polynomial_degrees() {
             degree: deg,
         }).fit(x, y);
         console.log(
-            `  ${deg}: y[0]=${result.y[0].toFixed(3)}, iterationsUsed=${result.iterationsUsed}`
+            `  ${deg}: y[0]=${result.y[0].toFixed(3)}, iterations_used=${result.iterations_used}`
         );
     }
     console.log();
@@ -314,32 +314,32 @@ function example_14_surface_modes_and_se() {
     const rDirect = new fastloess.Loess({
         fraction: 0.5,
         surface_mode: "direct",
-        returnSe: true,
+        return_se: true,
         confidence_intervals: 0.95,
         prediction_intervals: 0.95,
     }).fit(x, y);
 
     console.log("  surface_mode=direct:");
-    console.log(`    confidenceLower non-null: ${rDirect.confidenceLower != null}`);
-    console.log(`    predictionLower non-null: ${rDirect.predictionLower != null}`);
-    if (rDirect.standardErrors) console.log(`    standardErrors[0]: ${rDirect.standardErrors[0].toFixed(4)}`);
+    console.log(`    confidence_lower non-null: ${rDirect.confidence_lower != null}`);
+    console.log(`    prediction_lower non-null: ${rDirect.prediction_lower != null}`);
+    if (rDirect.standard_errors) console.log(`    standard_errors[0]: ${rDirect.standard_errors[0].toFixed(4)}`);
     if (rDirect.enp != null) console.log(`    enp: ${rDirect.enp.toFixed(3)}`);
-    if (rDirect.traceHat != null) console.log(`    traceHat: ${rDirect.traceHat.toFixed(3)}`);
+    if (rDirect.trace_hat != null) console.log(`    trace_hat: ${rDirect.trace_hat.toFixed(3)}`);
     if (rDirect.delta1 != null) console.log(`    delta1: ${rDirect.delta1.toFixed(3)}`);
     if (rDirect.delta2 != null) console.log(`    delta2: ${rDirect.delta2.toFixed(3)}`);
-    if (rDirect.residualScale != null) console.log(`    residualScale: ${rDirect.residualScale.toFixed(4)}`);
+    if (rDirect.residual_scale != null) console.log(`    residual_scale: ${rDirect.residual_scale.toFixed(4)}`);
     if (rDirect.leverage) console.log(`    leverage[0]: ${rDirect.leverage[0].toFixed(4)}`);
 
     // Interpolation surface — faster, approximate
     const rInterp = new fastloess.Loess({
         fraction: 0.5,
         surface_mode: "interpolation",
-        returnSe: true,
+        return_se: true,
     }).fit(x, y);
 
     console.log("  surface_mode=interpolation:");
     console.log(`    y[0]: ${rInterp.y[0].toFixed(3)}`);
-    if (rInterp.standardErrors) console.log(`    standardErrors[0]: ${rInterp.standardErrors[0].toFixed(4)}`);
+    if (rInterp.standard_errors) console.log(`    standard_errors[0]: ${rInterp.standard_errors[0].toFixed(4)}`);
     console.log();
 }
 
@@ -371,23 +371,23 @@ function example_16_loocv_and_auto_converge() {
 
     // Leave-one-out cross-validation
     const rLoocv = new fastloess.Loess({
-        cvFractions: [0.3, 0.5, 0.7],
-        cvMethod: "loocv",
+        cv_fractions: [0.3, 0.5, 0.7],
+        cv_method: "loocv",
     }).fit(x, y);
-    console.log(`  LOOCV selected fraction: ${rLoocv.fractionUsed}`);
-    if (rLoocv.cvScores) {
-        console.log(`  LOOCV scores: [${Array.from(rLoocv.cvScores).map(v => v.toFixed(4)).join(', ')}]`);
+    console.log(`  LOOCV selected fraction: ${rLoocv.fraction_used}`);
+    if (rLoocv.cv_scores) {
+        console.log(`  LOOCV scores: [${Array.from(rLoocv.cv_scores).map(v => v.toFixed(4)).join(', ')}]`);
     }
 
     // K-Fold cross-validation
     const rKfold = new fastloess.Loess({
-        cvFractions: [0.2, 0.4, 0.6],
-        cvMethod: "kfold",
-        cvK: 5,
+        cv_fractions: [0.2, 0.4, 0.6],
+        cv_method: "kfold",
+        cv_k: 5,
     }).fit(x, y);
-    console.log(`  KFold(k=5) selected fraction: ${rKfold.fractionUsed}`);
-    if (rKfold.cvScores) {
-        console.log(`  KFold scores: [${Array.from(rKfold.cvScores).map(v => v.toFixed(4)).join(', ')}]`);
+    console.log(`  KFold(k=5) selected fraction: ${rKfold.fraction_used}`);
+    if (rKfold.cv_scores) {
+        console.log(`  KFold scores: [${Array.from(rKfold.cv_scores).map(v => v.toFixed(4)).join(', ')}]`);
     }
 
     // Auto-converge: stop robustness iterations when change < tolerance
@@ -395,7 +395,7 @@ function example_16_loocv_and_auto_converge() {
         fraction: 0.5,
         auto_converge: 1e-4,
     }).fit(x, y);
-    console.log(`  auto_converge=1e-4: iterationsUsed=${rAc.iterationsUsed}`);
+    console.log(`  auto_converge=1e-4: iterations_used=${rAc.iterations_used}`);
     console.log();
 }
 
@@ -430,7 +430,7 @@ function example_17_interpolation_tuning() {
     const rSe = new fastloess.Loess({
         fraction: 0.5,
         surface_mode: "interpolation",
-        returnSe: true,
+        return_se: true,
     }).fit(x, y);
     if (rSe.enp != null) console.log(`  interpolation+SE enp: ${rSe.enp.toFixed(3)}`);
     console.log();

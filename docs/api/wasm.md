@@ -137,10 +137,10 @@ Returned by `add_point()` once the window has enough points (`undefined` until t
 | Field | Type | Description |
 | --- | --- | --- |
 | `smoothed` | `number` | Smoothed value for the latest point |
-| `stdError` | `number \| undefined` | Standard error (if requested) |
+| `std_error` | `number \| undefined` | Standard error (if requested) |
 | `residual` | `number \| undefined` | Residual y − smoothed (if requested) |
-| `robustnessWeight` | `number \| undefined` | Robustness weight (if requested) |
-| `iterationsUsed` | `number \| undefined` | Robustness iterations performed |
+| `robustness_weight` | `number \| undefined` | Robustness weight (if requested) |
+| `iterations_used` | `number \| undefined` | Robustness iterations performed |
 
 ### `LoessResult`
 
@@ -148,22 +148,22 @@ Returned by `add_point()` once the window has enough points (`undefined` until t
 | --- | --- | --- |
 | `x` | `Float64Array` | Sorted x values |
 | `y` | `Float64Array` | Smoothed y values |
-| `fractionUsed` | `number` | Fraction used (set or selected by CV) |
-| `iterationsUsed` | `number` \| `undefined` | Robustness iterations actually performed |
-| `standardErrors` | `Float64Array` \| `undefined` | Per-point SE (if `return_se`) |
-| `confidenceLower` | `Float64Array` \| `undefined` | Lower confidence bounds |
-| `confidenceUpper` | `Float64Array` \| `undefined` | Upper confidence bounds |
-| `predictionLower` | `Float64Array` \| `undefined` | Lower prediction bounds |
-| `predictionUpper` | `Float64Array` \| `undefined` | Upper prediction bounds |
+| `fraction_used` | `number` | Fraction used (set or selected by CV) |
+| `iterations_used` | `number` \| `undefined` | Robustness iterations actually performed |
+| `standard_errors` | `Float64Array` \| `undefined` | Per-point SE (if `return_se`) |
+| `confidence_lower` | `Float64Array` \| `undefined` | Lower confidence bounds |
+| `confidence_upper` | `Float64Array` \| `undefined` | Upper confidence bounds |
+| `prediction_lower` | `Float64Array` \| `undefined` | Lower prediction bounds |
+| `prediction_upper` | `Float64Array` \| `undefined` | Upper prediction bounds |
 | `residuals` | `Float64Array` \| `undefined` | Residuals (if `return_residuals`) |
-| `robustnessWeights` | `Float64Array` \| `undefined` | Robustness weights (if `return_robustness_weights`) |
-| `cvScores` | `Float64Array` \| `undefined` | CV score per tested fraction |
+| `robustness_weights` | `Float64Array` \| `undefined` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `Float64Array` \| `undefined` | CV score per tested fraction |
 | `diagnostics` | `Diagnostics` \| `undefined` | Fit metrics (if `return_diagnostics`) |
 | `enp` | `number` \| `undefined` | Equivalent number of parameters (if `return_se`) |
-| `traceHat` | `number` \| `undefined` | Trace of hat matrix (if `return_se`) |
+| `trace_hat` | `number` \| `undefined` | Trace of hat matrix (if `return_se`) |
 | `delta1` | `number` \| `undefined` | First delta statistic (if `return_se`) |
 | `delta2` | `number` \| `undefined` | Second delta statistic (if `return_se`) |
-| `residualScale` | `number` \| `undefined` | Residual scale estimate (if `return_se`) |
+| `residual_scale` | `number` \| `undefined` | Residual scale estimate (if `return_se`) |
 | `leverage` | `Float64Array` \| `undefined` | Per-point hat-matrix diagonal (if `return_se`) |
 | `dimensions` | `number` | Number of predictor dimensions |
 
@@ -173,9 +173,9 @@ Returned by `add_point()` once the window has enough points (`undefined` until t
 | --- | --- | --- |
 | `rmse` | `number` | Root Mean Squared Error |
 | `mae` | `number` | Mean Absolute Error |
-| `rSquared` | `number` | R-squared |
-| `residualSd` | `number` | Residual standard deviation |
-| `effectiveDf` | `number` \| `undefined` | Effective degrees of freedom |
+| `r_squared` | `number` | R-squared |
+| `residual_sd` | `number` | Residual standard deviation |
+| `effective_df` | `number` \| `undefined` | Effective degrees of freedom |
 | `aic` | `number` \| `undefined` | AIC |
 | `aicc` | `number` \| `undefined` | AICc |
 

@@ -77,7 +77,7 @@ Estimate uncertainty in the smoothed curve itself.
     const result = new fl.Loess({ fraction: 0.5, confidence_intervals: 0.95 }).fit(x, y);
 
     result.y.forEach((y, i) => {
-        console.log(`x=${result.x[i]}: y=${y} [${result.confidenceLower[i]}, ${result.confidenceUpper[i]}]`);
+        console.log(`x=${result.x[i]}: y=${y} [${result.confidence_lower[i]}, ${result.confidence_upper[i]}]`);
     });
     ```
 
@@ -86,7 +86,7 @@ Estimate uncertainty in the smoothed curve itself.
     const result = new Loess({ fraction: 0.5, confidence_intervals: 0.95 }).fit(x, y);
 
     result.y.forEach((y, i) => {
-        console.log(`x=${result.x[i]}: y=${y} [${result.confidenceLower[i]}, ${result.confidenceUpper[i]}]`);
+        console.log(`x=${result.x[i]}: y=${y} [${result.confidence_lower[i]}, ${result.confidence_upper[i]}]`);
     });
     ```
 
@@ -152,13 +152,13 @@ Estimate where new observations might fall.
 === "Node.js"
     ```javascript
     const result = new fl.Loess({ fraction: 0.5, prediction_intervals: 0.95 }).fit(x, y);
-    console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
+    console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
     ```
 
 === "WebAssembly"
     ```javascript
     const result = new Loess({ fraction: 0.5, prediction_intervals: 0.95 }).fit(x, y);
-    console.log(`Prediction bounds: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
+    console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
     ```
 
 === "C++"
@@ -334,7 +334,7 @@ Access standard errors directly (available when intervals are computed):
     ```javascript
     const result = new fl.Loess({ confidence_intervals: 0.95 }).fit(x, y);
 
-    result.standardErrors.forEach((se, i) => {
+    result.standard_errors.forEach((se, i) => {
         console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
     });
     ```
@@ -343,7 +343,7 @@ Access standard errors directly (available when intervals are computed):
     ```javascript
     const result = new Loess({ confidence_intervals: 0.95 }).fit(x, y);
 
-    result.standardErrors.forEach((se, i) => {
+    result.standard_errors.forEach((se, i) => {
         console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
     });
     ```

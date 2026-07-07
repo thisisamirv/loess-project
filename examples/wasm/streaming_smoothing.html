@@ -58,16 +58,16 @@
         function example_1_basic_chunked_processing() {
             log("Example 1: Basic Chunked Processing");
             const n = 50, { x, y } = makeLinear(n);
-            const chunkSize = 15, overlap = 5;
+            const chunk_size = 15, overlap = 5;
 
             const s = new StreamingLoessWasm(
-                { fraction: 0.5, iterations: 2, returnResiduals: true },
-                { chunkSize, overlap }
+                { fraction: 0.5, iterations: 2, return_residuals: true },
+                { chunk_size, overlap }
             );
-            log(`  Dataset: ${n} pts, chunk=${chunkSize}, overlap=${overlap}`);
+            log(`  Dataset: ${n} pts, chunk=${chunk_size}, overlap=${overlap}`);
             let total = 0, ci = 0;
-            for (let start = 0; start < n; start += chunkSize - overlap) {
-                const end = Math.min(start + chunkSize, n);
+            for (let start = 0; start < n; start += chunk_size - overlap) {
+                const end = Math.min(start + chunk_size, n);
                 const res = s.processChunk(x.subarray(start, end), y.subarray(start, end));
                 if (res.x.length > 0) {
                     total += res.x.length;
@@ -86,7 +86,7 @@
             log("Example 2: Chunk Size Comparison");
             const n = 100, { x, y } = makeLinear(n);
             for (const [cs, ov, label] of [[20, 5, "Small"], [50, 10, "Medium"], [80, 15, "Large"]]) {
-                const s = new StreamingLoessWasm({ fraction: 0.5, iterations: 1 }, { chunkSize: cs, overlap: ov });
+                const s = new StreamingLoessWasm({ fraction: 0.5, iterations: 1 }, { chunk_size: cs, overlap: ov });
                 let chunks = 0, total = 0;
                 for (let start = 0; start < n; start += cs - ov) {
                     const end = Math.min(start + cs, n);
@@ -106,7 +106,7 @@
             const n = 100, { x, y } = makeLinear(n);
             for (const [overlap, label] of [[0, "No overlap"], [10, "10-pt overlap"], [20, "20-pt overlap"]]) {
                 const cs = 40;
-                const s = new StreamingLoessWasm({ fraction: 0.5 }, { chunkSize: cs, overlap });
+                const s = new StreamingLoessWasm({ fraction: 0.5 }, { chunk_size: cs, overlap });
                 let total = 0;
                 const step = cs - overlap;
                 // Feed only full-size chunks; finalize() handles remaining data
@@ -127,7 +127,7 @@
             for (let i = 0; i < n; i++) { x[i] = i; y[i] = Math.sin(i * 0.01) + i * 0.001; }
 
             const cs = 500, ov = 50;
-            const s = new StreamingLoessWasm({ fraction: 0.05, iterations: 2 }, { chunkSize: cs, overlap: ov });
+            const s = new StreamingLoessWasm({ fraction: 0.05, iterations: 2 }, { chunk_size: cs, overlap: ov });
             let total = 0;
             const step = cs - ov;
             for (let start = 0; start < n; start += step) {
@@ -151,8 +151,8 @@
             }
             for (const m of ["bisquare", "huber", "talwar"]) {
                 const s = new StreamingLoessWasm(
-                    { fraction: 0.5, iterations: 5, robustnessMethod: m, returnResiduals: true },
-                    { chunkSize: 30, overlap: 10 }
+                    { fraction: 0.5, iterations: 5, robustness_method: m, return_residuals: true },
+                    { chunk_size: 30, overlap: 10 }
                 );
                 let large = 0;
                 for (let start = 0; start < n; start += 20) {
@@ -173,8 +173,8 @@
             log("  Simulating: input.csv -> Smooth -> output.csv");
             const total = 200, cs = 50, ov = 10;
             const s = new StreamingLoessWasm(
-                { fraction: 0.5, iterations: 2, returnResiduals: true },
-                { chunkSize: cs, overlap: ov }
+                { fraction: 0.5, iterations: 2, return_residuals: true },
+                { chunk_size: cs, overlap: ov }
             );
             let out_count = 0;
             for (let ci = 0; ci < Math.ceil(total / (cs - ov)); ci++) {
@@ -195,7 +195,7 @@
         function example_7_benchmark() {
             log("Example 7: Benchmark (Sequential Streaming)");
             const n = 1000, cs = 100, ov = 10;
-            const s = new StreamingLoessWasm({ fraction: 0.5, iterations: 3 }, { chunkSize: cs, overlap: ov });
+            const s = new StreamingLoessWasm({ fraction: 0.5, iterations: 3 }, { chunk_size: cs, overlap: ov });
             const t0 = performance.now();
             let total = 0;
             for (let start = 0; start < n; start += cs - ov) {
@@ -216,7 +216,7 @@
             for (const ms of ["average", "weighted_average", "take_first", "take_last"]) {
                 const s = new StreamingLoessWasm(
                     { fraction: 0.5, iterations: 2 },
-                    { chunkSize: 20, overlap: 5, mergeStrategy: ms }
+                    { chunk_size: 20, overlap: 5, merge_strategy: ms }
                 );
                 let total = 0;
                 for (let start = 0; start < n; start += 15) {
@@ -236,12 +236,12 @@
             const s = new StreamingLoessWasm(
                 {
                     fraction: 0.5, iterations: 2, degree: "quadratic",
-                    scalingMethod: "mar", boundaryPolicy: "reflect",
-                    zeroWeightFallback: "return_original", distanceMetric: "manhattan",
-                    surfaceMode: "direct", returnSe: true, returnDiagnostics: true,
-                    returnRobustnessWeights: true, autoConverge: 1e-3,
+                    scaling_method: "mar", boundary_policy: "reflect",
+                    zero_weight_fallback: "return_original", distance_metric: "manhattan",
+                    surface_mode: "direct", return_se: true, return_diagnostics: true,
+                    return_robustness_weights: true, auto_converge: 1e-3,
                 },
-                { chunkSize: 20, overlap: 5 }
+                { chunk_size: 20, overlap: 5 }
             );
             let total = 0;
             for (let start = 0; start < n; start += 15) {
@@ -250,15 +250,15 @@
             }
             const fin = s.finalize(); total += fin.x.length;
             log(`  total pts: ${total}`);
-            if (fin.standardErrors && fin.standardErrors.length > 0)
-                log(`  standardErrors[0]: ${fin.standardErrors[0].toFixed(4)}`);
+            if (fin.standard_errors && fin.standard_errors.length > 0)
+                log(`  standard_errors[0]: ${fin.standard_errors[0].toFixed(4)}`);
             if (fin.diagnostics) {
                 log(`  diagnostics.rmse: ${fin.diagnostics.rmse.toFixed(3)}`);
-                log(`  diagnostics.rSquared: ${fin.diagnostics.rSquared.toFixed(3)}`);
+                log(`  diagnostics.r_squared: ${fin.diagnostics.r_squared.toFixed(3)}`);
                 if (fin.diagnostics.aic != null) log(`  diagnostics.aic: ${fin.diagnostics.aic.toFixed(3)}`);
             }
-            if (fin.robustnessWeights && fin.robustnessWeights.length > 0)
-                log(`  robustnessWeights[0]: ${fin.robustnessWeights[0].toFixed(4)}`);
+            if (fin.robustness_weights && fin.robustness_weights.length > 0)
+                log(`  robustness_weights[0]: ${fin.robustness_weights[0].toFixed(4)}`);
             log("");
         }
 

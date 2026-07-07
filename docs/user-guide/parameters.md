@@ -1040,7 +1040,7 @@ Include fit quality metrics (Batch and Streaming only).
 === "WebAssembly"
     ```javascript
     const result = new Loess({ return_diagnostics: true }).fit(x, y);
-    console.log("R²:", result.diagnostics?.rSquared);
+    console.log("R²:", result.diagnostics?.r_squared);
     ```
 
 === "C++"
@@ -1089,13 +1089,13 @@ Include final robustness weights (useful for outlier detection).
 === "Node.js"
     ```javascript
     const result = new Loess({ iterations: 3, return_robustness_weights: true }).fit(x, y);
-    // result.robustnessWeights contains outlier weights
+    // result.robustness_weights contains outlier weights
     ```
 
 === "WebAssembly"
     ```javascript
     const result = new Loess({ iterations: 3, return_robustness_weights: true }).fit(x, y);
-    // result.robustnessWeights contains outlier weights
+    // result.robustness_weights contains outlier weights
     ```
 
 === "C++"

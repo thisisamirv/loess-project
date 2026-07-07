@@ -304,7 +304,7 @@ Remove trend to analyze residual patterns:
         prediction_intervals: 0.95
     }).fit(t, y);
 
-    console.log(`95% PI: [${result.predictionLower[0]}, ${result.predictionUpper[0]}]`);
+    console.log(`95% PI: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
     ```
 
 === "WebAssembly"
@@ -317,7 +317,7 @@ Remove trend to analyze residual patterns:
         prediction_intervals: 0.95
     }).fit(t, y);
 
-    // Access result.predictionLower and result.predictionUpper
+    // Access result.prediction_lower and result.prediction_upper
     ```
 
 === "C++"
@@ -606,7 +606,7 @@ Biological application:
         return_diagnostics: true
     }).fit(hours, expression);
 
-    console.log("R²:", result.diagnostics?.rSquared);
+    console.log("R²:", result.diagnostics?.r_squared);
     ```
 
 === "C++"

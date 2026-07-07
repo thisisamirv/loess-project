@@ -225,7 +225,7 @@ function example_8_update_modes() {
     let lastIterations = null;
     for (const [x, y] of data) {
         const res = model.add_point(x, y);
-        if (res !== null) { lastSmoothed = res.smoothed; lastIterations = res.iterationsUsed; }
+        if (res !== null) { lastSmoothed = res.smoothed; lastIterations = res.iterations_used; }
     }
     if (lastSmoothed !== null) {
         console.log(`  last smoothed: ${lastSmoothed.toFixed(3)}`);

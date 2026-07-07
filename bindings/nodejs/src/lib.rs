@@ -34,14 +34,17 @@ pub struct Diagnostics {
     // Mean Absolute Error.
     pub mae: f64,
     // R-squared (coefficient of determination).
+    #[napi(js_name = "r_squared")]
     pub r_squared: f64,
     // Akaike Information Criterion (if computed).
     pub aic: Option<f64>,
     // Corrected AIC (if computed).
     pub aicc: Option<f64>,
     // Effective degrees of freedom (if computed).
+    #[napi(js_name = "effective_df")]
     pub effective_df: Option<f64>,
     // Residual standard deviation.
+    #[napi(js_name = "residual_sd")]
     pub residual_sd: f64,
 }
 
@@ -51,12 +54,15 @@ pub struct OnlineOutput {
     // Smoothed value for the latest point.
     pub smoothed: f64,
     // Standard error (if computed).
+    #[napi(js_name = "std_error")]
     pub std_error: Option<f64>,
     // Residual y − smoothed (if computed).
     pub residual: Option<f64>,
     // Robustness weight for the latest point (if computed).
+    #[napi(js_name = "robustness_weight")]
     pub robustness_weight: Option<f64>,
     // Number of robustness iterations performed (if applicable).
+    #[napi(js_name = "iterations_used")]
     pub iterations_used: Option<u32>,
 }
 
@@ -90,7 +96,7 @@ impl LoessResult {
     }
 
     // Get standard errors (if requested/computed).
-    #[napi(getter)]
+    #[napi(getter, js_name = "standard_errors")]
     pub fn get_standard_errors(&self) -> Option<Float64Array> {
         self.inner
             .standard_errors
@@ -99,7 +105,7 @@ impl LoessResult {
     }
 
     // Get lower confidence bounds (if requested).
-    #[napi(getter)]
+    #[napi(getter, js_name = "confidence_lower")]
     pub fn get_confidence_lower(&self) -> Option<Float64Array> {
         self.inner
             .confidence_lower
@@ -108,7 +114,7 @@ impl LoessResult {
     }
 
     // Get upper confidence bounds (if requested).
-    #[napi(getter)]
+    #[napi(getter, js_name = "confidence_upper")]
     pub fn get_confidence_upper(&self) -> Option<Float64Array> {
         self.inner
             .confidence_upper
@@ -117,7 +123,7 @@ impl LoessResult {
     }
 
     // Get lower prediction bounds (if requested).
-    #[napi(getter)]
+    #[napi(getter, js_name = "prediction_lower")]
     pub fn get_prediction_lower(&self) -> Option<Float64Array> {
         self.inner
             .prediction_lower
@@ -126,7 +132,7 @@ impl LoessResult {
     }
 
     // Get upper prediction bounds (if requested).
-    #[napi(getter)]
+    #[napi(getter, js_name = "prediction_upper")]
     pub fn get_prediction_upper(&self) -> Option<Float64Array> {
         self.inner
             .prediction_upper
@@ -135,7 +141,7 @@ impl LoessResult {
     }
 
     // Get robustness weights (if requested).
-    #[napi(getter)]
+    #[napi(getter, js_name = "robustness_weights")]
     pub fn get_robustness_weights(&self) -> Option<Float64Array> {
         self.inner
             .robustness_weights
@@ -158,7 +164,7 @@ impl LoessResult {
     }
 
     // Get cross-validation scores (if CV was performed).
-    #[napi(getter)]
+    #[napi(getter, js_name = "cv_scores")]
     pub fn get_cv_scores(&self) -> Option<Float64Array> {
         self.inner
             .cv_scores
@@ -167,13 +173,13 @@ impl LoessResult {
     }
 
     // Get the fraction used for smoothing.
-    #[napi(getter)]
+    #[napi(getter, js_name = "fraction_used")]
     pub fn get_fraction_used(&self) -> f64 {
         self.inner.fraction_used
     }
 
     // Get the number of iterations performed.
-    #[napi(getter)]
+    #[napi(getter, js_name = "iterations_used")]
     pub fn get_iterations_used(&self) -> Option<u32> {
         self.inner.iterations_used.map(|i| i as u32)
     }
@@ -185,7 +191,7 @@ impl LoessResult {
     }
 
     // Get trace of hat matrix (if return_se was set).
-    #[napi(getter)]
+    #[napi(getter, js_name = "trace_hat")]
     pub fn get_trace_hat(&self) -> Option<f64> {
         self.inner.trace_hat
     }
@@ -203,7 +209,7 @@ impl LoessResult {
     }
 
     // Get residual scale estimate (if return_se was set).
-    #[napi(getter)]
+    #[napi(getter, js_name = "residual_scale")]
     pub fn get_residual_scale(&self) -> Option<f64> {
         self.inner.residual_scale
     }

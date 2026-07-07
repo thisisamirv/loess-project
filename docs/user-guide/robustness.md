@@ -232,7 +232,7 @@ Use robustness weights to identify potential outliers:
     ```javascript
     const result = new Loess({ iterations: 5, return_robustness_weights: true }).fit(x, y);
 
-    result.robustnessWeights.forEach((w, i) => {
+    result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
             console.log(`Potential outlier at index ${i}: weight = ${w.toFixed(3)}`);
         }
@@ -243,7 +243,7 @@ Use robustness weights to identify potential outliers:
     ```javascript
     const result = new Loess({ iterations: 5, return_robustness_weights: true }).fit(x, y);
 
-    result.robustnessWeights.forEach((w, i) => {
+    result.robustness_weights.forEach((w, i) => {
         if (w < 0.5) {
             console.log(`Potential outlier at index ${i}: weight = ${w.toFixed(3)}`);
         }

@@ -295,7 +295,7 @@ function example_9_advanced_options() {
             zero_weight_fallback: "return_original",
             distance_metric: "manhattan",
             surface_mode: "direct",
-            returnSe: true,
+            return_se: true,
             return_diagnostics: true,
             return_robustness_weights: true,
             auto_converge: 1e-3,
@@ -312,16 +312,16 @@ function example_9_advanced_options() {
     total += fin.x.length;
 
     console.log(`  total points: ${total}`);
-    if (fin.standardErrors && fin.standardErrors.length > 0) {
-        console.log(`  standardErrors[0]: ${fin.standardErrors[0].toFixed(4)}`);
+    if (fin.standard_errors && fin.standard_errors.length > 0) {
+        console.log(`  standard_errors[0]: ${fin.standard_errors[0].toFixed(4)}`);
     }
     if (fin.diagnostics) {
         console.log(`  diagnostics.rmse: ${fin.diagnostics.rmse.toFixed(3)}`);
         console.log(`  diagnostics.r_squared: ${fin.diagnostics.r_squared.toFixed(3)}`);
         if (fin.diagnostics.aic != null) console.log(`  diagnostics.aic: ${fin.diagnostics.aic.toFixed(3)}`);
     }
-    if (fin.robustnessWeights && fin.robustnessWeights.length > 0) {
-        console.log(`  robustnessWeights[0]: ${fin.robustnessWeights[0].toFixed(4)}`);
+    if (fin.robustness_weights && fin.robustness_weights.length > 0) {
+        console.log(`  robustness_weights[0]: ${fin.robustness_weights[0].toFixed(4)}`);
     }
     console.log();
 }

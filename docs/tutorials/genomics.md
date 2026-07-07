@@ -134,7 +134,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     }).fit(positions, observed);
 
     // Smoothed profile in result.y
-    // CI bounds in result.confidenceLower/Upper
+    // CI bounds in result.confidence_lower/upper
     ```
 
 === "WebAssembly"
@@ -149,7 +149,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     }).fit(positions, observed);
 
     // Smoothed profile in result.y
-    // CI bounds in result.confidenceLower/Upper
+    // CI bounds in result.confidence_lower/upper
     ```
 
 === "C++"

@@ -84,7 +84,7 @@ async function main() {
         return_diagnostics: true
     }).fit(x, y);
 
-    console.log('R²:', resultWithOptions.diagnostics?.rSquared);
+    console.log('R²:', resultWithOptions.diagnostics?.r_squared);
 }
 
 main();

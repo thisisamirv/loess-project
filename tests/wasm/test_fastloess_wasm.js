@@ -78,7 +78,7 @@ test('WASM options parsing', () => {
 
 // ---- Parameter coverage tests ----
 
-test('WASM smooth: iterations, zeroWeightFallback, returnResiduals, returnRobustnessWeights', () => {
+test('WASM smooth: iterations, zero_weight_fallback, return_residuals, return_robustness_weights', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);
 
@@ -92,7 +92,7 @@ test('WASM smooth: iterations, zeroWeightFallback, returnResiduals, returnRobust
     assert.strictEqual(result.y.length, 5);
 });
 
-test('WASM smooth: confidenceIntervals, predictionIntervals', () => {
+test('WASM smooth: confidence_intervals, prediction_intervals', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const y = new Float64Array([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
@@ -105,7 +105,7 @@ test('WASM smooth: confidenceIntervals, predictionIntervals', () => {
     assert.ok(result.prediction_upper !== null);
 });
 
-test('WASM smooth: degree, surfaceMode, distanceMetric', () => {
+test('WASM smooth: degree, surface_mode, distance_metric', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([1, 4, 9, 16, 25]);
 
@@ -121,7 +121,7 @@ test('WASM smooth: degree, surfaceMode, distanceMetric', () => {
     assert.strictEqual(r2.y.length, 5);
 });
 
-test('WASM smooth: returnSe', () => {
+test('WASM smooth: return_se', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const y = new Float64Array([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
@@ -130,7 +130,7 @@ test('WASM smooth: returnSe', () => {
     assert.ok(result.trace_hat !== null);
 });
 
-test('WASM smooth: autoConverge, parallel', () => {
+test('WASM smooth: auto_converge, parallel', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);
 
@@ -142,7 +142,7 @@ test('WASM smooth: autoConverge, parallel', () => {
     assert.strictEqual(result.y.length, 5);
 });
 
-test('WASM streaming: mergeStrategy', () => {
+test('WASM streaming: merge_strategy', () => {
     const x = new Float64Array(Array.from({ length: 40 }, (_, i) => i));
     const y = new Float64Array(Array.from({ length: 40 }, (_, i) => i * 2));
 

@@ -10,21 +10,21 @@ export declare class LoessResult {
   get x(): Float64Array
   get y(): Float64Array
   get residuals(): Float64Array | null
-  get standardErrors(): Float64Array | null
-  get confidenceLower(): Float64Array | null
-  get confidenceUpper(): Float64Array | null
-  get predictionLower(): Float64Array | null
-  get predictionUpper(): Float64Array | null
-  get robustnessWeights(): Float64Array | null
+  get standard_errors(): Float64Array | null
+  get confidence_lower(): Float64Array | null
+  get confidence_upper(): Float64Array | null
+  get prediction_lower(): Float64Array | null
+  get prediction_upper(): Float64Array | null
+  get robustness_weights(): Float64Array | null
   get diagnostics(): Diagnostics | null
-  get cvScores(): Float64Array | null
-  get fractionUsed(): number
-  get iterationsUsed(): number | null
+  get cv_scores(): Float64Array | null
+  get fraction_used(): number
+  get iterations_used(): number | null
   get enp(): number | null
-  get traceHat(): number | null
+  get trace_hat(): number | null
   get delta1(): number | null
   get delta2(): number | null
-  get residualScale(): number | null
+  get residual_scale(): number | null
   get leverage(): Float64Array | null
   get dimensions(): number
 }
@@ -43,11 +43,11 @@ export declare class StreamingLoess {
 export interface Diagnostics {
   rmse: number
   mae: number
-  rSquared: number
+  r_squared: number
   aic?: number
   aicc?: number
-  effectiveDf?: number
-  residualSd: number
+  effective_df?: number
+  residual_sd: number
 }
 
 export interface OnlineOptions {
@@ -58,10 +58,10 @@ export interface OnlineOptions {
 
 export interface OnlineOutput {
   smoothed: number
-  stdError?: number
+  std_error?: number
   residual?: number
-  robustnessWeight?: number
-  iterationsUsed?: number
+  robustness_weight?: number
+  iterations_used?: number
 }
 
 export interface SmoothOptions {

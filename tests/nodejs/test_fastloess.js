@@ -109,7 +109,7 @@ test('SmoothOptions: iterations, zero_weight_fallback, return_residuals, return_
     const result = model.fit(x, y);
 
     assert.ok(result.residuals !== null);
-    assert.ok(result.robustnessWeights !== null);
+    assert.ok(result.robustness_weights !== null);
 });
 
 test('SmoothOptions: confidence_intervals, prediction_intervals', () => {
@@ -123,13 +123,13 @@ test('SmoothOptions: confidence_intervals, prediction_intervals', () => {
     });
     const result = model.fit(x, y);
 
-    assert.ok(result.confidenceLower !== null);
-    assert.ok(result.confidenceUpper !== null);
-    assert.ok(result.predictionLower !== null);
-    assert.ok(result.predictionUpper !== null);
+    assert.ok(result.confidence_lower !== null);
+    assert.ok(result.confidence_upper !== null);
+    assert.ok(result.prediction_lower !== null);
+    assert.ok(result.prediction_upper !== null);
 });
 
-test('SmoothOptions: returnSe', () => {
+test('SmoothOptions: return_se', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const y = new Float64Array([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
@@ -137,7 +137,7 @@ test('SmoothOptions: returnSe', () => {
     const result = model.fit(x, y);
 
     assert.ok(result.enp !== null);
-    assert.ok(result.traceHat !== null);
+    assert.ok(result.trace_hat !== null);
     assert.ok(result.leverage !== null);
 });
 
@@ -174,7 +174,7 @@ test('SmoothOptions: minkowski via string format', () => {
     assert.strictEqual(r.y.length, 10);
 });
 
-test('SmoothOptions: weightedMetricWeights', () => {
+test('SmoothOptions: weighted_metric_weights', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const y = new Float64Array([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
@@ -198,7 +198,7 @@ test('SmoothOptions: auto_converge, parallel', () => {
     assert.strictEqual(r.y.length, 5);
 });
 
-test('SmoothOptions: cvFractions, cvMethod, cvK', () => {
+test('SmoothOptions: cv_fractions, cv_method, cv_k', () => {
     const x = new Float64Array(Array.from({ length: 30 }, (_, i) => i));
     const y = new Float64Array(Array.from({ length: 30 }, (_, i) => i * 2));
 
@@ -207,8 +207,8 @@ test('SmoothOptions: cvFractions, cvMethod, cvK', () => {
         cv_method: 'kfold',
         cv_k: 3,
     }).fit(x, y);
-    assert.ok(r.cvScores !== null);
-    assert.strictEqual(r.cvScores.length, 3);
+    assert.ok(r.cv_scores !== null);
+    assert.strictEqual(r.cv_scores.length, 3);
 });
 
 test('StreamingOptions: merge_strategy', () => {

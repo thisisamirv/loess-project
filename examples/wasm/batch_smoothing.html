@@ -13,12 +13,12 @@
    9. Scaling methods (MAR, MAD, Mean)
   10. Boundary policies
   11. Zero-weight fallback strategies
-  12. Polynomial degrees + iterationsUsed
+  12. Polynomial degrees + iterations_used
   13. Distance metrics
   14. Surface modes and standard errors
   15. Additional weight functions
   16. LOOCV and auto-converge
-  17. Interpolation tuning (surfaceMode effects)
+  17. Interpolation tuning (surface_mode effects)
 -->
 <!DOCTYPE html>
 <html>
@@ -69,7 +69,7 @@
             const x = new Float64Array([1, 2, 3, 4, 5]);
             const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
             const r = new Loess({ fraction: 0.5, iterations: 3 }).fit(x, y);
-            log(`  fractionUsed=${r.fractionUsed}`);
+            log(`  fraction_used=${r.fraction_used}`);
             log(`  Smoothed: [${Array.from(r.y).map(v => v.toFixed(3)).join(', ')}]`);
             log("");
         }
@@ -80,10 +80,10 @@
             const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8]);
             const y = new Float64Array([2.1, 4.0, 5.9, 25.0, 10.1, 12.0, 14.1, 15.9]);
             const r = new Loess({
-                fraction: 0.5, iterations: 5, robustnessMethod: "bisquare",
-                returnRobustnessWeights: true, returnResiduals: true
+                fraction: 0.5, iterations: 5, robustness_method: "bisquare",
+                return_robustness_weights: true, return_residuals: true
             }).fit(x, y);
-            const w = r.robustnessWeights;
+            const w = r.robustness_weights;
             if (w) for (let i = 0; i < w.length; i++) {
                 if (w[i] < 0.5) log(`  Outlier at index ${i} (y=${y[i]}): weight=${w[i].toFixed(3)}`);
             }
@@ -98,11 +98,11 @@
             const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
             const r = new Loess({
                 fraction: 0.5, iterations: 3,
-                confidenceIntervals: 0.95, predictionIntervals: 0.95
+                confidence_intervals: 0.95, prediction_intervals: 0.95
             }).fit(x, y);
             log("  x\ty_smooth\tconf_low\tconf_high\tpred_low\tpred_high");
             for (let i = 0; i < r.y.length; i++) {
-                log(`  ${r.x[i].toFixed(0)}\t${r.y[i].toFixed(4)}\t${r.confidenceLower[i].toFixed(4)}\t${r.confidenceUpper[i].toFixed(4)}\t${r.predictionLower[i].toFixed(4)}\t${r.predictionUpper[i].toFixed(4)}`);
+                log(`  ${r.x[i].toFixed(0)}\t${r.y[i].toFixed(4)}\t${r.confidence_lower[i].toFixed(4)}\t${r.confidence_upper[i].toFixed(4)}\t${r.prediction_lower[i].toFixed(4)}\t${r.prediction_upper[i].toFixed(4)}`);
             }
             log("");
         }
@@ -113,14 +113,14 @@
             const n = 20, x = new Float64Array(n), y = new Float64Array(n);
             for (let i = 0; i < n; i++) { x[i] = i + 1; y[i] = 2 * x[i] + 1 + Math.sin(x[i] * 0.5); }
             const r = new Loess({
-                cvFractions: [0.2, 0.3, 0.5, 0.7], cvMethod: "kfold", cvK: 5,
-                iterations: 2, returnDiagnostics: true
+                cv_fractions: [0.2, 0.3, 0.5, 0.7], cv_method: "kfold", cv_k: 5,
+                iterations: 2, return_diagnostics: true
             }).fit(x, y);
-            log(`  Selected fraction: ${r.fractionUsed}`);
-            if (r.cvScores) {
+            log(`  Selected fraction: ${r.fraction_used}`);
+            if (r.cv_scores) {
                 const fs = [0.2, 0.3, 0.5, 0.7];
                 log("  CV Scores:");
-                for (let i = 0; i < fs.length; i++) log(`    fraction=${fs[i]}: ${r.cvScores[i].toFixed(4)}`);
+                for (let i = 0; i < fs.length; i++) log(`    fraction=${fs[i]}: ${r.cv_scores[i].toFixed(4)}`);
             }
             log("");
         }
@@ -131,24 +131,24 @@
             const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8]);
             const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
             const r = new Loess({
-                fraction: 0.5, iterations: 3, confidenceIntervals: 0.95,
-                predictionIntervals: 0.95, returnDiagnostics: true,
-                returnResiduals: true, returnRobustnessWeights: true
+                fraction: 0.5, iterations: 3, confidence_intervals: 0.95,
+                prediction_intervals: 0.95, return_diagnostics: true,
+                return_residuals: true, return_robustness_weights: true
             }).fit(x, y);
             const d = r.diagnostics;
             if (d) {
                 log("  Diagnostics:");
                 log(`    RMSE:        ${d.rmse.toFixed(6)}`);
                 log(`    MAE:         ${d.mae.toFixed(6)}`);
-                log(`    R²:          ${d.rSquared.toFixed(6)}`);
-                log(`    Residual SD: ${d.residualSd.toFixed(6)}`);
+                log(`    R²:          ${d.r_squared.toFixed(6)}`);
+                log(`    Residual SD: ${d.residual_sd.toFixed(6)}`);
                 if (d.aic != null) log(`    AIC:         ${d.aic.toFixed(2)}`);
                 if (d.aicc != null) log(`    AICc:        ${d.aicc.toFixed(2)}`);
-                if (d.effectiveDf != null) log(`    Eff. DF:     ${d.effectiveDf.toFixed(2)}`);
+                if (d.effective_df != null) log(`    Eff. DF:     ${d.effective_df.toFixed(2)}`);
             }
             log(`  smoothed[0]: ${r.y[0].toFixed(5)}`);
             if (r.residuals) log(`  residuals[0]: ${r.residuals[0].toFixed(5)}`);
-            if (r.robustnessWeights) log(`  robWeight[0]: ${r.robustnessWeights[0].toFixed(4)}`);
+            if (r.robustness_weights) log(`  robWeight[0]: ${r.robustness_weights[0].toFixed(4)}`);
             log("");
         }
 
@@ -158,7 +158,7 @@
             const x = new Float64Array([1, 2, 3, 4, 5]);
             const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
             for (const k of ["tricube", "epanechnikov", "gaussian", "biweight"]) {
-                const r = new Loess({ fraction: 0.5, weightFunction: k }).fit(x, y);
+                const r = new Loess({ fraction: 0.5, weight_function: k }).fit(x, y);
                 log(`  ${k}: [${Array.from(r.y).map(v => v.toFixed(3)).join(', ')}]`);
             }
             log("");
@@ -171,10 +171,10 @@
             const y = new Float64Array([2.0, 4.1, 20.0, 8.2, 9.8]);
             for (const m of ["bisquare", "huber", "talwar"]) {
                 const r = new Loess({
-                    fraction: 0.5, iterations: 5, robustnessMethod: m,
-                    returnRobustnessWeights: true
+                    fraction: 0.5, iterations: 5, robustness_method: m,
+                    return_robustness_weights: true
                 }).fit(x, y);
-                const ws = r.robustnessWeights ? Array.from(r.robustnessWeights).map(v => v.toFixed(3)).join(', ') : 'N/A';
+                const ws = r.robustness_weights ? Array.from(r.robustness_weights).map(v => v.toFixed(3)).join(', ') : 'N/A';
                 log(`  ${m}:`);
                 log(`    Smoothed: [${Array.from(r.y).map(v => v.toFixed(2)).join(', ')}]`);
                 log(`    Weights:  [${ws}]`);
@@ -190,7 +190,7 @@
             const t0 = performance.now();
             const r = new Loess({ parallel: true }).fit(x, y);
             const ms = (performance.now() - t0).toFixed(2);
-            log(`  ${n} points in ${ms}ms, fractionUsed=${r.fractionUsed}, y[0]=${r.y[0].toFixed(4)}`);
+            log(`  ${n} points in ${ms}ms, fraction_used=${r.fraction_used}, y[0]=${r.y[0].toFixed(4)}`);
             log("");
         }
 
@@ -199,7 +199,7 @@
             log("Example 9: Scaling Methods (MAR, MAD, Mean)");
             const { x, y } = makeLinear(20);
             for (const m of ["mar", "mad", "mean"]) {
-                const r = new Loess({ fraction: 0.5, scalingMethod: m }).fit(x, y);
+                const r = new Loess({ fraction: 0.5, scaling_method: m }).fit(x, y);
                 log(`  ${m}: y[0]=${r.y[0].toFixed(3)}`);
             }
             log("");
@@ -210,7 +210,7 @@
             log("Example 10: Boundary Policies");
             const { x, y } = makeLinear(30);
             for (const p of ["extend", "reflect", "zero", "noboundary"]) {
-                const r = new Loess({ fraction: 0.5, boundaryPolicy: p }).fit(x, y);
+                const r = new Loess({ fraction: 0.5, boundary_policy: p }).fit(x, y);
                 log(`  ${p}: first=${r.y[0].toFixed(2)}, last=${r.y[r.y.length - 1].toFixed(2)}`);
             }
             log("");
@@ -221,7 +221,7 @@
             log("Example 11: Zero-Weight Fallback Strategies");
             const { x, y } = makeLinear(20);
             for (const fb of ["use_local_mean", "return_original", "return_none"]) {
-                const r = new Loess({ fraction: 0.5, zeroWeightFallback: fb }).fit(x, y);
+                const r = new Loess({ fraction: 0.5, zero_weight_fallback: fb }).fit(x, y);
                 log(`  ${fb}: y[0]=${r.y[0].toFixed(3)}`);
             }
             log("");
@@ -229,11 +229,11 @@
 
         // ── Example 12: Polynomial Degrees ────────────────────────────────────
         function example_12_polynomial_degrees() {
-            log("Example 12: Polynomial Degrees + iterationsUsed");
+            log("Example 12: Polynomial Degrees + iterations_used");
             const { x, y } = makeLinear(30);
             for (const deg of ["constant", "linear", "quadratic", "cubic", "quartic"]) {
                 const r = new Loess({ fraction: 0.5, iterations: 2, degree: deg }).fit(x, y);
-                log(`  ${deg}: y[0]=${r.y[0].toFixed(3)}, iterationsUsed=${r.iterationsUsed}`);
+                log(`  ${deg}: y[0]=${r.y[0].toFixed(3)}, iterations_used=${r.iterations_used}`);
             }
             log("");
         }
@@ -243,17 +243,17 @@
             log("Example 13: Distance Metrics");
             const { x, y } = makeLinear(20);
             for (const m of ["euclidean", "normalized", "manhattan", "chebyshev"]) {
-                const r = new Loess({ fraction: 0.5, distanceMetric: m }).fit(x, y);
+                const r = new Loess({ fraction: 0.5, distance_metric: m }).fit(x, y);
                 log(`  ${m}: y[0]=${r.y[0].toFixed(3)}`);
             }
             // Minkowski with custom p via "minkowski:p" format
-            const rMink = new Loess({ fraction: 0.5, distanceMetric: "minkowski:3" }).fit(x, y);
+            const rMink = new Loess({ fraction: 0.5, distance_metric: "minkowski:3" }).fit(x, y);
             log(`  minkowski(p=3): y[0]=${rMink.y[0].toFixed(3)}`);
             log("");
         }
 
         // ── Example 14: Surface Modes and Standard Errors ─────────────────────
-        // Note: enp, traceHat, delta1, delta2, residualScale, leverage are not
+        // Note: enp, trace_hat, delta1, delta2, residual_scale, leverage are not
         // exposed by the WASM binding (LoessResult). Use the Node.js binding
         // for full hat-matrix statistics.
         function example_14_surface_modes_and_se() {
@@ -261,22 +261,22 @@
             const { x, y } = makeLinear(30);
 
             const rDirect = new Loess({
-                fraction: 0.5, surfaceMode: "direct",
-                returnSe: true, confidenceIntervals: 0.95,
-                predictionIntervals: 0.95
+                fraction: 0.5, surface_mode: "direct",
+                return_se: true, confidence_intervals: 0.95,
+                prediction_intervals: 0.95
             }).fit(x, y);
-            log("  surfaceMode=direct:");
-            log(`    confidenceLower non-null: ${rDirect.confidenceLower != null}`);
-            log(`    predictionLower non-null: ${rDirect.predictionLower != null}`);
-            if (rDirect.standardErrors) log(`    standardErrors[0]: ${rDirect.standardErrors[0].toFixed(4)}`);
+            log("  surface_mode=direct:");
+            log(`    confidence_lower non-null: ${rDirect.confidence_lower != null}`);
+            log(`    prediction_lower non-null: ${rDirect.prediction_lower != null}`);
+            if (rDirect.standard_errors) log(`    standard_errors[0]: ${rDirect.standard_errors[0].toFixed(4)}`);
 
             const rInterp = new Loess({
-                fraction: 0.5, surfaceMode: "interpolation",
-                returnSe: true
+                fraction: 0.5, surface_mode: "interpolation",
+                return_se: true
             }).fit(x, y);
-            log("  surfaceMode=interpolation:");
+            log("  surface_mode=interpolation:");
             log(`    y[0]: ${rInterp.y[0].toFixed(3)}`);
-            if (rInterp.standardErrors) log(`    standardErrors[0]: ${rInterp.standardErrors[0].toFixed(4)}`);
+            if (rInterp.standard_errors) log(`    standard_errors[0]: ${rInterp.standard_errors[0].toFixed(4)}`);
             log("");
         }
 
@@ -286,7 +286,7 @@
             const x = new Float64Array([1, 2, 3, 4, 5]);
             const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
             for (const k of ["uniform", "triangle", "cosine"]) {
-                const r = new Loess({ fraction: 0.5, weightFunction: k }).fit(x, y);
+                const r = new Loess({ fraction: 0.5, weight_function: k }).fit(x, y);
                 log(`  ${k}: [${Array.from(r.y).map(v => v.toFixed(3)).join(', ')}]`);
             }
             log("");
@@ -298,38 +298,38 @@
             const n = 20, x = new Float64Array(n), y = new Float64Array(n);
             for (let i = 0; i < n; i++) { x[i] = i + 1; y[i] = 2 * x[i] + 1 + Math.sin(x[i] * 0.5); }
 
-            const rLoocv = new Loess({ cvFractions: [0.3, 0.5, 0.7], cvMethod: "loocv" }).fit(x, y);
-            log(`  LOOCV selected fraction: ${rLoocv.fractionUsed}`);
-            if (rLoocv.cvScores) log(`  LOOCV scores: [${Array.from(rLoocv.cvScores).map(v => v.toFixed(4)).join(', ')}]`);
+            const rLoocv = new Loess({ cv_fractions: [0.3, 0.5, 0.7], cv_method: "loocv" }).fit(x, y);
+            log(`  LOOCV selected fraction: ${rLoocv.fraction_used}`);
+            if (rLoocv.cv_scores) log(`  LOOCV scores: [${Array.from(rLoocv.cv_scores).map(v => v.toFixed(4)).join(', ')}]`);
 
-            const rKfold = new Loess({ cvFractions: [0.2, 0.4, 0.6], cvMethod: "kfold", cvK: 5 }).fit(x, y);
-            log(`  KFold(k=5) selected fraction: ${rKfold.fractionUsed}`);
-            if (rKfold.cvScores) log(`  KFold scores: [${Array.from(rKfold.cvScores).map(v => v.toFixed(4)).join(', ')}]`);
+            const rKfold = new Loess({ cv_fractions: [0.2, 0.4, 0.6], cv_method: "kfold", cv_k: 5 }).fit(x, y);
+            log(`  KFold(k=5) selected fraction: ${rKfold.fraction_used}`);
+            if (rKfold.cv_scores) log(`  KFold scores: [${Array.from(rKfold.cv_scores).map(v => v.toFixed(4)).join(', ')}]`);
 
-            const rAc = new Loess({ fraction: 0.5, autoConverge: 1e-4 }).fit(x, y);
-            log(`  autoConverge=1e-4: iterationsUsed=${rAc.iterationsUsed}`);
+            const rAc = new Loess({ fraction: 0.5, auto_converge: 1e-4 }).fit(x, y);
+            log(`  auto_converge=1e-4: iterations_used=${rAc.iterations_used}`);
             log("");
         }
 
-        // ── Example 17: Interpolation Tuning (surfaceMode effects) ────────────
+        // ── Example 17: Interpolation Tuning (surface_mode effects) ────────────
         function example_17_interpolation_tuning() {
-            log("Example 17: Interpolation Tuning (surfaceMode effects)");
+            log("Example 17: Interpolation Tuning (surface_mode effects)");
             const n = 50, { x, y } = makeLinear(n);
 
-            const rInterp = new Loess({ fraction: 0.5, surfaceMode: "interpolation" }).fit(x, y);
+            const rInterp = new Loess({ fraction: 0.5, surface_mode: "interpolation" }).fit(x, y);
             log(`  interpolation: y[0]=${rInterp.y[0].toFixed(3)}, y[-1]=${rInterp.y[n - 1].toFixed(3)}`);
 
-            const rDirect = new Loess({ fraction: 0.5, surfaceMode: "direct" }).fit(x, y);
+            const rDirect = new Loess({ fraction: 0.5, surface_mode: "direct" }).fit(x, y);
             log(`  direct:        y[0]=${rDirect.y[0].toFixed(3)}, y[-1]=${rDirect.y[n - 1].toFixed(3)}`);
 
             for (const frac of [0.2, 0.5, 0.8]) {
-                const r = new Loess({ fraction: frac, surfaceMode: "direct" }).fit(x, y);
+                const r = new Loess({ fraction: frac, surface_mode: "direct" }).fit(x, y);
                 log(`  direct fraction=${frac}: y[0]=${r.y[0].toFixed(3)}`);
             }
 
-            // returnSe works with interpolation mode too (fractionUsed/iterationsUsed)
-            const rSe = new Loess({ fraction: 0.5, surfaceMode: "interpolation", returnSe: true }).fit(x, y);
-            log(`  interpolation+SE: fractionUsed=${rSe.fractionUsed}, iterationsUsed=${rSe.iterationsUsed}`);
+            // return_se works with interpolation mode too (fraction_used/iterations_used)
+            const rSe = new Loess({ fraction: 0.5, surface_mode: "interpolation", return_se: true }).fit(x, y);
+            log(`  interpolation+SE: fraction_used=${rSe.fraction_used}, iterations_used=${rSe.iterations_used}`);
             log("");
         }
 
