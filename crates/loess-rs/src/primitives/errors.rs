@@ -231,8 +231,15 @@ impl Display for LoessError {
                     )
                 }
             }
-            Self::InvalidOption { option, value, valid } => {
-                write!(f, "Invalid value '{value}' for '{option}'. Valid options: {valid}")
+            Self::InvalidOption {
+                option,
+                value,
+                valid,
+            } => {
+                write!(
+                    f,
+                    "Invalid value '{value}' for '{option}'. Valid options: {valid}"
+                )
             }
             Self::ParseErrors(errors) => {
                 write!(f, "Multiple configuration errors ({} total):", errors.len())?;

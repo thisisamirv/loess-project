@@ -84,7 +84,7 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     y = trend_true .+ randn(500) .* 3.0
 
     # Extract trend
-    result = fit(Loess(fraction=0.1, iterations=3), t, y)
+    result = fit(Loess(; fraction=0.1, iterations=3), t, y)
 
     println("Extracted trend points: ", length(result.y))
     ```
@@ -94,7 +94,7 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     const fl = require('fastloess');
 
     // t and y are your time series arrays (Float64Array)
-    const result = fl.Loess({ 
+    const result = new fl.Loess({ 
         fraction: 0.1, 
         iterations: 3 
     }).fit(t, y);
@@ -122,7 +122,7 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     fastloess::Loess basic_model(trend_opts);
     auto basic_result = basic_model.fit(t, y).value();
 
-    // Trend in basic_result.yVector()
+    // Trend in basic_result.y_vector()
     ```
 
 ---
@@ -179,7 +179,7 @@ Remove trend to analyze residual patterns:
 === "Julia"
     ```julia
     # Smooth to get trend and residuals
-    result = fit(Loess(fraction=0.3, iterations=3, return_residuals=true), t, y)
+    result = fit(Loess(; fraction=0.3, iterations=3, return_residuals=true), t, y)
 
     trend = result.y
     detrended = result.residuals
@@ -223,7 +223,7 @@ Remove trend to analyze residual patterns:
     });
     auto result = model.fit(t, y).value();
 
-    auto trend = result.yVector();
+    auto trend = result.y_vector();
     auto detrended = result.residuals();
     ```
 
@@ -283,7 +283,7 @@ Remove trend to analyze residual patterns:
 
 === "Julia"
     ```julia
-    result = fit(Loess(
+    result = fit(Loess(;
         fraction=0.2,
         iterations=3,
         confidence_intervals=0.95,
@@ -298,7 +298,7 @@ Remove trend to analyze residual patterns:
     ```javascript
     const fl = require('fastloess');
 
-    const result = fl.Loess({
+    const result = new fl.Loess({
         fraction: 0.2,
         iterations: 3,
         prediction_intervals: 0.95
@@ -317,7 +317,7 @@ Remove trend to analyze residual patterns:
         prediction_intervals: 0.95
     }).fit(t, y);
 
-    // Access result.predictionLower() and result.predictionUpper()
+    // Access result.predictionLower and result.predictionUpper
     ```
 
 === "C++"
@@ -332,7 +332,7 @@ Remove trend to analyze residual patterns:
     });
     auto result = forecast_model.fit(t, y).value();
 
-    // Access result.predictionLower() and result.predictionUpper()
+    // Access result.prediction_lower() and result.prediction_upper()
     ```
 
 ---
@@ -376,7 +376,7 @@ LOESS naturally handles irregular time sampling:
     y_irregular = 10.0 .+ t_irregular .* 0.3 .+ randn(200) .* 2.0
 
     # LOESS handles this seamlessly
-    result = fit(Loess(fraction=0.2), t_irregular, y_irregular)
+    result = fit(Loess(; fraction=0.2), t_irregular, y_irregular)
     ```
 
 === "Node.js"
@@ -384,7 +384,7 @@ LOESS naturally handles irregular time sampling:
     const fl = require('fastloess');
 
     // No special handling needed for irregular spacing
-    const result = fl.Loess({ fraction: 0.2 }).fit(tIrregular, yIrregular);
+    const result = new fl.Loess({ fraction: 0.2 }).fit(tIrregular, yIrregular);
     ```
 
 === "WebAssembly"
@@ -454,7 +454,7 @@ Use different fractions to extract features at different scales:
     ```julia
     fractions = [0.05, 0.2, 0.5]
 
-    results = [fit(Loess(fraction=f), t, y) for f in fractions]
+    results = [fit(Loess(; fraction=f), t, y) for f in fractions]
     # results[i].y contains smoothed values for each fraction
     ```
 
@@ -464,7 +464,7 @@ Use different fractions to extract features at different scales:
 
     const scales = [0.05, 0.2, 0.5];
     const trends = scales.map(f => {
-        return fl.Loess({ fraction: f }).fit(t, y).y;
+        return new fl.Loess({ fraction: f }).fit(t, y).y;
     });
     ```
 
@@ -487,7 +487,7 @@ Use different fractions to extract features at different scales:
     for (auto f : scales) {
         fastloess::Loess scale_model({ .fraction = f });
         auto result = scale_model.fit(t, y).value();
-        trends.push_back(result.yVector());
+        trends.push_back(result.y_vector());
     }
     ```
 
@@ -573,7 +573,7 @@ Biological application:
     hours = collect(range(0, 24, step=0.5))
     expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hours)) .* 10.0
 
-    result = fit(Loess(
+    result = fit(Loess(;
         fraction=0.3,
         iterations=3,
         confidence_intervals=0.95,
@@ -606,7 +606,7 @@ Biological application:
         return_diagnostics: true
     }).fit(hours, expression);
 
-    console.log("R²:", result.diagnostics.r_squared);
+    console.log("R²:", result.diagnostics?.rSquared);
     ```
 
 === "C++"

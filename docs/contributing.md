@@ -235,7 +235,7 @@ pytest tests/python/
 # R tests (via make r)
 
 # Julia tests
-julia tests/julia/test_FastLOESS.jl
+julia --project=bindings/julia/julia tests/julia/test_FastLOESS.jl
 
 # Node.js tests (via make nodejs)
 

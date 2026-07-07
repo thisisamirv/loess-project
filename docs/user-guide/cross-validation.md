@@ -64,7 +64,7 @@ Split data into K folds, train on K-1, validate on 1.
     ```julia
     using FastLOESS
 
-    result = fit(Loess(
+    result = fit(Loess(;
         cv_method="kfold",
         cv_k=5,
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
@@ -77,7 +77,7 @@ Split data into K folds, train on K-1, validate on 1.
     ```javascript
     const result = new Loess({
         cv_method: "kfold",
-        cvK: 5,
+        cv_k: 5,
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
     }).fit(x, y);
 
@@ -89,7 +89,7 @@ Split data into K folds, train on K-1, validate on 1.
     ```javascript
     const result = new Loess({
         cv_method: "kfold",
-        cvK: 5,
+        cv_k: 5,
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
     }).fit(x, y);
 
@@ -109,7 +109,7 @@ Split data into K folds, train on K-1, validate on 1.
     fastloess::Loess model(opts);
     auto result = model.fit(x, y).value();
 
-    std::cout << "Selected fraction: " << result.fractionUsed() << std::endl;
+    std::cout << "Selected fraction: " << result.fraction_used() << std::endl;
     ```
 
 ---
@@ -145,7 +145,7 @@ Each point is held out once. Most thorough but slowest.
 
 === "Julia"
     ```julia
-    result = fit(Loess(
+    result = fit(Loess(;
         cv_method="loocv",
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
     ), x, y)
@@ -218,7 +218,7 @@ Set a seed for reproducible fold assignments:
 
 === "Julia"
     ```julia
-    result = fit(Loess(
+    result = fit(Loess(;
         cv_method="kfold",
         cv_k=5,
         cv_fractions=[0.3, 0.5, 0.7],
@@ -230,7 +230,7 @@ Set a seed for reproducible fold assignments:
     ```javascript
     const result = new Loess({
         cv_method: "kfold",
-        cvK: 5,
+        cv_k: 5,
         cv_fractions: [0.3, 0.5, 0.7],
         cv_seed: 42
     }).fit(x, y);
@@ -240,7 +240,7 @@ Set a seed for reproducible fold assignments:
     ```javascript
     const result = new Loess({
         cv_method: "kfold",
-        cvK: 5,
+        cv_k: 5,
         cv_fractions: [0.3, 0.5, 0.7],
         cv_seed: 42
     }).fit(x, y);
@@ -337,7 +337,7 @@ Lower MSE indicates better fit on held-out data.
 === "Julia"
     ```julia
     # Example output
-    result = fit(Loess(cv_method="kfold", cv_k=5,
+    result = fit(Loess(; cv_method="kfold", cv_k=5,
                     cv_fractions=[0.1, 0.3, 0.5, 0.7]), x, y)
 
     # Fraction  | CV Score (MSE)
@@ -352,7 +352,7 @@ Lower MSE indicates better fit on held-out data.
     // Example output
     const result = new Loess({
         cv_method: "kfold",
-        cvK: 5,
+        cv_k: 5,
         cv_fractions: [0.1, 0.3, 0.5, 0.7]
     }).fit(x, y);
 
@@ -368,7 +368,7 @@ Lower MSE indicates better fit on held-out data.
     // Example output
     const result = new Loess({
         cv_method: "kfold",
-        cvK: 5,
+        cv_k: 5,
         cv_fractions: [0.1, 0.3, 0.5, 0.7]
     }).fit(x, y);
 

@@ -67,7 +67,7 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Julia"
 
     ```julia
-    using FastLOESS
+    using FastLOESS, Random, Printf
 
     # 100-point noisy sine wave
     x = collect(range(0, 2π, length=100))
@@ -128,7 +128,7 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
         fastloess::Loess model({ .fraction = 0.3, .iterations = 3 });
         auto result = model.fit(x, y).value();
 
-        std::cout << "First smoothed: " << result.yVector()[0]
+        std::cout << "First smoothed: " << result.y_vector()[0]
                   << "  (true: " << std::sin(x[0]) << ")\n";
         return 0;
     }
@@ -196,7 +196,7 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Julia"
 
     ```julia
-    result = fit(Loess(
+    result = fit(Loess(;
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
@@ -213,7 +213,9 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Node.js"
 
     ```javascript
-    const result = new fastloess.Loess({
+    const { Loess } = require('fastloess');
+
+    const result = new Loess({
         fraction: 0.5,
         iterations: 3,
         confidence_intervals: 0.95,
@@ -256,8 +258,8 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     auto result = model.fit(x, y).value();
 
     // Access standard C++ vectors
-    auto lower = result.confidenceLower();
-    auto upper = result.confidenceUpper();
+    auto lower = result.confidence_lower();
+    auto upper = result.confidence_upper();
     double r2 = result.diagnostics().r_squared();
     ```
 
@@ -270,19 +272,15 @@ LOESS can robustly handle outliers through iterative reweighting:
 === "R"
 
     ```r
-    use fastLoess::prelude::*;
-    use std::f64::consts::PI;
-
-    let mut model = StreamingLoess::new()
+    x_out <- seq(1, 6)
     y_with_outlier <- c(2, 4, 6, 50, 10, 12)
-        .iterations(3)
-    model <- Loess(
+
+    result <- Loess(
         fraction = 0.5,
-        .build()?;
+        iterations = 5,
         robustness_method = "bisquare",
         return_robustness_weights = TRUE
-    )
-    result <- model$fit(x_out, y_with_outlier)
+    )$fit(x_out, y_with_outlier)
 
     # Check downweighted points
     weights <- result$robustness_weights
@@ -344,7 +342,7 @@ LOESS can robustly handle outliers through iterative reweighting:
     x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     y_with_outlier = [2.0, 4.0, 6.0, 50.0, 10.0, 12.0]
 
-    result = fit(Loess(
+    result = fit(Loess(;
         fraction=0.5,
         iterations=5,
         robustness_method="bisquare",
@@ -421,7 +419,7 @@ LOESS can robustly handle outliers through iterative reweighting:
     auto result = model.fit(x_out, y_outlier).value();
 
     // Check weights
-    auto weights = result.robustnessWeights();
+    auto weights = result.robustness_weights();
     for (size_t i = 0; i < weights.size(); ++i) {
         if (weights[i] < 0.5) {
             std::cout << "Point " << i << " is outlier (weight: " << weights[i] << ")\n";
@@ -437,18 +435,19 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 
 === "R"
 
-    let model = Loess::new()
+    ```r
     library(rfastloess)
 
     set.seed(42)
     x <- seq(0, 10 * pi, length.out = 5000)
+    y <- sin(x / pi) * exp(-x / 30) + rnorm(5000, sd = 0.15)
 
-    # Process in 1 000-point chunks with 100-point overlap
+    # Process in 1000-point chunks with 100-point overlap
     model <- StreamingLoess(
-        fraction        = 0.2,
-        chunk_size      = 1000L,
-        overlap         = 100L,
-        merge_strategy  = "weighted_average"
+        fraction       = 0.2,
+        chunk_size     = 1000L,
+        overlap        = 100L,
+        merge_strategy = "weighted_average"
     )
 
     chunk_size <- 1000L
@@ -504,7 +503,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
             .fraction(0.2)
             .chunk_size(1000)
             .overlap(100)
-            .build()?;;
+            .build()?;
 
         for chunk in x.chunks(1000).zip(y.chunks(1000)) {
             model.process_chunk(chunk.0, chunk.1)?;
@@ -518,7 +517,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 === "Julia"
 
     ```julia
-    using FastLOESS
+    using FastLOESS, Random
 
     x = collect(range(0, 10π, length=5000))
     rng = MersenneTwister(42)
@@ -581,6 +580,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 
     const chunk_size = 1000;
     for (let start = 0; start <= 4000; start += chunk_size) {
+        const end = Math.min(start + chunk_size, n);
         model.processChunk(x.slice(start, end), y.slice(start, end));
     }
     const result = model.finalize();
@@ -613,13 +613,13 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
 
         for (int start = 0; start <= 4000; start += 1000) {
             int end = std::min(start + 1000, n);
-            model.processChunk(
+            model.process_chunk(
                 std::vector<double>(x.begin() + start, x.begin() + end),
                 std::vector<double>(y.begin() + start, y.begin() + end)
             );
         }
         auto result = model.finalize().value();
-        std::cout << "Smoothed " << result.yVector().size() << " points\n";
+        std::cout << "Smoothed " << result.y_vector().size() << " points\n";
         return 0;
     }
     ```

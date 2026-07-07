@@ -155,7 +155,7 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
 
     ```html
     <script type="module">
-      import { smooth } from "https://cdn.jsdelivr.net/npm/fastloess-wasm@0.99/index.js";
+      import { Loess } from "https://cdn.jsdelivr.net/npm/fastloess-wasm@<version>/index.js";
     </script>
     ```
 
@@ -230,7 +230,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     x = [1.0, 2.0, 3.0, 4.0, 5.0]
     y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-    result = fit(Loess(fraction=0.5, iterations=3), x, y)
+    result = fit(Loess(; fraction=0.5, iterations=3), x, y)
     println(result.y)
     ```
 
@@ -249,7 +249,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 === "WebAssembly"
 
     ```javascript
-    import { smooth } from "fastloess-wasm";
+    import { Loess } from "fastloess-wasm";
 
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
@@ -276,7 +276,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
         fastloess::Loess model(options);
         auto result = model.fit(x, y).value();
 
-        for (const auto& val : result.yVector()) {
+        for (const auto& val : result.y_vector()) {
             std::cout << val << " ";
         }
         std::cout << std::endl;

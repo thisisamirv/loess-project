@@ -102,7 +102,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 === "Julia"
     ```julia
-    result = fit(Loess(fraction=0.3), x, y)
+    result = fit(Loess(; fraction=0.3), x, y)
     ```
 
 === "Node.js"
@@ -153,7 +153,7 @@ Number of robustness iterations for outlier resistance.
 
 === "Julia"
     ```julia
-    result = fit(Loess(iterations=5), x, y)
+    result = fit(Loess(; iterations=5), x, y)
     ```
 
 === "Node.js"
@@ -224,7 +224,7 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
 === "Julia"
     ```julia
-    result = fit(Loess(surface_mode="direct"), x, y)
+    result = fit(Loess(; surface_mode="direct"), x, y)
     ```
 
 === "Node.js"
@@ -276,7 +276,7 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
 
 === "Julia"
     ```julia
-    result = fit(Loess(cell=0.05), x, y)
+    result = fit(Loess(; cell=0.05), x, y)
     ```
 
 === "Node.js"
@@ -321,7 +321,7 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 
 === "Julia"
     ```julia
-    result = fit(Loess(interpolation_vertices=50), x, y)
+    result = fit(Loess(; interpolation_vertices=50), x, y)
     ```
 
 === "Node.js"
@@ -398,7 +398,7 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 
 === "Julia"
     ```julia
-    result = fit(Loess(
+    result = fit(Loess(;
         dimensions=2,
         distance_metric="weighted",
         weighted_metric_weights=[2.0, 0.5]
@@ -470,7 +470,7 @@ See [Weight Functions](kernels.md) for detailed comparison.
 
 === "Julia"
     ```julia
-    result = fit(Loess(weight_function="epanechnikov"), x, y)
+    result = fit(Loess(; weight_function="epanechnikov"), x, y)
     ```
 
 === "Node.js"
@@ -522,7 +522,7 @@ See [Robustness](robustness.md) for detailed comparison.
 
 === "Julia"
     ```julia
-    result = fit(Loess(robustness_method="talwar"), x, y)
+    result = fit(Loess(; robustness_method="talwar"), x, y)
     ```
 
 === "Node.js"
@@ -577,7 +577,7 @@ For example:
 
 === "Julia"
     ```julia
-    result = fit(Loess(boundary_policy="reflect"), x, y)
+    result = fit(Loess(; boundary_policy="reflect"), x, y)
     ```
 
 === "Node.js"
@@ -628,7 +628,7 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 
 === "Julia"
     ```julia
-    result = fit(Loess(degree="quadratic", boundary_degree_fallback=true), x, y)
+    result = fit(Loess(; degree="quadratic", boundary_degree_fallback=true), x, y)
     ```
 
 === "Node.js"
@@ -682,7 +682,7 @@ For example:
 
 === "Julia"
     ```julia
-    result = fit(Loess(scaling_method="mad"), x, y)
+    result = fit(Loess(; scaling_method="mad"), x, y)
     ```
 
 === "Node.js / WebAssembly"
@@ -731,7 +731,7 @@ For example:
 
 === "Julia"
     ```julia
-    result = fit(Loess(zero_weight_fallback="use_local_mean"), x, y)
+    result = fit(Loess(; zero_weight_fallback="use_local_mean"), x, y)
     ```
 
 === "Node.js"
@@ -776,7 +776,7 @@ Enable early stopping when robustness weights stabilize.
 
 === "Julia"
     ```julia
-    result = fit(Loess(iterations=20, auto_converge=1e-6), x, y)
+    result = fit(Loess(; iterations=20, auto_converge=1e-6), x, y)
     ```
 
 === "Node.js"
@@ -829,7 +829,7 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
 
 === "Julia"
     ```julia
-    result = fit(Loess(parallel=false), x, y)
+    result = fit(Loess(; parallel=false), x, y)
     ```
 
 === "Node.js"
@@ -961,7 +961,7 @@ Include residuals (`y - smoothed`) in the output.
 
 === "Julia"
     ```julia
-    result = fit(Loess(return_residuals=true), x, y)
+    result = fit(Loess(; return_residuals=true), x, y)
     println(result.residuals)
     ```
 
@@ -1027,7 +1027,7 @@ Include fit quality metrics (Batch and Streaming only).
 
 === "Julia"
     ```julia
-    result = fit(Loess(return_diagnostics=true), x, y)
+    result = fit(Loess(; return_diagnostics=true), x, y)
     println("R²: ", result.diagnostics.r_squared)
     ```
 
@@ -1040,7 +1040,7 @@ Include fit quality metrics (Batch and Streaming only).
 === "WebAssembly"
     ```javascript
     const result = new Loess({ return_diagnostics: true }).fit(x, y);
-    console.log("R²:", result.diagnostics.r_squared);
+    console.log("R²:", result.diagnostics?.rSquared);
     ```
 
 === "C++"
@@ -1082,7 +1082,7 @@ Include final robustness weights (useful for outlier detection).
 
 === "Julia"
     ```julia
-    result = fit(Loess(iterations=3, return_robustness_weights=true), x, y)
+    result = fit(Loess(; iterations=3, return_robustness_weights=true), x, y)
     # Points with result.robustness_weights < 0.5 are likely outliers
     ```
 
@@ -1102,7 +1102,7 @@ Include final robustness weights (useful for outlier detection).
     ```cpp
     fastloess::Loess model({ .iterations = 3, .return_robustness_weights = true });
     auto result = model.fit(x, y).value();
-    auto weights = result.robustnessWeights();
+    auto weights = result.robustness_weights();
     ```
 
 ---
@@ -1133,7 +1133,7 @@ See [Intervals](intervals.md) for detailed usage.
 
 === "Julia"
     ```julia
-    result = fit(Loess(confidence_intervals=0.95, prediction_intervals=0.95), x, y)
+    result = fit(Loess(; confidence_intervals=0.95, prediction_intervals=0.95), x, y)
     ```
 
 === "Node.js"
@@ -1186,7 +1186,7 @@ Selection strategy for automated parameter tuning.
 
 === "Julia"
     ```julia
-    result = fit(Loess(cv_method="kfold", cv_k=5), x, y)
+    result = fit(Loess(; cv_method="kfold", cv_k=5), x, y)
     ```
 
 === "Node.js"
@@ -1238,7 +1238,7 @@ Points per chunk in Streaming mode.
 
 === "Julia"
     ```julia
-    model = StreamingLoess(chunk_size=10000)
+    model = StreamingLoess(; chunk_size=10000)
     process_chunk(model, x, y)
     result = finalize(model)
     ```
@@ -1258,7 +1258,7 @@ Points per chunk in Streaming mode.
     fastloess::StreamingOptions opts;
     opts.chunk_size = 10000;
     fastloess::StreamingLoess stream(opts);
-    (void)stream.processChunk(x, y);
+    (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
     ```
 
@@ -1289,7 +1289,7 @@ Overlap between chunks in Streaming mode.
 
 === "Julia"
     ```julia
-    model = StreamingLoess(overlap=1000)
+    model = StreamingLoess(; overlap=1000)
     process_chunk(model, x, y)
     result = finalize(model)
     ```
@@ -1309,7 +1309,7 @@ Overlap between chunks in Streaming mode.
     fastloess::StreamingOptions opts;
     opts.overlap = 1000;
     fastloess::StreamingLoess stream(opts);
-    (void)stream.processChunk(x, y);
+    (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
     ```
 
@@ -1349,7 +1349,7 @@ For example:
 
 === "Julia"
     ```julia
-    model = StreamingLoess(merge_strategy="weighted_average")
+    model = StreamingLoess(; merge_strategy="weighted_average")
     process_chunk(model, x, y)
     result = finalize(model)
     ```
@@ -1368,7 +1368,7 @@ For example:
     ```cpp
     // merge_strategy is handled internally in C++
     fastloess::StreamingLoess stream({});
-    (void)stream.processChunk(x, y);
+    (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
     ```
 
@@ -1399,7 +1399,7 @@ Maximum points held in memory for Online mode.
 
 === "Julia"
     ```julia
-    model = OnlineLoess(window_capacity=500)
+    model = OnlineLoess(; window_capacity=500)
     result = add_point(model, x[1], y[1])  # nothing until window fills
     ```
 
@@ -1449,7 +1449,7 @@ Minimum points required before Online filter starts producing outputs.
 
 === "Julia"
     ```julia
-    model = OnlineLoess(min_points=10)
+    model = OnlineLoess(; min_points=10)
     result = add_point(model, x[1], y[1])  # nothing until 10 points seen
     ```
 
@@ -1506,7 +1506,7 @@ For example:
 
 === "Julia"
     ```julia
-    model = OnlineLoess(update_mode="full")
+    model = OnlineLoess(; update_mode="full")
     result = add_point(model, x[1], y[1])
     ```
 

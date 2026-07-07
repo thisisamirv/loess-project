@@ -83,7 +83,7 @@ Standard mode for complete datasets. **Supports all features.**
     ```julia
     using FastLOESS
 
-    result = fit(Loess(
+    result = fit(Loess(;
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
@@ -214,7 +214,7 @@ Process large datasets in chunks with configurable overlap.
     ```julia
     using FastLOESS
 
-    model = StreamingLoess(
+    model = StreamingLoess(;
         fraction=0.3,
         iterations=2,
         chunk_size=5000,
@@ -272,7 +272,7 @@ Process large datasets in chunks with configurable overlap.
     opts.overlap = 500;
 
     fastloess::StreamingLoess stream(opts);
-    (void)stream.processChunk(x, y);
+    (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
     ```
 
@@ -361,7 +361,7 @@ Incremental updates with a sliding window for real-time data.
     ```julia
     using FastLOESS
 
-    model = OnlineLoess(
+    model = OnlineLoess(;
         fraction=0.2,
         iterations=1,
         window_capacity=100,
@@ -427,7 +427,7 @@ Incremental updates with a sliding window for real-time data.
     for (size_t i = 0; i < x.size(); ++i) {
         auto out = model.add_point(x[i], y[i]).value();
         if (out.has_value())
-            std::cout << out.smoothed() << std::endl;
+            std::cout << out.value().smoothed() << std::endl;
     }
     ```
 

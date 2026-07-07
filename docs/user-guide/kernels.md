@@ -54,7 +54,7 @@ $$w(u) = (1 - |u|^3)^3$$
 
 === "Julia"
     ```julia
-    result = fit(Loess(weight_function="tricube"), x, y)
+    result = fit(Loess(; weight_function="tricube"), x, y)
     ```
 
 === "Node.js"
@@ -102,7 +102,7 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 === "Julia"
     ```julia
-    result = fit(Loess(weight_function="epanechnikov"), x, y)
+    result = fit(Loess(; weight_function="epanechnikov"), x, y)
     ```
 
 === "Node.js"
@@ -150,7 +150,7 @@ $$w(u) = \exp(-u^2/2)$$
 
 === "Julia"
     ```julia
-    result = fit(Loess(weight_function="gaussian"), x, y)
+    result = fit(Loess(; weight_function="gaussian"), x, y)
     ```
 
 === "Node.js"
@@ -198,7 +198,7 @@ $$w(u) = (1 - u^2)^2$$
 
 === "Julia"
     ```julia
-    result = fit(Loess(weight_function="biweight"), x, y)
+    result = fit(Loess(; weight_function="biweight"), x, y)
     ```
 
 === "Node.js"
@@ -246,7 +246,7 @@ $$w(u) = \cos(\pi u / 2)$$
 
 === "Julia"
     ```julia
-    result = fit(Loess(weight_function="cosine"), x, y)
+    result = fit(Loess(; weight_function="cosine"), x, y)
     ```
 
 === "Node.js"
@@ -294,7 +294,7 @@ $$w(u) = 1 - |u|$$
 
 === "Julia"
     ```julia
-    result = fit(Loess(weight_function="triangle"), x, y)
+    result = fit(Loess(; weight_function="triangle"), x, y)
     ```
 
 === "Node.js"
@@ -342,7 +342,7 @@ $$w(u) = 1$$
 
 === "Julia"
     ```julia
-    result = fit(Loess(weight_function="uniform"), x, y)
+    result = fit(Loess(; weight_function="uniform"), x, y)
     ```
 
 === "Node.js"

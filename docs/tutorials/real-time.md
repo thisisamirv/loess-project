@@ -90,7 +90,7 @@ For true real-time applications where each point must be processed immediately.
     temperatures = 20.0 .+ 5.0 .* sin.(times ./ 10.0) .+ randn(100)
 
     # Process with online mode
-    model = OnlineLoess(
+    model = OnlineLoess(;
         fraction=0.3,
         window_capacity=25,
         min_points=5,
@@ -159,7 +159,7 @@ For true real-time applications where each point must be processed immediately.
     for (size_t i = 0; i < times.size(); ++i) {
         auto res = model.add_point(times[i], temperatures[i]).value();
         if (res.has_value()) {
-            std::cout << "Time " << times[i] << ": " << res.smoothed() << std::endl;
+            std::cout << "Time " << times[i] << ": " << res.value().smoothed() << std::endl;
         }
     }
     ```
@@ -241,7 +241,7 @@ For large datasets that arrive in batches or files.
     y = sin.(x ./ 1000) .+ randn(length(x)) .* 0.1
 
     # Streaming mode handles everything internally
-    model = StreamingLoess(
+    model = StreamingLoess(;
         fraction=0.05,
         chunk_size=10000,
         overlap=1000,
@@ -294,10 +294,10 @@ For large datasets that arrive in batches or files.
     opts.overlap = 500;
 
     fastloess::StreamingLoess stream(opts);
-    (void)stream.processChunk(x, y);
+    (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
 
-    std::cout << "Processed " << result.yVector().size() << " points" << std::endl;
+    std::cout << "Processed " << result.y_vector().size() << " points" << std::endl;
     ```
 
 !!! warning "Always call finalize()"
@@ -421,7 +421,7 @@ For large datasets that arrive in batches or files.
         sw_opts.fraction = 0.4;
         fastloess::Loess model(sw_opts);
         auto result = model.fit(windowX, windowY).value();
-        const auto smoothed = result.yVector().back();
+        const auto smoothed = result.y_vector().back();
         (void)smoothed;
     }
     ```

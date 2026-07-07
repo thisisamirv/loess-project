@@ -65,7 +65,7 @@ Estimate uncertainty in the smoothed curve itself.
     ```julia
     using FastLOESS
 
-    result = fit(Loess(fraction=0.5, confidence_intervals=0.95), x, y)
+    result = fit(Loess(; fraction=0.5, confidence_intervals=0.95), x, y)
 
     for i in 1:length(result.y)
         println("x=$(result.x[i]): y=$(result.y[i]) [$(result.confidence_lower[i]), $(result.confidence_upper[i])]")
@@ -97,8 +97,8 @@ Estimate uncertainty in the smoothed curve itself.
     fastloess::Loess model({ .fraction = 0.5, .confidence_intervals = 0.95 });
     auto result = model.fit(x, y).value();
 
-    auto ci_lower = result.confidenceLower();
-    auto ci_upper = result.confidenceUpper();
+    auto ci_lower = result.confidence_lower();
+    auto ci_upper = result.confidence_upper();
     ```
 
 ---
@@ -144,7 +144,7 @@ Estimate where new observations might fall.
 
 === "Julia"
     ```julia
-    result = fit(Loess(fraction=0.5, prediction_intervals=0.95), x, y)
+    result = fit(Loess(; fraction=0.5, prediction_intervals=0.95), x, y)
 
     println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
     ```
@@ -202,7 +202,7 @@ Request both types simultaneously:
 
 === "Julia"
     ```julia
-    result = fit(Loess(
+    result = fit(Loess(;
         fraction=0.5,
         confidence_intervals=0.95,
         prediction_intervals=0.95
@@ -268,7 +268,7 @@ Common levels and their z-values:
 === "Julia"
     ```julia
     # 99% confidence interval
-    result = fit(Loess(confidence_intervals=0.99), x, y)
+    result = fit(Loess(; confidence_intervals=0.99), x, y)
     ```
 
 === "Node.js"
@@ -323,7 +323,7 @@ Access standard errors directly (available when intervals are computed):
 
 === "Julia"
     ```julia
-    result = fit(Loess(confidence_intervals=0.95), x, y)
+    result = fit(Loess(; confidence_intervals=0.95), x, y)
 
     for (i, se) in enumerate(result.standard_errors)
         println("Point $i: SE = $se")

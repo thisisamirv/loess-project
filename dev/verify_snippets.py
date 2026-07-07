@@ -24,6 +24,7 @@ Usage
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
 import os
 import re
@@ -31,7 +32,9 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+import threading
 import time
+from collections import defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, List, Optional, Tuple
@@ -1447,48 +1450,72 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
     print()
 
-    # ---- Run snippets -------------------------------------------------------
+    # ---- Run snippets (parallel per language) --------------------------------
     results: List[RunResult] = []
     n_pass = n_fail = n_skip = 0
+    _print_lock = threading.Lock()
 
-    for s, runner in runnable:
-        label = s.label
-        sys.stdout.write(f"  {cyan(runner):20s}  {label} … ")
-        sys.stdout.flush()
+    # Group runnable snippets by runner so each language executes as a unit.
+    # Rust snippets share a single temp project (main.rs), so they must remain
+    # sequential within their language — parallelism is across languages only.
+    _by_runner: dict[str, List[Tuple[Snippet, str]]] = defaultdict(list)
+    for _s, _r in runnable:
+        _by_runner[_r].append((_s, _r))
 
-        run_fn = _RUNNERS.get(runner)
-        if run_fn is None:
-            print(yellow("SKIP (no runner)"))
-            n_skip += 1
-            results.append(
-                RunResult(
+    def _run_language(lang_items: List[Tuple[Snippet, str]]) -> List[RunResult]:
+        lang_results: List[RunResult] = []
+        for s, runner in lang_items:
+            label = s.label
+            run_fn = _RUNNERS.get(runner)
+            if run_fn is None:
+                res = RunResult(
                     snippet=s,
                     runner=runner,
                     skipped=True,
                     skip_reason="no runner implementation",
                 )
-            )
-            continue
+                with _print_lock:
+                    print(
+                        f"  {cyan(runner):20s}  {label} … {yellow('SKIP (no runner)')}"
+                    )
+            else:
+                res = run_fn(s, args.timeout)
+                with _print_lock:
+                    sys.stdout.write(f"  {cyan(runner):20s}  {label} … ")
+                    if res.skipped:
+                        print(yellow(f"SKIP ({res.skip_reason})"))
+                    elif res.passed:
+                        print(green(f"PASS ({res.duration:.2f}s)"))
+                    else:
+                        print(red(f"FAIL ({res.duration:.2f}s, exit {res.returncode})"))
+                        if args.verbose:
+                            _print_failure(s, res)
 
-        res = run_fn(s, args.timeout)
+            lang_results.append(res)
+            if args.stop_on_fail and not res.skipped and not res.passed:
+                with _print_lock:
+                    print(
+                        red(
+                            f"\n[{runner}] Stopped after first failure (--stop-on-fail)."
+                        )
+                    )
+                break
+        return lang_results
 
-        if res.skipped:
-            print(yellow(f"SKIP ({res.skip_reason})"))
-            n_skip += 1
-        elif res.passed:
-            print(green(f"PASS ({res.duration:.2f}s)"))
-            n_pass += 1
-        else:
-            print(red(f"FAIL ({res.duration:.2f}s, exit {res.returncode})"))
-            n_fail += 1
-            if args.verbose:
-                _print_failure(s, res)
-
-        results.append(res)
-
-        if args.stop_on_fail and n_fail > 0:
-            print(red("\nStopped after first failure (--stop-on-fail)."))
-            break
+    n_workers = len(_by_runner) or 1
+    with concurrent.futures.ThreadPoolExecutor(max_workers=n_workers) as executor:
+        futures = [
+            executor.submit(_run_language, items) for items in _by_runner.values()
+        ]
+        for future in concurrent.futures.as_completed(futures):
+            for res in future.result():
+                results.append(res)
+                if res.skipped:
+                    n_skip += 1
+                elif res.passed:
+                    n_pass += 1
+                else:
+                    n_fail += 1
 
     # ---- Summary ------------------------------------------------------------
     print()

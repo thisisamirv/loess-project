@@ -77,7 +77,7 @@ int main() {
     // Smooth
     fastloess::Loess model(options);
     auto expected = model.fit(x, y);
-    if (!expected.hasValue()) {
+    if (!expected.has_value()) {
         std::cerr << "Error: " << expected.error() << std::endl;
         return 1;
     }
@@ -86,7 +86,7 @@ int main() {
     std::cout << "R²: " << result.diagnostics().r_squared() << std::endl;
 
     // Access smoothed values
-    auto smoothed = result.yVector();
+    auto smoothed = result.y_vector();
 
     return 0;
 }

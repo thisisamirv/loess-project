@@ -112,7 +112,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     using FastLOESS
 
     # positions and observed are your methylation data
-    result = fit(Loess(
+    result = fit(Loess(;
         fraction=0.1,
         iterations=3,
         confidence_intervals=0.95
@@ -160,8 +160,8 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     fastloess::Loess model({ .fraction = 0.1, .iterations = 3, .confidence_intervals = 0.95 });
     auto result = model.fit(positions, observed).value();
 
-    // Smoothed profile in result.yVector()
-    // CI bounds in result.confidenceLower()/result.confidenceUpper()
+    // Smoothed profile in result.y_vector()
+    // CI bounds in result.confidence_lower()/result.confidence_upper()
     ```
 
 ---
@@ -253,7 +253,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     using FastLOESS
 
     # positions and observed are your ChIP-seq data
-    result = fit(Loess(fraction=0.05, iterations=5), positions, observed)
+    result = fit(Loess(; fraction=0.05, iterations=5), positions, observed)
 
     # Find peaks above 75th percentile
     threshold = quantile(result.y, 0.75)
@@ -299,8 +299,8 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
     // Find peaks above threshold
     std::vector<double> peaks;
-    const auto& y_vals = result.yVector();
-    const auto& x_vals = result.xVector();
+    const auto& y_vals = result.y_vector();
+    const auto& x_vals = result.x_vector();
     for (size_t i = 0; i < y_vals.size(); ++i) {
         if (y_vals[i] > 25.0) {
             peaks.push_back(x_vals[i]);
@@ -358,7 +358,7 @@ For whole-genome data that doesn't fit in memory:
     using FastLOESS
 
     # coverage and positions are chromosome-scale vectors
-    model = StreamingLoess(
+    model = StreamingLoess(;
         fraction=0.05,
         chunk_size=100000,
         overlap=10000,
@@ -411,7 +411,7 @@ For whole-genome data that doesn't fit in memory:
     s_opts.chunk_size = 100000;
     s_opts.overlap = 10000;
     fastloess::StreamingLoess stream(s_opts);
-    (void)stream.processChunk(positions, coverage);
+    (void)stream.process_chunk(positions, coverage);
     auto result = stream.finalize().value();
     ```
 

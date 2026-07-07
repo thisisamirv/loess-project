@@ -48,7 +48,7 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 === "Julia"
     ```julia
-    result = fit(Loess(iterations=3, robustness_method="bisquare"), x, y)
+    result = fit(Loess(; iterations=3, robustness_method="bisquare"), x, y)
     ```
 
 === "Node.js"
@@ -97,7 +97,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 === "Julia"
     ```julia
-    result = fit(Loess(iterations=3, robustness_method="huber"), x, y)
+    result = fit(Loess(; iterations=3, robustness_method="huber"), x, y)
     ```
 
 === "Node.js"
@@ -146,7 +146,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 === "Julia"
     ```julia
-    result = fit(Loess(iterations=3, robustness_method="talwar"), x, y)
+    result = fit(Loess(; iterations=3, robustness_method="talwar"), x, y)
     ```
 
 === "Node.js"
@@ -219,7 +219,7 @@ Use robustness weights to identify potential outliers:
 
 === "Julia"
     ```julia
-    result = fit(Loess(iterations=5, return_robustness_weights=true), x, y)
+    result = fit(Loess(; iterations=5, return_robustness_weights=true), x, y)
 
     for (i, w) in enumerate(result.robustness_weights)
         if w < 0.5
@@ -255,7 +255,7 @@ Use robustness weights to identify potential outliers:
     fastloess::Loess model({ .iterations = 5, .return_robustness_weights = true });
     auto result = model.fit(x, y).value();
 
-    auto weights = result.robustnessWeights();
+    auto weights = result.robustness_weights();
     for (size_t i = 0; i < weights.size(); ++i) {
         if (weights[i] < 0.5) {
             std::cout << "Potential outlier at " << i << std::endl;
@@ -297,7 +297,7 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 === "Julia"
     ```julia
-    result = fit(Loess(iterations=3, scaling_method="mad"), x, y)
+    result = fit(Loess(; iterations=3, scaling_method="mad"), x, y)
     ```
 
 === "Node.js"
@@ -345,7 +345,7 @@ Stop iterations early when weights stabilize:
 
 === "Julia"
     ```julia
-    result = fit(Loess(iterations=10, auto_converge=1e-6), x, y)
+    result = fit(Loess(; iterations=10, auto_converge=1e-6), x, y)
     ```
 
 === "Node.js"

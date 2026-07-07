@@ -50,7 +50,7 @@ npm install fastloess-wasm
 
 ```html
 <script type="module">
-  import init, { smooth } from 'https://unpkg.com/fastloess-wasm@latest';
+  import init, { Loess } from 'https://unpkg.com/fastloess-wasm@latest';
   
   await init();
   // Ready to use
@@ -62,7 +62,7 @@ npm install fastloess-wasm
 ### Browser (ES Modules)
 
 ```javascript
-import init, { smooth, smoothStreaming, smoothOnline } from 'fastloess-wasm';
+import init, { Loess } from 'fastloess-wasm';
 
 async function main() {
     // Initialize WASM module
@@ -84,7 +84,7 @@ async function main() {
         return_diagnostics: true
     }).fit(x, y);
 
-    console.log('R²:', resultWithOptions.diagnostics.r_squared);
+    console.log('R²:', resultWithOptions.diagnostics?.rSquared);
 }
 
 main();
@@ -93,7 +93,7 @@ main();
 ### Node.js
 
 ```javascript
-const { smooth } = require('fastloess-wasm');
+const { Loess } = require('fastloess-wasm');
 
 // Same API as browser
 const result = new Loess({ fraction: 0.3 }).fit(x, y);

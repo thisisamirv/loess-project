@@ -74,7 +74,7 @@ result2 = fit(Loess(
     return_diagnostics=true
 ), x, y)
 
-println("R\u00b2: ", result2.diagnostics.r_squared)
+println("R²: ", result2.diagnostics.r_squared)
 
 # Access confidence intervals
 lower = result2.confidence_lower

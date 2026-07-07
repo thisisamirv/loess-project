@@ -245,7 +245,7 @@ Install the LOESS library for your preferred language.
     const x = new Float64Array([1.0, 2.0, 3.0]);
     const y = new Float64Array([2.0, 4.0, 6.0]);
     
-    const result = new fl.Loess().fit(x, y);
+    const result = new fl.Loess({}).fit(x, y);
     console.log("Installed successfully!");
     ```
 

@@ -90,7 +90,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
     opts.chunk_size = 5000;
     opts.overlap = 500;
     fastloess::StreamingLoess stream(opts);
-    (void)stream.processChunk(x, y);
+    (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
     ```
 
