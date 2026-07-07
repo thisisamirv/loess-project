@@ -23,6 +23,7 @@ use fastLoess::internals::api::{
 use fastLoess::prelude::LoessResult;
 
 thread_local! {
+    #[allow(clippy::missing_const_for_thread_local)]
     static CPP_LAST_ERROR: RefCell<Option<CString>> = const { RefCell::new(None) };
 }
 
@@ -48,12 +49,14 @@ fn error_result_from(err: shared_parse::BindingError) -> CppLoessResult {
     error_result(&err.message)
 }
 
+#[allow(clippy::result_large_err)]
 fn map_invalid_arg_result<T, E: ToString>(
     result: std::result::Result<T, E>,
 ) -> std::result::Result<T, CppLoessResult> {
     shared_parse::map_invalid_arg(result).map_err(error_result_from)
 }
 
+#[allow(clippy::result_large_err)]
 fn map_runtime_result<T, E: ToString>(
     result: std::result::Result<T, E>,
 ) -> std::result::Result<T, CppLoessResult> {
@@ -498,9 +501,9 @@ pub unsafe extern "C" fn cpp_loess_new(
                     .then_some(interpolation_vertices as usize),
                 boundary_degree_fallback: (boundary_degree_fallback >= 0)
                     .then_some(boundary_degree_fallback != 0),
-                cv_fractions: cv_fractions_vec.as_deref(),
-                cv_method: Some(cv_method_str.as_str()),
-                cv_k: Some(cv_k_usize),
+                cv_fractions: None,
+                cv_method: None,
+                cv_k: None,
                 cv_seed: None,
             },
         ) {

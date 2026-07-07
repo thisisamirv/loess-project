@@ -537,7 +537,7 @@ void testLoessCustomWeights() {
     const std::vector<size_t> non_outlier = {0, 1, 2, 4, 5, 6};
     double err_no_w = 0.0;
     double err_w = 0.0;
-    for (size_t idx : non_outlier) {
+    for (const size_t idx : non_outlier) {
       err_no_w += std::abs(r_no_w.y_vector()[idx] - y_true[idx]);
       err_w += std::abs(r_w.y_vector()[idx] - y_true[idx]);
     }
@@ -617,6 +617,7 @@ void testStreamingMergeStrategies() {
     StreamingOptions opts;
     opts.fraction = k_fraction_half;
     opts.chunk_size = k_chunk_half;
+    opts.overlap = 0;
     opts.merge_strategy = merge_strat;
     StreamingLoess stream(opts);
     auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
@@ -668,12 +669,8 @@ void testOnlineUpdateModeAndParams() {
     x_vals[i] = static_cast<double>(i);
     y_vals[i] = k_linear_slope * x_vals[i];
   }
-  bool any_output = false;
   for (size_t i = 0; i < k_window_capacity; ++i) {
-    auto out = online.add_point(x_vals[i], y_vals[i]).value();
-    if (out.has_value()) {
-      any_output = true;
-    }
+    online.add_point(x_vals[i], y_vals[i]).value();
   }
   assertTrue(true); // add_point succeeded for all points
 }

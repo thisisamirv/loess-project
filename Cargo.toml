@@ -1,13 +1,13 @@
 [workspace]
 resolver = "3"
 members = [
-    "crates/loess-rs",
+    # "crates/loess-rs",
     # "crates/fastLoess",
     # "bindings/python",
     # "bindings/julia",
     # "bindings/nodejs",
     # "bindings/wasm",
-    # "bindings/cpp",
+    "bindings/cpp",
     "examples",
     "tests",
     # "validation/fastLoess",

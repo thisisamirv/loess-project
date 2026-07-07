@@ -160,10 +160,39 @@ struct StreamingOptions : public LoessOptions {
 
 /**
  * @brief Options for online LOESS.
+ *
+ * Identical fields to LoessOptions but defaults parallel to false, since
+ * online LOESS processes one point at a time and parallelism rarely helps.
  */
-struct OnlineOptions : public LoessOptions {
-  bool parallel = false; ///< online LOESS fits one point at a time; parallelism
-                         ///< rarely helps
+struct OnlineOptions {
+  double fraction = detail::k_default_fraction;
+  int iterations = 3;
+  std::string weight_function = "tricube";
+  std::string robustness_method = "bisquare";
+  std::string scaling_method = "mad";
+  std::string boundary_policy = "extend";
+  std::string zero_weight_fallback = "use_local_mean";
+  double confidence_intervals = NAN;
+  double prediction_intervals = NAN;
+  double auto_converge = NAN;
+  bool return_diagnostics = false;
+  bool return_residuals = false;
+  bool return_robustness_weights = false;
+  bool return_se = false;
+  bool parallel = false; ///< Parallelism rarely helps for single-point updates
+  std::string degree = "linear";
+  int dimensions = 1;
+  std::string distance_metric = "normalized";
+  std::string surface_mode = "interpolation";
+  std::vector<double> cv_fractions;
+  std::string cv_method = "kfold";
+  int cv_k = detail::k_default_cv_k;
+  std::vector<double> weighted_metric_weights;
+  double cell = NAN;
+  int interpolation_vertices = 0;
+  int boundary_degree_fallback = -1;
+  uint64_t cv_seed = 0;
+  // Online-specific fields
   int window_capacity = detail::k_default_window_capacity;
   int min_points = 3;
   std::string update_mode = "full";
