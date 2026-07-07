@@ -388,11 +388,11 @@ fn test_online_builder_defaults() {
 /// Test OnlineLoessBuilder setters.
 #[test]
 fn test_online_builder_setters() {
-    let b = OnlineLoessBuilder::<f64>::default()
-        .boundary_policy(BoundaryPolicy::Extend)
-        .update_mode(UpdateMode::Incremental)
-        .window_capacity(100)
-        .min_points(5);
+    let mut b = OnlineLoessBuilder::<f64>::default();
+    b.boundary_policy = BoundaryPolicy::Extend;
+    b.update_mode = UpdateMode::Incremental;
+    b.window_capacity = 100;
+    b.min_points = 5;
     assert_eq!(b.boundary_policy, BoundaryPolicy::Extend);
     assert_eq!(b.update_mode, UpdateMode::Incremental);
     assert_eq!(b.window_capacity, 100);

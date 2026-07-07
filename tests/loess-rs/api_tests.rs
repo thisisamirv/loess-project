@@ -27,7 +27,7 @@ use std::fmt::Write;
 use loess_rs::internals::algorithms::regression::PolynomialDegree;
 use loess_rs::internals::algorithms::robustness::RobustnessMethod;
 use loess_rs::internals::api::{
-    Batch, KFold, LOOCV, Loess, Online, OnlineLoess, Streaming, StreamingLoess,
+    Batch, Loess, Online, OnlineLoess, Streaming, StreamingLoess,
 };
 use loess_rs::internals::engine::output::LoessResult;
 use loess_rs::internals::engine::validator::Validator;
@@ -167,7 +167,9 @@ fn test_validate_empty_cv_fractions() {
     // K-Fold with empty fractions
     let fracs: [f64; 0] = [];
     let res = Loess::<f64>::new()
-        .cross_validate(KFold(3, &fracs))
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_fractions(fracs.to_vec())
         .adapter(Batch)
         .build();
 
@@ -184,14 +186,18 @@ fn test_validate_empty_cv_fractions() {
 fn test_validate_invalid_fractions() {
     // Fraction <= 0
     let bad1 = Loess::<f64>::new()
-        .cross_validate(KFold(3, &[0.0f64]))
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_fractions(vec![0.0f64])
         .adapter(Batch)
         .build();
     assert!(matches!(bad1, Err(LoessError::InvalidFraction(_))));
 
     // Fraction > 1
     let bad2 = Loess::<f64>::new()
-        .cross_validate(KFold(3, &[1.5f64]))
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_fractions(vec![1.5f64])
         .adapter(Batch)
         .build();
     assert!(matches!(bad2, Err(LoessError::InvalidFraction(_))));

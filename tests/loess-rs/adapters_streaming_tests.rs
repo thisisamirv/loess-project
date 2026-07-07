@@ -316,10 +316,10 @@ fn test_streaming_builder_defaults() {
 /// Test StreamingLoessBuilder setters.
 #[test]
 fn test_streaming_builder_setters() {
-    let b = StreamingLoessBuilder::<f64>::default()
-        .boundary_policy(BoundaryPolicy::Extend)
-        .chunk_size(100)
-        .overlap(10);
+    let mut b = StreamingLoessBuilder::<f64>::default();
+    b.boundary_policy = BoundaryPolicy::Extend;
+    b.chunk_size = 100;
+    b.overlap = 10;
     assert_eq!(b.boundary_policy, BoundaryPolicy::Extend);
     assert_eq!(b.chunk_size, 100);
     assert_eq!(b.overlap, 10);

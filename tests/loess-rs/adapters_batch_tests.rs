@@ -22,7 +22,7 @@ use loess_rs::prelude::*;
 use num_traits::float::Float;
 
 use loess_rs::internals::adapters::batch::BatchLoessBuilder;
-use loess_rs::internals::api::{Batch, KFold, LOOCV};
+use loess_rs::internals::api::Batch;
 use loess_rs::internals::math::boundary::BoundaryPolicy;
 
 // ============================================================================
@@ -268,7 +268,9 @@ fn test_batch_cv_kfold() {
     let fractions = vec![0.2, 0.5, 0.8];
 
     let result = Loess::new()
-        .cross_validate(KFold(3, &fractions))
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_fractions(fractions.to_vec())
         .interpolation_vertices(30)
         .adapter(Batch)
         .build()
@@ -304,7 +306,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 1
     let result1 = Loess::new()
-        .cross_validate(KFold(5, &fractions).seed(seed))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(fractions.to_vec())
+        .cv_seed(seed)
         .interpolation_vertices(30)
         .adapter(Batch)
         .build()
@@ -314,7 +319,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 2 (same seed)
     let result2 = Loess::new()
-        .cross_validate(KFold(5, &fractions).seed(seed))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(fractions.to_vec())
+        .cv_seed(seed)
         .interpolation_vertices(30)
         .adapter(Batch)
         .build()
@@ -324,7 +332,10 @@ fn test_batch_cv_reproducibility() {
 
     // Run 3 (different seed)
     let result3 = Loess::new()
-        .cross_validate(KFold(5, &fractions).seed(seed + 1))
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(fractions.to_vec())
+        .cv_seed(seed + 1)
         .interpolation_vertices(30)
         .adapter(Batch)
         .build()
@@ -356,7 +367,8 @@ fn test_batch_cv_loocv() {
     let fractions = vec![0.5, 0.8];
 
     let result = Loess::new()
-        .cross_validate(LOOCV(&fractions))
+        .cv_method("loocv")
+        .cv_fractions(fractions.to_vec())
         .interpolation_vertices(30)
         .adapter(Batch)
         .build()
@@ -461,7 +473,8 @@ fn test_batch_builder_defaults() {
 /// Test BatchLoessBuilder setters.
 #[test]
 fn test_batch_builder_setters() {
-    let b = BatchLoessBuilder::<f64>::default().boundary_policy(BoundaryPolicy::Extend);
+    let mut b = BatchLoessBuilder::<f64>::default();
+    b.boundary_policy = BoundaryPolicy::Extend;
     assert_eq!(b.boundary_policy, BoundaryPolicy::Extend);
 }
 

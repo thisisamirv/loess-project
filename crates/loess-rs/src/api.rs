@@ -24,7 +24,7 @@ use crate::algorithms::regression::{PolynomialDegree, SolverLinalg, ZeroWeightFa
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::executor::SurfaceMode;
 use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
-use crate::evaluation::cv::{CVConfig, CVKind};
+use crate::evaluation::cv::CVKind;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::distance::DistanceLinalg;
@@ -36,7 +36,6 @@ use crate::primitives::backend::Backend;
 
 // Publicly re-exported non-enum API types
 pub use crate::engine::output::LoessResult;
-pub use crate::evaluation::cv::{KFold, LOOCV};
 pub use crate::primitives::errors::LoessError;
 
 // Mode markers — zero-sized types that select which processor build() produces.
@@ -433,16 +432,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Enable automatic bandwidth selection via cross-validation.
-    pub fn cross_validate(mut self, config: CVConfig<'_, T>) -> Self {
-        if self.cv_fractions.is_some() {
-            self.duplicate_param = Some("cross_validate");
-        }
-        self.cv_fractions = Some(config.fractions().to_vec());
-        self.cv_kind = Some(config.kind());
-        self.cv_seed = config.get_seed();
-        self
-    }
-
     // Set the cross-validation method: `"kfold"` or `"loocv"`.
     pub fn cv_method(mut self, method: &str) -> Self {
         self.cv_method_str = Some(method.to_string());
@@ -736,6 +725,27 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
             result.cv_kind = Some(cvk);
         }
         result.cv_seed = builder.cv_seed;
+        // Convert string-based CV method (from cv_method()/cv_k() builder methods)
+        if result.cv_kind.is_none()
+            && let Some(method_str) = builder.cv_method_str
+        {
+            let lower = method_str.to_lowercase();
+            match lower.as_str() {
+                "kfold" | "k_fold" | "k-fold" => {
+                    result.cv_kind = Some(CVKind::KFold(builder.cv_k_val));
+                }
+                "loocv" | "loo_cv" | "loo-cv" => {
+                    result.cv_kind = Some(CVKind::LOOCV);
+                }
+                _ => {
+                    result.deferred_error = Some(LoessError::InvalidOption {
+                        option: "cv_method",
+                        value: method_str,
+                        valid: "kfold, loocv",
+                    });
+                }
+            }
+        }
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
         }
