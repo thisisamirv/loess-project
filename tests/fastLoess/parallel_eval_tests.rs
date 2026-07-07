@@ -17,7 +17,6 @@ fn test_parallel_cross_validation() {
         .cv_method("kfold")
         .cv_k(5)
         .cv_fractions(fractions.clone())
-        
         .parallel(false)
         .build()
         .unwrap()
@@ -31,7 +30,6 @@ fn test_parallel_cross_validation() {
         .cv_method("kfold")
         .cv_k(5)
         .cv_fractions(fractions.clone())
-        
         .parallel(true)
         .build()
         .unwrap()
@@ -67,7 +65,6 @@ fn test_loocv_cross_validation_parallel() {
     let res = Loess::new()
         .cv_method("loocv")
         .cv_fractions(fractions)
-        
         .parallel(true)
         .build()
         .unwrap()
@@ -92,7 +89,6 @@ fn test_kfold_fold_size_less_than_2() {
         .cv_method("kfold")
         .cv_k(10)
         .cv_fractions(fractions)
-        
         .parallel(true)
         .build()
         .unwrap()
@@ -122,7 +118,6 @@ fn test_multidim_kfold_cv_parallel() {
         .cv_method("kfold")
         .cv_k(3)
         .cv_fractions(fractions)
-        
         .parallel(true)
         .build()
         .unwrap()

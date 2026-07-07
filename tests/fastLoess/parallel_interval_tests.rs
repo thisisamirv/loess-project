@@ -22,7 +22,6 @@ fn test_parallel_interval_estimation() {
         .iterations(2)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        
         .surface_mode("direct")
         .parallel(false)
         .build()
@@ -36,7 +35,6 @@ fn test_parallel_interval_estimation() {
         .iterations(2)
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
-        
         .surface_mode("direct")
         .parallel(true)
         .build()

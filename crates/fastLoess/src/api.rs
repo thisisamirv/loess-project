@@ -135,6 +135,11 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'sta
 // Macro: generate method-forwarding impls common to all three entry-point types.
 macro_rules! impl_common_builder {
     ($t:ty) => {
+        impl Default for $t {
+            fn default() -> Self {
+                Self::new()
+            }
+        }
         impl $t {
             pub fn new() -> Self {
                 Self(LoessBuilder::new())

@@ -11,6 +11,12 @@
 //! @srrstats {G2.4} Tuning constants documented (Bisquare=6.0, Huber=1.345, Talwar=2.5).
 //! Robust scale estimation via MAD with fallback to MAR.
 
+// Feature-gated imports
+#[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+#[cfg(feature = "std")]
+use std::string::ToString;
+
 // External dependencies
 use core::str::FromStr;
 use num_traits::Float;

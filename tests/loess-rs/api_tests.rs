@@ -26,9 +26,7 @@ use std::fmt::Write;
 
 use loess_rs::internals::algorithms::regression::PolynomialDegree;
 use loess_rs::internals::algorithms::robustness::RobustnessMethod;
-use loess_rs::internals::api::{
-    Batch, Loess, Online, OnlineLoess, Streaming, StreamingLoess,
-};
+use loess_rs::internals::api::{Batch, Loess, Online, OnlineLoess, Streaming, StreamingLoess};
 use loess_rs::internals::engine::output::LoessResult;
 use loess_rs::internals::engine::validator::Validator;
 use loess_rs::internals::evaluation::diagnostics::Diagnostics;
@@ -644,7 +642,9 @@ fn test_cross_validate_kfold() {
     let fracs = vec![0.2, 0.4];
 
     let res = Loess::<f64>::new()
-        .cross_validate(KFold(3, &fracs))
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_fractions(fracs.clone())
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -667,7 +667,8 @@ fn test_cross_validate_loocv() {
     let fractions = vec![0.3, 0.6];
 
     let res = Loess::<f64>::new()
-        .cross_validate(LOOCV(&fractions))
+        .cv_method("loocv")
+        .cv_fractions(fractions.clone())
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -1065,9 +1066,9 @@ fn test_adapter_online_ignores_batch_params() {
     let mut processor = Loess::new()
         .fraction(0.5)
         // Less relevant for online
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -1089,9 +1090,9 @@ fn test_adapter_streaming_ignores_online_params() {
         .fraction(0.5)
         .window_capacity(100)
         .min_points(5)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
+        .adapter(Streaming)
         .build()
         .unwrap();
 
@@ -1133,17 +1134,17 @@ fn test_adapter_type_inference() {
 
     let _online_processor = Loess::new()
         .fraction(0.5)
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
+        .adapter(Online)
         .build()
         .unwrap();
 
     let _streaming_processor = Loess::new()
         .fraction(0.5)
-        .adapter(Streaming)
         .chunk_size(10)
         .overlap(2)
+        .adapter(Streaming)
         .build()
         .unwrap();
 

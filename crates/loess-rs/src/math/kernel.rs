@@ -9,6 +9,12 @@
 //!   Biweight, Triangle, Cosine, Uniform. Each implements distance-based weighting.
 //! @srrstats {G1.2} Mathematical properties documented for each kernel.
 
+// Feature-gated imports
+#[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+#[cfg(feature = "std")]
+use std::string::ToString;
+
 // External dependencies
 use core::f64::consts::{PI, SQRT_2};
 use core::str::FromStr;

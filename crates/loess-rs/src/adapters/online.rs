@@ -11,7 +11,11 @@
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+#[cfg(not(feature = "std"))]
 use alloc::{collections::VecDeque, vec::Vec};
+#[cfg(feature = "std")]
+use std::string::ToString;
 #[cfg(feature = "std")]
 use std::{collections::VecDeque, vec::Vec};
 

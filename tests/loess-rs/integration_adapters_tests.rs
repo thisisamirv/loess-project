@@ -50,9 +50,9 @@ fn test_streaming_2d_linear_with_residuals() {
         .dimensions(2)
         .fraction(0.3)
         .return_residuals()
-        .adapter(Streaming)
         .chunk_size(50)
         .overlap(10)
+        .adapter(Streaming)
         .build()
         .unwrap();
 
@@ -76,8 +76,8 @@ fn test_online_3d_constant() {
         .degree("constant")
         .dimensions(3)
         .fraction(0.5)
-        .adapter(Online)
         .window_capacity(20)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -147,9 +147,9 @@ fn test_streaming_robust_outliers() {
         .robustness_method("bisquare")
         .iterations(2)
         .return_robustness_weights()
-        .adapter(Streaming)
         .chunk_size(40)
         .overlap(10)
+        .adapter(Streaming)
         .build()
         .unwrap();
 
@@ -168,8 +168,8 @@ fn test_online_robust_outliers() {
     let mut model = Loess::new()
         .robustness_method("bisquare")
         .iterations(1)
-        .adapter(Online)
         .window_capacity(10)
+        .adapter(Online)
         .build()
         .unwrap();
 

@@ -712,9 +712,9 @@ fn test_batch_insufficient_vertices() {
     let y = x.clone();
 
     let result = Loess::new()
-        .adapter(Batch)
         .interpolation_vertices(5) // Strict limit
         .cell(0.01) // Small cell -> many vertices required
+        .adapter(Batch)
         .build()
         .unwrap()
         .fit(&x, &y);

@@ -27,6 +27,7 @@ use loess_rs::internals::algorithms::robustness::RobustnessMethod;
 use loess_rs::internals::engine::executor::SurfaceMode;
 use loess_rs::internals::engine::output::LoessResult;
 use loess_rs::internals::evaluation::cv::CVKind;
+use loess_rs::internals::evaluation::intervals::IntervalMethod;
 use loess_rs::internals::math::boundary::BoundaryPolicy;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::distance::DistanceMetric;
@@ -203,7 +204,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
 
     // Set whether to reduce polynomial degree at boundary vertices.
     pub fn boundary_degree_fallback(mut self, enabled: bool) -> Self {
-        self.base = self.base.boundary_degree_fallback(enabled);
+        self.base.boundary_degree_fallback = enabled;
         self
     }
 
@@ -239,13 +240,29 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
 
     // Enable confidence intervals at the specified level.
     pub fn confidence_intervals(mut self, level: T) -> Self {
-        self.base = self.base.confidence_intervals(level);
+        self.base.interval_type = Some(match self.base.interval_type {
+            Some(existing) if existing.prediction => IntervalMethod {
+                level,
+                confidence: true,
+                prediction: true,
+                se: true,
+            },
+            _ => IntervalMethod::confidence(level),
+        });
         self
     }
 
     // Enable prediction intervals at the specified level.
     pub fn prediction_intervals(mut self, level: T) -> Self {
-        self.base = self.base.prediction_intervals(level);
+        self.base.interval_type = Some(match self.base.interval_type {
+            Some(existing) if existing.confidence => IntervalMethod {
+                level,
+                confidence: true,
+                prediction: true,
+                se: true,
+            },
+            _ => IntervalMethod::prediction(level),
+        });
         self
     }
 
@@ -285,7 +302,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
 
     // Enable returning standard errors in the result.
     pub fn return_se(mut self, enabled: bool) -> Self {
-        self.base = self.base.return_se(enabled);
+        if enabled && self.base.interval_type.is_none() {
+            self.base.interval_type = Some(IntervalMethod::se());
+        }
         self
     }
 
@@ -296,7 +315,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     //
     // Analogous to `weights` in R's `stats::loess`. Must have the same length as `y`.
     pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
-        self.base = self.base.custom_weights(weights);
+        self.base.custom_weights = Some(weights);
         self
     }
 
@@ -311,14 +330,14 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         // If distance_metric("weighted") was called without weighted_metric_weights(), error.
         if let Some(weights) = self.weighted_metric_weights.take() {
             self.base.distance_metric = DistanceMetric::Weighted(weights);
-        } else if let DistanceMetric::Weighted(ref w) = self.base.distance_metric {
-            if w.is_empty() {
-                return Err(LoessError::InvalidOption {
-                    option: "distance_metric",
-                    value: "weighted".to_string(),
-                    valid: "use .weighted_metric_weights(vec![...]) to supply per-dimension weights",
-                });
-            }
+        } else if let DistanceMetric::Weighted(ref w) = self.base.distance_metric
+            && w.is_empty()
+        {
+            return Err(LoessError::InvalidOption {
+                option: "distance_metric",
+                value: "weighted".to_string(),
+                valid: "use .weighted_metric_weights(vec![...]) to supply per-dimension weights",
+            });
         }
 
         // Apply CV method string to base.cv_kind.

@@ -3,6 +3,12 @@
 //! This module defines the core configuration enums and the `SolverLinalg` trait
 //! used across all regression fitting backends.
 
+// Feature-gated imports
+#[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+#[cfg(feature = "std")]
+use std::string::ToString;
+
 // External dependencies
 use core::str::FromStr;
 use num_traits::Float;

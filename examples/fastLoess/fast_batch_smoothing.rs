@@ -296,10 +296,7 @@ fn example_6_different_kernels() -> Result<(), LoessError> {
     for kernel in kernels {
         println!("Using {} kernel:", kernel);
 
-        let model = Loess::new()
-            .fraction(0.5)
-            .weight_function(kernel)
-            .build()?;
+        let model = Loess::new().fraction(0.5).weight_function(kernel).build()?;
 
         let result = model.fit(&x, &y)?;
 
@@ -428,10 +425,7 @@ fn example_9_scaling_methods() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
 
     for method in ["mar", "mad", "mean"] {
-        let model = Loess::new()
-            .fraction(0.5)
-            .scaling_method(method)
-            .build()?;
+        let model = Loess::new().fraction(0.5).scaling_method(method).build()?;
         let result = model.fit(&x, &y)?;
         println!("  {}: y[0]={:.3}", method, result.y[0]);
     }
@@ -449,10 +443,7 @@ fn example_10_boundary_policies() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
 
     for policy in ["extend", "reflect", "zero", "noboundary"] {
-        let model = Loess::new()
-            .fraction(0.5)
-            .boundary_policy(policy)
-            .build()?;
+        let model = Loess::new().fraction(0.5).boundary_policy(policy).build()?;
         let result = model.fit(&x, &y)?;
         println!(
             "  {}: first={:.2}, last={:.2}",
@@ -521,10 +512,7 @@ fn example_13_distance_metrics() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
 
     for metric in ["euclidean", "normalized", "manhattan", "chebyshev"] {
-        let model = Loess::new()
-            .fraction(0.5)
-            .distance_metric(metric)
-            .build()?;
+        let model = Loess::new().fraction(0.5).distance_metric(metric).build()?;
         let result = model.fit(&x, &y)?;
         println!("  {}: y[0]={:.3}", metric, result.y[0]);
     }
@@ -631,10 +619,7 @@ fn example_15_additional_kernels() -> Result<(), LoessError> {
     let y = vec![2.0_f64, 4.1, 5.9, 8.2, 9.8];
 
     for kernel in ["uniform", "triangle", "cosine"] {
-        let model = Loess::new()
-            .fraction(0.5)
-            .weight_function(kernel)
-            .build()?;
+        let model = Loess::new().fraction(0.5).weight_function(kernel).build()?;
         let result = model.fit(&x, &y)?;
         print!("  {}: [", kernel);
         for (i, &v) in result.y.iter().enumerate() {

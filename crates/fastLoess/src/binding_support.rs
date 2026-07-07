@@ -597,7 +597,7 @@ pub fn apply_typed_builder_options(
         builder = builder.parallel(par);
     }
     if let Some(deg) = options.degree {
-        applied_degree = Some(deg.clone());
+        applied_degree = Some(deg);
         builder = builder.degree(polynomial_degree_str(deg));
     }
     if let Some(dims) = options.dimensions {

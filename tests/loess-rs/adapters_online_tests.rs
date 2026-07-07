@@ -22,12 +22,8 @@ use loess_rs::prelude::*;
 
 use loess_rs::internals::adapters::online::OnlineLoessBuilder;
 use loess_rs::internals::adapters::online::UpdateMode;
-use loess_rs::internals::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
 use loess_rs::internals::api::Online;
 use loess_rs::internals::math::boundary::BoundaryPolicy;
-use loess_rs::internals::math::distance::DistanceMetric;
-use loess_rs::internals::math::kernel::WeightFunction;
-use loess_rs::internals::math::scaling::ScalingMethod;
 use loess_rs::internals::primitives::errors::LoessError;
 
 // ============================================================================
@@ -46,9 +42,9 @@ fn test_online_exact_linear_reproduction() {
         .fraction(1.0)
         .iterations(0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(3)
         .min_points(2)
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -84,9 +80,9 @@ fn test_online_add_point_basic() {
         .fraction(1.0)
         .iterations(0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(5)
         .min_points(2)
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -127,9 +123,9 @@ fn test_online_window_eviction() {
         .fraction(1.0) // Exact linear fit => smoothed value equals y
         .iterations(0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(3)
         .min_points(2)
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -181,9 +177,9 @@ fn test_online_sliding_window() {
         .fraction(0.5)
         .iterations(1)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -225,9 +221,9 @@ fn test_online_reset() {
         .fraction(1.0)
         .iterations(0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(5)
         .min_points(2)
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -253,9 +249,9 @@ fn test_online_reuse_after_reset() {
         .fraction(1.0)
         .iterations(0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(4)
         .min_points(2)
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -295,8 +291,8 @@ fn test_online_reuse_after_reset() {
 fn test_online_invalid_window_capacity() {
     let result = Loess::<f64>::new()
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(2)
+        .adapter(Online)
         .build();
 
     assert!(
@@ -313,9 +309,9 @@ fn test_online_invalid_min_points() {
     // min_points < 2 should error
     let result1 = Loess::<f64>::new()
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(1)
+        .adapter(Online)
         .build();
 
     assert!(
@@ -326,9 +322,9 @@ fn test_online_invalid_min_points() {
     // min_points > window_capacity should error
     let result2 = Loess::<f64>::new()
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(20)
+        .adapter(Online)
         .build();
 
     assert!(
@@ -346,9 +342,9 @@ fn test_online_valid_builder() {
         .fraction(0.5)
         .iterations(2)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
+        .adapter(Online)
         .build();
 
     assert!(result.is_ok(), "Valid configuration should be accepted");
@@ -405,9 +401,9 @@ fn test_online_loess_basic() {
     let mut model = Loess::<f64>::new()
         .fraction(0.5)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(5)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -434,9 +430,9 @@ fn test_online_duplicate_x_values() {
         .fraction(0.5)
         .iterations(0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(5)
         .min_points(2)
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -467,9 +463,9 @@ fn test_online_minimum_window_capacity() {
         .fraction(1.0)
         .iterations(0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(3) // Minimum allowed
         .min_points(2)
+        .adapter(Online)
         .build()
         .expect("Minimum window capacity should be accepted");
 
@@ -496,9 +492,9 @@ fn test_online_robustness_methods() {
             .iterations(3)
             .robustness_method(method)
             .surface_mode("direct")
-            .adapter(Online)
             .window_capacity(10)
             .min_points(3)
+            .adapter(Online)
             .build()
             .expect("Builder should succeed");
 
@@ -529,9 +525,9 @@ fn test_online_with_residuals() {
         .iterations(2)
         .return_residuals()
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -578,10 +574,10 @@ fn test_update_mode_consistency() {
         .fraction(0.5)
         .iterations(0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
-        .update_mode(UpdateMode::Incremental)
+        .update_mode("incremental")
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -590,10 +586,10 @@ fn test_update_mode_consistency() {
         .fraction(0.5)
         .iterations(0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
-        .update_mode(UpdateMode::Full)
+        .update_mode("full")
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -653,10 +649,10 @@ fn test_incremental_mode_performance() {
         .fraction(0.3)
         .iterations(0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(20)
         .min_points(3)
-        .update_mode(UpdateMode::Incremental)
+        .update_mode("incremental")
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -673,10 +669,10 @@ fn test_incremental_mode_performance() {
         .fraction(0.3)
         .iterations(0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(20)
         .min_points(3)
-        .update_mode(UpdateMode::Full)
+        .update_mode("full")
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -699,10 +695,10 @@ fn test_online_with_robustness_weights() {
         .iterations(3)
         .return_robustness_weights()
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(30)
         .min_points(10)
-        .update_mode(UpdateMode::Full)
+        .update_mode("full")
+        .adapter(Online)
         .build()
         .expect("Builder should succeed");
 
@@ -751,9 +747,9 @@ fn test_online_window_exactly_min_points() {
     let mut processor = Loess::new()
         .fraction(0.8)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(5)
         .min_points(5)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -776,9 +772,9 @@ fn test_online_all_points_identical() {
     let mut processor = Loess::new()
         .fraction(0.5)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -800,9 +796,9 @@ fn test_online_decreasing_x_values() {
     let mut processor = Loess::new()
         .fraction(0.5)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -828,9 +824,9 @@ fn test_online_extreme_window_sizes() {
     let processor = Loess::new()
         .fraction(0.1)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10000)
         .min_points(100)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -840,9 +836,9 @@ fn test_online_extreme_window_sizes() {
     let processor_min = Loess::new()
         .fraction(0.9)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(3)
         .min_points(2)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -856,9 +852,9 @@ fn test_online_fraction_boundaries() {
     let mut proc_small = Loess::new()
         .fraction(0.01)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(100)
         .min_points(10)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -870,9 +866,9 @@ fn test_online_fraction_boundaries() {
     let mut proc_one = Loess::new()
         .fraction(1.0)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(20)
         .min_points(5)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -892,9 +888,9 @@ fn test_online_reset_complete() {
     let mut processor = Loess::new()
         .fraction(0.5)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
+        .adapter(Online)
         .build()
         .unwrap();
 
@@ -931,18 +927,18 @@ fn test_online_builder_all_setters() {
         .fraction(0.8)
         .iterations(1)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
-        .weight_function(WeightFunction::Epanechnikov)
-        .scaling_method(ScalingMethod::MAR)
-        .zero_weight_fallback(ZeroWeightFallback::UseLocalMean)
-        .polynomial_degree(PolynomialDegree::Linear)
-        .distance_metric(DistanceMetric::Euclidean)
+        .weight_function("epanechnikov")
+        .scaling_method("mar")
+        .zero_weight_fallback("use_local_mean")
+        .degree("linear")
+        .distance_metric("euclidean")
         .cell(0.15)
         .interpolation_vertices(50)
         .boundary_degree_fallback(false)
         .auto_converge(1e-4)
+        .adapter(Online)
         .build();
 
     assert!(
@@ -966,10 +962,10 @@ fn test_online_builder_parallel_setter() {
     let result = Loess::<f64>::new()
         .fraction(0.8)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(10)
         .min_points(3)
         .parallel(true)
+        .adapter(Online)
         .build();
 
     assert!(result.is_ok(), "Builder with parallel=true should succeed");
@@ -983,10 +979,10 @@ fn test_online_builder_dimensions_setter() {
     let result = Loess::<f64>::new()
         .fraction(0.8)
         .surface_mode("direct")
-        .adapter(Online)
         .window_capacity(8)
         .min_points(3)
         .dimensions(1)
+        .adapter(Online)
         .build();
 
     assert!(result.is_ok(), "Builder with dimensions=1 should succeed");

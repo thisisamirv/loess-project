@@ -197,7 +197,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
 
     // Set whether to reduce polynomial degree at boundary vertices.
     pub fn boundary_degree_fallback(mut self, enabled: bool) -> Self {
-        self.base = self.base.boundary_degree_fallback(enabled);
+        self.base.boundary_degree_fallback = enabled;
         self
     }
 
@@ -263,14 +263,14 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         // Apply weighted_metric_weights
         if let Some(weights) = self.weighted_metric_weights.take() {
             self.base.distance_metric = DistanceMetric::Weighted(weights);
-        } else if let DistanceMetric::Weighted(ref w) = self.base.distance_metric {
-            if w.is_empty() {
-                return Err(LoessError::InvalidOption {
-                    option: "distance_metric",
-                    value: "weighted".to_string(),
-                    valid: "use .weighted_metric_weights(vec![...]) to supply per-dimension weights",
-                });
-            }
+        } else if let DistanceMetric::Weighted(ref w) = self.base.distance_metric
+            && w.is_empty()
+        {
+            return Err(LoessError::InvalidOption {
+                option: "distance_metric",
+                value: "weighted".to_string(),
+                valid: "use .weighted_metric_weights(vec![...]) to supply per-dimension weights",
+            });
         }
 
         // Check for deferred errors from adapter conversion
