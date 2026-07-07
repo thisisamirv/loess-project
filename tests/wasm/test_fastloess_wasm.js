@@ -52,7 +52,7 @@ test('WASM online smoothing', () => {
 
     let lastResult;
     for (let i = 0; i < 10; i++) {
-        lastResult = online.addPoints(new Float64Array([i]), new Float64Array([i * 2]));
+        lastResult = online.add_points(new Float64Array([i]), new Float64Array([i * 2]));
     }
 
     // lastResult[0] should be a number after enough points
@@ -163,7 +163,7 @@ test('WASM online: update mode via options', () => {
 
     let lastResult;
     for (let i = 0; i < 10; i++) {
-        lastResult = online.addPoints(new Float64Array([i]), new Float64Array([i * 2]));
+        lastResult = online.add_points(new Float64Array([i]), new Float64Array([i * 2]));
     }
     assert.ok(lastResult[0] !== undefined && lastResult[0] !== null);
 });

@@ -27,7 +27,7 @@
 #' lines(x, result$y, col = "red")
 #' @export
 OnlineLoess <- function(
-    fraction = 0.2,
+    fraction = 0.67,
     window_capacity = 100L,
     min_points = 2L,
     iterations = 3L,

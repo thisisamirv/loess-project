@@ -529,6 +529,30 @@ pub unsafe extern "C" fn cpp_loess_set_cv_seed(ptr: *mut CppLoess, seed: c_ulong
     });
 }
 
+/// Set per-observation custom weights for the next fit call.
+///
+/// # Safety
+/// `ptr` must be a valid `CppLoess` pointer. `weights` must be a valid array of length `n`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_loess_set_custom_weights(
+    ptr: *mut CppLoess,
+    weights: *const c_double,
+    n: c_ulong,
+) {
+    with_panic_void(|| {
+        if ptr.is_null() {
+            set_last_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return;
+        }
+        if weights.is_null() || n == 0 {
+            unsafe { (*ptr).custom_weights = None };
+            return;
+        }
+        let slice = unsafe { std::slice::from_raw_parts(weights, n as usize) };
+        unsafe { (*ptr).custom_weights = Some(slice.to_vec()) };
+    });
+}
+
 // Legacy model setters retained for ABI compatibility.
 // Streaming/online models are eagerly initialized at construction, so these setters
 // are unsupported and now report this through the last-error channel.

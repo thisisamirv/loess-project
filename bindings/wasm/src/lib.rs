@@ -546,7 +546,7 @@ impl OnlineLoess {
         })
     }
 
-    #[wasm_bindgen(js_name = "addPoints")]
+    #[wasm_bindgen(js_name = "add_points")]
     pub fn add_points(
         &mut self,
         xs: &Float64Array,

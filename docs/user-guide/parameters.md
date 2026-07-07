@@ -22,6 +22,7 @@ Complete reference for all LOESS configuration options.
 | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
 | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
 | **auto_converge** | Null value | tolerance | Early stopping | All |
+| **parallel** | true (false for Online) | logical | Multi-threaded execution | All |
 | **custom_weights** | Null value | positive | Per-observation weights | Batch |
 | **return_residuals** | Logical false | logical | Include residuals | All |
 | **return_robustness_weights** | Logical false | logical | Include weights | All |
@@ -796,6 +797,59 @@ Enable early stopping when robustness weights stabilize.
 
 ---
 
+### parallel
+
+Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitting on datasets with more than a few hundred points.
+
+- **Default**: `true` for Batch and Streaming; `false` for Online
+- **Adapter**: All
+
+!!! note
+    `OnlineLoess` defaults to `false` because it fits one point at a time. Each update touches only the sliding window, so there is no inner loop large enough to benefit from parallelism — enabling it would add thread overhead with no gain.
+
+!!! tip
+    Set to `false` for fully deterministic, reproducible output when debugging, or in environments where thread safety is required.
+
+=== "R"
+    ```r
+    result <- Loess(parallel = FALSE)$fit(x, y)
+    ```
+
+=== "Python"
+    ```python
+    result = fl.Loess(parallel=False).fit(x, y)
+    ```
+
+=== "Rust"
+    ```rust
+    let model = Loess::new()
+        .parallel(false)
+        .build()?;
+    ```
+
+=== "Julia"
+    ```julia
+    result = fit(Loess(parallel=false), x, y)
+    ```
+
+=== "Node.js"
+    ```javascript
+    const result = new Loess({ parallel: false }).fit(x, y);
+    ```
+
+=== "WebAssembly"
+    ```javascript
+    const result = new Loess({ parallel: false }).fit(x, y);
+    ```
+
+=== "C++"
+    ```cpp
+    fastloess::Loess model({ .parallel = false });
+    auto result = model.fit(x, y).value();
+    ```
+
+---
+
 ### custom_weights
 
 Per-observation case weights that scale each point's contribution to nearby local fits.
@@ -1363,7 +1417,7 @@ Maximum points held in memory for Online mode.
     fastloess::OnlineOptions opts;
     opts.window_capacity = 500;
     fastloess::OnlineLoess model(opts);
-    auto result = model.addPoints(x, y).value();
+    auto result = model.add_points(x, y).value();
     ```
 
 ---
@@ -1411,7 +1465,7 @@ Minimum points required before Online filter starts producing outputs.
     fastloess::OnlineOptions opts;
     opts.min_points = 10;
     fastloess::OnlineLoess model(opts);
-    auto result = model.addPoints(x, y).value();
+    auto result = model.add_points(x, y).value();
     ```
 
 ---
@@ -1466,5 +1520,5 @@ For example:
     fastloess::OnlineOptions opts;
     opts.update_mode = "full";
     fastloess::OnlineLoess model(opts);
-    auto result = model.addPoints(x, y).value();
+    auto result = model.add_points(x, y).value();
     ```

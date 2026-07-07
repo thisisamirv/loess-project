@@ -19,7 +19,7 @@ model = fastloess.Loess(**kwargs)
 **Methods:**
 
 ```python
-result = model.fit(x, y)
+result = model.fit(x, y, custom_weights=None)
 ```
 
 * Fits the model to the provided `x` and `y` array-like objects.
@@ -85,7 +85,7 @@ result = online.add_points(x, y)
 | `boundary_policy` | `str` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `float` | `None` | Auto-convergence tolerance |
-| `custom_weights` | `list[float]` | `None` | Per-observation case weights (Batch only) |
+| `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 | `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95) |
 | `return_diagnostics` | `bool` | `False` | Compute RMSE, MAE, R², AIC |
@@ -100,11 +100,11 @@ result = online.add_points(x, y)
 | `weighted_metric_weights` | `list[float]` | `None` | Per-dimension weights (used when `distance_metric="weighted"`) |
 | `cell` | `float` | `None` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `None` | Number of interpolation vertices |
-| `boundary_degree_fallback` | `bool` | `None` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `boundary_degree_fallback` | `bool \| None` | `None` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
 | `cv_seed` | `int` | `None` | Random seed for cross-validation shuffling (Batch only) |
-| `cv_fractions` | `list[float]` | `None` | Fractions to test for cross-validation |
-| `cv_method` | `str` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
-| `cv_k` | `int` | `5` | Number of folds for k-fold CV |
+| `cv_fractions` | `list[float]` | `None` | Fractions to test for cross-validation (Batch only) |
+| `cv_method` | `str` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_k` | `int` | `5` | Number of folds for k-fold CV (Batch only) |
 
 ### `StreamingOptions` (inherits `LoessOptions`)
 
@@ -121,6 +121,7 @@ result = online.add_points(x, y)
 | `window_capacity` | `int` | `100` | Max points in sliding window |
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `str` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `parallel` | `bool` | `False` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
 
@@ -157,80 +158,80 @@ result = online.add_points(x, y)
 | `mae` | `float` | Mean Absolute Error |
 | `r_squared` | `float` | R-squared |
 | `residual_sd` | `float` | Residual standard deviation |
-| `effective_df` | `float` | Effective degrees of freedom |
-| `aic` | `float` | AIC |
-| `aicc` | `float` | AICc |
+| `effective_df` | float \| None | Effective degrees of freedom |
+| `aic` | float \| None | AIC |
+| `aicc` | float \| None | AICc |
 
-## String Options
+## Options
 
-### Weight Functions
+### weight_function
 
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
-* `"uniform"`
-* `"biweight"`
-* `"triangle"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
 * `"cosine"`
 
-### Robustness Methods
+### robustness_method
 
-* `"bisquare"` (default)
+* `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
-### Boundary Policies
+### boundary_policy
 
-* `"extend"` (default - linear extrapolation)
-* `"reflect"`
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
 * `"zero"`
-* `"noboundary"`
+* `"noboundary"` (alias: `"none"`)
 
-### Scaling Methods
+### scaling_method
 
-* `"mad"` (default - Median Absolute Deviation)
-* `"mar"` (Median Absolute Residual)
-* `"mean"` (Mean Absolute Residual)
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
-### Zero Weight Fallback
+### zero_weight_fallback
 
-* `"use_local_mean"` (default)
-* `"return_original"`
-* `"return_none"`
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (alias: `"none"`)
 
-### Polynomial Degrees
+### degree
 
-* `"constant"` (degree 0)
-* `"linear"` (default, degree 1)
-* `"quadratic"` (degree 2)
-* `"cubic"` (degree 3)
-* `"quartic"` (degree 4)
+* `"constant"` or `"0"` (degree 0)
+* `"linear"` or `"1"` (default, degree 1)
+* `"quadratic"` or `"2"` (degree 2)
+* `"cubic"` or `"3"` (degree 3)
+* `"quartic"` or `"4"` (degree 4)
 
-### Distance Metrics
+### distance_metric
 
-* `"normalized"` (default — scales each dimension by its range)
-* `"euclidean"`
-* `"manhattan"`
-* `"chebyshev"`
+* `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+* `"euclidean"` (alias: `"euclid"`)
+* `"manhattan"` (alias: `"l1"`)
+* `"chebyshev"` (alias: `"linf"`)
 * `"minkowski"` (use `"minkowski:p"` string for custom exponent, e.g. `"minkowski:3"`)
-* `"weighted"` (set `weighted_metric_weights` for per-dimension scaling)
+* `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
 
-### Surface Modes
+### surface_mode
 
 * `"interpolation"` (default — faster, uses a spatial grid)
 * `"direct"` (fits every point exactly; slower but more accurate)
 
-### Merge Strategies (Streaming)
+### merge_strategy
 
-* `"weighted_average"` (default — weighted blend of overlapping regions)
-* `"average"` (simple mean of overlapping regions)
-* `"take_first"` (keep values from the earlier chunk)
-* `"take_last"` (keep values from the later chunk)
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
-### Update Modes (Online)
+### update_mode
 
-* `"full"` (default — re-smooth entire window each update)
-* `"incremental"` (faster, O(1) incremental update)
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 

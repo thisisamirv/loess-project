@@ -646,7 +646,7 @@ impl OnlineLoess {
     }
 
     // Add new points to the window and get smoothed values.
-    #[napi]
+    #[napi(js_name = "add_points")]
     pub fn add_points(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResult> {
         let x_slice = x.as_ref();
         let y_slice = y.as_ref();

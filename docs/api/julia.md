@@ -19,7 +19,7 @@ model = Loess(; kwargs...)
 **Methods:**
 
 ```julia
-result = fit(model, x::Vector{Float64}, y::Vector{Float64}) :: LoessResult
+result = fit(model, x::Vector{Float64}, y::Vector{Float64}; custom_weights=nothing) :: LoessResult
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
@@ -85,7 +85,7 @@ result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LoessResu
 | `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance (NaN to disable) |
-| `custom_weights` | `Vector{Float64}` | `Float64[]` | Per-observation case weights (Batch only) |
+| `custom_weights` | `Union{Vector{Float64}, Nothing}` | `nothing` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 | `confidence_intervals` | `Float64` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
 | `prediction_intervals` | `Float64` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) |
 | `return_diagnostics` | `Bool` | `false` | Compute RMSE, MAE, R², AIC |
@@ -102,9 +102,9 @@ result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LoessResu
 | `interpolation_vertices` | `Union{Int, Nothing}` | `nothing` | Number of interpolation vertices |
 | `boundary_degree_fallback` | `Union{Bool, Nothing}` | `nothing` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
 | `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling (Batch only) |
-| `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation |
-| `cv_method` | `String` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
-| `cv_k` | `Int` | `5` | Number of folds for k-fold CV |
+| `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation (Batch only) |
+| `cv_method` | `String` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_k` | `Int` | `5` | Number of folds for k-fold CV (Batch only) |
 
 ### `StreamingOptions` (inherits `LoessOptions`)
 
@@ -121,6 +121,7 @@ result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LoessResu
 | `window_capacity` | `Int` | `100` | Max points in sliding window |
 | `min_points` | `Int` | `2` | Min points before smoothing starts |
 | `update_mode` | `String` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `parallel` | `Bool` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
 
@@ -139,6 +140,7 @@ result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LoessResu
 | `prediction_upper` | `Union{Vector{Float64}, Nothing}` | Upper prediction bounds |
 | `residuals` | `Union{Vector{Float64}, Nothing}` | Residuals (if `return_residuals`) |
 | `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `Union{Vector{Float64}, Nothing}` | CV score per tested fraction |
 | `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `return_diagnostics`) |
 | `enp` | `Union{Float64, Nothing}` | Equivalent number of parameters (if `return_se`) |
 | `trace_hat` | `Union{Float64, Nothing}` | Trace of hat matrix (if `return_se`) |
@@ -156,80 +158,80 @@ result = add_points(online, x::Vector{Float64}, y::Vector{Float64}) :: LoessResu
 | `mae` | `Float64` | Mean Absolute Error |
 | `r_squared` | `Float64` | R-squared |
 | `residual_sd` | `Float64` | Residual standard deviation |
-| `effective_df` | `Float64` | Effective degrees of freedom |
-| `aic` | `Float64` | AIC |
-| `aicc` | `Float64` | AICc |
+| `effective_df` | `Float64` | Effective degrees of freedom (NaN if not computed) |
+| `aic` | `Float64` | AIC (NaN if not computed) |
+| `aicc` | `Float64` | AICc (NaN if not computed) |
 
-## String Options
+## Options
 
-### Weight Functions
+### weight_function
 
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
-* `"uniform"`
-* `"biweight"`
-* `"triangle"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
 * `"cosine"`
 
-### Robustness Methods
+### robustness_method
 
-* `"bisquare"` (default)
+* `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
-### Boundary Policies
+### boundary_policy
 
-* `"extend"` (default - linear extrapolation)
-* `"reflect"`
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
 * `"zero"`
-* `"noboundary"`
+* `"noboundary"` (alias: `"none"`)
 
-### Scaling Methods
+### scaling_method
 
-* `"mad"` (default - Median Absolute Deviation)
-* `"mar"` (Median Absolute Residual)
-* `"mean"` (Mean Absolute Residual)
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
-### Zero Weight Fallback
+### zero_weight_fallback
 
-* `"use_local_mean"` (default)
-* `"return_original"`
-* `"return_none"`
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (alias: `"none"`)
 
-### Polynomial Degrees
+### degree
 
-* `"constant"` (degree 0)
-* `"linear"` (default, degree 1)
-* `"quadratic"` (degree 2)
-* `"cubic"` (degree 3)
-* `"quartic"` (degree 4)
+* `"constant"` or `"0"` (degree 0)
+* `"linear"` or `"1"` (default, degree 1)
+* `"quadratic"` or `"2"` (degree 2)
+* `"cubic"` or `"3"` (degree 3)
+* `"quartic"` or `"4"` (degree 4)
 
-### Distance Metrics
+### distance_metric
 
-* `"normalized"` (default — scales each dimension by its range)
-* `"euclidean"`
-* `"manhattan"`
-* `"chebyshev"`
+* `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+* `"euclidean"` (alias: `"euclid"`)
+* `"manhattan"` (alias: `"l1"`)
+* `"chebyshev"` (alias: `"linf"`)
 * `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
-* `"weighted"` (set `weighted_metric_weights` for per-dimension scaling)
+* `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
 
-### Surface Modes
+### surface_mode
 
 * `"interpolation"` (default — faster, uses a spatial grid)
 * `"direct"` (fits every point exactly; slower but more accurate)
 
-### Merge Strategies (Streaming)
+### merge_strategy
 
-* `"weighted_average"` (default — weighted blend of overlapping regions)
-* `"average"` (simple mean of overlapping regions)
-* `"take_first"` (keep values from the earlier chunk)
-* `"take_last"` (keep values from the later chunk)
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
-### Update Modes (Online)
+### update_mode
 
-* `"full"` (default — re-smooth entire window each update)
-* `"incremental"` (faster, O(1) incremental update)`
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 
@@ -240,7 +242,7 @@ x = collect(range(0, 10, length=100))
 y = sin.(x) .+ randn(100) .* 0.2
 
 # Configure model
-model = Loess(fraction=0.3, iterations=3)
+model = Loess(fraction=0.5, iterations=3)
 
 # Fit data (throws on error)
 result = fit(model, x, y)

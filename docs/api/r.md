@@ -21,9 +21,10 @@ model <- Loess(fraction = 0.5)
 ```r
 model <- Loess()
 result <- model$fit(x, y)
+# or with per-observation weights:
+result <- model$fit(x, y, custom_weights = weights)
 ```
 
-* Fits the model to the provided `x` and `y` numeric vectors.
 * Fits the model to the provided `x` and `y` numeric vectors.
 * Returns a `LoessResult` S3 object containing the smoothed values and optional diagnostics.
 * `print(model)`: Displays the model configuration.
@@ -92,7 +93,7 @@ result <- online$add_points(x, y)
 | `boundary_policy` | `character` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `character` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `numeric` | `NULL` | Auto-convergence tolerance |
-| `custom_weights` | `numeric` | `NULL` | Per-observation case weights (Batch only) |
+| `custom_weights` | `numeric` | `NULL` | Per-observation case weights — passed to `$fit()`, not the constructor (Batch only) |
 | `confidence_intervals` | `numeric` | `NULL` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `numeric` | `NULL` | Prediction level (e.g., 0.95) |
 | `return_diagnostics` | `logical` | `FALSE` | Compute RMSE, MAE, R², AIC |
@@ -109,9 +110,9 @@ result <- online$add_points(x, y)
 | `interpolation_vertices` | `integer` | `NULL` | Number of interpolation vertices |
 | `boundary_degree_fallback` | `logical` | `NULL` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
 | `cv_seed` | `integer` | `NULL` | Random seed for cross-validation shuffling (Batch only) |
-| `cv_fractions` | `numeric` | `NULL` | Fractions to test for cross-validation |
-| `cv_method` | `character` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
-| `cv_k` | `integer` | `5L` | Number of folds for k-fold CV |
+| `cv_fractions` | `numeric` | `NULL` | Fractions to test for cross-validation (Batch only) |
+| `cv_method` | `character` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_k` | `integer` | `5L` | Number of folds for k-fold CV (Batch only) |
 
 ### `StreamingOptions` (inherits `LoessOptions`)
 
@@ -128,6 +129,7 @@ result <- online$add_points(x, y)
 | `window_capacity` | `integer` | `100L` | Max points in sliding window |
 | `min_points` | `integer` | `2L` | Min points before smoothing starts |
 | `update_mode` | `character` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `parallel` | `logical` | `FALSE` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
 
@@ -142,22 +144,22 @@ An S3 list with class `"LoessResult"` containing:
 | `x` | `numeric` | Sorted x values |
 | `y` | `numeric` | Smoothed y values |
 | `fraction_used` | `numeric` | Fraction used (set or selected by CV) |
-| `iterations_used` | `integer` | Robustness iterations actually performed |
-| `standard_errors` | `numeric` | Per-point SE (if `return_se`) |
-| `confidence_lower` | `numeric` | Lower confidence bounds |
-| `confidence_upper` | `numeric` | Upper confidence bounds |
-| `prediction_lower` | `numeric` | Lower prediction bounds |
-| `prediction_upper` | `numeric` | Upper prediction bounds |
-| `residuals` | `numeric` | Residuals (if `return_residuals`) |
-| `robustness_weights` | `numeric` | Robustness weights (if `return_robustness_weights`) |
-| `cv_scores` | `numeric` | CV score per tested fraction |
-| `diagnostics` | `list` | Fit metrics (if `return_diagnostics`) |
-| `enp` | `numeric` | Equivalent number of parameters (if `return_se`) |
-| `trace_hat` | `numeric` | Trace of hat matrix (if `return_se`) |
-| `delta1` | `numeric` | First delta statistic (if `return_se`) |
-| `delta2` | `numeric` | Second delta statistic (if `return_se`) |
-| `residual_scale` | `numeric` | Residual scale estimate (if `return_se`) |
-| `leverage` | `numeric` | Per-point hat-matrix diagonal (if `return_se`) |
+| `iterations_used` | `integer \| NULL` | Robustness iterations actually performed |
+| `standard_errors` | `numeric \| NULL` | Per-point SE (if `return_se`) |
+| `confidence_lower` | `numeric \| NULL` | Lower confidence bounds |
+| `confidence_upper` | `numeric \| NULL` | Upper confidence bounds |
+| `prediction_lower` | `numeric \| NULL` | Lower prediction bounds |
+| `prediction_upper` | `numeric \| NULL` | Upper prediction bounds |
+| `residuals` | `numeric \| NULL` | Residuals (if `return_residuals`) |
+| `robustness_weights` | `numeric \| NULL` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `numeric \| NULL` | CV score per tested fraction |
+| `diagnostics` | `list \| NULL` | Fit metrics (if `return_diagnostics`) |
+| `enp` | `numeric \| NULL` | Equivalent number of parameters (if `return_se`) |
+| `trace_hat` | `numeric \| NULL` | Trace of hat matrix (if `return_se`) |
+| `delta1` | `numeric \| NULL` | First delta statistic (if `return_se`) |
+| `delta2` | `numeric \| NULL` | Second delta statistic (if `return_se`) |
+| `residual_scale` | `numeric \| NULL` | Residual scale estimate (if `return_se`) |
+| `leverage` | `numeric \| NULL` | Per-point hat-matrix diagonal (if `return_se`) |
 | `dimensions` | `integer` | Number of predictor dimensions |
 
 ### `Diagnostics`
@@ -168,80 +170,80 @@ An S3 list with class `"LoessResult"` containing:
 | `mae` | `numeric` | Mean Absolute Error |
 | `r_squared` | `numeric` | R-squared |
 | `residual_sd` | `numeric` | Residual standard deviation |
-| `effective_df` | `numeric` | Effective degrees of freedom |
-| `aic` | `numeric` | AIC |
-| `aicc` | `numeric` | AICc |
+| `effective_df` | `numeric` | Effective degrees of freedom (NaN if not computed) |
+| `aic` | `numeric` | AIC (NaN if not computed) |
+| `aicc` | `numeric` | AICc (NaN if not computed) |
 
-## String Options
+## Options
 
-### Weight Functions
+### weight_function
 
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
-* `"uniform"`
-* `"biweight"`
-* `"triangle"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
 * `"cosine"`
 
-### Robustness Methods
+### robustness_method
 
-* `"bisquare"` (default)
+* `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
-### Boundary Policies
+### boundary_policy
 
-* `"extend"` (default - linear extrapolation)
-* `"reflect"`
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
 * `"zero"`
-* `"noboundary"`
+* `"noboundary"` (alias: `"none"`)
 
-### Scaling Methods
+### scaling_method
 
-* `"mad"` (default - Median Absolute Deviation)
-* `"mar"` (Median Absolute Residual)
-* `"mean"` (Mean Absolute Residual)
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
-### Zero Weight Fallback
+### zero_weight_fallback
 
-* `"use_local_mean"` (default)
-* `"return_original"`
-* `"return_none"`
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (alias: `"none"`)
 
-### Polynomial Degrees
+### degree
 
-* `"constant"` (degree 0)
-* `"linear"` (default, degree 1)
-* `"quadratic"` (degree 2)
-* `"cubic"` (degree 3)
-* `"quartic"` (degree 4)
+* `"constant"` or `"0"` (degree 0)
+* `"linear"` or `"1"` (default, degree 1)
+* `"quadratic"` or `"2"` (degree 2)
+* `"cubic"` or `"3"` (degree 3)
+* `"quartic"` or `"4"` (degree 4)
 
-### Distance Metrics
+### distance_metric
 
-* `"normalized"` (default — scales each dimension by its range)
-* `"euclidean"`
-* `"manhattan"`
-* `"chebyshev"`
+* `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+* `"euclidean"` (alias: `"euclid"`)
+* `"manhattan"` (alias: `"l1"`)
+* `"chebyshev"` (alias: `"linf"`)
 * `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
-* `"weighted"` (set `weighted_metric_weights` for per-dimension scaling)
+* `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
 
-### Surface Modes
+### surface_mode
 
 * `"interpolation"` (default — faster, uses a spatial grid)
 * `"direct"` (fits every point exactly; slower but more accurate)
 
-### Merge Strategies (Streaming)
+### merge_strategy
 
-* `"weighted_average"` (default — weighted blend of overlapping regions)
-* `"average"` (simple mean of overlapping regions)
-* `"take_first"` (keep values from the earlier chunk)
-* `"take_last"` (keep values from the later chunk)
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
-### Update Modes (Online)
+### update_mode
 
-* `"full"` (default — re-smooth entire window each update)
-* `"incremental"` (faster, O(1) incremental update)
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 

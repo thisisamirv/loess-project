@@ -23,6 +23,8 @@ fastloess::Loess model(opts);
 ```cpp
 fastloess::Loess model;
 auto result = model.fit(x, y).value();
+// or with custom weights:
+auto result = model.fit(x, y, weights).value();
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
@@ -102,14 +104,14 @@ auto result = model.add_points(x, y).value();
 | `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
-| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights (Batch only) |
+| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
 | `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
 | `prediction_intervals` | `double` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) |
 | `return_diagnostics` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
 | `return_residuals` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights` | `bool` | `false` | Include robustness weights in result |
 | `return_se` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
-| `parallel` | `bool` | `false` | Enable parallel execution |
+| `parallel` | `bool` | `true` | Enable parallel execution |
 | `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
@@ -117,7 +119,7 @@ auto result = model.add_points(x, y).value();
 | `weighted_metric_weights` | `std::vector<double>` | `{}` | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `cell` | `double` | `NaN` | Cell size for interpolation grid (NaN to use default; smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
-| `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = off, 0 = false, 1 = true) |
+| `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = unset/library default, 0 = false, 1 = true) |
 | `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (Batch only; 0 = random) |
 | `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation |
 | `cv_method` | `std::string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
@@ -135,9 +137,10 @@ auto result = model.add_points(x, y).value();
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `window_capacity` | `int` | `100` | Max points in sliding window |
+| `window_capacity` | `int` | `1000` | Max points in sliding window |
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `std::string` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `parallel` | `bool` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
 
@@ -150,22 +153,22 @@ A RAII wrapper around the C result struct `fastloess_CppLoessResult`.
 | `x_vector()` | `std::vector<double>` | Sorted x values |
 | `y_vector()` | `std::vector<double>` | Smoothed y values |
 | `fraction_used()` | `double` | Fraction used (set or selected by CV) |
-| `iterations_used()` | `int` | Robustness iterations actually performed |
-| `standard_errors()` | `std::vector<double>` | Per-point SE (if `return_se`) |
-| `confidence_lower()` | `std::vector<double>` | Lower confidence bounds |
-| `confidence_upper()` | `std::vector<double>` | Upper confidence bounds |
-| `prediction_lower()` | `std::vector<double>` | Lower prediction bounds |
-| `prediction_upper()` | `std::vector<double>` | Upper prediction bounds |
-| `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`) |
-| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`) |
-| `cv_scores()` | `std::vector<double>` | CV score per tested fraction |
-| `diagnostics()` | `Diagnostics` | Fit metrics (if `return_diagnostics`) |
-| `enp()` | `double` | Equivalent number of parameters (if `return_se`) |
-| `trace_hat()` | `double` | Trace of hat matrix (if `return_se`) |
-| `delta1()` | `double` | First delta statistic (if `return_se`) |
-| `delta2()` | `double` | Second delta statistic (if `return_se`) |
-| `residual_scale()` | `double` | Residual scale estimate (if `return_se`) |
-| `leverage()` | `std::vector<double>` | Per-point hat-matrix diagonal (if `return_se`) |
+| `iterations_used()` | `int` | Robustness iterations actually performed (-1 = N/A) |
+| `standard_errors()` | `std::vector<double>` | Per-point SE (if `return_se`; empty if not computed) |
+| `confidence_lower()` | `std::vector<double>` | Lower confidence bounds (empty if not computed) |
+| `confidence_upper()` | `std::vector<double>` | Upper confidence bounds (empty if not computed) |
+| `prediction_lower()` | `std::vector<double>` | Lower prediction bounds (empty if not computed) |
+| `prediction_upper()` | `std::vector<double>` | Upper prediction bounds (empty if not computed) |
+| `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`; empty if not computed) |
+| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not computed) |
+| `cv_scores()` | `std::vector<double>` | CV score per tested fraction (empty if CV not run) |
+| `diagnostics()` | `Diagnostics` | Fit metrics — check `diagnostics().has_value()` before use (if `return_diagnostics`) |
+| `enp()` | `double` | Equivalent number of parameters (NaN if not computed) |
+| `trace_hat()` | `double` | Trace of hat matrix (NaN if not computed) |
+| `delta1()` | `double` | First delta statistic (NaN if not computed) |
+| `delta2()` | `double` | Second delta statistic (NaN if not computed) |
+| `residual_scale()` | `double` | Residual scale estimate (NaN if not computed) |
+| `leverage()` | `std::vector<double>` | Per-point hat-matrix diagonal (if `return_se`; empty if not computed) |
 | `dimensions()` | `int` | Number of predictor dimensions |
 
 ### `fastloess::Diagnostics`
@@ -178,80 +181,80 @@ All accessors are const methods (not public fields):
 | `mae()` | `double` | Mean Absolute Error |
 | `r_squared()` | `double` | R-squared |
 | `residual_sd()` | `double` | Residual standard deviation |
-| `effective_df()` | `double` | Effective degrees of freedom |
-| `aic()` | `double` | AIC |
-| `aicc()` | `double` | AICc |
+| `effective_df()` | `double` | Effective degrees of freedom (NaN if not computed) |
+| `aic()` | `double` | AIC (NaN if not computed) |
+| `aicc()` | `double` | AICc (NaN if not computed) |
 
-## String Options
+## Options
 
-### Weight Functions
+### weight_function
 
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
-* `"uniform"`
-* `"biweight"`
-* `"triangle"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
 * `"cosine"`
 
-### Robustness Methods
+### robustness_method
 
-* `"bisquare"` (default)
+* `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
-### Boundary Policies
+### boundary_policy
 
-* `"extend"` (default - linear extrapolation)
-* `"reflect"`
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
 * `"zero"`
-* `"noboundary"`
+* `"noboundary"` (alias: `"none"`)
 
-### Scaling Methods
+### scaling_method
 
-* `"mad"` (default - Median Absolute Deviation)
-* `"mar"` (Median Absolute Residual)
-* `"mean"` (Mean Absolute Residual)
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
-### Zero Weight Fallback
+### zero_weight_fallback
 
-* `"use_local_mean"` (default)
-* `"return_original"`
-* `"return_none"`
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (alias: `"none"`)
 
-### Polynomial Degrees
+### degree
 
-* `"constant"` (degree 0)
-* `"linear"` (default, degree 1)
-* `"quadratic"` (degree 2)
-* `"cubic"` (degree 3)
-* `"quartic"` (degree 4)
+* `"constant"` or `"0"` (degree 0)
+* `"linear"` or `"1"` (default, degree 1)
+* `"quadratic"` or `"2"` (degree 2)
+* `"cubic"` or `"3"` (degree 3)
+* `"quartic"` or `"4"` (degree 4)
 
-### Distance Metrics
+### distance_metric
 
-* `"normalized"` (default — scales each dimension by its range)
-* `"euclidean"`
-* `"manhattan"`
-* `"chebyshev"`
+* `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+* `"euclidean"` (alias: `"euclid"`)
+* `"manhattan"` (alias: `"l1"`)
+* `"chebyshev"` (alias: `"linf"`)
 * `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
-* `"weighted"` (set `weighted_metric_weights` for per-dimension scaling)
+* `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
 
-### Surface Modes
+### surface_mode
 
 * `"interpolation"` (default — faster, uses a spatial grid)
 * `"direct"` (fits every point exactly; slower but more accurate)
 
-### Merge Strategies (Streaming)
+### merge_strategy
 
-* `"weighted_average"` (default — weighted blend of overlapping regions)
-* `"average"` (simple mean of overlapping regions)
-* `"take_first"` (keep values from the earlier chunk)
-* `"take_last"` (keep values from the later chunk)
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
-### Update Modes (Online)
+### update_mode
 
-* `"full"` (default — re-smooth entire window each update)
-* `"incremental"` (faster, O(1) incremental update)
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 

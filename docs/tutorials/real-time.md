@@ -149,7 +149,7 @@ For true real-time applications where each point must be processed immediately.
     opts.update_mode = "incremental";
 
     fastloess::OnlineLoess model(opts);
-    auto result = model.addPoints(times, temperatures).value();
+    auto result = model.add_points(times, temperatures).value();
 
     // Result contains smoothed values
     const auto& x_vals = result.xVector();

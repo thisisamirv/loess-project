@@ -31,7 +31,7 @@ function example_1_basic_streaming() {
 
     console.log(`  ${"X".padStart(8)} ${"Y_obs".padStart(12)} ${"Y_smooth".padStart(12)}`);
     for (const [x, y] of data) {
-        const res = model.addPoints(
+        const res = model.add_points(
             new Float64Array([x]),
             new Float64Array([y])
         );
@@ -59,7 +59,7 @@ function example_2_sensor_data_simulation() {
         const noise = ((hour * 7) % 11) * 0.3 - 1.5;
         const temp = baseTemp + cycle + noise;
 
-        const res = model.addPoints(new Float64Array([hour]), new Float64Array([temp]));
+        const res = model.add_points(new Float64Array([hour]), new Float64Array([temp]));
         if (res.y.length > 0) {
             console.log(
                 `  ${hour.toString().padStart(6)} ${temp.toFixed(2).padStart(12)}°C ${res.y[0].toFixed(2).padStart(12)}°C`
@@ -90,7 +90,7 @@ function example_3_outlier_handling() {
         );
         const smoothed = [];
         for (const [x, y] of data) {
-            const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+            const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
             if (res.y.length > 0) smoothed.push(res.y[0].toFixed(1));
         }
         console.log(`  ${method}: [${smoothed.join(', ')}]`);
@@ -114,7 +114,7 @@ function example_4_window_size_comparison() {
         );
         const smoothed = [];
         for (const [x, y] of data) {
-            const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+            const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
             if (res.y.length > 0) smoothed.push(res.y[0]);
         }
         const last5 = smoothed.slice(-5).map(v => v.toFixed(2));
@@ -138,7 +138,7 @@ function example_5_memory_bounded_processing() {
     for (let i = 0; i < total; i++) {
         const x = i;
         const y = 2 * x + Math.sin(x * 0.1) * 5 + ((i % 7) - 3) * 0.5;
-        const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+        const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
         if (res.y.length > 0) {
             count++;
             lastSmoothed = res.y[0];
@@ -164,7 +164,7 @@ function example_6_sliding_window_behavior() {
 
     console.log(`  ${"Pt".padStart(4)} ${"X".padStart(6)} ${"Y".padStart(8)} ${"Smoothed".padStart(10)} ${"Status".padStart(22)}`);
     data.forEach(([x, y], i) => {
-        const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+        const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
         if (res.y.length > 0) {
             console.log(`  ${(i + 1).toString().padStart(4)} ${x.toFixed(0).padStart(6)} ${y.toFixed(0).padStart(8)} ${res.y[0].toFixed(2).padStart(10)} ${"Window full (sliding)".padStart(22)}`);
         } else {
@@ -190,7 +190,7 @@ function example_7_benchmark() {
     for (let i = 0; i < n; i++) {
         const x = i;
         const y = Math.sin(x * 0.1) + Math.cos(x * 0.01);
-        const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+        const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
         if (res.y.length > 0) count++;
     }
     const ms = Number(process.hrtime.bigint() - t0) / 1e6;
@@ -213,7 +213,7 @@ function example_8_update_modes() {
         );
         let emitted = 0;
         for (const [x, y] of data) {
-            const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+            const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
             if (res.y.length > 0) emitted++;
         }
         console.log(`  ${mode}: ${emitted} points emitted (out of ${data.length})`);
@@ -226,7 +226,7 @@ function example_8_update_modes() {
     );
     let lastRes = null;
     for (const [x, y] of data) {
-        const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+        const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
         if (res.y.length > 0) lastRes = res;
     }
     if (lastRes) {
@@ -261,7 +261,7 @@ function example_9_advanced_online_options() {
     let emitted = 0;
     let lastRes = null;
     for (const [x, y] of data) {
-        const res = model.addPoints(new Float64Array([x]), new Float64Array([y]));
+        const res = model.add_points(new Float64Array([x]), new Float64Array([y]));
         if (res.y.length > 0) { emitted++; lastRes = res; }
     }
 

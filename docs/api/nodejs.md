@@ -19,11 +19,17 @@ const model = new Loess(options);
 **Methods:**
 
 ```javascript
-const result = model.fit(x, y);
+const result = model.fit(x, y, custom_weights);
 ```
 
 * Fits the model to the provided `x` and `y` typed arrays.
 * Returns a `LoessResult` object containing the smoothed values and optional diagnostics.
+
+```javascript
+const result = await model.fitAsync(x, y, custom_weights);
+```
+
+* Async variant of `fit()`. Returns a `Promise` that resolves to a `LoessResult`.
 
 ### `StreamingLoess`
 
@@ -68,7 +74,7 @@ const online = new OnlineLoess(options, onlineOptions);
 **Methods:**
 
 ```javascript
-const result = online.addPoints(x, y);
+const result = online.add_points(x, y);
 ```
 
 * Adds new points to the model and returns the smoothed values (retrospective or prospective depending on mode).
@@ -87,7 +93,7 @@ const result = online.addPoints(x, y);
 | `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
-| `custom_weights` | `number[]` | `null` | Per-observation case weights (Batch only) |
+| `custom_weights` | `number[]` | `null` | Per-observation case weights — passed to `fit()`/`fitAsync()`, not the options object (Batch only) |
 | `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
 | `return_diagnostics` | `boolean` | `false` | Compute RMSE, MAE, R², AIC |
@@ -106,14 +112,14 @@ const result = online.addPoints(x, y);
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
 | `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation |
 | `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) |
-| `cvK` | `number` | `5` | Number of folds for k-fold CV |
+| `cv_k` | `number` | `5` | Number of folds for k-fold CV |
 
 ### `StreamingOptions`
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `chunk_size` | `number` | `5000` | Data chunk size |
-| `overlap` | `number` | auto (10% of chunk) | Overlap between chunks |
+| `overlap` | `number` | `500` | Overlap between chunks |
 | `merge_strategy` | `string` | `"weighted_average"` | Strategy for blending overlap: see Merge Strategies |
 
 ### `OnlineOptions`
@@ -123,6 +129,7 @@ const result = online.addPoints(x, y);
 | `window_capacity` | `number` | `100` | Max points in sliding window |
 | `min_points` | `number` | `2` | Min points before smoothing starts |
 | `update_mode` | `string` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `parallel` | `boolean` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
 
@@ -159,80 +166,80 @@ const result = online.addPoints(x, y);
 | `mae` | `number` | Mean Absolute Error |
 | `r_squared` | `number` | R-squared |
 | `residual_sd` | `number` | Residual standard deviation |
-| `effective_df` | `number` | Effective degrees of freedom |
-| `aic` | `number` | AIC |
-| `aicc` | `number` | AICc |
+| `effective_df` | `number` \| `undefined` | Effective degrees of freedom |
+| `aic` | `number` \| `undefined` | AIC |
+| `aicc` | `number` \| `undefined` | AICc |
 
-## String Options
+## Options
 
-### Weight Functions
+### weight_function
 
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
-* `"uniform"`
-* `"biweight"`
-* `"triangle"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
 * `"cosine"`
 
-### Robustness Methods
+### robustness_method
 
-* `"bisquare"` (default)
+* `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
-### Boundary Policies
+### boundary_policy
 
-* `"extend"` (default - linear extrapolation)
-* `"reflect"`
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
 * `"zero"`
-* `"noboundary"`
+* `"noboundary"` (alias: `"none"`)
 
-### Scaling Methods
+### scaling_method
 
-* `"mad"` (default - Median Absolute Deviation)
-* `"mar"` (Median Absolute Residual)
-* `"mean"` (Mean Absolute Residual)
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
 
-### Zero Weight Fallback
+### zero_weight_fallback
 
-* `"use_local_mean"` (default)
-* `"return_original"`
-* `"return_none"`
+* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+* `"return_original"` (alias: `"original"`)
+* `"return_none"` (alias: `"none"`)
 
-### Polynomial Degrees
+### degree
 
-* `"constant"` (degree 0)
-* `"linear"` (default, degree 1)
-* `"quadratic"` (degree 2)
-* `"cubic"` (degree 3)
-* `"quartic"` (degree 4)
+* `"constant"` or `"0"` (degree 0)
+* `"linear"` or `"1"` (default, degree 1)
+* `"quadratic"` or `"2"` (degree 2)
+* `"cubic"` or `"3"` (degree 3)
+* `"quartic"` or `"4"` (degree 4)
 
-### Distance Metrics
+### distance_metric
 
-* `"normalized"` (default — scales each dimension by its range)
-* `"euclidean"`
-* `"manhattan"`
-* `"chebyshev"`
-* `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
-* `"weighted"` (set `weighted_metric_weights` for per-dimension scaling)
+* `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+* `"euclidean"` (alias: `"euclid"`)
+* `"manhattan"` (alias: `"l1"`)
+* `"chebyshev"` (alias: `"linf"`)
+* `"minkowski"` (use `"minkowski:p"` string for custom exponent, e.g. `"minkowski:3"`)
+* `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
 
-### Surface Modes
+### surface_mode
 
 * `"interpolation"` (default — faster, uses a spatial grid)
 * `"direct"` (fits every point exactly; slower but more accurate)
 
-### Merge Strategies (Streaming)
+### merge_strategy
 
-* `"weighted_average"` (default — weighted blend of overlapping regions)
-* `"average"` (simple mean of overlapping regions)
-* `"take_first"` (keep values from the earlier chunk)
-* `"take_last"` (keep values from the later chunk)
+* `"weighted_average"` (default; alias: `"weighted"`)
+* `"average"` (alias: `"mean"`)
+* `"take_first"` (alias: `"first"`)
+* `"take_last"` (alias: `"last"`)
 
-### Update Modes (Online)
+### update_mode
 
-* `"full"` (default — re-smooth entire window each update)
-* `"incremental"` (faster, O(1) incremental update)
+* `"full"` (default; alias: `"resmooth"`)
+* `"incremental"` (alias: `"single"`)
 
 ## Example
 

@@ -117,7 +117,7 @@ struct LoessOptions {
   bool return_residuals = false;
   bool return_robustness_weights = false;
   bool return_se = false; ///< Compute standard errors and hat-matrix statistics
-  bool parallel = false;
+  bool parallel = true;
 
   // LOESS-specific options
   std::string degree =
@@ -152,13 +152,15 @@ struct LoessOptions {
 struct StreamingOptions : public LoessOptions {
   int chunk_size = detail::k_default_chunk_size;
   int overlap = -1;                        ///< -1 for auto
-  std::string merge_strategy = "weighted"; ///< average, weighted, first, last
+  std::string merge_strategy = "weighted_average"; ///< weighted_average, average, take_first, take_last
 };
 
 /**
  * @brief Options for online LOESS.
  */
 struct OnlineOptions : public LoessOptions {
+  bool parallel = false; ///< online LOESS fits one point at a time; parallelism
+                         ///< rarely helps
   int window_capacity = detail::k_default_window_capacity;
   int min_points = 2;
   std::string update_mode = "full";
@@ -393,23 +395,12 @@ public:
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
             : nullptr,
-        options.surface_mode.c_str(), options.return_se ? 1 : 0);
-    if (!options.weighted_metric_weights.empty()) {
-      cpp_loess_set_weighted_metric(
-          ptr_, options.weighted_metric_weights.data(),
-          static_cast<unsigned long>(options.weighted_metric_weights.size()));
-    }
-    if (!std::isnan(options.cell)) {
-      cpp_loess_set_cell(ptr_, options.cell);
-    }
-    if (options.interpolation_vertices > 0) {
-      cpp_loess_set_interpolation_vertices(
-          ptr_, static_cast<unsigned long>(options.interpolation_vertices));
-    }
-    if (options.boundary_degree_fallback >= 0) {
-      cpp_loess_set_boundary_degree_fallback(ptr_,
-                                             options.boundary_degree_fallback);
-    }
+        options.surface_mode.c_str(), options.return_se ? 1 : 0, options.cell,
+        options.interpolation_vertices, options.boundary_degree_fallback,
+        options.weighted_metric_weights.empty()
+            ? nullptr
+            : options.weighted_metric_weights.data(),
+        static_cast<unsigned long>(options.weighted_metric_weights.size()));
     if (options.cv_seed > 0) {
       cpp_loess_set_cv_seed(ptr_, static_cast<unsigned long>(options.cv_seed));
     }
@@ -440,12 +431,17 @@ public:
   }
 
   /// @param custom_weights Per-observation weights (empty = no weights). Each
-  /// weight
-  ///   multiplies the local kernel weight: w_ij = custom_weights[j] * K(d_ij/h)
-  ///   * rob_j. Analogous to the `weights` argument in R's `stats::loess`.
+  /// weight multiplies the local kernel weight:
+  /// w_ij = custom_weights[j] * K(d_ij/h) * rob_j. Analogous to the
+  /// `weights` argument in R's `stats::loess`.
   Expected<LoessResult> fit(const std::vector<double> &x_values,
                             const std::vector<double> &y_values,
                             const std::vector<double> &custom_weights = {}) {
+    if (!custom_weights.empty()) {
+      cpp_loess_set_custom_weights(
+          ptr_, custom_weights.data(),
+          static_cast<unsigned long>(custom_weights.size()));
+    }
     if (y_values.empty() || x_values.empty() ||
         x_values.size() % y_values.size() != 0) {
       return Expected<LoessResult>::make_error(
@@ -455,12 +451,6 @@ public:
       return Expected<LoessResult>::make_error(
           "Input arrays must not be empty");
     }
-    if (!custom_weights.empty()) {
-      cpp_loess_set_custom_weights(
-          ptr_, custom_weights.data(),
-          static_cast<unsigned long>(custom_weights.size()));
-    }
-
     auto result = cpp_loess_fit(
         ptr_, x_values.data(), static_cast<unsigned long>(x_values.size()),
         y_values.data(), static_cast<unsigned long>(y_values.size()));
@@ -497,31 +487,14 @@ public:
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
             : nullptr,
-        options.surface_mode.c_str(), options.return_se ? 1 : 0);
-    if (!options.weighted_metric_weights.empty()) {
-      cpp_streaming_set_weighted_metric(
-          ptr_, options.weighted_metric_weights.data(),
-          static_cast<unsigned long>(options.weighted_metric_weights.size()));
-    }
-    if (!std::isnan(options.cell)) {
-      cpp_streaming_set_cell(ptr_, options.cell);
-    }
-    if (options.interpolation_vertices > 0) {
-      cpp_streaming_set_interpolation_vertices(
-          ptr_, static_cast<unsigned long>(options.interpolation_vertices));
-    }
-    if (options.boundary_degree_fallback >= 0) {
-      cpp_streaming_set_boundary_degree_fallback(
-          ptr_, options.boundary_degree_fallback);
-    }
-    if (!std::isnan(options.confidence_intervals)) {
-      cpp_streaming_set_confidence_intervals(ptr_,
-                                             options.confidence_intervals);
-    }
-    if (!std::isnan(options.prediction_intervals)) {
-      cpp_streaming_set_prediction_intervals(ptr_,
-                                             options.prediction_intervals);
-    }
+        options.surface_mode.c_str(), options.return_se ? 1 : 0,
+        options.confidence_intervals, options.prediction_intervals,
+        options.cell, options.interpolation_vertices,
+        options.boundary_degree_fallback,
+        options.weighted_metric_weights.empty()
+            ? nullptr
+            : options.weighted_metric_weights.data(),
+        static_cast<unsigned long>(options.weighted_metric_weights.size()));
   }
 
   ~StreamingLoess() {
@@ -606,29 +579,14 @@ public:
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
             : nullptr,
-        options.surface_mode.c_str(), options.return_se ? 1 : 0);
-    if (!options.weighted_metric_weights.empty()) {
-      cpp_online_set_weighted_metric(
-          ptr_, options.weighted_metric_weights.data(),
-          static_cast<unsigned long>(options.weighted_metric_weights.size()));
-    }
-    if (!std::isnan(options.cell)) {
-      cpp_online_set_cell(ptr_, options.cell);
-    }
-    if (options.interpolation_vertices > 0) {
-      cpp_online_set_interpolation_vertices(
-          ptr_, static_cast<unsigned long>(options.interpolation_vertices));
-    }
-    if (options.boundary_degree_fallback >= 0) {
-      cpp_online_set_boundary_degree_fallback(ptr_,
-                                              options.boundary_degree_fallback);
-    }
-    if (!std::isnan(options.confidence_intervals)) {
-      cpp_online_set_confidence_intervals(ptr_, options.confidence_intervals);
-    }
-    if (!std::isnan(options.prediction_intervals)) {
-      cpp_online_set_prediction_intervals(ptr_, options.prediction_intervals);
-    }
+        options.surface_mode.c_str(), options.return_se ? 1 : 0,
+        options.confidence_intervals, options.prediction_intervals,
+        options.cell, options.interpolation_vertices,
+        options.boundary_degree_fallback,
+        options.weighted_metric_weights.empty()
+            ? nullptr
+            : options.weighted_metric_weights.data(),
+        static_cast<unsigned long>(options.weighted_metric_weights.size()));
   }
 
   ~OnlineLoess() {

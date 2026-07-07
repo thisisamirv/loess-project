@@ -2,8 +2,8 @@
 /* eslint-disable */
 export declare class Loess {
     constructor(options?: SmoothOptions | undefined | null)
-    fit(x: Float64Array, y: Float64Array, customWeights?: Array<number> | undefined | null): LoessResult
-    fitAsync(x: Float64Array, y: Float64Array, customWeights?: Array<number> | undefined | null): Promise<unknown>
+    fit(x: Float64Array, y: Float64Array, custom_weights?: Array<number> | undefined | null): LoessResult
+    fitAsync(x: Float64Array, y: Float64Array, custom_weights?: Array<number> | undefined | null): Promise<unknown>
 }
 
 export declare class LoessResult {
@@ -31,7 +31,7 @@ export declare class LoessResult {
 
 export declare class OnlineLoess {
     constructor(options?: SmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
-    addPoints(x: Float64Array, y: Float64Array): LoessResult
+    add_points(x: Float64Array, y: Float64Array): LoessResult
 }
 
 export declare class StreamingLoess {

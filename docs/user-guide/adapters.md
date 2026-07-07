@@ -416,7 +416,7 @@ Incremental updates with a sliding window for real-time data.
     opts.update_mode = "incremental";
 
     fastloess::OnlineLoess model(opts);
-    auto result = model.addPoints(x, y).value();
+    auto result = model.add_points(x, y).value();
     ```
 
 ---

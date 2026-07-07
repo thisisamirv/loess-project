@@ -1,10 +1,14 @@
 # fastLoess & loess-rs Rust API Reference
 
-The Rust crates provide the core implementation and high-performance extensions. The API uses a builder pattern, but `fastLoess` exposes distinct batch, streaming, and online entry types.
+The Rust crates provide the core implementation and high-performance extensions.
 
 ## Structs & Usage
 
-For `fastLoess`, use `Loess` for batch mode, `StreamingLoess` for chunked processing, and `OnlineLoess` for sliding-window updates.
+Both crates expose the same three entry types via their `prelude`: `Loess` for batch mode, `StreamingLoess` for chunked processing, and `OnlineLoess` for sliding-window updates.
+
+```rust
+use fastLoess::prelude::*;  // or: use loess_rs::prelude::*;
+```
 
 ### `Loess` (Batch)
 
@@ -107,10 +111,11 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `degree(...)` | `"linear"` | Polynomial degree |
 | `dimensions(usize)` | `1` | Number of predictor dimensions |
 | `distance_metric(...)` | `"normalized"` | Distance metric |
+| `weighted_metric_weights(Vec<T>)` | disabled | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode(...)` | `"interpolation"` | Surface computation mode |
 | `cell(T)` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | disabled | Number of interpolation vertices |
-| `boundary_degree_fallback(bool)` | disabled | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `boundary_degree_fallback(bool)` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
 | `cv_method(...)` | disabled | Cross-validation method |
 | `cv_k(...)` | disabled | Number of folds for K-fold cross-validation |
 | `cv_fractions(...)` | disabled | Candidate fractions to evaluate during cross-validation |
@@ -121,16 +126,17 @@ These chained methods configure the builder. They correspond to the "Options Str
 | Method | Default | Description |
 | --- | --- | --- |
 | `chunk_size(usize)` | `5000` | Data chunk size |
-| `overlap(usize)` | auto (10%) | Overlap between chunks |
+| `overlap(usize)` | `500` | Overlap between chunks |
 | `merge_strategy(...)` | `"weighted_average"` | Strategy for blending overlap regions |
 
 ### Online Options
 
 | Method | Default | Description |
 | --- | --- | --- |
-| `window_capacity(usize)` | `100` | Max points in sliding window |
-| `min_points(usize)` | `2` | Min points before smoothing starts |
+| `window_capacity(usize)` | `1000` | Max points in sliding window |
+| `min_points(usize)` | `3` | Min points before smoothing starts |
 | `update_mode(...)` | `"full"` | Update strategy |
+| `parallel(bool)` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
 
@@ -169,9 +175,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `mae` | `T` | Mean Absolute Error |
 | `r_squared` | `T` | R-squared |
 | `residual_sd` | `T` | Residual standard deviation |
-| `effective_df` | `T` | Effective degrees of freedom |
-| `aic` | `T` | AIC |
-| `aicc` | `T` | AICc |
+| `effective_df` | `Option<T>` | Effective degrees of freedom |
+| `aic` | `Option<T>` | AIC |
+| `aicc` | `Option<T>` | AICc |
 
 ## Options
 

@@ -181,7 +181,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         Self {
             window_capacity: 1000,
             min_points: 3,
-            fraction: T::from(0.2).unwrap(),
+            fraction: T::from(0.67).unwrap(),
             iterations: 1,
             weight_function: WeightFunction::default(),
             update_mode: UpdateMode::default(),

@@ -200,7 +200,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
         Self {
             chunk_size: 5000,
             overlap: 500,
-            fraction: T::from(0.1).unwrap(),
+            fraction: T::from(0.67).unwrap(),
             iterations: 2,
             weight_function: WeightFunction::default(),
             boundary_policy: BoundaryPolicy::default(),

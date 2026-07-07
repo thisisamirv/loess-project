@@ -24,7 +24,7 @@
 #' final <- model$finalize()
 #' @export
 StreamingLoess <- function(
-    fraction = 0.3,
+    fraction = 0.67,
     chunk_size = 5000L,
     overlap = NULL,
     iterations = 3L,

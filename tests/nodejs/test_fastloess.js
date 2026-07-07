@@ -49,7 +49,7 @@ test('online smoothing', () => {
     for (let i = 0; i < 10; i++) {
         const xArr = new Float64Array([i]);
         const yArr = new Float64Array([i * 2]);
-        const res = online.addPoints(xArr, yArr);
+        const res = online.add_points(xArr, yArr);
 
         if (res.y.length > 0) {
             lastVal = res.y[0];
@@ -237,7 +237,7 @@ test('OnlineOptions: update_mode', () => {
             { fraction: 0.5 },
             { window_capacity: 10, min_points: 3, update_mode: um }
         );
-        const r = o.addPoints(x, y);
+        const r = o.add_points(x, y);
         assert.ok(r.y.length > 0);
     }
 });
