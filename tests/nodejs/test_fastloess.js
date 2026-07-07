@@ -133,7 +133,7 @@ test('SmoothOptions: returnSe', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const y = new Float64Array([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
-    const model = new fastloess.Loess({ fraction: 0.5, returnSe: true, surface_mode: 'direct' });
+    const model = new fastloess.Loess({ fraction: 0.5, return_se: true, surface_mode: 'direct' });
     const result = model.fit(x, y);
 
     assert.ok(result.enp !== null);
@@ -181,7 +181,7 @@ test('SmoothOptions: weightedMetricWeights', () => {
     const r = new fastloess.Loess({
         fraction: 0.5,
         distance_metric: 'weighted',
-        weightedMetricWeights: [1.0],
+        weighted_metric_weights: [1.0],
     }).fit(x, y);
     assert.strictEqual(r.y.length, 10);
 });
@@ -203,9 +203,9 @@ test('SmoothOptions: cvFractions, cvMethod, cvK', () => {
     const y = new Float64Array(Array.from({ length: 30 }, (_, i) => i * 2));
 
     const r = new fastloess.Loess({
-        cvFractions: [0.3, 0.5, 0.7],
-        cvMethod: 'kfold',
-        cvK: 3,
+        cv_fractions: [0.3, 0.5, 0.7],
+        cv_method: 'kfold',
+        cv_k: 3,
     }).fit(x, y);
     assert.ok(r.cvScores !== null);
     assert.strictEqual(r.cvScores.length, 3);

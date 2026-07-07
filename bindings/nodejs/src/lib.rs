@@ -232,32 +232,46 @@ pub struct SmoothOptions {
     // Number of robustness iterations. Default: 3.
     pub iterations: Option<u32>,
     // Weight function ("tricube", "gaussian", etc.). Default: "tricube".
+    #[napi(js_name = "weight_function")]
     pub weight_function: Option<String>,
     // Robustness method ("bisquare", "huber"). Default: "bisquare".
+    #[napi(js_name = "robustness_method")]
     pub robustness_method: Option<String>,
     // Fallback strategy when weights are zero ("use_local_mean").
+    #[napi(js_name = "zero_weight_fallback")]
     pub zero_weight_fallback: Option<String>,
     // Boundary handling ("extend", "reflect"). Default: "extend".
+    #[napi(js_name = "boundary_policy")]
     pub boundary_policy: Option<String>,
     // Scaling method ("mad", "mar", "mean"). Default: "mad".
+    #[napi(js_name = "scaling_method")]
     pub scaling_method: Option<String>,
     // Auto-convergence tolerance. Default: None.
+    #[napi(js_name = "auto_converge")]
     pub auto_converge: Option<f64>,
     // Return residuals in result. Default: false.
+    #[napi(js_name = "return_residuals")]
     pub return_residuals: Option<bool>,
     // Return robustness weights in result. Default: false.
+    #[napi(js_name = "return_robustness_weights")]
     pub return_robustness_weights: Option<bool>,
     // Return diagnostics (RMSE, etc.). Default: false.
+    #[napi(js_name = "return_diagnostics")]
     pub return_diagnostics: Option<bool>,
     // Calculate confidence intervals (e.g., 0.95). Default: None.
+    #[napi(js_name = "confidence_intervals")]
     pub confidence_intervals: Option<f64>,
     // Calculate prediction intervals. Default: None.
+    #[napi(js_name = "prediction_intervals")]
     pub prediction_intervals: Option<f64>,
     // Fractions to use for cross-validation.
+    #[napi(js_name = "cv_fractions")]
     pub cv_fractions: Option<Vec<f64>>,
     // CV method ("loocv", "kfold"). Default: "kfold".
+    #[napi(js_name = "cv_method")]
     pub cv_method: Option<String>,
     // Number of folds for K-Fold CV. Default: 5.
+    #[napi(js_name = "cv_k")]
     pub cv_k: Option<u32>,
     // Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
@@ -266,20 +280,27 @@ pub struct SmoothOptions {
     // Number of predictor dimensions. Default: 1.
     pub dimensions: Option<u32>,
     // Distance metric ("normalized", "euclidean", "weighted", etc.). Default: "normalized".
+    #[napi(js_name = "distance_metric")]
     pub distance_metric: Option<String>,
     // Per-dimension weights for the "weighted" distance metric.
+    #[napi(js_name = "weighted_metric_weights")]
     pub weighted_metric_weights: Option<Vec<f64>>,
     // Surface mode ("interpolation" or "direct"). Default: "interpolation".
+    #[napi(js_name = "surface_mode")]
     pub surface_mode: Option<String>,
     // Compute hat-matrix statistics (enp, trace_hat, etc.). Default: false.
+    #[napi(js_name = "return_se")]
     pub return_se: Option<bool>,
     // Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy.
     pub cell: Option<f64>,
     // Maximum number of interpolation vertices.
+    #[napi(js_name = "interpolation_vertices")]
     pub interpolation_vertices: Option<u32>,
     // Reduce polynomial degree to linear at boundary vertices (default true).
+    #[napi(js_name = "boundary_degree_fallback")]
     pub boundary_degree_fallback: Option<bool>,
     // Random seed for reproducible K-fold cross-validation splits.
+    #[napi(js_name = "cv_seed")]
     pub cv_seed: Option<u32>,
 }
 
@@ -434,10 +455,12 @@ impl Task for LoessTask {
 #[napi(object)]
 pub struct StreamingOptions {
     // Size of each data chunk. Default: 5000.
+    #[napi(js_name = "chunk_size")]
     pub chunk_size: Option<u32>,
     // Header/footer overlap size. Default: 500.
     pub overlap: Option<u32>,
     // Strategy for merging chunk overlaps ("average", "weighted_average", "take_first", "take_last").
+    #[napi(js_name = "merge_strategy")]
     pub merge_strategy: Option<String>,
 }
 
@@ -541,10 +564,13 @@ impl StreamingLoess {
 #[napi(object)]
 pub struct OnlineOptions {
     // Maximum number of points to keep in the window. Default: 100.
+    #[napi(js_name = "window_capacity")]
     pub window_capacity: Option<u32>,
     // Minimum points required before smoothing starts. Default: 2.
+    #[napi(js_name = "min_points")]
     pub min_points: Option<u32>,
     // Update mode ("full", "incremental"). Default: "full".
+    #[napi(js_name = "update_mode")]
     pub update_mode: Option<String>,
 }
 

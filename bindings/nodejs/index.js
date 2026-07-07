@@ -292,18 +292,18 @@ const {
 // ---------------------------------------------------------------------------
 
 const _SMOOTH_OPTION_KEYS = new Set([
-    'fraction', 'iterations', 'weightFunction', 'robustnessMethod',
-    'zeroWeightFallback', 'boundaryPolicy', 'scalingMethod', 'autoConverge',
-    'returnResiduals', 'returnRobustnessWeights', 'returnDiagnostics',
-    'confidenceIntervals', 'predictionIntervals', 'cvFractions', 'cvMethod',
-    'cvK', 'parallel', 'degree', 'dimensions', 'distanceMetric',
-    'weightedMetricWeights', 'surfaceMode', 'returnSe',
-    'cell', 'interpolationVertices', 'boundaryDegreeFallback', 'cvSeed',
+    'fraction', 'iterations', 'weight_function', 'robustness_method',
+    'zero_weight_fallback', 'boundary_policy', 'scaling_method', 'auto_converge',
+    'return_residuals', 'return_robustness_weights', 'return_diagnostics',
+    'confidence_intervals', 'prediction_intervals', 'cv_fractions', 'cv_method',
+    'cv_k', 'parallel', 'degree', 'dimensions', 'distance_metric',
+    'weighted_metric_weights', 'surface_mode', 'return_se',
+    'cell', 'interpolation_vertices', 'boundary_degree_fallback', 'cv_seed',
 ])
 
-const _STREAMING_OPTION_KEYS = new Set(['chunkSize', 'overlap', 'mergeStrategy'])
+const _STREAMING_OPTION_KEYS = new Set(['chunk_size', 'overlap', 'merge_strategy'])
 
-const _ONLINE_OPTION_KEYS = new Set(['windowCapacity', 'minPoints', 'updateMode'])
+const _ONLINE_OPTION_KEYS = new Set(['window_capacity', 'min_points', 'update_mode'])
 
 function _validateOptions(opts, validKeys, typeName) {
     if (opts == null) return
@@ -357,6 +357,10 @@ class OnlineLoess extends _NativeOnlineLoess {
         _validateOptions(opts, _SMOOTH_OPTION_KEYS, 'SmoothOptions')
         _validateOptions(onlineOpts, _ONLINE_OPTION_KEYS, 'OnlineOptions')
         super(opts, onlineOpts)
+    }
+
+    add_point(x, y) {
+        return this.addPoint(x, y)
     }
 }
 
