@@ -77,13 +77,10 @@ pub struct OnlineOptions {
 pub struct Diagnostics {
     pub rmse: f64,
     pub mae: f64,
-    #[wasm_bindgen(js_name = rSquared)]
     pub r_squared: f64,
     pub aic: Option<f64>,
     pub aicc: Option<f64>,
-    #[wasm_bindgen(js_name = effectiveDf)]
     pub effective_df: Option<f64>,
-    #[wasm_bindgen(js_name = residualSd)]
     pub residual_sd: f64,
 }
 
@@ -104,7 +101,7 @@ impl OnlineOutput {
         self.smoothed
     }
 
-    #[wasm_bindgen(getter, js_name = "stdError")]
+    #[wasm_bindgen(getter, js_name = "std_error")]
     pub fn std_error(&self) -> Option<f64> {
         self.std_error
     }
@@ -114,12 +111,12 @@ impl OnlineOutput {
         self.residual
     }
 
-    #[wasm_bindgen(getter, js_name = "robustnessWeight")]
+    #[wasm_bindgen(getter, js_name = "robustness_weight")]
     pub fn robustness_weight(&self) -> Option<f64> {
         self.robustness_weight
     }
 
-    #[wasm_bindgen(getter, js_name = "iterationsUsed")]
+    #[wasm_bindgen(getter, js_name = "iterations_used")]
     pub fn iterations_used(&self) -> Option<u32> {
         self.iterations_used.map(|i| i as u32)
     }
@@ -150,7 +147,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = standardErrors)]
+    #[wasm_bindgen(getter, js_name = "standard_errors")]
     pub fn standard_errors(&self) -> Option<Float64Array> {
         self.inner
             .standard_errors
@@ -158,7 +155,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = confidenceLower)]
+    #[wasm_bindgen(getter, js_name = "confidence_lower")]
     pub fn confidence_lower(&self) -> Option<Float64Array> {
         self.inner
             .confidence_lower
@@ -166,7 +163,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = confidenceUpper)]
+    #[wasm_bindgen(getter, js_name = "confidence_upper")]
     pub fn confidence_upper(&self) -> Option<Float64Array> {
         self.inner
             .confidence_upper
@@ -174,7 +171,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = predictionLower)]
+    #[wasm_bindgen(getter, js_name = "prediction_lower")]
     pub fn prediction_lower(&self) -> Option<Float64Array> {
         self.inner
             .prediction_lower
@@ -182,7 +179,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = predictionUpper)]
+    #[wasm_bindgen(getter, js_name = "prediction_upper")]
     pub fn prediction_upper(&self) -> Option<Float64Array> {
         self.inner
             .prediction_upper
@@ -190,7 +187,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = robustnessWeights)]
+    #[wasm_bindgen(getter, js_name = "robustness_weights")]
     pub fn robustness_weights(&self) -> Option<Float64Array> {
         self.inner
             .robustness_weights
@@ -211,7 +208,7 @@ impl LoessResult {
         })
     }
 
-    #[wasm_bindgen(getter, js_name = cvScores)]
+    #[wasm_bindgen(getter, js_name = "cv_scores")]
     pub fn cv_scores(&self) -> Option<Float64Array> {
         self.inner
             .cv_scores
@@ -219,12 +216,12 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = fractionUsed)]
+    #[wasm_bindgen(getter, js_name = "fraction_used")]
     pub fn fraction_used(&self) -> f64 {
         self.inner.fraction_used
     }
 
-    #[wasm_bindgen(getter, js_name = iterationsUsed)]
+    #[wasm_bindgen(getter, js_name = "iterations_used")]
     pub fn iterations_used(&self) -> Option<u32> {
         self.inner.iterations_used.map(|i| i as u32)
     }
@@ -234,7 +231,7 @@ impl LoessResult {
         self.inner.enp
     }
 
-    #[wasm_bindgen(getter, js_name = traceHat)]
+    #[wasm_bindgen(getter, js_name = "trace_hat")]
     pub fn trace_hat(&self) -> Option<f64> {
         self.inner.trace_hat
     }
@@ -249,7 +246,7 @@ impl LoessResult {
         self.inner.delta2
     }
 
-    #[wasm_bindgen(getter, js_name = residualScale)]
+    #[wasm_bindgen(getter, js_name = "residual_scale")]
     pub fn residual_scale(&self) -> Option<f64> {
         self.inner.residual_scale
     }

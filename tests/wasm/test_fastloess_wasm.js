@@ -10,7 +10,7 @@ test('WASM batch smoothing', () => {
 
     const result = new fastloess.Loess({
         fraction: 0.3,
-        returnDiagnostics: true
+        return_diagnostics: true
     }).fit(x, y);
 
     assert.strictEqual(result.x.length, 5);
@@ -23,7 +23,7 @@ test('WASM streaming smoothing', () => {
     const streamer = new fastloess.StreamingLoess({
         fraction: 0.3
     }, {
-        chunkSize: 10,
+        chunk_size: 10,
         overlap: 2
     });
 
@@ -46,8 +46,8 @@ test('WASM online smoothing', () => {
     const online = new fastloess.OnlineLoess({
         fraction: 0.5
     }, {
-        windowCapacity: 10,
-        minPoints: 2
+        window_capacity: 10,
+        min_points: 2
     });
 
     let lastSmoothed;
@@ -67,10 +67,10 @@ test('WASM options parsing', () => {
     const y = new Float64Array([2, 4, 6, 8, 10]);
 
     const result = new fastloess.Loess({
-        weightFunction: 'tricube',
-        robustnessMethod: 'bisquare',
-        boundaryPolicy: 'extend',
-        scalingMethod: 'mad'
+        weight_function: 'tricube',
+        robustness_method: 'bisquare',
+        boundary_policy: 'extend',
+        scaling_method: 'mad'
     }).fit(x, y);
 
     assert.strictEqual(result.y.length, 5);
@@ -85,9 +85,9 @@ test('WASM smooth: iterations, zeroWeightFallback, returnResiduals, returnRobust
     const result = new fastloess.Loess({
         fraction: 0.7,
         iterations: 5,
-        zeroWeightFallback: 'return_original',
-        returnResiduals: true,
-        returnRobustnessWeights: true,
+        zero_weight_fallback: 'return_original',
+        return_residuals: true,
+        return_robustness_weights: true,
     }).fit(x, y);
     assert.strictEqual(result.y.length, 5);
 });
@@ -98,11 +98,11 @@ test('WASM smooth: confidenceIntervals, predictionIntervals', () => {
 
     const result = new fastloess.Loess({
         fraction: 0.5,
-        confidenceIntervals: 0.95,
-        predictionIntervals: 0.95,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95,
     }).fit(x, y);
-    assert.ok(result.confidenceLower !== null);
-    assert.ok(result.predictionUpper !== null);
+    assert.ok(result.confidence_lower !== null);
+    assert.ok(result.prediction_upper !== null);
 });
 
 test('WASM smooth: degree, surfaceMode, distanceMetric', () => {
@@ -114,10 +114,10 @@ test('WASM smooth: degree, surfaceMode, distanceMetric', () => {
         assert.strictEqual(r.y.length, 5);
     }
     for (const dm of ['normalized', 'euclidean', 'manhattan', 'chebyshev', 'minkowski']) {
-        const r = new fastloess.Loess({ fraction: 0.5, distanceMetric: dm }).fit(x, y);
+        const r = new fastloess.Loess({ fraction: 0.5, distance_metric: dm }).fit(x, y);
         assert.strictEqual(r.y.length, 5);
     }
-    const r2 = new fastloess.Loess({ fraction: 0.5, surfaceMode: 'direct' }).fit(x, y);
+    const r2 = new fastloess.Loess({ fraction: 0.5, surface_mode: 'direct' }).fit(x, y);
     assert.strictEqual(r2.y.length, 5);
 });
 
@@ -125,9 +125,9 @@ test('WASM smooth: returnSe', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const y = new Float64Array([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
-    const result = new fastloess.Loess({ fraction: 0.5, returnSe: true, surfaceMode: 'direct' }).fit(x, y);
+    const result = new fastloess.Loess({ fraction: 0.5, return_se: true, surface_mode: 'direct' }).fit(x, y);
     assert.ok(result.enp !== null);
-    assert.ok(result.traceHat !== null);
+    assert.ok(result.trace_hat !== null);
 });
 
 test('WASM smooth: autoConverge, parallel', () => {
@@ -136,7 +136,7 @@ test('WASM smooth: autoConverge, parallel', () => {
 
     const result = new fastloess.Loess({
         fraction: 0.5,
-        autoConverge: 1e-4,
+        auto_converge: 1e-4,
         parallel: false,
     }).fit(x, y);
     assert.strictEqual(result.y.length, 5);
@@ -149,7 +149,7 @@ test('WASM streaming: mergeStrategy', () => {
     for (const ms of ['average', 'weighted_average', 'take_first', 'take_last']) {
         const s = new fastloess.StreamingLoess(
             { fraction: 0.3 },
-            { chunkSize: 20, overlap: 2, mergeStrategy: ms }
+            { chunk_size: 20, overlap: 2, merge_strategy: ms }
         );
         s.processChunk(x, y);
         const r = s.finalize();
@@ -159,8 +159,8 @@ test('WASM streaming: mergeStrategy', () => {
 
 test('WASM online: update mode via options', () => {
     const online = new fastloess.OnlineLoess(
-        { fraction: 0.5, degree: 'linear', distanceMetric: 'euclidean' },
-        { windowCapacity: 10, minPoints: 2 }
+        { fraction: 0.5, degree: 'linear', distance_metric: 'euclidean' },
+        { window_capacity: 10, min_points: 2 }
     );
 
     let lastSmoothed;
