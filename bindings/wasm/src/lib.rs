@@ -10,14 +10,23 @@ pub fn init_panic_hook() {
 }
 
 use ::fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
+use ::fastLoess::binding_support as shared_parse;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
-use ::fastLoess::internals::api::{
-    BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
-    ScalingMethod::{self, MAD, MAR, Mean},
-    SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
-};
+use ::fastLoess::internals::api::{DistanceMetric, MergeStrategy, PolynomialDegree, UpdateMode};
 use ::fastLoess::prelude::LoessResult as InnerLoessResult;
+
+fn to_js_error(err: shared_parse::BindingError) -> JsValue {
+    JsValue::from_str(&err.message)
+}
+
+fn map_invalid_arg<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
+    shared_parse::map_invalid_arg(result).map_err(to_js_error)
+}
+
+fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
+    shared_parse::map_runtime(result).map_err(to_js_error)
+}
 
 #[derive(Deserialize)]
 pub struct SmoothOptions {
@@ -62,139 +71,6 @@ pub struct OnlineOptions {
     pub window_capacity: Option<usize>,
     pub min_points: Option<usize>,
     pub update_mode: Option<String>,
-}
-
-fn parse_weight_function(name: &str) -> Result<WeightFunction, JsValue> {
-    match name.to_lowercase().as_str() {
-        "tricube" => Ok(WeightFunction::Tricube),
-        "epanechnikov" => Ok(WeightFunction::Epanechnikov),
-        "gaussian" => Ok(WeightFunction::Gaussian),
-        "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
-        "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
-        "triangle" | "triangular" => Ok(WeightFunction::Triangle),
-        "cosine" => Ok(WeightFunction::Cosine),
-        _ => Err(JsValue::from_str(&format!(
-            "Unknown weight function: {}",
-            name
-        ))),
-    }
-}
-
-fn parse_robustness_method(name: &str) -> Result<RobustnessMethod, JsValue> {
-    match name.to_lowercase().as_str() {
-        "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
-        "huber" => Ok(RobustnessMethod::Huber),
-        "talwar" => Ok(RobustnessMethod::Talwar),
-        _ => Err(JsValue::from_str(&format!(
-            "Unknown robustness method: {}",
-            name
-        ))),
-    }
-}
-
-fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback, JsValue> {
-    match name.to_lowercase().as_str() {
-        "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
-        "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-        "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
-        _ => Err(JsValue::from_str(&format!(
-            "Unknown zero weight fallback: {}",
-            name
-        ))),
-    }
-}
-
-fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy, JsValue> {
-    match name.to_lowercase().as_str() {
-        "extend" | "pad" => Ok(BoundaryPolicy::Extend),
-        "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-        "zero" | "none" => Ok(BoundaryPolicy::Zero),
-        "noboundary" => Ok(BoundaryPolicy::NoBoundary),
-        _ => Err(JsValue::from_str(&format!(
-            "Unknown boundary policy: {}",
-            name
-        ))),
-    }
-}
-
-fn parse_scaling_method(name: &str) -> Result<ScalingMethod, JsValue> {
-    match name.to_lowercase().as_str() {
-        "mad" => Ok(MAD),
-        "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
-        _ => Err(JsValue::from_str(&format!(
-            "Unknown scaling method: {}. Valid options: mad, mar, mean",
-            name
-        ))),
-    }
-}
-
-fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree, JsValue> {
-    match name.to_lowercase().as_str() {
-        "constant" | "0" => Ok(PolynomialDegree::Constant),
-        "linear" | "1" => Ok(PolynomialDegree::Linear),
-        "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
-        "cubic" | "3" => Ok(PolynomialDegree::Cubic),
-        "quartic" | "4" => Ok(PolynomialDegree::Quartic),
-        _ => Err(JsValue::from_str(&format!(
-            "Unknown polynomial degree: {}. Valid options: constant, linear, quadratic, cubic, quartic",
-            name
-        ))),
-    }
-}
-
-fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>, JsValue> {
-    // Handle "minkowski:p" inline format
-    if let Some(p_str) = name.to_lowercase().strip_prefix("minkowski:") {
-        let p: f64 = p_str
-            .parse()
-            .map_err(|_| JsValue::from_str(&format!("Invalid Minkowski p value: {}", p_str)))?;
-        return Ok(DistanceMetric::Minkowski(p));
-    }
-    match name.to_lowercase().as_str() {
-        "normalized" => Ok(DistanceMetric::Normalized),
-        "euclidean" => Ok(DistanceMetric::Euclidean),
-        "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
-        "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
-        "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
-        "weighted" => Ok(DistanceMetric::Weighted(Vec::new())),
-        _ => Err(JsValue::from_str(&format!(
-            "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski, weighted",
-            name
-        ))),
-    }
-}
-
-fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, JsValue> {
-    match name.to_lowercase().as_str() {
-        "average" | "mean" => Ok(MergeStrategy::Average),
-        "weighted_average" | "weighted" => Ok(MergeStrategy::WeightedAverage),
-        "take_first" | "first" => Ok(MergeStrategy::TakeFirst),
-        "take_last" | "last" => Ok(MergeStrategy::TakeLast),
-        _ => Err(JsValue::from_str(&format!(
-            "Unknown merge strategy: {}. Valid options: average, weighted_average, take_first, take_last",
-            name
-        ))),
-    }
-}
-
-fn parse_surface_mode(name: &str) -> Result<SurfaceMode, JsValue> {
-    match name.to_lowercase().as_str() {
-        "interpolation" | "interpolate" => Ok(SurfaceMode::Interpolation),
-        "direct" => Ok(SurfaceMode::Direct),
-        _ => Err(JsValue::from_str(&format!(
-            "Unknown surface mode: {}. Valid options: interpolation, direct",
-            name
-        ))),
-    }
-}
-
-fn parse_update_mode(name: &str) -> Result<UpdateMode, JsValue> {
-    match name.to_lowercase().as_str() {
-        "full" | "resmooth" => Ok(UpdateMode::Full),
-        "incremental" | "single" => Ok(UpdateMode::Incremental),
-        _ => Err(JsValue::from_str(&format!("Unknown update mode: {}", name))),
-    }
 }
 
 #[wasm_bindgen]
@@ -392,149 +268,66 @@ fn smooth(
     custom_weights: Option<Vec<f64>>,
 ) -> Result<LoessResult, JsValue> {
     let mut builder = LoessBuilder::<f64>::new();
+    let y_len = y.length() as usize;
 
     if !options.is_undefined() && !options.is_null() {
         let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
 
-        if let Some(f) = opts.fraction {
-            builder = builder.fraction(f);
-        }
-        if let Some(iter) = opts.iterations {
-            builder = builder.iterations(iter);
-        }
-        if let Some(wf) = opts.weight_function {
-            parse_weight_function(&wf)?;
-            builder = builder.weight_function(&wf);
-        }
-        if let Some(rm) = opts.robustness_method {
-            parse_robustness_method(&rm)?;
-            builder = builder.robustness_method(&rm);
-        }
-        if let Some(zw) = opts.zero_weight_fallback {
-            parse_zero_weight_fallback(&zw)?;
-            builder = builder.zero_weight_fallback(&zw);
-        }
-        if let Some(bp) = opts.boundary_policy {
-            parse_boundary_policy(&bp)?;
-            builder = builder.boundary_policy(&bp);
-        }
-        if let Some(sm) = opts.scaling_method {
-            parse_scaling_method(&sm)?;
-            builder = builder.scaling_method(&sm);
-        }
-        if let Some(ac) = opts.auto_converge {
-            builder = builder.auto_converge(ac);
-        }
-        if opts.return_residuals.unwrap_or(false) {
-            builder = builder.return_residuals();
-        }
-        if opts.return_robustness_weights.unwrap_or(false) {
-            builder = builder.return_robustness_weights();
-        }
-        if opts.return_diagnostics.unwrap_or(false) {
-            builder = builder.return_diagnostics();
-        }
-        if let Some(ci) = opts.confidence_intervals {
-            builder = builder.confidence_intervals(ci);
-        }
-        if let Some(pi) = opts.prediction_intervals {
-            builder = builder.prediction_intervals(pi);
-        }
-        if let Some(par) = opts.parallel {
-            builder = builder.parallel(par);
-        }
-        if let Some(deg) = opts.degree {
-            parse_polynomial_degree(&deg)?;
-            builder = builder.degree(&deg);
-        }
-        if let Some(dim) = opts.dimensions {
-            builder = builder.dimensions(dim);
-        }
-        {
-            let weighted_weights = opts.weighted_metric_weights.clone().unwrap_or_default();
-            if let Some(dm) = opts.distance_metric {
-                if dm.eq_ignore_ascii_case("weighted") {
-                    builder = builder.distance_metric("weighted");
-                    builder = builder.weighted_metric_weights(weighted_weights);
-                } else {
-                    parse_distance_metric(&dm)?;
-                    builder = builder.distance_metric(&dm);
-                }
-            }
-        }
-        if let Some(sm_val) = opts.surface_mode {
-            parse_surface_mode(&sm_val)?;
-            builder = builder.surface_mode(&sm_val);
-        }
-        if opts.return_se.unwrap_or(false) {
-            builder = builder.return_se();
-        }
-        if let Some(cw) = custom_weights {
-            if cw.len() != y.length() as usize {
-                return Err(JsValue::from_str(&format!(
-                    "custom_weights length ({}) must match y length ({})",
-                    cw.len(),
-                    y.length()
-                )));
-            }
-            if cw.iter().any(|&w| w < 0.0) {
-                return Err(JsValue::from_str("custom_weights must be non-negative"));
-            }
-            builder = builder.custom_weights(cw);
-        }
-        if let Some(c) = opts.cell {
-            builder = builder.cell(c);
-        }
-        if let Some(v) = opts.interpolation_vertices {
-            builder = builder.interpolation_vertices(v);
-        }
-        if let Some(bdf) = opts.boundary_degree_fallback {
-            builder = builder.boundary_degree_fallback(bdf);
-        }
+        let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+            builder,
+            shared_parse::BuilderOptionSet {
+                fraction: opts.fraction,
+                iterations: opts.iterations,
+                weight_function: opts.weight_function.as_deref(),
+                robustness_method: opts.robustness_method.as_deref(),
+                zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                boundary_policy: opts.boundary_policy.as_deref(),
+                scaling_method: opts.scaling_method.as_deref(),
+                auto_converge: opts.auto_converge,
+                return_residuals: opts.return_residuals.unwrap_or(false),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
+                parallel: opts.parallel,
+                degree: opts.degree.as_deref(),
+                dimensions: opts.dimensions,
+                distance_metric: opts.distance_metric.as_deref(),
+                weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
+                surface_mode: opts.surface_mode.as_deref(),
+                return_se: opts.return_se.unwrap_or(false),
+                cell: opts.cell,
+                interpolation_vertices: opts.interpolation_vertices,
+                boundary_degree_fallback: opts.boundary_degree_fallback,
+                cv_fractions: opts.cv_fractions.as_deref(),
+                cv_method: opts.cv_method.as_deref(),
+                cv_k: opts.cv_k.map(|v| v as usize),
+                cv_seed: opts.cv_seed,
+            },
+        ))?;
+        builder = configured_builder;
+    }
 
-        // Cross-validation
-        if let Some(fractions) = opts.cv_fractions {
-            let method = opts.cv_method.as_deref().unwrap_or("kfold");
-            let k = opts.cv_k.unwrap_or(5) as usize;
-            let seed = opts.cv_seed;
-
-            match method.to_lowercase().as_str() {
-                "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    builder = builder.cv_method("loocv");
-                    builder = builder.cv_fractions(fractions);
-                    if let Some(s) = seed {
-                        builder = builder.cv_seed(s);
-                    }
-                }
-                "kfold" | "k_fold" | "k-fold" => {
-                    builder = builder.cv_method("kfold");
-                    builder = builder.cv_k(k);
-                    builder = builder.cv_fractions(fractions);
-                    if let Some(s) = seed {
-                        builder = builder.cv_seed(s);
-                    }
-                }
-                _ => {
-                    return Err(JsValue::from_str(&format!(
-                        "Unknown CV method: {}. Valid options: loocv, kfold",
-                        method
-                    )));
-                }
-            };
+    if let Some(cw) = custom_weights {
+        if cw.len() != y_len {
+            return Err(to_js_error(shared_parse::BindingError::invalid_arg(
+                shared_parse::custom_weights_length_mismatch_message(cw.len(), y_len),
+            )));
         }
+        if cw.iter().any(|&w| w < 0.0) {
+            return Err(to_js_error(shared_parse::BindingError::invalid_arg(
+                shared_parse::CUSTOM_WEIGHTS_MUST_BE_NON_NEGATIVE,
+            )));
+        }
+        builder = builder.custom_weights(cw);
     }
 
     let x_vec = x.to_vec();
     let y_vec = y.to_vec();
 
-    let model = builder
-        .adapter(Batch)
-        .build()
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let model = map_runtime(builder.adapter(Batch).build())?;
 
-    let result = model
-        .fit(&x_vec, &y_vec)
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+    let result = map_runtime(model.fit(&x_vec, &y_vec))?;
 
     Ok(LoessResult { inner: result })
 }
@@ -556,117 +349,39 @@ impl StreamingLoess {
         if !options.is_undefined() && !options.is_null() {
             let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
 
-            if let Some(f) = opts.fraction {
-                builder = builder.fraction(f);
-            }
-            if let Some(iter) = opts.iterations {
-                builder = builder.iterations(iter);
-            }
-            if let Some(wf) = opts.weight_function {
-                parse_weight_function(&wf)?;
-                builder = builder.weight_function(&wf);
-            }
-            if let Some(rm) = opts.robustness_method {
-                parse_robustness_method(&rm)?;
-                builder = builder.robustness_method(&rm);
-            }
-            if let Some(zw) = opts.zero_weight_fallback {
-                parse_zero_weight_fallback(&zw)?;
-                builder = builder.zero_weight_fallback(&zw);
-            }
-            if let Some(bp) = opts.boundary_policy {
-                parse_boundary_policy(&bp)?;
-                builder = builder.boundary_policy(&bp);
-            }
-            if let Some(sm) = opts.scaling_method {
-                parse_scaling_method(&sm)?;
-                builder = builder.scaling_method(&sm);
-            }
-            if let Some(ac) = opts.auto_converge {
-                builder = builder.auto_converge(ac);
-            }
-            if opts.return_residuals.unwrap_or(false) {
-                builder = builder.return_residuals();
-            }
-            if opts.return_robustness_weights.unwrap_or(false) {
-                builder = builder.return_robustness_weights();
-            }
-            if opts.return_diagnostics.unwrap_or(false) {
-                builder = builder.return_diagnostics();
-            }
-            if let Some(ci) = opts.confidence_intervals {
-                builder = builder.confidence_intervals(ci);
-            }
-            if let Some(pi) = opts.prediction_intervals {
-                builder = builder.prediction_intervals(pi);
-            }
-            if let Some(par) = opts.parallel {
-                builder = builder.parallel(par);
-            }
-            if let Some(deg) = opts.degree {
-                parse_polynomial_degree(&deg)?;
-                builder = builder.degree(&deg);
-            }
-            if let Some(dim) = opts.dimensions {
-                builder = builder.dimensions(dim);
-            }
-            {
-                let weighted_weights = opts.weighted_metric_weights.clone().unwrap_or_default();
-                if let Some(dm) = opts.distance_metric {
-                    if dm.eq_ignore_ascii_case("weighted") {
-                        builder = builder.distance_metric("weighted");
-                        builder = builder.weighted_metric_weights(weighted_weights);
-                    } else {
-                        parse_distance_metric(&dm)?;
-                        builder = builder.distance_metric(&dm);
-                    }
-                }
-            }
-            if let Some(sm_val) = opts.surface_mode {
-                parse_surface_mode(&sm_val)?;
-                builder = builder.surface_mode(&sm_val);
-            }
-            if opts.return_se.unwrap_or(false) {
-                builder = builder.return_se();
-            }
-            if let Some(c) = opts.cell {
-                builder = builder.cell(c);
-            }
-            if let Some(v) = opts.interpolation_vertices {
-                builder = builder.interpolation_vertices(v);
-            }
-            if let Some(bdf) = opts.boundary_degree_fallback {
-                builder = builder.boundary_degree_fallback(bdf);
-            }
-            // Cross-validation
-            if let Some(fractions) = opts.cv_fractions {
-                let method = opts.cv_method.as_deref().unwrap_or("kfold");
-                let k = opts.cv_k.unwrap_or(5) as usize;
-                let seed = opts.cv_seed;
-                match method.to_lowercase().as_str() {
-                    "simple" | "loo" | "loocv" | "leave_one_out" => {
-                        builder = builder.cv_method("loocv");
-                        builder = builder.cv_fractions(fractions);
-                        if let Some(s) = seed {
-                            builder = builder.cv_seed(s);
-                        }
-                    }
-                    "kfold" | "k_fold" | "k-fold" => {
-                        builder = builder.cv_method("kfold");
-                        builder = builder.cv_k(k);
-                        builder = builder.cv_fractions(fractions);
-                        if let Some(s) = seed {
-                            builder = builder.cv_seed(s);
-                        }
-                    }
-                    _ => {
-                        return Err(JsValue::from_str(&format!(
-                            "Unknown CV method: {}. Valid options: loocv, kfold",
-                            method
-                        )));
-                    }
-                };
-            }
+            let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+                builder,
+                shared_parse::BuilderOptionSet {
+                    fraction: opts.fraction,
+                    iterations: opts.iterations,
+                    weight_function: opts.weight_function.as_deref(),
+                    robustness_method: opts.robustness_method.as_deref(),
+                    zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                    boundary_policy: opts.boundary_policy.as_deref(),
+                    scaling_method: opts.scaling_method.as_deref(),
+                    auto_converge: opts.auto_converge,
+                    return_residuals: opts.return_residuals.unwrap_or(false),
+                    return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                    return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                    confidence_intervals: opts.confidence_intervals,
+                    prediction_intervals: opts.prediction_intervals,
+                    parallel: opts.parallel,
+                    degree: opts.degree.as_deref(),
+                    dimensions: opts.dimensions,
+                    distance_metric: opts.distance_metric.as_deref(),
+                    weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
+                    surface_mode: opts.surface_mode.as_deref(),
+                    return_se: opts.return_se.unwrap_or(false),
+                    cell: opts.cell,
+                    interpolation_vertices: opts.interpolation_vertices,
+                    boundary_degree_fallback: opts.boundary_degree_fallback,
+                    cv_fractions: opts.cv_fractions.as_deref(),
+                    cv_method: opts.cv_method.as_deref(),
+                    cv_k: opts.cv_k.map(|v| v as usize),
+                    cv_seed: opts.cv_seed,
+                },
+            ))?;
+            builder = configured_builder;
         }
 
         let mut chunk_size = 5000;
@@ -682,17 +397,18 @@ impl StreamingLoess {
                 overlap = ov;
             }
             if let Some(ms) = sopts.merge_strategy {
-                merge_strategy = parse_merge_strategy(&ms)?;
+                merge_strategy = map_invalid_arg(shared_parse::parse_merge_strategy(&ms))?;
             }
         }
 
-        let model = builder
-            .adapter(Streaming)
-            .chunk_size(chunk_size)
-            .overlap(overlap)
-            .merge_strategy(merge_strategy)
-            .build()
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let model = map_runtime(
+            builder
+                .adapter(Streaming)
+                .chunk_size(chunk_size)
+                .overlap(overlap)
+                .merge_strategy(merge_strategy)
+                .build(),
+        )?;
 
         Ok(StreamingLoess { inner: model })
     }
@@ -705,18 +421,13 @@ impl StreamingLoess {
     ) -> Result<LoessResult, JsValue> {
         let x_vec = x.to_vec();
         let y_vec = y.to_vec();
-        let result: ::fastLoess::prelude::LoessResult<f64> = self
-            .inner
-            .process_chunk(&x_vec, &y_vec)
-            .map_err(|e: ::fastLoess::prelude::LoessError| JsValue::from_str(&e.to_string()))?;
+        let result: ::fastLoess::prelude::LoessResult<f64> =
+            map_runtime(self.inner.process_chunk(&x_vec, &y_vec))?;
         Ok(LoessResult { inner: result })
     }
 
     pub fn finalize(&mut self) -> Result<LoessResult, JsValue> {
-        let result: ::fastLoess::prelude::LoessResult<f64> = self
-            .inner
-            .finalize()
-            .map_err(|e: ::fastLoess::prelude::LoessError| JsValue::from_str(&e.to_string()))?;
+        let result: ::fastLoess::prelude::LoessResult<f64> = map_runtime(self.inner.finalize())?;
         Ok(LoessResult { inner: result })
     }
 }
@@ -725,6 +436,11 @@ impl StreamingLoess {
 #[wasm_bindgen]
 pub struct OnlineLoess {
     inner: ParallelOnlineLoess<f64>,
+    dimensions: usize,
+    degree: PolynomialDegree,
+    distance_metric: DistanceMetric<f64>,
+    fraction_used: f64,
+    iterations_used: Option<usize>,
 }
 
 #[wasm_bindgen]
@@ -734,94 +450,63 @@ impl OnlineLoess {
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, onlineOpts: JsValue) -> Result<OnlineLoess, JsValue> {
         let mut builder = LoessBuilder::<f64>::new();
+        let mut dimensions = 1usize;
+        let mut degree = PolynomialDegree::Linear;
+        let mut distance_metric = DistanceMetric::Normalized;
+        let mut fraction_used = 0.2f64;
+        let mut iterations_used = None;
 
         if !options.is_undefined() && !options.is_null() {
             let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
-
+            if let Some(d) = opts.dimensions {
+                dimensions = d.max(1);
+            }
             if let Some(f) = opts.fraction {
-                builder = builder.fraction(f);
+                fraction_used = f;
             }
-            if let Some(iter) = opts.iterations {
-                builder = builder.iterations(iter);
+            if let Some(i) = opts.iterations {
+                iterations_used = Some(i);
             }
-            if let Some(wf) = opts.weight_function {
-                parse_weight_function(&wf)?;
-                builder = builder.weight_function(&wf);
+
+            let (configured_builder, applied) =
+                map_invalid_arg(shared_parse::apply_builder_options(
+                    builder,
+                    shared_parse::BuilderOptionSet {
+                        fraction: opts.fraction,
+                        iterations: opts.iterations,
+                        weight_function: opts.weight_function.as_deref(),
+                        robustness_method: opts.robustness_method.as_deref(),
+                        zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                        boundary_policy: opts.boundary_policy.as_deref(),
+                        scaling_method: opts.scaling_method.as_deref(),
+                        auto_converge: opts.auto_converge,
+                        return_residuals: opts.return_residuals.unwrap_or(false),
+                        return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                        return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                        confidence_intervals: opts.confidence_intervals,
+                        prediction_intervals: opts.prediction_intervals,
+                        parallel: opts.parallel,
+                        degree: opts.degree.as_deref(),
+                        dimensions: opts.dimensions,
+                        distance_metric: opts.distance_metric.as_deref(),
+                        weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
+                        surface_mode: opts.surface_mode.as_deref(),
+                        return_se: opts.return_se.unwrap_or(false),
+                        cell: opts.cell,
+                        interpolation_vertices: opts.interpolation_vertices,
+                        boundary_degree_fallback: opts.boundary_degree_fallback,
+                        cv_fractions: None,
+                        cv_method: None,
+                        cv_k: None,
+                        cv_seed: None,
+                    },
+                ))?;
+            builder = configured_builder;
+            if let Some(parsed_degree) = applied.degree {
+                degree = parsed_degree;
             }
-            if let Some(rm) = opts.robustness_method {
-                parse_robustness_method(&rm)?;
-                builder = builder.robustness_method(&rm);
-            }
-            if let Some(zw) = opts.zero_weight_fallback {
-                parse_zero_weight_fallback(&zw)?;
-                builder = builder.zero_weight_fallback(&zw);
-            }
-            if let Some(bp) = opts.boundary_policy {
-                parse_boundary_policy(&bp)?;
-                builder = builder.boundary_policy(&bp);
-            }
-            if let Some(sm) = opts.scaling_method {
-                parse_scaling_method(&sm)?;
-                builder = builder.scaling_method(&sm);
-            }
-            if let Some(ac) = opts.auto_converge {
-                builder = builder.auto_converge(ac);
-            }
-            if opts.return_residuals.unwrap_or(false) {
-                builder = builder.return_residuals();
-            }
-            if opts.return_robustness_weights.unwrap_or(false) {
-                builder = builder.return_robustness_weights();
-            }
-            if opts.return_diagnostics.unwrap_or(false) {
-                builder = builder.return_diagnostics();
-            }
-            if let Some(ci) = opts.confidence_intervals {
-                builder = builder.confidence_intervals(ci);
-            }
-            if let Some(pi) = opts.prediction_intervals {
-                builder = builder.prediction_intervals(pi);
-            }
-            if let Some(par) = opts.parallel {
-                builder = builder.parallel(par);
-            }
-            if let Some(deg) = opts.degree {
-                parse_polynomial_degree(&deg)?;
-                builder = builder.degree(&deg);
-            }
-            if let Some(dim) = opts.dimensions {
-                builder = builder.dimensions(dim);
-            }
-            if let Some(dim) = opts.dimensions {
-                builder = builder.dimensions(dim);
-            }
-            {
-                let weighted_weights = opts.weighted_metric_weights.clone().unwrap_or_default();
-                if let Some(dm) = opts.distance_metric {
-                    if dm.eq_ignore_ascii_case("weighted") {
-                        builder = builder.distance_metric("weighted");
-                        builder = builder.weighted_metric_weights(weighted_weights);
-                    } else {
-                        parse_distance_metric(&dm)?;
-                        builder = builder.distance_metric(&dm);
-                    }
-                }
-            }
-            if let Some(sm_val) = opts.surface_mode {
-                parse_surface_mode(&sm_val)?;
-                builder = builder.surface_mode(&sm_val);
-            }
-            if opts.return_se.unwrap_or(false) {
-                builder = builder.return_se();
-            }
-            if let Some(c) = opts.cell {
-                builder = builder.cell(c);
-            }
-            if let Some(v) = opts.interpolation_vertices {
-                builder = builder.interpolation_vertices(v);
-            }
-            if let Some(bdf) = opts.boundary_degree_fallback {
-                builder = builder.boundary_degree_fallback(bdf);
+            if let Some(parsed_distance) = applied.distance_metric {
+                distance_metric = parsed_distance;
             }
         }
 
@@ -838,19 +523,27 @@ impl OnlineLoess {
                 min_points = mp;
             }
             if let Some(um) = oopts.update_mode {
-                update_mode = parse_update_mode(&um)?;
+                update_mode = map_invalid_arg(shared_parse::parse_update_mode(&um))?;
             }
         }
 
-        let model = builder
-            .adapter(Online)
-            .window_capacity(window_capacity)
-            .min_points(min_points)
-            .update_mode(update_mode)
-            .build()
-            .map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let model = map_runtime(
+            builder
+                .adapter(Online)
+                .window_capacity(window_capacity)
+                .min_points(min_points)
+                .update_mode(update_mode)
+                .build(),
+        )?;
 
-        Ok(OnlineLoess { inner: model })
+        Ok(OnlineLoess {
+            inner: model,
+            dimensions,
+            degree,
+            distance_metric,
+            fraction_used,
+            iterations_used,
+        })
     }
 
     #[wasm_bindgen(js_name = "addPoints")]
@@ -858,17 +551,27 @@ impl OnlineLoess {
         &mut self,
         xs: &Float64Array,
         ys: &Float64Array,
-    ) -> Result<Vec<f64>, JsValue> {
+    ) -> Result<LoessResult, JsValue> {
         let xs_vec: Vec<f64> = xs.to_vec();
         let ys_vec: Vec<f64> = ys.to_vec();
-        let mut results = Vec::with_capacity(ys_vec.len());
-        for (&xi, &yi) in xs_vec.iter().zip(ys_vec.iter()) {
-            let result = self
-                .inner
-                .add_point(std::slice::from_ref(&xi), yi)
-                .map_err(|e: ::fastLoess::prelude::LoessError| JsValue::from_str(&e.to_string()))?;
-            results.push(result.as_ref().map_or(yi, |o| o.smoothed));
-        }
-        Ok(results)
+        let metadata = shared_parse::OnlineResultMetadata {
+            dimensions: self.dimensions,
+            degree: self.degree,
+            distance_metric: self.distance_metric.clone(),
+            fraction_used: self.fraction_used,
+            iterations_used: self.iterations_used,
+        };
+
+        let inner = map_invalid_arg(shared_parse::online_add_points_to_result(
+            &xs_vec,
+            &ys_vec,
+            &metadata,
+            |x, y| {
+                let out = self.inner.add_point(x, y)?;
+                Ok(out.map(|v| v.smoothed))
+            },
+        ))?;
+
+        Ok(LoessResult { inner })
     }
 }

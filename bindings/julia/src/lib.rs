@@ -6,18 +6,54 @@
 #![allow(unsafe_op_in_unsafe_fn)]
 
 use ptr::null_mut;
+use std::cell::RefCell;
 use std::ffi::CStr;
+use std::ffi::CString;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::panic::catch_unwind;
 use std::ptr;
 use std::slice::from_raw_parts;
 
 use fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
+use fastLoess::binding_support as shared_parse;
 use fastLoess::internals::api::{
-    BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
-    ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
+    WeightFunction, ZeroWeightFallback,
 };
 use fastLoess::prelude::LoessResult;
+
+thread_local! {
+    static JL_LAST_ERROR: RefCell<Option<CString>> = const { RefCell::new(None) };
+}
+
+fn set_last_error_message(msg: &str) {
+    let cmsg = shared_parse::to_cstring_lossy(msg);
+    JL_LAST_ERROR.with(|slot| {
+        *slot.borrow_mut() = Some(cmsg);
+    });
+}
+
+fn clear_last_error_message() {
+    JL_LAST_ERROR.with(|slot| {
+        *slot.borrow_mut() = None;
+    });
+}
+
+fn null_with_last_error<T>(msg: &str) -> *mut T {
+    set_last_error_message(msg);
+    null_mut()
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn jl_last_error_message() -> *const c_char {
+    JL_LAST_ERROR.with(|slot| {
+        if let Some(msg) = slot.borrow().as_ref() {
+            msg.as_ptr()
+        } else {
+            ptr::null()
+        }
+    })
+}
 
 // Result struct that can be passed across FFI boundary.
 // All arrays are allocated by Rust and must be freed by Rust.
@@ -132,9 +168,25 @@ fn opt_vec_to_ptr(v: Option<Vec<f64>>) -> *mut c_double {
 // Create an error result with the given message.
 fn error_result(msg: &str) -> JlLoessResult {
     let mut result = JlLoessResult::default();
-    let c_string = std::ffi::CString::new(msg).unwrap_or_default();
+    let c_string = shared_parse::to_cstring_lossy(msg);
     result.error = c_string.into_raw();
     result
+}
+
+fn error_result_from(err: shared_parse::BindingError) -> JlLoessResult {
+    error_result(&err.message)
+}
+
+fn map_invalid_arg_result<T, E: ToString>(
+    result: std::result::Result<T, E>,
+) -> std::result::Result<T, JlLoessResult> {
+    shared_parse::map_invalid_arg(result).map_err(error_result_from)
+}
+
+fn map_runtime_result<T, E: ToString>(
+    result: std::result::Result<T, E>,
+) -> std::result::Result<T, JlLoessResult> {
+    shared_parse::map_runtime(result).map_err(error_result_from)
 }
 
 // Parse a C string safely.
@@ -143,153 +195,6 @@ unsafe fn parse_c_str(s: *const c_char, default: &str) -> &str {
         default
     } else {
         CStr::from_ptr(s).to_str().unwrap_or(default)
-    }
-}
-
-// Parse weight function from string.
-fn parse_weight_function(name: &str) -> Result<WeightFunction, String> {
-    match name.to_lowercase().as_str() {
-        "tricube" => Ok(WeightFunction::Tricube),
-        "epanechnikov" => Ok(WeightFunction::Epanechnikov),
-        "gaussian" => Ok(WeightFunction::Gaussian),
-        "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
-        "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
-        "triangle" | "triangular" => Ok(WeightFunction::Triangle),
-        "cosine" => Ok(WeightFunction::Cosine),
-        _ => Err(format!(
-            "Unknown weight function: {}. Valid: tricube, epanechnikov, gaussian, uniform, biweight, triangle, cosine",
-            name
-        )),
-    }
-}
-
-// Parse robustness method from string.
-fn parse_robustness_method(name: &str) -> Result<RobustnessMethod, String> {
-    match name.to_lowercase().as_str() {
-        "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
-        "huber" => Ok(RobustnessMethod::Huber),
-        "talwar" => Ok(RobustnessMethod::Talwar),
-        _ => Err(format!(
-            "Unknown robustness method: {}. Valid: bisquare, huber, talwar",
-            name
-        )),
-    }
-}
-
-// Parse zero weight fallback from string.
-fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback, String> {
-    match name.to_lowercase().as_str() {
-        "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
-        "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-        "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
-        _ => Err(format!(
-            "Unknown zero weight fallback: {}. Valid: use_local_mean, return_original, return_none",
-            name
-        )),
-    }
-}
-
-// Parse boundary policy from string.
-fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy, String> {
-    match name.to_lowercase().as_str() {
-        "extend" | "pad" => Ok(BoundaryPolicy::Extend),
-        "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-        "zero" | "none" => Ok(BoundaryPolicy::Zero),
-        "noboundary" => Ok(BoundaryPolicy::NoBoundary),
-        _ => Err(format!(
-            "Unknown boundary policy: {}. Valid: extend, reflect, zero, noboundary",
-            name
-        )),
-    }
-}
-
-// Parse scaling method from string.
-fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
-    match name.to_lowercase().as_str() {
-        "mad" => Ok(ScalingMethod::MAD),
-        "mar" => Ok(ScalingMethod::MAR),
-        "mean" => Ok(ScalingMethod::Mean),
-        _ => Err(format!(
-            "Unknown scaling method: {}. Valid: mad, mar, mean",
-            name
-        )),
-    }
-}
-
-// Parse update mode from string.
-fn parse_update_mode(name: &str) -> Result<UpdateMode, String> {
-    match name.to_lowercase().as_str() {
-        "full" | "resmooth" => Ok(UpdateMode::Full),
-        "incremental" | "single" => Ok(UpdateMode::Incremental),
-        _ => Err(format!(
-            "Unknown update mode: {}. Valid: full, incremental",
-            name
-        )),
-    }
-}
-
-// Parse merge strategy from string.
-fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
-    match name.to_lowercase().as_str() {
-        "average" | "mean" => Ok(MergeStrategy::Average),
-        "weighted_average" | "weighted" => Ok(MergeStrategy::WeightedAverage),
-        "take_first" | "first" => Ok(MergeStrategy::TakeFirst),
-        "take_last" | "last" => Ok(MergeStrategy::TakeLast),
-        _ => Err(format!(
-            "Unknown merge strategy: {}. Valid: average, weighted_average, take_first, take_last",
-            name
-        )),
-    }
-}
-
-// Parse polynomial degree from string.
-fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree, String> {
-    match name.to_lowercase().as_str() {
-        "constant" | "0" => Ok(PolynomialDegree::Constant),
-        "linear" | "1" => Ok(PolynomialDegree::Linear),
-        "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
-        "cubic" | "3" => Ok(PolynomialDegree::Cubic),
-        "quartic" | "4" => Ok(PolynomialDegree::Quartic),
-        _ => Err(format!(
-            "Unknown degree: {}. Valid: constant, linear, quadratic, cubic, quartic",
-            name
-        )),
-    }
-}
-
-// Parse surface mode from string.
-fn parse_surface_mode(name: &str) -> Result<SurfaceMode, String> {
-    match name.to_lowercase().as_str() {
-        "direct" => Ok(SurfaceMode::Direct),
-        "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
-        _ => Err(format!(
-            "Unknown surface mode: {}. Valid: direct, interpolation",
-            name
-        )),
-    }
-}
-
-// Parse distance metric from string.
-fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>, String> {
-    let lower = name.to_lowercase();
-    // Handle "minkowski:p" inline format
-    if let Some(p_str) = lower.strip_prefix("minkowski:") {
-        let p: f64 = p_str
-            .parse()
-            .map_err(|_| format!("Invalid Minkowski p value: {}", p_str))?;
-        return Ok(DistanceMetric::Minkowski(p));
-    }
-    match lower.as_str() {
-        "euclidean" => Ok(DistanceMetric::Euclidean),
-        "normalized" | "norm" => Ok(DistanceMetric::Normalized),
-        "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
-        "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
-        "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
-        "weighted" => Ok(DistanceMetric::Weighted(Vec::new())),
-        _ => Err(format!(
-            "Unknown distance metric: {}. Valid: euclidean, normalized, manhattan, chebyshev, minkowski, weighted",
-            name
-        )),
     }
 }
 
@@ -405,6 +310,8 @@ pub struct JlOnlineLoess {
     fraction: f64,
     iterations: usize,
     dimensions: usize,
+    degree: PolynomialDegree,
+    distance_metric: DistanceMetric<f64>,
 }
 
 // Loess () C API
@@ -440,6 +347,7 @@ pub unsafe extern "C" fn jl_loess_new(
     surface_mode: *const c_char,
     return_se: c_int,
 ) -> *mut JlLoessConfig {
+    clear_last_error_message();
     let result = catch_unwind(|| {
         let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
         let rm_str = unsafe { parse_c_str(robustness_method, "bisquare") };
@@ -451,14 +359,14 @@ pub unsafe extern "C" fn jl_loess_new(
         let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
         let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
 
-        let wf = unwrap_or_return_null!(parse_weight_function(wf_str));
-        let rm = unwrap_or_return_null!(parse_robustness_method(rm_str));
-        let sm = unwrap_or_return_null!(parse_scaling_method(sm_str));
-        let bp = unwrap_or_return_null!(parse_boundary_policy(bp_str));
-        let zwf = unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
-        let deg = unwrap_or_return_null!(parse_polynomial_degree(deg_str));
-        let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
-        let surf = unwrap_or_return_null!(parse_surface_mode(surf_str));
+        let wf = unwrap_or_return_null!(shared_parse::parse_weight_function(wf_str));
+        let rm = unwrap_or_return_null!(shared_parse::parse_robustness_method(rm_str));
+        let sm = unwrap_or_return_null!(shared_parse::parse_scaling_method(sm_str));
+        let bp = unwrap_or_return_null!(shared_parse::parse_boundary_policy(bp_str));
+        let zwf = unwrap_or_return_null!(shared_parse::parse_zero_weight_fallback(zwf_str));
+        let deg = unwrap_or_return_null!(shared_parse::parse_polynomial_degree(deg_str));
+        let dm = unwrap_or_return_null!(shared_parse::parse_distance_metric(dm_str));
+        let surf = unwrap_or_return_null!(shared_parse::parse_surface_mode(surf_str));
 
         let cv_fractions_vec = if !cv_fractions.is_null() && cv_fractions_len > 0 {
             let slice = unsafe { from_raw_parts(cv_fractions, cv_fractions_len as usize) };
@@ -518,7 +426,10 @@ pub unsafe extern "C" fn jl_loess_new(
 
     match result {
         Ok(ptr) => ptr,
-        Err(_) => null_mut(),
+        Err(_) => {
+            set_last_error_message(shared_parse::panic_fallback_message());
+            null_mut()
+        }
     }
 }
 
@@ -558,15 +469,15 @@ pub unsafe extern "C" fn jl_loess_fit(
 ) -> JlLoessResult {
     let result = catch_unwind(|| {
         if config_ptr.is_null() {
-            return error_result("Config pointer is null");
+            return error_result(shared_parse::CONFIG_POINTER_IS_NULL);
         }
         let config = unsafe { &*config_ptr };
 
         if x.is_null() || y.is_null() {
-            return error_result("x and y arrays must not be null");
+            return error_result(shared_parse::XY_ARRAYS_MUST_NOT_BE_NULL);
         }
         if n == 0 {
-            return error_result("Array length must be greater than 0");
+            return error_result(shared_parse::ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO);
         }
 
         // For multi-dimensional LOESS, x has n * dimensions elements (row-major flat).
@@ -574,132 +485,54 @@ pub unsafe extern "C" fn jl_loess_fit(
         let x_slice = unsafe { from_raw_parts(x, x_n) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
-        let mut builder = LoessBuilder::<f64>::new();
-        builder = builder.fraction(config.fraction);
-        builder = builder.iterations(config.iterations);
-        builder = builder.weight_function(match config.weight_function {
-            WeightFunction::Tricube => "tricube",
-            WeightFunction::Epanechnikov => "epanechnikov",
-            WeightFunction::Gaussian => "gaussian",
-            WeightFunction::Uniform => "uniform",
-            WeightFunction::Biweight => "biweight",
-            WeightFunction::Triangle => "triangle",
-            WeightFunction::Cosine => "cosine",
-        });
-        builder = builder.robustness_method(match config.robustness_method {
-            RobustnessMethod::Bisquare => "bisquare",
-            RobustnessMethod::Huber => "huber",
-            RobustnessMethod::Talwar => "talwar",
-        });
-        builder = builder.scaling_method(match config.scaling_method {
-            ScalingMethod::MAD => "mad",
-            ScalingMethod::MAR => "mar",
-            ScalingMethod::Mean => "mean",
-        });
-        builder = builder.zero_weight_fallback(match config.zero_weight_fallback {
-            ZeroWeightFallback::UseLocalMean => "use_local_mean",
-            ZeroWeightFallback::ReturnOriginal => "return_original",
-            ZeroWeightFallback::ReturnNone => "return_none",
-        });
-        builder = builder.boundary_policy(match config.boundary_policy {
-            BoundaryPolicy::Extend => "extend",
-            BoundaryPolicy::Reflect => "reflect",
-            BoundaryPolicy::Zero => "zero",
-            BoundaryPolicy::NoBoundary => "noboundary",
-        });
-        builder = builder.parallel(config.parallel);
+        let (mut builder, _) =
+            match map_invalid_arg_result(shared_parse::apply_typed_builder_options(
+                LoessBuilder::<f64>::new(),
+                shared_parse::TypedBuilderOptionSet {
+                    fraction: Some(config.fraction),
+                    iterations: Some(config.iterations),
+                    weight_function: Some(config.weight_function),
+                    robustness_method: Some(config.robustness_method),
+                    zero_weight_fallback: Some(config.zero_weight_fallback),
+                    boundary_policy: Some(config.boundary_policy),
+                    scaling_method: Some(config.scaling_method),
+                    auto_converge: config.auto_converge,
+                    return_residuals: config.return_residuals,
+                    return_robustness_weights: config.return_robustness_weights,
+                    return_diagnostics: config.return_diagnostics,
+                    confidence_intervals: config.confidence_intervals,
+                    prediction_intervals: config.prediction_intervals,
+                    parallel: Some(config.parallel),
+                    degree: Some(config.degree),
+                    dimensions: Some(config.dimensions),
+                    distance_metric: Some(config.distance_metric.clone()),
+                    surface_mode: Some(config.surface_mode),
+                    return_se: config.return_se,
+                    cell: config.cell,
+                    interpolation_vertices: config.interpolation_vertices,
+                    boundary_degree_fallback: config.boundary_degree_fallback,
+                    cv_fractions: config.cv_fractions.clone(),
+                    cv_method: Some(config.cv_method.clone()),
+                    cv_k: Some(config.cv_k),
+                    cv_seed: config.cv_seed,
+                },
+            )) {
+                Ok(v) => v,
+                Err(e) => return e,
+            };
 
-        if let Some(cl) = config.confidence_intervals {
-            builder = builder.confidence_intervals(cl);
-        }
-        if let Some(pl) = config.prediction_intervals {
-            builder = builder.prediction_intervals(pl);
-        }
-        if config.return_diagnostics {
-            builder = builder.return_diagnostics();
-        }
-        if config.return_residuals {
-            builder = builder.return_residuals();
-        }
-        if config.return_robustness_weights {
-            builder = builder.return_robustness_weights();
-        }
-        if let Some(tol) = config.auto_converge {
-            builder = builder.auto_converge(tol);
-        }
-        builder = builder.degree(match config.degree {
-            PolynomialDegree::Constant => "constant",
-            PolynomialDegree::Linear => "linear",
-            PolynomialDegree::Quadratic => "quadratic",
-            PolynomialDegree::Cubic => "cubic",
-            PolynomialDegree::Quartic => "quartic",
-        });
-        builder = builder.dimensions(config.dimensions);
-        builder = match &config.distance_metric {
-            DistanceMetric::Normalized => builder.distance_metric("normalized"),
-            DistanceMetric::Euclidean => builder.distance_metric("euclidean"),
-            DistanceMetric::Manhattan => builder.distance_metric("manhattan"),
-            DistanceMetric::Chebyshev => builder.distance_metric("chebyshev"),
-            DistanceMetric::Minkowski(p) => {
-                let m = format!("minkowski:{}", p);
-                builder.distance_metric(&m)
-            }
-            DistanceMetric::Weighted(w) => builder
-                .distance_metric("weighted")
-                .weighted_metric_weights(w.clone()),
-        };
-        builder = builder.surface_mode(match config.surface_mode {
-            SurfaceMode::Interpolation => "interpolation",
-            SurfaceMode::Direct => "direct",
-        });
-        if config.return_se {
-            builder = builder.return_se();
-        }
         if let Some(ref uw) = config.custom_weights {
             builder = builder.custom_weights(uw.clone());
         }
-        if let Some(c) = config.cell {
-            builder = builder.cell(c);
-        }
-        if let Some(v) = config.interpolation_vertices {
-            builder = builder.interpolation_vertices(v);
-        }
-        if let Some(bdf) = config.boundary_degree_fallback {
-            builder = builder.boundary_degree_fallback(bdf);
-        }
-        if let Some(ref fractions) = config.cv_fractions {
-            let seed = config.cv_seed;
-            match config.cv_method.to_lowercase().as_str() {
-                "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    builder = builder.cv_method("loocv");
-                    builder = builder.cv_fractions(fractions.clone());
-                    if let Some(s) = seed {
-                        builder = builder.cv_seed(s);
-                    }
-                }
-                "kfold" | "k_fold" | "k-fold" => {
-                    builder = builder.cv_method("kfold");
-                    builder = builder.cv_k(config.cv_k);
-                    builder = builder.cv_fractions(fractions.clone());
-                    if let Some(s) = seed {
-                        builder = builder.cv_seed(s);
-                    }
-                }
-                _ => {
-                    return error_result(&format!(
-                        "Unknown CV method: {}. Valid: loocv, kfold",
-                        config.cv_method
-                    ));
-                }
-            }
-        }
 
-        let result = match builder.adapter(Batch).build() {
-            Ok(m) => match m.fit(x_slice, y_slice) {
-                Ok(r) => r,
-                Err(e) => return error_result(&e.to_string()),
-            },
-            Err(e) => return error_result(&e.to_string()),
+        let model = match map_runtime_result(builder.adapter(Batch).build()) {
+            Ok(m) => m,
+            Err(e) => return e,
+        };
+
+        let result = match map_runtime_result(model.fit(x_slice, y_slice)) {
+            Ok(r) => r,
+            Err(e) => return e,
         };
 
         loess_result_to_jl(result)
@@ -707,7 +540,7 @@ pub unsafe extern "C" fn jl_loess_fit(
 
     match result {
         Ok(res) => res,
-        Err(_) => error_result("Panic in Rust library"),
+        Err(_) => error_result(shared_parse::panic_fallback_message()),
     }
 }
 
@@ -877,6 +710,7 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
 ) -> *mut JlStreamingLoess {
+    clear_last_error_message();
     let result = catch_unwind(|| {
         let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
         let rm_str = unsafe { parse_c_str(robustness_method, "bisquare") };
@@ -884,86 +718,67 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
         let bp_str = unsafe { parse_c_str(boundary_policy, "extend") };
         let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
         let ms_str = unsafe { parse_c_str(merge_strategy, "weighted_average") };
-
-        unwrap_or_return_null!(parse_weight_function(wf_str));
-        unwrap_or_return_null!(parse_robustness_method(rm_str));
-        unwrap_or_return_null!(parse_scaling_method(sm_str));
-        unwrap_or_return_null!(parse_boundary_policy(bp_str));
-        unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
-        let ms = unwrap_or_return_null!(parse_merge_strategy(ms_str));
-
-        let mut builder = LoessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf_str);
-        builder = builder.robustness_method(rm_str);
-        builder = builder.scaling_method(sm_str);
-        builder = builder.zero_weight_fallback(zwf_str);
-        builder = builder.boundary_policy(bp_str);
-
-        if return_diagnostics != 0 {
-            builder = builder.return_diagnostics();
-        }
-        if return_residuals != 0 {
-            builder = builder.return_residuals();
-        }
-        if return_robustness_weights != 0 {
-            builder = builder.return_robustness_weights();
-        }
-        if return_se != 0 {
-            builder = builder.return_se();
-        }
-        if !confidence_intervals.is_nan() {
-            builder = builder.confidence_intervals(confidence_intervals);
-        }
-        if !prediction_intervals.is_nan() {
-            builder = builder.prediction_intervals(prediction_intervals);
-        }
-
-        // Apply LOESS-specific options
+        let ms = unwrap_or_return_null!(shared_parse::parse_merge_strategy(ms_str));
         let deg_str = unsafe { parse_c_str(degree, "linear") };
         let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
-        unwrap_or_return_null!(parse_polynomial_degree(deg_str));
-        unwrap_or_return_null!(parse_surface_mode(surf_str));
-        builder = builder.degree(deg_str);
-        if dimensions > 0 {
-            builder = builder.dimensions(dimensions as usize);
-        }
-
-        // Distance metric (weighted takes precedence over the name-string)
-        if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
-            let w = unsafe {
-                std::slice::from_raw_parts(
-                    weighted_metric_weights,
-                    weighted_metric_weights_len as usize,
-                )
-                .to_vec()
-            };
-            builder = builder.distance_metric("weighted");
-            builder = builder.weighted_metric_weights(w);
-        } else {
-            let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
-            let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
-            if dm_str.eq_ignore_ascii_case("weighted") {
-                builder = builder.distance_metric("weighted");
+        let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
+        let weighted_metric =
+            if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
+                Some(unsafe {
+                    std::slice::from_raw_parts(
+                        weighted_metric_weights,
+                        weighted_metric_weights_len as usize,
+                    )
+                })
             } else {
-                let _ = dm;
-                builder = builder.distance_metric(dm_str);
-            }
-        }
+                None
+            };
+        let metric_name = if weighted_metric.is_some() {
+            "weighted"
+        } else {
+            dm_str
+        };
+        let configured_dimensions = (dimensions as usize).max(1);
 
-        builder = builder.surface_mode(surf_str);
-
-        // Advanced tuning
-        if !cell.is_nan() {
-            builder = builder.cell(cell);
-        }
-        if interpolation_vertices > 0 {
-            builder = builder.interpolation_vertices(interpolation_vertices as usize);
-        }
-        if boundary_degree_fallback >= 0 {
-            builder = builder.boundary_degree_fallback(boundary_degree_fallback != 0);
-        }
+        let (builder, _) = match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
+            LoessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations as usize),
+                weight_function: Some(wf_str),
+                robustness_method: Some(rm_str),
+                zero_weight_fallback: Some(zwf_str),
+                boundary_policy: Some(bp_str),
+                scaling_method: Some(sm_str),
+                auto_converge: None,
+                return_residuals: return_residuals != 0,
+                return_robustness_weights: return_robustness_weights != 0,
+                return_diagnostics: return_diagnostics != 0,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
+                parallel: None,
+                degree: Some(deg_str),
+                dimensions: Some(configured_dimensions),
+                distance_metric: Some(metric_name),
+                weighted_metric_weights: weighted_metric,
+                surface_mode: Some(surf_str),
+                return_se: return_se != 0,
+                cell: (!cell.is_nan()).then_some(cell),
+                interpolation_vertices: (interpolation_vertices > 0)
+                    .then_some(interpolation_vertices as usize),
+                boundary_degree_fallback: (boundary_degree_fallback >= 0)
+                    .then_some(boundary_degree_fallback != 0),
+                cv_fractions: None,
+                cv_method: None,
+                cv_k: None,
+                cv_seed: None,
+            },
+        )) {
+            Ok(v) => v,
+            Err(e) => return null_with_last_error(&e.message),
+        };
 
         let chunk_size_usize = chunk_size as usize;
         let overlap_size = if overlap < 0 {
@@ -983,20 +798,23 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
             s_builder = s_builder.auto_converge(auto_converge);
         }
 
-        let processor = match s_builder.build() {
+        let processor = match shared_parse::map_runtime(s_builder.build()) {
             Ok(p) => p,
-            Err(_) => return null_mut(),
+            Err(e) => return null_with_last_error(&e.message),
         };
 
         Box::into_raw(Box::new(JlStreamingLoess {
             inner: processor,
-            dimensions: (dimensions as usize).max(1),
+            dimensions: configured_dimensions,
         }))
     });
 
     match result {
         Ok(ptr) => ptr,
-        Err(_) => null_mut(),
+        Err(_) => {
+            set_last_error_message(shared_parse::panic_fallback_message());
+            null_mut()
+        }
     }
 }
 
@@ -1013,15 +831,15 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
 ) -> JlLoessResult {
     let result = catch_unwind(|| {
         if ptr.is_null() {
-            return error_result("Processor pointer is null");
+            return error_result(shared_parse::PROCESSOR_POINTER_IS_NULL);
         }
         let processor = unsafe { &mut *ptr };
 
         if x.is_null() || y.is_null() {
-            return error_result("x and y arrays must not be null");
+            return error_result(shared_parse::XY_ARRAYS_MUST_NOT_BE_NULL);
         }
         if n == 0 {
-            return error_result("Array length must be greater than 0");
+            return error_result(shared_parse::ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO);
         }
 
         // For multi-dimensional chunks, x has n * dimensions elements (row-major flat).
@@ -1029,15 +847,15 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
         let x_slice = unsafe { from_raw_parts(x, x_n) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
-        match processor.inner.process_chunk(x_slice, y_slice) {
+        match map_runtime_result(processor.inner.process_chunk(x_slice, y_slice)) {
             Ok(r) => loess_result_to_jl(r),
-            Err(e) => error_result(&e.to_string()),
+            Err(e) => e,
         }
     });
 
     match result {
         Ok(res) => res,
-        Err(_) => error_result("Panic in Rust library"),
+        Err(_) => error_result(shared_parse::panic_fallback_message()),
     }
 }
 
@@ -1049,19 +867,19 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
 pub unsafe extern "C" fn jl_streaming_loess_finalize(ptr: *mut JlStreamingLoess) -> JlLoessResult {
     let result = catch_unwind(|| {
         if ptr.is_null() {
-            return error_result("Processor pointer is null");
+            return error_result(shared_parse::PROCESSOR_POINTER_IS_NULL);
         }
         let processor = unsafe { &mut *ptr };
 
-        match processor.inner.finalize() {
+        match map_runtime_result(processor.inner.finalize()) {
             Ok(r) => loess_result_to_jl(r),
-            Err(e) => error_result(&e.to_string()),
+            Err(e) => e,
         }
     });
 
     match result {
         Ok(res) => res,
-        Err(_) => error_result("Panic in Rust library"),
+        Err(_) => error_result(shared_parse::panic_fallback_message()),
     }
 }
 
@@ -1114,6 +932,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
 ) -> *mut JlOnlineLoess {
+    clear_last_error_message();
     let result = catch_unwind(|| {
         let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
         let rm_str = unsafe { parse_c_str(robustness_method, "bisquare") };
@@ -1122,90 +941,83 @@ pub unsafe extern "C" fn jl_online_loess_new(
         let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
         let um_str = unsafe { parse_c_str(update_mode, "full") };
 
-        unwrap_or_return_null!(parse_weight_function(wf_str));
-        unwrap_or_return_null!(parse_robustness_method(rm_str));
-        unwrap_or_return_null!(parse_scaling_method(sm_str));
-        unwrap_or_return_null!(parse_boundary_policy(bp_str));
-        unwrap_or_return_null!(parse_zero_weight_fallback(zwf_str));
-        let um = unwrap_or_return_null!(parse_update_mode(um_str));
+        let um = unwrap_or_return_null!(shared_parse::parse_update_mode(um_str));
+        let deg_str = unsafe { parse_c_str(degree, "linear") };
+        let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
+        let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
+        let weighted_metric =
+            if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
+                Some(unsafe {
+                    std::slice::from_raw_parts(
+                        weighted_metric_weights,
+                        weighted_metric_weights_len as usize,
+                    )
+                })
+            } else {
+                None
+            };
+        let metric_name = if weighted_metric.is_some() {
+            "weighted"
+        } else {
+            dm_str
+        };
+        let configured_dimensions = if dimensions > 0 {
+            dimensions as usize
+        } else {
+            1
+        };
 
-        let mut builder = LoessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf_str);
-        builder = builder.robustness_method(rm_str);
-        builder = builder.scaling_method(sm_str);
-        builder = builder.zero_weight_fallback(zwf_str);
-        builder = builder.boundary_policy(bp_str);
-        if return_se != 0 {
-            builder = builder.return_se();
-        }
-        if return_diagnostics != 0 {
-            builder = builder.return_diagnostics();
-        }
-        if return_residuals != 0 {
-            builder = builder.return_residuals();
-        }
-        if !confidence_intervals.is_nan() {
-            builder = builder.confidence_intervals(confidence_intervals);
-        }
-        if !prediction_intervals.is_nan() {
-            builder = builder.prediction_intervals(prediction_intervals);
-        }
+        let (builder, applied) =
+            match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
+                LoessBuilder::<f64>::new(),
+                shared_parse::BuilderOptionSet {
+                    fraction: Some(fraction),
+                    iterations: Some(iterations as usize),
+                    weight_function: Some(wf_str),
+                    robustness_method: Some(rm_str),
+                    zero_weight_fallback: Some(zwf_str),
+                    boundary_policy: Some(bp_str),
+                    scaling_method: Some(sm_str),
+                    auto_converge: None,
+                    return_residuals: return_residuals != 0,
+                    return_robustness_weights: false,
+                    return_diagnostics: return_diagnostics != 0,
+                    confidence_intervals: (!confidence_intervals.is_nan())
+                        .then_some(confidence_intervals),
+                    prediction_intervals: (!prediction_intervals.is_nan())
+                        .then_some(prediction_intervals),
+                    parallel: None,
+                    degree: Some(deg_str),
+                    dimensions: Some(configured_dimensions),
+                    distance_metric: Some(metric_name),
+                    weighted_metric_weights: weighted_metric,
+                    surface_mode: Some(surf_str),
+                    return_se: return_se != 0,
+                    cell: (!cell.is_nan()).then_some(cell),
+                    interpolation_vertices: (interpolation_vertices > 0)
+                        .then_some(interpolation_vertices as usize),
+                    boundary_degree_fallback: (boundary_degree_fallback >= 0)
+                        .then_some(boundary_degree_fallback != 0),
+                    cv_fractions: None,
+                    cv_method: None,
+                    cv_k: None,
+                    cv_seed: None,
+                },
+            )) {
+                Ok(v) => v,
+                Err(e) => return null_with_last_error(&e.message),
+            };
+
+        let degree = applied.degree.unwrap_or(PolynomialDegree::Linear);
+        let distance_metric = applied
+            .distance_metric
+            .unwrap_or(DistanceMetric::Normalized);
 
         let mut o_builder = builder.adapter(Online);
         o_builder = o_builder.window_capacity(window_capacity as usize);
         o_builder = o_builder.min_points(min_points as usize);
         o_builder = o_builder.update_mode(um);
         o_builder = o_builder.parallel(parallel != 0);
-
-        // Apply LOESS-specific options
-        let deg_str = unsafe { parse_c_str(degree, "linear") };
-        let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
-        unwrap_or_return_null!(parse_polynomial_degree(deg_str));
-        unwrap_or_return_null!(parse_surface_mode(surf_str));
-        let configured_dimensions = if dimensions > 0 {
-            dimensions as usize
-        } else {
-            1
-        };
-        o_builder = o_builder.polynomial_degree(deg_str);
-        o_builder = o_builder.dimensions(configured_dimensions);
-
-        // Distance metric (weighted takes precedence over the name-string)
-        if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
-            let w = unsafe {
-                std::slice::from_raw_parts(
-                    weighted_metric_weights,
-                    weighted_metric_weights_len as usize,
-                )
-                .to_vec()
-            };
-            o_builder = o_builder.distance_metric("weighted");
-            o_builder = o_builder.weighted_metric_weights(w);
-        } else {
-            let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
-            let dm = unwrap_or_return_null!(parse_distance_metric(dm_str));
-            if dm_str.eq_ignore_ascii_case("weighted") {
-                o_builder = o_builder.distance_metric("weighted");
-            } else {
-                let _ = dm;
-                o_builder = o_builder.distance_metric(dm_str);
-            }
-        }
-
-        o_builder = o_builder.surface_mode(surf_str);
-
-        // Advanced tuning
-        if !cell.is_nan() {
-            o_builder = o_builder.cell(cell);
-        }
-        if interpolation_vertices > 0 {
-            o_builder = o_builder.interpolation_vertices(interpolation_vertices as usize);
-        }
-        if boundary_degree_fallback >= 0 {
-            o_builder = o_builder.boundary_degree_fallback(boundary_degree_fallback != 0);
-        }
 
         if !auto_converge.is_nan() {
             o_builder = o_builder.auto_converge(auto_converge);
@@ -1214,9 +1026,9 @@ pub unsafe extern "C" fn jl_online_loess_new(
             o_builder = o_builder.return_robustness_weights(true);
         }
 
-        let processor = match o_builder.build() {
+        let processor = match shared_parse::map_runtime(o_builder.build()) {
             Ok(p) => p,
-            Err(_) => return null_mut(),
+            Err(e) => return null_with_last_error(&e.message),
         };
 
         Box::into_raw(Box::new(JlOnlineLoess {
@@ -1224,12 +1036,17 @@ pub unsafe extern "C" fn jl_online_loess_new(
             fraction,
             iterations: iterations as usize,
             dimensions: configured_dimensions,
+            degree,
+            distance_metric,
         }))
     });
 
     match result {
         Ok(ptr) => ptr,
-        Err(_) => null_mut(),
+        Err(_) => {
+            set_last_error_message(shared_parse::panic_fallback_message());
+            null_mut()
+        }
     }
 }
 
@@ -1246,15 +1063,15 @@ pub unsafe extern "C" fn jl_online_loess_add_points(
 ) -> JlLoessResult {
     let result = catch_unwind(|| {
         if ptr.is_null() {
-            return error_result("Processor pointer is null");
+            return error_result(shared_parse::PROCESSOR_POINTER_IS_NULL);
         }
         let processor = unsafe { &mut *ptr };
 
         if x.is_null() || y.is_null() {
-            return error_result("x and y arrays must not be null");
+            return error_result(shared_parse::XY_ARRAYS_MUST_NOT_BE_NULL);
         }
         if n == 0 {
-            return error_result("Array length must be greater than 0");
+            return error_result(shared_parse::ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO);
         }
 
         // For multi-dimensional data, x has n * dimensions elements (row-major flat).
@@ -1263,44 +1080,32 @@ pub unsafe extern "C" fn jl_online_loess_add_points(
         let x_slice = unsafe { from_raw_parts(x, x_n) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
-        let mut smoothed = Vec::with_capacity(y_slice.len());
-        for (xi_chunk, &yi) in x_slice.chunks(d).zip(y_slice.iter()) {
-            match processor.inner.add_point(xi_chunk, yi) {
-                Ok(output) => smoothed.push(output.as_ref().map_or(yi, |o| o.smoothed)),
-                Err(e) => return error_result(&e.to_string()),
-            }
-        }
-
-        let result = LoessResult {
-            x: x_slice.to_vec(),
-            y: smoothed,
+        let metadata = shared_parse::OnlineResultMetadata {
             dimensions: processor.dimensions,
-            distance_metric: DistanceMetric::Normalized,
-            polynomial_degree: PolynomialDegree::Linear,
-            standard_errors: None,
-            confidence_lower: None,
-            confidence_upper: None,
-            prediction_lower: None,
-            prediction_upper: None,
-            residuals: None,
-            robustness_weights: None,
-            diagnostics: None,
-            iterations_used: Some(processor.iterations),
+            degree: processor.degree,
+            distance_metric: processor.distance_metric.clone(),
             fraction_used: processor.fraction,
-            cv_scores: None,
-            enp: None,
-            trace_hat: None,
-            delta1: None,
-            delta2: None,
-            residual_scale: None,
-            leverage: None,
+            iterations_used: Some(processor.iterations),
+        };
+
+        let result = match map_invalid_arg_result(shared_parse::online_add_points_to_result(
+            x_slice,
+            y_slice,
+            &metadata,
+            |xi_chunk, yi| {
+                let output = processor.inner.add_point(xi_chunk, yi)?;
+                Ok(output.map(|o| o.smoothed))
+            },
+        )) {
+            Ok(r) => r,
+            Err(e) => return e,
         };
         loess_result_to_jl(result)
     });
 
     match result {
         Ok(res) => res,
-        Err(_) => error_result("Panic in Rust library"),
+        Err(_) => error_result(shared_parse::panic_fallback_message()),
     }
 }
 
@@ -1320,7 +1125,10 @@ macro_rules! unwrap_or_return_null {
     ($e:expr) => {
         match $e {
             Ok(val) => val,
-            Err(_) => return null_mut(),
+            Err(err) => {
+                set_last_error_message(&err.to_string());
+                return null_mut();
+            }
         }
     };
 }

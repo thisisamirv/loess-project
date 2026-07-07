@@ -376,6 +376,9 @@ pub mod api;
 // Input data handling.
 pub mod input;
 
+// Shared option parsing helpers for language bindings.
+pub mod binding_support;
+
 // String-to-enum conversion trait for parallel builder methods (sealed; pub(crate) only).
 pub(crate) mod parse;
 

@@ -11,155 +11,41 @@ use extendr_api::prelude::*;
 
 type Result<T> = std::result::Result<T, Error>;
 
-use fastLoess::internals::api::{
-    BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
-    ScalingMethod::{self, MAD, MAR, Mean},
-    SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
-};
-use fastLoess::prelude::{
-    Batch, KFold, LOOCV, Loess as LoessBuilder, LoessResult, Online, Streaming,
-};
+use fastLoess::binding_support as shared_parse;
+use fastLoess::internals::api::{DistanceMetric, PolynomialDegree};
+use fastLoess::prelude::{Batch, Loess as LoessBuilder, LoessResult, Online, Streaming};
 
 // Helper Functions
 
-// Parse weight function from string
-fn parse_weight_function(name: &str) -> Result<WeightFunction> {
-    match name.to_lowercase().as_str() {
-        "tricube" => Ok(WeightFunction::Tricube),
-        "epanechnikov" => Ok(WeightFunction::Epanechnikov),
-        "gaussian" => Ok(WeightFunction::Gaussian),
-        "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
-        "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
-        "triangle" | "triangular" => Ok(WeightFunction::Triangle),
-        "cosine" => Ok(WeightFunction::Cosine),
-        _ => Err(Error::Other(format!(
-            "Unknown weight function: {}. Valid options: tricube, epanechnikov, gaussian, uniform, biweight, triangle, cosine",
-            name
-        ))),
-    }
+fn to_r_error(err: shared_parse::BindingError) -> Error {
+    let prefix = match err.category {
+        shared_parse::BindingErrorCategory::InvalidArg => "[invalid-arg]",
+        shared_parse::BindingErrorCategory::Runtime => "[runtime]",
+    };
+    Error::Other(format!("{} {}", prefix, err.message))
 }
 
-// Parse robustness method from string
-fn parse_robustness_method(name: &str) -> Result<RobustnessMethod> {
-    match name.to_lowercase().as_str() {
-        "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
-        "huber" => Ok(RobustnessMethod::Huber),
-        "talwar" => Ok(RobustnessMethod::Talwar),
-        _ => Err(Error::Other(format!(
-            "Unknown robustness method: {}. Valid options: bisquare, huber, talwar",
-            name
-        ))),
-    }
+fn map_invalid_arg<T, E: ToString>(result: std::result::Result<T, E>) -> Result<T> {
+    shared_parse::map_invalid_arg(result).map_err(to_r_error)
 }
 
-// Parse zero weight fallback from string
-fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback> {
-    match name.to_lowercase().as_str() {
-        "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
-        "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-        "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
-        _ => Err(Error::Other(format!(
-            "Unknown zero weight fallback: {}. Valid options: use_local_mean, return_original, return_none",
-            name
-        ))),
-    }
+fn map_runtime<T, E: ToString>(result: std::result::Result<T, E>) -> Result<T> {
+    shared_parse::map_runtime(result).map_err(to_r_error)
 }
 
-// Parse boundary policy from string
-fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy> {
-    match name.to_lowercase().as_str() {
-        "extend" | "pad" => Ok(BoundaryPolicy::Extend),
-        "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-        "zero" | "none" => Ok(BoundaryPolicy::Zero),
-        "noboundary" => Ok(BoundaryPolicy::NoBoundary),
-        _ => Err(Error::Other(format!(
-            "Unknown boundary policy: {}. Valid options: extend, reflect, zero, noboundary",
-            name
-        ))),
+fn require_positive_usize(name: &str, value: i32) -> Result<usize> {
+    if value <= 0 {
+        return Err(to_r_error(shared_parse::BindingError::invalid_arg(
+            format!("{} must be greater than 0", name),
+        )));
     }
+    Ok(value as usize)
 }
 
-// Parse scaling method from string
-fn parse_scaling_method(name: &str) -> Result<ScalingMethod> {
-    match name.to_lowercase().as_str() {
-        "mad" => Ok(MAD),
-        "mar" => Ok(MAR),
-        "mean" => Ok(Mean),
-        _ => Err(Error::Other(format!(
-            "Unknown scaling method: {}. Valid options: mad, mar, mean",
-            name
-        ))),
-    }
-}
-
-// Parse polynomial degree from string
-fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree> {
-    match name.to_lowercase().as_str() {
-        "constant" | "0" => Ok(PolynomialDegree::Constant),
-        "linear" | "1" => Ok(PolynomialDegree::Linear),
-        "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
-        "cubic" | "3" => Ok(PolynomialDegree::Cubic),
-        "quartic" | "4" => Ok(PolynomialDegree::Quartic),
-        _ => Err(Error::Other(format!("Unknown polynomial degree: {}", name))),
-    }
-}
-
-// Parse distance metric from string
-fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>> {
-    let lower = name.to_lowercase();
-    // Handle "minkowski:p" inline format
-    if let Some(p_str) = lower.strip_prefix("minkowski:") {
-        let p: f64 = p_str
-            .parse()
-            .map_err(|_| Error::Other(format!("Invalid Minkowski p value: {}", p_str)))?;
-        return Ok(DistanceMetric::Minkowski(p));
-    }
-    match lower.as_str() {
-        "normalized" | "norm" => Ok(DistanceMetric::Normalized),
-        "euclidean" | "euclid" => Ok(DistanceMetric::Euclidean),
-        "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
-        "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
-        "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
-        "weighted" => Ok(DistanceMetric::Weighted(Vec::new())),
-        _ => Err(Error::Other(format!(
-            "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski, weighted",
-            name
-        ))),
-    }
-}
-
-// Parse surface mode from string
-fn parse_surface_mode(name: &str) -> Result<SurfaceMode> {
-    match name.to_lowercase().as_str() {
-        "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
-        "direct" => Ok(SurfaceMode::Direct),
-        _ => Err(Error::Other(format!("Unknown surface mode: {}", name))),
-    }
-}
-
-// Parse update mode from string
-fn parse_update_mode(name: &str) -> Result<UpdateMode> {
-    match name.to_lowercase().as_str() {
-        "full" | "resmooth" => Ok(UpdateMode::Full),
-        "incremental" | "single" => Ok(UpdateMode::Incremental),
-        _ => Err(Error::Other(format!(
-            "Unknown update mode: {}. Valid options: full, incremental",
-            name
-        ))),
-    }
-}
-
-// Parse merge strategy from string
-fn parse_merge_strategy(name: &str) -> Result<MergeStrategy> {
-    match name.to_lowercase().as_str() {
-        "average" | "mean" => Ok(MergeStrategy::Average),
-        "weighted_average" | "weighted" => Ok(MergeStrategy::WeightedAverage),
-        "take_first" | "first" => Ok(MergeStrategy::TakeFirst),
-        "take_last" | "last" => Ok(MergeStrategy::TakeLast),
-        _ => Err(Error::Other(format!(
-            "Unknown merge strategy: {}. Valid options: average, weighted_average, take_first, take_last",
-            name
-        ))),
+fn optional_positive_usize(name: &str, value: Nullable<i32>) -> Result<Option<usize>> {
+    match value {
+        NotNull(v) => Ok(Some(require_positive_usize(name, v)?)),
+        Null => Ok(None),
     }
 }
 
@@ -204,93 +90,70 @@ impl RLoess {
         boundary_degree_fallback: Nullable<bool>,
         cv_seed: Nullable<i32>,
     ) -> Result<Self> {
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
-
-        let mut builder = LoessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.zero_weight_fallback(zwf);
-        builder = builder.boundary_policy(bp);
-
-        if let NotNull(cl) = confidence_intervals {
-            builder = builder.confidence_intervals(cl);
-        }
-        if let NotNull(pl) = prediction_intervals {
-            builder = builder.prediction_intervals(pl);
-        }
-        if return_diagnostics {
-            builder = builder.return_diagnostics();
-        }
-        if return_residuals {
-            builder = builder.return_residuals();
-        }
-        if return_robustness_weights {
-            builder = builder.return_robustness_weights();
-        }
-        if let NotNull(tol) = auto_converge {
-            builder = builder.auto_converge(tol);
-        }
-
-        let deg = parse_polynomial_degree(degree)?;
-        let dm = if distance_metric.to_lowercase() == "weighted" {
-            let w = match weighted_metric_weights {
-                NotNull(v) => v,
-                Null => Vec::new(),
-            };
-            DistanceMetric::Weighted(w)
-        } else {
-            parse_distance_metric(distance_metric)?
+        let weighted_weights = match weighted_metric_weights {
+            NotNull(v) => Some(v),
+            Null => None,
         };
-        let surf = parse_surface_mode(surface_mode)?;
-        builder = builder.degree(deg);
-        builder = builder.dimensions(dimensions as usize);
-        builder = builder.distance_metric(dm);
-        builder = builder.surface_mode(surf);
-        if return_se {
-            builder = builder.return_se();
-        }
-        if let NotNull(c) = cell {
-            builder = builder.cell(c);
-        }
-        if let NotNull(v) = interpolation_vertices {
-            builder = builder.interpolation_vertices(v as usize);
-        }
-        if let NotNull(bdf) = boundary_degree_fallback {
-            builder = builder.boundary_degree_fallback(bdf);
-        }
-
-        // Cross-validation if fractions are provided
-        if let NotNull(fractions) = cv_fractions {
-            let seed = match cv_seed {
-                NotNull(s) => Some(s as u64),
-                Null => None,
-            };
-            match cv_method.to_lowercase().as_str() {
-                "simple" | "loo" | "loocv" | "leave_one_out" => {
-                    let cv = LOOCV(&fractions);
-                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
-                    builder = builder.cross_validate(cv);
-                }
-                "kfold" | "k_fold" | "k-fold" => {
-                    let cv = KFold(cv_k as usize, &fractions);
-                    let cv = if let Some(s) = seed { cv.seed(s) } else { cv };
-                    builder = builder.cross_validate(cv);
-                }
-                _ => {
-                    return Err(Error::Other(format!(
-                        "Unknown CV method: {}. Valid options: loocv, kfold",
-                        cv_method
-                    )));
-                }
-            }
-        }
+        let fractions = match cv_fractions {
+            NotNull(v) => Some(v),
+            Null => None,
+        };
+        let seed = match cv_seed {
+            NotNull(s) => Some(s as u64),
+            Null => None,
+        };
+        let iterations = require_positive_usize("iterations", iterations)?;
+        let dimensions = require_positive_usize("dimensions", dimensions)?;
+        let cv_k = require_positive_usize("cv_k", cv_k)?;
+        let interpolation_vertices =
+            optional_positive_usize("interpolation_vertices", interpolation_vertices)?;
+        let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+            LoessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                boundary_policy: Some(boundary_policy),
+                scaling_method: Some(scaling_method),
+                auto_converge: match auto_converge {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                return_residuals,
+                return_robustness_weights,
+                return_diagnostics,
+                confidence_intervals: match confidence_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                prediction_intervals: match prediction_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                parallel: None,
+                degree: Some(degree),
+                dimensions: Some(dimensions),
+                distance_metric: Some(distance_metric),
+                weighted_metric_weights: weighted_weights.as_deref(),
+                surface_mode: Some(surface_mode),
+                return_se,
+                cell: match cell {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                interpolation_vertices,
+                boundary_degree_fallback: match boundary_degree_fallback {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                cv_fractions: fractions.as_deref(),
+                cv_method: Some(cv_method),
+                cv_k: Some(cv_k),
+                cv_seed: seed,
+            },
+        ))?;
 
         Ok(Self { builder, parallel })
     }
@@ -304,13 +167,9 @@ impl RLoess {
         if let NotNull(w) = custom_weights {
             builder = builder.custom_weights(w);
         }
-        let result = builder
-            .adapter(Batch)
-            .parallel(self.parallel)
-            .build()
-            .map_err(|e| Error::Other(e.to_string()))?
-            .fit(x, y)
-            .map_err(|e| Error::Other(e.to_string()))?;
+        let result = builder.adapter(Batch).parallel(self.parallel).build();
+        let result = map_runtime(result)?.fit(x, y);
+        let result = map_runtime(result)?;
 
         loess_result_to_list(result)
     }
@@ -356,64 +215,65 @@ impl RStreamingLoess {
         interpolation_vertices: Nullable<i32>,
         boundary_degree_fallback: Nullable<bool>,
     ) -> Result<Self> {
-        let chunk_size = chunk_size as usize;
+        let chunk_size = require_positive_usize("chunk_size", chunk_size)?;
         let overlap_size = match overlap {
-            NotNull(o) => o as usize,
+            NotNull(o) => require_positive_usize("overlap", o)?,
             Null => (chunk_size / 10).min(chunk_size.saturating_sub(10)).max(1),
         };
+        let iterations = require_positive_usize("iterations", iterations)?;
+        let dimensions = require_positive_usize("dimensions", dimensions)?;
+        let interpolation_vertices =
+            optional_positive_usize("interpolation_vertices", interpolation_vertices)?;
 
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
-        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
-        let ms = parse_merge_strategy(merge_strategy)?;
-
-        let mut builder = LoessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.boundary_policy(bp);
-        builder = builder.zero_weight_fallback(zwf);
-
-        let deg = parse_polynomial_degree(degree)?;
-        let dm = if distance_metric.to_lowercase() == "weighted" {
-            let w = match weighted_metric_weights {
-                NotNull(v) => v,
-                Null => Vec::new(),
-            };
-            DistanceMetric::Weighted(w)
-        } else {
-            parse_distance_metric(distance_metric)?
+        let ms = map_invalid_arg(shared_parse::parse_merge_strategy(merge_strategy))?;
+        let weighted_weights = match weighted_metric_weights {
+            NotNull(v) => Some(v),
+            Null => None,
         };
-        let surf = parse_surface_mode(surface_mode)?;
-        builder = builder.degree(deg);
-        builder = builder.dimensions(dimensions as usize);
-        builder = builder.distance_metric(dm);
-        builder = builder.surface_mode(surf);
-        if return_se {
-            builder = builder.return_se();
-        }
-        if return_residuals {
-            builder = builder.return_residuals();
-        }
-        if let NotNull(cl) = confidence_intervals {
-            builder = builder.confidence_intervals(cl);
-        }
-        if let NotNull(pl) = prediction_intervals {
-            builder = builder.prediction_intervals(pl);
-        }
-        if let NotNull(c) = cell {
-            builder = builder.cell(c);
-        }
-        if let NotNull(v) = interpolation_vertices {
-            builder = builder.interpolation_vertices(v as usize);
-        }
-        if let NotNull(bdf) = boundary_degree_fallback {
-            builder = builder.boundary_degree_fallback(bdf);
-        }
+        let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+            LoessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                boundary_policy: Some(boundary_policy),
+                scaling_method: Some(scaling_method),
+                auto_converge: None,
+                return_residuals,
+                return_robustness_weights: false,
+                return_diagnostics: false,
+                confidence_intervals: match confidence_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                prediction_intervals: match prediction_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                parallel: None,
+                degree: Some(degree),
+                dimensions: Some(dimensions),
+                distance_metric: Some(distance_metric),
+                weighted_metric_weights: weighted_weights.as_deref(),
+                surface_mode: Some(surface_mode),
+                return_se,
+                cell: match cell {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                interpolation_vertices,
+                boundary_degree_fallback: match boundary_degree_fallback {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                cv_fractions: None,
+                cv_method: None,
+                cv_k: None,
+                cv_seed: None,
+            },
+        ))?;
 
         let mut s_builder = builder.adapter(Streaming);
         s_builder = s_builder.chunk_size(chunk_size);
@@ -431,29 +291,25 @@ impl RStreamingLoess {
             s_builder = s_builder.return_robustness_weights(true);
         }
 
-        let model = s_builder.build().map_err(|e| Error::Other(e.to_string()))?;
+        let model = map_runtime(s_builder.build())?;
         Ok(Self {
             inner: model,
             fraction,
-            iterations: iterations as usize,
+            iterations,
         })
     }
 
     fn process_chunk(&mut self, x: &[f64], y: &[f64]) -> Result<List> {
-        let mut result = self
-            .inner
-            .process_chunk(x, y)
-            .map_err(|e| Error::Other(e.to_string()))?;
+        let result = self.inner.process_chunk(x, y);
+        let mut result = map_runtime(result)?;
         result.fraction_used = self.fraction;
         result.iterations_used = Some(self.iterations);
         loess_result_to_list(result)
     }
 
     fn finalize(&mut self) -> Result<List> {
-        let mut result = self
-            .inner
-            .finalize()
-            .map_err(|e| Error::Other(e.to_string()))?;
+        let result = self.inner.finalize();
+        let mut result = map_runtime(result)?;
         result.fraction_used = self.fraction;
         result.iterations_used = Some(self.iterations);
         loess_result_to_list(result)
@@ -501,60 +357,76 @@ impl ROnlineLoess {
         interpolation_vertices: Nullable<i32>,
         boundary_degree_fallback: Nullable<bool>,
     ) -> Result<Self> {
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
-        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
-        let um = parse_update_mode(update_mode)?;
-
-        let mut builder = LoessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations as usize);
-        builder = builder.weight_function(wf);
-        builder = builder.robustness_method(rm);
-        builder = builder.scaling_method(sm);
-        builder = builder.boundary_policy(bp);
-        builder = builder.zero_weight_fallback(zwf);
-
-        let deg = parse_polynomial_degree(degree)?;
-        let dm = if distance_metric.to_lowercase() == "weighted" {
-            let w = match weighted_metric_weights {
-                NotNull(v) => v,
-                Null => Vec::new(),
-            };
-            DistanceMetric::Weighted(w)
-        } else {
-            parse_distance_metric(distance_metric)?
+        let um = map_invalid_arg(shared_parse::parse_update_mode(update_mode))?;
+        let weighted_weights = match weighted_metric_weights {
+            NotNull(v) => Some(v),
+            Null => None,
         };
-        let surf = parse_surface_mode(surface_mode)?;
-        let configured_dimensions = dimensions as usize;
-        builder = builder.degree(deg);
-        builder = builder.dimensions(configured_dimensions);
-        builder = builder.distance_metric(dm.clone());
-        builder = builder.surface_mode(surf);
-        if return_se {
-            builder = builder.return_se();
-        }
-        if let NotNull(cl) = confidence_intervals {
-            builder = builder.confidence_intervals(cl);
-        }
-        if let NotNull(pl) = prediction_intervals {
-            builder = builder.prediction_intervals(pl);
-        }
-        if let NotNull(c) = cell {
-            builder = builder.cell(c);
-        }
-        if let NotNull(v) = interpolation_vertices {
-            builder = builder.interpolation_vertices(v as usize);
-        }
-        if let NotNull(bdf) = boundary_degree_fallback {
-            builder = builder.boundary_degree_fallback(bdf);
-        }
+        let configured_dimensions = require_positive_usize("dimensions", dimensions)?;
+        let iterations = require_positive_usize("iterations", iterations)?;
+        let window_capacity = require_positive_usize("window_capacity", window_capacity)?;
+        let min_points = require_positive_usize("min_points", min_points)?;
+        let interpolation_vertices =
+            optional_positive_usize("interpolation_vertices", interpolation_vertices)?;
+        let (builder, applied) = map_invalid_arg(shared_parse::apply_builder_options(
+            LoessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                boundary_policy: Some(boundary_policy),
+                scaling_method: Some(scaling_method),
+                auto_converge: None,
+                return_residuals: false,
+                return_robustness_weights: false,
+                return_diagnostics: false,
+                confidence_intervals: match confidence_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                prediction_intervals: match prediction_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                parallel: None,
+                degree: Some(degree),
+                dimensions: Some(configured_dimensions),
+                distance_metric: Some(distance_metric),
+                weighted_metric_weights: weighted_weights.as_deref(),
+                surface_mode: Some(surface_mode),
+                return_se,
+                cell: match cell {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                interpolation_vertices,
+                boundary_degree_fallback: match boundary_degree_fallback {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                cv_fractions: None,
+                cv_method: None,
+                cv_k: None,
+                cv_seed: None,
+            },
+        ))?;
+
+        let deg = applied.degree.ok_or_else(|| {
+            to_r_error(shared_parse::BindingError::invalid_arg(
+                shared_parse::required_option_message("degree"),
+            ))
+        })?;
+        let dm = applied.distance_metric.ok_or_else(|| {
+            to_r_error(shared_parse::BindingError::invalid_arg(
+                shared_parse::required_option_message("distance_metric"),
+            ))
+        })?;
 
         let mut o_builder = builder.adapter(Online);
-        o_builder = o_builder.window_capacity(window_capacity as usize);
-        o_builder = o_builder.min_points(min_points as usize);
+        o_builder = o_builder.window_capacity(window_capacity);
+        o_builder = o_builder.min_points(min_points);
         o_builder = o_builder.update_mode(um);
         o_builder = o_builder.parallel(parallel);
 
@@ -565,11 +437,11 @@ impl ROnlineLoess {
             o_builder = o_builder.return_robustness_weights(true);
         }
 
-        let model = o_builder.build().map_err(|e| Error::Other(e.to_string()))?;
+        let model = map_runtime(o_builder.build())?;
         Ok(Self {
             inner: model,
             fraction,
-            iterations: iterations as usize,
+            iterations,
             dimensions: configured_dimensions,
             degree: deg,
             distance_metric: dm,
@@ -577,39 +449,19 @@ impl ROnlineLoess {
     }
 
     fn add_points(&mut self, x: &[f64], y: &[f64]) -> Result<List> {
-        let mut smoothed = Vec::with_capacity(y.len());
-        for (&xi, &yi) in x.iter().zip(y.iter()) {
-            let output = self
-                .inner
-                .add_point(std::slice::from_ref(&xi), yi)
-                .map_err(|e| Error::Other(e.to_string()))?;
-            smoothed.push(output.as_ref().map_or(yi, |o| o.smoothed));
-        }
-
-        let result = LoessResult {
-            x: x.to_vec(),
-            y: smoothed,
+        let metadata = shared_parse::OnlineResultMetadata {
             dimensions: self.dimensions,
+            degree: self.degree,
             distance_metric: self.distance_metric.clone(),
-            polynomial_degree: self.degree,
-            standard_errors: None,
-            confidence_lower: None,
-            confidence_upper: None,
-            prediction_lower: None,
-            prediction_upper: None,
-            residuals: None,
-            robustness_weights: None,
-            diagnostics: None,
-            iterations_used: Some(self.iterations),
             fraction_used: self.fraction,
-            cv_scores: None,
-            enp: None,
-            trace_hat: None,
-            delta1: None,
-            delta2: None,
-            residual_scale: None,
-            leverage: None,
+            iterations_used: Some(self.iterations),
         };
+
+        let result = shared_parse::online_add_points_to_result(x, y, &metadata, |xi_chunk, yi| {
+            let output = self.inner.add_point(xi_chunk, yi)?;
+            Ok(output.map(|o| o.smoothed))
+        })
+        .map_err(|e| to_r_error(shared_parse::BindingError::invalid_arg(e)))?;
 
         loess_result_to_list(result)
     }

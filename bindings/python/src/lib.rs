@@ -2,218 +2,41 @@
 
 #![allow(non_snake_case)]
 use numpy::{PyArray1, PyReadonlyArray1};
+use pyo3::exceptions::PyRuntimeError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 use std::fmt::Display;
 use std::sync::Mutex;
 
 use ::fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
+use ::fastLoess::binding_support as shared_parse;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::{
-    BoundaryPolicy, DistanceMetric, MergeStrategy, PolynomialDegree, RobustnessMethod,
-    ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
+    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
+    WeightFunction, ZeroWeightFallback,
 };
 use ::fastLoess::prelude::LoessResult;
 
 // Helper Functions
 
-// Convert a LoessError to a PyErr
-fn to_py_error(e: impl Display) -> PyErr {
-    PyValueError::new_err(e.to_string())
-}
-
-// Parse weight function from string
-fn parse_weight_function(name: &str) -> PyResult<WeightFunction> {
-    match name.to_lowercase().as_str() {
-        "tricube" => Ok(WeightFunction::Tricube),
-        "epanechnikov" => Ok(WeightFunction::Epanechnikov),
-        "gaussian" => Ok(WeightFunction::Gaussian),
-        "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
-        "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
-        "triangle" | "triangular" => Ok(WeightFunction::Triangle),
-        "cosine" => Ok(WeightFunction::Cosine),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown weight function: {}. Valid options: tricube, epanechnikov, gaussian, uniform, biweight, triangle, cosine",
-            name
-        ))),
+fn to_py_error(err: shared_parse::BindingError) -> PyErr {
+    match err.category {
+        shared_parse::BindingErrorCategory::InvalidArg => PyValueError::new_err(err.message),
+        shared_parse::BindingErrorCategory::Runtime => PyRuntimeError::new_err(err.message),
     }
 }
 
-// Parse robustness method from string
-fn parse_robustness_method(name: &str) -> PyResult<RobustnessMethod> {
-    match name.to_lowercase().as_str() {
-        "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
-        "huber" => Ok(RobustnessMethod::Huber),
-        "talwar" => Ok(RobustnessMethod::Talwar),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown robustness method: {}. Valid options: bisquare, huber, talwar",
-            name
-        ))),
-    }
+fn map_invalid_arg<T, E: Display>(result: Result<T, E>) -> PyResult<T> {
+    shared_parse::map_invalid_arg(result).map_err(to_py_error)
 }
 
-// Parse zero weight fallback from string
-fn parse_zero_weight_fallback(name: &str) -> PyResult<ZeroWeightFallback> {
-    match name.to_lowercase().as_str() {
-        "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
-        "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-        "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown zero weight fallback: {}. Valid options: use_local_mean, return_original, return_none",
-            name
-        ))),
-    }
+fn map_runtime<T, E: Display>(result: Result<T, E>) -> PyResult<T> {
+    shared_parse::map_runtime(result).map_err(to_py_error)
 }
 
-// Parse boundary policy from string
-fn parse_boundary_policy(name: &str) -> PyResult<BoundaryPolicy> {
-    match name.to_lowercase().as_str() {
-        "extend" | "pad" => Ok(BoundaryPolicy::Extend),
-        "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-        "zero" | "none" => Ok(BoundaryPolicy::Zero),
-        "noboundary" => Ok(BoundaryPolicy::NoBoundary),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown boundary policy: {}. Valid options: extend, reflect, zero, noboundary",
-            name
-        ))),
-    }
-}
-
-// Parse scaling method from string
-fn parse_scaling_method(name: &str) -> PyResult<ScalingMethod> {
-    match name.to_lowercase().as_str() {
-        "mad" => Ok(ScalingMethod::MAD),
-        "mar" => Ok(ScalingMethod::MAR),
-        "mean" => Ok(ScalingMethod::Mean),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown scaling method: {}. Valid options: mad, mar, mean",
-            name
-        ))),
-    }
-}
-
-// Parse polynomial degree from string
-fn parse_polynomial_degree(name: &str) -> PyResult<PolynomialDegree> {
-    match name.to_lowercase().as_str() {
-        "constant" | "0" => Ok(PolynomialDegree::Constant),
-        "linear" | "1" => Ok(PolynomialDegree::Linear),
-        "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
-        "cubic" | "3" => Ok(PolynomialDegree::Cubic),
-        "quartic" | "4" => Ok(PolynomialDegree::Quartic),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown polynomial degree: {}",
-            name
-        ))),
-    }
-}
-
-// Build a distance metric from a name and optional weights.
-fn build_distance_metric(
-    name: &str,
-    weighted_metric_weights: Option<&[f64]>,
-) -> PyResult<DistanceMetric<f64>> {
-    let lower = name.to_lowercase();
-    if let Some(p_str) = lower.strip_prefix("minkowski:") {
-        let p: f64 = p_str
-            .parse()
-            .map_err(|_| PyValueError::new_err(format!("Invalid Minkowski p value: {}", p_str)))?;
-        return Ok(DistanceMetric::Minkowski(p));
-    }
-    match lower.as_str() {
-        "normalized" | "norm" => Ok(DistanceMetric::Normalized),
-        "euclidean" | "euclid" => Ok(DistanceMetric::Euclidean),
-        "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
-        "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
-        "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
-        "weighted" => {
-            let weights = weighted_metric_weights.ok_or_else(|| {
-                PyValueError::new_err(
-                    "weighted_metric_weights must be provided when distance_metric is 'weighted'",
-                )
-            })?;
-            Ok(DistanceMetric::Weighted(weights.to_vec()))
-        }
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski, weighted",
-            name
-        ))),
-    }
-}
-
-// Parse merge strategy from string
-fn parse_merge_strategy(name: &str) -> PyResult<MergeStrategy> {
-    match name.to_lowercase().as_str() {
-        "average" | "mean" => Ok(MergeStrategy::Average),
-        "weighted_average" | "weighted" => Ok(MergeStrategy::WeightedAverage),
-        "take_first" | "first" => Ok(MergeStrategy::TakeFirst),
-        "take_last" | "last" => Ok(MergeStrategy::TakeLast),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown merge strategy: {}. Valid options: average, weighted_average, take_first, take_last",
-            name
-        ))),
-    }
-}
-
-// Parse surface mode from string
-fn parse_surface_mode(name: &str) -> PyResult<SurfaceMode> {
-    match name.to_lowercase().as_str() {
-        "interpolation" | "interp" => Ok(SurfaceMode::Interpolation),
-        "direct" => Ok(SurfaceMode::Direct),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown surface mode: {}",
-            name
-        ))),
-    }
-}
-
-// Parse update mode from string
-fn parse_update_mode(name: &str) -> PyResult<UpdateMode> {
-    match name.to_lowercase().as_str() {
-        "full" | "resmooth" => Ok(UpdateMode::Full),
-        "incremental" | "single" => Ok(UpdateMode::Incremental),
-        _ => Err(PyValueError::new_err(format!(
-            "Unknown update mode: {}. Valid options: full, incremental",
-            name
-        ))),
-    }
-}
-
-fn degree_to_name(degree: PolynomialDegree) -> &'static str {
-    match degree {
-        PolynomialDegree::Constant => "constant",
-        PolynomialDegree::Linear => "linear",
-        PolynomialDegree::Quadratic => "quadratic",
-        PolynomialDegree::Cubic => "cubic",
-        PolynomialDegree::Quartic => "quartic",
-    }
-}
-
-fn surface_mode_to_name(surface_mode: SurfaceMode) -> &'static str {
-    match surface_mode {
-        SurfaceMode::Interpolation => "interpolation",
-        SurfaceMode::Direct => "direct",
-    }
-}
-
-fn apply_distance_metric(
-    mut builder: LoessBuilder<f64>,
-    distance_metric: &DistanceMetric<f64>,
-) -> LoessBuilder<f64> {
-    match distance_metric {
-        DistanceMetric::Normalized => builder.distance_metric("normalized"),
-        DistanceMetric::Euclidean => builder.distance_metric("euclidean"),
-        DistanceMetric::Manhattan => builder.distance_metric("manhattan"),
-        DistanceMetric::Chebyshev => builder.distance_metric("chebyshev"),
-        DistanceMetric::Minkowski(p) => {
-            let metric = format!("minkowski:{}", p);
-            builder.distance_metric(&metric)
-        }
-        DistanceMetric::Weighted(weights) => {
-            builder = builder.distance_metric("weighted");
-            builder.weighted_metric_weights(weights.clone())
-        }
-    }
+fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
+    to_py_error(shared_parse::BindingError::invalid_arg(e.to_string()))
 }
 
 // Python Classes
@@ -501,56 +324,39 @@ impl PyStreamingLoess {
         confidence_intervals: Option<f64>,
         prediction_intervals: Option<f64>,
     ) -> PyResult<Self> {
-        parse_weight_function(weight_function)?;
-        parse_robustness_method(robustness_method)?;
-        parse_scaling_method(scaling_method)?;
-        parse_zero_weight_fallback(zero_weight_fallback)?;
-        parse_boundary_policy(boundary_policy)?;
-        let ms = parse_merge_strategy(merge_strategy)?;
-        parse_polynomial_degree(degree)?;
-        let dm = build_distance_metric(distance_metric, weighted_metric_weights.as_deref())?;
-        parse_surface_mode(surface_mode)?;
-
-        let mut builder = LoessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations);
-        builder = builder.weight_function(weight_function);
-        builder = builder.robustness_method(robustness_method);
-        builder = builder.scaling_method(scaling_method);
-        builder = builder.zero_weight_fallback(zero_weight_fallback);
-        builder = builder.boundary_policy(boundary_policy);
-        builder = builder.degree(degree);
-        builder = builder.dimensions(dimensions);
-        builder = apply_distance_metric(builder, &dm);
-        builder = builder.surface_mode(surface_mode);
-        if return_se {
-            builder = builder.return_se();
-        }
-
-        if return_diagnostics {
-            builder = builder.return_diagnostics();
-        }
-        if return_residuals {
-            builder = builder.return_residuals();
-        }
-        if return_robustness_weights {
-            builder = builder.return_robustness_weights();
-        }
-        if let Some(c) = cell {
-            builder = builder.cell(c);
-        }
-        if let Some(v) = interpolation_vertices {
-            builder = builder.interpolation_vertices(v);
-        }
-        if let Some(bdf) = boundary_degree_fallback {
-            builder = builder.boundary_degree_fallback(bdf);
-        }
-        if let Some(ci) = confidence_intervals {
-            builder = builder.confidence_intervals(ci);
-        }
-        if let Some(pi) = prediction_intervals {
-            builder = builder.prediction_intervals(pi);
-        }
+        let ms = map_invalid_arg(shared_parse::parse_merge_strategy(merge_strategy))?;
+        let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+            LoessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                boundary_policy: Some(boundary_policy),
+                scaling_method: Some(scaling_method),
+                auto_converge,
+                return_residuals,
+                return_robustness_weights,
+                return_diagnostics,
+                confidence_intervals,
+                prediction_intervals,
+                parallel: Some(parallel),
+                degree: Some(degree),
+                dimensions: Some(dimensions),
+                distance_metric: Some(distance_metric),
+                weighted_metric_weights: weighted_metric_weights.as_deref(),
+                surface_mode: Some(surface_mode),
+                return_se,
+                cell,
+                interpolation_vertices,
+                boundary_degree_fallback,
+                cv_fractions: None,
+                cv_method: None,
+                cv_k: None,
+                cv_seed: None,
+            },
+        ))?;
 
         let overlap_size = overlap.unwrap_or_else(|| {
             let default = chunk_size / 10;
@@ -567,7 +373,7 @@ impl PyStreamingLoess {
             streaming_builder = streaming_builder.auto_converge(tol);
         }
 
-        let processor = streaming_builder.build().map_err(to_py_error)?;
+        let processor = map_runtime(streaming_builder.build())?;
         Ok(PyStreamingLoess {
             inner: Mutex::new(processor),
         })
@@ -580,15 +386,19 @@ impl PyStreamingLoess {
         x: PyReadonlyArray1<'py, f64>,
         y: PyReadonlyArray1<'py, f64>,
     ) -> PyResult<PyLoessResult> {
-        let x_vec = x.as_slice().map_err(to_py_error)?.to_vec();
-        let y_vec = y.as_slice().map_err(to_py_error)?.to_vec();
+        let x_vec = x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
+        let y_vec = y.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
 
         let result = py.detach(move || {
             self.inner
                 .lock()
-                .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?
+                .map_err(|e| {
+                    to_py_error(shared_parse::BindingError::runtime(
+                        shared_parse::mutex_poisoned_message(&e.to_string()),
+                    ))
+                })?
                 .process_chunk(&x_vec, &y_vec)
-                .map_err(to_py_error)
+                .map_err(|e| to_py_error(shared_parse::BindingError::runtime(e.to_string())))
         })?;
 
         Ok(PyLoessResult { inner: result })
@@ -599,9 +409,13 @@ impl PyStreamingLoess {
         let result = py.detach(move || {
             self.inner
                 .lock()
-                .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?
+                .map_err(|e| {
+                    to_py_error(shared_parse::BindingError::runtime(
+                        shared_parse::mutex_poisoned_message(&e.to_string()),
+                    ))
+                })?
                 .finalize()
-                .map_err(to_py_error)
+                .map_err(|e| to_py_error(shared_parse::BindingError::runtime(e.to_string())))
         })?;
 
         Ok(PyLoessResult { inner: result })
@@ -679,52 +493,50 @@ impl PyOnlineLoess {
         confidence_intervals: Option<f64>,
         prediction_intervals: Option<f64>,
     ) -> PyResult<Self> {
-        parse_weight_function(weight_function)?;
-        parse_robustness_method(robustness_method)?;
-        parse_scaling_method(scaling_method)?;
-        parse_boundary_policy(boundary_policy)?;
-        parse_zero_weight_fallback(zero_weight_fallback)?;
-        let um = parse_update_mode(update_mode)?;
-        let deg = parse_polynomial_degree(degree)?;
-        let dm = build_distance_metric(distance_metric, weighted_metric_weights.as_deref())?;
-        parse_surface_mode(surface_mode)?;
+        let um = map_invalid_arg(shared_parse::parse_update_mode(update_mode))?;
+        let (builder, applied) = map_invalid_arg(shared_parse::apply_builder_options(
+            LoessBuilder::<f64>::new(),
+            shared_parse::BuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                boundary_policy: Some(boundary_policy),
+                scaling_method: Some(scaling_method),
+                auto_converge,
+                return_residuals,
+                return_robustness_weights: false,
+                return_diagnostics,
+                confidence_intervals,
+                prediction_intervals,
+                parallel: Some(parallel),
+                degree: Some(degree),
+                dimensions: Some(dimensions),
+                distance_metric: Some(distance_metric),
+                weighted_metric_weights: weighted_metric_weights.as_deref(),
+                surface_mode: Some(surface_mode),
+                return_se,
+                cell,
+                interpolation_vertices,
+                boundary_degree_fallback,
+                cv_fractions: None,
+                cv_method: None,
+                cv_k: None,
+                cv_seed: None,
+            },
+        ))?;
 
-        let mut builder = LoessBuilder::<f64>::new();
-        builder = builder.fraction(fraction);
-        builder = builder.iterations(iterations);
-        builder = builder.weight_function(weight_function);
-        builder = builder.robustness_method(robustness_method);
-        builder = builder.scaling_method(scaling_method);
-        builder = builder.zero_weight_fallback(zero_weight_fallback);
-        builder = builder.boundary_policy(boundary_policy);
-        builder = builder.degree(degree);
-        builder = builder.dimensions(dimensions);
-        builder = apply_distance_metric(builder, &dm);
-        builder = builder.surface_mode(surface_mode);
-        if return_se {
-            builder = builder.return_se();
-        }
-        if return_diagnostics {
-            builder = builder.return_diagnostics();
-        }
-        if return_residuals {
-            builder = builder.return_residuals();
-        }
-        if let Some(c) = cell {
-            builder = builder.cell(c);
-        }
-        if let Some(v) = interpolation_vertices {
-            builder = builder.interpolation_vertices(v);
-        }
-        if let Some(bdf) = boundary_degree_fallback {
-            builder = builder.boundary_degree_fallback(bdf);
-        }
-        if let Some(ci) = confidence_intervals {
-            builder = builder.confidence_intervals(ci);
-        }
-        if let Some(pi) = prediction_intervals {
-            builder = builder.prediction_intervals(pi);
-        }
+        let deg = applied.degree.ok_or_else(|| {
+            to_py_error(shared_parse::BindingError::invalid_arg(
+                shared_parse::required_option_message("degree"),
+            ))
+        })?;
+        let dm = applied.distance_metric.ok_or_else(|| {
+            to_py_error(shared_parse::BindingError::invalid_arg(
+                shared_parse::required_option_message("distance_metric"),
+            ))
+        })?;
 
         let mut online_builder = builder.adapter(Online);
         online_builder = online_builder.window_capacity(window_capacity);
@@ -739,7 +551,7 @@ impl PyOnlineLoess {
             online_builder = online_builder.return_robustness_weights(true);
         }
 
-        let processor = online_builder.build().map_err(to_py_error)?;
+        let processor = map_runtime(online_builder.build())?;
         Ok(PyOnlineLoess {
             inner: Mutex::new(processor),
             fraction,
@@ -757,48 +569,35 @@ impl PyOnlineLoess {
         x: PyReadonlyArray1<'py, f64>,
         y: PyReadonlyArray1<'py, f64>,
     ) -> PyResult<PyLoessResult> {
-        let x_slice = x.as_slice().map_err(to_py_error)?;
-        let y_slice = y.as_slice().map_err(to_py_error)?;
-        let x_vec_out = x_slice.to_vec();
+        let x_slice = x.as_slice().map_err(to_py_invalid_arg_error)?;
+        let y_slice = y.as_slice().map_err(to_py_invalid_arg_error)?;
+        let metadata = shared_parse::OnlineResultMetadata {
+            dimensions: self.dimensions,
+            degree: self.degree,
+            distance_metric: self.distance_metric.clone(),
+            fraction_used: self.fraction,
+            iterations_used: Some(self.iterations),
+        };
 
-        let mut smoothed = Vec::with_capacity(y_slice.len());
-        {
-            let mut inner = self
-                .inner
-                .lock()
-                .map_err(|e| to_py_error(format!("Mutex poisoned: {}", e)))?;
-            for (&xi, &yi) in x_slice.iter().zip(y_slice.iter()) {
-                let output = inner.add_point(&[xi], yi).map_err(to_py_error)?;
-                smoothed.push(output.as_ref().map_or(yi, |o| o.smoothed));
-            }
-        }
+        let mut inner = self.inner.lock().map_err(|e| {
+            to_py_error(shared_parse::BindingError::runtime(
+                shared_parse::mutex_poisoned_message(&e.to_string()),
+            ))
+        })?;
+        let inner_result = shared_parse::online_add_points_to_result(
+            x_slice,
+            y_slice,
+            &metadata,
+            |xi_chunk, yi| {
+                let output = inner.add_point(xi_chunk, yi)?;
+                Ok(output.map(|o| o.smoothed))
+            },
+        )
+        .map_err(|e| to_py_error(shared_parse::BindingError::invalid_arg(e)))?;
         let _ = py;
 
         Ok(PyLoessResult {
-            inner: LoessResult {
-                x: x_vec_out,
-                y: smoothed,
-                dimensions: self.dimensions,
-                distance_metric: self.distance_metric.clone(),
-                polynomial_degree: self.degree,
-                standard_errors: None,
-                confidence_lower: None,
-                confidence_upper: None,
-                prediction_lower: None,
-                prediction_upper: None,
-                residuals: None,
-                robustness_weights: None,
-                diagnostics: None,
-                iterations_used: Some(self.iterations),
-                fraction_used: self.fraction,
-                cv_scores: None,
-                enp: None,
-                trace_hat: None,
-                delta1: None,
-                delta2: None,
-                residual_scale: None,
-                leverage: None,
-            },
+            inner: inner_result,
         })
     }
 }
@@ -900,14 +699,20 @@ impl PyLoess {
         boundary_degree_fallback: Option<bool>,
         cv_seed: Option<u64>,
     ) -> PyResult<Self> {
-        let wf = parse_weight_function(weight_function)?;
-        let rm = parse_robustness_method(robustness_method)?;
-        let sm = parse_scaling_method(scaling_method)?;
-        let zwf = parse_zero_weight_fallback(zero_weight_fallback)?;
-        let bp = parse_boundary_policy(boundary_policy)?;
-        let deg = parse_polynomial_degree(degree)?;
-        let dm = build_distance_metric(distance_metric, weighted_metric_weights.as_deref())?;
-        let surf = parse_surface_mode(surface_mode)?;
+        let wf = map_invalid_arg(shared_parse::parse_weight_function(weight_function))?;
+        let rm = map_invalid_arg(shared_parse::parse_robustness_method(robustness_method))?;
+        let sm = map_invalid_arg(shared_parse::parse_scaling_method(scaling_method))?;
+        let zwf = map_invalid_arg(shared_parse::parse_zero_weight_fallback(
+            zero_weight_fallback,
+        ))?;
+        let bp = map_invalid_arg(shared_parse::parse_boundary_policy(boundary_policy))?;
+        let deg = map_invalid_arg(shared_parse::parse_polynomial_degree(degree))?;
+        let (_, dm) = map_invalid_arg(shared_parse::apply_distance_metric(
+            LoessBuilder::<f64>::new(),
+            distance_metric,
+            weighted_metric_weights.as_deref(),
+        ))?;
+        let surf = map_invalid_arg(shared_parse::parse_surface_mode(surface_mode))?;
 
         Ok(PyLoess {
             fraction,
@@ -961,10 +766,14 @@ impl PyLoess {
         custom_weights: Option<PyReadonlyArray1<'py, f64>>,
     ) -> PyResult<PyLoessResult> {
         // 1. Copy data (Must be done with GIL)
-        let x_vec = x.as_slice().map_err(to_py_error)?.to_vec();
-        let y_vec = y.as_slice().map_err(to_py_error)?.to_vec();
+        let x_vec = x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
+        let y_vec = y.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
         let uw_vec: Option<Vec<f64>> = custom_weights
-            .map(|uw| uw.as_slice().map(|s| s.to_vec()).map_err(to_py_error))
+            .map(|uw| {
+                uw.as_slice()
+                    .map(|s| s.to_vec())
+                    .map_err(to_py_invalid_arg_error)
+            })
             .transpose()?;
 
         // Used for builder configuration
@@ -972,127 +781,51 @@ impl PyLoess {
 
         // 2. Release GIL
         let result = py.detach(move || {
-            let mut builder = LoessBuilder::<f64>::new();
-            builder = builder.fraction(params.fraction);
-            builder = builder.iterations(params.iterations);
-            builder = builder.weight_function(match params.weight_function {
-                WeightFunction::Tricube => "tricube",
-                WeightFunction::Epanechnikov => "epanechnikov",
-                WeightFunction::Gaussian => "gaussian",
-                WeightFunction::Uniform => "uniform",
-                WeightFunction::Biweight => "biweight",
-                WeightFunction::Triangle => "triangle",
-                WeightFunction::Cosine => "cosine",
-            });
-            builder = builder.robustness_method(match params.robustness_method {
-                RobustnessMethod::Bisquare => "bisquare",
-                RobustnessMethod::Huber => "huber",
-                RobustnessMethod::Talwar => "talwar",
-            });
-            builder = builder.scaling_method(match params.scaling_method {
-                ScalingMethod::MAD => "mad",
-                ScalingMethod::MAR => "mar",
-                ScalingMethod::Mean => "mean",
-            });
-            builder = builder.zero_weight_fallback(match params.zero_weight_fallback {
-                ZeroWeightFallback::UseLocalMean => "use_local_mean",
-                ZeroWeightFallback::ReturnOriginal => "return_original",
-                ZeroWeightFallback::ReturnNone => "return_none",
-            });
-            builder = builder.boundary_policy(match params.boundary_policy {
-                BoundaryPolicy::Extend => "extend",
-                BoundaryPolicy::Reflect => "reflect",
-                BoundaryPolicy::Zero => "zero",
-                BoundaryPolicy::NoBoundary => "noboundary",
-            });
-            builder = builder.parallel(params.parallel);
-
-            builder = builder.degree(degree_to_name(params.degree));
-            builder = builder.dimensions(params.dimensions);
-            builder = apply_distance_metric(builder, &params.distance_metric);
-            builder = builder.surface_mode(surface_mode_to_name(params.surface_mode));
+            let (mut builder, _) =
+                shared_parse::map_invalid_arg(shared_parse::apply_typed_builder_options(
+                    LoessBuilder::<f64>::new(),
+                    shared_parse::TypedBuilderOptionSet {
+                        fraction: Some(params.fraction),
+                        iterations: Some(params.iterations),
+                        weight_function: Some(params.weight_function),
+                        robustness_method: Some(params.robustness_method),
+                        zero_weight_fallback: Some(params.zero_weight_fallback),
+                        boundary_policy: Some(params.boundary_policy),
+                        scaling_method: Some(params.scaling_method),
+                        auto_converge: params.auto_converge,
+                        return_residuals: params.return_residuals,
+                        return_robustness_weights: params.return_robustness_weights,
+                        return_diagnostics: params.return_diagnostics,
+                        confidence_intervals: params.confidence_intervals,
+                        prediction_intervals: params.prediction_intervals,
+                        parallel: Some(params.parallel),
+                        degree: Some(params.degree),
+                        dimensions: Some(params.dimensions),
+                        distance_metric: Some(params.distance_metric),
+                        surface_mode: Some(params.surface_mode),
+                        return_se: params.return_se,
+                        cell: params.cell,
+                        interpolation_vertices: params.interpolation_vertices,
+                        boundary_degree_fallback: params.boundary_degree_fallback,
+                        cv_fractions: params.cv_fractions,
+                        cv_method: Some(params.cv_method),
+                        cv_k: Some(params.cv_k),
+                        cv_seed: params.cv_seed,
+                    },
+                ))?;
 
             if let Some(uw) = uw_vec {
                 builder = builder.custom_weights(uw);
             }
-            if params.return_se {
-                builder = builder.return_se();
-            }
 
-            if let Some(cl) = params.confidence_intervals {
-                builder = builder.confidence_intervals(cl);
-            }
-
-            if let Some(pl) = params.prediction_intervals {
-                builder = builder.prediction_intervals(pl);
-            }
-
-            if params.return_diagnostics {
-                builder = builder.return_diagnostics();
-            }
-
-            if params.return_residuals {
-                builder = builder.return_residuals();
-            }
-
-            if params.return_robustness_weights {
-                builder = builder.return_robustness_weights();
-            }
-
-            if let Some(tol) = params.auto_converge {
-                builder = builder.auto_converge(tol);
-            }
-
-            if let Some(c) = params.cell {
-                builder = builder.cell(c);
-            }
-            if let Some(v) = params.interpolation_vertices {
-                builder = builder.interpolation_vertices(v);
-            }
-            if let Some(bdf) = params.boundary_degree_fallback {
-                builder = builder.boundary_degree_fallback(bdf);
-            }
-
-            // Cross-validation if fractions are provided
-            if let Some(ref fractions) = params.cv_fractions {
-                let seed = params.cv_seed;
-                match params.cv_method.to_lowercase().as_str() {
-                    "simple" | "loo" | "loocv" | "leave_one_out" => {
-                        builder = builder.cv_method("loocv");
-                        builder = builder.cv_fractions(fractions.clone());
-                        if let Some(s) = seed {
-                            builder = builder.cv_seed(s);
-                        }
-                    }
-                    "kfold" | "k_fold" | "k-fold" => {
-                        builder = builder.cv_method("kfold");
-                        builder = builder.cv_k(params.cv_k);
-                        builder = builder.cv_fractions(fractions.clone());
-                        if let Some(s) = seed {
-                            builder = builder.cv_seed(s);
-                        }
-                    }
-                    _ => {
-                        return Err(format!(
-                            "Unknown CV method: {}. Valid options: loocv, kfold",
-                            params.cv_method
-                        ));
-                    }
-                };
-            }
-
-            builder
-                .adapter(Batch)
-                .build()
-                .map_err(|e| e.to_string())?
-                .fit(&x_vec, &y_vec)
-                .map_err(|e| e.to_string())
+            let model = shared_parse::map_runtime(builder.adapter(Batch).build())?;
+            shared_parse::map_runtime(model.fit(&x_vec, &y_vec))
         });
 
         // 3. Handle result (Back with GIL)
         match result {
             Ok(inner) => Ok(PyLoessResult { inner }),
-            Err(e) => Err(PyValueError::new_err(e)),
+            Err(e) => Err(to_py_error(e)),
         }
     }
 
