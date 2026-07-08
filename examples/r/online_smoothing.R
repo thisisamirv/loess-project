@@ -16,11 +16,14 @@
 library(rfastloess)
 
 # Helper: feed all (x, y) pairs through add_point one at a time.
-# Returns a named list with $smoothed (numeric vector, NA where window not full).
+# Returns a named list with $smoothed (numeric vector,
+# NA where window not full).
 add_all_points <- function(model, x, y) {
     results <- lapply(seq_along(x), function(i) model$add_point(x[i], y[i]))
     list(
-        smoothed = sapply(results, function(r) if (is.null(r)) NA_real_ else r$smoothed)
+        smoothed = sapply(
+            results, function(r) if (is.null(r)) NA_real_ else r$smoothed
+        )
     )
 }
 
@@ -40,7 +43,11 @@ example_1_basic_streaming <- function() {
 
     cat(sprintf("  %8s %12s %12s\n", "X", "Y_obs", "Y_smooth"))
     for (i in seq_along(y)) {
-        smoothed <- if (is.na(result$smoothed[i])) "(buffering)" else sprintf("%.2f", result$smoothed[i])
+        smoothed <- if (is.na(result$smoothed[i])) {
+            "(buffering)"
+        } else {
+            sprintf("%.2f", result$smoothed[i])
+        }
         cat(sprintf("  %8.2f %12.2f %12s\n", x[i], y[i], smoothed))
     }
     cat("\n")
@@ -64,7 +71,11 @@ example_2_sensor_simulation <- function() {
 
     cat(sprintf("  %6s %12s %12s\n", "Hour", "Raw", "Smoothed"))
     for (i in seq_along(hours)) {
-        smoothed <- if (is.na(result$smoothed[i])) "(warming up)" else sprintf("%.2f degC", result$smoothed[i])
+        smoothed <- if (is.na(result$smoothed[i])) {
+            "(warming up)"
+        } else {
+            sprintf("%.2f degC", result$smoothed[i])
+        }
         cat(sprintf("  %6.0f %10.2f degC %s\n", hours[i], temp[i], smoothed))
     }
     cat("\n")
@@ -85,7 +96,9 @@ example_3_outlier_handling <- function() {
         )
         result <- add_all_points(model, x, y)
         valid <- result$smoothed[!is.na(result$smoothed)]
-        cat(sprintf("  %s: [%s]\n", method, paste(round(valid, 1), collapse = ", ")))
+        cat(sprintf(
+            "  %s: [%s]\n", method, paste(round(valid, 1), collapse = ", ")
+        ))
     }
     cat("\n")
 }
@@ -219,7 +232,9 @@ example_8_update_modes <- function() {
     )
     result <- add_all_points(model, x, y)
     valid <- result$smoothed[!is.na(result$smoothed)]
-    if (length(valid) > 0) cat(sprintf("  last smoothed: %.3f\n", tail(valid, 1)))
+    if (length(valid) > 0) {
+        cat(sprintf("  last smoothed: %.3f\n", tail(valid, 1)))
+    }
     cat("\n")
 }
 
@@ -246,7 +261,9 @@ example_9_online_options <- function() {
     result <- add_all_points(model, x, y)
     valid <- result$smoothed[!is.na(result$smoothed)]
     cat(sprintf("  emitted: %d\n", length(valid)))
-    if (length(valid) > 0) cat(sprintf("  last smoothed: %.3f\n", tail(valid, 1)))
+    if (length(valid) > 0) {
+        cat(sprintf("  last smoothed: %.3f\n", tail(valid, 1)))
+    }
     cat("\n")
 }
 

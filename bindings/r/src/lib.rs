@@ -12,8 +12,7 @@ use extendr_api::prelude::*;
 type Result<T> = std::result::Result<T, Error>;
 
 use fastLoess::binding_support as shared_parse;
-use fastLoess::internals::api::{DistanceMetric, PolynomialDegree};
-use fastLoess::prelude::{Batch, Loess as LoessBuilder, LoessResult, Online, Streaming};
+use fastLoess::internals::api::{Batch, LoessBuilder, LoessResult, Online, Streaming};
 
 // Helper Functions
 
@@ -226,7 +225,7 @@ impl RStreamingLoess {
     ) -> Result<Self> {
         let chunk_size = require_positive_usize("chunk_size", chunk_size)?;
         let overlap_size = match overlap {
-            NotNull(o) => require_positive_usize("overlap", o)?,
+            NotNull(o) => require_non_negative_usize("overlap", o)?,
             Null => (chunk_size / 10).min(chunk_size.saturating_sub(10)).max(1),
         };
         let iterations = require_non_negative_usize("iterations", iterations)?;
@@ -330,11 +329,6 @@ impl RStreamingLoess {
 #[extendr]
 pub struct ROnlineLoess {
     inner: fastLoess::internals::adapters::online::ParallelOnlineLoess<f64>,
-    fraction: f64,
-    iterations: usize,
-    dimensions: usize,
-    degree: PolynomialDegree,
-    distance_metric: DistanceMetric<f64>,
 }
 
 #[extendr]
@@ -353,6 +347,8 @@ impl ROnlineLoess {
         update_mode: &str,
         auto_converge: Nullable<f64>,
         return_robustness_weights: bool,
+        return_diagnostics: bool,
+        return_residuals: bool,
         parallel: bool,
         degree: &str,
         dimensions: i32,
@@ -377,7 +373,7 @@ impl ROnlineLoess {
         let min_points = require_positive_usize("min_points", min_points)?;
         let interpolation_vertices =
             optional_positive_usize("interpolation_vertices", interpolation_vertices)?;
-        let (builder, applied) = map_invalid_arg(shared_parse::apply_builder_options(
+        let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -388,9 +384,9 @@ impl ROnlineLoess {
                 boundary_policy: Some(boundary_policy),
                 scaling_method: Some(scaling_method),
                 auto_converge: None,
-                return_residuals: false,
+                return_residuals,
                 return_robustness_weights: false,
-                return_diagnostics: false,
+                return_diagnostics,
                 confidence_intervals: match confidence_intervals {
                     NotNull(v) => Some(v),
                     Null => None,
@@ -422,17 +418,6 @@ impl ROnlineLoess {
             },
         ))?;
 
-        let deg = applied.degree.ok_or_else(|| {
-            to_r_error(shared_parse::BindingError::invalid_arg(
-                shared_parse::required_option_message("degree"),
-            ))
-        })?;
-        let dm = applied.distance_metric.ok_or_else(|| {
-            to_r_error(shared_parse::BindingError::invalid_arg(
-                shared_parse::required_option_message("distance_metric"),
-            ))
-        })?;
-
         let mut o_builder = builder.adapter(Online);
         o_builder = o_builder.window_capacity(window_capacity);
         o_builder = o_builder.min_points(min_points);
@@ -447,14 +432,7 @@ impl ROnlineLoess {
         }
 
         let model = map_runtime(o_builder.build())?;
-        Ok(Self {
-            inner: model,
-            fraction,
-            iterations,
-            dimensions: configured_dimensions,
-            degree: deg,
-            distance_metric: dm,
-        })
+        Ok(Self { inner: model })
     }
 
     fn add_point(&mut self, x: f64, y: f64) -> Result<Nullable<List>> {

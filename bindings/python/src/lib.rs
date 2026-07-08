@@ -271,7 +271,7 @@ impl PyStreamingLoess {
     #[pyo3(signature = (
         fraction=0.67,
         chunk_size=5000,
-        overlap=500,
+        overlap=None,
         iterations=3,
         weight_function="tricube",
         robustness_method="bisquare",
@@ -802,8 +802,8 @@ impl PyLoess {
                 builder = builder.custom_weights(uw);
             }
 
-            let model = shared_parse::map_runtime(builder.adapter(Batch).build())?;
-            shared_parse::map_runtime(model.fit(&x_vec, &y_vec))
+            let model = shared_parse::map_invalid_arg(builder.adapter(Batch).build())?;
+            shared_parse::map_invalid_arg(model.fit(&x_vec, &y_vec))
         });
 
         // 3. Handle result (Back with GIL)

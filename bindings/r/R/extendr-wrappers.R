@@ -31,7 +31,9 @@ RLoess$new <- function(
     )
 }
 
-RLoess$fit <- function(x, y, custom_weights = NULL) .Call(wrap__RLoess__fit, self, x, y, custom_weights)
+RLoess$fit <- function(x, y, custom_weights = NULL) {
+    .Call(wrap__RLoess__fit, self, x, y, custom_weights)
+}
 
 #' @export
 `$.RLoess` <- function(self, name) {
@@ -92,8 +94,8 @@ ROnlineLoess$new <- function(
     fraction, window_capacity, min_points, iterations,
     weight_function, robustness_method,
     scaling_method, boundary_policy, zero_weight_fallback, update_mode,
-    auto_converge, return_robustness_weights,
-    parallel, degree, dimensions, distance_metric,
+    auto_converge, return_robustness_weights, return_diagnostics,
+    return_residuals, parallel, degree, dimensions, distance_metric,
     weighted_metric_weights, surface_mode, return_se,
     confidence_intervals, prediction_intervals,
     cell, interpolation_vertices, boundary_degree_fallback
@@ -102,8 +104,8 @@ ROnlineLoess$new <- function(
         wrap__ROnlineLoess__new, fraction, window_capacity, min_points,
         iterations, weight_function, robustness_method, scaling_method,
         boundary_policy, zero_weight_fallback, update_mode, auto_converge,
-        return_robustness_weights, parallel,
-        degree, dimensions, distance_metric,
+        return_robustness_weights, return_diagnostics, return_residuals,
+        parallel, degree, dimensions, distance_metric,
         weighted_metric_weights, surface_mode, return_se,
         confidence_intervals, prediction_intervals,
         cell, interpolation_vertices, boundary_degree_fallback

@@ -23,9 +23,8 @@
 #' @srrstats {G2.15} NA checks on inputs before passing to algorithms.
 #' @srrstats {G2.16} Inf/NaN validation in input vectors.
 #' @srrstats {G3.0} Tolerance-based comparisons used in robustness weights.
-validate_common_args <- function(x, y, fraction, iterations) {
-    # For multi-dimensional input, x is a flat vector of length n * d.
-    # Accept if length(x) is a positive multiple of length(y).
+#' @noRd
+check_xy_inputs <- function(x, y) {
     n_y <- length(y)
     if (length(x) == 0 || n_y == 0 || length(x) %% n_y != 0) {
         stop("x must match y's length or be its multiple for multi-dim input")
@@ -33,16 +32,29 @@ validate_common_args <- function(x, y, fraction, iterations) {
     if (length(x) < 3) {
         stop("At least 3 data points are required")
     }
+}
+
+#' @noRd
+check_fraction_arg <- function(fraction) {
     if (!is.numeric(fraction) || length(fraction) != 1) {
         stop("fraction must be a single numeric value")
     }
     if (fraction <= 0 || fraction > 1) {
         stop("fraction must be between 0 and 1")
     }
+}
+
+#' @noRd
+check_iterations_arg <- function(iterations) {
     if (!is.numeric(iterations) || length(iterations) != 1 || iterations < 0) {
         stop("iterations must be a non-negative integer")
     }
+}
 
+validate_common_args <- function(x, y, fraction, iterations) {
+    check_xy_inputs(x, y)
+    check_fraction_arg(fraction)
+    check_iterations_arg(iterations)
     list(
         x = as.double(x),
         y = as.double(y),
@@ -228,7 +240,8 @@ online_params <- c(
     "fraction", "window_capacity", "min_points", "iterations",
     "weight_function", "robustness_method", "scaling_method",
     "boundary_policy", "zero_weight_fallback", "update_mode", "auto_converge",
-    "return_robustness_weights", "return_diagnostics", "return_residuals", "parallel",
+    "return_robustness_weights", "return_diagnostics",
+    "return_residuals", "parallel",
     "degree", "dimensions", "distance_metric", "surface_mode", "return_se",
     "confidence_intervals", "prediction_intervals",
     "weighted_metric_weights", "cell", "interpolation_vertices",

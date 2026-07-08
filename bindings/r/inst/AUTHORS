@@ -12,15 +12,15 @@ Package: bytemuck (1.25.0)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
-Package: crossbeam-deque (0.8.6)
+Package: crossbeam-deque (0.8.7)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: crossbeam-epoch (0.9.18)
+Package: crossbeam-epoch (0.9.20)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: crossbeam-utils (0.8.21)
+Package: crossbeam-utils (0.8.22)
 Authors: 
 License: MIT OR Apache-2.0
 ----------------------------------------
@@ -72,7 +72,7 @@ Package: ndarray (0.17.2)
 Authors: Ulrik Sverdrup "bluss", Jim Turner
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: num-bigint (0.4.6)
+Package: num-bigint (0.4.8)
 Authors: The Rust Project Developers
 License: MIT OR Apache-2.0
 ----------------------------------------

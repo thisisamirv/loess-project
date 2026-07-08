@@ -5,7 +5,7 @@
 \title{LOESS Streaming Smoothing}
 \usage{
 StreamingLoess(
-    fraction = 0.3,
+    fraction = 0.67,
     chunk_size = 5000L,
     overlap = NULL,
     iterations = 3L,
@@ -38,8 +38,7 @@ StreamingLoess(
 
 \item{chunk_size}{Number of data points per processing chunk.}
 
-\item{overlap}{Number of overlapping points between consecutive chunks.
-\code{NULL} uses the default (10\% of \code{chunk_size}).}
+\item{overlap}{Number of overlapping points between consecutive chunks.}
 
 \item{iterations}{Number of robustness iterations (non-negative integer).
 Default: 3.}

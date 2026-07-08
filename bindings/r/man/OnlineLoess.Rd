@@ -5,17 +5,19 @@
 \title{LOESS Online Smoothing}
 \usage{
 OnlineLoess(
-    fraction = 0.2,
-    window_capacity = 100L,
-    min_points = 2L,
+    fraction = 0.67,
+    window_capacity = 1000L,
+    min_points = 3L,
     iterations = 3L,
     weight_function = "tricube",
     robustness_method = "bisquare",
     scaling_method = "mad",
     boundary_policy = "extend",
-    update_mode = "incremental",
+    update_mode = "full",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
     zero_weight_fallback = "use_local_mean",
     parallel = FALSE,
     degree = "linear",
@@ -54,14 +56,21 @@ Default: 3.}
 \item{boundary_policy}{Boundary handling strategy: \code{"extend"}
 (default), \code{"reflect"}, \code{"zero"}, or \code{"noboundary"}.}
 
-\item{update_mode}{Window update strategy. Currently only
-\code{"incremental"} is supported.}
+\item{update_mode}{Window update strategy: \code{"full"} (default)
+re-smooths all window points after each addition,
+\code{"incremental"} updates only the newest point.}
 
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
 
 \item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
 robustness weights. Default: \code{FALSE}.}
+
+\item{return_diagnostics}{Logical; if \code{TRUE}, return fit-quality
+metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.}
+
+\item{return_residuals}{Logical; if \code{TRUE}, return residuals in the
+result. Default: \code{FALSE}.}
 
 \item{zero_weight_fallback}{Fallback policy when all robustness weights drop
 to zero: \code{"use_local_mean"} (default), \code{"return_original"}, or
@@ -116,7 +125,8 @@ Create a stateful LOESS model for real-time online data.
 model <- OnlineLoess(fraction = 0.2, window_capacity = 20)
 x <- 1:50
 y <- sin(x * 0.1) + rnorm(50, 0, 0.1)
-result <- model$add_points(x, y)
-plot(x, y)
-lines(x, result$y, col = "red")
+for (i in seq_along(x)) {
+    result <- model$add_point(x[i], y[i])
+    if (!is.null(result)) cat("smoothed:", result$smoothed, "\n")
+}
 }

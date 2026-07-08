@@ -13,7 +13,7 @@ test_that("OnlineLoess basic functionality works", {
     results <- lapply(seq_along(x), function(i) ol$add_point(x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
 
-    expect_true(length(non_null) > 0)
+    expect_gt(length(non_null), 0)
     expect_true("smoothed" %in% names(non_null[[1]]))
     expect_type(non_null[[1]]$smoothed, "double")
 })
@@ -26,15 +26,19 @@ test_that("OnlineLoess window capacity works", {
     ol_small <- OnlineLoess(
         fraction = 0.3, window_capacity = 15
     )
-    results_small <- lapply(seq_along(x), function(i) ol_small$add_point(x[i], y[i]))
+    results_small <- lapply(
+        seq_along(x), function(i) ol_small$add_point(x[i], y[i])
+    )
 
     ol_large <- OnlineLoess(
         fraction = 0.3, window_capacity = 50
     )
-    results_large <- lapply(seq_along(x), function(i) ol_large$add_point(x[i], y[i]))
+    results_large <- lapply(
+        seq_along(x), function(i) ol_large$add_point(x[i], y[i])
+    )
 
-    expect_true(length(Filter(Negate(is.null), results_small)) > 0)
-    expect_true(length(Filter(Negate(is.null), results_large)) > 0)
+    expect_gt(length(Filter(Negate(is.null), results_small)), 0)
+    expect_gt(length(Filter(Negate(is.null), results_large)), 0)
 })
 
 test_that("OnlineLoess min_points parameter works", {
@@ -52,7 +56,7 @@ test_that("OnlineLoess min_points parameter works", {
     expect_null(results[[4]])
     # After min_points points, should return a result
     non_null <- Filter(Negate(is.null), results)
-    expect_true(length(non_null) > 0)
+    expect_gt(length(non_null), 0)
     expect_type(non_null[[1]]$smoothed, "double")
 })
 
@@ -65,16 +69,20 @@ test_that("OnlineLoess update modes work", {
         fraction = 0.3, window_capacity = 25,
         update_mode = "full"
     )
-    results_full <- lapply(seq_along(x), function(i) ol_full$add_point(x[i], y[i]))
+    results_full <- lapply(
+        seq_along(x), function(i) ol_full$add_point(x[i], y[i])
+    )
 
     ol_incr <- OnlineLoess(
         fraction = 0.3, window_capacity = 25,
         update_mode = "incremental"
     )
-    results_incr <- lapply(seq_along(x), function(i) ol_incr$add_point(x[i], y[i]))
+    results_incr <- lapply(
+        seq_along(x), function(i) ol_incr$add_point(x[i], y[i])
+    )
 
-    expect_true(length(Filter(Negate(is.null), results_full)) > 0)
-    expect_true(length(Filter(Negate(is.null), results_incr)) > 0)
+    expect_gt(length(Filter(Negate(is.null), results_full)), 0)
+    expect_gt(length(Filter(Negate(is.null), results_incr)), 0)
 })
 
 test_that("OnlineLoess handles edge cases", {
@@ -86,7 +94,7 @@ test_that("OnlineLoess handles edge cases", {
     )
     results <- lapply(seq_along(x), function(i) ol$add_point(x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
-    expect_true(length(non_null) > 0)
+    expect_gt(length(non_null), 0)
 
     # Window larger than data
     ol2 <- OnlineLoess(
@@ -94,7 +102,7 @@ test_that("OnlineLoess handles edge cases", {
     )
     results2 <- lapply(seq_along(x), function(i) ol2$add_point(x[i], y[i]))
     non_null2 <- Filter(Negate(is.null), results2)
-    expect_true(length(non_null2) > 0)
+    expect_gt(length(non_null2), 0)
 })
 
 test_that("OnlineLoess robustness works", {
@@ -107,16 +115,20 @@ test_that("OnlineLoess robustness works", {
         fraction = 0.3, window_capacity = 25,
         iterations = 0
     )
-    results_no_robust <- lapply(seq_along(x), function(i) ol_no_robust$add_point(x[i], y[i]))
+    results_no_robust <- lapply(
+        seq_along(x), function(i) ol_no_robust$add_point(x[i], y[i])
+    )
 
     ol_robust <- OnlineLoess(
         fraction = 0.3, window_capacity = 25,
         iterations = 3
     )
-    results_robust <- lapply(seq_along(x), function(i) ol_robust$add_point(x[i], y[i]))
+    results_robust <- lapply(
+        seq_along(x), function(i) ol_robust$add_point(x[i], y[i])
+    )
 
-    expect_true(length(Filter(Negate(is.null), results_no_robust)) > 0)
-    expect_true(length(Filter(Negate(is.null), results_robust)) > 0)
+    expect_gt(length(Filter(Negate(is.null), results_no_robust)), 0)
+    expect_gt(length(Filter(Negate(is.null), results_robust)), 0)
 })
 
 # ---- Parameter coverage ----
@@ -147,7 +159,7 @@ test_that("OnlineLoess: degree, distance_metric, surface_mode, return_se", {
     )
     results <- lapply(seq_along(x), function(i) ol$add_point(x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
-    expect_true(length(non_null) > 0)
+    expect_gt(length(non_null), 0)
     expect_type(non_null[[1]]$smoothed, "double")
 })
 
@@ -162,5 +174,5 @@ test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge", {
     )
     results <- lapply(seq_along(x), function(i) ol$add_point(x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
-    expect_true(length(non_null) > 0)
+    expect_gt(length(non_null), 0)
 })

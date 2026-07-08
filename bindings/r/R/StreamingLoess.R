@@ -23,32 +23,20 @@
 #' final <- model$finalize()
 #' @export
 StreamingLoess <- function(
-    fraction = 0.67,
-    chunk_size = 5000L,
-    overlap = 500L,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
+    fraction = 0.67, chunk_size = 5000L,
+    overlap = NULL, iterations = 3L,
+    weight_function = "tricube", robustness_method = "bisquare",
+    scaling_method = "mad", boundary_policy = "extend",
+    auto_converge = NULL, return_diagnostics = FALSE,
+    return_residuals = FALSE, return_robustness_weights = FALSE,
     zero_weight_fallback = "use_local_mean",
     merge_strategy = "weighted_average",
-    parallel = TRUE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    return_se = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL
+    parallel = TRUE, degree = "linear",
+    dimensions = 1L, distance_metric = "normalized",
+    surface_mode = "interpolation", return_se = FALSE,
+    confidence_intervals = NULL, prediction_intervals = NULL,
+    weighted_metric_weights = NULL, cell = NULL,
+    interpolation_vertices = NULL, boundary_degree_fallback = NULL
 ) {
     validate_params(fraction = fraction, chunk_size = chunk_size)
     handle <- do.call(RStreamingLoess$new, env_args(streaming_params))
