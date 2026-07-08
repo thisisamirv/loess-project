@@ -988,7 +988,7 @@ docs-serve:
 
 docs-test:
 	@echo "Running doc snippet tests..."
-	$(PYTHON) dev/verify_snippets.py
+	$(PYTHON) dev/verify_snippets.py --timeout 120
 
 docs-clean:
 	@echo "Cleaning documentation build..."

@@ -775,7 +775,12 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(dims) = builder.dimensions {
             result.dimensions = dims;
         }
-        if let Some(dm) = builder.distance_metric {
+        if let Some(mut dm) = builder.distance_metric {
+            if let DistanceMetric::Weighted(ref mut w) = dm
+                && let Some(wmw) = builder.weighted_metric_weights
+            {
+                *w = wmw;
+            }
             result.distance_metric = dm;
         }
         if let Some(cell) = builder.cell {
@@ -885,7 +890,12 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(dims) = builder.dimensions {
             result.dimensions = dims;
         }
-        if let Some(dm) = builder.distance_metric {
+        if let Some(mut dm) = builder.distance_metric {
+            if let DistanceMetric::Weighted(ref mut w) = dm
+                && let Some(wmw) = builder.weighted_metric_weights
+            {
+                *w = wmw;
+            }
             result.distance_metric = dm;
         }
         if let Some(cell) = builder.cell {
@@ -989,7 +999,12 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(dims) = builder.dimensions {
             result.dimensions = dims;
         }
-        if let Some(dm) = builder.distance_metric {
+        if let Some(mut dm) = builder.distance_metric {
+            if let DistanceMetric::Weighted(ref mut w) = dm
+                && let Some(wmw) = builder.weighted_metric_weights
+            {
+                *w = wmw;
+            }
             result.distance_metric = dm;
         }
         if let Some(cell) = builder.cell {

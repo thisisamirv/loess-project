@@ -533,10 +533,11 @@ pub unsafe extern "C" fn cpp_loess_new(
 /// # Safety
 /// ptr must be valid.
 #[unsafe(no_mangle)]
+#[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Linux/macOS
 pub unsafe extern "C" fn cpp_loess_set_cv_seed(ptr: *mut CppLoess, seed: c_ulong) {
     with_panic_void(|| {
         if !ptr.is_null() {
-            unsafe { (*ptr).cv_seed = Some(seed as u64) };
+            unsafe { (*ptr).cv_seed = Some(u64::from(seed)) };
         }
     });
 }

@@ -9,6 +9,117 @@ pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
+// ============================================================================
+// TypeScript interface declarations injected into the generated .d.ts
+// ============================================================================
+
+#[wasm_bindgen(typescript_custom_section)]
+const TS_TYPES: &'static str = r#"
+/** Configuration options for LOESS smoothing. */
+export interface SmoothOptions {
+    /** Smoothing fraction (0 < fraction <= 1). Default: 0.75. */
+    fraction?: number;
+    /** Number of robustness iterations. Default: 3. */
+    iterations?: number;
+    /** Kernel function (\"tricube\", \"epanechnikov\", \"gaussian\", \"uniform\", \"biweight\", \"triangle\", \"cosine\"). Default: \"tricube\". */
+    weight_function?: string;
+    /** Robustness method (\"bisquare\", \"huber\", \"talwar\"). Default: \"bisquare\". */
+    robustness_method?: string;
+    /** Fallback when all weights are zero (\"use_local_mean\", \"return_original\", \"return_none\"). Default: \"use_local_mean\". */
+    zero_weight_fallback?: string;
+    /** Boundary handling (\"extend\", \"reflect\", \"zero\", \"noboundary\"). Default: \"extend\". */
+    boundary_policy?: string;
+    /** Scaling method (\"mad\", \"mar\", \"mean\"). Default: \"mad\". */
+    scaling_method?: string;
+    /** Auto-convergence tolerance. Disabled when absent. */
+    auto_converge?: number;
+    /** Include residuals in result. Default: false. */
+    return_residuals?: boolean;
+    /** Include robustness weights in result. Default: false. */
+    return_robustness_weights?: boolean;
+    /** Compute diagnostics (RMSE, MAE, R-squared, etc.). Default: false. */
+    return_diagnostics?: boolean;
+    /** Confidence interval level (e.g. 0.95). Disabled when absent. */
+    confidence_intervals?: number;
+    /** Prediction interval level (e.g. 0.95). Disabled when absent. */
+    prediction_intervals?: number;
+    /** Enable parallel execution. Default: true. */
+    parallel?: boolean;
+    /** Fractions to test for cross-validation. CV disabled when absent. */
+    cv_fractions?: number[];
+    /** CV method (\"kfold\" or \"loocv\"). Default: \"kfold\". */
+    cv_method?: string;
+    /** Number of folds for k-fold CV. Default: 5. */
+    cv_k?: number;
+    /** Polynomial degree (\"linear\" or \"quadratic\"). Default: \"quadratic\". */
+    degree?: string;
+    /** Number of predictor dimensions. Default: 1. */
+    dimensions?: number;
+    /** Distance metric (\"euclidean\", \"manhattan\", \"weighted\"). Default: \"euclidean\". */
+    distance_metric?: string;
+    /** Surface computation mode (\"direct\" or \"interpolate\"). Default: \"interpolate\". */
+    surface_mode?: string;
+    /** Include standard errors in result. Default: false. */
+    return_se?: boolean;
+    /** Per-dimension weights for the weighted distance metric. */
+    weighted_metric_weights?: number[];
+    /** Cell parameter for interpolation (fraction of data). Default: 0.2. */
+    cell?: number;
+    /** Number of interpolation vertices. Default: auto. */
+    interpolation_vertices?: number;
+    /** Fall back to lower polynomial degree at boundaries. Default: true. */
+    boundary_degree_fallback?: boolean;
+    /** Random seed for cross-validation. */
+    cv_seed?: number;
+}
+
+/** Configuration options for streaming LOESS. */
+export interface StreamingOptions {
+    /** Size of each processing chunk. Default: 5000. */
+    chunk_size?: number;
+    /** Overlap between adjacent chunks. Default: 500. */
+    overlap?: number;
+    /** Strategy for merging chunks (\"weighted\", \"average\", \"first\", \"last\"). Default: \"weighted\". */
+    merge_strategy?: string;
+}
+
+/** Configuration options for online LOESS. */
+export interface OnlineOptions {
+    /** Maximum number of points to retain in the sliding window. Default: 1000. */
+    window_capacity?: number;
+    /** Minimum points required before smoothing starts. Default: 3. */
+    min_points?: number;
+    /** Update strategy (\"full\" or \"incremental\"). Default: \"full\". */
+    update_mode?: string;
+}
+
+/** Batch LOESS smoother. */
+export class Loess {
+    free(): void;
+    constructor(options?: SmoothOptions);
+    /** Fit the model to data and return smoothed values. */
+    fit(x: Float64Array, y: Float64Array, customWeights?: Float64Array): LoessResult;
+}
+
+/** Streaming LOESS smoother for large datasets. */
+export class StreamingLoess {
+    free(): void;
+    constructor(options?: SmoothOptions, streamingOpts?: StreamingOptions);
+    /** Process a chunk of data. */
+    processChunk(x: Float64Array, y: Float64Array): LoessResult;
+    /** Finalize the stream and return remaining data. */
+    finalize(): LoessResult;
+}
+
+/** Online LOESS smoother for real-time data. */
+export class OnlineLoess {
+    free(): void;
+    constructor(options?: SmoothOptions, onlineOpts?: OnlineOptions);
+    /** Add a single point and get the smoothed value, or undefined if not enough points yet. */
+    add_point(x: number, y: number): OnlineOutput | undefined;
+}
+"#;
+
 use ::fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
 use ::fastLoess::binding_support as shared_parse;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
@@ -266,7 +377,7 @@ impl LoessResult {
 }
 
 // LOESS smoother.
-#[wasm_bindgen]
+#[wasm_bindgen(skip_typescript)]
 pub struct Loess {
     options: JsValue,
 }
@@ -274,12 +385,13 @@ pub struct Loess {
 #[wasm_bindgen]
 impl Loess {
     /// Create a new `Loess` model with the given options.
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, skip_typescript)]
     pub fn new(options: JsValue) -> Loess {
         Loess { options }
     }
 
     /// Fit the model to data and return smoothed values.
+    #[wasm_bindgen(skip_typescript)]
     #[allow(non_snake_case)]
     pub fn fit(
         &self,
@@ -368,7 +480,7 @@ fn smooth(
 }
 
 // LOESS smoother.
-#[wasm_bindgen]
+#[wasm_bindgen(skip_typescript)]
 pub struct StreamingLoess {
     inner: ParallelStreamingLoess<f64>,
 }
@@ -376,7 +488,7 @@ pub struct StreamingLoess {
 #[wasm_bindgen]
 impl StreamingLoess {
     // Create a new smoother.
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, skip_typescript)]
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, streamingOpts: JsValue) -> Result<StreamingLoess, JsValue> {
         let mut builder = LoessBuilder::<f64>::new();
@@ -448,7 +560,7 @@ impl StreamingLoess {
         Ok(StreamingLoess { inner: model })
     }
 
-    #[wasm_bindgen(js_name = processChunk)]
+    #[wasm_bindgen(js_name = processChunk, skip_typescript)]
     pub fn process_chunk(
         &mut self,
         x: &Float64Array,
@@ -461,6 +573,7 @@ impl StreamingLoess {
         Ok(LoessResult { inner: result })
     }
 
+    #[wasm_bindgen(skip_typescript)]
     pub fn finalize(&mut self) -> Result<LoessResult, JsValue> {
         let result: ::fastLoess::prelude::LoessResult<f64> = map_runtime(self.inner.finalize())?;
         Ok(LoessResult { inner: result })
@@ -468,7 +581,7 @@ impl StreamingLoess {
 }
 
 // LOESS smoother.
-#[wasm_bindgen]
+#[wasm_bindgen(skip_typescript)]
 pub struct OnlineLoess {
     inner: ParallelOnlineLoess<f64>,
 }
@@ -476,7 +589,7 @@ pub struct OnlineLoess {
 #[wasm_bindgen]
 impl OnlineLoess {
     // Create a new smoother.
-    #[wasm_bindgen(constructor)]
+    #[wasm_bindgen(constructor, skip_typescript)]
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, onlineOpts: JsValue) -> Result<OnlineLoess, JsValue> {
         let mut builder = LoessBuilder::<f64>::new();
@@ -549,7 +662,7 @@ impl OnlineLoess {
 
     // Add a single point and return its smoothed value, or undefined if the
     // window is not yet full enough to produce a result.
-    #[wasm_bindgen(js_name = "add_point")]
+    #[wasm_bindgen(js_name = "add_point", skip_typescript)]
     pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<OnlineOutput>, JsValue> {
         let output = map_invalid_arg(self.inner.add_point(&[x], y))?;
         Ok(output.map(|o| OnlineOutput {
