@@ -1362,7 +1362,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         ExecutorOutput {
             smoothed: y_smooth,
             std_errors: se,
-            iterations: tolerance.map(|_| iterations_performed),
+            // Report iterations whenever robustness is configured (target_iterations > 1),
+            // regardless of whether auto-converge tolerance was used.
+            iterations: (target_iterations > 1).then_some(iterations_performed),
             used_fraction: eff_fraction,
             cv_scores: None,
             robustness_weights: final_robustness_weights,
