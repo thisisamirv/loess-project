@@ -6,7 +6,7 @@ The Rust crates provide the core implementation and high-performance extensions.
 
 Both crates expose the same three entry types via their `prelude`: `Loess` for batch mode, `StreamingLoess` for chunked processing, and `OnlineLoess` for sliding-window updates.
 
-```rust
+```text
 use fastLoess::prelude::*;  // or: use loess_rs::prelude::*;
 ```
 

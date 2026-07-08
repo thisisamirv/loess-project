@@ -923,8 +923,8 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     ```cpp
     std::vector<double> custom_weights(y.size(), 1.0);
     custom_weights[4] = 0.0; // Exclude 5th point
-    fastloess::Loess model({ .custom_weights = custom_weights });
-    auto result = model.fit(x, y).value();
+    fastloess::Loess model;
+    auto result = model.fit(x, y, custom_weights).value();
     ```
 
 ---
@@ -1418,7 +1418,7 @@ Maximum points held in memory for Online mode.
     fastloess::OnlineOptions opts;
     opts.window_capacity = 500;
     fastloess::OnlineLoess model(opts);
-    auto out = model.add_point(x, y).value();
+    auto out = model.add_point(x[0], y[0]).value();
     // out.has_value() == false until window fills
     ```
 
@@ -1468,7 +1468,7 @@ Minimum points required before Online filter starts producing outputs.
     fastloess::OnlineOptions opts;
     opts.min_points = 10;
     fastloess::OnlineLoess model(opts);
-    auto out = model.add_point(x, y).value();
+    auto out = model.add_point(x[0], y[0]).value();
     // out.has_value() == false until min_points reached
     ```
 
@@ -1525,5 +1525,5 @@ For example:
     fastloess::OnlineOptions opts;
     opts.update_mode = "full";
     fastloess::OnlineLoess model(opts);
-    auto out = model.add_point(x, y).value();
+    auto out = model.add_point(x[0], y[0]).value();
     ```

@@ -21,7 +21,7 @@ const model = new Loess(options);
 ```javascript
 const result = model.fit(x, y);
 // or with per-observation weights:
-const result = model.fit(x, y, customWeights);
+const resultWeighted = model.fit(x, y, weights);
 ```
 
 * `x`: `Float64Array` of input x values.

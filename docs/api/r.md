@@ -74,7 +74,7 @@ online <- OnlineLoess(window_capacity = 10L)
 
 ```r
 online <- OnlineLoess(window_capacity = 10L)
-result <- online$add_point(x, y)  # returns list or NULL
+result <- online$add_point(x[[1L]], y[[1L]])  # returns list or NULL
 ```
 
 * Adds a single point to the sliding window. Returns a named list (`$smoothed`, `$residual`, …) once the window has enough points, or `NULL` while still filling.

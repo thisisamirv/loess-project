@@ -159,7 +159,7 @@ For true real-time applications where each point must be processed immediately.
     for (size_t i = 0; i < times.size(); ++i) {
         auto res = model.add_point(times[i], temperatures[i]).value();
         if (res.has_value()) {
-            std::cout << "Time " << times[i] << ": " << res.value().smoothed() << std::endl;
+            std::cout << "Time " << times[i] << ": " << res.smoothed() << std::endl;
         }
     }
     ```

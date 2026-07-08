@@ -24,7 +24,8 @@ fastloess::Loess model(opts);
 fastloess::Loess model;
 auto result = model.fit(x, y).value();
 // or with custom weights:
-auto result = model.fit(x, y, weights).value();
+std::vector<double> weights(x.size(), 1.0);
+auto resultW = model.fit(x, y, weights).value();
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
@@ -49,6 +50,7 @@ fastloess::StreamingLoess model(opts);
 ```cpp
 fastloess::StreamingOptions opts;
 opts.chunk_size = 10;
+opts.overlap = 0;
 fastloess::StreamingLoess model(opts);
 auto result = model.process_chunk(x, y).value();
 ```
@@ -58,6 +60,7 @@ auto result = model.process_chunk(x, y).value();
 ```cpp
 fastloess::StreamingOptions opts;
 opts.chunk_size = 10;
+opts.overlap = 0;
 fastloess::StreamingLoess model(opts);
 model.process_chunk(x, y);
 auto result = model.finalize().value();
@@ -85,7 +88,7 @@ fastloess::OnlineLoess model(opts);
 fastloess::OnlineOptions opts;
 opts.window_capacity = 10;
 fastloess::OnlineLoess model(opts);
-auto result = model.add_point(x, y).value();
+auto result = model.add_point(x[0], y[0]).value();
 // result.has_value() == false while window fills
 if (result.has_value()) {
     double smoothed = result.smoothed();

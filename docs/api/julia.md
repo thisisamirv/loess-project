@@ -66,7 +66,7 @@ online = OnlineLoess(; kwargs...)
 **Methods:**
 
 ```julia
-result = add_point(online, x::Float64, y::Float64) :: Union{OnlineOutput, Nothing}
+result = add_point(online, x[1], y[1])  # returns OnlineOutput or nothing
 ```
 
 * Adds a single point to the sliding window. Returns `nothing` while the window is still filling (fewer than `min_points` seen), and an `OnlineOutput` once smoothing begins.

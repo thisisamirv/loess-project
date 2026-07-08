@@ -66,7 +66,7 @@ online = fastloess.OnlineLoess(**kwargs)
 **Methods:**
 
 ```python
-result = online.add_point(x, y)  # returns OnlineOutput | None
+result = online.add_point(x[0], y[0])  # returns OnlineOutput | None
 ```
 
 * Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `None` while the window is still filling.

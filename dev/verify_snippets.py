@@ -148,7 +148,12 @@ _PYTHON_PREAMBLE = textwrap.dedent("""\
         import matplotlib.pyplot as plt
         plt.show = lambda *a, **kw: None
     except ImportError:
-        pass
+        import sys as _sys2, types as _types
+        _plt_stub = _types.ModuleType('matplotlib.pyplot')
+        _plt_stub.__getattr__ = lambda _n: (lambda *a, **kw: _plt_stub)  # type: ignore
+        _sys2.modules.setdefault('matplotlib', _types.ModuleType('matplotlib'))
+        _sys2.modules.setdefault('matplotlib.pyplot', _plt_stub)
+        plt = _plt_stub  # type: ignore
 
     # --- snippet preamble: common imports ------------------------------------
     import numpy as np
@@ -376,6 +381,13 @@ _RUST_PREAMBLE_TOP = textwrap.dedent("""\
 
     #[allow(dead_code, unused_variables)]
     fn _run() -> Result<(), Box<dyn std::error::Error>> {
+        // Concrete f64 specialisations so doc examples compile without turbofish
+        #[allow(unused)]
+        type Loess = loess_rs::prelude::Loess<f64>;
+        #[allow(unused)]
+        type StreamingLoess = loess_rs::prelude::StreamingLoess<f64>;
+        #[allow(unused)]
+        type OnlineLoess = loess_rs::prelude::OnlineLoess<f64>;
         let n = 100usize;
         let x: Vec<f64> = (0..n).map(|i| i as f64 / 10.0).collect();
         let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
@@ -1256,7 +1268,7 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
         + _CPP_PREAMBLE_BOTTOM
     )
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         src = os.path.join(tmpdir, "snippet.cpp")
         exe = os.path.join(tmpdir, "snippet.exe" if os.name == "nt" else "snippet")
         with open(src, "w", encoding="utf-8") as f:

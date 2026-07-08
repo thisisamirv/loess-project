@@ -427,7 +427,7 @@ Incremental updates with a sliding window for real-time data.
     for (size_t i = 0; i < x.size(); ++i) {
         auto out = model.add_point(x[i], y[i]).value();
         if (out.has_value())
-            std::cout << out.value().smoothed() << std::endl;
+            std::cout << out.smoothed() << std::endl;
     }
     ```
 

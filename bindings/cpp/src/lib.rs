@@ -496,11 +496,9 @@ pub unsafe extern "C" fn cpp_loess_new(
                 surface_mode: (!surface_mode.is_null())
                     .then_some(parse_c_str(surface_mode, "interpolation")),
                 return_se: return_se != 0,
-                cell: (!cell.is_nan()).then_some(cell),
-                interpolation_vertices: (interpolation_vertices > 0)
-                    .then_some(interpolation_vertices as usize),
-                boundary_degree_fallback: (boundary_degree_fallback >= 0)
-                    .then_some(boundary_degree_fallback != 0),
+                cell: None,
+                interpolation_vertices: None,
+                boundary_degree_fallback: None,
                 cv_fractions: None,
                 cv_method: None,
                 cv_k: None,

@@ -312,6 +312,8 @@ pub struct JlLoessConfig {
     return_se: bool,
     // User-defined case weights
     custom_weights: Option<Vec<f64>>,
+    // Weighted distance metric weights (set via jl_loess_set_weighted_metric)
+    weighted_metric_weights: Option<Vec<f64>>,
     // Interpolation and advanced options
     cell: Option<f64>,
     interpolation_vertices: Option<usize>,
@@ -429,6 +431,7 @@ pub unsafe extern "C" fn jl_loess_new(
             surface_mode: surf,
             return_se: return_se != 0,
             custom_weights: None,
+            weighted_metric_weights: None,
             cell: None,
             interpolation_vertices: None,
             boundary_degree_fallback: None,
@@ -519,7 +522,17 @@ pub unsafe extern "C" fn jl_loess_fit(
                     parallel: Some(config.parallel),
                     degree: Some(config.degree),
                     dimensions: Some(config.dimensions),
-                    distance_metric: Some(config.distance_metric.clone()),
+                    distance_metric: Some(match &config.distance_metric {
+                        // Resolve weighted metric with actual weights stored by setter
+                        DistanceMetric::Weighted(_) => {
+                            if let Some(ref wmw) = config.weighted_metric_weights {
+                                DistanceMetric::Weighted(wmw.clone())
+                            } else {
+                                config.distance_metric.clone()
+                            }
+                        }
+                        other => other.clone(),
+                    }),
                     surface_mode: Some(config.surface_mode),
                     return_se: config.return_se,
                     cell: config.cell,
@@ -633,7 +646,9 @@ pub unsafe extern "C" fn jl_loess_set_weighted_metric(
         set_last_error_message(shared_parse::INVALID_DATA_INPUTS);
         return;
     }
-    setter_unsupported_constructor_only("jl_loess_set_weighted_metric");
+    // Store the weights for use during fit
+    let slice = unsafe { from_raw_parts(weights, n as usize) };
+    unsafe { (*config_ptr).weighted_metric_weights = Some(slice.to_vec()) };
 }
 
 /// Legacy setter retained for ABI compatibility.
