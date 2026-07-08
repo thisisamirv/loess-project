@@ -1087,8 +1087,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 &mut workspace.executor_buffer.sorted_residuals,
             );
 
-            let tolerance_val = tolerance.unwrap_or_else(|| T::from(1e-6).unwrap());
-
             // 2. Sync to robustness_weights and check convergence
             let mut max_change = T::zero();
 
@@ -1115,7 +1113,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 }
             }
 
-            if max_change < tolerance_val {
+            if let Some(tol) = tolerance
+                && max_change < tol
+            {
                 break;
             }
 
@@ -1362,7 +1362,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         ExecutorOutput {
             smoothed: y_smooth,
             std_errors: se,
-            iterations: Some(iterations_performed),
+            iterations: tolerance.map(|_| iterations_performed),
             used_fraction: eff_fraction,
             cv_scores: None,
             robustness_weights: final_robustness_weights,

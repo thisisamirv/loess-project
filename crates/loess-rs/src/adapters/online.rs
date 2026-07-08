@@ -348,7 +348,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 std_error: None,
                 residual: Some(residual),
                 robustness_weight: Some(T::one()),
-                iterations_used: Some(0),
+                iterations_used: None,
             }));
         }
 
