@@ -48,28 +48,24 @@ def parse_estimates(estimates_file: Path) -> dict | None:
         return None
 
 
-def find_criterion_results(criterion_dir: Path) -> Dict[str, List[dict]]:
-    """Find all criterion benchmark results and organize by category."""
+def find_criterion_results(criterion_dir: Path, baseline: str) -> Dict[str, List[dict]]:
+    """Find criterion results for a named baseline (e.g. 'parallel' or 'serial').
+
+    Run benches with:
+      cargo bench -p benchmark -- --save-baseline parallel
+      $env:LOESS_PARALLEL="false"; cargo bench -p benchmark -- --save-baseline serial
+    """
     results: Dict[str, List[dict]] = {}
 
     if not criterion_dir.exists():
         print(f"Criterion directory not found: {criterion_dir}")
         return results
 
-    # Walk through criterion output structure
     for group_dir in criterion_dir.iterdir():
         if not group_dir.is_dir() or group_dir.name == "report":
             continue
 
         category = group_dir.name
-
-        # Strip suffix for logical checking
-        clean_category = category
-        if category.endswith("_parallel"):
-            clean_category = category[:-9]
-        elif category.endswith("_serial"):
-            clean_category = category[:-7]
-
         if category not in results:
             results[category] = []
 
@@ -79,11 +75,10 @@ def find_criterion_results(criterion_dir: Path) -> Dict[str, List[dict]]:
 
             bench_id = bench_dir.name
 
-            # Check if this has 'new/' directly (non-parameterized)
-            new_dir = bench_dir / "new"
-            if new_dir.exists() and (new_dir / "estimates.json").exists():
-                # Non-parameterized
-                timing = parse_estimates(new_dir / "estimates.json")
+            # Non-parameterized: bench_dir/<baseline>/estimates.json
+            baseline_dir = bench_dir / baseline
+            if baseline_dir.exists() and (baseline_dir / "estimates.json").exists():
+                timing = parse_estimates(baseline_dir / "estimates.json")
                 if timing:
                     result = {
                         "name": bench_id,
@@ -93,39 +88,38 @@ def find_criterion_results(criterion_dir: Path) -> Dict[str, List[dict]]:
                     }
                     results[category].append(result)
             else:
-                # Parameterized benchmark
+                # Parameterized: bench_dir/<param>/<baseline>/estimates.json
                 for param_dir in bench_dir.iterdir():
                     if not param_dir.is_dir() or param_dir.name in (
                         "report",
                         "new",
                         "base",
                         "change",
+                        baseline,
                     ):
                         continue
 
                     param = param_dir.name
-                    estimates_file = param_dir / "new" / "estimates.json"
+                    estimates_file = param_dir / baseline / "estimates.json"
 
                     if estimates_file.exists():
                         timing = parse_estimates(estimates_file)
                         if timing:
-                            # Try to parse param as size
                             try:
                                 size = int(param)
                             except ValueError:
                                 size = 0
 
-                            # Create aligned name
-                            if clean_category == "scalability":
+                            if category == "scalability":
                                 name = f"scale_{param}"
-                            elif clean_category in (
+                            elif category in (
                                 "financial",
                                 "scientific",
                                 "genomic",
                                 "fraction",
                                 "iterations",
                             ):
-                                name = f"{clean_category}_{param}"
+                                name = f"{category}_{param}"
                             else:
                                 name = f"{bench_id}_{param}"
 
@@ -137,9 +131,8 @@ def find_criterion_results(criterion_dir: Path) -> Dict[str, List[dict]]:
                             }
                             results[category].append(result)
 
-    # Sort results
-    for category in results:
-        results[category].sort(key=lambda x: x["name"])
+    for key in results:
+        results[key].sort(key=lambda x: x["name"])
 
     return results
 
@@ -154,30 +147,6 @@ def main():
 
     print(f"Reading criterion results from: {criterion_dir}")
 
-    results = find_criterion_results(criterion_dir)
-
-    if not results:
-        print("No criterion results found. Run 'cargo bench' first.")
-        return 1
-
-    # Separate results
-    cpu_results = {}
-    cpu_serial_results = {}
-
-    for category, benchmarks in results.items():
-        if category.endswith("_serial"):
-            target_dict = cpu_serial_results
-        elif category.endswith("_parallel"):
-            target_dict = cpu_results
-        else:
-            target_dict = cpu_results
-
-        clean_cat = category.replace("_serial", "").replace("_parallel", "")
-        if clean_cat not in target_dict:
-            target_dict[clean_cat] = []
-        target_dict[clean_cat].extend(benchmarks)
-
-    # Helper to save
     def save_results(data, filename):
         if not data:
             return
@@ -186,8 +155,17 @@ def main():
             json.dump(data, f, indent=2)
         print(f"Results saved to: {output_path}")
 
-    save_results(cpu_results, "rust_benchmark_cpu.json")
-    save_results(cpu_serial_results, "rust_benchmark_cpu_serial.json")
+    parallel_results = find_criterion_results(criterion_dir, "parallel")
+    serial_results = find_criterion_results(criterion_dir, "serial")
+
+    if not parallel_results and not serial_results:
+        print(
+            "No criterion results found. Run 'cargo bench -- --save-baseline parallel' first."
+        )
+        return 1
+
+    save_results(parallel_results, "rust_benchmark_cpu.json")
+    save_results(serial_results, "rust_benchmark_cpu_serial.json")
 
     return 0
 

@@ -1,0 +1,296 @@
+{
+  "scalability": [
+    {
+      "name": "scale_1000",
+      "size": 1000,
+      "iterations": 10,
+      "mean_time_ms": 2.0971,
+      "std_time_ms": 0.6799,
+      "median_time_ms": 2.0206,
+      "min_time_ms": 1.416,
+      "max_time_ms": 3.521
+    },
+    {
+      "name": "scale_5000",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 20.0564,
+      "std_time_ms": 2.2381,
+      "median_time_ms": 20.485,
+      "min_time_ms": 16.8471,
+      "max_time_ms": 24.384
+    },
+    {
+      "name": "scale_10000",
+      "size": 10000,
+      "iterations": 10,
+      "mean_time_ms": 67.4289,
+      "std_time_ms": 3.828,
+      "median_time_ms": 68.069,
+      "min_time_ms": 60.329,
+      "max_time_ms": 71.969
+    }
+  ],
+  "fraction": [
+    {
+      "name": "fraction_0.05",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 13.0909,
+      "std_time_ms": 2.2316,
+      "median_time_ms": 12.346,
+      "min_time_ms": 10.216,
+      "max_time_ms": 16.5689
+    },
+    {
+      "name": "fraction_0.1",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 20.8728,
+      "std_time_ms": 1.8789,
+      "median_time_ms": 20.9266,
+      "min_time_ms": 17.421,
+      "max_time_ms": 23.6518
+    },
+    {
+      "name": "fraction_0.2",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 37.7079,
+      "std_time_ms": 5.5402,
+      "median_time_ms": 36.6116,
+      "min_time_ms": 31.019,
+      "max_time_ms": 48.279
+    },
+    {
+      "name": "fraction_0.3",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 49.383,
+      "std_time_ms": 3.601,
+      "median_time_ms": 48.1864,
+      "min_time_ms": 45.332,
+      "max_time_ms": 56.5958
+    },
+    {
+      "name": "fraction_0.5",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 82.3657,
+      "std_time_ms": 8.5686,
+      "median_time_ms": 79.8591,
+      "min_time_ms": 74.2881,
+      "max_time_ms": 100.523
+    },
+    {
+      "name": "fraction_0.67",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 111.6943,
+      "std_time_ms": 5.9463,
+      "median_time_ms": 111.31,
+      "min_time_ms": 104.063,
+      "max_time_ms": 125.2439
+    }
+  ],
+  "iterations": [
+    {
+      "name": "iterations_0",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 0,
+      "std_time_ms": 0,
+      "median_time_ms": 0,
+      "min_time_ms": 0,
+      "max_time_ms": 0
+    },
+    {
+      "name": "iterations_1",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 31.2106,
+      "std_time_ms": 2.0535,
+      "median_time_ms": 30.4991,
+      "min_time_ms": 29.289,
+      "max_time_ms": 36.0069
+    },
+    {
+      "name": "iterations_2",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 32.592,
+      "std_time_ms": 3.1465,
+      "median_time_ms": 32.055,
+      "min_time_ms": 27.9431,
+      "max_time_ms": 39.8049
+    },
+    {
+      "name": "iterations_3",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 30.423,
+      "std_time_ms": 2.9385,
+      "median_time_ms": 30.1461,
+      "min_time_ms": 26.4831,
+      "max_time_ms": 34.3201
+    },
+    {
+      "name": "iterations_5",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 41.8176,
+      "std_time_ms": 21.9072,
+      "median_time_ms": 34.3665,
+      "min_time_ms": 27.456,
+      "max_time_ms": 99.8969
+    },
+    {
+      "name": "iterations_10",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 32.1751,
+      "std_time_ms": 3.694,
+      "median_time_ms": 31.8946,
+      "min_time_ms": 26.5398,
+      "max_time_ms": 36.406
+    }
+  ],
+  "financial": [
+    {
+      "name": "financial_500",
+      "size": 500,
+      "iterations": 10,
+      "mean_time_ms": 1.2143,
+      "std_time_ms": 0.5277,
+      "median_time_ms": 0.9251,
+      "min_time_ms": 0.7589,
+      "max_time_ms": 2.388
+    },
+    {
+      "name": "financial_1000",
+      "size": 1000,
+      "iterations": 10,
+      "mean_time_ms": 1.6962,
+      "std_time_ms": 0.3566,
+      "median_time_ms": 1.4975,
+      "min_time_ms": 1.3649,
+      "max_time_ms": 2.2128
+    },
+    {
+      "name": "financial_5000",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 18.4844,
+      "std_time_ms": 2.5815,
+      "median_time_ms": 18.0709,
+      "min_time_ms": 15.939,
+      "max_time_ms": 23.349
+    }
+  ],
+  "scientific": [
+    {
+      "name": "scientific_500",
+      "size": 500,
+      "iterations": 10,
+      "mean_time_ms": 1.2969,
+      "std_time_ms": 0.7677,
+      "median_time_ms": 1.0885,
+      "min_time_ms": 0.8268,
+      "max_time_ms": 3.3698
+    },
+    {
+      "name": "scientific_1000",
+      "size": 1000,
+      "iterations": 10,
+      "mean_time_ms": 2.0985,
+      "std_time_ms": 0.3641,
+      "median_time_ms": 2.134,
+      "min_time_ms": 1.6789,
+      "max_time_ms": 2.6798
+    },
+    {
+      "name": "scientific_5000",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 24.0232,
+      "std_time_ms": 2.3668,
+      "median_time_ms": 23.666,
+      "min_time_ms": 20.7238,
+      "max_time_ms": 29.1181
+    }
+  ],
+  "genomic": [
+    {
+      "name": "genomic_1000",
+      "size": 1000,
+      "iterations": 10,
+      "mean_time_ms": 1.705,
+      "std_time_ms": 0.3139,
+      "median_time_ms": 1.6035,
+      "min_time_ms": 1.3418,
+      "max_time_ms": 2.3189
+    },
+    {
+      "name": "genomic_5000",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 18.3124,
+      "std_time_ms": 2.6773,
+      "median_time_ms": 17.8862,
+      "min_time_ms": 15.542,
+      "max_time_ms": 23.9441
+    },
+    {
+      "name": "genomic_1e+05",
+      "size": 100000,
+      "iterations": 10,
+      "mean_time_ms": 7263.7372,
+      "std_time_ms": 767.2204,
+      "median_time_ms": 7075.6539,
+      "min_time_ms": 6283.0651,
+      "max_time_ms": 8379.2992
+    }
+  ],
+  "pathological": [
+    {
+      "name": "clustered",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 102.4107,
+      "std_time_ms": 44.3965,
+      "median_time_ms": 92.394,
+      "min_time_ms": 52.8922,
+      "max_time_ms": 167.825
+    },
+    {
+      "name": "high_noise",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 76.542,
+      "std_time_ms": 7.7085,
+      "median_time_ms": 77.0016,
+      "min_time_ms": 66.5128,
+      "max_time_ms": 87.26
+    },
+    {
+      "name": "extreme_outliers",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 31.5091,
+      "std_time_ms": 1.7174,
+      "median_time_ms": 31.682,
+      "min_time_ms": 28.4259,
+      "max_time_ms": 34.9169
+    },
+    {
+      "name": "constant_y",
+      "size": 5000,
+      "iterations": 10,
+      "mean_time_ms": 30.0543,
+      "std_time_ms": 2.9828,
+      "median_time_ms": 27.9654,
+      "min_time_ms": 27.246,
+      "max_time_ms": 34.4992
+    }
+  ]
+}

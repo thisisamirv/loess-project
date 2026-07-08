@@ -52,16 +52,7 @@ def load_all_data(output_dir: Path):
 
 
 def main():
-    repo_root = Path(__file__).resolve().parent
-    # walk up to workspace root
-    workspace = repo_root
-    for _ in range(6):
-        if (workspace / "output").exists():
-            break
-        if workspace.parent == workspace:
-            break
-        workspace = workspace.parent
-    out_dir = workspace / "output"
+    out_dir = Path(__file__).resolve().parent / "output"
 
     data = load_all_data(out_dir)
 

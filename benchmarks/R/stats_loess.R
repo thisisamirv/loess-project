@@ -63,7 +63,7 @@ run_benchmark <- function(name, size, func, iterations = 10, warmup = 2) {
 }
 
 # ============================================================================
-# Data Generation (Aligned with Rust/Python)
+# Data Generation (Aligned with Rust)
 # ============================================================================
 
 generate_sine_data <- function(size, seed = 42) {
@@ -140,7 +140,7 @@ benchmark_scalability <- function(iterations = 10) {
     for (size in sizes) {
         data <- generate_sine_data(size)
         run <- function() {
-            loess(x = data$x, y = data$y, f = 0.1, iter = 3)
+            loess(data$y ~ data$x, span = 0.1, control = loess.control(iterations = 3))
         }
         results[[paste0("scale_", size)]] <- run_benchmark(
             paste0("scale_", size), size, run, iterations
@@ -156,12 +156,15 @@ benchmark_fraction <- function(iterations = 10) {
     data <- generate_sine_data(size)
 
     for (frac in fractions) {
-        run <- function() {
-            loess(x = data$x, y = data$y, f = frac, iter = 3)
-        }
-        results[[paste0("fraction_", frac)]] <- run_benchmark(
-            paste0("fraction_", frac), size, run, iterations
-        )
+        local({
+            frac_val <- frac
+            run <- function() {
+                loess(data$y ~ data$x, span = frac_val, control = loess.control(iterations = 3))
+            }
+            results[[paste0("fraction_", frac_val)]] <<- run_benchmark(
+                paste0("fraction_", frac_val), size, run, iterations
+            )
+        })
     }
     results
 }
@@ -173,12 +176,15 @@ benchmark_iterations <- function(iterations = 10) {
     data <- generate_outlier_data(size)
 
     for (it in iter_values) {
-        run <- function() {
-            loess(x = data$x, y = data$y, f = 0.2, iter = it)
-        }
-        results[[paste0("iterations_", it)]] <- run_benchmark(
-            paste0("iterations_", it), size, run, iterations
-        )
+        local({
+            it_val <- it
+            run <- function() {
+                loess(data$y ~ data$x, span = 0.2, control = loess.control(iterations = it_val))
+            }
+            results[[paste0("iterations_", it_val)]] <<- run_benchmark(
+                paste0("iterations_", it_val), size, run, iterations
+            )
+        })
     }
     results
 }
@@ -190,7 +196,7 @@ benchmark_financial <- function(iterations = 10) {
     for (size in sizes) {
         data <- generate_financial_data(size)
         run <- function() {
-            loess(x = data$x, y = data$y, f = 0.1, iter = 2)
+            loess(data$y ~ data$x, span = 0.1, control = loess.control(iterations = 2))
         }
         results[[paste0("financial_", size)]] <- run_benchmark(
             paste0("financial_", size), size, run, iterations
@@ -206,7 +212,7 @@ benchmark_scientific <- function(iterations = 10) {
     for (size in sizes) {
         data <- generate_scientific_data(size)
         run <- function() {
-            loess(x = data$x, y = data$y, f = 0.15, iter = 3)
+            loess(data$y ~ data$x, span = 0.15, control = loess.control(iterations = 3))
         }
         results[[paste0("scientific_", size)]] <- run_benchmark(
             paste0("scientific_", size), size, run, iterations
@@ -222,10 +228,11 @@ benchmark_genomic <- function(iterations = 10) {
     for (size in sizes) {
         data <- generate_genomic_data(size)
         run <- function() {
-            loess(x = data$x, y = data$y, f = 0.1, iter = 3)
+            loess(data$y ~ data$x, span = 0.1, control = loess.control(iterations = 3))
         }
-        results[[paste0("genomic_", size)]] <- run_benchmark(
-            paste0("genomic_", size), size, run, iterations
+        size_str <- format(size, scientific = FALSE, trim = TRUE)
+        results[[paste0("genomic_", size_str)]] <- run_benchmark(
+            paste0("genomic_", size_str), size, run, iterations
         )
     }
     results
@@ -238,7 +245,7 @@ benchmark_pathological <- function(iterations = 10) {
     # Clustered
     data_clustered <- generate_clustered_data(size)
     run_clustered <- function() {
-        loess(x = data_clustered$x, y = data_clustered$y, f = 0.3, iter = 2)
+        loess(data_clustered$y ~ data_clustered$x, span = 0.3, control = loess.control(iterations = 2))
     }
     results$clustered <- run_benchmark(
         "clustered", size, run_clustered, iterations
@@ -247,7 +254,7 @@ benchmark_pathological <- function(iterations = 10) {
     # High noise
     data_noisy <- generate_high_noise_data(size)
     run_noise <- function() {
-        loess(x = data_noisy$x, y = data_noisy$y, f = 0.5, iter = 5)
+        loess(data_noisy$y ~ data_noisy$x, span = 0.5, control = loess.control(iterations = 5))
     }
     results$high_noise <- run_benchmark(
         "high_noise", size, run_noise, iterations
@@ -256,7 +263,7 @@ benchmark_pathological <- function(iterations = 10) {
     # Extreme outliers
     data_outlier <- generate_outlier_data(size)
     run_outliers <- function() {
-        loess(x = data_outlier$x, y = data_outlier$y, f = 0.2, iter = 10)
+        loess(data_outlier$y ~ data_outlier$x, span = 0.2, control = loess.control(iterations = 10))
     }
     results$extreme_outliers <- run_benchmark(
         "extreme_outliers", size, run_outliers, iterations
@@ -267,7 +274,7 @@ benchmark_pathological <- function(iterations = 10) {
     y_const <- rep(5.0, size)
     data_const <- list(x = x_const, y = y_const)
     run_const <- function() {
-        loess(x = data_const$x, y = data_const$y, f = 0.2, iter = 2)
+        loess(data_const$y ~ data_const$x, span = 0.2, control = loess.control(iterations = 2))
     }
     results$constant_y <- run_benchmark(
         "constant_y", size, run_const, iterations
@@ -282,7 +289,7 @@ benchmark_pathological <- function(iterations = 10) {
 
 main <- function() {
     cat("=============================================================\n")
-    cat("R LOESS BENCHMARK SUITE (Aligned with Python/Rust)\n")
+    cat("R LOESS BENCHMARK SUITE (Aligned with Rust)\n")
     cat("=============================================================\n")
 
     iterations <- 10
@@ -296,8 +303,8 @@ main <- function() {
     all_results$genomic <- unname(benchmark_genomic(iterations))
     all_results$pathological <- unname(benchmark_pathological(iterations))
 
-    # Move to output directory
-    out_dir <- "output"
+    # Save to shared output directory (benchmarks/output/)
+    out_dir <- file.path(dirname(getwd()), "output")
     if (!dir.exists(out_dir)) {
         dir.create(out_dir, recursive = TRUE)
     }
