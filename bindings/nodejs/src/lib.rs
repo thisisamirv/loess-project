@@ -3,8 +3,8 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 
-use ::fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
-use ::fastLoess::binding_support as shared_parse;
+use ::fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
+use ::fastLoess::internals::binding_support as shared_parse;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::{MergeStrategy, UpdateMode};

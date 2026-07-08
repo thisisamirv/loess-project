@@ -356,28 +356,28 @@
 #![allow(non_snake_case)]
 
 // Layer 2: Math - pure mathematical functions.
-pub mod math;
+mod math;
 
 // Layer 4: Evaluation - post-processing and diagnostics.
-pub mod evaluation;
+mod evaluation;
 
 // Layer 5: Engine - orchestration and execution control.
-pub mod engine;
+mod engine;
 
 // Layer 6: Adapters - execution mode adapters.
-pub mod adapters;
+mod adapters;
 
 // High-level fluent API for LOESS smoothing.
-pub mod api;
+mod api;
 
 // Input data handling.
-pub mod input;
+mod input;
 
 // Shared option parsing helpers for language bindings.
-pub mod binding_support;
+mod binding_support;
 
 // String-to-enum conversion trait for parallel builder methods (sealed; pub(crate) only).
-pub(crate) mod parse;
+mod parse;
 
 // Standard fastLoess prelude.
 pub mod prelude {
@@ -404,5 +404,8 @@ pub mod internals {
     }
     pub mod api {
         pub use crate::api::*;
+    }
+    pub mod binding_support {
+        pub use crate::binding_support::*;
     }
 }

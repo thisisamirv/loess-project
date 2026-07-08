@@ -14,8 +14,8 @@ use std::panic::catch_unwind;
 use std::ptr;
 use std::slice::from_raw_parts;
 
-use fastLoess::api::{Batch, LoessBuilder, Online, Streaming};
-use fastLoess::binding_support as shared_parse;
+use fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
+use fastLoess::internals::binding_support as shared_parse;
 use fastLoess::internals::api::{
     BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
     WeightFunction, ZeroWeightFallback,
