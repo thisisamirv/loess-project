@@ -478,10 +478,10 @@ impl StreamingLoess {
                     cell: opts.cell,
                     interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
                     boundary_degree_fallback: opts.boundary_degree_fallback,
-                    cv_fractions: opts.cv_fractions.as_deref(),
-                    cv_method: opts.cv_method.as_deref(),
-                    cv_k: opts.cv_k.map(|v| v as usize),
-                    cv_seed: opts.cv_seed.map(|s| s as u64),
+                    cv_fractions: None,
+                    cv_method: None,
+                    cv_k: None,
+                    cv_seed: None,
                 },
             ))?;
             builder = configured_builder;
@@ -576,10 +576,10 @@ impl OnlineLoess {
                     cell: opts.cell,
                     interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
                     boundary_degree_fallback: opts.boundary_degree_fallback,
-                    cv_fractions: opts.cv_fractions.as_deref(),
-                    cv_method: opts.cv_method.as_deref(),
-                    cv_k: opts.cv_k.map(|v| v as usize),
-                    cv_seed: opts.cv_seed.map(|s| s as u64),
+                    cv_fractions: None,
+                    cv_method: None,
+                    cv_k: None,
+                    cv_seed: None,
                 },
             ))?;
             builder = configured_builder;

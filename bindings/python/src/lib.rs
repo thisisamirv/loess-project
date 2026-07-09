@@ -12,10 +12,7 @@ use std::sync::Mutex;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::binding_support as shared_parse;
-use ::fastLoess::internals::binding_support::{
-    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
-    WeightFunction, ZeroWeightFallback,
-};
+
 use ::fastLoess::prelude::LoessResult;
 use fastLoess::internals::api::LoessBuilder;
 
@@ -574,32 +571,11 @@ impl PyOnlineLoess {
 #[pyclass(name = "Loess", from_py_object)]
 #[derive(Clone)]
 pub struct PyLoess {
+    builder: LoessBuilder<f64>,
+    // Kept only for __repr__
     fraction: f64,
     iterations: usize,
-    weight_function: WeightFunction,
-    robustness_method: RobustnessMethod,
-    scaling_method: ScalingMethod,
-    zero_weight_fallback: ZeroWeightFallback,
-    boundary_policy: BoundaryPolicy,
-    auto_converge: Option<f64>,
-    confidence_intervals: Option<f64>,
-    prediction_intervals: Option<f64>,
-    return_diagnostics: bool,
-    return_residuals: bool,
-    return_robustness_weights: bool,
-    cv_fractions: Option<Vec<f64>>,
-    cv_method: String,
-    cv_k: usize,
     parallel: bool,
-    degree: PolynomialDegree,
-    dimensions: usize,
-    distance_metric: DistanceMetric<f64>,
-    surface_mode: SurfaceMode,
-    return_se: bool,
-    cell: Option<f64>,
-    interpolation_vertices: Option<usize>,
-    boundary_degree_fallback: Option<bool>,
-    cv_seed: Option<u64>,
 }
 
 #[pymethods]
@@ -679,33 +655,43 @@ impl PyLoess {
         ))?;
         let surf = map_invalid_arg(shared_parse::parse_surface_mode(surface_mode))?;
 
+        let (builder, _) = map_invalid_arg(shared_parse::apply_typed_builder_options(
+            LoessBuilder::<f64>::new(),
+            shared_parse::TypedBuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations),
+                weight_function: Some(wf),
+                robustness_method: Some(rm),
+                zero_weight_fallback: Some(zwf),
+                boundary_policy: Some(bp),
+                scaling_method: Some(sm),
+                auto_converge,
+                return_residuals,
+                return_robustness_weights,
+                return_diagnostics,
+                confidence_intervals,
+                prediction_intervals,
+                parallel: Some(parallel),
+                degree: Some(deg),
+                dimensions: Some(dimensions),
+                distance_metric: Some(dm),
+                surface_mode: Some(surf),
+                return_se,
+                cell,
+                interpolation_vertices,
+                boundary_degree_fallback,
+                cv_fractions,
+                cv_method: Some(cv_method.to_string()),
+                cv_k: Some(cv_k),
+                cv_seed,
+            },
+        ))?;
+
         Ok(PyLoess {
+            builder,
             fraction,
             iterations,
-            weight_function: wf,
-            robustness_method: rm,
-            scaling_method: sm,
-            zero_weight_fallback: zwf,
-            boundary_policy: bp,
-            auto_converge,
-            confidence_intervals,
-            prediction_intervals,
-            return_diagnostics,
-            return_residuals,
-            return_robustness_weights,
-            cv_fractions,
-            cv_method: cv_method.to_string(),
-            cv_k,
             parallel,
-            degree: deg,
-            dimensions,
-            distance_metric: dm,
-            surface_mode: surf,
-            return_se,
-            cell,
-            interpolation_vertices,
-            boundary_degree_fallback,
-            cv_seed,
         })
     }
 
@@ -741,44 +727,11 @@ impl PyLoess {
             })
             .transpose()?;
 
-        // Used for builder configuration
-        let params = self.clone();
+        // Clone the pre-built builder for this fit call
+        let builder = self.builder.clone();
 
         // 2. Release GIL
         let result = py.detach(move || {
-            let (builder, _) =
-                shared_parse::map_invalid_arg(shared_parse::apply_typed_builder_options(
-                    LoessBuilder::<f64>::new(),
-                    shared_parse::TypedBuilderOptionSet {
-                        fraction: Some(params.fraction),
-                        iterations: Some(params.iterations),
-                        weight_function: Some(params.weight_function),
-                        robustness_method: Some(params.robustness_method),
-                        zero_weight_fallback: Some(params.zero_weight_fallback),
-                        boundary_policy: Some(params.boundary_policy),
-                        scaling_method: Some(params.scaling_method),
-                        auto_converge: params.auto_converge,
-                        return_residuals: params.return_residuals,
-                        return_robustness_weights: params.return_robustness_weights,
-                        return_diagnostics: params.return_diagnostics,
-                        confidence_intervals: params.confidence_intervals,
-                        prediction_intervals: params.prediction_intervals,
-                        parallel: Some(params.parallel),
-                        degree: Some(params.degree),
-                        dimensions: Some(params.dimensions),
-                        distance_metric: Some(params.distance_metric),
-                        surface_mode: Some(params.surface_mode),
-                        return_se: params.return_se,
-                        cell: params.cell,
-                        interpolation_vertices: params.interpolation_vertices,
-                        boundary_degree_fallback: params.boundary_degree_fallback,
-                        cv_fractions: params.cv_fractions,
-                        cv_method: Some(params.cv_method),
-                        cv_k: Some(params.cv_k),
-                        cv_seed: params.cv_seed,
-                    },
-                ))?;
-
             let model = shared_parse::build_batch(builder, uw_vec)?;
             shared_parse::map_invalid_arg(model.fit(&x_vec, &y_vec))
         });

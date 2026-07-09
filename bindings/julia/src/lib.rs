@@ -16,10 +16,7 @@ use std::slice::from_raw_parts;
 
 use fastLoess::internals::api::LoessBuilder;
 use fastLoess::internals::binding_support as shared_parse;
-use fastLoess::internals::binding_support::{
-    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
-    WeightFunction, ZeroWeightFallback,
-};
+use fastLoess::internals::binding_support::DistanceMetric;
 use fastLoess::prelude::LoessResult;
 
 thread_local! {
@@ -193,12 +190,6 @@ fn error_result_from(err: shared_parse::BindingError) -> JlLoessResult {
     error_result(&err.message)
 }
 
-fn map_invalid_arg_result<T, E: ToString>(
-    result: std::result::Result<T, E>,
-) -> std::result::Result<T, Box<JlLoessResult>> {
-    shared_parse::map_invalid_arg(result).map_err(|e| Box::new(error_result_from(e)))
-}
-
 fn map_runtime_result<T, E: ToString>(
     result: std::result::Result<T, E>,
 ) -> std::result::Result<T, Box<JlLoessResult>> {
@@ -263,38 +254,15 @@ use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 
 pub struct JlLoessConfig {
-    fraction: f64,
-    iterations: usize,
-    weight_function: WeightFunction,
-    robustness_method: RobustnessMethod,
-    scaling_method: ScalingMethod,
-    zero_weight_fallback: ZeroWeightFallback,
-    boundary_policy: BoundaryPolicy,
-    auto_converge: Option<f64>,
-    confidence_intervals: Option<f64>,
-    prediction_intervals: Option<f64>,
-    return_diagnostics: bool,
-    return_residuals: bool,
-    return_robustness_weights: bool,
-    cv_fractions: Option<Vec<f64>>,
-    cv_method: String,
-    cv_k: usize,
-    parallel: bool,
-    // LOESS-specific
-    degree: PolynomialDegree,
-    dimensions: usize,
+    base_builder: LoessBuilder<f64>,
+    // Saved for weighted metric override resolution at fit time
     distance_metric: DistanceMetric<f64>,
-    surface_mode: SurfaceMode,
-    return_se: bool,
-    // User-defined case weights
-    custom_weights: Option<Vec<f64>>,
-    // Weighted distance metric weights (set via jl_loess_set_weighted_metric)
+    // Mutable via jl_loess_set_weighted_metric
     weighted_metric_weights: Option<Vec<f64>>,
-    // Interpolation and advanced options
-    cell: Option<f64>,
-    interpolation_vertices: Option<usize>,
-    boundary_degree_fallback: Option<bool>,
-    cv_seed: Option<u64>,
+    // Mutable via jl_loess_set_custom_weights; applied to build_batch
+    custom_weights: Option<Vec<f64>>,
+    // Needed to compute x_n = n * dimensions in jl_loess_fit
+    dimensions: usize,
 }
 
 pub struct JlStreamingLoess {
@@ -363,54 +331,63 @@ pub unsafe extern "C" fn jl_loess_new(
         let cv_fractions_vec =
             shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len as usize);
 
-        let config = JlLoessConfig {
-            fraction,
-            iterations: iterations as usize,
-            weight_function: wf,
-            robustness_method: rm,
-            scaling_method: sm,
-            zero_weight_fallback: zwf,
-            boundary_policy: bp,
-            auto_converge: if auto_converge.is_nan() {
-                None
-            } else {
-                Some(auto_converge)
-            },
-            confidence_intervals: if confidence_intervals.is_nan() {
-                None
-            } else {
-                Some(confidence_intervals)
-            },
-            prediction_intervals: if prediction_intervals.is_nan() {
-                None
-            } else {
-                Some(prediction_intervals)
-            },
-            return_diagnostics: return_diagnostics != 0,
-            return_residuals: return_residuals != 0,
-            return_robustness_weights: return_robustness_weights != 0,
-            cv_fractions: cv_fractions_vec,
-            cv_method: cv_method_str.to_string(),
-            cv_k: cv_k as usize,
-            parallel: parallel != 0,
-            degree: deg,
-            dimensions: if dimensions > 0 {
-                dimensions as usize
-            } else {
-                1
-            },
-            distance_metric: dm,
-            surface_mode: surf,
-            return_se: return_se != 0,
-            custom_weights: None,
-            weighted_metric_weights: None,
-            cell: None,
-            interpolation_vertices: None,
-            boundary_degree_fallback: None,
-            cv_seed: None,
+        let dims = if dimensions > 0 {
+            dimensions as usize
+        } else {
+            1
         };
 
-        Box::into_raw(Box::new(config))
+        let (base_builder, _) = unwrap_or_return_null!(shared_parse::apply_typed_builder_options(
+            LoessBuilder::<f64>::new(),
+            shared_parse::TypedBuilderOptionSet {
+                fraction: Some(fraction),
+                iterations: Some(iterations as usize),
+                weight_function: Some(wf),
+                robustness_method: Some(rm),
+                zero_weight_fallback: Some(zwf),
+                boundary_policy: Some(bp),
+                scaling_method: Some(sm),
+                auto_converge: if auto_converge.is_nan() {
+                    None
+                } else {
+                    Some(auto_converge)
+                },
+                return_residuals: return_residuals != 0,
+                return_robustness_weights: return_robustness_weights != 0,
+                return_diagnostics: return_diagnostics != 0,
+                confidence_intervals: if confidence_intervals.is_nan() {
+                    None
+                } else {
+                    Some(confidence_intervals)
+                },
+                prediction_intervals: if prediction_intervals.is_nan() {
+                    None
+                } else {
+                    Some(prediction_intervals)
+                },
+                parallel: Some(parallel != 0),
+                degree: Some(deg),
+                dimensions: Some(dims),
+                distance_metric: Some(dm.clone()),
+                surface_mode: Some(surf),
+                return_se: return_se != 0,
+                cell: None,
+                interpolation_vertices: None,
+                boundary_degree_fallback: None,
+                cv_fractions: cv_fractions_vec,
+                cv_method: Some(cv_method_str.to_string()),
+                cv_k: Some(cv_k as usize),
+                cv_seed: None,
+            },
+        ));
+
+        Box::into_raw(Box::new(JlLoessConfig {
+            base_builder,
+            distance_metric: dm,
+            weighted_metric_weights: None,
+            custom_weights: None,
+            dimensions: dims,
+        }))
     });
 
     match result {
@@ -474,43 +451,15 @@ pub unsafe extern "C" fn jl_loess_fit(
         let x_slice = unsafe { from_raw_parts(x, x_n) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
-        let (builder, _) = match map_invalid_arg_result(shared_parse::apply_typed_builder_options(
-            LoessBuilder::<f64>::new(),
-            shared_parse::TypedBuilderOptionSet {
-                fraction: Some(config.fraction),
-                iterations: Some(config.iterations),
-                weight_function: Some(config.weight_function),
-                robustness_method: Some(config.robustness_method),
-                zero_weight_fallback: Some(config.zero_weight_fallback),
-                boundary_policy: Some(config.boundary_policy),
-                scaling_method: Some(config.scaling_method),
-                auto_converge: config.auto_converge,
-                return_residuals: config.return_residuals,
-                return_robustness_weights: config.return_robustness_weights,
-                return_diagnostics: config.return_diagnostics,
-                confidence_intervals: config.confidence_intervals,
-                prediction_intervals: config.prediction_intervals,
-                parallel: Some(config.parallel),
-                degree: Some(config.degree),
-                dimensions: Some(config.dimensions),
-                distance_metric: Some(shared_parse::resolve_typed_distance_metric(
-                    config.distance_metric.clone(),
-                    config.weighted_metric_weights.as_deref(),
-                )),
-                surface_mode: Some(config.surface_mode),
-                return_se: config.return_se,
-                cell: config.cell,
-                interpolation_vertices: config.interpolation_vertices,
-                boundary_degree_fallback: config.boundary_degree_fallback,
-                cv_fractions: config.cv_fractions.clone(),
-                cv_method: Some(config.cv_method.clone()),
-                cv_k: Some(config.cv_k),
-                cv_seed: config.cv_seed,
-            },
-        )) {
-            Ok(v) => v,
-            Err(e) => return *e,
-        };
+        // Clone the pre-built builder; re-apply weighted metric if the setter was called
+        let mut builder = config.base_builder.clone();
+        if let Some(ref weights) = config.weighted_metric_weights {
+            let dm = shared_parse::resolve_typed_distance_metric(
+                config.distance_metric.clone(),
+                Some(weights),
+            );
+            builder = shared_parse::apply_distance_metric_value(builder, &dm);
+        }
 
         let model = match shared_parse::build_batch(builder, config.custom_weights.clone()) {
             Ok(m) => m,
