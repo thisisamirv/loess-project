@@ -63,7 +63,8 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
             weighted_metric_weights: None,
         }
     }
-}impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
+}
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     ParallelStreamingLoessBuilder<T>
 {
     // Build the streaming processor.

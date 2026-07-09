@@ -78,7 +78,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     }
 }
 
-
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     ParallelBatchLoessBuilder<T>
 {

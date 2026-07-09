@@ -15,11 +15,11 @@ use std::ptr;
 use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
+use fastLoess::internals::binding_support as shared_parse;
 use fastLoess::internals::binding_support::{
     BoundaryPolicy, MergeStrategy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction,
     ZeroWeightFallback,
 };
-use fastLoess::internals::binding_support as shared_parse;
 use fastLoess::prelude::LoessResult;
 
 thread_local! {

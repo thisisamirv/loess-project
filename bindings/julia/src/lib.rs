@@ -15,11 +15,11 @@ use std::ptr;
 use std::slice::from_raw_parts;
 
 use fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
+use fastLoess::internals::binding_support as shared_parse;
 use fastLoess::internals::binding_support::{
     BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
     WeightFunction, ZeroWeightFallback,
 };
-use fastLoess::internals::binding_support as shared_parse;
 use fastLoess::prelude::LoessResult;
 
 thread_local! {

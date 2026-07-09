@@ -6,8 +6,8 @@ use napi_derive::napi;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
-use ::fastLoess::internals::binding_support::{MergeStrategy, UpdateMode};
 use ::fastLoess::internals::binding_support as shared_parse;
+use ::fastLoess::internals::binding_support::{MergeStrategy, UpdateMode};
 use ::fastLoess::prelude::LoessResult as InnerLoessResult;
 
 fn to_napi_error(err: shared_parse::BindingError) -> Error {
