@@ -122,9 +122,8 @@ export class OnlineLoess {
 
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
-use ::fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
+use ::fastLoess::internals::api::LoessBuilder;
 use ::fastLoess::internals::binding_support as shared_parse;
-use ::fastLoess::internals::binding_support::{MergeStrategy, UpdateMode};
 use ::fastLoess::prelude::LoessResult as InnerLoessResult;
 
 fn to_js_error(err: shared_parse::BindingError) -> JsValue {
@@ -457,15 +456,10 @@ fn smooth(
         builder = configured_builder;
     }
 
-    if let Some(cw) = custom_weights {
-        builder = builder.custom_weights(cw);
-    }
-
     let x_vec = x.to_vec();
     let y_vec = y.to_vec();
 
-    let model = map_runtime(builder.adapter(Batch).build())?;
-
+    let model = map_runtime(shared_parse::build_batch(builder, custom_weights))?;
     let result = map_runtime(model.fit(&x_vec, &y_vec))?;
 
     Ok(LoessResult { inner: result })
@@ -523,31 +517,20 @@ impl StreamingLoess {
             builder = configured_builder;
         }
 
-        let mut chunk_size = 5000;
-        let mut overlap = 500;
-        let mut merge_strategy = MergeStrategy::WeightedAverage;
+        let (chunk_size, overlap, merge_strategy) =
+            if !streamingOpts.is_undefined() && !streamingOpts.is_null() {
+                let sopts: StreamingOptions = serde_wasm_bindgen::from_value(streamingOpts)?;
+                (sopts.chunk_size, sopts.overlap, sopts.merge_strategy)
+            } else {
+                (None, None, None)
+            };
 
-        if !streamingOpts.is_undefined() && !streamingOpts.is_null() {
-            let sopts: StreamingOptions = serde_wasm_bindgen::from_value(streamingOpts)?;
-            if let Some(cs) = sopts.chunk_size {
-                chunk_size = cs;
-            }
-            if let Some(ov) = sopts.overlap {
-                overlap = ov;
-            }
-            if let Some(ms) = sopts.merge_strategy {
-                merge_strategy = map_invalid_arg(shared_parse::parse_merge_strategy(&ms))?;
-            }
-        }
-
-        let model = map_runtime(
-            builder
-                .adapter(Streaming)
-                .chunk_size(chunk_size)
-                .overlap(overlap)
-                .merge_strategy(merge_strategy)
-                .build(),
-        )?;
+        let model = map_runtime(shared_parse::build_streaming(
+            builder,
+            chunk_size,
+            overlap,
+            merge_strategy.as_deref(),
+        ))?;
 
         Ok(StreamingLoess { inner: model })
     }
@@ -623,31 +606,20 @@ impl OnlineLoess {
             builder = configured_builder;
         }
 
-        let mut window_capacity = 1000;
-        let mut min_points = 3;
-        let mut update_mode = UpdateMode::Full;
+        let (window_capacity, min_points, update_mode) =
+            if !onlineOpts.is_undefined() && !onlineOpts.is_null() {
+                let oopts: OnlineOptions = serde_wasm_bindgen::from_value(onlineOpts)?;
+                (oopts.window_capacity, oopts.min_points, oopts.update_mode)
+            } else {
+                (None, None, None)
+            };
 
-        if !onlineOpts.is_undefined() && !onlineOpts.is_null() {
-            let oopts: OnlineOptions = serde_wasm_bindgen::from_value(onlineOpts)?;
-            if let Some(wc) = oopts.window_capacity {
-                window_capacity = wc;
-            }
-            if let Some(mp) = oopts.min_points {
-                min_points = mp;
-            }
-            if let Some(um) = oopts.update_mode {
-                update_mode = map_invalid_arg(shared_parse::parse_update_mode(&um))?;
-            }
-        }
-
-        let model = map_runtime(
-            builder
-                .adapter(Online)
-                .window_capacity(window_capacity)
-                .min_points(min_points)
-                .update_mode(update_mode)
-                .build(),
-        )?;
+        let model = map_runtime(shared_parse::build_online(
+            builder,
+            window_capacity,
+            min_points,
+            update_mode.as_deref(),
+        ))?;
 
         Ok(OnlineLoess { inner: model })
     }

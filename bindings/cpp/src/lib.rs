@@ -14,12 +14,8 @@ use std::ptr;
 
 use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
-use fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
+use fastLoess::internals::api::{Batch, LoessBuilder};
 use fastLoess::internals::binding_support as shared_parse;
-use fastLoess::internals::binding_support::{
-    BoundaryPolicy, MergeStrategy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction,
-    ZeroWeightFallback,
-};
 use fastLoess::prelude::LoessResult;
 
 thread_local! {
@@ -213,22 +209,6 @@ impl Default for CppLoessResult {
     }
 }
 
-// Convert a Vec<f64> to a raw pointer.
-fn vec_to_ptr(v: Vec<f64>) -> *mut c_double {
-    let mut boxed = v.into_boxed_slice();
-    let ptr = boxed.as_mut_ptr();
-    std::mem::forget(boxed);
-    ptr
-}
-
-// Convert an optional Vec<f64> to a raw pointer.
-fn opt_vec_to_ptr(v: Option<Vec<f64>>) -> *mut c_double {
-    match v {
-        Some(vec) => vec_to_ptr(vec),
-        None => ptr::null_mut(),
-    }
-}
-
 // Create an error result with the given message.
 fn error_result(msg: &str) -> CppLoessResult {
     let mut result = CppLoessResult::default();
@@ -246,79 +226,23 @@ unsafe fn parse_c_str(s: *const c_char, default: &str) -> &str {
     }
 }
 
-// Parse weight function from string.
-fn parse_weight_function(name: &str) -> Result<WeightFunction, String> {
-    shared_parse::parse_weight_function(name)
-}
-
-// Parse robustness method from string.
-fn parse_robustness_method(name: &str) -> Result<RobustnessMethod, String> {
-    shared_parse::parse_robustness_method(name)
-}
-
-// Parse zero weight fallback from string.
-fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback, String> {
-    shared_parse::parse_zero_weight_fallback(name)
-}
-
-// Parse boundary policy from string.
-fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy, String> {
-    shared_parse::parse_boundary_policy(name)
-}
-
-// Parse scaling method from string.
-fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
-    shared_parse::parse_scaling_method(name)
-}
-
-// Parse update mode from string.
-fn parse_update_mode(name: &str) -> Result<UpdateMode, String> {
-    shared_parse::parse_update_mode(name)
-}
-
-// Parse merge strategy from string.
-fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
-    shared_parse::parse_merge_strategy(name)
-}
-
 impl From<LoessResult<f64>> for CppLoessResult {
     fn from(result: LoessResult<f64>) -> Self {
         let n = result.y.len();
-
         let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
-            if let Some(ref d) = result.diagnostics {
-                (
-                    d.rmse,
-                    d.mae,
-                    d.r_squared,
-                    d.aic.unwrap_or(f64::NAN),
-                    d.aicc.unwrap_or(f64::NAN),
-                    d.effective_df.unwrap_or(f64::NAN),
-                    d.residual_sd,
-                )
-            } else {
-                (
-                    f64::NAN,
-                    f64::NAN,
-                    f64::NAN,
-                    f64::NAN,
-                    f64::NAN,
-                    f64::NAN,
-                    f64::NAN,
-                )
-            };
+            shared_parse::extract_diagnostics(&result);
 
         CppLoessResult {
-            x: vec_to_ptr(result.x),
-            y: vec_to_ptr(result.y),
+            x: shared_parse::vec_to_raw_ptr(result.x),
+            y: shared_parse::vec_to_raw_ptr(result.y),
             n: n as c_ulong,
-            standard_errors: opt_vec_to_ptr(result.standard_errors),
-            confidence_lower: opt_vec_to_ptr(result.confidence_lower),
-            confidence_upper: opt_vec_to_ptr(result.confidence_upper),
-            prediction_lower: opt_vec_to_ptr(result.prediction_lower),
-            prediction_upper: opt_vec_to_ptr(result.prediction_upper),
-            residuals: opt_vec_to_ptr(result.residuals),
-            robustness_weights: opt_vec_to_ptr(result.robustness_weights),
+            standard_errors: shared_parse::opt_vec_to_raw_ptr(result.standard_errors),
+            confidence_lower: shared_parse::opt_vec_to_raw_ptr(result.confidence_lower),
+            confidence_upper: shared_parse::opt_vec_to_raw_ptr(result.confidence_upper),
+            prediction_lower: shared_parse::opt_vec_to_raw_ptr(result.prediction_lower),
+            prediction_upper: shared_parse::opt_vec_to_raw_ptr(result.prediction_upper),
+            residuals: shared_parse::opt_vec_to_raw_ptr(result.residuals),
+            robustness_weights: shared_parse::opt_vec_to_raw_ptr(result.robustness_weights),
             fraction_used: result.fraction_used,
             iterations_used: result.iterations_used.map(|i| i as c_int).unwrap_or(-1),
             rmse,
@@ -333,14 +257,28 @@ impl From<LoessResult<f64>> for CppLoessResult {
             delta1: result.delta1.unwrap_or(f64::NAN),
             delta2: result.delta2.unwrap_or(f64::NAN),
             residual_scale: result.residual_scale.unwrap_or(f64::NAN),
-            leverage: opt_vec_to_ptr(result.leverage),
+            leverage: shared_parse::opt_vec_to_raw_ptr(result.leverage),
             dimensions: result.dimensions as c_int,
-            cv_scores: opt_vec_to_ptr(result.cv_scores.clone()),
+            cv_scores: shared_parse::opt_vec_to_raw_ptr(result.cv_scores.clone()),
             cv_scores_len: result
                 .cv_scores
                 .as_ref()
                 .map(|v| v.len() as c_ulong)
                 .unwrap_or(0),
+            error: ptr::null_mut(),
+        }
+    }
+}
+
+impl Default for CppOnlineOutput {
+    fn default() -> Self {
+        CppOnlineOutput {
+            has_value: 0,
+            smoothed: f64::NAN,
+            std_error: f64::NAN,
+            residual: f64::NAN,
+            robustness_weight: f64::NAN,
+            iterations_used: -1,
             error: ptr::null_mut(),
         }
     }
@@ -373,9 +311,7 @@ pub struct CppOnlineLoess {
 }
 
 fn setter_unsupported_eager_lifecycle(name: &str) {
-    set_last_error(&format!(
-        "{name} is not supported: streaming/online models are eagerly initialized at construction"
-    ));
+    set_last_error(&shared_parse::setter_unsupported_eager_message(name));
 }
 
 /// C++ wrapper constructor.
@@ -423,57 +359,32 @@ pub unsafe extern "C" fn cpp_loess_new(
         let bp_str = parse_c_str(boundary_policy, "extend");
         let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
 
-        match parse_weight_function(wf_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_robustness_method(rm_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_scaling_method(sm_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_boundary_policy(bp_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_zero_weight_fallback(zwf_str) {
-            Ok(_) => (),
+        let iterations = match shared_parse::require_non_negative_usize("iterations", iterations) {
+            Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
 
-        let cv_fractions_vec = if !cv_fractions.is_null() && cv_fractions_len > 0 {
-            let fractions = std::slice::from_raw_parts(cv_fractions, cv_fractions_len as usize);
-            Some(fractions.to_vec())
-        } else {
-            None
-        };
+        let cv_fractions_vec =
+            shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len as usize);
 
         let cv_method_str = parse_c_str(cv_method, "kfold").to_string();
         let cv_k_usize = cv_k.max(2) as usize;
-        let weighted_metric_weights_slice =
-            if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
-                Some(std::slice::from_raw_parts(
-                    weighted_metric_weights,
-                    weighted_metric_weights_len as usize,
-                ))
-            } else {
-                None
-            };
+        let weighted_metric_weights_slice = shared_parse::option_slice_from_ptr(
+            weighted_metric_weights,
+            weighted_metric_weights_len as usize,
+        );
         let distance_metric_str =
             (!distance_metric.is_null()).then_some(parse_c_str(distance_metric, "normalized"));
-        let weighted_without_weights = distance_metric_str
-            .map(|v| v.eq_ignore_ascii_case("weighted"))
-            .unwrap_or(false)
-            && weighted_metric_weights_slice.is_none();
+        let effective_metric = shared_parse::resolve_distance_metric_for_builder(
+            distance_metric_str,
+            weighted_metric_weights_slice,
+        );
 
-        let (mut builder, _) = match shared_parse::apply_builder_options(
+        let (builder, _) = match shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
-                iterations: Some(iterations as usize),
+                iterations: Some(iterations),
                 weight_function: Some(wf_str),
                 robustness_method: Some(rm_str),
                 zero_weight_fallback: Some(zwf_str),
@@ -490,8 +401,7 @@ pub unsafe extern "C" fn cpp_loess_new(
                 parallel: Some(parallel != 0),
                 degree: (!degree.is_null()).then_some(parse_c_str(degree, "linear")),
                 dimensions: (dimensions > 0).then_some(dimensions as usize),
-                distance_metric: distance_metric_str
-                    .filter(|v| !v.eq_ignore_ascii_case("weighted")),
+                distance_metric: effective_metric,
                 weighted_metric_weights: weighted_metric_weights_slice,
                 surface_mode: (!surface_mode.is_null())
                     .then_some(parse_c_str(surface_mode, "interpolation")),
@@ -508,9 +418,6 @@ pub unsafe extern "C" fn cpp_loess_new(
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
-        if weighted_without_weights {
-            builder = builder.distance_metric("weighted");
-        }
 
         Box::into_raw(Box::new(CppLoess {
             builder: Some(builder),
@@ -929,35 +836,12 @@ pub unsafe extern "C" fn cpp_streaming_new(
         let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
         let ms_str = parse_c_str(merge_strategy, "weighted_average");
 
-        match parse_weight_function(wf_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_robustness_method(rm_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_scaling_method(sm_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_boundary_policy(bp_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_zero_weight_fallback(zwf_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        let ms = match parse_merge_strategy(ms_str) {
+        let chunk_size = match shared_parse::require_positive_usize("chunk_size", chunk_size) {
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
-
-        let chunk_size = chunk_size as usize;
         let overlap_size = if overlap < 0 {
-            let default = chunk_size / 10;
-            default.min(chunk_size.saturating_sub(10)).max(1)
+            shared_parse::default_overlap(chunk_size)
         } else {
             overlap as usize
         };
@@ -966,21 +850,16 @@ pub unsafe extern "C" fn cpp_streaming_new(
             (!surface_mode.is_null()).then_some(parse_c_str(surface_mode, "interpolation"));
         let distance_metric_str =
             (!distance_metric.is_null()).then_some(parse_c_str(distance_metric, "normalized"));
-        let weighted_metric_weights_slice =
-            if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
-                Some(std::slice::from_raw_parts(
-                    weighted_metric_weights,
-                    weighted_metric_weights_len as usize,
-                ))
-            } else {
-                None
-            };
-        let weighted_without_weights = distance_metric_str
-            .map(|v| v.eq_ignore_ascii_case("weighted"))
-            .unwrap_or(false)
-            && weighted_metric_weights_slice.is_none();
+        let weighted_metric_weights_slice = shared_parse::option_slice_from_ptr(
+            weighted_metric_weights,
+            weighted_metric_weights_len as usize,
+        );
+        let effective_metric = shared_parse::resolve_distance_metric_for_builder(
+            distance_metric_str,
+            weighted_metric_weights_slice,
+        );
 
-        let (mut builder, _) = match shared_parse::apply_builder_options(
+        let (builder, _) = match shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -994,13 +873,14 @@ pub unsafe extern "C" fn cpp_streaming_new(
                 return_residuals: return_residuals != 0,
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: return_diagnostics != 0,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
                 parallel: Some(parallel != 0),
                 degree: degree_str,
                 dimensions: (dimensions > 0).then_some(dimensions as usize),
-                distance_metric: distance_metric_str
-                    .filter(|v| !v.eq_ignore_ascii_case("weighted")),
+                distance_metric: effective_metric,
                 weighted_metric_weights: weighted_metric_weights_slice,
                 surface_mode: surface_mode_str,
                 return_se: return_se != 0,
@@ -1018,24 +898,12 @@ pub unsafe extern "C" fn cpp_streaming_new(
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
-        if weighted_without_weights {
-            builder = builder.distance_metric("weighted");
-        }
-        if !confidence_intervals.is_nan() {
-            builder = builder.confidence_intervals(confidence_intervals);
-        }
-        if !prediction_intervals.is_nan() {
-            builder = builder.prediction_intervals(prediction_intervals);
-        }
 
-        let model = match shared_parse::map_runtime(
-            builder
-                .clone()
-                .adapter(Streaming)
-                .chunk_size(chunk_size)
-                .overlap(overlap_size)
-                .merge_strategy(ms)
-                .build(),
+        let model = match shared_parse::build_streaming(
+            builder,
+            Some(chunk_size),
+            Some(overlap_size),
+            Some(ms_str),
         ) {
             Ok(m) => m,
             Err(e) => return null_with_error(&e.message),
@@ -1161,27 +1029,12 @@ pub unsafe extern "C" fn cpp_online_new(
         let zwf_str = parse_c_str(zero_weight_fallback, "use_local_mean");
         let um_str = parse_c_str(update_mode, "full");
 
-        match parse_weight_function(wf_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_robustness_method(rm_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_scaling_method(sm_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_boundary_policy(bp_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        match parse_zero_weight_fallback(zwf_str) {
-            Ok(_) => (),
-            Err(e) => return null_with_error(&e),
-        };
-        let um = match parse_update_mode(um_str) {
+        let window_capacity =
+            match shared_parse::require_positive_usize("window_capacity", window_capacity) {
+                Ok(v) => v,
+                Err(e) => return null_with_error(&e),
+            };
+        let min_points = match shared_parse::require_positive_usize("min_points", min_points) {
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
@@ -1196,21 +1049,16 @@ pub unsafe extern "C" fn cpp_online_new(
             (!surface_mode.is_null()).then_some(parse_c_str(surface_mode, "interpolation"));
         let distance_metric_str =
             (!distance_metric.is_null()).then_some(parse_c_str(distance_metric, "normalized"));
-        let weighted_metric_weights_slice =
-            if !weighted_metric_weights.is_null() && weighted_metric_weights_len > 0 {
-                Some(std::slice::from_raw_parts(
-                    weighted_metric_weights,
-                    weighted_metric_weights_len as usize,
-                ))
-            } else {
-                None
-            };
-        let weighted_without_weights = distance_metric_str
-            .map(|v| v.eq_ignore_ascii_case("weighted"))
-            .unwrap_or(false)
-            && weighted_metric_weights_slice.is_none();
+        let weighted_metric_weights_slice = shared_parse::option_slice_from_ptr(
+            weighted_metric_weights,
+            weighted_metric_weights_len as usize,
+        );
+        let effective_metric = shared_parse::resolve_distance_metric_for_builder(
+            distance_metric_str,
+            weighted_metric_weights_slice,
+        );
 
-        let (mut builder, _) = match shared_parse::apply_builder_options(
+        let (builder, _) = match shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -1224,13 +1072,14 @@ pub unsafe extern "C" fn cpp_online_new(
                 return_residuals: return_residuals != 0,
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: return_diagnostics != 0,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
                 parallel: Some(parallel != 0),
                 degree: degree_str,
                 dimensions: (dimensions > 0).then_some(configured_dimensions),
-                distance_metric: distance_metric_str
-                    .filter(|v| !v.eq_ignore_ascii_case("weighted")),
+                distance_metric: effective_metric,
                 weighted_metric_weights: weighted_metric_weights_slice,
                 surface_mode: surface_mode_str,
                 return_se: return_se != 0,
@@ -1248,24 +1097,12 @@ pub unsafe extern "C" fn cpp_online_new(
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
-        if weighted_without_weights {
-            builder = builder.distance_metric("weighted");
-        }
-        if !confidence_intervals.is_nan() {
-            builder = builder.confidence_intervals(confidence_intervals);
-        }
-        if !prediction_intervals.is_nan() {
-            builder = builder.prediction_intervals(prediction_intervals);
-        }
 
-        let model = match shared_parse::map_runtime(
-            builder
-                .clone()
-                .adapter(Online)
-                .window_capacity(window_capacity as usize)
-                .min_points(min_points as usize)
-                .update_mode(um)
-                .build(),
+        let model = match shared_parse::build_online(
+            builder,
+            Some(window_capacity),
+            Some(min_points),
+            Some(um_str),
         ) {
             Ok(m) => m,
             Err(e) => return null_with_error(&e.message),
@@ -1287,15 +1124,9 @@ pub unsafe extern "C" fn cpp_online_add_point(
     y: c_double,
 ) -> CppOnlineOutput {
     let make_error = |msg: &str| -> CppOnlineOutput {
-        let c_string = shared_parse::to_cstring_lossy(msg);
         CppOnlineOutput {
-            has_value: 0,
-            smoothed: f64::NAN,
-            std_error: f64::NAN,
-            residual: f64::NAN,
-            robustness_weight: f64::NAN,
-            iterations_used: -1,
-            error: c_string.into_raw(),
+            error: shared_parse::to_cstring_lossy(msg).into_raw(),
+            ..CppOnlineOutput::default()
         }
     };
 
@@ -1308,15 +1139,7 @@ pub unsafe extern "C" fn cpp_online_add_point(
         if let Some(model) = &mut loess.model {
             match model.add_point(&[x], y) {
                 Err(e) => make_error(&e.to_string()),
-                Ok(None) => CppOnlineOutput {
-                    has_value: 0,
-                    smoothed: f64::NAN,
-                    std_error: f64::NAN,
-                    residual: f64::NAN,
-                    robustness_weight: f64::NAN,
-                    iterations_used: -1,
-                    error: ptr::null_mut(),
-                },
+                Ok(None) => CppOnlineOutput::default(),
                 Ok(Some(o)) => CppOnlineOutput {
                     has_value: 1,
                     smoothed: o.smoothed,

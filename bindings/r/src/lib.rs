@@ -11,7 +11,7 @@ use extendr_api::prelude::*;
 
 type Result<T> = std::result::Result<T, Error>;
 
-use fastLoess::internals::api::{Batch, LoessBuilder, LoessResult, Online, Streaming};
+use fastLoess::internals::api::{Batch, LoessBuilder, LoessResult};
 use fastLoess::internals::binding_support as shared_parse;
 
 // Helper Functions
@@ -33,21 +33,13 @@ fn map_runtime<T, E: ToString>(result: std::result::Result<T, E>) -> Result<T> {
 }
 
 fn require_positive_usize(name: &str, value: i32) -> Result<usize> {
-    if value <= 0 {
-        return Err(to_r_error(shared_parse::BindingError::invalid_arg(
-            format!("{} must be greater than 0", name),
-        )));
-    }
-    Ok(value as usize)
+    shared_parse::require_positive_usize(name, value)
+        .map_err(|e| to_r_error(shared_parse::BindingError::invalid_arg(e)))
 }
 
 fn require_non_negative_usize(name: &str, value: i32) -> Result<usize> {
-    if value < 0 {
-        return Err(to_r_error(shared_parse::BindingError::invalid_arg(
-            format!("{} must be greater than or equal to 0", name),
-        )));
-    }
-    Ok(value as usize)
+    shared_parse::require_non_negative_usize(name, value)
+        .map_err(|e| to_r_error(shared_parse::BindingError::invalid_arg(e)))
 }
 
 fn optional_positive_usize(name: &str, value: Nullable<i32>) -> Result<Option<usize>> {
@@ -226,14 +218,13 @@ impl RStreamingLoess {
         let chunk_size = require_positive_usize("chunk_size", chunk_size)?;
         let overlap_size = match overlap {
             NotNull(o) => require_non_negative_usize("overlap", o)?,
-            Null => (chunk_size / 10).min(chunk_size.saturating_sub(10)).max(1),
+            Null => shared_parse::default_overlap(chunk_size),
         };
         let iterations = require_non_negative_usize("iterations", iterations)?;
         let dimensions = require_positive_usize("dimensions", dimensions)?;
         let interpolation_vertices =
             optional_positive_usize("interpolation_vertices", interpolation_vertices)?;
 
-        let ms = map_invalid_arg(shared_parse::parse_merge_strategy(merge_strategy))?;
         let weighted_weights = match weighted_metric_weights {
             NotNull(v) => Some(v),
             Null => None,
@@ -248,10 +239,13 @@ impl RStreamingLoess {
                 zero_weight_fallback: Some(zero_weight_fallback),
                 boundary_policy: Some(boundary_policy),
                 scaling_method: Some(scaling_method),
-                auto_converge: None,
+                auto_converge: match auto_converge {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
                 return_residuals,
-                return_robustness_weights: false,
-                return_diagnostics: false,
+                return_robustness_weights,
+                return_diagnostics,
                 confidence_intervals: match confidence_intervals {
                     NotNull(v) => Some(v),
                     Null => None,
@@ -260,7 +254,7 @@ impl RStreamingLoess {
                     NotNull(v) => Some(v),
                     Null => None,
                 },
-                parallel: None,
+                parallel: Some(parallel),
                 degree: Some(degree),
                 dimensions: Some(dimensions),
                 distance_metric: Some(distance_metric),
@@ -283,23 +277,12 @@ impl RStreamingLoess {
             },
         ))?;
 
-        let mut s_builder = builder.adapter(Streaming);
-        s_builder = s_builder.chunk_size(chunk_size);
-        s_builder = s_builder.overlap(overlap_size);
-        s_builder = s_builder.parallel(parallel);
-        s_builder = s_builder.merge_strategy(ms);
-
-        if let NotNull(tol) = auto_converge {
-            s_builder = s_builder.auto_converge(tol);
-        }
-        if return_diagnostics {
-            s_builder = s_builder.return_diagnostics(true);
-        }
-        if return_robustness_weights {
-            s_builder = s_builder.return_robustness_weights(true);
-        }
-
-        let model = map_runtime(s_builder.build())?;
+        let model = map_runtime(shared_parse::build_streaming(
+            builder,
+            Some(chunk_size),
+            Some(overlap_size),
+            Some(merge_strategy),
+        ))?;
         Ok(Self {
             inner: model,
             fraction,
@@ -362,7 +345,6 @@ impl ROnlineLoess {
         interpolation_vertices: Nullable<i32>,
         boundary_degree_fallback: Nullable<bool>,
     ) -> Result<Self> {
-        let um = map_invalid_arg(shared_parse::parse_update_mode(update_mode))?;
         let weighted_weights = match weighted_metric_weights {
             NotNull(v) => Some(v),
             Null => None,
@@ -383,9 +365,12 @@ impl ROnlineLoess {
                 zero_weight_fallback: Some(zero_weight_fallback),
                 boundary_policy: Some(boundary_policy),
                 scaling_method: Some(scaling_method),
-                auto_converge: None,
+                auto_converge: match auto_converge {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
                 return_residuals,
-                return_robustness_weights: false,
+                return_robustness_weights,
                 return_diagnostics,
                 confidence_intervals: match confidence_intervals {
                     NotNull(v) => Some(v),
@@ -395,7 +380,7 @@ impl ROnlineLoess {
                     NotNull(v) => Some(v),
                     Null => None,
                 },
-                parallel: None,
+                parallel: Some(parallel),
                 degree: Some(degree),
                 dimensions: Some(configured_dimensions),
                 distance_metric: Some(distance_metric),
@@ -418,20 +403,12 @@ impl ROnlineLoess {
             },
         ))?;
 
-        let mut o_builder = builder.adapter(Online);
-        o_builder = o_builder.window_capacity(window_capacity);
-        o_builder = o_builder.min_points(min_points);
-        o_builder = o_builder.update_mode(um);
-        o_builder = o_builder.parallel(parallel);
-
-        if let NotNull(tol) = auto_converge {
-            o_builder = o_builder.auto_converge(tol);
-        }
-        if return_robustness_weights {
-            o_builder = o_builder.return_robustness_weights(true);
-        }
-
-        let model = map_runtime(o_builder.build())?;
+        let model = map_runtime(shared_parse::build_online(
+            builder,
+            Some(window_capacity),
+            Some(min_points),
+            Some(update_mode),
+        ))?;
         Ok(Self { inner: model })
     }
 

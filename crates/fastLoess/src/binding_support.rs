@@ -4,10 +4,10 @@
 //! Node.js, Python, R, and WASM bindings so option aliases and validation
 //! behavior stay consistent across all binding frontends.
 
-use crate::adapters::batch::ParallelBatchLoessBuilder;
-use crate::adapters::online::ParallelOnlineLoessBuilder;
-use crate::adapters::streaming::ParallelStreamingLoessBuilder;
-use crate::api::LoessBuilder;
+use crate::adapters::batch::{ParallelBatchLoess, ParallelBatchLoessBuilder};
+use crate::adapters::online::{ParallelOnlineLoess, ParallelOnlineLoessBuilder};
+use crate::adapters::streaming::{ParallelStreamingLoess, ParallelStreamingLoessBuilder};
+use crate::api::{Batch, LoessBuilder, Online, Streaming};
 use crate::parse::IntoEnum;
 use crate::prelude::{LoessError, LoessResult};
 pub use loess_rs::internals::adapters::online::UpdateMode;
@@ -55,6 +55,12 @@ impl BindingError {
     }
 }
 
+impl std::fmt::Display for BindingError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
 pub fn map_invalid_arg<T, E: ToString>(result: Result<T, E>) -> Result<T, BindingError> {
     result.map_err(|e| BindingError::invalid_arg(e.to_string()))
 }
@@ -83,11 +89,132 @@ pub fn panic_fallback_message() -> &'static str {
     PANIC_FALLBACK_MESSAGE
 }
 
+// Validate that a signed integer is > 0 and safely cast to usize.
+// Used by C/Julia FFI bindings to convert c_int parameters with bounds checking.
+pub fn require_positive_usize(name: &str, value: i32) -> Result<usize, String> {
+    if value <= 0 {
+        Err(format!("{name} must be greater than 0, got {value}"))
+    } else {
+        Ok(value as usize)
+    }
+}
+
+// Validate that a signed integer is >= 0 and safely cast to usize.
+pub fn require_non_negative_usize(name: &str, value: i32) -> Result<usize, String> {
+    if value < 0 {
+        Err(format!("{name} must be non-negative, got {value}"))
+    } else {
+        Ok(value as usize)
+    }
+}
+
 pub fn dims_mismatch_message(x_len: usize, y_len: usize, dimensions: usize) -> String {
     format!(
         "x length ({}) must equal y length ({}) * dimensions ({})",
         x_len, y_len, dimensions
     )
+}
+
+// Returns a non-null raw pointer as a slice, or None if the pointer is null or len is 0.
+// Safety: if ptr is non-null, it must point to at least `len` valid, initialized elements of
+// type T that remain live for at least as long as the returned slice is used.
+pub unsafe fn option_slice_from_ptr<'a, T>(ptr: *const T, len: usize) -> Option<&'a [T]> {
+    if !ptr.is_null() && len > 0 {
+        Some(unsafe { std::slice::from_raw_parts(ptr, len) })
+    } else {
+        None
+    }
+}
+
+// Like option_slice_from_ptr but clones the slice into a Vec.
+// Safety: same preconditions as option_slice_from_ptr.
+pub unsafe fn option_vec_from_ptr<T: Clone>(ptr: *const T, len: usize) -> Option<Vec<T>> {
+    unsafe { option_slice_from_ptr(ptr, len) }.map(<[T]>::to_vec)
+}
+
+// Resolves the effective distance metric string to pass to apply_builder_options.
+// If weights are provided they imply "weighted" regardless of the user's metric string.
+// If the user explicitly asks for "weighted" without weights, the string is passed through
+// as-is so apply_builder_options can return a clear error.
+pub fn resolve_distance_metric_for_builder<'a>(
+    distance_metric: Option<&'a str>,
+    weighted_metric_weights: Option<&'a [f64]>,
+) -> Option<&'a str> {
+    if weighted_metric_weights.is_some() {
+        Some("weighted")
+    } else {
+        distance_metric
+    }
+}
+
+// Message returned by setter stubs on streaming/online models (C++ binding).
+pub fn setter_unsupported_eager_message(name: &str) -> String {
+    format!(
+        "{name} is not supported: streaming/online models are eagerly initialized at construction"
+    )
+}
+
+// Message returned by setter stubs that require constructor-time configuration (Julia binding).
+pub fn setter_unsupported_constructor_only_message(name: &str) -> String {
+    format!("{name} is not supported: configure model options at construction time")
+}
+
+// Converts a Vec<f64> into a heap-allocated raw pointer.
+// The caller is responsible for freeing the memory via Box::from_raw / Vec::from_raw_parts.
+pub fn vec_to_raw_ptr(v: Vec<f64>) -> *mut f64 {
+    let mut boxed = v.into_boxed_slice();
+    let ptr = boxed.as_mut_ptr();
+    std::mem::forget(boxed);
+    ptr
+}
+
+// Same as vec_to_raw_ptr but for an Option, returning null for None.
+pub fn opt_vec_to_raw_ptr(v: Option<Vec<f64>>) -> *mut f64 {
+    match v {
+        Some(vec) => vec_to_raw_ptr(vec),
+        None => std::ptr::null_mut(),
+    }
+}
+
+// Extracts flat scalar diagnostics from a LoessResult.
+// Returns (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) with
+// f64::NAN for any field that was not computed.
+pub fn extract_diagnostics(result: &LoessResult<f64>) -> (f64, f64, f64, f64, f64, f64, f64) {
+    if let Some(ref d) = result.diagnostics {
+        (
+            d.rmse,
+            d.mae,
+            d.r_squared,
+            d.aic.unwrap_or(f64::NAN),
+            d.aicc.unwrap_or(f64::NAN),
+            d.effective_df.unwrap_or(f64::NAN),
+            d.residual_sd,
+        )
+    } else {
+        (
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+            f64::NAN,
+        )
+    }
+}
+
+// Resolves the typed distance metric at fit time, applying any override weights
+// that were stored via a post-construction setter.  If the metric is Weighted
+// and override weights are provided, the override replaces the constructor-time
+// weights; otherwise the metric is returned unchanged.
+pub fn resolve_typed_distance_metric(
+    metric: DistanceMetric<f64>,
+    override_weights: Option<&[f64]>,
+) -> DistanceMetric<f64> {
+    match (metric, override_weights) {
+        (DistanceMetric::Weighted(_), Some(w)) => DistanceMetric::Weighted(w.to_vec()),
+        (metric, _) => metric,
+    }
 }
 
 pub fn required_option_message(option_name: &str) -> String {
@@ -666,6 +793,82 @@ pub fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
             name
         )),
     }
+}
+
+// ─── Adapter build helpers ────────────────────────────────────────────────────
+//
+// These functions centralize the "extract defaults → parse string enum →
+// chain adapter setters → build" pattern that every binding repeats for its
+// batch, streaming, and online constructors.
+
+// Compute the default overlap size from a chunk size when the caller does not
+// specify one. cpp, julia, python, and r all use this same formula instead of
+// the flat 500-point default used by wasm/nodejs.
+pub fn default_overlap(chunk_size: usize) -> usize {
+    let default = chunk_size / 10;
+    default.min(chunk_size.saturating_sub(10)).max(1)
+}
+
+// Build a parallel batch processor. Applies optional case weights before
+// building.
+pub fn build_batch(
+    builder: LoessBuilder<f64>,
+    custom_weights: Option<Vec<f64>>,
+) -> Result<ParallelBatchLoess<f64>, BindingError> {
+    let builder = if let Some(cw) = custom_weights {
+        builder.custom_weights(cw)
+    } else {
+        builder
+    };
+    map_runtime(builder.adapter(Batch).build())
+}
+
+// Build a parallel streaming processor.
+// Defaults: chunk_size = 5000, overlap = 500, merge_strategy = WeightedAverage.
+pub fn build_streaming(
+    builder: LoessBuilder<f64>,
+    chunk_size: Option<usize>,
+    overlap: Option<usize>,
+    merge_strategy: Option<&str>,
+) -> Result<ParallelStreamingLoess<f64>, BindingError> {
+    let cs = chunk_size.unwrap_or(5000);
+    let ov = overlap.unwrap_or(500);
+    let ms = match merge_strategy {
+        Some(s) => map_invalid_arg(parse_merge_strategy(s))?,
+        None => MergeStrategy::WeightedAverage,
+    };
+    map_runtime(
+        builder
+            .adapter(Streaming)
+            .chunk_size(cs)
+            .overlap(ov)
+            .merge_strategy(ms)
+            .build(),
+    )
+}
+
+// Build a parallel online processor.
+// Defaults: window_capacity = 1000, min_points = 3, update_mode = Full.
+pub fn build_online(
+    builder: LoessBuilder<f64>,
+    window_capacity: Option<usize>,
+    min_points: Option<usize>,
+    update_mode: Option<&str>,
+) -> Result<ParallelOnlineLoess<f64>, BindingError> {
+    let wc = window_capacity.unwrap_or(1000);
+    let mp = min_points.unwrap_or(3);
+    let um = match update_mode {
+        Some(s) => map_invalid_arg(parse_update_mode(s))?,
+        None => UpdateMode::Full,
+    };
+    map_runtime(
+        builder
+            .adapter(Online)
+            .window_capacity(wc)
+            .min_points(mp)
+            .update_mode(um)
+            .build(),
+    )
 }
 
 // ─── Builder setter methods ───────────────────────────────────────────────────

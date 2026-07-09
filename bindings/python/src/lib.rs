@@ -11,13 +11,13 @@ use std::sync::Mutex;
 
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
-use ::fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
 use ::fastLoess::internals::binding_support as shared_parse;
 use ::fastLoess::internals::binding_support::{
     BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
     WeightFunction, ZeroWeightFallback,
 };
 use ::fastLoess::prelude::LoessResult;
+use fastLoess::internals::api::LoessBuilder;
 
 // Helper Functions
 
@@ -325,7 +325,6 @@ impl PyStreamingLoess {
         confidence_intervals: Option<f64>,
         prediction_intervals: Option<f64>,
     ) -> PyResult<Self> {
-        let ms = map_invalid_arg(shared_parse::parse_merge_strategy(merge_strategy))?;
         let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
@@ -359,22 +358,13 @@ impl PyStreamingLoess {
             },
         ))?;
 
-        let overlap_size = overlap.unwrap_or_else(|| {
-            let default = chunk_size / 10;
-            default.min(chunk_size.saturating_sub(10)).max(1)
-        });
-
-        let mut streaming_builder = builder.adapter(Streaming);
-        streaming_builder = streaming_builder.chunk_size(chunk_size);
-        streaming_builder = streaming_builder.overlap(overlap_size);
-        streaming_builder = streaming_builder.parallel(parallel);
-        streaming_builder = streaming_builder.merge_strategy(ms);
-
-        if let Some(tol) = auto_converge {
-            streaming_builder = streaming_builder.auto_converge(tol);
-        }
-
-        let processor = map_runtime(streaming_builder.build())?;
+        let overlap_size = overlap.unwrap_or_else(|| shared_parse::default_overlap(chunk_size));
+        let processor = map_runtime(shared_parse::build_streaming(
+            builder,
+            Some(chunk_size),
+            Some(overlap_size),
+            Some(merge_strategy),
+        ))?;
         Ok(PyStreamingLoess {
             inner: Mutex::new(processor),
         })
@@ -512,7 +502,6 @@ impl PyOnlineLoess {
         confidence_intervals: Option<f64>,
         prediction_intervals: Option<f64>,
     ) -> PyResult<Self> {
-        let um = map_invalid_arg(shared_parse::parse_update_mode(update_mode))?;
         let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
@@ -525,7 +514,7 @@ impl PyOnlineLoess {
                 scaling_method: Some(scaling_method),
                 auto_converge,
                 return_residuals,
-                return_robustness_weights: false,
+                return_robustness_weights,
                 return_diagnostics,
                 confidence_intervals,
                 prediction_intervals,
@@ -546,20 +535,12 @@ impl PyOnlineLoess {
             },
         ))?;
 
-        let mut online_builder = builder.adapter(Online);
-        online_builder = online_builder.window_capacity(window_capacity);
-        online_builder = online_builder.min_points(min_points);
-        online_builder = online_builder.update_mode(um);
-        online_builder = online_builder.parallel(parallel);
-
-        if let Some(tol) = auto_converge {
-            online_builder = online_builder.auto_converge(tol);
-        }
-        if return_robustness_weights {
-            online_builder = online_builder.return_robustness_weights(true);
-        }
-
-        let processor = map_runtime(online_builder.build())?;
+        let processor = map_runtime(shared_parse::build_online(
+            builder,
+            Some(window_capacity),
+            Some(min_points),
+            Some(update_mode),
+        ))?;
         Ok(PyOnlineLoess {
             inner: Mutex::new(processor),
         })
@@ -765,7 +746,7 @@ impl PyLoess {
 
         // 2. Release GIL
         let result = py.detach(move || {
-            let (mut builder, _) =
+            let (builder, _) =
                 shared_parse::map_invalid_arg(shared_parse::apply_typed_builder_options(
                     LoessBuilder::<f64>::new(),
                     shared_parse::TypedBuilderOptionSet {
@@ -798,11 +779,7 @@ impl PyLoess {
                     },
                 ))?;
 
-            if let Some(uw) = uw_vec {
-                builder = builder.custom_weights(uw);
-            }
-
-            let model = shared_parse::map_invalid_arg(builder.adapter(Batch).build())?;
+            let model = shared_parse::build_batch(builder, uw_vec)?;
             shared_parse::map_invalid_arg(model.fit(&x_vec, &y_vec))
         });
 
