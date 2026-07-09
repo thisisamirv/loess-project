@@ -4,7 +4,7 @@ use js_sys::Float64Array;
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
-#[wasm_bindgen(js_name = "initPanicHook")]
+#[wasm_bindgen]
 pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
 }
@@ -188,10 +188,13 @@ pub struct OnlineOptions {
 pub struct Diagnostics {
     pub rmse: f64,
     pub mae: f64,
+    #[wasm_bindgen(js_name = r_squared)]
     pub r_squared: f64,
     pub aic: Option<f64>,
     pub aicc: Option<f64>,
+    #[wasm_bindgen(js_name = effective_df)]
     pub effective_df: Option<f64>,
+    #[wasm_bindgen(js_name = residual_sd)]
     pub residual_sd: f64,
 }
 
@@ -415,7 +418,6 @@ fn smooth(
     custom_weights: Option<Vec<f64>>,
 ) -> Result<LoessResult, JsValue> {
     let mut builder = LoessBuilder::<f64>::new();
-    let y_len = y.length() as usize;
 
     if !options.is_undefined() && !options.is_null() {
         let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
@@ -456,16 +458,6 @@ fn smooth(
     }
 
     if let Some(cw) = custom_weights {
-        if cw.len() != y_len {
-            return Err(to_js_error(shared_parse::BindingError::invalid_arg(
-                shared_parse::custom_weights_length_mismatch_message(cw.len(), y_len),
-            )));
-        }
-        if cw.iter().any(|&w| w < 0.0) {
-            return Err(to_js_error(shared_parse::BindingError::invalid_arg(
-                shared_parse::CUSTOM_WEIGHTS_MUST_BE_NON_NEGATIVE,
-            )));
-        }
         builder = builder.custom_weights(cw);
     }
 

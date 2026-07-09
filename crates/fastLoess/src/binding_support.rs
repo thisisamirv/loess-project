@@ -70,7 +70,6 @@ pub const PROCESSOR_POINTER_IS_NULL: &str = "Processor pointer is null";
 pub const INVALID_DATA_INPUTS: &str = "Invalid data inputs";
 pub const XY_ARRAYS_MUST_NOT_BE_NULL: &str = "x and y arrays must not be null";
 pub const ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO: &str = "Array length must be greater than 0";
-pub const CUSTOM_WEIGHTS_MUST_BE_NON_NEGATIVE: &str = "custom_weights must be non-negative";
 
 pub fn sanitize_error_message(msg: &str) -> String {
     msg.replace('\0', " ")
@@ -89,28 +88,6 @@ pub fn dims_mismatch_message(x_len: usize, y_len: usize, dimensions: usize) -> S
         "x length ({}) must equal y length ({}) * dimensions ({})",
         x_len, y_len, dimensions
     )
-}
-
-pub fn custom_weights_length_mismatch_message(weights_len: usize, y_len: usize) -> String {
-    format!(
-        "custom_weights length ({}) must match y length ({})",
-        weights_len, y_len
-    )
-}
-
-pub fn custom_weights_length_mismatch_message_for(
-    label: &str,
-    weights_len: usize,
-    y_len: usize,
-) -> String {
-    format!(
-        "{} length ({}) must match y length ({})",
-        label, weights_len, y_len
-    )
-}
-
-pub fn custom_weights_must_be_non_negative_message_for(label: &str) -> String {
-    format!("{} must be non-negative", label)
 }
 
 pub fn required_option_message(option_name: &str) -> String {

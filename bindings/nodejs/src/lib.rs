@@ -334,20 +334,6 @@ impl Loess {
     ) -> Result<LoessResult> {
         let mut builder = self.create_builder()?;
         if let Some(cw) = custom_weights {
-            if cw.len() != y.as_ref().len() {
-                return Err(to_napi_error(shared_parse::BindingError::invalid_arg(
-                    shared_parse::custom_weights_length_mismatch_message_for(
-                        "customWeights",
-                        cw.len(),
-                        y.as_ref().len(),
-                    ),
-                )));
-            }
-            if cw.iter().any(|&w| w < 0.0) {
-                return Err(to_napi_error(shared_parse::BindingError::invalid_arg(
-                    shared_parse::custom_weights_must_be_non_negative_message_for("customWeights"),
-                )));
-            }
             builder = builder.custom_weights(cw);
         }
         let model = map_runtime(builder.adapter(Batch).build())?;
@@ -367,20 +353,6 @@ impl Loess {
     ) -> Result<AsyncTask<LoessTask>> {
         let mut builder = self.create_builder()?;
         if let Some(cw) = custom_weights {
-            if cw.len() != y.as_ref().len() {
-                return Err(to_napi_error(shared_parse::BindingError::invalid_arg(
-                    shared_parse::custom_weights_length_mismatch_message_for(
-                        "customWeights",
-                        cw.len(),
-                        y.as_ref().len(),
-                    ),
-                )));
-            }
-            if cw.iter().any(|&w| w < 0.0) {
-                return Err(to_napi_error(shared_parse::BindingError::invalid_arg(
-                    shared_parse::custom_weights_must_be_non_negative_message_for("customWeights"),
-                )));
-            }
             builder = builder.custom_weights(cw);
         }
         let x_vec = x.as_ref().to_vec();
