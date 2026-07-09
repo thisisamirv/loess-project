@@ -4,12 +4,28 @@
 //! Node.js, Python, R, and WASM bindings so option aliases and validation
 //! behavior stay consistent across all binding frontends.
 
-use crate::api::{
-    BoundaryPolicy, DistanceMetric, LoessBuilder, MergeStrategy, PolynomialDegree,
-    RobustnessMethod, ScalingMethod, SurfaceMode, UpdateMode, WeightFunction, ZeroWeightFallback,
-};
+use crate::adapters::batch::ParallelBatchLoessBuilder;
+use crate::adapters::online::ParallelOnlineLoessBuilder;
+use crate::adapters::streaming::ParallelStreamingLoessBuilder;
+use crate::api::LoessBuilder;
+use crate::parse::IntoEnum;
 use crate::prelude::{LoessError, LoessResult};
+pub use loess_rs::internals::adapters::online::UpdateMode;
+pub use loess_rs::internals::adapters::streaming::MergeStrategy;
+use loess_rs::internals::algorithms::regression::SolverLinalg;
+pub use loess_rs::internals::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
+pub use loess_rs::internals::algorithms::robustness::RobustnessMethod;
+pub use loess_rs::internals::engine::executor::SurfaceMode;
+use loess_rs::internals::evaluation::intervals::IntervalMethod;
+pub use loess_rs::internals::math::boundary::BoundaryPolicy;
+use loess_rs::internals::math::distance::DistanceLinalg;
+pub use loess_rs::internals::math::distance::DistanceMetric;
+pub use loess_rs::internals::math::kernel::WeightFunction;
+use loess_rs::internals::math::linalg::FloatLinalg;
+pub use loess_rs::internals::math::scaling::ScalingMethod;
+pub use loess_rs::internals::primitives::backend::Backend;
 use std::ffi::CString;
+use std::fmt::Debug;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BindingErrorCategory {
@@ -672,5 +688,610 @@ pub fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
             "Unknown merge strategy: {}. Valid options: average, weighted_average, take_first, take_last",
             name
         )),
+    }
+}
+
+// ─── Builder setter methods ───────────────────────────────────────────────────
+//
+// These impl blocks are in binding_support.rs (compiled only with the `dev`
+// feature) so the adapter files (batch.rs, online.rs, streaming.rs) stay free
+// of any `#[cfg]` attributes.
+
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
+    ParallelBatchLoessBuilder<T>
+{
+    // Set parallel execution mode.
+    pub fn parallel(mut self, parallel: bool) -> Self {
+        self.base.parallel = Some(parallel);
+        self
+    }
+
+    // Set the execution backend.
+    pub fn backend(mut self, backend: Backend) -> Self {
+        self.base.backend = Some(backend);
+        self
+    }
+
+    // Set the smoothing fraction (span).
+    pub fn fraction(mut self, fraction: T) -> Self {
+        self.base.fraction = fraction;
+        self
+    }
+
+    // Set the number of robustness iterations.
+    pub fn iterations(mut self, iterations: usize) -> Self {
+        self.base.iterations = iterations;
+        self
+    }
+
+    // Set the kernel weight function.
+    #[allow(private_bounds)]
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
+        match wf.into_enum() {
+            Ok(w) => self.base.weight_function = w,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the robustness method for outlier handling.
+    #[allow(private_bounds)]
+    pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.robustness_method = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the residual scaling method (MAR/MAD).
+    #[allow(private_bounds)]
+    pub fn scaling_method(mut self, method: impl IntoEnum<ScalingMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.scaling_method = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the zero-weight fallback policy.
+    #[allow(private_bounds)]
+    pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
+        match fallback.into_enum() {
+            Ok(f) => self.base.zero_weight_fallback = f,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the boundary handling policy.
+    #[allow(private_bounds)]
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(p) => self.base.boundary_policy = p,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the polynomial degree.
+    #[allow(private_bounds)]
+    pub fn polynomial_degree(mut self, degree: impl IntoEnum<PolynomialDegree>) -> Self {
+        match degree.into_enum() {
+            Ok(d) => self.base.polynomial_degree = d,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the number of dimensions explicitly.
+    pub fn dimensions(mut self, dims: usize) -> Self {
+        self.base.dimensions = dims;
+        self
+    }
+
+    // Set the distance metric.
+    #[allow(private_bounds)]
+    pub fn distance_metric(mut self, metric: impl IntoEnum<DistanceMetric<T>>) -> Self {
+        match metric.into_enum() {
+            Ok(m) => self.base.distance_metric = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the surface evaluation mode (Direct or Interpolation).
+    #[allow(private_bounds)]
+    pub fn surface_mode(mut self, mode: impl IntoEnum<SurfaceMode>) -> Self {
+        match mode.into_enum() {
+            Ok(m) => self.base.surface_mode = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the cell size for interpolation mode.
+    pub fn cell(mut self, cell: f64) -> Self {
+        self.base.cell = Some(cell);
+        self
+    }
+
+    // Set whether to reduce polynomial degree at boundary vertices.
+    pub fn boundary_degree_fallback(mut self, enabled: bool) -> Self {
+        self.base.boundary_degree_fallback = enabled;
+        self
+    }
+
+    // Set the maximum number of vertices for interpolation.
+    pub fn interpolation_vertices(mut self, vertices: usize) -> Self {
+        self.base.interpolation_vertices = Some(vertices);
+        self
+    }
+
+    // Enable auto-convergence for robustness iterations.
+    pub fn auto_converge(mut self, tolerance: T) -> Self {
+        self.base.auto_converge = Some(tolerance);
+        self
+    }
+
+    // Enable returning residuals in the output.
+    pub fn compute_residuals(mut self, enabled: bool) -> Self {
+        self.base.compute_residuals = enabled;
+        self
+    }
+
+    // Enable returning robustness weights in the result.
+    pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
+        self.base.return_robustness_weights = enabled;
+        self
+    }
+
+    // Enable returning diagnostics in the result.
+    pub fn return_diagnostics(mut self, enabled: bool) -> Self {
+        self.base.return_diagnostics = enabled;
+        self
+    }
+
+    // Enable confidence intervals at the specified level.
+    pub fn confidence_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(match self.base.interval_type {
+            Some(existing) if existing.prediction => IntervalMethod {
+                level,
+                confidence: true,
+                prediction: true,
+                se: true,
+            },
+            _ => IntervalMethod::confidence(level),
+        });
+        self
+    }
+
+    // Enable prediction intervals at the specified level.
+    pub fn prediction_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(match self.base.interval_type {
+            Some(existing) if existing.confidence => IntervalMethod {
+                level,
+                confidence: true,
+                prediction: true,
+                se: true,
+            },
+            _ => IntervalMethod::prediction(level),
+        });
+        self
+    }
+
+    // Set the cross-validation method: `"kfold"` or `"loocv"`.
+    pub fn cv_method(mut self, method: &str) -> Self {
+        self.cv_method_str = Some(method.to_string());
+        self
+    }
+
+    // Set the number of folds for K-fold cross-validation (default: 5).
+    pub fn cv_k(mut self, k: usize) -> Self {
+        self.cv_k_val = k;
+        self
+    }
+
+    // Set the candidate fractions to evaluate during cross-validation.
+    pub fn cv_fractions(mut self, fractions: Vec<T>) -> Self {
+        self.base.cv_fractions = Some(fractions);
+        self
+    }
+
+    // Set the random seed for reproducible cross-validation fold splitting.
+    pub fn cv_seed(mut self, seed: u64) -> Self {
+        self.base.cv_seed = Some(seed);
+        self
+    }
+
+    // Set per-dimension weights for the `"weighted"` distance metric.
+    //
+    // Calling this method selects the weighted Euclidean metric and supplies
+    // the weight vector (one entry per predictor dimension). Must be combined
+    // with `.distance_metric("weighted")` or called on its own.
+    pub fn weighted_metric_weights(mut self, weights: Vec<T>) -> Self {
+        self.weighted_metric_weights = Some(weights);
+        self
+    }
+
+    // Enable returning standard errors in the result.
+    pub fn return_se(mut self, enabled: bool) -> Self {
+        if enabled && self.base.interval_type.is_none() {
+            self.base.interval_type = Some(IntervalMethod::se());
+        }
+        self
+    }
+
+    // Set user-defined case weights (one per observation).
+    //
+    // Weights multiply the local kernel weight at each neighborhood point:
+    // `w_ij = custom_weights[j] * K(d_ij / h) * robustness_j`.
+    //
+    // Analogous to `weights` in R's `stats::loess`. Must have the same length as `y`.
+    pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
+        self.base.custom_weights = Some(weights);
+        self
+    }
+}
+
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
+    ParallelOnlineLoessBuilder<T>
+{
+    // Set parallel execution mode.
+    pub fn parallel(mut self, parallel: bool) -> Self {
+        self.base.parallel = Some(parallel);
+        self
+    }
+
+    // Set the execution backend.
+    pub fn backend(mut self, backend: Backend) -> Self {
+        self.base.backend = Some(backend);
+        self
+    }
+
+    // Set the smoothing fraction (span).
+    pub fn fraction(mut self, fraction: T) -> Self {
+        self.base.fraction = fraction;
+        self
+    }
+
+    // Set the number of robustness iterations.
+    pub fn iterations(mut self, iterations: usize) -> Self {
+        self.base.iterations = iterations;
+        self
+    }
+
+    // Set the kernel weight function.
+    #[allow(private_bounds)]
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
+        match wf.into_enum() {
+            Ok(w) => self.base.weight_function = w,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the robustness method for outlier handling.
+    #[allow(private_bounds)]
+    pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.robustness_method = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the residual scaling method (MAR/MAD).
+    #[allow(private_bounds)]
+    pub fn scaling_method(mut self, method: impl IntoEnum<ScalingMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.scaling_method = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the zero-weight fallback policy.
+    #[allow(private_bounds)]
+    pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
+        match fallback.into_enum() {
+            Ok(f) => self.base.zero_weight_fallback = f,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the boundary handling policy.
+    #[allow(private_bounds)]
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(p) => self.base.boundary_policy = p,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the polynomial degree.
+    #[allow(private_bounds)]
+    pub fn polynomial_degree(mut self, degree: impl IntoEnum<PolynomialDegree>) -> Self {
+        match degree.into_enum() {
+            Ok(d) => self.base.polynomial_degree = d,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the number of dimensions explicitly (though usually inferred from input).
+    pub fn dimensions(mut self, dims: usize) -> Self {
+        self.base.dimensions = dims;
+        self
+    }
+
+    // Set the distance metric.
+    #[allow(private_bounds)]
+    pub fn distance_metric(mut self, metric: impl IntoEnum<DistanceMetric<T>>) -> Self {
+        match metric.into_enum() {
+            Ok(m) => self.base.distance_metric = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the surface evaluation mode (Direct or Interpolation).
+    #[allow(private_bounds)]
+    pub fn surface_mode(mut self, mode: impl IntoEnum<SurfaceMode>) -> Self {
+        match mode.into_enum() {
+            Ok(m) => self.base.surface_mode = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the cell size for interpolation mode.
+    pub fn cell(mut self, cell: f64) -> Self {
+        self.base.cell = Some(cell);
+        self
+    }
+
+    // Set the maximum number of vertices for interpolation.
+    pub fn interpolation_vertices(mut self, vertices: usize) -> Self {
+        self.base.interpolation_vertices = Some(vertices);
+        self
+    }
+
+    // Set whether to reduce polynomial degree at boundary vertices.
+    pub fn boundary_degree_fallback(mut self, enabled: bool) -> Self {
+        self.base.boundary_degree_fallback = enabled;
+        self
+    }
+
+    // Enable auto-convergence for robustness iterations.
+    pub fn auto_converge(mut self, tolerance: T) -> Self {
+        self.base.auto_converge = Some(tolerance);
+        self
+    }
+
+    // Set whether to compute residuals.
+    pub fn compute_residuals(mut self, compute: bool) -> Self {
+        self.base.compute_residuals = compute;
+        self
+    }
+
+    // Set whether to return robustness weights.
+    pub fn return_robustness_weights(mut self, ret: bool) -> Self {
+        self.base.return_robustness_weights = ret;
+        self
+    }
+
+    // Set the window capacity.
+    pub fn window_capacity(mut self, capacity: usize) -> Self {
+        self.base.window_capacity = capacity;
+        self
+    }
+
+    // Set the minimum points required before smoothing.
+    pub fn min_points(mut self, min: usize) -> Self {
+        self.base.min_points = min;
+        self
+    }
+
+    // Set the update mode (Incremental/Full).
+    #[allow(private_bounds)]
+    pub fn update_mode(mut self, mode: impl IntoEnum<UpdateMode>) -> Self {
+        match mode.into_enum() {
+            Ok(m) => self.base.update_mode = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set per-dimension weights for the `"weighted"` distance metric.
+    pub fn weighted_metric_weights(mut self, weights: Vec<T>) -> Self {
+        self.weighted_metric_weights = Some(weights);
+        self
+    }
+}
+
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
+    ParallelStreamingLoessBuilder<T>
+{
+    // Set parallel execution mode.
+    pub fn parallel(mut self, parallel: bool) -> Self {
+        self.base.parallel = Some(parallel);
+        self
+    }
+
+    // Set the execution backend.
+    pub fn backend(mut self, backend: Backend) -> Self {
+        self.base.backend = Some(backend);
+        self
+    }
+
+    // Set the smoothing fraction (span).
+    pub fn fraction(mut self, fraction: T) -> Self {
+        self.base.fraction = fraction;
+        self
+    }
+
+    // Set the number of robustness iterations.
+    pub fn iterations(mut self, iterations: usize) -> Self {
+        self.base.iterations = iterations;
+        self
+    }
+
+    // Set the kernel weight function.
+    #[allow(private_bounds)]
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
+        match wf.into_enum() {
+            Ok(w) => self.base.weight_function = w,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the robustness method for outlier handling.
+    #[allow(private_bounds)]
+    pub fn robustness_method(mut self, method: impl IntoEnum<RobustnessMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.robustness_method = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the residual scaling method (MAR/MAD).
+    #[allow(private_bounds)]
+    pub fn scaling_method(mut self, method: impl IntoEnum<ScalingMethod>) -> Self {
+        match method.into_enum() {
+            Ok(m) => self.base.scaling_method = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the zero-weight fallback policy.
+    #[allow(private_bounds)]
+    pub fn zero_weight_fallback(mut self, fallback: impl IntoEnum<ZeroWeightFallback>) -> Self {
+        match fallback.into_enum() {
+            Ok(f) => self.base.zero_weight_fallback = f,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the boundary handling policy.
+    #[allow(private_bounds)]
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(p) => self.base.boundary_policy = p,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the polynomial degree.
+    #[allow(private_bounds)]
+    pub fn polynomial_degree(mut self, degree: impl IntoEnum<PolynomialDegree>) -> Self {
+        match degree.into_enum() {
+            Ok(d) => self.base.polynomial_degree = d,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the number of dimensions explicitly.
+    pub fn dimensions(mut self, dims: usize) -> Self {
+        self.base.dimensions = dims;
+        self
+    }
+
+    // Set the distance metric.
+    #[allow(private_bounds)]
+    pub fn distance_metric(mut self, metric: impl IntoEnum<DistanceMetric<T>>) -> Self {
+        match metric.into_enum() {
+            Ok(m) => self.base.distance_metric = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the surface evaluation mode (Direct or Interpolation).
+    #[allow(private_bounds)]
+    pub fn surface_mode(mut self, mode: impl IntoEnum<SurfaceMode>) -> Self {
+        match mode.into_enum() {
+            Ok(m) => self.base.surface_mode = m,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the cell size for interpolation mode.
+    pub fn cell(mut self, cell: f64) -> Self {
+        self.base.cell = Some(cell);
+        self
+    }
+
+    // Set the maximum number of vertices for interpolation.
+    pub fn interpolation_vertices(mut self, vertices: usize) -> Self {
+        self.base.interpolation_vertices = Some(vertices);
+        self
+    }
+
+    // Set whether to reduce polynomial degree at boundary vertices.
+    pub fn boundary_degree_fallback(mut self, enabled: bool) -> Self {
+        self.base.boundary_degree_fallback = enabled;
+        self
+    }
+
+    // Enable auto-convergence for robustness iterations.
+    pub fn auto_converge(mut self, tolerance: T) -> Self {
+        self.base.auto_converge = Some(tolerance);
+        self
+    }
+
+    // Enable returning residuals in the output.
+    pub fn compute_residuals(mut self, enabled: bool) -> Self {
+        self.base.compute_residuals = enabled;
+        self
+    }
+
+    // Enable returning robustness weights in the result.
+    pub fn return_robustness_weights(mut self, enabled: bool) -> Self {
+        self.base.return_robustness_weights = enabled;
+        self
+    }
+
+    // Enable returning diagnostics in the result.
+    pub fn return_diagnostics(mut self, enabled: bool) -> Self {
+        self.base.return_diagnostics = enabled;
+        self
+    }
+
+    // Set chunk size for processing.
+    pub fn chunk_size(mut self, size: usize) -> Self {
+        self.base.chunk_size = size;
+        self
+    }
+
+    // Set overlap between chunks.
+    pub fn overlap(mut self, overlap: usize) -> Self {
+        self.base.overlap = overlap;
+        self
+    }
+
+    // Set the merge strategy for overlapping chunks.
+    #[allow(private_bounds)]
+    pub fn merge_strategy(mut self, strategy: impl IntoEnum<MergeStrategy>) -> Self {
+        match strategy.into_enum() {
+            Ok(s) => self.base.merge_strategy = s,
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set per-dimension weights for the `"weighted"` distance metric.
+    pub fn weighted_metric_weights(mut self, weights: Vec<T>) -> Self {
+        self.weighted_metric_weights = Some(weights);
+        self
     }
 }

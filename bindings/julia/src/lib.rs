@@ -15,7 +15,7 @@ use std::ptr;
 use std::slice::from_raw_parts;
 
 use fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
-use fastLoess::internals::api::{
+use fastLoess::internals::binding_support::{
     BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
     WeightFunction, ZeroWeightFallback,
 };
