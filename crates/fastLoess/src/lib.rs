@@ -374,9 +374,11 @@ mod api;
 mod input;
 
 // Shared option parsing helpers for language bindings.
+#[cfg(feature = "dev")]
 mod binding_support;
 
 // String-to-enum conversion trait for parallel builder methods (sealed; pub(crate) only).
+#[cfg(feature = "dev")]
 mod parse;
 
 // Standard fastLoess prelude.

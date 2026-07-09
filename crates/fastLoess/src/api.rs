@@ -23,21 +23,31 @@ use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
 
 // Publicly re-exported types
+#[cfg(feature = "dev")]
 pub use loess_rs::internals::adapters::online::UpdateMode;
+#[cfg(feature = "dev")]
 pub use loess_rs::internals::adapters::streaming::MergeStrategy;
+#[cfg(feature = "dev")]
 pub use loess_rs::internals::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
+#[cfg(feature = "dev")]
 pub use loess_rs::internals::algorithms::robustness::RobustnessMethod;
 pub use loess_rs::internals::api::{LoessAdapter, LoessBuilder};
+#[cfg(feature = "dev")]
 pub use loess_rs::internals::engine::executor::SurfaceMode;
 pub use loess_rs::internals::engine::output::LoessResult;
+#[cfg(feature = "dev")]
 pub use loess_rs::internals::math::boundary::BoundaryPolicy;
+#[cfg(feature = "dev")]
 pub use loess_rs::internals::math::distance::DistanceMetric;
+#[cfg(feature = "dev")]
 pub use loess_rs::internals::math::kernel::WeightFunction;
+#[cfg(feature = "dev")]
 pub use loess_rs::internals::math::scaling::ScalingMethod;
 pub use loess_rs::internals::primitives::backend::Backend;
 pub use loess_rs::internals::primitives::errors::LoessError;
 
 // Adapter selection namespace.
+#[cfg(feature = "dev")]
 #[allow(non_snake_case)]
 pub mod Adapter {
     pub use super::{Batch, Online, Streaming};

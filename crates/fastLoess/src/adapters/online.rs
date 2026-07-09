@@ -19,21 +19,32 @@ use crate::engine::executor::{smooth_pass_parallel, vertex_pass_parallel};
 use crate::evaluation::cv::cv_pass_parallel;
 use crate::evaluation::intervals::interval_pass_parallel;
 use crate::math::neighborhood::build_kdtree_parallel;
+#[cfg(feature = "dev")]
 use crate::parse::IntoEnum;
 
 // Export dependencies from loess-rs crate
-use loess_rs::internals::adapters::online::{OnlineLoessBuilder, OnlineOutput, UpdateMode};
+#[cfg(feature = "dev")]
+use loess_rs::internals::adapters::online::UpdateMode;
+use loess_rs::internals::adapters::online::{OnlineLoessBuilder, OnlineOutput};
+#[cfg(feature = "dev")]
 use loess_rs::internals::algorithms::regression::PolynomialDegree;
 use loess_rs::internals::algorithms::regression::SolverLinalg;
+#[cfg(feature = "dev")]
 use loess_rs::internals::algorithms::regression::ZeroWeightFallback;
+#[cfg(feature = "dev")]
 use loess_rs::internals::algorithms::robustness::RobustnessMethod;
+#[cfg(feature = "dev")]
 use loess_rs::internals::engine::executor::SurfaceMode;
+#[cfg(feature = "dev")]
 use loess_rs::internals::math::boundary::BoundaryPolicy;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::distance::DistanceMetric;
+#[cfg(feature = "dev")]
 use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
+#[cfg(feature = "dev")]
 use loess_rs::internals::math::scaling::ScalingMethod;
+#[cfg(feature = "dev")]
 use loess_rs::internals::primitives::backend::Backend;
 use loess_rs::internals::primitives::errors::LoessError;
 
@@ -70,7 +81,12 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
             weighted_metric_weights: None,
         }
     }
+}
 
+#[cfg(feature = "dev")]
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
+    ParallelOnlineLoessBuilder<T>
+{
     // Set parallel execution mode.
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.base.parallel = Some(parallel);
@@ -244,7 +260,11 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self.weighted_metric_weights = Some(weights);
         self
     }
+}
 
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
+    ParallelOnlineLoessBuilder<T>
+{
     // Build the online processor.
     pub fn build(mut self) -> Result<ParallelOnlineLoess<T>, LoessError> {
         // Check for parse errors from string builder methods

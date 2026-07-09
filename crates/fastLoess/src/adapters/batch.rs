@@ -20,19 +20,27 @@ use std::result::Result;
 
 // Export dependencies from loess-rs crate
 use loess_rs::internals::adapters::batch::BatchLoessBuilder;
+#[cfg(feature = "dev")]
 use loess_rs::internals::algorithms::regression::PolynomialDegree;
 use loess_rs::internals::algorithms::regression::SolverLinalg;
+#[cfg(feature = "dev")]
 use loess_rs::internals::algorithms::regression::ZeroWeightFallback;
+#[cfg(feature = "dev")]
 use loess_rs::internals::algorithms::robustness::RobustnessMethod;
+#[cfg(feature = "dev")]
 use loess_rs::internals::engine::executor::SurfaceMode;
 use loess_rs::internals::engine::output::LoessResult;
 use loess_rs::internals::evaluation::cv::CVKind;
+#[cfg(feature = "dev")]
 use loess_rs::internals::evaluation::intervals::IntervalMethod;
+#[cfg(feature = "dev")]
 use loess_rs::internals::math::boundary::BoundaryPolicy;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::distance::DistanceMetric;
+#[cfg(feature = "dev")]
 use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
+#[cfg(feature = "dev")]
 use loess_rs::internals::math::scaling::ScalingMethod;
 use loess_rs::internals::primitives::backend::Backend;
 use loess_rs::internals::primitives::errors::LoessError;
@@ -40,6 +48,7 @@ use loess_rs::internals::primitives::errors::LoessError;
 // Internal dependencies
 use crate::input::LoessInput;
 use crate::math::neighborhood::build_kdtree_parallel;
+#[cfg(feature = "dev")]
 use crate::parse::IntoEnum;
 
 // Builder for batch LOESS processor with parallel support.
@@ -85,7 +94,12 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
             cv_k_val: 5,
         }
     }
+}
 
+#[cfg(feature = "dev")]
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
+    ParallelBatchLoessBuilder<T>
+{
     // Set parallel execution mode.
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.base.parallel = Some(parallel);
@@ -318,7 +332,11 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self.base.custom_weights = Some(weights);
         self
     }
+}
 
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
+    ParallelBatchLoessBuilder<T>
+{
     // Build the batch processor.
     pub fn build(mut self) -> Result<ParallelBatchLoess<T>, LoessError> {
         // Check for parse errors from string builder methods

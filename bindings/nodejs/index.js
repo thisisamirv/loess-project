@@ -339,8 +339,8 @@ class Loess extends _NativeLoess {
         return super.fit(x, y, _normalizeCustomWeights(customWeights))
     }
 
-    fitAsync(x, y, customWeights) {
-        return super.fitAsync(x, y, _normalizeCustomWeights(customWeights))
+    fit_async(x, y, customWeights) {
+        return super.fit_async(x, y, _normalizeCustomWeights(customWeights))
     }
 }
 
@@ -359,9 +359,6 @@ class OnlineLoess extends _NativeOnlineLoess {
         super(opts, onlineOpts)
     }
 
-    add_point(x, y) {
-        return this.addPoint(x, y)
-    }
 }
 
 module.exports.Loess = Loess

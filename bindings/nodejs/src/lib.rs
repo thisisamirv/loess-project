@@ -358,7 +358,7 @@ impl Loess {
     }
 
     // Fit the model asynchronously.
-    #[napi(js_name = "fitAsync")]
+    #[napi(js_name = "fit_async")]
     pub fn fit_async(
         &self,
         x: Float64Array,
@@ -551,7 +551,7 @@ impl StreamingLoess {
     }
 
     // Process a chunk of data.
-    #[napi]
+    #[napi(js_name = "process_chunk")]
     pub fn process_chunk(&mut self, x: Float64Array, y: Float64Array) -> Result<LoessResult> {
         let result: InnerLoessResult<f64> =
             map_runtime(self.inner.process_chunk(x.as_ref(), y.as_ref()))?;
@@ -659,7 +659,7 @@ impl OnlineLoess {
 
     // Add a single point and return its smoothed value, or null if the window
     // is not yet full enough to produce a result.
-    #[napi]
+    #[napi(js_name = "add_point")]
     pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<OnlineOutput>> {
         let output = self
             .inner
