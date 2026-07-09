@@ -120,11 +120,11 @@ export class OnlineLoess {
 }
 "#;
 
-use ::fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
-use ::fastLoess::internals::binding_support as shared_parse;
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
+use ::fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
 use ::fastLoess::internals::api::{MergeStrategy, UpdateMode};
+use ::fastLoess::internals::binding_support as shared_parse;
 use ::fastLoess::prelude::LoessResult as InnerLoessResult;
 
 fn to_js_error(err: shared_parse::BindingError) -> JsValue {

@@ -11,8 +11,8 @@ use extendr_api::prelude::*;
 
 type Result<T> = std::result::Result<T, Error>;
 
-use fastLoess::internals::binding_support as shared_parse;
 use fastLoess::internals::api::{Batch, LoessBuilder, LoessResult, Online, Streaming};
+use fastLoess::internals::binding_support as shared_parse;
 
 // Helper Functions
 

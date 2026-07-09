@@ -12,14 +12,14 @@ use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::ptr;
 
-use fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
-use fastLoess::internals::binding_support as shared_parse;
 use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
+use fastLoess::internals::api::{Batch, LoessBuilder, Online, Streaming};
 use fastLoess::internals::api::{
     BoundaryPolicy, MergeStrategy, RobustnessMethod, ScalingMethod, UpdateMode, WeightFunction,
     ZeroWeightFallback,
 };
+use fastLoess::internals::binding_support as shared_parse;
 use fastLoess::prelude::LoessResult;
 
 thread_local! {
