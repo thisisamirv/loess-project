@@ -34,11 +34,12 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     observed <- pmax(0, pmin(1, observed))
 
     # Smooth
-    result <- Loess(
+    model <- Loess(
         fraction = 0.1,
         iterations = 3,
         confidence_intervals = 0.95
-    )$fit(positions, observed)
+    )
+    result <- model$fit(positions, observed)
 
     # Plot
     plot(positions, observed, pch = ".", col = "gray",
@@ -68,11 +69,12 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     observed = np.clip(observed, 0, 1)  # Methylation is 0-1
 
     # Smooth with LOESS
-    result = fl.Loess(
+    model = fl.Loess(
         fraction=0.1,           # Small fraction for local detail
         iterations=3,           # Robustness for outliers
         confidence_intervals=0.95
-    ).fit(positions, observed)
+    )
+    result = model.fit(positions, observed)
 
     # Plot
     plt.figure(figsize=(12, 5))
@@ -112,11 +114,12 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     using FastLOESS
 
     # positions and observed are your methylation data
-    result = fit(Loess(;
+    model = Loess(;
         fraction=0.1,
         iterations=3,
         confidence_intervals=0.95
-    ), positions, observed)
+    )
+    result = fit(model, positions, observed)
 
     # Smoothed profile in result.y
     # CI bounds in result.confidence_lower/upper
@@ -127,11 +130,12 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     const fl = require('fastloess');
 
     // positions and observed are your methylation data (Float64Array)
-    const result = new fl.Loess({
+    const model = new fl.Loess({
         fraction: 0.1,
         iterations: 3,
         confidence_intervals: 0.95
-    }).fit(positions, observed);
+    });
+    const result = model.fit(positions, observed);
 
     // Smoothed profile in result.y
     // CI bounds in result.confidence_lower/upper
@@ -142,11 +146,12 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     import { Loess } from 'fastloess-wasm';
 
     // positions and observed are your methylation data (Float64Array)
-    const result = new Loess({
+    const model = new Loess({
         fraction: 0.1,
         iterations: 3,
         confidence_intervals: 0.95
-    }).fit(positions, observed);
+    });
+    const result = model.fit(positions, observed);
 
     // Smoothed profile in result.y
     // CI bounds in result.confidence_lower/upper
@@ -187,10 +192,11 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     true_signal <- background + peak1 + peak2 + peak3
     observed <- rpois(n, true_signal)
 
-    result <- Loess(
+    model <- Loess(
         fraction = 0.05,
         iterations = 5
-    )$fit(positions, observed)
+    )
+    result <- model$fit(positions, observed)
 
     # Find peaks
     threshold <- quantile(result$y, 0.75)
@@ -214,11 +220,12 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     observed = np.random.poisson(true_signal)  # Poisson noise
 
     # Smooth with robustness for sporadic high counts
-    result = fl.Loess(
+    model = fl.Loess(
         fraction=0.05,   # Very local smoothing
         iterations=5,    # Strong robustness
         return_residuals=True
-    ).fit(positions, observed.astype(float))
+    )
+    result = model.fit(positions, observed.astype(float))
 
     # Identify peaks (smoothed signal significantly above background)
     threshold = np.percentile(result.y, 75)
@@ -253,7 +260,8 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     using FastLOESS
 
     # positions and observed are your ChIP-seq data
-    result = fit(Loess(; fraction=0.05, iterations=5), positions, observed)
+    model = Loess(; fraction=0.05, iterations=5)
+    result = fit(model, positions, observed)
 
     # Find peaks above 75th percentile
     threshold = quantile(result.y, 0.75)
@@ -265,10 +273,11 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     ```javascript
     const fl = require('fastloess');
 
-    const result = new fl.Loess({
+    const model = new fl.Loess({
         fraction: 0.05,
         iterations: 5
-    }).fit(positions, observed);
+    });
+    const result = model.fit(positions, observed);
 
     // Identify peaks above threshold
     const smoothed = result.y;
@@ -280,10 +289,11 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     ```javascript
     import { Loess } from 'fastloess-wasm';
 
-    const result = new Loess({
+    const model = new Loess({
         fraction: 0.05,
         iterations: 5
-    }).fit(positions, observed);
+    });
+    const result = model.fit(positions, observed);
 
     // Find peaks
     const smoothed = result.y;

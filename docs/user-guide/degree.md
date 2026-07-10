@@ -29,12 +29,14 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 === "R"
     ```r
-    result <- Loess(degree = 0L, fraction = 0.5)$fit(x, y)
+    model <- Loess(degree = 0L, fraction = 0.5)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(degree="constant", fraction=0.5).fit(x, y)
+    model = fl.Loess(degree="constant", fraction=0.5)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -43,21 +45,25 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
         .degree("constant")
         .fraction(0.5)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; degree="constant", fraction=0.5), x, y)
+    model = Loess(; degree="constant", fraction=0.5)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ degree: 0, fraction: 0.5 }).fit(x, y);
+    const model = new Loess({ degree: 0, fraction: 0.5 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ degree: "constant", fraction: 0.5 }).fit(x, y);
+    const model = new Loess({ degree: "constant", fraction: 0.5 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -81,12 +87,14 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 === "R"
     ```r
-    result <- Loess(degree = 1L, fraction = 0.5)$fit(x, y)
+    model <- Loess(degree = 1L, fraction = 0.5)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(degree="linear", fraction=0.5).fit(x, y)
+    model = fl.Loess(degree="linear", fraction=0.5)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -95,21 +103,25 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
         .degree("linear")
         .fraction(0.5)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; degree="linear", fraction=0.5), x, y)
+    model = Loess(; degree="linear", fraction=0.5)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ degree: 1, fraction: 0.5 }).fit(x, y);
+    const model = new Loess({ degree: 1, fraction: 0.5 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ degree: "linear", fraction: 0.5 }).fit(x, y);
+    const model = new Loess({ degree: "linear", fraction: 0.5 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -133,12 +145,14 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 === "R"
     ```r
-    result <- Loess(degree = 2L, fraction = 0.5)$fit(x, y)
+    model <- Loess(degree = 2L, fraction = 0.5)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(degree="quadratic", fraction=0.5).fit(x, y)
+    model = fl.Loess(degree="quadratic", fraction=0.5)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -147,21 +161,25 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
         .degree("quadratic")
         .fraction(0.5)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; degree="quadratic", fraction=0.5), x, y)
+    model = Loess(; degree="quadratic", fraction=0.5)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ degree: 2, fraction: 0.5 }).fit(x, y);
+    const model = new Loess({ degree: 2, fraction: 0.5 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ degree: "quadratic", fraction: 0.5 }).fit(x, y);
+    const model = new Loess({ degree: "quadratic", fraction: 0.5 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -185,12 +203,14 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 === "R"
     ```r
-    result <- Loess(degree = 3L, fraction = 0.6)$fit(x, y)
+    model <- Loess(degree = 3L, fraction = 0.6)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(degree="cubic", fraction=0.6).fit(x, y)
+    model = fl.Loess(degree="cubic", fraction=0.6)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -199,21 +219,25 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
         .degree("cubic")
         .fraction(0.6)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; degree="cubic", fraction=0.6), x, y)
+    model = Loess(; degree="cubic", fraction=0.6)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ degree: 3, fraction: 0.6 }).fit(x, y);
+    const model = new Loess({ degree: 3, fraction: 0.6 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ degree: "cubic", fraction: 0.6 }).fit(x, y);
+    const model = new Loess({ degree: "cubic", fraction: 0.6 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -237,12 +261,14 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 === "R"
     ```r
-    result <- Loess(degree = 4L, fraction = 0.7)$fit(x, y)
+    model <- Loess(degree = 4L, fraction = 0.7)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(degree="quartic", fraction=0.7).fit(x, y)
+    model = fl.Loess(degree="quartic", fraction=0.7)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -251,21 +277,25 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
         .degree("quartic")
         .fraction(0.7)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; degree="quartic", fraction=0.7), x, y)
+    model = Loess(; degree="quartic", fraction=0.7)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ degree: 4, fraction: 0.7 }).fit(x, y);
+    const model = new Loess({ degree: 4, fraction: 0.7 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ degree: "quartic", fraction: 0.7 }).fit(x, y);
+    const model = new Loess({ degree: "quartic", fraction: 0.7 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"

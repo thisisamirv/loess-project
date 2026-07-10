@@ -261,7 +261,8 @@ const x = new Float64Array([1, 2, 3, 4, 5]);
 const y = new Float64Array([2.1, 4.0, 6.2, 8.0, 10.1]);
 
 // Fit data
-const result = new Loess({ fraction: 0.5 }).fit(x, y);
+const model = new Loess({ fraction: 0.5 });
+const result = model.fit(x, y);
 
 console.log("Smoothed Y:", result.y);
 ```

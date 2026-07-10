@@ -62,7 +62,8 @@ const x = Array.from({ length: 100 }, (_, i) => i * 0.1);
 const y = x.map(xi => Math.sin(xi) + Math.random() * 0.2);
 
 // Basic smoothing
-const result = new Loess({ fraction: 0.3 }).fit(x, y);
+const model = new Loess({ fraction: 0.3 });
+const result = model.fit(x, y);
 console.log('Smoothed values:', result.y);
 
 // With options

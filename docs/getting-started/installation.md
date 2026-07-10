@@ -191,7 +191,8 @@ Install the LOESS library for your preferred language.
     x <- c(1, 2, 3)
     y <- c(2, 4, 6)
     
-    result <- Loess()$fit(x, y)
+    model <- Loess()
+    result <- model$fit(x, y)
     print("Installed successfully!")
     ```
 
@@ -204,7 +205,8 @@ Install the LOESS library for your preferred language.
     x = np.array([1.0, 2.0, 3.0])
     y = np.array([2.0, 4.0, 6.0])
     
-    result = fl.Loess().fit(x, y)
+    model = fl.Loess()
+    result = model.fit(x, y)
     print("Installed successfully!")
     ```
 
@@ -233,7 +235,8 @@ Install the LOESS library for your preferred language.
     x = [1.0, 2.0, 3.0]
     y = [2.0, 4.0, 6.0]
     
-    result = fit(Loess(), x, y)
+    model = Loess()
+    result = fit(model, x, y)
     println("Installed successfully!")
     ```
 
@@ -245,7 +248,8 @@ Install the LOESS library for your preferred language.
     const x = new Float64Array([1.0, 2.0, 3.0]);
     const y = new Float64Array([2.0, 4.0, 6.0]);
     
-    const result = new fl.Loess({}).fit(x, y);
+    const model = new fl.Loess({});
+    const result = model.fit(x, y);
     console.log("Installed successfully!");
     ```
 
@@ -257,7 +261,8 @@ Install the LOESS library for your preferred language.
     async function verify() {
         const x = new Float64Array([1.0, 2.0, 3.0]);
         const y = new Float64Array([2.0, 4.0, 6.0]);
-        const result = new Loess({}).fit(x, y);
+        const model = new Loess({});
+        const result = model.fit(x, y);
         console.log("Installed successfully!");
     }
     verify();

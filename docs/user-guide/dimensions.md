@@ -28,7 +28,8 @@ Single predictor. No configuration required.
     ```r
     x <- seq(0, 10, length.out = 200)
     y <- sin(x) + rnorm(200, sd = 0.2)
-    result <- Loess(fraction = 0.3)$fit(x, y)
+    model <- Loess(fraction = 0.3)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
@@ -38,7 +39,8 @@ Single predictor. No configuration required.
 
     x = np.linspace(0, 10, 200)
     y = np.sin(x) + np.random.normal(0, 0.2, 200)
-    result = fl.Loess(fraction=0.3).fit(x, y)
+    model = fl.Loess(fraction=0.3)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -51,17 +53,20 @@ Single predictor. No configuration required.
 
 === "Julia"
     ```julia
-    result = fit(Loess(; fraction=0.3), x, y)
+    model = Loess(; fraction=0.3)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ fraction: 0.3 }).fit(x, y);
+    const model = new Loess({ fraction: 0.3 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ fraction: 0.3 }).fit(x, y);
+    const model = new Loess({ fraction: 0.3 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -80,7 +85,8 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     ```r
     # n × 2 predictor matrix
     coords <- cbind(lat, lon)
-    result <- Loess(dimensions = 2L, fraction = 0.3)$fit(coords, z)
+    model <- Loess(dimensions = 2L, fraction = 0.3)
+    result <- model$fit(coords, z)
     ```
 
 === "Python"
@@ -90,7 +96,8 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
 
     # x is an (n, 2) array flattened to 1D (Python binding requires flat input)
     x2d = np.column_stack([lat, lon]).ravel()
-    result = fl.Loess(dimensions=2, fraction=0.3).fit(x2d, z)
+    model = fl.Loess(dimensions=2, fraction=0.3)
+    result = model.fit(x2d, z)
     ```
 
 === "Rust"
@@ -106,18 +113,21 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     ```julia
     # x is an (n, 2) matrix of predictors
     x2d = hcat(lat, lon)
-    result = fit(Loess(; dimensions=2, fraction=0.3), x2d, z)
+    model = Loess(; dimensions=2, fraction=0.3)
+    result = fit(model, x2d, z)
     ```
 
 === "Node.js"
     ```javascript
     // x is a flat Float64Array of length n*2, row-major
-    const result = new Loess({ dimensions: 2, fraction: 0.3 }).fit(x2d, z);
+    const model = new Loess({ dimensions: 2, fraction: 0.3 });
+    const result = model.fit(x2d, z);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ dimensions: 2, fraction: 0.3 }).fit(x2d, z);
+    const model = new Loess({ dimensions: 2, fraction: 0.3 });
+    const result = model.fit(x2d, z);
     ```
 
 === "C++"
@@ -139,13 +149,15 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 === "R"
     ```r
     predictors <- cbind(x1, x2, x3)   # n × 3
-    result <- Loess(dimensions = 3L, fraction = 0.5)$fit(predictors, y)
+    model <- Loess(dimensions = 3L, fraction = 0.5)
+    result <- model$fit(predictors, y)
     ```
 
 === "Python"
     ```python
     x3d = np.column_stack([x1, x2, x3]).ravel()   # (n*3,) flat
-    result = fl.Loess(dimensions=3, fraction=0.5).fit(x3d, y)
+    model = fl.Loess(dimensions=3, fraction=0.5)
+    result = model.fit(x3d, y)
     ```
 
 === "Rust"
@@ -161,17 +173,20 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
     ```julia
     # x is an (n, 3) matrix of predictors
     x3d = hcat(x1, x2, x3)
-    result = fit(Loess(; dimensions=3, fraction=0.5), x3d, y)
+    model = Loess(; dimensions=3, fraction=0.5)
+    result = fit(model, x3d, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ dimensions: 3, fraction: 0.5 }).fit(x3d, y);
+    const model = new Loess({ dimensions: 3, fraction: 0.5 });
+    const result = model.fit(x3d, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ dimensions: 3, fraction: 0.5 }).fit(x3d, y);
+    const model = new Loess({ dimensions: 3, fraction: 0.5 });
+    const result = model.fit(x3d, y);
     ```
 
 === "C++"

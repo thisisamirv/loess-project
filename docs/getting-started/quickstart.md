@@ -17,7 +17,8 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    result <- Loess(fraction = 0.3, iterations = 3)$fit(x, y)
+    model <- Loess(fraction = 0.3, iterations = 3)
+    result <- model$fit(x, y)
 
     cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
                 result$y[1], sin(x[1])))
@@ -34,7 +35,8 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     x = np.linspace(0, 2 * np.pi, 100)
     y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    result = fl.Loess(fraction=0.3, iterations=3).fit(x, y)
+    model = fl.Loess(fraction=0.3, iterations=3)
+    result = model.fit(x, y)
 
     print(f"First smoothed value: {result.y[0]:.4f}  (true: {np.sin(x[0]):.4f})")
     ```
@@ -74,7 +76,8 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     rng = MersenneTwister(42)
     y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-    result = fit(Loess(; fraction=0.3, iterations=3), x, y)
+    model = Loess(; fraction=0.3, iterations=3)
+    result = fit(model, x, y)
 
     @printf "First smoothed: %.4f  (true: %.4f)\n" result.y[1] sin(x[1])
     ```
@@ -89,7 +92,8 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    const result = new Loess({ fraction: 0.3, iterations: 3 }).fit(x, y);
+    const model = new Loess({ fraction: 0.3, iterations: 3 });
+    const result = model.fit(x, y);
 
     console.log(`First smoothed: ${result.y[0].toFixed(4)}  (true: ${Math.sin(x[0]).toFixed(4)})`);
     ```
@@ -103,7 +107,8 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-    const result = new Loess({ fraction: 0.3, iterations: 3 }).fit(x, y);
+    const model = new Loess({ fraction: 0.3, iterations: 3 });
+    const result = model.fit(x, y);
 
     console.log(`First smoothed: ${result.y[0].toFixed(4)}`);
     ```
@@ -158,13 +163,14 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Python"
 
     ```python
-    result = fl.Loess(
+    model = fl.Loess(
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=True
-    ).fit(x, y)
+    )
+    result = model.fit(x, y)
 
     print("Smoothed:", result.y)
     print("CI Lower:", result.confidence_lower)
@@ -196,13 +202,14 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
 === "Julia"
 
     ```julia
-    result = fit(Loess(;
+    model = Loess(;
         fraction=0.5,
         iterations=3,
         confidence_intervals=0.95,
         prediction_intervals=0.95,
         return_diagnostics=true
-    ), x, y)
+    )
+    result = fit(model, x, y)
 
     println("Smoothed: ", result.y)
     println("CI Lower: ", result.confidence_lower)
@@ -215,13 +222,14 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     ```javascript
     const { Loess } = require('fastloess');
 
-    const result = new Loess({
+    const model = new Loess({
         fraction: 0.5,
         iterations: 3,
         confidence_intervals: 0.95,
         prediction_intervals: 0.95,
         return_diagnostics: true
-    }).fit(x, y);
+    });
+    const result = model.fit(x, y);
 
     console.log("Smoothed:", result.y);
     console.log("CI Lower:", result.confidence_lower);
@@ -239,7 +247,8 @@ Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example
     const y = new Float64Array([2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7]);
 
     // Smooth the data
-    const result = new Loess({ fraction: 0.5, iterations: 3 }).fit(x, y);
+    const model = new Loess({ fraction: 0.5, iterations: 3 });
+    const result = model.fit(x, y);
 
     console.log("Smoothed values:", result.y);
     ```
@@ -275,12 +284,13 @@ LOESS can robustly handle outliers through iterative reweighting:
     x_out <- seq(1, 6)
     y_with_outlier <- c(2, 4, 6, 50, 10, 12)
 
-    result <- Loess(
+    model <- Loess(
         fraction = 0.5,
         iterations = 5,
         robustness_method = "bisquare",
         return_robustness_weights = TRUE
-    )$fit(x_out, y_with_outlier)
+    )
+    result <- model$fit(x_out, y_with_outlier)
 
     # Check downweighted points
     weights <- result$robustness_weights
@@ -297,12 +307,13 @@ LOESS can robustly handle outliers through iterative reweighting:
     x_out = np.linspace(1, 6, 6)
     y_with_outlier = np.array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0])
 
-    result = fl.Loess(
+    model = fl.Loess(
         fraction=0.5,
         iterations=5,
         robustness_method="bisquare",
         return_robustness_weights=True
-    ).fit(x_out, y_with_outlier)
+    )
+    result = model.fit(x_out, y_with_outlier)
 
     # Check which points were downweighted
     for i, w in enumerate(result.robustness_weights):
@@ -342,12 +353,13 @@ LOESS can robustly handle outliers through iterative reweighting:
     x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     y_with_outlier = [2.0, 4.0, 6.0, 50.0, 10.0, 12.0]
 
-    result = fit(Loess(;
+    model = Loess(;
         fraction=0.5,
         iterations=5,
         robustness_method="bisquare",
         return_robustness_weights=true
-    ), x, y_with_outlier)
+    )
+    result = fit(model, x, y_with_outlier)
 
     # Check which points were downweighted
     for (i, w) in enumerate(result.robustness_weights)
@@ -364,12 +376,13 @@ LOESS can robustly handle outliers through iterative reweighting:
 
     const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
 
-    const result = new fl.Loess({
+    const model = new fl.Loess({
         fraction: 0.5,
         iterations: 5,
         robustness_method: "bisquare",
         return_robustness_weights: true
-    }).fit(x, yWithOutlier);
+    });
+    const result = model.fit(x, yWithOutlier);
 
     // Outliers will have low robustness weights
     result.robustness_weights.forEach((w, i) => {
@@ -387,12 +400,13 @@ LOESS can robustly handle outliers through iterative reweighting:
     // Data with an outlier at position 3
     const yWithOutlier = new Float64Array([2.0, 4.0, 6.0, 50.0, 10.0, 12.0]);
 
-    const result = new Loess({
+    const model = new Loess({
         fraction: 0.5,
         iterations: 5,
         robustness_method: "bisquare",
         return_robustness_weights: true
-    }).fit(x, yWithOutlier);
+    });
+    const result = model.fit(x, yWithOutlier);
 
     // Outliers will have low robustness weights
     result.robustness_weights.forEach((w, i) => {

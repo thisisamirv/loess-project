@@ -63,7 +63,8 @@ x = collect(0.0:0.1:10.0)
 y = sin.(x) .+ 0.3 .* randn(length(x))
 
 # Basic smoothing
-result = fit(Loess(fraction=0.3), x, y)
+model = Loess(fraction=0.3)
+result = fit(model, x, y)
 println("Smoothed values: ", result.y[1:5])
 
 # With options

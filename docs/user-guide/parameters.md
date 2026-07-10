@@ -85,12 +85,14 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 === "R"
     ```r
-    result <- Loess(fraction = 0.3)$fit(x, y)
+    model <- Loess(fraction = 0.3)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(fraction=0.3).fit(x, y)
+    model = fl.Loess(fraction=0.3)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -98,21 +100,25 @@ The proportion of data used for each local fit. **Most important parameter.**
     let model = Loess::new()
         .fraction(0.3)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; fraction=0.3), x, y)
+    model = Loess(; fraction=0.3)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ fraction: 0.3 }).fit(x, y);
+    const model = new Loess({ fraction: 0.3 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ fraction: 0.3 }).fit(x, y);
+    const model = new Loess({ fraction: 0.3 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -136,12 +142,14 @@ Number of robustness iterations for outlier resistance.
 
 === "R"
     ```r
-    result <- Loess(iterations = 5)$fit(x, y)
+    model <- Loess(iterations = 5)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(iterations=5).fit(x, y)
+    model = fl.Loess(iterations=5)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -149,21 +157,25 @@ Number of robustness iterations for outlier resistance.
     let model = Loess::new()
         .iterations(5)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; iterations=5), x, y)
+    model = Loess(; iterations=5)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 5 }).fit(x, y);
+    const model = new Loess({ iterations: 5 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 5 }).fit(x, y);
+    const model = new Loess({ iterations: 5 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -207,12 +219,14 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
 === "R"
     ```r
-    result <- Loess(surface_mode = "direct")$fit(x, y)
+    model <- Loess(surface_mode = "direct")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(surface_mode="direct").fit(x, y)
+    model = fl.Loess(surface_mode="direct")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -220,21 +234,25 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
     let model = Loess::new()
         .surface_mode("direct")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; surface_mode="direct"), x, y)
+    model = Loess(; surface_mode="direct")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ surface_mode: "direct" }).fit(x, y);
+    const model = new Loess({ surface_mode: "direct" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ surface_mode: "direct" }).fit(x, y);
+    const model = new Loess({ surface_mode: "direct" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -261,12 +279,14 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
 
 === "R"
     ```r
-    result <- Loess(cell = 0.05)$fit(x, y)
+    model <- Loess(cell = 0.05)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(cell=0.05).fit(x, y)
+    model = fl.Loess(cell=0.05)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -276,17 +296,20 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
 
 === "Julia"
     ```julia
-    result = fit(Loess(; cell=0.05), x, y)
+    model = Loess(; cell=0.05)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ cell: 0.05 }).fit(x, y);
+    const model = new Loess({ cell: 0.05 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ cell: 0.05 }).fit(x, y);
+    const model = new Loess({ cell: 0.05 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -306,12 +329,14 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 
 === "R"
     ```r
-    result <- Loess(interpolation_vertices = 50L)$fit(x, y)
+    model <- Loess(interpolation_vertices = 50L)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(interpolation_vertices=50).fit(x, y)
+    model = fl.Loess(interpolation_vertices=50)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -321,17 +346,20 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 
 === "Julia"
     ```julia
-    result = fit(Loess(; interpolation_vertices=50), x, y)
+    model = Loess(; interpolation_vertices=50)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ interpolation_vertices: 50 }).fit(x, y);
+    const model = new Loess({ interpolation_vertices: 50 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ interpolation_vertices: 50 }).fit(x, y);
+    const model = new Loess({ interpolation_vertices: 50 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -371,20 +399,22 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 
 === "R"
     ```r
-    result <- Loess(
+    model <- Loess(
         dimensions = 2L,
         distance_metric = "weighted",
         weighted_metric_weights = c(2.0, 0.5)  # x1 twice as important
-    )$fit(x2d, y)
+    )
+    result <- model$fit(x2d, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(
+    model = fl.Loess(
         dimensions=2,
         distance_metric="weighted",
         weighted_metric_weights=[2.0, 0.5]
-    ).fit(x2d, y)
+    )
+    result = model.fit(x2d, y)
     ```
 
 === "Rust"
@@ -394,33 +424,37 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
         .distance_metric("weighted")
         .weighted_metric_weights(vec![2.0, 0.5])
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(;
+    model = Loess(;
         dimensions=2,
         distance_metric="weighted",
         weighted_metric_weights=[2.0, 0.5]
-    ), x2d, y)
+    )
+    result = fit(model, x2d, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({
+    const model = new Loess({
         dimensions: 2,
         distance_metric: "weighted",
         weighted_metric_weights: [2.0, 0.5]
-    }).fit(x2d, y);
+    });
+    const result = model.fit(x2d, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({
+    const model = new Loess({
         dimensions: 2,
         distance_metric: "weighted",
         weighted_metric_weights: [2.0, 0.5]
-    }).fit(x2d, y);
+    });
+    const result = model.fit(x2d, y);
     ```
 
 === "C++"
@@ -453,12 +487,14 @@ See [Weight Functions](kernels.md) for detailed comparison.
 
 === "R"
     ```r
-    result <- Loess(weight_function = "epanechnikov")$fit(x, y)
+    model <- Loess(weight_function = "epanechnikov")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(weight_function="epanechnikov").fit(x, y)
+    model = fl.Loess(weight_function="epanechnikov")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -466,21 +502,25 @@ See [Weight Functions](kernels.md) for detailed comparison.
     let model = Loess::new()
         .weight_function("epanechnikov")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; weight_function="epanechnikov"), x, y)
+    model = Loess(; weight_function="epanechnikov")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ weight_function: "epanechnikov" }).fit(x, y);
+    const model = new Loess({ weight_function: "epanechnikov" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ weight_function: "epanechnikov" }).fit(x, y);
+    const model = new Loess({ weight_function: "epanechnikov" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -505,12 +545,14 @@ See [Robustness](robustness.md) for detailed comparison.
 
 === "R"
     ```r
-    result <- Loess(robustness_method = "talwar")$fit(x, y)
+    model <- Loess(robustness_method = "talwar")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(robustness_method="talwar").fit(x, y)
+    model = fl.Loess(robustness_method="talwar")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -518,21 +560,25 @@ See [Robustness](robustness.md) for detailed comparison.
     let model = Loess::new()
         .robustness_method("talwar")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; robustness_method="talwar"), x, y)
+    model = Loess(; robustness_method="talwar")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ robustness_method: "talwar" }).fit(x, y);
+    const model = new Loess({ robustness_method: "talwar" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ robustness_method: "talwar" }).fit(x, y);
+    const model = new Loess({ robustness_method: "talwar" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -560,12 +606,14 @@ For example:
 
 === "R"
     ```r
-    result <- Loess(boundary_policy = "reflect")$fit(x, y)
+    model <- Loess(boundary_policy = "reflect")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(boundary_policy="reflect").fit(x, y)
+    model = fl.Loess(boundary_policy="reflect")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -573,21 +621,25 @@ For example:
     let model = Loess::new()
         .boundary_policy("reflect")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; boundary_policy="reflect"), x, y)
+    model = Loess(; boundary_policy="reflect")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ boundary_policy: "reflect" }).fit(x, y);
+    const model = new Loess({ boundary_policy: "reflect" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ boundary_policy: "reflect" }).fit(x, y);
+    const model = new Loess({ boundary_policy: "reflect" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -610,12 +662,14 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 
 === "R"
     ```r
-    result <- Loess(degree = "quadratic", boundary_degree_fallback = TRUE)$fit(x, y)
+    model <- Loess(degree = "quadratic", boundary_degree_fallback = TRUE)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(degree="quadratic", boundary_degree_fallback=True).fit(x, y)
+    model = fl.Loess(degree="quadratic", boundary_degree_fallback=True)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -624,21 +678,25 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
         .degree("quadratic")
         .boundary_degree_fallback(true)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; degree="quadratic", boundary_degree_fallback=true), x, y)
+    model = Loess(; degree="quadratic", boundary_degree_fallback=true)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ degree: "quadratic", boundary_degree_fallback: true }).fit(x, y);
+    const model = new Loess({ degree: "quadratic", boundary_degree_fallback: true });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ degree: "quadratic", boundary_degree_fallback: true }).fit(x, y);
+    const model = new Loess({ degree: "quadratic", boundary_degree_fallback: true });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -665,12 +723,14 @@ For example:
 
 === "R"
     ```r
-    result <- Loess(scaling_method = "mad")$fit(x, y)
+    model <- Loess(scaling_method = "mad")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(scaling_method="mad").fit(x, y)
+    model = fl.Loess(scaling_method="mad")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -678,16 +738,19 @@ For example:
     let model = Loess::new()
         .scaling_method("mad")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; scaling_method="mad"), x, y)
+    model = Loess(; scaling_method="mad")
+    result = fit(model, x, y)
     ```
 
 === "Node.js / WebAssembly"
     ```javascript
-    const result = new Loess({ scaling_method: "mad" }).fit(x, y);
+    const model = new Loess({ scaling_method: "mad" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -714,12 +777,14 @@ For example:
 
 === "R"
     ```r
-    result <- Loess(zero_weight_fallback = "use_local_mean")$fit(x, y)
+    model <- Loess(zero_weight_fallback = "use_local_mean")
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(zero_weight_fallback="use_local_mean").fit(x, y)
+    model = fl.Loess(zero_weight_fallback="use_local_mean")
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -727,21 +792,25 @@ For example:
     let model = Loess::new()
         .zero_weight_fallback("use_local_mean")
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; zero_weight_fallback="use_local_mean"), x, y)
+    model = Loess(; zero_weight_fallback="use_local_mean")
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ zero_weight_fallback: "use_local_mean" }).fit(x, y);
+    const model = new Loess({ zero_weight_fallback: "use_local_mean" });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ zero_weight_fallback: "use_local_mean" }).fit(x, y);
+    const model = new Loess({ zero_weight_fallback: "use_local_mean" });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -758,12 +827,14 @@ Enable early stopping when robustness weights stabilize.
 
 === "R"
     ```r
-    result <- Loess(iterations = 20, auto_converge = 1e-6)$fit(x, y)
+    model <- Loess(iterations = 20, auto_converge = 1e-6)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(iterations=20, auto_converge=1e-6).fit(x, y)
+    model = fl.Loess(iterations=20, auto_converge=1e-6)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -772,21 +843,25 @@ Enable early stopping when robustness weights stabilize.
         .iterations(20)           // Maximum
         .auto_converge(1e-6)      // Stop when change < 1e-6
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; iterations=20, auto_converge=1e-6), x, y)
+    model = Loess(; iterations=20, auto_converge=1e-6)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 20, auto_converge: 1e-6 }).fit(x, y);
+    const model = new Loess({ iterations: 20, auto_converge: 1e-6 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 20, auto_converge: 1e-6 }).fit(x, y);
+    const model = new Loess({ iterations: 20, auto_converge: 1e-6 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -812,12 +887,14 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
 
 === "R"
     ```r
-    result <- Loess(parallel = FALSE)$fit(x, y)
+    model <- Loess(parallel = FALSE)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(parallel=False).fit(x, y)
+    model = fl.Loess(parallel=False)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -825,21 +902,25 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
     let model = Loess::new()
         .parallel(false)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; parallel=false), x, y)
+    model = Loess(; parallel=false)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ parallel: false }).fit(x, y);
+    const model = new Loess({ parallel: false });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ parallel: false }).fit(x, y);
+    const model = new Loess({ parallel: false });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -877,7 +958,8 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     # Downweight an outlier at index 5
     weights <- rep(1, length(y))
     weights[5] <- 0
-    result <- Loess()$fit(x, y, custom_weights = weights)
+    model <- Loess()
+    result <- model$fit(x, y, custom_weights = weights)
     ```
 
 === "Python"
@@ -885,7 +967,8 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     import numpy as np
     weights = np.ones(len(y))
     weights[4] = 0  # Exclude 5th point
-    result = fl.Loess().fit(x, y, custom_weights=weights)
+    model = fl.Loess()
+    result = model.fit(x, y, custom_weights=weights)
     ```
 
 === "Rust"
@@ -902,21 +985,24 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     ```julia
     weights = ones(length(y))
     weights[5] = 0.0  # Exclude 5th point
-    result = fit(Loess(), x, y; custom_weights=weights)
+    model = Loess()
+    result = fit(model, x, y; custom_weights=weights)
     ```
 
 === "Node.js"
     ```javascript
     const weights = new Array(y.length).fill(1);
     weights[4] = 0; // Exclude 5th point
-    const result = new Loess({ custom_weights: weights }).fit(x, y);
+    const model = new Loess({ custom_weights: weights });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
     const weights = new Array(y.length).fill(1);
     weights[4] = 0; // Exclude 5th point
-    const result = new Loess({ custom_weights: weights }).fit(x, y);
+    const model = new Loess({ custom_weights: weights });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -937,13 +1023,15 @@ Include residuals (`y - smoothed`) in the output.
 
 === "R"
     ```r
-    result <- Loess(return_residuals = TRUE)$fit(x, y)
+    model <- Loess(return_residuals = TRUE)
+    result <- model$fit(x, y)
     print(result$residuals)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(return_residuals=True).fit(x, y)
+    model = fl.Loess(return_residuals=True)
+    result = model.fit(x, y)
     print(result.residuals)
     ```
 
@@ -961,19 +1049,22 @@ Include residuals (`y - smoothed`) in the output.
 
 === "Julia"
     ```julia
-    result = fit(Loess(; return_residuals=true), x, y)
+    model = Loess(; return_residuals=true)
+    result = fit(model, x, y)
     println(result.residuals)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ return_residuals: true }).fit(x, y);
+    const model = new Loess({ return_residuals: true });
+    const result = model.fit(x, y);
     console.log(result.residuals);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ return_residuals: true }).fit(x, y);
+    const model = new Loess({ return_residuals: true });
+    const result = model.fit(x, y);
     console.log(result.residuals);
     ```
 
@@ -1002,13 +1093,15 @@ Include fit quality metrics (Batch and Streaming only).
 
 === "R"
     ```r
-    result <- Loess(return_diagnostics = TRUE)$fit(x, y)
+    model <- Loess(return_diagnostics = TRUE)
+    result <- model$fit(x, y)
     cat(sprintf("R²: %.4f\n", result$diagnostics$r_squared))
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(return_diagnostics=True).fit(x, y)
+    model = fl.Loess(return_diagnostics=True)
+    result = model.fit(x, y)
     print(f"R²: {result.diagnostics.r_squared:.4f}")
     ```
 
@@ -1027,19 +1120,22 @@ Include fit quality metrics (Batch and Streaming only).
 
 === "Julia"
     ```julia
-    result = fit(Loess(; return_diagnostics=true), x, y)
+    model = Loess(; return_diagnostics=true)
+    result = fit(model, x, y)
     println("R²: ", result.diagnostics.r_squared)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ return_diagnostics: true }).fit(x, y);
+    const model = new Loess({ return_diagnostics: true });
+    const result = model.fit(x, y);
     console.log("R²:", result.diagnostics.r_squared);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ return_diagnostics: true }).fit(x, y);
+    const model = new Loess({ return_diagnostics: true });
+    const result = model.fit(x, y);
     console.log("R²:", result.diagnostics?.r_squared);
     ```
 
@@ -1059,13 +1155,15 @@ Include final robustness weights (useful for outlier detection).
 
 === "R"
     ```r
-    result <- Loess(iterations = 3, return_robustness_weights = TRUE)$fit(x, y)
+    model <- Loess(iterations = 3, return_robustness_weights = TRUE)
+    result <- model$fit(x, y)
     outliers <- which(result$robustness_weights < 0.5)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(iterations=3, return_robustness_weights=True).fit(x, y)
+    model = fl.Loess(iterations=3, return_robustness_weights=True)
+    result = model.fit(x, y)
     outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
     ```
 
@@ -1082,19 +1180,22 @@ Include final robustness weights (useful for outlier detection).
 
 === "Julia"
     ```julia
-    result = fit(Loess(; iterations=3, return_robustness_weights=true), x, y)
+    model = Loess(; iterations=3, return_robustness_weights=true)
+    result = fit(model, x, y)
     # Points with result.robustness_weights < 0.5 are likely outliers
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ iterations: 3, return_robustness_weights: true }).fit(x, y);
+    const model = new Loess({ iterations: 3, return_robustness_weights: true });
+    const result = model.fit(x, y);
     // result.robustness_weights contains outlier weights
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ iterations: 3, return_robustness_weights: true }).fit(x, y);
+    const model = new Loess({ iterations: 3, return_robustness_weights: true });
+    const result = model.fit(x, y);
     // result.robustness_weights contains outlier weights
     ```
 
@@ -1115,12 +1216,14 @@ See [Intervals](intervals.md) for detailed usage.
 
 === "R"
     ```r
-    result <- Loess(confidence_intervals = 0.95, prediction_intervals = 0.95)$fit(x, y)
+    model <- Loess(confidence_intervals = 0.95, prediction_intervals = 0.95)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(confidence_intervals=0.95, prediction_intervals=0.95).fit(x, y)
+    model = fl.Loess(confidence_intervals=0.95, prediction_intervals=0.95)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -1129,21 +1232,25 @@ See [Intervals](intervals.md) for detailed usage.
         .confidence_intervals(0.95)
         .prediction_intervals(0.95)
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; confidence_intervals=0.95, prediction_intervals=0.95), x, y)
+    model = Loess(; confidence_intervals=0.95, prediction_intervals=0.95)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const result = new Loess({ confidence_intervals: 0.95, prediction_intervals: 0.95 }).fit(x, y);
+    const model = new Loess({ confidence_intervals: 0.95, prediction_intervals: 0.95 });
+    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
-    const result = new Loess({ confidence_intervals: 0.95, prediction_intervals: 0.95 }).fit(x, y);
+    const model = new Loess({ confidence_intervals: 0.95, prediction_intervals: 0.95 });
+    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -1167,12 +1274,14 @@ Selection strategy for automated parameter tuning.
 
 === "R"
     ```r
-    result <- Loess(cv_method = "kfold", cv_k = 5)$fit(x, y)
+    model <- Loess(cv_method = "kfold", cv_k = 5)
+    result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
-    result = fl.Loess(cv_method="kfold", cv_k=5).fit(x, y)
+    model = fl.Loess(cv_method="kfold", cv_k=5)
+    result = model.fit(x, y)
     ```
 
 === "Rust"
@@ -1182,11 +1291,13 @@ Selection strategy for automated parameter tuning.
         .cv_k(5)
         .cv_fractions(vec![0.1, 0.3, 0.5])
         .build()?;
+    let result = model.fit(&x, &y)?;
     ```
 
 === "Julia"
     ```julia
-    result = fit(Loess(; cv_method="kfold", cv_k=5), x, y)
+    model = Loess(; cv_method="kfold", cv_k=5)
+    result = fit(model, x, y)
     ```
 
 === "Node.js"
