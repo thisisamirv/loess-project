@@ -179,8 +179,8 @@ fn test_string_merge_strategy() {
 
 #[test]
 fn test_string_update_mode() {
-    let x = vec![1.0_f64, 2.0, 3.0, 4.0, 5.0];
-    let y = vec![2.0_f64, 4.0, 6.0, 8.0, 10.0];
+    let x = [1.0_f64, 2.0, 3.0, 4.0, 5.0];
+    let y = [2.0_f64, 4.0, 6.0, 8.0, 10.0];
     let mut model = OnlineLoess::new().update_mode("full").build().unwrap();
     for (xi, yi) in x.iter().zip(y.iter()) {
         model.add_point(&[*xi], *yi).unwrap();

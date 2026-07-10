@@ -12,8 +12,6 @@
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
-use alloc::string::ToString;
-#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;

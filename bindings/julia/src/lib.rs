@@ -180,9 +180,10 @@ impl Default for JlLoessResult {
 
 // Create an error result with the given message.
 fn error_result(msg: &str) -> JlLoessResult {
-    let mut result = JlLoessResult::default();
-    result.error = shared_parse::into_raw_error_c_string(msg);
-    result
+    JlLoessResult {
+        error: shared_parse::into_raw_error_c_string(msg),
+        ..Default::default()
+    }
 }
 
 fn error_result_from(err: shared_parse::BindingError) -> JlLoessResult {

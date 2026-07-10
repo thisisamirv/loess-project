@@ -8,10 +8,6 @@
 //! Robust scale estimation: MAD (default), MAR, and Mean methods.
 //! Quickselect-based median for O(n) performance.
 
-// Feature-gated imports
-#[cfg(not(feature = "std"))]
-use alloc::string::ToString;
-
 // External dependencies
 use core::cmp::Ordering::Equal;
 use num_traits::Float;

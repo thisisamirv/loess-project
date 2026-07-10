@@ -72,6 +72,16 @@ pub fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, BindingErr
     result.map_err(|e| BindingError::runtime(e.to_string()))
 }
 
+/// Categorize a [`LoessError`]: only [`LoessError::RuntimeError`] maps to
+/// [`BindingErrorCategory::Runtime`]; every other variant is an invalid-argument
+/// error that originates from bad user input.
+pub fn map_loess_result<T>(result: Result<T, LoessError>) -> Result<T, BindingError> {
+    result.map_err(|err| match &err {
+        LoessError::RuntimeError(_) => BindingError::runtime(err.to_string()),
+        _ => BindingError::invalid_arg(err.to_string()),
+    })
+}
+
 pub const PANIC_FALLBACK_MESSAGE: &str = "Panic in Rust library";
 pub const CONFIG_POINTER_IS_NULL: &str = "Config pointer is null";
 pub const MODEL_POINTER_IS_NULL: &str = "Model pointer is null";
@@ -114,7 +124,7 @@ pub fn panic_fallback_message() -> &'static str {
 /// # Safety
 /// If `s` is non-null it must point to a valid null-terminated C string that
 /// lives at least as long as the returned `&str`.
-pub unsafe fn parse_c_str_or_default<'a>(s: *const c_char, default: &'a str) -> &'a str {
+pub unsafe fn parse_c_str_or_default(s: *const c_char, default: &str) -> &str {
     if s.is_null() {
         return default;
     }
@@ -148,9 +158,11 @@ pub fn dims_mismatch_message(x_len: usize, y_len: usize, dimensions: usize) -> S
     )
 }
 
-// Returns a non-null raw pointer as a slice, or None if the pointer is null or len is 0.
-// Safety: if ptr is non-null, it must point to at least `len` valid, initialized elements of
-// type T that remain live for at least as long as the returned slice is used.
+/// Returns a non-null raw pointer as a slice, or `None` if the pointer is null or `len` is 0.
+///
+/// # Safety
+/// `ptr` must point to at least `len` valid, initialized elements of type `T` that remain
+/// live for at least as long as the returned slice is used.
 pub unsafe fn option_slice_from_ptr<'a, T>(ptr: *const T, len: usize) -> Option<&'a [T]> {
     if !ptr.is_null() && len > 0 {
         Some(unsafe { std::slice::from_raw_parts(ptr, len) })
@@ -159,8 +171,10 @@ pub unsafe fn option_slice_from_ptr<'a, T>(ptr: *const T, len: usize) -> Option<
     }
 }
 
-// Like option_slice_from_ptr but clones the slice into a Vec.
-// Safety: same preconditions as option_slice_from_ptr.
+/// Like [`option_slice_from_ptr`] but clones the slice into a `Vec`.
+///
+/// # Safety
+/// Same preconditions as [`option_slice_from_ptr`].
 pub unsafe fn option_vec_from_ptr<T: Clone>(ptr: *const T, len: usize) -> Option<Vec<T>> {
     unsafe { option_slice_from_ptr(ptr, len) }.map(<[T]>::to_vec)
 }
@@ -339,13 +353,13 @@ pub fn extract_ffi_loess_result(result: LoessResult<f64>) -> FfiLoessResult {
     }
 }
 
-// Free a heap-allocated f64 buffer produced by vec_to_raw_ptr / opt_vec_to_raw_ptr.
-// No-op when ptr is null. Both functions allocate via into_boxed_slice, so the
-// correct counterpart is Box::from_raw(slice_from_raw_parts_mut).
-//
-// # Safety
-// ptr must either be null or have been produced by vec_to_raw_ptr /
-// opt_vec_to_raw_ptr with the same `len`.
+/// Free a heap-allocated `f64` buffer produced by `vec_to_raw_ptr` / `opt_vec_to_raw_ptr`.
+/// No-op when `ptr` is null. Both functions allocate via `into_boxed_slice`, so the
+/// correct counterpart is `Box::from_raw(slice_from_raw_parts_mut)`.
+///
+/// # Safety
+/// `ptr` must either be null or have been produced by `vec_to_raw_ptr` /
+/// `opt_vec_to_raw_ptr` with the same `len`.
 pub unsafe fn free_raw_f64_buffer(ptr: *mut f64, len: usize) {
     if !ptr.is_null() {
         unsafe {
@@ -354,10 +368,10 @@ pub unsafe fn free_raw_f64_buffer(ptr: *mut f64, len: usize) {
     }
 }
 
-// Free a heap-allocated C string produced by CString::into_raw.
-//
-// # Safety
-// ptr must either be null or have been produced by CString::into_raw.
+/// Free a heap-allocated C string produced by `CString::into_raw`.
+///
+/// # Safety
+/// `ptr` must either be null or have been produced by `CString::into_raw`.
 pub unsafe fn free_raw_c_string(ptr: *mut c_char) {
     if !ptr.is_null() {
         unsafe {
@@ -861,7 +875,7 @@ pub fn build_batch(
     } else {
         builder
     };
-    map_runtime(builder.adapter(Batch).build())
+    map_loess_result(builder.adapter(Batch).build())
 }
 
 // Build a parallel streaming processor.
@@ -878,7 +892,7 @@ pub fn build_streaming(
         Some(s) => map_invalid_arg(parse_merge_strategy(s))?,
         None => MergeStrategy::WeightedAverage,
     };
-    map_runtime(
+    map_loess_result(
         builder
             .adapter(Streaming)
             .chunk_size(cs)
@@ -902,7 +916,7 @@ pub fn build_online(
         Some(s) => map_invalid_arg(parse_update_mode(s))?,
         None => UpdateMode::Full,
     };
-    map_runtime(
+    map_loess_result(
         builder
             .adapter(Online)
             .window_capacity(wc)

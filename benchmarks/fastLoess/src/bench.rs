@@ -7,7 +7,7 @@ use std::time::Duration;
 /// Set LOESS_PARALLEL=false to run in serial mode.
 fn use_parallel() -> bool {
     std::env::var("LOESS_PARALLEL")
-        .map(|v| v != "0" && v.to_ascii_lowercase() != "false")
+        .map(|v| v != "0" && !v.eq_ignore_ascii_case("false"))
         .unwrap_or(true)
 }
 

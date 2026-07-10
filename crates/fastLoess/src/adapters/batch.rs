@@ -114,9 +114,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
                     valid: "kfold, loocv",
                 }),
             };
-            match kind {
-                Ok(k) => self.base.cv_kind = Some(k),
-                Err(e) => return Err(e),
+            {
+                let k = kind?;
+                self.base.cv_kind = Some(k)
             }
         }
 

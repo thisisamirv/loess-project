@@ -211,9 +211,10 @@ impl Default for CppLoessResult {
 
 // Create an error result with the given message.
 fn error_result(msg: &str) -> CppLoessResult {
-    let mut result = CppLoessResult::default();
-    result.error = shared_parse::into_raw_error_c_string(msg);
-    result
+    CppLoessResult {
+        error: shared_parse::into_raw_error_c_string(msg),
+        ..Default::default()
+    }
 }
 
 impl From<LoessResult<f64>> for CppLoessResult {

@@ -265,7 +265,7 @@ fn test_batch_diagnostics() {
 fn test_batch_cv_kfold() {
     let x = (0..10).map(|v| v as f64).collect::<Vec<_>>();
     let y = x.iter().map(|v| v * v + 0.1).collect::<Vec<_>>();
-    let fractions = vec![0.2, 0.5, 0.8];
+    let fractions = [0.2, 0.5, 0.8];
 
     let result = Loess::new()
         .cv_method("kfold")
@@ -301,7 +301,7 @@ fn test_batch_cv_kfold() {
 fn test_batch_cv_reproducibility() {
     let x = (0..20).map(|v| v as f64).collect::<Vec<_>>();
     let y = x.iter().map(|v| v.sin() + 0.1).collect::<Vec<_>>();
-    let fractions = vec![0.3, 0.5, 0.7];
+    let fractions = [0.3, 0.5, 0.7];
     let seed = 12345u64;
 
     // Run 1
@@ -364,7 +364,7 @@ fn test_batch_cv_reproducibility() {
 fn test_batch_cv_loocv() {
     let x = vec![0.0, 1.0, 2.0, 3.0];
     let y = vec![0.0, 1.0, 4.0, 9.0];
-    let fractions = vec![0.5, 0.8];
+    let fractions = [0.5, 0.8];
 
     let result = Loess::new()
         .cv_method("loocv")

@@ -275,9 +275,7 @@ impl RStreamingLoess {
             overlap_size,
             Some(merge_strategy),
         ))?;
-        Ok(Self {
-            inner: model,
-        })
+        Ok(Self { inner: model })
     }
 
     fn process_chunk(&mut self, x: &[f64], y: &[f64]) -> Result<List> {

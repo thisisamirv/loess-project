@@ -30,7 +30,7 @@ test('streaming smoothing', () => {
     const x = new Float64Array(Array.from({ length: 20 }, (_, i) => i));
     const y = new Float64Array(Array.from({ length: 20 }, (_, i) => i * 2));
 
-    const result = streamer.processChunk(x, y);
+    const result = streamer.process_chunk(x, y);
     assert.ok(result.y.length >= 0);
 
     const finalResult = streamer.finalize();
@@ -82,11 +82,11 @@ test('async batch smoothing', async () => {
         fraction: 0.3
     });
 
-    if (typeof model.fitAsync !== 'function') {
+    if (typeof model.fit_async !== 'function') {
         console.error('Available properties on model:', Object.getOwnPropertyNames(Object.getPrototypeOf(model)));
-        throw new Error('model.fitAsync is not a function');
+        throw new Error('model.fit_async is not a function');
     }
-    const result = await model.fitAsync(x, y);
+    const result = await model.fit_async(x, y);
 
     assert.strictEqual(result.x.length, 5);
     assert.strictEqual(result.y.length, 5);
@@ -220,7 +220,7 @@ test('StreamingOptions: merge_strategy', () => {
             { fraction: 0.3 },
             { chunk_size: 20, overlap: 2, merge_strategy: ms }
         );
-        s.processChunk(x, y);
+        s.process_chunk(x, y);
         const r = s.finalize();
         assert.ok(r.y.length >= 0);
     }

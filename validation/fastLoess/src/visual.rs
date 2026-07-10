@@ -614,7 +614,7 @@ fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
     for policy in &policies {
         let result = Loess::new()
-            .boundary_policy(*policy)
+            .boundary_policy(policy)
             .fraction(0.4) // Larger fraction highlights boundary bias
             .build()
             .unwrap()
@@ -1715,13 +1715,13 @@ fn run_degree_interpolation_comparison() -> Result<(), Box<dyn std::error::Error
     for (deg, name) in &degrees {
         let direct = Loess::new()
             .fraction(0.3)
-            .degree(*deg)
+            .degree(deg)
             .surface_mode("direct")
             .build()?
             .fit(&x, &y_noisy)?;
         let interp = Loess::new()
             .fraction(0.3)
-            .degree(*deg)
+            .degree(deg)
             .surface_mode("interpolation")
             .build()?
             .fit(&x, &y_noisy)?;

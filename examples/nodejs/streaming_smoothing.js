@@ -42,7 +42,7 @@ function example_1_basic_chunked_processing() {
     let chunkIdx = 0;
     for (let start = 0; start < n; start += chunk_size - overlap) {
         const end = Math.min(start + chunk_size, n);
-        const res = streamer.processChunk(x.subarray(start, end), y.subarray(start, end));
+        const res = streamer.process_chunk(x.subarray(start, end), y.subarray(start, end));
         if (res.x.length > 0) {
             totalProcessed += res.x.length;
             console.log(`  Chunk ${chunkIdx}: ${res.x.length} pts (x: ${res.x[0].toFixed(0)}..${res.x[res.x.length - 1].toFixed(0)})`);
@@ -73,7 +73,7 @@ function example_2_chunk_size_comparison() {
         let chunks = 0, total = 0;
         for (let start = 0; start < n; start += chunk_size - overlap) {
             const end = Math.min(start + chunk_size, n);
-            const res = streamer.processChunk(x.subarray(start, end), y.subarray(start, end));
+            const res = streamer.process_chunk(x.subarray(start, end), y.subarray(start, end));
             if (res.x.length > 0) { chunks++; total += res.x.length; }
         }
         const fin = streamer.finalize();
@@ -100,7 +100,7 @@ function example_3_overlap_strategies() {
         const step = chunk_size - overlap;
         // Feed only full-size chunks; finalize() handles remaining data
         for (let start = 0; start + chunk_size <= n; start += step) {
-            const res = streamer.processChunk(x.subarray(start, start + chunk_size), y.subarray(start, start + chunk_size));
+            const res = streamer.process_chunk(x.subarray(start, start + chunk_size), y.subarray(start, start + chunk_size));
             total += res.x.length;
         }
         total += streamer.finalize().x.length;
@@ -130,7 +130,7 @@ function example_4_large_dataset_processing() {
     const step = chunk_size - overlap;
     for (let start = 0; start < n; start += step) {
         const end = Math.min(start + chunk_size, n);
-        const res = streamer.processChunk(x.subarray(start, end), y.subarray(start, end));
+        const res = streamer.process_chunk(x.subarray(start, end), y.subarray(start, end));
         total += res.x.length;
         if (total > 0 && total % 2000 < step) {
             console.log(`  Progress: ~${total} points smoothed`);
@@ -163,7 +163,7 @@ function example_5_outlier_handling() {
         let largeResiduals = 0;
         for (let start = 0; start < n; start += 20) {
             const end = Math.min(start + 30, n);
-            const res = streamer.processChunk(x.subarray(start, end), y.subarray(start, end));
+            const res = streamer.process_chunk(x.subarray(start, end), y.subarray(start, end));
             if (res.residuals) {
                 for (const r of res.residuals) { if (Math.abs(r) > 10) largeResiduals++; }
             }
@@ -205,7 +205,7 @@ function example_6_file_simulation() {
         }
 
         console.log(`  Reading chunk ${ci} (lines ${start}..${end - 1})`);
-        const res = streamer.processChunk(xChunk, yChunk);
+        const res = streamer.process_chunk(xChunk, yChunk);
         if (res.x.length > 0) {
             outputLines += res.x.length;
             console.log(`    -> Writing ${res.x.length} smoothed pts (total: ${outputLines})`);
@@ -245,7 +245,7 @@ function example_7_benchmark() {
             xc[j] = start + j;
             yc[j] = Math.sin(xc[j] * 0.1) + Math.cos(xc[j] * 0.01);
         }
-        total += streamer.processChunk(xc, yc).x.length;
+        total += streamer.process_chunk(xc, yc).x.length;
     }
     total += streamer.finalize().x.length;
     const ms = Number(process.hrtime.bigint() - t0) / 1e6;
@@ -270,7 +270,7 @@ function example_8_merge_strategies() {
         let total = 0;
         for (let start = 0; start < n; start += 15) {
             const end = Math.min(start + 20, n);
-            total += streamer.processChunk(x.subarray(start, end), y.subarray(start, end)).x.length;
+            total += streamer.process_chunk(x.subarray(start, end), y.subarray(start, end)).x.length;
         }
         total += streamer.finalize().x.length;
         console.log(`  ${strategy}: total=${total}`);
@@ -306,7 +306,7 @@ function example_9_advanced_options() {
     let total = 0;
     for (let start = 0; start < n; start += 15) {
         const end = Math.min(start + 20, n);
-        total += streamer.processChunk(x.subarray(start, end), y.subarray(start, end)).x.length;
+        total += streamer.process_chunk(x.subarray(start, end), y.subarray(start, end)).x.length;
     }
     const fin = streamer.finalize();
     total += fin.x.length;

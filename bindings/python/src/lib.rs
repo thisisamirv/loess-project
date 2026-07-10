@@ -29,10 +29,6 @@ fn map_invalid_arg<T, E: Display>(result: Result<T, E>) -> PyResult<T> {
     shared_parse::map_invalid_arg(result).map_err(to_py_error)
 }
 
-fn map_runtime<T, E: Display>(result: Result<T, E>) -> PyResult<T> {
-    shared_parse::map_runtime(result).map_err(to_py_error)
-}
-
 fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
     to_py_error(shared_parse::BindingError::invalid_arg(e.to_string()))
 }
@@ -352,12 +348,9 @@ impl PyStreamingLoess {
             },
         ))?;
 
-        let processor = map_runtime(shared_parse::build_streaming(
-            builder,
-            Some(chunk_size),
-            overlap,
-            Some(merge_strategy),
-        ))?;
+        let processor =
+            shared_parse::build_streaming(builder, Some(chunk_size), overlap, Some(merge_strategy))
+                .map_err(to_py_error)?;
         Ok(PyStreamingLoess {
             inner: Mutex::new(processor),
         })
@@ -525,12 +518,13 @@ impl PyOnlineLoess {
             },
         ))?;
 
-        let processor = map_runtime(shared_parse::build_online(
+        let processor = shared_parse::build_online(
             builder,
             Some(window_capacity),
             Some(min_points),
             Some(update_mode),
-        ))?;
+        )
+        .map_err(to_py_error)?;
         Ok(PyOnlineLoess {
             inner: Mutex::new(processor),
         })
@@ -712,7 +706,7 @@ impl PyLoess {
         // 2. Release GIL
         let result = py.detach(move || {
             let model = shared_parse::build_batch(builder, uw_vec)?;
-            shared_parse::map_runtime(model.fit(&x_vec, &y_vec))
+            shared_parse::map_loess_result(model.fit(&x_vec, &y_vec))
         });
 
         // 3. Handle result (Back with GIL)

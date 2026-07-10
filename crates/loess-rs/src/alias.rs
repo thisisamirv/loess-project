@@ -246,150 +246,143 @@ impl FromStr for UpdateMode {
     }
 }
 
-// ─── Parse helpers ─────────────────────────────────────────────────────────────
+// ─── Binding helpers (only with the `dev` feature) ───────────────────────────
 //
-// These public wrappers surface the `FromStr` impls with concrete return types
-// so callers don't need turbofish annotations or error-type conversions.
+// Parse and canonical-name wrappers used by the binding layer.  Only compiled
+// when the `dev` feature is active; re-exported through
+// `loess_rs::internals::alias`.
 
-// Parse `WeightFunction` from a string alias.
-pub fn parse_weight_function(s: &str) -> Result<WeightFunction, LoessError> {
-    s.parse()
-}
+#[cfg(feature = "dev")]
+pub mod helpers {
+    use super::{
+        BoundaryPolicy, DistanceMetric, LoessError, MergeStrategy, PolynomialDegree,
+        RobustnessMethod, ScalingMethod, SurfaceMode, UpdateMode, WeightFunction,
+        ZeroWeightFallback,
+    };
 
-// Parse `RobustnessMethod` from a string alias.
-pub fn parse_robustness_method(s: &str) -> Result<RobustnessMethod, LoessError> {
-    s.parse()
-}
+    // ─── Parse helpers ────────────────────────────────────────────────────────
 
-// Parse `ZeroWeightFallback` from a string alias.
-pub fn parse_zero_weight_fallback(s: &str) -> Result<ZeroWeightFallback, LoessError> {
-    s.parse()
-}
-
-// Parse `BoundaryPolicy` from a string alias.
-pub fn parse_boundary_policy(s: &str) -> Result<BoundaryPolicy, LoessError> {
-    s.parse()
-}
-
-// Parse `ScalingMethod` from a string alias.
-pub fn parse_scaling_method(s: &str) -> Result<ScalingMethod, LoessError> {
-    s.parse()
-}
-
-// Parse `PolynomialDegree` from a string alias.
-pub fn parse_polynomial_degree(s: &str) -> Result<PolynomialDegree, LoessError> {
-    s.parse()
-}
-
-// Parse `DistanceMetric<f64>` from a string alias.
-pub fn parse_distance_metric(s: &str) -> Result<DistanceMetric<f64>, LoessError> {
-    s.parse()
-}
-
-// Parse `SurfaceMode` from a string alias.
-pub fn parse_surface_mode(s: &str) -> Result<SurfaceMode, LoessError> {
-    s.parse()
-}
-
-// Parse `UpdateMode` from a string alias.
-pub fn parse_update_mode(s: &str) -> Result<UpdateMode, LoessError> {
-    s.parse()
-}
-
-// Parse `MergeStrategy` from a string alias.
-pub fn parse_merge_strategy(s: &str) -> Result<MergeStrategy, LoessError> {
-    s.parse()
-}
-
-// ─── Canonical-name helpers ───────────────────────────────────────────────────
-//
-// Round-trip guarantee: `X_str(v).parse::<X>().unwrap() == v` for all `v`.
-// `DistanceMetric` is excluded because `Minkowski(p)` requires a formatted
-// string; use `distance_metric_components` in the binding layer instead.
-
-// Canonical string name for `WeightFunction`.
-pub fn weight_function_str(v: WeightFunction) -> &'static str {
-    match v {
-        WeightFunction::Tricube => "tricube",
-        WeightFunction::Epanechnikov => "epanechnikov",
-        WeightFunction::Gaussian => "gaussian",
-        WeightFunction::Uniform => "uniform",
-        WeightFunction::Biweight => "biweight",
-        WeightFunction::Triangle => "triangle",
-        WeightFunction::Cosine => "cosine",
+    pub fn parse_weight_function(s: &str) -> Result<WeightFunction, LoessError> {
+        s.parse()
     }
-}
 
-// Canonical string name for `RobustnessMethod`.
-pub fn robustness_method_str(v: RobustnessMethod) -> &'static str {
-    match v {
-        RobustnessMethod::Bisquare => "bisquare",
-        RobustnessMethod::Huber => "huber",
-        RobustnessMethod::Talwar => "talwar",
+    pub fn parse_robustness_method(s: &str) -> Result<RobustnessMethod, LoessError> {
+        s.parse()
     }
-}
 
-// Canonical string name for `ScalingMethod`.
-pub fn scaling_method_str(v: ScalingMethod) -> &'static str {
-    match v {
-        ScalingMethod::MAD => "mad",
-        ScalingMethod::MAR => "mar",
-        ScalingMethod::Mean => "mean",
+    pub fn parse_zero_weight_fallback(s: &str) -> Result<ZeroWeightFallback, LoessError> {
+        s.parse()
     }
-}
 
-// Canonical string name for `ZeroWeightFallback`.
-pub fn zero_weight_fallback_str(v: ZeroWeightFallback) -> &'static str {
-    match v {
-        ZeroWeightFallback::UseLocalMean => "use_local_mean",
-        ZeroWeightFallback::ReturnOriginal => "return_original",
-        ZeroWeightFallback::ReturnNone => "return_none",
+    pub fn parse_boundary_policy(s: &str) -> Result<BoundaryPolicy, LoessError> {
+        s.parse()
     }
-}
 
-// Canonical string name for `BoundaryPolicy`.
-pub fn boundary_policy_str(v: BoundaryPolicy) -> &'static str {
-    match v {
-        BoundaryPolicy::Extend => "extend",
-        BoundaryPolicy::Reflect => "reflect",
-        BoundaryPolicy::Zero => "zero",
-        BoundaryPolicy::NoBoundary => "noboundary",
+    pub fn parse_scaling_method(s: &str) -> Result<ScalingMethod, LoessError> {
+        s.parse()
     }
-}
 
-// Canonical string name for `PolynomialDegree`.
-pub fn polynomial_degree_str(v: PolynomialDegree) -> &'static str {
-    match v {
-        PolynomialDegree::Constant => "constant",
-        PolynomialDegree::Linear => "linear",
-        PolynomialDegree::Quadratic => "quadratic",
-        PolynomialDegree::Cubic => "cubic",
-        PolynomialDegree::Quartic => "quartic",
+    pub fn parse_polynomial_degree(s: &str) -> Result<PolynomialDegree, LoessError> {
+        s.parse()
     }
-}
 
-// Canonical string name for `SurfaceMode`.
-pub fn surface_mode_str(v: SurfaceMode) -> &'static str {
-    match v {
-        SurfaceMode::Interpolation => "interpolation",
-        SurfaceMode::Direct => "direct",
+    pub fn parse_distance_metric(s: &str) -> Result<DistanceMetric<f64>, LoessError> {
+        s.parse()
     }
-}
 
-// Canonical string name for `UpdateMode`.
-pub fn update_mode_str(v: UpdateMode) -> &'static str {
-    match v {
-        UpdateMode::Full => "full",
-        UpdateMode::Incremental => "incremental",
+    pub fn parse_surface_mode(s: &str) -> Result<SurfaceMode, LoessError> {
+        s.parse()
     }
-}
 
-// Canonical string name for `MergeStrategy`.
-pub fn merge_strategy_str(v: MergeStrategy) -> &'static str {
-    match v {
-        MergeStrategy::Average => "average",
-        MergeStrategy::WeightedAverage => "weighted_average",
-        MergeStrategy::TakeFirst => "take_first",
-        MergeStrategy::TakeLast => "take_last",
+    pub fn parse_update_mode(s: &str) -> Result<UpdateMode, LoessError> {
+        s.parse()
+    }
+
+    pub fn parse_merge_strategy(s: &str) -> Result<MergeStrategy, LoessError> {
+        s.parse()
+    }
+
+    // ─── Canonical-name helpers ───────────────────────────────────────────────
+    //
+    // Round-trip guarantee: `X_str(v).parse::<X>().unwrap() == v` for all `v`.
+    // `DistanceMetric` is excluded because `Minkowski(p)` requires a formatted
+    // string; use `distance_metric_components` in the binding layer instead.
+
+    pub fn weight_function_str(v: WeightFunction) -> &'static str {
+        match v {
+            WeightFunction::Tricube => "tricube",
+            WeightFunction::Epanechnikov => "epanechnikov",
+            WeightFunction::Gaussian => "gaussian",
+            WeightFunction::Uniform => "uniform",
+            WeightFunction::Biweight => "biweight",
+            WeightFunction::Triangle => "triangle",
+            WeightFunction::Cosine => "cosine",
+        }
+    }
+
+    pub fn robustness_method_str(v: RobustnessMethod) -> &'static str {
+        match v {
+            RobustnessMethod::Bisquare => "bisquare",
+            RobustnessMethod::Huber => "huber",
+            RobustnessMethod::Talwar => "talwar",
+        }
+    }
+
+    pub fn scaling_method_str(v: ScalingMethod) -> &'static str {
+        match v {
+            ScalingMethod::MAD => "mad",
+            ScalingMethod::MAR => "mar",
+            ScalingMethod::Mean => "mean",
+        }
+    }
+
+    pub fn zero_weight_fallback_str(v: ZeroWeightFallback) -> &'static str {
+        match v {
+            ZeroWeightFallback::UseLocalMean => "use_local_mean",
+            ZeroWeightFallback::ReturnOriginal => "return_original",
+            ZeroWeightFallback::ReturnNone => "return_none",
+        }
+    }
+
+    pub fn boundary_policy_str(v: BoundaryPolicy) -> &'static str {
+        match v {
+            BoundaryPolicy::Extend => "extend",
+            BoundaryPolicy::Reflect => "reflect",
+            BoundaryPolicy::Zero => "zero",
+            BoundaryPolicy::NoBoundary => "noboundary",
+        }
+    }
+
+    pub fn polynomial_degree_str(v: PolynomialDegree) -> &'static str {
+        match v {
+            PolynomialDegree::Constant => "constant",
+            PolynomialDegree::Linear => "linear",
+            PolynomialDegree::Quadratic => "quadratic",
+            PolynomialDegree::Cubic => "cubic",
+            PolynomialDegree::Quartic => "quartic",
+        }
+    }
+
+    pub fn surface_mode_str(v: SurfaceMode) -> &'static str {
+        match v {
+            SurfaceMode::Interpolation => "interpolation",
+            SurfaceMode::Direct => "direct",
+        }
+    }
+
+    pub fn update_mode_str(v: UpdateMode) -> &'static str {
+        match v {
+            UpdateMode::Full => "full",
+            UpdateMode::Incremental => "incremental",
+        }
+    }
+
+    pub fn merge_strategy_str(v: MergeStrategy) -> &'static str {
+        match v {
+            MergeStrategy::Average => "average",
+            MergeStrategy::WeightedAverage => "weighted_average",
+            MergeStrategy::TakeFirst => "take_first",
+            MergeStrategy::TakeLast => "take_last",
+        }
     }
 }
