@@ -390,6 +390,9 @@ mod adapters;
 // High-level fluent API for LOESS smoothing.
 mod api;
 
+// Centralised string-alias maps for all option enums.
+mod alias;
+
 // Standard LOESS prelude.
 pub mod prelude {
     pub use crate::api::{Loess, LoessError, LoessResult, OnlineLoess, StreamingLoess};
@@ -421,5 +424,8 @@ pub mod internals {
     }
     pub mod api {
         pub use crate::api::*;
+    }
+    pub mod alias {
+        pub use crate::alias::*;
     }
 }

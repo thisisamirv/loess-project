@@ -11,22 +11,14 @@
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
-use alloc::string::ToString;
-#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-#[cfg(feature = "std")]
-use std::string::ToString;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
 // External dependencies
 use core::cmp::Ordering::Equal;
 use core::iter::repeat_n;
-use core::str::FromStr;
 use num_traits::Float;
-
-// Internal dependencies
-use crate::primitives::errors::LoessError;
 
 // Policy for handling boundaries at the start and end of a data stream.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -43,24 +35,6 @@ pub enum BoundaryPolicy {
 
     // No boundary padding (standard LOESS behavior).
     NoBoundary,
-}
-
-impl FromStr for BoundaryPolicy {
-    type Err = LoessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "extend" | "pad" => Ok(BoundaryPolicy::Extend),
-            "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-            "zero" => Ok(BoundaryPolicy::Zero),
-            "noboundary" | "none" => Ok(BoundaryPolicy::NoBoundary),
-            _ => Err(LoessError::InvalidOption {
-                option: "boundary_policy",
-                value: s.to_string(),
-                valid: "extend, reflect, zero, noboundary",
-            }),
-        }
-    }
 }
 
 impl BoundaryPolicy {

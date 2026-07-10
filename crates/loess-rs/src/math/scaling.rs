@@ -11,16 +11,12 @@
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
 use alloc::string::ToString;
-#[cfg(feature = "std")]
-use std::string::ToString;
 
 // External dependencies
 use core::cmp::Ordering::Equal;
-use core::str::FromStr;
 use num_traits::Float;
 
 // Internal dependencies
-use crate::primitives::errors::LoessError;
 
 // Method for measuring the scale of residuals.
 #[allow(clippy::upper_case_acronyms)]
@@ -35,23 +31,6 @@ pub enum ScalingMethod {
 
     // Mean Absolute Residual: `mean(|r|)`.
     Mean,
-}
-
-impl FromStr for ScalingMethod {
-    type Err = LoessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "mar" | "median_absolute_residual" => Ok(ScalingMethod::MAR),
-            "mad" | "median_absolute_deviation" => Ok(ScalingMethod::MAD),
-            "mean" | "mean_absolute_residual" => Ok(ScalingMethod::Mean),
-            _ => Err(LoessError::InvalidOption {
-                option: "scaling_method",
-                value: s.to_string(),
-                valid: "mad, mar, mean",
-            }),
-        }
-    }
 }
 
 impl ScalingMethod {

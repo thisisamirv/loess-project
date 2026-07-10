@@ -12,16 +12,12 @@
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
 use alloc::string::ToString;
-#[cfg(feature = "std")]
-use std::string::ToString;
 
 // External dependencies
 use core::f64::consts::{PI, SQRT_2};
-use core::str::FromStr;
 use num_traits::Float;
 
 // Internal dependencies
-use crate::primitives::errors::LoessError;
 
 // Square root of 2*pi, used in Gaussian kernel calculations.
 const SQRT_2PI: f64 = 2.5066282746310005024157652848110452530069867406099_f64;
@@ -150,27 +146,6 @@ pub enum WeightFunction {
 
     // Uniform (rectangular) kernel: K(u) = 1 for |u| < 1.
     Uniform,
-}
-
-impl FromStr for WeightFunction {
-    type Err = LoessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "cosine" => Ok(WeightFunction::Cosine),
-            "epanechnikov" => Ok(WeightFunction::Epanechnikov),
-            "gaussian" => Ok(WeightFunction::Gaussian),
-            "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
-            "triangle" | "triangular" => Ok(WeightFunction::Triangle),
-            "tricube" => Ok(WeightFunction::Tricube),
-            "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
-            _ => Err(LoessError::InvalidOption {
-                option: "weight_function",
-                value: s.to_string(),
-                valid: "tricube, epanechnikov, gaussian, uniform, biweight, triangle, cosine",
-            }),
-        }
-    }
 }
 
 impl WeightFunction {

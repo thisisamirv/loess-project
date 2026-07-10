@@ -6,15 +6,11 @@
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
 use alloc::string::ToString;
-#[cfg(feature = "std")]
-use std::string::ToString;
 
 // External dependencies
-use core::str::FromStr;
 use num_traits::Float;
 
 // Internal dependencies
-use crate::primitives::errors::LoessError;
 
 // Polynomial degree for local regression fitting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -192,25 +188,6 @@ impl PolynomialDegree {
     }
 }
 
-impl FromStr for PolynomialDegree {
-    type Err = LoessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "constant" | "0" => Ok(PolynomialDegree::Constant),
-            "linear" | "1" => Ok(PolynomialDegree::Linear),
-            "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
-            "cubic" | "3" => Ok(PolynomialDegree::Cubic),
-            "quartic" | "4" => Ok(PolynomialDegree::Quartic),
-            _ => Err(LoessError::InvalidOption {
-                option: "degree",
-                value: s.to_string(),
-                valid: "constant (0), linear (1), quadratic (2), cubic (3), quartic (4)",
-            }),
-        }
-    }
-}
-
 // Policy for handling cases where all weights are zero.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ZeroWeightFallback {
@@ -244,23 +221,6 @@ impl ZeroWeightFallback {
             ZeroWeightFallback::UseLocalMean => 0,
             ZeroWeightFallback::ReturnOriginal => 1,
             ZeroWeightFallback::ReturnNone => 2,
-        }
-    }
-}
-
-impl FromStr for ZeroWeightFallback {
-    type Err = LoessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
-            "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-            "return_none" | "none" => Ok(ZeroWeightFallback::ReturnNone),
-            _ => Err(LoessError::InvalidOption {
-                option: "zero_weight_fallback",
-                value: s.to_string(),
-                valid: "use_local_mean, return_original, return_none",
-            }),
         }
     }
 }

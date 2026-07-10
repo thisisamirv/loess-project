@@ -16,6 +16,7 @@ pub use loess_rs::internals::adapters::streaming::MergeStrategy;
 use loess_rs::internals::algorithms::regression::SolverLinalg;
 pub use loess_rs::internals::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
 pub use loess_rs::internals::algorithms::robustness::RobustnessMethod;
+use loess_rs::internals::alias;
 pub use loess_rs::internals::engine::executor::SurfaceMode;
 use loess_rs::internals::evaluation::intervals::IntervalMethod;
 pub use loess_rs::internals::math::boundary::BoundaryPolicy;
@@ -515,167 +516,59 @@ pub struct TypedBuilderOptionSet {
 }
 
 pub fn parse_weight_function(name: &str) -> Result<WeightFunction, String> {
-    match name.to_lowercase().as_str() {
-        "tricube" => Ok(WeightFunction::Tricube),
-        "epanechnikov" => Ok(WeightFunction::Epanechnikov),
-        "gaussian" => Ok(WeightFunction::Gaussian),
-        "uniform" | "boxcar" => Ok(WeightFunction::Uniform),
-        "biweight" | "bisquare" => Ok(WeightFunction::Biweight),
-        "triangle" | "triangular" => Ok(WeightFunction::Triangle),
-        "cosine" => Ok(WeightFunction::Cosine),
-        _ => Err(format!(
-            "Unknown weight function: {}. Valid options: tricube, epanechnikov, gaussian, uniform, biweight, triangle, cosine",
-            name
-        )),
-    }
+    alias::parse_weight_function(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_robustness_method(name: &str) -> Result<RobustnessMethod, String> {
-    match name.to_lowercase().as_str() {
-        "bisquare" | "biweight" => Ok(RobustnessMethod::Bisquare),
-        "huber" => Ok(RobustnessMethod::Huber),
-        "talwar" => Ok(RobustnessMethod::Talwar),
-        _ => Err(format!(
-            "Unknown robustness method: {}. Valid options: bisquare, huber, talwar",
-            name
-        )),
-    }
+    alias::parse_robustness_method(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_zero_weight_fallback(name: &str) -> Result<ZeroWeightFallback, String> {
-    match name.to_lowercase().as_str() {
-        "use_local_mean" | "local_mean" | "mean" => Ok(ZeroWeightFallback::UseLocalMean),
-        "return_original" | "original" => Ok(ZeroWeightFallback::ReturnOriginal),
-        "return_none" | "none" | "nan" => Ok(ZeroWeightFallback::ReturnNone),
-        _ => Err(format!(
-            "Unknown zero weight fallback: {}. Valid options: use_local_mean, return_original, return_none",
-            name
-        )),
-    }
+    alias::parse_zero_weight_fallback(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_boundary_policy(name: &str) -> Result<BoundaryPolicy, String> {
-    match name.to_lowercase().as_str() {
-        "extend" | "pad" => Ok(BoundaryPolicy::Extend),
-        "reflect" | "mirror" => Ok(BoundaryPolicy::Reflect),
-        "zero" | "none" => Ok(BoundaryPolicy::Zero),
-        "noboundary" => Ok(BoundaryPolicy::NoBoundary),
-        _ => Err(format!(
-            "Unknown boundary policy: {}. Valid options: extend, reflect, zero, noboundary",
-            name
-        )),
-    }
+    alias::parse_boundary_policy(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_scaling_method(name: &str) -> Result<ScalingMethod, String> {
-    match name.to_lowercase().as_str() {
-        "mad" => Ok(ScalingMethod::MAD),
-        "mar" => Ok(ScalingMethod::MAR),
-        "mean" => Ok(ScalingMethod::Mean),
-        _ => Err(format!(
-            "Unknown scaling method: {}. Valid options: mad, mar, mean",
-            name
-        )),
-    }
+    alias::parse_scaling_method(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_polynomial_degree(name: &str) -> Result<PolynomialDegree, String> {
-    match name.to_lowercase().as_str() {
-        "constant" | "0" => Ok(PolynomialDegree::Constant),
-        "linear" | "1" => Ok(PolynomialDegree::Linear),
-        "quadratic" | "2" => Ok(PolynomialDegree::Quadratic),
-        "cubic" | "3" => Ok(PolynomialDegree::Cubic),
-        "quartic" | "4" => Ok(PolynomialDegree::Quartic),
-        _ => Err(format!(
-            "Unknown polynomial degree: {}. Valid options: constant, linear, quadratic, cubic, quartic",
-            name
-        )),
-    }
+    alias::parse_polynomial_degree(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_distance_metric(name: &str) -> Result<DistanceMetric<f64>, String> {
-    let lower = name.to_lowercase();
-    if let Some(p_str) = lower.strip_prefix("minkowski:") {
-        let p: f64 = p_str
-            .parse()
-            .map_err(|_| format!("Invalid Minkowski p value: {}", p_str))?;
-        return Ok(DistanceMetric::Minkowski(p));
-    }
-
-    match lower.as_str() {
-        "normalized" | "norm" => Ok(DistanceMetric::Normalized),
-        "euclidean" | "euclid" => Ok(DistanceMetric::Euclidean),
-        "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
-        "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
-        "minkowski" => Ok(DistanceMetric::Minkowski(2.0)),
-        "weighted" => Ok(DistanceMetric::Weighted(Vec::new())),
-        _ => Err(format!(
-            "Unknown distance metric: {}. Valid options: normalized, euclidean, manhattan, chebyshev, minkowski, weighted",
-            name
-        )),
-    }
+    alias::parse_distance_metric(name).map_err(|e| e.to_string())
 }
 
 pub fn weight_function_str(value: WeightFunction) -> &'static str {
-    match value {
-        WeightFunction::Tricube => "tricube",
-        WeightFunction::Epanechnikov => "epanechnikov",
-        WeightFunction::Gaussian => "gaussian",
-        WeightFunction::Uniform => "uniform",
-        WeightFunction::Biweight => "biweight",
-        WeightFunction::Triangle => "triangle",
-        WeightFunction::Cosine => "cosine",
-    }
+    alias::weight_function_str(value)
 }
 
 pub fn robustness_method_str(value: RobustnessMethod) -> &'static str {
-    match value {
-        RobustnessMethod::Bisquare => "bisquare",
-        RobustnessMethod::Huber => "huber",
-        RobustnessMethod::Talwar => "talwar",
-    }
+    alias::robustness_method_str(value)
 }
 
 pub fn scaling_method_str(value: ScalingMethod) -> &'static str {
-    match value {
-        ScalingMethod::MAD => "mad",
-        ScalingMethod::MAR => "mar",
-        ScalingMethod::Mean => "mean",
-    }
+    alias::scaling_method_str(value)
 }
 
 pub fn zero_weight_fallback_str(value: ZeroWeightFallback) -> &'static str {
-    match value {
-        ZeroWeightFallback::UseLocalMean => "use_local_mean",
-        ZeroWeightFallback::ReturnOriginal => "return_original",
-        ZeroWeightFallback::ReturnNone => "return_none",
-    }
+    alias::zero_weight_fallback_str(value)
 }
 
 pub fn boundary_policy_str(value: BoundaryPolicy) -> &'static str {
-    match value {
-        BoundaryPolicy::Extend => "extend",
-        BoundaryPolicy::Reflect => "reflect",
-        BoundaryPolicy::Zero => "zero",
-        BoundaryPolicy::NoBoundary => "noboundary",
-    }
+    alias::boundary_policy_str(value)
 }
 
 pub fn polynomial_degree_str(value: PolynomialDegree) -> &'static str {
-    match value {
-        PolynomialDegree::Constant => "constant",
-        PolynomialDegree::Linear => "linear",
-        PolynomialDegree::Quadratic => "quadratic",
-        PolynomialDegree::Cubic => "cubic",
-        PolynomialDegree::Quartic => "quartic",
-    }
+    alias::polynomial_degree_str(value)
 }
 
 pub fn surface_mode_str(value: SurfaceMode) -> &'static str {
-    match value {
-        SurfaceMode::Interpolation => "interpolation",
-        SurfaceMode::Direct => "direct",
-    }
+    alias::surface_mode_str(value)
 }
 
 pub fn distance_metric_components(value: &DistanceMetric<f64>) -> (String, Option<&[f64]>) {
@@ -932,38 +825,15 @@ pub fn apply_typed_builder_options(
 }
 
 pub fn parse_surface_mode(name: &str) -> Result<SurfaceMode, String> {
-    match name.to_lowercase().as_str() {
-        "interpolation" | "interp" | "interpolate" => Ok(SurfaceMode::Interpolation),
-        "direct" => Ok(SurfaceMode::Direct),
-        _ => Err(format!(
-            "Unknown surface mode: {}. Valid options: interpolation, direct",
-            name
-        )),
-    }
+    alias::parse_surface_mode(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_update_mode(name: &str) -> Result<UpdateMode, String> {
-    match name.to_lowercase().as_str() {
-        "full" | "resmooth" => Ok(UpdateMode::Full),
-        "incremental" | "single" => Ok(UpdateMode::Incremental),
-        _ => Err(format!(
-            "Unknown update mode: {}. Valid options: full, incremental",
-            name
-        )),
-    }
+    alias::parse_update_mode(name).map_err(|e| e.to_string())
 }
 
 pub fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
-    match name.to_lowercase().as_str() {
-        "average" | "mean" => Ok(MergeStrategy::Average),
-        "weighted" | "weighted_average" | "weightedaverage" => Ok(MergeStrategy::WeightedAverage),
-        "first" | "take_first" | "takefirst" | "left" => Ok(MergeStrategy::TakeFirst),
-        "last" | "take_last" | "takelast" | "right" => Ok(MergeStrategy::TakeLast),
-        _ => Err(format!(
-            "Unknown merge strategy: {}. Valid options: average, weighted_average, take_first, take_last",
-            name
-        )),
-    }
+    alias::parse_merge_strategy(name).map_err(|e| e.to_string())
 }
 
 // ─── Adapter build helpers ────────────────────────────────────────────────────

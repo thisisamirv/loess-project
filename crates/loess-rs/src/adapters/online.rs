@@ -15,8 +15,6 @@ use alloc::string::ToString;
 #[cfg(not(feature = "std"))]
 use alloc::{collections::VecDeque, vec::Vec};
 #[cfg(feature = "std")]
-use std::string::ToString;
-#[cfg(feature = "std")]
 use std::{collections::VecDeque, vec::Vec};
 
 // External dependencies
@@ -47,22 +45,6 @@ pub enum UpdateMode {
     // Optimized incremental update.
     #[default]
     Incremental,
-}
-
-impl core::str::FromStr for UpdateMode {
-    type Err = LoessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "full" | "resmooth" => Ok(UpdateMode::Full),
-            "incremental" | "single" => Ok(UpdateMode::Incremental),
-            _ => Err(LoessError::InvalidOption {
-                option: "update_mode",
-                value: s.to_string(),
-                valid: "full, incremental",
-            }),
-        }
-    }
 }
 
 // Builder for online LOESS processor.

@@ -16,8 +16,6 @@ use alloc::string::ToString;
 #[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 #[cfg(feature = "std")]
-use std::string::ToString;
-#[cfg(feature = "std")]
 use std::vec::Vec;
 
 // External dependencies
@@ -58,24 +56,6 @@ pub enum MergeStrategy {
 
     // Use the value from the last chunk in processing order.
     TakeLast,
-}
-
-impl core::str::FromStr for MergeStrategy {
-    type Err = LoessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "average" | "mean" => Ok(MergeStrategy::Average),
-            "weighted_average" | "weighted" => Ok(MergeStrategy::WeightedAverage),
-            "take_first" | "first" => Ok(MergeStrategy::TakeFirst),
-            "take_last" | "last" => Ok(MergeStrategy::TakeLast),
-            _ => Err(LoessError::InvalidOption {
-                option: "merge_strategy",
-                value: s.to_string(),
-                valid: "average, weighted_average, take_first, take_last",
-            }),
-        }
-    }
 }
 
 // Builder for streaming LOESS processor.

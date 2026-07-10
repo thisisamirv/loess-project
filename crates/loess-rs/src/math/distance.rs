@@ -11,21 +11,13 @@
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
-use alloc::string::ToString;
-#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-#[cfg(feature = "std")]
-use std::string::ToString;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
 // External dependencies
-use core::str::FromStr;
 use num_traits::Float;
 use wide::{f32x8, f64x4};
-
-// Internal dependencies
-use crate::primitives::errors::LoessError;
 
 // Trait for SIMD-optimized distance computations.
 pub trait DistanceLinalg: Float + 'static {
@@ -195,40 +187,6 @@ pub enum DistanceMetric<T> {
 
     // Weighted Euclidean distance: √(Σ wᵢ(xᵢ - yᵢ)²)
     Weighted(Vec<T>),
-}
-
-impl<T> FromStr for DistanceMetric<T>
-where
-    T: Float + FromStr,
-{
-    type Err = LoessError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let lower = s.to_lowercase();
-        if let Some(p_str) = lower.strip_prefix("minkowski:") {
-            let p: T = p_str.parse().map_err(|_| LoessError::InvalidOption {
-                option: "distance_metric",
-                value: s.to_string(),
-                valid: "normalized, euclidean, manhattan, chebyshev, minkowski, minkowski:<p>",
-            })?;
-            return Ok(DistanceMetric::Minkowski(p));
-        }
-        match lower.as_str() {
-            "normalized" | "norm" => Ok(DistanceMetric::Normalized),
-            "euclidean" | "euclid" => Ok(DistanceMetric::Euclidean),
-            "manhattan" | "l1" => Ok(DistanceMetric::Manhattan),
-            "chebyshev" | "linf" => Ok(DistanceMetric::Chebyshev),
-            "minkowski" => Ok(DistanceMetric::Minkowski(T::from(2.0).unwrap())),
-            // "weighted" is accepted as a string; combine with weighted_metric_weights() in the builder.
-            // The empty-vec placeholder is replaced at build time when weights are provided.
-            "weighted" | "weighted_euclidean" => Ok(DistanceMetric::Weighted(Vec::new())),
-            _ => Err(LoessError::InvalidOption {
-                option: "distance_metric",
-                value: s.to_string(),
-                valid: "normalized, euclidean, manhattan, chebyshev, minkowski, minkowski:<p>, weighted",
-            }),
-        }
-    }
 }
 
 impl<T: DistanceLinalg> DistanceMetric<T> {
