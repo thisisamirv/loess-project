@@ -51,13 +51,13 @@ export interface SmoothOptions {
     cv_method?: string;
     /** Number of folds for k-fold CV. Default: 5. */
     cv_k?: number;
-    /** Polynomial degree (\"linear\" or \"quadratic\"). Default: \"quadratic\". */
+    /** Polynomial degree (\"linear\" or \"quadratic\"). Default: \"linear\". */
     degree?: string;
     /** Number of predictor dimensions. Default: 1. */
     dimensions?: number;
-    /** Distance metric (\"euclidean\", \"manhattan\", \"weighted\"). Default: \"euclidean\". */
+    /** Distance metric (\"normalized\", \"euclidean\", \"manhattan\", \"weighted\"). Default: \"normalized\". */
     distance_metric?: string;
-    /** Surface computation mode (\"direct\" or \"interpolate\"). Default: \"interpolate\". */
+    /** Surface computation mode (\"interpolation\" or \"direct\"). Default: \"interpolation\". */
     surface_mode?: string;
     /** Include standard errors in result. Default: false. */
     return_se?: boolean;
@@ -77,7 +77,7 @@ export interface SmoothOptions {
 export interface StreamingOptions {
     /** Size of each processing chunk. Default: 5000. */
     chunk_size?: number;
-    /** Overlap between adjacent chunks. Default: 500. */
+    /** Overlap between adjacent chunks. Default: chunk_size / 10, min. 1. */
     overlap?: number;
     /** Strategy for merging chunks (\"weighted\", \"average\", \"first\", \"last\"). Default: \"weighted\". */
     merge_strategy?: string;
@@ -410,17 +410,12 @@ impl Loess {
     }
 }
 
-fn smooth(
-    x: &Float64Array,
-    y: &Float64Array,
-    options: JsValue,
-    custom_weights: Option<Vec<f64>>,
-) -> Result<LoessResult, JsValue> {
+// Build a LoessBuilder from an optional SmoothOptions, applying all fields.
+// cv_fractions / cv_method / cv_k / cv_seed are forwarded but ignored by
+// build_streaming and build_online (they are batch-only CV options).
+fn options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<f64>, JsValue> {
     let mut builder = LoessBuilder::<f64>::new();
-
-    if !options.is_undefined() && !options.is_null() {
-        let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
-
+    if let Some(opts) = opts {
         let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
@@ -455,6 +450,21 @@ fn smooth(
         ))?;
         builder = configured_builder;
     }
+    Ok(builder)
+}
+
+fn smooth(
+    x: &Float64Array,
+    y: &Float64Array,
+    options: JsValue,
+    custom_weights: Option<Vec<f64>>,
+) -> Result<LoessResult, JsValue> {
+    let opts = if !options.is_undefined() && !options.is_null() {
+        Some(serde_wasm_bindgen::from_value::<SmoothOptions>(options)?)
+    } else {
+        None
+    };
+    let builder = options_to_builder(opts)?;
 
     let x_vec = x.to_vec();
     let y_vec = y.to_vec();
@@ -477,45 +487,12 @@ impl StreamingLoess {
     #[wasm_bindgen(constructor, skip_typescript)]
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, streamingOpts: JsValue) -> Result<StreamingLoess, JsValue> {
-        let mut builder = LoessBuilder::<f64>::new();
-
-        if !options.is_undefined() && !options.is_null() {
-            let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
-
-            let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
-                builder,
-                shared_parse::BuilderOptionSet {
-                    fraction: opts.fraction,
-                    iterations: opts.iterations,
-                    weight_function: opts.weight_function.as_deref(),
-                    robustness_method: opts.robustness_method.as_deref(),
-                    zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
-                    boundary_policy: opts.boundary_policy.as_deref(),
-                    scaling_method: opts.scaling_method.as_deref(),
-                    auto_converge: opts.auto_converge,
-                    return_residuals: opts.return_residuals.unwrap_or(false),
-                    return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                    return_diagnostics: opts.return_diagnostics.unwrap_or(false),
-                    confidence_intervals: opts.confidence_intervals,
-                    prediction_intervals: opts.prediction_intervals,
-                    parallel: opts.parallel,
-                    degree: opts.degree.as_deref(),
-                    dimensions: opts.dimensions,
-                    distance_metric: opts.distance_metric.as_deref(),
-                    weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
-                    surface_mode: opts.surface_mode.as_deref(),
-                    return_se: opts.return_se.unwrap_or(false),
-                    cell: opts.cell,
-                    interpolation_vertices: opts.interpolation_vertices,
-                    boundary_degree_fallback: opts.boundary_degree_fallback,
-                    cv_fractions: None,
-                    cv_method: None,
-                    cv_k: None,
-                    cv_seed: None,
-                },
-            ))?;
-            builder = configured_builder;
-        }
+        let opts = if !options.is_undefined() && !options.is_null() {
+            Some(serde_wasm_bindgen::from_value::<SmoothOptions>(options)?)
+        } else {
+            None
+        };
+        let builder = options_to_builder(opts)?;
 
         let (chunk_size, overlap, merge_strategy) =
             if !streamingOpts.is_undefined() && !streamingOpts.is_null() {
@@ -567,44 +544,12 @@ impl OnlineLoess {
     #[wasm_bindgen(constructor, skip_typescript)]
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, onlineOpts: JsValue) -> Result<OnlineLoess, JsValue> {
-        let mut builder = LoessBuilder::<f64>::new();
-
-        if !options.is_undefined() && !options.is_null() {
-            let opts: SmoothOptions = serde_wasm_bindgen::from_value(options)?;
-            let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
-                builder,
-                shared_parse::BuilderOptionSet {
-                    fraction: opts.fraction,
-                    iterations: opts.iterations,
-                    weight_function: opts.weight_function.as_deref(),
-                    robustness_method: opts.robustness_method.as_deref(),
-                    zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
-                    boundary_policy: opts.boundary_policy.as_deref(),
-                    scaling_method: opts.scaling_method.as_deref(),
-                    auto_converge: opts.auto_converge,
-                    return_residuals: opts.return_residuals.unwrap_or(false),
-                    return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                    return_diagnostics: opts.return_diagnostics.unwrap_or(false),
-                    confidence_intervals: opts.confidence_intervals,
-                    prediction_intervals: opts.prediction_intervals,
-                    parallel: opts.parallel,
-                    degree: opts.degree.as_deref(),
-                    dimensions: opts.dimensions,
-                    distance_metric: opts.distance_metric.as_deref(),
-                    weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
-                    surface_mode: opts.surface_mode.as_deref(),
-                    return_se: opts.return_se.unwrap_or(false),
-                    cell: opts.cell,
-                    interpolation_vertices: opts.interpolation_vertices,
-                    boundary_degree_fallback: opts.boundary_degree_fallback,
-                    cv_fractions: None,
-                    cv_method: None,
-                    cv_k: None,
-                    cv_seed: None,
-                },
-            ))?;
-            builder = configured_builder;
-        }
+        let opts = if !options.is_undefined() && !options.is_null() {
+            Some(serde_wasm_bindgen::from_value::<SmoothOptions>(options)?)
+        } else {
+            None
+        };
+        let builder = options_to_builder(opts)?;
 
         let (window_capacity, min_points, update_mode) =
             if !onlineOpts.is_undefined() && !onlineOpts.is_null() {

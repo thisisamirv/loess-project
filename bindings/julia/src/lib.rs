@@ -7,7 +7,6 @@
 
 use ptr::null_mut;
 use std::cell::RefCell;
-use std::ffi::CStr;
 use std::ffi::CString;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::panic::catch_unwind;
@@ -16,7 +15,6 @@ use std::slice::from_raw_parts;
 
 use fastLoess::internals::api::LoessBuilder;
 use fastLoess::internals::binding_support as shared_parse;
-use fastLoess::internals::binding_support::DistanceMetric;
 use fastLoess::prelude::LoessResult;
 
 thread_local! {
@@ -69,6 +67,7 @@ pub struct JlOnlineOutput {
     pub residual: c_double,          // f64::NAN when not computed
     pub robustness_weight: c_double, // f64::NAN when not computed
     pub iterations_used: c_int,      // -1 when not computed
+    pub error: *mut c_char,          // NULL if no error
 }
 
 impl Default for JlOnlineOutput {
@@ -80,6 +79,7 @@ impl Default for JlOnlineOutput {
             residual: f64::NAN,
             robustness_weight: f64::NAN,
             iterations_used: -1,
+            error: ptr::null_mut(),
         }
     }
 }
@@ -181,8 +181,7 @@ impl Default for JlLoessResult {
 // Create an error result with the given message.
 fn error_result(msg: &str) -> JlLoessResult {
     let mut result = JlLoessResult::default();
-    let c_string = shared_parse::to_cstring_lossy(msg);
-    result.error = c_string.into_raw();
+    result.error = shared_parse::into_raw_error_c_string(msg);
     result
 }
 
@@ -196,54 +195,38 @@ fn map_runtime_result<T, E: ToString>(
     shared_parse::map_runtime(result).map_err(|e| Box::new(error_result_from(e)))
 }
 
-// Parse a C string safely.
-unsafe fn parse_c_str(s: *const c_char, default: &str) -> &str {
-    if s.is_null() {
-        default
-    } else {
-        CStr::from_ptr(s).to_str().unwrap_or(default)
-    }
-}
-
 // Convert LoessResult to JlLoessResult.
 fn loess_result_to_jl(result: LoessResult<f64>) -> JlLoessResult {
-    let n = result.y.len();
-    let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
-        shared_parse::extract_diagnostics(&result);
-
+    let p = shared_parse::extract_ffi_loess_result(result);
     JlLoessResult {
-        x: shared_parse::vec_to_raw_ptr(result.x),
-        y: shared_parse::vec_to_raw_ptr(result.y),
-        n: n as c_ulong,
-        standard_errors: shared_parse::opt_vec_to_raw_ptr(result.standard_errors),
-        confidence_lower: shared_parse::opt_vec_to_raw_ptr(result.confidence_lower),
-        confidence_upper: shared_parse::opt_vec_to_raw_ptr(result.confidence_upper),
-        prediction_lower: shared_parse::opt_vec_to_raw_ptr(result.prediction_lower),
-        prediction_upper: shared_parse::opt_vec_to_raw_ptr(result.prediction_upper),
-        residuals: shared_parse::opt_vec_to_raw_ptr(result.residuals),
-        robustness_weights: shared_parse::opt_vec_to_raw_ptr(result.robustness_weights),
-        fraction_used: result.fraction_used,
-        iterations_used: result.iterations_used.map(|i| i as c_int).unwrap_or(-1),
-        rmse,
-        mae,
-        r_squared,
-        aic,
-        aicc,
-        effective_df,
-        residual_sd,
-        enp: result.enp.unwrap_or(f64::NAN),
-        trace_hat: result.trace_hat.unwrap_or(f64::NAN),
-        delta1: result.delta1.unwrap_or(f64::NAN),
-        delta2: result.delta2.unwrap_or(f64::NAN),
-        residual_scale: result.residual_scale.unwrap_or(f64::NAN),
-        leverage: shared_parse::opt_vec_to_raw_ptr(result.leverage),
-        dimensions: result.dimensions as c_int,
-        cv_scores: shared_parse::opt_vec_to_raw_ptr(result.cv_scores.clone()),
-        cv_scores_len: result
-            .cv_scores
-            .as_ref()
-            .map(|v| v.len() as c_ulong)
-            .unwrap_or(0),
+        x: p.x,
+        y: p.y,
+        n: p.n as c_ulong,
+        standard_errors: p.standard_errors,
+        confidence_lower: p.confidence_lower,
+        confidence_upper: p.confidence_upper,
+        prediction_lower: p.prediction_lower,
+        prediction_upper: p.prediction_upper,
+        residuals: p.residuals,
+        robustness_weights: p.robustness_weights,
+        fraction_used: p.fraction_used,
+        iterations_used: p.iterations_used,
+        rmse: p.rmse,
+        mae: p.mae,
+        r_squared: p.r_squared,
+        aic: p.aic,
+        aicc: p.aicc,
+        effective_df: p.effective_df,
+        residual_sd: p.residual_sd,
+        enp: p.enp,
+        trace_hat: p.trace_hat,
+        delta1: p.delta1,
+        delta2: p.delta2,
+        residual_scale: p.residual_scale,
+        leverage: p.leverage,
+        dimensions: p.dimensions,
+        cv_scores: p.cv_scores,
+        cv_scores_len: p.cv_scores_len as c_ulong,
         error: null_mut(),
     }
 }
@@ -255,12 +238,6 @@ use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 
 pub struct JlLoessConfig {
     base_builder: LoessBuilder<f64>,
-    // Saved for weighted metric override resolution at fit time
-    distance_metric: DistanceMetric<f64>,
-    // Mutable via jl_loess_set_weighted_metric
-    weighted_metric_weights: Option<Vec<f64>>,
-    // Mutable via jl_loess_set_custom_weights; applied to build_batch
-    custom_weights: Option<Vec<f64>>,
     // Needed to compute x_n = n * dimensions in jl_loess_fit
     dimensions: usize,
 }
@@ -306,87 +283,110 @@ pub unsafe extern "C" fn jl_loess_new(
     distance_metric: *const c_char,
     surface_mode: *const c_char,
     return_se: c_int,
+    weighted_metric_weights: *const c_double,
+    weighted_metric_weights_len: c_ulong,
 ) -> *mut JlLoessConfig {
     clear_last_error_message();
     let result = catch_unwind(|| {
-        let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
-        let rm_str = unsafe { parse_c_str(robustness_method, "bisquare") };
-        let sm_str = unsafe { parse_c_str(scaling_method, "mad") };
-        let bp_str = unsafe { parse_c_str(boundary_policy, "extend") };
-        let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
-        let cv_method_str = unsafe { parse_c_str(cv_method, "kfold") };
-        let deg_str = unsafe { parse_c_str(degree, "linear") };
-        let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
-        let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
-
-        let wf = unwrap_or_return_null!(shared_parse::parse_weight_function(wf_str));
-        let rm = unwrap_or_return_null!(shared_parse::parse_robustness_method(rm_str));
-        let sm = unwrap_or_return_null!(shared_parse::parse_scaling_method(sm_str));
-        let bp = unwrap_or_return_null!(shared_parse::parse_boundary_policy(bp_str));
-        let zwf = unwrap_or_return_null!(shared_parse::parse_zero_weight_fallback(zwf_str));
-        let deg = unwrap_or_return_null!(shared_parse::parse_polynomial_degree(deg_str));
-        let dm = unwrap_or_return_null!(shared_parse::parse_distance_metric(dm_str));
-        let surf = unwrap_or_return_null!(shared_parse::parse_surface_mode(surf_str));
-
-        let cv_fractions_vec =
-            shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len as usize);
-
-        let dims = if dimensions > 0 {
-            dimensions as usize
-        } else {
-            1
+        let wf_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                weight_function,
+                shared_parse::DEFAULT_WEIGHT_FUNCTION,
+            )
+        };
+        let rm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                robustness_method,
+                shared_parse::DEFAULT_ROBUSTNESS_METHOD,
+            )
+        };
+        let sm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                scaling_method,
+                shared_parse::DEFAULT_SCALING_METHOD,
+            )
+        };
+        let bp_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                boundary_policy,
+                shared_parse::DEFAULT_BOUNDARY_POLICY,
+            )
+        };
+        let zwf_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                zero_weight_fallback,
+                shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
+            )
+        };
+        let cv_method_str = unsafe {
+            shared_parse::parse_c_str_or_default(cv_method, shared_parse::DEFAULT_CV_METHOD)
+        };
+        let deg_str =
+            unsafe { shared_parse::parse_c_str_or_default(degree, shared_parse::DEFAULT_DEGREE) };
+        let dm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                distance_metric,
+                shared_parse::DEFAULT_DISTANCE_METRIC,
+            )
+        };
+        let surf_str = unsafe {
+            shared_parse::parse_c_str_or_default(surface_mode, shared_parse::DEFAULT_SURFACE_MODE)
         };
 
-        let (base_builder, _) = unwrap_or_return_null!(shared_parse::apply_typed_builder_options(
-            LoessBuilder::<f64>::new(),
-            shared_parse::TypedBuilderOptionSet {
-                fraction: Some(fraction),
-                iterations: Some(iterations as usize),
-                weight_function: Some(wf),
-                robustness_method: Some(rm),
-                zero_weight_fallback: Some(zwf),
-                boundary_policy: Some(bp),
-                scaling_method: Some(sm),
-                auto_converge: if auto_converge.is_nan() {
-                    None
-                } else {
-                    Some(auto_converge)
+        let wmw_slice = shared_parse::option_slice_from_ptr(
+            weighted_metric_weights,
+            weighted_metric_weights_len as usize,
+        );
+        let effective_metric =
+            shared_parse::resolve_distance_metric_for_builder(Some(dm_str), wmw_slice);
+
+        let cv_fractions_slice =
+            shared_parse::option_slice_from_ptr(cv_fractions, cv_fractions_len as usize);
+
+        let configured_dimensions = dimensions.max(1) as usize;
+
+        let (base_builder, _) =
+            match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
+                LoessBuilder::<f64>::new(),
+                shared_parse::BuilderOptionSet {
+                    fraction: Some(fraction),
+                    iterations: Some(iterations as usize),
+                    weight_function: Some(wf_str),
+                    robustness_method: Some(rm_str),
+                    zero_weight_fallback: Some(zwf_str),
+                    boundary_policy: Some(bp_str),
+                    scaling_method: Some(sm_str),
+                    auto_converge: (!auto_converge.is_nan()).then_some(auto_converge),
+                    return_residuals: return_residuals != 0,
+                    return_robustness_weights: return_robustness_weights != 0,
+                    return_diagnostics: return_diagnostics != 0,
+                    confidence_intervals: (!confidence_intervals.is_nan())
+                        .then_some(confidence_intervals),
+                    prediction_intervals: (!prediction_intervals.is_nan())
+                        .then_some(prediction_intervals),
+                    parallel: Some(parallel != 0),
+                    degree: Some(deg_str),
+                    dimensions: Some(configured_dimensions),
+                    distance_metric: effective_metric,
+                    weighted_metric_weights: wmw_slice,
+                    surface_mode: Some(surf_str),
+                    return_se: return_se != 0,
+                    cell: None,
+                    interpolation_vertices: None,
+                    boundary_degree_fallback: None,
+                    cv_fractions: cv_fractions_slice,
+                    cv_method: Some(cv_method_str),
+                    cv_k: Some(cv_k as usize),
+                    cv_seed: None,
                 },
-                return_residuals: return_residuals != 0,
-                return_robustness_weights: return_robustness_weights != 0,
-                return_diagnostics: return_diagnostics != 0,
-                confidence_intervals: if confidence_intervals.is_nan() {
-                    None
-                } else {
-                    Some(confidence_intervals)
-                },
-                prediction_intervals: if prediction_intervals.is_nan() {
-                    None
-                } else {
-                    Some(prediction_intervals)
-                },
-                parallel: Some(parallel != 0),
-                degree: Some(deg),
-                dimensions: Some(dims),
-                distance_metric: Some(dm.clone()),
-                surface_mode: Some(surf),
-                return_se: return_se != 0,
-                cell: None,
-                interpolation_vertices: None,
-                boundary_degree_fallback: None,
-                cv_fractions: cv_fractions_vec,
-                cv_method: Some(cv_method_str.to_string()),
-                cv_k: Some(cv_k as usize),
-                cv_seed: None,
-            },
-        ));
+            )) {
+                Ok(v) => v,
+                Err(e) => return null_with_last_error(&e.message),
+            };
 
         Box::into_raw(Box::new(JlLoessConfig {
             base_builder,
-            distance_metric: dm,
-            weighted_metric_weights: None,
-            custom_weights: None,
-            dimensions: dims,
+            dimensions: configured_dimensions,
         }))
     });
 
@@ -397,28 +397,6 @@ pub unsafe extern "C" fn jl_loess_new(
             null_mut()
         }
     }
-}
-
-/// Set user-defined case weights for the next fit call.
-///
-/// Weights multiply the local kernel weight: `w_ij = custom_weights[j] * K(d_ij/h) * rob_j`.
-/// Must have the same length as the `y` array passed to `jl_loess_fit`.
-///
-/// # Safety
-/// config_ptr must be a valid mutable pointer returned by jl_loess_new.
-/// weights must be a valid array of length n.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn jl_loess_set_custom_weights(
-    config_ptr: *mut JlLoessConfig,
-    weights: *const c_double,
-    n: c_ulong,
-) {
-    if config_ptr.is_null() || weights.is_null() || n == 0 {
-        return;
-    }
-    let config = unsafe { &mut *config_ptr };
-    let slice = unsafe { from_raw_parts(weights, n as usize) };
-    config.custom_weights = Some(slice.to_vec());
 }
 
 /// Fit the Loess model to data.
@@ -432,6 +410,8 @@ pub unsafe extern "C" fn jl_loess_fit(
     x: *const c_double,
     y: *const c_double,
     n: c_ulong,
+    custom_weights: *const c_double,
+    custom_weights_n: c_ulong,
 ) -> JlLoessResult {
     let result = catch_unwind(|| {
         if config_ptr.is_null() {
@@ -451,17 +431,10 @@ pub unsafe extern "C" fn jl_loess_fit(
         let x_slice = unsafe { from_raw_parts(x, x_n) };
         let y_slice = unsafe { from_raw_parts(y, n as usize) };
 
-        // Clone the pre-built builder; re-apply weighted metric if the setter was called
-        let mut builder = config.base_builder.clone();
-        if let Some(ref weights) = config.weighted_metric_weights {
-            let dm = shared_parse::resolve_typed_distance_metric(
-                config.distance_metric.clone(),
-                Some(weights),
-            );
-            builder = shared_parse::apply_distance_metric_value(builder, &dm);
-        }
+        let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_n as usize);
+        let builder = config.base_builder.clone();
 
-        let model = match shared_parse::build_batch(builder, config.custom_weights.clone()) {
+        let model = match shared_parse::build_batch(builder, cw) {
             Ok(m) => m,
             Err(e) => return error_result(&e.message),
         };
@@ -491,36 +464,20 @@ pub unsafe extern "C" fn jl_loess_free_result(result: *mut JlLoessResult) {
     }
     let res = &mut *result;
     let n = res.n as usize;
+    let cv_n = res.cv_scores_len as usize;
 
-    unsafe fn free_vec(ptr: *mut c_double, len: usize) {
-        if !ptr.is_null() {
-            let _ = Vec::from_raw_parts(ptr, len, len);
-        }
-    }
-
-    free_vec(res.x, n);
-    free_vec(res.y, n);
-    free_vec(res.standard_errors, n);
-    free_vec(res.confidence_lower, n);
-    free_vec(res.confidence_upper, n);
-    free_vec(res.prediction_lower, n);
-    free_vec(res.prediction_upper, n);
-    free_vec(res.residuals, n);
-    free_vec(res.robustness_weights, n);
-    if !res.leverage.is_null() {
-        let _ = Vec::from_raw_parts(res.leverage, n, n);
-    }
-    if !res.cv_scores.is_null() {
-        let _ = Vec::from_raw_parts(
-            res.cv_scores,
-            res.cv_scores_len as usize,
-            res.cv_scores_len as usize,
-        );
-    }
-
-    if !res.error.is_null() {
-        let _ = std::ffi::CString::from_raw(res.error);
-    }
+    shared_parse::free_raw_f64_buffer(res.x, n);
+    shared_parse::free_raw_f64_buffer(res.y, n);
+    shared_parse::free_raw_f64_buffer(res.standard_errors, n);
+    shared_parse::free_raw_f64_buffer(res.confidence_lower, n);
+    shared_parse::free_raw_f64_buffer(res.confidence_upper, n);
+    shared_parse::free_raw_f64_buffer(res.prediction_lower, n);
+    shared_parse::free_raw_f64_buffer(res.prediction_upper, n);
+    shared_parse::free_raw_f64_buffer(res.residuals, n);
+    shared_parse::free_raw_f64_buffer(res.robustness_weights, n);
+    shared_parse::free_raw_f64_buffer(res.leverage, n);
+    shared_parse::free_raw_f64_buffer(res.cv_scores, cv_n);
+    shared_parse::free_raw_c_string(res.error);
 }
 
 /// Free the Loess configuration.
@@ -532,32 +489,6 @@ pub unsafe extern "C" fn jl_loess_free(ptr: *mut JlLoessConfig) {
     if !ptr.is_null() {
         let _ = Box::from_raw(ptr);
     }
-}
-
-/// Legacy setter retained for ABI compatibility.
-///
-/// Configure this in `jl_loess_new` instead.
-///
-/// # Safety
-/// config_ptr must be a valid mutable pointer returned by jl_loess_new.
-/// weights must be a valid array of length n (number of predictor dimensions).
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn jl_loess_set_weighted_metric(
-    config_ptr: *mut JlLoessConfig,
-    weights: *const c_double,
-    n: c_ulong,
-) {
-    if config_ptr.is_null() {
-        set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
-        return;
-    }
-    if weights.is_null() || n == 0 {
-        set_last_error_message(shared_parse::INVALID_DATA_INPUTS);
-        return;
-    }
-    // Store the weights for use during fit
-    let slice = unsafe { from_raw_parts(weights, n as usize) };
-    unsafe { (*config_ptr).weighted_metric_weights = Some(slice.to_vec()) };
 }
 
 /// Legacy setter retained for ABI compatibility.
@@ -671,15 +602,53 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
 ) -> *mut JlStreamingLoess {
     clear_last_error_message();
     let result = catch_unwind(|| {
-        let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
-        let rm_str = unsafe { parse_c_str(robustness_method, "bisquare") };
-        let sm_str = unsafe { parse_c_str(scaling_method, "mad") };
-        let bp_str = unsafe { parse_c_str(boundary_policy, "extend") };
-        let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
-        let ms_str = unsafe { parse_c_str(merge_strategy, "weighted_average") };
-        let deg_str = unsafe { parse_c_str(degree, "linear") };
-        let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
-        let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
+        let wf_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                weight_function,
+                shared_parse::DEFAULT_WEIGHT_FUNCTION,
+            )
+        };
+        let rm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                robustness_method,
+                shared_parse::DEFAULT_ROBUSTNESS_METHOD,
+            )
+        };
+        let sm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                scaling_method,
+                shared_parse::DEFAULT_SCALING_METHOD,
+            )
+        };
+        let bp_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                boundary_policy,
+                shared_parse::DEFAULT_BOUNDARY_POLICY,
+            )
+        };
+        let zwf_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                zero_weight_fallback,
+                shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
+            )
+        };
+        let ms_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                merge_strategy,
+                shared_parse::DEFAULT_MERGE_STRATEGY,
+            )
+        };
+        let deg_str =
+            unsafe { shared_parse::parse_c_str_or_default(degree, shared_parse::DEFAULT_DEGREE) };
+        let surf_str = unsafe {
+            shared_parse::parse_c_str_or_default(surface_mode, shared_parse::DEFAULT_SURFACE_MODE)
+        };
+        let dm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                distance_metric,
+                shared_parse::DEFAULT_DISTANCE_METRIC,
+            )
+        };
 
         let chunk_size_usize = unwrap_or_return_null!(shared_parse::require_positive_usize(
             "chunk_size",
@@ -728,26 +697,17 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
                     .then_some(interpolation_vertices as usize),
                 boundary_degree_fallback: (boundary_degree_fallback >= 0)
                     .then_some(boundary_degree_fallback != 0),
-                cv_fractions: None,
-                cv_method: None,
-                cv_k: None,
-                cv_seed: None,
+                ..Default::default()
             },
         )) {
             Ok(v) => v,
             Err(e) => return null_with_last_error(&e.message),
         };
 
-        let overlap_size = if overlap < 0 {
-            shared_parse::default_overlap(chunk_size_usize)
-        } else {
-            overlap as usize
-        };
-
         let processor = match shared_parse::build_streaming(
             builder,
             Some(chunk_size_usize),
-            Some(overlap_size),
+            (overlap >= 0).then_some(overlap as usize),
             Some(ms_str),
         ) {
             Ok(p) => p,
@@ -885,16 +845,51 @@ pub unsafe extern "C" fn jl_online_loess_new(
 ) -> *mut JlOnlineLoess {
     clear_last_error_message();
     let result = catch_unwind(|| {
-        let wf_str = unsafe { parse_c_str(weight_function, "tricube") };
-        let rm_str = unsafe { parse_c_str(robustness_method, "bisquare") };
-        let sm_str = unsafe { parse_c_str(scaling_method, "mad") };
-        let bp_str = unsafe { parse_c_str(boundary_policy, "extend") };
-        let zwf_str = unsafe { parse_c_str(zero_weight_fallback, "use_local_mean") };
-        let um_str = unsafe { parse_c_str(update_mode, "full") };
+        let wf_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                weight_function,
+                shared_parse::DEFAULT_WEIGHT_FUNCTION,
+            )
+        };
+        let rm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                robustness_method,
+                shared_parse::DEFAULT_ROBUSTNESS_METHOD,
+            )
+        };
+        let sm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                scaling_method,
+                shared_parse::DEFAULT_SCALING_METHOD,
+            )
+        };
+        let bp_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                boundary_policy,
+                shared_parse::DEFAULT_BOUNDARY_POLICY,
+            )
+        };
+        let zwf_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                zero_weight_fallback,
+                shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
+            )
+        };
+        let um_str = unsafe {
+            shared_parse::parse_c_str_or_default(update_mode, shared_parse::DEFAULT_UPDATE_MODE)
+        };
 
-        let deg_str = unsafe { parse_c_str(degree, "linear") };
-        let surf_str = unsafe { parse_c_str(surface_mode, "interpolation") };
-        let dm_str = unsafe { parse_c_str(distance_metric, "normalized") };
+        let deg_str =
+            unsafe { shared_parse::parse_c_str_or_default(degree, shared_parse::DEFAULT_DEGREE) };
+        let surf_str = unsafe {
+            shared_parse::parse_c_str_or_default(surface_mode, shared_parse::DEFAULT_SURFACE_MODE)
+        };
+        let dm_str = unsafe {
+            shared_parse::parse_c_str_or_default(
+                distance_metric,
+                shared_parse::DEFAULT_DISTANCE_METRIC,
+            )
+        };
 
         let iterations_usize = unwrap_or_return_null!(shared_parse::require_non_negative_usize(
             "iterations",
@@ -951,10 +946,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
                     .then_some(interpolation_vertices as usize),
                 boundary_degree_fallback: (boundary_degree_fallback >= 0)
                     .then_some(boundary_degree_fallback != 0),
-                cv_fractions: None,
-                cv_method: None,
-                cv_k: None,
-                cv_seed: None,
+                ..Default::default()
             },
         )) {
             Ok(v) => v,
@@ -996,29 +988,54 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
 ) -> JlOnlineOutput {
     let result = catch_unwind(|| {
         if ptr.is_null() {
-            set_last_error_message(shared_parse::PROCESSOR_POINTER_IS_NULL);
-            return JlOnlineOutput::default();
+            return JlOnlineOutput {
+                error: shared_parse::into_raw_error_c_string(
+                    shared_parse::PROCESSOR_POINTER_IS_NULL,
+                ),
+                ..JlOnlineOutput::default()
+            };
         }
         let processor = unsafe { &mut *ptr };
 
         match processor.inner.add_point(&[x], y) {
-            Err(e) => {
-                set_last_error_message(&e.to_string());
-                JlOnlineOutput::default()
-            }
-            Ok(None) => JlOnlineOutput::default(),
-            Ok(Some(o)) => JlOnlineOutput {
-                has_value: 1,
-                smoothed: o.smoothed,
-                std_error: o.std_error.unwrap_or(f64::NAN),
-                residual: o.residual.unwrap_or(f64::NAN),
-                robustness_weight: o.robustness_weight.unwrap_or(f64::NAN),
-                iterations_used: o.iterations_used.map(|i| i as c_int).unwrap_or(-1),
+            Err(e) => JlOnlineOutput {
+                error: shared_parse::into_raw_error_c_string(&e.to_string()),
+                ..JlOnlineOutput::default()
             },
+            Ok(None) => JlOnlineOutput::default(),
+            Ok(Some(o)) => {
+                let (std_error, residual, robustness_weight, iterations_used) =
+                    shared_parse::extract_online_output(&o);
+                JlOnlineOutput {
+                    has_value: 1,
+                    smoothed: o.smoothed,
+                    std_error,
+                    residual,
+                    robustness_weight,
+                    iterations_used,
+                    error: ptr::null_mut(),
+                }
+            }
         }
     });
 
-    result.unwrap_or_default()
+    result.unwrap_or_else(|_| JlOnlineOutput {
+        error: shared_parse::into_raw_error_c_string(shared_parse::panic_fallback_message()),
+        ..JlOnlineOutput::default()
+    })
+}
+
+/// Free the error field of a JlOnlineOutput returned by jl_online_loess_add_point.
+/// No-op when output is null or the error field is already null.
+///
+/// # Safety
+/// `output` must be a valid pointer to a JlOnlineOutput or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_online_free_output(output: *mut JlOnlineOutput) {
+    if !output.is_null() {
+        shared_parse::free_raw_c_string((*output).error);
+        (*output).error = ptr::null_mut();
+    }
 }
 
 /// Free the OnlineLoess processor.

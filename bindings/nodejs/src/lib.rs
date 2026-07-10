@@ -309,6 +309,49 @@ pub struct SmoothOptions {
     pub cv_seed: Option<u32>,
 }
 
+// Build a LoessBuilder from an optional SmoothOptions, applying all fields.
+// cv_fractions / cv_method / cv_k / cv_seed are forwarded but ignored by
+// build_streaming and build_online (they are batch-only CV options).
+fn options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder<f64>> {
+    let mut builder = LoessBuilder::<f64>::new();
+    if let Some(opts) = opts {
+        let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+            builder,
+            shared_parse::BuilderOptionSet {
+                fraction: opts.fraction,
+                iterations: opts.iterations.map(|v| v as usize),
+                weight_function: opts.weight_function.as_deref(),
+                robustness_method: opts.robustness_method.as_deref(),
+                zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                boundary_policy: opts.boundary_policy.as_deref(),
+                scaling_method: opts.scaling_method.as_deref(),
+                auto_converge: opts.auto_converge,
+                return_residuals: opts.return_residuals.unwrap_or(false),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
+                parallel: opts.parallel,
+                degree: opts.degree.as_deref(),
+                dimensions: opts.dimensions.map(|v| v as usize),
+                distance_metric: opts.distance_metric.as_deref(),
+                weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
+                surface_mode: opts.surface_mode.as_deref(),
+                return_se: opts.return_se.unwrap_or(false),
+                cell: opts.cell,
+                interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
+                boundary_degree_fallback: opts.boundary_degree_fallback,
+                cv_fractions: opts.cv_fractions.as_deref(),
+                cv_method: opts.cv_method.as_deref(),
+                cv_k: opts.cv_k.map(|v| v as usize),
+                cv_seed: opts.cv_seed.map(|s| s as u64),
+            },
+        ))?;
+        builder = configured_builder;
+    }
+    Ok(builder)
+}
+
 // LOESS smoothing.
 #[napi]
 pub struct Loess {
@@ -360,45 +403,7 @@ impl Loess {
     }
 
     fn create_builder(&self) -> Result<LoessBuilder<f64>> {
-        let mut builder = LoessBuilder::<f64>::new();
-        let options = &self.options;
-
-        if let Some(opts) = options {
-            let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
-                builder,
-                shared_parse::BuilderOptionSet {
-                    fraction: opts.fraction,
-                    iterations: opts.iterations.map(|v| v as usize),
-                    weight_function: opts.weight_function.as_deref(),
-                    robustness_method: opts.robustness_method.as_deref(),
-                    zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
-                    boundary_policy: opts.boundary_policy.as_deref(),
-                    scaling_method: opts.scaling_method.as_deref(),
-                    auto_converge: opts.auto_converge,
-                    return_residuals: opts.return_residuals.unwrap_or(false),
-                    return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                    return_diagnostics: opts.return_diagnostics.unwrap_or(false),
-                    confidence_intervals: opts.confidence_intervals,
-                    prediction_intervals: opts.prediction_intervals,
-                    parallel: opts.parallel,
-                    degree: opts.degree.as_deref(),
-                    dimensions: opts.dimensions.map(|v| v as usize),
-                    distance_metric: opts.distance_metric.as_deref(),
-                    weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
-                    surface_mode: opts.surface_mode.as_deref(),
-                    return_se: opts.return_se.unwrap_or(false),
-                    cell: opts.cell,
-                    interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
-                    boundary_degree_fallback: opts.boundary_degree_fallback,
-                    cv_fractions: opts.cv_fractions.as_deref(),
-                    cv_method: opts.cv_method.as_deref(),
-                    cv_k: opts.cv_k.map(|v| v as usize),
-                    cv_seed: opts.cv_seed.map(|s| s as u64),
-                },
-            ))?;
-            builder = configured_builder;
-        }
-        Ok(builder)
+        options_to_builder(self.options.as_ref())
     }
 }
 
@@ -428,7 +433,7 @@ pub struct StreamingOptions {
     // Size of each data chunk. Default: 5000.
     #[napi(js_name = "chunk_size")]
     pub chunk_size: Option<u32>,
-    // Header/footer overlap size. Default: 500.
+    // Header/footer overlap size. Default: chunk_size / 10, min. 1.
     pub overlap: Option<u32>,
     // Strategy for merging chunk overlaps ("average", "weighted_average", "take_first", "take_last").
     #[napi(js_name = "merge_strategy")]
@@ -449,43 +454,7 @@ impl StreamingLoess {
         options: Option<SmoothOptions>,
         streaming_opts: Option<StreamingOptions>,
     ) -> Result<Self> {
-        let mut builder = LoessBuilder::<f64>::new();
-
-        if let Some(opts) = options {
-            let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
-                builder,
-                shared_parse::BuilderOptionSet {
-                    fraction: opts.fraction,
-                    iterations: opts.iterations.map(|v| v as usize),
-                    weight_function: opts.weight_function.as_deref(),
-                    robustness_method: opts.robustness_method.as_deref(),
-                    zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
-                    boundary_policy: opts.boundary_policy.as_deref(),
-                    scaling_method: opts.scaling_method.as_deref(),
-                    auto_converge: opts.auto_converge,
-                    return_residuals: opts.return_residuals.unwrap_or(false),
-                    return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                    return_diagnostics: opts.return_diagnostics.unwrap_or(false),
-                    confidence_intervals: opts.confidence_intervals,
-                    prediction_intervals: opts.prediction_intervals,
-                    parallel: opts.parallel,
-                    degree: opts.degree.as_deref(),
-                    dimensions: opts.dimensions.map(|v| v as usize),
-                    distance_metric: opts.distance_metric.as_deref(),
-                    weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
-                    surface_mode: opts.surface_mode.as_deref(),
-                    return_se: opts.return_se.unwrap_or(false),
-                    cell: opts.cell,
-                    interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
-                    boundary_degree_fallback: opts.boundary_degree_fallback,
-                    cv_fractions: None,
-                    cv_method: None,
-                    cv_k: None,
-                    cv_seed: None,
-                },
-            ))?;
-            builder = configured_builder;
-        }
+        let builder = options_to_builder(options.as_ref())?;
 
         let (chunk_size, overlap, merge_strategy) = match streaming_opts {
             Some(s) => (
@@ -525,10 +494,10 @@ impl StreamingLoess {
 // Configuration options for processing.
 #[napi(object)]
 pub struct OnlineOptions {
-    // Maximum number of points to keep in the window. Default: 100.
+    // Maximum number of points to keep in the window. Default: 1000.
     #[napi(js_name = "window_capacity")]
     pub window_capacity: Option<u32>,
-    // Minimum points required before smoothing starts. Default: 2.
+    // Minimum points required before smoothing starts. Default: 3.
     #[napi(js_name = "min_points")]
     pub min_points: Option<u32>,
     // Update mode ("full", "incremental"). Default: "full".
@@ -547,43 +516,7 @@ impl OnlineLoess {
     // Create a new LOESS smoother.
     #[napi(constructor)]
     pub fn new(options: Option<SmoothOptions>, online_opts: Option<OnlineOptions>) -> Result<Self> {
-        let mut builder = LoessBuilder::<f64>::new();
-
-        if let Some(opts) = options {
-            let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
-                builder,
-                shared_parse::BuilderOptionSet {
-                    fraction: opts.fraction,
-                    iterations: opts.iterations.map(|v| v as usize),
-                    weight_function: opts.weight_function.as_deref(),
-                    robustness_method: opts.robustness_method.as_deref(),
-                    zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
-                    boundary_policy: opts.boundary_policy.as_deref(),
-                    scaling_method: opts.scaling_method.as_deref(),
-                    auto_converge: opts.auto_converge,
-                    return_residuals: opts.return_residuals.unwrap_or(false),
-                    return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                    return_diagnostics: opts.return_diagnostics.unwrap_or(false),
-                    confidence_intervals: opts.confidence_intervals,
-                    prediction_intervals: opts.prediction_intervals,
-                    parallel: opts.parallel,
-                    degree: opts.degree.as_deref(),
-                    dimensions: opts.dimensions.map(|v| v as usize),
-                    distance_metric: opts.distance_metric.as_deref(),
-                    weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
-                    surface_mode: opts.surface_mode.as_deref(),
-                    return_se: opts.return_se.unwrap_or(false),
-                    cell: opts.cell,
-                    interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
-                    boundary_degree_fallback: opts.boundary_degree_fallback,
-                    cv_fractions: None,
-                    cv_method: None,
-                    cv_k: None,
-                    cv_seed: None,
-                },
-            ))?;
-            builder = configured_builder;
-        }
+        let builder = options_to_builder(options.as_ref())?;
 
         let (window_capacity, min_points, update_mode) = match online_opts {
             Some(o) => (

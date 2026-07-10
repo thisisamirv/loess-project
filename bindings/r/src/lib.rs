@@ -11,7 +11,7 @@ use extendr_api::prelude::*;
 
 type Result<T> = std::result::Result<T, Error>;
 
-use fastLoess::internals::api::{Batch, LoessBuilder, LoessResult};
+use fastLoess::internals::api::{LoessBuilder, LoessResult};
 use fastLoess::internals::binding_support as shared_parse;
 
 // Helper Functions
@@ -54,7 +54,6 @@ fn optional_positive_usize(name: &str, value: Nullable<i32>) -> Result<Option<us
 #[extendr]
 pub struct RLoess {
     builder: LoessBuilder<f64>,
-    parallel: bool,
 }
 
 #[extendr]
@@ -132,7 +131,7 @@ impl RLoess {
                     NotNull(v) => Some(v),
                     Null => None,
                 },
-                parallel: None,
+                parallel: Some(parallel),
                 degree: Some(degree),
                 dimensions: Some(dimensions),
                 distance_metric: Some(distance_metric),
@@ -155,7 +154,7 @@ impl RLoess {
             },
         ))?;
 
-        Ok(Self { builder, parallel })
+        Ok(Self { builder })
     }
 
     // Fit the model to data, with optional user-defined case weights.
@@ -163,14 +162,12 @@ impl RLoess {
     // `custom_weights` must be the same length as `y`. Each weight multiplies the
     // local kernel weight: analogous to `weights` in `stats::loess`.
     fn fit(&self, x: &[f64], y: &[f64], custom_weights: Nullable<Vec<f64>>) -> Result<List> {
-        let mut builder = self.builder.clone();
-        if let NotNull(w) = custom_weights {
-            builder = builder.custom_weights(w);
-        }
-        let result = builder.adapter(Batch).parallel(self.parallel).build();
-        let result = map_runtime(result)?.fit(x, y);
-        let result = map_runtime(result)?;
-
+        let cw = match custom_weights {
+            NotNull(w) => Some(w),
+            Null => None,
+        };
+        let model = map_runtime(shared_parse::build_batch(self.builder.clone(), cw))?;
+        let result = map_runtime(model.fit(x, y))?;
         loess_result_to_list(result)
     }
 }
@@ -180,8 +177,6 @@ impl RLoess {
 #[extendr]
 pub struct RStreamingLoess {
     inner: fastLoess::internals::adapters::streaming::ParallelStreamingLoess<f64>,
-    fraction: f64,
-    iterations: usize,
 }
 
 #[extendr]
@@ -217,8 +212,8 @@ impl RStreamingLoess {
     ) -> Result<Self> {
         let chunk_size = require_positive_usize("chunk_size", chunk_size)?;
         let overlap_size = match overlap {
-            NotNull(o) => require_non_negative_usize("overlap", o)?,
-            Null => shared_parse::default_overlap(chunk_size),
+            NotNull(o) => Some(require_non_negative_usize("overlap", o)?),
+            Null => None,
         };
         let iterations = require_non_negative_usize("iterations", iterations)?;
         let dimensions = require_positive_usize("dimensions", dimensions)?;
@@ -270,39 +265,28 @@ impl RStreamingLoess {
                     NotNull(v) => Some(v),
                     Null => None,
                 },
-                cv_fractions: None,
-                cv_method: None,
-                cv_k: None,
-                cv_seed: None,
+                ..Default::default()
             },
         ))?;
 
         let model = map_runtime(shared_parse::build_streaming(
             builder,
             Some(chunk_size),
-            Some(overlap_size),
+            overlap_size,
             Some(merge_strategy),
         ))?;
         Ok(Self {
             inner: model,
-            fraction,
-            iterations,
         })
     }
 
     fn process_chunk(&mut self, x: &[f64], y: &[f64]) -> Result<List> {
-        let result = self.inner.process_chunk(x, y);
-        let mut result = map_runtime(result)?;
-        result.fraction_used = self.fraction;
-        result.iterations_used = Some(self.iterations);
+        let result = map_runtime(self.inner.process_chunk(x, y))?;
         loess_result_to_list(result)
     }
 
     fn finalize(&mut self) -> Result<List> {
-        let result = self.inner.finalize();
-        let mut result = map_runtime(result)?;
-        result.fraction_used = self.fraction;
-        result.iterations_used = Some(self.iterations);
+        let result = map_runtime(self.inner.finalize())?;
         loess_result_to_list(result)
     }
 }
@@ -396,10 +380,7 @@ impl ROnlineLoess {
                     NotNull(v) => Some(v),
                     Null => None,
                 },
-                cv_fractions: None,
-                cv_method: None,
-                cv_k: None,
-                cv_seed: None,
+                ..Default::default()
             },
         ))?;
 
@@ -443,6 +424,9 @@ impl ROnlineLoess {
 // Helper: Convert LoessResult to R List
 
 fn loess_result_to_list(result: LoessResult<f64>) -> Result<List> {
+    let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
+        shared_parse::extract_diagnostics(&result);
+    let has_diagnostics = result.diagnostics.is_some();
     let mut list_items: Vec<(&str, Robj)> = vec![
         ("x", result.x.into_robj()),
         ("y", result.y.into_robj()),
@@ -495,15 +479,15 @@ fn loess_result_to_list(result: LoessResult<f64>) -> Result<List> {
         list_items.push(("leverage", lev.into_robj()));
     }
     list_items.push(("dimensions", (result.dimensions as i32).into_robj()));
-    if let Some(diag) = result.diagnostics {
+    if has_diagnostics {
         let diag_list = list!(
-            rmse = diag.rmse,
-            mae = diag.mae,
-            r_squared = diag.r_squared,
-            aic = diag.aic.unwrap_or(f64::NAN),
-            aicc = diag.aicc.unwrap_or(f64::NAN),
-            effective_df = diag.effective_df.unwrap_or(f64::NAN),
-            residual_sd = diag.residual_sd
+            rmse = rmse,
+            mae = mae,
+            r_squared = r_squared,
+            aic = aic,
+            aicc = aicc,
+            effective_df = effective_df,
+            residual_sd = residual_sd
         );
         list_items.push(("diagnostics", diag_list.into_robj()));
     }

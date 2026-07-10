@@ -348,18 +348,14 @@ impl PyStreamingLoess {
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,
-                cv_fractions: None,
-                cv_method: None,
-                cv_k: None,
-                cv_seed: None,
+                ..Default::default()
             },
         ))?;
 
-        let overlap_size = overlap.unwrap_or_else(|| shared_parse::default_overlap(chunk_size));
         let processor = map_runtime(shared_parse::build_streaming(
             builder,
             Some(chunk_size),
-            Some(overlap_size),
+            overlap,
             Some(merge_strategy),
         ))?;
         Ok(PyStreamingLoess {
@@ -525,10 +521,7 @@ impl PyOnlineLoess {
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,
-                cv_fractions: None,
-                cv_method: None,
-                cv_k: None,
-                cv_seed: None,
+                ..Default::default()
             },
         ))?;
 
@@ -640,31 +633,16 @@ impl PyLoess {
         boundary_degree_fallback: Option<bool>,
         cv_seed: Option<u64>,
     ) -> PyResult<Self> {
-        let wf = map_invalid_arg(shared_parse::parse_weight_function(weight_function))?;
-        let rm = map_invalid_arg(shared_parse::parse_robustness_method(robustness_method))?;
-        let sm = map_invalid_arg(shared_parse::parse_scaling_method(scaling_method))?;
-        let zwf = map_invalid_arg(shared_parse::parse_zero_weight_fallback(
-            zero_weight_fallback,
-        ))?;
-        let bp = map_invalid_arg(shared_parse::parse_boundary_policy(boundary_policy))?;
-        let deg = map_invalid_arg(shared_parse::parse_polynomial_degree(degree))?;
-        let (_, dm) = map_invalid_arg(shared_parse::apply_distance_metric(
+        let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
-            distance_metric,
-            weighted_metric_weights.as_deref(),
-        ))?;
-        let surf = map_invalid_arg(shared_parse::parse_surface_mode(surface_mode))?;
-
-        let (builder, _) = map_invalid_arg(shared_parse::apply_typed_builder_options(
-            LoessBuilder::<f64>::new(),
-            shared_parse::TypedBuilderOptionSet {
+            shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
                 iterations: Some(iterations),
-                weight_function: Some(wf),
-                robustness_method: Some(rm),
-                zero_weight_fallback: Some(zwf),
-                boundary_policy: Some(bp),
-                scaling_method: Some(sm),
+                weight_function: Some(weight_function),
+                robustness_method: Some(robustness_method),
+                zero_weight_fallback: Some(zero_weight_fallback),
+                boundary_policy: Some(boundary_policy),
+                scaling_method: Some(scaling_method),
                 auto_converge,
                 return_residuals,
                 return_robustness_weights,
@@ -672,16 +650,17 @@ impl PyLoess {
                 confidence_intervals,
                 prediction_intervals,
                 parallel: Some(parallel),
-                degree: Some(deg),
+                degree: Some(degree),
                 dimensions: Some(dimensions),
-                distance_metric: Some(dm),
-                surface_mode: Some(surf),
+                distance_metric: Some(distance_metric),
+                weighted_metric_weights: weighted_metric_weights.as_deref(),
+                surface_mode: Some(surface_mode),
                 return_se,
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,
-                cv_fractions,
-                cv_method: Some(cv_method.to_string()),
+                cv_fractions: cv_fractions.as_deref(),
+                cv_method: Some(cv_method),
                 cv_k: Some(cv_k),
                 cv_seed,
             },
@@ -733,7 +712,7 @@ impl PyLoess {
         // 2. Release GIL
         let result = py.detach(move || {
             let model = shared_parse::build_batch(builder, uw_vec)?;
-            shared_parse::map_invalid_arg(model.fit(&x_vec, &y_vec))
+            shared_parse::map_runtime(model.fit(&x_vec, &y_vec))
         });
 
         // 3. Handle result (Back with GIL)

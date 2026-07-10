@@ -469,23 +469,16 @@ public:
   Expected<LoessResult> fit(const std::vector<double> &x_values,
                             const std::vector<double> &y_values,
                             const std::vector<double> &custom_weights = {}) {
-    if (!custom_weights.empty()) {
-      cpp_loess_set_custom_weights(
-          ptr_, custom_weights.data(),
-          static_cast<unsigned long>(custom_weights.size()));
-    }
     if (y_values.empty() || x_values.empty() ||
         x_values.size() % y_values.size() != 0) {
       return Expected<LoessResult>::make_error(
           "x length must be a non-zero multiple of y length");
     }
-    if (x_values.empty()) {
-      return Expected<LoessResult>::make_error(
-          "Input arrays must not be empty");
-    }
     auto result = cpp_loess_fit(
         ptr_, x_values.data(), static_cast<unsigned long>(x_values.size()),
-        y_values.data(), static_cast<unsigned long>(y_values.size()));
+        y_values.data(), static_cast<unsigned long>(y_values.size()),
+        custom_weights.empty() ? nullptr : custom_weights.data(),
+        static_cast<unsigned long>(custom_weights.size()));
 
     if (result.error != nullptr) {
       const std::string error_msg(result.error);

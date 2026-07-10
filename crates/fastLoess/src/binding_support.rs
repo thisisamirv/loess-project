@@ -10,6 +10,7 @@ use crate::adapters::streaming::{ParallelStreamingLoess, ParallelStreamingLoessB
 use crate::api::{Batch, LoessBuilder, Online, Streaming};
 use crate::parse::IntoEnum;
 use crate::prelude::{LoessError, LoessResult};
+use loess_rs::internals::adapters::online::OnlineOutput;
 pub use loess_rs::internals::adapters::online::UpdateMode;
 pub use loess_rs::internals::adapters::streaming::MergeStrategy;
 use loess_rs::internals::algorithms::regression::SolverLinalg;
@@ -24,8 +25,9 @@ pub use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
 pub use loess_rs::internals::math::scaling::ScalingMethod;
 pub use loess_rs::internals::primitives::backend::Backend;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::fmt::Debug;
+use std::os::raw::c_char;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BindingErrorCategory {
@@ -72,10 +74,26 @@ pub fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, BindingErr
 pub const PANIC_FALLBACK_MESSAGE: &str = "Panic in Rust library";
 pub const CONFIG_POINTER_IS_NULL: &str = "Config pointer is null";
 pub const MODEL_POINTER_IS_NULL: &str = "Model pointer is null";
+pub const MODEL_NOT_INITIALIZED: &str = "Model not initialized";
 pub const PROCESSOR_POINTER_IS_NULL: &str = "Processor pointer is null";
 pub const INVALID_DATA_INPUTS: &str = "Invalid data inputs";
 pub const XY_ARRAYS_MUST_NOT_BE_NULL: &str = "x and y arrays must not be null";
 pub const ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO: &str = "Array length must be greater than 0";
+
+// Default string values for all parser-facing options. These are the canonical
+// fallback strings passed to the shared parse_* functions when a caller does
+// not supply a value.
+pub const DEFAULT_WEIGHT_FUNCTION: &str = "tricube";
+pub const DEFAULT_ROBUSTNESS_METHOD: &str = "bisquare";
+pub const DEFAULT_SCALING_METHOD: &str = "mad";
+pub const DEFAULT_BOUNDARY_POLICY: &str = "extend";
+pub const DEFAULT_ZERO_WEIGHT_FALLBACK: &str = "use_local_mean";
+pub const DEFAULT_CV_METHOD: &str = "kfold";
+pub const DEFAULT_DEGREE: &str = "linear";
+pub const DEFAULT_DISTANCE_METRIC: &str = "normalized";
+pub const DEFAULT_SURFACE_MODE: &str = "interpolation";
+pub const DEFAULT_MERGE_STRATEGY: &str = "weighted_average";
+pub const DEFAULT_UPDATE_MODE: &str = "full";
 
 pub fn sanitize_error_message(msg: &str) -> String {
     msg.replace('\0', " ")
@@ -87,6 +105,20 @@ pub fn to_cstring_lossy(msg: &str) -> CString {
 
 pub fn panic_fallback_message() -> &'static str {
     PANIC_FALLBACK_MESSAGE
+}
+
+/// Parse a C string safely, returning `default` when the pointer is null or
+/// the bytes are not valid UTF-8.
+///
+/// # Safety
+/// If `s` is non-null it must point to a valid null-terminated C string that
+/// lives at least as long as the returned `&str`.
+pub unsafe fn parse_c_str_or_default<'a>(s: *const c_char, default: &'a str) -> &'a str {
+    if s.is_null() {
+        return default;
+    }
+    // SAFETY: caller guarantees `s` is a valid null-terminated C string.
+    unsafe { CStr::from_ptr(s) }.to_str().unwrap_or(default)
 }
 
 // Validate that a signed integer is > 0 and safely cast to usize.
@@ -203,6 +235,144 @@ pub fn extract_diagnostics(result: &LoessResult<f64>) -> (f64, f64, f64, f64, f6
     }
 }
 
+// Extracts the hat-matrix statistics and iteration count from a batch result.
+// Returns (enp, trace_hat, delta1, delta2, residual_scale, iterations_used).
+// Optional f64 fields default to f64::NAN; iterations_used defaults to -1.
+pub fn extract_loess_result_stats(result: &LoessResult<f64>) -> (f64, f64, f64, f64, f64, i32) {
+    (
+        result.enp.unwrap_or(f64::NAN),
+        result.trace_hat.unwrap_or(f64::NAN),
+        result.delta1.unwrap_or(f64::NAN),
+        result.delta2.unwrap_or(f64::NAN),
+        result.residual_scale.unwrap_or(f64::NAN),
+        result.iterations_used.map(|i| i as i32).unwrap_or(-1),
+    )
+}
+
+// Extracts the optional scalar fields from an online add_point output.
+// Returns (std_error, residual, robustness_weight, iterations_used).
+// Optional f64 fields default to f64::NAN; iterations_used defaults to -1.
+pub fn extract_online_output(o: &OnlineOutput<f64>) -> (f64, f64, f64, i32) {
+    (
+        o.std_error.unwrap_or(f64::NAN),
+        o.residual.unwrap_or(f64::NAN),
+        o.robustness_weight.unwrap_or(f64::NAN),
+        o.iterations_used.map(|i| i as i32).unwrap_or(-1),
+    )
+}
+
+// Neutral FFI loess result parts produced by extract_ffi_loess_result.
+// All raw-pointer fields are either Rust-allocated heap memory (freed via
+// free_raw_f64_buffer) or null. Types use Rust-native widths; the binding casts
+// to its platform ABI types (e.g. usize → c_ulong) and appends its own error
+// field before exposing the struct to C.
+pub struct FfiLoessResult {
+    pub x: *mut f64,
+    pub y: *mut f64,
+    pub n: usize,
+    pub standard_errors: *mut f64,
+    pub confidence_lower: *mut f64,
+    pub confidence_upper: *mut f64,
+    pub prediction_lower: *mut f64,
+    pub prediction_upper: *mut f64,
+    pub residuals: *mut f64,
+    pub robustness_weights: *mut f64,
+    pub fraction_used: f64,
+    pub iterations_used: i32,
+    pub rmse: f64,
+    pub mae: f64,
+    pub r_squared: f64,
+    pub aic: f64,
+    pub aicc: f64,
+    pub effective_df: f64,
+    pub residual_sd: f64,
+    pub enp: f64,
+    pub trace_hat: f64,
+    pub delta1: f64,
+    pub delta2: f64,
+    pub residual_scale: f64,
+    pub leverage: *mut f64,
+    pub dimensions: i32,
+    pub cv_scores: *mut f64,
+    pub cv_scores_len: usize,
+}
+
+// Extract all fields from a LoessResult into an FfiLoessResult. All optional
+// vectors are moved to heap-allocated raw pointers; scalar optionals are
+// NaN/−1-defaulted. The caller owns the returned pointers.
+pub fn extract_ffi_loess_result(result: LoessResult<f64>) -> FfiLoessResult {
+    let n = result.y.len();
+    let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) = extract_diagnostics(&result);
+    let (enp, trace_hat, delta1, delta2, residual_scale, iterations_used) =
+        extract_loess_result_stats(&result);
+    let cv_scores_len = result.cv_scores.as_ref().map(|v| v.len()).unwrap_or(0);
+    FfiLoessResult {
+        x: vec_to_raw_ptr(result.x),
+        y: vec_to_raw_ptr(result.y),
+        n,
+        standard_errors: opt_vec_to_raw_ptr(result.standard_errors),
+        confidence_lower: opt_vec_to_raw_ptr(result.confidence_lower),
+        confidence_upper: opt_vec_to_raw_ptr(result.confidence_upper),
+        prediction_lower: opt_vec_to_raw_ptr(result.prediction_lower),
+        prediction_upper: opt_vec_to_raw_ptr(result.prediction_upper),
+        residuals: opt_vec_to_raw_ptr(result.residuals),
+        robustness_weights: opt_vec_to_raw_ptr(result.robustness_weights),
+        fraction_used: result.fraction_used,
+        iterations_used,
+        rmse,
+        mae,
+        r_squared,
+        aic,
+        aicc,
+        effective_df,
+        residual_sd,
+        enp,
+        trace_hat,
+        delta1,
+        delta2,
+        residual_scale,
+        leverage: opt_vec_to_raw_ptr(result.leverage),
+        dimensions: result.dimensions as i32,
+        cv_scores: opt_vec_to_raw_ptr(result.cv_scores),
+        cv_scores_len,
+    }
+}
+
+// Free a heap-allocated f64 buffer produced by vec_to_raw_ptr / opt_vec_to_raw_ptr.
+// No-op when ptr is null. Both functions allocate via into_boxed_slice, so the
+// correct counterpart is Box::from_raw(slice_from_raw_parts_mut).
+//
+// # Safety
+// ptr must either be null or have been produced by vec_to_raw_ptr /
+// opt_vec_to_raw_ptr with the same `len`.
+pub unsafe fn free_raw_f64_buffer(ptr: *mut f64, len: usize) {
+    if !ptr.is_null() {
+        unsafe {
+            let _ = Box::from_raw(std::ptr::slice_from_raw_parts_mut(ptr, len));
+        }
+    }
+}
+
+// Free a heap-allocated C string produced by CString::into_raw.
+//
+// # Safety
+// ptr must either be null or have been produced by CString::into_raw.
+pub unsafe fn free_raw_c_string(ptr: *mut c_char) {
+    if !ptr.is_null() {
+        unsafe {
+            let _ = CString::from_raw(ptr);
+        }
+    }
+}
+
+// Convert an error message to a heap-allocated C string and return its raw
+// pointer. The caller must eventually free it via free_raw_c_string /
+// CString::from_raw. The message is sanitized (null bytes replaced with spaces)
+// before conversion.
+pub fn into_raw_error_c_string(msg: &str) -> *mut c_char {
+    to_cstring_lossy(msg).into_raw()
+}
+
 // Resolves the typed distance metric at fit time, applying any override weights
 // that were stored via a post-construction setter.  If the metric is Weighted
 // and override weights are provided, the override replaces the constructor-time
@@ -279,6 +449,7 @@ where
     })
 }
 
+#[derive(Default)]
 pub struct BuilderOptionSet<'a> {
     pub fraction: Option<f64>,
     pub iterations: Option<usize>,
@@ -824,7 +995,7 @@ pub fn build_batch(
 }
 
 // Build a parallel streaming processor.
-// Defaults: chunk_size = 5000, overlap = 500, merge_strategy = WeightedAverage.
+// Defaults: chunk_size = 5000, overlap = default_overlap(chunk_size), merge_strategy = WeightedAverage.
 pub fn build_streaming(
     builder: LoessBuilder<f64>,
     chunk_size: Option<usize>,
@@ -832,7 +1003,7 @@ pub fn build_streaming(
     merge_strategy: Option<&str>,
 ) -> Result<ParallelStreamingLoess<f64>, BindingError> {
     let cs = chunk_size.unwrap_or(5000);
-    let ov = overlap.unwrap_or(500);
+    let ov = overlap.unwrap_or_else(|| default_overlap(cs));
     let ms = match merge_strategy {
         Some(s) => map_invalid_arg(parse_merge_strategy(s))?,
         None => MergeStrategy::WeightedAverage,
