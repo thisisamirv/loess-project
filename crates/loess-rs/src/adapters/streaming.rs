@@ -37,6 +37,10 @@ use crate::math::linalg::FloatLinalg;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::errors::LoessError;
+use crate::adapters::defaults::*;
+use crate::algorithms::defaults::*;
+use crate::engine::defaults::*;
+use crate::math::defaults::*;
 
 // Strategy for merging overlapping regions between streaming chunks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -180,28 +184,28 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
     // Create a new streaming LOESS builder with default parameters.
     fn new() -> Self {
         Self {
-            chunk_size: 5000,
-            overlap: 500,
-            fraction: T::from(0.67).unwrap(),
-            iterations: 2,
-            weight_function: WeightFunction::default(),
-            boundary_policy: BoundaryPolicy::default(),
-            robustness_method: RobustnessMethod::default(),
-            scaling_method: ScalingMethod::default(),
-            zero_weight_fallback: ZeroWeightFallback::default(),
-            merge_strategy: MergeStrategy::default(),
-            compute_residuals: false,
-            return_diagnostics: false,
-            return_robustness_weights: false,
-            auto_converge: None,
+            chunk_size: DEFAULT_STREAMING_CHUNK_SIZE,
+            overlap: DEFAULT_STREAMING_OVERLAP,
+            fraction: T::from(DEFAULT_FRACTION).unwrap(),
+            iterations: DEFAULT_STREAMING_ITERATIONS,
+            weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
+            boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
+            robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
+            scaling_method: DEFAULT_SCALING_METHOD_ENUM,
+            zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
+            merge_strategy: DEFAULT_STREAMING_MERGE_STRATEGY_ENUM,
+            compute_residuals: DEFAULT_RETURN_RESIDUALS,
+            return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
+            return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            auto_converge: default_auto_converge(),
             deferred_error: None,
-            polynomial_degree: PolynomialDegree::default(),
-            dimensions: 1,
-            distance_metric: DistanceMetric::default(),
+            polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
+            dimensions: DEFAULT_DIMENSIONS,
+            distance_metric: default_distance_metric(),
             cell: None,
             interpolation_vertices: None,
-            surface_mode: SurfaceMode::default(),
-            boundary_degree_fallback: true,
+            surface_mode: DEFAULT_SURFACE_MODE_ENUM,
+            boundary_degree_fallback: DEFAULT_BOUNDARY_DEGREE_FALLBACK,
             duplicate_param: None,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +

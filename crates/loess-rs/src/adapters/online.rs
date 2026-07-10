@@ -19,14 +19,18 @@ use std::{collections::VecDeque, vec::Vec};
 use core::fmt::Debug;
 
 // Internal dependencies
+use crate::adapters::defaults::*;
+use crate::algorithms::defaults::*;
 use crate::algorithms::regression::{PolynomialDegree, SolverLinalg, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
+use crate::engine::defaults::*;
 use crate::engine::executor::{
     CVPassFn, FitPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig, LoessExecutor, SmoothPassFn,
     SurfaceMode, VertexPassFn,
 };
 use crate::engine::validator::Validator;
 use crate::math::boundary::BoundaryPolicy;
+use crate::math::defaults::*;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
 use crate::math::kernel::WeightFunction;
 use crate::math::linalg::FloatLinalg;
@@ -163,27 +167,27 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
     // Create a new online LOESS builder with default parameters.
     fn new() -> Self {
         Self {
-            window_capacity: 1000,
-            min_points: 3,
-            fraction: T::from(0.67).unwrap(),
-            iterations: 1,
-            weight_function: WeightFunction::default(),
-            update_mode: UpdateMode::default(),
-            robustness_method: RobustnessMethod::default(),
-            scaling_method: ScalingMethod::default(),
-            zero_weight_fallback: ZeroWeightFallback::default(),
-            boundary_policy: BoundaryPolicy::default(),
-            compute_residuals: false,
-            return_robustness_weights: false,
-            auto_converge: None,
+            window_capacity: DEFAULT_ONLINE_WINDOW_CAPACITY,
+            min_points: DEFAULT_ONLINE_MIN_POINTS,
+            fraction: T::from(DEFAULT_FRACTION).unwrap(),
+            iterations: DEFAULT_ONLINE_ITERATIONS,
+            weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
+            update_mode: DEFAULT_ONLINE_UPDATE_MODE_ENUM,
+            robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
+            scaling_method: DEFAULT_SCALING_METHOD_ENUM,
+            zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
+            boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
+            compute_residuals: DEFAULT_RETURN_RESIDUALS,
+            return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            auto_converge: default_auto_converge(),
             deferred_error: None,
-            polynomial_degree: PolynomialDegree::default(),
-            dimensions: 1,
-            distance_metric: DistanceMetric::default(),
+            polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
+            dimensions: DEFAULT_DIMENSIONS,
+            distance_metric: default_distance_metric(),
             cell: None,
             interpolation_vertices: None,
-            surface_mode: SurfaceMode::default(),
-            boundary_degree_fallback: true,
+            surface_mode: DEFAULT_SURFACE_MODE_ENUM,
+            boundary_degree_fallback: DEFAULT_BOUNDARY_DEGREE_FALLBACK,
             duplicate_param: None,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +

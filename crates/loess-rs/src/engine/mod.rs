@@ -7,6 +7,9 @@
 // Unified execution engine for LOESS smoothing.
 pub mod executor;
 
+// Default values for engine configuration.
+pub mod defaults;
+
 // Validation utilities.
 pub mod validator;
 

@@ -8,7 +8,79 @@ use crate::adapters::batch::{ParallelBatchLoess, ParallelBatchLoessBuilder};
 use crate::adapters::online::{ParallelOnlineLoess, ParallelOnlineLoessBuilder};
 use crate::adapters::streaming::{ParallelStreamingLoess, ParallelStreamingLoessBuilder};
 use crate::api::{Batch, LoessBuilder, Online, Streaming};
-use crate::parse::IntoEnum;
+use core::str::FromStr;
+
+// Converts a value into a typed enum, either infallibly (enum variant) or
+// via case-insensitive string parsing (string literal / `String`).
+pub(crate) trait IntoEnum<E> {
+    fn into_enum(self) -> Result<E, LoessError>;
+}
+
+// Generate IntoEnum impls for a concrete (non-generic) enum type.
+macro_rules! impl_into_enum_for {
+    ($ty:ty) => {
+        impl IntoEnum<$ty> for $ty {
+            #[inline]
+            fn into_enum(self) -> Result<$ty, LoessError> {
+                Ok(self)
+            }
+        }
+
+        impl IntoEnum<$ty> for &str {
+            #[inline]
+            fn into_enum(self) -> Result<$ty, LoessError> {
+                self.parse()
+            }
+        }
+
+        impl IntoEnum<$ty> for String {
+            #[inline]
+            fn into_enum(self) -> Result<$ty, LoessError> {
+                self.as_str().parse()
+            }
+        }
+    };
+}
+
+impl_into_enum_for!(BoundaryPolicy);
+impl_into_enum_for!(MergeStrategy);
+impl_into_enum_for!(PolynomialDegree);
+impl_into_enum_for!(RobustnessMethod);
+impl_into_enum_for!(ScalingMethod);
+impl_into_enum_for!(SurfaceMode);
+impl_into_enum_for!(UpdateMode);
+impl_into_enum_for!(WeightFunction);
+impl_into_enum_for!(ZeroWeightFallback);
+
+// IntoEnum for DistanceMetric<T>.
+//
+// String form requires `T: Float + FromStr` to parse Minkowski p.
+impl<T> IntoEnum<DistanceMetric<T>> for DistanceMetric<T> {
+    #[inline]
+    fn into_enum(self) -> Result<DistanceMetric<T>, LoessError> {
+        Ok(self)
+    }
+}
+
+impl<T> IntoEnum<DistanceMetric<T>> for &str
+where
+    T: num_traits::Float + FromStr,
+{
+    #[inline]
+    fn into_enum(self) -> Result<DistanceMetric<T>, LoessError> {
+        self.parse()
+    }
+}
+
+impl<T> IntoEnum<DistanceMetric<T>> for String
+where
+    T: num_traits::Float + FromStr,
+{
+    #[inline]
+    fn into_enum(self) -> Result<DistanceMetric<T>, LoessError> {
+        self.as_str().parse()
+    }
+}
 use crate::prelude::{LoessError, LoessResult};
 use loess_rs::internals::adapters::online::OnlineOutput;
 pub use loess_rs::internals::adapters::online::UpdateMode;
@@ -91,20 +163,20 @@ pub const INVALID_DATA_INPUTS: &str = "Invalid data inputs";
 pub const XY_ARRAYS_MUST_NOT_BE_NULL: &str = "x and y arrays must not be null";
 pub const ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO: &str = "Array length must be greater than 0";
 
-// Default string values for all parser-facing options. These are the canonical
-// fallback strings passed to the shared parse_* functions when a caller does
-// not supply a value.
-pub const DEFAULT_WEIGHT_FUNCTION: &str = "tricube";
-pub const DEFAULT_ROBUSTNESS_METHOD: &str = "bisquare";
-pub const DEFAULT_SCALING_METHOD: &str = "mad";
-pub const DEFAULT_BOUNDARY_POLICY: &str = "extend";
-pub const DEFAULT_ZERO_WEIGHT_FALLBACK: &str = "use_local_mean";
+// Default string values for all parser-facing options. Re-exported from
+// `loess_rs::defaults` so that all bindings share a single source of truth.
+pub use loess_rs::internals::adapters::defaults::DEFAULT_ONLINE_UPDATE_MODE as DEFAULT_UPDATE_MODE;
+pub use loess_rs::internals::adapters::defaults::DEFAULT_STREAMING_MERGE_STRATEGY as DEFAULT_MERGE_STRATEGY;
+pub use loess_rs::internals::algorithms::defaults::DEFAULT_POLYNOMIAL_DEGREE as DEFAULT_DEGREE;
+pub use loess_rs::internals::algorithms::defaults::DEFAULT_ROBUSTNESS_METHOD;
+pub use loess_rs::internals::algorithms::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK;
+pub use loess_rs::internals::engine::defaults::DEFAULT_SURFACE_MODE;
+pub use loess_rs::internals::math::defaults::DEFAULT_BOUNDARY_POLICY;
+pub use loess_rs::internals::math::defaults::DEFAULT_DISTANCE_METRIC;
+pub use loess_rs::internals::math::defaults::DEFAULT_SCALING_METHOD;
+pub use loess_rs::internals::math::defaults::DEFAULT_WEIGHT_FUNCTION;
+// CV method is an internal subsystem fallback, not a user-facing default.
 pub const DEFAULT_CV_METHOD: &str = "kfold";
-pub const DEFAULT_DEGREE: &str = "linear";
-pub const DEFAULT_DISTANCE_METRIC: &str = "normalized";
-pub const DEFAULT_SURFACE_MODE: &str = "interpolation";
-pub const DEFAULT_MERGE_STRATEGY: &str = "weighted_average";
-pub const DEFAULT_UPDATE_MODE: &str = "full";
 
 pub fn sanitize_error_message(msg: &str) -> String {
     msg.replace('\0', " ")
@@ -850,7 +922,7 @@ pub fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
     alias::parse_merge_strategy(name).map_err(|e| e.to_string())
 }
 
-// ─── Adapter build helpers ────────────────────────────────────────────────────
+// Adapter build helpers
 //
 // These functions centralize the "extract defaults → parse string enum →
 // chain adapter setters → build" pattern that every binding repeats for its
@@ -926,11 +998,7 @@ pub fn build_online(
     )
 }
 
-// ─── Builder setter methods ───────────────────────────────────────────────────
-//
-// These impl blocks are in binding_support.rs (compiled only with the `dev`
-// feature) so the adapter files (batch.rs, online.rs, streaming.rs) stay free
-// of any `#[cfg]` attributes.
+// Builder setter methods
 
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     ParallelBatchLoessBuilder<T>

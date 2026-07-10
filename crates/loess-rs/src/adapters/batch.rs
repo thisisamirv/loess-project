@@ -19,8 +19,11 @@ use std::vec::Vec;
 use core::fmt::Debug;
 
 // Internal dependencies
+use crate::adapters::defaults::*;
+use crate::algorithms::defaults::*;
 use crate::algorithms::regression::{PolynomialDegree, SolverLinalg, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
+use crate::engine::defaults::*;
 use crate::engine::executor::{
     CVPassFn, FitPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig, LoessExecutor, SmoothPassFn,
     SurfaceMode, VertexPassFn,
@@ -31,6 +34,7 @@ use crate::evaluation::cv::CVKind;
 use crate::evaluation::diagnostics::Diagnostics;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::math::boundary::BoundaryPolicy;
+use crate::math::defaults::*;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
 use crate::math::hat_matrix::HatMatrixStats;
 use crate::math::kernel::WeightFunction;
@@ -168,29 +172,29 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
     // Create a new batch LOESS builder with default parameters.
     fn new() -> Self {
         Self {
-            fraction: T::from(0.67).unwrap(),
-            iterations: 3,
-            weight_function: WeightFunction::default(),
-            robustness_method: RobustnessMethod::default(),
-            scaling_method: ScalingMethod::default(),
+            fraction: T::from(DEFAULT_FRACTION).unwrap(),
+            iterations: DEFAULT_ITERATIONS,
+            weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
+            robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
+            scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             interval_type: None,
             cv_fractions: None,
             cv_kind: None,
-            cv_seed: None,
+            cv_seed: DEFAULT_CV_SEED,
             deferred_error: None,
-            auto_converge: None,
-            return_diagnostics: false,
-            compute_residuals: false,
-            return_robustness_weights: false,
-            zero_weight_fallback: ZeroWeightFallback::default(),
-            boundary_policy: BoundaryPolicy::default(),
-            polynomial_degree: PolynomialDegree::default(),
-            dimensions: 1,
-            distance_metric: DistanceMetric::default(),
+            auto_converge: default_auto_converge(),
+            return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
+            compute_residuals: DEFAULT_RETURN_RESIDUALS,
+            return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
+            boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
+            polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
+            dimensions: DEFAULT_DIMENSIONS,
+            distance_metric: default_distance_metric(),
             cell: None,
             interpolation_vertices: None,
-            surface_mode: SurfaceMode::default(),
-            boundary_degree_fallback: true,
+            surface_mode: DEFAULT_SURFACE_MODE_ENUM,
+            boundary_degree_fallback: DEFAULT_BOUNDARY_DEGREE_FALLBACK,
             duplicate_param: None,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +

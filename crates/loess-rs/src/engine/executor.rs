@@ -26,14 +26,18 @@ use core::fmt::Debug;
 use num_traits::Float;
 
 // Internal dependencies
+use crate::adapters::defaults::*;
+use crate::algorithms::defaults::*;
 use crate::algorithms::interpolation::InterpolationSurface;
 use crate::algorithms::regression::{
     PolynomialDegree, RegressionContext, SolverLinalg, ZeroWeightFallback,
 };
 use crate::algorithms::robustness::RobustnessMethod;
+use crate::engine::defaults::*;
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::math::boundary::BoundaryPolicy;
+use crate::math::defaults::*;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
 use crate::math::kernel::WeightFunction;
 use crate::math::linalg::FloatLinalg;
@@ -344,24 +348,24 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Defau
     fn default() -> Self {
         Self {
             fraction: None,
-            iterations: 3,
-            weight_function: WeightFunction::default(),
-            zero_weight_fallback: ZeroWeightFallback::default(),
-            robustness_method: RobustnessMethod::default(),
-            scaling_method: ScalingMethod::default(),
+            iterations: DEFAULT_ITERATIONS,
+            weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
+            zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
+            robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
+            scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             cv_fractions: None,
             cv_kind: None,
             cv_seed: None,
             auto_converge: None,
             return_variance: None,
-            boundary_policy: BoundaryPolicy::default(),
-            polynomial_degree: PolynomialDegree::default(),
-            dimensions: 1,
-            distance_metric: DistanceMetric::default(),
-            surface_mode: SurfaceMode::default(),
+            boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
+            polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
+            dimensions: DEFAULT_DIMENSIONS,
+            distance_metric: default_distance_metric(),
+            surface_mode: DEFAULT_SURFACE_MODE_ENUM,
             interpolation_vertices: None,
             cell: None,
-            boundary_degree_fallback: true,
+            boundary_degree_fallback: DEFAULT_BOUNDARY_DEGREE_FALLBACK,
             custom_weights: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
@@ -473,20 +477,20 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // Create a new executor with default parameters.
     pub fn new() -> Self {
         Self {
-            fraction: T::from(0.67).unwrap_or_else(|| T::from(0.5).unwrap()),
-            iterations: 3,
-            weight_function: WeightFunction::default(),
-            zero_weight_fallback: ZeroWeightFallback::default(),
-            robustness_method: RobustnessMethod::default(),
-            scaling_method: ScalingMethod::default(),
-            boundary_policy: BoundaryPolicy::default(),
-            polynomial_degree: PolynomialDegree::default(),
-            dimensions: 1,
-            distance_metric: DistanceMetric::default(),
-            surface_mode: SurfaceMode::default(),
+            fraction: T::from(DEFAULT_FRACTION).unwrap_or_else(|| T::from(0.5).unwrap()),
+            iterations: DEFAULT_ITERATIONS,
+            weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
+            zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
+            robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
+            scaling_method: DEFAULT_SCALING_METHOD_ENUM,
+            boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
+            polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
+            dimensions: DEFAULT_DIMENSIONS,
+            distance_metric: default_distance_metric(),
+            surface_mode: DEFAULT_SURFACE_MODE_ENUM,
             interpolation_vertices: None,
             cell: None,
-            boundary_degree_fallback: true,
+            boundary_degree_fallback: DEFAULT_BOUNDARY_DEGREE_FALLBACK,
             custom_weights: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
