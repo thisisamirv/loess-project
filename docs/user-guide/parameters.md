@@ -424,7 +424,7 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
         .distance_metric("weighted")
         .weighted_metric_weights(vec![2.0, 0.5])
         .build()?;
-    let result = model.fit(&x, &y)?;
+    let result = model.fit(&x2d, &y)?;
     ```
 
 === "Julia"
