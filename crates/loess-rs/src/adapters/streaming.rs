@@ -21,8 +21,11 @@ use core::fmt::Debug;
 use core::mem;
 
 // Internal dependencies
+use crate::adapters::defaults::*;
+use crate::algorithms::defaults::*;
 use crate::algorithms::regression::{PolynomialDegree, SolverLinalg, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
+use crate::engine::defaults::*;
 use crate::engine::executor::{
     CVPassFn, FitPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig, LoessExecutor, SmoothPassFn,
     SurfaceMode, VertexPassFn,
@@ -31,16 +34,13 @@ use crate::engine::output::LoessResult;
 use crate::engine::validator::Validator;
 use crate::evaluation::diagnostics::DiagnosticsState;
 use crate::math::boundary::BoundaryPolicy;
+use crate::math::defaults::*;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
 use crate::math::kernel::WeightFunction;
 use crate::math::linalg::FloatLinalg;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::errors::LoessError;
-use crate::adapters::defaults::*;
-use crate::algorithms::defaults::*;
-use crate::engine::defaults::*;
-use crate::math::defaults::*;
 
 // Strategy for merging overlapping regions between streaming chunks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
