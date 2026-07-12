@@ -64,38 +64,31 @@ npm install fastloess-wasm
 ```javascript
 const { Loess } = require('fastloess-wasm');
 
-async function main() {
-    // Initialize WASM module
-    await init();
-    // Generate sample data
-    const x = Float64Array.from({ length: 100 }, (_, i) => i * 0.1);
-    const y = Float64Array.from(x, xi => Math.sin(xi) + ((xi * 7 % 1) - 0.5) * 0.2);
+// Generate sample data
+const x = Float64Array.from({ length: 100 }, (_, i) => i * 0.1);
+const y = Float64Array.from(x, xi => Math.sin(xi) + ((xi * 7 % 1) - 0.5) * 0.2);
 
-    // Basic smoothing
-    const model = new Loess({ fraction: 0.3 });
-    const result = model.fit(x, y);
-    console.log('Smoothed values:', result.y);
+// Basic smoothing
+const model = new Loess({ fraction: 0.3 });
+const result = model.fit(x, y);
+console.log('Smoothed values:', result.y);
 
-    // With options
-    const modelWithOptions = new Loess({
-        fraction: 0.3,
-        iterations: 3,
-        confidence_intervals: 0.95,
-        return_diagnostics: true
-    });
-    const resultWithOptions = modelWithOptions.fit(x, y);
+// With options
+const modelWithOptions = new Loess({
+    fraction: 0.3,
+    iterations: 3,
+    confidence_intervals: 0.95,
+    return_diagnostics: true
+});
+const resultWithOptions = modelWithOptions.fit(x, y);
 
-    console.log('R²:', resultWithOptions.diagnostics?.r_squared);
-}
-
-main();
+console.log('R²:', resultWithOptions.diagnostics?.r_squared);
 ```
 
 ### Browser (ES Modules)
 
 ```javascript
-import init, { Loess } from 'fastloess-wasm';
-await init();
+const { Loess } = require('fastloess-wasm');
 
 async function main() {
     // Initialize WASM module

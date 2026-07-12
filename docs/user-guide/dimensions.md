@@ -94,8 +94,7 @@ Single predictor. No configuration required.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -137,8 +136,10 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     ```r
     library(rfastloess)
     set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
+    n <- 100
+    lat <- seq(0, 2 *pi, length.out = n)
+    lon <- seq(0, 2* pi, length.out = n)
+    z <- sin(lat) + cos(lon) + rnorm(n, sd = 0.1)
 
     # n × 2 predictor matrix
     coords <- cbind(lat, lon)
@@ -151,6 +152,12 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     import numpy as np
     import fastloess as fl
 
+    rng = np.random.default_rng(42)
+    n = 100
+    lat = np.linspace(0, 2 * np.pi, n)
+    lon = np.linspace(0, 2 * np.pi, n)
+    z = np.sin(lat) + np.cos(lon) + rng.normal(0, 0.1, n)
+
     # x is an (n, 2) array flattened to 1D (Python binding requires flat input)
     x2d = np.column_stack([lat, lon]).ravel()
     model = fl.Loess(dimensions=2, fraction=0.3)
@@ -160,8 +167,15 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
 === "Rust"
     ```rust
     use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
 
     fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let lat: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let lon: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let z: Vec<f64> = (0..n).map(|i| lat[i].sin() + lon[i].cos() + 0.05).collect();
+        let x2d: Vec<f64> = (0..n).flat_map(|i| [lat[i], lon[i]]).collect();
+
         let model = Loess::new()
             .dimensions(2)
             .fraction(0.3)
@@ -178,8 +192,10 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     using Random, Statistics
 
     rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
+    n = 100
+    lat = collect(range(0, 2π, length=n))
+    lon = collect(range(0, 2π, length=n))
+    z = sin.(lat) .+ cos.(lon) .+ randn(rng, n) .* 0.1
 
     # x is an (n, 2) matrix of predictors
     x2d = hcat(lat, lon)
@@ -192,18 +208,25 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     const { Loess } = require('fastloess');
 
     const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
+    const lat = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const lon = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const z = Float64Array.from({ length: n }, (_, i) => Math.sin(lat[i]) + Math.cos(lon[i]) + 0.05);
     // x is a flat Float64Array of length n*2, row-major
+    const x2d = Float64Array.from({ length: n * 2 }, (_, k) => k % 2 === 0 ? lat[k >> 1] : lon[k >> 1]);
+
     const model = new Loess({ dimensions: 2, fraction: 0.3 });
     const result = model.fit(x2d, z);
     ```
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
+
+    const n = 100;
+    const lat = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const lon = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const z = Float64Array.from({ length: n }, (_, i) => Math.sin(lat[i]) + Math.cos(lon[i]) + 0.05);
+    const x2d = Float64Array.from({ length: n * 2 }, (_, k) => k % 2 === 0 ? lat[k >> 1] : lon[k >> 1]);
 
     const model = new Loess({ dimensions: 2, fraction: 0.3 });
     const result = model.fit(x2d, z);
@@ -217,6 +240,16 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     #include <vector>
 
     int main() {
+        const int n = 100;
+        std::vector<double> lat(n), lon(n), z(n), x2d(n * 2);
+        for (int i = 0; i < n; ++i) {
+            lat[i] = i * 2 * M_PI / (n - 1);
+            lon[i] = i * 2 * M_PI / (n - 1);
+            z[i] = std::sin(lat[i]) + std::cos(lon[i]) + 0.05;
+            x2d[2 * i]     = lat[i];
+            x2d[2 * i + 1] = lon[i];
+        }
+
         // x is an (n × 2) row-major matrix
         fastloess::LoessOptions d2_opts;
         d2_opts.dimensions = 2;
@@ -238,8 +271,11 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
     ```r
     library(rfastloess)
     set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
+    n <- 100
+    x1 <- seq(0, 2 * pi, length.out = n)
+    x2 <- seq(0, 1, length.out = n)
+    x3 <- seq(1, 0, length.out = n)
+    y <- sin(x1) + x2 - x3 + rnorm(n, sd = 0.1)
 
     predictors <- cbind(x1, x2, x3)   # n × 3
     model <- Loess(dimensions = 3L, fraction = 0.5)
@@ -252,8 +288,11 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
     import numpy as np
 
     rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+    n = 100
+    x1 = np.linspace(0, 2 * np.pi, n)
+    x2 = np.linspace(0, 1, n)
+    x3 = np.linspace(1, 0, n)
+    y = np.sin(x1) + x2 - x3 + rng.normal(0, 0.1, n)
 
     x3d = np.column_stack([x1, x2, x3]).ravel()   # (n*3,) flat
     model = fl.Loess(dimensions=3, fraction=0.5)
@@ -267,8 +306,11 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 
     fn main() -> Result<(), LoessError> {
         let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+        let x1: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let x2: Vec<f64> = (0..n).map(|i| i as f64 / (n - 1) as f64).collect();
+        let x3: Vec<f64> = (0..n).map(|i| 1.0 - i as f64 / (n - 1) as f64).collect();
+        let y: Vec<f64> = (0..n).map(|i| x1[i].sin() + x2[i] - x3[i] + 0.05).collect();
+        let x3d: Vec<f64> = (0..n).flat_map(|i| [x1[i], x2[i], x3[i]]).collect();
 
         let model = Loess::new()
             .dimensions(3)
@@ -286,8 +328,11 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
     using Random, Statistics
 
     rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
+    n = 100
+    x1 = collect(range(0, 2π, length=n))
+    x2 = collect(range(0.0, 1.0, length=n))
+    x3 = collect(range(1.0, 0.0, length=n))
+    y = sin.(x1) .+ x2 .- x3 .+ randn(rng, n) .* 0.1
 
     # x is an (n, 3) matrix of predictors
     x3d = hcat(x1, x2, x3)
@@ -300,8 +345,14 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
     const { Loess } = require('fastloess');
 
     const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+    const x1 = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const x2 = Float64Array.from({ length: n }, (_, i) => i / (n - 1));
+    const x3 = Float64Array.from({ length: n }, (_, i) => 1 - i / (n - 1));
+    const y = Float64Array.from({ length: n }, (_, i) => Math.sin(x1[i]) + x2[i] - x3[i] + 0.05);
+    const x3d = Float64Array.from({ length: n * 3 }, (_, k) => {
+        const i = Math.floor(k / 3), d = k % 3;
+        return d === 0 ? x1[i] : d === 1 ? x2[i] : x3[i];
+    });
 
     const model = new Loess({ dimensions: 3, fraction: 0.5 });
     const result = model.fit(x3d, y);
@@ -309,12 +360,17 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+    const x1 = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const x2 = Float64Array.from({ length: n }, (_, i) => i / (n - 1));
+    const x3 = Float64Array.from({ length: n }, (_, i) => 1 - i / (n - 1));
+    const y = Float64Array.from({ length: n }, (_, i) => Math.sin(x1[i]) + x2[i] - x3[i] + 0.05);
+    const x3d = Float64Array.from({ length: n * 3 }, (_, k) => {
+        const i = Math.floor(k / 3), d = k % 3;
+        return d === 0 ? x1[i] : d === 1 ? x2[i] : x3[i];
+    });
 
     const model = new Loess({ dimensions: 3, fraction: 0.5 });
     const result = model.fit(x3d, y);
@@ -328,6 +384,18 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
     #include <vector>
 
     int main() {
+        const int n = 100;
+        std::vector<double> y(n), x3d(n * 3);
+        for (int i = 0; i < n; ++i) {
+            double x1 = i * 2 * M_PI / (n - 1);
+            double x2 = static_cast<double>(i) / (n - 1);
+            double x3 = 1.0 - static_cast<double>(i) / (n - 1);
+            y[i] = std::sin(x1) + x2 - x3 + 0.05;
+            x3d[3 * i]     = x1;
+            x3d[3 * i + 1] = x2;
+            x3d[3 * i + 2] = x3;
+        }
+
         fastloess::LoessOptions d3_opts;
         d3_opts.dimensions = 3;
         d3_opts.fraction = 0.5;

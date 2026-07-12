@@ -26,8 +26,15 @@ model = Loess()
 **Methods:**
 
 ```julia
-result = fit(model, x::Vector{Float64}, y::Vector{Float64};
-             custom_weights::Union{Vector{Float64}, Nothing} = nothing) :: LoessResult
+using FastLOESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+model = Loess()
+result = fit(model, x, y)
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.

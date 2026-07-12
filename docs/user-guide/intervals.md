@@ -119,8 +119,7 @@ Estimate uncertainty in the smoothed curve itself.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -255,8 +254,7 @@ Estimate where new observations might fall.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -383,8 +381,7 @@ Request both types simultaneously:
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -507,8 +504,7 @@ Common levels and their z-values:
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -633,8 +629,7 @@ Access standard errors directly (available when intervals are computed):
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

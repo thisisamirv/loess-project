@@ -122,8 +122,7 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -258,8 +257,7 @@ Each point is held out once. Most thorough but slowest.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -397,8 +395,7 @@ Set a seed for reproducible fold assignments:
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -585,8 +582,7 @@ Lower MSE indicates better fit on held-out data.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

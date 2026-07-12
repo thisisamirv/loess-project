@@ -153,8 +153,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -269,8 +268,7 @@ Number of robustness iterations for outlier resistance.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -405,8 +403,7 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -522,8 +519,7 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -632,8 +628,7 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -718,7 +713,7 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
     rng = np.random.default_rng(42)
     x = np.linspace(0, 2 * np.pi, 100)
     y = np.sin(x) + rng.normal(0, 0.3, 100)
-    x2d = np.column_stack([x, x**2 / (2 * np.pi)**2])
+    x2d = np.column_stack([x, x**2 / (2 * np.pi)**2]).ravel()
 
     model = fl.Loess(
         dimensions=2,
@@ -787,8 +782,7 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -919,8 +913,7 @@ See [Weight Functions](kernels.md) for detailed comparison.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1036,8 +1029,7 @@ See [Robustness](robustness.md) for detailed comparison.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1156,8 +1148,7 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1272,8 +1263,7 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1497,8 +1487,7 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1607,8 +1596,7 @@ Enable early stopping when robustness weights stabilize.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1725,8 +1713,7 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1863,8 +1850,7 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -1986,8 +1972,7 @@ Include residuals (`y - smoothed`) in the output.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -2116,8 +2101,7 @@ Include fit quality metrics (Batch and Streaming only).
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -2235,8 +2219,7 @@ Include final robustness weights (useful for outlier detection).
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -2349,8 +2332,7 @@ See [Intervals](intervals.md) for detailed usage.
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -2466,8 +2448,7 @@ Selection strategy for automated parameter tuning.
 
 === "WebAssembly"
     ```javascript
-    import init, { smooth } from 'fastloess-wasm';
-    await init();
+    const { smooth } = require('fastloess-wasm');
 
     // Coming soon
     ```
@@ -2578,8 +2559,7 @@ Points per chunk in Streaming mode.
 
 === "WebAssembly"
     ```javascript
-    import init, { StreamingLoess } from 'fastloess-wasm';
-    await init();
+    const { StreamingLoess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -2693,8 +2673,7 @@ Overlap between chunks in Streaming mode.
 
 === "WebAssembly"
     ```javascript
-    import init, { StreamingLoess } from 'fastloess-wasm';
-    await init();
+    const { StreamingLoess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -2817,8 +2796,7 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    import init, { StreamingLoess } from 'fastloess-wasm';
-    await init();
+    const { StreamingLoess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -2929,8 +2907,7 @@ Maximum points held in memory for Online mode.
 
 === "WebAssembly"
     ```javascript
-    import init, { OnlineLoess } from 'fastloess-wasm';
-    await init();
+    const { OnlineLoess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -3041,8 +3018,7 @@ Minimum points required before Online filter starts producing outputs.
 
 === "WebAssembly"
     ```javascript
-    import init, { OnlineLoess } from 'fastloess-wasm';
-    await init();
+    const { OnlineLoess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -3160,8 +3136,7 @@ For example:
 
 === "WebAssembly"
     ```javascript
-    import init, { OnlineLoess } from 'fastloess-wasm';
-    await init();
+    const { OnlineLoess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

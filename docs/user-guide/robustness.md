@@ -101,8 +101,7 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -215,8 +214,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -329,8 +327,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -478,8 +475,7 @@ Use robustness weights to identify potential outliers:
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -609,8 +605,7 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -722,8 +717,7 @@ Stop iterations early when weights stabilize:
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

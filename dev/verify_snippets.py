@@ -139,7 +139,7 @@ _LANG_TAGS: dict[str, set[str]] = {
     "rust": {"rust"},
 }
 
-_PYTHON_PREAMBLE = ""
+_PYTHON_PREAMBLE = "import fastloess as fl\nimport numpy as np\n"
 
 _JULIA_PREAMBLE = ""
 
@@ -301,50 +301,15 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
     if not code.strip():
         return "empty"
 
-    # Skip snippets that reference variables or packages we can't supply
     if runner == "python":
-        # Genomic-specific heavy I/O (would need real files)
-        if any(s in code for s in ["read_csv", "open(", "glob(", "argparse"]):
-            return "file I/O"
-        # Lines that are obviously just output examples (no executable Python)
-        if not any(c in code for c in ["=", "(", "import", "print"]):
-            return "no executable statements"
         # Large synthetic datasets that exceed the per-snippet timeout
         if re.search(r"total_points\s*=\s*[1-9][0-9]{4,}", code):
             return "large synthetic dataset (too slow for CI)"
-        # Multi-dimensional snippets that need lat/lon/x1/x2/x3/x2d/x3d data
-        if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*=\s*[23]", code):
-            return "multi-dim Python (needs dimensional data)"
-        # Snippets that use fastloess without importing it first
-        if re.search(
-            r"\bfl\b|\bfastloess\b|\bLoess\b|\bStreamingLoess\b|\bOnlineLoess\b",
-            code,
-        ):
-            if not re.search(r"\bimport\b.*fastloess|\bfrom\b.*fastloess", code):
-                return "fastloess not imported (snippet is not self-contained)"
 
     if runner == "julia":
         # Skip package-management / installation snippets
         if re.search(r"\bPkg\.(add|develop|clone|rm|pin)\s*\(", code):
             return "Pkg management snippet"
-        # Skip API method-signature snippets: type-annotated keyword arguments
-        # (e.g. `; custom_weights::Union{...} = nothing`) are valid only in
-        # function *definitions*, not call sites — Julia rejects them as calls.
-        if re.search(r";\s*\w+::", code, re.DOTALL):
-            return "Julia method signature (keyword arg with type annotation — not callable)"
-        # Multi-dimensional snippets that use lat/lon/x1/x2/x3 (undefined data)
-        if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*=\s*[23]", code):
-            return "multi-dim Julia (needs dimensional data)"
-    if runner == "nodejs":
-        # TypeScript-only syntax (type annotations)
-        if ": SmoothOptions" in code or ": LoessResult" in code:
-            return "TypeScript (not Node.js)"
-        # Snippets must load fastloess themselves (no preamble)
-        if not re.search(r"require\s*\(", code):
-            return "no require() — snippet must load fastloess itself"
-        # Multi-dimensional snippets that use x2d/x3d undefined data
-        if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*:\s*[23]", code):
-            return "multi-dim Node.js (needs dimensional data)"
 
     if runner == "r":
         # Skip install/devtools snippets
@@ -353,48 +318,6 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # Skip if no actual R statements (e.g., pure output blocks)
         if not any(c in code for c in ["<-", "=", "(", "library"]):
             return "no executable R statements"
-        # Multi-dim input (x2d/x3d) requires a package rebuild to work correctly
-        # Note: R uses integer suffix L (e.g., dimensions = 2L), so no trailing \b
-        if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*=\s*[23]", code):
-            return "multi-dim R (needs package rebuild)"
-        # API signature snippets that use R's '...' outside a function definition
-        # (e.g. 'model <- Loess(...)') — not valid in a script context.
-        if re.search(r"\(\s*\.\.\.\s*\)", code):
-            return "R API signature with ... (not runnable outside function)"
-
-    if runner == "wasm":
-        # Skip any ES-module import syntax — wasm runner uses CJS require().
-        # Catches `import { X }`, `import init, { X }`, `import X from ...`, etc.
-        if re.search(r"^import\b", code, re.MULTILINE) or "await init(" in code:
-            return "ES module import (not supported in CJS runner)"
-        # Snippets must load the WASM package themselves (no preamble)
-        if not re.search(r"require\s*\(", code):
-            return "no require() — snippet must load the WASM package itself"
-
-    if runner == "rust":
-        # Without a structural wrapper, only complete programs (with fn main) compile
-        if not re.search(r"\bfn\s+main\s*\(", code):
-            return "fragment — no fn main (not a standalone Rust program)"
-        # Skip snippets that look like TOML config (Cargo.toml examples)
-        if code.strip().startswith("[") and "=" in code and "fn " not in code:
-            return "TOML/config snippet"
-        # Backend::GPU requires the optional gpu feature flag
-        if re.search(r"\bBackend\s*::\s*GPU\b", code):
-            return "requires gpu feature flag (not enabled in snippet workspace)"
-        # cross_validate / KFold are not in the stable public API
-        if re.search(r"\bcross_validate\b|\bKFold\b", code):
-            return "cross_validate/KFold not in stable public API"
-        # Multi-dimensional snippets that use x2d/x3d undefined data
-        if re.search(r"\bx2d\b|\bx3d\b", code):
-            return "multi-dim Rust (needs dimensional data)"
-
-    if runner == "cpp":
-        # Without a structural wrapper, only complete programs (with int main) compile
-        if not re.search(r"\bint\s+main\s*\(", code):
-            return "fragment — no int main (not a standalone C++ program)"
-        # Multi-dimensional snippets that use x2d/x3d undefined data
-        if re.search(r"\bx2d\b|\bx3d\b", code):
-            return "multi-dim C++ (needs dimensional data)"
 
     return None
 

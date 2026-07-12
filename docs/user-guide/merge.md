@@ -127,8 +127,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 === "WebAssembly"
     ```javascript
-    import init, { StreamingLoess } from 'fastloess-wasm';
-    await init();
+    const { StreamingLoess } = require('fastloess-wasm');
 
     const n = 100;
     const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -265,8 +264,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 === "WebAssembly"
     ```javascript
-    import init, { StreamingLoess } from 'fastloess-wasm';
-    await init();
+    const { StreamingLoess } = require('fastloess-wasm');
 
     const n = 100;
     const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -399,8 +397,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 === "WebAssembly"
     ```javascript
-    import init, { StreamingLoess } from 'fastloess-wasm';
-    await init();
+    const { StreamingLoess } = require('fastloess-wasm');
 
     const n = 100;
     const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -554,8 +551,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "WebAssembly"
     ```javascript
-    import init, { StreamingLoess } from 'fastloess-wasm';
-    await init();
+    const { StreamingLoess } = require('fastloess-wasm');
 
     const n = 100;
     const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

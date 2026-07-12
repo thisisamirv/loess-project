@@ -11,8 +11,7 @@ The `Loess` class is the main entry point for batch smoothing.
 **Constructor:**
 
 ```javascript
-import init, { Loess } from 'fastloess-wasm';
-await init();
+const { Loess } = require('fastloess-wasm');
 
 const model = new Loess({ fraction: 0.5 });
 ```
@@ -22,8 +21,7 @@ const model = new Loess({ fraction: 0.5 });
 **Methods:**
 
 ```javascript
-import init, { Loess } from 'fastloess-wasm';
-await init();
+const { Loess } = require('fastloess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -47,8 +45,7 @@ The `StreamingLoess` class processes data in chunks, suitable for very large dat
 **Constructor:**
 
 ```javascript
-import init, { StreamingLoess } from 'fastloess-wasm';
-await init();
+const { StreamingLoess } = require('fastloess-wasm');
 
 const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
 ```
@@ -59,8 +56,7 @@ const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 
 **Methods:**
 
 ```javascript
-import init, { StreamingLoess } from 'fastloess-wasm';
-await init();
+const { StreamingLoess } = require('fastloess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -73,8 +69,7 @@ const partialResult = stream.process_chunk(x.slice(0, 50), y.slice(0, 50));
 * Processes a chunk of data. Returns partial results.
 
 ```javascript
-import init, { StreamingLoess } from 'fastloess-wasm';
-await init();
+const { StreamingLoess } = require('fastloess-wasm');
 
 const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -94,8 +89,7 @@ The `OnlineLoess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```javascript
-import init, { OnlineLoess } from 'fastloess-wasm';
-await init();
+const { OnlineLoess } = require('fastloess-wasm');
 
 const online = new OnlineLoess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
 ```
@@ -106,8 +100,7 @@ const online = new OnlineLoess({ fraction: 0.3 }, { window_capacity: 50, min_poi
 **Methods:**
 
 ```javascript
-import init, { OnlineLoess } from 'fastloess-wasm';
-await init();
+const { OnlineLoess } = require('fastloess-wasm');
 
 const online = new OnlineLoess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
 const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | undefined
@@ -292,8 +285,7 @@ Returned by `add_point()` once the window has enough points (`undefined` until t
 ## Example
 
 ```javascript
-import init, { Loess } from 'fastloess-wasm';
-await init();
+const { Loess } = require('fastloess-wasm');
 
 const x = new Float64Array([1, 2, 3, 4, 5]);
 const y = new Float64Array([2.1, 4.0, 6.2, 8.0, 10.1]);

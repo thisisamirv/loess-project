@@ -141,8 +141,7 @@ Standard mode for complete datasets. **Supports all features.**
 
 === "WebAssembly"
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -325,8 +324,7 @@ Process large datasets in chunks with configurable overlap.
 
 === "WebAssembly"
     ```javascript
-    import init, { StreamingLoess } from 'fastloess-wasm';
-    await init();
+    const { StreamingLoess } = require('fastloess-wasm');
 
     const n = 100;
     const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -521,8 +519,7 @@ Incremental updates with a sliding window for real-time data.
 
 === "WebAssembly"
     ```javascript
-    import init, { OnlineLoess } from 'fastloess-wasm';
-    await init();
+    const { OnlineLoess } = require('fastloess-wasm');
 
     const n = 100;
     const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

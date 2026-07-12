@@ -256,8 +256,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 === "WebAssembly"
 
     ```javascript
-    import init, { Loess } from 'fastloess-wasm';
-    await init();
+    const { Loess } = require('fastloess-wasm');
 
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
