@@ -17,7 +17,7 @@ pub fn init_panic_hook() {
 const TS_TYPES: &'static str = r#"
 /** Configuration options for LOESS smoothing. */
 export interface SmoothOptions {
-    /** Smoothing fraction (0 < fraction <= 1). Default: 0.75. */
+    /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
     /** Number of robustness iterations. Default: 3. */
     iterations?: number;
@@ -51,11 +51,11 @@ export interface SmoothOptions {
     cv_method?: string;
     /** Number of folds for k-fold CV. Default: 5. */
     cv_k?: number;
-    /** Polynomial degree (\"linear\" or \"quadratic\"). Default: \"linear\". */
+    /** Polynomial degree (\"constant\", \"linear\", \"quadratic\", \"cubic\", \"quartic\"). Default: \"linear\". */
     degree?: string;
     /** Number of predictor dimensions. Default: 1. */
     dimensions?: number;
-    /** Distance metric (\"normalized\", \"euclidean\", \"manhattan\", \"weighted\"). Default: \"normalized\". */
+    /** Distance metric (\"normalized\", \"euclidean\", \"manhattan\", \"chebyshev\", \"minkowski:p\", \"weighted\"). Default: \"normalized\". */
     distance_metric?: string;
     /** Surface computation mode (\"interpolation\" or \"direct\"). Default: \"interpolation\". */
     surface_mode?: string;
@@ -79,7 +79,7 @@ export interface StreamingOptions {
     chunk_size?: number;
     /** Overlap between adjacent chunks. Default: chunk_size / 10, min. 1. */
     overlap?: number;
-    /** Strategy for merging chunks (\"weighted\", \"average\", \"first\", \"last\"). Default: \"weighted\". */
+    /** Strategy for merging chunks (\"average\", \"weighted_average\", \"take_first\", \"take_last\"). Default: \"weighted_average\". */
     merge_strategy?: string;
 }
 
@@ -106,7 +106,7 @@ export class StreamingLoess {
     free(): void;
     constructor(options?: SmoothOptions, streamingOpts?: StreamingOptions);
     /** Process a chunk of data. */
-    processChunk(x: Float64Array, y: Float64Array): LoessResult;
+    process_chunk(x: Float64Array, y: Float64Array): LoessResult;
     /** Finalize the stream and return remaining data. */
     finalize(): LoessResult;
 }
@@ -117,6 +117,16 @@ export class OnlineLoess {
     constructor(options?: SmoothOptions, onlineOpts?: OnlineOptions);
     /** Add a single point and get the smoothed value, or undefined if not enough points yet. */
     add_point(x: number, y: number): OnlineOutput | undefined;
+}
+
+/** Result from a single online update step. */
+export class OnlineOutput {
+    free(): void;
+    get smoothed(): number;
+    get std_error(): number | undefined;
+    get residual(): number | undefined;
+    get robustness_weight(): number | undefined;
+    get iterations_used(): number | undefined;
 }
 "#;
 
@@ -512,7 +522,7 @@ impl StreamingLoess {
         Ok(StreamingLoess { inner: model })
     }
 
-    #[wasm_bindgen(js_name = processChunk, skip_typescript)]
+    #[wasm_bindgen(js_name = process_chunk, skip_typescript)]
     pub fn process_chunk(
         &mut self,
         x: &Float64Array,

@@ -45,6 +45,11 @@ fn setter_unsupported_constructor_only(name: &str) {
     ));
 }
 
+/// Export the last error message set by a failed constructor.
+///
+/// Returns a null pointer when no error has been set since the last successful
+/// constructor call.  The returned pointer is valid until the next call to any
+/// `jl_loess_*` function on the current thread.
 #[unsafe(no_mangle)]
 pub extern "C" fn jl_last_error_message() -> *const c_char {
     JL_LAST_ERROR.with(|slot| {
@@ -84,38 +89,38 @@ impl Default for JlOnlineOutput {
     }
 }
 
-// Result struct that can be passed across FFI boundary.
-// All arrays are allocated by Rust and must be freed by Rust.
+/// Result struct that can be passed across FFI boundary.
+/// All arrays are allocated by Rust and must be freed by Rust.
 #[repr(C)]
 pub struct JlLoessResult {
-    // Sorted x values (length = n)
+    /// Sorted x values (length = n)
     pub x: *mut c_double,
-    // Smoothed y values (length = n)
+    /// Smoothed y values (length = n)
     pub y: *mut c_double,
-    // Number of data points
+    /// Number of data points
     pub n: c_ulong,
 
-    // Standard errors (NULL if not computed)
+    /// Standard errors (NULL if not computed)
     pub standard_errors: *mut c_double,
-    // Lower confidence bounds (NULL if not computed)
+    /// Lower confidence bounds (NULL if not computed)
     pub confidence_lower: *mut c_double,
-    // Upper confidence bounds (NULL if not computed)
+    /// Upper confidence bounds (NULL if not computed)
     pub confidence_upper: *mut c_double,
-    // Lower prediction bounds (NULL if not computed)
+    /// Lower prediction bounds (NULL if not computed)
     pub prediction_lower: *mut c_double,
-    // Upper prediction bounds (NULL if not computed)
+    /// Upper prediction bounds (NULL if not computed)
     pub prediction_upper: *mut c_double,
-    // Residuals (NULL if not computed)
+    /// Residuals (NULL if not computed)
     pub residuals: *mut c_double,
-    // Robustness weights (NULL if not computed)
+    /// Robustness weights (NULL if not computed)
     pub robustness_weights: *mut c_double,
 
-    // Fraction used for smoothing
+    /// Fraction used for smoothing
     pub fraction_used: c_double,
-    // Number of iterations performed (-1 if not available)
+    /// Number of iterations performed (-1 if not available)
     pub iterations_used: c_int,
 
-    // Diagnostics (NaN if not computed)
+    /// Diagnostics (NaN if not computed)
     pub rmse: c_double,
     pub mae: c_double,
     pub r_squared: c_double,
@@ -124,21 +129,21 @@ pub struct JlLoessResult {
     pub effective_df: c_double,
     pub residual_sd: c_double,
 
-    // Hat-matrix statistics (NaN / NULL if not computed; set return_se = 1 to enable)
+    /// Hat-matrix statistics (NaN / NULL if not computed; set return_se = 1 to enable)
     pub enp: c_double,
     pub trace_hat: c_double,
     pub delta1: c_double,
     pub delta2: c_double,
     pub residual_scale: c_double,
-    // Per-point leverage / hat-matrix diagonal (NULL if not computed, length = n)
+    /// Per-point leverage / hat-matrix diagonal (NULL if not computed, length = n)
     pub leverage: *mut c_double,
-    // Number of predictor dimensions used
+    /// Number of predictor dimensions used
     pub dimensions: c_int,
-    // Cross-validation scores (NULL if not computed, length = cv_scores_len)
+    /// Cross-validation scores (NULL if not computed, length = cv_scores_len)
     pub cv_scores: *mut c_double,
     pub cv_scores_len: c_ulong,
 
-    // Error message (NULL if no error)
+    /// Error message (NULL if no error)
     pub error: *mut c_char,
 }
 
@@ -232,7 +237,9 @@ fn loess_result_to_jl(result: LoessResult<f64>) -> JlLoessResult {
     }
 }
 
+// ============================================================================
 // Stateful Structs (Opaque to C)
+// ============================================================================
 
 use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
@@ -252,7 +259,9 @@ pub struct JlOnlineLoess {
     inner: ParallelOnlineLoess<f64>,
 }
 
-// Loess () C API
+// ============================================================================
+// Loess (Batch) C API
+// ============================================================================
 
 /// Create a new Loess configuration.
 ///
@@ -494,7 +503,7 @@ pub unsafe extern "C" fn jl_loess_free(ptr: *mut JlLoessConfig) {
 
 /// Legacy setter retained for ABI compatibility.
 ///
-/// Configure this in `jl_loess_new` instead.
+/// Configure `cell` in `jl_loess_new` instead.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
@@ -510,7 +519,7 @@ pub unsafe extern "C" fn jl_loess_set_cell(config_ptr: *mut JlLoessConfig, cell:
 
 /// Legacy setter retained for ABI compatibility.
 ///
-/// Configure this in `jl_loess_new` instead.
+/// Configure `interpolation_vertices` in `jl_loess_new` instead.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
@@ -529,7 +538,7 @@ pub unsafe extern "C" fn jl_loess_set_interpolation_vertices(
 
 /// Legacy setter retained for ABI compatibility.
 ///
-/// Configure this in `jl_loess_new` instead.
+/// Configure `boundary_degree_fallback` in `jl_loess_new` instead.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
@@ -548,7 +557,7 @@ pub unsafe extern "C" fn jl_loess_set_boundary_degree_fallback(
 
 /// Legacy setter retained for ABI compatibility.
 ///
-/// Configure this in `jl_loess_new` instead.
+/// Configure `cv_seed` in `jl_loess_new` instead.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
@@ -563,7 +572,9 @@ pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, se
     setter_unsupported_constructor_only("jl_loess_set_cv_seed");
 }
 
+// ============================================================================
 // StreamingLoess C API
+// ============================================================================
 
 /// Create a new StreamingLoess processor.
 ///
@@ -806,7 +817,9 @@ pub unsafe extern "C" fn jl_streaming_loess_free(ptr: *mut JlStreamingLoess) {
     }
 }
 
+// ============================================================================
 // OnlineLoess C API
+// ============================================================================
 
 /// Create a new OnlineLoess processor.
 ///

@@ -21,26 +21,105 @@ use core::marker::PhantomData;
 // Internal dependencies
 use crate::adapters::batch::BatchLoessBuilder;
 use crate::adapters::online::OnlineLoessBuilder;
-use crate::adapters::online::UpdateMode;
-use crate::adapters::streaming::MergeStrategy;
 use crate::adapters::streaming::StreamingLoessBuilder;
-use crate::algorithms::regression::{PolynomialDegree, SolverLinalg, ZeroWeightFallback};
-use crate::algorithms::robustness::RobustnessMethod;
-use crate::engine::executor::SurfaceMode;
+use crate::algorithms::regression::SolverLinalg;
 use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
 use crate::evaluation::cv::CVKind;
+use crate::evaluation::defaults::DEFAULT_CV_K_FOLDS;
 use crate::evaluation::intervals::IntervalMethod;
-use crate::math::boundary::BoundaryPolicy;
 use crate::math::distance::DistanceLinalg;
-use crate::math::distance::DistanceMetric;
-use crate::math::kernel::WeightFunction;
 use crate::math::linalg::FloatLinalg;
-use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 
-// Publicly re-exported non-enum API types
+// Publicly re-exported types
+pub use crate::adapters::online::UpdateMode;
+pub use crate::adapters::streaming::MergeStrategy;
+pub use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
+pub use crate::algorithms::robustness::RobustnessMethod;
+pub use crate::engine::executor::SurfaceMode;
 pub use crate::engine::output::LoessResult;
+pub use crate::math::boundary::BoundaryPolicy;
+pub use crate::math::distance::DistanceMetric;
+pub use crate::math::kernel::WeightFunction;
+pub use crate::math::scaling::ScalingMethod;
 pub use crate::primitives::errors::LoessError;
+
+// Converts a value into a typed enum, either infallibly (enum variant) or
+// via case-insensitive string parsing (string literal / `String`).
+//
+// Invalid strings do not panic; errors accumulate in the builder and are
+// returned together as [`LoessError::ParseErrors`] by `build()`.
+pub(crate) trait IntoEnum<E> {
+    fn into_enum(self) -> Result<E, LoessError>;
+}
+
+// Generate IntoEnum impls for a concrete (non-generic) enum type.
+macro_rules! impl_into_enum_for {
+    ($ty:ty) => {
+        impl IntoEnum<$ty> for $ty {
+            #[inline]
+            fn into_enum(self) -> Result<$ty, LoessError> {
+                Ok(self)
+            }
+        }
+
+        impl IntoEnum<$ty> for &str {
+            #[inline]
+            fn into_enum(self) -> Result<$ty, LoessError> {
+                self.parse()
+            }
+        }
+
+        impl IntoEnum<$ty> for String {
+            #[inline]
+            fn into_enum(self) -> Result<$ty, LoessError> {
+                self.as_str().parse()
+            }
+        }
+    };
+}
+
+impl_into_enum_for!(BoundaryPolicy);
+impl_into_enum_for!(MergeStrategy);
+impl_into_enum_for!(PolynomialDegree);
+impl_into_enum_for!(RobustnessMethod);
+impl_into_enum_for!(ScalingMethod);
+impl_into_enum_for!(SurfaceMode);
+impl_into_enum_for!(UpdateMode);
+impl_into_enum_for!(WeightFunction);
+impl_into_enum_for!(ZeroWeightFallback);
+
+// IntoEnum for DistanceMetric<T>.
+//
+// Accepting a string requires `T: Float + FromStr` to parse the Minkowski `p`
+// parameter from `"minkowski:3.0"` syntax. Passing an enum variant directly
+// works unconditionally.
+impl<T> IntoEnum<DistanceMetric<T>> for DistanceMetric<T> {
+    #[inline]
+    fn into_enum(self) -> Result<DistanceMetric<T>, LoessError> {
+        Ok(self)
+    }
+}
+
+impl<T> IntoEnum<DistanceMetric<T>> for &str
+where
+    T: num_traits::Float + core::str::FromStr,
+{
+    #[inline]
+    fn into_enum(self) -> Result<DistanceMetric<T>, LoessError> {
+        self.parse()
+    }
+}
+
+impl<T> IntoEnum<DistanceMetric<T>> for String
+where
+    T: num_traits::Float + core::str::FromStr,
+{
+    #[inline]
+    fn into_enum(self) -> Result<DistanceMetric<T>, LoessError> {
+        self.as_str().parse()
+    }
+}
 
 // Mode markers — zero-sized types that select which processor build() produces.
 #[derive(Debug, Clone, Copy, Default)]
@@ -242,7 +321,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             boundary_degree_fallback: None,
             custom_weights: None,
             cv_method_str: None,
-            cv_k_val: 5,
+            cv_k_val: DEFAULT_CV_K_FOLDS,
             weighted_metric_weights: None,
             custom_smooth_pass: None,
             custom_cv_pass: None,
@@ -256,11 +335,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set behavior for handling zero-weight neighborhoods.
-    pub fn zero_weight_fallback(mut self, policy: impl AsRef<str>) -> Self {
+    pub fn zero_weight_fallback(mut self, policy: impl IntoEnum<ZeroWeightFallback>) -> Self {
         if self.zero_weight_fallback.is_some() {
             self.duplicate_param = Some("zero_weight_fallback");
         }
-        match policy.as_ref().parse() {
+        match policy.into_enum() {
             Ok(p) => self.zero_weight_fallback = Some(p),
             Err(e) => self.parse_errors.push(e),
         }
@@ -268,11 +347,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the boundary handling policy.
-    pub fn boundary_policy(mut self, policy: impl AsRef<str>) -> Self {
+    pub fn boundary_policy(mut self, policy: impl IntoEnum<BoundaryPolicy>) -> Self {
         if self.boundary_policy.is_some() {
             self.duplicate_param = Some("boundary_policy");
         }
-        match policy.as_ref().parse() {
+        match policy.into_enum() {
             Ok(p) => self.boundary_policy = Some(p),
             Err(e) => self.parse_errors.push(e),
         }
@@ -280,11 +359,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the merging strategy for overlapping chunks (Streaming only).
-    pub fn merge_strategy(mut self, strategy: impl AsRef<str>) -> Self {
+    pub fn merge_strategy(mut self, strategy: impl IntoEnum<MergeStrategy>) -> Self {
         if self.merge_strategy.is_some() {
             self.duplicate_param = Some("merge_strategy");
         }
-        match strategy.as_ref().parse() {
+        match strategy.into_enum() {
             Ok(s) => self.merge_strategy = Some(s),
             Err(e) => self.parse_errors.push(e),
         }
@@ -292,11 +371,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the incremental update mode (Online only).
-    pub fn update_mode(mut self, mode: impl AsRef<str>) -> Self {
+    pub fn update_mode(mut self, mode: impl IntoEnum<UpdateMode>) -> Self {
         if self.update_mode.is_some() {
             self.duplicate_param = Some("update_mode");
         }
-        match mode.as_ref().parse() {
+        match mode.into_enum() {
             Ok(m) => self.update_mode = Some(m),
             Err(e) => self.parse_errors.push(e),
         }
@@ -358,11 +437,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the kernel weight function.
-    pub fn weight_function(mut self, wf: impl AsRef<str>) -> Self {
+    pub fn weight_function(mut self, wf: impl IntoEnum<WeightFunction>) -> Self {
         if self.weight_function.is_some() {
             self.duplicate_param = Some("weight_function");
         }
-        match wf.as_ref().parse() {
+        match wf.into_enum() {
             Ok(w) => self.weight_function = Some(w),
             Err(e) => self.parse_errors.push(e),
         }
@@ -370,11 +449,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the robustness weighting method.
-    pub fn robustness_method(mut self, rm: impl AsRef<str>) -> Self {
+    pub fn robustness_method(mut self, rm: impl IntoEnum<RobustnessMethod>) -> Self {
         if self.robustness_method.is_some() {
             self.duplicate_param = Some("robustness_method");
         }
-        match rm.as_ref().parse() {
+        match rm.into_enum() {
             Ok(r) => self.robustness_method = Some(r),
             Err(e) => self.parse_errors.push(e),
         }
@@ -382,11 +461,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the residual scaling method (MAR/MAD).
-    pub fn scaling_method(mut self, sm: impl AsRef<str>) -> Self {
+    pub fn scaling_method(mut self, sm: impl IntoEnum<ScalingMethod>) -> Self {
         if self.scaling_method.is_some() {
             self.duplicate_param = Some("scaling_method");
         }
-        match sm.as_ref().parse() {
+        match sm.into_enum() {
             Ok(s) => self.scaling_method = Some(s),
             Err(e) => self.parse_errors.push(e),
         }
@@ -500,11 +579,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     //
     // Accepts case-insensitive strings:
     // "constant", "linear", "quadratic", "cubic", "quartic".
-    pub fn degree(mut self, degree: impl AsRef<str>) -> Self {
+    pub fn degree(mut self, degree: impl IntoEnum<PolynomialDegree>) -> Self {
         if self.polynomial_degree.is_some() {
             self.duplicate_param = Some("degree");
         }
-        match degree.as_ref().parse() {
+        match degree.into_enum() {
             Ok(d) => self.polynomial_degree = Some(d),
             Err(e) => self.parse_errors.push(e),
         }
@@ -521,14 +600,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the distance metric for nD neighborhood computation.
-    pub fn distance_metric(mut self, metric: impl AsRef<str>) -> Self
-    where
-        T: core::str::FromStr,
-    {
+    pub fn distance_metric(mut self, metric: impl IntoEnum<DistanceMetric<T>>) -> Self {
         if self.distance_metric.is_some() {
             self.duplicate_param = Some("distance_metric");
         }
-        match metric.as_ref().parse() {
+        match metric.into_enum() {
             Ok(m) => self.distance_metric = Some(m),
             Err(e) => self.parse_errors.push(e),
         }
@@ -536,11 +612,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set the surface evaluation mode (Interpolation or Direct).
-    pub fn surface_mode(mut self, mode: impl AsRef<str>) -> Self {
+    pub fn surface_mode(mut self, mode: impl IntoEnum<SurfaceMode>) -> Self {
         if self.surface_mode.is_some() {
             self.duplicate_param = Some("surface_mode");
         }
-        match mode.as_ref().parse() {
+        match mode.into_enum() {
             Ok(m) => self.surface_mode = Some(m),
             Err(e) => self.parse_errors.push(e),
         }

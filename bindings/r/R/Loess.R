@@ -99,13 +99,14 @@ Loess <- function(
 ) {
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLoess$new, env_args(loess_params))
+
     # Return a wrapper that coerces inputs for methods
     structure(
         list(
             handle = handle,
             fit = function(x, y, custom_weights = NULL) {
-                args <- validate_common_args(x, y, fraction, iterations)
-                handle$fit(args$x, args$y, custom_weights)
+                validated_args <- validate_common_args(x, y, fraction, iterations)
+                handle$fit(validated_args$x, validated_args$y, custom_weights)
             },
             params = list(
                 fraction = fraction,
@@ -123,3 +124,59 @@ Loess <- function(
         class = "Loess"
     )
 }
+aram_names) {
+    env <- parent.frame()
+    result <- lapply(param_names, function(name) {
+        val <- get(name, envir = env)
+        type <- param_types[[name]]
+        if (is.null(type)) {
+            return(val)
+        }
+        switch(type,
+            double = as.double(val),
+            integer = as.integer(val),
+            character = as.character(val),
+            logical = as.logical(val),
+            nullable = coerce_nullable(val)[[1]],
+            val
+        )
+    })
+    setNames(result, param_names)
+}
+
+#' Parameter names for each Loess constructor
+#' @noRd
+loess_params <- c(
+    "fraction", "iterations", "weight_function", "robustness_method",
+    "scaling_method", "boundary_policy", "confidence_intervals",
+    "prediction_intervals", "return_diagnostics", "return_residuals",
+    "return_robustness_weights", "zero_weight_fallback", "auto_converge",
+    "cv_fractions", "cv_method", "cv_k", "parallel",
+    "degree", "dimensions", "distance_metric", "surface_mode", "return_se",
+    "weighted_metric_weights", "cell", "interpolation_vertices",
+    "boundary_degree_fallback", "cv_seed"
+)
+
+online_params <- c(
+    "fraction", "window_capacity", "min_points", "iterations",
+    "weight_function", "robustness_method", "scaling_method",
+    "boundary_policy", "zero_weight_fallback", "update_mode", "auto_converge",
+    "return_robustness_weights", "return_diagnostics",
+    "return_residuals", "parallel",
+    "degree", "dimensions", "distance_metric", "surface_mode", "return_se",
+    "confidence_intervals", "prediction_intervals",
+    "weighted_metric_weights", "cell", "interpolation_vertices",
+    "boundary_degree_fallback"
+)
+
+streaming_params <- c(
+    "fraction", "chunk_size", "overlap", "iterations",
+    "weight_function", "robustness_method", "scaling_method",
+    "boundary_policy", "zero_weight_fallback", "auto_converge",
+    "return_diagnostics", "return_residuals", "return_robustness_weights",
+    "merge_strategy", "parallel",
+    "degree", "dimensions", "distance_metric", "surface_mode", "return_se",
+    "confidence_intervals", "prediction_intervals",
+    "weighted_metric_weights", "cell", "interpolation_vertices",
+    "boundary_degree_fallback"
+)

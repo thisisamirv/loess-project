@@ -12,3 +12,6 @@ pub const DEFAULT_SURFACE_MODE: &str = "interpolation";
 
 // Default: reduce polynomial degree at boundary vertices during interpolation.
 pub const DEFAULT_BOUNDARY_DEGREE_FALLBACK: bool = true;
+
+// Default KD-tree cell size as a fraction of the smoothing span.
+pub const DEFAULT_CELL: f64 = 0.2;

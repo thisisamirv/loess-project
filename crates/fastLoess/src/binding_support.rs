@@ -162,6 +162,7 @@ pub const PROCESSOR_POINTER_IS_NULL: &str = "Processor pointer is null";
 pub const INVALID_DATA_INPUTS: &str = "Invalid data inputs";
 pub const XY_ARRAYS_MUST_NOT_BE_NULL: &str = "x and y arrays must not be null";
 pub const ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO: &str = "Array length must be greater than 0";
+pub const CUSTOM_WEIGHTS_MUST_BE_NON_NEGATIVE: &str = "custom_weights must be non-negative";
 
 // Default string values for all parser-facing options. Re-exported from
 // `loess_rs::defaults` so that all bindings share a single source of truth.
@@ -171,6 +172,8 @@ pub use loess_rs::internals::algorithms::defaults::DEFAULT_POLYNOMIAL_DEGREE as 
 pub use loess_rs::internals::algorithms::defaults::DEFAULT_ROBUSTNESS_METHOD;
 pub use loess_rs::internals::algorithms::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK;
 pub use loess_rs::internals::engine::defaults::DEFAULT_SURFACE_MODE;
+pub use loess_rs::internals::evaluation::defaults::DEFAULT_CV_K_FOLDS;
+pub use loess_rs::internals::evaluation::defaults::DEFAULT_INTERVAL_LEVEL;
 pub use loess_rs::internals::math::defaults::DEFAULT_BOUNDARY_POLICY;
 pub use loess_rs::internals::math::defaults::DEFAULT_DISTANCE_METRIC;
 pub use loess_rs::internals::math::defaults::DEFAULT_SCALING_METHOD;
@@ -228,6 +231,28 @@ pub fn dims_mismatch_message(x_len: usize, y_len: usize, dimensions: usize) -> S
         "x length ({}) must equal y length ({}) * dimensions ({})",
         x_len, y_len, dimensions
     )
+}
+
+pub fn custom_weights_length_mismatch_message(weights_len: usize, y_len: usize) -> String {
+    format!(
+        "custom_weights length ({}) must match y length ({})",
+        weights_len, y_len
+    )
+}
+
+pub fn custom_weights_length_mismatch_message_for(
+    label: &str,
+    weights_len: usize,
+    y_len: usize,
+) -> String {
+    format!(
+        "{} length ({}) must match y length ({})",
+        label, weights_len, y_len
+    )
+}
+
+pub fn custom_weights_must_be_non_negative_message_for(label: &str) -> String {
+    format!("{} must be non-negative", label)
 }
 
 /// Returns a non-null raw pointer as a slice, or `None` if the pointer is null or `len` is 0.
@@ -705,7 +730,7 @@ pub fn apply_distance_metric_value(
         DistanceMetric::Chebyshev => builder.distance_metric("chebyshev"),
         DistanceMetric::Minkowski(p) => {
             let metric = format!("minkowski:{}", p);
-            builder.distance_metric(&metric)
+            builder.distance_metric(metric)
         }
         DistanceMetric::Weighted(weights) => {
             builder = builder.distance_metric("weighted");

@@ -951,8 +951,8 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 context.fit_with_coefficients()
             };
 
-            let cell_fraction =
-                T::from(self.cell.unwrap_or(0.2)).unwrap_or_else(|| T::from(0.2).unwrap());
+            let cell_fraction = T::from(self.cell.unwrap_or(DEFAULT_CELL))
+                .unwrap_or_else(|| T::from(DEFAULT_CELL).unwrap());
 
             let surface = InterpolationSurface::build(
                 &ax,

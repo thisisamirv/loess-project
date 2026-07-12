@@ -1,8 +1,7 @@
 //! Python bindings for fastLoess.
 
 #![allow(non_snake_case)]
-use numpy::PyArray1;
-use numpy::PyReadonlyArray1;
+use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
@@ -16,7 +15,9 @@ use ::fastLoess::internals::binding_support as shared_parse;
 use ::fastLoess::prelude::LoessResult;
 use fastLoess::internals::api::LoessBuilder;
 
+// ============================================================================
 // Helper Functions
+// ============================================================================
 
 fn to_py_error(err: shared_parse::BindingError) -> PyErr {
     match err.category {
@@ -33,37 +34,39 @@ fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
     to_py_error(shared_parse::BindingError::invalid_arg(e.to_string()))
 }
 
+// ============================================================================
 // Python Classes
+// ============================================================================
 
 // Diagnostic statistics for LOESS fit quality.
 #[pyclass(name = "Diagnostics", from_py_object)]
 #[derive(Clone)]
 pub struct PyDiagnostics {
-    // Root Mean Squared Error
+    /// Root Mean Squared Error
     #[pyo3(get)]
     pub rmse: f64,
 
-    // Mean Absolute Error
+    /// Mean Absolute Error
     #[pyo3(get)]
     pub mae: f64,
 
-    // R-squared (coefficient of determination)
+    /// R-squared (coefficient of determination)
     #[pyo3(get)]
     pub r_squared: f64,
 
-    // Akaike Information Criterion
+    /// Akaike Information Criterion
     #[pyo3(get)]
     pub aic: Option<f64>,
 
-    // Corrected AIC
+    /// Corrected AIC
     #[pyo3(get)]
     pub aicc: Option<f64>,
 
-    // Effective degrees of freedom
+    /// Effective degrees of freedom
     #[pyo3(get)]
     pub effective_df: Option<f64>,
 
-    // Residual standard deviation
+    /// Residual standard deviation
     #[pyo3(get)]
     pub residual_sd: f64,
 }
@@ -86,19 +89,19 @@ pub struct PyLoessResult {
 
 #[pymethods]
 impl PyLoessResult {
-    // Sorted x values
+    /// Sorted x values
     #[getter]
     fn x<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<f64>> {
         PyArray1::from_vec(py, self.inner.x.clone())
     }
 
-    // Smoothed y values
+    /// Smoothed y values
     #[getter]
     fn y<'py>(&self, py: Python<'py>) -> Bound<'py, PyArray1<f64>> {
         PyArray1::from_vec(py, self.inner.y.clone())
     }
 
-    // Standard errors (if computed)
+    /// Standard errors (if computed)
     #[getter]
     fn standard_errors<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -107,7 +110,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    // Lower confidence interval bounds
+    /// Lower confidence interval bounds
     #[getter]
     fn confidence_lower<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -116,7 +119,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    // Upper confidence interval bounds
+    /// Upper confidence interval bounds
     #[getter]
     fn confidence_upper<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -125,7 +128,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    // Lower prediction interval bounds
+    /// Lower prediction interval bounds
     #[getter]
     fn prediction_lower<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -134,7 +137,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    // Upper prediction interval bounds
+    /// Upper prediction interval bounds
     #[getter]
     fn prediction_upper<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -143,7 +146,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    // Residuals (original y - smoothed y)
+    /// Residuals (original y - smoothed y)
     #[getter]
     fn residuals<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -152,7 +155,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    // Robustness weights from final iteration
+    /// Robustness weights from final iteration
     #[getter]
     fn robustness_weights<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -161,7 +164,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    // Diagnostic metrics
+    /// Diagnostic metrics
     #[getter]
     fn diagnostics(&self) -> Option<PyDiagnostics> {
         self.inner.diagnostics.as_ref().map(|d| PyDiagnostics {
@@ -175,19 +178,19 @@ impl PyLoessResult {
         })
     }
 
-    // Number of iterations performed
+    /// Number of iterations performed
     #[getter]
     fn iterations_used(&self) -> Option<usize> {
         self.inner.iterations_used
     }
 
-    // Fraction used for smoothing
+    /// Fraction used for smoothing
     #[getter]
     fn fraction_used(&self) -> f64 {
         self.inner.fraction_used
     }
 
-    // CV scores for tested fractions
+    /// CV scores for tested fractions
     #[getter]
     fn cv_scores<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -196,37 +199,37 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    // Equivalent number of parameters (hat-matrix stat, if return_se was set)
+    /// Equivalent number of parameters (hat-matrix stat, if return_se was set)
     #[getter]
     fn enp(&self) -> Option<f64> {
         self.inner.enp
     }
 
-    // Trace of hat matrix (if return_se was set)
+    /// Trace of hat matrix (if return_se was set)
     #[getter]
     fn trace_hat(&self) -> Option<f64> {
         self.inner.trace_hat
     }
 
-    // First delta statistic (if return_se was set)
+    /// First delta statistic (if return_se was set)
     #[getter]
     fn delta1(&self) -> Option<f64> {
         self.inner.delta1
     }
 
-    // Second delta statistic (if return_se was set)
+    /// Second delta statistic (if return_se was set)
     #[getter]
     fn delta2(&self) -> Option<f64> {
         self.inner.delta2
     }
 
-    // Residual scale estimate (if return_se was set)
+    /// Residual scale estimate (if return_se was set)
     #[getter]
     fn residual_scale(&self) -> Option<f64> {
         self.inner.residual_scale
     }
 
-    // Per-point leverage / hat-matrix diagonal (if return_se was set)
+    /// Per-point leverage / hat-matrix diagonal (if return_se was set)
     #[getter]
     fn leverage<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
         self.inner
@@ -235,7 +238,7 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
-    // Number of predictor dimensions
+    /// Number of predictor dimensions
     #[getter]
     fn dimensions(&self) -> usize {
         self.inner.dimensions
@@ -250,9 +253,11 @@ impl PyLoessResult {
     }
 }
 
+// ============================================================================
 // Python Classes - Stateful Adapters
+// ============================================================================
 
-// LOESS processor for incremental chunk-based smoothing.
+/// Streaming LOESS processor for incremental chunk-based smoothing.
 #[pyclass(name = "StreamingLoess")]
 pub struct PyStreamingLoess {
     inner: Mutex<ParallelStreamingLoess<f64>>,
@@ -356,7 +361,7 @@ impl PyStreamingLoess {
         })
     }
 
-    // Process a chunk of data.
+    /// Process a chunk of data.
     fn process_chunk<'py>(
         &self,
         py: Python<'py>,
@@ -381,7 +386,7 @@ impl PyStreamingLoess {
         Ok(PyLoessResult { inner: result })
     }
 
-    // Finalize smoothing and return remaining buffered data.
+    /// Finalize smoothing and return remaining buffered data.
     fn finalize(&self, py: Python<'_>) -> PyResult<PyLoessResult> {
         let result = py.detach(move || {
             self.inner
@@ -403,14 +408,19 @@ impl PyStreamingLoess {
 #[pyclass(name = "OnlineOutput", from_py_object)]
 #[derive(Clone)]
 pub struct PyOnlineOutput {
+    /// Smoothed value for the latest point
     #[pyo3(get)]
     pub smoothed: f64,
+    /// Standard error (if computed)
     #[pyo3(get)]
     pub std_error: Option<f64>,
+    /// Residual y − smoothed (if computed)
     #[pyo3(get)]
     pub residual: Option<f64>,
+    /// Robustness weight for the latest point (if computed)
     #[pyo3(get)]
     pub robustness_weight: Option<f64>,
+    /// Number of robustness iterations performed (if tracked)
     #[pyo3(get)]
     pub iterations_used: Option<usize>,
 }
@@ -422,7 +432,7 @@ impl PyOnlineOutput {
     }
 }
 
-// LOESS processor for real-time data streams.
+/// Online LOESS processor for real-time data streams.
 #[pyclass(name = "OnlineLoess")]
 pub struct PyOnlineLoess {
     inner: Mutex<ParallelOnlineLoess<f64>>,
@@ -530,8 +540,8 @@ impl PyOnlineLoess {
         })
     }
 
-    // Add a single point and return its smoothed value, or None if the window
-    // is not yet full enough to produce a result.
+    /// Add a single point and return its smoothed value, or None if the window
+    /// is still filling up.
     fn add_point(&self, x: f64, y: f64) -> PyResult<Option<PyOnlineOutput>> {
         let mut inner = self.inner.lock().map_err(|e| {
             to_py_error(shared_parse::BindingError::runtime(
@@ -551,15 +561,15 @@ impl PyOnlineLoess {
     }
 }
 
-// LOESS processor with configurable parameters.
-//
-// This class allows you to configure LOESS parameters once and then
-// call `fit()` multiple times with different datasets.
+/// Batch LOESS processor with configurable parameters.
+///
+/// This class allows you to configure LOESS parameters once and then
+/// call `fit()` multiple times with different datasets.
 #[pyclass(name = "Loess", from_py_object)]
 #[derive(Clone)]
 pub struct PyLoess {
     builder: LoessBuilder<f64>,
-    // Kept only for __repr__
+    /// Kept only for __repr__
     fraction: f64,
     iterations: usize,
     parallel: bool,
@@ -668,19 +678,23 @@ impl PyLoess {
         })
     }
 
-    // Fit LOESS model to data.
-    //
-    // Parameters
-    // ----------
-    // x : array_like
-    //     Independent variable values.
-    // y : array_like
-    //     Dependent variable values.
-    //
-    // Returns
-    // -------
-    // LoessResult
-    //     Smoothed values and optional diagnostics.
+    /// Fit LOESS model to data.
+    ///
+    /// Parameters
+    /// ----------
+    /// x : array_like
+    ///     Independent variable values.
+    /// y : array_like
+    ///     Dependent variable values.
+    /// custom_weights : array_like, optional
+    ///     Per-observation weights (same length as y). Each weight multiplies the
+    ///     local kernel weight: w_ij = custom_weights[j] * K(d_ij/h) * rob_j.
+    ///     Analogous to the ``weights`` argument in R's ``stats::loess``.
+    ///
+    /// Returns
+    /// -------
+    /// LoessResult
+    ///     Smoothed values and optional diagnostics.
     #[pyo3(signature = (x, y, custom_weights=None))]
     fn fit<'py>(
         &self,
@@ -724,7 +738,9 @@ impl PyLoess {
     }
 }
 
+// ============================================================================
 // Module Registration
+// ============================================================================
 
 #[pymodule]
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {

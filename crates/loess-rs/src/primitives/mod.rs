@@ -4,6 +4,9 @@
 //! utility functions used throughout the crate. It has zero internal
 //! dependencies within the crate.
 
+// Default configuration values for the primitives layer.
+pub mod defaults;
+
 // Windowing logic.
 pub mod window;
 

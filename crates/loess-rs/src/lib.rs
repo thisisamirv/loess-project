@@ -392,7 +392,10 @@ mod api;
 
 // Standard LOESS prelude.
 pub mod prelude {
-    pub use crate::api::{Loess, LoessError, LoessResult, OnlineLoess, StreamingLoess};
+    pub use crate::api::{
+        Batch, Loess, LoessBuilder, LoessError, LoessResult, Online, OnlineLoess, Streaming,
+        StreamingLoess,
+    };
 }
 
 // Internal modules for development and testing.
@@ -429,6 +432,7 @@ pub mod internals {
         pub use crate::adapters::defaults::*;
         pub use crate::algorithms::defaults::*;
         pub use crate::engine::defaults::*;
+        pub use crate::evaluation::defaults::*;
         pub use crate::math::defaults::*;
     }
 }

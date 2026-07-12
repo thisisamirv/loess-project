@@ -23,6 +23,7 @@ use loess_rs::internals::adapters::batch::BatchLoessBuilder;
 use loess_rs::internals::algorithms::regression::SolverLinalg;
 use loess_rs::internals::engine::output::LoessResult;
 use loess_rs::internals::evaluation::cv::CVKind;
+use loess_rs::internals::evaluation::defaults::DEFAULT_CV_K_FOLDS;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::distance::DistanceMetric;
 use loess_rs::internals::math::linalg::FloatLinalg;
@@ -73,7 +74,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
             parse_errors: Vec::new(),
             weighted_metric_weights: None,
             cv_method_str: None,
-            cv_k_val: 5,
+            cv_k_val: DEFAULT_CV_K_FOLDS,
         }
     }
 }

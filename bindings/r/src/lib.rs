@@ -9,12 +9,15 @@
 
 use extendr_api::prelude::*;
 
+// Provide the Result alias that was removed from extendr_api::prelude in 0.9.0
 type Result<T> = std::result::Result<T, Error>;
 
 use fastLoess::internals::api::{LoessBuilder, LoessResult};
 use fastLoess::internals::binding_support as shared_parse;
 
+// ============================================================================
 // Helper Functions
+// ============================================================================
 
 fn to_r_error(err: shared_parse::BindingError) -> Error {
     let prefix = match err.category {
@@ -49,7 +52,9 @@ fn optional_positive_usize(name: &str, value: Nullable<i32>) -> Result<Option<us
     }
 }
 
+// ============================================================================
 // Stateful API: Loess
+// ============================================================================
 
 #[extendr]
 pub struct RLoess {
@@ -58,7 +63,7 @@ pub struct RLoess {
 
 #[extendr]
 impl RLoess {
-    // Create a new Loess model
+    /// Create a new Loess model
     #[allow(clippy::too_many_arguments)]
     fn new(
         fraction: f64,
@@ -157,10 +162,10 @@ impl RLoess {
         Ok(Self { builder })
     }
 
-    // Fit the model to data, with optional user-defined case weights.
-    //
-    // `custom_weights` must be the same length as `y`. Each weight multiplies the
-    // local kernel weight: analogous to `weights` in `stats::loess`.
+    /// Fit the model to data, with optional user-defined case weights.
+    ///
+    /// `custom_weights` must be the same length as `y`. Each weight multiplies the
+    /// local kernel weight: analogous to `weights` in `stats::loess`.
     fn fit(&self, x: &[f64], y: &[f64], custom_weights: Nullable<Vec<f64>>) -> Result<List> {
         let cw = match custom_weights {
             NotNull(w) => Some(w),
@@ -172,7 +177,9 @@ impl RLoess {
     }
 }
 
+// ============================================================================
 // Stateful API: StreamingLoess
+// ============================================================================
 
 #[extendr]
 pub struct RStreamingLoess {
@@ -289,7 +296,9 @@ impl RStreamingLoess {
     }
 }
 
+// ============================================================================
 // Stateful API: OnlineLoess
+// ============================================================================
 
 #[extendr]
 pub struct ROnlineLoess {
@@ -419,7 +428,9 @@ impl ROnlineLoess {
     }
 }
 
+// ============================================================================
 // Helper: Convert LoessResult to R List
+// ============================================================================
 
 fn loess_result_to_list(result: LoessResult<f64>) -> Result<List> {
     let (rmse, mae, r_squared, aic, aicc, effective_df, residual_sd) =
@@ -498,7 +509,9 @@ fn loess_result_to_list(result: LoessResult<f64>) -> Result<List> {
     Ok(list)
 }
 
+// ============================================================================
 // Module Registration
+// ============================================================================
 
 extendr_module! {
     mod rfastloess;

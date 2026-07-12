@@ -5,6 +5,9 @@
 //! - Diagnostic metrics for fit quality
 //! - Confidence and prediction intervals
 
+// Default configuration values for the evaluation layer.
+pub mod defaults;
+
 // Cross-validation for bandwidth selection.
 pub mod cv;
 

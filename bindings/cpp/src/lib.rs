@@ -119,34 +119,34 @@ pub struct CppOnlineOutput {
 // All arrays are allocated by Rust and must be freed by Rust.
 #[repr(C)]
 pub struct CppLoessResult {
-    // Sorted x values (length = n)
+    /// Sorted x values (length = n)
     pub x: *mut c_double,
-    // Smoothed y values (length = n)
+    /// Smoothed y values (length = n)
     pub y: *mut c_double,
-    // Number of data points
+    /// Number of data points
     pub n: c_ulong,
 
-    // Standard errors (NULL if not computed)
+    /// Standard errors (NULL if not computed)
     pub standard_errors: *mut c_double,
-    // Lower confidence bounds (NULL if not computed)
+    /// Lower confidence bounds (NULL if not computed)
     pub confidence_lower: *mut c_double,
-    // Upper confidence bounds (NULL if not computed)
+    /// Upper confidence bounds (NULL if not computed)
     pub confidence_upper: *mut c_double,
-    // Lower prediction bounds (NULL if not computed)
+    /// Lower prediction bounds (NULL if not computed)
     pub prediction_lower: *mut c_double,
-    // Upper prediction bounds (NULL if not computed)
+    /// Upper prediction bounds (NULL if not computed)
     pub prediction_upper: *mut c_double,
-    // Residuals (NULL if not computed)
+    /// Residuals (NULL if not computed)
     pub residuals: *mut c_double,
-    // Robustness weights (NULL if not computed)
+    /// Robustness weights (NULL if not computed)
     pub robustness_weights: *mut c_double,
 
-    // Fraction used for smoothing
+    /// Fraction used for smoothing
     pub fraction_used: c_double,
-    // Number of iterations performed (-1 if not available)
+    /// Number of iterations performed (-1 if not available)
     pub iterations_used: c_int,
 
-    // Diagnostics (NaN if not computed)
+    /// Diagnostics (NaN if not computed)
     pub rmse: c_double,
     pub mae: c_double,
     pub r_squared: c_double,
@@ -155,21 +155,21 @@ pub struct CppLoessResult {
     pub effective_df: c_double,
     pub residual_sd: c_double,
 
-    // Hat-matrix statistics (NaN / NULL if not computed; set return_se = 1 to enable)
+    /// Hat-matrix statistics (NaN / NULL if not computed; set return_se = 1 to enable)
     pub enp: c_double,
     pub trace_hat: c_double,
     pub delta1: c_double,
     pub delta2: c_double,
     pub residual_scale: c_double,
-    // Per-point leverage / hat-matrix diagonal (NULL if not computed, length = n)
+    /// Per-point leverage / hat-matrix diagonal (NULL if not computed, length = n)
     pub leverage: *mut c_double,
-    // Number of predictor dimensions used
+    /// Number of predictor dimensions used
     pub dimensions: c_int,
-    // Cross-validation scores (NULL if not computed, length = cv_scores_len)
+    /// Cross-validation scores (NULL if not computed, length = cv_scores_len)
     pub cv_scores: *mut c_double,
     pub cv_scores_len: c_ulong,
 
-    // Error message (NULL if no error)
+    /// Error message (NULL if no error)
     pub error: *mut c_char,
 }
 
@@ -268,7 +268,7 @@ impl Default for CppOnlineOutput {
     }
 }
 
-// Opaque handle to a Loess model.
+// Opaque handle to a batch Loess model.
 pub struct CppLoess {
     builder: Option<LoessBuilder<f64>>,
     // Store CV options to apply lazily because of lifetime constraints
@@ -282,12 +282,12 @@ pub struct CppLoess {
     cv_seed: Option<u64>,
 }
 
-// Opaque handle to a Loess model.
+// Opaque handle to a streaming Loess model.
 pub struct CppStreamingLoess {
     model: Option<ParallelStreamingLoess<f64>>,
 }
 
-// Opaque handle to a Loess model.
+// Opaque handle to an online Loess model.
 pub struct CppOnlineLoess {
     model: Option<ParallelOnlineLoess<f64>>,
 }
@@ -554,7 +554,7 @@ pub unsafe extern "C" fn cpp_streaming_set_prediction_intervals(
 // Streaming/online models are eagerly initialized at construction, so these setters
 // are unsupported and now report this through the last-error channel.
 
-/// Set cell tuning parameter for an model.
+/// Set cell tuning parameter for a model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
@@ -570,7 +570,7 @@ pub unsafe extern "C" fn cpp_online_set_cell(ptr: *mut CppOnlineLoess, cell: c_d
     });
 }
 
-/// Set number of interpolation vertices for an model.
+/// Set number of interpolation vertices for a model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
@@ -589,7 +589,7 @@ pub unsafe extern "C" fn cpp_online_set_interpolation_vertices(
     });
 }
 
-/// Enable or disable boundary degree fallback for an model.
+/// Enable or disable boundary degree fallback for a model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
@@ -608,7 +608,7 @@ pub unsafe extern "C" fn cpp_online_set_boundary_degree_fallback(
     });
 }
 
-/// Set confidence interval level for an model.
+/// Set confidence interval level for a model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
@@ -627,7 +627,7 @@ pub unsafe extern "C" fn cpp_online_set_confidence_intervals(
     });
 }
 
-/// Set prediction interval level for an model.
+/// Set prediction interval level for a model.
 ///
 /// # Safety
 /// `ptr` must be a valid `CppOnlineLoess` pointer.
@@ -723,7 +723,7 @@ pub unsafe extern "C" fn cpp_loess_free(ptr: *mut CppLoess) {
     });
 }
 
-/// Create a new Loess model.
+/// Create a new Streaming Loess model.
 ///
 /// # Safety
 /// Pointers must be valid null-terminated strings or null.
@@ -898,7 +898,7 @@ pub unsafe extern "C" fn cpp_streaming_process(
     })
 }
 
-/// Finalize the process.
+/// Finalize the streaming process.
 ///
 /// # Safety
 /// `ptr` must be valid.
@@ -933,7 +933,7 @@ pub unsafe extern "C" fn cpp_streaming_free(ptr: *mut CppStreamingLoess) {
     });
 }
 
-/// Create a new Loess model.
+/// Create a new Online Loess model.
 ///
 /// # Safety
 /// Pointers must be valid null-terminated strings or null.

@@ -39,7 +39,7 @@ check_fraction_arg <- function(fraction) {
     if (!is.numeric(fraction) || length(fraction) != 1) {
         stop("fraction must be a single numeric value")
     }
-    if (fraction <= 0 || fraction > 1) {
+    if (fraction < 0 || fraction > 1) {
         stop("fraction must be between 0 and 1")
     }
 }

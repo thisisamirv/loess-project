@@ -19,6 +19,7 @@ use std::vec::Vec;
 use num_traits::Float;
 
 // Internal dependencies
+use crate::evaluation::defaults::DEFAULT_INTERVAL_LEVEL;
 use crate::math::scaling::ScalingMethod;
 use crate::primitives::errors::LoessError;
 use crate::primitives::window::Window;
@@ -49,7 +50,7 @@ impl<T: Float> IntervalMethod<T> {
     // No intervals or standard errors.
     fn none() -> Self {
         Self {
-            level: T::from(0.95).unwrap(),
+            level: T::from(DEFAULT_INTERVAL_LEVEL).unwrap(),
             confidence: false,
             prediction: false,
             se: false,

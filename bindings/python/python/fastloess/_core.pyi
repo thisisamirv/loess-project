@@ -1,5 +1,7 @@
 """Type stubs for fastloess._core native extension module."""
 
+# pylint: disable=unnecessary-ellipsis,unused-argument
+
 from typing import Sequence
 
 import numpy as np
@@ -202,8 +204,12 @@ class Loess:
         surface_mode: str = "interpolation",
         return_se: bool = False,
         weighted_metric_weights: Sequence[float] | None = None,
+        cell: float | None = None,
+        interpolation_vertices: int | None = None,
+        boundary_degree_fallback: bool | None = None,
+        cv_seed: int | None = None,
     ) -> None:
-        """Initialize the batch LOESS processor."""
+        """Initialize the batch LOESS processor.""""
         ...
 
     def fit(
@@ -232,7 +238,7 @@ class StreamingLoess:
 
     def __init__(
         self,
-        fraction: float = 0.3,
+        fraction: float = 0.67,
         chunk_size: int = 5000,
         overlap: int | None = None,
         iterations: int = 3,
@@ -253,8 +259,13 @@ class StreamingLoess:
         return_se: bool = False,
         merge_strategy: str = "weighted_average",
         weighted_metric_weights: Sequence[float] | None = None,
+        cell: float | None = None,
+        interpolation_vertices: int | None = None,
+        boundary_degree_fallback: bool | None = None,
+        confidence_intervals: float | None = None,
+        prediction_intervals: float | None = None,
     ) -> None:
-        """Initialize the streaming processor."""
+        """Initialize the streaming processor.""""
         ...
 
     def process_chunk(self, x: ArrayLike, y: ArrayLike) -> LoessResult:
@@ -270,9 +281,9 @@ class OnlineLoess:
 
     def __init__(
         self,
-        fraction: float = 0.2,
-        window_capacity: int = 100,
-        min_points: int = 2,
+        fraction: float = 0.67,
+        window_capacity: int = 1000,
+        min_points: int = 3,
         iterations: int = 3,
         weight_function: str = "tricube",
         robustness_method: str = "bisquare",
@@ -289,6 +300,13 @@ class OnlineLoess:
         surface_mode: str = "interpolation",
         return_se: bool = False,
         weighted_metric_weights: Sequence[float] | None = None,
+        return_diagnostics: bool = False,
+        return_residuals: bool = False,
+        cell: float | None = None,
+        interpolation_vertices: int | None = None,
+        boundary_degree_fallback: bool | None = None,
+        confidence_intervals: float | None = None,
+        prediction_intervals: float | None = None,
     ) -> None:
         """Initialize the online processor."""
         ...
