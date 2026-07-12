@@ -73,7 +73,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 ### Speed
 
-The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **2-3x faster** than R's `loess`.
+The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is typically **5–20x faster** than R's `loess` in serial mode, and up to **200x faster** on large datasets with parallel execution.
 
 For more details on the performance comparison, see the [Benchmarks](https://loess.readthedocs.io/benchmarks/) page.
 
@@ -117,21 +117,24 @@ R's `loess` does not apply boundary padding, which can lead to:
 
 A variety of features, supporting a range of use cases:
 
-| Feature              | This package  | R (stats)    |
-|----------------------|:-------------:|:------------:|
-| Kernel               | 7 options     | only Tricube |
-| Robustness Weighting | 3 options     | only Huber   |
-| Scale Estimation     | 3 options     | only MAR     |
-| Boundary Padding     | 4 options     | no padding   |
-| Zero Weight Fallback | 3 options     | no           |
-| Auto Convergence     | yes           | no           |
-| Online Mode          | yes           | no           |
-| Streaming Mode       | yes           | no           |
-| Confidence Intervals | yes           | no           |
-| Prediction Intervals | yes           | no           |
-| Cross-Validation     | 2 options     | no           |
-| Parallel Execution   | yes           | no           |
-| `no-std` Support     | yes           | no           |
+| Feature                       | This package  | R (stats)        |
+|-------------------------------|:-------------:|:----------------:|
+| Polynomial Degree             | 5 (0–4)       | 2 (1 or 2)       |
+| Kernel                        | 7 options     | only Tricube     |
+| Robustness Weighting          | 3 options     | only Bisquare    |
+| Scale Estimation              | 3 options     | only MAR         |
+| Distance Metric               | 6 options     | normalized only  |
+| Boundary Padding              | 4 options     | no padding       |
+| Zero Weight Fallback          | 3 options     | no               |
+| Auto Convergence              | yes           | no               |
+| Online Mode                   | yes           | no               |
+| Streaming Mode                | yes           | no               |
+| Confidence Intervals          | yes           | no               |
+| Prediction Intervals          | yes           | no               |
+| Diagnostics (RMSE, R², AIC)   | yes           | no               |
+| Cross-Validation              | 2 options     | no               |
+| Parallel Execution            | yes           | no               |
+| `no-std` Support              | yes           | no               |
 
 ## Validation
 
@@ -149,22 +152,22 @@ All implementations are **numerical twins** of R's `loess`:
 
 ```r
 Loess(
-    fraction = 0.5,
+    fraction = 0.67,
     iterations = 3L,
-    delta = 0.01,
     weight_function = "tricube",
     robustness_method = "bisquare",
     zero_weight_fallback = "use_local_mean",
     boundary_policy = "extend",
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95,
-    return_diagnostics = TRUE,
-    return_residuals = TRUE,
-    return_robustness_weights = TRUE,
-    cv_fractions = c(0.3, 0.5, 0.7),
+    scaling_method = "mad",
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    return_robustness_weights = FALSE,
+    cv_fractions = NULL,
     cv_method = "kfold",
     cv_k = 5L,
-    auto_converge = 1e-4,
+    auto_converge = NULL,
     parallel = TRUE
 )$fit(x, y)
 
@@ -190,22 +193,22 @@ result$cv_scores
 from fastloess import Loess
 
 model = Loess(
-    fraction=0.5,
+    fraction=0.67,
     iterations=3,
-    delta=0.01,
     weight_function="tricube",
     robustness_method="bisquare",
     zero_weight_fallback="use_local_mean",
     boundary_policy="extend",
-    confidence_intervals=0.95,
-    prediction_intervals=0.95,
-    return_diagnostics=True,
-    return_residuals=True,
-    return_robustness_weights=True,
-    cv_fractions=[0.3, 0.5, 0.7],
+    scaling_method="mad",
+    confidence_intervals=None,
+    prediction_intervals=None,
+    return_diagnostics=False,
+    return_residuals=False,
+    return_robustness_weights=False,
+    cv_fractions=None,
     cv_method="kfold",
     cv_k=5,
-    auto_converge=1e-4,
+    auto_converge=None,
     parallel=True
 )
 result = model.fit(x, y)
@@ -230,26 +233,27 @@ result.cv_scores
 
 ```rust
 Loess::new()
-    .fraction(0.5)
+    .fraction(0.67)
     .iterations(3)
-    .delta(0.01)
-    .weight_function(Tricube)
-    .robustness_method(Bisquare)
-    .zero_weight_fallback(UseLocalMean)
-    .boundary_policy(Extend)
+    .weight_function("tricube")
+    .robustness_method("bisquare")
+    .zero_weight_fallback("use_local_mean")
+    .boundary_policy("extend")
+    .scaling_method("mad")
     .confidence_intervals(0.95)
     .prediction_intervals(0.95)
     .return_diagnostics()
     .return_residuals()
     .return_robustness_weights()
-    .cross_validate(KFold(5, &[0.3, 0.5, 0.7]).seed(123))
+    .cv_fractions(vec![0.3, 0.5, 0.7])
+    .cv_method("kfold")
+    .cv_k(5)
+    .cv_seed(123)
     .auto_converge(1e-4)
-    .adapter(Batch)
     .parallel(true)             // fastLoess only
-    .backend(CPU)               // fastLoess only
     .build()?;
 
-let result = model.fit(x, y);
+let result = model.fit(&x, &y)?;
 
 // Result structure:
 pub struct LoessResult<T> {
@@ -273,18 +277,18 @@ pub struct LoessResult<T> {
 
 ```julia
 Loess(;
-    fraction=0.5,
+    fraction=0.67,
     iterations=3,
-    delta=NaN,  # NaN for auto
     weight_function="tricube",
     robustness_method="bisquare",
     zero_weight_fallback="use_local_mean",
     boundary_policy="extend",
+    scaling_method="mad",
     confidence_intervals=NaN,
     prediction_intervals=NaN,
-    return_diagnostics=true,
-    return_residuals=true,
-    return_robustness_weights=true,
+    return_diagnostics=false,
+    return_residuals=false,
+    return_robustness_weights=false,
     cv_fractions=Float64[], # e.g. [0.3, 0.5]
     cv_method="kfold",
     cv_k=5,
@@ -312,13 +316,13 @@ result.cv_scores
 
 ```javascript
 new Loess({
-    fraction: 0.5,
+    fraction: 0.67,
     iterations: 3,
-    delta: 0.01,
     weight_function: "tricube",
     robustness_method: "bisquare",
     zero_weight_fallback: "use_local_mean",
     boundary_policy: "extend",
+    scaling_method: "mad",
     confidence_intervals: 0.95,
     prediction_intervals: 0.95,
     return_diagnostics: true,
@@ -351,13 +355,13 @@ result.cv_scores
 
 ```javascript
 new Loess({
-    fraction: 0.5,
+    fraction: 0.67,
     iterations: 3,
-    delta: 0.01,
     weight_function: "tricube",
     robustness_method: "bisquare",
     zero_weight_fallback: "use_local_mean",
     boundary_policy: "extend",
+    scaling_method: "mad",
     confidence_intervals: 0.95,
     prediction_intervals: 0.95,
     return_diagnostics: true,
@@ -390,13 +394,13 @@ result.cv_scores
 
 ```cpp
 fastloess::LoessOptions options;
-options.fraction = 0.5;
+options.fraction = 0.67;
 options.iterations = 3;
-options.delta = 0.01;
 options.weight_function = "tricube";
 options.robustness_method = "bisquare";
 options.zero_weight_fallback = "use_local_mean";
 options.boundary_policy = "extend";
+options.scaling_method = "mad";
 options.confidence_intervals = 0.95;
 options.prediction_intervals = 0.95;
 options.return_diagnostics = true;

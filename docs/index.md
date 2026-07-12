@@ -20,7 +20,9 @@ LOESS is a nonparametric regression method that fits smooth curves through scatt
 
 ### Speed
 
-The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is on average **2-3x faster** than R's `loess`.
+The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is typically **5–20x faster** than R's `loess` in serial mode, and up to **200x faster** on large datasets with parallel execution.
+
+![LOESS Benchmarks](assets/diagrams/benchmark_comparison.svg)
 
 For detailed benchmark comparisons, see the [Benchmarks](https://loess.readthedocs.io/benchmarks/) page.
 
@@ -62,9 +64,11 @@ A variety of features, supporting a range of use cases:
 
 | Feature | This package | R (stats) |
 | --- | --- | --- |
+| Polynomial Degree | 5 (0–4) | 2 (1 or 2) |
 | Kernel | 7 options | only Tricube |
-| Robustness Weighting | 3 options | only Huber |
+| Robustness Weighting | 3 options | only Bisquare |
 | Scale Estimation | 3 options | only MAR |
+| Distance Metric | 6 options | normalized only |
 | Boundary Padding | 4 options | no padding |
 | Zero Weight Fallback | 3 options | no |
 | Auto Convergence | yes | no |
@@ -72,6 +76,7 @@ A variety of features, supporting a range of use cases:
 | Streaming Mode | yes | no |
 | Confidence Intervals | yes | no |
 | Prediction Intervals | yes | no |
+| Diagnostics (RMSE, R², AIC) | yes | no |
 | Cross-Validation | 2 options | no |
 | Parallel Execution | yes | no |
 | `no-std` Support | yes | no |
