@@ -11,7 +11,10 @@ The `Loess` class is the main entry point for batch smoothing.
 **Constructor:**
 
 ```javascript
-const model = new Loess(options);
+import init, { Loess } from 'fastloess-wasm';
+await init();
+
+const model = new Loess({ fraction: 0.5 });
 ```
 
 * `options`: An object containing `LoessOptions` fields.
@@ -19,8 +22,17 @@ const model = new Loess(options);
 **Methods:**
 
 ```javascript
+import init, { Loess } from 'fastloess-wasm';
+await init();
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+const model = new Loess({ fraction: 0.5 });
 const result = model.fit(x, y);
 // or with per-observation weights:
+const weights = new Float64Array(n).fill(1);
 const resultWeighted = model.fit(x, y, weights);
 ```
 
@@ -35,7 +47,10 @@ The `StreamingLoess` class processes data in chunks, suitable for very large dat
 **Constructor:**
 
 ```javascript
-const stream = new StreamingLoess(options, streamingOptions);
+import init, { StreamingLoess } from 'fastloess-wasm';
+await init();
+
+const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
 ```
 
 * `options`: An object containing `LoessOptions` fields.
@@ -44,12 +59,29 @@ const stream = new StreamingLoess(options, streamingOptions);
 **Methods:**
 
 ```javascript
-const partialResult = stream.processChunk(x, y);
+import init, { StreamingLoess } from 'fastloess-wasm';
+await init();
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
+const partialResult = stream.process_chunk(x.slice(0, 50), y.slice(0, 50));
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```javascript
+import init, { StreamingLoess } from 'fastloess-wasm';
+await init();
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
+stream.process_chunk(x, y);
 const finalResult = stream.finalize();
 ```
 
@@ -62,7 +94,10 @@ The `OnlineLoess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```javascript
-const online = new OnlineLoess(options, onlineOptions);
+import init, { OnlineLoess } from 'fastloess-wasm';
+await init();
+
+const online = new OnlineLoess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
 ```
 
 * `options`: An object containing `LoessOptions` fields.
@@ -71,7 +106,11 @@ const online = new OnlineLoess(options, onlineOptions);
 **Methods:**
 
 ```javascript
-const result = online.add_point(x, y);  // returns OnlineOutput | undefined
+import init, { OnlineLoess } from 'fastloess-wasm';
+await init();
+
+const online = new OnlineLoess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
+const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | undefined
 ```
 
 * Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `undefined` while the window is still filling.
@@ -254,7 +293,6 @@ Returned by `add_point()` once the window has enough points (`undefined` until t
 
 ```javascript
 import init, { Loess } from 'fastloess-wasm';
-
 await init();
 
 const x = new Float64Array([1, 2, 3, 4, 5]);

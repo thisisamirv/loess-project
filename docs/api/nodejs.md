@@ -42,7 +42,9 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const model = new Loess({ fraction: 0.5 });
-const result = await model.fitAsync(x, y);
+(async () => {
+    const result = await model.fit_async(x, y);
+})();
 ```
 
 * Async variant of `fit()`. Returns a `Promise` that resolves to a `LoessResult`.
@@ -72,7 +74,7 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
-const partialResult = stream.processChunk(x.slice(0, 50), y.slice(0, 50));
+const partialResult = stream.process_chunk(x.slice(0, 50), y.slice(0, 50));
 ```
 
 * Processes a chunk of data. Returns partial results.
@@ -85,7 +87,7 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
-stream.processChunk(x, y);
+stream.process_chunk(x, y);
 const finalResult = stream.finalize();
 ```
 

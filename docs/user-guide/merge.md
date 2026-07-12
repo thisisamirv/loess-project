@@ -37,6 +37,11 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
     ```r
     library(rfastloess)
     set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
+    library(rfastloess)
+    set.seed(42)
     n <- 100
     x_chunk <- seq(0, 2 * pi, length.out = n)
     y_chunk <- sin(x_chunk) + rnorm(n, sd = 0.3)
@@ -73,12 +78,12 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
         let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
         let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-        let model = StreamingLoess::new()
+        let mut model = StreamingLoess::new()
             .merge_strategy("average")
             .chunk_size(5000)
             .overlap(500)
             .build()?;
-        let result = model.process_chunk(&x_chunk, &y_chunk)?;
+        let result = model.process_chunk(&x_chunk, &y_chunk)?;;
 
         Ok(())
     }
@@ -86,6 +91,13 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     using FastLOESS
     using Random, Statistics
 
@@ -110,7 +122,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
         {},
         { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
     );
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     ```
 
 === "WebAssembly"
@@ -126,7 +138,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
         {},
         { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
     );
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     ```
 
 === "C++"
@@ -166,6 +178,11 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     library(rfastloess)
     set.seed(42)
     n <- 100
@@ -217,6 +234,13 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
     using Random, Statistics
 
     rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
     n = 100
     x_chunk = collect(range(0, 2π, length=n))
     y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
@@ -235,7 +259,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
     const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const processor = new StreamingLoess({}, { merge_strategy: "take_first" });
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     const final_ = processor.finalize();
     ```
 
@@ -249,7 +273,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
     const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const processor = new StreamingLoess({}, { merge_strategy: "take_first" });
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     const final_ = processor.finalize();
     ```
 
@@ -288,6 +312,11 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     library(rfastloess)
     set.seed(42)
     n <- 100
@@ -339,6 +368,13 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
     using Random, Statistics
 
     rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
     n = 100
     x_chunk = collect(range(0, 2π, length=n))
     y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
@@ -357,7 +393,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
     const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const processor = new StreamingLoess({}, { merge_strategy: "take_last" });
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     const final_ = processor.finalize();
     ```
 
@@ -371,7 +407,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
     const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const processor = new StreamingLoess({}, { merge_strategy: "take_last" });
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     const final_ = processor.finalize();
     ```
 
@@ -414,6 +450,11 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     library(rfastloess)
     set.seed(42)
     n <- 100
@@ -475,6 +516,13 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
     using Random, Statistics
 
     rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
     n = 100
     x_chunk = collect(range(0, 2π, length=n))
     y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
@@ -500,7 +548,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
         {},
         { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
     );
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     const final_ = processor.finalize();
     ```
 
@@ -517,7 +565,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
         {},
         { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
     );
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     const final_ = processor.finalize();
     ```
 

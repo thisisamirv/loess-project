@@ -319,7 +319,7 @@ Process large datasets in chunks with configurable overlap.
         { chunk_size: 5000, overlap: 500 }
     );
 
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     const finalResult = processor.finalize();
     ```
 
@@ -337,7 +337,7 @@ Process large datasets in chunks with configurable overlap.
         { chunk_size: 5000, overlap: 500 }
     );
 
-    const result = processor.processChunk(xChunk, yChunk);
+    const result = processor.process_chunk(xChunk, yChunk);
     const finalResult = processor.finalize();
     ```
 

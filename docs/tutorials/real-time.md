@@ -18,6 +18,11 @@ For true real-time applications where each point must be processed immediately.
 === "R"
     ```r
     library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
+    library(rfastloess)
 
     set.seed(42)
     times <- 1:100
@@ -88,6 +93,13 @@ For true real-time applications where each point must be processed immediately.
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     using FastLOESS
     using Random, Statistics
 
@@ -319,8 +331,8 @@ For large datasets that arrive in batches or files.
     );
 
     // Process chunks
-    const r1 = processor.processChunk(chunk1_x, chunk1_y);
-    const r2 = processor.processChunk(chunk2_x, chunk2_y);
+    const r1 = processor.process_chunk(chunk1_x, chunk1_y);
+    const r2 = processor.process_chunk(chunk2_x, chunk2_y);
 
     // Always get buffered data
     const finalResult = processor.finalize();
@@ -342,8 +354,8 @@ For large datasets that arrive in batches or files.
     );
 
     // Process chunks as they arrive
-    const result1 = processor.processChunk(x1, y1);
-    const result2 = processor.processChunk(x2, y2);
+    const result1 = processor.process_chunk(x1, y1);
+    const result2 = processor.process_chunk(x2, y2);
     const finalResult = processor.finalize();
     ```
 
@@ -441,6 +453,10 @@ For large datasets that arrive in batches or files.
 === "Node.js"
     ```javascript
     const fl = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
 
     const window_capacity = 50;
     let dataX = [], dataY = [];

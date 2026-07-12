@@ -95,10 +95,10 @@ main();
 
 ```javascript
 import init, { Loess } from 'fastloess-wasm';
+await init();
 
 async function main() {
     // Initialize WASM module
-    await init();
 
     // Generate sample data
     const x = Float64Array.from({ length: 100 }, (_, i) => i * 0.1);

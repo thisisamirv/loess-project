@@ -12,6 +12,11 @@ The `Loess` class allows configuring the LOESS parameters once and fitting multi
 
 ```r
 library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+library(rfastloess)
 model <- Loess(fraction = 0.5)
 ```
 
@@ -28,6 +33,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 model <- Loess(fraction = 0.5)
 result <- model$fit(x, y)
 # or with per-observation weights:
+weights <- rep(1, length(x))
 result <- model$fit(x, y, custom_weights = weights)
 ```
 
@@ -42,6 +48,11 @@ The `StreamingLoess` class processes data in chunks, suitable for very large dat
 **Constructor:**
 
 ```r
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
 library(rfastloess)
 stream <- StreamingLoess(fraction = 0.3, chunk_size = 50, overlap = 10)
 ```
@@ -82,6 +93,11 @@ The `OnlineLoess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```r
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
 library(rfastloess)
 online <- OnlineLoess(fraction = 0.3, window_capacity = 50)
 ```

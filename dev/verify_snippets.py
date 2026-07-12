@@ -312,6 +312,9 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # Large synthetic datasets that exceed the per-snippet timeout
         if re.search(r"total_points\s*=\s*[1-9][0-9]{4,}", code):
             return "large synthetic dataset (too slow for CI)"
+        # Multi-dimensional snippets that need lat/lon/x1/x2/x3/x2d/x3d data
+        if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*=\s*[23]", code):
+            return "multi-dim Python (needs dimensional data)"
         # Snippets that use fastloess without importing it first
         if re.search(
             r"\bfl\b|\bfastloess\b|\bLoess\b|\bStreamingLoess\b|\bOnlineLoess\b",
@@ -329,6 +332,9 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # function *definitions*, not call sites — Julia rejects them as calls.
         if re.search(r";\s*\w+::", code, re.DOTALL):
             return "Julia method signature (keyword arg with type annotation — not callable)"
+        # Multi-dimensional snippets that use lat/lon/x1/x2/x3 (undefined data)
+        if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*=\s*[23]", code):
+            return "multi-dim Julia (needs dimensional data)"
     if runner == "nodejs":
         # TypeScript-only syntax (type annotations)
         if ": SmoothOptions" in code or ": LoessResult" in code:
@@ -336,6 +342,9 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # Snippets must load fastloess themselves (no preamble)
         if not re.search(r"require\s*\(", code):
             return "no require() — snippet must load fastloess itself"
+        # Multi-dimensional snippets that use x2d/x3d undefined data
+        if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*:\s*[23]", code):
+            return "multi-dim Node.js (needs dimensional data)"
 
     if runner == "r":
         # Skip install/devtools snippets
@@ -345,7 +354,8 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         if not any(c in code for c in ["<-", "=", "(", "library"]):
             return "no executable R statements"
         # Multi-dim input (x2d/x3d) requires a package rebuild to work correctly
-        if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*=\s*[23]\b", code):
+        # Note: R uses integer suffix L (e.g., dimensions = 2L), so no trailing \b
+        if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*=\s*[23]", code):
             return "multi-dim R (needs package rebuild)"
         # API signature snippets that use R's '...' outside a function definition
         # (e.g. 'model <- Loess(...)') — not valid in a script context.
@@ -374,11 +384,17 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # cross_validate / KFold are not in the stable public API
         if re.search(r"\bcross_validate\b|\bKFold\b", code):
             return "cross_validate/KFold not in stable public API"
+        # Multi-dimensional snippets that use x2d/x3d undefined data
+        if re.search(r"\bx2d\b|\bx3d\b", code):
+            return "multi-dim Rust (needs dimensional data)"
 
     if runner == "cpp":
         # Without a structural wrapper, only complete programs (with int main) compile
         if not re.search(r"\bint\s+main\s*\(", code):
             return "fragment — no int main (not a standalone C++ program)"
+        # Multi-dimensional snippets that use x2d/x3d undefined data
+        if re.search(r"\bx2d\b|\bx3d\b", code):
+            return "multi-dim C++ (needs dimensional data)"
 
     return None
 

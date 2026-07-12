@@ -14,6 +14,11 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
 === "R"
     ```r
     library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
+    library(rfastloess)
 
     set.seed(42)
     t <- seq(0, 100, length.out = 500)
@@ -166,6 +171,11 @@ Remove trend to analyze residual patterns:
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     library(rfastloess)
     set.seed(42)
     t <- seq(0, 100, length.out = 500)
@@ -328,6 +338,11 @@ Remove trend to analyze residual patterns:
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     library(rfastloess)
     set.seed(42)
     t <- seq(0, 100, length.out = 500)
@@ -499,6 +514,11 @@ LOESS naturally handles irregular time sampling:
 === "R"
     ```r
     library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
+    library(rfastloess)
 
     t_irregular <- sort(runif(200, 0, 100))
     y_irregular <- 10 + 0.3 * t_irregular + rnorm(200, sd = 2)
@@ -548,6 +568,13 @@ LOESS naturally handles irregular time sampling:
     using Random, Statistics
 
     rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
 
     # Irregular time points (gaps in data)
     t_irregular = sort(rand(200) .*100.0)
@@ -561,6 +588,10 @@ LOESS naturally handles irregular time sampling:
 === "Node.js"
     ```javascript
     const fl = require('fastloess');
+
+    const n = 500;
+    const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
+    const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
 
     const tIrregular = Float64Array.from({ length: 200 }, () => Math.random() * 100).sort((a,b)=>a-b);
     const yIrregular = Float64Array.from(tIrregular, t => 10 + 0.3 * t + Math.random() * 2);
@@ -611,6 +642,11 @@ Use different fractions to extract features at different scales:
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     library(rfastloess)
     set.seed(42)
     t <- seq(0, 100, length.out = 500)
@@ -759,6 +795,11 @@ Biological application:
 === "R"
     ```r
     library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
+    library(rfastloess)
 
     # Gene expression over 24 hours
     hours <- seq(0, 24, by = 0.5)
@@ -835,6 +876,13 @@ Biological application:
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     using FastLOESS
 
     hours = collect(range(0, 24, step=0.5))

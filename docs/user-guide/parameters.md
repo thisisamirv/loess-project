@@ -1857,8 +1857,8 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
 
     const weights = new Array(y.length).fill(1);
     weights[4] = 0; // Exclude 5th point
-    const model = new Loess({ custom_weights: weights });
-    const result = model.fit(x, y);
+    const model = new Loess({});
+    const result = model.fit(x, y, weights);
     ```
 
 === "WebAssembly"
@@ -2079,7 +2079,7 @@ Include fit quality metrics (Batch and Streaming only).
 
         let result = model.fit(&x, &y)?;
         if let Some(diag) = result.diagnostics {
-            println!("R\u00b2: {:.4}", diag.r_squared);
+            println!("R\u{00b2}: {:.4}", diag.r_squared);
             println!("RMSE: {:.4}", diag.rmse);
         }
 
@@ -2455,11 +2455,20 @@ Selection strategy for automated parameter tuning.
 
 === "Node.js"
     ```javascript
+    const { Loess } = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     // Coming soon
     ```
 
 === "WebAssembly"
     ```javascript
+    import init, { smooth } from 'fastloess-wasm';
+    await init();
+
     // Coming soon
     ```
 
@@ -2563,7 +2572,7 @@ Points per chunk in Streaming mode.
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const processor = new StreamingLoess({}, { chunk_size: 10000 });
-    processor.processChunk(x, y);
+    processor.process_chunk(x, y);
     const result = processor.finalize();
     ```
 
@@ -2577,7 +2586,7 @@ Points per chunk in Streaming mode.
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const processor = new StreamingLoess({}, { chunk_size: 10000 });
-    processor.processChunk(x, y);
+    processor.process_chunk(x, y);
     const result = processor.finalize();
     ```
 
@@ -2678,7 +2687,7 @@ Overlap between chunks in Streaming mode.
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const processor = new StreamingLoess({}, { overlap: 1000 });
-    processor.processChunk(x, y);
+    processor.process_chunk(x, y);
     const result = processor.finalize();
     ```
 
@@ -2692,7 +2701,7 @@ Overlap between chunks in Streaming mode.
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const processor = new StreamingLoess({}, { overlap: 1000 });
-    processor.processChunk(x, y);
+    processor.process_chunk(x, y);
     const result = processor.finalize();
     ```
 
@@ -2802,7 +2811,7 @@ For example:
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const processor = new StreamingLoess({}, { merge_strategy: "weighted_average" });
-    processor.processChunk(x, y);
+    processor.process_chunk(x, y);
     const result = processor.finalize();
     ```
 
@@ -2816,7 +2825,7 @@ For example:
     const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const processor = new StreamingLoess({}, { merge_strategy: "weighted_average" });
-    processor.processChunk(x, y);
+    processor.process_chunk(x, y);
     const result = processor.finalize();
     ```
 

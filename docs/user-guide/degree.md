@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 -->
+<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Polynomial Degree
 
 Degree of the local polynomial fitted at each point.
@@ -29,50 +29,109 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Loess(degree = 0L, fraction = 0.5)
     result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Loess(degree="constant", fraction=0.5)
     result = model.fit(x, y)
     ```
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .degree("constant")
-        .fraction(0.5)
-        .build()?;
-    let result = model.fit(&x, &y)?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let model = Loess::new()
+            .degree("constant")
+            .fraction(0.5)
+            .build()?;
+        let result = model.fit(&x, &y)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = Loess(; degree="constant", fraction=0.5)
     result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const model = new Loess({ degree: 0, fraction: 0.5 });
+    const { Loess } = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const model = new Loess({ degree: "constant", fraction: 0.5 });
     const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
+    import init, { Loess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Loess({ degree: "constant", fraction: 0.5 });
     const result = model.fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    fastloess::LoessOptions deg0_opts;
-    deg0_opts.degree = "constant";
-    deg0_opts.fraction = 0.5;
-    fastloess::Loess model(deg0_opts);
-    auto result = model.fit(x, y).value();
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastloess::LoessOptions deg0_opts;
+        deg0_opts.degree = "constant";
+        deg0_opts.fraction = 0.5;
+        fastloess::Loess model(deg0_opts);
+        auto result = model.fit(x, y).value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -87,50 +146,109 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Loess(degree = 1L, fraction = 0.5)
     result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Loess(degree="linear", fraction=0.5)
     result = model.fit(x, y)
     ```
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .degree("linear")
-        .fraction(0.5)
-        .build()?;
-    let result = model.fit(&x, &y)?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let model = Loess::new()
+            .degree("linear")
+            .fraction(0.5)
+            .build()?;
+        let result = model.fit(&x, &y)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = Loess(; degree="linear", fraction=0.5)
     result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const model = new Loess({ degree: 1, fraction: 0.5 });
+    const { Loess } = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const model = new Loess({ degree: "linear", fraction: 0.5 });
     const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
+    import init, { Loess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Loess({ degree: "linear", fraction: 0.5 });
     const result = model.fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    fastloess::LoessOptions deg1_opts;
-    deg1_opts.degree = "linear";
-    deg1_opts.fraction = 0.5;
-    fastloess::Loess model(deg1_opts);
-    auto result = model.fit(x, y).value();
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastloess::LoessOptions deg1_opts;
+        deg1_opts.degree = "linear";
+        deg1_opts.fraction = 0.5;
+        fastloess::Loess model(deg1_opts);
+        auto result = model.fit(x, y).value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -145,50 +263,109 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Loess(degree = 2L, fraction = 0.5)
     result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Loess(degree="quadratic", fraction=0.5)
     result = model.fit(x, y)
     ```
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .degree("quadratic")
-        .fraction(0.5)
-        .build()?;
-    let result = model.fit(&x, &y)?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let model = Loess::new()
+            .degree("quadratic")
+            .fraction(0.5)
+            .build()?;
+        let result = model.fit(&x, &y)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = Loess(; degree="quadratic", fraction=0.5)
     result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const model = new Loess({ degree: 2, fraction: 0.5 });
+    const { Loess } = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const model = new Loess({ degree: "quadratic", fraction: 0.5 });
     const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
+    import init, { Loess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Loess({ degree: "quadratic", fraction: 0.5 });
     const result = model.fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    fastloess::LoessOptions deg2_opts;
-    deg2_opts.degree = "quadratic";
-    deg2_opts.fraction = 0.5;
-    fastloess::Loess model(deg2_opts);
-    auto result = model.fit(x, y).value();
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastloess::LoessOptions deg2_opts;
+        deg2_opts.degree = "quadratic";
+        deg2_opts.fraction = 0.5;
+        fastloess::Loess model(deg2_opts);
+        auto result = model.fit(x, y).value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -203,50 +380,109 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Loess(degree = 3L, fraction = 0.6)
     result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Loess(degree="cubic", fraction=0.6)
     result = model.fit(x, y)
     ```
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .degree("cubic")
-        .fraction(0.6)
-        .build()?;
-    let result = model.fit(&x, &y)?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let model = Loess::new()
+            .degree("cubic")
+            .fraction(0.6)
+            .build()?;
+        let result = model.fit(&x, &y)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = Loess(; degree="cubic", fraction=0.6)
     result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const model = new Loess({ degree: 3, fraction: 0.6 });
+    const { Loess } = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const model = new Loess({ degree: "cubic", fraction: 0.6 });
     const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
+    import init, { Loess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Loess({ degree: "cubic", fraction: 0.6 });
     const result = model.fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    fastloess::LoessOptions deg3_opts;
-    deg3_opts.degree = "cubic";
-    deg3_opts.fraction = 0.6;
-    fastloess::Loess model(deg3_opts);
-    auto result = model.fit(x, y).value();
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastloess::LoessOptions deg3_opts;
+        deg3_opts.degree = "cubic";
+        deg3_opts.fraction = 0.6;
+        fastloess::Loess model(deg3_opts);
+        auto result = model.fit(x, y).value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -261,50 +497,109 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Loess(degree = 4L, fraction = 0.7)
     result <- model$fit(x, y)
     ```
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Loess(degree="quartic", fraction=0.7)
     result = model.fit(x, y)
     ```
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .degree("quartic")
-        .fraction(0.7)
-        .build()?;
-    let result = model.fit(&x, &y)?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let model = Loess::new()
+            .degree("quartic")
+            .fraction(0.7)
+            .build()?;
+        let result = model.fit(&x, &y)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = Loess(; degree="quartic", fraction=0.7)
     result = fit(model, x, y)
     ```
 
 === "Node.js"
     ```javascript
-    const model = new Loess({ degree: 4, fraction: 0.7 });
+    const { Loess } = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const model = new Loess({ degree: "quartic", fraction: 0.7 });
     const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
     ```javascript
+    import init, { Loess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Loess({ degree: "quartic", fraction: 0.7 });
     const result = model.fit(x, y);
     ```
 
 === "C++"
     ```cpp
-    fastloess::LoessOptions deg4_opts;
-    deg4_opts.degree = "quartic";
-    deg4_opts.fraction = 0.7;
-    fastloess::Loess model(deg4_opts);
-    auto result = model.fit(x, y).value();
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastloess::LoessOptions deg4_opts;
+        deg4_opts.degree = "quartic";
+        deg4_opts.fraction = 0.7;
+        fastloess::Loess model(deg4_opts);
+        auto result = model.fit(x, y).value();
+
+        return 0;
+    }
     ```
 
 ---

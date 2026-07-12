@@ -20,15 +20,20 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 === "R"
     ```r
     library(rfastloess)
+    set.seed(42)
+    positions <- seq(0, 10000, by = 10)
+    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
+
+    library(rfastloess)
 
     # Simulate methylation data
     set.seed(42)
     n <- 1000
     positions <- sort(runif(n, 0, 1e6))
-    
+
     # True pattern
     true_meth <- 0.5 + 0.3 * sin(positions / 1e5)
-    
+
     # Observed with noise
     observed <- true_meth + rnorm(n, sd = 0.15)
     observed <- pmax(0, pmin(1, observed))
@@ -129,6 +134,13 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     positions = collect(0.0:10.0:10000.0)
     observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
 
+    using FastLOESS
+    using Random
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
     # positions and observed are your methylation data
     model = Loess(;
         fraction=0.1,
@@ -144,6 +156,10 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 === "Node.js"
     ```javascript
     const fl = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
 
     const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
     const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
@@ -217,6 +233,11 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 === "R"
     ```r
     library(rfastloess)
+    set.seed(42)
+    positions <- seq(0, 10000, by = 10)
+    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
+
+    library(rfastloess)
 
     set.seed(123)
     positions <- seq(0, 10000, by = 10)
@@ -227,7 +248,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     peak1 <- 50 * exp(-((positions - 2000)^2) / (2 * 200^2))
     peak2 <- 80 * exp(-((positions - 5000)^2) / (2 * 300^2))
     peak3 <- 40 * exp(-((positions - 8000)^2) / (2 * 150^2))
-    
+
     true_signal <- background + peak1 + peak2 + peak3
     observed <- rpois(n, true_signal)
 
@@ -311,6 +332,13 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 === "Julia"
     ```julia
     using FastLOESS
+    using Random
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
+    using FastLOESS
     using Random, Statistics
 
     rng = MersenneTwister(42)
@@ -330,6 +358,10 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 === "Node.js"
     ```javascript
     const fl = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
 
     const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
     const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
@@ -409,6 +441,11 @@ For whole-genome data that doesn't fit in memory:
     set.seed(42)
     positions <- seq(0, 10000, by = 10)
     observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
+
+    library(rfastloess)
+    set.seed(42)
+    positions <- seq(0, 10000, by = 10)
+    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
     coverage <- observed  # alias
 
     model <- StreamingLoess(
@@ -472,6 +509,13 @@ For whole-genome data that doesn't fit in memory:
     rng = MersenneTwister(42)
     positions = collect(0.0:10.0:10000.0)
     observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+
+    using FastLOESS
+    using Random
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
     coverage = observed
 
     # coverage and positions are chromosome-scale vectors
@@ -504,7 +548,7 @@ For whole-genome data that doesn't fit in memory:
 
     // Process genomic chunks from stream or file
     for (const chunk of genomicData) {
-        processor.processChunk(chunk.positions, chunk.coverage);
+        processor.process_chunk(chunk.positions, chunk.coverage);
     }
     const result = processor.finalize();
     ```
@@ -521,7 +565,7 @@ For whole-genome data that doesn't fit in memory:
         { chunk_size: 100, overlap: 10 }
     );
 
-    processor.processChunk(xChunk, yChunk);
+    processor.process_chunk(xChunk, yChunk);
     const result = processor.finalize();
     ```
 

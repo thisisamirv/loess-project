@@ -427,6 +427,13 @@ LOESS can robustly handle outliers through iterative reweighting:
 === "Julia"
 
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     x = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
     y_with_outlier = [2.0, 4.0, 6.0, 50.0, 10.0, 12.0]
 
@@ -499,25 +506,34 @@ LOESS can robustly handle outliers through iterative reweighting:
 === "C++"
 
     ```cpp
-    // Data with an outlier at index 3
-    std::vector<double> x_out = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
-    std::vector<double> y_outlier = {2.0, 4.0, 6.0, 50.0, 10.0, 12.0};
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastloess::LoessOptions options;
-    options.fraction = 0.5;
-    options.iterations = 5;
-    options.robustness_method = "bisquare";
-    options.return_robustness_weights = true;
+    int main() {
+        // Data with an outlier at index 3
+        std::vector<double> x_out = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+        std::vector<double> y_outlier = {2.0, 4.0, 6.0, 50.0, 10.0, 12.0};
 
-    fastloess::Loess model(options);
-    auto result = model.fit(x_out, y_outlier).value();
+        fastloess::LoessOptions options;
+        options.fraction = 0.5;
+        options.iterations = 5;
+        options.robustness_method = "bisquare";
+        options.return_robustness_weights = true;
 
-    // Check weights
-    auto weights = result.robustness_weights();
-    for (size_t i = 0; i < weights.size(); ++i) {
-        if (weights[i] < 0.5) {
-            std::cout << "Point " << i << " is outlier (weight: " << weights[i] << ")\n";
+        fastloess::Loess model(options);
+        auto result = model.fit(x_out, y_outlier).value();
+
+        // Check weights
+        auto weights = result.robustness_weights();
+        for (size_t i = 0; i < weights.size(); ++i) {
+            if (weights[i] < 0.5) {
+                std::cout << "Point " << i << " is outlier (weight: " << weights[i] << ")\n";
+            }
         }
+
+        return 0;
     }
     ```
 
@@ -649,7 +665,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
     const chunk_size = 1000;
     for (let start = 0; start <= 4000; start += chunk_size) {
         const end = Math.min(start + chunk_size, n);
-        model.processChunk(x.slice(start, end), y.slice(start, end));
+        model.process_chunk(x.slice(start, end), y.slice(start, end));
     }
     const result = model.finalize();
     console.log(`Smoothed ${result.y.length} points in streaming mode`);
@@ -676,7 +692,7 @@ For datasets too large to fit in memory, stream them in fixed-size chunks with o
     const chunk_size = 1000;
     for (let start = 0; start <= 4000; start += chunk_size) {
         const end = Math.min(start + chunk_size, n);
-        model.processChunk(x.slice(start, end), y.slice(start, end));
+        model.process_chunk(x.slice(start, end), y.slice(start, end));
     }
     const result = model.finalize();
     console.log(`Smoothed ${result.y.length} points`);
