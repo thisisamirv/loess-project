@@ -30,8 +30,8 @@ test('WASM streaming smoothing', () => {
     const x = new Float64Array(Array.from({ length: 20 }, (_, i) => i));
     const y = new Float64Array(Array.from({ length: 20 }, (_, i) => i * 2));
 
-    const result = streamer.processChunk(x, y);
-    // WASM processChunk returns a struct, safe to check .y existence/length if populated
+    const result = streamer.process_chunk(x, y);
+    // WASM process_chunk returns a struct, safe to check .y existence/length if populated
     if (result) {
         assert.ok(result.y.length >= 0);
     }
@@ -151,7 +151,7 @@ test('WASM streaming: merge_strategy', () => {
             { fraction: 0.3 },
             { chunk_size: 20, overlap: 2, merge_strategy: ms }
         );
-        s.processChunk(x, y);
+        s.process_chunk(x, y);
         const r = s.finalize();
         assert.ok(r.y.length >= 0);
     }

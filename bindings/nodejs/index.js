@@ -317,12 +317,12 @@ function _validateOptions(opts, validKeys, typeName) {
     }
 }
 
-// Normalize customWeights: accept Float64Array in addition to Array<number>.
+// Normalize customWeights: ensure the value is a Float64Array for the native addon.
+// Accepts Float64Array (passed through), plain Array<number> (converted), or null/undefined.
 function _normalizeCustomWeights(cw) {
-    if (cw instanceof Float64Array) {
-        return Array.from(cw)
-    }
-    return cw
+    if (cw == null) return cw
+    if (cw instanceof Float64Array) return cw
+    return new Float64Array(cw)
 }
 
 // ---------------------------------------------------------------------------
