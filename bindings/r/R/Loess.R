@@ -124,7 +124,8 @@ Loess <- function(
         class = "Loess"
     )
 }
-aram_names) {
+
+env_args <- function(param_names) {
     env <- parent.frame()
     result <- lapply(param_names, function(name) {
         val <- get(name, envir = env)

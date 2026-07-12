@@ -3,7 +3,7 @@
 #' Benchmarks are aligned with the Rust benchmarks to enable direct comparison.
 #' Results are written to benchmarks/output/r_benchmark.json.
 #'
-#' Run with: Rscript benchmark.R
+#' Run with: Rscript stats_loess.R
 
 library(jsonlite)
 library(stats)
@@ -35,14 +35,16 @@ run_benchmark <- function(name, size, func, iterations = 10, warmup = 2) {
 
     # Timed runs
     times <- numeric(iterations)
+    last_output <- NULL
     for (i in seq_len(iterations)) {
         start <- Sys.time()
         tryCatch(
             {
-                func()
+                result <- func()
                 end <- Sys.time()
                 elapsed <- as.numeric(difftime(end, start, units = "secs"))
                 times[i] <- elapsed * 1000 # convert to ms
+                last_output <- result
             },
             error = function(e) {
                 cat(sprintf("Benchmark %s failed: %s\n", name, e$message))
@@ -58,7 +60,8 @@ run_benchmark <- function(name, size, func, iterations = 10, warmup = 2) {
         std_time_ms = sd(times),
         median_time_ms = median(times),
         min_time_ms = min(times),
-        max_time_ms = max(times)
+        max_time_ms = max(times),
+        fitted = if (!is.null(last_output)) as.numeric(fitted(last_output)) else NULL
     )
 }
 
@@ -172,7 +175,7 @@ benchmark_fraction <- function(iterations = 10) {
 benchmark_iterations <- function(iterations = 10) {
     results <- list()
     size <- 5000
-    iter_values <- c(0, 1, 2, 3, 5, 10)
+    iter_values <- c(1, 2, 3, 5, 10)
     data <- generate_outlier_data(size)
 
     for (it in iter_values) {
@@ -304,7 +307,14 @@ main <- function() {
     all_results$pathological <- unname(benchmark_pathological(iterations))
 
     # Save to shared output directory (benchmarks/output/)
-    out_dir <- file.path(dirname(getwd()), "output")
+    args <- commandArgs(trailingOnly = FALSE)
+    file_flag <- grep("--file=", args, value = TRUE)
+    if (length(file_flag) > 0) {
+        script_dir <- dirname(normalizePath(sub("--file=", "", file_flag)))
+    } else {
+        script_dir <- getwd()
+    }
+    out_dir <- file.path(script_dir, "output")
     if (!dir.exists(out_dir)) {
         dir.create(out_dir, recursive = TRUE)
     }
