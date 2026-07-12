@@ -1,4 +1,4 @@
-name: Release Julia
+name: Release Julia JLL
 
 on:
   release:
@@ -16,13 +16,11 @@ env:
 permissions:
   contents: write
   pull-requests: write
-  issues: write
 
 jobs:
   update-yggdrasil:
     name: Update Yggdrasil
     runs-on: ubuntu-latest
-    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
 
     steps:
       - name: Check required secrets
@@ -92,7 +90,7 @@ jobs:
           CONTENT=$(echo "$CONTENT" | sed -E "s/^version = v\"[^\"]*\"$/version = v\"$VERSION\"/")
 
           # Replace only the GitSource commit hash line.
-          CONTENT=$(echo "$CONTENT" | sed -E "s/^([[:space:]]*)\"[0-9a-f]{40}\"\),$/\1\"$COMMIT\"),/")
+          CONTENT=$(echo "$CONTENT" | sed -E "s/(GitSource\(\"[^\"]*\", \")([0-9a-f]{40})(\"\),)/\1$COMMIT\3/")
 
           # Verify replacements
           echo "=== Updated Script (first 30 lines) ==="
@@ -106,7 +104,7 @@ jobs:
           fi
 
           # Verify commit was replaced
-          if ! echo "$CONTENT" | grep -qE "^[[:space:]]*\"$COMMIT\"\),$"; then
+          if ! echo "$CONTENT" | grep -qE "GitSource\(\"[^\"]*\", \"$COMMIT\"\),"; then
             echo "❌ Failed to update commit hash in script"
             exit 1
           fi
@@ -267,25 +265,4 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "A PR has been created/updated on Yggdrasil. Once merged:" >> $GITHUB_STEP_SUMMARY
           echo "1. The JLL will be built for all platforms" >> $GITHUB_STEP_SUMMARY
-          echo "2. A registration PR will be auto-created on General" >> $GITHUB_STEP_SUMMARY
-          echo "3. After ~20 minutes, the package will be available" >> $GITHUB_STEP_SUMMARY
-
-  trigger-registration:
-    name: Trigger Registration
-    needs: update-yggdrasil
-    runs-on: ubuntu-latest
-    if: success()
-    steps:
-      - name: Trigger JuliaRegistrator
-        uses: actions/github-script@v9
-        with:
-          github-token: ${{ secrets.YGGDRASIL_TOKEN || secrets.GITHUB_TOKEN }}
-          script: |
-            const commit_sha = context.sha;
-            console.log(`Triggering registration for commit: ${commit_sha}`);
-            await github.rest.repos.createCommitComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: commit_sha,
-              body: '@JuliaRegistrator register subdir=bindings/julia/julia'
-            });
+          echo "2. Run the 'Release Julia Package' workflow to trigger registration" >> $GITHUB_STEP_SUMMARY
