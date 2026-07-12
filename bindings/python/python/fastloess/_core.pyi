@@ -209,7 +209,7 @@ class Loess:
         boundary_degree_fallback: bool | None = None,
         cv_seed: int | None = None,
     ) -> None:
-        """Initialize the batch LOESS processor.""""
+        """Initialize the batch LOESS processor."""
         ...
 
     def fit(
@@ -265,7 +265,7 @@ class StreamingLoess:
         confidence_intervals: float | None = None,
         prediction_intervals: float | None = None,
     ) -> None:
-        """Initialize the streaming processor.""""
+        """Initialize the streaming processor."""
         ...
 
     def process_chunk(self, x: ArrayLike, y: ArrayLike) -> LoessResult:
