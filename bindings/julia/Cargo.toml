@@ -14,8 +14,8 @@ keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 
 [dependencies]
-loess-rs = { path = "../../crates/loess-rs", version = "0.9.0" }
-fastLoess = { path = "../../crates/fastLoess", version = "0.9.0", features = [
+loess-rs = { path = "../../crates/loess-rs", version = "0.9" }
+fastLoess = { path = "../../crates/fastLoess", version = "0.9", features = [
     "dev",
 ] }
 

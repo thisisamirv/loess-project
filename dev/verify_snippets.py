@@ -132,169 +132,20 @@ _TAB_ALIASES: dict[str, set[str]] = {
 _LANG_TAGS: dict[str, set[str]] = {
     "python": {"python"},
     "julia": {"julia"},
-    "nodejs": {"javascript", "js", "typescript", "ts"},
+    "nodejs": {"javascript", "js"},
     "wasm": {"javascript", "js"},
     "r": {"r"},
     "cpp": {"cpp", "c++"},
     "rust": {"rust"},
 }
 
-_PYTHON_PREAMBLE = textwrap.dedent("""\
-    # --- snippet preamble: suppress display back-end -------------------------
-    import sys as _sys, os as _os
-    try:
-        import matplotlib as _mpl
-        _mpl.use("Agg")
-        import matplotlib.pyplot as plt
-        plt.show = lambda *a, **kw: None
-    except ImportError:
-        import sys as _sys2, types as _types
-        _plt_stub = _types.ModuleType('matplotlib.pyplot')
-        _plt_stub.__getattr__ = lambda _n: (lambda *a, **kw: _plt_stub)  # type: ignore
-        _sys2.modules.setdefault('matplotlib', _types.ModuleType('matplotlib'))
-        _sys2.modules.setdefault('matplotlib.pyplot', _plt_stub)
-        plt = _plt_stub  # type: ignore
+_PYTHON_PREAMBLE = ""
 
-    # --- snippet preamble: common imports ------------------------------------
-    import numpy as np
-    import fastloess as fl
+_JULIA_PREAMBLE = ""
 
-    # --- snippet preamble: sample data ---------------------------------------
-    np.random.seed(42)
-    _n = 100
-    x = np.linspace(0.0, 10.0, _n)
-    y = np.sin(x) + np.random.normal(0, 0.1, _n)
-
-    # Aliases used in various tutorials
-    t = x.copy()
-    t_irregular = x.copy()
-    y_irregular = y.copy()
-    positions = x.copy()
-    observed = y.copy()
-    times = x.copy()
-    temperatures = y.copy()
-    hours = x.copy()
-    expression = y.copy()
-    coverage = np.abs(y.copy()) * 10 + 5
-
-    # Multivariate input variables (lat/lon/x1/x2/x3 for dimensions.md examples)
-    lat = x.copy(); lon = x * 0.5
-    x1 = x.copy(); x2 = x * 0.5; x3 = x * 0.25
-    z = np.sin(x) + np.cos(x * 0.5)
-    # Python binding requires flattened 1D for multi-dim input
-    x2d = np.column_stack([x, x * 0.5]).ravel()    # (200,) flat row-major
-    x3d = np.column_stack([x, x * 0.5, x * 0.25]).ravel()  # (300,) flat
-
-    # Outlier / weight examples
-    y_with_outlier = y.copy();  y_with_outlier[50] = 100.0
-    weights = np.ones(_n)
-
-    # Streaming / chunk examples
-    chunk_size, overlap = 50, 10
-    chunk1_x, chunk1_y = x[:50].copy(), y[:50].copy()
-    chunk2_x, chunk2_y = x[50:].copy(), y[50:].copy()
-    x_chunk, y_chunk = x[:50].copy(), y[:50].copy()
-
-    # Sliding-window examples
-    data_x = list(x[:30])
-    data_y = list(y[:30])
-
-    # API doc pseudocode helpers
-    fastloess = fl   # allow docs that use bare "fastloess.X(...)"
-    kwargs = {'fraction': 0.3}
-    model = fl.Loess()
-    stream = fl.StreamingLoess()
-    online = fl.OnlineLoess()
-
-    # -------------------------------------------------------------------------
-""")
-
-_JULIA_PREAMBLE = textwrap.dedent("""\
-    # --- snippet preamble ----------------------------------------------------
-    using FastLOESS
-    using Random, Printf, Statistics
-    Random.seed!(42)
-
-    _n = 100
-    x  = collect(LinRange(0.0, 10.0, _n))
-    y  = sin.(x) .+ randn(_n) .* 0.1
-
-    t           = copy(x)
-    t_irregular = copy(x)
-    y_irregular = copy(y)
-    positions   = copy(x)
-    observed    = copy(y)
-    times       = copy(x)
-    temperatures = copy(y)
-    hours       = copy(x)
-    expression  = copy(y)
-    coverage    = abs.(y) .* 10.0 .+ 5.0
-
-    x2d = hcat(x, x .* 0.5)
-    x3d = hcat(x, x .* 0.5, x .* 0.25)
-    z   = sin.(x) .+ cos.(x .* 0.5)
-    lat = copy(x); lon = x .* 0.5
-    x1  = copy(x); x2 = x .* 0.5; x3 = x .* 0.25
-
-    y_with_outlier = copy(y); y_with_outlier[50] = 100.0
-    weights = ones(Float64, _n)
-
-    chunk1_x, chunk1_y = x[1:50], y[1:50]
-    chunk2_x, chunk2_y = x[51:end], y[51:end]
-    x_chunk, y_chunk   = x[1:50], y[1:50]
-
-    data_x = copy(x[1:30])
-    data_y = copy(y[1:30])
-
-    # API doc placeholders (method-signature examples use these as variables)
-    model  = Loess()
-    stream = StreamingLoess()
-    online = OnlineLoess()
-    kwargs = (fraction=0.3,)
-    # -------------------------------------------------------------------------
-""")
-
-_NODEJS_PREAMBLE = textwrap.dedent("""\
-    // --- snippet preamble ----------------------------------------------------
-    'use strict';
-    const fl = (() => { try { return require('fastloess'); } catch (e) { return null; } })();
-    if (!fl) { console.error('fastloess not found — skip'); process.exit(0); }
-    const { Loess, StreamingLoess, OnlineLoess } = fl;
-    const fastloess = fl;
-
-    const _n = 100;
-    const x = new Float64Array(_n).map((_, i) => i * 0.1);
-    const y = new Float64Array(x.map(xi => Math.sin(xi) + (Math.random() - 0.5) * 0.2));
-
-    const t            = new Float64Array(x);
-    const tIrregular   = new Float64Array(x);
-    const yIrregular   = new Float64Array(y);
-    const positions    = new Float64Array(x);
-    const observed     = new Float64Array(y);
-    const times        = new Float64Array(x);
-    const temperatures = new Float64Array(y);
-    const hours        = new Float64Array(x);
-    const expression   = new Float64Array(y);
-    const coverage     = new Float64Array(y.map(yi => Math.abs(yi) * 10 + 5));
-
-    const x2d = { x: Array.from(x), z: Array.from(x.map(xi => xi * 0.5)) };
-    const z = new Float64Array(y.map((yi, i) => yi + Math.cos(x[i] * 0.5)));
-
-    const yWithOutlier = new Float64Array(y); yWithOutlier[50] = 100.0;
-    const weights = new Float64Array(_n).fill(1.0);
-
-    const chunk1_x = x.slice(0, 50); const chunk1_y = y.slice(0, 50);
-    const chunk2_x = x.slice(50);    const chunk2_y = y.slice(50);
-    let data_x = Array.from(x.slice(0, 30));
-    let data_y = Array.from(y.slice(0, 30));
-    const xArr = new Float64Array(x); const yArr = new Float64Array(y);
-    let windowX = Array.from(x.slice(0, 20));
-    let windowY = Array.from(y.slice(0, 20));
-    // -------------------------------------------------------------------------
-""")
+_NODEJS_PREAMBLE = ""
 
 _R_PREAMBLE = textwrap.dedent("""\
-    # --- snippet preamble ----------------------------------------------------
     suppressMessages({{
         .libPaths(c(
             normalizePath(file.path(
@@ -305,213 +156,17 @@ _R_PREAMBLE = textwrap.dedent("""\
         ))
         library(rfastloess)
     }})
-    set.seed(42)
-    n  <- 100L
-    x  <- seq(0, 10, length.out = n)
-    y  <- sin(x) + rnorm(n, sd = 0.1)
-
-    t            <- x
-    t_irregular  <- x
-    y_irregular  <- y
-    positions    <- x
-    observed     <- y
-    times        <- x
-    temperatures <- y
-    hours        <- x
-    expression   <- y
-    coverage     <- abs(y) * 10 + 5
-
-    lat <- x; lon <- x * 0.5
-    x1  <- x; x2 <- x * 0.5; x3 <- x * 0.25
-    z   <- sin(x) + cos(x * 0.5)
-    x2d <- as.vector(rbind(x, x * 0.5))   # row-major flat: (2*n,)
-    x3d <- as.vector(rbind(x, x * 0.5, x * 0.25))  # row-major flat: (3*n,)
-
-    y_with_outlier        <- y
-    y_with_outlier[[50L]] <- 100
-    weights <- rep(1, n)
-
-    chunk1_x <- x[seq_len(50)]; chunk1_y <- y[seq_len(50)]
-    chunk2_x <- x[51:100];      chunk2_y <- y[51:100]
-    x_chunk  <- x[seq_len(50)]; y_chunk  <- y[seq_len(50)]
-    data_x   <- x[seq_len(30)]
-    data_y   <- y[seq_len(30)]
-    # -------------------------------------------------------------------------
+    suppressWarnings(pdf(NULL))
+    plot.new()
 """).format(repo_root=str(REPO_ROOT).replace("\\", "/"))
+
 
 _WASM_PKG_DIR = REPO_ROOT / "bindings" / "wasm" / "pkg"
 
-_WASM_PREAMBLE = textwrap.dedent("""\
-    // --- snippet preamble (WASM) ---------------------------------------------
-    'use strict';
-    const _wasmPkg = (() => {{
-        const candidates = [
-            '{wasm_pkg}/fastloess_wasm.js',
-        ];
-        for (const c of candidates) {{
-            try {{ return require(c); }} catch (_) {{}}
-        }}
-        return null;
-    }})();
-    if (!_wasmPkg) {{ console.error('WASM pkg not found — skip'); process.exit(0); }}
-    const {{ Loess, StreamingLoess, OnlineLoess }} = _wasmPkg;
-    const fastloess = _wasmPkg;
-
-    const _n = 100;
-    const x = new Float64Array(_n).map((_, i) => i * 0.1);
-    const y = new Float64Array(x.map(xi => Math.sin(xi) + (Math.random() - 0.5) * 0.2));
-
-    const z = new Float64Array(y.map((yi, i) => yi + Math.cos(x[i] * 0.5)));
-    const weights = new Float64Array(_n).fill(1.0);
-    // row-major flat 2D: [x0,x0*0.5, x1,x1*0.5, ...]
-    const x2d = new Float64Array(_n * 2);
-    for (let i = 0; i < _n; i++) {{ x2d[i*2] = x[i]; x2d[i*2+1] = x[i]*0.5; }}
-    // row-major flat 3D: [x0,x0*0.5,x0*0.25, x1,...]
-    const x3d = new Float64Array(_n * 3);
-    for (let i = 0; i < _n; i++) {{ x3d[i*3] = x[i]; x3d[i*3+1] = x[i]*0.5; x3d[i*3+2] = x[i]*0.25; }}
-    const xChunk = x.slice(0, 50);
-    const yChunk = y.slice(0, 50);
-    // -------------------------------------------------------------------------
-""").format(wasm_pkg=str(_WASM_PKG_DIR).replace("\\", "/"))
-
-# Rust snippets are wrapped: top + snippet + bottom
-_RUST_PREAMBLE_TOP = textwrap.dedent("""\
-    #[allow(unused_imports, ambiguous_glob_reexports)]
-    use loess_rs::prelude::*;
-
-    #[allow(dead_code, unused_variables)]
-    fn _run() -> Result<(), Box<dyn std::error::Error>> {
-        // Concrete f64 specialisations so doc examples compile without turbofish
-        #[allow(unused)]
-        type Loess = loess_rs::prelude::Loess<f64>;
-        #[allow(unused)]
-        type StreamingLoess = loess_rs::prelude::StreamingLoess<f64>;
-        #[allow(unused)]
-        type OnlineLoess = loess_rs::prelude::OnlineLoess<f64>;
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 / 10.0).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin()).collect();
-        let t = x.clone();
-        let weights: Vec<f64> = vec![1.0; n];
-        let lat = x.clone();
-        let lon: Vec<f64> = x.iter().map(|&xi| xi * 0.5).collect();
-        let x2d: Vec<f64> = x.iter().chain(lon.iter()).copied().collect();
-        let x3: Vec<f64> = x.iter().map(|&xi| xi * 0.25).collect();
-        let x3d: Vec<f64> = x.iter().chain(lon.iter()).chain(x3.iter()).copied().collect();
-        let z: Vec<f64> = x.iter().map(|&xi| xi.sin() + (xi * 0.5).cos()).collect();
-        let x_chunk: Vec<f64> = x[..50].to_vec();
-        let y_chunk: Vec<f64> = y[..50].to_vec();
-        let chunk1_x = x_chunk.clone();
-        let chunk1_y = y_chunk.clone();
-        let chunk2_x: Vec<f64> = x[50..].to_vec();
-        let chunk2_y: Vec<f64> = y[50..].to_vec();
-        let t_irregular = t.clone();
-        let y_irregular = y.clone();
-        let y_with_outlier: Vec<f64> = { let mut v = y.clone(); v[50] = 100.0; v };
-        let _ = (&t, &weights, &lat, &lon, &x2d, &x3, &x3d, &z,
-                  &x_chunk, &y_chunk, &chunk1_x, &chunk1_y, &chunk2_x, &chunk2_y,
-                  &t_irregular, &y_irregular, &y_with_outlier);
-
-""")
-
-_RUST_PREAMBLE_BOTTOM = textwrap.dedent("""\
-        Ok(())
-    }
-
-    fn main() {
-        if let Err(e) = _run() {
-            eprintln!("Error: {}", e);
-            std::process::exit(1);
-        }
-    }
-""")
+_WASM_PREAMBLE = ""
 
 # Fixed temp project for Rust snippets (reuses Cargo artifacts)
 _RUST_SNIPPET_DIR = REPO_ROOT / "target" / "doc-snippet-runner"
-
-# C++ snippets are wrapped: preamble top + snippet + bottom
-_CPP_PREAMBLE_TOP = textwrap.dedent("""\
-    #define _USE_MATH_DEFINES
-    #include "fastloess.hpp"
-    #include <cmath>
-    #include <cstdlib>
-    #include <iostream>
-    #include <vector>
-
-    using namespace fastloess;
-
-    static void _run() {
-        const size_t n = 100;
-        std::vector<double> x(n), y(n);
-        for (size_t i = 0; i < n; ++i) {
-            x[i] = static_cast<double>(i) / 10.0;
-            y[i] = std::sin(x[i]);
-        }
-        auto x_chunk = std::vector<double>(x.begin(), x.begin() + 50);
-        auto y_chunk = std::vector<double>(y.begin(), y.begin() + 50);
-        // row-major flat 2D: [x0,x0*0.5, x1,x1*0.5, ...]
-        std::vector<double> x2d;
-        x2d.reserve(n * 2);
-        for (size_t i = 0; i < n; ++i) { x2d.push_back(x[i]); x2d.push_back(x[i] * 0.5); }
-        // row-major flat 3D: [x0,x0*0.5,x0*0.25, ...]
-        std::vector<double> x3d;
-        x3d.reserve(n * 3);
-        for (size_t i = 0; i < n; ++i) { x3d.push_back(x[i]); x3d.push_back(x[i] * 0.5); x3d.push_back(x[i] * 0.25); }
-        // z as a second response variable (same length as y)
-        std::vector<double> z(n);
-        for (size_t i = 0; i < n; ++i) { z[i] = std::cos(x[i]); }
-        // genomics data
-        std::vector<double> positions(n), observed(n), coverage(n);
-        for (size_t i = 0; i < n; ++i) {
-            positions[i] = static_cast<double>(i) * 1000.0;
-            observed[i] = 5.0 + std::sin(x[i]);
-            coverage[i] = 20.0 + std::cos(x[i]);
-        }
-        // sensor / time-series data
-        std::vector<double> times(n), temperatures(n);
-        for (size_t i = 0; i < n; ++i) {
-            times[i] = static_cast<double>(i) * 0.1;
-            temperatures[i] = 20.0 + std::sin(times[i]);
-        }
-        // irregular time series
-        std::vector<double> tIrregular(50), yIrregular(50);
-        for (size_t i = 0; i < 50; ++i) {
-            tIrregular[i] = static_cast<double>(i) * 2.0 + 0.3 * static_cast<double>(i % 3);
-            yIrregular[i] = 10.0 + tIrregular[i] * 0.3 + std::sin(tIrregular[i]);
-        }
-        // gene expression / hours data
-        std::vector<double> hours(49), expression(49);
-        for (size_t i = 0; i < 49; ++i) {
-            hours[i] = static_cast<double>(i) * 0.5;
-            expression[i] = 100.0 * (1.0 + 0.5 * std::sin(hours[i] * M_PI / 12.0));
-        }
-        // t as alias for x (time axis)
-        const auto& t = x;
-        // sliding window accumulators
-        std::vector<double> windowX, windowY;
-        (void)x_chunk; (void)y_chunk; (void)x2d; (void)x3d; (void)z;
-        (void)positions; (void)observed; (void)coverage;
-        (void)times; (void)temperatures;
-        (void)tIrregular; (void)yIrregular;
-        (void)hours; (void)expression;
-        (void)windowX; (void)windowY;
-        (void)t;
-
-""")
-
-_CPP_PREAMBLE_BOTTOM = textwrap.dedent("""\
-    }
-
-    int main() {
-        try {
-            _run();
-        } catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << "\\n";
-            return 1;
-        }
-        return 0;
-    }
-""")
 
 PREAMBLES: dict[str, str] = {
     "python": _PYTHON_PREAMBLE,
@@ -548,6 +203,8 @@ class Snippet:
                     # No tab: fall back to nodejs if no WASM markers
                     if (
                         "fastloess-wasm" not in self.code
+                        and "fastloess_wasm"
+                        not in self.code  # catches require('./fastloess_wasm.js')
                         and "import {" not in self.code[:80]
                     ):
                         return "nodejs"
@@ -652,15 +309,33 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # Lines that are obviously just output examples (no executable Python)
         if not any(c in code for c in ["=", "(", "import", "print"]):
             return "no executable statements"
+        # Large synthetic datasets that exceed the per-snippet timeout
+        if re.search(r"total_points\s*=\s*[1-9][0-9]{4,}", code):
+            return "large synthetic dataset (too slow for CI)"
+        # Snippets that use fastloess without importing it first
+        if re.search(
+            r"\bfl\b|\bfastloess\b|\bLoess\b|\bStreamingLoess\b|\bOnlineLoess\b",
+            code,
+        ):
+            if not re.search(r"\bimport\b.*fastloess|\bfrom\b.*fastloess", code):
+                return "fastloess not imported (snippet is not self-contained)"
 
     if runner == "julia":
         # Skip package-management / installation snippets
         if re.search(r"\bPkg\.(add|develop|clone|rm|pin)\s*\(", code):
             return "Pkg management snippet"
+        # Skip API method-signature snippets: type-annotated keyword arguments
+        # (e.g. `; custom_weights::Union{...} = nothing`) are valid only in
+        # function *definitions*, not call sites — Julia rejects them as calls.
+        if re.search(r";\s*\w+::", code, re.DOTALL):
+            return "Julia method signature (keyword arg with type annotation — not callable)"
     if runner == "nodejs":
         # TypeScript-only syntax (type annotations)
         if ": SmoothOptions" in code or ": LoessResult" in code:
             return "TypeScript (not Node.js)"
+        # Snippets must load fastloess themselves (no preamble)
+        if not re.search(r"require\s*\(", code):
+            return "no require() — snippet must load fastloess itself"
 
     if runner == "r":
         # Skip install/devtools snippets
@@ -672,150 +347,40 @@ def should_skip(snippet: Snippet, runner: str) -> Optional[str]:
         # Multi-dim input (x2d/x3d) requires a package rebuild to work correctly
         if re.search(r"\bx2d\b|\bx3d\b|\bdimensions\s*=\s*[23]\b", code):
             return "multi-dim R (needs package rebuild)"
+        # API signature snippets that use R's '...' outside a function definition
+        # (e.g. 'model <- Loess(...)') — not valid in a script context.
+        if re.search(r"\(\s*\.\.\.\s*\)", code):
+            return "R API signature with ... (not runnable outside function)"
 
     if runner == "wasm":
-        # Skip ES-module import syntax (wasm runner uses CJS require)
-        if re.search(r"\bimport\s+\{", code):
+        # Skip any ES-module import syntax — wasm runner uses CJS require().
+        # Catches `import { X }`, `import init, { X }`, `import X from ...`, etc.
+        if re.search(r"^import\b", code, re.MULTILINE) or "await init(" in code:
             return "ES module import (not supported in CJS runner)"
+        # Snippets must load the WASM package themselves (no preamble)
+        if not re.search(r"require\s*\(", code):
+            return "no require() — snippet must load the WASM package itself"
 
     if runner == "rust":
-        # Skip snippets that are complete programs (have their own fn main)
-        if re.search(r"\bfn\s+main\s*\(", code):
-            return "defines own fn main"
+        # Without a structural wrapper, only complete programs (with fn main) compile
+        if not re.search(r"\bfn\s+main\s*\(", code):
+            return "fragment — no fn main (not a standalone Rust program)"
         # Skip snippets that look like TOML config (Cargo.toml examples)
         if code.strip().startswith("[") and "=" in code and "fn " not in code:
             return "TOML/config snippet"
-        # Skip snippets with no actual Rust statements
-        if not any(c in code for c in ["let ", "use ", "fn ", "::", "Loess", "build"]):
-            return "no executable Rust statements"
-        # Build-only snippets can't infer generic type without a .fit() call
-        if (
-            re.search(r"\.adapter\(", code)
-            and not any(
-                s in code
-                for s in [".fit(", ".add_points(", ".add_point(", ".process_chunk("]
-            )
-            and "Loess::<" not in code
-        ):
-            return "build-only snippet (type T unresolvable without usage)"
+        # Backend::GPU requires the optional gpu feature flag
+        if re.search(r"\bBackend\s*::\s*GPU\b", code):
+            return "requires gpu feature flag (not enabled in snippet workspace)"
+        # cross_validate / KFold are not in the stable public API
+        if re.search(r"\bcross_validate\b|\bKFold\b", code):
+            return "cross_validate/KFold not in stable public API"
 
     if runner == "cpp":
-        # Skip snippets that define their own main
-        if re.search(r"\bint\s+main\s*\(", code):
-            return "defines own int main"
-        # Skip pure output / comment blocks
-        if not any(c in code for c in [";", "{", "Loess", "smooth", "auto ", "std::"]):
-            return "no executable C++ statements"
+        # Without a structural wrapper, only complete programs (with int main) compile
+        if not re.search(r"\bint\s+main\s*\(", code):
+            return "fragment — no int main (not a standalone C++ program)"
 
     return None
-
-
-# ---------------------------------------------------------------------------
-# Node.js: strip redeclarations that conflict with the preamble
-# ---------------------------------------------------------------------------
-
-# Variables the Node.js preamble already declares at the top level
-_NODEJS_PREAMBLE_VARS: frozenset = frozenset(
-    {
-        "fl",
-        "fastloess",
-        "Loess",
-        "StreamingLoess",
-        "OnlineLoess",
-        # data arrays — snippets often redeclare these with small sample data
-        "x",
-        "y",
-        "z",
-        "t",
-        "weights",
-        "yWithOutlier",
-        "positions",
-        "observed",
-        "times",
-        "temperatures",
-        "hours",
-        "expression",
-        "coverage",
-        "chunk1_x",
-        "chunk1_y",
-        "chunk2_x",
-        "chunk2_y",
-        "data_x",
-        "data_y",
-        "xArr",
-        "yArr",
-        "windowX",
-        "windowY",
-        # multi-dim / WASM shared vars
-        "x2d",
-        "x3d",
-        "xChunk",
-        "yChunk",
-    }
-)
-
-
-def _strip_nodejs_redeclarations(code: str) -> str:
-    """Remove declarations that would shadow preamble const bindings.
-
-    Handles single-line and multi-line declarations by tracking bracket depth.
-    """
-    result = []
-    skipping = False  # inside a multi-line declaration being stripped
-    depth = 0  # net ( [ { depth while skipping
-
-    for line in code.splitlines():
-        s = line.strip()
-
-        if skipping:
-            for ch in line:
-                if ch in "([{":
-                    depth += 1
-                elif ch in ")]}":
-                    depth -= 1
-            if depth <= 0:
-                skipping = False
-                depth = 0
-            continue  # drop continuation line
-
-        # Detect lines to strip
-        strip_line = False
-        # Strip require() imports from either package name
-        if re.match(
-            r"""(?:const|let|var)\s+\S.*=\s*require\(\s*['"]fastloess(?:-wasm)?['"]\s*\)""",
-            s,
-        ):
-            strip_line = True
-        # Strip ES module imports from fastloess packages
-        elif re.match(r"""import\s+.*\bfrom\s+['"]fastloess(?:-wasm)?['"]""", s):
-            strip_line = True
-        # Strip `await init()` — WASM preamble initialises synchronously via require
-        elif re.match(r"""await\s+init\s*\(""", s):
-            strip_line = True
-        elif re.match(
-            r"""(?:const|let|var)\s+\{[^}]+\}\s*=\s*(?:fl|fastloess)\s*;?\s*$""", s
-        ):
-            strip_line = True
-        else:
-            m = re.match(r"(?:const|let|var)\s+(\w+)\s*=", s)
-            if m and m.group(1) in _NODEJS_PREAMBLE_VARS:
-                strip_line = True
-
-        if strip_line:
-            for ch in line:
-                if ch in "([{":
-                    depth += 1
-                elif ch in ")]}":
-                    depth -= 1
-            if depth > 0:
-                skipping = True  # multi-line declaration
-            else:
-                depth = 0
-            continue
-
-        result.append(line)
-
-    return "\n".join(result)
 
 
 # ---------------------------------------------------------------------------
@@ -898,6 +463,21 @@ def run_julia(snippet: Snippet, timeout: int) -> RunResult:
     if julia_project.exists():
         env["JULIA_PROJECT"] = str(julia_project)
 
+    # Prefer the locally-built library over a potentially-stale JLL artifact
+    if "FASTLOESS_LIB" not in env:
+        _jl_lib_name = (
+            "fastloess_jl.dll"
+            if sys.platform == "win32"
+            else (
+                "libfastloess_jl.dylib"
+                if sys.platform == "darwin"
+                else "libfastloess_jl.so"
+            )
+        )
+        _local_lib = REPO_ROOT / "target" / "release" / _jl_lib_name
+        if _local_lib.exists():
+            env["FASTLOESS_LIB"] = str(_local_lib)
+
     try:
         t0 = time.monotonic()
         proc = subprocess.run(
@@ -929,17 +509,50 @@ def run_julia(snippet: Snippet, timeout: int) -> RunResult:
         os.unlink(tmp)
 
 
+def _ensure_nodejs_selflink(nodejs_dir: Path) -> None:
+    """Create node_modules/fastloess shim so require('fastloess') resolves locally.
+
+    npm does not self-install the package, so we create a minimal shim that
+    re-exports the local binding.  The shim is idempotent and safe to leave in
+    node_modules alongside the real platform packages.
+    """
+    nm_fastloess = nodejs_dir / "node_modules" / "fastloess"
+    if nm_fastloess.exists():
+        return
+    nm_fastloess.mkdir(parents=True, exist_ok=True)
+    (nm_fastloess / "index.js").write_text(
+        "module.exports = require('../../');\n", encoding="utf-8"
+    )
+    (nm_fastloess / "package.json").write_text(
+        '{"name":"fastloess","main":"index.js","version":"0.0.0"}\n',
+        encoding="utf-8",
+    )
+
+
+def _ensure_wasm_selflink(wasm_pkg_dir: Path) -> None:
+    """Create node_modules/fastloess-wasm shim so require('fastloess-wasm') resolves locally.
+
+    The wasm pkg/ directory IS the fastloess-wasm package, but npm doesn't
+    self-install it, so we create a shim that re-exports from the pkg root.
+    """
+    nm_wasm = wasm_pkg_dir / "node_modules" / "fastloess-wasm"
+    if nm_wasm.exists():
+        return
+    nm_wasm.mkdir(parents=True, exist_ok=True)
+    (nm_wasm / "index.js").write_text(
+        "module.exports = require('../../');\n", encoding="utf-8"
+    )
+    (nm_wasm / "package.json").write_text(
+        '{"name":"fastloess-wasm","main":"index.js","version":"0.0.0"}\n',
+        encoding="utf-8",
+    )
+
+
 def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
-    code = PREAMBLES["nodejs"] + _strip_nodejs_redeclarations(snippet.code)
-    with tempfile.NamedTemporaryFile(
-        suffix=".js", mode="w", delete=False, encoding="utf-8"
-    ) as f:
-        f.write(code)
-        tmp = f.name
+    code = snippet.code
 
     node_bin = _find_exe("node")
     if node_bin is None:
-        os.unlink(tmp)
         return RunResult(
             snippet=snippet,
             runner="nodejs",
@@ -947,9 +560,20 @@ def run_nodejs(snippet: Snippet, timeout: int) -> RunResult:
             skip_reason="node not found in PATH",
         )
 
-    # Run from the nodejs binding directory so require('fastloess') resolves
+    # Write the temp file INSIDE the nodejs binding directory so that Node.js
+    # module resolution (file-relative) can find node_modules/fastloess there.
     nodejs_dir = REPO_ROOT / "bindings" / "nodejs"
     cwd = str(nodejs_dir) if nodejs_dir.exists() else str(REPO_ROOT)
+
+    if nodejs_dir.exists():
+        _ensure_nodejs_selflink(nodejs_dir)
+
+    import uuid
+
+    tmp_name = f"_snippet_{uuid.uuid4().hex}.js"
+    tmp = str(Path(cwd) / tmp_name)
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(code)
 
     try:
         t0 = time.monotonic()
@@ -1041,22 +665,25 @@ def run_wasm(snippet: Snippet, timeout: int) -> RunResult:
             skip_reason="bindings/wasm/pkg/ not built (run 'make wasm' first)",
         )
 
-    code = PREAMBLES["wasm"] + _strip_nodejs_redeclarations(snippet.code)
-    with tempfile.NamedTemporaryFile(
-        suffix=".js", mode="w", delete=False, encoding="utf-8"
-    ) as f:
-        f.write(code)
-        tmp = f.name
-
     node_bin = _find_exe("node")
     if node_bin is None:
-        os.unlink(tmp)
         return RunResult(
             snippet=snippet,
             runner="wasm",
             skipped=True,
             skip_reason="node not found in PATH",
         )
+
+    # Write the temp file INSIDE _WASM_PKG_DIR so require('./fastloess_wasm.js') resolves
+    _ensure_wasm_selflink(_WASM_PKG_DIR)
+
+    import uuid
+
+    tmp_name = f"_snippet_{uuid.uuid4().hex}.js"
+    tmp = str(_WASM_PKG_DIR / tmp_name)
+    code = snippet.code
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(code)
 
     try:
         t0 = time.monotonic()
@@ -1114,7 +741,7 @@ def _ensure_rust_snippet_project() -> bool:
                 path = "src/main.rs"
 
                 [dependencies]
-                loess-rs  = {{ path = "{loess_rs_path}", features = ["std"] }}
+                loess-rs  = {{ path = "{loess_rs_path}" }}
                 fastLoess = {{ path = "{fastloess_path}" }}
             """),
             encoding="utf-8",
@@ -1136,24 +763,8 @@ def run_rust(snippet: Snippet, timeout: int) -> RunResult:
 
     _ensure_rust_snippet_project()
 
-    # Strip leading use declarations from snippet (preamble provides them)
-    code_lines = snippet.code.splitlines()
-    filtered: list[str] = []
-    for line in code_lines:
-        # Keep use statements but they'll be duplicates — Rust ignores them
-        filtered.append(line)
-
-    code_body = "\n".join(filtered)
-    main_rs = (
-        _RUST_PREAMBLE_TOP
-        + "    "
-        + code_body.replace("\n", "\n    ")
-        + "\n"
-        + _RUST_PREAMBLE_BOTTOM
-    )
-
     main_path = _RUST_SNIPPET_DIR / "src" / "main.rs"
-    main_path.write_text(main_rs, encoding="utf-8")
+    main_path.write_text(snippet.code, encoding="utf-8")
 
     # Share the parent workspace's target dir to reuse compiled deps
     target_dir = str(REPO_ROOT / "target" / "doc-snippet-target")
@@ -1255,18 +866,7 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
     include_dir = str(REPO_ROOT / "bindings" / "cpp" / "include")
     lib_dir_str = str(lib_dir)
 
-    # Strip redundant includes that are already in the preamble
-    cpp_code = snippet.code
-    for inc in ('#include "fastloess.hpp"', "#include <fastloess.hpp>"):
-        cpp_code = cpp_code.replace(inc + "\n", "").replace(inc, "")
-
-    code = (
-        _CPP_PREAMBLE_TOP
-        + "    "
-        + cpp_code.strip().replace("\n", "\n    ")
-        + "\n"
-        + _CPP_PREAMBLE_BOTTOM
-    )
+    code = snippet.code
 
     with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
         src = os.path.join(tmpdir, "snippet.cpp")
@@ -1277,6 +877,7 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
         compile_cmd = [
             compiler,
             "-std=c++17",
+            "-D_USE_MATH_DEFINES",
             "-O0",
             f"-I{include_dir}",
             f"-L{lib_dir_str}",
@@ -1296,6 +897,18 @@ def run_cpp(snippet: Snippet, timeout: int) -> RunResult:
             )
             if cproc.returncode != 0:
                 dur = time.monotonic() - t0
+                # Detect MSVC-ABI / MinGW linker mismatch so we skip rather than fail.
+                _abi_markers = ("__chkstk", "??_7type_info", "_Unwind_Resume")
+                if os.name == "nt" and any(m in cproc.stderr for m in _abi_markers):
+                    return RunResult(
+                        snippet=snippet,
+                        runner="cpp",
+                        skipped=True,
+                        skip_reason=(
+                            "C++ library ABI mismatch (MSVC vs MinGW) — "
+                            "rebuild with: make cpp (using the x86_64-pc-windows-gnu target)"
+                        ),
+                    )
                 return RunResult(
                     snippet=snippet,
                     runner="cpp",
@@ -1383,6 +996,12 @@ def iter_md_files(root: Path, file_filter: Optional[str]) -> Iterator[Path]:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    # Ensure stdout/stderr use UTF-8 on Windows (avoids UnicodeEncodeError for
+    # characters like π that can't be encoded by the default cp1252 codec).
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,

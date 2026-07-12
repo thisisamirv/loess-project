@@ -17,8 +17,8 @@ categories = ["science", "algorithms"]
 crate-type = ["cdylib"]
 
 [dependencies]
-loess-rs = { path = "../../crates/loess-rs", version = "0.9.0" }
-fastLoess = { path = "../../crates/fastLoess", version = "0.9.0", features = [
+loess-rs = { path = "../../crates/loess-rs", version = "0.9" }
+fastLoess = { path = "../../crates/fastLoess", version = "0.9", features = [
     "dev",
 ] }
 napi = { version = "3.8", features = ["napi4"] }
