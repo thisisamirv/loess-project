@@ -211,16 +211,20 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     ```rust
     use fastLoess::prelude::*;
 
-    let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-    let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
+    fn main() -> Result<(), LoessError> {
+        let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
+        let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
 
-    let model = Loess::new()
-        .fraction(0.5)
-        .iterations(3)
-        .build()?;
+        let model = Loess::new()
+            .fraction(0.5)
+            .iterations(3)
+            .build()?;
 
-    let result = model.fit(&x, &y)?;
-    println!("{}", result);
+        let result = model.fit(&x, &y)?;
+        println!("{}", result);
+
+        Ok(())
+    }
     ```
 
 === "Julia"
@@ -252,7 +256,8 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 === "WebAssembly"
 
     ```javascript
-    import { Loess } from "fastloess-wasm";
+    import init, { Loess } from 'fastloess-wasm';
+    await init();
 
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
@@ -301,7 +306,7 @@ See the [Installation Guide](getting-started/installation.md) for more options a
 
     ---
 
-    Pure Rust crates with zero-copy ndarray support, parallel execution.
+    Pure Rust crates with zero-copy ndarray support, and parallel execution.
 
     [:octicons-arrow-right-24: Rust API](api/rust.md)
 

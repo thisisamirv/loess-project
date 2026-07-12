@@ -17,14 +17,31 @@ Standard in-memory smoothing.
 **Constructor:**
 
 ```rust
-let model = Loess::new().build()?;
+use fastLoess::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let builder = Loess::new(); // Batch is default
+
+    Ok(())
+}
 ```
 
 **Methods:**
 
 ```rust
-let model = Loess::new().build()?;
-let result = model.fit(&x, &y)?;
+use fastLoess::prelude::*;
+use std::f64::consts::TAU;
+
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let model = Loess::new().build()?;
+    let result = model.fit(&x, &y)?;
+
+    Ok(())
+}
 ```
 
 * Fits the model to the provided `x` and `y` arrays.
@@ -37,22 +54,50 @@ Streaming mode for large datasets.
 **Constructor:**
 
 ```rust
-let mut processor = StreamingLoess::new().build()?;
+use fastLoess::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let mut processor = StreamingLoess::new();
+
+    Ok(())
+}
 ```
 
 **Methods:**
 
 ```rust
-let mut processor = StreamingLoess::new().build()?;
-let result = processor.process_chunk(&x, &y)?;
+use fastLoess::prelude::*;
+use std::f64::consts::TAU;
+
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let mut processor = StreamingLoess::new().build()?;
+    let result = processor.process_chunk(&x, &y)?;
+
+    Ok(())
+}
 ```
 
 * Processes a chunk of data. Returns `LoessResult<T>` with partial results.
 
 ```rust
-let mut processor = StreamingLoess::new().build()?;
-processor.process_chunk(&x_chunk, &y_chunk)?;
-let final_result = processor.finalize()?;
+use fastLoess::prelude::*;
+use std::f64::consts::TAU;
+
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let mut processor = StreamingLoess::new().build()?;
+    processor.process_chunk(&x, &y)?;
+    let final_result = processor.finalize()?;
+
+    Ok(())
+}
 ```
 
 * Finalizes processing and returns remaining buffered results.
@@ -64,25 +109,44 @@ Online mode for real-time data.
 **Constructor:**
 
 ```rust
-let mut processor = OnlineLoess::new().build()?;
+use fastLoess::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let mut processor = OnlineLoess::new();
+
+    Ok(())
+}
 ```
 
 **Methods:**
 
 ```rust
-let mut processor = OnlineLoess::new().build()?;
-let output = processor.add_point(&[x[0]], y[0])?;
+use fastLoess::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let mut processor = OnlineLoess::new().build()?;
+    let output = processor.add_point(&[1.0f64], 2.0f64)?;
+
+    Ok(())
+}
 ```
 
 * Adds a single point `(x, y)` to the window.
 * Returns `Result<Option<OnlineOutput<T>>, LoessError>`.
 
 ```rust
-let mut processor = OnlineLoess::new().build()?;
-processor.reset();
+use fastLoess::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let mut processor = OnlineLoess::new().build()?;
+    processor.reset();
+
+    Ok(())
+}
 ```
 
 * Clears the internal window buffer.
+* **Rust-only** — this method is not exposed in other language bindings, where creating a new instance is the idiomatic alternative.
 
 ## Builder Configuration
 
@@ -90,53 +154,53 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 ### Loess Options
 
-| Method | Default | Description |
-| --- | --- | --- |
-| `fraction(T)` | `0.67` | Smoothing fraction (bandwidth) |
-| `iterations(usize)` | `3` | Number of robustifying iterations |
-| `weight_function(...)` | `"tricube"` | Kernel weight function |
-| `robustness_method(...)` | `"bisquare"` | Robustness method |
-| `scaling_method(...)` | `"mad"` | Residual scaling method |
-| `boundary_policy(...)` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback(...)` | `"use_local_mean"` | Zero-weight handling |
-| `auto_converge(T)` | disabled | Auto-convergence tolerance |
-| `custom_weights(Vec<T>)` | disabled | Per-observation case weights (Batch only) |
-| `confidence_intervals(T)` | disabled | Confidence level (e.g., 0.95) |
-| `prediction_intervals(T)` | disabled | Prediction level (e.g., 0.95) |
-| `return_diagnostics()` | `false` | Compute RMSE, MAE, R², AIC |
-| `return_residuals()` | `false` | Include residuals in result |
-| `return_robustness_weights()` | `false` | Include robustness weights in result |
-| `return_se()` | `false` | Compute hat-matrix statistics (enp, leverage …) |
-| `parallel(bool)` | `true` | Enable parallel execution |
-| `degree(...)` | `"linear"` | Polynomial degree |
-| `dimensions(usize)` | `1` | Number of predictor dimensions |
-| `distance_metric(...)` | `"normalized"` | Distance metric |
-| `weighted_metric_weights(Vec<T>)` | disabled | Per-dimension weights (used when `distance_metric = "weighted"`) |
-| `surface_mode(...)` | `"interpolation"` | Surface computation mode |
-| `cell(T)` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
-| `interpolation_vertices(usize)` | disabled | Number of interpolation vertices |
-| `boundary_degree_fallback(bool)` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cv_method(...)` | disabled | Cross-validation method |
-| `cv_k(...)` | disabled | Number of folds for K-fold cross-validation |
-| `cv_fractions(...)` | disabled | Candidate fractions to evaluate during cross-validation |
-| `cv_seed(...)` | disabled | Random seed for reproducible fold assignments |
+| Method | Argument Type | Default | Description |
+| --- | --- | --- | --- |
+| `fraction(T)` | `T: Float` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
+| `weight_function(...)` | `weight_function` | `"tricube"` | Kernel weight function |
+| `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method |
+| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
+| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
+| `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
+| `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights (Batch only) |
+| `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) |
+| `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) |
+| `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
+| `return_residuals()` | `bool` | `false` | Include residuals in result |
+| `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
+| `return_se()` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
+| `parallel(bool)` | `bool` | `true` | Enable parallel execution |
+| `degree(...)` | `degree` | `"linear"` | Polynomial degree |
+| `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
+| `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
+| `weighted_metric_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-dimension weights (used when `distance_metric = "weighted"`) |
+| `surface_mode(...)` | `surface_mode` | `"interpolation"` | Surface computation mode |
+| `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
+| `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
+| `boundary_degree_fallback(bool)` | `bool` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `cv_method(...)` | `&str` | disabled | Cross-validation method |
+| `cv_k(...)` | `usize` | disabled | Number of folds for K-fold cross-validation |
+| `cv_fractions(...)` | `Vec<f64>` | disabled | Candidate fractions to evaluate during cross-validation |
+| `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
 
 ### Streaming Options
 
-| Method | Default | Description |
-| --- | --- | --- |
-| `chunk_size(usize)` | `5000` | Data chunk size |
-| `overlap(usize)` | `500` | Overlap between chunks |
-| `merge_strategy(...)` | `"weighted_average"` | Strategy for blending overlap regions |
+| Method | Argument Type | Default | Description |
+| --- | --- | --- | --- |
+| `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
+| `overlap(usize)` | `usize` | `500` | Overlap between chunks |
+| `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
 
 ### Online Options
 
-| Method | Default | Description |
-| --- | --- | --- |
-| `window_capacity(usize)` | `1000` | Max points in sliding window |
-| `min_points(usize)` | `3` | Min points before smoothing starts |
-| `update_mode(...)` | `"full"` | Update strategy |
-| `parallel(bool)` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
+| Method | Argument Type | Default | Description |
+| --- | --- | --- | --- |
+| `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
+| `min_points(usize)` | `usize` | `3` | Min points before smoothing starts |
+| `update_mode(...)` | `update_mode` | `"full"` | Update strategy |
+| `parallel(bool)` | `bool` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
 

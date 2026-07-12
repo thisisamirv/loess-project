@@ -11,6 +11,7 @@ The `Loess` class allows configuring the LOESS parameters once and fitting multi
 **Constructor:**
 
 ```r
+library(rfastloess)
 model <- Loess(fraction = 0.5)
 ```
 
@@ -19,7 +20,12 @@ model <- Loess(fraction = 0.5)
 **Methods:**
 
 ```r
-model <- Loess()
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Loess(fraction = 0.5)
 result <- model$fit(x, y)
 # or with per-observation weights:
 result <- model$fit(x, y, custom_weights = weights)
@@ -36,7 +42,8 @@ The `StreamingLoess` class processes data in chunks, suitable for very large dat
 **Constructor:**
 
 ```r
-stream <- StreamingLoess(chunk_size = 10L)
+library(rfastloess)
+stream <- StreamingLoess(fraction = 0.3, chunk_size = 50, overlap = 10)
 ```
 
 * `...`: Arguments corresponding to `LoessOptions` and `StreamingOptions` fields.
@@ -44,14 +51,24 @@ stream <- StreamingLoess(chunk_size = 10L)
 **Methods:**
 
 ```r
-stream <- StreamingLoess(chunk_size = 10L)
-partial_result <- stream$process_chunk(x, y)
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+stream <- StreamingLoess(fraction = 0.3, chunk_size = 50, overlap = 10)
+partial_result <- stream$process_chunk(x[seq_len(50)], y[seq_len(50)])
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```r
-stream <- StreamingLoess(chunk_size = 10L)
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+stream <- StreamingLoess(fraction = 0.3, chunk_size = 50, overlap = 10)
 stream$process_chunk(x, y)
 final_result <- stream$finalize()
 ```
@@ -65,7 +82,8 @@ The `OnlineLoess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```r
-online <- OnlineLoess(window_capacity = 10L)
+library(rfastloess)
+online <- OnlineLoess(fraction = 0.3, window_capacity = 50)
 ```
 
 * `...`: Arguments corresponding to `LoessOptions` and `OnlineOptions` fields.
@@ -73,7 +91,12 @@ online <- OnlineLoess(window_capacity = 10L)
 **Methods:**
 
 ```r
-online <- OnlineLoess(window_capacity = 10L)
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+online <- OnlineLoess(fraction = 0.3, window_capacity = 50)
 result <- online$add_point(x[[1L]], y[[1L]])  # returns list or NULL
 ```
 

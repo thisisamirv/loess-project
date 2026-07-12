@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 -->
 # Real-Time Processing
 
 Streaming and online LOESS for live data.
@@ -63,31 +64,55 @@ For true real-time applications where each point must be processed immediately.
     ```rust
     use fastLoess::prelude::*;
 
-    let mut processor = OnlineLoess::new()
-        .fraction(0.3)
-        .iterations(1)
-        .window_capacity(25)
-        .min_points(5)
-        .update_mode("incremental")
-        .build()?;
+    fn main() -> Result<(), LoessError> {
+        let mut processor = OnlineLoess::new()
+            .fraction(0.3)
+            .iterations(1)
+            .window_capacity(25)
+            .min_points(5)
+            .update_mode("incremental")
+            .build()?;
 
-    for i in 0..100 {
-        let xi = i as f64;
-        let yi = 20.0 + 5.0 * (xi / 10.0).sin() + (xi * 1.7).sin() * 0.5;
+        for i in 0..100 {
+            let xi = i as f64;
+            let yi = 20.0 + 5.0 * (xi / 10.0).sin() + (xi * 1.7).sin() * 0.5;
 
-        if let Some(output) = processor.add_point(&[xi], yi)? {
-            println!("Time {}: smoothed = {:.2}", xi, output.smoothed);
+            if let Some(output) = processor.add_point(&[xi], yi)? {
+                println!("Time {}: smoothed = {:.2}", xi, output.smoothed);
+            }
         }
+
+        Ok(())
     }
     ```
 
 === "Julia"
     ```julia
     using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    times_bg = collect(range(0, 2π, length=100))
+    y_bg = sin.(times_bg) .+ randn(rng, 100) .* 0.3
 
     # Simulate sensor readings 
     times = collect(Float64, 1:100)
     temperatures = 20.0 .+ 5.0 .* sin.(times ./ 10.0) .+ randn(100)
+
+    # Process with online mode
+    model = OnlineLoess(;
+        fraction=0.3,
+        window_capacity=25,
+        min_points=5,
+        update_mode="incremental"
+    )
+    for i in eachindex(times)
+        result = add_point(model, times[i], temperatures[i])
+        if result !== nothing
+            println("Time $(times[i]): smoothed = $(round(result.smoothed; digits=2))")
+        end
+    end
+    ```
 
     # Process with online mode
     model = OnlineLoess(;
@@ -127,16 +152,19 @@ For true real-time applications where each point must be processed immediately.
 
 === "WebAssembly"
     ```javascript
-    import { OnlineLoess } from 'fastloess-wasm';
+    const { OnlineLoess } = require('fastloess-wasm');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const processor = new OnlineLoess(
         { fraction: 0.3, iterations: 1 },
         { window_capacity: 25, min_points: 5, update_mode: "incremental" }
     );
 
-    // Simulate real-time data arrival
-    for (let i = 0; i < readings.length; i++) {
-        const res = processor.add_point(readings[i].x, readings[i].y);
+    for (let i = 0; i < x.length; i++) {
+        const res = processor.add_point(x[i], y[i]);
         if (res !== undefined) {
             // Update dashboard UI with res.smoothed
         }
@@ -145,22 +173,36 @@ For true real-time applications where each point must be processed immediately.
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    // Online mode processes points incrementally
-    fastloess::OnlineOptions opts;
-    opts.fraction = 0.3;
-    opts.iterations = 1;
-    opts.window_capacity = 25;
-    opts.min_points = 5;
-    opts.update_mode = "incremental";
-
-    fastloess::OnlineLoess model(opts);
-    for (size_t i = 0; i < times.size(); ++i) {
-        auto res = model.add_point(times[i], temperatures[i]).value();
-        if (res.has_value()) {
-            std::cout << "Time " << times[i] << ": " << res.smoothed() << std::endl;
+    int main() {
+        const int n = 100;
+        std::vector<double> times(n), temperatures(n);
+        for (int i = 0; i < n; ++i) {
+            times[i] = i * 0.1;
+            temperatures[i] = 20.0 + std::sin(times[i]);
         }
+
+        // Online mode processes points incrementally
+        fastloess::OnlineOptions opts;
+        opts.fraction = 0.3;
+        opts.iterations = 1;
+        opts.window_capacity = 25;
+        opts.min_points = 5;
+        opts.update_mode = "incremental";
+
+        fastloess::OnlineLoess model(opts);
+        for (size_t i = 0; i < times.size(); ++i) {
+            auto res = model.add_point(times[i], temperatures[i]).value();
+            if (res.has_value()) {
+                std::cout << "Time " << times[i] << ": " << res.smoothed() << std::endl;
+            }
+        }
+
+        return 0;
     }
     ```
 
@@ -174,6 +216,8 @@ For large datasets that arrive in batches or files.
 
 === "R"
     ```r
+    library(rfastloess)
+
     x <- seq(0, 100000, by = 1)
     y <- sin(x / 1000) + rnorm(length(x), sd = 0.1)
 
@@ -216,20 +260,29 @@ For large datasets that arrive in batches or files.
     ```rust
     use fastLoess::prelude::*;
 
-    let mut processor = StreamingLoess::new()
-        .fraction(0.1)
-        .iterations(2)
-        .chunk_size(50)
-        .overlap(10)
-        .merge_strategy("weighted_average")
-        .build()?;
+    fn main() -> Result<(), LoessError> {
+        let chunk1_x: Vec<f64> = (0..50).map(|i| i as f64).collect();
+        let chunk1_y: Vec<f64> = chunk1_x.iter().map(|&xi| xi.sin() + 0.1).collect();
+        let chunk2_x: Vec<f64> = (50..100).map(|i| i as f64).collect();
+        let chunk2_y: Vec<f64> = chunk2_x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    // Process chunks as they arrive
-    processor.process_chunk(&chunk1_x, &chunk1_y)?;
-    processor.process_chunk(&chunk2_x, &chunk2_y)?;
+        let mut processor = StreamingLoess::new()
+            .fraction(0.1)
+            .iterations(2)
+            .chunk_size(50)
+            .overlap(10)
+            .merge_strategy("weighted_average")
+            .build()?;
 
-    // CRITICAL: Get buffered overlap data
-    let final_result = processor.finalize()?;
+        // Process chunks as they arrive
+        processor.process_chunk(&chunk1_x, &chunk1_y)?;
+        processor.process_chunk(&chunk2_x, &chunk2_y)?;
+
+        // CRITICAL: Get buffered overlap data
+        let final_result = processor.finalize()?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
@@ -255,6 +308,11 @@ For large datasets that arrive in batches or files.
     ```javascript
     const { StreamingLoess } = require('fastloess');
 
+    const chunk1_x = Float64Array.from({ length: 50 }, (_, i) => i);
+    const chunk1_y = Float64Array.from(chunk1_x, v => Math.sin(v * 0.1));
+    const chunk2_x = Float64Array.from({ length: 50 }, (_, i) => i + 50);
+    const chunk2_y = Float64Array.from(chunk2_x, v => Math.sin(v * 0.1));
+
     const processor = new StreamingLoess(
         { fraction: 0.1, iterations: 2 },
         { chunk_size: 5000, overlap: 500 }
@@ -270,7 +328,13 @@ For large datasets that arrive in batches or files.
 
 === "WebAssembly"
     ```javascript
-    import { StreamingLoess } from 'fastloess-wasm';
+    const { StreamingLoess } = require('fastloess-wasm');
+
+    const n = 50;
+    const x1 = Float64Array.from({ length: n }, (_, i) => i);
+    const y1 = Float64Array.from(x1, xi => Math.sin(xi * 0.1) + 0.1);
+    const x2 = Float64Array.from({ length: n }, (_, i) => n + i);
+    const y2 = Float64Array.from(x2, xi => Math.sin(xi * 0.1) + 0.1);
 
     const processor = new StreamingLoess(
         { fraction: 0.1, iterations: 2 },
@@ -285,19 +349,33 @@ For large datasets that arrive in batches or files.
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastloess::StreamingOptions opts;
-    opts.fraction = 0.1;
-    opts.iterations = 2;
-    opts.chunk_size = 5000;
-    opts.overlap = 500;
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
 
-    fastloess::StreamingLoess stream(opts);
-    (void)stream.process_chunk(x, y);
-    auto result = stream.finalize().value();
+        fastloess::StreamingOptions opts;
+        opts.fraction = 0.1;
+        opts.iterations = 2;
+        opts.chunk_size = 5000;
+        opts.overlap = 500;
 
-    std::cout << "Processed " << result.y_vector().size() << " points" << std::endl;
+        fastloess::StreamingLoess stream(opts);
+        (void)stream.process_chunk(x, y);
+        auto result = stream.finalize().value();
+
+        std::cout << "Processed " << result.y_vector().size() << " points" << std::endl;
+
+        return 0;
+    }
     ```
 
 !!! warning "Always call finalize()"
@@ -388,18 +466,24 @@ For large datasets that arrive in batches or files.
 
 === "WebAssembly"
     ```javascript
-    import { Loess } from 'fastloess-wasm';
+    const { Loess } = require('fastloess-wasm');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     // Sliding window logic
-    for (const point of stream) {
-        windowX.push(point.x);
-        windowY.push(point.y);
-        
+    const windowX = [], windowY = [];
+    for (let i = 0; i < x.length; i++) {
+        windowX.push(x[i]);
+        windowY.push(y[i]);
+
         if (windowX.length > 50) {
             windowX.shift();
             windowY.shift();
         }
 
+        if (windowX.length < 2) continue;
         const model = new Loess({ 
             fraction: 0.4 
         });
@@ -410,23 +494,41 @@ For large datasets that arrive in batches or files.
 
 === "C++"
     ```cpp
-    // Sliding window over times/temperatures (skip until window has ≥2 points)
-    for (size_t i = 0; i < times.size(); ++i) {
-        windowX.push_back(times[i]);
-        windowY.push_back(temperatures[i]);
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-        if (windowX.size() > 50) {
-            windowX.erase(windowX.begin());
-            windowY.erase(windowY.begin());
+    int main() {
+        const int n = 100;
+        std::vector<double> times(n), temperatures(n);
+        for (int i = 0; i < n; ++i) {
+            times[i] = i * 0.1;
+            temperatures[i] = 25.0 + 10.0 * std::sin(times[i] / 2.0) + 2.0;
         }
-        if (windowX.size() < 2) continue;
 
-        fastloess::LoessOptions sw_opts;
-        sw_opts.fraction = 0.4;
-        fastloess::Loess model(sw_opts);
-        auto result = model.fit(windowX, windowY).value();
-        const auto smoothed = result.y_vector().back();
-        (void)smoothed;
+        std::vector<double> windowX, windowY;
+
+        // Sliding window over times/temperatures (skip until window has ≥2 points)
+        for (size_t i = 0; i < times.size(); ++i) {
+            windowX.push_back(times[i]);
+            windowY.push_back(temperatures[i]);
+
+            if (windowX.size() > 50) {
+                windowX.erase(windowX.begin());
+                windowY.erase(windowY.begin());
+            }
+            if (windowX.size() < 2) continue;
+
+            fastloess::LoessOptions sw_opts;
+            sw_opts.fraction = 0.4;
+            fastloess::Loess model(sw_opts);
+            auto result = model.fit(windowX, windowY).value();
+            const auto smoothed = result.y_vector().back();
+            (void)smoothed;
+        }
+
+        return 0;
     }
     ```
 

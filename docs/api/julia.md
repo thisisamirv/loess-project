@@ -11,7 +11,14 @@ The `Loess` struct allows configuring the LOESS parameters once and fitting mult
 **Constructor:**
 
 ```julia
-model = Loess(; kwargs...)
+using FastLOESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+model = Loess()
 ```
 
 * `kwargs`: Keyword arguments corresponding to `LoessOptions` fields.
@@ -19,10 +26,12 @@ model = Loess(; kwargs...)
 **Methods:**
 
 ```julia
-result = fit(model, x::Vector{Float64}, y::Vector{Float64}; custom_weights=nothing) :: LoessResult
+result = fit(model, x::Vector{Float64}, y::Vector{Float64};
+             custom_weights::Union{Vector{Float64}, Nothing} = nothing) :: LoessResult
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
+* `custom_weights`: Optional per-observation weights. All values must be ≥ 0 and length must match `x`. Batch only.
 * Returns a `LoessResult` struct containing the smoothed values and optional diagnostics.
 
 ### `StreamingLoess`
@@ -32,7 +41,14 @@ The `StreamingLoess` struct processes data in chunks, suitable for very large da
 **Constructor:**
 
 ```julia
-stream = StreamingLoess(; kwargs...)
+using FastLOESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+stream = StreamingLoess()
 ```
 
 * `kwargs`: Keyword arguments corresponding to `StreamingOptions` fields.
@@ -40,13 +56,30 @@ stream = StreamingLoess(; kwargs...)
 **Methods:**
 
 ```julia
-partial_result = process_chunk(stream, x::Vector{Float64}, y::Vector{Float64}) :: LoessResult
+using FastLOESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+stream = StreamingLoess()
+partial_result = process_chunk(stream, x, y)
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```julia
-final_result = finalize(stream) :: LoessResult
+using FastLOESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+stream = StreamingLoess()
+process_chunk(stream, x, y)
+final_result = finalize(stream)
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.
@@ -58,7 +91,14 @@ The `OnlineLoess` struct updates the model incrementally with new data points.
 **Constructor:**
 
 ```julia
-online = OnlineLoess(; kwargs...)
+using FastLOESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+online = OnlineLoess()
 ```
 
 * `kwargs`: Keyword arguments corresponding to `OnlineOptions` fields.
@@ -66,6 +106,14 @@ online = OnlineLoess(; kwargs...)
 **Methods:**
 
 ```julia
+using FastLOESS
+using Random, Statistics
+
+rng = MersenneTwister(42)
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+online = OnlineLoess()
 result = add_point(online, x[1], y[1])  # returns OnlineOutput or nothing
 ```
 

@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 -->
+<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Merge Strategies
 
 How overlapping chunk boundaries are reconciled in Streaming mode.
@@ -35,6 +35,12 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    n <- 100
+    x_chunk <- seq(0, 2 * pi, length.out = n)
+    y_chunk <- sin(x_chunk) + rnorm(n, sd = 0.3)
+
     model <- StreamingLoess(
         merge_strategy = "average",
         chunk_size = 5000,
@@ -46,27 +52,60 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 === "Python"
     ```python
     from fastloess import StreamingLoess
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    n = 100
+    x_chunk = np.linspace(0, 2 * np.pi, n)
+    y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
+
     model = StreamingLoess(merge_strategy="average", chunk_size=5000, overlap=500)
     result = model.process_chunk(x_chunk, y_chunk)
     ```
 
 === "Rust"
     ```rust
-    let model = StreamingLoess::new()
-        .merge_strategy("average")
-        .chunk_size(5000)
-        .overlap(500)
-        .build()?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let model = StreamingLoess::new()
+            .merge_strategy("average")
+            .chunk_size(5000)
+            .overlap(500)
+            .build()?;
+        let result = model.process_chunk(&x_chunk, &y_chunk)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    n = 100
+    x_chunk = collect(range(0, 2π, length=n))
+    y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
+
     model = StreamingLoess(; merge_strategy="average", chunk_size=5000, overlap=500)
     result = process_chunk(model, x_chunk, y_chunk)
     ```
 
 === "Node.js"
     ```javascript
+    const { StreamingLoess } = require('fastloess');
+
+    const n = 100;
+    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const processor = new StreamingLoess(
         {},
         { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
@@ -76,6 +115,13 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 === "WebAssembly"
     ```javascript
+    import init, { StreamingLoess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const processor = new StreamingLoess(
         {},
         { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
@@ -85,13 +131,29 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 === "C++"
     ```cpp
-    fastloess::StreamingOptions opts;
-    opts.merge_strategy = "average";
-    opts.chunk_size = 5000;
-    opts.overlap = 500;
-    fastloess::StreamingLoess stream(opts);
-    (void)stream.process_chunk(x, y);
-    auto result = stream.finalize().value();
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastloess::StreamingOptions opts;
+        opts.merge_strategy = "average";
+        opts.chunk_size = 5000;
+        opts.overlap = 500;
+        fastloess::StreamingLoess stream(opts);
+        (void)stream.process_chunk(x, y);
+        auto result = stream.finalize().value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -104,40 +166,116 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    n <- 100
+    x_chunk <- seq(0, 2 * pi, length.out = n)
+    y_chunk <- sin(x_chunk) + rnorm(n, sd = 0.3)
+
     model <- StreamingLoess(merge_strategy = "take_first")
+    result <- model$process_chunk(x_chunk, y_chunk)
+    final <- model$finalize()
     ```
 
 === "Python"
     ```python
     from fastloess import StreamingLoess
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    n = 100
+    x_chunk = np.linspace(0, 2 * np.pi, n)
+    y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
+
     model = StreamingLoess(merge_strategy="take_first")
+    model.process_chunk(x_chunk, y_chunk)
+    result = model.finalize()
     ```
 
 === "Rust"
     ```rust
-    .merge_strategy("take_first")
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let mut model = StreamingLoess::new()
+            .merge_strategy("take_first")
+            .build()?;
+        let result = model.process_chunk(&x_chunk, &y_chunk)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    n = 100
+    x_chunk = collect(range(0, 2π, length=n))
+    y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
+
     model = StreamingLoess(; merge_strategy="take_first")
+    process_chunk(model, x_chunk, y_chunk)
+    result = finalize(model)
     ```
 
 === "Node.js"
     ```javascript
-    { merge_strategy: "take_first" }
+    const { StreamingLoess } = require('fastloess');
+
+    const n = 100;
+    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const processor = new StreamingLoess({}, { merge_strategy: "take_first" });
+    const result = processor.processChunk(xChunk, yChunk);
+    const final_ = processor.finalize();
     ```
 
 === "WebAssembly"
     ```javascript
-    { merge_strategy: "take_first" }
+    import init, { StreamingLoess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const processor = new StreamingLoess({}, { merge_strategy: "take_first" });
+    const result = processor.processChunk(xChunk, yChunk);
+    const final_ = processor.finalize();
     ```
 
 === "C++"
     ```cpp
-    fastloess::StreamingOptions s_opts;
-    s_opts.merge_strategy = "take_first";
-    fastloess::StreamingLoess model(s_opts);
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastloess::StreamingOptions s_opts;
+        s_opts.merge_strategy = "take_first";
+        fastloess::StreamingLoess stream(s_opts);
+        (void)stream.process_chunk(x, y);
+        auto result = stream.finalize().value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -150,40 +288,116 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    n <- 100
+    x_chunk <- seq(0, 2 * pi, length.out = n)
+    y_chunk <- sin(x_chunk) + rnorm(n, sd = 0.3)
+
     model <- StreamingLoess(merge_strategy = "take_last")
+    result <- model$process_chunk(x_chunk, y_chunk)
+    final <- model$finalize()
     ```
 
 === "Python"
     ```python
     from fastloess import StreamingLoess
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    n = 100
+    x_chunk = np.linspace(0, 2 * np.pi, n)
+    y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
+
     model = StreamingLoess(merge_strategy="take_last")
+    model.process_chunk(x_chunk, y_chunk)
+    result = model.finalize()
     ```
 
 === "Rust"
     ```rust
-    .merge_strategy("take_last")
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let mut model = StreamingLoess::new()
+            .merge_strategy("take_last")
+            .build()?;
+        let result = model.process_chunk(&x_chunk, &y_chunk)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    n = 100
+    x_chunk = collect(range(0, 2π, length=n))
+    y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
+
     model = StreamingLoess(; merge_strategy="take_last")
+    process_chunk(model, x_chunk, y_chunk)
+    result = finalize(model)
     ```
 
 === "Node.js"
     ```javascript
-    { merge_strategy: "take_last" }
+    const { StreamingLoess } = require('fastloess');
+
+    const n = 100;
+    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const processor = new StreamingLoess({}, { merge_strategy: "take_last" });
+    const result = processor.processChunk(xChunk, yChunk);
+    const final_ = processor.finalize();
     ```
 
 === "WebAssembly"
     ```javascript
-    { merge_strategy: "take_last" }
+    import init, { StreamingLoess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+    const processor = new StreamingLoess({}, { merge_strategy: "take_last" });
+    const result = processor.processChunk(xChunk, yChunk);
+    const final_ = processor.finalize();
     ```
 
 === "C++"
     ```cpp
-    fastloess::StreamingOptions s_opts;
-    s_opts.merge_strategy = "take_last";
-    fastloess::StreamingLoess model(s_opts);
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastloess::StreamingOptions s_opts;
+        s_opts.merge_strategy = "take_last";
+        fastloess::StreamingLoess stream(s_opts);
+        (void)stream.process_chunk(x, y);
+        auto result = stream.finalize().value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -200,62 +414,136 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    n <- 100
+    x_chunk <- seq(0, 2 * pi, length.out = n)
+    y_chunk <- sin(x_chunk) + rnorm(n, sd = 0.3)
+
     model <- StreamingLoess(
         merge_strategy = "weighted_average",
         chunk_size = 5000,
         overlap = 500
     )
+    result <- model$process_chunk(x_chunk, y_chunk)
+    final <- model$finalize()
     ```
 
 === "Python"
     ```python
     from fastloess import StreamingLoess
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    n = 100
+    x_chunk = np.linspace(0, 2 * np.pi, n)
+    y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
+
     model = StreamingLoess(
         merge_strategy="weighted_average",
         chunk_size=5000,
         overlap=500
     )
+    model.process_chunk(x_chunk, y_chunk)
+    result = model.finalize()
     ```
 
 === "Rust"
     ```rust
-    let model = StreamingLoess::new()
-    .merge_strategy("weighted_average")
-    .chunk_size(5000)
-    .overlap(500)
-    .build()?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let mut model = StreamingLoess::new()
+            .merge_strategy("weighted_average")
+            .chunk_size(5000)
+            .overlap(500)
+            .build()?;
+        let result = model.process_chunk(&x_chunk, &y_chunk)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    n = 100
+    x_chunk = collect(range(0, 2π, length=n))
+    y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
+
     model = StreamingLoess(;
         merge_strategy="weighted_average",
         chunk_size=5000,
         overlap=500
     )
+    process_chunk(model, x_chunk, y_chunk)
+    result = finalize(model)
     ```
 
 === "Node.js"
     ```javascript
+    const { StreamingLoess } = require('fastloess');
+
+    const n = 100;
+    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const processor = new StreamingLoess(
         {},
         { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
     );
+    const result = processor.processChunk(xChunk, yChunk);
+    const final_ = processor.finalize();
     ```
 
 === "WebAssembly"
     ```javascript
+    import init, { StreamingLoess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const processor = new StreamingLoess(
         {},
         { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
     );
+    const result = processor.processChunk(xChunk, yChunk);
+    const final_ = processor.finalize();
     ```
 
 === "C++"
     ```cpp
-    fastloess::StreamingOptions s_opts;
-    s_opts.merge_strategy = "weighted_average";
-    fastloess::StreamingLoess model(s_opts);
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
+
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastloess::StreamingOptions s_opts;
+        s_opts.merge_strategy = "weighted_average";
+        fastloess::StreamingLoess stream(s_opts);
+        (void)stream.process_chunk(x, y);
+        auto result = stream.finalize().value();
+
+        return 0;
+    }
     ```
 
 ---

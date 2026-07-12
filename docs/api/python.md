@@ -11,7 +11,9 @@ The `Loess` class allows configuring the LOESS parameters once and fitting multi
 **Constructor:**
 
 ```python
-model = fastloess.Loess(**kwargs)
+import fastloess as fl
+
+model = fl.Loess(fraction=0.5, iterations=3)
 ```
 
 * `kwargs`: Keyword arguments corresponding to `LoessOptions` fields.
@@ -19,10 +21,19 @@ model = fastloess.Loess(**kwargs)
 **Methods:**
 
 ```python
+import fastloess as fl
+import numpy as np
+
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
+
+model = fl.Loess(fraction=0.5)
 result = model.fit(x, y, custom_weights=None)
 ```
 
 * Fits the model to the provided `x` and `y` array-like objects.
+* `custom_weights`: Optional array of per-observation weights. All values must be ≥ 0 and length must match `x`. Batch only.
 * Returns a `LoessResult` object containing the smoothed values and optional diagnostics.
 
 ### `StreamingLoess`
@@ -32,7 +43,9 @@ The `StreamingLoess` class processes data in chunks, suitable for very large dat
 **Constructor:**
 
 ```python
-stream = fastloess.StreamingLoess(**kwargs)
+import fastloess as fl
+
+stream = fl.StreamingLoess(chunk_size=50, overlap=10)
 ```
 
 * `kwargs`: Keyword arguments corresponding to `LoessOptions` and `StreamingOptions` fields.
@@ -40,12 +53,29 @@ stream = fastloess.StreamingLoess(**kwargs)
 **Methods:**
 
 ```python
-partial_result = stream.process_chunk(x, y)
+import fastloess as fl
+import numpy as np
+
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
+
+stream = fl.StreamingLoess(chunk_size=50, overlap=10)
+partial_result = stream.process_chunk(x[:50], y[:50])
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```python
+import fastloess as fl
+import numpy as np
+
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
+
+stream = fl.StreamingLoess(chunk_size=50, overlap=10)
+stream.process_chunk(x, y)
 final_result = stream.finalize()
 ```
 
@@ -58,7 +88,9 @@ The `OnlineLoess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```python
-online = fastloess.OnlineLoess(**kwargs)
+import fastloess as fl
+
+online = fl.OnlineLoess(fraction=0.3, window_capacity=50)
 ```
 
 * `kwargs`: Keyword arguments corresponding to `LoessOptions` and `OnlineOptions` fields.
@@ -66,7 +98,10 @@ online = fastloess.OnlineLoess(**kwargs)
 **Methods:**
 
 ```python
-result = online.add_point(x[0], y[0])  # returns OnlineOutput | None
+import fastloess as fl
+
+online = fl.OnlineLoess(fraction=0.3, window_capacity=50)
+result = online.add_point(1.0, 2.0)  # returns OnlineOutput | None
 ```
 
 * Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `None` while the window is still filling.

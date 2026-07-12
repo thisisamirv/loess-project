@@ -1,4 +1,4 @@
-<!-- markdownlint-disable MD024 MD046 -->
+<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Cross-Validation
 
 Automated parameter selection via cross-validation.
@@ -17,6 +17,11 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Loess(
         cv_method = "kfold",
         cv_k = 5,
@@ -30,6 +35,13 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Loess(
         cv_method="kfold",
         cv_k=5,
@@ -44,26 +56,40 @@ Split data into K folds, train on K-1, validate on 1.
 === "Rust"
     ```rust
     use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let model = Loess::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
-        .build()?;
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let result = model.fit(&x, &y)?;
-    
-    // The best fraction was automatically selected
-    println!("Selected fraction: {}", result.fraction_used);
-    
-    if let Some(cv_scores) = &result.cv_scores {
-        println!("CV scores: {:?}", cv_scores);
+        let model = Loess::new()
+            .cv_method("kfold")
+            .cv_k(5)
+            .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
+            .build()?;
+
+        let result = model.fit(&x, &y)?;
+
+        // The best fraction was automatically selected
+        println!("Selected fraction: {}", result.fraction_used);
+
+        if let Some(cv_scores) = &result.cv_scores {
+            println!("CV scores: {:?}", cv_scores);
+        }
+
+        Ok(())
     }
     ```
 
 === "Julia"
     ```julia
     using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
 
     model = Loess(;
         cv_method="kfold",
@@ -77,6 +103,12 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "Node.js"
     ```javascript
+    const { Loess } = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Loess({
         cv_method: "kfold",
         cv_k: 5,
@@ -90,6 +122,13 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "WebAssembly"
     ```javascript
+    import init, { Loess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Loess({
         cv_method: "kfold",
         cv_k: 5,
@@ -103,17 +142,31 @@ Split data into K folds, train on K-1, validate on 1.
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastloess::LoessOptions opts;
-    opts.cv_fractions = {0.2, 0.3, 0.5, 0.7};
-    opts.cv_method = "kfold";
-    opts.cv_k = 5;
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
 
-    fastloess::Loess model(opts);
-    auto result = model.fit(x, y).value();
+        fastloess::LoessOptions opts;
+        opts.cv_fractions = {0.2, 0.3, 0.5, 0.7};
+        opts.cv_method = "kfold";
+        opts.cv_k = 5;
 
-    std::cout << "Selected fraction: " << result.fraction_used() << std::endl;
+        fastloess::Loess model(opts);
+        auto result = model.fit(x, y).value();
+
+        std::cout << "Selected fraction: " << result.fraction_used() << std::endl;
+
+        return 0;
+    }
     ```
 
 ---
@@ -124,6 +177,11 @@ Each point is held out once. Most thorough but slowest.
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Loess(
         cv_method = "loocv",
         cv_fractions = c(0.2, 0.3, 0.5, 0.7)
@@ -133,6 +191,13 @@ Each point is held out once. Most thorough but slowest.
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Loess(
         cv_method="loocv",
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
@@ -142,15 +207,33 @@ Each point is held out once. Most thorough but slowest.
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .cv_method("loocv")
-        .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
-        .build()?;
-    let result = model.fit(&x, &y)?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let model = Loess::new()
+            .cv_method("loocv")
+            .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
+            .build()?;
+        let result = model.fit(&x, &y)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = Loess(;
         cv_method="loocv",
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
@@ -160,6 +243,12 @@ Each point is held out once. Most thorough but slowest.
 
 === "Node.js"
     ```javascript
+    const { Loess } = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Loess({
         cv_method: "loocv",
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
@@ -169,6 +258,13 @@ Each point is held out once. Most thorough but slowest.
 
 === "WebAssembly"
     ```javascript
+    import init, { Loess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Loess({
         cv_method: "loocv",
         cv_fractions: [0.2, 0.3, 0.5, 0.7]
@@ -178,14 +274,28 @@ Each point is held out once. Most thorough but slowest.
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastloess::LoessOptions opts;
-    opts.cv_method = "loocv";
-    opts.cv_fractions = {0.2, 0.3, 0.5, 0.7};
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
 
-    fastloess::Loess model(opts);
-    auto result = model.fit(x, y).value();
+        fastloess::LoessOptions opts;
+        opts.cv_method = "loocv";
+        opts.cv_fractions = {0.2, 0.3, 0.5, 0.7};
+
+        fastloess::Loess model(opts);
+        auto result = model.fit(x, y).value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -196,6 +306,11 @@ Set a seed for reproducible fold assignments:
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     model <- Loess(
         cv_method = "kfold",
         cv_k = 5,
@@ -207,6 +322,13 @@ Set a seed for reproducible fold assignments:
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     model = fl.Loess(
         cv_method="kfold",
         cv_k=5,
@@ -218,17 +340,35 @@ Set a seed for reproducible fold assignments:
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(vec![0.3, 0.5, 0.7])
-        .cv_seed(42)
-        .build()?;
-    let result = model.fit(&x, &y)?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
+
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+        let model = Loess::new()
+            .cv_method("kfold")
+            .cv_k(5)
+            .cv_fractions(vec![0.3, 0.5, 0.7])
+            .cv_seed(42)
+            .build()?;
+        let result = model.fit(&x, &y)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     model = Loess(;
         cv_method="kfold",
         cv_k=5,
@@ -240,6 +380,12 @@ Set a seed for reproducible fold assignments:
 
 === "Node.js"
     ```javascript
+    const { Loess } = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Loess({
         cv_method: "kfold",
         cv_k: 5,
@@ -251,6 +397,13 @@ Set a seed for reproducible fold assignments:
 
 === "WebAssembly"
     ```javascript
+    import init, { Loess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     const model = new Loess({
         cv_method: "kfold",
         cv_k: 5,
@@ -262,16 +415,30 @@ Set a seed for reproducible fold assignments:
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastloess::LoessOptions opts;
-    opts.cv_fractions = {0.3, 0.5, 0.7};
-    opts.cv_method = "kfold";
-    opts.cv_k = 5;
-    opts.cv_seed = 42;
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
 
-    fastloess::Loess model(opts);
-    auto result = model.fit(x, y).value();
+        fastloess::LoessOptions opts;
+        opts.cv_fractions = {0.3, 0.5, 0.7};
+        opts.cv_method = "kfold";
+        opts.cv_k = 5;
+        opts.cv_seed = 42;
+
+        fastloess::Loess model(opts);
+        auto result = model.fit(x, y).value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -305,6 +472,11 @@ Lower MSE indicates better fit on held-out data.
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
     # Example output
     model <- Loess(cv_method = "kfold", cv_k = 5,
                     cv_fractions = c(0.1, 0.3, 0.5, 0.7))
@@ -319,6 +491,13 @@ Lower MSE indicates better fit on held-out data.
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    x = np.linspace(0, 2 * np.pi, 100)
+    y = np.sin(x) + rng.normal(0, 0.3, 100)
+
     # Example output
     model = fl.Loess(cv_method="kfold", cv_k=5,
                        cv_fractions=[0.1, 0.3, 0.5, 0.7])
@@ -333,24 +512,42 @@ Lower MSE indicates better fit on held-out data.
 
 === "Rust"
     ```rust
-    // Example output
-    let model = Loess::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(vec![0.1, 0.3, 0.5, 0.7])
-        .build()?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let result = model.fit(&x, &y)?;
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    // Fraction  | CV Score (MSE)
-    // 0.1       | 0.0542  ← Undersmoothed
-    // 0.3       | 0.0231  ← Best
-    // 0.5       | 0.0298
-    // 0.7       | 0.0412  ← Oversmoothed
+        // Example output
+        let model = Loess::new()
+            .cv_method("kfold")
+            .cv_k(5)
+            .cv_fractions(vec![0.1, 0.3, 0.5, 0.7])
+            .build()?;
+
+        let result = model.fit(&x, &y)?;
+
+        // Fraction  | CV Score (MSE)
+        // 0.1       | 0.0542  ← Undersmoothed
+        // 0.3       | 0.0231  ← Best
+        // 0.5       | 0.0298
+        // 0.7       | 0.0412  ← Oversmoothed
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     # Example output
     model = Loess(; cv_method="kfold", cv_k=5,
                     cv_fractions=[0.1, 0.3, 0.5, 0.7])
@@ -365,6 +562,12 @@ Lower MSE indicates better fit on held-out data.
 
 === "Node.js"
     ```javascript
+    const { Loess } = require('fastloess');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     // Example output
     const model = new Loess({
         cv_method: "kfold",
@@ -382,6 +585,13 @@ Lower MSE indicates better fit on held-out data.
 
 === "WebAssembly"
     ```javascript
+    import init, { Loess } from 'fastloess-wasm';
+    await init();
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
     // Example output
     const model = new Loess({
         cv_method: "kfold",
@@ -399,18 +609,34 @@ Lower MSE indicates better fit on held-out data.
 
 === "C++"
     ```cpp
-    fastloess::LoessOptions cv_opts;
-    cv_opts.cv_fractions = {0.1, 0.3, 0.5, 0.7};
-    cv_opts.cv_method = "kfold";
-    cv_opts.cv_k = 5;
-    fastloess::Loess model(cv_opts);
-    auto result = model.fit(x, y).value();
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    // Fraction with lowest CV score is automatically selected.
-    // 0.1 → 0.0542  ← Undersmoothed
-    // 0.3 → 0.0231  ← Best
-    // 0.5 → 0.0298
-    // 0.7 → 0.0412  ← Oversmoothed
+    int main() {
+        const int n = 100;
+        std::vector<double> x(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            x[i] = i * 2 * M_PI / (n - 1);
+            y[i] = std::sin(x[i]) + 0.1;
+        }
+
+        fastloess::LoessOptions cv_opts;
+        cv_opts.cv_fractions = {0.1, 0.3, 0.5, 0.7};
+        cv_opts.cv_method = "kfold";
+        cv_opts.cv_k = 5;
+        fastloess::Loess model(cv_opts);
+        auto result = model.fit(x, y).value();
+
+        // Fraction with lowest CV score is automatically selected.
+        // 0.1 → 0.0542  ← Undersmoothed
+        // 0.3 → 0.0231  ← Best
+        // 0.5 → 0.0298
+        // 0.7 → 0.0412  ← Oversmoothed
+
+        return 0;
+    }
     ```
 
 The fraction with **lowest CV score** is automatically selected.

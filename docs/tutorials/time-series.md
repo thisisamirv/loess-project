@@ -61,20 +61,24 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     ```rust
     use fastLoess::prelude::*;
 
-    let n = 500usize;
-    let t: Vec<f64> = (0..n).map(|i| i as f64 * 100.0 / (n - 1) as f64).collect();
-    let y: Vec<f64> = t.iter().enumerate()
-        .map(|(i, &ti)| 10.0 + 0.5 * ti + 3.0 * (ti / 10.0).sin()
-                      + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 3.0)
-        .collect();
+    fn main() -> Result<(), LoessError> {
+        let n = 500usize;
+        let t: Vec<f64> = (0..n).map(|i| i as f64 * 100.0 / (n - 1) as f64).collect();
+        let y: Vec<f64> = t.iter().enumerate()
+            .map(|(i, &ti)| 10.0 + 0.5 * ti + 3.0 * (ti / 10.0).sin()
+                          + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 3.0)
+            .collect();
 
-    let model = Loess::new()
-        .fraction(0.1)
-        .iterations(3)
-        .build()?;
+        let model = Loess::new()
+            .fraction(0.1)
+            .iterations(3)
+            .build()?;
 
-    let result = model.fit(&t, &y)?;
-    // result.y contains the trend
+        let result = model.fit(&t, &y)?;
+        // result.y contains the trend
+
+        Ok(())
+    }
     ```
 
 === "Julia"
@@ -96,6 +100,10 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
     ```javascript
     const fl = require('fastloess');
 
+    const n = 500;
+    const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
+    const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
+
     // t and y are your time series arrays (Float64Array)
     const model = new fl.Loess({ 
         fraction: 0.1, 
@@ -108,26 +116,46 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
 
 === "WebAssembly"
     ```javascript
-    import { Loess } from 'fastloess-wasm';
+    const { Loess } = require('fastloess-wasm');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const model = new Loess({ 
         fraction: 0.1, 
         iterations: 3 
     });
-    const result = model.fit(t, y);
+    const result = model.fit(x, y);
 
     // Trend values in result.y
     ```
 
 === "C++"
     ```cpp
-    fastloess::LoessOptions trend_opts;
-    trend_opts.fraction = 0.1;
-    trend_opts.iterations = 3;
-    fastloess::Loess basic_model(trend_opts);
-    auto basic_result = basic_model.fit(t, y).value();
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    // Trend in basic_result.y_vector()
+    int main() {
+        const int n = 100;
+        std::vector<double> t(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            t[i] = i * 2.0 * M_PI / (n - 1);
+            y[i] = std::sin(t[i]) + 0.1;
+        }
+
+        fastloess::LoessOptions trend_opts;
+        trend_opts.fraction = 0.1;
+        trend_opts.iterations = 3;
+        fastloess::Loess basic_model(trend_opts);
+        auto basic_result = basic_model.fit(t, y).value();
+
+        // Trend in basic_result.y_vector()
+
+        return 0;
+    }
     ```
 
 ---
@@ -138,6 +166,12 @@ Remove trend to analyze residual patterns:
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    t <- seq(0, 100, length.out = 500)
+    trend_true <- 10 + 0.5 *t + 3* sin(t / 10)
+    y <- trend_true + rnorm(500, sd = 3)
+
     model <- Loess(fraction = 0.3, iterations = 3, return_residuals = TRUE)
     result <- model$fit(t, y)
 
@@ -151,6 +185,15 @@ Remove trend to analyze residual patterns:
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    np.random.seed(42)
+    t = np.linspace(0, 100, 500)
+    trend_true = 10 + 0.5 * t + 3 * np.sin(t / 10)
+    y = trend_true + np.random.normal(0, 3, len(t))
+
     # Smooth to get trend
     model = fl.Loess(fraction=0.3, iterations=3, return_residuals=True)
     result = model.fit(t, y)
@@ -172,19 +215,37 @@ Remove trend to analyze residual patterns:
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .fraction(0.3)
-        .iterations(3)
-        .return_residuals()
-        .build()?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let result = model.fit(&t, &y)?;
-    let trend = &result.y;
-    let detrended = result.residuals.as_ref().unwrap();
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let t: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = t.iter().map(|&ti| ti.sin() + 0.1).collect();
+
+        let model = Loess::new()
+            .fraction(0.3)
+            .iterations(3)
+            .return_residuals()
+            .build()?;
+
+        let result = model.fit(&t, &y)?;
+        let trend = &result.y;
+        let detrended = result.residuals.as_ref().unwrap();
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    t = collect(range(0, 100, length=500))
+    y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
+
     # Smooth to get trend and residuals
     model = Loess(; fraction=0.3, iterations=3, return_residuals=true)
     result = fit(model, t, y)
@@ -197,6 +258,12 @@ Remove trend to analyze residual patterns:
 
 === "Node.js"
     ```javascript
+    const fl = require('fastloess');
+
+    const n = 500;
+    const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
+    const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
+
     const model = new fl.Loess({
         fraction: 0.3,
         iterations: 3,
@@ -210,31 +277,49 @@ Remove trend to analyze residual patterns:
 
 === "WebAssembly"
     ```javascript
-    import { Loess } from 'fastloess-wasm';
+    const { Loess } = require('fastloess-wasm');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const model = new Loess({ 
         fraction: 0.3, 
         iterations: 3, 
         return_residuals: true 
     });
-    const result = model.fit(t, y);
+    const result = model.fit(x, y);
 
     // Access result.y (trend) and result.residuals (detrended)
     ```
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastloess::Loess model({
-        .fraction = 0.3,
-        .iterations = 3,
-        .return_residuals = true
-    });
-    auto result = model.fit(t, y).value();
+    int main() {
+        const int n = 100;
+        std::vector<double> t(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            t[i] = i * 2.0 * M_PI / (n - 1);
+            y[i] = std::sin(t[i]) + 0.1;
+        }
 
-    auto trend = result.y_vector();
-    auto detrended = result.residuals();
+        fastloess::Loess model({
+            .fraction = 0.3,
+            .iterations = 3,
+            .return_residuals = true
+        });
+        auto result = model.fit(t, y).value();
+
+        auto trend = result.y_vector();
+        auto detrended = result.residuals();
+
+        return 0;
+    }
     ```
 
 ---
@@ -243,6 +328,12 @@ Remove trend to analyze residual patterns:
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    t <- seq(0, 100, length.out = 500)
+    trend_true <- 10 + 0.5 *t + 3* sin(t / 10)
+    y <- trend_true + rnorm(500, sd = 3)
+
     model <- Loess(
         fraction = 0.2,
         iterations = 3,
@@ -259,6 +350,15 @@ Remove trend to analyze residual patterns:
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    np.random.seed(42)
+    t = np.linspace(0, 100, 500)
+    trend_true = 10 + 0.5 * t + 3 * np.sin(t / 10)
+    y = trend_true + np.random.normal(0, 3, len(t))
+
     model = fl.Loess(
         fraction=0.2,
         iterations=3,
@@ -282,19 +382,37 @@ Remove trend to analyze residual patterns:
 
 === "Rust"
     ```rust
-    let model = Loess::new()
-        .fraction(0.2)
-        .iterations(3)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
-        .build()?;
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let result = model.fit(&t, &y)?;
-    // Access result.prediction_lower and result.prediction_upper
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let t: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = t.iter().map(|&ti| ti.sin() + 0.1).collect();
+
+        let model = Loess::new()
+            .fraction(0.2)
+            .iterations(3)
+            .confidence_intervals(0.95)
+            .prediction_intervals(0.95)
+            .build()?;
+
+        let result = model.fit(&t, &y)?;
+        // Access result.prediction_lower and result.prediction_upper
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    t = collect(range(0, 100, length=500))
+    y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
+
     model = Loess(;
         fraction=0.2,
         iterations=3,
@@ -311,6 +429,10 @@ Remove trend to analyze residual patterns:
     ```javascript
     const fl = require('fastloess');
 
+    const n = 500;
+    const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
+    const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
+
     const model = new fl.Loess({
         fraction: 0.2,
         iterations: 3,
@@ -323,31 +445,49 @@ Remove trend to analyze residual patterns:
 
 === "WebAssembly"
     ```javascript
-    import { Loess } from 'fastloess-wasm';
+    const { Loess } = require('fastloess-wasm');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const model = new Loess({
         fraction: 0.2,
         iterations: 3,
         prediction_intervals: 0.95
     });
-    const result = model.fit(t, y);
+    const result = model.fit(x, y);
 
     // Access result.prediction_lower and result.prediction_upper
     ```
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastloess::Loess forecast_model({
-        .fraction = 0.2,
-        .iterations = 3,
-        .confidence_intervals = 0.95,
-        .prediction_intervals = 0.95
-    });
-    auto result = forecast_model.fit(t, y).value();
+    int main() {
+        const int n = 100;
+        std::vector<double> t(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            t[i] = i * 2.0 * M_PI / (n - 1);
+            y[i] = std::sin(t[i]) + 0.1;
+        }
 
-    // Access result.prediction_lower() and result.prediction_upper()
+        fastloess::Loess forecast_model({
+            .fraction = 0.2,
+            .iterations = 3,
+            .confidence_intervals = 0.95,
+            .prediction_intervals = 0.95
+        });
+        auto result = forecast_model.fit(t, y).value();
+
+        // Access result.prediction_lower() and result.prediction_upper()
+
+        return 0;
+    }
     ```
 
 ---
@@ -358,6 +498,8 @@ LOESS naturally handles irregular time sampling:
 
 === "R"
     ```r
+    library(rfastloess)
+
     t_irregular <- sort(runif(200, 0, 100))
     y_irregular <- 10 + 0.3 * t_irregular + rnorm(200, sd = 2)
 
@@ -367,6 +509,11 @@ LOESS naturally handles irregular time sampling:
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+
     # Irregular time points (gaps in data)
     t_irregular = np.sort(np.random.uniform(0, 100, 200))
     y_irregular = 10 + t_irregular * 0.3 + np.random.normal(0, 2, 200)
@@ -378,16 +525,30 @@ LOESS naturally handles irregular time sampling:
 
 === "Rust"
     ```rust
-    // Irregular sampling - no special handling needed
-    let model = Loess::new()
-        .fraction(0.2)
-        .build()?;
+    use fastLoess::prelude::*;
 
-    let result = model.fit(&t_irregular, &y_irregular)?;
+    fn main() -> Result<(), LoessError> {
+        let t_irregular: Vec<f64> = (0..100).map(|i| i as f64 * 1.0 + (i * 31 % 10) as f64 * 0.1).collect();
+        let y_irregular: Vec<f64> = t_irregular.iter().map(|&t| 10.0 + t * 0.3 + 2.0 * (t * 0.1).sin()).collect();
+
+        // Irregular sampling - no special handling needed
+        let model = Loess::new()
+            .fraction(0.2)
+            .build()?;
+
+        let result = model.fit(&t_irregular, &y_irregular)?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+
     # Irregular time points (gaps in data)
     t_irregular = sort(rand(200) .*100.0)
     y_irregular = 10.0 .+ t_irregular .* 0.3 .+ randn(200) .* 2.0
@@ -401,6 +562,9 @@ LOESS naturally handles irregular time sampling:
     ```javascript
     const fl = require('fastloess');
 
+    const tIrregular = Float64Array.from({ length: 200 }, () => Math.random() * 100).sort((a,b)=>a-b);
+    const yIrregular = Float64Array.from(tIrregular, t => 10 + 0.3 * t + Math.random() * 2);
+
     // No special handling needed for irregular spacing
     const model = new fl.Loess({ fraction: 0.2 });
     const result = model.fit(tIrregular, yIrregular);
@@ -408,18 +572,35 @@ LOESS naturally handles irregular time sampling:
 
 === "WebAssembly"
     ```javascript
-    import { Loess } from 'fastloess-wasm';
+    const { Loess } = require('fastloess-wasm');
 
+    const n = 100;
+    const tIrregular = Float64Array.from({ length: n }, (_, i) => i * 1.0 + (i * 31 % 10) * 0.1).sort((a, b) => a - b);
+    const yIrregular = Float64Array.from(tIrregular, t => 10 + 0.3 * t + 2.0 * Math.sin(t * 0.1));
     const model = new Loess({ fraction: 0.2 });
     const result = model.fit(tIrregular, yIrregular);
     ```
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastloess::Loess missing_model({ .fraction = 0.2 });
-    auto result = missing_model.fit(tIrregular, yIrregular).value();
+    int main() {
+        const int n = 100;
+        std::vector<double> tIrregular(n), yIrregular(n);
+        for (int i = 0; i < n; ++i) {
+            tIrregular[i] = i * 1.0 + (i * 31 % 10) * 0.1;
+            yIrregular[i] = 10.0 + 0.3 * tIrregular[i] + 2.0 * std::sin(tIrregular[i] * 0.1);
+        }
+
+        fastloess::Loess missing_model({ .fraction = 0.2 });
+        auto result = missing_model.fit(tIrregular, yIrregular).value();
+
+        return 0;
+    }
     ```
 
 ---
@@ -430,6 +611,12 @@ Use different fractions to extract features at different scales:
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    t <- seq(0, 100, length.out = 500)
+    trend_true <- 10 + 0.5 *t + 3* sin(t / 10)
+    y <- trend_true + rnorm(500, sd = 3)
+
     fractions <- c(0.05, 0.2, 0.5)
 
     plot(t, y, col = "gray", pch = ".", main = "Multi-Scale LOESS")
@@ -444,6 +631,15 @@ Use different fractions to extract features at different scales:
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    np.random.seed(42)
+    t = np.linspace(0, 100, 500)
+    trend_true = 10 + 0.5 * t + 3 * np.sin(t / 10)
+    y = trend_true + np.random.normal(0, 3, len(t))
+
     # Multiple smoothing scales
     fractions = [0.05, 0.2, 0.5]
 
@@ -461,19 +657,37 @@ Use different fractions to extract features at different scales:
 
 === "Rust"
     ```rust
-    let fractions = [0.05, 0.2, 0.5];
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
 
-    for f in fractions {
-        let model = Loess::new()
-            .fraction(f)
-            .build()?;
-        let result = model.fit(&t, &y)?;
-        // Store or plot result.y for each scale
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let t: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = t.iter().map(|&ti| ti.sin() + 0.1).collect();
+
+        let fractions = [0.05, 0.2, 0.5];
+
+        for f in fractions {
+            let model = Loess::new()
+                .fraction(f)
+                .build()?;
+            let result = model.fit(&t, &y)?;
+            // Store or plot result.y for each scale
+        }
+
+        Ok(())
     }
     ```
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    t = collect(range(0, 100, length=500))
+    y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
+
     fractions = [0.05, 0.2, 0.5]
 
     results = [fit(Loess(; fraction=f), t, y) for f in fractions]
@@ -484,6 +698,10 @@ Use different fractions to extract features at different scales:
     ```javascript
     const fl = require('fastloess');
 
+    const n = 500;
+    const t = Float64Array.from({ length: n }, (_, i) => i * 100 / (n - 1));
+    const y = Float64Array.from(t, ti => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) + (Math.random()-0.5)*6);
+
     const scales = [0.05, 0.2, 0.5];
     const trends = scales.map(f => {
         return new fl.Loess({ fraction: f }).fit(t, y).y;
@@ -492,25 +710,43 @@ Use different fractions to extract features at different scales:
 
 === "WebAssembly"
     ```javascript
-    import { Loess } from 'fastloess-wasm';
+    const { Loess } = require('fastloess-wasm');
+
+    const n = 100;
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
     const trends = [0.05, 0.2, 0.5].map(f => {
         const model = new Loess({ fraction: f });
-        const result = model.fit(t, y);
+        const result = model.fit(x, y);
         return result.y;
     });
     ```
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    std::vector<double> scales = {0.05, 0.2, 0.5};
-    std::vector<std::vector<double>> trends;
-    for (auto f : scales) {
-        fastloess::Loess scale_model({ .fraction = f });
-        auto result = scale_model.fit(t, y).value();
-        trends.push_back(result.y_vector());
+    int main() {
+        const int n = 100;
+        std::vector<double> t(n), y(n);
+        for (int i = 0; i < n; ++i) {
+            t[i] = i * 2.0 * M_PI / (n - 1);
+            y[i] = std::sin(t[i]) + 0.1;
+        }
+
+        std::vector<double> scales = {0.05, 0.2, 0.5};
+        std::vector<std::vector<double>> trends;
+        for (auto f : scales) {
+            fastloess::Loess scale_model({ .fraction = f });
+            auto result = scale_model.fit(t, y).value();
+            trends.push_back(result.y_vector());
+        }
+
+        return 0;
     }
     ```
 
@@ -522,6 +758,8 @@ Biological application:
 
 === "R"
     ```r
+    library(rfastloess)
+
     # Gene expression over 24 hours
     hours <- seq(0, 24, by = 0.5)
 
@@ -572,22 +810,26 @@ Biological application:
     use fastLoess::prelude::*;
     use std::f64::consts::PI;
 
-    let hours: Vec<f64> = (0..49).map(|i| i as f64 * 0.5).collect(); // 0.0..24.0 step 0.5
-    let expression: Vec<f64> = hours.iter().enumerate()
-        .map(|(i, &h)| 100.0 * (1.0 + 0.5 * (h * PI / 12.0).sin())
-                      + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 10.0)
-        .collect();
+    fn main() -> Result<(), LoessError> {
+        let hours: Vec<f64> = (0..49).map(|i| i as f64 * 0.5).collect(); // 0.0..24.0 step 0.5
+        let expression: Vec<f64> = hours.iter().enumerate()
+            .map(|(i, &h)| 100.0 * (1.0 + 0.5 * (h * PI / 12.0).sin())
+                          + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 10.0)
+            .collect();
 
-    let model = Loess::new()
-        .fraction(0.3)
-        .iterations(3)
-        .confidence_intervals(0.95)
-        .return_diagnostics()
-        .build()?;
+        let model = Loess::new()
+            .fraction(0.3)
+            .iterations(3)
+            .confidence_intervals(0.95)
+            .return_diagnostics()
+            .build()?;
 
-    let result = model.fit(&hours, &expression)?;
-    if let Some(diag) = &result.diagnostics {
-        println!("R²: {:.3}", diag.r_squared);
+        let result = model.fit(&hours, &expression)?;
+        if let Some(diag) = &result.diagnostics {
+            println!("R²: {:.3}", diag.r_squared);
+        }
+
+        Ok(())
     }
     ```
 
@@ -613,6 +855,9 @@ Biological application:
     ```javascript
     const fl = require('fastloess');
 
+    const hours = Float64Array.from({ length: 49 }, (_, i) => i * 0.5);
+    const expression = Float64Array.from(hours, h => 100*(1+0.5*Math.sin(h*Math.PI/12))+(Math.random()-0.5)*20);
+
     const model = new fl.Loess({
         fraction: 0.3,
         iterations: 3,
@@ -625,13 +870,12 @@ Biological application:
 
 === "WebAssembly"
     ```javascript
-    import { Loess } from 'fastloess-wasm';
+    const { Loess } = require('fastloess-wasm');
 
-    const model = new Loess({
-        fraction: 0.3,
-        iterations: 3,
-        return_diagnostics: true
-    });
+    const n = 24;
+    const hours = Float64Array.from({ length: n }, (_, i) => i);
+    const expression = Float64Array.from(hours, h => 5 + 3 * Math.sin(h * Math.PI / 12) + (h % 3) * 0.2);
+    const model = new Loess({ fraction: 0.3, iterations: 3, return_diagnostics: true });
     const result = model.fit(hours, expression);
 
     console.log("R²:", result.diagnostics?.r_squared);
@@ -639,16 +883,30 @@ Biological application:
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastloess::Loess gene_model({
-        .fraction = 0.3,
-        .iterations = 3,
-        .return_diagnostics = true
-    });
-    auto result = gene_model.fit(hours, expression).value();
+    int main() {
+        const int n = 49;
+        std::vector<double> hours(n), expression(n);
+        for (int i = 0; i < n; ++i) {
+            hours[i] = i * 0.5;
+            expression[i] = 100.0 * (1.0 + 0.5 * std::sin(hours[i] * M_PI / 12.0));
+        }
 
-    std::cout << "R²: " << result.diagnostics().r_squared() << std::endl;
+        fastloess::Loess gene_model({
+            .fraction = 0.3,
+            .iterations = 3,
+            .return_diagnostics = true
+        });
+        auto result = gene_model.fit(hours, expression).value();
+
+        std::cout << "R²: " << result.diagnostics().r_squared() << std::endl;
+
+        return 0;
+    }
     ```
 
 ---

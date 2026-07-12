@@ -11,7 +11,9 @@ The `Loess` class allows configuring the LOESS parameters once and fitting multi
 **Constructor:**
 
 ```javascript
-const model = new Loess(options);
+const { Loess } = require('fastloess');
+
+const model = new Loess({ fraction: 0.5 });
 ```
 
 * `options`: An object containing `LoessOptions` fields.
@@ -19,14 +21,28 @@ const model = new Loess(options);
 **Methods:**
 
 ```javascript
-const result = model.fit(x, y, custom_weights);
+const { Loess } = require('fastloess');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+const model = new Loess({ fraction: 0.5 });
+const result = model.fit(x, y);
 ```
 
 * Fits the model to the provided `x` and `y` typed arrays.
 * Returns a `LoessResult` object containing the smoothed values and optional diagnostics.
 
 ```javascript
-const result = await model.fitAsync(x, y, custom_weights);
+const { Loess } = require('fastloess');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+const model = new Loess({ fraction: 0.5 });
+const result = await model.fitAsync(x, y);
 ```
 
 * Async variant of `fit()`. Returns a `Promise` that resolves to a `LoessResult`.
@@ -38,7 +54,9 @@ The `StreamingLoess` class processes data in chunks, suitable for very large dat
 **Constructor:**
 
 ```javascript
-const stream = new StreamingLoess(options, streamingOptions);
+const { StreamingLoess } = require('fastloess');
+
+const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
 ```
 
 * `options`: An object containing `LoessOptions` fields.
@@ -47,12 +65,27 @@ const stream = new StreamingLoess(options, streamingOptions);
 **Methods:**
 
 ```javascript
-const partialResult = stream.processChunk(x, y);
+const { StreamingLoess } = require('fastloess');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
+const partialResult = stream.processChunk(x.slice(0, 50), y.slice(0, 50));
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```javascript
+const { StreamingLoess } = require('fastloess');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
+
+const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
+stream.processChunk(x, y);
 const finalResult = stream.finalize();
 ```
 
@@ -65,7 +98,9 @@ The `OnlineLoess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```javascript
-const online = new OnlineLoess(options, onlineOptions);
+const { OnlineLoess } = require('fastloess');
+
+const online = new OnlineLoess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
 ```
 
 * `options`: An object containing `LoessOptions` fields.
@@ -74,7 +109,10 @@ const online = new OnlineLoess(options, onlineOptions);
 **Methods:**
 
 ```javascript
-const result = online.add_point(x, y);  // returns OnlineOutput | null
+const { OnlineLoess } = require('fastloess');
+
+const online = new OnlineLoess({ fraction: 0.3 }, { window_capacity: 50, min_points: 5 });
+const result = online.add_point(1.0, 2.0);  // returns OnlineOutput | null
 ```
 
 * Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
@@ -93,7 +131,7 @@ const result = online.add_point(x, y);  // returns OnlineOutput | null
 | `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
-| `custom_weights` | `number[]` | `null` | Per-observation case weights — passed to `fit()`/`fitAsync()`, not the options object (Batch only) |
+| `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`/`fitAsync()`, not the options object (Batch only) |
 | `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
 | `return_diagnostics` | `boolean` | `false` | Compute RMSE, MAE, R², AIC |

@@ -95,23 +95,39 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "Rust"
     ```rust
-    let positions = x.clone();
-    let observed = y.clone();
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let model = Loess::new()
-        .fraction(0.1)
-        .iterations(3)
-        .confidence_intervals(0.95)
-        .build()?;
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let result = model.fit(&positions, &observed)?;
-    // result.y contains smoothed methylation profile
-    // result.confidence_lower/upper contain 95% CI bounds
+        let positions = x.clone();
+        let observed = y.clone();
+
+        let model = Loess::new()
+            .fraction(0.1)
+            .iterations(3)
+            .confidence_intervals(0.95)
+            .build()?;
+
+        let result = model.fit(&positions, &observed)?;
+        // result.y contains smoothed methylation profile
+        // result.confidence_lower/upper contain 95% CI bounds
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
     using FastLOESS
+    using Random
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
 
     # positions and observed are your methylation data
     model = Loess(;
@@ -129,6 +145,9 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
     ```javascript
     const fl = require('fastloess');
 
+    const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
+    const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
+
     // positions and observed are your methylation data (Float64Array)
     const model = new fl.Loess({
         fraction: 0.1,
@@ -143,7 +162,11 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "WebAssembly"
     ```javascript
-    import { Loess } from 'fastloess-wasm';
+    const { Loess } = require('fastloess-wasm');
+
+    const n = 100;
+    const positions = Float64Array.from({ length: n }, (_, i) => i * 100.0);
+    const observed = Float64Array.from(positions, p => 50 + Math.sin(p / 100) * 20 + ((p * 7 % 17) / 17 - 0.5) * 5);
 
     // positions and observed are your methylation data (Float64Array)
     const model = new Loess({
@@ -159,14 +182,28 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    // positions and observed are std::vector<double>
-    fastloess::Loess model({ .fraction = 0.1, .iterations = 3, .confidence_intervals = 0.95 });
-    auto result = model.fit(positions, observed).value();
+    int main() {
+        const int n = 100;
+        std::vector<double> positions(n), observed(n);
+        for (int i = 0; i < n; ++i) {
+            positions[i] = i * 1000.0;
+            observed[i] = 50.0 + std::sin(positions[i] / 1000.0) * 20.0 + 5.0;
+        }
 
-    // Smoothed profile in result.y_vector()
-    // CI bounds in result.confidence_lower()/result.confidence_upper()
+        // positions and observed are std::vector<double>
+        fastloess::Loess model({ .fraction = 0.1, .iterations = 3, .confidence_intervals = 0.95 });
+        auto result = model.fit(positions, observed).value();
+
+        // Smoothed profile in result.y_vector()
+        // CI bounds in result.confidence_lower()/result.confidence_upper()
+
+        return 0;
+    }
     ```
 
 ---
@@ -179,6 +216,8 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
 === "R"
     ```r
+    library(rfastloess)
+
     set.seed(123)
     positions <- seq(0, 10000, by = 10)
     n <- length(positions)
@@ -205,6 +244,9 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
     # Simulate ChIP-seq coverage with peaks
     np.random.seed(123)
     positions = np.arange(0, 10000, 10, dtype=float)
@@ -235,29 +277,45 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
 === "Rust"
     ```rust
-    let positions: Vec<f64> = (0..1000).map(|i| i as f64 *10.0).collect(); // 0 to 9990 step 10
-    let observed: Vec<f64> = positions.iter().map(|&p| (p / 1000.0).sin().abs()* 100.0 + 10.0).collect();
+    use fastLoess::prelude::*;
+    use std::f64::consts::TAU;
 
-    let model = Loess::new()
-        .fraction(0.05)
-        .iterations(5)
-        .return_residuals()
-        .build()?;
+    fn main() -> Result<(), LoessError> {
+        let n = 100usize;
+        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    let result = model.fit(&positions, &observed)?;
+        let positions: Vec<f64> = (0..1000).map(|i| i as f64 *10.0).collect(); // 0 to 9990 step 10
+        let observed: Vec<f64> = positions.iter().map(|&p| (p / 1000.0).sin().abs()* 100.0 + 10.0).collect();
 
-    // Find peaks above threshold
-    let threshold = result.y.iter().copied()
-        .fold(f64::NEG_INFINITY, f64::max) * 0.75;
-    let peak_positions: Vec<f64> = positions.iter().zip(result.y.iter())
-        .filter(|(_, &y)| y > threshold)
-        .map(|(&p, _)| p)
-        .collect();
+        let model = Loess::new()
+            .fraction(0.05)
+            .iterations(5)
+            .return_residuals()
+            .build()?;
+
+        let result = model.fit(&positions, &observed)?;
+
+        // Find peaks above threshold
+        let threshold = result.y.iter().copied()
+            .fold(f64::NEG_INFINITY, f64::max) * 0.75;
+        let peak_positions: Vec<f64> = positions.iter().zip(result.y.iter())
+            .filter(|(_, &y)| y > threshold)
+            .map(|(&p, _)| p)
+            .collect();
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
     using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
 
     # positions and observed are your ChIP-seq data
     model = Loess(; fraction=0.05, iterations=5)
@@ -273,6 +331,9 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     ```javascript
     const fl = require('fastloess');
 
+    const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
+    const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
+
     const model = new fl.Loess({
         fraction: 0.05,
         iterations: 5
@@ -287,7 +348,11 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
 === "WebAssembly"
     ```javascript
-    import { Loess } from 'fastloess-wasm';
+    const { Loess } = require('fastloess-wasm');
+
+    const n = 100;
+    const positions = Float64Array.from({ length: n }, (_, i) => i * 100.0);
+    const observed = Float64Array.from(positions, p => 50 + Math.sin(p / 100) * 20 + ((p * 7 % 17) / 17 - 0.5) * 5);
 
     const model = new Loess({
         fraction: 0.05,
@@ -302,19 +367,33 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    fastloess::Loess model({ .fraction = 0.05, .iterations = 5 });
-    auto result = model.fit(positions, observed).value();
-
-    // Find peaks above threshold
-    std::vector<double> peaks;
-    const auto& y_vals = result.y_vector();
-    const auto& x_vals = result.x_vector();
-    for (size_t i = 0; i < y_vals.size(); ++i) {
-        if (y_vals[i] > 25.0) {
-            peaks.push_back(x_vals[i]);
+    int main() {
+        const int n = 100;
+        std::vector<double> positions(n), observed(n);
+        for (int i = 0; i < n; ++i) {
+            positions[i] = i * 1000.0;
+            observed[i] = 50.0 + std::sin(positions[i] / 1000.0) * 20.0 + 5.0;
         }
+
+        fastloess::Loess model({ .fraction = 0.05, .iterations = 5 });
+        auto result = model.fit(positions, observed).value();
+
+        // Find peaks above threshold
+        std::vector<double> peaks;
+        const auto& y_vals = result.y_vector();
+        const auto& x_vals = result.x_vector();
+        for (size_t i = 0; i < y_vals.size(); ++i) {
+            if (y_vals[i] > 25.0) {
+                peaks.push_back(x_vals[i]);
+            }
+        }
+
+        return 0;
     }
     ```
 
@@ -326,6 +405,12 @@ For whole-genome data that doesn't fit in memory:
 
 === "R"
     ```r
+    library(rfastloess)
+    set.seed(42)
+    positions <- seq(0, 10000, by = 10)
+    observed <- 50 + sin(positions / 100) * 20 + rnorm(length(positions), sd = 5)
+    coverage <- observed  # alias
+
     model <- StreamingLoess(
         fraction = 0.05,
         chunk_size = 100000,
@@ -338,6 +423,13 @@ For whole-genome data that doesn't fit in memory:
 
 === "Python"
     ```python
+    import fastloess as fl
+    import numpy as np
+
+    np.random.seed(42)
+    positions = np.arange(0, 10000, 10, dtype=float)
+    coverage = np.random.poisson(50, len(positions)).astype(float)
+
     # Process chromosome-by-chromosome or in chunks
     model = fl.StreamingLoess(
         fraction=0.05,
@@ -351,21 +443,36 @@ For whole-genome data that doesn't fit in memory:
 
 === "Rust"
     ```rust
-    let mut processor = StreamingLoess::new()
-        .fraction(0.05)
-        .iterations(3)
-        .chunk_size(50)
-        .overlap(10)
-        .merge_strategy("weighted_average")
-        .build()?;
+    use fastLoess::prelude::*;
 
-    processor.process_chunk(&x_chunk, &y_chunk)?;
-    let result = processor.finalize()?;
+    fn main() -> Result<(), LoessError> {
+        let x_chunk: Vec<f64> = (0..1001).map(|i| i as f64 * 10.0).collect();
+        let y_chunk: Vec<f64> = x_chunk.iter().map(|&p| 50.0 + (p / 100.0).sin() * 20.0 + 5.0).collect();
+
+        let mut processor = StreamingLoess::new()
+            .fraction(0.05)
+            .iterations(3)
+            .chunk_size(50)
+            .overlap(10)
+            .merge_strategy("weighted_average")
+            .build()?;
+
+        processor.process_chunk(&x_chunk, &y_chunk)?;
+        let result = processor.finalize()?;
+
+        Ok(())
+    }
     ```
 
 === "Julia"
     ```julia
     using FastLOESS
+    using Random
+
+    rng = MersenneTwister(42)
+    positions = collect(0.0:10.0:10000.0)
+    observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
+    coverage = observed
 
     # coverage and positions are chromosome-scale vectors
     model = StreamingLoess(;
@@ -382,6 +489,14 @@ For whole-genome data that doesn't fit in memory:
     ```javascript
     const { StreamingLoess } = require('fastloess');
 
+    const positions = Float64Array.from({ length: 1000 }, (_, i) => i * 10.0);
+    const observed = Float64Array.from(positions, p => 50 + Math.sin(p/100)*20 + Math.random()*5);
+    // Array of genomic chunks to process
+    const genomicData = [
+        { positions: positions.slice(0, 500), coverage: observed.slice(0, 500) },
+        { positions: positions.slice(500), coverage: observed.slice(500) }
+    ];
+
     const processor = new StreamingLoess(
         { fraction: 0.05, iterations: 3 },
         { chunk_size: 100000, overlap: 10000 }
@@ -396,33 +511,47 @@ For whole-genome data that doesn't fit in memory:
 
 === "WebAssembly"
     ```javascript
-    import { StreamingLoess } from 'fastloess-wasm';
+    const { StreamingLoess } = require('fastloess-wasm');
+
+    const xChunk = Float64Array.from({ length: 1001 }, (_, i) => i * 10.0);
+    const yChunk = Float64Array.from(xChunk, p => 50 + Math.sin(p / 100) * 20 + 5.0);
 
     const processor = new StreamingLoess(
         { fraction: 0.05, iterations: 3 },
-        { chunk_size: 100000, overlap: 10000 }
+        { chunk_size: 100, overlap: 10 }
     );
 
-    // Process chunks
-    for (const chunk of stream) {
-        processor.processChunk(chunk.positions, chunk.coverage);
-    }
+    processor.processChunk(xChunk, yChunk);
     const result = processor.finalize();
     ```
 
 === "C++"
     ```cpp
-    #include "fastloess.hpp"
+    #include <fastloess.hpp>
+    #include <cmath>
+    #include <iostream>
+    #include <vector>
 
-    // coverage and positions are chromosome-scale vectors
-    fastloess::StreamingOptions s_opts;
-    s_opts.fraction = 0.05;
-    s_opts.iterations = 3;
-    s_opts.chunk_size = 100000;
-    s_opts.overlap = 10000;
-    fastloess::StreamingLoess stream(s_opts);
-    (void)stream.process_chunk(positions, coverage);
-    auto result = stream.finalize().value();
+    int main() {
+        const int n = 100;
+        std::vector<double> positions(n), coverage(n);
+        for (int i = 0; i < n; ++i) {
+            positions[i] = i * 1000.0;
+            coverage[i] = 50.0 + std::sin(positions[i] / 1000.0) * 20.0 + 5.0;
+        }
+
+        // coverage and positions are chromosome-scale vectors
+        fastloess::StreamingOptions s_opts;
+        s_opts.fraction = 0.05;
+        s_opts.iterations = 3;
+        s_opts.chunk_size = 100000;
+        s_opts.overlap = 10000;
+        fastloess::StreamingLoess stream(s_opts);
+        (void)stream.process_chunk(positions, coverage);
+        auto result = stream.finalize().value();
+
+        return 0;
+    }
     ```
 
 ---

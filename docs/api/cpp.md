@@ -11,9 +11,18 @@ The `Loess` class allows configuring the LOESS parameters once and fitting multi
 **Constructor:**
 
 ```cpp
-fastloess::LoessOptions opts;
-opts.fraction = 0.5;
-fastloess::Loess model(opts);
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
+
+int main() {
+    fastloess::LoessOptions opts;
+    opts.fraction = 0.5;
+    fastloess::Loess model(opts);
+
+    return 0;
+}
 ```
 
 * `options`: A `LoessOptions` struct containing configuration parameters.
@@ -21,11 +30,27 @@ fastloess::Loess model(opts);
 **Methods:**
 
 ```cpp
-fastloess::Loess model;
-auto result = model.fit(x, y).value();
-// or with custom weights:
-std::vector<double> weights(x.size(), 1.0);
-auto resultW = model.fit(x, y, weights).value();
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
+
+    fastloess::Loess model;
+    auto result = model.fit(x, y).value();
+    // or with custom weights:
+    std::vector<double> weights(x.size(), 1.0);
+    auto resultW = model.fit(x, y, weights).value();
+
+    return 0;
+}
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
@@ -38,9 +63,18 @@ The `StreamingLoess` class processes data in chunks, suitable for very large dat
 **Constructor:**
 
 ```cpp
-fastloess::StreamingOptions opts;
-opts.chunk_size = 5;
-fastloess::StreamingLoess model(opts);
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
+
+int main() {
+    fastloess::StreamingOptions opts;
+    opts.chunk_size = 5;
+    fastloess::StreamingLoess model(opts);
+
+    return 0;
+}
 ```
 
 * `options`: A `StreamingOptions` struct (inherits from `LoessOptions`) with additional `chunk_size` and `overlap` parameters.
@@ -48,22 +82,54 @@ fastloess::StreamingLoess model(opts);
 **Methods:**
 
 ```cpp
-fastloess::StreamingOptions opts;
-opts.chunk_size = 10;
-opts.overlap = 0;
-fastloess::StreamingLoess model(opts);
-auto result = model.process_chunk(x, y).value();
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
+
+    fastloess::StreamingOptions opts;
+    opts.chunk_size = 10;
+    opts.overlap = 0;
+    fastloess::StreamingLoess model(opts);
+    (void)model.process_chunk(x, y);
+
+    return 0;
+}
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```cpp
-fastloess::StreamingOptions opts;
-opts.chunk_size = 10;
-opts.overlap = 0;
-fastloess::StreamingLoess model(opts);
-model.process_chunk(x, y);
-auto result = model.finalize().value();
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
+
+    fastloess::StreamingOptions opts;
+    opts.chunk_size = 10;
+    opts.overlap = 0;
+    fastloess::StreamingLoess model(opts);
+    model.process_chunk(x, y);
+    auto result = model.finalize().value();
+
+    return 0;
+}
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.
@@ -75,9 +141,26 @@ The `OnlineLoess` class updates the model incrementally with new data points.
 **Constructor:**
 
 ```cpp
-fastloess::OnlineOptions opts;
-opts.window_capacity = 10;
-fastloess::OnlineLoess model(opts);
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
+
+    fastloess::OnlineOptions opts;
+    opts.window_capacity = 10;
+    fastloess::OnlineLoess model(opts);
+    auto out = model.add_point(x[0], y[0]);
+
+    return 0;
+}
 ```
 
 * `options`: An `OnlineOptions` struct (inherits from `LoessOptions`) with `window_capacity`, `min_points`, and `update_mode`.
@@ -85,13 +168,26 @@ fastloess::OnlineLoess model(opts);
 **Methods:**
 
 ```cpp
-fastloess::OnlineOptions opts;
-opts.window_capacity = 10;
-fastloess::OnlineLoess model(opts);
-auto result = model.add_point(x[0], y[0]).value();
-// result.has_value() == false while window fills
-if (result.has_value()) {
-    double smoothed = result.smoothed();
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
+
+    fastloess::OnlineOptions opts;
+    opts.window_capacity = 10;
+    fastloess::OnlineLoess model(opts);
+    // Returns Expected<OnlineOutput> — empty until window fills
+    auto out = model.add_point(x[0], y[0]);
+
+    return 0;
 }
 ```
 

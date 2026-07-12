@@ -68,14 +68,15 @@ result = fit(model, x, y)
 println("Smoothed values: ", result.y[1:5])
 
 # With options
-result2 = fit(Loess(
+model2 = Loess(
     fraction=0.3,
     iterations=3,
     confidence_intervals=0.95,
     return_diagnostics=true
-), x, y)
+)
+result2 = fit(model2, x, y)
 
-println("R²: ", result2.diagnostics.r_squared)
+println("R²: ", result2.diagnostics.r_squared)  # requires return_diagnostics=true
 
 # Access confidence intervals
 lower = result2.confidence_lower

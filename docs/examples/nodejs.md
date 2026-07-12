@@ -47,9 +47,9 @@ npm install
 npm run build
 
 # Run examples
-node examples/nodejs/batch_smoothing.js
-node examples/nodejs/streaming_smoothing.js
-node examples/nodejs/online_smoothing.js
+node ../../examples/nodejs/batch_smoothing.js
+node ../../examples/nodejs/streaming_smoothing.js
+node ../../examples/nodejs/online_smoothing.js
 ```
 
 ## Quick Start
@@ -58,8 +58,8 @@ node examples/nodejs/online_smoothing.js
 const { Loess } = require('fastloess');
 
 // Generate sample data
-const x = Array.from({ length: 100 }, (_, i) => i * 0.1);
-const y = x.map(xi => Math.sin(xi) + Math.random() * 0.2);
+const x = Float64Array.from({ length: 100 }, (_, i) => i * 0.1);
+const y = Float64Array.from(x, xi => Math.sin(xi) + Math.random() * 0.2);
 
 // Basic smoothing
 const model = new Loess({ fraction: 0.3 });
@@ -82,7 +82,11 @@ console.log('R²:', resultWithOptions.diagnostics.r_squared);
 The package includes TypeScript definitions:
 
 ```typescript
-import { Loess, LoessResult } from 'fastloess';
+const { Loess, LoessResult } = require('fastloess');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const options = {
     fraction: 0.3,
@@ -90,5 +94,6 @@ const options = {
     confidence_intervals: 0.95
 };
 
-const result: LoessResult = new Loess(options).fit(x, y);
+const model = new Loess(options);
+const result: LoessResult = model.fit(x, y);
 ```

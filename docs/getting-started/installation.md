@@ -55,11 +55,11 @@ Install the LOESS library for your preferred language.
     ```toml
     # loess-rs (no_std compatible)
     [dependencies]
-    loess-rs = "*"
+    loess-rs = "0.9"
 
-    # fastLoess (parallel)
+    # fastLoess (parallel + GPU)
     [dependencies]
-    fastLoess = "*"
+    fastLoess = { version = "0.9", features = ["cpu"] }
     ```
 
     === "Feature Flags"
@@ -67,6 +67,8 @@ Install the LOESS library for your preferred language.
         | Crate | Feature | Description |
         | --- | --- | --- |
         | `loess-rs` | `std` | Enable standard library (default) |
+        | `fastLoess` | `cpu` | Enable CPU parallelism via Rayon |
+        | `fastLoess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
 
 === "Julia"
 
@@ -112,7 +114,8 @@ Install the LOESS library for your preferred language.
 
     ```html
     <script type="module">
-      import { Loess } from "https://cdn.jsdelivr.net/npm/fastloess-wasm@<version>/index.js";
+      import init, { Loess } from "https://cdn.jsdelivr.net/npm/fastloess-wasm@0.9/fastloess_wasm.js";
+      await init();
     </script>
     ```
 
@@ -256,9 +259,10 @@ Install the LOESS library for your preferred language.
 === "WebAssembly"
 
     ```javascript
-    import { Loess } from 'fastloess-wasm';
+    import init, { Loess } from 'fastloess-wasm';
 
     async function verify() {
+        await init();
         const x = new Float64Array([1.0, 2.0, 3.0]);
         const y = new Float64Array([2.0, 4.0, 6.0]);
         const model = new Loess({});
