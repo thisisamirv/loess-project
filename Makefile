@@ -2,6 +2,7 @@
 # Configuration
 # ==============================================================================
 FEATURE_SET ?= all
+RUN_GPU_TESTS ?= auto
 
 # Make shell commands fail on error
 .SHELLFLAGS := -ec
@@ -20,6 +21,16 @@ else
 	HOST_PLATFORM := linux
 	PATH_SEPARATOR := :
 	STAT_SIZE_CMD := stat -c%s
+endif
+
+ifeq ($(RUN_GPU_TESTS),auto)
+	ifeq ($(HOST_PLATFORM),linux)
+		EFFECTIVE_RUN_GPU_TESTS := true
+	else
+		EFFECTIVE_RUN_GPU_TESTS := false
+	endif
+else
+	EFFECTIVE_RUN_GPU_TESTS := $(RUN_GPU_TESTS)
 endif
 
 # Python interpreter
@@ -101,9 +112,10 @@ CPP_LIBRARY_DIR := target/release-c
 ifeq ($(OS),Windows_NT)
 	# Detect whether MinGW GCC is the active C++ toolchain (e.g. rtools45, MSYS2).
 	# gcc -dumpmachine reports a mingw triple when MinGW is first in PATH.
-	# Use the GNU Rust target in that case so the static lib uses MinGW ABI
-	# (avoids __chkstk / type_info vtable link errors from MSVC-only symbols).
+	# Only use the GNU Rust target when Cargo's expected GNU linker is also
 	# Otherwise keep the MSVC Rust target for native MSVC builds.
+	# The .cargo/config.toml supplies the full MinGW linker path so Cargo
+	# works even when x86_64-w64-mingw32-gcc is not on PATH.
 	_CPP_GCC_MACHINE := $(shell gcc -dumpmachine 2>/dev/null)
 	ifneq ($(findstring mingw,$(_CPP_GCC_MACHINE)),)
 		_CPP_WIN_TOOLCHAIN := mingw
@@ -347,7 +359,7 @@ _python_impl:
 	@. $(PY_ACTIVATE) && python -m pip cache purge >/dev/null 2>&1 || true
 	@echo "Installing Python packages (pip, pytest, numpy, maturin, ruff)..."
 	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir --upgrade pip >/dev/null
-	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir pytest numpy maturin ruff >/dev/null
+	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir pytest numpy maturin ruff matplotlib >/dev/null
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
@@ -423,6 +435,7 @@ _r_impl:
 	@# Metadata sync disabled by user request
 	@# (Only cleaning up workspace/patch/vendor directives below)
 	@sed -i.bak '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
+	sed -i.bak '/^\[patch\.crates-io\]/d' $(R_DIR)/src/Cargo.toml; \
 	sed -i.bak '/^loess-rs = { path = "vendor\/loess-rs" }/d' $(R_DIR)/src/Cargo.toml; \
 	rm -f $(R_DIR)/src/Cargo.toml.bak; \
 	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
@@ -459,7 +472,7 @@ _r_impl:
 	@rm -f $(R_DIR)/src/vendor/fastLoess/Cargo.lock $(R_DIR)/src/vendor/loess-rs/Cargo.lock
 	@rm -f $(R_DIR)/src/vendor/fastLoess/README.md $(R_DIR)/src/vendor/fastLoess/CHANGELOG.md
 	@rm -f $(R_DIR)/src/vendor/loess-rs/README.md $(R_DIR)/src/vendor/loess-rs/CHANGELOG.md
-	@# Step 3: Patch local crates (remove workspace inheritance)
+	@# Step 3: Patch local crates (remove workspace inheritance, strip GPU deps)
 	@dev/patch_vendor_crates.py Cargo.toml $(R_DIR)/src/vendor -q
 	@# Step 4: Create dummy checksum files for local crates
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/loess-rs/.cargo-checksum.json
@@ -501,7 +514,10 @@ _r_impl:
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('roxygen2', 'srr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) suppressWarnings(try(install.packages(pkg, lib = lib, quiet = TRUE), silent = TRUE)) }; if (!requireNamespace('roxygen2', quietly = TRUE, lib.loc = lib)) stop('Required R package not available for roxygen regeneration: roxygen2', call. = FALSE); has_srr <- requireNamespace('srr', quietly = TRUE, lib.loc = lib); roclets <- if (has_srr) c('namespace', 'rd', 'srr::srr_stats_roclet') else c('namespace', 'rd'); roxygen2::roxygenise(package.dir = '.', roclets = roclets, load_code = roxygen2::load_pkgload)"
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript dev/fix_rd_style.R
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (!requireNamespace('rmarkdown', quietly = TRUE, lib.loc = Sys.getenv('R_LIBS_USER')) || !rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('pkgdown', 'rmarkdown', 'knitr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) install.packages(pkg, lib = lib, quiet = TRUE) }; if (!requireNamespace('pkgdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('rmarkdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('knitr', quietly = TRUE, lib.loc = lib)) stop('Required R packages not available for pkgdown site build', call. = FALSE); pkgdown::build_site(quiet = TRUE, install = TRUE)"
+	@echo "Pre-installing package to R_LIBS_USER so pkgdown subprocess finds the current version..."
+	@mkdir -p $(R_LIB_DIR)
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD INSTALL -l $(CURDIR)/$(R_LIB_DIR) . >/dev/null 2>&1
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('pkgdown', 'rmarkdown', 'knitr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) install.packages(pkg, lib = lib, quiet = TRUE) }; if (!requireNamespace('pkgdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('rmarkdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('knitr', quietly = TRUE, lib.loc = lib)) stop('Required R packages not available for pkgdown site build', call. = FALSE); pkgdown::build_site(quiet = TRUE, install = FALSE)"
 	@rm -f $(R_DIR)/.gitignore
 	@echo "=============================================================================="
 	@echo "4c. Building..."
@@ -530,7 +546,7 @@ _r_impl:
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."
 	@echo "=============================================================================="
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/dev/Makevars.check R CMD check --as-cran --no-manual $(R_PKG_TARBALL) || true
+	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/dev/Makevars.check R CMD check --as-cran --no-manual --no-check-urls $(R_PKG_TARBALL) || true
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE, lib.loc = Sys.getenv('R_LIBS_USER'))) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true
 	@echo "Package size (Limit: 5MB):"
 	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
@@ -793,7 +809,7 @@ _cpp_impl:
 	@echo "Linting C++ files..."
 	@if command -v clang-tidy >/dev/null 2>&1; then \
 		clang_tidy_log="$(TEMP)/clang-tidy-cpp.log"; \
-			clang-tidy bindings/cpp/include/fastloess.hpp tests/cpp/test_fastloess.cpp examples/cpp/*.cpp -- -I bindings/cpp/include -std=c++17 > "$$clang_tidy_log" 2>&1; \
+		clang-tidy --config-file=bindings/cpp/.clang-tidy bindings/cpp/include/fastloess.hpp tests/cpp/test_fastloess.cpp examples/cpp/*.cpp -- -I bindings/cpp/include -std=c++17 > "$$clang_tidy_log" 2>&1; \
 		clang_tidy_status=$$?; \
 		grep -Ev '^(\[[0-9]+/[0-9]+\] Processing file |[0-9]+ warnings generated\.|Suppressed [0-9]+ warnings \([0-9]+ in non-user code\)\.|Use -header-filter=\.\* or leave it as default to display errors from all non-system headers\.|Use -system-headers to display errors from system headers as well\.)' "$$clang_tidy_log" || true; \
 		rm -f "$$clang_tidy_log"; \
@@ -933,17 +949,17 @@ examples-python:
 examples-r:
 	@echo "Running $(R_PKG_NAME) examples..."
 	@echo "=============================================================================="
-	@Rscript $(EXAMPLES_DIR)/r/batch_smoothing.R
-	@Rscript $(EXAMPLES_DIR)/r/streaming_smoothing.R
-	@Rscript $(EXAMPLES_DIR)/r/online_smoothing.R
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(EXAMPLES_DIR)/r/batch_smoothing.R
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(EXAMPLES_DIR)/r/streaming_smoothing.R
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(EXAMPLES_DIR)/r/online_smoothing.R
 	@echo "=============================================================================="
 
 examples-julia:
 	@echo "Running $(JL_PKG) examples..."
 	@echo "=============================================================================="
-	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/batch_smoothing.jl
-	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/streaming_smoothing.jl
-	@julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/online_smoothing.jl
+	@FASTLOESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/batch_smoothing.jl
+	@FASTLOESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/streaming_smoothing.jl
+	@FASTLOESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/online_smoothing.jl
 	@echo "=============================================================================="
 
 examples-nodejs:
@@ -979,16 +995,20 @@ check-msrv:
 docs:
 	@echo "Building documentation..."
 	@if [ ! -d "$(DOCS_VENV)" ]; then $(PYTHON) -m venv $(DOCS_VENV); fi
-	@. $(DOCS_VENV)/$(if $(filter $(HOST_PLATFORM),windows),Scripts,bin)/activate && pip install -q -r docs/requirements.txt && mkdocs build
+	@. $(DOCS_VENV)/$(if $(filter $(HOST_PLATFORM),windows),Scripts,bin)/activate && pip install -q -r docs/requirements.txt && mkdocs build --config-file docs/mkdocs.yml
 
 docs-serve:
 	@echo "Starting documentation server..."
 	@if [ ! -d "$(DOCS_VENV)" ]; then $(PYTHON) -m venv $(DOCS_VENV); fi
-	@. $(DOCS_VENV)/$(if $(filter $(HOST_PLATFORM),windows),Scripts,bin)/activate && pip install -q -r docs/requirements.txt && mkdocs serve
+	@. $(DOCS_VENV)/$(if $(filter $(HOST_PLATFORM),windows),Scripts,bin)/activate && pip install -q -r docs/requirements.txt && mkdocs serve --config-file docs/mkdocs.yml
 
 docs-test:
 	@echo "Running doc snippet tests..."
-	$(PYTHON) dev/verify_snippets.py --timeout 120
+	@if [ -f "$(PY_VENV_PYTHON)" ]; then \
+		$(PY_VENV_PYTHON) dev/verify_snippets.py --timeout 120; \
+	else \
+		$(PYTHON) dev/verify_snippets.py --timeout 120; \
+	fi
 
 docs-clean:
 	@echo "Cleaning documentation build..."
@@ -1017,4 +1037,4 @@ all-clean: r-clean loess-rs-clean fastLoess-clean python-clean julia-clean nodej
 	@rm -rf bindings/r/tests/
 	@echo "All clean completed!"
 
-.PHONY: loess-rs loess-rs-coverage loess-rs-clean fastLoess fastLoess-coverage fastLoess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-test docs-clean all all-coverage all-clean examples examples-loess-rs examples-fastLoess examples-python examples-r examples-julia examples-nodejs examples-cpp
+.PHONY: loess-rs loess-rs-coverage loess-rs-clean fastLoess fastLoess-coverage fastLoess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-test docs-clean all all-coverage all-clean examples examples-loess-rs examples-fastLoess examples-python examples-r examples-julia examples-nodejs examples-cpp ensure-llvm-cov
