@@ -10,11 +10,12 @@ License: MIT + file LICENSE | Apache License (== 2.0)
 SystemRequirements: 'Rust' programming language (via 'rustup' or system tools)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE, roclets = c("namespace", "rd", "srr::srr_stats_roclet"))
+Imports: BiocGenerics
 Suggests: BiocStyle, knitr, rmarkdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 BugReports: https://github.com/thisisamirv/loess-project/issues
 URL: https://github.com/thisisamirv/loess-project
-biocViews: StatisticalMethod, Regression
+biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, QualityControl, KEGG
 Config/rextendr/version: 0.4.2
 Config/roxygen2/version: 8.0.0

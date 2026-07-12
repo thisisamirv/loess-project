@@ -151,7 +151,9 @@ All implementations are **numerical twins** of R's `loess`:
 **R:**
 
 ```r
-Loess(
+library(rfastloess)
+
+model <- Loess(
     fraction = 0.67,
     iterations = 3L,
     weight_function = "tricube",
@@ -169,7 +171,9 @@ Loess(
     cv_k = 5L,
     auto_converge = NULL,
     parallel = TRUE
-)$fit(x, y)
+)
+custom_weights <- rep(1, length(x))
+result <- model$fit(x, y, custom_weights = custom_weights)
 
 # Result structure:
 result$x,
@@ -211,7 +215,8 @@ model = Loess(
     auto_converge=None,
     parallel=True
 )
-result = model.fit(x, y)
+custom_weights = [1.0] * len(x)
+result = model.fit(x, y, custom_weights=custom_weights)
 
 # Result structure:
 result.x,
@@ -232,7 +237,9 @@ result.cv_scores
 **Rust:**
 
 ```rust
-Loess::new()
+use loess_rs::prelude::*;
+
+let model = Loess::new()
     .fraction(0.67)
     .iterations(3)
     .weight_function("tricube")
@@ -250,6 +257,7 @@ Loess::new()
     .cv_k(5)
     .cv_seed(123)
     .auto_converge(1e-4)
+    .custom_weights(vec![1.0; x.len()])
     .parallel(true)             // fastLoess only
     .build()?;
 
@@ -276,7 +284,9 @@ pub struct LoessResult<T> {
 **Julia:**
 
 ```julia
-Loess(;
+using FastLOESS
+
+model = Loess(;
     fraction=0.67,
     iterations=3,
     weight_function="tricube",
@@ -295,6 +305,8 @@ Loess(;
     auto_converge=NaN,
     parallel=true
 )
+custom_weights = ones(length(x))
+result = fit(model, x, y; custom_weights=custom_weights)
 
 # Result structure:
 result.x,
@@ -315,7 +327,9 @@ result.cv_scores
 **Node.js:**
 
 ```javascript
-new Loess({
+import { Loess } from "fastloess"
+
+const model = new Loess({
     fraction: 0.67,
     iterations: 3,
     weight_function: "tricube",
@@ -333,7 +347,9 @@ new Loess({
     cv_k: 5,
     auto_converge: 1e-4,
     parallel: true
-}).fit(x, y)
+})
+const custom_weights = Array(x.length).fill(1.0)
+const result = model.fit(x, y, custom_weights)
 
 // Result structure:
 result.x,
@@ -354,7 +370,9 @@ result.cv_scores
 **WebAssembly:**
 
 ```javascript
-new Loess({
+import { Loess } from "fastloess-wasm"
+
+const model = new Loess({
     fraction: 0.67,
     iterations: 3,
     weight_function: "tricube",
@@ -372,7 +390,9 @@ new Loess({
     cv_k: 5,
     auto_converge: 1e-4,
     parallel: true
-}).fit(x, y)
+})
+const custom_weights = new Float64Array(x.length).fill(1)
+const result = model.fit(x, y, custom_weights)
 
 // Result structure:
 result.x,
@@ -413,7 +433,8 @@ options.auto_converge = 1e-4;
 options.parallel = true;
 
 fastloess::Loess model(options);
-auto result = model.fit(x, y);
+std::vector<double> custom_weights(x.size(), 1.0);
+const auto result = model.fit(x, y, custom_weights).value();
 
 // Result structure:
 result.x_vector(),
