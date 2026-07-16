@@ -1,5 +1,5 @@
 name = "FastLOESS"
-uuid = "5d760c97-4851-4f57-8eaf-1b3e829bbf83"
+uuid = "c279703f-da8c-4b11-8b1f-668c81ca24ad"
 version = "0.9.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
