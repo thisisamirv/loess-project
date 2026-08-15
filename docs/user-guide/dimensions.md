@@ -136,6 +136,11 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     ```r
     library(rfastloess)
     set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
+    library(rfastloess)
+    set.seed(42)
     n <- 100
     lat <- seq(0, 2 *pi, length.out = n)
     lon <- seq(0, 2* pi, length.out = n)
@@ -192,6 +197,13 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     using Random, Statistics
 
     rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
     n = 100
     lat = collect(range(0, 2π, length=n))
     lon = collect(range(0, 2π, length=n))
@@ -206,6 +218,9 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
+
+    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
 
     const n = 100;
     const lat = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
@@ -271,6 +286,11 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
     ```r
     library(rfastloess)
     set.seed(42)
+    x <- seq(0, 2 * pi, length.out = 100)
+    y <- sin(x) + rnorm(100, sd = 0.3)
+
+    library(rfastloess)
+    set.seed(42)
     n <- 100
     x1 <- seq(0, 2 * pi, length.out = n)
     x2 <- seq(0, 1, length.out = n)
@@ -324,6 +344,13 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 
 === "Julia"
     ```julia
+    using FastLOESS
+    using Random, Statistics
+
+    rng = MersenneTwister(42)
+    x = collect(range(0, 2π, length=100))
+    y = sin.(x) .+ randn(rng, 100) .* 0.3
+
     using FastLOESS
     using Random, Statistics
 
