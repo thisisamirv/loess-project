@@ -60,12 +60,7 @@ build:
 	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
 
 	@echo "============================================================"
-	@echo "3. Installing Python build tools..."
-	@echo "============================================================"
-	@$(PYTHON) -m pip install -q tomli tomli_w >/dev/null 2>&1 || true
-
-	@echo "============================================================"
-	@echo "4. Vendoring Cargo dependencies..."
+	@echo "3. Vendoring Cargo dependencies..."
 	@echo "============================================================"
 	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
 	@mkdir -p $(R_DIR)/src/vendor
@@ -78,6 +73,11 @@ build:
 	@$(PYTHON) $(DEV_DIR)/patch_vendor_crates.py $(REPO_ROOT)/Cargo.toml $(R_DIR)/src/vendor -q
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/loess-rs/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLoess/.cargo-checksum.json
+	@# Remove version from the loess-rs path dep in fastLoess
+	@sed -i.bak \
+		-e 's|loess-rs = { path = "\.\./loess-rs", version = "[^"]*", |loess-rs = { path = "../loess-rs", |' \
+		$(R_DIR)/src/vendor/fastLoess/Cargo.toml
+	@rm -f $(R_DIR)/src/vendor/fastLoess/Cargo.toml.bak
 	@printf '\n\n[workspace]\n\n[patch.crates-io]\nloess-rs = { path = "vendor/loess-rs" }\n' >> $(R_DIR)/src/Cargo.toml
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
 	@$(PYTHON) $(DEV_DIR)/clean_checksums.py -q $(R_DIR)/src/vendor
