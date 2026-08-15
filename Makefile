@@ -1,192 +1,79 @@
 # ==============================================================================
 # Configuration
 # ==============================================================================
-FEATURE_SET ?= all
+FEATURE_SET   ?= all
 RUN_GPU_TESTS ?= auto
 
 # Make shell commands fail on error
 .SHELLFLAGS := -ec
 
-UNAME_S := $(shell uname -s)
-
-ifeq ($(OS),Windows_NT)
-	HOST_PLATFORM := windows
-	PATH_SEPARATOR := ;
-	STAT_SIZE_CMD := stat -c%s
-else ifeq ($(UNAME_S),Darwin)
-	HOST_PLATFORM := macos
-	PATH_SEPARATOR := :
-	STAT_SIZE_CMD := stat -f%z
-else
-	HOST_PLATFORM := linux
-	PATH_SEPARATOR := :
-	STAT_SIZE_CMD := stat -c%s
-endif
-
-ifeq ($(RUN_GPU_TESTS),auto)
-	ifeq ($(HOST_PLATFORM),linux)
-		EFFECTIVE_RUN_GPU_TESTS := true
-	else
-		EFFECTIVE_RUN_GPU_TESTS := false
-	endif
-else
-	EFFECTIVE_RUN_GPU_TESTS := $(RUN_GPU_TESTS)
-endif
-
-# Python interpreter
-PYTHON ?= python3
-PYO3_PYTHON ?= $(PYTHON)
-NODE ?= node
+include mk/config.mk
 
 # loess-rs crate
-LOESS_PKG := loess-rs
-LOESS_DIR := crates/loess-rs
+LOESS_PKG      := loess-rs
+LOESS_DIR      := crates/loess-rs
 LOESS_FEATURES := std dev
 LOESS_EXAMPLES := batch_smoothing online_smoothing streaming_smoothing
 
 # fastLoess crate
-FASTLOESS_PKG := fastLoess
-FASTLOESS_DIR := crates/fastLoess
+FASTLOESS_PKG      := fastLoess
+FASTLOESS_DIR      := crates/fastLoess
 FASTLOESS_FEATURES := dev
 FASTLOESS_EXAMPLES := fast_batch_smoothing fast_online_smoothing fast_streaming_smoothing
 
 # Python bindings
-PY_PKG := fastLoess-py
-PY_DIR := bindings/python
-PY_VENV := .venv
+PY_PKG      := fastLoess-py
+PY_DIR      := bindings/python
+PY_VENV     := .venv
 PY_TEST_DIR := tests/python
 ifeq ($(OS),Windows_NT)
-	PY_ACTIVATE := $(PY_VENV)/Scripts/activate
+	PY_ACTIVATE    := $(PY_VENV)/Scripts/activate
 	PY_VENV_PYTHON := $(PY_VENV)/Scripts/python.exe
 else
-	PY_ACTIVATE := $(PY_VENV)/bin/activate
+	PY_ACTIVATE    := $(PY_VENV)/bin/activate
 	PY_VENV_PYTHON := $(PY_VENV)/bin/python
 endif
 
 # R bindings
 R_PKG_NAME := rfastloess
-R_PKG_VERSION = $(shell grep "^Version:" bindings/r/DESCRIPTION | sed 's/Version: //')
-R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
-R_DIR := bindings/r
-R_LIB_DIR := $(R_DIR)/.r-lib
-R_CARGO_TARGET :=
-R_CROSS_ENV :=
-ifeq ($(OS),Windows_NT)
-    R_CARGO_TARGET := --target x86_64-pc-windows-gnu
-    R_CROSS_ENV := PATH="/c/rtools45/x86_64-w64-mingw32.static.posix/bin:$$PATH"
-endif
+R_DIR      := bindings/r
+R_LIB_DIR  := $(R_DIR)/.r-lib
 
 # Julia bindings
-JL_PKG := fastloess-jl
-JL_DIR := bindings/julia
-JL_TEST_DIR := tests/julia
+JL_PKG  := fastloess-jl
+JL_DIR  := bindings/julia
 
-# Node.js bindings
-NODE_PKG := fastloess-node
-NODE_DIR := bindings/nodejs
-NODE_TEST_DIR := tests/nodejs
-
+# Julia native library paths (for examples)
 ifeq ($(HOST_PLATFORM),windows)
-	NPM := npm.cmd
-	NPX := npx.cmd
+	JL_SHARED_LIB := target/release/fastloess_jl.dll
+else ifeq ($(HOST_PLATFORM),macos)
+	JL_SHARED_LIB := target/release/libfastloess_jl.dylib
 else
-	NPM := npm
-	NPX := npx
+	JL_SHARED_LIB := target/release/libfastloess_jl.so
 endif
 
+# Node.js bindings
+NODE_PKG  := fastloess-node
+NODE_DIR  := bindings/nodejs
+
 # WebAssembly bindings
-WASM_PKG := fastloess-wasm
-WASM_DIR := bindings/wasm
-WASM_TEST_DIR := tests/wasm
+WASM_PKG  := fastloess-wasm
+WASM_DIR  := bindings/wasm
 
 # C++ bindings
-CPP_PKG := fastloess-cpp
-CPP_DIR := bindings/cpp
-CPP_CARGO_TARGET :=
-# Use the dedicated release-c profile (panic=abort) so no GCC unwind symbols
-# end up in the static archive or DLL, making the artifact compatible with
-# MSVC, Clang, and GCC consumers without any MinGW runtime dependency.
+CPP_PKG         := fastloess-cpp
+CPP_DIR         := bindings/cpp
 CPP_CARGO_PROFILE := --profile release-c
 CPP_LIBRARY_DIR := target/release-c
 
 ifeq ($(OS),Windows_NT)
-	# Detect whether MinGW GCC is the active C++ toolchain (e.g. rtools45, MSYS2).
-	# gcc -dumpmachine reports a mingw triple when MinGW is first in PATH.
-	# Only use the GNU Rust target when Cargo's expected GNU linker is also
-	# Otherwise keep the MSVC Rust target for native MSVC builds.
-	# The .cargo/config.toml supplies the full MinGW linker path so Cargo
-	# works even when x86_64-w64-mingw32-gcc is not on PATH.
 	_CPP_GCC_MACHINE := $(shell gcc -dumpmachine 2>/dev/null)
 	ifneq ($(findstring mingw,$(_CPP_GCC_MACHINE)),)
-		_CPP_WIN_TOOLCHAIN := mingw
-		CPP_CARGO_TARGET := --target x86_64-pc-windows-gnu
 		CPP_LIBRARY_DIR := target/x86_64-pc-windows-gnu/release-c
 	else
-		_CPP_WIN_TOOLCHAIN := msvc
-		CPP_CARGO_TARGET := --target x86_64-pc-windows-msvc
 		CPP_LIBRARY_DIR := target/x86_64-pc-windows-msvc/release-c
 	endif
 endif
-
-# Julia native library paths and symbol scanners
-ifeq ($(HOST_PLATFORM),windows)
-	JL_SHARED_LIB := target/release/fastloess_jl.dll
-	JL_EXPORT_SCAN := objdump -p $(JL_SHARED_LIB)
-else ifeq ($(HOST_PLATFORM),macos)
-	JL_SHARED_LIB := target/release/libfastloess_jl.dylib
-	JL_EXPORT_SCAN := nm -gU $(JL_SHARED_LIB)
-else
-	JL_SHARED_LIB := target/release/libfastloess_jl.so
-	JL_EXPORT_SCAN := nm -D $(JL_SHARED_LIB)
-endif
-
-JL_SHARED_LIB_ABS := $(abspath $(JL_SHARED_LIB))
-
-ifeq ($(HOST_PLATFORM),windows)
-	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/fastloess_cpp.dll
-	CPP_EXPORT_SCAN := objdump -p $(CPP_SHARED_LIB)
-	ifeq ($(_CPP_WIN_TOOLCHAIN),mingw)
-		# MinGW: GNU import library (.dll.a)
-		CPP_TEST_LIB := $(CPP_LIBRARY_DIR)/libfastloess_cpp.dll.a
-		# Use MinGW Makefiles generator if mingw32-make is available (single-config,
-		# binary lands in the build dir).  Otherwise fall back to the default CMake
-		# generator on this host (typically Visual Studio, multi-config, binary in
-		# Release/ sub-directory).
-		_HAVE_MINGW32_MAKE := $(shell mingw32-make --version 2>/dev/null | head -c 3)
-		ifneq ($(_HAVE_MINGW32_MAKE),)
-			CPP_CMAKE_GENERATOR := -G "MinGW Makefiles"
-			CPP_TEST_BUILD := cmake --build .
-			CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./test_fastloess_suite.exe
-		else
-			CPP_CMAKE_GENERATOR :=
-			CPP_TEST_BUILD := cmake --build . --config Release
-			CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./Release/test_fastloess_suite.exe
-		endif
-	else
-		# MSVC: import library (.lib); multi-config generator puts binary in Release/
-		CPP_TEST_LIB := $(CPP_LIBRARY_DIR)/fastloess_cpp.lib
-		CPP_CMAKE_GENERATOR :=
-		CPP_TEST_BUILD := cmake --build . --config Release
-		CPP_TEST_RUN := PATH="../../../$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH" ./Release/test_fastloess_suite.exe
-	endif
-else ifeq ($(HOST_PLATFORM),macos)
-	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/libfastloess_cpp.dylib
-	CPP_TEST_LIB := $(CPP_SHARED_LIB)
-	CPP_EXPORT_SCAN := nm -gU $(CPP_SHARED_LIB)
-	CPP_CMAKE_GENERATOR :=
-	CPP_TEST_BUILD := make
-	CPP_TEST_RUN := ./test_fastloess_suite
-else
-	CPP_SHARED_LIB := $(CPP_LIBRARY_DIR)/libfastloess_cpp.so
-	CPP_TEST_LIB := $(CPP_SHARED_LIB)
-	CPP_EXPORT_SCAN := nm -D $(CPP_SHARED_LIB)
-	CPP_CMAKE_GENERATOR :=
-	CPP_TEST_BUILD := make
-	CPP_TEST_RUN := ./test_fastloess_suite
-endif
-
-CPP_LIBRARY_DIR_ABS := $(abspath $(CPP_LIBRARY_DIR))
-CPP_TEST_LIB_ABS := $(abspath $(CPP_TEST_LIB))
 
 ifeq ($(HOST_PLATFORM),windows)
 	CPP_EXAMPLE_RUN_ENV := PATH="$(CPP_LIBRARY_DIR)$(PATH_SEPARATOR)$$PATH"
@@ -202,668 +89,93 @@ EXAMPLES_DIR := examples
 # Documentation
 DOCS_VENV := docs-venv
 
-# Temporary directory for build checks
-TEMP ?= /tmp
-ifeq ($(OS),Windows_NT)
-    TEMP := /tmp
-endif
-
 # ==============================================================================
 # loess-rs crate
 # ==============================================================================
 loess-rs:
-	@"$(MAKE)" _loess_impl
+	@"$(MAKE)" -f crates/loess-rs/Makefile FEATURE_SET="$(FEATURE_SET)"
 
-_loess_impl:
-	@echo "Running $(LOESS_PKG) crate checks..."
-	@echo "=============================================================================="
-	@echo "1. Formatting..."
-	@echo "=============================================================================="
-	@cargo fmt -p $(LOESS_PKG) -- --check
-	@echo "Formatting complete!"
-	@echo "=============================================================================="
-	@echo "2. Linting & Building..."
-	@echo "=============================================================================="
-	@if [ "$(FEATURE_SET)" = "all" ]; then \
-		echo "Checking $(LOESS_PKG) (std)..."; \
-		cargo clippy -q -p $(LOESS_PKG) --all-targets -- -D warnings || exit 1; \
-		cargo build -q -p $(LOESS_PKG) || exit 1; \
-		RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(LOESS_PKG) --no-deps || exit 1; \
-		echo "Checking $(LOESS_PKG) (no-default-features)..."; \
-		cargo clippy -q -p $(LOESS_PKG) --all-targets --no-default-features -- -D warnings || exit 1; \
-		cargo build -q -p $(LOESS_PKG) --no-default-features || exit 1; \
-		RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(LOESS_PKG) --no-deps --no-default-features || exit 1; \
-		for feature in $(LOESS_FEATURES); do \
-			echo "Checking $(LOESS_PKG) ($$feature)..."; \
-			cargo clippy -q -p $(LOESS_PKG) --all-targets --features $$feature -- -D warnings || exit 1; \
-			cargo build -q -p $(LOESS_PKG) --features $$feature || exit 1; \
-			RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(LOESS_PKG) --no-deps --features $$feature || exit 1; \
-		done; \
-	else \
-		cargo clippy -q -p $(LOESS_PKG) --all-targets --features $(FEATURE_SET) -- -D warnings || exit 1; \
-		cargo build -q -p $(LOESS_PKG) --features $(FEATURE_SET) || exit 1; \
-		RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(LOESS_PKG) --no-deps --features $(FEATURE_SET) || exit 1; \
-	fi
-	@cargo clippy -p examples --examples --all-features -- -D warnings || exit 1
-	@echo "=============================================================================="
-	@echo "3. Testing..."
-	@echo "=============================================================================="
-	@echo "Testing (no-default-features)..."
-	@cargo test -q -p loess-project-tests --test $(LOESS_PKG) --no-default-features
-	@for feature in $(LOESS_FEATURES); do \
-		echo "Testing ($$feature)..."; \
-		cargo test -q -p loess-project-tests --test $(LOESS_PKG) --features $$feature || exit 1; \
-	done
-	@echo "=============================================================================="
-	@echo "All $(LOESS_PKG) crate checks completed successfully!"
+loess-rs-coverage:
+	@"$(MAKE)" -f crates/loess-rs/Makefile coverage
+
+loess-rs-clean:
+	@"$(MAKE)" -f crates/loess-rs/Makefile clean
 
 ensure-llvm-cov:
 	@cargo llvm-cov --version > /dev/null 2>&1 || (echo "Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov && cargo llvm-cov install-llvm-tools)
-
-loess-rs-coverage: ensure-llvm-cov
-	@echo "Running $(LOESS_PKG) coverage..."
-	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --workspace --test $(LOESS_PKG) --all-features \
-		--ignore-filename-regex 'crates[/\\]fastLoess[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
-
-loess-rs-clean:
-	@echo "Cleaning $(LOESS_PKG) crate..."
-	@cargo clean -p $(LOESS_PKG)
-	@rm -rf $(LOESS_DIR)/coverage_html
-	@rm -rf $(LOESS_DIR)/Cargo.lock
-	@rm -rf $(LOESS_DIR)/benchmarks
-	@rm -rf $(LOESS_DIR)/validation
-	@echo "$(LOESS_PKG) clean complete!"
 
 # ==============================================================================
 # fastLoess crate
 # ==============================================================================
 fastLoess:
-	@"$(MAKE)" _fastLoess_impl
+	@"$(MAKE)" -f crates/fastLoess/Makefile FEATURE_SET="$(FEATURE_SET)"
 
-_fastLoess_impl:
-	@echo "Running $(FASTLOESS_PKG) crate checks..."
-	@echo "=============================================================================="
-	@echo "1. Formatting..."
-	@echo "=============================================================================="
-	@cargo fmt -p $(FASTLOESS_PKG) -- --check
-	@echo "Formatting complete!"
-	@echo "=============================================================================="
-	@echo "2. Linting & Building..."
-	@echo "=============================================================================="
-	@for feature in $(FASTLOESS_FEATURES) no-default-features; do \
-		if [ "$$feature" = "no-default-features" ]; then \
-			echo "Checking $(FASTLOESS_PKG) (no-default-features)..."; \
-			cargo clippy -q -p $(FASTLOESS_PKG) --all-targets --no-default-features -- -D warnings || exit 1; \
-			cargo build -q -p $(FASTLOESS_PKG) --no-default-features || exit 1; \
-			RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(FASTLOESS_PKG) --no-deps --no-default-features || exit 1; \
-		else \
-			echo "Checking $(FASTLOESS_PKG) ($$feature)..."; \
-			cargo clippy -q -p $(FASTLOESS_PKG) --all-targets --features $$feature -- -D warnings || exit 1; \
-			cargo build -q -p $(FASTLOESS_PKG) --features $$feature || exit 1; \
-			RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(FASTLOESS_PKG) --no-deps --features $$feature || exit 1; \
-		fi; \
-	done
-	@echo "=============================================================================="
-	@echo "3. Testing..."
-	@echo "=============================================================================="
-	@echo "Testing (no-default-features)..."
-	@cargo test -q -p loess-project-tests --test $(FASTLOESS_PKG) --no-default-features
-	@for feature in $(FASTLOESS_FEATURES); do \
-		echo "Testing ($$feature)..."; \
-		cargo test -q -p loess-project-tests --test $(FASTLOESS_PKG) --features $$feature || exit 1; \
-	done
-	@echo "=============================================================================="
-	@echo "All $(FASTLOESS_PKG) crate checks completed successfully!"
-
-fastLoess-coverage: ensure-llvm-cov
-	@echo "Running $(FASTLOESS_PKG) coverage..."
-	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --workspace --test $(FASTLOESS_PKG) --all-features \
-		--ignore-filename-regex 'crates[/\\]loess-rs[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
+fastLoess-coverage:
+	@"$(MAKE)" -f crates/fastLoess/Makefile coverage
 
 fastLoess-clean:
-	@echo "Cleaning $(FASTLOESS_PKG) crate..."
-	@cargo clean -p $(FASTLOESS_PKG)
-	@rm -rf $(FASTLOESS_DIR)/coverage_html
-	@rm -rf $(FASTLOESS_DIR)/benchmarks
-	@rm -rf $(FASTLOESS_DIR)/validation
-	@echo "$(FASTLOESS_PKG) clean complete!"
+	@"$(MAKE)" -f crates/fastLoess/Makefile clean
 
 # ==============================================================================
 # Python bindings
 # ==============================================================================
 python:
-	@"$(MAKE)" _python_impl
+	@"$(MAKE)" -f bindings/python/Makefile \
+		PYTHON="$(PYTHON)" PYO3_PYTHON="$(PYO3_PYTHON)"
 
-_python_impl:
-	@echo "Running $(PY_PKG) checks..."
-	@echo "=============================================================================="
-	@echo "0. Environment Setup..."
-	@echo "=============================================================================="
-	@if [ ! -d "$(PY_VENV)" ]; then $(PYTHON) -m venv $(PY_VENV); fi
-	@. $(PY_ACTIVATE) && python -c "import shutil, site; from pathlib import Path; [shutil.rmtree(path, ignore_errors=True) for base in site.getsitepackages() for path in Path(base).glob('~ip*')]"
-	@. $(PY_ACTIVATE) && python -m pip cache purge >/dev/null 2>&1 || true
-	@echo "Installing Python packages (pip, pytest, numpy, maturin, ruff)..."
-	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir --upgrade pip >/dev/null
-	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir pytest numpy maturin ruff matplotlib >/dev/null
-	@echo "=============================================================================="
-	@echo "1. Formatting..."
-	@echo "=============================================================================="
-	@cargo fmt -p $(PY_PKG) -- --check
-	@. $(PY_ACTIVATE) && ruff format $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
-	@echo "=============================================================================="
-	@echo "2. Linting..."
-	@echo "=============================================================================="
-	@VIRTUAL_ENV= PYO3_PYTHON=$(PYO3_PYTHON) cargo clippy -q -p $(PY_PKG) --all-targets -- -D warnings
-	@. $(PY_ACTIVATE) && ruff check $(PY_DIR)/python/ $(PY_TEST_DIR)/ examples/python/
-	@echo "=============================================================================="
-	@echo "3. Building..."
-	@echo "=============================================================================="
-	@. $(PY_ACTIVATE) && cd $(PY_DIR) && maturin develop -q
-	@echo "=============================================================================="
-	@echo "4. Testing..."
-	@echo "=============================================================================="
-	@VIRTUAL_ENV= PYO3_PYTHON=$(PYO3_PYTHON) cargo test -q -p $(PY_PKG)
-	@. $(PY_ACTIVATE) && python -m pytest $(PY_TEST_DIR) -q
-	@echo "$(PY_PKG) checks completed successfully!"
-
-python-coverage: ensure-llvm-cov
-	@echo "Running $(PY_PKG) coverage..."
-	@cd $(PY_DIR) && LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(PY_PKG) --all-targets
+python-coverage:
+	@"$(MAKE)" -f bindings/python/Makefile coverage PYTHON="$(PYTHON)" PYO3_PYTHON="$(PYO3_PYTHON)"
 
 python-clean:
-	@echo "Cleaning $(PY_PKG)..."
-	@cargo clean -p $(PY_PKG)
-	@rm -rf $(PY_DIR)/coverage_html
-	@rm -rf $(PY_DIR)/benchmarks
-	@rm -rf $(PY_DIR)/validation
-	@rm -rf $(PY_DIR)/.benchmarks
-	@rm -rf $(PY_DIR)/target/wheels
-	@rm -rf $(PY_DIR)/.pytest_cache
-	@rm -rf $(PY_DIR)/__pycache__
-	@rm -rf examples/python/plots/
-	@rm -rf $(PY_DIR)/python/fastloess/__pycache__
-	@rm -rf $(PY_DIR)/python/fastloess/*so
-	@rm -rf $(PY_TEST_DIR)/__pycache__
-	@rm -rf $(PY_DIR)/*.egg-info
-	@rm -rf $(PY_DIR)/.ruff_cache
-	@rm -rf $(PY_DIR)/*.so
-	@rm -rf $(PY_DIR)/Cargo.lock
-	@echo "$(PY_PKG) clean complete!"
+	@"$(MAKE)" -f bindings/python/Makefile clean
 
 # ==============================================================================
 # R bindings
 # ==============================================================================
 r:
-	@"$(MAKE)" _r_impl
-
-_r_impl:
-	@echo "Running $(R_PKG_NAME) checks..."
-	@# Sync version from Cargo.toml to DESCRIPTION
-	@VERSION=$$(grep "^version =" $(R_DIR)/src/Cargo.toml | head -n1 | sed 's/version = "\(.*\)"/\1/'); \
-	sed -i.bak "s/^Version: .*/Version: $$VERSION/" $(R_DIR)/DESCRIPTION; \
-	rm -f $(R_DIR)/DESCRIPTION.bak; \
-	echo "Synced DESCRIPTION version to $$VERSION"
-	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then \
-		mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; \
-	elif [ ! -f $(R_DIR)/src/Cargo.toml ] && [ -f $(R_DIR)/src/Cargo.toml.test ]; then \
-		cp $(R_DIR)/src/Cargo.toml.test $(R_DIR)/src/Cargo.toml; \
-	fi
-	@echo "=============================================================================="
-	@echo "1. Patching Cargo.toml for isolated build..."
-	@echo "=============================================================================="
-	@cp $(R_DIR)/src/Cargo.toml $(R_DIR)/src/Cargo.toml.orig
-	@# Extract values from root Cargo.toml [workspace.package] section and update R binding's Cargo.toml
-	@# Metadata sync disabled by user request
-	@# (Only cleaning up workspace/patch/vendor directives below)
-	@sed -i.bak '/^\[workspace\]/d' $(R_DIR)/src/Cargo.toml; \
-	sed -i.bak '/^\[patch\.crates-io\]/d' $(R_DIR)/src/Cargo.toml; \
-	sed -i.bak '/^loess-rs = { path = "vendor\/loess-rs" }/d' $(R_DIR)/src/Cargo.toml; \
-	rm -f $(R_DIR)/src/Cargo.toml.bak; \
-	rm -rf $(R_DIR)/*.Rcheck $(R_DIR)/*.BiocCheck $(R_DIR)/src/target $(R_DIR)/target $(R_DIR)/src/vendor; \
-	echo "" >> $(R_DIR)/src/Cargo.toml
-	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
-	@echo "Patched $(R_DIR)/src/Cargo.toml"
-	@echo "=============================================================================="
-	@echo "2. Installing R development packages..."
-	@echo "=============================================================================="
-	@echo "Installing R required packages (BiocManager, styler, testthat, rmarkdown, knitr, lintr, roxygen2, pkgdown, remotes)..."
-	@echo "This may take a while depending on your internet connection and system performance."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths())); options(repos = c(CRAN = 'https://cloud.r-project.org'), warn = 1); required_pkgs <- c('BiocManager', 'styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes'); missing <- required_pkgs[!vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing) > 0L) { tryCatch({ install.packages(missing, lib = lib, type = ifelse(Sys.info()[['sysname']] == 'Darwin', 'both', 'source'), INSTALL_opts = '--no-test-load', quiet = TRUE, dependencies = NA, Ncpus = parallel::detectCores()); still_missing <- missing[!vapply(missing, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(still_missing) > 0L) stop('Required R packages not available: ', paste(still_missing, collapse = ', '), call. = FALSE) }, error = function(err) stop('Failed to install required packages: ', conditionMessage(err), call. = FALSE)) }; optional_pkgs <- c('covr', 'prettycode', 'toml', 'V8', 'visNetwork'); missing_opt <- optional_pkgs[!vapply(optional_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_opt) > 0L) { tryCatch(install.packages(missing_opt, lib = lib, quiet = TRUE, dependencies = NA, Ncpus = parallel::detectCores()), error = function(err) invisible(NULL)) } })" >/dev/null
-	@echo "Installing R srr package..."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('srr', quietly = TRUE, lib.loc = lib)) { options(repos = c(ropenscireviewtools = 'https://ropensci-review-tools.r-universe.dev', CRAN = 'https://cloud.r-project.org')); tryCatch(suppressWarnings(install.packages('srr', lib = lib, quiet = TRUE)), error = function(err) invisible(NULL)) } })" >/dev/null
-	@echo "Installing R Bioconductor packages (BiocStyle, BiocCheck)..."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('BiocManager', quietly = TRUE, lib.loc = lib)) stop('Required R package not available: BiocManager', call. = FALSE); bioc_pkgs <- c('BiocStyle'); missing_bioc <- bioc_pkgs[!vapply(bioc_pkgs, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_bioc) > 0L) { tryCatch({ BiocManager::install(missing_bioc, lib = lib, update = FALSE, ask = FALSE, force = TRUE, quiet = TRUE); still_missing <- missing_bioc[!vapply(missing_bioc, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(still_missing) > 0L) stop('Required Bioconductor packages not available: ', paste(still_missing, collapse = ', '), call. = FALSE) }, error = function(err) stop('Failed to install Bioconductor packages: ', conditionMessage(err), call. = FALSE)) }; optional_bioc <- c('BiocCheck'); missing_opt_bioc <- optional_bioc[!vapply(optional_bioc, requireNamespace, logical(1), quietly = TRUE, lib.loc = lib)]; if (length(missing_opt_bioc) > 0L) { tryCatch(suppressWarnings(BiocManager::install(missing_opt_bioc, lib = lib, update = FALSE, ask = FALSE, force = TRUE, quiet = TRUE)), error = function(err) invisible(NULL)) } })" >/dev/null
-	@echo "Installing R ropensci packages (pkgcheck, pkgstats)..."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); options(repos = c('https://ropensci.r-universe.dev', 'https://cloud.r-project.org')); install_optional <- function(pkg) { if (requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) return(invisible(TRUE)); tryCatch(suppressWarnings(install.packages(pkg, lib = lib, quiet = TRUE)), error = function(err) invisible(NULL)); invisible(TRUE) }; invisible(vapply(c('pkgcheck', 'pkgstats'), install_optional, logical(1))) })" >/dev/null
-	@echo "R development packages installed!"
-	@echo "=============================================================================="
-	@echo "3. Vendoring..."
-	@echo "=============================================================================="
-	@echo "Updating and re-vendoring crates.io dependencies..."
-	@# Step 1: Prepare vendor directory with local crates
-	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/src/vendor.tar.xz
-	@mkdir -p $(R_DIR)/src/vendor
-	@cp -rL crates/fastLoess $(R_DIR)/src/vendor/
-	@cp -rL crates/loess-rs $(R_DIR)/src/vendor/
-	@rm -rf $(R_DIR)/src/vendor/fastLoess/target $(R_DIR)/src/vendor/loess-rs/target
-	@rm -f $(R_DIR)/src/vendor/fastLoess/Cargo.lock $(R_DIR)/src/vendor/loess-rs/Cargo.lock
-	@rm -f $(R_DIR)/src/vendor/fastLoess/README.md $(R_DIR)/src/vendor/fastLoess/CHANGELOG.md
-	@rm -f $(R_DIR)/src/vendor/loess-rs/README.md $(R_DIR)/src/vendor/loess-rs/CHANGELOG.md
-	@# Step 3: Remove version from the loess-rs path dep in fastLoess
-	@sed -i.bak \
-		-e 's|loess-rs = { path = "\.\./loess-rs", version = "[^"]*", |loess-rs = { path = "../loess-rs", |' \
-		$(R_DIR)/src/vendor/fastLoess/Cargo.toml
-	@rm -f $(R_DIR)/src/vendor/fastLoess/Cargo.toml.bak
-	@# Step 4: Create dummy checksum files for local crates
-	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/loess-rs/.cargo-checksum.json
-	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLoess/.cargo-checksum.json
-	@# Step 5: Add workspace isolation so cargo vendor resolves the local patch
-	@printf '\n\n[workspace]\n\n[patch.crates-io]\nloess-rs = { path = "vendor/loess-rs" }\n' >> $(R_DIR)/src/Cargo.toml
-	@# Step 6: Vendor crates.io dependencies
-	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
-	@# Step 7: Strip test/bench/example/doc dirs to reduce archive size
-	@find $(R_DIR)/src/vendor -mindepth 2 -maxdepth 2 -type d \
-		\( -name tests -o -name benches -o -name examples \
-		   -o -name doc -o -name docs -o -name .github -o -name .config \) \
-		-exec rm -rf {} \; 2>/dev/null || true
-	@# Reset checksums — cargo accepts {"files":{}} for vendored crates
-	@find $(R_DIR)/src/vendor -name '.cargo-checksum.json' \
-		-exec sh -c 'echo '"'"'{"files":{},"package":null}'"'"' > "$$1"' _ {} \;
-	@echo "Creating vendor.tar.xz archive (including Cargo.lock)..."
-	@(cd $(R_DIR)/src && (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner --xz --create --file=vendor.tar.xz vendor Cargo.lock 2>/dev/null || tar --xz --create --file=vendor.tar.xz vendor Cargo.lock))
-	@rm -rf $(R_DIR)/src/vendor
-	@echo "Vendor update complete. Archive: $(R_DIR)/src/vendor.tar.xz"
-	@if [ -f $(R_DIR)/src/vendor.tar.xz ] && [ ! -d $(R_DIR)/src/vendor ]; then \
-		echo "Extending vendor.tar.xz..."; \
-		(cd $(R_DIR)/src && tar -xf vendor.tar.xz) && \
-		rm -f $(R_DIR)/src/vendor/*/CITATION.cff && \
-		rm -f $(R_DIR)/src/vendor/*/CITATION; \
-	fi
-	@echo "=============================================================================="
-	@echo "4. Building..."
-	@echo "=============================================================================="
-	@(cd $(R_DIR)/src && $(R_CROSS_ENV) cargo build -q --release $(R_CARGO_TARGET) || (mv Cargo.toml.orig Cargo.toml && exit 1))
-	@rm -rf $(R_DIR)/src/.cargo
-	@echo "=============================================================================="
-	@echo "4a. Formatting..."
-	@echo "=============================================================================="
-	@cd $(R_DIR)/src && cargo fmt -q
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript dev/style_pkg.R $(R_DIR) || true
-	@cd $(R_DIR)/src && cargo fmt -- --check || (echo "Run 'cargo fmt' to fix"; exit 1)
-	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo clippy -q $(R_CARGO_TARGET) -- -D warnings
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('lintr', quietly = TRUE, lib.loc = lib)) stop('Required R package not available: lintr', call. = FALSE); my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL); lints <- c(lintr::lint_dir('$(R_DIR)/R', linters = my_linters), lintr::lint_dir('tests/r/testthat', linters = my_linters), lintr::lint_dir('examples/r', linters = my_linters)); print(lints); if (length(lints) > 0L) quit(status = 1)"
-	@echo "=============================================================================="
-	@echo "4b. Documentation..."
-	@echo "=============================================================================="
-	@rm -rf $(R_DIR)/*.Rcheck
-	@cd $(R_DIR)/src && RUSTDOCFLAGS="-D warnings" $(R_CROSS_ENV) cargo doc -q --no-deps $(R_CARGO_TARGET)
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('roxygen2', 'srr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) suppressWarnings(try(install.packages(pkg, lib = lib, quiet = TRUE), silent = TRUE)) }; if (!requireNamespace('roxygen2', quietly = TRUE, lib.loc = lib)) stop('Required R package not available for roxygen regeneration: roxygen2', call. = FALSE); has_srr <- requireNamespace('srr', quietly = TRUE, lib.loc = lib); roclets <- if (has_srr) c('namespace', 'rd', 'srr::srr_stats_roclet') else c('namespace', 'rd'); roxygen2::roxygenise(package.dir = '.', roclets = roclets, load_code = roxygen2::load_pkgload)"
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript dev/fix_rd_style.R
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (!requireNamespace('rmarkdown', quietly = TRUE, lib.loc = Sys.getenv('R_LIBS_USER')) || !rmarkdown::pandoc_available()) { message('\nERROR: Pandoc is required to build R Markdown vignettes but is not available.\nPlease install Pandoc (https://pandoc.org/installing.html) and ensure it is in your PATH.\n'); quit(status = 1) }"
-	@echo "Pre-installing package to R_LIBS_USER so pkgdown subprocess finds the current version..."
-	@mkdir -p $(R_LIB_DIR)
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD INSTALL -l $(CURDIR)/$(R_LIB_DIR) . >/dev/null 2>&1
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); for (pkg in c('pkgdown', 'rmarkdown', 'knitr')) { if (!requireNamespace(pkg, quietly = TRUE, lib.loc = lib)) install.packages(pkg, lib = lib, quiet = TRUE) }; if (!requireNamespace('pkgdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('rmarkdown', quietly = TRUE, lib.loc = lib) || !requireNamespace('knitr', quietly = TRUE, lib.loc = lib)) stop('Required R packages not available for pkgdown site build', call. = FALSE); pkgdown::build_site(quiet = TRUE, install = FALSE)"
-	@rm -f $(R_DIR)/.gitignore
-	@echo "=============================================================================="
-	@echo "4c. Building..."
-	@echo "=============================================================================="
-	@cd $(R_DIR) && ../../dev/prepare_cran.sh
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD build .
-	@echo "=============================================================================="
-	@echo "5. Installing..."
-	@echo "=============================================================================="
-	@rm -rf $(R_DIR)/00LOCK-$(R_PKG_NAME)
-	@mkdir -p $(R_LIB_DIR)
-	@echo "Installing R runtime dependencies (BiocManager, BiocGenerics, testthat)..."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "suppressMessages({ lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); if (!requireNamespace('BiocManager', quietly = TRUE, lib.loc = lib)) install.packages('BiocManager', lib = lib, quiet = TRUE); if (!requireNamespace('BiocGenerics', quietly = TRUE, lib.loc = lib)) BiocManager::install('BiocGenerics', lib = lib, ask = FALSE, update = FALSE, quiet = TRUE); if (!requireNamespace('testthat', quietly = TRUE, lib.loc = lib)) install.packages('testthat', lib = lib, quiet = TRUE) })" >/dev/null
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD INSTALL -l .r-lib $(R_PKG_TARBALL)
-	@echo "=============================================================================="
-	@echo "8. Testing..."
-	@echo "=============================================================================="
-	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
-	@if [ -n "$(R_CARGO_TARGET)" ]; then \
-	    GCC_LIBDIR="c:/rtools45/x86_64-w64-mingw32.static.posix/lib/gcc/x86_64-w64-mingw32.static.posix/14.3.0"; \
-	    test -f "$$GCC_LIBDIR/libgcc_eh.a" || x86_64-w64-mingw32.static.posix-ar rcs "$$GCC_LIBDIR/libgcc_eh.a"; \
-	fi
-	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo test -q --no-run $(R_CARGO_TARGET)
-	@rm -rf $(R_DIR)/src/.cargo
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('tests/r/testthat', package = 'rfastloess')"
-	@echo "=============================================================================="
-	@echo "9. Submission checks..."
-	@echo "=============================================================================="
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R_MAKEVARS_USER=$(CURDIR)/dev/Makevars.check R CMD check --as-cran --no-manual --no-check-urls $(R_PKG_TARBALL) || true
-	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "if (requireNamespace('BiocCheck', quietly=TRUE, lib.loc = Sys.getenv('R_LIBS_USER'))) BiocCheck::BiocCheck('$(R_PKG_TARBALL)', new_package=FALSE)" || true
-	@echo "Package size (Limit: 5MB):"
-	@ls -lh $(R_DIR)/$(R_PKG_TARBALL) || true
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "lib <- Sys.getenv('R_LIBS_USER'); if (!requireNamespace('pkgstats', quietly = TRUE, lib.loc = lib) || !requireNamespace('pkgcheck', quietly = TRUE, lib.loc = lib)) { message('Skipping pkgcheck because pkgstats/pkgcheck are not available in R_LIBS_USER'); quit(status = 0) }; library(pkgstats, lib.loc = lib); library(pkgcheck, lib.loc = lib); token <- Sys.getenv('GITHUB_TOKEN', ''); if (nzchar(token) && !nzchar(Sys.getenv('GITHUB_PAT', ''))) Sys.setenv(GITHUB_PAT = token); tryCatch(pkgcheck(use_cache = FALSE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error', msg, ignore.case = TRUE) || grepl('rate limit exceeded', msg, ignore.case = TRUE) || grepl('timeout', msg, ignore.case = TRUE) || grepl('could not resolve host', msg, ignore.case = TRUE)) { message('Skipping pkgcheck due to external GitHub/network failure: ', msg); return(invisible(NULL)); }; stop(err) })"
-	@if [ -f $(R_DIR)/src/Cargo.toml.orig ]; then mv $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.toml; fi
-
-	@echo "All $(R_PKG_NAME) checks completed successfully!"
+	@"$(MAKE)" -f bindings/r/Makefile
 
 r-coverage:
-	@echo "Calculating $(R_PKG_NAME) coverage..."
-	@cd $(R_DIR) && NOT_CRAN=true Rscript -e "\
-	  if (!requireNamespace('covr', quietly = TRUE)) { message('covr missing'); quit(status=0) }; \
-	  cov <- covr::package_coverage(); \
-	  covr::zero_coverage(cov); \
-	  print(cov)"
+	@"$(MAKE)" -f bindings/r/Makefile coverage
 
 r-clean:
-	@echo "Cleaning $(R_PKG_NAME)..."
-	@if [ -d $(R_DIR)/src/target ]; then \
-		rm -rf $(R_DIR)/src/target 2>/dev/null || \
-		(command -v docker >/dev/null && docker run --rm -v "$(PWD)/$(R_DIR)":/pkg ghcr.io/r-universe-org/build-wasm:latest rm -rf /pkg/src/target) || \
-		echo "Warning: Failed to clean src/target"; \
-	fi
-	@(cd $(R_DIR)/src && cargo clean 2>/dev/null || true)
-	@rm -rf $(R_DIR)/src/vendor $(R_DIR)/target $(R_LIB_DIR)
-	@rm -rf $(R_DIR)/$(R_PKG_NAME).Rcheck $(R_DIR)/..Rcheck $(R_DIR)/$(R_PKG_NAME).BiocCheck
-	@rm -f $(R_DIR)/$(R_PKG_NAME)_*.tar.gz
-	@rm -rf $(R_DIR)/src/*.o $(R_DIR)/src/*.so $(R_DIR)/src/*.dll $(R_DIR)/src/Cargo.toml.orig $(R_DIR)/src/Cargo.lock $(R_DIR)/Cargo.lock
-	@rm -rf $(R_DIR)/doc $(R_DIR)/Meta $(R_DIR)/vignettes/*.html $(R_DIR)/README.html
-	@$(PYTHON) -c "from pathlib import Path; [path.unlink() for path in Path(r'$(R_DIR)').rglob('*.Rout')]"
-	@Rscript -e "try(remove.packages('$(R_PKG_NAME)'), silent = TRUE)" || true
-	@rm -rf $(R_DIR)/src/Makevars $(R_DIR)/rfastloess*.tgz
-	@rm -rf $(R_DIR)/benchmarks $(R_DIR)/validation $(R_DIR)/docs
-	@echo "$(R_PKG_NAME) clean complete!"
+	@"$(MAKE)" -f bindings/r/Makefile clean PYTHON="$(PYTHON)"
 
 # ==============================================================================
 # Julia bindings
 # ==============================================================================
 julia:
-	@"$(MAKE)" _julia_impl
-
-_julia_impl:
-	@echo "Running $(JL_PKG) checks..."
-	@# Backup and adjust Project.toml for local testing
-	@PROJECT_TOML="$(JL_DIR)/julia/Project.toml"; \
-	BACKUP="$$PROJECT_TOML.bak"; \
-	cp "$$PROJECT_TOML" "$$BACKUP"; \
-	trap 'if [ -f "$$BACKUP" ]; then mv "$$BACKUP" "$$PROJECT_TOML"; echo "=============================================================================="; echo "Restored $$PROJECT_TOML"; fi' EXIT; \
-	echo "=============================================================================="; \
-	echo "0. Local environment setup (relaxing JLL constraint)..."; \
-	echo "=============================================================================="; \
-	LATEST=$$(julia -e 'using Pkg; Pkg.activate(temp=true); try Pkg.add("fastloess_jll"); pkgs = Pkg.dependencies(); v = [p.version for (_,p) in pkgs if p.name == "fastloess_jll"]; isempty(v) ? print("1.0.0") : print(first(v)) catch; print("1.0.0") end' | cut -d'+' -f1); \
-	CURRENT=$$(grep "^version =" "$$PROJECT_TOML" | cut -d"\"" -f2); \
-	julia -e "using TOML; path = \"$$PROJECT_TOML\"; p = TOML.parsefile(path); if haskey(get(p, \"compat\", Dict()), \"fastloess_jll\"); p[\"compat\"][\"fastloess_jll\"] = \"$$LATEST, $$CURRENT\"; open(path, \"w\") do io; TOML.print(io, p); end; end"; \
-	echo "Modified $$PROJECT_TOML (fastloess_jll = \"$$LATEST, $$CURRENT\") using TOML parser."; \
-	"$(MAKE)" _julia_checks_internal
-
-_julia_checks_internal:
-	@echo "=============================================================================="
-	@echo "0. Commit hash update..."
-	@echo "=============================================================================="
-	@git fetch origin main 2>/dev/null || true
-	@COMMIT=$$(git rev-parse origin/main 2>/dev/null) && \
-		COMMIT="$$COMMIT" $(PYTHON) -c 'from pathlib import Path; import os, re; path = Path("dev/build_tarballs_julia.jl"); text = path.read_text(encoding="utf-8"); commit = os.environ["COMMIT"]; new_text, _ = re.subn(r"GitSource\\(\"[^\"]*\",\\s*\"[a-f0-9]+\"\\)", f"GitSource(\"https://github.com/thisisamirv/loess-project.git\", \"{commit}\")", text); path.write_text(new_text, encoding="utf-8")' && \
-		echo "Commit: $$COMMIT"
-	@echo "=============================================================================="
-	@echo "1. Formatting..."
-	@echo "=============================================================================="
-	@cd $(JL_DIR) && cargo fmt -- --check
-	@echo "Formatting complete!"
-	@echo "=============================================================================="
-	@echo "2. Linting..."
-	@echo "=============================================================================="
-	@cd $(JL_DIR) && cargo clippy -q --all-targets -- -D warnings
-	@echo "Linting Julia files..."
-	@julia dev/format_julia.jl || true
-	@julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.add("JuliaFormatter"); using JuliaFormatter; format(["bindings/julia/julia", "tests/julia", "examples/julia"], verbose=true, overwrite=false) ? exit(0) : exit(1)'
-	@echo "=============================================================================="
-	@echo "3. Building..."
-	@echo "=============================================================================="
-	@cd $(JL_DIR) && cargo build -q --release
-	@cd $(JL_DIR) && RUSTDOCFLAGS="-D warnings" cargo doc -q --no-deps
-	@echo "=============================================================================="
-	@echo "4. Testing Rust library..."
-	@echo "=============================================================================="
-	@cd $(JL_DIR) && cargo test -q
-	@echo "=============================================================================="
-	@echo "5. Verifying library exports..."
-	@echo "=============================================================================="
-	@$(JL_EXPORT_SCAN) 2>/dev/null | grep -q jl_loess_new || \
-		(echo "Error: jl_loess_new not exported"; exit 1)
-	@$(JL_EXPORT_SCAN) 2>/dev/null | grep -q jl_streaming_loess_new || \
-		(echo "Error: jl_streaming_loess_new not exported"; exit 1)
-	@$(JL_EXPORT_SCAN) 2>/dev/null | grep -q jl_online_loess_new || \
-		(echo "Error: jl_online_loess_new not exported"; exit 1)
-	@$(JL_EXPORT_SCAN) 2>/dev/null | grep -q jl_loess_free_result || \
-		(echo "Error: jl_loess_free_result not exported"; exit 1)
-	@echo "All exports verified!"
-	@echo "=============================================================================="
-	@echo "5b. ABI size check (limit: 5 MB)..."
-	@echo "=============================================================================="
-	@[ $$($(STAT_SIZE_CMD) $(JL_SHARED_LIB)) -le 5242880 ] || \
-		(echo "Error: $(JL_SHARED_LIB) exceeds 5 MB ABI size limit"; exit 1)
-	@echo "ABI size OK."
-	@echo "=============================================================================="
-	@echo "6. Testing Julia bindings..."
-	@echo "=============================================================================="
-	@export FASTLOESS_LIB=$(JL_SHARED_LIB_ABS) && \
-	julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.resolve(); Pkg.instantiate(); Pkg.precompile()' && \
-	julia --project=$(JL_DIR)/julia tests/julia/test_FastLOESS.jl
-	@echo "=============================================================================="
-	@echo "7. Aqua.jl package quality..."
-	@echo "=============================================================================="
-	@export FASTLOESS_LIB=$(JL_SHARED_LIB_ABS) && \
-	julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="$(JL_DIR)/julia"); \
-		Pkg.add("Aqua"); using Aqua, FastLOESS; \
-		Aqua.test_all(FastLOESS; ambiguities=false, stale_deps=(ignore=[:Aqua],))'
-	@echo "=============================================================================="
-	@echo "8. JET.jl type-inference check..."
-	@echo "=============================================================================="
-	@export FASTLOESS_LIB=$(JL_SHARED_LIB_ABS) && \
-	julia -e 'using Pkg; Pkg.activate(temp=true); Pkg.develop(path="$(JL_DIR)/julia"); \
-		Pkg.add("JET"); using JET, FastLOESS; \
-		report = JET.report_package(FastLOESS); \
-		show(stderr, MIME("text/plain"), report); println(stderr); \
-		if length(JET.get_reports(report)) > 0; @error "JET found type errors"; exit(1); end'
-	@echo "$(JL_PKG) checks completed successfully!"
-	@echo ""
-	@echo "To use in Julia:"
-	@echo "  julia> using Pkg"
-	@echo "  julia> Pkg.develop(path=\"$(JL_DIR)/julia\")"
-	@echo "  julia> using FastLOESS"
+	@"$(MAKE)" -f bindings/julia/Makefile PYTHON="$(PYTHON)"
 
 julia-clean:
-	@echo "Cleaning $(JL_PKG)..."
-	@cargo clean -p $(JL_PKG)
-	@rm -rf $(JL_DIR)/target
-	@rm -rf $(JL_DIR)/julia/Manifest.toml
-	@rm -rf $(JL_DIR)/Cargo.lock
-	@echo "$(JL_PKG) clean complete!"
+	@"$(MAKE)" -f bindings/julia/Makefile clean
 
 # ==============================================================================
 # Node.js bindings
 # ==============================================================================
 nodejs:
-	@"$(MAKE)" _nodejs_impl
-
-_nodejs_impl:
-	@echo "Running $(NODE_PKG) checks..."
-	@echo "=============================================================================="
-	@echo "1. Formatting..."
-	@echo "=============================================================================="
-	@cargo fmt -p $(NODE_PKG) -- --check
-	@echo "=============================================================================="
-	@echo "2. Linting & Building..."
-	@echo "=============================================================================="
-	@cargo clippy -q -p $(NODE_PKG) --all-targets -- -D warnings
-	@echo "Linting Node.js files..."
-	@cd $(NODE_DIR) && $(NPM) install
-	@cd $(NODE_DIR) && $(NPM) audit || true
-	@cd $(NODE_DIR) && $(NPX) -y depcheck --ignores="fastloess-*,oxlint"
-	@cd $(NODE_DIR) && ($(NPM) outdated | grep -v "fastloess-" || true)
-	@cd $(NODE_DIR) && $(NPM) ci --dry-run
-	@cd $(NODE_DIR) && $(NPX) -y -p typescript tsc index.d.ts --noEmit --allowJs
-	@$(NPX) -y oxlint $(NODE_DIR)/index.js tests/nodejs/test_fastloess.js examples/nodejs/*.js
-	@cd $(NODE_DIR) && $(NPM) run build
-	@echo "=============================================================================="
-	@echo "3. Testing..."
-	@echo "=============================================================================="
-	@cd $(NODE_DIR) && $(NPM) test
-	@echo "$(NODE_PKG) checks completed successfully!"
+	@"$(MAKE)" -f bindings/nodejs/Makefile
 
 nodejs-clean:
-	@echo "Cleaning $(NODE_PKG)..."
-	@cargo clean -p $(NODE_PKG)
-	@rm -rf $(NODE_DIR)/node_modules $(NODE_DIR)/fastloess.*.node
-	@echo "$(NODE_PKG) clean complete!"
+	@"$(MAKE)" -f bindings/nodejs/Makefile clean
 
 # ==============================================================================
 # WebAssembly bindings
 # ==============================================================================
 wasm:
-	@"$(MAKE)" _wasm_impl
-
-_wasm_impl:
-	@echo "Running $(WASM_PKG) checks..."
-	@echo "=============================================================================="
-	@echo "1. Formatting..."
-	@echo "=============================================================================="
-	@cargo fmt -p $(WASM_PKG) -- --check
-	@echo "=============================================================================="
-	@echo "2. Linting & Building..."
-	@echo "=============================================================================="
-	@cargo clippy -q -p $(WASM_PKG) --all-targets -- -D warnings
-	@echo "Linting WASM JS files..."
-	@cd $(WASM_DIR) && $(NPM) install -q
-	@cd $(WASM_DIR) && $(NPM) audit || true
-	@cd $(WASM_DIR) && $(NPX) -y depcheck --ignores="oxlint"
-	@cd $(WASM_DIR) && ($(NPM) outdated | grep -v "fastloess-" || true)
-	@cd $(WASM_DIR) && $(NPM) ci --dry-run
-	@$(NPX) -y oxlint $(WASM_DIR)/src/*.js tests/wasm/*.js
-	@if ! command -v wasm-pack >/dev/null 2>&1; then \
-		echo "wasm-pack not found. Installing..."; \
-		cargo install wasm-pack; \
-	fi
-	@cd $(WASM_DIR) && wasm-pack build --target nodejs --out-dir pkg
-	@echo "Checking WASM size (Limit: 2MB)..."
-	@[ $$($(STAT_SIZE_CMD) $(WASM_DIR)/pkg/fastloess_wasm_bg.wasm) -le 2097152 ] || (echo "Error: WASM size exceeded 2MB"; exit 1)
-	@echo "Building for Web (Examples)..."
-	@cd $(WASM_DIR) && wasm-pack build --target web --out-dir pkg-web
-	@echo "=============================================================================="
-	@echo "3. Testing..."
-	@echo "=============================================================================="
-	@cd $(WASM_DIR) && wasm-pack test --node
-	@echo "Running JS tests..."
-	@node --test tests/wasm/test_fastloess_wasm.js
-	@echo "=============================================================================="
-	@echo "$(WASM_PKG) checks completed successfully!"
+	@"$(MAKE)" -f bindings/wasm/Makefile
 
 wasm-clean:
-	@echo "Cleaning $(WASM_PKG)..."
-	@cargo clean -p $(WASM_PKG)
-	@rm -rf $(WASM_DIR)/pkg $(WASM_DIR)/pkg-web $(WASM_DIR)/node_modules
-	@echo "$(WASM_PKG) clean complete!"
+	@"$(MAKE)" -f bindings/wasm/Makefile clean
 
 # ==============================================================================
 # C++ bindings
 # ==============================================================================
 cpp:
-	@"$(MAKE)" _cpp_impl
-
-_cpp_impl:
-	@echo "Running $(CPP_PKG) checks..."
-	@echo "=============================================================================="
-	@echo "1. Formatting..."
-	@echo "=============================================================================="
-	@cargo fmt -p $(CPP_PKG) -- --check
-	@echo "=============================================================================="
-	@echo "2. Linting & Building..."
-	@echo "=============================================================================="
-	@cargo clippy -q -p $(CPP_PKG) --all-targets $(CPP_CARGO_TARGET) -- -D warnings
-	@echo "Linting C++ files..."
-	@if command -v clang-tidy >/dev/null 2>&1; then \
-		clang_tidy_log="$(TEMP)/clang-tidy-cpp.log"; \
-		clang-tidy --config-file=bindings/cpp/.clang-tidy bindings/cpp/include/fastloess.hpp tests/cpp/test_fastloess.cpp examples/cpp/*.cpp -- -I bindings/cpp/include -std=c++17 > "$$clang_tidy_log" 2>&1; \
-		clang_tidy_status=$$?; \
-		grep -Ev '^(\[[0-9]+/[0-9]+\] Processing file |[0-9]+ warnings generated\.|Suppressed [0-9]+ warnings \([0-9]+ in non-user code\)\.|Use -header-filter=\.\* or leave it as default to display errors from all non-system headers\.|Use -system-headers to display errors from system headers as well\.)' "$$clang_tidy_log" || true; \
-		rm -f "$$clang_tidy_log"; \
-		if [ $$clang_tidy_status -ne 0 ]; then \
-			echo "C++ linting failed"; \
-			exit $$clang_tidy_status; \
-		fi; \
-	else \
-		echo "clang-tidy not found. Skipping C++ lint pass."; \
-	fi
-	@echo "Running cppcheck..."
-	@if command -v cppcheck >/dev/null 2>&1; then \
-		cppcheck_log="$(TEMP)/cppcheck-cpp.log"; \
-		if cppcheck --error-exitcode=1 --enable=warning,performance,portability \
-			--suppress=missingInclude --suppress=missingIncludeSystem \
-			-I $(CPP_DIR)/include \
-				$(CPP_DIR)/include/fastloess.hpp tests/cpp/test_fastloess.cpp examples/cpp/ > "$$cppcheck_log" 2>&1; then \
-			cat "$$cppcheck_log"; \
-		else \
-			cppcheck_status=$$?; \
-			cat "$$cppcheck_log"; \
-			if grep -q "Failed to load library configuration file 'std.cfg'" "$$cppcheck_log"; then \
-				echo "cppcheck installation is broken. Skipping static analysis pass."; \
-			else \
-				rm -f "$$cppcheck_log"; \
-				exit $$cppcheck_status; \
-			fi; \
-		fi; \
-		rm -f "$$cppcheck_log"; \
-	else \
-		echo "cppcheck not found. Skipping static analysis pass."; \
-	fi
-	@if [ -n "$(CPP_CARGO_TARGET)" ]; then \
-		_rust_target=$$(echo "$(CPP_CARGO_TARGET)" | sed 's/--target //'); \
-		rustup target add "$$_rust_target" 2>/dev/null || true; \
-	fi
-	@cargo build -q -p $(CPP_PKG) $(CPP_CARGO_PROFILE) $(CPP_CARGO_TARGET)
-	@echo "C header generated at $(CPP_DIR)/include/fastloess.h"
-	@echo "=============================================================================="
-	@echo "2b. cbindgen idempotency check..."
-	@echo "=============================================================================="
-	@if ! command -v cbindgen >/dev/null 2>&1; then \
-		echo "cbindgen not found. Installing latest version..."; \
-		cargo install cbindgen --force; \
-	fi
-	@cbindgen --config $(CPP_DIR)/cbindgen.toml --crate $(CPP_PKG) --output $(TEMP)/fastloess_new.h 2>/dev/null && \
-		diff -q $(CPP_DIR)/include/fastloess.h $(TEMP)/fastloess_new.h > /dev/null || \
-		(echo "Error: fastloess.h is stale — run 'cargo build -p $(CPP_PKG) $(CPP_CARGO_PROFILE) $(CPP_CARGO_TARGET)' to regenerate"; exit 1)
-	@echo "cbindgen header is up-to-date."
-	@echo "=============================================================================="
-	@echo "2c. Symbol export verification..."
-	@echo "=============================================================================="
-	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q cpp_loess_new || \
-		(echo "Error: cpp_loess_new not exported"; exit 1)
-	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q cpp_streaming_new || \
-		(echo "Error: cpp_streaming_new not exported"; exit 1)
-	@$(CPP_EXPORT_SCAN) 2>/dev/null | grep -q cpp_online_new || \
-		(echo "Error: cpp_online_new not exported"; exit 1)
-	@echo "All C++ exports verified."
-	@echo "=============================================================================="
-	@echo "3. Testing..."
-	@echo "=============================================================================="
-	@rm -rf tests/cpp/build
-	@mkdir -p tests/cpp/build
-	@cd tests/cpp/build && cmake $(CPP_CMAKE_GENERATOR) -DFASTLOESS_LIB="$(CPP_TEST_LIB_ABS)" -DFASTLOESS_LIB_DIR="$(CPP_LIBRARY_DIR_ABS)" .. && $(CPP_TEST_BUILD) && $(CPP_TEST_RUN)
-	@echo "=============================================================================="
-	@echo "3b. Valgrind memory check..."
-	@echo "=============================================================================="
-	@if [ "$(HOST_PLATFORM)" != "linux" ]; then \
-		echo "Valgrind: skipped on $(HOST_PLATFORM)."; \
-	elif ! command -v valgrind >/dev/null 2>&1; then \
-		echo "Valgrind not found. Skipping memory check."; \
-	else \
-		valgrind --leak-check=full --error-exitcode=1 --quiet \
-			tests/cpp/build/test_fastloess_suite 2>&1 || \
-		(echo "Error: Valgrind detected memory errors"; exit 1); \
-		echo "Valgrind: no leaks."; \
-	fi
-	@echo "$(CPP_PKG) checks completed successfully!"
+	@"$(MAKE)" -f bindings/cpp/Makefile
 
 cpp-clean:
-	@echo "Cleaning $(CPP_PKG)..."
-	@cargo clean -p $(CPP_PKG)
-	@rm -rf $(CPP_DIR)/include/fastloess.h $(CPP_DIR)/bin $(CPP_DIR)/build
-	@rm -rf tests/cpp/build
-	@echo "$(CPP_PKG) clean complete!"
+	@"$(MAKE)" -f bindings/cpp/Makefile clean
 
 # ==============================================================================
 # Examples

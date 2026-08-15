@@ -1,0 +1,60 @@
+.SHELLFLAGS := -ec
+
+include mk/config.mk
+
+FASTLOESS_PKG      := fastLoess
+FASTLOESS_DIR      := crates/fastLoess
+FASTLOESS_FEATURES := dev
+
+.PHONY: default clean coverage ensure-llvm-cov
+
+default:
+	@echo "Running $(FASTLOESS_PKG) crate checks..."
+	@echo "=============================================================================="
+	@echo "1. Formatting..."
+	@echo "=============================================================================="
+	@cargo fmt -p $(FASTLOESS_PKG) -- --check
+	@echo "Formatting complete!"
+	@echo "=============================================================================="
+	@echo "2. Linting & Building..."
+	@echo "=============================================================================="
+	@for feature in $(FASTLOESS_FEATURES) no-default-features; do \
+		if [ "$$feature" = "no-default-features" ]; then \
+			echo "Checking $(FASTLOESS_PKG) (no-default-features)..."; \
+			cargo clippy -q -p $(FASTLOESS_PKG) --all-targets --no-default-features -- -D warnings || exit 1; \
+			cargo build -q -p $(FASTLOESS_PKG) --no-default-features || exit 1; \
+			RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(FASTLOESS_PKG) --no-deps --no-default-features || exit 1; \
+		else \
+			echo "Checking $(FASTLOESS_PKG) ($$feature)..."; \
+			cargo clippy -q -p $(FASTLOESS_PKG) --all-targets --features $$feature -- -D warnings || exit 1; \
+			cargo build -q -p $(FASTLOESS_PKG) --features $$feature || exit 1; \
+			RUSTDOCFLAGS="-D warnings" cargo doc -q -p $(FASTLOESS_PKG) --no-deps --features $$feature || exit 1; \
+		fi; \
+	done
+	@echo "=============================================================================="
+	@echo "3. Testing..."
+	@echo "=============================================================================="
+	@echo "Testing (no-default-features)..."
+	@cargo test -q -p loess-project-tests --test $(FASTLOESS_PKG) --no-default-features
+	@for feature in $(FASTLOESS_FEATURES); do \
+		echo "Testing ($$feature)..."; \
+		cargo test -q -p loess-project-tests --test $(FASTLOESS_PKG) --features $$feature || exit 1; \
+	done
+	@echo "=============================================================================="
+	@echo "All $(FASTLOESS_PKG) crate checks completed successfully!"
+
+ensure-llvm-cov:
+	@cargo llvm-cov --version > /dev/null 2>&1 || (echo "Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov && cargo llvm-cov install-llvm-tools)
+
+coverage: ensure-llvm-cov
+	@echo "Running $(FASTLOESS_PKG) coverage..."
+	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --workspace --test $(FASTLOESS_PKG) --all-features \
+		--ignore-filename-regex 'crates[/\\]loess-rs[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
+
+clean:
+	@echo "Cleaning $(FASTLOESS_PKG) crate..."
+	@cargo clean -p $(FASTLOESS_PKG)
+	@rm -rf $(FASTLOESS_DIR)/coverage_html
+	@rm -rf $(FASTLOESS_DIR)/benchmarks
+	@rm -rf $(FASTLOESS_DIR)/validation
+	@echo "$(FASTLOESS_PKG) clean complete!"
