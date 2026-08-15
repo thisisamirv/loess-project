@@ -70,7 +70,6 @@ build:
 	@rm -f  $(R_DIR)/src/vendor/fastLoess/Cargo.lock $(R_DIR)/src/vendor/loess-rs/Cargo.lock
 	@rm -f  $(R_DIR)/src/vendor/fastLoess/README.md  $(R_DIR)/src/vendor/fastLoess/CHANGELOG.md
 	@rm -f  $(R_DIR)/src/vendor/loess-rs/README.md   $(R_DIR)/src/vendor/loess-rs/CHANGELOG.md
-	@$(PYTHON) $(DEV_DIR)/patch_vendor_crates.py $(REPO_ROOT)/Cargo.toml $(R_DIR)/src/vendor -q
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/loess-rs/.cargo-checksum.json
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLoess/.cargo-checksum.json
 	@# Remove version from the loess-rs path dep in fastLoess
@@ -80,7 +79,14 @@ build:
 	@rm -f $(R_DIR)/src/vendor/fastLoess/Cargo.toml.bak
 	@printf '\n\n[workspace]\n\n[patch.crates-io]\nloess-rs = { path = "vendor/loess-rs" }\n' >> $(R_DIR)/src/Cargo.toml
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
-	@$(PYTHON) $(DEV_DIR)/clean_checksums.py -q $(R_DIR)/src/vendor
+	@# Strip test/bench/example/doc dirs to reduce archive size
+	@find $(R_DIR)/src/vendor -mindepth 2 -maxdepth 2 -type d \
+		\( -name tests -o -name benches -o -name examples \
+		   -o -name doc -o -name docs -o -name .github -o -name .config \) \
+		-exec rm -rf {} \; 2>/dev/null || true
+	@# Reset checksums — cargo accepts {"files":{}} for vendored crates
+	@find $(R_DIR)/src/vendor -name '.cargo-checksum.json' \
+		-exec sh -c 'echo '"'"'{"files":{},"package":null}'"'"' > "$$1"' _ {} \;
 	@echo "  Creating vendor.tar.xz..."
 	@(cd $(R_DIR)/src && \
 	  (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner \
