@@ -1,3 +1,4 @@
+import sys
 import threading
 import time
 
@@ -59,7 +60,7 @@ def test_gil_release():
         print(
             f"FAIL: Main thread was blocked! Got {ticks} ticks, expected > {expected_ticks:.2f}"
         )
-        exit(1)
+        sys.exit(1)
     else:
         print("PASS: Main thread remained responsive.")
 

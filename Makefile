@@ -211,15 +211,8 @@ endif
 # ==============================================================================
 # loess-rs crate
 # ==============================================================================
-ISOLATE ?= true
-all: ISOLATE := false
-
 loess-rs:
-	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py crates/loess-rs -- "$(MAKE)" _loess_impl; \
-	else \
-		"$(MAKE)" _loess_impl; \
-	fi
+	@"$(MAKE)" _loess_impl
 
 _loess_impl:
 	@echo "Running $(LOESS_PKG) crate checks..."
@@ -285,11 +278,7 @@ loess-rs-clean:
 # fastLoess crate
 # ==============================================================================
 fastLoess:
-	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py crates/fastLoess -- "$(MAKE)" _fastLoess_impl; \
-	else \
-		"$(MAKE)" _fastLoess_impl; \
-	fi
+	@"$(MAKE)" _fastLoess_impl
 
 _fastLoess_impl:
 	@echo "Running $(FASTLOESS_PKG) crate checks..."
@@ -343,11 +332,7 @@ fastLoess-clean:
 # Python bindings
 # ==============================================================================
 python:
-	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/python -- "$(MAKE)" _python_impl; \
-	else \
-		"$(MAKE)" _python_impl; \
-	fi
+	@"$(MAKE)" _python_impl
 
 _python_impl:
 	@echo "Running $(PY_PKG) checks..."
@@ -409,11 +394,7 @@ python-clean:
 # R bindings
 # ==============================================================================
 r:
-	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/r -- "$(MAKE)" _r_impl; \
-	else \
-		"$(MAKE)" _r_impl; \
-	fi
+	@"$(MAKE)" _r_impl
 
 _r_impl:
 	@echo "Running $(R_PKG_NAME) checks..."
@@ -588,11 +569,7 @@ r-clean:
 # Julia bindings
 # ==============================================================================
 julia:
-	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/julia -- "$(MAKE)" _julia_impl; \
-	else \
-		"$(MAKE)" _julia_impl; \
-	fi
+	@"$(MAKE)" _julia_impl
 
 _julia_impl:
 	@echo "Running $(JL_PKG) checks..."
@@ -698,11 +675,7 @@ julia-clean:
 # Node.js bindings
 # ==============================================================================
 nodejs:
-	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/nodejs -- "$(MAKE)" _nodejs_impl; \
-	else \
-		"$(MAKE)" _nodejs_impl; \
-	fi
+	@"$(MAKE)" _nodejs_impl
 
 _nodejs_impl:
 	@echo "Running $(NODE_PKG) checks..."
@@ -740,11 +713,7 @@ nodejs-clean:
 # WebAssembly bindings
 # ==============================================================================
 wasm:
-	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/wasm -- "$(MAKE)" _wasm_impl; \
-	else \
-		"$(MAKE)" _wasm_impl; \
-	fi
+	@"$(MAKE)" _wasm_impl
 
 _wasm_impl:
 	@echo "Running $(WASM_PKG) checks..."
@@ -792,11 +761,7 @@ wasm-clean:
 # C++ bindings
 # ==============================================================================
 cpp:
-	@if [ "$(ISOLATE)" = "true" ]; then \
-		$(PYTHON) dev/isolate_cargo.py bindings/cpp -- "$(MAKE)" _cpp_impl; \
-	else \
-		"$(MAKE)" _cpp_impl; \
-	fi
+	@"$(MAKE)" _cpp_impl
 
 _cpp_impl:
 	@echo "Running $(CPP_PKG) checks..."

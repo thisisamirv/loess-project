@@ -16,10 +16,11 @@ from ._core import (
 )
 
 __all__ = [
-    "LoessResult",
     "Diagnostics",
     "Loess",
+    "LoessResult",
     "OnlineLoess",
+    "OnlineOutput",
     "StreamingLoess",
     "__version__",
 ]
