@@ -42,19 +42,17 @@ endif
 LOESS_PKG      := loess-rs
 LOESS_DIR      := crates/loess-rs
 LOESS_FEATURES := std dev
-LOESS_EXAMPLES := batch_smoothing online_smoothing streaming_smoothing
 
 # fastLoess crate
 FASTLOESS_PKG      := fastLoess
 FASTLOESS_DIR      := crates/fastLoess
 FASTLOESS_FEATURES := dev
-FASTLOESS_EXAMPLES := fast_batch_smoothing fast_online_smoothing fast_streaming_smoothing
 
 # Python bindings
 PY_PKG      := fastLoess-py
 PY_DIR      := bindings/python
 PY_VENV     := .venv
-PY_TEST_DIR := tests/python
+
 ifeq ($(OS),Windows_NT)
 	PY_ACTIVATE    := $(PY_VENV)/Scripts/activate
 	PY_VENV_PYTHON := $(PY_VENV)/Scripts/python.exe
@@ -111,9 +109,6 @@ else ifeq ($(HOST_PLATFORM),macos)
 else
 	CPP_EXAMPLE_RUN_ENV := LD_LIBRARY_PATH=$(CPP_LIBRARY_DIR)
 endif
-
-# Examples directory
-EXAMPLES_DIR := examples
 
 # Documentation
 DOCS_VENV := docs-venv
@@ -213,83 +208,25 @@ examples: examples-loess-rs examples-fastLoess examples-python examples-r exampl
 	@echo "All examples completed successfully!"
 
 examples-loess-rs:
-	@echo "Running $(LOESS_PKG) examples..."
-	@echo "=============================================================================="
-	@echo "Running examples (no-default-features)..."
-	@for example in $(LOESS_EXAMPLES); do \
-		cargo run -q -p examples --example $$example --no-default-features || exit 1; \
-	done
-	@for feature in $(LOESS_FEATURES); do \
-		echo "Running examples ($$feature)..."; \
-		for example in $(LOESS_EXAMPLES); do \
-			cargo run -q -p examples --example $$example --features $$feature || exit 1; \
-		done; \
-	done
-	@echo "=============================================================================="
+	@"$(MAKE)" -f crates/loess-rs/Makefile examples
 
 examples-fastLoess:
-	@echo "Running $(FASTLOESS_PKG) examples..."
-	@echo "=============================================================================="
-	@echo "Running examples (no-default-features)..."
-	@for example in $(FASTLOESS_EXAMPLES); do \
-		cargo run -q -p examples --example $$example --no-default-features > /dev/null || exit 1; \
-	done
-	@for feature in $(FASTLOESS_FEATURES); do \
-		echo "Running examples with feature: $$feature"; \
-		for example in $(FASTLOESS_EXAMPLES); do \
-			if [ "$$feature" = "dev" ]; then \
-				cargo run -q -p examples --example $$example --features $$feature || exit 1; \
-			else \
-				cargo run -q -p examples --example $$example --features $$feature > /dev/null || exit 1; \
-			fi; \
-		done; \
-	done
-	@echo "=============================================================================="
+	@"$(MAKE)" -f crates/fastLoess/Makefile examples
 
 examples-python:
-	@echo "Running $(PY_PKG) examples..."
-	@echo "=============================================================================="
-	@. $(PY_ACTIVATE) && pip install -q matplotlib
-	@. $(PY_ACTIVATE) && python $(EXAMPLES_DIR)/python/batch_smoothing.py
-	@. $(PY_ACTIVATE) && python $(EXAMPLES_DIR)/python/streaming_smoothing.py
-	@. $(PY_ACTIVATE) && python $(EXAMPLES_DIR)/python/online_smoothing.py
-	@echo "=============================================================================="
+	@"$(MAKE)" -f bindings/python/Makefile examples
 
 examples-r:
-	@echo "Running $(R_PKG_NAME) examples..."
-	@echo "=============================================================================="
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(EXAMPLES_DIR)/r/batch_smoothing.R
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(EXAMPLES_DIR)/r/streaming_smoothing.R
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript $(EXAMPLES_DIR)/r/online_smoothing.R
-	@echo "=============================================================================="
+	@"$(MAKE)" -f bindings/r/Makefile examples
 
 examples-julia:
-	@echo "Running $(JL_PKG) examples..."
-	@echo "=============================================================================="
-	@FASTLOESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/batch_smoothing.jl
-	@FASTLOESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/streaming_smoothing.jl
-	@FASTLOESS_LIB=$(CURDIR)/$(JL_SHARED_LIB) julia --project=$(JL_DIR)/julia $(EXAMPLES_DIR)/julia/online_smoothing.jl
-	@echo "=============================================================================="
+	@"$(MAKE)" -f bindings/julia/Makefile examples
 
 examples-nodejs:
-	@echo "Running $(NODE_PKG) examples..."
-	@echo "=============================================================================="
-	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/batch_smoothing.js
-	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/online_smoothing.js
-	@cd $(NODE_DIR) && node ../../$(EXAMPLES_DIR)/nodejs/streaming_smoothing.js
-	@echo "=============================================================================="
+	@"$(MAKE)" -f bindings/nodejs/Makefile examples
 
 examples-cpp:
-	@echo "Running $(CPP_PKG) examples..."
-	@echo "=============================================================================="
-	@mkdir -p $(CPP_DIR)/bin
-	@g++ -O3 $(EXAMPLES_DIR)/cpp/batch_smoothing.cpp -o $(CPP_DIR)/bin/batch_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastloess_cpp -lpthread -ldl -lm
-	@g++ -O3 $(EXAMPLES_DIR)/cpp/streaming_smoothing.cpp -o $(CPP_DIR)/bin/streaming_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastloess_cpp -lpthread -ldl -lm
-	@g++ -O3 $(EXAMPLES_DIR)/cpp/online_smoothing.cpp -o $(CPP_DIR)/bin/online_smoothing -I$(CPP_DIR)/include -L$(CPP_LIBRARY_DIR) -lfastloess_cpp -lpthread -ldl -lm
-	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/batch_smoothing
-	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/streaming_smoothing
-	@$(CPP_EXAMPLE_RUN_ENV) $(CPP_DIR)/bin/online_smoothing
-	@echo "=============================================================================="
+	@"$(MAKE)" -f bindings/cpp/Makefile examples
 
 # ==============================================================================
 # Development checks
@@ -339,11 +276,9 @@ all-clean: r-clean loess-rs-clean fastLoess-clean python-clean julia-clean nodej
 	@rm -rf target Cargo.lock .venv .ruff_cache .pytest_cache site docs-venv build bindings/python/.venv bindings/python/target crates/fastLoess/target crates/loess-rs/target .vscode tests/.pytest_cache local_*.tar.gz bindings/r/.r-lib bindings/r/docs
 	@rm -f Rplots.pdf .gitignore~ ..gitignore.un~
 	@rm -rf r.Rcheck/
-	@rm -f tests/r/testthat/Rplots.pdf
-	@rm -rf examples/cpp/bin/
+	@rm -rf $(CPP_DIR)/examples/bin/
 	@rm -f bindings/nodejs/fastloess.node
 	@rm -f bindings/python/python/fastloess/*.pyd bindings/python/python/fastloess/*.pdb
-	@rm -rf bindings/r/tests/
 	@echo "All clean completed!"
 
 .PHONY: loess-rs loess-rs-coverage loess-rs-clean fastLoess fastLoess-coverage fastLoess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-test docs-clean all all-coverage all-clean examples examples-loess-rs examples-fastLoess examples-python examples-r examples-julia examples-nodejs examples-cpp ensure-llvm-cov

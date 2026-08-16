@@ -8,8 +8,6 @@ members = [
     "bindings/nodejs",
     "bindings/wasm",
     "bindings/cpp",
-    "examples",
-    "tests",
     "validation/fastLoess",
 ]
 exclude = ["bindings/r/src/vendor"]

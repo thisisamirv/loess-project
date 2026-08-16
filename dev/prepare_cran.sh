@@ -42,23 +42,7 @@ directory = "vendor"
 EOF
 fi
 
-# 3. Copy shared R tests
-echo "   -> Copying shared R tests..."
-if [ -d "../../tests/r/testthat" ] && [ -f "../../tests/r/testthat.R" ]; then
-	rm -rf tests/testthat
-	rm -f tests/testthat.R
-	mkdir -p tests/testthat
-	cp ../../tests/r/testthat/*.R tests/testthat/
-	cp ../../tests/r/testthat.R tests/testthat.R
-	echo "      (Copied shared tests from repository root)"
-elif [ -d "tests/testthat" ] && [ -f "tests/testthat.R" ]; then
-	echo "      (Using tests already present in package)"
-else
-	echo "Error: no R tests available in either ../../tests/r or tests/." >&2
-	exit 1
-fi
-
-# 4. Generate AUTHORS file
+# 3. Generate AUTHORS file
 echo "   -> Generating inst/AUTHORS..."
 mkdir -p inst
 (cd src && cargo metadata --locked --format-version 1 >../cargo_metadata_temp.json)
@@ -92,7 +76,6 @@ rm cargo_metadata_temp.json
 echo "✅ Preparation complete!"
 echo "   1. Dependencies are in 'src/vendor/'"
 echo "   2. Local config is in 'src/cargo/config.toml'"
-echo "   3. Shared tests are in 'tests/testthat/'"
-echo "   4. Attribution is in 'inst/AUTHORS'"
+echo "   3. Attribution is in 'inst/AUTHORS'"
 echo ""
 echo "You can now run: make install"

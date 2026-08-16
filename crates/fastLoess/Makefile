@@ -1,3 +1,5 @@
+THIS_MK := $(lastword $(MAKEFILE_LIST))
+
 .SHELLFLAGS := -ec
 
 UNAME_S := $(shell uname -s)
@@ -34,8 +36,9 @@ endif
 FASTLOESS_PKG      := fastLoess
 FASTLOESS_DIR      := crates/fastLoess
 FASTLOESS_FEATURES := dev
+FASTLOESS_EXAMPLES := fast_batch_smoothing fast_online_smoothing fast_streaming_smoothing
 
-.PHONY: default clean coverage ensure-llvm-cov
+.PHONY: default clean coverage ensure-llvm-cov examples
 
 default:
 	@echo "Running $(FASTLOESS_PKG) crate checks..."
@@ -64,20 +67,40 @@ default:
 	@echo "3. Testing..."
 	@echo "=============================================================================="
 	@echo "Testing (no-default-features)..."
-	@cargo test -q -p loess-project-tests --test $(FASTLOESS_PKG) --no-default-features
+	@cargo test -q -p $(FASTLOESS_PKG) --test $(FASTLOESS_PKG) --no-default-features
 	@for feature in $(FASTLOESS_FEATURES); do \
 		echo "Testing ($$feature)..."; \
-		cargo test -q -p loess-project-tests --test $(FASTLOESS_PKG) --features $$feature || exit 1; \
+		cargo test -q -p $(FASTLOESS_PKG) --test $(FASTLOESS_PKG) --features $$feature || exit 1; \
 	done
 	@echo "=============================================================================="
+	@"$(MAKE)" -f $(THIS_MK) examples
 	@echo "All $(FASTLOESS_PKG) crate checks completed successfully!"
+
+examples:
+	@echo "Running $(FASTLOESS_PKG) examples..."
+	@echo "============================================================================="
+	@echo "Running examples (no-default-features)..."
+	@for example in $(FASTLOESS_EXAMPLES); do \
+		cargo run -q -p $(FASTLOESS_PKG) --example $$example --no-default-features > /dev/null || exit 1; \
+	done
+	@for feature in $(FASTLOESS_FEATURES); do \
+		echo "Running examples with feature: $$feature"; \
+		for example in $(FASTLOESS_EXAMPLES); do \
+			if [ "$$feature" = "dev" ]; then \
+				cargo run -q -p $(FASTLOESS_PKG) --example $$example --features $$feature || exit 1; \
+			else \
+				cargo run -q -p $(FASTLOESS_PKG) --example $$example --features $$feature > /dev/null || exit 1; \
+			fi; \
+		done; \
+	done
+	@echo "============================================================================="
 
 ensure-llvm-cov:
 	@cargo llvm-cov --version > /dev/null 2>&1 || (echo "Installing cargo-llvm-cov..." && cargo install cargo-llvm-cov && cargo llvm-cov install-llvm-tools)
 
 coverage: ensure-llvm-cov
 	@echo "Running $(FASTLOESS_PKG) coverage..."
-	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov --workspace --test $(FASTLOESS_PKG) --all-features \
+	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(FASTLOESS_PKG) --test $(FASTLOESS_PKG) --all-features \
 		--ignore-filename-regex 'crates[/\\]loess-rs[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
 
 clean:
