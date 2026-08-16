@@ -31,7 +31,7 @@ using FastLOESS
 # Helper: feed all (x, y) pairs through add_point; return vector of smoothed values (NaN when None).
 function add_all_points(model, x, y)
     [
-        let r = add_point(model, x[i], y[i]);
+        let r = add_point(model, x[i], y[i])
             r !== nothing ? r.smoothed : NaN
         end for i ∈ eachindex(x)
     ]

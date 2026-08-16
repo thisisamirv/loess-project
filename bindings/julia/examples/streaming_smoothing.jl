@@ -113,23 +113,23 @@ function example_2_chunk_size_comparison()
     for (cs, ov, label) ∈ [(20, 5, "Small"), (50, 10, "Medium"), (80, 15, "Large")]
         model =
             StreamingLoess(fraction = 0.5, iterations = 1, chunk_size = cs, overlap = ov)
-        chunks = 0;
-        total = 0;
+        chunks = 0
+        total = 0
         start = 1
         while start + cs - 1 <= n
             res = process_chunk(model, x[start:(start+cs-1)], y[start:(start+cs-1)])
             if length(res.x) > 0
-                ;
-                chunks += 1;
-                total += length(res.x);
+
+                chunks += 1
+                total += length(res.x)
             end
             start += cs - ov
         end
         fin = finalize(model)
         if length(fin.x) > 0
-            ;
-            chunks += 1;
-            total += length(fin.x);
+
+            chunks += 1
+            total += length(fin.x)
         end
         println("  $label (size=$cs, overlap=$ov): chunks=$chunks, total=$total")
     end
@@ -144,8 +144,8 @@ function example_3_overlap_strategies()
     cs = 40
     for (overlap, label) ∈ [(0, "No overlap"), (10, "10-pt overlap"), (20, "20-pt overlap")]
         model = StreamingLoess(fraction = 0.5, chunk_size = cs, overlap = overlap)
-        total = 0;
-        step = cs - overlap;
+        total = 0
+        step = cs - overlap
         start = 1
         while start + cs - 1 <= n
             total +=
@@ -166,8 +166,8 @@ function example_4_large_dataset_processing()
     y = sin.(x .* 0.01) .+ x .* 0.001
     cs, ov = 500, 50
     model = StreamingLoess(fraction = 0.05, iterations = 2, chunk_size = cs, overlap = ov)
-    total = 0;
-    step = cs - ov;
+    total = 0
+    step = cs - ov
     start = 1
     while start + cs - 1 <= n
         total +=
@@ -198,7 +198,7 @@ function example_5_outlier_handling()
             overlap = 10,
             return_residuals = true,
         )
-        large = 0;
+        large = 0
         start = 1
         while start + 29 <= n
             res = process_chunk(model, x[start:(start+29)], y[start:(start+29)])
@@ -228,8 +228,8 @@ function example_6_file_simulation()
         overlap = ov,
         return_residuals = true,
     )
-    out_count = 0;
-    ci = 0;
+    out_count = 0
+    ci = 0
     start_line = 0
     while start_line < total_lines
         end_line = min(start_line + cs, total_lines)
@@ -259,7 +259,7 @@ function example_7_benchmark()
     n, cs, ov = 1000, 100, 10
     model = StreamingLoess(fraction = 0.5, iterations = 3, chunk_size = cs, overlap = ov)
     t0 = time()
-    total = 0;
+    total = 0
     start = 1
     while start + cs - 1 <= n
         xc = collect(Float64, (start-1):(start+cs-2))
@@ -286,7 +286,7 @@ function example_8_merge_strategies()
             overlap = 5,
             merge_strategy = strategy,
         )
-        total = 0;
+        total = 0
         start = 1
         while start + 19 <= n
             total +=
@@ -320,7 +320,7 @@ function example_9_advanced_options()
         chunk_size = 20,
         overlap = 5,
     )
-    total = 0;
+    total = 0
     start = 1
     while start + 19 <= n
         total += length(process_chunk(model, x[start:(start+19)], y[start:(start+19)]).x)
