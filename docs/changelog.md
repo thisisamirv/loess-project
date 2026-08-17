@@ -25,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed `ruff` linting errors in the Python binding: replaced `from typing import Sequence` with `from collections.abc import Sequence` in `_core.pyi` (UP035), removed redundant `...` literals from all property and method stub bodies — a docstring alone is the correct single-statement body in a `.pyi` file (PYI048, PIE790), and replaced bare `exit(1)` with `sys.exit(1)` in `tests/python/test_gil.py` (PLR1722).
 
+**R:**
+
+- Fixed incorrect URLs in R bidning docs.
+
 ### Changed
 
 **Monorepo:**
@@ -50,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `dev/patch_vendor_crates.py`. The only real work the script did was strip the `version` field from the `loess-rs` path dep in `fastLoess/Cargo.toml` (no GPU deps, no workspace inheritance). This is now a single `sed -i.bak` call inline in the Makefiles. This also eliminates the `tomli`/`tomli_w` pip-install step from the R build.
 - Removed `dev/clean_checksums.py`. The two things it did — strip `tests`/`benches`/`examples`/`doc` directories from the vendor tree and reset `.cargo-checksum.json` files — are now done with two `find` commands inline in the Makefiles. Cargo accepts `{"files":{}}` checksums for vendored crates so per-file verification is disabled after stripping, removing the need to recompute hashes. The R build now requires no Python scripts at all.
 - Removed `dev/prepare_cran.sh`. Its vendor-extraction and cargo-config steps were already handled by `Makevars.in` during `R CMD build`, making them dead code. The only unique step — generating `inst/AUTHORS` from `cargo metadata` — is now inlined directly into `bindings/r/Makefile`'s step 4c using a `jq` pipeline, removing the Python dependency and temp-file pattern. The stale `fastLoess-R` package-name exclusion filter has been corrected to use the current name (`rfastloess`) via the existing `$(R_PKG_NAME)` variable.
+- Added `...` to `Loess()`, `StreamingLoess()`, and `OnlineLoess()` to force named arguments for all optional parameters following the primary positional arguments. Passing extra arguments positionally now raises an error; every optional argument must be specified by name.
 
 **Julia:**
 

@@ -7,6 +7,7 @@
 #' @srrstats {G1.6} Sliding window for incremental updates.
 #'
 #' @inheritParams Loess
+#' @param ... Not used; forces all subsequent arguments to be named.
 #' @param window_capacity Maximum number of points kept in the sliding window.
 #' @param min_points Minimum number of points required before smoothing begins.
 #' @param update_mode Window update strategy: \code{"full"} (default)
@@ -27,6 +28,7 @@ OnlineLoess <- function(
     fraction = 0.67,
     window_capacity = 1000L,
     min_points = 3L,
+    ...,
     iterations = 3L,
     weight_function = "tricube",
     robustness_method = "bisquare",
@@ -51,6 +53,7 @@ OnlineLoess <- function(
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL
 ) {
+    if (...length() > 0) stop("All arguments after 'min_points' must be named.", call. = FALSE)
     validate_params(
         fraction = fraction,
         window_capacity = window_capacity,

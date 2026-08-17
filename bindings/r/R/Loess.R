@@ -14,6 +14,7 @@
 #' @srrstats {RE4.11} Goodness-of-fit metrics via return_diagnostics.
 #' @srrstats {RE5.0} O(n) scaling documented in README.
 #'
+#' @param ... Not used; forces all subsequent arguments to be named.
 #' @param fraction Smoothing fraction (between 0 and 1).
 #' @param iterations Number of robustness iterations (non-negative integer).
 #'   Default: 3.
@@ -83,6 +84,7 @@
 #' @export
 Loess <- function(
     fraction = 0.67,
+    ...,
     iterations = 3L,
     weight_function = "tricube",
     robustness_method = "bisquare",
@@ -110,6 +112,7 @@ Loess <- function(
     boundary_degree_fallback = NULL,
     cv_seed = NULL
 ) {
+    if (...length() > 0) stop("All arguments after 'fraction' must be named.", call. = FALSE)
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLoess$new, env_args(loess_params))
     .make_loess(
