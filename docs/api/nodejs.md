@@ -226,6 +226,8 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 
 ### weight_function
 
+*See: [Weight Functions](../user-guide/kernels.md)*
+
 * `"tricube"` (default)
 * `"epanechnikov"`
 * `"gaussian"`
@@ -236,11 +238,15 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 
 ### robustness_method
 
+*See: [Robustness](../user-guide/robustness.md)*
+
 * `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
 * `"talwar"`
 
 ### boundary_policy
+
+*See: [Boundary Handling](../user-guide/boundary.md)*
 
 * `"extend"` (default; alias: `"pad"`)
 * `"reflect"` (alias: `"mirror"`)
@@ -249,17 +255,23 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 
 ### scaling_method
 
+*See: [Scaling Methods](../user-guide/scaling.md)*
+
 * `"mad"` (default; alias: `"median_absolute_deviation"`)
 * `"mar"` (alias: `"median_absolute_residual"`)
 * `"mean"` (alias: `"mean_absolute_residual"`)
 
 ### zero_weight_fallback
 
+*See: [Parameters](../user-guide/parameters.md)*
+
 * `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
 * `"return_original"` (alias: `"original"`)
 * `"return_none"` (alias: `"none"`)
 
 ### degree
+
+*See: [Polynomial Degree](../user-guide/degree.md)*
 
 * `"constant"` or `"0"` (degree 0)
 * `"linear"` or `"1"` (default, degree 1)
@@ -268,6 +280,8 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 * `"quartic"` or `"4"` (degree 4)
 
 ### distance_metric
+
+*See: [Multivariate LOESS](../user-guide/dimensions.md)*
 
 * `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
 * `"euclidean"` (alias: `"euclid"`)
@@ -278,10 +292,14 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 
 ### surface_mode
 
+*See: [Parameters](../user-guide/parameters.md)*
+
 * `"interpolation"` (default — faster, uses a spatial grid)
 * `"direct"` (fits every point exactly; slower but more accurate)
 
 ### merge_strategy
+
+*See: [Merge Strategies](../user-guide/merge.md)*
 
 * `"weighted_average"` (default; alias: `"weighted"`)
 * `"average"` (alias: `"mean"`)
@@ -289,6 +307,8 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 * `"take_last"` (alias: `"last"`)
 
 ### update_mode
+
+*See: [Execution Modes](../user-guide/adapters.md)*
 
 * `"full"` (default; alias: `"resmooth"`)
 * `"incremental"` (alias: `"single"`)
