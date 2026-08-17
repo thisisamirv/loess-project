@@ -1,4 +1,4 @@
-const fastloess = require('../../bindings/nodejs');
+const fastloess = require('..');
 
 /**
  * fastloess Batch Smoothing - Comprehensive Examples

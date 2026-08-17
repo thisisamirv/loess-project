@@ -65,10 +65,15 @@ print.LoessResult <- function(x, ...) {
 plot.LoessResult <- function(x, main = "LOESS Fit", ...) {
     # Plot the smoothed curve
     plot(
-        x$x, x$y,
-        type = "l", col = "blue", lwd = 2,
-        xlab = "x", ylab = "Fitted",
-        main = main, ...
+        x$x,
+        x$y,
+        type = "l",
+        col = "blue",
+        lwd = 2,
+        xlab = "x",
+        ylab = "Fitted",
+        main = main,
+        ...
     )
 
     # If confidence intervals exist, plot them

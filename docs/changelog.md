@@ -8,32 +8,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 1.0.0
 
+### Added
+
+**R:**
+
+- `bindings/r/Makefile` step 4a now auto-installs [Air](https://posit-dev.github.io/air/) when `air` is not on `PATH` — using `irm … | iex` (PowerShell) on Windows and `curl … | sh` on macOS/Linux — then prepends `$HOME/.local/bin` to `PATH` before running `air format`, so formatting works out-of-the-box without a pre-installed Air binary.
+
 ### Fixed
 
 **Monorepo:**
 
 - Fixed `make r` (and other Python-dependent targets) failing on Ubuntu 24.04 and other modern Linux distributions where `python` is not in `PATH` by changing the default from `PYTHON ?= python` to `PYTHON ?= python3`. The interpreter can still be overridden via `make PYTHON=...`.
 - Fixed `ModuleNotFoundError: No module named 'tomli_w'` on systems with an externally-managed Python (Ubuntu 24.04+, Debian 12+, PEP 668) by adding a `--user` fallback to the automatic `tomli`/`tomli_w` install step in the Makefile.
-- Documented in `docs/contributing.md` that `python3` with `tomli` and `tomli_w` is required to run the R binding's vendoring scripts, and why Python is needed for an R build.
-- Removed `dev/isolate_cargo.py` and the `ISOLATE` Makefile variable. All per-component targets (`loess-rs`, `fastLoess`, `python`, `r`, `julia`, `nodejs`, `wasm`, `cpp`) now call their `_*_impl` sub-target directly; Cargo's `-p <package>` flag already scopes each build to the relevant crate without workspace mutation.
-- Removed `dev/check_root_cargo.py`. This script guarded against `Cargo.toml` being left in an isolated state by `isolate_cargo.py`; since workspace isolation no longer happens, the guard is unnecessary.
-- Removed `dev/fix_doc_snippets.py`. All 11 documentation code snippets that previously required runtime transformation (missing R/Julia imports and data preambles, Node.js variable injection) now carry their boilerplate directly in the Markdown source.
-- Removed `dev/prepare_cargo.py`. The two actions it provided — (1) stripping `[workspace]`/`[patch.crates-io]` before vendoring and (2) appending them back afterward — are now performed inline in the Makefiles with `sed` and `printf`. The `exclude`/`restore` actions it also defined were never called.
-- Removed `dev/patch_vendor_crates.py`. The only real work the script did was strip the `version` field from the `loess-rs` path dep in `fastLoess/Cargo.toml` (no GPU deps, no workspace inheritance). This is now a single `sed -i.bak` call inline in the Makefiles. This also eliminates the `tomli`/`tomli_w` pip-install step from the R build.
-- Removed `dev/clean_checksums.py`. The two things it did — strip `tests`/`benches`/`examples`/`doc` directories from the vendor tree and reset `.cargo-checksum.json` files — are now done with two `find` commands inline in the Makefiles. Cargo accepts `{"files":{}}` checksums for vendored crates so per-file verification is disabled after stripping, removing the need to recompute hashes. The R build now requires no Python scripts at all.
-- Removed `check_js_licenses.js` as it was just needed once during development.
-- Split the monolithic root `Makefile` into per-crate and per-binding sub-Makefiles (`crates/loess-rs/Makefile`, `crates/fastLoess/Makefile`, `bindings/python/Makefile`, `bindings/r/Makefile`, `bindings/julia/Makefile`, `bindings/nodejs/Makefile`, `bindings/wasm/Makefile`, `bindings/cpp/Makefile`). Each sub-Makefile is self-contained and can be invoked directly via `make -f path/Makefile` from the project root (all paths remain root-relative). Platform detection (`UNAME_S`, `HOST_PLATFORM`, `NPM`/`NPX`, `PYTHON`, `TEMP`) is inlined directly at the top of every Makefile; `mk/config.mk` has been removed. The root `Makefile` now delegates exclusively via `$(MAKE) -f path/Makefile` and retains only `examples-*`, `docs`, `check-msrv`, `all`, `all-coverage`, and `all-clean` aggregation targets.
-- Moved Rust integration tests into their respective crates: `tests/loess-rs/` → `crates/loess-rs/tests/loess-rs/` and `tests/fastLoess/` → `crates/fastLoess/tests/fastLoess/` (auto-discovered by Cargo as the test binaries `loess-rs` and `fastLoess`). Moved Rust examples into their respective crates: `examples/loess-rs/` → `crates/loess-rs/examples/` and `examples/fastLoess/` → `crates/fastLoess/examples/`. Moved binding tests into their binding directories: `tests/{cpp,julia,nodejs,python,r,wasm}/` → `bindings/{cpp,julia,nodejs,python,r,wasm}/tests/`. Moved binding examples: `examples/{cpp,julia,nodejs,python,wasm}/` → `bindings/{cpp,julia,nodejs,python,wasm}/examples/` and `examples/r/` → `bindings/r/demo/`. The standalone `tests/` and `examples/` workspace packages have been removed from the workspace.
-- Moved examples execution logic from root Makefile `examples-*` targets into each sub-Makefile as a standalone `examples` target. The `default` target in each sub-Makefile now runs examples as the final step, so `make -f path/Makefile` performs a full end-to-end check including examples. Root Makefile `examples-*` targets now delegate to the corresponding sub-Makefile via `$(MAKE) -f path/Makefile examples`.
-- Moved `dev/Makevars.check` to `bindings/r/Makevars.check`. The file is only used by `R CMD check` (via `R_MAKEVARS_USER`) in the R binding's Makefile, so it belongs alongside the binding rather than in the shared `dev/` directory.
-- Replaced `dev/style_pkg.R` (which used `styler`) with [Air](https://posit-dev.github.io/air/), Posit's idiomatic R formatter. A minimal `bindings/r/air.toml` config (`indent-width = 4`) now controls formatting; the `bindings/r/Makefile` step 4a calls `air format` on the R source directories instead of invoking a script. Removed `style_pkg.R` from the repository.
-- Removed `dev/fix_rd_style.R` and `bindings/r/fix_rd_style.R`. The post-processing logic (fix 2→4 space indentation in generated Rd files; wrap long lines inside `\author{}` and `\seealso{}` blocks) is now inlined directly in `bindings/r/Makefile` step 4b as a `Rscript -e` one-liner, eliminating a loose script file with no idiomatic alternative.
-- Removed `dev/format_julia.jl`. The `JuliaFormatter.format(...)` call with `overwrite=true` is now inlined directly in `bindings/julia/Makefile` alongside the existing check-only variant, using the Makefile's `$(JL_TEST_DIR)` and `$(JL_DIR)/examples` variables (the script had stale hardcoded paths).
-- Removed `dev/prepare_cran.sh`. Its vendor-extraction and cargo-config steps were already handled by `Makevars.in` during `R CMD build`, making them dead code. The only unique step — generating `inst/AUTHORS` from `cargo metadata` — is now inlined directly into `bindings/r/Makefile`'s step 4c using a `jq` pipeline, removing the Python dependency and temp-file pattern. The stale `fastLoess-R` package-name exclusion filter has been corrected to use the current name (`rfastloess`) via the existing `$(R_PKG_NAME)` variable.
 
 **Python:**
 
 - Fixed `ruff` linting errors in the Python binding: replaced `from typing import Sequence` with `from collections.abc import Sequence` in `_core.pyi` (UP035), removed redundant `...` literals from all property and method stub bodies — a docstring alone is the correct single-statement body in a `.pyi` file (PYI048, PIE790), and replaced bare `exit(1)` with `sys.exit(1)` in `tests/python/test_gil.py` (PLR1722).
+
+### Changed
+
+**Monorepo:**
+
+- Documented in `docs/contributing.md` that `python3` with `tomli` and `tomli_w` is required to run the R binding's vendoring scripts, and why Python is needed for an R build.
+- Removed `dev/isolate_cargo.py` and the `ISOLATE` Makefile variable. All per-component targets (`loess-rs`, `fastLoess`, `python`, `r`, `julia`, `nodejs`, `wasm`, `cpp`) now call their `_*_impl` sub-target directly; Cargo's `-p <package>` flag already scopes each build to the relevant crate without workspace mutation.
+- Removed `dev/check_root_cargo.py`. This script guarded against `Cargo.toml` being left in an isolated state by `isolate_cargo.py`; since workspace isolation no longer happens, the guard is unnecessary.
+- Removed `dev/fix_doc_snippets.py`. All 11 documentation code snippets that previously required runtime transformation (missing R/Julia imports and data preambles, Node.js variable injection) now carry their boilerplate directly in the Markdown source.
+- Removed `check_js_licenses.js` as it was just needed once during development.
+- Split the monolithic root `Makefile` into per-crate and per-binding sub-Makefiles (`crates/loess-rs/Makefile`, `crates/fastLoess/Makefile`, `bindings/python/Makefile`, `bindings/r/Makefile`, `bindings/julia/Makefile`, `bindings/nodejs/Makefile`, `bindings/wasm/Makefile`, `bindings/cpp/Makefile`). Each sub-Makefile is self-contained and can be invoked directly via `make -f path/Makefile` from the project root (all paths remain root-relative). Platform detection (`UNAME_S`, `HOST_PLATFORM`, `NPM`/`NPX`, `PYTHON`, `TEMP`) is inlined directly at the top of every Makefile; `mk/config.mk` has been removed. The root `Makefile` now delegates exclusively via `$(MAKE) -f path/Makefile` and retains only `examples-*`, `docs`, `check-msrv`, `all`, `all-coverage`, and `all-clean` aggregation targets.
+- Moved Rust integration tests into their respective crates: `tests/loess-rs/` → `crates/loess-rs/tests/loess-rs/` and `tests/fastLoess/` → `crates/fastLoess/tests/fastLoess/` (auto-discovered by Cargo as the test binaries `loess-rs` and `fastLoess`). Moved Rust examples into their respective crates: `examples/loess-rs/` → `crates/loess-rs/examples/` and `examples/fastLoess/` → `crates/fastLoess/examples/`. Moved binding tests into their binding directories: `tests/{cpp,julia,nodejs,python,r,wasm}/` → `bindings/{cpp,julia,nodejs,python,r,wasm}/tests/`. Moved binding examples: `examples/{cpp,julia,nodejs,python,wasm}/` → `bindings/{cpp,julia,nodejs,python,wasm}/examples/` and `examples/r/` → `bindings/r/demo/`. The standalone `tests/` and `examples/` workspace packages have been removed from the workspace.
+- Moved examples execution logic from root Makefile `examples-*` targets into each sub-Makefile as a standalone `examples` target. The `default` target in each sub-Makefile now runs examples as the final step, so `make -f path/Makefile` performs a full end-to-end check including examples. Root Makefile `examples-*` targets now delegate to the corresponding sub-Makefile via `$(MAKE) -f path/Makefile examples`.
+
+**loess-rs:**
+
+- Updated `wide` to v1.6.
+
+**R:**
+
+- Replaced `dev/style_pkg.R` (which used `styler`) with [Air](https://posit-dev.github.io/air/), Posit's idiomatic R formatter. A minimal `bindings/r/air.toml` config (`indent-width = 4`) now controls formatting; the `bindings/r/Makefile` step 4a calls `air format` on the R source directories instead of invoking a script. Removed `style_pkg.R` from the repository.
+- Removed `dev/fix_rd_style.R` and `bindings/r/fix_rd_style.R`. The post-processing logic (fix 2→4 space indentation in generated Rd files; wrap long lines inside `\author{}` and `\seealso{}` blocks) is now inlined directly in `bindings/r/Makefile` step 4b as a `Rscript -e` one-liner, eliminating a loose script file with no idiomatic alternative.
+- Removed `dev/prepare_cargo.py`. The two actions it provided — (1) stripping `[workspace]`/`[patch.crates-io]` before vendoring and (2) appending them back afterward — are now performed inline in the Makefiles with `sed` and `printf`. The `exclude`/`restore` actions it also defined were never called.
+- Removed `dev/patch_vendor_crates.py`. The only real work the script did was strip the `version` field from the `loess-rs` path dep in `fastLoess/Cargo.toml` (no GPU deps, no workspace inheritance). This is now a single `sed -i.bak` call inline in the Makefiles. This also eliminates the `tomli`/`tomli_w` pip-install step from the R build.
+- Removed `dev/clean_checksums.py`. The two things it did — strip `tests`/`benches`/`examples`/`doc` directories from the vendor tree and reset `.cargo-checksum.json` files — are now done with two `find` commands inline in the Makefiles. Cargo accepts `{"files":{}}` checksums for vendored crates so per-file verification is disabled after stripping, removing the need to recompute hashes. The R build now requires no Python scripts at all.
+- Removed `dev/prepare_cran.sh`. Its vendor-extraction and cargo-config steps were already handled by `Makevars.in` during `R CMD build`, making them dead code. The only unique step — generating `inst/AUTHORS` from `cargo metadata` — is now inlined directly into `bindings/r/Makefile`'s step 4c using a `jq` pipeline, removing the Python dependency and temp-file pattern. The stale `fastLoess-R` package-name exclusion filter has been corrected to use the current name (`rfastloess`) via the existing `$(R_PKG_NAME)` variable.
+
+**Julia:**
+
+- Removed `dev/format_julia.jl`. The `JuliaFormatter.format(...)` call with `overwrite=true` is now inlined directly in `bindings/julia/Makefile` alongside the existing check-only variant, using the Makefile's `$(JL_TEST_DIR)` and `$(JL_DIR)/examples` variables (the script had stale hardcoded paths).
+
+**Node.js:**
+
+- Updated `@napi-rs/cli` to v3.8 and `oxlint` to v1.78.
+
+**WASM:**
+
+- Updated `oxlint` to v1.78.
 
 ## 0.9.0
 

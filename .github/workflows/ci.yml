@@ -92,9 +92,9 @@ jobs:
 
       - name: "Rust: Loess Tests"
         run: |
-          cargo test -q -p loess-rs --test loess-rs
+          cargo test -q -p loess-rs --test loess-rs --features dev
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            cargo test -q -p loess-rs --test loess-rs --no-default-features
+            cargo test -q -p loess-rs --test loess-rs --features dev --no-default-features
           fi
         shell: bash
 

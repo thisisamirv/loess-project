@@ -21,13 +21,15 @@ library(rfastloess)
 add_all_points <- function(model, x, y) {
     results <- lapply(seq_along(x), function(i) model$add_point(x[i], y[i]))
     list(
-        smoothed = sapply(
-            results, function(r) if (is.null(r)) NA_real_ else r$smoothed
+        smoothed = vapply(
+            results,
+            function(r) if (is.null(r)) NA_real_ else r$smoothed,
+            numeric(1L)
         )
     )
 }
 
-# ── Example 1: Basic Incremental Processing ──────────────────────────────────
+# -- Example 1: Basic Incremental Processing ----------------------------------
 example_1_basic_streaming <- function() {
     cat("Example 1: Basic Incremental Processing\n")
 
@@ -35,7 +37,8 @@ example_1_basic_streaming <- function() {
     y <- c(3.1, 5.0, 7.2, 8.9, 11.1, 13.0, 15.2, 16.8, 19.1, 21.0)
 
     model <- OnlineLoess(
-        fraction = 0.5, iterations = 2L,
+        fraction = 0.5,
+        iterations = 2L,
         window_capacity = 5L,
         return_robustness_weights = FALSE
     )
@@ -53,7 +56,7 @@ example_1_basic_streaming <- function() {
     cat("\n")
 }
 
-# ── Example 2: Real-Time Sensor Data Simulation ───────────────────────────────
+# -- Example 2: Real-Time Sensor Data Simulation -------------------------------
 example_2_sensor_simulation <- function() {
     cat("Example 2: Real-Time Sensor Data Simulation\n")
     cat("  Simulating temperature sensor with noise...\n")
@@ -63,7 +66,8 @@ example_2_sensor_simulation <- function() {
     temp <- 20 + 5 * sin(hours * pi / 12) + ((hours * 7) %% 11) * 0.3 - 1.5
 
     model <- OnlineLoess(
-        fraction = 0.4, iterations = 3L,
+        fraction = 0.4,
+        iterations = 3L,
         robustness_method = "bisquare",
         window_capacity = 12L
     )
@@ -81,7 +85,7 @@ example_2_sensor_simulation <- function() {
     cat("\n")
 }
 
-# ── Example 3: Outlier Handling in Online Mode ────────────────────────────────
+# -- Example 3: Outlier Handling in Online Mode --------------------------------
 example_3_outlier_handling <- function() {
     cat("Example 3: Outlier Handling in Online Mode\n")
 
@@ -90,20 +94,23 @@ example_3_outlier_handling <- function() {
 
     for (method in c("bisquare", "talwar")) {
         model <- OnlineLoess(
-            fraction = 0.5, iterations = 5L,
+            fraction = 0.5,
+            iterations = 5L,
             robustness_method = method,
             window_capacity = 6L
         )
         result <- add_all_points(model, x, y)
         valid <- result$smoothed[!is.na(result$smoothed)]
         cat(sprintf(
-            "  %s: [%s]\n", method, paste(round(valid, 1), collapse = ", ")
+            "  %s: [%s]\n",
+            method,
+            paste0(round(valid, 1), collapse = ", ")
         ))
     }
     cat("\n")
 }
 
-# ── Example 4: Window Size Comparison ────────────────────────────────────────
+# -- Example 4: Window Size Comparison ----------------------------------------
 example_4_window_comparison <- function() {
     cat("Example 4: Window Size Comparison\n")
 
@@ -112,7 +119,8 @@ example_4_window_comparison <- function() {
 
     for (w in c(5L, 10L, 15L)) {
         model <- OnlineLoess(
-            fraction = 0.5, iterations = 2L,
+            fraction = 0.5,
+            iterations = 2L,
             window_capacity = w
         )
         result <- add_all_points(model, x, y)
@@ -120,13 +128,14 @@ example_4_window_comparison <- function() {
         last5 <- tail(valid, 5)
         cat(sprintf(
             "  window_capacity=%d: last 5 = [%s]\n",
-            w, paste(round(last5, 2), collapse = ", ")
+            w,
+            paste0(round(last5, 2), collapse = ", ")
         ))
     }
     cat("\n")
 }
 
-# ── Example 5: Memory-Bounded Processing ──────────────────────────────────────
+# -- Example 5: Memory-Bounded Processing --------------------------------------
 example_5_memory_bounded <- function() {
     cat("Example 5: Memory-Bounded Processing (Embedded Systems)\n")
 
@@ -143,18 +152,20 @@ example_5_memory_bounded <- function() {
         if (milestone <= n_out) {
             cat(sprintf(
                 "  Processed: %4d pts | smoothed=%.2f\n",
-                milestone, valid_smoothed[milestone]
+                milestone,
+                valid_smoothed[milestone]
             ))
         }
     }
     cat(sprintf(
         "  Total smoothed: %d, final: %.2f\n",
-        n_out, tail(valid_smoothed, 1)
+        n_out,
+        tail(valid_smoothed, 1)
     ))
     cat("  Memory: constant (window=20)\n\n")
 }
 
-# ── Example 6: Sliding Window Behavior ───────────────────────────────────────
+# -- Example 6: Sliding Window Behavior ---------------------------------------
 example_6_sliding_window <- function() {
     cat("Example 6: Sliding Window Behavior\n")
 
@@ -166,25 +177,37 @@ example_6_sliding_window <- function() {
 
     cat(sprintf(
         "  %4s %6s %8s %10s %-22s\n",
-        "Pt", "X", "Y", "Smoothed", "Status"
+        "Pt",
+        "X",
+        "Y",
+        "Smoothed",
+        "Status"
     ))
     for (i in seq_along(x)) {
         if (!is.na(result$smoothed[i])) {
             cat(sprintf(
                 "  %4d %6.0f %8.0f %10.2f %-22s\n",
-                i, x[i], y[i], result$smoothed[i], "Window full (sliding)"
+                i,
+                x[i],
+                y[i],
+                result$smoothed[i],
+                "Window full (sliding)"
             ))
         } else {
             cat(sprintf(
                 "  %4d %6.0f %8.0f %10s %-22s\n",
-                i, x[i], y[i], "-", sprintf("Filling (%d/4)", i)
+                i,
+                x[i],
+                y[i],
+                "-",
+                sprintf("Filling (%d/4)", i)
             ))
         }
     }
     cat("  Output starts after window fills (4 pts), then slides.\n\n")
 }
 
-# ── Example 7: Benchmark (Sequential Online) ──────────────────────────────────
+# -- Example 7: Benchmark (Sequential Online) ----------------------------------
 example_7_benchmark <- function() {
     cat("Example 7: Benchmark (Sequential Online)\n")
 
@@ -200,11 +223,12 @@ example_7_benchmark <- function() {
     valid <- result$smoothed[!is.na(result$smoothed)]
     cat(sprintf(
         "  %d pts processed in %.2fms (window_capacity=10)\n\n",
-        length(valid), elapsed_ms
+        length(valid),
+        elapsed_ms
     ))
 }
 
-# ── Example 8: Update Modes (Full vs Incremental) and min_points ──────────────
+# -- Example 8: Update Modes (Full vs Incremental) and min_points --------------
 example_8_update_modes <- function() {
     cat("Example 8: Update Modes (Full vs Incremental) and min_points\n")
 
@@ -213,22 +237,28 @@ example_8_update_modes <- function() {
 
     for (mode in c("full", "incremental")) {
         model <- OnlineLoess(
-            fraction = 0.5, iterations = 2L,
-            update_mode = mode, min_points = 5L,
+            fraction = 0.5,
+            iterations = 2L,
+            update_mode = mode,
+            min_points = 5L,
             window_capacity = 15L
         )
         result <- add_all_points(model, x, y)
         valid <- result$smoothed[!is.na(result$smoothed)]
         cat(sprintf(
             "  %s: %d pts emitted (out of %d)\n",
-            mode, length(valid), length(x)
+            mode,
+            length(valid),
+            length(x)
         ))
     }
 
     # Show last smoothed value
     model <- OnlineLoess(
-        fraction = 0.5, iterations = 2L,
-        window_capacity = 10L, min_points = 3L
+        fraction = 0.5,
+        iterations = 2L,
+        window_capacity = 10L,
+        min_points = 3L
     )
     result <- add_all_points(model, x, y)
     valid <- result$smoothed[!is.na(result$smoothed)]
@@ -238,7 +268,7 @@ example_8_update_modes <- function() {
     cat("\n")
 }
 
-# ── Example 9: Advanced Online Options ────────────────────────────────────────
+# -- Example 9: Advanced Online Options ----------------------------------------
 example_9_online_options <- function() {
     cat("Example 9: Advanced Online Options\n")
 
@@ -246,7 +276,8 @@ example_9_online_options <- function() {
     y <- 2 * x + 1
 
     model <- OnlineLoess(
-        fraction = 0.5, iterations = 2L,
+        fraction = 0.5,
+        iterations = 2L,
         degree = "quadratic",
         scaling_method = "mar",
         boundary_policy = "reflect",
@@ -267,7 +298,7 @@ example_9_online_options <- function() {
     cat("\n")
 }
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# -- Main ----------------------------------------------------------------------
 main <- function() {
     cat(strrep("=", 60), "\n")
     cat("rfastloess Online Smoothing - Comprehensive Examples\n")
@@ -286,4 +317,6 @@ main <- function() {
     cat("=== Online Smoothing Examples Complete ===\n")
 }
 
-if (sys.nframe() == 0) main()
+if (sys.nframe() == 0) {
+    main()
+}

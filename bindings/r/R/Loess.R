@@ -82,33 +82,70 @@
 #' lines(x, result$y, col = "red")
 #' @export
 Loess <- function(
-    fraction = 0.67, iterations = 3L,
-    weight_function = "tricube", robustness_method = "bisquare",
-    scaling_method = "mad", boundary_policy = "extend",
-    confidence_intervals = NULL, prediction_intervals = NULL,
-    return_diagnostics = FALSE, return_residuals = FALSE,
-    return_robustness_weights = FALSE, zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL, cv_fractions = NULL,
-    cv_method = "kfold", cv_k = 5L,
-    parallel = TRUE, degree = "linear",
-    dimensions = 1L, distance_metric = "normalized",
-    surface_mode = "interpolation", return_se = FALSE,
-    weighted_metric_weights = NULL, cell = NULL,
-    interpolation_vertices = NULL, boundary_degree_fallback = NULL,
+    fraction = 0.67,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    return_robustness_weights = FALSE,
+    zero_weight_fallback = "use_local_mean",
+    auto_converge = NULL,
+    cv_fractions = NULL,
+    cv_method = "kfold",
+    cv_k = 5L,
+    parallel = TRUE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    return_se = FALSE,
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL,
     cv_seed = NULL
 ) {
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLoess$new, env_args(loess_params))
+    .make_loess(
+        handle,
+        fraction,
+        iterations,
+        weight_function,
+        robustness_method,
+        scaling_method,
+        parallel,
+        degree,
+        dimensions,
+        distance_metric,
+        surface_mode
+    )
+}
 
-    # Return a wrapper that coerces inputs for methods
+.make_loess <- function(
+    handle,
+    fraction,
+    iterations,
+    weight_function,
+    robustness_method,
+    scaling_method,
+    parallel,
+    degree,
+    dimensions,
+    distance_metric,
+    surface_mode
+) {
     structure(
         list(
             handle = handle,
             fit = function(x, y, custom_weights = NULL) {
-                validated_args <- validate_common_args(
-                    x, y, fraction, iterations
-                )
-                handle$fit(validated_args$x, validated_args$y, custom_weights)
+                a <- validate_common_args(x, y, fraction, iterations)
+                handle$fit(a$x, a$y, custom_weights)
             },
             params = list(
                 fraction = fraction,
@@ -150,36 +187,89 @@ env_args <- function(param_names) {
 #' Parameter names for each Loess constructor
 #' @noRd
 loess_params <- c(
-    "fraction", "iterations", "weight_function", "robustness_method",
-    "scaling_method", "boundary_policy", "confidence_intervals",
-    "prediction_intervals", "return_diagnostics", "return_residuals",
-    "return_robustness_weights", "zero_weight_fallback", "auto_converge",
-    "cv_fractions", "cv_method", "cv_k", "parallel",
-    "degree", "dimensions", "distance_metric", "surface_mode", "return_se",
-    "weighted_metric_weights", "cell", "interpolation_vertices",
-    "boundary_degree_fallback", "cv_seed"
+    "fraction",
+    "iterations",
+    "weight_function",
+    "robustness_method",
+    "scaling_method",
+    "boundary_policy",
+    "confidence_intervals",
+    "prediction_intervals",
+    "return_diagnostics",
+    "return_residuals",
+    "return_robustness_weights",
+    "zero_weight_fallback",
+    "auto_converge",
+    "cv_fractions",
+    "cv_method",
+    "cv_k",
+    "parallel",
+    "degree",
+    "dimensions",
+    "distance_metric",
+    "surface_mode",
+    "return_se",
+    "weighted_metric_weights",
+    "cell",
+    "interpolation_vertices",
+    "boundary_degree_fallback",
+    "cv_seed"
 )
 
 online_params <- c(
-    "fraction", "window_capacity", "min_points", "iterations",
-    "weight_function", "robustness_method", "scaling_method",
-    "boundary_policy", "zero_weight_fallback", "update_mode", "auto_converge",
-    "return_robustness_weights", "return_diagnostics",
-    "return_residuals", "parallel",
-    "degree", "dimensions", "distance_metric", "surface_mode", "return_se",
-    "confidence_intervals", "prediction_intervals",
-    "weighted_metric_weights", "cell", "interpolation_vertices",
+    "fraction",
+    "window_capacity",
+    "min_points",
+    "iterations",
+    "weight_function",
+    "robustness_method",
+    "scaling_method",
+    "boundary_policy",
+    "zero_weight_fallback",
+    "update_mode",
+    "auto_converge",
+    "return_robustness_weights",
+    "return_diagnostics",
+    "return_residuals",
+    "parallel",
+    "degree",
+    "dimensions",
+    "distance_metric",
+    "surface_mode",
+    "return_se",
+    "confidence_intervals",
+    "prediction_intervals",
+    "weighted_metric_weights",
+    "cell",
+    "interpolation_vertices",
     "boundary_degree_fallback"
 )
 
 streaming_params <- c(
-    "fraction", "chunk_size", "overlap", "iterations",
-    "weight_function", "robustness_method", "scaling_method",
-    "boundary_policy", "zero_weight_fallback", "auto_converge",
-    "return_diagnostics", "return_residuals", "return_robustness_weights",
-    "merge_strategy", "parallel",
-    "degree", "dimensions", "distance_metric", "surface_mode", "return_se",
-    "confidence_intervals", "prediction_intervals",
-    "weighted_metric_weights", "cell", "interpolation_vertices",
+    "fraction",
+    "chunk_size",
+    "overlap",
+    "iterations",
+    "weight_function",
+    "robustness_method",
+    "scaling_method",
+    "boundary_policy",
+    "zero_weight_fallback",
+    "auto_converge",
+    "return_diagnostics",
+    "return_residuals",
+    "return_robustness_weights",
+    "merge_strategy",
+    "parallel",
+    "degree",
+    "dimensions",
+    "distance_metric",
+    "surface_mode",
+    "return_se",
+    "confidence_intervals",
+    "prediction_intervals",
+    "weighted_metric_weights",
+    "cell",
+    "interpolation_vertices",
     "boundary_degree_fallback"
 )

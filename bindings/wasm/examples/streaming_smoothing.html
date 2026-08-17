@@ -42,7 +42,7 @@
     <div id="output">Initializing...</div>
 
     <script type="module">
-        import init, { StreamingLoessWasm } from "../../bindings/wasm/pkg-web/fastloess_wasm.js";
+        import init, { StreamingLoessWasm } from "../pkg-web/fastloess_wasm.js";
 
         const out = document.getElementById('output');
         function log(msg) { out.innerText += msg + "\n"; console.log(msg); }

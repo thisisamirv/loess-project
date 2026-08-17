@@ -1,4 +1,4 @@
-#include "../../bindings/cpp/include/fastloess.hpp"
+#include "../include/fastloess.hpp"
 #include <array>
 #include <cmath>
 #include <cstddef>

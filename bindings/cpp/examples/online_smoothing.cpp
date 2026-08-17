@@ -13,7 +13,7 @@
 #include <random>
 #include <vector>
 
-#include "../../bindings/cpp/include/fastloess.hpp"
+#include "../include/fastloess.hpp"
 
 namespace {
 

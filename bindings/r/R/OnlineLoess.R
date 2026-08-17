@@ -24,26 +24,47 @@
 #' }
 #' @export
 OnlineLoess <- function(
-    fraction = 0.67, window_capacity = 1000L,
-    min_points = 3L, iterations = 3L,
-    weight_function = "tricube", robustness_method = "bisquare",
-    scaling_method = "mad", boundary_policy = "extend",
-    update_mode = "full", auto_converge = NULL,
-    return_robustness_weights = FALSE, return_diagnostics = FALSE,
-    return_residuals = FALSE, zero_weight_fallback = "use_local_mean",
-    parallel = FALSE, degree = "linear",
-    dimensions = 1L, distance_metric = "normalized",
-    surface_mode = "interpolation", return_se = FALSE,
-    confidence_intervals = NULL, prediction_intervals = NULL,
-    weighted_metric_weights = NULL, cell = NULL,
-    interpolation_vertices = NULL, boundary_degree_fallback = NULL
+    fraction = 0.67,
+    window_capacity = 1000L,
+    min_points = 3L,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    update_mode = "full",
+    auto_converge = NULL,
+    return_robustness_weights = FALSE,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    zero_weight_fallback = "use_local_mean",
+    parallel = FALSE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    return_se = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL
 ) {
     validate_params(
-        fraction = fraction, window_capacity = window_capacity,
+        fraction = fraction,
+        window_capacity = window_capacity,
         min_points = min_points
     )
     handle <- do.call(ROnlineLoess$new, env_args(online_params))
+    .make_online_loess(
+        handle, fraction, window_capacity, min_points, iterations, parallel
+    )
+}
 
+.make_online_loess <- function(
+    handle, fraction, window_capacity, min_points, iterations, parallel
+) {
     structure(
         list(
             handle = handle,
