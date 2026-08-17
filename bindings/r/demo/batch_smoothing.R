@@ -34,7 +34,7 @@ example_1_basic_smoothing <- function() {
     x <- c(1, 2, 3, 4, 5)
     y <- c(2.0, 4.1, 5.9, 8.2, 9.8)
 
-    result <- Loess(fraction = 0.5, iterations = 3L)$fit(x, y)
+    result <- fit(Loess(fraction = 0.5, iterations = 3L), x, y)
 
     cat(sprintf("  fraction_used=%g\n", result$fraction_used))
     cat("  Smoothed:", paste0(round(result$y, 3), collapse = ", "), "\n\n")
@@ -47,13 +47,13 @@ example_2_robust_with_outliers <- function() {
     x <- c(1, 2, 3, 4, 5, 6, 7, 8)
     y <- c(2.1, 4.0, 5.9, 25.0, 10.1, 12.0, 14.1, 15.9) # 25.0 is outlier
 
-    result <- Loess(
+    result <- fit(Loess(
         fraction = 0.5,
         iterations = 5L,
         robustness_method = "bisquare",
         return_robustness_weights = TRUE,
         return_residuals = TRUE
-    )$fit(x, y)
+    ), x, y)
 
     if (!is.null(result$robustness_weights)) {
         for (i in seq_along(result$robustness_weights)) {
@@ -77,12 +77,12 @@ example_3_uncertainty_quant <- function() {
     x <- c(1, 2, 3, 4, 5, 6, 7, 8)
     y <- c(2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7)
 
-    result <- Loess(
+    result <- fit(Loess(
         fraction = 0.5,
         iterations = 3L,
         confidence_intervals = 0.95,
         prediction_intervals = 0.95
-    )$fit(x, y)
+    ), x, y)
 
     cat("  x  y_smooth  conf_low  conf_high  pred_low  pred_high\n")
     for (i in seq_along(result$y)) {
@@ -106,13 +106,13 @@ example_4_cross_validation <- function() {
     x <- 1:20
     y <- 2 * x + 1 + sin(x * 0.5)
 
-    result <- Loess(
+    result <- fit(Loess(
         cv_fractions = c(0.2, 0.3, 0.5, 0.7),
         cv_method = "kfold",
         cv_k = 5L,
         iterations = 2L,
         return_diagnostics = TRUE
-    )$fit(x, y)
+    ), x, y)
 
     cat(sprintf("  Selected fraction: %g\n", result$fraction_used))
     if (!is.null(result$cv_scores)) {
@@ -136,7 +136,7 @@ example_5_complete_diagnostics <- function() {
     x <- c(1, 2, 3, 4, 5, 6, 7, 8)
     y <- c(2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7)
 
-    result <- Loess(
+    result <- fit(Loess(
         fraction = 0.5,
         iterations = 3L,
         confidence_intervals = 0.95,
@@ -144,7 +144,7 @@ example_5_complete_diagnostics <- function() {
         return_diagnostics = TRUE,
         return_residuals = TRUE,
         return_robustness_weights = TRUE
-    )$fit(x, y)
+    ), x, y)
 
     if (!is.null(result$diagnostics)) {
         d <- result$diagnostics
@@ -181,7 +181,7 @@ example_6_different_kernels <- function() {
     y <- c(2.0, 4.1, 5.9, 8.2, 9.8)
 
     for (kernel in c("tricube", "epanechnikov", "gaussian", "biweight")) {
-        result <- Loess(fraction = 0.5, weight_function = kernel)$fit(x, y)
+        result <- fit(Loess(fraction = 0.5, weight_function = kernel), x, y)
         cat(sprintf(
             "  %s: [%s]\n",
             kernel,
@@ -199,12 +199,12 @@ example_7_robustness_methods <- function() {
     y <- c(2.0, 4.1, 20.0, 8.2, 9.8) # 20.0 is an outlier
 
     for (method in c("bisquare", "huber", "talwar")) {
-        result <- Loess(
+        result <- fit(Loess(
             fraction = 0.5,
             iterations = 5L,
             robustness_method = method,
             return_robustness_weights = TRUE
-        )$fit(x, y)
+        ), x, y)
         cat(sprintf("  %s:\n", method))
         cat(sprintf(
             "    Smoothed: [%s]\n",
@@ -229,7 +229,7 @@ example_8_benchmark <- function() {
     y <- sin(x * 0.1) + cos(x * 0.01)
 
     t0 <- proc.time()["elapsed"]
-    result <- Loess(parallel = TRUE)$fit(x, y)
+    result <- fit(Loess(parallel = TRUE), x, y)
     elapsed_ms <- (proc.time()["elapsed"] - t0) * 1000
 
     cat(sprintf("  %d points in %.2fms\n", n, elapsed_ms))
@@ -248,7 +248,7 @@ example_9_scaling_methods <- function() {
     d <- make_linear(20)
 
     for (method in c("mar", "mad", "mean")) {
-        result <- Loess(fraction = 0.5, scaling_method = method)$fit(d$x, d$y)
+        result <- fit(Loess(fraction = 0.5, scaling_method = method), d$x, d$y)
         cat(sprintf("  %s: y[1]=%.3f\n", method, result$y[1]))
     }
     cat("\n")
@@ -261,7 +261,7 @@ example_10_boundary_policies <- function() {
     d <- make_linear(30)
 
     for (policy in c("extend", "reflect", "zero", "noboundary")) {
-        result <- Loess(fraction = 0.5, boundary_policy = policy)$fit(d$x, d$y)
+        result <- fit(Loess(fraction = 0.5, boundary_policy = policy), d$x, d$y)
         n <- length(result$y)
         cat(sprintf(
             "  %s: first=%.2f, last=%.2f\n",
@@ -280,7 +280,7 @@ example_11_zero_wt_fallback <- function() {
     d <- make_linear(20)
 
     for (fb in c("use_local_mean", "return_original", "return_none")) {
-        result <- Loess(fraction = 0.5, zero_weight_fallback = fb)$fit(d$x, d$y)
+        result <- fit(Loess(fraction = 0.5, zero_weight_fallback = fb), d$x, d$y)
         cat(sprintf("  %s: y[1]=%.3f\n", fb, result$y[1]))
     }
     cat("\n")
@@ -293,11 +293,11 @@ example_12_polynomial_degrees <- function() {
     d <- make_linear(30)
 
     for (deg in c("constant", "linear", "quadratic", "cubic", "quartic")) {
-        result <- Loess(
+        result <- fit(Loess(
             fraction = 0.5,
             iterations = 2L,
             degree = deg
-        )$fit(d$x, d$y)
+        ), d$x, d$y)
         iter_used <- result$iterations_used
         if (is.null(iter_used)) {
             iter_used <- "NULL"
@@ -319,15 +319,15 @@ example_13_distance_metrics <- function() {
     d <- make_linear(20)
 
     for (metric in c("euclidean", "normalized", "manhattan", "chebyshev")) {
-        result <- Loess(fraction = 0.5, distance_metric = metric)$fit(d$x, d$y)
+        result <- fit(Loess(fraction = 0.5, distance_metric = metric), d$x, d$y)
         cat(sprintf("  %s: y[1]=%.3f\n", metric, result$y[1]))
     }
 
     # Minkowski with custom p via "minkowski:p" format
-    result_mink <- Loess(
+    result_mink <- fit(Loess(
         fraction = 0.5,
         distance_metric = "minkowski:3"
-    )$fit(d$x, d$y)
+    ), d$x, d$y)
     cat(sprintf("  minkowski(p=3): y[1]=%.3f\n", result_mink$y[1]))
     cat("\n")
 }
@@ -339,13 +339,13 @@ example_14_surface_modes_se <- function() {
     d <- make_linear(30)
 
     # Direct surface -- fits every point; SE fields fully populated
-    r_direct <- Loess(
+    r_direct <- fit(Loess(
         fraction = 0.5,
         surface_mode = "direct",
         return_se = TRUE,
         confidence_intervals = 0.95,
         prediction_intervals = 0.95
-    )$fit(d$x, d$y)
+    ), d$x, d$y)
 
     cat("  surface_mode=direct:\n")
     cat(sprintf(
@@ -382,11 +382,11 @@ example_14_surface_modes_se <- function() {
     }
 
     # Interpolation surface -- faster, approximate
-    r_interp <- Loess(
+    r_interp <- fit(Loess(
         fraction = 0.5,
         surface_mode = "interpolation",
         return_se = TRUE
-    )$fit(d$x, d$y)
+    ), d$x, d$y)
 
     cat("  surface_mode=interpolation:\n")
     cat(sprintf("    y[1]: %.3f\n", r_interp$y[1]))
@@ -407,7 +407,7 @@ example_15_additional_kernels <- function() {
     y <- c(2.0, 4.1, 5.9, 8.2, 9.8)
 
     for (kernel in c("uniform", "triangle", "cosine")) {
-        result <- Loess(fraction = 0.5, weight_function = kernel)$fit(x, y)
+        result <- fit(Loess(fraction = 0.5, weight_function = kernel), x, y)
         cat(sprintf(
             "  %s: [%s]\n",
             kernel,
@@ -425,10 +425,10 @@ example_16_loocv_auto_conv <- function() {
     y <- 2 * x + 1 + sin(x * 0.5)
 
     # Leave-one-out cross-validation
-    r_loocv <- Loess(
+    r_loocv <- fit(Loess(
         cv_fractions = c(0.3, 0.5, 0.7),
         cv_method = "loocv"
-    )$fit(x, y)
+    ), x, y)
     cat(sprintf("  LOOCV selected fraction: %g\n", r_loocv$fraction_used))
     if (!is.null(r_loocv$cv_scores)) {
         cat(sprintf(
@@ -438,11 +438,11 @@ example_16_loocv_auto_conv <- function() {
     }
 
     # K-Fold cross-validation
-    r_kfold <- Loess(
+    r_kfold <- fit(Loess(
         cv_fractions = c(0.2, 0.4, 0.6),
         cv_method = "kfold",
         cv_k = 5L
-    )$fit(x, y)
+    ), x, y)
     cat(sprintf("  KFold(k=5) selected fraction: %g\n", r_kfold$fraction_used))
     if (!is.null(r_kfold$cv_scores)) {
         cat(sprintf(
@@ -452,7 +452,7 @@ example_16_loocv_auto_conv <- function() {
     }
 
     # Auto-converge: stop robustness iterations when change < tolerance
-    r_ac <- Loess(fraction = 0.5, auto_converge = 1e-4)$fit(x, y)
+    r_ac <- fit(Loess(fraction = 0.5, auto_converge = 1e-4), x, y)
     iter_used_ac <- r_ac$iterations_used
     if (is.null(iter_used_ac)) {
         iter_used_ac <- "NULL"
@@ -472,10 +472,10 @@ example_17_interp_tuning <- function() {
     d <- make_linear(n)
 
     # Default (interpolation) -- fastest, uses a spatial grid
-    r_interp <- Loess(
+    r_interp <- fit(Loess(
         fraction = 0.5,
         surface_mode = "interpolation"
-    )$fit(d$x, d$y)
+    ), d$x, d$y)
     cat(sprintf(
         "  interpolation: y[1]=%.3f, y[%d]=%.3f\n",
         r_interp$y[1],
@@ -484,7 +484,7 @@ example_17_interp_tuning <- function() {
     ))
 
     # Direct -- fits every point exactly, more accurate but slower
-    r_direct <- Loess(fraction = 0.5, surface_mode = "direct")$fit(d$x, d$y)
+    r_direct <- fit(Loess(fraction = 0.5, surface_mode = "direct"), d$x, d$y)
     cat(sprintf(
         "  direct:        y[1]=%.3f, y[%d]=%.3f\n",
         r_direct$y[1],
@@ -494,16 +494,16 @@ example_17_interp_tuning <- function() {
 
     # Fraction sweep with direct surface
     for (frac in c(0.2, 0.5, 0.8)) {
-        r <- Loess(fraction = frac, surface_mode = "direct")$fit(d$x, d$y)
+        r <- fit(Loess(fraction = frac, surface_mode = "direct"), d$x, d$y)
         cat(sprintf("  direct fraction=%.1f: y[1]=%.3f\n", frac, r$y[1]))
     }
 
     # Interpolation + SE for hat-matrix statistics
-    r_se <- Loess(
+    r_se <- fit(Loess(
         fraction = 0.5,
         surface_mode = "interpolation",
         return_se = TRUE
-    )$fit(d$x, d$y)
+    ), d$x, d$y)
     if (!is.null(r_se$enp)) {
         cat(sprintf("  interpolation+SE enp: %.3f\n", r_se$enp))
     }

@@ -51,7 +51,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
         chunk_size = 5000,
         overlap = 500
     )
-    result <- model$process_chunk(x_chunk, y_chunk)
+    result <- process_chunk(model, x_chunk, y_chunk)
     ```
 
 === "Python"
@@ -189,8 +189,8 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
     y_chunk <- sin(x_chunk) + rnorm(n, sd = 0.3)
 
     model <- StreamingLoess(merge_strategy = "take_first")
-    result <- model$process_chunk(x_chunk, y_chunk)
-    final <- model$finalize()
+    result <- process_chunk(model, x_chunk, y_chunk)
+    final <- finalize(model)
     ```
 
 === "Python"
@@ -322,8 +322,8 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
     y_chunk <- sin(x_chunk) + rnorm(n, sd = 0.3)
 
     model <- StreamingLoess(merge_strategy = "take_last")
-    result <- model$process_chunk(x_chunk, y_chunk)
-    final <- model$finalize()
+    result <- process_chunk(model, x_chunk, y_chunk)
+    final <- finalize(model)
     ```
 
 === "Python"
@@ -463,8 +463,8 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
         chunk_size = 5000,
         overlap = 500
     )
-    result <- model$process_chunk(x_chunk, y_chunk)
-    final <- model$finalize()
+    result <- process_chunk(model, x_chunk, y_chunk)
+    final <- finalize(model)
     ```
 
 === "Python"

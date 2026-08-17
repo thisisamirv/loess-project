@@ -30,12 +30,12 @@ process_all <- function(model, x, y, chunk_size, overlap) {
     start <- 1L
     while (start + chunk_size - 1L <= n) {
         end <- start + chunk_size - 1L
-        res <- model$process_chunk(x[start:end], y[start:end])
+        res <- process_chunk(model, x[start:end], y[start:end])
         result_x <- c(result_x, res$x)
         result_y <- c(result_y, res$y)
         start <- start + step
     }
-    fin <- model$finalize()
+    fin <- finalize(model)
     list(x = c(result_x, fin$x), y = c(result_y, fin$y))
 }
 
@@ -69,7 +69,7 @@ example_1_basic_chunked <- function() {
     start <- 1L
     while (start + chunk_size - 1L <= n) {
         end <- start + chunk_size - 1L
-        res <- model$process_chunk(d$x[start:end], d$y[start:end])
+        res <- process_chunk(model, d$x[start:end], d$y[start:end])
         if (length(res$x) > 0) {
             result_x <- c(result_x, res$x)
             result_y <- c(result_y, res$y)
@@ -84,7 +84,7 @@ example_1_basic_chunked <- function() {
         ci <- ci + 1L
         start <- start + chunk_size - overlap
     }
-    fin <- model$finalize()
+    fin <- finalize(model)
     if (length(fin$x) > 0) {
         result_x <- c(result_x, fin$x)
         result_y <- c(result_y, fin$y)
@@ -118,14 +118,14 @@ example_2_chunk_comparison <- function() {
         start <- 1L
         while (start + cfg$cs - 1L <= n) {
             end <- start + cfg$cs - 1L
-            res <- model$process_chunk(d$x[start:end], d$y[start:end])
+            res <- process_chunk(model, d$x[start:end], d$y[start:end])
             if (length(res$x) > 0) {
                 chunks <- chunks + 1L
                 total <- total + length(res$x)
             }
             start <- start + cfg$cs - cfg$ov
         }
-        fin <- model$finalize()
+        fin <- finalize(model)
         if (length(fin$x) > 0) {
             chunks <- chunks + 1L
             total <- total + length(fin$x)
@@ -163,11 +163,11 @@ example_3_overlap_strategies <- function() {
         start <- 1L
         while (start + cs - 1L <= n) {
             end <- start + cs - 1L
-            res <- model$process_chunk(d$x[start:end], d$y[start:end])
+            res <- process_chunk(model, d$x[start:end], d$y[start:end])
             total <- total + length(res$x)
             start <- start + cs - ov
         }
-        total <- total + length(model$finalize()$x)
+        total <- total + length(finalize(model)$x)
         cat(sprintf("  %s: total output=%d\n", label, total))
     }
     cat("\n")
@@ -195,14 +195,14 @@ example_4_large_dataset <- function() {
     start <- 1L
     while (start + cs - 1L <= n) {
         end <- start + cs - 1L
-        res <- model$process_chunk(x[start:end], y[start:end])
+        res <- process_chunk(model, x[start:end], y[start:end])
         total <- total + length(res$x)
         if (total > 0L && total %% 2000L < step) {
             cat(sprintf("  Progress: ~%d pts smoothed\n", total))
         }
         start <- start + step
     }
-    total <- total + length(model$finalize()$x)
+    total <- total + length(finalize(model)$x)
     cat(sprintf(
         "  Total: %d/%d, memory: constant (chunk=%d)\n\n",
         total,
@@ -233,13 +233,13 @@ example_5_outlier_handling <- function() {
         start <- 1L
         while (start + 29L <= n) {
             end <- start + 29L
-            res <- model$process_chunk(x[start:end], y[start:end])
+            res <- process_chunk(model, x[start:end], y[start:end])
             if (!is.null(res$residuals)) {
                 large <- large + sum(abs(res$residuals) > 10)
             }
             start <- start + 20L
         }
-        fin <- model$finalize()
+        fin <- finalize(model)
         if (!is.null(fin$residuals)) {
             large <- large + sum(abs(fin$residuals) > 10)
         }
@@ -278,7 +278,7 @@ example_6_file_simulation <- function() {
             start_line,
             end_line
         ))
-        res <- model$process_chunk(xc, yc)
+        res <- process_chunk(model, xc, yc)
         if (length(res$x) > 0) {
             out_count <- out_count + length(res$x)
             cat(sprintf(
@@ -288,7 +288,7 @@ example_6_file_simulation <- function() {
             ))
         }
     }
-    fin <- model$finalize()
+    fin <- finalize(model)
     if (length(fin$x) > 0) {
         out_count <- out_count + length(fin$x)
         cat(sprintf("  Finalizing: %d remaining pts\n", length(fin$x)))
@@ -317,10 +317,10 @@ example_7_benchmark <- function() {
         end <- start + cs - 1L
         xc <- as.numeric((start - 1L):(end - 1L))
         yc <- sin(xc * 0.1) + cos(xc * 0.01)
-        total <- total + length(model$process_chunk(xc, yc)$x)
+        total <- total + length(process_chunk(model, xc, yc)$x)
         start <- start + cs - ov
     }
-    total <- total + length(model$finalize()$x)
+    total <- total + length(finalize(model)$x)
     elapsed_ms <- (proc.time()["elapsed"] - t0) * 1000
 
     cat(sprintf(
@@ -352,11 +352,11 @@ example_8_merge_strategies <- function() {
         start <- 1L
         while (start + 19L <= n) {
             end <- start + 19L
-            res <- model$process_chunk(d$x[start:end], d$y[start:end])
+            res <- process_chunk(model, d$x[start:end], d$y[start:end])
             total <- total + length(res$x)
             start <- start + 15L
         }
-        total <- total + length(model$finalize()$x)
+        total <- total + length(finalize(model)$x)
         cat(sprintf("  %s: total=%d\n", strategy, total))
     }
     cat("\n")
@@ -390,11 +390,11 @@ example_9_advanced_options <- function() {
     start <- 1L
     while (start + 19L <= n) {
         end <- start + 19L
-        res <- model$process_chunk(d$x[start:end], d$y[start:end])
+        res <- process_chunk(model, d$x[start:end], d$y[start:end])
         total <- total + length(res$x)
         start <- start + 15L
     }
-    fin <- model$finalize()
+    fin <- finalize(model)
     total <- total + length(fin$x)
 
     cat(sprintf("  total pts: %d\n", total))

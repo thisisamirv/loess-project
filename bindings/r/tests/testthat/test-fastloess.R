@@ -15,7 +15,7 @@ test_that("Loess basic functionality works", {
     x <- c(1, 2, 3, 4, 5)
     y <- c(2, 4, 6, 8, 10)
 
-    result <- Loess(fraction = 0.67)$fit(as.double(x), as.double(y))
+    result <- fit(Loess(fraction = 0.67), as.double(x), as.double(y))
 
     expect_type(result, "list")
     expect_named(
@@ -33,8 +33,8 @@ test_that("Loess handles different fractions", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, sd = 0.1)
 
-    result_low <- Loess(fraction = 0.2)$fit(as.double(x), as.double(y))
-    result_high <- Loess(fraction = 0.8)$fit(as.double(x), as.double(y))
+    result_low <- fit(Loess(fraction = 0.2), as.double(x), as.double(y))
+    result_high <- fit(Loess(fraction = 0.8), as.double(x), as.double(y))
 
     expect_length(result_low$y, length(y))
     expect_length(result_high$y, length(y))
@@ -52,9 +52,9 @@ test_that("Loess robustness iterations work", {
     y[c(10, 25, 40)] <- y[c(10, 25, 40)] + 5
 
     model_no_robust <- Loess(fraction = 0.3, iterations = 0)
-    result_no_robust <- model_no_robust$fit(as.double(x), as.double(y))
+    result_no_robust <- fit(model_no_robust, as.double(x), as.double(y))
     model_robust <- Loess(fraction = 0.3, iterations = 5)
-    result_robust <- model_robust$fit(as.double(x), as.double(y))
+    result_robust <- fit(model_robust, as.double(x), as.double(y))
 
     expect_length(result_no_robust$y, length(y))
     expect_length(result_robust$y, length(y))
@@ -66,7 +66,7 @@ test_that("Loess confidence intervals work", {
     y <- sin(x) + rnorm(50, sd = 0.2)
 
     model <- Loess(fraction = 0.5, confidence_intervals = 0.95)
-    result <- model$fit(as.double(x), as.double(y))
+    result <- fit(model, as.double(x), as.double(y))
 
     expect_true("confidence_lower" %in% names(result))
     expect_true("confidence_upper" %in% names(result))
@@ -84,7 +84,7 @@ test_that("Loess prediction intervals work", {
     y <- sin(x) + rnorm(50, sd = 0.2)
 
     model <- Loess(fraction = 0.5, prediction_intervals = 0.95)
-    result <- model$fit(as.double(x), as.double(y))
+    result <- fit(model, as.double(x), as.double(y))
 
     expect_true("prediction_lower" %in% names(result))
     expect_true("prediction_upper" %in% names(result))
@@ -93,7 +93,7 @@ test_that("Loess prediction intervals work", {
 
     # PI should be wider than CI
     model_ci <- Loess(fraction = 0.5, confidence_intervals = 0.95)
-    result_ci <- model_ci$fit(as.double(x), as.double(y))
+    result_ci <- fit(model_ci, as.double(x), as.double(y))
     expect_gt(
         mean(result$prediction_upper - result$prediction_lower),
         mean(result_ci$confidence_upper - result_ci$confidence_lower)
@@ -106,7 +106,7 @@ test_that("Loess diagnostics work", {
     y <- 2 * x + rnorm(50, sd = 0.5)
 
     model <- Loess(fraction = 0.5, return_diagnostics = TRUE)
-    result <- model$fit(as.double(x), as.double(y))
+    result <- fit(model, as.double(x), as.double(y))
 
     expect_true("diagnostics" %in% names(result))
     expect_type(result$diagnostics, "list")
@@ -125,7 +125,7 @@ test_that("Loess residuals work", {
     y <- sin(x) + rnorm(50, sd = 0.1)
 
     model <- Loess(fraction = 0.5, return_residuals = TRUE)
-    result <- model$fit(as.double(x), as.double(y))
+    result <- fit(model, as.double(x), as.double(y))
 
     expect_true("residuals" %in% names(result))
     expect_length(result$residuals, length(y))
@@ -138,11 +138,11 @@ test_that("Loess robustness weights work", {
     y <- sin(x) + rnorm(50, sd = 0.1)
     y[25] <- y[25] + 5 # Add outlier
 
-    result <- Loess(
+    result <- fit(Loess(
         fraction = 0.5,
         iterations = 3,
         return_robustness_weights = TRUE
-    )$fit(as.double(x), as.double(y))
+    ), as.double(x), as.double(y))
 
     expect_true("robustness_weights" %in% names(result))
     expect_length(result$robustness_weights, length(y))
@@ -156,11 +156,11 @@ test_that("Loess cross-validation works", {
     x <- seq(0, 10, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.2)
 
-    result <- Loess(
+    result <- fit(Loess(
         cv_fractions = c(0.2, 0.3, 0.5, 0.7),
         cv_method = "kfold",
         cv_k = 5
-    )$fit(as.double(x), as.double(y))
+    ), as.double(x), as.double(y))
 
     expect_true("cv_scores" %in% names(result))
     expect_length(result$cv_scores, 4)
@@ -171,13 +171,13 @@ test_that("Loess handles edge cases", {
     # Minimum data points
     x <- c(1, 2, 3)
     y <- c(1, 2, 3)
-    result <- Loess(fraction = 0.67)$fit(as.double(x), as.double(y))
+    result <- fit(Loess(fraction = 0.67), as.double(x), as.double(y))
     expect_length(result$y, 3)
 
     # Constant y values
     x <- 1:10
     y <- rep(5, 10)
-    result <- Loess(fraction = 0.5)$fit(as.double(x), as.double(y))
+    result <- fit(Loess(fraction = 0.5), as.double(x), as.double(y))
     expect_lt(max(abs(result$y - 5)), 1e-10)
 })
 
@@ -187,9 +187,9 @@ test_that("Loess parallel execution works", {
     y <- sin(x) + rnorm(1000, sd = 0.1)
 
     model_serial <- Loess(fraction = 0.3, parallel = FALSE)
-    result_serial <- model_serial$fit(as.double(x), as.double(y))
+    result_serial <- fit(model_serial, as.double(x), as.double(y))
     model_parallel <- Loess(fraction = 0.3, parallel = TRUE)
-    result_parallel <- model_parallel$fit(as.double(x), as.double(y))
+    result_parallel <- fit(model_parallel, as.double(x), as.double(y))
 
     # Results should be nearly identical
     expect_equal(result_serial$y, result_parallel$y, tolerance = 1e-10)
@@ -202,18 +202,18 @@ test_that("Loess: scaling_method, boundary_policy, zero_weight_fallback", {
     y <- as.double(c(2, 4, 6, 8, 10))
 
     for (sm in c("mad", "mar", "mean")) {
-        r <- Loess(fraction = 0.5, scaling_method = sm)$fit(x, y)
+        r <- fit(Loess(fraction = 0.5, scaling_method = sm), x, y)
         expect_length(r$y, 5)
     }
     for (bp in c("extend", "reflect", "zero", "noboundary")) {
-        r <- Loess(fraction = 0.5, boundary_policy = bp)$fit(x, y)
+        r <- fit(Loess(fraction = 0.5, boundary_policy = bp), x, y)
         expect_length(r$y, 5)
     }
     for (zwf in c("use_local_mean", "return_original", "return_none")) {
-        r <- Loess(fraction = 0.5, zero_weight_fallback = zwf)$fit(x, y)
+        r <- fit(Loess(fraction = 0.5, zero_weight_fallback = zwf), x, y)
         expect_length(r$y, 5)
     }
-    r <- Loess(fraction = 0.5, auto_converge = 1e-4)$fit(x, y)
+    r <- fit(Loess(fraction = 0.5, auto_converge = 1e-4), x, y)
     expect_length(r$y, 5)
 })
 
@@ -222,7 +222,7 @@ test_that("Loess: degree, distance_metric, surface_mode", {
     y <- as.double(c(2, 4, 6, 8, 10))
 
     for (deg in c("constant", "linear", "quadratic")) {
-        r <- Loess(fraction = 0.9, degree = deg)$fit(x, y)
+        r <- fit(Loess(fraction = 0.9, degree = deg), x, y)
         expect_length(r$y, 5)
     }
     for (dm in c(
@@ -232,10 +232,10 @@ test_that("Loess: degree, distance_metric, surface_mode", {
         "chebyshev",
         "minkowski:3"
     )) {
-        r <- Loess(fraction = 0.5, distance_metric = dm)$fit(x, y)
+        r <- fit(Loess(fraction = 0.5, distance_metric = dm), x, y)
         expect_length(r$y, 5)
     }
-    r <- Loess(fraction = 0.5, surface_mode = "direct")$fit(x, y)
+    r <- fit(Loess(fraction = 0.5, surface_mode = "direct"), x, y)
     expect_length(r$y, 5)
 })
 
@@ -243,11 +243,11 @@ test_that("Loess: return_se", {
     x <- as.double(seq(0, 10, length.out = 20))
     y <- sin(x)
 
-    r <- Loess(
+    r <- fit(Loess(
         fraction = 0.5,
         return_se = TRUE,
         surface_mode = "direct"
-    )$fit(x, y)
+    ), x, y)
     expect_true("enp" %in% names(r))
     expect_true("trace_hat" %in% names(r))
     expect_true("leverage" %in% names(r))
@@ -260,8 +260,8 @@ test_that("Loess: custom_weights zero on outlier reduces error", {
     w_zero <- as.double(c(1, 1, 1, 0, 1, 1, 1))
 
     loess <- Loess(fraction = 0.6)
-    r_no_w <- loess$fit(x, y_outlier)
-    r_w <- loess$fit(x, y_outlier, custom_weights = w_zero)
+    r_no_w <- fit(loess, x, y_outlier)
+    r_w <- fit(loess, x, y_outlier, custom_weights = w_zero)
 
     non_outlier <- c(1, 2, 3, 5, 6, 7)
     err_no_w <- mean(abs(r_no_w$y[non_outlier] - y_true[non_outlier]))
@@ -275,8 +275,8 @@ test_that("Loess: uniform custom_weights equal no weights", {
     w_uniform <- rep(1.0, 7)
 
     loess <- Loess(fraction = 0.6)
-    r_no_w <- loess$fit(x, y)
-    r_w <- loess$fit(x, y, custom_weights = w_uniform)
+    r_no_w <- fit(loess, x, y)
+    r_w <- fit(loess, x, y, custom_weights = w_uniform)
 
     expect_equal(r_w$y, r_no_w$y, tolerance = 1e-6)
 })
@@ -287,7 +287,7 @@ test_that("Loess: custom_weights wrong length raises error", {
     w_bad <- as.double(c(1, 1, 1))
 
     loess <- Loess(fraction = 0.6)
-    expect_error(loess$fit(x, y, custom_weights = w_bad))
+    expect_error(fit(loess, x, y, custom_weights = w_bad))
 })
 
 test_that("Loess: negative custom_weights raises error", {
@@ -296,5 +296,5 @@ test_that("Loess: negative custom_weights raises error", {
     w_neg <- as.double(c(1, -1, 1, 1, 1, 1, 1))
 
     loess <- Loess(fraction = 0.6)
-    expect_error(loess$fit(x, y, custom_weights = w_neg))
+    expect_error(fit(loess, x, y, custom_weights = w_neg))
 })

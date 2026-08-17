@@ -7,10 +7,10 @@ Complete C++ examples demonstrating the fastLoess C++ bindings with modern C++ f
 Process complete datasets with the idiomatic C++ wrapper.
 
 ```cpp
---8<-- "examples/cpp/batch_smoothing.cpp"
+--8<-- "bindings/cpp/examples/batch_smoothing.cpp"
 ```
 
-[:material-download: Download batch_smoothing.cpp](https://github.com/thisisamirv/loess-project/blob/main/examples/cpp/batch_smoothing.cpp)
+[:material-download: Download batch_smoothing.cpp](https://github.com/thisisamirv/loess-project/blob/main/bindings/cpp/examples/batch_smoothing.cpp)
 
 ---
 
@@ -19,10 +19,10 @@ Process complete datasets with the idiomatic C++ wrapper.
 Process large datasets in memory-efficient chunks.
 
 ```cpp
---8<-- "examples/cpp/streaming_smoothing.cpp"
+--8<-- "bindings/cpp/examples/streaming_smoothing.cpp"
 ```
 
-[:material-download: Download streaming_smoothing.cpp](https://github.com/thisisamirv/loess-project/blob/main/examples/cpp/streaming_smoothing.cpp)
+[:material-download: Download streaming_smoothing.cpp](https://github.com/thisisamirv/loess-project/blob/main/bindings/cpp/examples/streaming_smoothing.cpp)
 
 ---
 
@@ -31,10 +31,10 @@ Process large datasets in memory-efficient chunks.
 Real-time smoothing with sliding window for streaming data.
 
 ```cpp
---8<-- "examples/cpp/online_smoothing.cpp"
+--8<-- "bindings/cpp/examples/online_smoothing.cpp"
 ```
 
-[:material-download: Download online_smoothing.cpp](https://github.com/thisisamirv/loess-project/blob/main/examples/cpp/online_smoothing.cpp)
+[:material-download: Download online_smoothing.cpp](https://github.com/thisisamirv/loess-project/blob/main/bindings/cpp/examples/online_smoothing.cpp)
 
 ---
 
@@ -47,7 +47,7 @@ make cpp
 # The examples are built as part of the bindings
 # Or compile manually:
 g++ -std=c++20 -I bindings/cpp/include \
-    examples/cpp/batch_smoothing.cpp \
+    bindings/cpp/examples/batch_smoothing.cpp \
     -L target/release -lfastloess_cpp \
     -o batch_smoothing
 ```

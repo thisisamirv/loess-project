@@ -35,7 +35,7 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(degree = 0L, fraction = 0.5)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -151,7 +151,7 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(degree = 1L, fraction = 0.5)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -267,7 +267,7 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(degree = 2L, fraction = 0.5)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -383,7 +383,7 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(degree = 3L, fraction = 0.6)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -499,7 +499,7 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(degree = 4L, fraction = 0.7)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"

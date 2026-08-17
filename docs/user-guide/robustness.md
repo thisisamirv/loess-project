@@ -38,7 +38,7 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(iterations = 3, robustness_method = "bisquare")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -151,7 +151,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(iterations = 3, robustness_method = "huber")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -264,7 +264,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(iterations = 3, robustness_method = "talwar")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -383,7 +383,7 @@ Use robustness weights to identify potential outliers:
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(iterations = 5, return_robustness_weights = TRUE)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
 
     weights <- result$robustness_weights
     outliers <- which(weights < 0.5)
@@ -542,7 +542,7 @@ Residuals are scaled before computing robustness weights. Two methods:
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(iterations = 3, scaling_method = "mad")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -654,7 +654,7 @@ Stop iterations early when weights stabilize:
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(iterations = 10, auto_converge = 1e-6)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"

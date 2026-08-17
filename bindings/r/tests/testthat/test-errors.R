@@ -19,7 +19,7 @@ test_that("Loess rejects invalid inputs", {
 
     # Mismatched lengths at fit time
     expect_error(
-        Loess(fraction = 0.5)$fit(as.double(1:7), as.double(1:5)),
+        fit(Loess(fraction = 0.5), as.double(1:7), as.double(1:5)),
         "must match y"
     )
 })
@@ -41,7 +41,7 @@ test_that("OnlineLoess rejects invalid inputs", {
 
     # add_point accepts scalar x and y without error
     ol <- OnlineLoess(fraction = 0.5)
-    result <- ol$add_point(1.0, 2.0)
+    result <- add_point(ol, 1.0, 2.0)
     expect_true(is.null(result) || "smoothed" %in% names(result))
 })
 
@@ -59,7 +59,7 @@ test_that("StreamingLoess rejects invalid inputs", {
     # Mismatched lengths at process_chunk time
     sl <- StreamingLoess(fraction = 0.5)
     expect_error(
-        sl$process_chunk(as.double(1:7), as.double(1:5)),
+        process_chunk(sl, as.double(1:7), as.double(1:5)),
         "must match y"
     )
 })

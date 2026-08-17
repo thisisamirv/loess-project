@@ -7,10 +7,10 @@ Complete Rust examples demonstrating fastLoess with the builder pattern and type
 Parallel batch processing with confidence intervals, diagnostics, and cross-validation.
 
 ```rust
---8<-- "examples/fastLoess/fast_batch_smoothing.rs"
+--8<-- "crates/fastLoess/examples/fast_batch_smoothing.rs"
 ```
 
-[:material-download: Download fast_batch_smoothing.rs](https://github.com/thisisamirv/loess-project/blob/main/examples/fastLoess/fast_batch_smoothing.rs)
+[:material-download: Download fast_batch_smoothing.rs](https://github.com/thisisamirv/loess-project/blob/main/crates/fastLoess/examples/fast_batch_smoothing.rs)
 
 ---
 
@@ -19,10 +19,10 @@ Parallel batch processing with confidence intervals, diagnostics, and cross-vali
 Process large datasets in memory-efficient chunks with parallel processing.
 
 ```rust
---8<-- "examples/fastLoess/fast_streaming_smoothing.rs"
+--8<-- "crates/fastLoess/examples/fast_streaming_smoothing.rs"
 ```
 
-[:material-download: Download fast_streaming_smoothing.rs](https://github.com/thisisamirv/loess-project/blob/main/examples/fastLoess/fast_streaming_smoothing.rs)
+[:material-download: Download fast_streaming_smoothing.rs](https://github.com/thisisamirv/loess-project/blob/main/crates/fastLoess/examples/fast_streaming_smoothing.rs)
 
 ---
 
@@ -31,10 +31,10 @@ Process large datasets in memory-efficient chunks with parallel processing.
 Real-time smoothing with sliding window for streaming data applications.
 
 ```rust
---8<-- "examples/fastLoess/fast_online_smoothing.rs"
+--8<-- "crates/fastLoess/examples/fast_online_smoothing.rs"
 ```
 
-[:material-download: Download fast_online_smoothing.rs](https://github.com/thisisamirv/loess-project/blob/main/examples/fastLoess/fast_online_smoothing.rs)
+[:material-download: Download fast_online_smoothing.rs](https://github.com/thisisamirv/loess-project/blob/main/crates/fastLoess/examples/fast_online_smoothing.rs)
 
 ---
 
@@ -45,19 +45,19 @@ The core `loess-rs` crate provides single-threaded, `no_std`-compatible implemen
 ### Batch Smoothing (loess-rs)
 
 ```rust
---8<-- "examples/loess-rs/batch_smoothing.rs"
+--8<-- "crates/loess-rs/examples/batch_smoothing.rs"
 ```
 
 ### Streaming Smoothing (loess-rs)
 
 ```rust
---8<-- "examples/loess-rs/streaming_smoothing.rs"
+--8<-- "crates/loess-rs/examples/streaming_smoothing.rs"
 ```
 
 ### Online Smoothing (loess-rs)
 
 ```rust
---8<-- "examples/loess-rs/online_smoothing.rs"
+--8<-- "crates/loess-rs/examples/online_smoothing.rs"
 ```
 
 ---

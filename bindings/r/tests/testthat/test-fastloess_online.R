@@ -12,7 +12,7 @@ test_that("OnlineLoess basic functionality works", {
         window_capacity = 25,
         min_points = 10
     )
-    results <- lapply(seq_along(x), function(i) ol$add_point(x[i], y[i]))
+    results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
 
     expect_gt(length(non_null), 0)
@@ -31,7 +31,7 @@ test_that("OnlineLoess window capacity works", {
     )
     results_small <- lapply(
         seq_along(x),
-        function(i) ol_small$add_point(x[i], y[i])
+        function(i) add_point(ol_small, x[i], y[i])
     )
 
     ol_large <- OnlineLoess(
@@ -40,7 +40,7 @@ test_that("OnlineLoess window capacity works", {
     )
     results_large <- lapply(
         seq_along(x),
-        function(i) ol_large$add_point(x[i], y[i])
+        function(i) add_point(ol_large, x[i], y[i])
     )
 
     expect_gt(length(Filter(Negate(is.null), results_small)), 0)
@@ -57,7 +57,7 @@ test_that("OnlineLoess min_points parameter works", {
         window_capacity = 25,
         min_points = 5
     )
-    results <- lapply(seq_along(x), function(i) ol$add_point(x[i], y[i]))
+    results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
 
     # First 4 calls (before min_points = 5) should return NULL
     expect_null(results[[1]])
@@ -80,7 +80,7 @@ test_that("OnlineLoess update modes work", {
     )
     results_full <- lapply(
         seq_along(x),
-        function(i) ol_full$add_point(x[i], y[i])
+        function(i) add_point(ol_full, x[i], y[i])
     )
 
     ol_incr <- OnlineLoess(
@@ -90,7 +90,7 @@ test_that("OnlineLoess update modes work", {
     )
     results_incr <- lapply(
         seq_along(x),
-        function(i) ol_incr$add_point(x[i], y[i])
+        function(i) add_point(ol_incr, x[i], y[i])
     )
 
     expect_gt(length(Filter(Negate(is.null), results_full)), 0)
@@ -106,7 +106,7 @@ test_that("OnlineLoess handles edge cases", {
         window_capacity = 5,
         min_points = 3
     )
-    results <- lapply(seq_along(x), function(i) ol$add_point(x[i], y[i]))
+    results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
     expect_gt(length(non_null), 0)
 
@@ -116,7 +116,7 @@ test_that("OnlineLoess handles edge cases", {
         window_capacity = 20,
         min_points = 3
     )
-    results2 <- lapply(seq_along(x), function(i) ol2$add_point(x[i], y[i]))
+    results2 <- lapply(seq_along(x), function(i) add_point(ol2, x[i], y[i]))
     non_null2 <- Filter(Negate(is.null), results2)
     expect_gt(length(non_null2), 0)
 })
@@ -134,7 +134,7 @@ test_that("OnlineLoess robustness works", {
     )
     results_no_robust <- lapply(
         seq_along(x),
-        function(i) ol_no_robust$add_point(x[i], y[i])
+        function(i) add_point(ol_no_robust, x[i], y[i])
     )
 
     ol_robust <- OnlineLoess(
@@ -144,7 +144,7 @@ test_that("OnlineLoess robustness works", {
     )
     results_robust <- lapply(
         seq_along(x),
-        function(i) ol_robust$add_point(x[i], y[i])
+        function(i) add_point(ol_robust, x[i], y[i])
     )
 
     expect_gt(length(Filter(Negate(is.null), results_no_robust)), 0)
@@ -163,7 +163,7 @@ test_that("OnlineLoess: zero_weight_fallback", {
             window_capacity = 20,
             zero_weight_fallback = zwf
         )
-        r <- ol$add_point(x[1], y[1])
+        r <- add_point(ol, x[1], y[1])
         # NULL until min_points reached, or a list with smoothed
         expect_true(is.null(r) || "smoothed" %in% names(r))
     }
@@ -181,7 +181,7 @@ test_that("OnlineLoess: degree, distance_metric, surface_mode, return_se", {
         surface_mode = "direct",
         return_se = TRUE
     )
-    results <- lapply(seq_along(x), function(i) ol$add_point(x[i], y[i]))
+    results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
     expect_gt(length(non_null), 0)
     expect_type(non_null[[1]]$smoothed, "double")
@@ -199,7 +199,7 @@ test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge", {
         auto_converge = 1e-3,
         return_robustness_weights = TRUE
     )
-    results <- lapply(seq_along(x), function(i) ol$add_point(x[i], y[i]))
+    results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
     expect_gt(length(non_null), 0)
 })

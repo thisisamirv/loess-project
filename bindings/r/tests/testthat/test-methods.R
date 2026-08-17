@@ -19,7 +19,7 @@ test_that("print.Loess outputs correct fields", {
 test_that("print.LoessResult outputs basic fields", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, 0, 0.1)
-    result <- Loess(fraction = 0.3)$fit(x, y)
+    result <- fit(Loess(fraction = 0.3), x, y)
     out <- capture.output(print(result))
     expect_true(any(grepl("LoessResult", out, fixed = TRUE)))
     expect_true(any(grepl("Points", out, fixed = TRUE)))
@@ -47,11 +47,11 @@ test_that("print.LoessResult shows cv_scores when present", {
     set.seed(42)
     x <- seq(0, 10, length.out = 100)
     y <- sin(x) + rnorm(100, 0, 0.2)
-    result <- Loess(
+    result <- fit(Loess(
         cv_fractions = c(0.2, 0.3, 0.5),
         cv_method = "kfold",
         cv_k = 5L
-    )$fit(x, y)
+    ), x, y)
     out <- capture.output(print(result))
     expect_true(any(grepl("CV Scores", out, fixed = TRUE)))
 })
@@ -79,7 +79,7 @@ test_that("print.OnlineLoess outputs correct fields", {
 test_that("plot.LoessResult runs without error", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, 0, 0.1)
-    result <- Loess(fraction = 0.3)$fit(x, y)
+    result <- fit(Loess(fraction = 0.3), x, y)
     expect_no_error(plot(result))
 })
 
@@ -87,6 +87,6 @@ test_that("plot.LoessResult draws confidence interval lines when present", {
     set.seed(42)
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, 0, 0.2)
-    result <- Loess(fraction = 0.5, confidence_intervals = 0.95)$fit(x, y)
+    result <- fit(Loess(fraction = 0.5, confidence_intervals = 0.95), x, y)
     expect_no_error(plot(result, main = "With CI"))
 })

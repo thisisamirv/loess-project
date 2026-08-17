@@ -6,8 +6,8 @@
 # Helper to simulate bulk streaming
 bulk_stream <- function(x, y, ...) {
     sl <- StreamingLoess(...)
-    res <- sl$process_chunk(as.double(x), as.double(y))
-    fin <- sl$finalize()
+    res <- process_chunk(sl, as.double(x), as.double(y))
+    fin <- finalize(sl)
     # Merge results
     list(
         x = c(res$x, fin$x),
@@ -160,8 +160,8 @@ test_that("StreamingLoess: return_residuals", {
         chunk_size = 100,
         return_residuals = TRUE
     )
-    sl$process_chunk(x, y)
-    fin <- sl$finalize()
+    process_chunk(sl, x, y)
+    fin <- finalize(sl)
     expect_type(fin, "list")
 })
 

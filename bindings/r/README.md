@@ -173,7 +173,7 @@ model <- Loess(
     parallel = TRUE
 )
 custom_weights <- rep(1, length(x))
-result <- model$fit(x, y, custom_weights = custom_weights)
+result <- fit(model, x, y, custom_weights = custom_weights)
 
 # Result structure:
 result$x,
@@ -456,11 +456,11 @@ result.cv_scores()
 
 ## Contributing
 
-Contributions are welcome! Please see the [Contributing Guide](https://loess.readthedocs.io/contributing/) for more information.
+Contributions are welcome! Please see the [Contributing Guide](https://loess.readthedocs.io/en/latest/contributing/) for more information.
 
 ## Changelog
 
-See the [Changelog](https://loess.readthedocs.io/changelog/) for a history of changes.
+See the [Changelog](https://loess.readthedocs.io/en/latest/changelog/) for a history of changes.
 
 ## License
 

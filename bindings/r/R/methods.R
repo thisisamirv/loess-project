@@ -29,7 +29,7 @@ print.Loess <- function(x, ...) {
 #' x <- seq(0, 10, length.out = 50)
 #' y <- sin(x) + rnorm(50, 0, 0.1)
 #' model <- Loess(fraction = 0.3)
-#' result <- model$fit(x, y)
+#' result <- fit(model, x, y)
 #' print(result)
 #' @export
 print.LoessResult <- function(x, ...) {
@@ -57,7 +57,7 @@ print.LoessResult <- function(x, ...) {
 #' x <- seq(0, 10, length.out = 100)
 #' y <- sin(x) + rnorm(100, 0, 0.1)
 #' model <- Loess(fraction = 0.2)
-#' res <- model$fit(x, y)
+#' res <- fit(model, x, y)
 #' plot(res)
 #' @return The input object \code{x}, invisibly.
 #' @importFrom graphics lines
@@ -118,4 +118,96 @@ print.OnlineLoess <- function(x, ...) {
     cat("  Min Points:       ", x$params$min_points, "\n")
     cat("  Update Mode:      ", x$params$update_mode, "\n")
     invisible(x)
+}
+
+#' Fit a LOESS model to data
+#'
+#' @param model A \code{Loess} object.
+#' @param x Numeric vector of predictor values.
+#' @param y Numeric vector of response values.
+#' @param custom_weights Optional numeric vector of non-negative per-observation
+#'   weights. \code{NULL} (default) applies no custom weighting.
+#' @param ... Not used.
+#' @return A \code{LoessResult} object.
+#' @examples
+#' x <- seq(0, 10, length.out = 100)
+#' y <- sin(x) + rnorm(100, 0, 0.1)
+#' model <- Loess(fraction = 0.2)
+#' result <- fit(model, x, y)
+#' @export
+fit <- function(model, ...) UseMethod("fit")
+
+#' @export
+fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
+    validated_args <- validate_common_args(
+        x,
+        y,
+        model$params$fraction,
+        model$params$iterations
+    )
+    model$handle$fit(validated_args$x, validated_args$y, custom_weights)
+}
+
+#' Process a data chunk through a streaming LOESS model
+#'
+#' @param model A \code{StreamingLoess} object.
+#' @param x Numeric vector of x values.
+#' @param y Numeric vector of y values.
+#' @param ... Not used.
+#' @return A \code{LoessResult} for this chunk.
+#' @examples
+#' x <- seq(0, 10, length.out = 100)
+#' y <- sin(x) + rnorm(100, 0, 0.1)
+#' model <- StreamingLoess(fraction = 0.2, chunk_size = 50L)
+#' res <- process_chunk(model, x[1:50], y[1:50])
+#' @export
+process_chunk <- function(model, ...) UseMethod("process_chunk")
+
+#' @export
+process_chunk.StreamingLoess <- function(model, x, y, ...) {
+    args <- validate_common_args(
+        x,
+        y,
+        model$params$fraction,
+        model$params$iterations
+    )
+    model$handle$process_chunk(args$x, args$y)
+}
+
+#' Finalize a streaming LOESS model
+#'
+#' @param model A \code{StreamingLoess} object.
+#' @param ... Not used.
+#' @return A \code{LoessResult} combining all processed chunks.
+#' @examples
+#' x <- seq(0, 10, length.out = 100)
+#' y <- sin(x) + rnorm(100, 0, 0.1)
+#' model <- StreamingLoess(fraction = 0.2, chunk_size = 50L)
+#' invisible(process_chunk(model, x[1:50], y[1:50]))
+#' final <- finalize(model)
+#' @export
+finalize <- function(model, ...) UseMethod("finalize")
+
+#' @export
+finalize.StreamingLoess <- function(model, ...) {
+    model$handle$finalize()
+}
+
+#' Add a single point to an online LOESS model
+#'
+#' @param model An \code{OnlineLoess} object.
+#' @param x A single numeric x value.
+#' @param y A single numeric y value.
+#' @param ... Not used.
+#' @return An online result list, or \code{NULL} if fewer than
+#'   \code{min_points} have been added.
+#' @examples
+#' model <- OnlineLoess(fraction = 0.2, window_capacity = 20L)
+#' result <- add_point(model, 1.0, 0.5)
+#' @export
+add_point <- function(model, ...) UseMethod("add_point")
+
+#' @export
+add_point.OnlineLoess <- function(model, x, y, ...) {
+    model$handle$add_point(as.double(x), as.double(y))
 }

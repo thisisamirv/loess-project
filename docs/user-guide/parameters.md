@@ -91,7 +91,7 @@ The proportion of data used for each local fit. **Most important parameter.**
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(fraction = 0.3)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -206,7 +206,7 @@ Number of robustness iterations for outlier resistance.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(iterations = 5)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -341,7 +341,7 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(surface_mode = "direct")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -459,7 +459,7 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(cell = 0.05)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -568,7 +568,7 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(interpolation_vertices = 50L)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -702,7 +702,7 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
         distance_metric = "weighted",
         weighted_metric_weights = c(2.0, 0.5)  # x1 twice as important
     )
-    result <- model$fit(x2d, y)
+    result <- fit(model, x2d, y)
     ```
 
 === "Python"
@@ -851,7 +851,7 @@ See [Weight Functions](kernels.md) for detailed comparison.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(weight_function = "epanechnikov")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -967,7 +967,7 @@ See [Robustness](robustness.md) for detailed comparison.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(robustness_method = "talwar")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -1086,7 +1086,7 @@ For example:
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(boundary_policy = "reflect")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -1200,7 +1200,7 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(degree = "quadratic", boundary_degree_fallback = TRUE)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -1319,7 +1319,7 @@ For example:
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(scaling_method = "mad")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -1425,7 +1425,7 @@ For example:
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(zero_weight_fallback = "use_local_mean")
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -1533,7 +1533,7 @@ Enable early stopping when robustness weights stabilize.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(iterations = 20, auto_converge = 1e-6)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -1651,7 +1651,7 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(parallel = FALSE)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -1780,7 +1780,7 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     weights <- rep(1, length(y))
     weights[5] <- 0
     model <- Loess()
-    result <- model$fit(x, y, custom_weights = weights)
+    result <- fit(model, x, y, custom_weights = weights)
     ```
 
 === "Python"
@@ -1902,7 +1902,7 @@ Include residuals (`y - smoothed`) in the output.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(return_residuals = TRUE)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     print(result$residuals)
     ```
 
@@ -2030,7 +2030,7 @@ Include fit quality metrics (Batch and Streaming only).
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(return_diagnostics = TRUE)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     cat(sprintf("R\u00b2: %.4f\n", result$diagnostics$r_squared))
     ```
 
@@ -2150,7 +2150,7 @@ Include final robustness weights (useful for outlier detection).
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(iterations = 3, return_robustness_weights = TRUE)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     outliers <- which(result$robustness_weights < 0.5)
     ```
 
@@ -2269,7 +2269,7 @@ See [Intervals](intervals.md) for detailed usage.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(confidence_intervals = 0.95, prediction_intervals = 0.95)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -2385,7 +2385,7 @@ Selection strategy for automated parameter tuning.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- Loess(cv_method = "kfold", cv_k = 5)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -2494,7 +2494,7 @@ Points per chunk in Streaming mode.
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    result <- StreamingLoess(chunk_size = 10000)$process_chunk(x, y)
+    result <- process_chunk(StreamingLoess(chunk_size = 10000), x, y)
     ```
 
 === "Python"
@@ -2608,7 +2608,7 @@ Overlap between chunks in Streaming mode.
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    result <- StreamingLoess(overlap = 1000)$process_chunk(x, y)
+    result <- process_chunk(StreamingLoess(overlap = 1000), x, y)
     ```
 
 === "Python"
@@ -2731,7 +2731,7 @@ For example:
     x <- seq(0, 2 * pi, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.3)
 
-    result <- StreamingLoess(merge_strategy = "weighted_average")$process_chunk(x, y)
+    result <- process_chunk(StreamingLoess(merge_strategy = "weighted_average"), x, y)
     ```
 
 === "Python"
@@ -2845,7 +2845,7 @@ Maximum points held in memory for Online mode.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- OnlineLoess(window_capacity = 500)
-    result <- model$add_point(x[1], y[1])  # NULL until window fills
+    result <- add_point(model, x[1], y[1])  # NULL until window fills
     ```
 
 === "Python"
@@ -2956,7 +2956,7 @@ Minimum points required before Online filter starts producing outputs.
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- OnlineLoess(min_points = 10)
-    result <- model$add_point(x[1], y[1])  # NULL until 10 points seen
+    result <- add_point(model, x[1], y[1])  # NULL until 10 points seen
     ```
 
 === "Python"
@@ -3074,7 +3074,7 @@ For example:
     y <- sin(x) + rnorm(100, sd = 0.3)
 
     model <- OnlineLoess(update_mode = "full")
-    result <- model$add_point(x[1], y[1])
+    result <- add_point(model, x[1], y[1])
     ```
 
 === "Python"

@@ -19,7 +19,7 @@ library(rfastloess)
 # Returns a named list with $smoothed (numeric vector,
 # NA where window not full).
 add_all_points <- function(model, x, y) {
-    results <- lapply(seq_along(x), function(i) model$add_point(x[i], y[i]))
+    results <- lapply(seq_along(x), function(i) add_point(model, x[i], y[i]))
     list(
         smoothed = vapply(
             results,

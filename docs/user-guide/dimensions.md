@@ -34,7 +34,7 @@ Single predictor. No configuration required.
     x <- seq(0, 10, length.out = 200)
     y <- sin(x) + rnorm(200, sd = 0.2)
     model <- Loess(fraction = 0.3)
-    result <- model$fit(x, y)
+    result <- fit(model, x, y)
     ```
 
 === "Python"
@@ -149,7 +149,7 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     # n × 2 predictor matrix
     coords <- cbind(lat, lon)
     model <- Loess(dimensions = 2L, fraction = 0.3)
-    result <- model$fit(coords, z)
+    result <- fit(model, coords, z)
     ```
 
 === "Python"
@@ -299,7 +299,7 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 
     predictors <- cbind(x1, x2, x3)   # n × 3
     model <- Loess(dimensions = 3L, fraction = 0.5)
-    result <- model$fit(predictors, y)
+    result <- fit(model, predictors, y)
     ```
 
 === "Python"
