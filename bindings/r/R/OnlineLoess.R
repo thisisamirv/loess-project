@@ -15,6 +15,7 @@
 #'   \code{"incremental"} (alias: \code{"single"}) updates only the newest
 #'   point.
 #'
+#' @seealso \url{https://loess.readthedocs.io/} for full documentation.
 #' @return An OnlineLoess object.
 #' @examples
 #' model <- OnlineLoess(fraction = 0.2, window_capacity = 20)

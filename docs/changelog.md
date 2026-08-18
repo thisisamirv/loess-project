@@ -62,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `...` to `Loess()`, `StreamingLoess()`, and `OnlineLoess()` to force named arguments for all optional parameters following the primary positional arguments. Passing extra arguments positionally now raises an error; every optional argument must be specified by name.
 - Added `Depends: R (>= 4.2)` to `DESCRIPTION` to declare the minimum R version required by the `extendr` backend. Added a corresponding R 4.2 matrix entry to the `R-CMD-check` CI workflow to verify compatibility.
 - Expanded `@param` roxygen2 descriptions in `StreamingLoess()` and `OnlineLoess()` to include string aliases for `merge_strategy` and `update_mode`, matching the level of detail already present in `Loess()`. Regenerated all `man/*.Rd` files.
+- Added a `See Also` section to `Loess()`, `StreamingLoess()`, and `OnlineLoess()` linking to <https://loess.readthedocs.io/> for full documentation. Regenerated all `man/*.Rd` files.
 
 **Julia:**
 

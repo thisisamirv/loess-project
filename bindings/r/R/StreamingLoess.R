@@ -16,6 +16,7 @@
 #'   \code{"take_first"} (alias: \code{"first"}), or
 #'   \code{"take_last"} (alias: \code{"last"}).
 #'
+#' @seealso \url{https://loess.readthedocs.io/} for full documentation.
 #' @return A StreamingLoess object.
 #' @examples
 #' x <- seq(0, 10, length.out = 100)

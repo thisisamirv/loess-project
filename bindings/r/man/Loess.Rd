@@ -144,3 +144,6 @@ result <- fit(model, x, y)
 plot(x, y)
 lines(x, result$y, col = "red")
 }
+\seealso{
+\url{https://loess.readthedocs.io/} for full documentation.
+}
