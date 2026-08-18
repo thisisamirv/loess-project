@@ -43,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved Rust integration tests into their respective crates: `tests/loess-rs/` → `crates/loess-rs/tests/loess-rs/` and `tests/fastLoess/` → `crates/fastLoess/tests/fastLoess/` (auto-discovered by Cargo as the test binaries `loess-rs` and `fastLoess`). Moved Rust examples into their respective crates: `examples/loess-rs/` → `crates/loess-rs/examples/` and `examples/fastLoess/` → `crates/fastLoess/examples/`. Moved binding tests into their binding directories: `tests/{cpp,julia,nodejs,python,r,wasm}/` → `bindings/{cpp,julia,nodejs,python,r,wasm}/tests/`. Moved binding examples: `examples/{cpp,julia,nodejs,python,wasm}/` → `bindings/{cpp,julia,nodejs,python,wasm}/examples/` and `examples/r/` → `bindings/r/demo/`. The standalone `tests/` and `examples/` workspace packages have been removed from the workspace.
 - Moved examples execution logic from root Makefile `examples-*` targets into each sub-Makefile as a standalone `examples` target. The `default` target in each sub-Makefile now runs examples as the final step, so `make -f path/Makefile` performs a full end-to-end check including examples. Root Makefile `examples-*` targets now delegate to the corresponding sub-Makefile via `$(MAKE) -f path/Makefile examples`.
 
+**Docs:**
+
+- Split `StreamingLoess` and `OnlineLoess` content out of each binding's main API reference page into dedicated `{lang}-streaming.md` and `{lang}-online.md` files (`cpp-streaming.md`, `cpp-online.md`, `nodejs-streaming.md`, `nodejs-online.md`, `python-streaming.md`, `python-online.md`, `julia-streaming.md`, `julia-online.md`, `wasm-streaming.md`, `wasm-online.md`, `rust-streaming.md`, `rust-online.md`). Each main reference page now links to the split-out files from a callout at the top and from short inline cross-references in place of the removed sections.
+
 **loess-rs:**
 
 - Updated `wide` to v1.6.

@@ -2,6 +2,8 @@
 
 The R bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
+> **StreamingLoess** and **OnlineLoess** are documented separately: [r-streaming.md](r-streaming.md), [r-online.md](r-online.md)
+
 ## Classes
 
 ### `Loess`
@@ -41,82 +43,9 @@ result <- fit(model, x, y, custom_weights = weights)
 * Returns a `LoessResult` S3 object containing the smoothed values and optional diagnostics.
 * `print(model)`: Displays the model configuration.
 
-### `StreamingLoess`
+See [r-streaming.md](r-streaming.md) for the `StreamingLoess` class.
 
-The `StreamingLoess` class processes data in chunks, suitable for very large datasets or streaming applications.
-
-**Constructor:**
-
-```r
-library(rfastloess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
-
-library(rfastloess)
-stream <- StreamingLoess(fraction = 0.3, chunk_size = 50, overlap = 10)
-```
-
-* `...`: Arguments corresponding to `LoessOptions` and `StreamingOptions` fields.
-
-**Methods:**
-
-```r
-library(rfastloess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
-
-stream <- StreamingLoess(fraction = 0.3, chunk_size = 50, overlap = 10)
-partial_result <- process_chunk(stream, x[seq_len(50)], y[seq_len(50)])
-```
-
-* Processes a chunk of data. Returns partial results.
-
-```r
-library(rfastloess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
-
-stream <- StreamingLoess(fraction = 0.3, chunk_size = 50, overlap = 10)
-process_chunk(stream, x, y)
-final_result <- finalize(stream)
-```
-
-* Finalizes the smoothing process and returns any remaining buffered results.
-
-### `OnlineLoess`
-
-The `OnlineLoess` class updates the model incrementally with new data points.
-
-**Constructor:**
-
-```r
-library(rfastloess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
-
-library(rfastloess)
-online <- OnlineLoess(fraction = 0.3, window_capacity = 50)
-```
-
-* `...`: Arguments corresponding to `LoessOptions` and `OnlineOptions` fields.
-
-**Methods:**
-
-```r
-library(rfastloess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
-
-online <- OnlineLoess(fraction = 0.3, window_capacity = 50)
-result <- add_point(online, x[[1L]], y[[1L]])  # returns list or NULL
-```
-
-* Adds a single point to the sliding window. Returns a named list (`$smoothed`, `$residual`, …) once the window has enough points, or `NULL` while still filling.
+See [r-online.md](r-online.md) for the `OnlineLoess` class.
 
 ## Options Structures
 
@@ -153,36 +82,13 @@ result <- add_point(online, x[[1L]], y[[1L]])  # returns list or NULL
 | `cv_fractions` | `numeric` | `NULL` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `integer` | `NULL` | Random seed for cross-validation shuffling (Batch only) |
 
-### `StreamingOptions` (inherits `LoessOptions`)
+See [r-streaming.md](r-streaming.md) for `StreamingOptions`.
 
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `chunk_size` | `integer` | `5000L` | Data chunk size |
-| `overlap` | `integer` | `500L` | Overlap between chunks |
-| `merge_strategy` | `character` | `"weighted_average"` | Strategy for blending overlap regions |
-
-### `OnlineOptions` (inherits `LoessOptions`)
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `window_capacity` | `integer` | `1000L` | Max points in sliding window |
-| `min_points` | `integer` | `3L` | Min points before smoothing starts |
-| `update_mode` | `character` | `"full"` | Update mode (`"full"` or `"incremental"`) |
-| `parallel` | `logical` | `FALSE` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
+See [r-online.md](r-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-### `OnlineOutput` (named list)
-
-Returned by `add_point()` once the window has enough points (`NULL` until then).
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `smoothed` | `numeric` | Smoothed value for the latest point |
-| `std_error` | `numeric` (optional) | Standard error (if requested) |
-| `residual` | `numeric` (optional) | Residual y − smoothed (if requested) |
-| `robustness_weight` | `numeric` (optional) | Robustness weight (if requested) |
-| `iterations_used` | `integer` (optional) | Robustness iterations performed |
+See [r-online.md](r-online.md) for `OnlineOutput`.
 
 ### `LoessResult`
 
@@ -302,19 +208,11 @@ An S3 list with class `"LoessResult"` containing:
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
-
-* `"weighted_average"` (default; alias: `"weighted"`)
-* `"average"` (alias: `"mean"`)
-* `"take_first"` (alias: `"first"`)
-* `"take_last"` (alias: `"last"`)
+See [r-streaming.md](r-streaming.md).
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
-
-* `"full"` (default; alias: `"resmooth"`)
-* `"incremental"` (alias: `"single"`)
+See [r-online.md](r-online.md).
 
 ## Example
 

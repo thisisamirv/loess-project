@@ -161,36 +161,13 @@ result = add_point(online, x[1], y[1])  # returns OnlineOutput or nothing
 | `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling (Batch only) |
 
-### `StreamingOptions` (inherits `LoessOptions`)
+See [julia-streaming.md](julia-streaming.md) for `StreamingOptions`.
 
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `chunk_size` | `Int` | `5000` | Data chunk size |
-| `overlap` | `Int` | `500` | Overlap between chunks |
-| `merge_strategy` | `String` | `"weighted_average"` | Strategy for blending overlap regions |
-
-### `OnlineOptions` (inherits `LoessOptions`)
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `window_capacity` | `Int` | `1000` | Max points in sliding window |
-| `min_points` | `Int` | `3` | Min points before smoothing starts |
-| `update_mode` | `String` | `"full"` | Update mode (`"full"` or `"incremental"`) |
-| `parallel` | `Bool` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
+See [julia-online.md](julia-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-### `OnlineOutput`
-
-Returned by `add_point()` once the window has enough points (`nothing` until then).
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `smoothed` | `Float64` | Smoothed value for the latest point |
-| `std_error` | `Union{Float64, Nothing}` | Standard error (if requested) |
-| `residual` | `Union{Float64, Nothing}` | Residual y − smoothed (if requested) |
-| `robustness_weight` | `Union{Float64, Nothing}` | Robustness weight (if requested) |
-| `iterations_used` | `Union{Int, Nothing}` | Robustness iterations performed |
+See [julia-online.md](julia-online.md) for `OnlineOutput`.
 
 ### `LoessResult`
 
@@ -306,19 +283,11 @@ Returned by `add_point()` once the window has enough points (`nothing` until the
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
-
-* `"weighted_average"` (default; alias: `"weighted"`)
-* `"average"` (alias: `"mean"`)
-* `"take_first"` (alias: `"first"`)
-* `"take_last"` (alias: `"last"`)
+See [julia-streaming.md](julia-streaming.md).
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
-
-* `"full"` (default; alias: `"resmooth"`)
-* `"incremental"` (alias: `"single"`)
+See [julia-online.md](julia-online.md).
 
 ## Example
 

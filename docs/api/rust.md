@@ -6,6 +6,8 @@ The Rust crates provide the core implementation and high-performance extensions.
 
 Both crates expose the same three entry types via their `prelude`: `Loess` for batch mode, `StreamingLoess` for chunked processing, and `OnlineLoess` for sliding-window updates.
 
+> **StreamingLoess** and **OnlineLoess** are documented separately: [rust-streaming.md](rust-streaming.md), [rust-online.md](rust-online.md)
+
 ```text
 use fastLoess::prelude::*;  // or: use loess_rs::prelude::*;
 ```
@@ -47,106 +49,9 @@ fn main() -> Result<(), LoessError> {
 * Fits the model to the provided `x` and `y` arrays.
 * Returns `Result<LoessResult<T>, LoessError>`.
 
-### `StreamingLoess`
+See [rust-streaming.md](rust-streaming.md) for the `StreamingLoess` struct.
 
-Streaming mode for large datasets.
-
-**Constructor:**
-
-```rust
-use fastLoess::prelude::*;
-
-fn main() -> Result<(), LoessError> {
-    let mut processor = StreamingLoess::new();
-
-    Ok(())
-}
-```
-
-**Methods:**
-
-```rust
-use fastLoess::prelude::*;
-use std::f64::consts::TAU;
-
-fn main() -> Result<(), LoessError> {
-    let n = 100usize;
-    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-    let mut processor = StreamingLoess::new().build()?;
-    let result = processor.process_chunk(&x, &y)?;
-
-    Ok(())
-}
-```
-
-* Processes a chunk of data. Returns `LoessResult<T>` with partial results.
-
-```rust
-use fastLoess::prelude::*;
-use std::f64::consts::TAU;
-
-fn main() -> Result<(), LoessError> {
-    let n = 100usize;
-    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-    let mut processor = StreamingLoess::new().build()?;
-    processor.process_chunk(&x, &y)?;
-    let final_result = processor.finalize()?;
-
-    Ok(())
-}
-```
-
-* Finalizes processing and returns remaining buffered results.
-
-### `OnlineLoess`
-
-Online mode for real-time data.
-
-**Constructor:**
-
-```rust
-use fastLoess::prelude::*;
-
-fn main() -> Result<(), LoessError> {
-    let mut processor = OnlineLoess::new();
-
-    Ok(())
-}
-```
-
-**Methods:**
-
-```rust
-use fastLoess::prelude::*;
-
-fn main() -> Result<(), LoessError> {
-    let mut processor = OnlineLoess::new().build()?;
-    let output = processor.add_point(&[1.0f64], 2.0f64)?;
-
-    Ok(())
-}
-```
-
-* Adds a single point `(x, y)` to the window.
-* Returns `Result<Option<OnlineOutput<T>>, LoessError>`.
-
-```rust
-use fastLoess::prelude::*;
-
-fn main() -> Result<(), LoessError> {
-    let mut processor = OnlineLoess::new().build()?;
-    processor.reset();
-
-    Ok(())
-}
-```
-
-* Clears the internal window buffer.
-* **Rust-only** — this method is not exposed in other language bindings, where creating a new instance is the idiomatic alternative.
+See [rust-online.md](rust-online.md) for the `OnlineLoess` struct.
 
 ## Builder Configuration
 
@@ -185,22 +90,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `cv_fractions(...)` | `Vec<f64>` | disabled | Candidate fractions to evaluate during cross-validation |
 | `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
 
-### Streaming Options
+See [rust-streaming.md](rust-streaming.md) for Streaming Options.
 
-| Method | Argument Type | Default | Description |
-| --- | --- | --- | --- |
-| `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
-| `overlap(usize)` | `usize` | `500` | Overlap between chunks |
-| `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
-
-### Online Options
-
-| Method | Argument Type | Default | Description |
-| --- | --- | --- | --- |
-| `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
-| `min_points(usize)` | `usize` | `3` | Min points before smoothing starts |
-| `update_mode(...)` | `update_mode` | `"full"` | Update strategy |
-| `parallel(bool)` | `bool` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
+See [rust-online.md](rust-online.md) for Online Options.
 
 ## Result Structure
 
@@ -320,19 +212,11 @@ These chained methods configure the builder. They correspond to the "Options Str
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
-
-* `"weighted_average"` (default; alias: `"weighted"`)
-* `"average"` (alias: `"mean"`)
-* `"take_first"` (alias: `"first"`)
-* `"take_last"` (alias: `"last"`)
+See [rust-streaming.md](rust-streaming.md).
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
-
-* `"full"` (default; alias: `"resmooth"`)
-* `"incremental"` (alias: `"single"`)
+See [rust-online.md](rust-online.md).
 
 ## Example
 

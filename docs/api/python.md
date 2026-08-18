@@ -2,6 +2,8 @@
 
 The Python bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
+> **StreamingLoess** and **OnlineLoess** are documented separately: [python-streaming.md](python-streaming.md), [python-online.md](python-online.md)
+
 ## Classes
 
 ### `Loess`
@@ -36,75 +38,9 @@ result = model.fit(x, y, custom_weights=None)
 * `custom_weights`: Optional array of per-observation weights. All values must be ≥ 0 and length must match `x`. Batch only.
 * Returns a `LoessResult` object containing the smoothed values and optional diagnostics.
 
-### `StreamingLoess`
+See [python-streaming.md](python-streaming.md) for the `StreamingLoess` class.
 
-The `StreamingLoess` class processes data in chunks, suitable for very large datasets or streaming applications.
-
-**Constructor:**
-
-```python
-import fastloess as fl
-
-stream = fl.StreamingLoess(chunk_size=50, overlap=10)
-```
-
-* `kwargs`: Keyword arguments corresponding to `LoessOptions` and `StreamingOptions` fields.
-
-**Methods:**
-
-```python
-import fastloess as fl
-import numpy as np
-
-rng = np.random.default_rng(42)
-x = np.linspace(0, 2 * np.pi, 100)
-y = np.sin(x) + rng.normal(0, 0.3, 100)
-
-stream = fl.StreamingLoess(chunk_size=50, overlap=10)
-partial_result = stream.process_chunk(x[:50], y[:50])
-```
-
-* Processes a chunk of data. Returns partial results.
-
-```python
-import fastloess as fl
-import numpy as np
-
-rng = np.random.default_rng(42)
-x = np.linspace(0, 2 * np.pi, 100)
-y = np.sin(x) + rng.normal(0, 0.3, 100)
-
-stream = fl.StreamingLoess(chunk_size=50, overlap=10)
-stream.process_chunk(x, y)
-final_result = stream.finalize()
-```
-
-* Finalizes the smoothing process and returns any remaining buffered results.
-
-### `OnlineLoess`
-
-The `OnlineLoess` class updates the model incrementally with new data points.
-
-**Constructor:**
-
-```python
-import fastloess as fl
-
-online = fl.OnlineLoess(fraction=0.3, window_capacity=50)
-```
-
-* `kwargs`: Keyword arguments corresponding to `LoessOptions` and `OnlineOptions` fields.
-
-**Methods:**
-
-```python
-import fastloess as fl
-
-online = fl.OnlineLoess(fraction=0.3, window_capacity=50)
-result = online.add_point(1.0, 2.0)  # returns OnlineOutput | None
-```
-
-* Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `None` while the window is still filling.
+See [python-online.md](python-online.md) for the `OnlineLoess` class.
 
 ## Options Structures
 
@@ -141,36 +77,13 @@ result = online.add_point(1.0, 2.0)  # returns OnlineOutput | None
 | `cv_fractions` | `list[float]` | `None` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `int` | `None` | Random seed for cross-validation shuffling (Batch only) |
 
-### `StreamingOptions` (inherits `LoessOptions`)
+See [python-streaming.md](python-streaming.md) for `StreamingOptions`.
 
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `chunk_size` | `int` | `5000` | Data chunk size |
-| `overlap` | `int` | `500` | Overlap between chunks |
-| `merge_strategy` | `str` | `"weighted_average"` | Strategy for blending overlap regions |
-
-### `OnlineOptions` (inherits `LoessOptions`)
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `window_capacity` | `int` | `1000` | Max points in sliding window |
-| `min_points` | `int` | `3` | Min points before smoothing starts |
-| `update_mode` | `str` | `"full"` | Update mode (`"full"` or `"incremental"`) |
-| `parallel` | `bool` | `False` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
+See [python-online.md](python-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-### `OnlineOutput`
-
-Returned by `add_point()` once the window has enough points (`None` until then).
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `smoothed` | `float` | Smoothed value for the latest point |
-| `std_error` | `float \| None` | Standard error (if requested) |
-| `residual` | `float \| None` | Residual y − smoothed (if requested) |
-| `robustness_weight` | `float \| None` | Robustness weight (if requested) |
-| `iterations_used` | `int \| None` | Robustness iterations performed |
+See [python-online.md](python-online.md) for `OnlineOutput`.
 
 ### `LoessResult`
 
@@ -286,19 +199,11 @@ Returned by `add_point()` once the window has enough points (`None` until then).
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
-
-* `"weighted_average"` (default; alias: `"weighted"`)
-* `"average"` (alias: `"mean"`)
-* `"take_first"` (alias: `"first"`)
-* `"take_last"` (alias: `"last"`)
+See [python-streaming.md](python-streaming.md).
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
-
-* `"full"` (default; alias: `"resmooth"`)
-* `"incremental"` (alias: `"single"`)
+See [python-online.md](python-online.md).
 
 ## Example
 
