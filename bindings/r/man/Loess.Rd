@@ -5,53 +5,63 @@
 \title{LOESS Batch Smoothing}
 \usage{
 Loess(
-    fraction = 0.67,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
-    parallel = TRUE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    return_se = FALSE,
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL,
-    cv_seed = NULL
+  fraction = 0.67,
+  ...,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  cv_fractions = NULL,
+  cv_method = "kfold",
+  cv_k = 5L,
+  parallel = TRUE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  return_se = FALSE,
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL,
+  cv_seed = NULL
 )
 }
 \arguments{
 \item{fraction}{Smoothing fraction (between 0 and 1).}
 
+\item{...}{Not used; forces all subsequent arguments to be named.}
+
 \item{iterations}{Number of robustness iterations (non-negative integer).
 Default: 3.}
 
 \item{weight_function}{Kernel weight function. One of \code{"tricube"}
-(default), \code{"gaussian"}, \code{"uniform"}, \code{"cosine"},
-\code{"epanechnikov"}, \code{"biweight"}, \code{"triangle"}.}
+(default), \code{"gaussian"},
+\code{"uniform"} (alias: \code{"boxcar"}),
+\code{"cosine"}, \code{"epanechnikov"},
+\code{"biweight"} (alias: \code{"bisquare"}), or
+\code{"triangle"} (alias: \code{"triangular"}).}
 
 \item{robustness_method}{Outlier downweighting method: \code{"bisquare"}
-(default), \code{"huber"}, or \code{"talwar"}.}
+(default; alias: \code{"biweight"}), \code{"huber"}, or \code{"talwar"}.}
 
 \item{scaling_method}{Residual scale estimation for robustness weights:
-\code{"mad"} (default), \code{"mar"}, or \code{"mean"}.}
+\code{"mad"} (default; alias: \code{"median_absolute_deviation"}),
+\code{"mar"} (alias: \code{"median_absolute_residual"}), or
+\code{"mean"} (alias: \code{"mean_absolute_residual"}).}
 
 \item{boundary_policy}{Boundary handling strategy: \code{"extend"}
-(default), \code{"reflect"}, \code{"zero"}, or \code{"noboundary"}.}
+(default; alias: \code{"pad"}), \code{"reflect"} (alias:
+\code{"mirror"}), \code{"zero"}, or
+\code{"noboundary"} (alias: \code{"none"}).}
 
 \item{confidence_intervals}{Confidence level for confidence intervals
 (e.g., 0.95). \code{NULL} (default) disables confidence intervals.}
@@ -69,8 +79,9 @@ result. Default: \code{FALSE}.}
 robustness weights. Default: \code{FALSE}.}
 
 \item{zero_weight_fallback}{Fallback policy when all robustness weights drop
-to zero: \code{"use_local_mean"} (default), \code{"return_original"}, or
-\code{"return_none"}.}
+to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
+\code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
+\code{"return_none"} (alias: \code{"none"}).}
 
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
@@ -129,7 +140,7 @@ Create a stateful LOESS model for batch smoothing.
 x <- seq(0, 10, length.out = 100)
 y <- sin(x) + rnorm(100, 0, 0.1)
 model <- Loess(fraction = 0.2)
-result <- model$fit(x, y)
+result <- fit(model, x, y)
 plot(x, y)
 lines(x, result$y, col = "red")
 }

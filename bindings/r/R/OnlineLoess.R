@@ -10,9 +10,10 @@
 #' @param ... Not used; forces all subsequent arguments to be named.
 #' @param window_capacity Maximum number of points kept in the sliding window.
 #' @param min_points Minimum number of points required before smoothing begins.
-#' @param update_mode Window update strategy: \code{"full"} (default)
-#'   re-smooths all window points after each addition,
-#'   \code{"incremental"} updates only the newest point.
+#' @param update_mode Window update strategy: \code{"full"} (default; alias:
+#'   \code{"resmooth"}) re-smooths all window points after each addition;
+#'   \code{"incremental"} (alias: \code{"single"}) updates only the newest
+#'   point.
 #'
 #' @return An OnlineLoess object.
 #' @examples

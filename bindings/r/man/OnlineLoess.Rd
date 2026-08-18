@@ -5,32 +5,33 @@
 \title{LOESS Online Smoothing}
 \usage{
 OnlineLoess(
-    fraction = 0.67,
-    window_capacity = 1000L,
-    min_points = 3L,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    update_mode = "full",
-    auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    zero_weight_fallback = "use_local_mean",
-    parallel = FALSE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    return_se = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL
+  fraction = 0.67,
+  window_capacity = 1000L,
+  min_points = 3L,
+  ...,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  update_mode = "full",
+  auto_converge = NULL,
+  return_robustness_weights = FALSE,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  zero_weight_fallback = "use_local_mean",
+  parallel = FALSE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  return_se = FALSE,
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL
 )
 }
 \arguments{
@@ -40,25 +41,35 @@ OnlineLoess(
 
 \item{min_points}{Minimum number of points required before smoothing begins.}
 
+\item{...}{Not used; forces all subsequent arguments to be named.}
+
 \item{iterations}{Number of robustness iterations (non-negative integer).
 Default: 3.}
 
 \item{weight_function}{Kernel weight function. One of \code{"tricube"}
-(default), \code{"gaussian"}, \code{"uniform"}, \code{"cosine"},
-\code{"epanechnikov"}, \code{"biweight"}, \code{"triangle"}.}
+(default), \code{"gaussian"},
+\code{"uniform"} (alias: \code{"boxcar"}),
+\code{"cosine"}, \code{"epanechnikov"},
+\code{"biweight"} (alias: \code{"bisquare"}), or
+\code{"triangle"} (alias: \code{"triangular"}).}
 
 \item{robustness_method}{Outlier downweighting method: \code{"bisquare"}
-(default), \code{"huber"}, or \code{"talwar"}.}
+(default; alias: \code{"biweight"}), \code{"huber"}, or \code{"talwar"}.}
 
 \item{scaling_method}{Residual scale estimation for robustness weights:
-\code{"mad"} (default), \code{"mar"}, or \code{"mean"}.}
+\code{"mad"} (default; alias: \code{"median_absolute_deviation"}),
+\code{"mar"} (alias: \code{"median_absolute_residual"}), or
+\code{"mean"} (alias: \code{"mean_absolute_residual"}).}
 
 \item{boundary_policy}{Boundary handling strategy: \code{"extend"}
-(default), \code{"reflect"}, \code{"zero"}, or \code{"noboundary"}.}
+(default; alias: \code{"pad"}), \code{"reflect"} (alias:
+\code{"mirror"}), \code{"zero"}, or
+\code{"noboundary"} (alias: \code{"none"}).}
 
-\item{update_mode}{Window update strategy: \code{"full"} (default)
-re-smooths all window points after each addition,
-\code{"incremental"} updates only the newest point.}
+\item{update_mode}{Window update strategy: \code{"full"} (default; alias:
+\code{"resmooth"}) re-smooths all window points after each addition;
+\code{"incremental"} (alias: \code{"single"}) updates only the newest
+point.}
 
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
@@ -73,8 +84,9 @@ metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.}
 result. Default: \code{FALSE}.}
 
 \item{zero_weight_fallback}{Fallback policy when all robustness weights drop
-to zero: \code{"use_local_mean"} (default), \code{"return_original"}, or
-\code{"return_none"}.}
+to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
+\code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
+\code{"return_none"} (alias: \code{"none"}).}
 
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
 
@@ -126,7 +138,7 @@ model <- OnlineLoess(fraction = 0.2, window_capacity = 20)
 x <- 1:50
 y <- sin(x * 0.1) + rnorm(50, 0, 0.1)
 for (i in seq_along(x)) {
-    result <- model$add_point(x[i], y[i])
+    result <- add_point(model, x[i], y[i])
     if (!is.null(result)) cat("smoothed:", result$smoothed, "\n")
 }
 }

@@ -11,8 +11,10 @@
 #' @param chunk_size Number of data points per processing chunk.
 #' @param overlap Number of overlapping points between consecutive chunks.
 #' @param merge_strategy Strategy for reconciling overlapping chunk regions:
-#'   \code{"weighted_average"} (default), \code{"average"},
-#'   \code{"take_first"}, or \code{"take_last"}.
+#'   \code{"weighted_average"} (default; alias: \code{"weighted"}),
+#'   \code{"average"} (alias: \code{"mean"}),
+#'   \code{"take_first"} (alias: \code{"first"}), or
+#'   \code{"take_last"} (alias: \code{"last"}).
 #'
 #' @return A StreamingLoess object.
 #' @examples

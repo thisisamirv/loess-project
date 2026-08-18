@@ -61,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed `dev/prepare_cran.sh`. Its vendor-extraction and cargo-config steps were already handled by `Makevars.in` during `R CMD build`, making them dead code. The only unique step — generating `inst/AUTHORS` from `cargo metadata` — is now inlined directly into `bindings/r/Makefile`'s step 4c using a `jq` pipeline, removing the Python dependency and temp-file pattern. The stale `fastLoess-R` package-name exclusion filter has been corrected to use the current name (`rfastloess`) via the existing `$(R_PKG_NAME)` variable.
 - Added `...` to `Loess()`, `StreamingLoess()`, and `OnlineLoess()` to force named arguments for all optional parameters following the primary positional arguments. Passing extra arguments positionally now raises an error; every optional argument must be specified by name.
 - Added `Depends: R (>= 4.2)` to `DESCRIPTION` to declare the minimum R version required by the `extendr` backend. Added a corresponding R 4.2 matrix entry to the `R-CMD-check` CI workflow to verify compatibility.
+- Expanded `@param` roxygen2 descriptions in `StreamingLoess()` and `OnlineLoess()` to include string aliases for `merge_strategy` and `update_mode`, matching the level of detail already present in `Loess()`. Regenerated all `man/*.Rd` files.
 
 **Julia:**
 

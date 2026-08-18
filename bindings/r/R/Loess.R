@@ -19,14 +19,21 @@
 #' @param iterations Number of robustness iterations (non-negative integer).
 #'   Default: 3.
 #' @param weight_function Kernel weight function. One of \code{"tricube"}
-#'   (default), \code{"gaussian"}, \code{"uniform"}, \code{"cosine"},
-#'   \code{"epanechnikov"}, \code{"biweight"}, \code{"triangle"}.
+#'   (default), \code{"gaussian"},
+#'   \code{"uniform"} (alias: \code{"boxcar"}),
+#'   \code{"cosine"}, \code{"epanechnikov"},
+#'   \code{"biweight"} (alias: \code{"bisquare"}), or
+#'   \code{"triangle"} (alias: \code{"triangular"}).
 #' @param robustness_method Outlier downweighting method: \code{"bisquare"}
-#'   (default), \code{"huber"}, or \code{"talwar"}.
+#'   (default; alias: \code{"biweight"}), \code{"huber"}, or \code{"talwar"}.
 #' @param scaling_method Residual scale estimation for robustness weights:
-#'   \code{"mad"} (default), \code{"mar"}, or \code{"mean"}.
+#'   \code{"mad"} (default; alias: \code{"median_absolute_deviation"}),
+#'   \code{"mar"} (alias: \code{"median_absolute_residual"}), or
+#'   \code{"mean"} (alias: \code{"mean_absolute_residual"}).
 #' @param boundary_policy Boundary handling strategy: \code{"extend"}
-#'   (default), \code{"reflect"}, \code{"zero"}, or \code{"noboundary"}.
+#'   (default; alias: \code{"pad"}), \code{"reflect"} (alias:
+#'   \code{"mirror"}), \code{"zero"}, or
+#'   \code{"noboundary"} (alias: \code{"none"}).
 #' @param auto_converge Convergence tolerance for early stopping of robustness
 #'   iterations. \code{NULL} (default) disables early stopping.
 #' @param return_diagnostics Logical; if \code{TRUE}, return fit-quality
@@ -36,8 +43,9 @@
 #' @param return_robustness_weights Logical; if \code{TRUE}, return per-point
 #'   robustness weights. Default: \code{FALSE}.
 #' @param zero_weight_fallback Fallback policy when all robustness weights drop
-#'   to zero: \code{"use_local_mean"} (default), \code{"return_original"}, or
-#'   \code{"return_none"}.
+#'   to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
+#'   \code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
+#'   \code{"return_none"} (alias: \code{"none"}).
 #' @param parallel Logical; enable parallel processing. Default: \code{TRUE}.
 #' @param degree Local polynomial degree: \code{"constant"}, \code{"linear"}
 #'   (default), \code{"quadratic"}, \code{"cubic"}, or \code{"quartic"}.
