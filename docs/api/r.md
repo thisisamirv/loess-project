@@ -14,15 +14,15 @@ The `Loess` class allows configuring the LOESS parameters once and fitting multi
 
 ```r
 library(rfastloess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
 
-library(rfastloess)
 model <- Loess(fraction = 0.5)
+print(model)
+#> <Loess Model>
+#>   Fraction:          0.5
+#>   Iterations:        3
+#>   Weight Function:   tricube
+#>   Parallel:          TRUE
 ```
-
-* `...`: Arguments corresponding to `LoessOptions` fields.
 
 **Methods:**
 
@@ -34,6 +34,12 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(fraction = 0.5)
 result <- fit(model, x, y)
+print(result)
+#> <LoessResult>
+#>   Points:            100
+#>   Fraction Used:     0.5
+#>   Iterations Used:   3
+
 # or with per-observation weights:
 weights <- rep(1, length(x))
 result <- fit(model, x, y, custom_weights = weights)
@@ -230,6 +236,10 @@ result <- fit(model, x, y)
 
 # Print summary
 print(result)
+#> <LoessResult>
+#>   Points:            100
+#>   Fraction Used:     0.5
+#>   Iterations Used:   3
 
 # Plot result
 plot(result)

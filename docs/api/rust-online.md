@@ -50,6 +50,20 @@ fn main() -> Result<(), LoessError> {
 * Clears the internal window buffer.
 * **Rust-only** — this method is not exposed in other language bindings, where creating a new instance is the idiomatic alternative.
 
+## Result Structure
+
+### `OnlineOutput<T>`
+
+Returned inside `Ok(Some(...))` by `add_point()`. `None` while the window is still filling.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `smoothed` | `T` | Smoothed value for the latest point |
+| `std_error` | `Option<T>` | Standard error (if requested) |
+| `residual` | `Option<T>` | Residual y − smoothed (if requested) |
+| `robustness_weight` | `Option<T>` | Robustness weight (if requested) |
+| `iterations_used` | `Option<usize>` | Robustness iterations performed |
+
 ## Builder Options
 
 ### Online Options
