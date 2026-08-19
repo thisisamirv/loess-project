@@ -2,9 +2,11 @@
 % Please edit documentation in R/methods.R
 \name{process_chunk}
 \alias{process_chunk}
+\alias{process_chunk.StreamingLoess}
 \title{Process a data chunk through a streaming LOESS model}
 \usage{
 process_chunk(model, ...)
+\method{process_chunk}{StreamingLoess}(model, x, y, ...)
 }
 \arguments{
 \item{model}{A \code{StreamingLoess} object.}

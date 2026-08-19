@@ -2,9 +2,11 @@
 % Please edit documentation in R/methods.R
 \name{add_point}
 \alias{add_point}
+\alias{add_point.OnlineLoess}
 \title{Add a single point to an online LOESS model}
 \usage{
 add_point(model, ...)
+\method{add_point}{OnlineLoess}(model, x, y, ...)
 }
 \arguments{
 \item{model}{An \code{OnlineLoess} object.}

@@ -2,9 +2,11 @@
 % Please edit documentation in R/methods.R
 \name{fit}
 \alias{fit}
+\alias{fit.Loess}
 \title{Fit a LOESS model to data}
 \usage{
 fit(model, ...)
+\method{fit}{Loess}(model, x, y, custom_weights = NULL, ...)
 }
 \arguments{
 \item{model}{A \code{Loess} object.}

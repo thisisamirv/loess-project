@@ -137,6 +137,7 @@ print.OnlineLoess <- function(x, ...) {
 #' @export
 fit <- function(model, ...) UseMethod("fit")
 
+#' @rdname fit
 #' @export
 fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
     validated_args <- validate_common_args(
@@ -163,6 +164,7 @@ fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
 #' @export
 process_chunk <- function(model, ...) UseMethod("process_chunk")
 
+#' @rdname process_chunk
 #' @export
 process_chunk.StreamingLoess <- function(model, x, y, ...) {
     args <- validate_common_args(
@@ -207,6 +209,7 @@ finalize.StreamingLoess <- function(model, ...) {
 #' @export
 add_point <- function(model, ...) UseMethod("add_point")
 
+#' @rdname add_point
 #' @export
 add_point.OnlineLoess <- function(model, x, y, ...) {
     model$handle$add_point(as.double(x), as.double(y))
