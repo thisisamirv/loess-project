@@ -117,7 +117,7 @@ Result from LOESS smoothing.
 - `residuals::Union{Vector{Float64}, Nothing}`: Residuals
 - `robustness_weights::Union{Vector{Float64}, Nothing}`: Robustness weights
 - `fraction_used::Float64`: Fraction used for smoothing
-- `iterations_used::Int`: Number of iterations performed (-1 if not available)
+- `iterations_used::Union{Int, Nothing}`: Number of iterations performed (`nothing` if not applicable)
 - `diagnostics::Union{Diagnostics, Nothing}`: Diagnostic metrics
 - `enp::Union{Float64, Nothing}`: Equivalent number of parameters
 - `trace_hat::Union{Float64, Nothing}`: Trace of hat matrix
@@ -138,7 +138,7 @@ struct LoessResult
     residuals::Union{Vector{Float64},Nothing}
     robustness_weights::Union{Vector{Float64},Nothing}
     fraction_used::Float64
-    iterations_used::Int
+    iterations_used::Union{Int,Nothing}
     diagnostics::Union{Diagnostics,Nothing}
     enp::Union{Float64,Nothing}
     trace_hat::Union{Float64,Nothing}
@@ -292,7 +292,7 @@ function convert_result(c_result::CJlLoessResult)
         residuals,
         robustness_weights,
         c_result.fraction_used,
-        Int(c_result.iterations_used),
+        c_result.iterations_used == -1 ? nothing : Int(c_result.iterations_used),
         diagnostics,
         enp,
         trace_hat,
