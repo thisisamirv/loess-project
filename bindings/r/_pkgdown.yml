@@ -18,10 +18,10 @@ reference:
   - title: Results and Utilities
     desc: Objects returned by fit methods and helper functions.
     contents:
-      - fit.Loess
-      - process_chunk.StreamingLoess
-      - finalize.StreamingLoess
-      - add_point.OnlineLoess
+      - fit
+      - process_chunk
+      - finalize
+      - add_point
       - plot.LoessResult
       - print.Loess
       - print.LoessResult
