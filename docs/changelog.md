@@ -6,102 +6,82 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## 1.0.0
 
 ### Added
 
 **R:**
 
-- Introduced S3 generics `fit()`, `process_chunk()`, `finalize()`, and `add_point()` in the R binding. These replace the previous list-closure API (`fit(model, )`, `process_chunk(model, )`, etc.) with idiomatic R dispatch: `fit(model, x, y)`, `process_chunk(model, x, y)`, `finalize(model)`, `add_point(model, x, y)`. All demos, vignettes, tests, and roxygen examples updated accordingly.
-- `bindings/r/Makefile` step 4a now auto-installs [Air](https://posit-dev.github.io/air/) when `air` is not on `PATH` — using `irm … | iex` (PowerShell) on Windows and `curl … | sh` on macOS/Linux — then prepends `$HOME/.local/bin` to `PATH` before running `air format`, so formatting works out-of-the-box without a pre-installed Air binary.
-- Added a new `reject_extra_positional_args()` helper (`R/utils.R`) that inspects `sys.call()` directly and rejects any call with more than one unnamed argument, regardless of how many formals precede `...`.
+- Introduced S3 generics `fit()`, `process_chunk()`, `finalize()`, and `add_point()`, replacing the previous list-closure API.
+- `bindings/r/Makefile` now auto-installs [Air](https://posit-dev.github.io/air/) if missing, before running `air format`.
+- Added a `reject_extra_positional_args()` helper to reject extra unnamed arguments.
 
 ### Fixed
 
-**Monorepo:**
+**R:**
 
-- Fixed `make r` (and other Python-dependent targets) failing on Ubuntu 24.04 and other modern Linux distributions where `python` is not in `PATH` by changing the default from `PYTHON ?= python` to `PYTHON ?= python3`. The interpreter can still be overridden via `make PYTHON=...`.
-- Fixed `ModuleNotFoundError: No module named 'tomli_w'` on systems with an externally-managed Python (Ubuntu 24.04+, Debian 12+, PEP 668) by adding a `--user` fallback to the automatic `tomli`/`tomli_w` install step in the Makefile.
-
-**Python:**
-
-- Fixed `ruff` linting errors in the Python binding: replaced `from typing import Sequence` with `from collections.abc import Sequence` in `_core.pyi` (UP035), removed redundant `...` literals from all property and method stub bodies — a docstring alone is the correct single-statement body in a `.pyi` file (PYI048, PIE790), and replaced bare `exit(1)` with `sys.exit(1)` in `tests/python/test_gil.py` (PLR1722).
+- Fixed incorrect URLs in R binding docs.
 
 **Julia:**
 
-- Fixed `LoessResult.iterations_used` returning the raw FFI sentinel `-1` instead of `nothing` when robustness iterations were not applicable. The field type is now `Union{Int,Nothing}` and `-1` is mapped to `nothing` on the Julia side, matching the existing behaviour of `OnlineOutput.iterations_used`.
+- Fixed `LoessResult.iterations_used` returning the raw FFI sentinel `-1` instead of `nothing` when robustness iterations were not applicable.
 
 **WASM:**
 
-- Fixed `OnlineLoess.add_point()` returning `undefined` instead of `null` when the sliding window has not yet accumulated enough points. `wasm-bindgen` maps `Option<T>` to `T | undefined` by default; the binding now explicitly returns `JsValue::null()` to match the Node.js binding, which returns `null` via napi-rs.
-
-**R:**
-
-- Fixed incorrect URLs in R bidning docs.
+- Fixed `OnlineLoess.add_point()` returning `undefined` instead of `null` when the sliding window has not yet accumulated enough points.
 
 ### Changed
 
 **Monorepo:**
 
-- Documented in `docs/contributing.md` that `python3` with `tomli` and `tomli_w` is required to run the R binding's vendoring scripts, and why Python is needed for an R build.
-- Removed `dev/isolate_cargo.py` and the `ISOLATE` Makefile variable. All per-component targets (`loess-rs`, `fastLoess`, `python`, `r`, `julia`, `nodejs`, `wasm`, `cpp`) now call their `_*_impl` sub-target directly; Cargo's `-p <package>` flag already scopes each build to the relevant crate without workspace mutation.
-- Removed `dev/check_root_cargo.py`. This script guarded against `Cargo.toml` being left in an isolated state by `isolate_cargo.py`; since workspace isolation no longer happens, the guard is unnecessary.
-- Removed `dev/fix_doc_snippets.py`. All 11 documentation code snippets that previously required runtime transformation (missing R/Julia imports and data preambles, Node.js variable injection) now carry their boilerplate directly in the Markdown source.
-- Removed `check_js_licenses.js` as it was just needed once during development.
-- Split the monolithic root `Makefile` into per-crate and per-binding sub-Makefiles (`crates/loess-rs/Makefile`, `crates/fastLoess/Makefile`, `bindings/python/Makefile`, `bindings/r/Makefile`, `bindings/julia/Makefile`, `bindings/nodejs/Makefile`, `bindings/wasm/Makefile`, `bindings/cpp/Makefile`). Each sub-Makefile is self-contained and can be invoked directly via `make -f path/Makefile` from the project root (all paths remain root-relative). Platform detection (`UNAME_S`, `HOST_PLATFORM`, `NPM`/`NPX`, `PYTHON`, `TEMP`) is inlined directly at the top of every Makefile; `mk/config.mk` has been removed. The root `Makefile` now delegates exclusively via `$(MAKE) -f path/Makefile` and retains only `examples-*`, `docs`, `check-msrv`, `all`, `all-coverage`, and `all-clean` aggregation targets.
-- Moved Rust integration tests into their respective crates: `tests/loess-rs/` → `crates/loess-rs/tests/loess-rs/` and `tests/fastLoess/` → `crates/fastLoess/tests/fastLoess/` (auto-discovered by Cargo as the test binaries `loess-rs` and `fastLoess`). Moved Rust examples into their respective crates: `examples/loess-rs/` → `crates/loess-rs/examples/` and `examples/fastLoess/` → `crates/fastLoess/examples/`. Moved binding tests into their binding directories: `tests/{cpp,julia,nodejs,python,r,wasm}/` → `bindings/{cpp,julia,nodejs,python,r,wasm}/tests/`. Moved binding examples: `examples/{cpp,julia,nodejs,python,wasm}/` → `bindings/{cpp,julia,nodejs,python,wasm}/examples/` and `examples/r/` → `bindings/r/demo/`. The standalone `tests/` and `examples/` workspace packages have been removed from the workspace.
-- Moved examples execution logic from root Makefile `examples-*` targets into each sub-Makefile as a standalone `examples` target. The `default` target in each sub-Makefile now runs examples as the final step, so `make -f path/Makefile` performs a full end-to-end check including examples. Root Makefile `examples-*` targets now delegate to the corresponding sub-Makefile via `$(MAKE) -f path/Makefile examples`.
-- Removed `examples/` directories from all crates (`crates/loess-rs/examples/`, `crates/fastLoess/examples/`) and all language bindings (`bindings/cpp/examples/`, `bindings/julia/examples/`, `bindings/nodejs/examples/`, `bindings/python/examples/`, `bindings/wasm/examples/`). The corresponding `examples` Make targets and all `examples`-related references (format/lint paths, PHONY declarations, clean rules) have been removed from every sub-Makefile and from the root Makefile.
-
-**Docs:**
-
-- Split `StreamingLoess` and `OnlineLoess` content out of each binding's main API reference page into dedicated `{lang}-streaming.md` and `{lang}-online.md` files (`cpp-streaming.md`, `cpp-online.md`, `nodejs-streaming.md`, `nodejs-online.md`, `python-streaming.md`, `python-online.md`, `julia-streaming.md`, `julia-online.md`, `wasm-streaming.md`, `wasm-online.md`, `rust-streaming.md`, `rust-online.md`). Each main reference page now links to the split-out files from a callout at the top and from short inline cross-references in place of the removed sections.
-- Moved the `tutorials/` pages (Genomics, Time Series, Real-Time Processing) into a new `user-guide/use-cases/` section. The top-level Tutorials and Examples navigation tabs have been removed; domain-focused use-case guides now live under User Guide → Use Cases in the site navigation. Explanatory prose has been added to each use-case page describing the rationale behind key parameter choices.
-- Standardized all `docs/api/` code examples across every language binding. Added expected output comments to every method code block.
-- `dev/verify_snippets.py` now also runs the R code chunks in `bindings/r/vignettes/rfastloess-intro.Rmd`. All runnable chunks from an `.Rmd` file are combined into a single script before execution so that later chunks can reference variables defined in earlier ones, matching knitr's shared-state model. Chunks with `eval=FALSE` or `include=FALSE` are skipped.
+- Removed `dev/isolate_cargo.py`, `dev/check_root_cargo.py`, `dev/fix_doc_snippets.py`, and `check_js_licenses.js` — workspace isolation, doc-snippet transformation, and license checks are no longer needed.
+- Split the monolithic root `Makefile` into per-crate/binding sub-Makefiles (e.g. `crates/loess-rs/Makefile`, `bindings/r/Makefile`), each invokable directly via `make -f path/Makefile`. The root `Makefile` now only aggregates (`docs`, `check-msrv`, `all*`).
+- Moved Rust and binding tests into their respective crate/binding directories (e.g. `tests/loess-rs/` → `crates/loess-rs/tests/loess-rs/`, `tests/cpp/` → `bindings/cpp/tests/`). Removed the standalone `tests/` workspace packages.
 
 **loess-rs:**
 
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, matching the `y` and `standard_errors` fields already used by `LoessResult` (batch and streaming). This is a **breaking change**.
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, matching `LoessResult`. This is a **breaking change**.
 - Updated `wide` to v1.6.
 
 **Python:**
 
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` properties to `y` and `standard_error`, for consistency with `LoessResult`'s fields. This is a **breaking change**.
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` properties to `y` and `standard_error`. This is a **breaking change**.
 
 **R:**
 
-- Renamed the `smoothed` and `std_error` fields of the named list returned by `OnlineLoess`'s `add_point()` to `y` and `standard_error`, for consistency with `Loess`/`StreamingLoess` result fields. This is a **breaking change**.
-- Replaced `dev/style_pkg.R` (which used `styler`) with [Air](https://posit-dev.github.io/air/), Posit's idiomatic R formatter. A minimal `bindings/r/air.toml` config (`indent-width = 4`) now controls formatting; the `bindings/r/Makefile` step 4a calls `air format` on the R source directories instead of invoking a script. Removed `style_pkg.R` from the repository.
-- Removed `dev/fix_rd_style.R` and `bindings/r/fix_rd_style.R`. The post-processing logic (fix 2→4 space indentation in generated Rd files; wrap long lines inside `\author{}` and `\seealso{}` blocks) is now inlined directly in `bindings/r/Makefile` step 4b as a `Rscript -e` one-liner, eliminating a loose script file with no idiomatic alternative.
-- Removed `dev/prepare_cargo.py`. The two actions it provided — (1) stripping `[workspace]`/`[patch.crates-io]` before vendoring and (2) appending them back afterward — are now performed inline in the Makefiles with `sed` and `printf`. The `exclude`/`restore` actions it also defined were never called.
-- Removed `dev/patch_vendor_crates.py`. The only real work the script did was strip the `version` field from the `loess-rs` path dep in `fastLoess/Cargo.toml` (no GPU deps, no workspace inheritance). This is now a single `sed -i.bak` call inline in the Makefiles. This also eliminates the `tomli`/`tomli_w` pip-install step from the R build.
-- Removed `dev/clean_checksums.py`. The two things it did — strip `tests`/`benches`/`examples`/`doc` directories from the vendor tree and reset `.cargo-checksum.json` files — are now done with two `find` commands inline in the Makefiles. Cargo accepts `{"files":{}}` checksums for vendored crates so per-file verification is disabled after stripping, removing the need to recompute hashes. The R build now requires no Python scripts at all.
-- Removed `dev/prepare_cran.sh`. Its vendor-extraction and cargo-config steps were already handled by `Makevars.in` during `R CMD build`, making them dead code. The only unique step — generating `inst/AUTHORS` from `cargo metadata` — is now inlined directly into `bindings/r/Makefile`'s step 4c using a `jq` pipeline, removing the Python dependency and temp-file pattern. The stale `fastLoess-R` package-name exclusion filter has been corrected to use the current name (`rfastloess`) via the existing `$(R_PKG_NAME)` variable.
-- Added `...` to `Loess()`, `StreamingLoess()`, and `OnlineLoess()` to force named arguments for all optional parameters following the primary positional arguments. Passing extra arguments positionally now raises an error; every optional argument must be specified by name.
-- Added `Depends: R (>= 4.2)` to `DESCRIPTION` to declare the minimum R version required by the `extendr` backend. Added a corresponding R 4.2 matrix entry to the `R-CMD-check` CI workflow to verify compatibility.
-- Expanded `@param` roxygen2 descriptions in `StreamingLoess()` and `OnlineLoess()` to include string aliases for `merge_strategy` and `update_mode`, matching the level of detail already present in `Loess()`. Regenerated all `man/*.Rd` files.
-- Added a `See Also` section to `Loess()`, `StreamingLoess()`, and `OnlineLoess()` linking to <https://loess.readthedocs.io/> for full documentation. Regenerated all `man/*.Rd` files.
+- Renamed the `smoothed` and `std_error` fields returned by `OnlineLoess`'s `add_point()` to `y` and `standard_error`. This is a **breaking change**.
+- Replaced `dev/style_pkg.R` with [Air](https://posit-dev.github.io/air/) for formatting.
+- Removed `dev/fix_rd_style.R`, `dev/prepare_cargo.py`, `dev/patch_vendor_crates.py`, `dev/clean_checksums.py`, and `dev/prepare_cran.sh` — their logic is now inlined directly in `bindings/r/Makefile`, so the R build no longer requires any Python scripts.
+- Added `...` to `Loess()`, `StreamingLoess()`, and `OnlineLoess()` to force named arguments for optional parameters.
+- Added `Depends: R (>= 4.6)` to `DESCRIPTION` and a matching CI matrix entry.
+- Expanded roxygen2 `@param` docs and added a `See Also` section linking to <https://loess.readthedocs.io/>.
 - Expanded `rfastloess-intro.Rmd` vignettes.
 
 **Julia:**
 
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, for consistency with `LoessResult`'s fields. This is a **breaking change**.
-- Removed `dev/format_julia.jl`. The `JuliaFormatter.format(...)` call with `overwrite=true` is now inlined directly in `bindings/julia/Makefile` alongside the existing check-only variant, using the Makefile's `$(JL_TEST_DIR)` and `$(JL_DIR)/examples` variables (the script had stale hardcoded paths).
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`. This is a **breaking change**.
+- Removed `dev/format_julia.jl`; formatting is now inlined in `bindings/julia/Makefile`.
 
 **Node.js:**
 
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, for consistency with `LoessResultObj`'s fields. This is a **breaking change**.
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`. This is a **breaking change**.
 - Updated `@napi-rs/cli` to v3.8 and `oxlint` to v1.79.
 
 **WASM:**
 
-- Renamed `OnlineOutput`'s `smoothed` and `std_error` getters to `y` and `standard_error`, for consistency with `LoessResult`'s fields. This is a **breaking change**.
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` getters to `y` and `standard_error`. This is a **breaking change**.
 - Updated `oxlint` to v1.79.
 
 **C++:**
 
-- Renamed `OnlineOutput`'s `smoothed()` and `std_error()` methods to `y()` and `standard_error()`, for consistency with `LoessResult`'s `y_vector()`/`standard_errors()`. This is a **breaking change**.
+- Renamed `OnlineOutput`'s `smoothed()` and `std_error()` methods to `y()` and `standard_error()`. This is a **breaking change**.
+
+**Docs:**
+
+- Split `StreamingLoess`/`OnlineLoess` content out of each binding's main API reference page into dedicated `{lang}-streaming.md`/`{lang}-online.md` files.
+- Moved the `tutorials/` pages into a new `user-guide/use-cases/` section.
+- Standardized `docs/api/` code examples across every binding, with expected output comments.
+- `dev/verify_snippets.py` now also runs the R code chunks in vignettes.
 
 ## 0.9.0
 

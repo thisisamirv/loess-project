@@ -94,8 +94,5 @@ coverage: ensure-llvm-cov
 clean:
 	@echo "Cleaning $(LOESS_PKG) crate..."
 	@cargo clean -p $(LOESS_PKG)
-	@rm -rf $(LOESS_DIR)/coverage_html
-	@rm -rf $(LOESS_DIR)/Cargo.lock
-	@rm -rf $(LOESS_DIR)/benchmarks
-	@rm -rf $(LOESS_DIR)/validation
+	@git clean -fdX -- $(LOESS_DIR)
 	@echo "$(LOESS_PKG) clean complete!"

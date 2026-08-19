@@ -34,6 +34,8 @@ bindings/r/README.html
 bindings/r/src/Makevars
 .Rprofile
 bindings/r/tests/testthat/Rplots.pdf
+*.Rout
+bindings/r/vignettes/*.html
 
 # Python
 __pycache__/
@@ -48,6 +50,8 @@ venv/
 .pytest_cache/
 .ruff_cache/
 .pyc
+.benchmarks/
+*.pyd
 
 # IDEs & Editors
 .idea/
@@ -74,7 +78,7 @@ examples/python/plots/
 bindings/cpp/include/fastloess.h
 bindings/cpp/bin/
 bindings/cpp/build/
-tests/cpp/build/
+bindings/cpp/tests/build/
 examples/cpp/bin/
 
 # Benchmarks
@@ -106,3 +110,9 @@ Manifest.toml
 
 # C++
 compile_flags.txt
+
+# Stray generated dirs (accidental output under the wrong working directory)
+bindings/*/benchmarks/
+bindings/*/validation/
+crates/*/benchmarks/
+crates/*/validation/

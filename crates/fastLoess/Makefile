@@ -85,7 +85,5 @@ coverage: ensure-llvm-cov
 clean:
 	@echo "Cleaning $(FASTLOESS_PKG) crate..."
 	@cargo clean -p $(FASTLOESS_PKG)
-	@rm -rf $(FASTLOESS_DIR)/coverage_html
-	@rm -rf $(FASTLOESS_DIR)/benchmarks
-	@rm -rf $(FASTLOESS_DIR)/validation
+	@git clean -fdX -- $(FASTLOESS_DIR)
 	@echo "$(FASTLOESS_PKG) clean complete!"
