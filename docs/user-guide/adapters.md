@@ -532,7 +532,7 @@ Incremental updates with a sliding window for real-time data.
 
     for (let i = 0; i < n; i++) {
         const res = processor.add_point(x[i], y[i]);
-        if (res !== undefined) {
+        if (res !== undefined && res !== null) {
             console.log(`Smoothed: ${res.smoothed.toFixed(2)}`);
         }
     }

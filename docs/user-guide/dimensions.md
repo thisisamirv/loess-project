@@ -219,9 +219,6 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     ```javascript
     const { Loess } = require('fastloess');
 
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0.6);
-
     const n = 100;
     const lat = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
     const lon = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));

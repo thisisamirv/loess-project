@@ -179,7 +179,7 @@ For true real-time applications where each point must be processed immediately.
 
     for (let i = 0; i < x.length; i++) {
         const res = processor.add_point(x[i], y[i]);
-        if (res !== undefined) {
+        if (res !== undefined && res !== null) {
             // Update dashboard UI with res.smoothed
         }
     }

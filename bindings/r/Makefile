@@ -34,6 +34,28 @@ else
 AIR_INSTALL_CMD := curl -LsSf https://github.com/posit-dev/air/releases/latest/download/air-installer.sh | sh
 endif
 
+# jq (used to generate inst/AUTHORS). Not preinstalled on plain Windows/macOS
+# dev machines the way it is on GitHub-hosted CI runners, so fall back to
+# downloading a static binary if it's not already on PATH.
+JQ_DIR   := $(R_DIR)/.bin
+ifeq ($(HOST_PLATFORM),windows)
+	JQ_LOCAL := $(JQ_DIR)/jq.exe
+	JQ_ASSET := jq-windows-amd64.exe
+else ifeq ($(HOST_PLATFORM),macos)
+	JQ_LOCAL := $(JQ_DIR)/jq
+	JQ_ASSET := jq-macos-amd64
+else
+	JQ_LOCAL := $(JQ_DIR)/jq
+	JQ_ASSET := jq-linux-amd64
+endif
+JQ := $(shell command -v jq 2>/dev/null || echo $(JQ_LOCAL))
+JQ_ENSURE_CMD := if ! command -v jq >/dev/null 2>&1 && [ ! -x "$(JQ_LOCAL)" ]; then \
+	echo "jq not found on PATH — downloading a static binary..."; \
+	mkdir -p $(JQ_DIR); \
+	curl -fLsS -o "$(JQ_LOCAL)" "https://github.com/jqlang/jq/releases/latest/download/$(JQ_ASSET)"; \
+	chmod +x "$(JQ_LOCAL)"; \
+	fi
+
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
 	TEMP := /tmp
@@ -161,11 +183,12 @@ default:
 	@echo "=============================================================================="
 	@echo "Generating $(R_DIR)/inst/AUTHORS..."
 	@mkdir -p $(R_DIR)/inst
+	@$(JQ_ENSURE_CMD)
 	@{ \
 		echo "Authors and Copyright Holders for Rust Dependencies:"; \
 		echo ""; \
 		(cargo metadata --format-version 1) | \
-			jq -r '. as $$root | [.packages[] | select(.id as $$id | ($$root.workspace_members | index($$id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'; \
+			$(JQ) -r '. as $$root | [.packages[] | select(.id as $$id | ($$root.workspace_members | index($$id)) == null)] | unique_by(.name)[] | "Package: \(.name) (\(.version))\nAuthors: \(.authors | join(", "))\nLicense: \(.license // "Unknown")\n" + "-" * 40'; \
 	} > $(R_DIR)/inst/AUTHORS
 	@cd $(R_DIR) && R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) R CMD build .
 	@echo "=============================================================================="
