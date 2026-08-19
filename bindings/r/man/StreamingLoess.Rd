@@ -5,33 +5,33 @@
 \title{LOESS Streaming Smoothing}
 \usage{
 StreamingLoess(
-  fraction = 0.67,
-  chunk_size = 5000L,
-  ...,
-  overlap = NULL,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  auto_converge = NULL,
-  return_diagnostics = FALSE,
-  return_residuals = FALSE,
-  return_robustness_weights = FALSE,
-  zero_weight_fallback = "use_local_mean",
-  merge_strategy = "weighted_average",
-  parallel = TRUE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  return_se = FALSE,
-  confidence_intervals = NULL,
-  prediction_intervals = NULL,
-  weighted_metric_weights = NULL,
-  cell = NULL,
-  interpolation_vertices = NULL,
-  boundary_degree_fallback = NULL
+    fraction = 0.67,
+    chunk_size = 5000L,
+    ...,
+    overlap = NULL,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
+    auto_converge = NULL,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    return_robustness_weights = FALSE,
+    merge_strategy = "weighted_average",
+    parallel = TRUE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    return_se = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL
 )
 }
 \arguments{
@@ -66,6 +66,11 @@ Default: 3.}
 \code{"mirror"}), \code{"zero"}, or
 \code{"noboundary"} (alias: \code{"none"}).}
 
+\item{zero_weight_fallback}{Fallback policy when all robustness weights drop
+to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
+\code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
+\code{"return_none"} (alias: \code{"none"}).}
+
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
 
@@ -77,11 +82,6 @@ result. Default: \code{FALSE}.}
 
 \item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
 robustness weights. Default: \code{FALSE}.}
-
-\item{zero_weight_fallback}{Fallback policy when all robustness weights drop
-to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
-\code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
-\code{"return_none"} (alias: \code{"none"}).}
 
 \item{merge_strategy}{Strategy for reconciling overlapping chunk regions:
 \code{"weighted_average"} (default; alias: \code{"weighted"}),

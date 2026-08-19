@@ -6,6 +6,7 @@
 \title{Fit a LOESS model to data}
 \usage{
 fit(model, ...)
+
 \method{fit}{Loess}(model, x, y, custom_weights = NULL, ...)
 }
 \arguments{

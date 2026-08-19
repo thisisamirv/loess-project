@@ -138,11 +138,15 @@ test_that("Loess robustness weights work", {
     y <- sin(x) + rnorm(50, sd = 0.1)
     y[25] <- y[25] + 5 # Add outlier
 
-    result <- fit(Loess(
-        fraction = 0.5,
-        iterations = 3,
-        return_robustness_weights = TRUE
-    ), as.double(x), as.double(y))
+    result <- fit(
+        Loess(
+            fraction = 0.5,
+            iterations = 3,
+            return_robustness_weights = TRUE
+        ),
+        as.double(x),
+        as.double(y)
+    )
 
     expect_true("robustness_weights" %in% names(result))
     expect_length(result$robustness_weights, length(y))
@@ -156,11 +160,15 @@ test_that("Loess cross-validation works", {
     x <- seq(0, 10, length.out = 100)
     y <- sin(x) + rnorm(100, sd = 0.2)
 
-    result <- fit(Loess(
-        cv_fractions = c(0.2, 0.3, 0.5, 0.7),
-        cv_method = "kfold",
-        cv_k = 5
-    ), as.double(x), as.double(y))
+    result <- fit(
+        Loess(
+            cv_fractions = c(0.2, 0.3, 0.5, 0.7),
+            cv_method = "kfold",
+            cv_k = 5
+        ),
+        as.double(x),
+        as.double(y)
+    )
 
     expect_true("cv_scores" %in% names(result))
     expect_length(result$cv_scores, 4)
@@ -243,11 +251,15 @@ test_that("Loess: return_se", {
     x <- as.double(seq(0, 10, length.out = 20))
     y <- sin(x)
 
-    r <- fit(Loess(
-        fraction = 0.5,
-        return_se = TRUE,
-        surface_mode = "direct"
-    ), x, y)
+    r <- fit(
+        Loess(
+            fraction = 0.5,
+            return_se = TRUE,
+            surface_mode = "direct"
+        ),
+        x,
+        y
+    )
     expect_true("enp" %in% names(r))
     expect_true("trace_hat" %in% names(r))
     expect_true("leverage" %in% names(r))

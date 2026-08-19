@@ -54,16 +54,24 @@ StreamingLoess <- function(
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL
 ) {
-    if (...length() > 0) stop("All arguments after 'chunk_size' must be named.", call. = FALSE)
+    reject_extra_positional_args(sys.call(), "chunk_size")
     validate_params(fraction = fraction, chunk_size = chunk_size)
     handle <- do.call(RStreamingLoess$new, env_args(streaming_params))
     .make_streaming_loess(
-        handle, fraction, chunk_size, iterations, parallel
+        handle,
+        fraction,
+        chunk_size,
+        iterations,
+        parallel
     )
 }
 
 .make_streaming_loess <- function(
-    handle, fraction, chunk_size, iterations, parallel
+    handle,
+    fraction,
+    chunk_size,
+    iterations,
+    parallel
 ) {
     structure(
         list(

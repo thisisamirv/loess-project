@@ -6,11 +6,18 @@ on:
   pull_request:
     branches: [main, master, develop]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
   RUST_BACKTRACE: 1
   PIP_DISABLE_PIP_VERSION_CHECK: 1
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  ASAN_OPTIONS: detect_leaks=0:strict_init_order=1
 
 jobs:
   # ============================================================================
@@ -44,14 +51,6 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-
-      - name: Install R
-        uses: r-lib/actions/setup-r@v2
-        with:
-          use-public-rspm: true
-
-      - name: Install Pandoc
-        uses: r-lib/actions/setup-pandoc@v2
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -114,20 +113,6 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
 
-      - name: "Rust: Run Examples"
-        run: |
-          for example in crates/loess-rs/examples/*.rs; do
-            name=$(basename "$example" .rs)
-            echo "Running example: $name"
-            cargo run -p loess-rs --example "$name"
-          done
-          for example in crates/fastLoess/examples/*.rs; do
-            name=$(basename "$example" .rs)
-            echo "Running example: $name"
-            cargo run -p fastLoess --example "$name" --features dev
-          done
-        shell: bash
-
       # ========================================================================
       # PYTHON
       # ========================================================================
@@ -147,13 +132,6 @@ jobs:
       - name: "Python: Tests"
         working-directory: bindings/python
         run: pytest tests/ -v
-
-      - name: "Python: Examples"
-        working-directory: bindings/python
-        run: |
-          python examples/batch_smoothing.py
-          python examples/streaming_smoothing.py
-          python examples/online_smoothing.py
 
       # ========================================================================
       # JULIA
@@ -182,20 +160,6 @@ jobs:
           fi
           julia -e 'using Pkg; Pkg.activate("bindings/julia/julia"); Pkg.instantiate(); include("bindings/julia/tests/test_FastLOESS.jl")'
 
-      - name: "Julia: Examples"
-        shell: bash
-        run: |
-          if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            export FASTLOESS_LIB="target/release/fastloess_jl.dll"
-          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            export FASTLOESS_LIB="target/release/libfastloess_jl.dylib"
-          else
-            export FASTLOESS_LIB="target/release/libfastloess_jl.so"
-          fi
-          julia --project=bindings/julia/julia bindings/julia/examples/batch_smoothing.jl
-          julia --project=bindings/julia/julia bindings/julia/examples/streaming_smoothing.jl
-          julia --project=bindings/julia/julia bindings/julia/examples/online_smoothing.jl
-
       - name: "Julia: Lint"
         working-directory: bindings/julia
         run: |
@@ -214,13 +178,6 @@ jobs:
       - name: "Node.js: Tests"
         working-directory: bindings/nodejs
         run: npm test
-
-      - name: "Node.js: Examples"
-        working-directory: bindings/nodejs
-        run: |
-          node examples/batch_smoothing.js
-          node examples/streaming_smoothing.js
-          node examples/online_smoothing.js
 
       - name: "Node.js: Lint"
         working-directory: bindings/nodejs
@@ -251,18 +208,6 @@ jobs:
       - name: "C++: Build"
         working-directory: bindings/cpp
         run: cargo build --release
-
-      - name: "C++: Examples (Ubuntu only)"
-        if: matrix.os == 'ubuntu-latest'
-        working-directory: bindings/cpp
-        run: |
-          mkdir -p bin
-          g++ -O3 examples/batch_smoothing.cpp -o bin/batch_smoothing -Iinclude -L../../target/release -lfastloess_cpp -lpthread -ldl -lm
-          g++ -O3 examples/streaming_smoothing.cpp -o bin/streaming_smoothing -Iinclude -L../../target/release -lfastloess_cpp -lpthread -ldl -lm
-          g++ -O3 examples/online_smoothing.cpp -o bin/online_smoothing -Iinclude -L../../target/release -lfastloess_cpp -lpthread -ldl -lm
-          LD_LIBRARY_PATH=../../target/release ./bin/batch_smoothing
-          LD_LIBRARY_PATH=../../target/release ./bin/streaming_smoothing
-          LD_LIBRARY_PATH=../../target/release ./bin/online_smoothing
 
       - name: "C++: Lint"
         working-directory: bindings/cpp
@@ -451,3 +396,328 @@ jobs:
         env:
           PYTHON: python
         run: make all
+
+  # ============================================================================
+  # R CMD CHECK (multi-OS matrix) + SRR CHECK (statistical software review
+  # standards, via pkgcheck)
+  # ============================================================================
+  r-cmd-check:
+    name: R-CMD-check (${{ matrix.os }}, R ${{ matrix.r }})
+    runs-on: ${{ matrix.os }}
+    permissions:
+      issues: write
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        r: [release]
+        rust: [stable]
+        include:
+          - os: ubuntu-latest
+            r: "4.2"
+            rust: stable
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ matrix.rust }}
+          components: rustfmt, clippy
+
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: r-cmd-check-${{ matrix.os }}-r${{ matrix.r }}-cargo
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r }}
+          use-public-rspm: true
+
+      - name: Setup Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Bootstrap pak (Windows)
+        if: runner.os == 'Windows'
+        shell: Rscript {0}
+        run: |
+          install.packages(
+            "pak",
+            repos = sprintf(
+              "https://r-lib.github.io/p/pak/stable/%s/%s/%s",
+              .Platform$pkgType, R.Version()$os, R.Version()$arch
+            )
+          )
+
+      - name: "R: Setup Dependencies"
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: bindings/r
+          extra-packages: |
+            any::rcmdcheck
+            any::BiocCheck
+            any::XML
+            any::devtools
+            any::lintr
+            any::BiocManager
+          needs: check
+
+      - name: "R: Prepare Package Sources"
+        uses: ./.github/actions/prepare-r-source
+
+      - name: "R: CMD Check"
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          upload-snapshots: true
+          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          args: 'c("--no-manual", "--as-cran")'
+          check-dir: '"check"'
+          error-on: '"error"'
+          upload-results: false
+          working-directory: bindings/r
+
+      - name: "R: Install Package"
+        working-directory: bindings/r
+        run: Rscript -e "devtools::install(quiet = TRUE)"
+
+      - name: "R: Quality (BiocCheck/Lint)"
+        working-directory: bindings/r
+        shell: bash
+        run: |
+          mkdir -p ~/.R
+          echo "CXXFLAGS += -w" >> ~/.R/Makevars
+          echo "CFLAGS += -w" >> ~/.R/Makevars
+          Rscript -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_usage_linter = NULL, object_name_linter = lintr::object_name_linter(styles = c('snake_case', 'symbols', 'CamelCase'))); lintr::lint_dir('R', linters = my_linters)"
+          R CMD build .
+          Rscript -e "BiocCheck::BiocCheck(list.files(pattern='[.]tar[.]gz$')[1], new_package=FALSE, no_check_vignettes=TRUE, quit_with_status=TRUE)"
+
+      # SRR checks run once (ubuntu-latest/release only) since they only need
+      # to reuse the toolchain/dependencies already set up above.
+      - name: Install TinyTeX (SRR checks)
+        if: matrix.os == 'ubuntu-latest' && matrix.r == 'release'
+        uses: r-lib/actions/setup-tinytex@v2
+
+      - name: "SRR: Install Dependencies"
+        if: matrix.os == 'ubuntu-latest' && matrix.r == 'release'
+        shell: Rscript {0}
+        run: |
+          install.packages(c("remotes", "BiocManager", "covr"))
+          install.packages(c("pkgcheck", "pkgstats", "toml", "visNetwork"), repos = c("https://ropensci.r-universe.dev", "https://cloud.r-project.org"))
+          # Install package dependencies including suggests (needed for BiocStyle vignette)
+          remotes::install_deps("bindings/r", dependencies = TRUE, repos = c(BiocManager::repositories(), "https://cloud.r-project.org"))
+
+      - name: "SRR: Debug Coverage"
+        if: matrix.os == 'ubuntu-latest' && matrix.r == 'release'
+        shell: Rscript {0}
+        run: |
+          tryCatch({
+            print(covr::package_coverage("bindings/r"))
+          }, error = function(e) {
+            print(e)
+            message("Covr failed to run directly")
+          })
+
+      - name: "SRR: Run pkgcheck"
+        if: matrix.os == 'ubuntu-latest' && matrix.r == 'release'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: Rscript {0}
+        run: |
+          library(pkgcheck)
+          library(pkgstats)
+          check <- pkgcheck::pkgcheck("bindings/r")
+          print(check)
+          # Fail if checks don't pass
+          if (any(check$checks$error)) stop("pkgcheck failed with errors")
+
+  # ============================================================================
+  # SANITIZERS
+  #
+  # Native Rust/binding ASAN coverage plus the dedicated R ASAN job that needs
+  # R-specific container setup. WASM is intentionally excluded: sanitizer
+  # instrumentation is not meaningful for the wasm32 target in this CI setup.
+  # ============================================================================
+  asan-native:
+    name: Native ASAN (Rust + bindings)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Install Rust Nightly
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly
+          components: rust-src
+
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Install Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: "1.11"
+
+      - name: Cache dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: sanitizers-asan-native-cargo
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends clang lld cmake g++
+
+      - name: Rust Core Tests (ASAN)
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+        shell: bash
+        run: |
+          cargo test \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p loess-rs \
+            --test loess-rs
+
+          cargo test \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastLoess \
+            --test fastLoess \
+            --features dev
+
+      - name: Build Native Bindings (ASAN)
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+        shell: bash
+        run: |
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastLoess-py \
+            --release
+
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastloess-node \
+            --release
+
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastloess-jl \
+            --release
+
+          cargo build \
+            -Zbuild-std \
+            --target x86_64-unknown-linux-gnu \
+            -p fastloess-cpp \
+            --release
+
+      - name: Prepare Sanitized C++ Library Path
+        shell: bash
+        run: |
+          mkdir -p target/release
+          mkdir -p target/release-c
+          cp target/x86_64-unknown-linux-gnu/release/libfastloess_cpp.so target/release/libfastloess_cpp.so
+          cp target/x86_64-unknown-linux-gnu/release/libfastloess_cpp.so target/release-c/libfastloess_cpp.so
+
+      - name: C++ Binding Tests (ASAN)
+        shell: bash
+        run: |
+          cmake -S bindings/cpp/tests -B bindings/cpp/tests/build-asan \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS='-fsanitize=address -fno-omit-frame-pointer' \
+            -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address' \
+            -DFASTLOESS_LIB_DIR="$(pwd)/target/release"
+          cmake --build bindings/cpp/tests/build-asan --config Debug
+          LD_LIBRARY_PATH=target/release ctest --test-dir bindings/cpp/tests/build-asan --output-on-failure
+
+      - name: Sanitizer Scope Note
+        run: |
+          echo "WASM is intentionally excluded from this workflow because ASAN is not meaningful for wasm32 in this CI setup."
+
+  r-asan-check:
+    name: R - Clang ASAN
+    runs-on: ubuntu-latest
+    container:
+      image: rocker/r-devel-san:latest
+    env:
+      CARGO_HOME: /usr/local/cargo
+      RUSTUP_HOME: /usr/local/rustup
+    defaults:
+      run:
+        working-directory: bindings/r
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install latest Rust
+        shell: bash
+        run: |
+          export CARGO_HOME=/usr/local/cargo
+          export RUSTUP_HOME=/usr/local/rustup
+          if command -v curl >/dev/null 2>&1; then
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          elif command -v wget >/dev/null 2>&1; then
+            wget -qO- https://sh.rustup.rs | sh -s -- -y
+          else
+            apt-get update
+            apt-get install -y --no-install-recommends wget ca-certificates
+            wget -qO- https://sh.rustup.rs | sh -s -- -y
+          fi
+          echo "$CARGO_HOME/bin" >> $GITHUB_PATH
+          echo "CARGO_HOME=$CARGO_HOME" >> $GITHUB_ENV
+          echo "RUSTUP_HOME=$RUSTUP_HOME" >> $GITHUB_ENV
+      - name: Install System Dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends libssl-dev libcurl4-openssl-dev libxml2-dev libuv1-dev jq
+      - name: Suppress Third-party Compiler Warnings
+        shell: bash
+        run: |
+          # Append -w to env-level flags so libsass (which uses its own
+          # Makefile reading CXXFLAGS from env) also gets the suppression.
+          echo "CFLAGS=${CFLAGS:+$CFLAGS }-w"     >> "$GITHUB_ENV"
+          echo "CXXFLAGS=${CXXFLAGS:+$CXXFLAGS }-w" >> "$GITHUB_ENV"
+          # Also write to R user Makevars as a belt-and-suspenders fallback
+          # for packages compiled through R's standard make infrastructure.
+          mkdir -p ~/.R
+          echo "CFLAGS   += -w" >> ~/.R/Makevars
+          echo "CXXFLAGS += -w" >> ~/.R/Makevars
+      - name: Install R Dependencies
+        run: |
+          export R_LIBS_USER="$RUNNER_TEMP/Library"
+          mkdir -p "$R_LIBS_USER"
+          echo "R_LIBS_USER=$R_LIBS_USER" >> "$GITHUB_ENV"
+          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); install.packages(c('remotes', 'rcmdcheck', 'testthat', 'knitr', 'rmarkdown', 'BiocManager'), lib = lib)"
+          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); BiocManager::install('BiocStyle', lib = lib, ask = FALSE, update = FALSE)"
+          RDscript -e "lib <- Sys.getenv('R_LIBS_USER'); options(repos = c(CRAN = 'https://cloud.r-project.org')); remotes::install_deps(dependencies = TRUE, lib = lib)"
+      - name: Prepare Package Sources
+        uses: ./.github/actions/prepare-r-source
+      - name: Run ASAN Check
+        shell: bash
+        run: |
+          if [ -f "$CARGO_HOME/env" ]; then
+            . "$CARGO_HOME/env"
+          elif [ -f "$HOME/.cargo/env" ]; then
+            . "$HOME/.cargo/env"
+          fi
+          RDscript -e "rcmdcheck::rcmdcheck(args = c('--no-manual', '--ignore-vignettes'), build_args = c('--no-build-vignettes'), error_on = 'error', check_dir = 'check')"

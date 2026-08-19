@@ -54,7 +54,7 @@ OnlineLoess <- function(
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL
 ) {
-    if (...length() > 0) stop("All arguments after 'min_points' must be named.", call. = FALSE)
+    reject_extra_positional_args(sys.call(), "min_points")
     validate_params(
         fraction = fraction,
         window_capacity = window_capacity,
@@ -62,12 +62,22 @@ OnlineLoess <- function(
     )
     handle <- do.call(ROnlineLoess$new, env_args(online_params))
     .make_online_loess(
-        handle, fraction, window_capacity, min_points, iterations, parallel
+        handle,
+        fraction,
+        window_capacity,
+        min_points,
+        iterations,
+        parallel
     )
 }
 
 .make_online_loess <- function(
-    handle, fraction, window_capacity, min_points, iterations, parallel
+    handle,
+    fraction,
+    window_capacity,
+    min_points,
+    iterations,
+    parallel
 ) {
     structure(
         list(
