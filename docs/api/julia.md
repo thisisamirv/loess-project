@@ -106,7 +106,7 @@ result = add_point(online, x[2], y[2])  # nothing
 
 # Returns OnlineOutput once enough points are available
 result = add_point(online, x[3], y[3])
-println(result.smoothed)
+println(result.y)
 # 0.22659245357374927
 ```
 

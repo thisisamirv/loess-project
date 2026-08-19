@@ -758,7 +758,7 @@ fn test_online_propagates_options() {
     let third = online.add_point(&[2.0], 5.0).expect("ok");
     assert!(third.is_some());
     assert!(
-        third.unwrap().smoothed.is_finite(),
+        third.unwrap().y.is_finite(),
         "Smoothed value should be finite"
     );
     assert!(online.window_size() > 0);

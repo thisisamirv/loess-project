@@ -54,7 +54,7 @@ fn test_online_exact_linear_reproduction() {
             .add_point(&[xi], yi)
             .expect("add_point should succeed")
         {
-            smoothed.push(output.smoothed);
+            smoothed.push(output.y);
         } else {
             // First few points return None until min_points reached
             smoothed.push(yi);
@@ -100,7 +100,7 @@ fn test_online_add_point_basic() {
     let output = processor.add_point(&[1.0], 3.0).expect("add_point ok");
     assert!(output.is_some(), "Second point should return Some");
     assert_relative_eq!(
-        output.unwrap().smoothed,
+        output.unwrap().y,
         3.0,
         max_relative = 1e-12,
         epsilon = 1e-14
@@ -140,7 +140,7 @@ fn test_online_window_eviction() {
     // Second point - produces smoothed value
     let second = processor.add_point(&[1.0f64], 3.0f64).expect("ok");
     assert!(second.is_some(), "Second point should return Some");
-    let second_val = second.unwrap().smoothed;
+    let second_val = second.unwrap().y;
     assert!(
         f64::is_finite(second_val),
         "Smoothed value should be finite"
@@ -149,14 +149,14 @@ fn test_online_window_eviction() {
     // Third point - window fills to capacity
     let third = processor.add_point(&[2.0f64], 5.0f64).expect("ok");
     assert!(third.is_some(), "Third point should return Some");
-    let third_val = third.unwrap().smoothed;
+    let third_val = third.unwrap().y;
     assert!(f64::is_finite(third_val), "Smoothed value should be finite");
     assert_eq!(processor.window_size(), 3, "Window should be at capacity");
 
     // Fourth point - oldest should be evicted, window size stays at capacity
     let fourth = processor.add_point(&[3.0f64], 7.0f64).expect("ok");
     assert!(fourth.is_some(), "Fourth point should return Some");
-    let fourth_val = fourth.unwrap().smoothed;
+    let fourth_val = fourth.unwrap().y;
     assert!(
         f64::is_finite(fourth_val),
         "Smoothed value should be finite"
@@ -193,7 +193,7 @@ fn test_online_sliding_window() {
             // After min_points, should always return Some
             assert!(result.is_some(), "Should return smoothed value at i={}", i);
             assert!(
-                result.unwrap().smoothed.is_finite(),
+                result.unwrap().y.is_finite(),
                 "Smoothed value should be finite at i={}",
                 i
             );
@@ -277,7 +277,7 @@ fn test_online_reuse_after_reset() {
     // Second point after reset should produce a smoothed value
     let output = processor.add_point(&[11.0], 23.0).expect("ok");
     assert!(output.is_some(), "Second point should return Some");
-    assert_relative_eq!(output.unwrap().smoothed, 23.0, max_relative = 1e-12);
+    assert_relative_eq!(output.unwrap().y, 23.0, max_relative = 1e-12);
 }
 
 // ============================================================================
@@ -447,7 +447,7 @@ fn test_online_duplicate_x_values() {
     let output = processor.add_point(&[1.0], 3.0).expect("ok");
     assert!(output.is_some(), "Second point should return Some");
     assert_relative_eq!(
-        output.unwrap().smoothed,
+        output.unwrap().y,
         2.0,
         max_relative = 1e-12,
         epsilon = 1e-14
@@ -507,7 +507,7 @@ fn test_online_robustness_methods() {
             if i >= 2 {
                 assert!(result.is_some(), "Should return smoothed value");
                 assert!(
-                    result.unwrap().smoothed.is_finite(),
+                    result.unwrap().y.is_finite(),
                     "Smoothed value should be finite"
                 );
             }
@@ -598,10 +598,10 @@ fn test_update_mode_consistency() {
 
     for (x, y) in test_data {
         if let Some(output) = incremental.add_point(&[x], y).expect("add_point ok") {
-            incremental_results.push(output.smoothed);
+            incremental_results.push(output.y);
         }
         if let Some(output) = full.add_point(&[x], y).expect("add_point ok") {
-            full_results.push(output.smoothed);
+            full_results.push(output.y);
         }
     }
 
@@ -660,7 +660,7 @@ fn test_incremental_mode_performance() {
         let result = incremental.add_point(&[*x], *y).expect("add_point ok");
         if incremental.window_size() >= 3 {
             assert!(result.is_some(), "Should produce output");
-            assert!(result.unwrap().smoothed.is_finite(), "Should be finite");
+            assert!(result.unwrap().y.is_finite(), "Should be finite");
         }
     }
 
@@ -680,7 +680,7 @@ fn test_incremental_mode_performance() {
         let result = full.add_point(&[*x], *y).expect("add_point ok");
         if full.window_size() >= 3 {
             assert!(result.is_some(), "Should produce output");
-            assert!(result.unwrap().smoothed.is_finite(), "Should be finite");
+            assert!(result.unwrap().y.is_finite(), "Should be finite");
         }
     }
 }
@@ -759,7 +759,7 @@ fn test_online_window_exactly_min_points() {
         if i >= 4
             && let Some(output) = output
         {
-            assert!(output.smoothed.is_finite());
+            assert!(output.y.is_finite());
         };
     }
 
@@ -785,7 +785,7 @@ fn test_online_all_points_identical() {
         if processor.window_size() >= 3
             && let Some(output) = output
         {
-            assert_relative_eq!(output.smoothed, 10.0, epsilon = 1e-6);
+            assert_relative_eq!(output.y, 10.0, epsilon = 1e-6);
         };
     }
 }
@@ -812,7 +812,7 @@ fn test_online_decreasing_x_values() {
         if processor.window_size() >= 3
             && let Some(output) = output
         {
-            assert!(output.smoothed.is_finite());
+            assert!(output.y.is_finite());
         };
     }
 }
@@ -877,7 +877,7 @@ fn test_online_fraction_boundaries() {
         if proc_one.window_size() >= 5
             && let Some(output) = output
         {
-            assert!(output.smoothed.is_finite());
+            assert!(output.y.is_finite());
         };
     }
 }

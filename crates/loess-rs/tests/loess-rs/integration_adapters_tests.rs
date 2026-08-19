@@ -87,7 +87,7 @@ fn test_online_3d_constant() {
         let result = model.add_point(xi, yi).unwrap();
 
         if let Some(res) = result {
-            assert!((res.smoothed - 10.0).abs() < 1e-1);
+            assert!((res.y - 10.0).abs() < 1e-1);
         }
     }
 }

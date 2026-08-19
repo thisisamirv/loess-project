@@ -54,7 +54,7 @@ test('WASM online smoothing', () => {
     for (let i = 0; i < 10; i++) {
         const res = online.add_point(i, i * 2);
         if (res !== undefined && res !== null) {
-            lastSmoothed = res.smoothed;
+            lastSmoothed = res.y;
         }
     }
 
@@ -167,7 +167,7 @@ test('WASM online: update mode via options', () => {
     for (let i = 0; i < 10; i++) {
         const res = online.add_point(i, i * 2);
         if (res !== undefined && res !== null) {
-            lastSmoothed = res.smoothed;
+            lastSmoothed = res.y;
         }
     }
     assert.ok(lastSmoothed !== undefined && lastSmoothed !== null);

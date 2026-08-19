@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.0.0
+## [Unreleased]
 
 ### Added
 
@@ -62,10 +62,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, matching the `y` and `standard_errors` fields already used by `LoessResult` (batch and streaming). This is a **breaking change**.
 - Updated `wide` to v1.6.
+
+**Python:**
+
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` properties to `y` and `standard_error`, for consistency with `LoessResult`'s fields. This is a **breaking change**.
 
 **R:**
 
+- Renamed the `smoothed` and `std_error` fields of the named list returned by `OnlineLoess`'s `add_point()` to `y` and `standard_error`, for consistency with `Loess`/`StreamingLoess` result fields. This is a **breaking change**.
 - Replaced `dev/style_pkg.R` (which used `styler`) with [Air](https://posit-dev.github.io/air/), Posit's idiomatic R formatter. A minimal `bindings/r/air.toml` config (`indent-width = 4`) now controls formatting; the `bindings/r/Makefile` step 4a calls `air format` on the R source directories instead of invoking a script. Removed `style_pkg.R` from the repository.
 - Removed `dev/fix_rd_style.R` and `bindings/r/fix_rd_style.R`. The post-processing logic (fix 2→4 space indentation in generated Rd files; wrap long lines inside `\author{}` and `\seealso{}` blocks) is now inlined directly in `bindings/r/Makefile` step 4b as a `Rscript -e` one-liner, eliminating a loose script file with no idiomatic alternative.
 - Removed `dev/prepare_cargo.py`. The two actions it provided — (1) stripping `[workspace]`/`[patch.crates-io]` before vendoring and (2) appending them back afterward — are now performed inline in the Makefiles with `sed` and `printf`. The `exclude`/`restore` actions it also defined were never called.
@@ -80,15 +86,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, for consistency with `LoessResult`'s fields. This is a **breaking change**.
 - Removed `dev/format_julia.jl`. The `JuliaFormatter.format(...)` call with `overwrite=true` is now inlined directly in `bindings/julia/Makefile` alongside the existing check-only variant, using the Makefile's `$(JL_TEST_DIR)` and `$(JL_DIR)/examples` variables (the script had stale hardcoded paths).
 
 **Node.js:**
 
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` fields to `y` and `standard_error`, for consistency with `LoessResultObj`'s fields. This is a **breaking change**.
 - Updated `@napi-rs/cli` to v3.8 and `oxlint` to v1.79.
 
 **WASM:**
 
+- Renamed `OnlineOutput`'s `smoothed` and `std_error` getters to `y` and `standard_error`, for consistency with `LoessResult`'s fields. This is a **breaking change**.
 - Updated `oxlint` to v1.79.
+
+**C++:**
+
+- Renamed `OnlineOutput`'s `smoothed()` and `std_error()` methods to `y()` and `standard_error()`, for consistency with `LoessResult`'s `y_vector()`/`standard_errors()`. This is a **breaking change**.
 
 ## 0.9.0
 

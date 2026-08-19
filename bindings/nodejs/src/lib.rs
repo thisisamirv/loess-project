@@ -51,11 +51,11 @@ pub struct Diagnostics {
 #[napi(object)]
 pub struct OnlineOutput {
     /// Smoothed value for the latest point.
-    pub smoothed: f64,
+    pub y: f64,
     /// Standard error (if computed).
-    #[napi(js_name = "std_error")]
-    pub std_error: Option<f64>,
-    /// Residual y − smoothed (if computed).
+    #[napi(js_name = "standard_error")]
+    pub standard_error: Option<f64>,
+    /// Residual (raw input y minus this output's y) (if computed).
     pub residual: Option<f64>,
     /// Robustness weight for the latest point (if computed).
     #[napi(js_name = "robustness_weight")]
@@ -548,8 +548,8 @@ impl OnlineLoess {
             .add_point(&[x], y)
             .map_err(|e| to_napi_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
         Ok(output.map(|o| OnlineOutput {
-            smoothed: o.smoothed,
-            std_error: o.std_error,
+            y: o.y,
+            standard_error: o.standard_error,
             residual: o.residual,
             robustness_weight: o.robustness_weight,
             iterations_used: o.iterations_used.map(|i| i as u32),

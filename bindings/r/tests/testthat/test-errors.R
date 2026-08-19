@@ -54,7 +54,7 @@ test_that("OnlineLoess rejects invalid inputs", {
     # add_point accepts scalar x and y without error
     ol <- OnlineLoess(fraction = 0.5)
     result <- add_point(ol, 1.0, 2.0)
-    expect_true(is.null(result) || "smoothed" %in% names(result))
+    expect_true(is.null(result) || "y" %in% names(result))
 })
 
 test_that("StreamingLoess rejects invalid inputs", {

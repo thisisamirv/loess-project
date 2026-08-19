@@ -410,11 +410,11 @@ impl PyStreamingLoess {
 pub struct PyOnlineOutput {
     /// Smoothed value for the latest point
     #[pyo3(get)]
-    pub smoothed: f64,
+    pub y: f64,
     /// Standard error (if computed)
     #[pyo3(get)]
-    pub std_error: Option<f64>,
-    /// Residual y − smoothed (if computed)
+    pub standard_error: Option<f64>,
+    /// Residual (raw input y minus this output's y) (if computed)
     #[pyo3(get)]
     pub residual: Option<f64>,
     /// Robustness weight for the latest point (if computed)
@@ -428,7 +428,7 @@ pub struct PyOnlineOutput {
 #[pymethods]
 impl PyOnlineOutput {
     fn __repr__(&self) -> String {
-        format!("OnlineOutput(smoothed={:.4})", self.smoothed)
+        format!("OnlineOutput(y={:.4})", self.y)
     }
 }
 
@@ -552,8 +552,8 @@ impl PyOnlineLoess {
             .add_point(&[x], y)
             .map_err(|e| to_py_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
         Ok(output.map(|o| PyOnlineOutput {
-            smoothed: o.smoothed,
-            std_error: o.std_error,
+            y: o.y,
+            standard_error: o.standard_error,
             residual: o.residual,
             robustness_weight: o.robustness_weight,
             iterations_used: o.iterations_used,

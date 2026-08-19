@@ -418,7 +418,7 @@ Incremental updates with a sliding window for real-time data.
     )
     for (i in seq_along(x)) {
         result <- add_point(model, x[i], y[i])
-        if (!is.null(result)) cat(result$smoothed, "\n")
+        if (!is.null(result)) cat(result$y, "\n")
     }
     ```
 
@@ -441,7 +441,7 @@ Incremental updates with a sliding window for real-time data.
     for xi, yi in zip(x, y):
         result = model.add_point(float(xi), float(yi))
         if result is not None:
-            print(result.smoothed)
+            print(result.y)
     ```
 
 === "Rust"
@@ -464,7 +464,7 @@ Incremental updates with a sliding window for real-time data.
 
         for i in 0..x.len() {
             if let Some(output) = processor.add_point(&[x[i]], y[i])? {
-                println!("Smoothed: {:.2}", output.smoothed);
+                println!("Smoothed: {:.2}", output.y);
             }
         }
 
@@ -491,7 +491,7 @@ Incremental updates with a sliding window for real-time data.
     for i in eachindex(x)
         result = add_point(model, x[i], y[i])
         if result !== nothing
-            println(result.smoothed)
+            println(result.y)
         end
     end
     ```
@@ -512,7 +512,7 @@ Incremental updates with a sliding window for real-time data.
     for (let i = 0; i < n; i++) {
         const res = processor.add_point(x[i], y[i]);
         if (res !== null) {
-            console.log(`Smoothed: ${res.smoothed.toFixed(2)}`);
+            console.log(`Smoothed: ${res.y.toFixed(2)}`);
         }
     }
     ```
@@ -533,7 +533,7 @@ Incremental updates with a sliding window for real-time data.
     for (let i = 0; i < n; i++) {
         const res = processor.add_point(x[i], y[i]);
         if (res !== undefined && res !== null) {
-            console.log(`Smoothed: ${res.smoothed.toFixed(2)}`);
+            console.log(`Smoothed: ${res.y.toFixed(2)}`);
         }
     }
     ```
@@ -564,7 +564,7 @@ Incremental updates with a sliding window for real-time data.
         for (size_t i = 0; i < x.size(); ++i) {
             auto out = model.add_point(x[i], y[i]).value();
             if (out.has_value())
-                std::cout << out.smoothed() << std::endl;
+                std::cout << out.y() << std::endl;
         }
 
         return 0;

@@ -39,7 +39,7 @@ For true real-time applications where each point must be processed immediately.
     for (i in seq_along(times)) {
         result <- add_point(model, times[i], temperatures[i])
         if (!is.null(result))
-            cat(sprintf("Time %d: %.2f\n", times[i], result$smoothed))
+            cat(sprintf("Time %d: %.2f\n", times[i], result$y))
     }
     ```
 
@@ -64,7 +64,7 @@ For true real-time applications where each point must be processed immediately.
     for xi, yi in zip(times, temperatures):
         result = online.add_point(float(xi), float(yi))
         if result is not None:
-            print(f"Time {xi:.0f}: smoothed = {result.smoothed:.2f}")
+            print(f"Time {xi:.0f}: smoothed = {result.y:.2f}")
     ```
 
 === "Rust"
@@ -85,7 +85,7 @@ For true real-time applications where each point must be processed immediately.
             let yi = 20.0 + 5.0 * (xi / 10.0).sin() + (xi * 1.7).sin() * 0.5;
 
             if let Some(output) = processor.add_point(&[xi], yi)? {
-                println!("Time {}: smoothed = {:.2}", xi, output.smoothed);
+                println!("Time {}: smoothed = {:.2}", xi, output.y);
             }
         }
 
@@ -123,7 +123,7 @@ For true real-time applications where each point must be processed immediately.
     for i in eachindex(times)
         result = add_point(model, times[i], temperatures[i])
         if result !== nothing
-            println("Time $(times[i]): smoothed = $(round(result.smoothed; digits=2))")
+            println("Time $(times[i]): smoothed = $(round(result.y; digits=2))")
         end
     end
     ```
@@ -138,7 +138,7 @@ For true real-time applications where each point must be processed immediately.
     for i in eachindex(times)
         result = add_point(model, times[i], temperatures[i])
         if result !== nothing
-            println("Time $(times[i]): smoothed = $(round(result.smoothed; digits=2))")
+            println("Time $(times[i]): smoothed = $(round(result.y; digits=2))")
         end
     end
     ```
@@ -159,7 +159,7 @@ For true real-time applications where each point must be processed immediately.
         
         const res = processor.add_point(x, y);
         if (res !== null) {
-            console.log(`Time ${x}: smoothed = ${res.smoothed.toFixed(2)}`);
+            console.log(`Time ${x}: smoothed = ${res.y.toFixed(2)}`);
         }
     }
     ```
@@ -180,7 +180,7 @@ For true real-time applications where each point must be processed immediately.
     for (let i = 0; i < x.length; i++) {
         const res = processor.add_point(x[i], y[i]);
         if (res !== undefined && res !== null) {
-            // Update dashboard UI with res.smoothed
+            // Update dashboard UI with res.y
         }
     }
     ```
@@ -212,7 +212,7 @@ For true real-time applications where each point must be processed immediately.
         for (size_t i = 0; i < times.size(); ++i) {
             auto res = model.add_point(times[i], temperatures[i]).value();
             if (res.has_value()) {
-                std::cout << "Time " << times[i] << ": " << res.smoothed() << std::endl;
+                std::cout << "Time " << times[i] << ": " << res.y() << std::endl;
             }
         }
 

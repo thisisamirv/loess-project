@@ -409,9 +409,9 @@ impl ROnlineLoess {
         match output {
             None => Ok(Null),
             Some(o) => {
-                let mut items: Vec<(&str, Robj)> = vec![("smoothed", o.smoothed.into_robj())];
-                if let Some(se) = o.std_error {
-                    items.push(("std_error", se.into_robj()));
+                let mut items: Vec<(&str, Robj)> = vec![("y", o.y.into_robj())];
+                if let Some(se) = o.standard_error {
+                    items.push(("standard_error", se.into_robj()));
                 }
                 if let Some(res) = o.residual {
                     items.push(("residual", res.into_robj()));

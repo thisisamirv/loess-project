@@ -123,10 +123,10 @@ test_that("ROnlineLoess generated accessors dispatch add_point", {
     non_null <- Filter(Negate(is.null), results)
 
     expect_gt(length(non_null), 0)
-    has_smoothed <- vapply(
+    has_y <- vapply(
         non_null,
-        function(r) "smoothed" %in% names(r),
+        function(r) "y" %in% names(r),
         logical(1)
     )
-    expect_true(all(has_smoothed))
+    expect_true(all(has_y))
 })

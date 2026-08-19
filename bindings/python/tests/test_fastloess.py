@@ -301,7 +301,7 @@ class TestOnlineLoess:
         for i in range(len(x)):
             result = online.add_point(x[i], y[i])
             if result is not None:
-                results.append(result.smoothed)
+                results.append(result.y)
 
         assert len(results) > 0
 
@@ -317,7 +317,7 @@ class TestOnlineLoess:
         for i in range(len(x)):
             result = online.add_point(x[i], y[i])
             if result is not None:
-                results.append(result.smoothed)
+                results.append(result.y)
 
         assert len(results) > 0
 

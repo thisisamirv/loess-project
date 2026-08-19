@@ -16,8 +16,8 @@ test_that("OnlineLoess basic functionality works", {
     non_null <- Filter(Negate(is.null), results)
 
     expect_gt(length(non_null), 0)
-    expect_true("smoothed" %in% names(non_null[[1]]))
-    expect_type(non_null[[1]]$smoothed, "double")
+    expect_true("y" %in% names(non_null[[1]]))
+    expect_type(non_null[[1]]$y, "double")
 })
 
 test_that("OnlineLoess window capacity works", {
@@ -65,7 +65,7 @@ test_that("OnlineLoess min_points parameter works", {
     # After min_points points, should return a result
     non_null <- Filter(Negate(is.null), results)
     expect_gt(length(non_null), 0)
-    expect_type(non_null[[1]]$smoothed, "double")
+    expect_type(non_null[[1]]$y, "double")
 })
 
 test_that("OnlineLoess update modes work", {
@@ -164,8 +164,8 @@ test_that("OnlineLoess: zero_weight_fallback", {
             zero_weight_fallback = zwf
         )
         r <- add_point(ol, x[1], y[1])
-        # NULL until min_points reached, or a list with smoothed
-        expect_true(is.null(r) || "smoothed" %in% names(r))
+        # NULL until min_points reached, or a list with y
+        expect_true(is.null(r) || "y" %in% names(r))
     }
 })
 
@@ -184,7 +184,7 @@ test_that("OnlineLoess: degree, distance_metric, surface_mode, return_se", {
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
     expect_gt(length(non_null), 0)
-    expect_type(non_null[[1]]$smoothed, "double")
+    expect_type(non_null[[1]]$y, "double")
 })
 
 test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge", {
