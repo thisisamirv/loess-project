@@ -45,8 +45,12 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastloess::Loess model;
+    fastloess::LoessOptions opts;
+    opts.fraction = 0.5;
+    fastloess::Loess model(opts);
     auto result = model.fit(x, y).value();
+    std::cout << result.fraction_used() << std::endl;  // 0.5
+    std::cout << result.iterations_used() << std::endl;  // 3
     // or with custom weights:
     std::vector<double> weights(x.size(), 1.0);
     auto resultW = model.fit(x, y, weights).value();

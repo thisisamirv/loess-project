@@ -12,29 +12,22 @@ The `Loess` struct allows configuring the LOESS parameters once and fitting mult
 
 ```julia
 using FastLOESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-model = Loess()
+model = Loess(fraction=0.5)
 ```
-
-* `kwargs`: Keyword arguments corresponding to `LoessOptions` fields.
 
 **Methods:**
 
 ```julia
 using FastLOESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
+y = sin.(x) .+ 0.1
 
-model = Loess()
+model = Loess(fraction=0.5)
 result = fit(model, x, y)
+println(result.fraction_used)
+# 0.5
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
@@ -49,44 +42,38 @@ The `StreamingLoess` struct processes data in chunks, suitable for very large da
 
 ```julia
 using FastLOESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-stream = StreamingLoess()
+stream = StreamingLoess(chunk_size=50, overlap=10)
 ```
-
-* `kwargs`: Keyword arguments corresponding to `StreamingOptions` fields.
 
 **Methods:**
 
 ```julia
 using FastLOESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
+y = sin.(x) .+ 0.1
 
-stream = StreamingLoess()
-partial_result = process_chunk(stream, x, y)
+stream = StreamingLoess(fraction=0.5, chunk_size=50, overlap=10)
+partial_result = process_chunk(stream, x[1:50], y[1:50])
+println(partial_result.fraction_used)
+# 0.5
 ```
 
 * Processes a chunk of data. Returns partial results.
 
 ```julia
 using FastLOESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
+y = sin.(x) .+ 0.1
 
-stream = StreamingLoess()
-process_chunk(stream, x, y)
+stream = StreamingLoess(fraction=0.3, chunk_size=50, overlap=10)
+process_chunk(stream, x[1:50], y[1:50])
+process_chunk(stream, x[51:end], y[51:end])
 final_result = finalize(stream)
+println(final_result.fraction_used)
+# 0.3
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.
@@ -99,29 +86,28 @@ The `OnlineLoess` struct updates the model incrementally with new data points.
 
 ```julia
 using FastLOESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-online = OnlineLoess()
+online = OnlineLoess(fraction=0.3, window_capacity=50)
 ```
-
-* `kwargs`: Keyword arguments corresponding to `OnlineOptions` fields.
 
 **Methods:**
 
 ```julia
 using FastLOESS
-using Random, Statistics
 
-rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
+y = sin.(x) .+ 0.1
 
-online = OnlineLoess()
-result = add_point(online, x[1], y[1])  # returns OnlineOutput or nothing
+online = OnlineLoess(fraction=0.3, window_capacity=50)
+
+# Returns nothing until min_points (3) are reached
+result = add_point(online, x[1], y[1])  # nothing
+result = add_point(online, x[2], y[2])  # nothing
+
+# Returns OnlineOutput once enough points are available
+result = add_point(online, x[3], y[3])
+println(result.smoothed)
+# 0.22659245357374927
 ```
 
 * Adds a single point to the sliding window. Returns `nothing` while the window is still filling (fewer than `min_points` seen), and an `OnlineOutput` once smoothing begins.
