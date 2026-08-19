@@ -13,7 +13,7 @@ The `StreamingLoess` class processes data in chunks, suitable for very large dat
 ```javascript
 const { StreamingLoess } = require('fastloess');
 
-const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
+const stream = new StreamingLoess({ fraction: 0.5 }, { chunk_size: 50, overlap: 10 });
 ```
 
 * `options`: An object containing `LoessOptions` fields.
@@ -42,11 +42,11 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
-const stream = new StreamingLoess({ fraction: 0.3 }, { chunk_size: 50, overlap: 10 });
+const stream = new StreamingLoess({ fraction: 0.5 }, { chunk_size: 50, overlap: 10 });
 stream.process_chunk(x.slice(0, 50), y.slice(0, 50));
 stream.process_chunk(x.slice(50), y.slice(50));
 const finalResult = stream.finalize();
-console.log(finalResult.fraction_used);  // 0.3
+console.log(finalResult.fraction_used);  // 0.5
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.

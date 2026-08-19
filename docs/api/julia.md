@@ -68,12 +68,12 @@ using FastLOESS
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ 0.1
 
-stream = StreamingLoess(fraction=0.3, chunk_size=50, overlap=10)
+stream = StreamingLoess(fraction=0.5, chunk_size=50, overlap=10)
 process_chunk(stream, x[1:50], y[1:50])
 process_chunk(stream, x[51:end], y[51:end])
 final_result = finalize(stream)
 println(final_result.fraction_used)
-# 0.3
+# 0.5
 ```
 
 * Finalizes the smoothing process and returns any remaining buffered results.
@@ -87,7 +87,7 @@ The `OnlineLoess` struct updates the model incrementally with new data points.
 ```julia
 using FastLOESS
 
-online = OnlineLoess(fraction=0.3, window_capacity=50)
+online = OnlineLoess(fraction=0.5, window_capacity=50)
 ```
 
 **Methods:**
@@ -98,7 +98,7 @@ using FastLOESS
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ 0.1
 
-online = OnlineLoess(fraction=0.3, window_capacity=50)
+online = OnlineLoess(fraction=0.5, window_capacity=50)
 
 # Returns nothing until min_points (3) are reached
 result = add_point(online, x[1], y[1])  # nothing
@@ -280,8 +280,8 @@ See [julia-online.md](julia-online.md).
 ```julia
 using FastLOESS
 
-x = collect(range(0, 10, length=100))
-y = sin.(x) .+ randn(100) .* 0.2
+x = collect(range(0, 2π, length=100))
+y = sin.(x) .+ 0.1
 
 # Configure model
 model = Loess(fraction=0.5, iterations=3)

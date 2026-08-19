@@ -13,7 +13,7 @@ The `OnlineLoess` struct updates the model incrementally with new data points.
 ```julia
 using FastLOESS
 
-online = OnlineLoess(fraction=0.3, window_capacity=50)
+online = OnlineLoess(fraction=0.5, window_capacity=50)
 ```
 
 **Methods:**
@@ -24,7 +24,7 @@ using FastLOESS
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ 0.1
 
-online = OnlineLoess(fraction=0.3, window_capacity=50)
+online = OnlineLoess(fraction=0.5, window_capacity=50)
 
 # Returns nothing until min_points (3) are reached
 result = add_point(online, x[1], y[1])  # nothing
