@@ -1,12 +1,20 @@
 TARGET_DIR = ./target
 
 # R-Universe sets CARGO_BUILD_TARGET for cross-compilation (e.g. aarch64-pc-windows-gnullvm)
-RUST_TARGET = $(if $(CARGO_BUILD_TARGET),$(CARGO_BUILD_TARGET),x86_64-pc-windows-gnu)
+RUST_TARGET := $(if $(CARGO_BUILD_TARGET),$(CARGO_BUILD_TARGET),x86_64-pc-windows-gnu)
 LIBDIR = $(TARGET_DIR)/$(RUST_TARGET)/release
 STATLIB = $(LIBDIR)/librfastloess.a
 
+# On gnullvm we strip all raw-dylib *.dll stubs to work around lld 19's .idata$4
+# validation; provide the symbols they carried via explicit system libs instead.
+ifneq ($(findstring gnullvm,$(RUST_TARGET)),)
+GNULLVM_LIBS = -lbcryptprimitives -lsynchronization
+else
+GNULLVM_LIBS =
+endif
+
 # GNU-style linking for MinGW
-PKG_LIBS = -L$(LIBDIR) -Wl,--whole-archive -lrfastloess -Wl,--no-whole-archive -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols
+PKG_LIBS = -L$(LIBDIR) -Wl,--whole-archive -lrfastloess -Wl,--no-whole-archive -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll $(GNULLVM_LIBS) -Wl,--export-all-symbols
 
 all: clean $(SHLIB)
 
