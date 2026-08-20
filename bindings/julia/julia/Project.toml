@@ -1,13 +1,13 @@
 name = "FastLOESS"
 uuid = "c279703f-da8c-4b11-8b1f-668c81ca24ad"
-version = "0.9.0"
+version = "1.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/thisisamirv/loess-project"
 homepage = "https://github.com/thisisamirv/loess-project"
 documentation = "https://loess.readthedocs.io/"
-rust-version = "1.88"
+rust-version = "1.89"
 readme = "README.md"
 description = "High-performance LOESS (Locally Estimated Scatterplot Smoothing)"
 keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]

@@ -43,7 +43,7 @@ jobs:
           fi
 
       - name: Checkout Source (Loess Project)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: loess-project
 

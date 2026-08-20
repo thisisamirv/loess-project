@@ -24,7 +24,11 @@ else
 	NPX := npx
 endif
 
-PYTHON      ?= python3
+ifeq ($(OS),Windows_NT)
+	PYTHON ?= python
+else
+	PYTHON ?= python3
+endif
 PYO3_PYTHON ?= $(PYTHON)
 NODE        ?= node
 
@@ -53,7 +57,7 @@ default:
 	@echo "=============================================================================="
 	@echo "0. Environment Setup..."
 	@echo "=============================================================================="
-	@if [ ! -d "$(PY_VENV)" ]; then $(PYTHON) -m venv $(PY_VENV); fi
+	@if [ ! -f "$(PY_ACTIVATE)" ]; then $(PYTHON) -m venv --clear $(PY_VENV); fi
 	@. $(PY_ACTIVATE) && python -c "import shutil, site; from pathlib import Path; [shutil.rmtree(path, ignore_errors=True) for base in site.getsitepackages() for path in Path(base).glob('~ip*')]"
 	@. $(PY_ACTIVATE) && python -m pip cache purge >/dev/null 2>&1 || true
 	@echo "Installing Python packages (pip, pytest, numpy, maturin, ruff)..."

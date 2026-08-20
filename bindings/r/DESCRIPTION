@@ -1,6 +1,6 @@
 Package: rfastloess
 Title: High-Performance LOESS Smoothing for R
-Version: 0.9.0
+Version: 1.0.0
 Authors@R: person("Amir", "Valizadeh", email = "thisisamirv@gmail.com", role = c("aut", "cre", "fnd"), comment = c(ORCID = "0000-0001-5983-8527"))
 Description: Provides high-performance LOESS smoothing (Locally Estimated Scatterplot Smoothing) 
     using a 'Rust' backend. Supports various weight functions, robustness iterations, 
@@ -18,5 +18,5 @@ VignetteBuilder: knitr
 BugReports: https://github.com/thisisamirv/loess-project/issues
 URL: https://github.com/thisisamirv/loess-project, https://thisisamirv.github.io/loess-project/
 biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, QualityControl, KEGG
-Config/rextendr/version: 0.4.2
+Config/rextendr/version: 0.5.0
 Config/roxygen2/version: 8.1.0

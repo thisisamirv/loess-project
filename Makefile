@@ -29,7 +29,11 @@ else
 	NPX := npx
 endif
 
-PYTHON      ?= python3
+ifeq ($(OS),Windows_NT)
+	PYTHON ?= python
+else
+	PYTHON ?= python3
+endif
 PYO3_PYTHON ?= $(PYTHON)
 NODE        ?= node
 
