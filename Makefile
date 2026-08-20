@@ -222,6 +222,7 @@ docs-test:
 
 docs-clean:
 	@echo "Cleaning documentation build..."
+	@$(PYTHON) dev/kill_locked_venv.py $(DOCS_VENV)
 	@git clean -fdX -- site $(DOCS_VENV)
 	@echo "Documentation clean complete!"
 
@@ -237,6 +238,7 @@ all-coverage: loess-rs-coverage fastLoess-coverage python-coverage r-coverage
 all-clean: r-clean loess-rs-clean fastLoess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean
 	@echo "Cleaning project root..."
 	@cargo clean
+	@$(PYTHON) dev/kill_locked_venv.py $(PY_VENV) $(DOCS_VENV)
 	@git clean -fdX .
 	@echo "All clean completed!"
 
