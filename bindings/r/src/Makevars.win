@@ -5,8 +5,14 @@ RUST_TARGET := $(if $(CARGO_BUILD_TARGET),$(CARGO_BUILD_TARGET),x86_64-pc-window
 LIBDIR = $(TARGET_DIR)/$(RUST_TARGET)/release
 STATLIB = $(LIBDIR)/librfastloess.a
 
-# GNU-style linking for MinGW
-PKG_LIBS = -L$(LIBDIR) -Wl,--whole-archive -lrfastloess -Wl,--no-whole-archive -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols
+# gnullvm: skip --whole-archive to avoid lld duplicate-symbol crashes from
+# per-crate raw-dylib stubs; entrypoint.c refs the extendr init symbol directly.
+ifneq ($(findstring gnullvm,$(RUST_TARGET)),)
+WHOLE_ARCHIVE_LIBS = -lrfastloess
+else
+WHOLE_ARCHIVE_LIBS = -Wl,--whole-archive -lrfastloess -Wl,--no-whole-archive
+endif
+PKG_LIBS = -L$(LIBDIR) $(WHOLE_ARCHIVE_LIBS) -lws2_32 -luserenv -ladvapi32 -lbcrypt -lncrypt -lntdll -Wl,--export-all-symbols
 
 all: clean $(SHLIB)
 
@@ -25,8 +31,7 @@ $(STATLIB):
 	@cp cargo-config.toml .cargo/config.toml
 	@mkdir -p $(TARGET_DIR)
 	@cargo build -q -j 2 --release --manifest-path=Cargo.toml --target-dir $(TARGET_DIR) --target $(RUST_TARGET)
-	@# lld 19 rejects .idata$4 relocations in raw-dylib stubs (rustc<=1.97, gnullvm)
-	@# ar x (no member arg) resolves long-name entries; ar/objcopy are in PATH with nm
+	@# ar x without a member name resolves long-name entries (>16 chars stored as /<offset>)
 	@if echo "$(RUST_TARGET)" | grep -q gnullvm; then \
 		_lib=$$(pwd)/$(STATLIB); \
 		mkdir -p _ar_patch; \
