@@ -24,9 +24,9 @@ else
 	NPX := npx
 endif
 
-PYTHON      ?= python3
+PYTHON ?= python3
 PYO3_PYTHON ?= $(PYTHON)
-NODE        ?= node
+NODE ?= node
 
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
@@ -35,8 +35,8 @@ endif
 
 FEATURE_SET ?= all
 
-LOESS_PKG      := loess-rs
-LOESS_DIR      := crates/loess-rs
+LOESS_PKG := loess-rs
+LOESS_DIR := crates/loess-rs
 LOESS_FEATURES := std dev
 
 .PHONY: default clean coverage ensure-llvm-cov
@@ -81,6 +81,8 @@ default:
 		cargo test -q -p $(LOESS_PKG) --test $(LOESS_PKG) --features $$feature || exit 1; \
 	done
 	@echo "=============================================================================="
+	@echo "Doc snippet tests (rust)..."
+	@$(PYTHON) dev/verify_snippets.py --lang rust --timeout 120
 	@echo "All $(LOESS_PKG) crate checks completed successfully!"
 
 ensure-llvm-cov:

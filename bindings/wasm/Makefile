@@ -22,17 +22,17 @@ else
 	NPX := npx
 endif
 
-PYTHON      ?= python3
+PYTHON ?= python3
 PYO3_PYTHON ?= $(PYTHON)
-NODE        ?= node
+NODE ?= node
 
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
 	TEMP := /tmp
 endif
 
-WASM_PKG      := fastloess-wasm
-WASM_DIR      := bindings/wasm
+WASM_PKG := fastloess-wasm
+WASM_DIR := bindings/wasm
 WASM_TEST_DIR := bindings/wasm/tests
 
 .PHONY: default clean
@@ -69,6 +69,9 @@ default:
 	@cd $(WASM_DIR) && wasm-pack test --node
 	@echo "Running JS tests..."
 	@node --test $(WASM_TEST_DIR)/test_fastloess_wasm.js
+	@echo "=============================================================================="
+	@echo "Doc snippet tests (wasm)..."
+	@$(PYTHON) dev/verify_snippets.py --lang wasm --timeout 120
 	@echo "=============================================================================="
 	@echo "$(WASM_PKG) checks completed successfully!"
 

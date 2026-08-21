@@ -1,7 +1,7 @@
 # ==============================================================================
 # Configuration
 # ==============================================================================
-FEATURE_SET   ?= all
+FEATURE_SET ?= all
 RUN_GPU_TESTS ?= auto
 
 # Make shell commands fail on error
@@ -35,7 +35,7 @@ else
 	PYTHON ?= python3
 endif
 PYO3_PYTHON ?= $(PYTHON)
-NODE        ?= node
+NODE ?= node
 
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
@@ -43,19 +43,19 @@ ifeq ($(OS),Windows_NT)
 endif
 
 # loess-rs crate
-LOESS_PKG      := loess-rs
-LOESS_DIR      := crates/loess-rs
+LOESS_PKG := loess-rs
+LOESS_DIR := crates/loess-rs
 LOESS_FEATURES := std dev
 
 # fastLoess crate
-FASTLOESS_PKG      := fastLoess
-FASTLOESS_DIR      := crates/fastLoess
+FASTLOESS_PKG := fastLoess
+FASTLOESS_DIR := crates/fastLoess
 FASTLOESS_FEATURES := dev
 
 # Python bindings
-PY_PKG      := fastLoess-py
-PY_DIR      := bindings/python
-PY_VENV     := .venv
+PY_PKG := fastLoess-py
+PY_DIR := bindings/python
+PY_VENV := .venv
 
 ifeq ($(OS),Windows_NT)
 	PY_ACTIVATE    := $(PY_VENV)/Scripts/activate
@@ -67,12 +67,12 @@ endif
 
 # R bindings
 R_PKG_NAME := rfastloess
-R_DIR      := bindings/r
-R_LIB_DIR  := $(R_DIR)/.r-lib
+R_DIR := bindings/r
+R_LIB_DIR := $(R_DIR)/.r-lib
 
 # Julia bindings
-JL_PKG  := fastloess-jl
-JL_DIR  := bindings/julia
+JL_PKG := fastloess-jl
+JL_DIR := bindings/julia
 
 ifeq ($(HOST_PLATFORM),windows)
 	JL_SHARED_LIB := target/release/fastloess_jl.dll
@@ -83,16 +83,16 @@ else
 endif
 
 # Node.js bindings
-NODE_PKG  := fastloess-node
-NODE_DIR  := bindings/nodejs
+NODE_PKG := fastloess-node
+NODE_DIR := bindings/nodejs
 
 # WebAssembly bindings
-WASM_PKG  := fastloess-wasm
-WASM_DIR  := bindings/wasm
+WASM_PKG := fastloess-wasm
+WASM_DIR := bindings/wasm
 
 # C++ bindings
-CPP_PKG         := fastloess-cpp
-CPP_DIR         := bindings/cpp
+CPP_PKG := fastloess-cpp
+CPP_DIR := bindings/cpp
 CPP_CARGO_PROFILE := --profile release-c
 CPP_LIBRARY_DIR := target/release-c
 
@@ -233,7 +233,7 @@ docs-clean:
 # ==============================================================================
 # All targets
 # ==============================================================================
-all: loess-rs fastLoess python r julia nodejs wasm cpp check-msrv docs-test
+all: loess-rs fastLoess python r julia nodejs wasm cpp check-msrv
 	@echo "All checks completed successfully!"
 
 all-coverage: loess-rs-coverage fastLoess-coverage python-coverage r-coverage

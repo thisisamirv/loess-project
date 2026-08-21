@@ -24,17 +24,17 @@ else
 	NPX := npx
 endif
 
-PYTHON      ?= python3
+PYTHON ?= python3
 PYO3_PYTHON ?= $(PYTHON)
-NODE        ?= node
+NODE ?= node
 
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
 	TEMP := /tmp
 endif
 
-FASTLOESS_PKG      := fastLoess
-FASTLOESS_DIR      := crates/fastLoess
+FASTLOESS_PKG := fastLoess
+FASTLOESS_DIR := crates/fastLoess
 FASTLOESS_FEATURES := dev
 
 .PHONY: default clean coverage ensure-llvm-cov
@@ -72,6 +72,9 @@ default:
 		cargo test -q -p $(FASTLOESS_PKG) --test $(FASTLOESS_PKG) --features $$feature || exit 1; \
 	done
 	@echo "=============================================================================="
+	@echo "=============================================================================="
+	@echo "Doc snippet tests (rust)..."
+	@$(PYTHON) dev/verify_snippets.py --lang rust --timeout 120
 	@echo "All $(FASTLOESS_PKG) crate checks completed successfully!"
 
 ensure-llvm-cov:

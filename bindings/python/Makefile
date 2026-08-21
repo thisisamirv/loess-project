@@ -30,16 +30,16 @@ else
 	PYTHON ?= python3
 endif
 PYO3_PYTHON ?= $(PYTHON)
-NODE        ?= node
+NODE ?= node
 
 TEMP ?= /tmp
 ifeq ($(OS),Windows_NT)
 	TEMP := /tmp
 endif
 
-PY_PKG      := fastLoess-py
-PY_DIR      := bindings/python
-PY_VENV     := .venv
+PY_PKG := fastLoess-py
+PY_DIR := bindings/python
+PY_VENV := .venv
 PY_TEST_DIR := bindings/python/tests
 
 ifeq ($(OS),Windows_NT)
@@ -82,6 +82,9 @@ default:
 	@echo "=============================================================================="
 	@VIRTUAL_ENV= PYO3_PYTHON=$(PYO3_PYTHON) cargo test -q -p $(PY_PKG)
 	@. $(PY_ACTIVATE) && python -m pytest $(PY_TEST_DIR) -q
+	@echo "=============================================================================="
+	@echo "Doc snippet tests (python)..."
+	@$(PYTHON) dev/verify_snippets.py --lang python --timeout 120
 	@echo "$(PY_PKG) checks completed successfully!"
 
 ensure-llvm-cov:

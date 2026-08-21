@@ -1,0 +1,95 @@
+name: CI — C++
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_NET_GIT_FETCH_WITH_CLI: true
+  RUST_BACKTRACE: 1
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  ASAN_OPTIONS: detect_leaks=0:strict_init_order=1
+
+jobs:
+  ci:
+    name: C++ (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Install Rust GNU (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rustup toolchain install stable-x86_64-pc-windows-gnu
+
+      - name: Install GNU Make (Windows)
+        if: matrix.os == 'windows-latest'
+        run: choco install make -y
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cpp-${{ matrix.os }}
+
+      - name: Build
+        working-directory: bindings/cpp
+        run: cargo build --release
+
+      - name: Lint
+        working-directory: bindings/cpp
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --all-targets -- -D warnings
+
+      - name: make cpp
+        run: make cpp
+
+  asan:
+    name: C++ ASAN
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly
+          components: rust-src
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cpp-asan
+      - name: Install System Dependencies
+        run: sudo apt-get install -y --no-install-recommends clang lld cmake g++
+      - name: Build (ASAN)
+        env:
+          RUSTFLAGS: -Zsanitizer=address
+        run: |
+          cargo build \
+            -Zbuild-std --target x86_64-unknown-linux-gnu \
+            -p fastloess-cpp --release
+      - name: Prepare sanitized library
+        run: |
+          mkdir -p target/release
+          cp target/x86_64-unknown-linux-gnu/release/libfastloess_cpp.so target/release/
+      - name: C++ Tests (ASAN)
+        run: |
+          cmake -S bindings/cpp/tests -B bindings/cpp/tests/build-asan \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_COMPILER=clang \
+            -DCMAKE_CXX_COMPILER=clang++ \
+            -DCMAKE_CXX_FLAGS='-fsanitize=address -fno-omit-frame-pointer' \
+            -DCMAKE_EXE_LINKER_FLAGS='-fsanitize=address' \
+            -DFASTLOESS_LIB_DIR="$(pwd)/target/release"
+          cmake --build bindings/cpp/tests/build-asan --config Debug
+          LD_LIBRARY_PATH=target/release \
+            ctest --test-dir bindings/cpp/tests/build-asan --output-on-failure
