@@ -873,13 +873,15 @@ def _find_vcvarsall(compiler_path: str) -> str | None:
 def _get_msvc_env(vcvarsall: str) -> dict[str, str]:
     """Return the environment after sourcing vcvarsall.bat x64."""
     try:
+        # `call` is required: without it, vcvarsall.bat's GOTO :EOF causes cmd.exe
+        # to exit entirely, so `&& set` never runs and the env is never captured.
         result = subprocess.run(
-            f'"{vcvarsall}" x64 > nul 2>&1 && set',
+            f'call "{vcvarsall}" x64 > nul 2>&1 && set',
             shell=True,
             capture_output=True,
             text=True,
             check=False,
-            timeout=30,
+            timeout=60,
         )
         env: dict[str, str] = {}
         for line in result.stdout.splitlines():
@@ -1268,9 +1270,10 @@ def main(argv: list[str] | None = None) -> int:
         print(bold("Failed snippets:"))
         for r in failures:
             print(f"  {red('FAIL')} {r.snippet.label}")
-            # Show first 5 lines of stderr
-            if r.stderr.strip():
-                for line in r.stderr.strip().splitlines()[:5]:
+            # cl.exe writes errors to stdout; other compilers use stderr
+            diag = (r.stderr or r.stdout).strip()
+            if diag:
+                for line in diag.splitlines()[:5]:
                     print(f"      {line}")
         print()
 
