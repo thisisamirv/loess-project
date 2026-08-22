@@ -16,7 +16,7 @@ Suggests: BiocStyle, knitr, rmarkdown, testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 BugReports: https://github.com/thisisamirv/loess-project/issues
-URL: https://github.com/thisisamirv/loess-project, https://thisisamirv.github.io/loess-project/
+URL: https://github.com/thisisamirv/loess-project, https://loess.readthedocs.io/
 biocViews: Preprocessing, StatisticalMethod, Regression, FunctionalPrediction, QualityControl, KEGG
 Config/rextendr/version: 0.5.0
 Config/roxygen2/version: 8.1.0

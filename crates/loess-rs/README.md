@@ -45,7 +45,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 > [!NOTE]
 >
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://loess.readthedocs.io/getting-started/installation/) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://loess.readthedocs.io/en/latest/getting-started/installation/) for detailed installation instructions.
 
 ## Documentation
 
@@ -75,7 +75,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is typically **5–20x faster** than R's `loess` in serial mode, and up to **200x faster** on large datasets with parallel execution.
 
-For more details on the performance comparison, see the [Benchmarks](https://loess.readthedocs.io/benchmarks/) page.
+For more details on the performance comparison, see the [Benchmarks](https://loess.readthedocs.io/en/latest/benchmarks/) page.
 
 ### Robustness
 
