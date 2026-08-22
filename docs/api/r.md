@@ -24,6 +24,8 @@ print(model)
 #>   Parallel:          TRUE
 ```
 
+* `...`: Not used. All parameters after `fraction` must be passed by name; passing extra positional arguments raises an error.
+
 **Methods:**
 
 ```r
@@ -59,6 +61,7 @@ See [r-online.md](r-online.md) for the `OnlineLoess` class.
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `fraction` | `numeric` | `0.67` | Smoothing fraction (bandwidth) |
+| `...` | — | — | Not used. Forces all parameters after `fraction` to be passed by name. |
 | `iterations` | `integer` | `3` | Number of robustifying iterations |
 | `weight_function` | `character` | `"tricube"` | Kernel weight function |
 | `robustness_method` | `character` | `"bisquare"` | Robustness method |
