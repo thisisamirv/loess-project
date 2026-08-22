@@ -8,7 +8,7 @@
         "build": "napi build --release",
         "build:debug": "napi build",
         "test": "node --test tests/test_fastloess.js",
-        "lint": "eslint index.js tests/test_fastloess.js",
+        "lint": "oxlint index.js tests/test_fastloess.js",
         "universal": "napi universal"
     },
     "napi": {
