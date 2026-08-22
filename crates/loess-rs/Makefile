@@ -39,9 +39,12 @@ LOESS_PKG := loess-rs
 LOESS_DIR := crates/loess-rs
 LOESS_FEATURES := std dev
 
-.PHONY: default clean coverage ensure-llvm-cov
+.PHONY: default dev clean coverage ensure-llvm-cov
 
 default:
+	@cargo build -q -p $(LOESS_PKG)
+
+dev:
 	@echo "Running $(LOESS_PKG) crate checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."

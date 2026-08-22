@@ -114,6 +114,9 @@ DOCS_VENV := docs-venv
 loess-rs:
 	@"$(MAKE)" -f crates/loess-rs/Makefile FEATURE_SET="$(FEATURE_SET)"
 
+loess-rs-dev:
+	@"$(MAKE)" -f crates/loess-rs/Makefile dev FEATURE_SET="$(FEATURE_SET)"
+
 loess-rs-coverage:
 	@"$(MAKE)" -f crates/loess-rs/Makefile coverage
 
@@ -129,6 +132,9 @@ ensure-llvm-cov:
 fastLoess:
 	@"$(MAKE)" -f crates/fastLoess/Makefile FEATURE_SET="$(FEATURE_SET)"
 
+fastLoess-dev:
+	@"$(MAKE)" -f crates/fastLoess/Makefile dev FEATURE_SET="$(FEATURE_SET)"
+
 fastLoess-coverage:
 	@"$(MAKE)" -f crates/fastLoess/Makefile coverage
 
@@ -140,6 +146,10 @@ fastLoess-clean:
 # ==============================================================================
 python:
 	@"$(MAKE)" -f bindings/python/Makefile \
+		PYTHON="$(PYTHON)" PYO3_PYTHON="$(PYO3_PYTHON)"
+
+python-dev:
+	@"$(MAKE)" -f bindings/python/Makefile dev \
 		PYTHON="$(PYTHON)" PYO3_PYTHON="$(PYO3_PYTHON)"
 
 python-coverage:
@@ -154,6 +164,9 @@ python-clean:
 r:
 	@"$(MAKE)" -f bindings/r/Makefile
 
+r-dev:
+	@"$(MAKE)" -f bindings/r/Makefile dev
+
 r-coverage:
 	@"$(MAKE)" -f bindings/r/Makefile coverage
 
@@ -166,6 +179,9 @@ r-clean:
 julia:
 	@"$(MAKE)" -f bindings/julia/Makefile PYTHON="$(PYTHON)"
 
+julia-dev:
+	@"$(MAKE)" -f bindings/julia/Makefile dev PYTHON="$(PYTHON)"
+
 julia-clean:
 	@"$(MAKE)" -f bindings/julia/Makefile clean
 
@@ -174,6 +190,9 @@ julia-clean:
 # ==============================================================================
 nodejs:
 	@"$(MAKE)" -f bindings/nodejs/Makefile
+
+nodejs-dev:
+	@"$(MAKE)" -f bindings/nodejs/Makefile dev
 
 nodejs-clean:
 	@"$(MAKE)" -f bindings/nodejs/Makefile clean
@@ -184,6 +203,9 @@ nodejs-clean:
 wasm:
 	@"$(MAKE)" -f bindings/wasm/Makefile
 
+wasm-dev:
+	@"$(MAKE)" -f bindings/wasm/Makefile dev
+
 wasm-clean:
 	@"$(MAKE)" -f bindings/wasm/Makefile clean
 
@@ -192,6 +214,9 @@ wasm-clean:
 # ==============================================================================
 cpp:
 	@"$(MAKE)" -f bindings/cpp/Makefile
+
+cpp-dev:
+	@"$(MAKE)" -f bindings/cpp/Makefile dev
 
 cpp-clean:
 	@"$(MAKE)" -f bindings/cpp/Makefile clean
@@ -236,6 +261,9 @@ docs-clean:
 all: loess-rs fastLoess python r julia nodejs wasm cpp check-msrv
 	@echo "All checks completed successfully!"
 
+all-dev: loess-rs-dev fastLoess-dev python-dev r-dev julia-dev nodejs-dev wasm-dev cpp-dev check-msrv
+	@echo "All dev checks completed successfully!"
+
 all-coverage: loess-rs-coverage fastLoess-coverage python-coverage r-coverage
 	@echo "All coverage completed!"
 
@@ -246,4 +274,4 @@ all-clean: r-clean loess-rs-clean fastLoess-clean python-clean julia-clean nodej
 	@git clean -fdX .
 	@echo "All clean completed!"
 
-.PHONY: loess-rs loess-rs-coverage loess-rs-clean fastLoess fastLoess-coverage fastLoess-clean python python-coverage python-clean r r-coverage r-clean julia julia-clean julia-update-commit nodejs nodejs-clean wasm wasm-clean cpp cpp-clean check-msrv docs docs-serve docs-test docs-clean all all-coverage all-clean ensure-llvm-cov
+.PHONY: loess-rs loess-rs-dev loess-rs-coverage loess-rs-clean fastLoess fastLoess-dev fastLoess-coverage fastLoess-clean python python-dev python-coverage python-clean r r-dev r-coverage r-clean julia julia-dev julia-clean julia-update-commit nodejs nodejs-dev nodejs-clean wasm wasm-dev wasm-clean cpp cpp-dev cpp-clean check-msrv docs docs-serve docs-test docs-clean all all-dev all-coverage all-clean ensure-llvm-cov

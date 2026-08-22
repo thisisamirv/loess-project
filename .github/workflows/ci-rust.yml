@@ -74,11 +74,11 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
 
-      - name: make loess-rs
-        run: make loess-rs
+      - name: make loess-rs-dev
+        run: make loess-rs-dev
 
-      - name: make fastLoess
-        run: make fastLoess
+      - name: make fastLoess-dev
+        run: make fastLoess-dev
 
   asan:
     name: Rust ASAN

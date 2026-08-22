@@ -37,9 +37,12 @@ FASTLOESS_PKG := fastLoess
 FASTLOESS_DIR := crates/fastLoess
 FASTLOESS_FEATURES := dev
 
-.PHONY: default clean coverage ensure-llvm-cov
+.PHONY: default dev clean coverage ensure-llvm-cov
 
 default:
+	@cargo build -q -p $(FASTLOESS_PKG)
+
+dev:
 	@echo "Running $(FASTLOESS_PKG) crate checks..."
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
