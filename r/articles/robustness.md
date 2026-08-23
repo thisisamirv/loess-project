@@ -46,8 +46,13 @@ result <- fit(model, x, y)
 
 ### Huber
 
-Less aggressive than bisquare; still downweights outliers but keeps
-moderate residuals at reduced weight.
+Linear penalty beyond threshold. Less aggressive than Bisquare.
+
+``` math
+w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}
+```
+
+**Use when**: Moderate outliers, want to retain some influence.
 
 ``` r
 
@@ -57,7 +62,13 @@ result <- fit(model, x, y)
 
 ### Talwar
 
-Hard thresholding — points above the threshold are excluded completely.
+Hard threshold — points above the threshold are excluded completely.
+
+``` math
+w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}
+```
+
+**Use when**: Extreme outliers, want binary exclusion.
 
 ``` r
 

@@ -19,7 +19,7 @@ adapts locally to the data structure, making it ideal for:
 
 ## How It Works
 
-![LOESS smoothing concept](../reference/figures/lowess_concept.svg)
+![LOESS smoothing concept](../reference/figures/loess_concept.svg)
 
 LOESS smoothing concept
 
@@ -113,10 +113,12 @@ Decision guide:
 
 ## Key Advantages
 
-| Feature                    | LOESS | Polynomial Regression | Moving Average |
-|----------------------------|-------|-----------------------|----------------|
-| No parametric assumptions  | ✓     | ✗                     | ✓              |
-| Adapts to local structure  | ✓     | ✗                     | Partial        |
-| Robust to outliers         | ✓     | ✗                     | ✗              |
-| Uncertainty estimates      | ✓     | ✓                     | ✗              |
-| Handles irregular sampling | ✓     | ✓                     | ✗              |
+| Feature                      | LOESS   | Polynomial Regression | Moving Average |
+|------------------------------|---------|-----------------------|----------------|
+| No parametric assumptions    | ✓       | ✗                     | ✓              |
+| Adapts to local structure    | ✓       | ✗                     | Partial        |
+| Robust to outliers           | ✓       | ✗                     | ✗              |
+| Uncertainty estimates        | ✓       | ✓                     | ✗              |
+| Handles irregular sampling   | ✓       | ✓                     | ✗              |
+| Multivariate predictors      | ✓       | ✓                     | ✗              |
+| Adjustable polynomial degree | ✓ (0–4) | ✓                     | ✗              |

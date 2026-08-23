@@ -1,6 +1,6 @@
 # Articles
 
-### Getting Started
+### Introduction
 
 - [Installation](https://thisisamirv.github.io/loess-project/r/articles/installation.md):
 - [Quick
@@ -12,8 +12,18 @@
 
 - [Parameters
   Reference](https://thisisamirv.github.io/loess-project/r/articles/parameters.md):
-- [Execution
-  Modes](https://thisisamirv.github.io/loess-project/r/articles/adapters.md):
+- [Choosing an Execution
+  Mode](https://thisisamirv.github.io/loess-project/r/articles/adapter-choice.md):
+- [Batch Mode
+  (Loess)](https://thisisamirv.github.io/loess-project/r/articles/batch.md):
+- [Streaming Mode
+  (StreamingLoess)](https://thisisamirv.github.io/loess-project/r/articles/streaming.md):
+- [Online Mode
+  (OnlineLoess)](https://thisisamirv.github.io/loess-project/r/articles/online.md):
+- [Polynomial
+  Degree](https://thisisamirv.github.io/loess-project/r/articles/degree.md):
+- [Multivariate
+  LOESS](https://thisisamirv.github.io/loess-project/r/articles/dimensions.md):
 - [Confidence and Prediction
   Intervals](https://thisisamirv.github.io/loess-project/r/articles/intervals.md):
 - [Cross-Validation](https://thisisamirv.github.io/loess-project/r/articles/cross-validation.md):
@@ -34,8 +44,6 @@
   Handling](https://thisisamirv.github.io/loess-project/r/articles/boundary.md):
 - [Merge
   Strategies](https://thisisamirv.github.io/loess-project/r/articles/merge.md):
-- [GPU
-  Backend](https://thisisamirv.github.io/loess-project/r/articles/gpu-backend.md):
 
 ### Use Cases
 
@@ -46,6 +54,6 @@
 - [Use Case: Real-Time
   Processing](https://thisisamirv.github.io/loess-project/r/articles/use-case-real-time.md):
 
-### Reference
+### Performance
 
 - [Benchmarks](https://thisisamirv.github.io/loess-project/r/articles/benchmarks.md):

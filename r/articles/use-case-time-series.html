@@ -71,6 +71,12 @@ parametric assumptions.</p>
 <div class="section level2">
 <h2 id="basic-trend-extraction">Basic Trend Extraction<a class="anchor" aria-label="anchor" href="#basic-trend-extraction"></a>
 </h2>
+<p><code>fraction = 0.1</code> sizes the neighbourhood as 10% of the
+data at each evaluation point — narrow enough to follow a slowly varying
+trend without smearing periodic variation. Three robustness
+<code>iterations</code> down-weight noise spikes so they cannot bias the
+fitted curve; this is especially important when the signal-to-noise
+ratio is low or when occasional outliers are expected.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
 <span></span>
@@ -93,6 +99,12 @@ parametric assumptions.</p>
 <div class="section level2">
 <h2 id="seasonal-decomposition">Seasonal Decomposition<a class="anchor" aria-label="anchor" href="#seasonal-decomposition"></a>
 </h2>
+<p>Setting <code>return_residuals = TRUE</code> stores
+<code>observed − smoothed</code> alongside the smooth. A slightly wider
+<code>fraction = 0.4</code> produces a smoother baseline trend, so
+short-duration oscillations end up in the residuals rather than being
+absorbed into the trend component. The residual series is then ready for
+spectral analysis, seasonality detection, or change-point methods.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>

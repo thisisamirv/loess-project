@@ -69,112 +69,88 @@ better):</p>
 <table class="table">
 <thead><tr class="header">
 <th>Category</th>
-<th>R baseline</th>
+<th>R (stats)</th>
 <th>rfastloess Serial</th>
 <th>rfastloess Parallel</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
 <td><strong>Clustered</strong></td>
-<td>2.34 ms</td>
-<td>2.0×</td>
-<td><strong>2.5×</strong></td>
+<td>1×</td>
+<td>18×</td>
+<td><strong>21×</strong></td>
 </tr>
 <tr class="even">
 <td><strong>Constant Y</strong></td>
-<td>1.81 ms</td>
-<td>1.7×</td>
-<td><strong>3.2×</strong></td>
+<td>1×</td>
+<td>15×</td>
+<td><strong>21×</strong></td>
 </tr>
 <tr class="odd">
 <td><strong>Extreme Outliers</strong></td>
-<td>5.81 ms</td>
-<td>1.5×</td>
-<td><strong>2.6×</strong></td>
+<td>1×</td>
+<td>7×</td>
+<td><strong>8×</strong></td>
 </tr>
 <tr class="even">
 <td>
 <strong>Financial</strong> (500–5K)</td>
-<td>0.65 ms</td>
-<td><strong>2.0×</strong></td>
-<td>1.4×</td>
+<td>1×</td>
+<td>5×</td>
+<td><strong>5×</strong></td>
 </tr>
 <tr class="odd">
 <td>
 <strong>Fraction</strong> (0.05–0.67)</td>
-<td>3.8 ms</td>
-<td>1.6×</td>
-<td><strong>3.2×</strong></td>
+<td>1×</td>
+<td><strong>22×</strong></td>
+<td>18×</td>
 </tr>
 <tr class="even">
 <td>
-<strong>Genomic</strong> (1K–100K)</td>
-<td>11.2 ms</td>
-<td>2.2×</td>
-<td><strong>2.4×</strong></td>
+<strong>Genomic</strong> (1K–5K)</td>
+<td>1×</td>
+<td>6×</td>
+<td><strong>7×</strong></td>
 </tr>
 <tr class="odd">
+<td>
+<strong>Genomic</strong> (100K)</td>
+<td>1×</td>
+<td>137×</td>
+<td><strong>201×</strong></td>
+</tr>
+<tr class="even">
 <td><strong>High Noise</strong></td>
-<td>7.08 ms</td>
-<td>1.5×</td>
-<td><strong>3.6×</strong></td>
-</tr>
-<tr class="even">
-<td>
-<strong>Iterations</strong> (0–10)</td>
-<td>3.0 ms</td>
-<td>1.9×</td>
-<td><strong>2.7×</strong></td>
+<td>1×</td>
+<td>22×</td>
+<td><strong>25×</strong></td>
 </tr>
 <tr class="odd">
+<td>
+<strong>Iterations</strong> (1–10)</td>
+<td>1×</td>
+<td>13×</td>
+<td><strong>16×</strong></td>
+</tr>
+<tr class="even">
 <td>
 <strong>Scale</strong> (1K–10K)</td>
-<td>1.6 ms</td>
-<td>1.5×</td>
-<td><strong>1.6×</strong></td>
+<td>1×</td>
+<td><strong>8×</strong></td>
+<td>8×</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>
 <strong>Scientific</strong> (500–5K)</td>
-<td>0.9 ms</td>
-<td>1.4×</td>
-<td>1.4×</td>
+<td>1×</td>
+<td>4×</td>
+<td><strong>5×</strong></td>
 </tr>
 </tbody>
 </table>
+<p><em>Averages across all sizes within each category.</em></p>
 <hr>
-</div>
-<div class="section level2">
-<h2 id="gpu-backend">GPU Backend<a class="anchor" aria-label="anchor" href="#gpu-backend"></a>
-</h2>
-<table class="table">
-<thead><tr class="header">
-<th>Scenario</th>
-<th>CPU-Parallel</th>
-<th>GPU</th>
-<th>Speedup</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>n = 50K, fraction = 0.5</td>
-<td>~200 ms</td>
-<td>~180 ms</td>
-<td>~1.1×</td>
-</tr>
-<tr class="even">
-<td>n = 100K, fraction = 0.5</td>
-<td>~800 ms</td>
-<td>~350 ms</td>
-<td>~2.3×</td>
-</tr>
-<tr class="odd">
-<td>n = 1M, fraction = 0.5</td>
-<td>1.24 s</td>
-<td>187 ms</td>
-<td><strong>6.6×</strong></td>
-</tr>
-</tbody>
-</table>
 <hr>
 </div>
 <div class="section level2">

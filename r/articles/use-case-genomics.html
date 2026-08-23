@@ -71,6 +71,22 @@ profiles, ChIP-seq signals, and expression arrays.</p>
 <div class="section level2">
 <h2 id="methylation-profile-smoothing">Methylation Profile Smoothing<a class="anchor" aria-label="anchor" href="#methylation-profile-smoothing"></a>
 </h2>
+<div class="section level3">
+<h3 id="the-challenge">The Challenge<a class="anchor" aria-label="anchor" href="#the-challenge"></a>
+</h3>
+<p>DNA methylation data (from bisulfite sequencing or arrays) shows
+position-dependent patterns that can be obscured by measurement
+noise.</p>
+</div>
+<div class="section level3">
+<h3 id="solution">Solution<a class="anchor" aria-label="anchor" href="#solution"></a>
+</h3>
+<p>A small <code>fraction = 0.1</code> lets LOESS follow fine-scale
+spatial structure without smearing the transitions between methylated
+and unmethylated regions. <code>confidence_intervals = 0.95</code>
+produces uncertainty bands that naturally widen at positions with
+sparser CpG coverage, making low-confidence segments immediately
+apparent in the plot.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
 <span></span>
@@ -99,6 +115,7 @@ profiles, ChIP-seq signals, and expression arrays.</p>
 <span>       pch <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="cn">NA</span>, <span class="cn">NA</span><span class="op">)</span>, lty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">NA</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>,</span>
 <span>       col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gray"</span>, <span class="st">"blue"</span>, <span class="st">"blue"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="chip-seq-signal-smoothing">ChIP-seq Signal Smoothing<a class="anchor" aria-label="anchor" href="#chip-seq-signal-smoothing"></a>

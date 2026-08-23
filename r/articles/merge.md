@@ -2,16 +2,23 @@
 
 ## Overview
 
-Streaming LOESS processes data in fixed-size chunks with overlap. The
-`merge_strategy` decides how overlapping estimates from adjacent chunks
-are combined.
+Streaming LOESS processes data in fixed-size chunks with a configurable
+overlap. Points inside the overlap zone receive estimates from both
+adjacent chunks; the merge strategy decides how those two estimates are
+reconciled.
 
-| Strategy | Method | Best For |
-|----|----|----|
-| `"average"` | Simple mean | Uniform data density |
-| `"take_first"` | Left-chunk estimate only | Left chunk is more accurate |
-| `"take_last"` | Right-chunk estimate only | Right chunk is more accurate |
-| `"weighted_average"` | Distance-weighted mean (default) | Most situations |
+``` text
+Chunk A:   [=========|=====]
+Chunk B:            [=====|=========]
+Overlap:            [=====]
+```
+
+| Strategy             | Method                        | Robustness | Speed    |
+|----------------------|-------------------------------|------------|----------|
+| `"average"`          | Simple mean of both estimates | Low        | Fastest  |
+| `"take_first"`       | Left-chunk estimate only      | Low        | Fastest  |
+| `"take_last"`        | Right-chunk estimate only     | Low        | Fastest  |
+| `"weighted_average"` | Distance-weighted mean        | High       | Moderate |
 
 ![Merge strategy comparison](../reference/figures/merge_comparison.svg)
 
@@ -20,6 +27,14 @@ Merge strategy comparison
 ------------------------------------------------------------------------
 
 ## Weighted Average (Default)
+
+Assigns each overlap point a weight proportional to its proximity to the
+centre of its respective chunk: points near the left-chunk centre favour
+the left estimate; points near the right-chunk centre favour the right.
+Minimises boundary artefacts.
+
+**Use when**: Minimising boundary artefacts is more important than
+speed; moderate overlap (10–20% of chunk size) is used.
 
 ``` r
 
@@ -42,6 +57,13 @@ result <- process_chunk(model, x_chunk, y_chunk)
 
 ## Average
 
+Takes the arithmetic mean of the left-chunk and right-chunk estimates in
+the overlap region. Fast and sufficient when both chunks have similar
+smoothing quality.
+
+**Use when**: Chunks are large and the overlap region has uniform data
+density.
+
 ``` r
 
 model <- StreamingLoess(
@@ -56,6 +78,12 @@ result <- process_chunk(model, x_chunk, y_chunk)
 
 ## Take First
 
+Keeps only the left-chunk estimate in the overlap zone and discards the
+right-chunk estimate. Produces a left-flush output.
+
+**Use when**: You need final output values immediately after each chunk
+(no look-ahead revision); left-chunk context dominates.
+
 ``` r
 
 model <- StreamingLoess(
@@ -69,6 +97,13 @@ result <- process_chunk(model, x_chunk, y_chunk)
 ------------------------------------------------------------------------
 
 ## Take Last
+
+Keeps only the right-chunk estimate in the overlap zone. The right chunk
+sees more of the surrounding data, so its estimates can be more accurate
+in the overlap region.
+
+**Use when**: Right-chunk context improves overlap quality; you are
+post-processing complete data rather than streaming in real time.
 
 ``` r
 

@@ -89,7 +89,7 @@ or expression data</li>
 <h2 id="how-it-works">How It Works<a class="anchor" aria-label="anchor" href="#how-it-works"></a>
 </h2>
 <div class="float">
-<img src="../reference/figures/lowess_concept.svg" alt="LOESS smoothing concept"><div class="figcaption">LOESS smoothing concept</div>
+<img src="../reference/figures/loess_concept.svg" alt="LOESS smoothing concept"><div class="figcaption">LOESS smoothing concept</div>
 </div>
 <p>For each point in your data, LOESS:</p>
 <ol style="list-style-type: decimal">
@@ -323,6 +323,18 @@ points might fall</li>
 <tr class="odd">
 <td>Handles irregular sampling</td>
 <td>✓</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr class="even">
+<td>Multivariate predictors</td>
+<td>✓</td>
+<td>✓</td>
+<td>✗</td>
+</tr>
+<tr class="odd">
+<td>Adjustable polynomial degree</td>
+<td>✓ (0–4)</td>
 <td>✓</td>
 <td>✗</td>
 </tr>

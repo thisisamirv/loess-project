@@ -8,8 +8,7 @@ intervals](../reference/figures/intervals_comparison.svg)
 Confidence and prediction intervals
 
 > **Note:** Confidence and prediction intervals are available in
-> **Batch** mode only. Streaming and Online modes do not support
-> intervals.
+> **Batch**, **Streaming**, and **Online** modes.
 
 | Type           | Represents                 | Width  | Use                       |
 |----------------|----------------------------|--------|---------------------------|

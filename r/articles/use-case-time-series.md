@@ -9,6 +9,13 @@ parametric assumptions.
 
 ## Basic Trend Extraction
 
+`fraction = 0.1` sizes the neighbourhood as 10% of the data at each
+evaluation point — narrow enough to follow a slowly varying trend
+without smearing periodic variation. Three robustness `iterations`
+down-weight noise spikes so they cannot bias the fitted curve; this is
+especially important when the signal-to-noise ratio is low or when
+occasional outliers are expected.
+
 ``` r
 
 library(rfastloess)
@@ -32,6 +39,13 @@ legend("topleft", c("Observed", "Trend (LOESS)"),
 ------------------------------------------------------------------------
 
 ## Seasonal Decomposition
+
+Setting `return_residuals = TRUE` stores `observed − smoothed` alongside
+the smooth. A slightly wider `fraction = 0.4` produces a smoother
+baseline trend, so short-duration oscillations end up in the residuals
+rather than being absorbed into the trend component. The residual series
+is then ready for spectral analysis, seasonality detection, or
+change-point methods.
 
 ``` r
 

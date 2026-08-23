@@ -64,10 +64,13 @@
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>The <code>scaling_method</code> parameter controls how the residual
-scale
+<p>When <code>iterations &gt; 0</code>, LOESS computes robustness
+weights by comparing each residual to the current residual scale
+estimate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>σ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{\sigma}</annotation></semantics></math>.
+The <code>scaling_method</code> parameter controls how
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>σ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{\sigma}</annotation></semantics></math>
-is estimated during robustness iterations.</p>
+is estimated.</p>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>w</mi><mi>i</mi></msub><mo>=</mo><mi>B</mi><mspace width="-0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mfrac><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>r</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow><mrow><mn>6</mn><mo>⋅</mo><mover><mi>σ</mi><mo accent="true">̂</mo></mover></mrow></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">w_i = B\!\left(\frac{|r_i|}{6 \cdot \hat{\sigma}}\right)</annotation></semantics></math></p>
 <table class="table">
 <colgroup>
@@ -109,9 +112,14 @@ is estimated during robustness iterations.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="mad-default">MAD (Default)<a class="anchor" aria-label="anchor" href="#mad-default"></a>
+<h2 id="mad-median-absolute-deviation-default">MAD — Median Absolute Deviation (Default)<a class="anchor" aria-label="anchor" href="#mad-median-absolute-deviation-default"></a>
 </h2>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mo>=</mo><mtext mathvariant="normal">median</mtext><mo stretchy="false" form="prefix">(</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>r</mi><mi>i</mi></msub><mo>−</mo><mtext mathvariant="normal">median</mtext><mo stretchy="false" form="prefix">(</mo><msub><mi>r</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)</annotation></semantics></math></p>
+<p>First centers residuals at their median, then takes the median of the
+absolute deviations. Double use of the median makes it highly resistant
+to extreme outliers.</p>
+<p><strong>Use when</strong>: Data may contain outliers (default for
+most applications).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
@@ -123,18 +131,30 @@ is estimated during robustness iterations.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="mar">MAR<a class="anchor" aria-label="anchor" href="#mar"></a>
+<h2 id="mar-median-absolute-residual">MAR — Median Absolute Residual<a class="anchor" aria-label="anchor" href="#mar-median-absolute-residual"></a>
 </h2>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mo>=</mo><mtext mathvariant="normal">median</mtext><mo stretchy="false" form="prefix">(</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>r</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">|</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\hat{\sigma} = \text{median}(|r_i|)</annotation></semantics></math></p>
+<p>Uses the uncentered median — unlike MAD it does not subtract the
+residual median first. Still robust (median-based), faster (one partial
+sort instead of two).</p>
+<p><strong>Use when</strong>: Speed matters and data have minimal
+systematic bias in residuals.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, scaling_method <span class="op">=</span> <span class="st">"mar"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="mean">Mean<a class="anchor" aria-label="anchor" href="#mean"></a>
+<h2 id="mean-mean-absolute-residual">Mean — Mean Absolute Residual<a class="anchor" aria-label="anchor" href="#mean-mean-absolute-residual"></a>
 </h2>
 <p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>σ</mi><mo accent="true">̂</mo></mover><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munder><mo>∑</mo><mi>i</mi></munder><mo stretchy="false" form="prefix">|</mo><msub><mi>r</mi><mi>i</mi></msub><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">\hat{\sigma} = \frac{1}{n}\sum_i |r_i|</annotation></semantics></math></p>
+<p>Arithmetic mean of absolute residuals. Non-robust: a single extreme
+outlier inflates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>σ</mi><mo accent="true">̂</mo></mover><annotation encoding="application/x-tex">\hat{\sigma}</annotation></semantics></math>,
+causing the bisquare weight function to under-downweight other
+outliers.</p>
+<p><strong>Use when</strong>: Clean data with no outliers; maximum
+computation speed required.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, scaling_method <span class="op">=</span> <span class="st">"mean"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>

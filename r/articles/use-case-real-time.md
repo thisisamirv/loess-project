@@ -9,6 +9,16 @@ arriving data.
 
 ## Online Mode: Point-by-Point
 
+`window_capacity = 25` limits the internal buffer to the 25 most recent
+observations; each `add_point` call costs O(window) rather than growing
+with total history. `min_points = 5` suppresses output until the window
+holds enough points for a stable fit — calls made before that threshold
+return `NULL`. `update_mode = "incremental"` re-fits only the most
+recent point rather than the full window, halving typical latency at a
+modest accuracy cost.
+
+### Sensor Data Example
+
 ``` r
 
 library(rfastloess)

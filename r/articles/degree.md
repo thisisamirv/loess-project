@@ -1,0 +1,126 @@
+# Polynomial Degree
+
+## Overview
+
+At each target point, LOESS fits a polynomial to the neighbouring data
+using weighted least squares. The `degree` parameter controls the order
+of that polynomial.
+
+![Degree comparison](../reference/figures/degree_comparison.svg)
+
+Degree comparison
+
+| Degree | Local Fit | Captures | Risk |
+|----|----|----|----|
+| `0` / `"constant"` | Weighted mean | Level only | Over-smooth, biased at edges |
+| `1` / `"linear"` | Weighted line | Trend (default) | Rarely overfits |
+| `2` / `"quadratic"` | Parabola | Curvature | Overfits with small `fraction` |
+| `3` / `"cubic"` | Cubic curve | Inflections | Requires larger `fraction` |
+| `4` / `"quartic"` | Quartic curve | Fine structure | High variance, rarely needed |
+
+Degree can be specified as an integer (`0L`–`4L`) or as a string
+(`"constant"`, `"linear"`, `"quadratic"`, `"cubic"`, `"quartic"`).
+
+------------------------------------------------------------------------
+
+## Degree 0 — Local Constant
+
+The fit at each point is a weighted mean. Produces very smooth results
+but ignores local slope, introducing bias wherever the true function
+changes.
+
+**Use when**: Maximum smoothness matters more than accuracy;
+computationally cheapest.
+
+``` r
+
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Loess(degree = "constant", fraction = 0.5)
+result <- fit(model, x, y)
+```
+
+------------------------------------------------------------------------
+
+## Degree 1 — Local Linear (Default)
+
+Fits a weighted line through the neighbourhood. Removes first-order bias
+and handles boundary regions correctly. The right choice for the vast
+majority of applications.
+
+**Use when**: Default; monotone or gently curved data; boundary accuracy
+matters.
+
+``` r
+
+model <- Loess(degree = "linear", fraction = 0.5)
+result <- fit(model, x, y)
+```
+
+------------------------------------------------------------------------
+
+## Degree 2 — Local Quadratic
+
+Fits a weighted parabola. Captures curvature in the data and reduces
+bias in regions with strong local curvature, at the cost of higher
+variance.
+
+**Use when**: Data has visible curvature or local extrema; use a larger
+`fraction` to stabilise the fit.
+
+``` r
+
+model <- Loess(degree = "quadratic", fraction = 0.5)
+result <- fit(model, x, y)
+```
+
+------------------------------------------------------------------------
+
+## Degree 3 and 4 — Higher-Order Fits
+
+Cubic and quartic local fits capture inflections and fine structure but
+require a sufficiently large neighbourhood to remain stable. Rarely
+needed in practice.
+
+**Use when**: Highly non-linear local structure; combine with a larger
+`fraction`.
+
+``` r
+
+model <- Loess(degree = "cubic", fraction = 0.6)
+result <- fit(model, x, y)
+```
+
+------------------------------------------------------------------------
+
+## Degree and Boundary Fallback
+
+At the dataset boundary, the neighbourhood is one-sided and may not
+contain enough points to support the requested degree. Setting
+`boundary_degree_fallback = TRUE` automatically reduces the degree at
+boundaries to avoid instability.
+
+``` r
+
+model <- Loess(degree = 2L, boundary_degree_fallback = TRUE)
+result <- fit(model, x, y)
+```
+
+------------------------------------------------------------------------
+
+## Choosing a Degree
+
+| Situation                           | Recommended Degree |
+|-------------------------------------|--------------------|
+| Flat or slowly varying signal       | `0`                |
+| General purpose                     | `1` (default)      |
+| Visibly curved signal               | `2`                |
+| Strong non-linearity, large dataset | `3`                |
+| Benchmark / exploratory only        | `4`                |
+
+> **Rule of thumb:** Start with `degree = 1` (default). Move to
+> `degree = 2` only if you see systematic bias in regions of high
+> curvature, and increase `fraction` at the same time.

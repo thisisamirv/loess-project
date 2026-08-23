@@ -2,8 +2,10 @@
 
 ## Overview
 
-The `scaling_method` parameter controls how the residual scale
-$`\hat{\sigma}`$ is estimated during robustness iterations.
+When `iterations > 0`, LOESS computes robustness weights by comparing
+each residual to the current residual scale estimate $`\hat{\sigma}`$.
+The `scaling_method` parameter controls how $`\hat{\sigma}`$ is
+estimated.
 
 ``` math
 w_i = B\!\left(\frac{|r_i|}{6 \cdot \hat{\sigma}}\right)
@@ -22,11 +24,17 @@ Scaling method comparison
 
 ------------------------------------------------------------------------
 
-## MAD (Default)
+## MAD — Median Absolute Deviation (Default)
 
 ``` math
 \hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)
 ```
+
+First centers residuals at their median, then takes the median of the
+absolute deviations. Double use of the median makes it highly resistant
+to extreme outliers.
+
+**Use when**: Data may contain outliers (default for most applications).
 
 ``` r
 
@@ -41,11 +49,18 @@ result <- fit(model, x, y)
 
 ------------------------------------------------------------------------
 
-## MAR
+## MAR — Median Absolute Residual
 
 ``` math
 \hat{\sigma} = \text{median}(|r_i|)
 ```
+
+Uses the uncentered median — unlike MAD it does not subtract the
+residual median first. Still robust (median-based), faster (one partial
+sort instead of two).
+
+**Use when**: Speed matters and data have minimal systematic bias in
+residuals.
 
 ``` r
 
@@ -55,11 +70,18 @@ result <- fit(model, x, y)
 
 ------------------------------------------------------------------------
 
-## Mean
+## Mean — Mean Absolute Residual
 
 ``` math
 \hat{\sigma} = \frac{1}{n}\sum_i |r_i|
 ```
+
+Arithmetic mean of absolute residuals. Non-robust: a single extreme
+outlier inflates $`\hat{\sigma}`$, causing the bisquare weight function
+to under-downweight other outliers.
+
+**Use when**: Clean data with no outliers; maximum computation speed
+required.
 
 ``` r
 

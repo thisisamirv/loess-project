@@ -101,8 +101,10 @@ downweight points with large residuals:</p>
 <div class="section level3">
 <h3 id="huber">Huber<a class="anchor" aria-label="anchor" href="#huber"></a>
 </h3>
-<p>Less aggressive than bisquare; still downweights outliers but keeps
-moderate residuals at reduced weight.</p>
+<p>Linear penalty beyond threshold. Less aggressive than Bisquare.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mn>1</mn></mtd><mtd columnalign="left" style="text-align: left"><mo stretchy="false" form="prefix">|</mo><mi>u</mi><mo stretchy="false" form="prefix">|</mo><mo>≤</mo><mi>k</mi></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mi>k</mi><mi>/</mi><mo stretchy="false" form="prefix">|</mo><mi>u</mi><mo stretchy="false" form="prefix">|</mo></mtd><mtd columnalign="left" style="text-align: left"><mo stretchy="false" form="prefix">|</mo><mi>u</mi><mo stretchy="false" form="prefix">|</mo><mo>&gt;</mo><mi>k</mi></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">w(u) = \begin{cases} 1 &amp; |u| \leq k \\ k/|u| &amp; |u| &gt; k \end{cases}</annotation></semantics></math></p>
+<p><strong>Use when</strong>: Moderate outliers, want to retain some
+influence.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, robustness_method <span class="op">=</span> <span class="st">"huber"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
@@ -110,8 +112,11 @@ moderate residuals at reduced weight.</p>
 <div class="section level3">
 <h3 id="talwar">Talwar<a class="anchor" aria-label="anchor" href="#talwar"></a>
 </h3>
-<p>Hard thresholding — points above the threshold are excluded
+<p>Hard threshold — points above the threshold are excluded
 completely.</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo stretchy="false" form="prefix">(</mo><mi>u</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mo stretchy="true" form="prefix">{</mo><mtable><mtr><mtd columnalign="left" style="text-align: left"><mn>1</mn></mtd><mtd columnalign="left" style="text-align: left"><mo stretchy="false" form="prefix">|</mo><mi>u</mi><mo stretchy="false" form="prefix">|</mo><mo>≤</mo><mi>k</mi></mtd></mtr><mtr><mtd columnalign="left" style="text-align: left"><mn>0</mn></mtd><mtd columnalign="left" style="text-align: left"><mo stretchy="false" form="prefix">|</mo><mi>u</mi><mo stretchy="false" form="prefix">|</mo><mo>&gt;</mo><mi>k</mi></mtd></mtr></mtable></mrow></mrow><annotation encoding="application/x-tex">w(u) = \begin{cases} 1 &amp; |u| \leq k \\ 0 &amp; |u| &gt; k \end{cases}</annotation></semantics></math></p>
+<p><strong>Use when</strong>: Extreme outliers, want binary
+exclusion.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3</span>, robustness_method <span class="op">=</span> <span class="st">"talwar"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
