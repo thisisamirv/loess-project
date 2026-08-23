@@ -12,7 +12,7 @@ Standard mode for complete datasets. **Supports all features.**
 
 ## Example
 
-```julia
+```@example batch
 using FastLOESS
 using Random, Statistics
 
@@ -29,6 +29,7 @@ model = Loess(;
     parallel=true
 )
 result = fit(model, x, y)
+println("First smoothed value: ", result.y[1])
 ```
 
 ---

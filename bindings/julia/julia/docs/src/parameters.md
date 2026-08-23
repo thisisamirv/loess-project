@@ -78,7 +78,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 ![Fraction Comparison](assets/fraction_comparison.svg)
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -88,6 +88,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; fraction=0.3)
 result = fit(model, x, y)
+println("First smoothed value (fraction=0.3): ", result.y[1])
 ```
 
 ---
@@ -103,7 +104,7 @@ Number of robustness iterations for outlier resistance.
 | 4–6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -113,6 +114,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; iterations=5)
 result = fit(model, x, y)
+println("First smoothed value (iterations=5): ", result.y[1])
 ```
 
 ---
@@ -148,7 +150,7 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 
 See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -158,6 +160,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; surface_mode="direct")
 result = fit(model, x, y)
+println("First smoothed value (direct surface mode): ", result.y[1])
 ```
 
 ---
@@ -176,7 +179,7 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
 | `0.2` | Moderate (default) | High | Fast |
 | `0.5` | Coarse | Lower | Faster |
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -186,6 +189,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; cell=0.05)
 result = fit(model, x, y)
+println("First smoothed value (cell=0.05, very fine grid): ", result.y[1])
 ```
 
 ---
@@ -197,7 +201,7 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 - **Default**: auto (derived from `cell` and data range)
 - **Adapter**: All
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -207,6 +211,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; interpolation_vertices=50)
 result = fit(model, x, y)
+println("First smoothed value (interpolation_vertices=50): ", result.y[1])
 ```
 
 ---
@@ -238,7 +243,7 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 | `"minkowski:p"` | Generalised $L_p$ norm — e.g. `"minkowski:3"` |
 | `"weighted"` | Weighted Euclidean — set `weighted_metric_weights` to one weight per dimension |
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -253,6 +258,7 @@ model = Loess(;
     weighted_metric_weights=[2.0, 0.5]
 )
 result = fit(model, x2d, y)
+println("First smoothed value (weighted distance metric, 2D): ", result.y[1])
 ```
 
 ---
@@ -273,7 +279,7 @@ Distance weighting kernel for local fits.
 
 See [Weight Functions](kernels.md) for detailed comparison.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -283,6 +289,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; weight_function="epanechnikov")
 result = fit(model, x, y)
+println("First smoothed value (epanechnikov kernel): ", result.y[1])
 ```
 
 ---
@@ -299,7 +306,7 @@ Method for downweighting outliers during iterative refinement.
 
 See [Robustness](robustness.md) for detailed comparison.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -309,6 +316,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; robustness_method="talwar")
 result = fit(model, x, y)
+println("First smoothed value (talwar robustness): ", result.y[1])
 ```
 
 ---
@@ -328,7 +336,7 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 
 For example:
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -338,6 +346,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; boundary_policy="reflect")
 result = fit(model, x, y)
+println("First smoothed value (reflect boundary): ", result.y[1])
 ```
 
 ---
@@ -352,7 +361,7 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 !!! tip
     Enable this if you observe NaN values or instability at the edges of your data when using `degree = "quadratic"` or higher.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -362,6 +371,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; degree="quadratic", boundary_degree_fallback=true)
 result = fit(model, x, y)
+println("First smoothed value (quadratic degree, boundary fallback): ", result.y[1])
 ```
 
 ---
@@ -380,7 +390,7 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 
 For example:
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -390,6 +400,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; scaling_method="mad")
 result = fit(model, x, y)
+println("First smoothed value (MAD scaling): ", result.y[1])
 ```
 
 ---
@@ -408,7 +419,7 @@ Behavior when all neighborhood weights are zero.
 
 For example:
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -418,6 +429,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; zero_weight_fallback="use_local_mean")
 result = fit(model, x, y)
+println("First smoothed value (use_local_mean fallback): ", result.y[1])
 ```
 
 ---
@@ -426,7 +438,7 @@ result = fit(model, x, y)
 
 Enable early stopping when robustness weights stabilize.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -436,6 +448,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; iterations=20, auto_converge=1e-6)
 result = fit(model, x, y)
+println("First smoothed value (auto_converge=1e-6): ", result.y[1])
 ```
 
 ---
@@ -453,7 +466,7 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
 !!! tip
     Set to `false` for fully deterministic, reproducible output when debugging, or in environments where thread safety is required.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -463,6 +476,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; parallel=false)
 result = fit(model, x, y)
+println("First smoothed value (parallel=false): ", result.y[1])
 ```
 
 ---
@@ -489,7 +503,7 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
 !!! warning "Length must match y"
     The weights vector must have the same length as `y`. A mismatch returns an error.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -501,6 +515,7 @@ weights = ones(length(y))
 weights[5] = 0.0  # Exclude 5th point
 model = Loess()
 result = fit(model, x, y; custom_weights=weights)
+println("First smoothed value (custom weights, index 5 excluded): ", result.y[1])
 ```
 
 ---
@@ -511,7 +526,7 @@ result = fit(model, x, y; custom_weights=weights)
 
 Include residuals (`y - smoothed`) in the output.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -521,7 +536,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; return_residuals=true)
 result = fit(model, x, y)
-println(result.residuals)
+println("Residuals: ", result.residuals)
 ```
 
 ---
@@ -540,7 +555,7 @@ Include fit quality metrics (Batch and Streaming only).
 | `aic` | Akaike Information Criterion |
 | `aicc` | Corrected AIC |
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -559,7 +574,7 @@ println("R\u00b2: ", result.diagnostics.r_squared)
 
 Include final robustness weights (useful for outlier detection).
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -570,6 +585,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = Loess(; iterations=3, return_robustness_weights=true)
 result = fit(model, x, y)
 # Points with result.robustness_weights < 0.5 are likely outliers
+println("First smoothed value (robustness weights computed): ", result.y[1])
 ```
 
 ---
@@ -580,7 +596,7 @@ Request uncertainty estimates (Batch only).
 
 See [Intervals](intervals.md) for detailed usage.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -590,6 +606,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; confidence_intervals=0.95, prediction_intervals=0.95)
 result = fit(model, x, y)
+println("First smoothed value (95% CI + PI): ", result.y[1])
 ```
 
 ---
@@ -605,7 +622,7 @@ Selection strategy for automated parameter tuning.
 | `"kfold"` | K-Fold Cross-Validation | Fast |
 | `"loocv"` | Leave-One-Out Cross-Validation | Slow |
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -615,6 +632,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; cv_method="kfold", cv_k=5)
 result = fit(model, x, y)
+println("First smoothed value (k-fold CV, k=5): ", result.y[1])
 ```
 
 ---
@@ -625,7 +643,7 @@ result = fit(model, x, y)
 
 Points per chunk in Streaming mode.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -636,6 +654,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = StreamingLoess(; chunk_size=10000)
 process_chunk(model, x, y)
 result = finalize(model)
+println("First smoothed value (chunk_size=10000): ", result.y[1])
 ```
 
 ---
@@ -644,7 +663,7 @@ result = finalize(model)
 
 Overlap between chunks in Streaming mode.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -655,6 +674,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = StreamingLoess(; overlap=1000)
 process_chunk(model, x, y)
 result = finalize(model)
+println("First smoothed value (overlap=1000): ", result.y[1])
 ```
 
 ---
@@ -672,7 +692,7 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 
 For example:
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -683,6 +703,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = StreamingLoess(; merge_strategy="weighted_average")
 process_chunk(model, x, y)
 result = finalize(model)
+println("First smoothed value (weighted_average merge): ", result.y[1])
 ```
 
 ---
@@ -691,7 +712,7 @@ result = finalize(model)
 
 Maximum points held in memory for Online mode.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -701,6 +722,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = OnlineLoess(; window_capacity=500)
 result = add_point(model, x[1], y[1])  # nothing until window fills
+println("Result before window fills (capacity=500): ", result)
 ```
 
 ---
@@ -709,7 +731,7 @@ result = add_point(model, x[1], y[1])  # nothing until window fills
 
 Minimum points required before Online filter starts producing outputs.
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -719,6 +741,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = OnlineLoess(; min_points=10)
 result = add_point(model, x[1], y[1])  # nothing until 10 points seen
+println("Result before min_points reached (min_points=10): ", result)
 ```
 
 ---
@@ -734,7 +757,7 @@ Optimization strategy for Online mode updates.
 
 For example:
 
-```julia
+```@example parameters
 using FastLOESS
 using Random, Statistics
 
@@ -744,4 +767,5 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = OnlineLoess(; update_mode="full")
 result = add_point(model, x[1], y[1])
+println("Result after first point (update_mode=full): ", result)
 ```

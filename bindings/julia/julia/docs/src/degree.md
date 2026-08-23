@@ -27,7 +27,7 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 **Use when**: Maximum smoothness is more important than accuracy; computationally cheapest option.
 
-```julia
+```@example degree
 using FastLOESS
 using Random, Statistics
 
@@ -37,6 +37,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; degree="constant", fraction=0.5)
 result = fit(model, x, y)
+println("First smoothed value (constant/Nadaraya-Watson): ", result.y[1])
 ```
 
 ---
@@ -49,7 +50,7 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 **Use when**: Default; monotone or gently curved data; boundary accuracy matters.
 
-```julia
+```@example degree
 using FastLOESS
 using Random, Statistics
 
@@ -59,6 +60,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; degree="linear", fraction=0.5)
 result = fit(model, x, y)
+println("First smoothed value (linear local regression): ", result.y[1])
 ```
 
 ---
@@ -71,7 +73,7 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 **Use when**: Data with pronounced peaks, valleys, or curvature; `fraction` ≥ 0.4.
 
-```julia
+```@example degree
 using FastLOESS
 using Random, Statistics
 
@@ -81,6 +83,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; degree="quadratic", fraction=0.5)
 result = fit(model, x, y)
+println("First smoothed value (quadratic local regression): ", result.y[1])
 ```
 
 ---
@@ -93,7 +96,7 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 **Use when**: Data has clear S-shaped curves or multiple inflection points; `fraction` ≥ 0.5.
 
-```julia
+```@example degree
 using FastLOESS
 using Random, Statistics
 
@@ -103,6 +106,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; degree="cubic", fraction=0.6)
 result = fit(model, x, y)
+println("First smoothed value (cubic local regression): ", result.y[1])
 ```
 
 ---
@@ -115,7 +119,7 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 **Use when**: Fine oscillatory structure is physically meaningful and the dataset is large; always cross-validate.
 
-```julia
+```@example degree
 using FastLOESS
 using Random, Statistics
 
@@ -125,6 +129,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; degree="quartic", fraction=0.7)
 result = fit(model, x, y)
+println("First smoothed value (quartic local regression): ", result.y[1])
 ```
 
 ---

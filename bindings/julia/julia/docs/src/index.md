@@ -8,14 +8,14 @@ See the [main documentation](https://thisisamirv.github.io/loess-project/julia/)
 
 ## Quick Start
 
-```julia
+```@example index
 using FastLOESS
 
 x = collect(1.0:0.1:10.0)
 y = sin.(x) .+ 0.1 .* randn(length(x))
 
 result = fit(Loess(fraction = 0.3), x, y)
-println(result.y)
+println("Smoothed values: ", result.y)
 ```
 
 ## Installation

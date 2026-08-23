@@ -20,7 +20,7 @@ Pkg.develop(url="https://github.com/thisisamirv/loess-project", subdir="bindings
 
 ## Verify Installation
 
-```julia
+```@example installation
 using FastLOESS
 
 x = [1.0, 2.0, 3.0]

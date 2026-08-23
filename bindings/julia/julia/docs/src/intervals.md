@@ -21,7 +21,7 @@ Confidence and prediction intervals for uncertainty quantification.
 
 Estimate uncertainty in the smoothed curve itself.
 
-```julia
+```@example intervals
 using FastLOESS
 using Random, Statistics
 
@@ -43,7 +43,7 @@ end
 
 Estimate where new observations might fall.
 
-```julia
+```@example intervals
 using FastLOESS
 using Random, Statistics
 
@@ -63,7 +63,7 @@ println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_
 
 Request both types simultaneously:
 
-```julia
+```@example intervals
 using FastLOESS
 using Random, Statistics
 
@@ -77,6 +77,7 @@ model = Loess(;
     prediction_intervals=0.95
 )
 result = fit(model, x, y)
+println("First smoothed value (95% CI + PI): ", result.y[1])
 ```
 
 ---
@@ -91,7 +92,7 @@ Common levels and their z-values:
 | 0.95 | 1.960 | 95% of intervals contain true value |
 | 0.99 | 2.576 | 99% of intervals contain true value |
 
-```julia
+```@example intervals
 using FastLOESS
 using Random, Statistics
 
@@ -102,6 +103,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 # 99% confidence interval
 model = Loess(; confidence_intervals=0.99)
 result = fit(model, x, y)
+println("First smoothed value (99% CI): ", result.y[1])
 ```
 
 ---
@@ -110,7 +112,7 @@ result = fit(model, x, y)
 
 Access standard errors directly (available when intervals are computed):
 
-```julia
+```@example intervals
 using FastLOESS
 using Random, Statistics
 

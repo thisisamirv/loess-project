@@ -33,7 +33,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
-```julia
+```@example merge
 using FastLOESS
 using Random, Statistics
 
@@ -41,7 +41,6 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
@@ -51,6 +50,7 @@ y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
 
 model = StreamingLoess(; merge_strategy="average", chunk_size=5000, overlap=500)
 result = process_chunk(model, x_chunk, y_chunk)
+println("First smoothed value (average strategy): ", result.y[1])
 ```
 
 ---
@@ -61,7 +61,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 **Use when**: You need final output values immediately after each chunk (no look-ahead revision); left-chunk data quality is higher.
 
-```julia
+```@example merge
 using FastLOESS
 using Random, Statistics
 
@@ -69,7 +69,6 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
@@ -80,6 +79,7 @@ y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
 model = StreamingLoess(; merge_strategy="take_first")
 process_chunk(model, x_chunk, y_chunk)
 result = finalize(model)
+println("First smoothed value (take_first strategy): ", result.y[1])
 ```
 
 ---
@@ -90,7 +90,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 **Use when**: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming live.
 
-```julia
+```@example merge
 using FastLOESS
 using Random, Statistics
 
@@ -98,7 +98,6 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
@@ -109,6 +108,7 @@ y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
 model = StreamingLoess(; merge_strategy="take_last")
 process_chunk(model, x_chunk, y_chunk)
 result = finalize(model)
+println("First smoothed value (take_last strategy): ", result.y[1])
 ```
 
 ---
@@ -123,7 +123,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 **Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20 % of chunk size).
 
-```julia
+```@example merge
 using FastLOESS
 using Random, Statistics
 
@@ -131,7 +131,6 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
@@ -146,6 +145,7 @@ model = StreamingLoess(;
 )
 process_chunk(model, x_chunk, y_chunk)
 result = finalize(model)
+println("First smoothed value (weighted_average strategy): ", result.y[1])
 ```
 
 ---

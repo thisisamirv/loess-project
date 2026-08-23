@@ -27,7 +27,7 @@ Incremental updates with a sliding window for real-time data.
 
 ## Example
 
-```julia
+```@example online
 using FastLOESS
 using Random, Statistics
 
@@ -45,7 +45,7 @@ model = OnlineLoess(;
 for i in eachindex(x)
     result = add_point(model, x[i], y[i])
     if result !== nothing
-        println(result.y)
+        println("Current smoothed value: ", result.y)
     end
 end
 ```

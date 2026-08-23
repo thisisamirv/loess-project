@@ -12,7 +12,8 @@ Time series data often contains noise, seasonality, and trends. LOESS provides f
 ## Basic Trend Extraction
 
 `fraction = 0.1` sizes the neighbourhood as 10% of the data at each evaluation point — narrow enough to follow a slowly varying trend without smearing periodic variation. Three robustness `iterations` down-weight noise spikes so they cannot bias the fitted curve; this is especially important when the signal-to-noise ratio is low or when occasional outliers are expected.
-```julia
+
+```@example use-case-time-series
 using FastLOESS
 
 t = collect(range(0, 100, length=500))
@@ -33,7 +34,8 @@ println("Extracted trend points: ", length(result.y))
 Remove trend to analyze residual patterns.
 
 Setting `return_residuals = True` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
-```julia
+
+```@example use-case-time-series
 using FastLOESS
 using Random, Statistics
 
@@ -56,7 +58,8 @@ println("Detrended variance: ", var(detrended))
 ## Forecasting with Prediction Intervals
 
 Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve (confidence interval) and the expected scatter of new observations around it. `fraction = 0.2` offers a balance between local detail and stable interval width — too small a fraction produces jagged interval edges; too large a fraction underestimates local variance near turning points.
-```julia
+
+```@example use-case-time-series
 using FastLOESS
 using Random, Statistics
 
@@ -81,7 +84,8 @@ println("First point 95% PI: [$(result.prediction_lower[1]), $(result.prediction
 ## Handling Missing Data
 
 LOESS naturally handles irregular time sampling:
-```julia
+
+```@example use-case-time-series
 using FastLOESS
 using Random, Statistics
 
@@ -89,7 +93,6 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
@@ -101,6 +104,7 @@ y_irregular = 10.0 .+ t_irregular .* 0.3 .+ randn(200) .* 2.0
 # LOESS handles this seamlessly
 model = Loess(; fraction=0.2)
 result = fit(model, t_irregular, y_irregular)
+println("First smoothed value (irregular time series): ", result.y[1])
 ```
 
 ---
@@ -108,7 +112,8 @@ result = fit(model, t_irregular, y_irregular)
 ## Multi-Scale Analysis
 
 Use different fractions to extract features at different scales:
-```julia
+
+```@example use-case-time-series
 using FastLOESS
 using Random, Statistics
 
@@ -119,7 +124,9 @@ y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
 fractions = [0.05, 0.2, 0.5]
 
 results = [fit(Loess(; fraction=f), t, y) for f in fractions]
-# results[i].y contains smoothed values for each fraction
+for (f, res) in zip(fractions, results)
+    println("fraction=$(f): first smoothed value = $(round(res.y[1]; digits=4))")
+end
 ```
 
 ---
@@ -127,15 +134,14 @@ results = [fit(Loess(; fraction=f), t, y) for f in fractions]
 ## Gene Expression Time Course
 
 Biological application:
-```julia
+
+```@example use-case-time-series
 using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using FastLOESS
 
 hours = collect(range(0, 24, step=0.5))
 expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hours)) .* 10.0

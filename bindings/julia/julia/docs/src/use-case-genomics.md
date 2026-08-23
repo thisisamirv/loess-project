@@ -19,7 +19,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 A small `fraction = 0.1` lets LOESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `confidence_intervals = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
 
-```julia
+```@example use-case-genomics
 using FastLOESS
 using Random
 
@@ -27,14 +27,6 @@ rng = MersenneTwister(42)
 positions = collect(0.0:10.0:10000.0)
 observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
 
-using FastLOESS
-using Random
-
-rng = MersenneTwister(42)
-positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
-using FastLOESS
 using Random
 
 rng = MersenneTwister(42)
@@ -51,6 +43,7 @@ result = fit(model, positions, observed)
 
 # Smoothed profile in result.y
 # CI bounds in result.confidence_lower/upper
+println("First smoothed ChIP-seq enrichment value: ", result.y[1])
 ```
 
 ---
@@ -63,7 +56,7 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
 `fraction = 0.05` provides high spatial resolution — important for resolving narrow binding peaks that would otherwise be smeared into the background. The larger `iterations = 5` is deliberate: Poisson-distributed read counts produce tall, isolated spikes, and extra robustness iterations progressively down-weight them so the estimated background level is not inflated by a handful of extreme counts.
 
-```julia
+```@example use-case-genomics
 using FastLOESS
 using Random
 
@@ -71,14 +64,6 @@ rng = MersenneTwister(42)
 positions = collect(0.0:10.0:10000.0)
 observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
 
-using FastLOESS
-using Random
-
-rng = MersenneTwister(42)
-positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
-using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
@@ -93,6 +78,7 @@ result = fit(model, positions, observed)
 threshold = quantile(result.y, 0.75)
 peak_indices = findall(y -> y > threshold, result.y)
 peak_positions = positions[peak_indices]
+println("First 3 detected peak positions: ", peak_positions[1:3])
 ```
 
 ---
@@ -101,7 +87,7 @@ peak_positions = positions[peak_indices]
 
 For whole-genome data that doesn't fit in memory:
 
-```julia
+```@example use-case-genomics
 using FastLOESS
 using Random
 
@@ -109,14 +95,6 @@ rng = MersenneTwister(42)
 positions = collect(0.0:10.0:10000.0)
 observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
 
-using FastLOESS
-using Random
-
-rng = MersenneTwister(42)
-positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
-using FastLOESS
 using Random
 
 rng = MersenneTwister(42)
@@ -133,6 +111,7 @@ model = StreamingLoess(;
 )
 process_chunk(model, positions, coverage)
 result = finalize(model)
+println("First smoothed value (streaming ChIP-seq): ", result.y[1])
 ```
 
 ---

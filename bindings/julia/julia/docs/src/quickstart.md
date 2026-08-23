@@ -7,7 +7,7 @@ Get up and running with LOESS in minutes.
 
 Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example recovers the underlying trend from 100 points of Gaussian noise.
 
-```julia
+```@example quickstart
 using FastLOESS, Random, Printf
 
 # 100-point noisy sine wave
@@ -25,7 +25,7 @@ result = fit(model, x, y)
 
 ## With Confidence Intervals
 
-```julia
+```@example quickstart
 using FastLOESS
 using Random, Statistics
 
@@ -54,7 +54,7 @@ println("R²: ", result.diagnostics.r_squared)
 
 LOESS can robustly handle outliers through iterative reweighting:
 
-```julia
+```@example quickstart
 using FastLOESS
 using Random, Statistics
 
@@ -87,7 +87,7 @@ end
 
 For datasets too large to fit in memory, stream them in fixed-size chunks with overlap.
 
-```julia
+```@example quickstart
 using FastLOESS, Random
 
 x = collect(range(0, 10π, length=5000))

@@ -24,7 +24,7 @@ Standard LOESS operates on a single predictor $x$. Setting `dimensions > 1` exte
 
 Single predictor. No configuration required.
 
-```julia
+```@example dimensions
 using FastLOESS
 using Random, Statistics
 
@@ -34,6 +34,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(; fraction=0.3)
 result = fit(model, x, y)
+println("First smoothed value (1D LOESS): ", result.y[1])
 ```
 
 ---
@@ -42,7 +43,7 @@ result = fit(model, x, y)
 
 Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ matrix as `x`.
 
-```julia
+```@example dimensions
 using FastLOESS
 using Random, Statistics
 
@@ -50,7 +51,6 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
@@ -63,6 +63,7 @@ z = sin.(lat) .+ cos.(lon) .+ randn(rng, n) .* 0.1
 x2d = hcat(lat, lon)
 model = Loess(; dimensions=2, fraction=0.3)
 result = fit(model, x2d, z)
+println("First smoothed value (2D LOESS, lat/lon): ", result.y[1])
 ```
 
 ---
@@ -71,7 +72,7 @@ result = fit(model, x2d, z)
 
 Three or more predictors. The neighbourhood radius grows in each additional dimension, so a larger `fraction` (or smaller dataset) is typically needed.
 
-```julia
+```@example dimensions
 using FastLOESS
 using Random, Statistics
 
@@ -79,7 +80,6 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
@@ -93,6 +93,7 @@ y = sin.(x1) .+ x2 .- x3 .+ randn(rng, n) .* 0.1
 x3d = hcat(x1, x2, x3)
 model = Loess(; dimensions=3, fraction=0.5)
 result = fit(model, x3d, y)
+println("First smoothed value (3D LOESS): ", result.y[1])
 ```
 
 ---
