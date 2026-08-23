@@ -7,7 +7,7 @@ Degree of the local polynomial fitted at each point.
 
 At each target point, LOESS fits a polynomial to the neighbouring data using weighted least squares. The `degree` parameter controls the order of that polynomial.
 
-![Degree Comparison](../assets/diagrams/degree_comparison.svg)
+![Degree Comparison](assets/degree_comparison.svg)
 
 | Degree | Local Fit | Captures | Risk |
 | --- | --- | --- | --- |
@@ -145,7 +145,7 @@ result = fit(model, x, y)
 
 ## Higher Degree Effects
 
-![Higher Degree Comparison](../assets/diagrams/higher_degree_comparison.svg)
+![Higher Degree Comparison](assets/higher_degree_comparison.svg)
 
 ---
 
@@ -158,6 +158,6 @@ The `surface_mode` parameter controls whether LOESS evaluates the local polynomi
 | `"interpolation"` (default) | Evaluate at anchor vertices, blend via Hermite cubic | Faster | Slight approximation |
 | `"direct"` | Evaluate at every query point | Exact | Full precision |
 
-![Surface Mode Comparison](../assets/diagrams/surface_comparison.svg)
+![Surface Mode Comparison](assets/surface_comparison.svg)
 
-![Degree × Interpolation](../assets/diagrams/degree_interpolation_comparison.svg)
+![Degree × Interpolation](assets/degree_interpolation_comparison.svg)
