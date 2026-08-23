@@ -22,7 +22,7 @@ Standard in-memory smoothing.
 use loess_rs::prelude::*;
 
 fn main() -> Result<(), LoessError> {
-    let builder = Loess::new(); // Batch is default
+    let builder = Loess::<f64>::new(); // Batch is default
 
     Ok(())
 }

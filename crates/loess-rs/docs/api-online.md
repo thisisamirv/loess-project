@@ -14,7 +14,7 @@ Online mode for real-time data.
 use loess_rs::prelude::*;
 
 fn main() -> Result<(), LoessError> {
-    let mut processor = OnlineLoess::new();
+    let mut processor = OnlineLoess::<f64>::new();
 
     Ok(())
 }
@@ -54,7 +54,7 @@ fn main() -> Result<(), LoessError> {
 use loess_rs::prelude::*;
 
 fn main() -> Result<(), LoessError> {
-    let mut processor = OnlineLoess::new().build()?;
+    let mut processor = OnlineLoess::<f64>::new().build()?;
     processor.reset();
 
     Ok(())
