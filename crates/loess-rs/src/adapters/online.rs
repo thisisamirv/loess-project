@@ -274,6 +274,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             return Err(LoessError::MismatchedInputs {
                 x_len: x.len(),
                 y_len: 1,
+                dimensions,
             });
         }
         for &xi in x {

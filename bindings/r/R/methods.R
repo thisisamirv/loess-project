@@ -141,6 +141,12 @@ fit <- function(model, ...) UseMethod("fit")
 #' @export
 fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
     if (...length() > 0L) stop("unused arguments (...)")
+    if (is.matrix(x) && ncol(x) != model$params$dimensions) {
+        stop(sprintf(
+            "x is a %d\u00d7%d matrix but model has dimensions=%d; use Loess(dimensions=%dL)",
+            nrow(x), ncol(x), model$params$dimensions, ncol(x)
+        ))
+    }
     validated_args <- validate_common_args(
         x,
         y,
@@ -169,6 +175,12 @@ process_chunk <- function(model, ...) UseMethod("process_chunk")
 #' @export
 process_chunk.StreamingLoess <- function(model, x, y, ...) {
     if (...length() > 0L) stop("unused arguments (...)")
+    if (is.matrix(x) && ncol(x) != model$params$dimensions) {
+        stop(sprintf(
+            "x is a %d\u00d7%d matrix but model has dimensions=%d; use StreamingLoess(dimensions=%dL)",
+            nrow(x), ncol(x), model$params$dimensions, ncol(x)
+        ))
+    }
     args <- validate_common_args(
         x,
         y,

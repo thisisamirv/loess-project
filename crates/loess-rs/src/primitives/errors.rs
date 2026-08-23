@@ -33,6 +33,8 @@ pub enum LoessError {
         x_len: usize,
         // Number of elements in the `y` array.
         y_len: usize,
+        // Number of predictor dimensions the model was built for.
+        dimensions: usize,
     },
 
     // Input data contains NaN or infinite values.
@@ -145,8 +147,18 @@ impl Display for LoessError {
         match self {
             Self::EmptyInput => write!(f, "Input arrays are empty"),
             Self::InvalidInput(msg) => write!(f, "Invalid input: {}", msg),
-            Self::MismatchedInputs { x_len, y_len } => {
-                write!(f, "Length mismatch: x has {x_len} points, y has {y_len}")
+            Self::MismatchedInputs {
+                x_len,
+                y_len,
+                dimensions,
+            } => {
+                let pts = if *y_len == 1 { "point" } else { "points" };
+                let expected = y_len * dimensions;
+                write!(
+                    f,
+                    "Length mismatch: x has {x_len} elements, y has {y_len} {pts} \
+                     (dimensions={dimensions}, expected x length = {expected})"
+                )
             }
             Self::InvalidNumericValue(s) => write!(f, "Invalid numeric value: {s}"),
             Self::TooFewPoints { got, min } => {

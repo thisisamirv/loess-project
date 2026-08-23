@@ -16,10 +16,11 @@ fn test_loess_error_display() {
     let err = LoessError::MismatchedInputs {
         x_len: 10,
         y_len: 5,
+        dimensions: 2,
     };
     assert_eq!(
         format!("{}", err),
-        "Length mismatch: x has 10 points, y has 5"
+        "Length mismatch: x has 10 elements, y has 5 points (dimensions=2, expected x length = 10)"
     );
 
     // InvalidNumericalValue

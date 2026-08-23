@@ -61,7 +61,8 @@ StreamingLoess <- function(
         fraction,
         chunk_size,
         iterations,
-        parallel
+        parallel,
+        dimensions
     )
 }
 
@@ -70,7 +71,8 @@ StreamingLoess <- function(
     fraction,
     chunk_size,
     iterations,
-    parallel
+    parallel,
+    dimensions
 ) {
     structure(
         list(
@@ -79,7 +81,8 @@ StreamingLoess <- function(
                 fraction = fraction,
                 chunk_size = chunk_size,
                 iterations = iterations,
-                parallel = parallel
+                parallel = parallel,
+                dimensions = dimensions
             )
         ),
         class = "StreamingLoess"

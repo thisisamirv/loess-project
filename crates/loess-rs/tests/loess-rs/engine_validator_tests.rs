@@ -54,7 +54,11 @@ fn test_validate_length_mismatch() {
     assert!(
         matches!(
             res,
-            Err(LoessError::MismatchedInputs { x_len: 2, y_len: 1 })
+            Err(LoessError::MismatchedInputs {
+                x_len: 2,
+                y_len: 1,
+                dimensions: 1
+            })
         ),
         "Length mismatch should error"
     );

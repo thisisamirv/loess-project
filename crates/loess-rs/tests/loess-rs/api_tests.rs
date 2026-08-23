@@ -232,7 +232,11 @@ fn test_validate_invalid_confidence_level() {
 fn test_loess_rs_error_display() {
     let errs = [
         LoessError::EmptyInput,
-        LoessError::MismatchedInputs { x_len: 1, y_len: 2 },
+        LoessError::MismatchedInputs {
+            x_len: 1,
+            y_len: 2,
+            dimensions: 1,
+        },
         LoessError::TooFewPoints { got: 1, min: 2 },
         LoessError::InvalidFraction(1.5),
         LoessError::InvalidIterations(0),

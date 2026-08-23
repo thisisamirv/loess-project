@@ -391,6 +391,7 @@ result = fit(l, x, y)
 """
 mutable struct Loess
 	handle::Ptr{Cvoid}
+	dimensions::Int
 
 	function Loess(;
 		fraction::Float64 = 0.67,
@@ -484,7 +485,7 @@ mutable struct Loess
 			)::Cvoid
 		end
 
-		obj = new(handle)
+		obj = new(handle, dimensions)
 		finalizer(x -> @ccall(libfastloess.jl_loess_free(x.handle::Ptr{Cvoid})::Cvoid), obj)
 		return obj
 	end
@@ -562,6 +563,12 @@ function fit(
 	custom_weights::Union{Vector{Float64}, Nothing} = nothing,
 )
 	n = size(x, 1)
+	if size(x, 2) != l.dimensions
+		throw(ArgumentError(
+			"x has $(size(x, 2)) columns but model has dimensions=$(l.dimensions); " *
+			"pass dimensions=$(size(x, 2)) to Loess()",
+		))
+	end
 	if n != length(y)
 		throw(ArgumentError("x and y must have the same length"))
 	end

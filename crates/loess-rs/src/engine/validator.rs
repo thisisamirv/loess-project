@@ -45,6 +45,7 @@ impl Validator {
             return Err(LoessError::MismatchedInputs {
                 x_len: x.len(),
                 y_len: n_y,
+                dimensions,
             });
         }
 
