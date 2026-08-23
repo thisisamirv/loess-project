@@ -38,31 +38,6 @@ Estimate uncertainty in the smoothed curve itself.
     print("CI Upper:", result.confidence_upper)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .fraction = 0.5, .confidence_intervals = 0.95 });
-        auto result = model.fit(x, y).value();
-
-        auto ci_lower = result.confidence_lower();
-        auto ci_upper = result.confidence_upper();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Prediction Intervals
@@ -83,28 +58,6 @@ Estimate where new observations might fall.
 
     print("PI Lower:", result.prediction_lower)
     print("PI Upper:", result.prediction_upper)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .fraction = 0.5, .prediction_intervals = 0.95 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -128,28 +81,6 @@ Request both types simultaneously:
         prediction_intervals=0.95
     )
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -178,28 +109,6 @@ Common levels and their z-values:
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .confidence_intervals = 0.99 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Standard Errors
@@ -218,28 +127,6 @@ Access standard errors directly (available when intervals are computed):
     model = fl.Loess(confidence_intervals=0.95)
     result = model.fit(x, y)
     print("Standard errors:", result.standard_errors)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .confidence_intervals = 0.95 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---

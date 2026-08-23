@@ -48,28 +48,6 @@ $$w(u) = (1 - |u|^3)^3$$
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .weight_function = "tricube" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Epanechnikov
@@ -91,28 +69,6 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
     model = fl.Loess(weight_function="epanechnikov")
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .weight_function = "epanechnikov" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -138,28 +94,6 @@ $$w(u) = \exp(-u^2/2)$$
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .weight_function = "gaussian" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Biweight
@@ -181,28 +115,6 @@ $$w(u) = (1 - u^2)^2$$
 
     model = fl.Loess(weight_function="biweight")
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .weight_function = "biweight" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -228,28 +140,6 @@ $$w(u) = \cos(\pi u / 2)$$
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .weight_function = "cosine" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Triangle
@@ -273,28 +163,6 @@ $$w(u) = 1 - |u|$$
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .weight_function = "triangle" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Uniform
@@ -316,28 +184,6 @@ $$w(u) = 1$$
 
     model = fl.Loess(weight_function="uniform")
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .weight_function = "uniform" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---

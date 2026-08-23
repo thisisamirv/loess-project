@@ -35,35 +35,6 @@ Split data into K folds, train on K-1, validate on 1.
     print(f"CV scores: {result.cv_scores}")
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::LoessOptions opts;
-        opts.cv_fractions = {0.2, 0.3, 0.5, 0.7};
-        opts.cv_method = "kfold";
-        opts.cv_k = 5;
-
-        fastloess::Loess model(opts);
-        auto result = model.fit(x, y).value();
-
-        std::cout << "Selected fraction: " << result.fraction_used() << std::endl;
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Leave-One-Out (LOOCV)
@@ -84,32 +55,6 @@ Each point is held out once. Most thorough but slowest.
         cv_fractions=[0.2, 0.3, 0.5, 0.7]
     )
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::LoessOptions opts;
-        opts.cv_method = "loocv";
-        opts.cv_fractions = {0.2, 0.3, 0.5, 0.7};
-
-        fastloess::Loess model(opts);
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -134,34 +79,6 @@ Set a seed for reproducible fold assignments:
         cv_seed=42
     )
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::LoessOptions opts;
-        opts.cv_fractions = {0.3, 0.5, 0.7};
-        opts.cv_method = "kfold";
-        opts.cv_k = 5;
-        opts.cv_seed = 42;
-
-        fastloess::Loess model(opts);
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -212,38 +129,6 @@ Lower MSE indicates better fit on held-out data.
     # 0.3       | 0.0231  ← Best
     # 0.5       | 0.0298
     # 0.7       | 0.0412  ← Oversmoothed
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::LoessOptions cv_opts;
-        cv_opts.cv_fractions = {0.1, 0.3, 0.5, 0.7};
-        cv_opts.cv_method = "kfold";
-        cv_opts.cv_k = 5;
-        fastloess::Loess model(cv_opts);
-        auto result = model.fit(x, y).value();
-
-        // Fraction with lowest CV score is automatically selected.
-        // 0.1 → 0.0542  ← Undersmoothed
-        // 0.3 → 0.0231  ← Best
-        // 0.5 → 0.0298
-        // 0.7 → 0.0412  ← Oversmoothed
-
-        return 0;
-    }
     ```
 
 The fraction with **lowest CV score** is automatically selected.

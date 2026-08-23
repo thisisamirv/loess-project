@@ -27,18 +27,29 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 **Use when**: Maximum smoothness is more important than accuracy; computationally cheapest option.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = fl.Loess(degree="constant", fraction=0.5)
-    result = model.fit(x, y)
-    ```
+    fastloess::LoessOptions deg0_opts;
+    deg0_opts.degree = "constant";
+    deg0_opts.fraction = 0.5;
+    fastloess::Loess model(deg0_opts);
+    auto result = model.fit(x, y).value();
+
+    return 0;
+}
+```
 
 ---
 
@@ -50,18 +61,29 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 **Use when**: Default; monotone or gently curved data; boundary accuracy matters.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = fl.Loess(degree="linear", fraction=0.5)
-    result = model.fit(x, y)
-    ```
+    fastloess::LoessOptions deg1_opts;
+    deg1_opts.degree = "linear";
+    deg1_opts.fraction = 0.5;
+    fastloess::Loess model(deg1_opts);
+    auto result = model.fit(x, y).value();
+
+    return 0;
+}
+```
 
 ---
 
@@ -73,18 +95,29 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 **Use when**: Data with pronounced peaks, valleys, or curvature; `fraction` ≥ 0.4.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = fl.Loess(degree="quadratic", fraction=0.5)
-    result = model.fit(x, y)
-    ```
+    fastloess::LoessOptions deg2_opts;
+    deg2_opts.degree = "quadratic";
+    deg2_opts.fraction = 0.5;
+    fastloess::Loess model(deg2_opts);
+    auto result = model.fit(x, y).value();
+
+    return 0;
+}
+```
 
 ---
 
@@ -96,18 +129,29 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 **Use when**: Data has clear S-shaped curves or multiple inflection points; `fraction` ≥ 0.5.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = fl.Loess(degree="cubic", fraction=0.6)
-    result = model.fit(x, y)
-    ```
+    fastloess::LoessOptions deg3_opts;
+    deg3_opts.degree = "cubic";
+    deg3_opts.fraction = 0.6;
+    fastloess::Loess model(deg3_opts);
+    auto result = model.fit(x, y).value();
+
+    return 0;
+}
+```
 
 ---
 
@@ -119,18 +163,29 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 **Use when**: Fine oscillatory structure is physically meaningful and the dataset is large; always cross-validate.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = fl.Loess(degree="quartic", fraction=0.7)
-    result = model.fit(x, y)
-    ```
+    fastloess::LoessOptions deg4_opts;
+    deg4_opts.degree = "quartic";
+    deg4_opts.fraction = 0.7;
+    fastloess::Loess model(deg4_opts);
+    auto result = model.fit(x, y).value();
+
+    return 0;
+}
+```
 
 ---
 

@@ -33,19 +33,31 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
-=== "Python"
-    ```python
-    from fastloess import StreamingLoess
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    n = 100
-    x_chunk = np.linspace(0, 2 * np.pi, n)
-    y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = StreamingLoess(merge_strategy="average", chunk_size=5000, overlap=500)
-    result = model.process_chunk(x_chunk, y_chunk)
-    ```
+    fastloess::StreamingOptions opts;
+    opts.merge_strategy = "average";
+    opts.chunk_size = 5000;
+    opts.overlap = 500;
+    fastloess::StreamingLoess stream(opts);
+    (void)stream.process_chunk(x, y);
+    auto result = stream.finalize().value();
+
+    return 0;
+}
+```
 
 ---
 
@@ -55,20 +67,29 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 **Use when**: You need final output values immediately after each chunk (no look-ahead revision); left-chunk data quality is higher.
 
-=== "Python"
-    ```python
-    from fastloess import StreamingLoess
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    n = 100
-    x_chunk = np.linspace(0, 2 * np.pi, n)
-    y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = StreamingLoess(merge_strategy="take_first")
-    model.process_chunk(x_chunk, y_chunk)
-    result = model.finalize()
-    ```
+    fastloess::StreamingOptions s_opts;
+    s_opts.merge_strategy = "take_first";
+    fastloess::StreamingLoess stream(s_opts);
+    (void)stream.process_chunk(x, y);
+    auto result = stream.finalize().value();
+
+    return 0;
+}
+```
 
 ---
 
@@ -78,20 +99,29 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 **Use when**: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming live.
 
-=== "Python"
-    ```python
-    from fastloess import StreamingLoess
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    n = 100
-    x_chunk = np.linspace(0, 2 * np.pi, n)
-    y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = StreamingLoess(merge_strategy="take_last")
-    model.process_chunk(x_chunk, y_chunk)
-    result = model.finalize()
-    ```
+    fastloess::StreamingOptions s_opts;
+    s_opts.merge_strategy = "take_last";
+    fastloess::StreamingLoess stream(s_opts);
+    (void)stream.process_chunk(x, y);
+    auto result = stream.finalize().value();
+
+    return 0;
+}
+```
 
 ---
 
@@ -105,24 +135,29 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 **Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20 % of chunk size).
 
-=== "Python"
-    ```python
-    from fastloess import StreamingLoess
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    n = 100
-    x_chunk = np.linspace(0, 2 * np.pi, n)
-    y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = StreamingLoess(
-        merge_strategy="weighted_average",
-        chunk_size=5000,
-        overlap=500
-    )
-    model.process_chunk(x_chunk, y_chunk)
-    result = model.finalize()
-    ```
+    fastloess::StreamingOptions s_opts;
+    s_opts.merge_strategy = "weighted_average";
+    fastloess::StreamingLoess stream(s_opts);
+    (void)stream.process_chunk(x, y);
+    auto result = stream.finalize().value();
+
+    return 0;
+}
+```
 
 ---
 

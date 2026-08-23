@@ -43,28 +43,6 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 3, .robustness_method = "bisquare" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### Huber
@@ -88,28 +66,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 3, .robustness_method = "huber" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### Talwar
@@ -131,28 +87,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
     model = fl.Loess(iterations=3, robustness_method="talwar")
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 3, .robustness_method = "talwar" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -188,35 +122,6 @@ Use robustness weights to identify potential outliers:
             print(f"Potential outlier at index {i}: weight = {w:.3f}")
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 5, .return_robustness_weights = true });
-        auto result = model.fit(x, y).value();
-
-        auto weights = result.robustness_weights();
-        for (size_t i = 0; i < weights.size(); ++i) {
-            if (weights[i] < 0.5) {
-                std::cout << "Potential outlier at " << i << std::endl;
-            }
-        }
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Scale Estimation
@@ -244,28 +149,6 @@ Residuals are scaled before computing robustness weights. Two methods:
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 3, .scaling_method = "mad" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Auto-Convergence
@@ -288,24 +171,3 @@ Stop iterations early when weights stabilize:
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 10, .auto_converge = 1e-6 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```

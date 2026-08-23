@@ -96,28 +96,6 @@ The proportion of data used for each local fit. **Most important parameter.**
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .fraction = 0.3 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### iterations
@@ -142,28 +120,6 @@ Number of robustness iterations for outlier resistance.
 
     model = fl.Loess(iterations=5)
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 5 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -212,28 +168,6 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .surface_mode = "direct" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### cell
@@ -263,28 +197,6 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .cell = 0.05 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### interpolation_vertices
@@ -305,28 +217,6 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 
     model = fl.Loess(interpolation_vertices=50)
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .interpolation_vertices = 50 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -376,34 +266,6 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
     result = model.fit(x2d, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n), x2d(n * 2);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-            x2d[2 * i]     = x[i];
-            x2d[2 * i + 1] = x[i] * x[i] / (2 * M_PI * 2 * M_PI);
-        }
-
-        fastloess::LoessOptions opts;
-        opts.dimensions = 2;
-        opts.distance_metric = "weighted";
-        opts.weighted_metric_weights = {2.0, 0.5};
-        fastloess::Loess model(opts);
-        auto result = model.fit(x2d, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### weight_function
@@ -435,28 +297,6 @@ See [Weight Functions](kernels.md) for detailed comparison.
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .weight_function = "epanechnikov" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### robustness_method
@@ -482,28 +322,6 @@ See [Robustness](robustness.md) for detailed comparison.
 
     model = fl.Loess(robustness_method="talwar")
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .robustness_method = "talwar" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -536,28 +354,6 @@ For example:
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .boundary_policy = "reflect" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### boundary_degree_fallback
@@ -581,28 +377,6 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 
     model = fl.Loess(degree="quadratic", boundary_degree_fallback=True)
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .degree = "quadratic", .boundary_degree_fallback = 1 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -646,28 +420,6 @@ For example:
     const result = model.fit(x, y);
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .scaling_method = "mad" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### zero_weight_fallback
@@ -697,28 +449,6 @@ For example:
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .zero_weight_fallback = "use_local_mean" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### auto_converge
@@ -736,28 +466,6 @@ Enable early stopping when robustness weights stabilize.
 
     model = fl.Loess(iterations=20, auto_converge=1e-6)
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 20, .auto_converge = 1e-6 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -786,28 +494,6 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
 
     model = fl.Loess(parallel=False)
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .parallel = false });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -849,30 +535,6 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     result = model.fit(x, y, custom_weights=weights)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        std::vector<double> custom_weights(y.size(), 1.0);
-        custom_weights[4] = 0.0; // Exclude 5th point
-        fastloess::Loess model;
-        auto result = model.fit(x, y, custom_weights).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Output Options
@@ -893,29 +555,6 @@ Include residuals (`y - smoothed`) in the output.
     model = fl.Loess(return_residuals=True)
     result = model.fit(x, y)
     print(result.residuals)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .return_residuals = true });
-        auto result = model.fit(x, y).value();
-        auto residuals = result.residuals();
-
-        return 0;
-    }
     ```
 
 ---
@@ -948,30 +587,6 @@ Include fit quality metrics (Batch and Streaming only).
     print(f"R\u00b2: {result.diagnostics.r_squared:.4f}")
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .return_diagnostics = true });
-        auto result = model.fit(x, y).value();
-        auto diag = result.diagnostics();
-        std::cout << "R\u00b2: " << diag.r_squared() << std::endl;
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### return_robustness_weights
@@ -990,29 +605,6 @@ Include final robustness weights (useful for outlier detection).
     model = fl.Loess(iterations=3, return_robustness_weights=True)
     result = model.fit(x, y)
     outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 3, .return_robustness_weights = true });
-        auto result = model.fit(x, y).value();
-        auto weights = result.robustness_weights();
-
-        return 0;
-    }
     ```
 
 ---
@@ -1034,28 +626,6 @@ See [Intervals](intervals.md) for detailed usage.
 
     model = fl.Loess(confidence_intervals=0.95, prediction_intervals=0.95)
     result = model.fit(x, y)
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .confidence_intervals = 0.95, .prediction_intervals = 0.95 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -1084,32 +654,6 @@ Selection strategy for automated parameter tuning.
     result = model.fit(x, y)
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({
-            .cv_fractions = {0.1, 0.3, 0.5},
-            .cv_method = "kfold",
-            .cv_k = 5
-        });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ## Adapter Parameters
@@ -1132,31 +676,6 @@ Points per chunk in Streaming mode.
     result = model.finalize()
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::StreamingOptions opts;
-        opts.chunk_size = 10000;
-        fastloess::StreamingLoess stream(opts);
-        (void)stream.process_chunk(x, y);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### overlap
@@ -1175,31 +694,6 @@ Overlap between chunks in Streaming mode.
     model = fl.StreamingLoess(overlap=1000)
     model.process_chunk(x, y)
     result = model.finalize()
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::StreamingOptions opts;
-        opts.overlap = 1000;
-        fastloess::StreamingLoess stream(opts);
-        (void)stream.process_chunk(x, y);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
     ```
 
 ---
@@ -1231,30 +725,6 @@ For example:
     result = model.finalize()
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        // merge_strategy is handled internally in C++
-        fastloess::StreamingLoess stream({});
-        (void)stream.process_chunk(x, y);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### window_capacity
@@ -1274,31 +744,6 @@ Maximum points held in memory for Online mode.
     result = model.add_point(x[0], y[0])  # None until window fills
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::OnlineOptions opts;
-        opts.window_capacity = 500;
-        fastloess::OnlineLoess model(opts);
-        auto out = model.add_point(x[0], y[0]).value();
-        // out.has_value() == false until window fills
-
-        return 0;
-    }
-    ```
-
 ---
 
 ### min_points
@@ -1316,31 +761,6 @@ Minimum points required before Online filter starts producing outputs.
 
     model = fl.OnlineLoess(min_points=10)
     result = model.add_point(x[0], y[0])  # None until 10 points seen
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::OnlineOptions opts;
-        opts.min_points = 10;
-        fastloess::OnlineLoess model(opts);
-        auto out = model.add_point(x[0], y[0]).value();
-        // out.has_value() == false until min_points reached
-
-        return 0;
-    }
     ```
 
 ---
@@ -1369,26 +789,3 @@ For example:
     result = model.add_point(x[0], y[0])
     ```
 
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::OnlineOptions opts;
-        opts.update_mode = "full";
-        fastloess::OnlineLoess model(opts);
-        auto out = model.add_point(x[0], y[0]).value();
-
-        return 0;
-    }
-    ```

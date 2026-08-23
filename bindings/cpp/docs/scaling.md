@@ -31,18 +31,26 @@ First centers residuals at their median, then takes the median of the absolute d
 
 **Use when**: Data may contain outliers (default for most applications).
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = fl.Loess(iterations=3, scaling_method="mad")
-    result = model.fit(x, y)
-    ```
+    fastloess::Loess model({ .iterations = 3, .scaling_method = "mad" });
+    auto result = model.fit(x, y).value();
+
+    return 0;
+}
+```
 
 ---
 
@@ -54,18 +62,26 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 **Use when**: Speed matters and data have minimal systematic bias in residuals.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = fl.Loess(iterations=3, scaling_method="mar")
-    result = model.fit(x, y)
-    ```
+    fastloess::Loess model({ .iterations = 3, .scaling_method = "mar" });
+    auto result = model.fit(x, y).value();
+
+    return 0;
+}
+```
 
 ---
 
@@ -77,18 +93,26 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 **Use when**: Clean data with no outliers; maximum computation speed required.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
 
-    model = fl.Loess(iterations=3, scaling_method="mean")
-    result = model.fit(x, y)
-    ```
+    fastloess::Loess model({ .iterations = 3, .scaling_method = "mean" });
+    auto result = model.fit(x, y).value();
+
+    return 0;
+}
+```
 
 ---
 

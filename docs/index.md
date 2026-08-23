@@ -99,22 +99,6 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
     conda install -c conda-forge fastloess
     ```
 
-=== "C++"
-
-    Install from source:
-
-    ```bash
-    git clone https://github.com/thisisamirv/loess-project.git
-    cd loess-project
-    make cpp
-    ```
-
-    Or from conda-forge:
-
-    ```bash
-    conda install -c conda-forge libfastloess
-    ```
-
 See the [Installation Guide](getting-started/installation.md) for more options and details.
 
 ## Quick Example
@@ -131,32 +115,6 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     model = fl.Loess(fraction=0.5, iterations=3)
     result = model.fit(x, y)
     print(result.y)
-    ```
-
-=== "C++"
-
-    ```cpp
-    #include <fastloess.hpp>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-        std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
-
-        fastloess::LoessOptions options;
-        options.fraction = 0.5;
-        options.iterations = 3;
-
-        fastloess::Loess model(options);
-        auto result = model.fit(x, y).value();
-
-        for (const auto& val : result.y_vector()) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
-        return 0;
-    }
     ```
 
 ## Getting Started
