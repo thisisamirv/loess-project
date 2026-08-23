@@ -3,8 +3,6 @@
 
 Install the LOESS library for your preferred language.
 
-=== "From crates.io"
-
 ```toml
 # loess-rs (no_std compatible)
 [dependencies]
@@ -15,13 +13,13 @@ loess-rs = "0.9"
 fastLoess = { version = "0.9", features = ["cpu"] }
 ```
 
-=== "Feature Flags"
+## Feature Flags
 
-    | Crate | Feature | Description |
-    | --- | --- | --- |
-    | `loess-rs` | `std` | Enable standard library (default) |
-    | `fastLoess` | `cpu` | Enable CPU parallelism via Rayon |
-    | `fastLoess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
+| Crate | Feature | Description |
+| --- | --- | --- |
+| `loess-rs` | `std` | Enable standard library (default) |
+| `fastLoess` | `cpu` | Enable CPU parallelism via Rayon |
+| `fastLoess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
 
 ---
 

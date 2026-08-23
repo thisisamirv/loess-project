@@ -3,7 +3,7 @@
 High-performance LOESS (Locally Estimated Scatterplot Smoothing) for Julia,
 backed by a Rust library.
 
-See the [main documentation](https://loess.readthedocs.io/) and the
+See the [main documentation](https://thisisamirv.github.io/loess-project/julia/) and the
 [GitHub repository](https://github.com/thisisamirv/loess-project) for full details.
 
 ## Quick Start

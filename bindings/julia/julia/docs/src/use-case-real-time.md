@@ -19,22 +19,12 @@ For true real-time applications where each point must be processed immediately.
 
 ```julia
 using FastLOESS
-using Random, Statistics
+using Random
 
 rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using FastLOESS
-using Random, Statistics
-
-rng = MersenneTwister(42)
-times_bg = collect(range(0, 2π, length=100))
-y_bg = sin.(times_bg) .+ randn(rng, 100) .* 0.3
-
 # Simulate sensor readings 
 times = collect(Float64, 1:100)
-temperatures = 20.0 .+ 5.0 .* sin.(times ./ 10.0) .+ randn(100)
+temperatures = 20.0 .+ 5.0 .* sin.(times ./ 10.0) .+ randn(rng, 100)
 
 # Process with online mode
 model = OnlineLoess(;
@@ -49,24 +39,6 @@ for i in eachindex(times)
         println("Time $(times[i]): smoothed = $(round(result.y; digits=2))")
     end
 end
-```
-
-### Process with online mode
-
-```julia
-model = OnlineLoess(;
-    fraction=0.3,
-    window_capacity=25,
-    min_points=5,
-    update_mode="incremental"
-)
-for i in eachindex(times)
-    result = add_point(model, times[i], temperatures[i])
-    if result !== nothing
-        println("Time $(times[i]): smoothed = $(round(result.y; digits=2))")
-    end
-end
-
 ```
 
 ---

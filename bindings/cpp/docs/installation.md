@@ -3,7 +3,7 @@
 
 Install the LOESS library for your preferred language.
 
-=== "Pre-built Binaries (Linux (x64))"
+## Pre-built Binaries (Linux (x64))
 
 ```bash
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-x64.so
@@ -11,7 +11,7 @@ wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastl
 g++ -o myapp myapp.cpp -L. -lfastloess-linux-x64
 ```
 
-=== "Pre-built Binaries (macOS (x64))"
+## Pre-built Binaries (macOS (x64))
 
 ```bash
 curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-macos-x64.dylib
@@ -19,7 +19,7 @@ curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/f
 clang++ -o myapp myapp.cpp -L. -lfastloess-macos-x64
 ```
 
-=== "Pre-built Binaries (Windows (x64))"
+## Pre-built Binaries (Windows (x64))
 
 ```powershell
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess-win32-x64.dll
@@ -27,7 +27,7 @@ wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastl
 cl myapp.cpp /link fastloess-win32-x64.lib
 ```
 
-=== "From Source"
+## From Source
 
 ```bash
 # Install Rust first: https://rustup.rs/
@@ -43,7 +43,7 @@ cargo build --release
 #                target/release/fastloess_cpp.dll (Windows)
 ```
 
-=== "From conda-forge"
+## From conda-forge
 
 ```bash
 conda install -c conda-forge libfastloess
@@ -59,13 +59,13 @@ conda install -c conda-forge libfastloess
 #include <vector>
 
 int main() {
-    std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
-    std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
+std::vector<double> x = {1.0, 2.0, 3.0, 4.0, 5.0};
+std::vector<double> y = {2.0, 4.1, 5.9, 8.2, 9.8};
 
-    fastloess::Loess model;
-    model.fit(x, y).value();
+fastloess::Loess model;
+model.fit(x, y).value();
 
-    std::cout << "Installed successfully!" << std::endl;
-    return 0;
+std::cout << "Installed successfully!" << std::endl;
+return 0;
 }
 ```

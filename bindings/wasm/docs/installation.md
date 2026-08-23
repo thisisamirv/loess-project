@@ -3,13 +3,13 @@
 
 Install the LOESS library for your preferred language.
 
-=== "From NPM (recommended)"
+## From NPM (recommended)
 
 ```bash
 npm install fastloess-wasm
 ```
 
-=== "From CDN"
+## From CDN
 
 ```html
 <script type="module">
@@ -18,7 +18,7 @@ npm install fastloess-wasm
 </script>
 ```
 
-=== "From Source"
+## From Source
 
 ```bash
 # Install Rust first: https://rustup.rs/

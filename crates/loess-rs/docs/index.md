@@ -1,15 +1,15 @@
 Add the crate to your `Cargo.toml`:
 
-=== "loess-rs (no_std compatible)"
+### loess-rs (no_std compatible)
 
-    ```toml
-    [dependencies]
-    loess-rs = "*"
-    ```
+```toml
+[dependencies]
+loess-rs = "*"
+```
 
-=== "loess_rs (parallel)"
+### loess_rs (parallel)
 
-    ```toml
-    [dependencies]
-    loess_rs = "*"
-    ```
+```toml
+[dependencies]
+loess_rs = "*"
+```

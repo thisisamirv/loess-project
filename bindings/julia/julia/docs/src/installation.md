@@ -3,13 +3,13 @@
 
 Install the LOESS library for your preferred language.
 
-=== "From General Registry (recommended)"
+## From General Registry (recommended)
 
 ```julia
 Pkg.add("FastLOESS")
 ```
 
-=== "From Source"
+## From Source
 
 ```julia
 using Pkg

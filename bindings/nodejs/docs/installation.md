@@ -3,13 +3,13 @@
 
 Install the LOESS library for your preferred language.
 
-=== "From NPM (recommended)"
+## From NPM (recommended)
 
 ```bash
 npm install fastloess
 ```
 
-=== "From Source"
+## From Source
 
 ```bash
 git clone https://github.com/thisisamirv/loess-project
