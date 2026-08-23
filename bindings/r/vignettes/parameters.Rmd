@@ -24,7 +24,6 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 | **scaling_method** | `"mad"` | 3 options | Scale estimate | All |
 | **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight handling | All |
 | **boundary_policy** | `"extend"` | 4 options | Edge padding | All |
-| **backend** | `"cpu"` | `"cpu"`, `"gpu"` | Compute backend | Batch |
 | **parallel** | `FALSE` | `TRUE`/`FALSE` | Parallel CPU execution | Batch |
 | **confidence_intervals** | `NULL` | (0, 1) | CI coverage level | Batch |
 | **prediction_intervals** | `NULL` | (0, 1) | PI level | Batch |

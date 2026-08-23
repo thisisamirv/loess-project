@@ -21,7 +21,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 
 | Mode | Use Case | Memory | Key Features |
 | --- | --- | --- | --- |
-| **Batch** | Complete datasets in memory | Entire dataset | All features: CI, PI, CV, GPU |
+| **Batch** | Complete datasets in memory | Entire dataset | All features: CI, PI, CV |
 | **Streaming** | Large files (>100K points) | One chunk at a time | Chunked processing with overlap |
 | **Online** | Real-time / live data | Fixed sliding window | Point-by-point incremental updates |
 
@@ -47,7 +47,6 @@ The default mode. Processes the entire dataset at once and supports all features
 | `confidence_intervals` | `NULL` | CI coverage (e.g. 0.95) |
 | `prediction_intervals` | `NULL` | PI coverage (e.g. 0.95) |
 | `parallel` | `FALSE` | Enable CPU parallelism |
-| `backend` | `"cpu"` | `"cpu"` or `"gpu"` |
 
 ### Example
 

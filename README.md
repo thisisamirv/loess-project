@@ -455,11 +455,11 @@ result.cv_scores()
 
 ## Contributing
 
-Contributions are welcome! Please see the [Contributing Guide](https://loess.readthedocs.io/en/latest/contributing/) for more information.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
 
 ## Changelog
 
-See the [Changelog](https://loess.readthedocs.io/en/latest/changelog/) for a history of changes.
+See [CHANGELOG.md](CHANGELOG.md) for a history of changes.
 
 ## License
 
