@@ -58,30 +58,6 @@ Standard mode for complete datasets. **Supports all features.**
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .fraction(0.5)
-            .iterations(3)
-            .confidence_intervals(0.95)
-            .prediction_intervals(0.95)
-            .return_diagnostics()
-            .parallel(true)
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -200,33 +176,6 @@ Process large datasets in chunks with configurable overlap.
     result = model.finalize()
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut processor = StreamingLoess::new()
-            .fraction(0.3)
-            .iterations(2)
-            .chunk_size(50)
-            .overlap(10)
-            .merge_strategy("average")
-            .build()?;
-
-        let result = processor.process_chunk(&x_chunk, &y_chunk)?;
-        println!("Chunk processed: {} points", result.y.len());
-
-        let final_result = processor.finalize()?;
-        println!("Final: {} points", final_result.y.len());
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');
@@ -346,33 +295,6 @@ Incremental updates with a sliding window for real-time data.
             print(result.y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut processor = OnlineLoess::new()
-            .fraction(0.2)
-            .iterations(1)
-            .window_capacity(100)
-            .min_points(5)
-            .update_mode("incremental")
-            .build()?;
-
-        for i in 0..x.len() {
-            if let Some(output) = processor.add_point(&[x[i]], y[i])? {
-                println!("Smoothed: {:.2}", output.y);
-            }
-        }
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { OnlineLoess } = require('fastloess');

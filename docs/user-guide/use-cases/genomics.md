@@ -62,32 +62,6 @@ A small `fraction = 0.1` lets LOESS follow fine-scale spatial structure without 
     plt.show()
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let positions = x.clone();
-        let observed = y.clone();
-
-        let model = Loess::new()
-            .fraction(0.1)
-            .iterations(3)
-            .confidence_intervals(0.95)
-            .build()?;
-
-        let result = model.fit(&positions, &observed)?;
-        // result.y contains smoothed methylation profile
-        // result.confidence_lower/upper contain 95% CI bounds
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const fl = require('fastloess');
@@ -200,38 +174,6 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
     print(f"Peak regions: {peaks}")
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let positions: Vec<f64> = (0..1000).map(|i| i as f64 *10.0).collect(); // 0 to 9990 step 10
-        let observed: Vec<f64> = positions.iter().map(|&p| (p / 1000.0).sin().abs()* 100.0 + 10.0).collect();
-
-        let model = Loess::new()
-            .fraction(0.05)
-            .iterations(5)
-            .return_residuals()
-            .build()?;
-
-        let result = model.fit(&positions, &observed)?;
-
-        // Find peaks above threshold
-        let threshold = result.y.iter().copied()
-            .fold(f64::NEG_INFINITY, f64::max) * 0.75;
-        let peak_positions: Vec<f64> = positions.iter().zip(result.y.iter())
-            .filter(|(_, &y)| y > threshold)
-            .map(|(&p, _)| p)
-            .collect();
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const fl = require('fastloess');
@@ -332,28 +274,6 @@ For whole-genome data that doesn't fit in memory:
     result = model.finalize()
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-
-    fn main() -> Result<(), LoessError> {
-        let x_chunk: Vec<f64> = (0..1001).map(|i| i as f64 * 10.0).collect();
-        let y_chunk: Vec<f64> = x_chunk.iter().map(|&p| 50.0 + (p / 100.0).sin() * 20.0 + 5.0).collect();
-
-        let mut processor = StreamingLoess::new()
-            .fraction(0.05)
-            .iterations(3)
-            .chunk_size(50)
-            .overlap(10)
-            .merge_strategy("weighted_average")
-            .build()?;
-
-        processor.process_chunk(&x_chunk, &y_chunk)?;
-        let result = processor.finalize()?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');

@@ -355,6 +355,9 @@
 
 #![allow(non_snake_case)]
 
+#[cfg(doc)]
+pub mod doc;
+
 // Layer 2: Math - pure mathematical functions.
 mod math;
 

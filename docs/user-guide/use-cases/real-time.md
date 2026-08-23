@@ -41,31 +41,6 @@ For true real-time applications where each point must be processed immediately.
             print(f"Time {xi:.0f}: smoothed = {result.y:.2f}")
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-
-    fn main() -> Result<(), LoessError> {
-        let mut processor = OnlineLoess::new()
-            .fraction(0.3)
-            .iterations(1)
-            .window_capacity(25)
-            .min_points(5)
-            .update_mode("incremental")
-            .build()?;
-
-        for i in 0..100 {
-            let xi = i as f64;
-            let yi = 20.0 + 5.0 * (xi / 10.0).sin() + (xi * 1.7).sin() * 0.5;
-
-            if let Some(output) = processor.add_point(&[xi], yi)? {
-                println!("Time {}: smoothed = {:.2}", xi, output.y);
-            }
-        }
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { OnlineLoess } = require('fastloess');
@@ -181,34 +156,6 @@ For large datasets that arrive in batches or files.
     print(f"Processed {len(result.y)} points")
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-
-    fn main() -> Result<(), LoessError> {
-        let chunk1_x: Vec<f64> = (0..50).map(|i| i as f64).collect();
-        let chunk1_y: Vec<f64> = chunk1_x.iter().map(|&xi| xi.sin() + 0.1).collect();
-        let chunk2_x: Vec<f64> = (50..100).map(|i| i as f64).collect();
-        let chunk2_y: Vec<f64> = chunk2_x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut processor = StreamingLoess::new()
-            .fraction(0.1)
-            .iterations(2)
-            .chunk_size(50)
-            .overlap(10)
-            .merge_strategy("weighted_average")
-            .build()?;
-
-        // Process chunks as they arrive
-        processor.process_chunk(&chunk1_x, &chunk1_y)?;
-        processor.process_chunk(&chunk2_x, &chunk2_y)?;
-
-        // CRITICAL: Get buffered overlap data
-        let final_result = processor.finalize()?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');

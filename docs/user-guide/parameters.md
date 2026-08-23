@@ -96,24 +96,6 @@ The proportion of data used for each local fit. **Most important parameter.**
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .fraction(0.3)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -186,24 +168,6 @@ Number of robustness iterations for outlier resistance.
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .iterations(5)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -296,24 +260,6 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .surface_mode("direct")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -389,22 +335,6 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new().cell(0.05).build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -473,22 +403,6 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new().interpolation_vertices(50).build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -582,27 +496,6 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
     result = model.fit(x2d, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-        let x2d: Vec<f64> = x.iter().flat_map(|&xi| [xi, xi * xi / (TAU * TAU)]).collect();
-
-        let model = Loess::new()
-            .dimensions(2)
-            .distance_metric("weighted")
-            .weighted_metric_weights(vec![2.0, 0.5])
-            .build()?;
-        let result = model.fit(&x2d, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -696,24 +589,6 @@ See [Weight Functions](kernels.md) for detailed comparison.
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .weight_function("epanechnikov")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -787,24 +662,6 @@ See [Robustness](robustness.md) for detailed comparison.
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .robustness_method("talwar")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -881,24 +738,6 @@ For example:
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .boundary_policy("reflect")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -970,25 +809,6 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .degree("quadratic")
-            .boundary_degree_fallback(true)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -1064,24 +884,6 @@ For example:
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .scaling_method("mad")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js / WebAssembly"
     ```javascript
     const { Loess } = require('fastloess');
@@ -1145,24 +947,6 @@ For example:
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .zero_weight_fallback("use_local_mean")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -1228,25 +1012,6 @@ Enable early stopping when robustness weights stabilize.
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .iterations(20)           // Maximum
-            .auto_converge(1e-6)      // Stop when change < 1e-6
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -1321,24 +1086,6 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .parallel(false)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -1424,26 +1171,6 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     result = model.fit(x, y, custom_weights=weights)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut weights = vec![1.0f64; y.len()];
-        weights[4] = 0.0; // Exclude 5th point
-        let model = Loess::new()
-            .custom_weights(weights)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -1518,28 +1245,6 @@ Include residuals (`y - smoothed`) in the output.
     print(result.residuals)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .return_residuals()
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-        if let Some(residuals) = result.residuals {
-            println!("Residuals: {:?}", residuals);
-        }
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -1619,29 +1324,6 @@ Include fit quality metrics (Batch and Streaming only).
     print(f"R\u00b2: {result.diagnostics.r_squared:.4f}")
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .return_diagnostics()
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-        if let Some(diag) = result.diagnostics {
-            println!("R\u{00b2}: {:.4}", diag.r_squared);
-            println!("RMSE: {:.4}", diag.rmse);
-        }
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -1712,27 +1394,6 @@ Include final robustness weights (useful for outlier detection).
     outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .iterations(3)
-            .return_robustness_weights()
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-        // Points with weight < 0.5 are likely outliers
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -1803,25 +1464,6 @@ See [Intervals](intervals.md) for detailed usage.
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .confidence_intervals(0.95)
-            .prediction_intervals(0.95)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -1894,26 +1536,6 @@ Selection strategy for automated parameter tuning.
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .cv_method("kfold")
-            .cv_k(5)
-            .cv_fractions(vec![0.1, 0.3, 0.5])
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -1980,24 +1602,6 @@ Points per chunk in Streaming mode.
     result = model.finalize()
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = StreamingLoess::new()
-            .chunk_size(10000)
-            .build()?;
-        let result = model.process_chunk(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');
@@ -2069,24 +1673,6 @@ Overlap between chunks in Streaming mode.
     result = model.finalize()
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = StreamingLoess::new()
-            .overlap(1000)
-            .build()?;
-        let result = model.process_chunk(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');
@@ -2167,24 +1753,6 @@ For example:
     result = model.finalize()
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = StreamingLoess::new()
-            .merge_strategy("weighted_average")
-            .build()?;
-        let result = model.process_chunk(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');
@@ -2254,24 +1822,6 @@ Maximum points held in memory for Online mode.
     result = model.add_point(x[0], y[0])  # None until window fills
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = OnlineLoess::new()
-            .window_capacity(500)
-            .build()?;
-        let out = model.add_point(&[x[0]], y[0])?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { OnlineLoess } = require('fastloess');
@@ -2340,24 +1890,6 @@ Minimum points required before Online filter starts producing outputs.
     result = model.add_point(x[0], y[0])  # None until 10 points seen
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = OnlineLoess::new()
-            .min_points(10)
-            .build()?;
-        let out = model.add_point(&[x[0]], y[0])?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { OnlineLoess } = require('fastloess');
@@ -2433,24 +1965,6 @@ For example:
     result = model.add_point(x[0], y[0])
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = OnlineLoess::new()
-            .update_mode("full")
-            .build()?;
-        let out = model.add_point(&[x[0]], y[0])?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { OnlineLoess } = require('fastloess');

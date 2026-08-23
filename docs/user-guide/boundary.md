@@ -37,24 +37,6 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .boundary_policy("extend")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -122,24 +104,6 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .boundary_policy("reflect")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -207,24 +171,6 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .boundary_policy("zero")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -295,24 +241,6 @@ Applies no padding. Each local fit uses only the points that are actually availa
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .boundary_policy("noboundary")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');

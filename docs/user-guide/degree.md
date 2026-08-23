@@ -40,25 +40,6 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .degree("constant")
-            .fraction(0.5)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -131,25 +112,6 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .degree("linear")
-            .fraction(0.5)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -222,25 +184,6 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .degree("quadratic")
-            .fraction(0.5)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -313,25 +256,6 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .degree("cubic")
-            .fraction(0.6)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -404,25 +328,6 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .degree("quartic")
-            .fraction(0.7)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');

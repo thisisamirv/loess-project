@@ -12,7 +12,7 @@ description = "High-performance LOESS (Locally Estimated Scatterplot Smoothing)"
 readme = "README.md"
 repository = "https://github.com/thisisamirv/loess-project"
 homepage = "https://github.com/thisisamirv/loess-project"
-documentation = "https://loess.readthedocs.io/"
+documentation = "https://docs.rs/fastLoess"
 keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 

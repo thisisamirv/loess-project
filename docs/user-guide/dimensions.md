@@ -35,24 +35,6 @@ Single predictor. No configuration required.
     result = model.fit(x, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .fraction(0.3)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -122,27 +104,6 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     result = model.fit(x2d, z)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let lat: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let lon: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let z: Vec<f64> = (0..n).map(|i| lat[i].sin() + lon[i].cos() + 0.05).collect();
-        let x2d: Vec<f64> = (0..n).flat_map(|i| [lat[i], lon[i]]).collect();
-
-        let model = Loess::new()
-            .dimensions(2)
-            .fraction(0.3)
-            .build()?;
-        let result = model.fit(&x2d, &z)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -224,28 +185,6 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
     result = model.fit(x3d, y)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x1: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let x2: Vec<f64> = (0..n).map(|i| i as f64 / (n - 1) as f64).collect();
-        let x3: Vec<f64> = (0..n).map(|i| 1.0 - i as f64 / (n - 1) as f64).collect();
-        let y: Vec<f64> = (0..n).map(|i| x1[i].sin() + x2[i] - x3[i] + 0.05).collect();
-        let x3d: Vec<f64> = (0..n).flat_map(|i| [x1[i], x2[i], x3[i]]).collect();
-
-        let model = Loess::new()
-            .dimensions(3)
-            .fraction(0.5)
-            .build()?;
-        let result = model.fit(&x3d, &y)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');

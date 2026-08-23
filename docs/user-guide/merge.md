@@ -47,26 +47,6 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
     result = model.process_chunk(x_chunk, y_chunk)
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = StreamingLoess::new()
-            .merge_strategy("average")
-            .chunk_size(5000)
-            .overlap(500)
-            .build()?;
-        let result = model.process_chunk(&x_chunk, &y_chunk)?;;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');
@@ -147,24 +127,6 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
     result = model.finalize()
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = StreamingLoess::new()
-            .merge_strategy("take_first")
-            .build()?;
-        let result = model.process_chunk(&x_chunk, &y_chunk)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');
@@ -239,24 +201,6 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
     result = model.finalize()
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = StreamingLoess::new()
-            .merge_strategy("take_last")
-            .build()?;
-        let result = model.process_chunk(&x_chunk, &y_chunk)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');
@@ -339,26 +283,6 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
     result = model.finalize()
     ```
 
-=== "Rust"
-    ```rust
-    use fastLoess::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x_chunk: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = StreamingLoess::new()
-            .merge_strategy("weighted_average")
-            .chunk_size(5000)
-            .overlap(500)
-            .build()?;
-        let result = model.process_chunk(&x_chunk, &y_chunk)?;
-
-        Ok(())
-    }
-    ```
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');

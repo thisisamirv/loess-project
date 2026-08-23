@@ -99,23 +99,6 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
     conda install -c conda-forge fastloess
     ```
 
-=== "Rust"
-
-    Add the crate to your `Cargo.toml`:
-
-    === "loess-rs (no_std compatible)"
-
-        ```toml
-        [dependencies]
-        loess-rs = "*"
-        ```
-
-    === "fastLoess (parallel)"
-
-        ```toml
-        [dependencies]
-        fastLoess = "*"
-        ```
 === "Node.js"
 
     Install from npm:
@@ -174,26 +157,6 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     print(result.y)
     ```
 
-=== "Rust"
-
-    ```rust
-    use fastLoess::prelude::*;
-
-    fn main() -> Result<(), LoessError> {
-        let x = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let y = vec![2.0, 4.1, 5.9, 8.2, 9.8];
-
-        let model = Loess::new()
-            .fraction(0.5)
-            .iterations(3)
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-        println!("{}", result);
-
-        Ok(())
-    }
-    ```
 === "Node.js"
 
     ```javascript
