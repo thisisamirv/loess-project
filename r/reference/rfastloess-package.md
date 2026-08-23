@@ -28,8 +28,6 @@ Useful links:
 
 - <https://github.com/thisisamirv/loess-project>
 
-- <https://loess.readthedocs.io/>
-
 - Report bugs at <https://github.com/thisisamirv/loess-project/issues>
 
 ## Author

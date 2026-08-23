@@ -180,10 +180,6 @@ StreamingLoess(
 
 A StreamingLoess object.
 
-## See also
-
-<https://loess.readthedocs.io/> for full documentation.
-
 ## Examples
 
 ``` r
