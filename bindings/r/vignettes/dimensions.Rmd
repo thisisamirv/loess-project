@@ -13,7 +13,10 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Overview
 
-Standard LOESS operates on a single predictor `x`. LOESS extends this to an **n-dimensional predictor space** by passing a matrix as `x`, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets.
+Standard LOESS operates on a single predictor `x`. LOESS extends this to an
+**n-dimensional predictor space** by passing a matrix as `x`, enabling surface
+smoothing over spatial grids, time–altitude combinations, and similar
+multi-predictor datasets.
 
 | Dimensions | Use Case | `x` Input Shape |
 | --- | --- | --- |
@@ -21,7 +24,9 @@ Standard LOESS operates on a single predictor `x`. LOESS extends this to an **n-
 | `2` | Spatial surface, 2-predictor model | `n × 2` matrix |
 | `3+` | High-dimensional regression | `n × d` matrix |
 
-> **Note:** Neighbourhood search scales with the number of dimensions. For `d ≥ 3` keep `fraction` small and consider the `"interpolation"` surface mode (the default) to reduce computation.
+> **Note:** Neighbourhood search scales with the number of dimensions. For `d ≥
+> 3` keep `fraction` small and consider the `"interpolation"` surface mode (the
+> default) to reduce computation.
 
 ---
 
@@ -44,7 +49,8 @@ print(head(result$y))
 
 ## 2D — Spatial Surface
 
-Two predictors (e.g., latitude/longitude, time/altitude). Pass an `n × 2` matrix as `x`.
+Two predictors (e.g., latitude/longitude, time/altitude). Pass an `n × 2` matrix
+as `x`.
 
 ```{r dimensions_2}
 set.seed(42)
@@ -64,7 +70,8 @@ print(head(result$y))
 
 ## 3D and Higher
 
-Pass an `n × d` matrix as `x`. Higher dimensions require a larger `fraction` to keep the local neighbourhood populated.
+Pass an `n × d` matrix as `x`. Higher dimensions require a larger `fraction` to
+keep the local neighbourhood populated.
 
 ```{r dimensions_3}
 set.seed(42)
@@ -85,13 +92,14 @@ print(head(result$y))
 
 ## Distance Metrics
 
-In multivariate mode, neighbour distances can be computed with different metrics.
+In multivariate mode, neighbour distances can be computed with different
+metrics.
 
 | Metric | Description | When to Use |
 | --- | --- | --- |
-| `"normalized"` | Each dimension scaled by its range (default) | Mixed-scale predictors |
+| `"normalized"` | Scaled by dimension range (default) | Mixed-scale |
 | `"euclidean"` | Raw Euclidean distance | Same-scale predictors |
-| `"weighted"` | Per-dimension scaling via `weighted_metric_weights` | Custom anisotropic distance |
+| `"weighted"` | Per-dimension via `weighted_metric_weights` | Anisotropic |
 
 ```{r dimensions_4}
 # Reuse the 2D spatial data from above; upweight the lat dimension
@@ -111,7 +119,7 @@ print(head(result$y))
 
 | Mode | Behaviour | Speed |
 | --- | --- | --- |
-| `"interpolation"` | Fit at grid vertices, interpolate elsewhere (default) | Fast |
+| `"interpolation"` | Grid-fit, interpolate elsewhere (default) | Fast |
 | `"direct"` | Fit directly at every query point | Exact, slower |
 
 ```{r dimensions_5}
@@ -121,7 +129,8 @@ result <- fit(model, x2d, z)
 print(head(result$y))
 ```
 
-For large 2D or 3D datasets use `"interpolation"` (default) and tune `cell` and `interpolation_vertices` to control grid resolution.
+For large 2D or 3D datasets use `"interpolation"` (default) and tune `cell` and
+`interpolation_vertices` to control grid resolution.
 
 ```{r dimensions_6}
 model <- Loess(

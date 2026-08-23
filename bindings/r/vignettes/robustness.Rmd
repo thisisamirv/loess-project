@@ -13,7 +13,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## How Robustness Works
 
-Standard LOESS can be biased by outliers. Robustness iterations downweight points with large residuals:
+Standard LOESS can be biased by outliers. Robustness iterations downweight
+points with large residuals:
 
 1. Fit initial LOESS
 2. Compute residuals

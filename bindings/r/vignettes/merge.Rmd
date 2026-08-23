@@ -13,7 +13,9 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Overview
 
-Streaming LOESS processes data in fixed-size chunks with a configurable overlap. Points inside the overlap zone receive estimates from both adjacent chunks; the merge strategy decides how those two estimates are reconciled.
+Streaming LOESS processes data in fixed-size chunks with a configurable overlap.
+Points inside the overlap zone receive estimates from both adjacent chunks; the
+merge strategy decides how those two estimates are reconciled.
 
 ```text
 Chunk A:   [=========|=====]
@@ -34,9 +36,13 @@ Overlap:            [=====]
 
 ## Weighted Average (Default)
 
-Assigns each overlap point a weight proportional to its proximity to the centre of its respective chunk: points near the left-chunk centre favour the left estimate; points near the right-chunk centre favour the right. Minimises boundary artefacts.
+Assigns each overlap point a weight proportional to its proximity to the centre
+of its respective chunk: points near the left-chunk centre favour the left
+estimate; points near the right-chunk centre favour the right. Minimises
+boundary artefacts.
 
-**Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20% of chunk size) is used.
+**Use when**: Minimising boundary artefacts is more important than speed;
+moderate overlap (10–20% of chunk size) is used.
 
 ```{r merge_1}
 library(rfastloess)
@@ -59,7 +65,9 @@ print(head(result$y))
 
 ## Average
 
-Takes the arithmetic mean of the left-chunk and right-chunk estimates in the overlap region. Fast and sufficient when both chunks have similar smoothing quality.
+Takes the arithmetic mean of the left-chunk and right-chunk estimates in the
+overlap region. Fast and sufficient when both chunks have similar smoothing
+quality.
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
@@ -77,9 +85,11 @@ print(head(result$y))
 
 ## Take First
 
-Keeps only the left-chunk estimate in the overlap zone and discards the right-chunk estimate. Produces a left-flush output.
+Keeps only the left-chunk estimate in the overlap zone and discards the
+right-chunk estimate. Produces a left-flush output.
 
-**Use when**: You need final output values immediately after each chunk (no look-ahead revision); left-chunk context dominates.
+**Use when**: You need final output values immediately after each chunk (no
+look-ahead revision); left-chunk context dominates.
 
 ```{r merge_3}
 model <- StreamingLoess(
@@ -95,9 +105,12 @@ print(head(result$y))
 
 ## Take Last
 
-Keeps only the right-chunk estimate in the overlap zone. The right chunk sees more of the surrounding data, so its estimates can be more accurate in the overlap region.
+Keeps only the right-chunk estimate in the overlap zone. The right chunk sees
+more of the surrounding data, so its estimates can be more accurate in the
+overlap region.
 
-**Use when**: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming in real time.
+**Use when**: Right-chunk context improves overlap quality; you are
+post-processing complete data rather than streaming in real time.
 
 ```{r merge_4}
 model <- StreamingLoess(
@@ -125,7 +138,8 @@ model <- StreamingLoess(
     overlap        = overlap,
     merge_strategy = "weighted_average"
 )
-cat(sprintf("overlap = %d points (%.0f%% of chunk)\n", overlap, 100 * overlap / chunk_size))
+cat(sprintf("overlap = %d points (%.0f%% of chunk)\n",
+            overlap, 100 * overlap / chunk_size))
 ```
 
 ```{r session-info}

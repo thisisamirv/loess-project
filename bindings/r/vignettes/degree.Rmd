@@ -13,27 +13,32 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Overview
 
-At each target point, LOESS fits a polynomial to the neighbouring data using weighted least squares. The `degree` parameter controls the order of that polynomial.
+At each target point, LOESS fits a polynomial to the neighbouring data using
+weighted least squares. The `degree` parameter controls the order of that
+polynomial.
 
 ![Degree comparison](../man/figures/degree_comparison.svg)
 
 | Degree | Local Fit | Captures | Risk |
 | --- | --- | --- | --- |
-| `0` / `"constant"` | Weighted mean | Level only | Over-smooth, biased at edges |
+| `0` / `"constant"` | Weighted mean | Level only | Over-smooth; edge bias |
 | `1` / `"linear"` | Weighted line | Trend (default) | Rarely overfits |
 | `2` / `"quadratic"` | Parabola | Curvature | Overfits with small `fraction` |
 | `3` / `"cubic"` | Cubic curve | Inflections | Requires larger `fraction` |
-| `4` / `"quartic"` | Quartic curve | Fine structure | High variance, rarely needed |
+| `4` / `"quartic"` | Quartic curve | Fine structure | High variance, rare |
 
-Degree can be specified as an integer (`0L`–`4L`) or as a string (`"constant"`, `"linear"`, `"quadratic"`, `"cubic"`, `"quartic"`).
+Degree can be specified as an integer (`0L`–`4L`) or as a string (`"constant"`,
+`"linear"`, `"quadratic"`, `"cubic"`, `"quartic"`).
 
 ---
 
 ## Degree 0 — Local Constant
 
-The fit at each point is a weighted mean. Produces very smooth results but ignores local slope, introducing bias wherever the true function changes.
+The fit at each point is a weighted mean. Produces very smooth results but
+ignores local slope, introducing bias wherever the true function changes.
 
-**Use when**: Maximum smoothness matters more than accuracy; computationally cheapest.
+**Use when**: Maximum smoothness matters more than accuracy; computationally
+cheapest.
 
 ```{r degree_1}
 library(rfastloess)
@@ -50,9 +55,12 @@ print(head(result$y))
 
 ## Degree 1 — Local Linear (Default)
 
-Fits a weighted line through the neighbourhood. Removes first-order bias and handles boundary regions correctly. The right choice for the vast majority of applications.
+Fits a weighted line through the neighbourhood. Removes first-order bias and
+handles boundary regions correctly. The right choice for the vast majority of
+applications.
 
-**Use when**: Default; monotone or gently curved data; boundary accuracy matters.
+**Use when**: Default; monotone or gently curved data; boundary accuracy
+matters.
 
 ```{r degree_2}
 model <- Loess(degree = "linear", fraction = 0.5)
@@ -64,9 +72,11 @@ print(head(result$y))
 
 ## Degree 2 — Local Quadratic
 
-Fits a weighted parabola. Captures curvature in the data and reduces bias in regions with strong local curvature, at the cost of higher variance.
+Fits a weighted parabola. Captures curvature in the data and reduces bias in
+regions with strong local curvature, at the cost of higher variance.
 
-**Use when**: Data has visible curvature or local extrema; use a larger `fraction` to stabilise the fit.
+**Use when**: Data has visible curvature or local extrema; use a larger
+`fraction` to stabilise the fit.
 
 ```{r degree_3}
 model <- Loess(degree = "quadratic", fraction = 0.5)
@@ -78,9 +88,11 @@ print(head(result$y))
 
 ## Degree 3 and 4 — Higher-Order Fits
 
-Cubic and quartic local fits capture inflections and fine structure but require a sufficiently large neighbourhood to remain stable. Rarely needed in practice.
+Cubic and quartic local fits capture inflections and fine structure but require
+a sufficiently large neighbourhood to remain stable. Rarely needed in practice.
 
-**Use when**: Highly non-linear local structure; combine with a larger `fraction`.
+**Use when**: Highly non-linear local structure; combine with a larger
+`fraction`.
 
 ```{r degree_4}
 model <- Loess(degree = "cubic", fraction = 0.6)
@@ -92,7 +104,9 @@ print(head(result$y))
 
 ## Degree and Boundary Fallback
 
-At the dataset boundary, the neighbourhood is one-sided and may not contain enough points to support the requested degree. Setting `boundary_degree_fallback = TRUE` automatically reduces the degree at boundaries to avoid instability.
+At the dataset boundary, the neighbourhood is one-sided and may not contain
+enough points to support the requested degree. Setting `boundary_degree_fallback
+= TRUE` automatically reduces the degree at boundaries to avoid instability.
 
 ```{r degree_5}
 model <- Loess(degree = 2L, boundary_degree_fallback = TRUE)
@@ -112,7 +126,9 @@ print(head(result$y))
 | Strong non-linearity, large dataset | `3` |
 | Benchmark / exploratory only | `4` |
 
-> **Rule of thumb:** Start with `degree = 1` (default). Move to `degree = 2` only if you see systematic bias in regions of high curvature, and increase `fraction` at the same time.
+> **Rule of thumb:** Start with `degree = 1` (default). Move to `degree = 2`
+> only if you see systematic bias in regions of high curvature, and increase
+> `fraction` at the same time.
 
 ```{r session-info}
 sessionInfo()

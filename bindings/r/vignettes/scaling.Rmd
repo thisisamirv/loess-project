@@ -13,13 +13,15 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## Overview
 
-When `iterations > 0`, LOESS computes robustness weights by comparing each residual to the current residual scale estimate $\hat{\sigma}$. The `scaling_method` parameter controls how $\hat{\sigma}$ is estimated.
+When `iterations > 0`, LOESS computes robustness weights by comparing each
+residual to the current residual scale estimate $\hat{\sigma}$. The
+`scaling_method` parameter controls how $\hat{\sigma}$ is estimated.
 
 $$w_i = B\!\left(\frac{|r_i|}{6 \cdot \hat{\sigma}}\right)$$
 
 | Method | Formula | Robustness | Speed |
 | --- | --- | --- | --- |
-| `"mad"` | Median of \|residuals − median(residuals)\| | Very robust | Moderate |
+| `"mad"` | Median absolute deviation from median | Very robust | Moderate |
 | `"mar"` | Median of \|residuals\| | Robust | Fast |
 | `"mean"` | Mean of \|residuals\| | Less robust | Fastest |
 
@@ -31,7 +33,9 @@ $$w_i = B\!\left(\frac{|r_i|}{6 \cdot \hat{\sigma}}\right)$$
 
 $$\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)$$
 
-First centers residuals at their median, then takes the median of the absolute deviations. Double use of the median makes it highly resistant to extreme outliers.
+First centers residuals at their median, then takes the median of the absolute
+deviations. Double use of the median makes it highly resistant to extreme
+outliers.
 
 **Use when**: Data may contain outliers (default for most applications).
 
@@ -52,7 +56,8 @@ print(head(result$y))
 
 $$\hat{\sigma} = \text{median}(|r_i|)$$
 
-Uses the uncentered median — unlike MAD it does not subtract the residual median first. Still robust (median-based), faster (one partial sort instead of two).
+Uses the uncentered median — unlike MAD it does not subtract the residual median
+first. Still robust (median-based), faster (one partial sort instead of two).
 
 **Use when**: Speed matters and data have minimal systematic bias in residuals.
 
@@ -68,7 +73,9 @@ print(head(result$y))
 
 $$\hat{\sigma} = \frac{1}{n}\sum_i |r_i|$$
 
-Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier inflates $\hat{\sigma}$, causing the bisquare weight function to under-downweight other outliers.
+Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier
+inflates $\hat{\sigma}$, causing the bisquare weight function to
+under-downweight other outliers.
 
 **Use when**: Clean data with no outliers; maximum computation speed required.
 

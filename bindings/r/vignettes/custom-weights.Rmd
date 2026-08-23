@@ -13,9 +13,11 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ## How Custom Weights Work
 
-Per-observation weights encode data quality directly into the LOESS fit. The effective weight of observation $j$ in a local fit centred at $x_i$ is:
+Per-observation weights encode data quality directly into the LOESS fit. The
+effective weight of observation $j$ in a local fit centred at $x_i$ is:
 
-$$w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j$$
+$$w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right)
+\times r_j$$
 
 > **Note:** `custom_weights` applies in **Batch** mode only.
 

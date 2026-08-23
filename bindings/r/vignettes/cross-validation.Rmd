@@ -15,7 +15,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ![Cross-validation comparison](../man/figures/cv_comparison.svg)
 
-Cross-validation helps select the optimal `fraction` parameter by evaluating performance on held-out data.
+Cross-validation helps select the optimal `fraction` parameter by evaluating
+performance on held-out data.
 
 ---
 

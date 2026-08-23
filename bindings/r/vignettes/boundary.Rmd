@@ -15,20 +15,25 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ![Boundary policy comparison](../man/figures/boundary_comparison.svg)
 
-Standard LOESS neighbourhoods become asymmetric at the boundaries: fewer points exist on one side, pulling the local fit toward the data interior. The `boundary_policy` parameter controls how the data is padded to mitigate this effect.
+Standard LOESS neighbourhoods become asymmetric at the boundaries: fewer points
+exist on one side, pulling the local fit toward the data interior. The
+`boundary_policy` parameter controls how the data is padded to mitigate this
+effect.
 
 | Policy | Padding Strategy | Best For |
 | --- | --- | --- |
 | `"extend"` | Repeat first / last value | Most datasets (default) |
 | `"reflect"` | Mirror data at boundaries | Periodic or symmetric data |
 | `"zero"` | Pad with zeros | Data known to approach zero |
-| `"noboundary"` | No padding (Cleveland original) | Reproducing reference behaviour |
+| `"noboundary"` | No padding (Cleveland original) | Reference behaviour |
 
 ---
 
 ## Extend (Default)
 
-Pads beyond both endpoints by replicating the first and last observed values. Prevents the fit from curling toward zero and is a safe default for nearly all use cases.
+Pads beyond both endpoints by replicating the first and last observed values.
+Prevents the fit from curling toward zero and is a safe default for nearly all
+use cases.
 
 **Use when**: No strong prior on boundary behaviour; general-purpose smoothing.
 
@@ -47,9 +52,12 @@ print(head(result$y))
 
 ## Reflect
 
-Mirrors the data about both endpoints before fitting, then discards the reflected region from the output. Preserves continuity of derivatives at the endpoints.
+Mirrors the data about both endpoints before fitting, then discards the
+reflected region from the output. Preserves continuity of derivatives at the
+endpoints.
 
-**Use when**: Circular data (e.g., angle, day-of-year), symmetric physical quantities, or when the derivative at the boundary is expected to be zero.
+**Use when**: Circular data (e.g., angle, day-of-year), symmetric physical
+quantities, or when the derivative at the boundary is expected to be zero.
 
 ```{r boundary_2}
 model <- Loess(boundary_policy = "reflect")
@@ -61,9 +69,11 @@ print(head(result$y))
 
 ## Zero
 
-Pads beyond both endpoints with zeros before fitting. Appropriate when the underlying process is known to be zero outside the observed range.
+Pads beyond both endpoints with zeros before fitting. Appropriate when the
+underlying process is known to be zero outside the observed range.
 
-**Use when**: Signal decays to zero at both ends; zero is a meaningful boundary value.
+**Use when**: Signal decays to zero at both ends; zero is a meaningful boundary
+value.
 
 ```{r boundary_3}
 model <- Loess(boundary_policy = "zero")
@@ -75,9 +85,12 @@ print(head(result$y))
 
 ## No Boundary Padding
 
-Applies no padding. Each local fit uses only the points that are actually available, which may be fewer than the requested neighbourhood at the endpoints. This reproduces the original Cleveland (1979) algorithm exactly.
+Applies no padding. Each local fit uses only the points that are actually
+available, which may be fewer than the requested neighbourhood at the endpoints.
+This reproduces the original Cleveland (1979) algorithm exactly.
 
-**Use when**: Reproducing reference results; you prefer the raw LOESS boundary behaviour.
+**Use when**: Reproducing reference results; you prefer the raw LOESS boundary
+behaviour.
 
 ```{r boundary_4}
 model <- Loess(boundary_policy = "noboundary")
