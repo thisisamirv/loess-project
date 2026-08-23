@@ -14,7 +14,6 @@
 (C++)](https://img.shields.io/badge/libfastloess_(C++)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/libfastloess)
 [![rfastloess
 (R)](https://img.shields.io/badge/rfastloess_(R)-44A833?logo=anaconda&logoColor=white)](https://anaconda.org/conda-forge/r-rfastloess)  
-[![CI](https://github.com/thisisamirv/loess-project/actions/workflows/ci.yml/badge.svg)](https://github.com/thisisamirv/loess-project/actions/workflows/ci.yml)
 
 ![One LOESS to Rule Them
 All](https://raw.githubusercontent.com/thisisamirv/loess-project/main/dev/logo.png)  
