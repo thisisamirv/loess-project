@@ -11,6 +11,39 @@ makedocs(
 	),
 	pages = [
 		"Home" => "index.md",
+		"Introduction" => [
+			"installation.md",
+			"quickstart.md",
+			"concepts.md",
+		],
+		"User Guide" => [
+			"parameters.md",
+			"degree.md",
+			"dimensions.md",
+			"adapter-choice.md",
+			"batch.md",
+			"streaming.md",
+			"online.md",
+			"intervals.md",
+			"cross-validation.md",
+		],
+		"Weight & Robustness" => [
+			"kernels.md",
+			"robustness.md",
+			"scaling.md",
+		],
+		"Advanced" => [
+			"boundary.md",
+			"merge.md",
+		],
+		"Use Cases" => [
+			"use-case-genomics.md",
+			"use-case-time-series.md",
+			"use-case-real-time.md",
+		],
+		"Performance" => [
+			"benchmarks.md",
+		],
 		"API Reference" => "api.md",
 	],
 	authors = "Amir Valizadeh",

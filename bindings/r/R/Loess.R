@@ -81,7 +81,6 @@
 #' @param cv_seed Integer seed for the cross-validation random number
 #'   generator. \code{NULL} (default) uses a random seed.
 #'
-#' @seealso \url{https://loess.readthedocs.io/} for full documentation.
 #' @return A Loess object.
 #' @examples
 #' x <- seq(0, 10, length.out = 100)

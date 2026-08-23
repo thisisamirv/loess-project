@@ -48,22 +48,6 @@ Install the LOESS library for your preferred language.
         | `loess-rs` | `std` | Enable standard library (default) |
         | `fastLoess` | `cpu` | Enable CPU parallelism via Rayon |
         | `fastLoess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
-
-=== "Julia"
-
-    === "From General Registry (recommended)"
-
-    ```julia
-    Pkg.add("FastLOESS")
-    ```
-
-    === "From Source"
-
-    ```julia
-    using Pkg
-    Pkg.develop(url="https://github.com/thisisamirv/loess-project", subdir="bindings/julia/julia")
-    ```
-
 === "Node.js"
 
     === "From NPM (recommended)"
@@ -195,20 +179,6 @@ Install the LOESS library for your preferred language.
         Ok(())
     }
     ```
-
-=== "Julia"
-
-    ```julia
-    using FastLOESS
-    
-    x = [1.0, 2.0, 3.0]
-    y = [2.0, 4.0, 6.0]
-    
-    model = Loess()
-    result = fit(model, x, y)
-    println("Installed successfully!")
-    ```
-
 === "Node.js"
 
     ```javascript

@@ -142,6 +142,3 @@ res1 <- process_chunk(model, x[1:50], y[1:50])
 res2 <- process_chunk(model, x[51:100], y[51:100])
 final <- finalize(model)
 }
-\seealso{
-\url{https://loess.readthedocs.io/} for full documentation.
-}

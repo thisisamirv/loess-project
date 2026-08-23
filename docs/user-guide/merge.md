@@ -67,28 +67,6 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    n = 100
-    x_chunk = collect(range(0, 2π, length=n))
-    y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
-
-    model = StreamingLoess(; merge_strategy="average", chunk_size=5000, overlap=500)
-    result = process_chunk(model, x_chunk, y_chunk)
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');
@@ -187,29 +165,6 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    n = 100
-    x_chunk = collect(range(0, 2π, length=n))
-    y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
-
-    model = StreamingLoess(; merge_strategy="take_first")
-    process_chunk(model, x_chunk, y_chunk)
-    result = finalize(model)
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');
@@ -302,29 +257,6 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    n = 100
-    x_chunk = collect(range(0, 2π, length=n))
-    y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
-
-    model = StreamingLoess(; merge_strategy="take_last")
-    process_chunk(model, x_chunk, y_chunk)
-    result = finalize(model)
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');
@@ -427,33 +359,6 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    n = 100
-    x_chunk = collect(range(0, 2π, length=n))
-    y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
-
-    model = StreamingLoess(;
-        merge_strategy="weighted_average",
-        chunk_size=5000,
-        overlap=500
-    )
-    process_chunk(model, x_chunk, y_chunk)
-    result = finalize(model)
-    ```
-
 === "Node.js"
     ```javascript
     const { StreamingLoess } = require('fastloess');

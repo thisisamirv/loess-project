@@ -142,6 +142,3 @@ for (i in seq_along(x)) {
     if (!is.null(result)) cat("smoothed:", result$y, "\n")
 }
 }
-\seealso{
-\url{https://loess.readthedocs.io/} for full documentation.
-}

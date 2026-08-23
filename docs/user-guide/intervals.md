@@ -66,24 +66,6 @@ Estimate uncertainty in the smoothed curve itself.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; fraction=0.5, confidence_intervals=0.95)
-    result = fit(model, x, y)
-
-    for i in 1:length(result.y)
-        println("x=$(result.x[i]): y=$(result.y[i]) [$(result.confidence_lower[i]), $(result.confidence_upper[i])]")
-    end
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -187,22 +169,6 @@ Estimate where new observations might fall.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; fraction=0.5, prediction_intervals=0.95)
-    result = fit(model, x, y)
-
-    println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -294,24 +260,6 @@ Request both types simultaneously:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(;
-        fraction=0.5,
-        confidence_intervals=0.95,
-        prediction_intervals=0.95
-    )
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -411,21 +359,6 @@ Common levels and their z-values:
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    # 99% confidence interval
-    model = Loess(; confidence_intervals=0.99)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -518,24 +451,6 @@ Access standard errors directly (available when intervals are computed):
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; confidence_intervals=0.95)
-    result = fit(model, x, y)
-
-    for (i, se) in enumerate(result.standard_errors)
-        println("Point $i: SE = $se")
-    end
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');

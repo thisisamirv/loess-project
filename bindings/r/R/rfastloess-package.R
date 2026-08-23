@@ -22,9 +22,6 @@
 #'   \item \code{\link{OnlineLoess}}: Sliding window for real-time data
 #' }
 #'
-#' @section Documentation:
-#' For comprehensive documentation, tutorials, and API reference, see:
-#' \url{https://loess.readthedocs.io/}
 #'
 #' @examples
 #' # Basic smoothing

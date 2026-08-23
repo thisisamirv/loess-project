@@ -59,20 +59,6 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; degree="constant", fraction=0.5)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -164,20 +150,6 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; degree="linear", fraction=0.5)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -269,20 +241,6 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; degree="quadratic", fraction=0.5)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -374,20 +332,6 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; degree="cubic", fraction=0.6)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -479,20 +423,6 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; degree="quartic", fraction=0.7)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');

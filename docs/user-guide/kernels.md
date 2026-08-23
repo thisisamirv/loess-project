@@ -66,20 +66,6 @@ $$w(u) = (1 - |u|^3)^3$$
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; weight_function="tricube")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -167,20 +153,6 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; weight_function="epanechnikov")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -268,20 +240,6 @@ $$w(u) = \exp(-u^2/2)$$
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; weight_function="gaussian")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -369,20 +327,6 @@ $$w(u) = (1 - u^2)^2$$
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; weight_function="biweight")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -470,20 +414,6 @@ $$w(u) = \cos(\pi u / 2)$$
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; weight_function="cosine")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -571,20 +501,6 @@ $$w(u) = 1 - |u|$$
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; weight_function="triangle")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -672,20 +588,6 @@ $$w(u) = 1$$
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; weight_function="uniform")
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');

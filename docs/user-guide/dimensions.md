@@ -53,20 +53,6 @@ Single predictor. No configuration required.
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    model = Loess(; fraction=0.3)
-    result = fit(model, x, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -157,31 +143,6 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    n = 100
-    lat = collect(range(0, 2π, length=n))
-    lon = collect(range(0, 2π, length=n))
-    z = sin.(lat) .+ cos.(lon) .+ randn(rng, n) .* 0.1
-
-    # x is an (n, 2) matrix of predictors
-    x2d = hcat(lat, lon)
-    model = Loess(; dimensions=2, fraction=0.3)
-    result = fit(model, x2d, z)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
@@ -285,32 +246,6 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
         Ok(())
     }
     ```
-
-=== "Julia"
-    ```julia
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    x = collect(range(0, 2π, length=100))
-    y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-    using FastLOESS
-    using Random, Statistics
-
-    rng = MersenneTwister(42)
-    n = 100
-    x1 = collect(range(0, 2π, length=n))
-    x2 = collect(range(0.0, 1.0, length=n))
-    x3 = collect(range(1.0, 0.0, length=n))
-    y = sin.(x1) .+ x2 .- x3 .+ randn(rng, n) .* 0.1
-
-    # x is an (n, 3) matrix of predictors
-    x3d = hcat(x1, x2, x3)
-    model = Loess(; dimensions=3, fraction=0.5)
-    result = fit(model, x3d, y)
-    ```
-
 === "Node.js"
     ```javascript
     const { Loess } = require('fastloess');
