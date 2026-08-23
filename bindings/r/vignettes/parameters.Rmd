@@ -13,21 +13,34 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 
 ## All Parameters
 
-| Parameter | Default | Range | Description | Mode |
+| Parameter | Default | Range/Options | Description | Mode |
 | --- | --- | --- | --- | --- |
-| **fraction** | 0.67 | (0, 1] | Neighbourhood size | All |
-| **iterations** | 0 | [0, ∞) | Robustness iterations | All |
-| **degree** | 1 | 0, 1, 2 | Polynomial degree | All |
-| **delta** | 0.0 | [0, ∞) | Distance threshold for skipping | Batch |
+| **fraction** | 0.67 | (0, 1] | Smoothing span | All |
+| **iterations** | 3 | [0, 1000] | Robustness iterations | All |
+| **degree** | 1 | 0–4 | Polynomial degree | All |
+| **surface_mode** | `"interpolation"` | 2 options | Fit vs interpolate | All |
 | **weight_function** | `"tricube"` | 7 options | Distance kernel | All |
 | **robustness_method** | `"bisquare"` | 3 options | Outlier weighting | All |
-| **scaling_method** | `"mad"` | 3 options | Scale estimate | All |
-| **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight handling | All |
-| **boundary_policy** | `"extend"` | 4 options | Edge padding | All |
-| **parallel** | `FALSE` | `TRUE`/`FALSE` | Parallel CPU execution | Batch |
-| **confidence_intervals** | `NULL` | (0, 1) | CI coverage level | Batch |
+| **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behaviour | All |
+| **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
+| **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
+| **auto_converge** | `NULL` | tolerance | Early stopping | All |
+| **parallel** | `TRUE` | `TRUE`/`FALSE` | Multi-threaded execution | Batch |
+| **custom_weights** | `NULL` | positive | Per-observation weights | Batch |
+| **return_residuals** | `FALSE` | logical | Include residuals | All |
+| **return_robustness_weights** | `FALSE` | logical | Include weights | All |
+| **return_diagnostics** | `FALSE` | logical | Include metrics | All |
+| **confidence_intervals** | `NULL` | (0, 1) | CI level | Batch |
 | **prediction_intervals** | `NULL` | (0, 1) | PI level | Batch |
+| **distance_metric** | `"normalized"` | string | Distance metric | All |
+| **weighted_metric_weights** | `NULL` | numeric vector | Per-dimension distance weights | All |
+| **cell** | `NULL` | (0, ∞) | Interpolation cell size | All |
+| **interpolation_vertices** | `NULL` | integer | Interpolation grid vertices | All |
+| **boundary_degree_fallback** | `FALSE` | logical | Degree fallback at boundaries | All |
 | **cv_method** | `NULL` | method | Auto-select fraction | Batch |
+| **cv_k** | 5 | [2, ∞) | K-fold count | Batch |
+| **cv_fractions** | `NULL` | numeric | Fractions to evaluate | Batch |
+| **cv_seed** | `NULL` | integer | CV fold randomisation seed | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
 | **merge_strategy** | `"weighted_average"` | 4 options | Merge overlaps | Streaming |
@@ -41,11 +54,14 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 
 | Parameter | Available Options |
 | --- | --- |
+| **degree** | `0`/`"constant"`, `1`/`"linear"` (default), `2`/`"quadratic"`, `3`/`"cubic"`, `4`/`"quartic"` |
+| **surface_mode** | `"interpolation"` (default), `"direct"` |
 | **weight_function** | `"tricube"`, `"epanechnikov"`, `"gaussian"`, `"biweight"`, `"cosine"`, `"triangle"`, `"uniform"` |
 | **robustness_method** | `"bisquare"`, `"huber"`, `"talwar"` |
 | **zero_weight_fallback** | `"use_local_mean"`, `"return_original"`, `"return_none"` |
 | **boundary_policy** | `"extend"`, `"reflect"`, `"zero"`, `"noboundary"` |
 | **scaling_method** | `"mad"`, `"mar"`, `"mean"` |
+| **distance_metric** | `"normalized"`, `"euclidean"`, `"weighted"` |
 | **merge_strategy** | `"average"`, `"weighted_average"`, `"take_first"`, `"take_last"` |
 | **update_mode** | `"incremental"`, `"full"` |
 
@@ -79,26 +95,40 @@ result <- fit(model, x, y)
 Number of robustness iterations. Each iteration downweights high-residual points.
 
 ```{r}
-model <- Loess(iterations = 3)
+model <- Loess(iterations = 3L)
 result <- fit(model, x, y)
 ```
 
 ### degree
 
-Polynomial degree for local fits: 0 (constant), 1 (linear, default), or 2 (quadratic).
+Polynomial degree for local fits. See the [Polynomial Degree](degree.html) vignette.
 
 ```{r}
-model <- Loess(degree = 2L)
+model <- Loess(degree = 2L)  # quadratic
 result <- fit(model, x, y)
 ```
 
-### delta
+### surface_mode
 
-Distance threshold for skipping intermediate points (approximation).
+Controls whether LOESS fits directly at every query point (`"direct"`) or fits at a coarse grid and interpolates (`"interpolation"`, default). Interpolation is faster for large datasets.
 
 ```{r}
-model <- Loess(delta = 0.01)
+model <- Loess(surface_mode = "direct")
 result <- fit(model, x, y)
+```
+
+### distance_metric
+
+Metric used when computing neighbour distances in multivariate mode. Use `"weighted"` with `weighted_metric_weights` to scale each dimension separately.
+
+```{r}
+# 2D fit with per-dimension scaling
+x2d <- cbind(seq(0, 1, length.out = 100), seq(0, 2, length.out = 100))
+model <- Loess(
+    distance_metric = "weighted",
+    weighted_metric_weights = c(1.0, 0.5)
+)
+result <- fit(model, x2d, y)
 ```
 
 ### parallel
@@ -128,8 +158,8 @@ print(result$diagnostics$r_squared)
 
 ```{r}
 model <- StreamingLoess(
-    chunk_size = 5000,
-    overlap = 500,
+    chunk_size = 5000L,
+    overlap = 500L,
     merge_strategy = "weighted_average"
 )
 ```
@@ -142,8 +172,8 @@ model <- StreamingLoess(
 
 ```{r}
 model <- OnlineLoess(
-    window_capacity = 50,
-    min_points = 5,
+    window_capacity = 50L,
+    min_points = 5L,
     update_mode = "incremental"
 )
 ```

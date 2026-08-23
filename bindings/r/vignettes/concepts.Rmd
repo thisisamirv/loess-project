@@ -26,7 +26,7 @@ Unlike parametric methods (linear regression, polynomial fitting), LOESS adapts 
 
 ## How It Works
 
-![LOESS smoothing concept](../man/figures/lowess_concept.svg)
+![LOESS smoothing concept](../man/figures/loess_concept.svg)
 
 For each point in your data, LOESS:
 
@@ -109,3 +109,5 @@ Decision guide:
 | Robust to outliers | ✓ | ✗ | ✗ |
 | Uncertainty estimates | ✓ | ✓ | ✗ |
 | Handles irregular sampling | ✓ | ✓ | ✗ |
+| Multivariate predictors | ✓ | ✓ | ✗ |
+| Adjustable polynomial degree | ✓ (0–4) | ✓ | ✗ |

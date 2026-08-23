@@ -42,6 +42,8 @@ articles:
     contents:
       - parameters
       - adapters
+      - degree
+      - dimensions
       - intervals
       - cross-validation
   - title: Weight & Robustness

@@ -1,0 +1,130 @@
+---
+title: "Multivariate LOESS"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Multivariate LOESS}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+## Overview
+
+Standard LOESS operates on a single predictor `x`. LOESS extends this to an **n-dimensional predictor space** by passing a matrix as `x`, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets.
+
+| Dimensions | Use Case | `x` Input Shape |
+| --- | --- | --- |
+| `1` | Time series, 1D signal (default) | Numeric vector |
+| `2` | Spatial surface, 2-predictor model | `n × 2` matrix |
+| `3+` | High-dimensional regression | `n × d` matrix |
+
+> **Note:** Neighbourhood search scales with the number of dimensions. For `d ≥ 3` keep `fraction` small and consider the `"interpolation"` surface mode (the default) to reduce computation.
+
+---
+
+## 1D — Standard (Default)
+
+Single predictor. No configuration required.
+
+```{r}
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 10, length.out = 200)
+y <- sin(x) + rnorm(200, sd = 0.2)
+
+model <- Loess(fraction = 0.3)
+result <- fit(model, x, y)
+```
+
+---
+
+## 2D — Spatial Surface
+
+Two predictors (e.g., latitude/longitude, time/altitude). Pass an `n × 2` matrix as `x`.
+
+```{r}
+set.seed(42)
+n <- 100
+lat <- runif(n, -pi, pi)
+lon <- runif(n, -pi, pi)
+z   <- sin(lat) + cos(lon) + rnorm(n, sd = 0.1)
+
+x2d <- cbind(lat, lon)   # n × 2 matrix
+
+model <- Loess(fraction = 0.3)
+result <- fit(model, x2d, z)
+```
+
+---
+
+## 3D and Higher
+
+Pass an `n × d` matrix as `x`. Higher dimensions require a larger `fraction` to keep the local neighbourhood populated.
+
+```{r}
+set.seed(42)
+n <- 200
+x1 <- runif(n)
+x2 <- runif(n)
+x3 <- runif(n)
+y  <- x1 + sin(2 * pi * x2) + x3^2 + rnorm(n, sd = 0.1)
+
+x3d <- cbind(x1, x2, x3)   # n × 3 matrix
+
+model <- Loess(fraction = 0.5)
+result <- fit(model, x3d, y)
+```
+
+---
+
+## Distance Metrics
+
+In multivariate mode, neighbour distances can be computed with different metrics.
+
+| Metric | Description | When to Use |
+| --- | --- | --- |
+| `"normalized"` | Each dimension scaled by its range (default) | Mixed-scale predictors |
+| `"euclidean"` | Raw Euclidean distance | Same-scale predictors |
+| `"weighted"` | Per-dimension scaling via `weighted_metric_weights` | Custom anisotropic distance |
+
+```{r}
+# Upweight time dimension relative to spatial dimension
+x2d <- cbind(time_col, space_col)
+
+model <- Loess(
+    fraction = 0.3,
+    distance_metric = "weighted",
+    weighted_metric_weights = c(2.0, 1.0)  # time counts twice
+)
+result <- fit(model, x2d, y)
+```
+
+---
+
+## Surface Mode
+
+| Mode | Behaviour | Speed |
+| --- | --- | --- |
+| `"interpolation"` | Fit at grid vertices, interpolate elsewhere (default) | Fast |
+| `"direct"` | Fit directly at every query point | Exact, slower |
+
+```{r}
+# Exact fit at every point — slower but no interpolation artefacts
+model <- Loess(surface_mode = "direct", fraction = 0.3)
+result <- fit(model, x2d, z)
+```
+
+For large 2D or 3D datasets use `"interpolation"` (default) and tune `cell` and `interpolation_vertices` to control grid resolution.
+
+```{r}
+model <- Loess(
+    surface_mode = "interpolation",
+    cell = 0.2,
+    interpolation_vertices = 200L,
+    fraction = 0.3
+)
+result <- fit(model, x2d, z)
+```

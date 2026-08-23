@@ -15,7 +15,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 
 ![Boundary policy comparison](../man/figures/boundary_comparison.svg)
 
-The `boundary_policy` parameter controls how data is padded at the edges to reduce bias from asymmetric neighbourhoods.
+Standard LOESS neighbourhoods become asymmetric at the boundaries: fewer points exist on one side, pulling the local fit toward the data interior. The `boundary_policy` parameter controls how the data is padded to mitigate this effect.
 
 | Policy | Padding Strategy | Best For |
 | --- | --- | --- |
@@ -27,6 +27,10 @@ The `boundary_policy` parameter controls how data is padded at the edges to redu
 ---
 
 ## Extend (Default)
+
+Pads beyond both endpoints by replicating the first and last observed values. Prevents the fit from curling toward zero and is a safe default for nearly all use cases.
+
+**Use when**: No strong prior on boundary behaviour; general-purpose smoothing.
 
 ```{r}
 library(rfastloess)
@@ -42,6 +46,10 @@ result <- fit(model, x, y)
 
 ## Reflect
 
+Mirrors the data about both endpoints before fitting, then discards the reflected region from the output. Preserves continuity of derivatives at the endpoints.
+
+**Use when**: Circular data (e.g., angle, day-of-year), symmetric physical quantities, or when the derivative at the boundary is expected to be zero.
+
 ```{r}
 model <- Loess(boundary_policy = "reflect")
 result <- fit(model, x, y)
@@ -51,6 +59,10 @@ result <- fit(model, x, y)
 
 ## Zero
 
+Pads beyond both endpoints with zeros before fitting. Appropriate when the underlying process is known to be zero outside the observed range.
+
+**Use when**: Signal decays to zero at both ends; zero is a meaningful boundary value.
+
 ```{r}
 model <- Loess(boundary_policy = "zero")
 result <- fit(model, x, y)
@@ -59,6 +71,10 @@ result <- fit(model, x, y)
 ---
 
 ## No Boundary Padding
+
+Applies no padding. Each local fit uses only the points that are actually available, which may be fewer than the requested neighbourhood at the endpoints. This reproduces the original Cleveland (1979) algorithm exactly.
+
+**Use when**: Reproducing reference results; you prefer the raw LOESS boundary behaviour.
 
 ```{r}
 model <- Loess(boundary_policy = "noboundary")
