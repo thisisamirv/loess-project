@@ -33,27 +33,6 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    library(rfastloess)
-    set.seed(42)
-    n <- 100
-    x_chunk <- seq(0, 2 * pi, length.out = n)
-    y_chunk <- sin(x_chunk) + rnorm(n, sd = 0.3)
-
-    model <- StreamingLoess(
-        merge_strategy = "average",
-        chunk_size = 5000,
-        overlap = 500
-    )
-    result <- process_chunk(model, x_chunk, y_chunk)
-    ```
-
 === "Python"
     ```python
     from fastloess import StreamingLoess
@@ -175,24 +154,6 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 **Use when**: You need final output values immediately after each chunk (no look-ahead revision); left-chunk data quality is higher.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    library(rfastloess)
-    set.seed(42)
-    n <- 100
-    x_chunk <- seq(0, 2 * pi, length.out = n)
-    y_chunk <- sin(x_chunk) + rnorm(n, sd = 0.3)
-
-    model <- StreamingLoess(merge_strategy = "take_first")
-    result <- process_chunk(model, x_chunk, y_chunk)
-    final <- finalize(model)
-    ```
-
 === "Python"
     ```python
     from fastloess import StreamingLoess
@@ -307,24 +268,6 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 Keeps only the right-chunk estimate in the overlap zone. The right chunk sees more of the surrounding data, so its fit can be more accurate near the left boundary of the new chunk.
 
 **Use when**: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming live.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    library(rfastloess)
-    set.seed(42)
-    n <- 100
-    x_chunk <- seq(0, 2 * pi, length.out = n)
-    y_chunk <- sin(x_chunk) + rnorm(n, sd = 0.3)
-
-    model <- StreamingLoess(merge_strategy = "take_last")
-    result <- process_chunk(model, x_chunk, y_chunk)
-    final <- finalize(model)
-    ```
 
 === "Python"
     ```python
@@ -444,28 +387,6 @@ $$\hat{y} = \frac{w_L \hat{y}_L + w_R \hat{y}_R}{w_L + w_R}$$
 where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 **Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20 % of chunk size).
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    library(rfastloess)
-    set.seed(42)
-    n <- 100
-    x_chunk <- seq(0, 2 * pi, length.out = n)
-    y_chunk <- sin(x_chunk) + rnorm(n, sd = 0.3)
-
-    model <- StreamingLoess(
-        merge_strategy = "weighted_average",
-        chunk_size = 5000,
-        overlap = 500
-    )
-    result <- process_chunk(model, x_chunk, y_chunk)
-    final <- finalize(model)
-    ```
 
 === "Python"
     ```python

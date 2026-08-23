@@ -24,19 +24,6 @@ Standard LOESS operates on a single predictor $x$. Setting `dimensions > 1` exte
 
 Single predictor. No configuration required.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    x <- seq(0, 10, length.out = 200)
-    y <- sin(x) + rnorm(200, sd = 0.2)
-    model <- Loess(fraction = 0.3)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import numpy as np
@@ -131,26 +118,6 @@ Single predictor. No configuration required.
 ## 2D — Spatial Surface
 
 Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ matrix as `x`.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    library(rfastloess)
-    set.seed(42)
-    n <- 100
-    lat <- seq(0, 2 *pi, length.out = n)
-    lon <- seq(0, 2* pi, length.out = n)
-    z <- sin(lat) + cos(lon) + rnorm(n, sd = 0.1)
-
-    # n × 2 predictor matrix
-    coords <- cbind(lat, lon)
-    model <- Loess(dimensions = 2L, fraction = 0.3)
-    result <- fit(model, coords, z)
-    ```
 
 === "Python"
     ```python
@@ -278,26 +245,6 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
 ## 3D and Higher
 
 Three or more predictors. The neighbourhood radius grows in each additional dimension, so a larger `fraction` (or smaller dataset) is typically needed.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    library(rfastloess)
-    set.seed(42)
-    n <- 100
-    x1 <- seq(0, 2 * pi, length.out = n)
-    x2 <- seq(0, 1, length.out = n)
-    x3 <- seq(1, 0, length.out = n)
-    y <- sin(x1) + x2 - x3 + rnorm(n, sd = 0.1)
-
-    predictors <- cbind(x1, x2, x3)   # n × 3
-    model <- Loess(dimensions = 3L, fraction = 0.5)
-    result <- fit(model, predictors, y)
-    ```
 
 === "Python"
     ```python

@@ -27,17 +27,6 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 **Use when**: Maximum smoothness is more important than accuracy; computationally cheapest option.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(degree = 0L, fraction = 0.5)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -142,17 +131,6 @@ $$\hat{y}(x_0) = \arg\min_{a,b} \sum_i w_i(x_0)\,(y_i - a - b x_i)^2$$
 Fits a weighted line through the neighbourhood. Removes first-order bias and handles boundary regions correctly. The right choice for the vast majority of applications.
 
 **Use when**: Default; monotone or gently curved data; boundary accuracy matters.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(degree = 1L, fraction = 0.5)
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -259,17 +237,6 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 **Use when**: Data with pronounced peaks, valleys, or curvature; `fraction` ≥ 0.4.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(degree = 2L, fraction = 0.5)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -375,17 +342,6 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 **Use when**: Data has clear S-shaped curves or multiple inflection points; `fraction` ≥ 0.5.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(degree = 3L, fraction = 0.6)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -490,17 +446,6 @@ $$\hat{y}(x_0) = \arg\min_{a,...,e} \sum_i w_i(x_0)\,(y_i - a - b x_i - \cdots -
 Fits a weighted quartic polynomial. Rarely needed in practice; only useful for capturing highly oscillatory local structure. Very prone to overfitting — require `fraction` ≥ 0.6 and cross-validate.
 
 **Use when**: Fine oscillatory structure is physically meaningful and the dataset is large; always cross-validate.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(degree = 4L, fraction = 0.7)
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python

@@ -30,17 +30,6 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 **Use when**: General purpose, balanced approach.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(iterations = 3, robustness_method = "bisquare")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -143,17 +132,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 **Use when**: Moderate outliers, want to retain some influence.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(iterations = 3, robustness_method = "huber")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -255,17 +233,6 @@ Hard threshold. Points are either fully weighted or completely excluded.
 $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 **Use when**: Extreme outliers, want binary exclusion.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(iterations = 3, robustness_method = "talwar")
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -374,21 +341,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 ## Detecting Outliers
 
 Use robustness weights to identify potential outliers:
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(iterations = 5, return_robustness_weights = TRUE)
-    result <- fit(model, x, y)
-
-    weights <- result$robustness_weights
-    outliers <- which(weights < 0.5)
-    cat("Potential outliers at indices:", outliers, "\n")
-    ```
 
 === "Python"
     ```python
@@ -534,17 +486,6 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 ![Scaling Methods Comparison](../assets/diagrams/scaling_comparison.svg)
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(iterations = 3, scaling_method = "mad")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -645,17 +586,6 @@ Stop iterations early when weights stabilize:
 
 !!! tip "Performance"
     Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(iterations = 10, auto_converge = 1e-6)
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python

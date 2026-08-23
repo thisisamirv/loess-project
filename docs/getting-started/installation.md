@@ -3,27 +3,6 @@
 
 Install the LOESS library for your preferred language.
 
-=== "R"
-
-    === "From R-universe (recommended)"
-
-    ```r
-    install.packages("rfastloess", repos = "https://thisisamirv.r-universe.dev")
-    ```
-
-    === "From conda-forge"
-
-    ```r
-    conda install -c conda-forge r-rfastloess
-    ```
-
-    === "From Source"
-
-    ```r
-    # Install Rust first: https://rustup.rs/
-    devtools::install_github("thisisamirv/loess-project", subdir = "bindings/r")
-    ```
-
 === "Python"
 
     === "From PyPI (recommended)"
@@ -185,19 +164,6 @@ Install the LOESS library for your preferred language.
 ---
 
 ## Verify Installation
-
-=== "R"
-
-    ```r
-    library(rfastloess)
-    
-    x <- c(1, 2, 3)
-    y <- c(2, 4, 6)
-    
-    model <- Loess()
-    result <- fit(model, x, y)
-    print("Installed successfully!")
-    ```
 
 === "Python"
 

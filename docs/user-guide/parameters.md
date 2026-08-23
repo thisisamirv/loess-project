@@ -83,17 +83,6 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 ![Fraction Comparison](../assets/diagrams/fraction_comparison.svg)
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(fraction = 0.3)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -197,17 +186,6 @@ Number of robustness iterations for outlier resistance.
 | 1–3 | Moderate | Recommended |
 | 4–6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(iterations = 5)
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -333,17 +311,6 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 
 See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(surface_mode = "direct")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -451,17 +418,6 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
 | `0.2` | Moderate (default) | High | Fast |
 | `0.5` | Coarse | Lower | Faster |
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(cell = 0.05)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -559,17 +515,6 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 
 - **Default**: auto (derived from `cell` and data range)
 - **Adapter**: All
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(interpolation_vertices = 50L)
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -688,22 +633,6 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 | `"chebyshev"` | Maximum coordinate difference |
 | `"minkowski:p"` | Generalised $L_p$ norm — e.g. `"minkowski:3"` |
 | `"weighted"` | Weighted Euclidean — set `weighted_metric_weights` to one weight per dimension |
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 *pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-    x2d <- cbind(x, x^2 / (2* pi)^2)
-
-    model <- Loess(
-        dimensions = 2L,
-        distance_metric = "weighted",
-        weighted_metric_weights = c(2.0, 0.5)  # x1 twice as important
-    )
-    result <- fit(model, x2d, y)
-    ```
 
 === "Python"
     ```python
@@ -843,17 +772,6 @@ Distance weighting kernel for local fits.
 
 See [Weight Functions](kernels.md) for detailed comparison.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(weight_function = "epanechnikov")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -958,17 +876,6 @@ Method for downweighting outliers during iterative refinement.
 | `"talwar"` | Hard threshold (0 or 1) | Extreme contamination |
 
 See [Robustness](robustness.md) for detailed comparison.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(robustness_method = "talwar")
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -1078,17 +985,6 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 
 For example:
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(boundary_policy = "reflect")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -1191,17 +1087,6 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 
 !!! tip
     Enable this if you observe NaN values or instability at the edges of your data when using `degree = "quadratic"` or higher.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(degree = "quadratic", boundary_degree_fallback = TRUE)
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -1311,17 +1196,6 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 
 For example:
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(scaling_method = "mad")
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -1416,17 +1290,6 @@ Behavior when all neighborhood weights are zero.
 | `"return_none"` | Return NaN |
 
 For example:
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(zero_weight_fallback = "use_local_mean")
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -1524,17 +1387,6 @@ For example:
 ### auto_converge
 
 Enable early stopping when robustness weights stabilize.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(iterations = 20, auto_converge = 1e-6)
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -1642,17 +1494,6 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
 
 !!! tip
     Set to `false` for fully deterministic, reproducible output when debugging, or in environments where thread safety is required.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(parallel = FALSE)
-    result <- fit(model, x, y)
-    ```
 
 === "Python"
     ```python
@@ -1769,20 +1610,6 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
 !!! warning "Length must match y"
     The weights vector must have the same length as `y`. A mismatch returns an error.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    # Downweight an outlier at index 5
-    weights <- rep(1, length(y))
-    weights[5] <- 0
-    model <- Loess()
-    result <- fit(model, x, y, custom_weights = weights)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -1893,18 +1720,6 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
 ### return_residuals
 
 Include residuals (`y - smoothed`) in the output.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(return_residuals = TRUE)
-    result <- fit(model, x, y)
-    print(result$residuals)
-    ```
 
 === "Python"
     ```python
@@ -2022,18 +1837,6 @@ Include fit quality metrics (Batch and Streaming only).
 | `aic` | Akaike Information Criterion |
 | `aicc` | Corrected AIC |
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(return_diagnostics = TRUE)
-    result <- fit(model, x, y)
-    cat(sprintf("R\u00b2: %.4f\n", result$diagnostics$r_squared))
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -2142,18 +1945,6 @@ Include fit quality metrics (Batch and Streaming only).
 
 Include final robustness weights (useful for outlier detection).
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(iterations = 3, return_robustness_weights = TRUE)
-    result <- fit(model, x, y)
-    outliers <- which(result$robustness_weights < 0.5)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -2261,17 +2052,6 @@ Request uncertainty estimates (Batch only).
 
 See [Intervals](intervals.md) for detailed usage.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(confidence_intervals = 0.95, prediction_intervals = 0.95)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -2377,17 +2157,6 @@ Selection strategy for automated parameter tuning.
 | `"kfold"` | K-Fold Cross-Validation | Fast |
 | `"loocv"` | Leave-One-Out Cross-Validation | Slow |
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- Loess(cv_method = "kfold", cv_k = 5)
-    result <- fit(model, x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -2486,16 +2255,6 @@ Selection strategy for automated parameter tuning.
 ### chunk_size
 
 Points per chunk in Streaming mode.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    result <- process_chunk(StreamingLoess(chunk_size = 10000), x, y)
-    ```
 
 === "Python"
     ```python
@@ -2600,16 +2359,6 @@ Points per chunk in Streaming mode.
 ### overlap
 
 Overlap between chunks in Streaming mode.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    result <- process_chunk(StreamingLoess(overlap = 1000), x, y)
-    ```
 
 === "Python"
     ```python
@@ -2724,16 +2473,6 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 
 For example:
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    result <- process_chunk(StreamingLoess(merge_strategy = "weighted_average"), x, y)
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -2837,17 +2576,6 @@ For example:
 
 Maximum points held in memory for Online mode.
 
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- OnlineLoess(window_capacity = 500)
-    result <- add_point(model, x[1], y[1])  # NULL until window fills
-    ```
-
 === "Python"
     ```python
     import fastloess as fl
@@ -2947,17 +2675,6 @@ Maximum points held in memory for Online mode.
 ### min_points
 
 Minimum points required before Online filter starts producing outputs.
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- OnlineLoess(min_points = 10)
-    result <- add_point(model, x[1], y[1])  # NULL until 10 points seen
-    ```
 
 === "Python"
     ```python
@@ -3065,17 +2782,6 @@ Optimization strategy for Online mode updates.
 | `"incremental"` | Update only affected fits | Fast |
 
 For example:
-
-=== "R"
-    ```r
-    library(rfastloess)
-    set.seed(42)
-    x <- seq(0, 2 * pi, length.out = 100)
-    y <- sin(x) + rnorm(100, sd = 0.3)
-
-    model <- OnlineLoess(update_mode = "full")
-    result <- add_point(model, x[1], y[1])
-    ```
 
 === "Python"
     ```python
