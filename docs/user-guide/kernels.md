@@ -48,18 +48,6 @@ $$w(u) = (1 - |u|^3)^3$$
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ weight_function: "tricube" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -115,18 +103,6 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
     model = fl.Loess(weight_function="epanechnikov")
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ weight_function: "epanechnikov" });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
@@ -186,18 +162,6 @@ $$w(u) = \exp(-u^2/2)$$
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ weight_function: "gaussian" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -253,18 +217,6 @@ $$w(u) = (1 - u^2)^2$$
 
     model = fl.Loess(weight_function="biweight")
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ weight_function: "biweight" });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
@@ -324,18 +276,6 @@ $$w(u) = \cos(\pi u / 2)$$
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ weight_function: "cosine" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -393,18 +333,6 @@ $$w(u) = 1 - |u|$$
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ weight_function: "triangle" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -460,18 +388,6 @@ $$w(u) = 1$$
 
     model = fl.Loess(weight_function="uniform")
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ weight_function: "uniform" });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"

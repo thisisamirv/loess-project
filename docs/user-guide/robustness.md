@@ -43,18 +43,6 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 3, robustness_method: "bisquare" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -112,18 +100,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 3, robustness_method: "huber" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -179,18 +155,6 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
     model = fl.Loess(iterations=3, robustness_method="talwar")
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 3, robustness_method: "talwar" });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
@@ -258,24 +222,6 @@ Use robustness weights to identify potential outliers:
     for i, w in enumerate(result.robustness_weights):
         if w < 0.5:
             print(f"Potential outlier at index {i}: weight = {w:.3f}")
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 5, return_robustness_weights: true });
-    const result = model.fit(x, y);
-
-    result.robustness_weights.forEach((w, i) => {
-        if (w < 0.5) {
-            console.log(`Potential outlier at index ${i}: weight = ${w.toFixed(3)}`);
-        }
-    });
     ```
 
 === "WebAssembly"
@@ -352,18 +298,6 @@ Residuals are scaled before computing robustness weights. Two methods:
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 3, scaling_method: "mad" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -418,18 +352,6 @@ Stop iterations early when weights stabilize:
 
     model = fl.Loess(iterations=10, auto_converge=1e-6)
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 10, auto_converge: 1e-6 });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"

@@ -1,3 +1,34 @@
+# Streaming Adapter
+
+Process large datasets in chunks with configurable overlap.
+
+## When to Use
+
+- Dataset >100,000 points
+- Memory-constrained environments
+- Batch processing pipelines
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `chunk_size` | 5000 | Points per chunk |
+| `overlap` | 500 | Overlap between chunks |
+| `merge_strategy` | `"weighted_average"` | How to merge overlaps |
+
+### Merge Strategies
+
+| Strategy | Behavior |
+| --- | --- |
+| `"average"` | Average overlapping values |
+| `"weighted_average"` | Distance-weighted blend (default) |
+| `"take_first"` | Keep left chunk values |
+| `"take_last"` | Keep right chunk values |
+
+![Merge Strategies](../assets/diagrams/merge_comparison.svg)
+
+## Example
+
 ```rust
 use fastLoess::prelude::*;
 use std::f64::consts::TAU;
@@ -24,3 +55,8 @@ fn main() -> Result<(), LoessError> {
     Ok(())
 }
 ```
+
+---
+
+!!! warning "Always call finalize()"
+    In Rust, always call `processor.finalize()` after processing all chunks to retrieve buffered overlap data.

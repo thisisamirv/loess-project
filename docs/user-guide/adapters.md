@@ -58,24 +58,6 @@ Standard mode for complete datasets. **Supports all features.**
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({
-        fraction: 0.5,
-        iterations: 3,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95,
-        return_diagnostics: true
-    });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -174,23 +156,6 @@ Process large datasets in chunks with configurable overlap.
     )
     model.process_chunk(x, y)
     result = model.finalize()
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { StreamingLoess } = require('fastloess');
-
-    const n = 100;
-    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess(
-        { fraction: 0.3, iterations: 2 },
-        { chunk_size: 5000, overlap: 500 }
-    );
-
-    const result = processor.process_chunk(xChunk, yChunk);
-    const finalResult = processor.finalize();
     ```
 
 === "WebAssembly"
@@ -293,27 +258,6 @@ Incremental updates with a sliding window for real-time data.
         result = model.add_point(float(xi), float(yi))
         if result is not None:
             print(result.y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { OnlineLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new OnlineLoess(
-        { fraction: 0.2, iterations: 1 },
-        { window_capacity: 100, min_points: 5, update_mode: "incremental" }
-    );
-
-    for (let i = 0; i < n; i++) {
-        const res = processor.add_point(x[i], y[i]);
-        if (res !== null) {
-            console.log(`Smoothed: ${res.y.toFixed(2)}`);
-        }
-    }
     ```
 
 === "WebAssembly"

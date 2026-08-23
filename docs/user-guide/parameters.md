@@ -96,18 +96,6 @@ The proportion of data used for each local fit. **Most important parameter.**
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ fraction: 0.3 });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -166,18 +154,6 @@ Number of robustness iterations for outlier resistance.
 
     model = fl.Loess(iterations=5)
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 5 });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
@@ -260,18 +236,6 @@ See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ surface_mode: "direct" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -335,18 +299,6 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ cell: 0.05 });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -401,18 +353,6 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 
     model = fl.Loess(interpolation_vertices=50)
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ interpolation_vertices: 50 });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
@@ -496,23 +436,6 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
     result = model.fit(x2d, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-    const x2d = Float64Array.from({ length: n * 2 }, (_, k) => k % 2 === 0 ? x[k >> 1] : x[k >> 1] ** 2 / (2 * Math.PI) ** 2);
-
-    const model = new Loess({
-        dimensions: 2,
-        distance_metric: "weighted",
-        weighted_metric_weights: [2.0, 0.5]
-    });
-    const result = model.fit(x2d, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -589,18 +512,6 @@ See [Weight Functions](kernels.md) for detailed comparison.
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ weight_function: "epanechnikov" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -660,18 +571,6 @@ See [Robustness](robustness.md) for detailed comparison.
 
     model = fl.Loess(robustness_method="talwar")
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ robustness_method: "talwar" });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
@@ -738,18 +637,6 @@ For example:
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ boundary_policy: "reflect" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -807,18 +694,6 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 
     model = fl.Loess(degree="quadratic", boundary_degree_fallback=True)
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ degree: "quadratic", boundary_degree_fallback: true });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
@@ -947,18 +822,6 @@ For example:
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ zero_weight_fallback: "use_local_mean" });
-    const result = model.fit(x, y);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -1010,18 +873,6 @@ Enable early stopping when robustness weights stabilize.
 
     model = fl.Loess(iterations=20, auto_converge=1e-6)
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 20, auto_converge: 1e-6 });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
@@ -1084,18 +935,6 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
 
     model = fl.Loess(parallel=False)
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ parallel: false });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
@@ -1171,20 +1010,6 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
     result = model.fit(x, y, custom_weights=weights)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const weights = new Array(y.length).fill(1);
-    weights[4] = 0; // Exclude 5th point
-    const model = new Loess({});
-    const result = model.fit(x, y, weights);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -1243,19 +1068,6 @@ Include residuals (`y - smoothed`) in the output.
     model = fl.Loess(return_residuals=True)
     result = model.fit(x, y)
     print(result.residuals)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ return_residuals: true });
-    const result = model.fit(x, y);
-    console.log(result.residuals);
     ```
 
 === "WebAssembly"
@@ -1324,19 +1136,6 @@ Include fit quality metrics (Batch and Streaming only).
     print(f"R\u00b2: {result.diagnostics.r_squared:.4f}")
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ return_diagnostics: true });
-    const result = model.fit(x, y);
-    console.log("R\u00b2:", result.diagnostics.r_squared);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -1394,19 +1193,6 @@ Include final robustness weights (useful for outlier detection).
     outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 3, return_robustness_weights: true });
-    const result = model.fit(x, y);
-    // result.robustness_weights contains outlier weights
-    ```
-
 === "WebAssembly"
     ```javascript
     const { Loess } = require('fastloess-wasm');
@@ -1462,18 +1248,6 @@ See [Intervals](intervals.md) for detailed usage.
 
     model = fl.Loess(confidence_intervals=0.95, prediction_intervals=0.95)
     result = model.fit(x, y)
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ confidence_intervals: 0.95, prediction_intervals: 0.95 });
-    const result = model.fit(x, y);
     ```
 
 === "WebAssembly"
@@ -1536,17 +1310,6 @@ Selection strategy for automated parameter tuning.
     result = model.fit(x, y)
     ```
 
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    // Coming soon
-    ```
-
 === "WebAssembly"
     ```javascript
     const { smooth } = require('fastloess-wasm');
@@ -1600,19 +1363,6 @@ Points per chunk in Streaming mode.
     model = fl.StreamingLoess(chunk_size=10000)
     model.process_chunk(x, y)
     result = model.finalize()
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { StreamingLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess({}, { chunk_size: 10000 });
-    processor.process_chunk(x, y);
-    const result = processor.finalize();
     ```
 
 === "WebAssembly"
@@ -1671,19 +1421,6 @@ Overlap between chunks in Streaming mode.
     model = fl.StreamingLoess(overlap=1000)
     model.process_chunk(x, y)
     result = model.finalize()
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { StreamingLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess({}, { overlap: 1000 });
-    processor.process_chunk(x, y);
-    const result = processor.finalize();
     ```
 
 === "WebAssembly"
@@ -1753,19 +1490,6 @@ For example:
     result = model.finalize()
     ```
 
-=== "Node.js"
-    ```javascript
-    const { StreamingLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess({}, { merge_strategy: "weighted_average" });
-    processor.process_chunk(x, y);
-    const result = processor.finalize();
-    ```
-
 === "WebAssembly"
     ```javascript
     const { StreamingLoess } = require('fastloess-wasm');
@@ -1822,18 +1546,6 @@ Maximum points held in memory for Online mode.
     result = model.add_point(x[0], y[0])  # None until window fills
     ```
 
-=== "Node.js"
-    ```javascript
-    const { OnlineLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new OnlineLoess({}, { window_capacity: 500 });
-    processor.add_point(x[0], y[0]);
-    ```
-
 === "WebAssembly"
     ```javascript
     const { OnlineLoess } = require('fastloess-wasm');
@@ -1888,18 +1600,6 @@ Minimum points required before Online filter starts producing outputs.
 
     model = fl.OnlineLoess(min_points=10)
     result = model.add_point(x[0], y[0])  # None until 10 points seen
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { OnlineLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new OnlineLoess({}, { min_points: 10 });
-    processor.add_point(x[0], y[0]);
     ```
 
 === "WebAssembly"
@@ -1963,18 +1663,6 @@ For example:
 
     model = fl.OnlineLoess(update_mode="full")
     result = model.add_point(x[0], y[0])
-    ```
-
-=== "Node.js"
-    ```javascript
-    const { OnlineLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new OnlineLoess({}, { update_mode: "full" });
-    processor.add_point(x[0], y[0]);
     ```
 
 === "WebAssembly"

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import subprocess
 import textwrap
 import time
@@ -9,7 +10,23 @@ import time
 from .base import REPO_ROOT, RunResult, Snippet, _find_exe
 
 
+def _strip_hidden_lines(code: str) -> str:
+    """Remove Rustdoc `# ` hidden-line prefixes so the code is valid Rust."""
+    out = []
+    for line in code.splitlines():
+        if line.startswith("# "):
+            out.append(line[2:])
+        elif line == "#":
+            out.append("")
+        else:
+            out.append(line)
+    return "\n".join(out)
+
+
 def skip_reason(snippet: Snippet) -> str | None:
+    code = _strip_hidden_lines(snippet.code)
+    if not re.search(r"\bfn\s+main\s*\(", code):
+        return "fragment — no fn main (not a standalone Rust program)"
     return None
 
 
@@ -56,7 +73,9 @@ def run_rust(snippet: Snippet, timeout: int) -> RunResult:
         )
 
     _ensure_rust_snippet_project()
-    (_RUST_SNIPPET_DIR / "src" / "main.rs").write_text(snippet.code, encoding="utf-8")
+    (_RUST_SNIPPET_DIR / "src" / "main.rs").write_text(
+        _strip_hidden_lines(snippet.code), encoding="utf-8"
+    )
 
     target_dir = str(REPO_ROOT / "target" / "doc-snippet-target")
 

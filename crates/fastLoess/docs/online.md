@@ -1,3 +1,32 @@
+# Online Adapter
+
+Incremental updates with a sliding window for real-time data.
+
+## When to Use
+
+- Data arrives incrementally (sensors, streams)
+- Need real-time smoothed values
+- Fixed memory budget
+
+![Online Adapter](../assets/diagrams/online_comparison.svg)
+
+## Parameters
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `window_capacity` | 1000 | Max points in window |
+| `min_points` | 2 | Points before output starts |
+| `update_mode` | `"incremental"` | Update strategy |
+
+### Update Modes
+
+| Mode | Behavior | Speed |
+| --- | --- | --- |
+| `"incremental"` | Update only affected fits | Faster |
+| `"full"` | Recompute entire window | More accurate |
+
+## Example
+
 ```rust
 use fastLoess::prelude::*;
 use std::f64::consts::TAU;
@@ -24,3 +53,5 @@ fn main() -> Result<(), LoessError> {
     Ok(())
 }
 ```
+
+---

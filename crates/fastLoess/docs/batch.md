@@ -1,3 +1,17 @@
+# Batch Adapter
+
+Standard mode for complete datasets. **Supports all features.**
+
+## When to Use
+
+- Dataset fits in memory
+- Need intervals, cross-validation, or diagnostics
+- Processing complete files
+
+![Gap Handling](../assets/diagrams/gap_handling.svg)
+
+## Example
+
 ```rust
 use fastLoess::prelude::*;
 use std::f64::consts::TAU;
@@ -21,3 +35,5 @@ fn main() -> Result<(), LoessError> {
     Ok(())
 }
 ```
+
+---

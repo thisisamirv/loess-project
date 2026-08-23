@@ -77,82 +77,23 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 ![Fraction Comparison](../assets/diagrams/fraction_comparison.svg)
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(fraction=0.3)
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .fraction(0.3)
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .fraction(0.3)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ fraction: 0.3 });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ fraction: 0.3 });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .fraction = 0.3 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -167,82 +108,23 @@ Number of robustness iterations for outlier resistance.
 | 4–6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(iterations=5)
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .iterations(5)
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .iterations(5)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 5 });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 5 });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 5 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -277,82 +159,23 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 
 See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(surface_mode="direct")
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .surface_mode("direct")
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .surface_mode("direct")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ surface_mode: "direct" });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ surface_mode: "direct" });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .surface_mode = "direct" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -370,80 +193,21 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
 | `0.2` | Moderate (default) | High | Fast |
 | `0.5` | Coarse | Lower | Faster |
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(cell=0.05)
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new().cell(0.05).build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new().cell(0.05).build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ cell: 0.05 });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ cell: 0.05 });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .cell = 0.05 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -454,80 +218,21 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 - **Default**: auto (derived from `cell` and data range)
 - **Adapter**: All
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(interpolation_vertices=50)
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new().interpolation_vertices(50).build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new().interpolation_vertices(50).build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ interpolation_vertices: 50 });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ interpolation_vertices: 50 });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .interpolation_vertices = 50 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -558,106 +263,26 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 | `"minkowski:p"` | Generalised $L_p$ norm — e.g. `"minkowski:3"` |
 | `"weighted"` | Weighted Euclidean — set `weighted_metric_weights` to one weight per dimension |
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
-    x2d = np.column_stack([x, x**2 / (2 * np.pi)**2]).ravel()
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+    let x2d: Vec<f64> = x.iter().flat_map(|&xi| [xi, xi * xi / (TAU * TAU)]).collect();
 
-    model = fl.Loess(
-        dimensions=2,
-        distance_metric="weighted",
-        weighted_metric_weights=[2.0, 0.5]
-    )
-    result = model.fit(x2d, y)
-    ```
+    let model = Loess::new()
+        .dimensions(2)
+        .distance_metric("weighted")
+        .weighted_metric_weights(vec![2.0, 0.5])
+        .build()?;
+    let result = model.fit(&x2d, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-        let x2d: Vec<f64> = x.iter().flat_map(|&xi| [xi, xi * xi / (TAU * TAU)]).collect();
-
-        let model = Loess::new()
-            .dimensions(2)
-            .distance_metric("weighted")
-            .weighted_metric_weights(vec![2.0, 0.5])
-            .build()?;
-        let result = model.fit(&x2d, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-    const x2d = Float64Array.from({ length: n * 2 }, (_, k) => k % 2 === 0 ? x[k >> 1] : x[k >> 1] ** 2 / (2 * Math.PI) ** 2);
-
-    const model = new Loess({
-        dimensions: 2,
-        distance_metric: "weighted",
-        weighted_metric_weights: [2.0, 0.5]
-    });
-    const result = model.fit(x2d, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-    const x2d = Float64Array.from({ length: n * 2 }, (_, k) => k % 2 === 0 ? x[k >> 1] : x[k >> 1] ** 2 / (2 * Math.PI) ** 2);
-
-    const model = new Loess({
-        dimensions: 2,
-        distance_metric: "weighted",
-        weighted_metric_weights: [2.0, 0.5]
-    });
-    const result = model.fit(x2d, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n), x2d(n * 2);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-            x2d[2 * i]     = x[i];
-            x2d[2 * i + 1] = x[i] * x[i] / (2 * M_PI * 2 * M_PI);
-        }
-
-        fastloess::LoessOptions opts;
-        opts.dimensions = 2;
-        opts.distance_metric = "weighted";
-        opts.weighted_metric_weights = {2.0, 0.5};
-        fastloess::Loess model(opts);
-        auto result = model.fit(x2d, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -677,82 +302,23 @@ Distance weighting kernel for local fits.
 
 See [Weight Functions](kernels.md) for detailed comparison.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(weight_function="epanechnikov")
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .weight_function("epanechnikov")
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .weight_function("epanechnikov")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ weight_function: "epanechnikov" });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ weight_function: "epanechnikov" });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .weight_function = "epanechnikov" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -768,82 +334,23 @@ Method for downweighting outliers during iterative refinement.
 
 See [Robustness](robustness.md) for detailed comparison.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(robustness_method="talwar")
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .robustness_method("talwar")
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .robustness_method("talwar")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ robustness_method: "talwar" });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ robustness_method: "talwar" });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .robustness_method = "talwar" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -862,82 +369,23 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 
 For example:
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(boundary_policy="reflect")
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .boundary_policy("reflect")
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .boundary_policy("reflect")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ boundary_policy: "reflect" });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ boundary_policy: "reflect" });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .boundary_policy = "reflect" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -951,83 +399,24 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 !!! tip
     Enable this if you observe NaN values or instability at the edges of your data when using `degree = "quadratic"` or higher.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(degree="quadratic", boundary_degree_fallback=True)
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .degree("quadratic")
+        .boundary_degree_fallback(true)
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .degree("quadratic")
-            .boundary_degree_fallback(true)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ degree: "quadratic", boundary_degree_fallback: true });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ degree: "quadratic", boundary_degree_fallback: true });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .degree = "quadratic", .boundary_degree_fallback = 1 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -1045,70 +434,23 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 
 For example:
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(scaling_method="mad")
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .scaling_method("mad")
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .scaling_method("mad")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js / WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ scaling_method: "mad" });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .scaling_method = "mad" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -1126,82 +468,23 @@ Behavior when all neighborhood weights are zero.
 
 For example:
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(zero_weight_fallback="use_local_mean")
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .zero_weight_fallback("use_local_mean")
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .zero_weight_fallback("use_local_mean")
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ zero_weight_fallback: "use_local_mean" });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ zero_weight_fallback: "use_local_mean" });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .zero_weight_fallback = "use_local_mean" });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -1209,83 +492,24 @@ For example:
 
 Enable early stopping when robustness weights stabilize.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(iterations=20, auto_converge=1e-6)
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .iterations(20)           // Maximum
+        .auto_converge(1e-6)      // Stop when change < 1e-6
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .iterations(20)           // Maximum
-            .auto_converge(1e-6)      // Stop when change < 1e-6
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 20, auto_converge: 1e-6 });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 20, auto_converge: 1e-6 });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 20, .auto_converge = 1e-6 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -1302,82 +526,23 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
 !!! tip
     Set to `false` for fully deterministic, reproducible output when debugging, or in environments where thread safety is required.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(parallel=False)
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .parallel(false)
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .parallel(false)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ parallel: false });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ parallel: false });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .parallel = false });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -1403,92 +568,25 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
 !!! warning "Length must match y"
     The weights vector must have the same length as `y`. A mismatch returns an error.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    weights = np.ones(len(y))
-    weights[4] = 0  # Exclude 5th point
-    model = fl.Loess()
-    result = model.fit(x, y, custom_weights=weights)
-    ```
+    let mut weights = vec![1.0f64; y.len()];
+    weights[4] = 0.0; // Exclude 5th point
+    let model = Loess::new()
+        .custom_weights(weights)
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut weights = vec![1.0f64; y.len()];
-        weights[4] = 0.0; // Exclude 5th point
-        let model = Loess::new()
-            .custom_weights(weights)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const weights = new Array(y.length).fill(1);
-    weights[4] = 0; // Exclude 5th point
-    const model = new Loess({});
-    const result = model.fit(x, y, weights);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const weights = new Array(y.length).fill(1);
-    weights[4] = 0; // Exclude 5th point
-    const model = new Loess({ custom_weights: weights });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        std::vector<double> custom_weights(y.size(), 1.0);
-        custom_weights[4] = 0.0; // Exclude 5th point
-        fastloess::Loess model;
-        auto result = model.fit(x, y, custom_weights).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -1498,90 +596,27 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
 
 Include residuals (`y - smoothed`) in the output.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(return_residuals=True)
-    result = model.fit(x, y)
-    print(result.residuals)
-    ```
+    let model = Loess::new()
+        .return_residuals()
+        .build()?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .return_residuals()
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-        if let Some(residuals) = result.residuals {
-            println!("Residuals: {:?}", residuals);
-        }
-
-        Ok(())
+    let result = model.fit(&x, &y)?;
+    if let Some(residuals) = result.residuals {
+        println!("Residuals: {:?}", residuals);
     }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
 
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ return_residuals: true });
-    const result = model.fit(x, y);
-    console.log(result.residuals);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ return_residuals: true });
-    const result = model.fit(x, y);
-    console.log(result.residuals);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .return_residuals = true });
-        auto result = model.fit(x, y).value();
-        auto residuals = result.residuals();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -1599,92 +634,28 @@ Include fit quality metrics (Batch and Streaming only).
 | `aic` | Akaike Information Criterion |
 | `aicc` | Corrected AIC |
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(return_diagnostics=True)
-    result = model.fit(x, y)
-    print(f"R\u00b2: {result.diagnostics.r_squared:.4f}")
-    ```
+    let model = Loess::new()
+        .return_diagnostics()
+        .build()?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .return_diagnostics()
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-        if let Some(diag) = result.diagnostics {
-            println!("R\u{00b2}: {:.4}", diag.r_squared);
-            println!("RMSE: {:.4}", diag.rmse);
-        }
-
-        Ok(())
+    let result = model.fit(&x, &y)?;
+    if let Some(diag) = result.diagnostics {
+        println!("R\u{00b2}: {:.4}", diag.r_squared);
+        println!("RMSE: {:.4}", diag.rmse);
     }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
 
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ return_diagnostics: true });
-    const result = model.fit(x, y);
-    console.log("R\u00b2:", result.diagnostics.r_squared);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ return_diagnostics: true });
-    const result = model.fit(x, y);
-    console.log("R\u00b2:", result.diagnostics?.r_squared);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .return_diagnostics = true });
-        auto result = model.fit(x, y).value();
-        auto diag = result.diagnostics();
-        std::cout << "R\u00b2: " << diag.r_squared() << std::endl;
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -1692,89 +663,26 @@ Include fit quality metrics (Batch and Streaming only).
 
 Include final robustness weights (useful for outlier detection).
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(iterations=3, return_robustness_weights=True)
-    result = model.fit(x, y)
-    outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
-    ```
+    let model = Loess::new()
+        .iterations(3)
+        .return_robustness_weights()
+        .build()?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
+    let result = model.fit(&x, &y)?;
+    // Points with weight < 0.5 are likely outliers
 
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .iterations(3)
-            .return_robustness_weights()
-            .build()?;
-
-        let result = model.fit(&x, &y)?;
-        // Points with weight < 0.5 are likely outliers
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 3, return_robustness_weights: true });
-    const result = model.fit(x, y);
-    // result.robustness_weights contains outlier weights
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ iterations: 3, return_robustness_weights: true });
-    const result = model.fit(x, y);
-    // result.robustness_weights contains outlier weights
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .iterations = 3, .return_robustness_weights = true });
-        auto result = model.fit(x, y).value();
-        auto weights = result.robustness_weights();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -1784,83 +692,24 @@ Request uncertainty estimates (Batch only).
 
 See [Intervals](intervals.md) for detailed usage.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(confidence_intervals=0.95, prediction_intervals=0.95)
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .confidence_intervals(0.95)
-            .prediction_intervals(0.95)
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ confidence_intervals: 0.95, prediction_intervals: 0.95 });
-    const result = model.fit(x, y);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ confidence_intervals: 0.95, prediction_intervals: 0.95 });
-    const result = model.fit(x, y);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({ .confidence_intervals = 0.95, .prediction_intervals = 0.95 });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -1875,82 +724,25 @@ Selection strategy for automated parameter tuning.
 | `"kfold"` | K-Fold Cross-Validation | Fast |
 | `"loocv"` | Leave-One-Out Cross-Validation | Slow |
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.Loess(cv_method="kfold", cv_k=5)
-    result = model.fit(x, y)
-    ```
+    let model = Loess::new()
+        .cv_method("kfold")
+        .cv_k(5)
+        .cv_fractions(vec![0.1, 0.3, 0.5])
+        .build()?;
+    let result = model.fit(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let model = Loess::new()
-            .cv_method("kfold")
-            .cv_k(5)
-            .cv_fractions(vec![0.1, 0.3, 0.5])
-            .build()?;
-        let result = model.fit(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    // Coming soon
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { smooth } = require('fastloess-wasm');
-
-    // Coming soon
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::Loess model({
-            .cv_fractions = {0.1, 0.3, 0.5},
-            .cv_method = "kfold",
-            .cv_k = 5
-        });
-        auto result = model.fit(x, y).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -1960,88 +752,23 @@ Selection strategy for automated parameter tuning.
 
 Points per chunk in Streaming mode.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.StreamingLoess(chunk_size=10000)
-    model.process_chunk(x, y)
-    result = model.finalize()
-    ```
+    let mut model = StreamingLoess::new()
+        .chunk_size(10000)
+        .build()?;
+    let result = model.process_chunk(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = StreamingLoess::new()
-            .chunk_size(10000)
-            .build()?;
-        let result = model.process_chunk(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { StreamingLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess({}, { chunk_size: 10000 });
-    processor.process_chunk(x, y);
-    const result = processor.finalize();
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLoess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess({}, { chunk_size: 10000 });
-    processor.process_chunk(x, y);
-    const result = processor.finalize();
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::StreamingOptions opts;
-        opts.chunk_size = 10000;
-        fastloess::StreamingLoess stream(opts);
-        (void)stream.process_chunk(x, y);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -2049,88 +776,23 @@ Points per chunk in Streaming mode.
 
 Overlap between chunks in Streaming mode.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.StreamingLoess(overlap=1000)
-    model.process_chunk(x, y)
-    result = model.finalize()
-    ```
+    let mut model = StreamingLoess::new()
+        .overlap(1000)
+        .build()?;
+    let result = model.process_chunk(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = StreamingLoess::new()
-            .overlap(1000)
-            .build()?;
-        let result = model.process_chunk(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { StreamingLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess({}, { overlap: 1000 });
-    processor.process_chunk(x, y);
-    const result = processor.finalize();
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLoess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess({}, { overlap: 1000 });
-    processor.process_chunk(x, y);
-    const result = processor.finalize();
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::StreamingOptions opts;
-        opts.overlap = 1000;
-        fastloess::StreamingLoess stream(opts);
-        (void)stream.process_chunk(x, y);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -2147,87 +809,23 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 
 For example:
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.StreamingLoess(merge_strategy="weighted_average")
-    model.process_chunk(x, y)
-    result = model.finalize()
-    ```
+    let mut model = StreamingLoess::new()
+        .merge_strategy("weighted_average")
+        .build()?;
+    let result = model.process_chunk(&x, &y)?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = StreamingLoess::new()
-            .merge_strategy("weighted_average")
-            .build()?;
-        let result = model.process_chunk(&x, &y)?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { StreamingLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess({}, { merge_strategy: "weighted_average" });
-    processor.process_chunk(x, y);
-    const result = processor.finalize();
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLoess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess({}, { merge_strategy: "weighted_average" });
-    processor.process_chunk(x, y);
-    const result = processor.finalize();
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        // merge_strategy is handled internally in C++
-        fastloess::StreamingLoess stream({});
-        (void)stream.process_chunk(x, y);
-        auto result = stream.finalize().value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -2235,85 +833,23 @@ For example:
 
 Maximum points held in memory for Online mode.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.OnlineLoess(window_capacity=500)
-    result = model.add_point(x[0], y[0])  # None until window fills
-    ```
+    let mut model = OnlineLoess::new()
+        .window_capacity(500)
+        .build()?;
+    let out = model.add_point(&[x[0]], y[0])?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = OnlineLoess::new()
-            .window_capacity(500)
-            .build()?;
-        let out = model.add_point(&[x[0]], y[0])?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { OnlineLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new OnlineLoess({}, { window_capacity: 500 });
-    processor.add_point(x[0], y[0]);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { OnlineLoess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new OnlineLoess({}, { window_capacity: 500 });
-    processor.add_point(x[0], y[0]);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::OnlineOptions opts;
-        opts.window_capacity = 500;
-        fastloess::OnlineLoess model(opts);
-        auto out = model.add_point(x[0], y[0]).value();
-        // out.has_value() == false until window fills
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -2321,85 +857,23 @@ Maximum points held in memory for Online mode.
 
 Minimum points required before Online filter starts producing outputs.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.OnlineLoess(min_points=10)
-    result = model.add_point(x[0], y[0])  # None until 10 points seen
-    ```
+    let mut model = OnlineLoess::new()
+        .min_points(10)
+        .build()?;
+    let out = model.add_point(&[x[0]], y[0])?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = OnlineLoess::new()
-            .min_points(10)
-            .build()?;
-        let out = model.add_point(&[x[0]], y[0])?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { OnlineLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new OnlineLoess({}, { min_points: 10 });
-    processor.add_point(x[0], y[0]);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { OnlineLoess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new OnlineLoess({}, { min_points: 10 });
-    processor.add_point(x[0], y[0]);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::OnlineOptions opts;
-        opts.min_points = 10;
-        fastloess::OnlineLoess model(opts);
-        auto out = model.add_point(x[0], y[0]).value();
-        // out.has_value() == false until min_points reached
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
 
 ---
 
@@ -2414,81 +888,20 @@ Optimization strategy for Online mode updates.
 
 For example:
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
-    model = fl.OnlineLoess(update_mode="full")
-    result = model.add_point(x[0], y[0])
-    ```
+    let mut model = OnlineLoess::new()
+        .update_mode("full")
+        .build()?;
+    let out = model.add_point(&[x[0]], y[0])?;
 
-=== "Rust"
-    ```rust
-    use loess_rs::prelude::*;
-    use std::f64::consts::TAU;
-
-    fn main() -> Result<(), LoessError> {
-        let n = 100usize;
-        let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
-
-        let mut model = OnlineLoess::new()
-            .update_mode("full")
-            .build()?;
-        let out = model.add_point(&[x[0]], y[0])?;
-
-        Ok(())
-    }
-    ```
-=== "Node.js"
-    ```javascript
-    const { OnlineLoess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new OnlineLoess({}, { update_mode: "full" });
-    processor.add_point(x[0], y[0]);
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { OnlineLoess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new OnlineLoess({}, { update_mode: "full" });
-    processor.add_point(x[0], y[0]);
-    ```
-
-=== "C++"
-    ```cpp
-    #include <fastloess.hpp>
-    #include <cmath>
-    #include <iostream>
-    #include <vector>
-
-    int main() {
-        const int n = 100;
-        std::vector<double> x(n), y(n);
-        for (int i = 0; i < n; ++i) {
-            x[i] = i * 2 * M_PI / (n - 1);
-            y[i] = std::sin(x[i]) + 0.1;
-        }
-
-        fastloess::OnlineOptions opts;
-        opts.update_mode = "full";
-        fastloess::OnlineLoess model(opts);
-        auto out = model.add_point(x[0], y[0]).value();
-
-        return 0;
-    }
-    ```
+    Ok(())
+}
+```
