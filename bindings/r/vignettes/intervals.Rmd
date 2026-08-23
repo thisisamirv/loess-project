@@ -111,3 +111,7 @@ legend("topright",
 model <- Loess(fraction = 0.5, confidence_intervals = 0.99)
 result <- fit(model, x, y)
 ```
+
+```{r session-info}
+sessionInfo()
+```

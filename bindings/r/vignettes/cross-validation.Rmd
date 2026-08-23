@@ -129,3 +129,7 @@ model <- Loess(
 result <- fit(model, x, y)
 cat("Selected fraction:", result$fraction_used, "\n")
 ```
+
+```{r session-info}
+sessionInfo()
+```

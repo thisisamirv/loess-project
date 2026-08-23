@@ -116,3 +116,7 @@ polygon(c(result$x, rev(result$x)),
         col = rgb(0, 0, 1, 0.15), border = NA)
 lines(result$x, result$y, col = "blue", lwd = 2)
 ```
+
+```{r session-info}
+sessionInfo()
+```

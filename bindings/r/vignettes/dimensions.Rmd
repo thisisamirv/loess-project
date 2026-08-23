@@ -127,3 +127,7 @@ model <- Loess(
 )
 result <- fit(model, x2d, z)
 ```
+
+```{r session-info}
+sessionInfo()
+```

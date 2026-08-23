@@ -103,3 +103,7 @@ for (chunk_i in 1:5) {
 }
 final <- finalize(model)
 ```
+
+```{r session-info}
+sessionInfo()
+```

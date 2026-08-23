@@ -111,3 +111,7 @@ Decision guide:
 | Handles irregular sampling | ✓ | ✓ | ✗ |
 | Multivariate predictors | ✓ | ✓ | ✗ |
 | Adjustable polynomial degree | ✓ (0–4) | ✓ | ✗ |
+
+```{r session-info}
+sessionInfo()
+```

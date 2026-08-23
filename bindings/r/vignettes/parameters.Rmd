@@ -178,3 +178,7 @@ model <- OnlineLoess(
     update_mode = "incremental"
 )
 ```
+
+```{r session-info}
+sessionInfo()
+```

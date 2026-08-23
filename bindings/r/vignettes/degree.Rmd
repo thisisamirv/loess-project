@@ -108,3 +108,7 @@ result <- fit(model, x, y)
 | Benchmark / exploratory only | `4` |
 
 > **Rule of thumb:** Start with `degree = 1` (default). Move to `degree = 2` only if you see systematic bias in regions of high curvature, and increase `fraction` at the same time.
+
+```{r session-info}
+sessionInfo()
+```

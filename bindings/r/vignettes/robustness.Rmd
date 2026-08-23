@@ -116,3 +116,7 @@ legend("topright", c("Data", "iterations=0", "iterations=3"),
 | `"bisquare"` | Smooth to zero | General purpose |
 | `"huber"` | Linear then downweights | Mild contamination |
 | `"talwar"` | Hard threshold (0/1) | Severe point outliers |
+
+```{r session-info}
+sessionInfo()
+```

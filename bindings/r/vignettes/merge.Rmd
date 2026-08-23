@@ -122,3 +122,7 @@ model <- StreamingLoess(
     merge_strategy = "weighted_average"
 )
 ```
+
+```{r session-info}
+sessionInfo()
+```

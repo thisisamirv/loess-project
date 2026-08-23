@@ -62,3 +62,7 @@ model <- Loess()
 result <- fit(model, x, y)
 print(result$y)
 ```
+
+```{r session-info}
+sessionInfo()
+```
