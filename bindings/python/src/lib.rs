@@ -269,6 +269,7 @@ impl PyStreamingLoess {
     #[pyo3(signature = (
         fraction=0.67,
         chunk_size=5000,
+        *,
         overlap=None,
         iterations=3,
         weight_function="tricube",
@@ -445,6 +446,7 @@ impl PyOnlineLoess {
         fraction=0.67,
         window_capacity=1000,
         min_points=3,
+        *,
         iterations=3,
         weight_function="tricube",
         robustness_method="bisquare",
@@ -580,6 +582,7 @@ impl PyLoess {
     #[new]
     #[pyo3(signature = (
         fraction=0.67,
+        *,
         iterations=3,
         weight_function="tricube",
         robustness_method="bisquare",

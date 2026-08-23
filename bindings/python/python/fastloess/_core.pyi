@@ -150,6 +150,7 @@ class Loess:
     def __init__(
         self,
         fraction: float = 0.67,
+        *,
         iterations: int = 3,
         weight_function: str = "tricube",
         robustness_method: str = "bisquare",
@@ -206,6 +207,7 @@ class StreamingLoess:
         self,
         fraction: float = 0.67,
         chunk_size: int = 5000,
+        *,
         overlap: int | None = None,
         iterations: int = 3,
         weight_function: str = "tricube",
@@ -247,6 +249,7 @@ class OnlineLoess:
         fraction: float = 0.67,
         window_capacity: int = 1000,
         min_points: int = 3,
+        *,
         iterations: int = 3,
         weight_function: str = "tricube",
         robustness_method: str = "bisquare",
