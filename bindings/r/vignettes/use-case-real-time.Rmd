@@ -23,7 +23,7 @@ The Online adapter provides incremental smoothing for continuously arriving data
 
 ### Sensor Data Example
 
-```{r}
+```{r use_case_real_time_1}
 library(rfastloess)
 
 set.seed(42)
@@ -47,7 +47,7 @@ for (i in seq_along(times)) {
 
 ## Accumulating Results
 
-```{r}
+```{r use_case_real_time_2}
 library(rfastloess)
 set.seed(42)
 n      <- 200
@@ -95,7 +95,7 @@ lines(smoothed_x, smoothed_y, col = "blue", lwd = 2)
 
 ## Streaming Mode for Large Batches
 
-```{r}
+```{r use_case_real_time_3}
 library(rfastloess)
 
 model <- StreamingLoess(

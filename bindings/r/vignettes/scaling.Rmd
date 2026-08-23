@@ -35,7 +35,7 @@ First centers residuals at their median, then takes the median of the absolute d
 
 **Use when**: Data may contain outliers (default for most applications).
 
-```{r}
+```{r scaling_1}
 library(rfastloess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -55,7 +55,7 @@ Uses the uncentered median — unlike MAD it does not subtract the residual medi
 
 **Use when**: Speed matters and data have minimal systematic bias in residuals.
 
-```{r}
+```{r scaling_2}
 model <- Loess(iterations = 3, scaling_method = "mar")
 result <- fit(model, x, y)
 ```
@@ -70,7 +70,7 @@ Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier infl
 
 **Use when**: Clean data with no outliers; maximum computation speed required.
 
-```{r}
+```{r scaling_3}
 model <- Loess(iterations = 3, scaling_method = "mean")
 result <- fit(model, x, y)
 ```
@@ -79,7 +79,7 @@ result <- fit(model, x, y)
 
 ## Comparing Scaling Methods
 
-```{r}
+```{r scaling_4}
 library(rfastloess)
 set.seed(42)
 x <- 1:100

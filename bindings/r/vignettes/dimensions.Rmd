@@ -29,7 +29,7 @@ Standard LOESS operates on a single predictor `x`. LOESS extends this to an **n-
 
 Single predictor. No configuration required.
 
-```{r}
+```{r dimensions_1}
 library(rfastloess)
 set.seed(42)
 x <- seq(0, 10, length.out = 200)
@@ -45,7 +45,7 @@ result <- fit(model, x, y)
 
 Two predictors (e.g., latitude/longitude, time/altitude). Pass an `n × 2` matrix as `x`.
 
-```{r}
+```{r dimensions_2}
 set.seed(42)
 n <- 100
 lat <- runif(n, -pi, pi)
@@ -64,7 +64,7 @@ result <- fit(model, x2d, z)
 
 Pass an `n × d` matrix as `x`. Higher dimensions require a larger `fraction` to keep the local neighbourhood populated.
 
-```{r}
+```{r dimensions_3}
 set.seed(42)
 n <- 200
 x1 <- runif(n)
@@ -90,7 +90,7 @@ In multivariate mode, neighbour distances can be computed with different metrics
 | `"euclidean"` | Raw Euclidean distance | Same-scale predictors |
 | `"weighted"` | Per-dimension scaling via `weighted_metric_weights` | Custom anisotropic distance |
 
-```{r}
+```{r dimensions_4}
 # Reuse the 2D spatial data from above; upweight the lat dimension
 model <- Loess(
     fraction = 0.3,
@@ -110,7 +110,7 @@ result <- fit(model, x2d, z)
 | `"interpolation"` | Fit at grid vertices, interpolate elsewhere (default) | Fast |
 | `"direct"` | Fit directly at every query point | Exact, slower |
 
-```{r}
+```{r dimensions_5}
 # Exact fit at every point — slower but no interpolation artefacts
 model <- Loess(surface_mode = "direct", fraction = 0.3, dimensions = 2L)
 result <- fit(model, x2d, z)
@@ -118,7 +118,7 @@ result <- fit(model, x2d, z)
 
 For large 2D or 3D datasets use `"interpolation"` (default) and tune `cell` and `interpolation_vertices` to control grid resolution.
 
-```{r}
+```{r dimensions_6}
 model <- Loess(
     surface_mode = "interpolation",
     cell = 0.2,

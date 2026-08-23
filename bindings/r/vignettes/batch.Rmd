@@ -36,7 +36,7 @@ The default mode. Processes the entire dataset at once and supports all features
 
 ## Example
 
-```{r}
+```{r batch_1}
 library(rfastloess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)

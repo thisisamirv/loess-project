@@ -35,7 +35,7 @@ The fit at each point is a weighted mean. Produces very smooth results but ignor
 
 **Use when**: Maximum smoothness matters more than accuracy; computationally cheapest.
 
-```{r}
+```{r degree_1}
 library(rfastloess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -53,7 +53,7 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 **Use when**: Default; monotone or gently curved data; boundary accuracy matters.
 
-```{r}
+```{r degree_2}
 model <- Loess(degree = "linear", fraction = 0.5)
 result <- fit(model, x, y)
 ```
@@ -66,7 +66,7 @@ Fits a weighted parabola. Captures curvature in the data and reduces bias in reg
 
 **Use when**: Data has visible curvature or local extrema; use a larger `fraction` to stabilise the fit.
 
-```{r}
+```{r degree_3}
 model <- Loess(degree = "quadratic", fraction = 0.5)
 result <- fit(model, x, y)
 ```
@@ -79,7 +79,7 @@ Cubic and quartic local fits capture inflections and fine structure but require 
 
 **Use when**: Highly non-linear local structure; combine with a larger `fraction`.
 
-```{r}
+```{r degree_4}
 model <- Loess(degree = "cubic", fraction = 0.6)
 result <- fit(model, x, y)
 ```
@@ -90,7 +90,7 @@ result <- fit(model, x, y)
 
 At the dataset boundary, the neighbourhood is one-sided and may not contain enough points to support the requested degree. Setting `boundary_degree_fallback = TRUE` automatically reduces the degree at boundaries to avoid instability.
 
-```{r}
+```{r degree_5}
 model <- Loess(degree = 2L, boundary_degree_fallback = TRUE)
 result <- fit(model, x, y)
 ```

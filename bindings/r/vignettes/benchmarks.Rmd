@@ -37,7 +37,7 @@ Speedup relative to R's `stats::loess` (higher is better):
 
 ## Reproducing Benchmarks
 
-```{r}
+```{r benchmarks_1}
 # install.packages("microbenchmark")
 
 library(rfastloess)

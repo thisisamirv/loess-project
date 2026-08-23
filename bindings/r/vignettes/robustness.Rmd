@@ -35,7 +35,7 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 **Use when**: General purpose, balanced approach.
 
-```{r}
+```{r robustness_1}
 library(rfastloess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -53,7 +53,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 **Use when**: Moderate outliers, want to retain some influence.
 
-```{r}
+```{r robustness_2}
 model <- Loess(iterations = 3, robustness_method = "huber")
 result <- fit(model, x, y)
 ```
@@ -66,7 +66,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 **Use when**: Extreme outliers, want binary exclusion.
 
-```{r}
+```{r robustness_3}
 model <- Loess(iterations = 3, robustness_method = "talwar")
 result <- fit(model, x, y)
 ```
@@ -82,7 +82,7 @@ result <- fit(model, x, y)
 | 4–6 | Strong | Data with clear outliers |
 | 7+ | Very strong | Heavy contamination |
 
-```{r}
+```{r robustness_4}
 library(rfastloess)
 set.seed(42)
 x <- 1:100

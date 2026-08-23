@@ -38,7 +38,7 @@ Assigns each overlap point a weight proportional to its proximity to the centre 
 
 **Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20% of chunk size) is used.
 
-```{r}
+```{r merge_1}
 library(rfastloess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -62,7 +62,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
-```{r}
+```{r merge_2}
 model <- StreamingLoess(
     merge_strategy = "average",
     chunk_size = 5000,
@@ -79,7 +79,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 **Use when**: You need final output values immediately after each chunk (no look-ahead revision); left-chunk context dominates.
 
-```{r}
+```{r merge_3}
 model <- StreamingLoess(
     merge_strategy = "take_first",
     chunk_size = 5000,
@@ -96,7 +96,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 **Use when**: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming in real time.
 
-```{r}
+```{r merge_4}
 model <- StreamingLoess(
     merge_strategy = "take_last",
     chunk_size = 5000,
@@ -109,7 +109,7 @@ result <- process_chunk(model, x_chunk, y_chunk)
 
 ## Choosing Chunk Size and Overlap
 
-```{r}
+```{r merge_5}
 # Rule of thumb: overlap = fraction * chunk_size
 fraction  <- 0.3
 chunk_size <- 5000
