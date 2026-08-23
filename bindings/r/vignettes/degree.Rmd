@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## Overview
@@ -43,6 +43,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(degree = "constant", fraction = 0.5)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -56,6 +57,7 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 ```{r degree_2}
 model <- Loess(degree = "linear", fraction = 0.5)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -69,6 +71,7 @@ Fits a weighted parabola. Captures curvature in the data and reduces bias in reg
 ```{r degree_3}
 model <- Loess(degree = "quadratic", fraction = 0.5)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -82,6 +85,7 @@ Cubic and quartic local fits capture inflections and fine structure but require 
 ```{r degree_4}
 model <- Loess(degree = "cubic", fraction = 0.6)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -93,6 +97,7 @@ At the dataset boundary, the neighbourhood is one-sided and may not contain enou
 ```{r degree_5}
 model <- Loess(degree = 2L, boundary_degree_fallback = TRUE)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---

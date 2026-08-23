@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## Overview
@@ -40,6 +40,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(boundary_policy = "extend")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -53,6 +54,7 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
 ```{r boundary_2}
 model <- Loess(boundary_policy = "reflect")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -66,6 +68,7 @@ Pads beyond both endpoints with zeros before fitting. Appropriate when the under
 ```{r boundary_3}
 model <- Loess(boundary_policy = "zero")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---
@@ -79,6 +82,7 @@ Applies no padding. Each local fit uses only the points that are actually availa
 ```{r boundary_4}
 model <- Loess(boundary_policy = "noboundary")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---

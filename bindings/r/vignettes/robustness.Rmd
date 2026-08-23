@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## How Robustness Works
@@ -43,6 +43,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(iterations = 3, robustness_method = "bisquare")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### Huber
@@ -56,6 +57,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 ```{r robustness_2}
 model <- Loess(iterations = 3, robustness_method = "huber")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### Talwar
@@ -69,6 +71,7 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 ```{r robustness_3}
 model <- Loess(iterations = 3, robustness_method = "talwar")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ---

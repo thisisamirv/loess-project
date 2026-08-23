@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## Overview
@@ -52,6 +52,7 @@ model <- StreamingLoess(
     overlap = 500
 )
 result <- process_chunk(model, x_chunk, y_chunk)
+print(head(result$y))
 ```
 
 ---
@@ -69,6 +70,7 @@ model <- StreamingLoess(
     overlap = 500
 )
 result <- process_chunk(model, x_chunk, y_chunk)
+print(head(result$y))
 ```
 
 ---
@@ -86,6 +88,7 @@ model <- StreamingLoess(
     overlap = 500
 )
 result <- process_chunk(model, x_chunk, y_chunk)
+print(head(result$y))
 ```
 
 ---
@@ -103,6 +106,7 @@ model <- StreamingLoess(
     overlap = 500
 )
 result <- process_chunk(model, x_chunk, y_chunk)
+print(head(result$y))
 ```
 
 ---
@@ -121,6 +125,7 @@ model <- StreamingLoess(
     overlap        = overlap,
     merge_strategy = "weighted_average"
 )
+cat(sprintf("overlap = %d points (%.0f%% of chunk)\n", overlap, 100 * overlap / chunk_size))
 ```
 
 ```{r session-info}

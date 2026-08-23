@@ -8,7 +8,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## All Parameters
@@ -88,6 +88,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(fraction = 0.3)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### iterations
@@ -97,6 +98,7 @@ Number of robustness iterations. Each iteration downweights high-residual points
 ```{r parameters_2}
 model <- Loess(iterations = 3L)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### degree
@@ -106,6 +108,7 @@ Polynomial degree for local fits. See the [Polynomial Degree](degree.html) vigne
 ```{r parameters_3}
 model <- Loess(degree = 2L)  # quadratic
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### surface_mode
@@ -115,6 +118,7 @@ Controls whether LOESS fits directly at every query point (`"direct"`) or fits a
 ```{r parameters_4}
 model <- Loess(surface_mode = "direct")
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### distance_metric
@@ -130,6 +134,7 @@ model <- Loess(
     weighted_metric_weights = c(1.0, 0.5)
 )
 result <- fit(model, x2d, y)
+print(head(result$y))
 ```
 
 ### parallel
@@ -139,6 +144,7 @@ Enable parallel CPU execution (multiple cores).
 ```{r parameters_6}
 model <- Loess(parallel = TRUE)
 result <- fit(model, x, y)
+print(head(result$y))
 ```
 
 ### return_diagnostics
@@ -163,6 +169,7 @@ model <- StreamingLoess(
     overlap = 500L,
     merge_strategy = "weighted_average"
 )
+cat(sprintf("overlap = %d points (%.0f%% of chunk)\n", overlap, 100 * overlap / chunk_size))
 ```
 
 ---
@@ -177,6 +184,7 @@ model <- OnlineLoess(
     min_points = 5L,
     update_mode = "incremental"
 )
+cat("OnlineLoess model created.\n")
 ```
 
 ```{r session-info}
