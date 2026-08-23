@@ -48,6 +48,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(degree = "constant", fraction = 0.5)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (constant/Nadaraya-Watson):\n")
 print(head(result$y))
 ```
 
@@ -65,6 +66,7 @@ matters.
 ```{r degree_2}
 model <- Loess(degree = "linear", fraction = 0.5)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (linear local regression):\n")
 print(head(result$y))
 ```
 
@@ -81,6 +83,7 @@ regions with strong local curvature, at the cost of higher variance.
 ```{r degree_3}
 model <- Loess(degree = "quadratic", fraction = 0.5)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (quadratic local regression):\n")
 print(head(result$y))
 ```
 
@@ -97,6 +100,7 @@ a sufficiently large neighbourhood to remain stable. Rarely needed in practice.
 ```{r degree_4}
 model <- Loess(degree = "cubic", fraction = 0.6)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (cubic local regression):\n")
 print(head(result$y))
 ```
 
@@ -111,6 +115,7 @@ enough points to support the requested degree. Setting `boundary_degree_fallback
 ```{r degree_5}
 model <- Loess(degree = 2L, boundary_degree_fallback = TRUE)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (quadratic, boundary fallback):\n")
 print(head(result$y))
 ```
 

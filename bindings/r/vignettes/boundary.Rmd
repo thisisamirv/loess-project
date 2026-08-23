@@ -45,6 +45,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(boundary_policy = "extend")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (extend policy):\n")
 print(head(result$y))
 ```
 
@@ -62,6 +63,7 @@ quantities, or when the derivative at the boundary is expected to be zero.
 ```{r boundary_2}
 model <- Loess(boundary_policy = "reflect")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (reflect policy):\n")
 print(head(result$y))
 ```
 
@@ -78,6 +80,7 @@ value.
 ```{r boundary_3}
 model <- Loess(boundary_policy = "zero")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (zero policy):\n")
 print(head(result$y))
 ```
 
@@ -95,6 +98,7 @@ behaviour.
 ```{r boundary_4}
 model <- Loess(boundary_policy = "noboundary")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (noboundary policy):\n")
 print(head(result$y))
 ```
 

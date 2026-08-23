@@ -86,6 +86,7 @@ model <- Loess(
 result <- fit(model, x, y)
 
 cat("Best fraction:", result$fraction_used, "\n")
+cat("CV scores by fraction:\n")
 print(data.frame(fraction = fractions, score = result$cv_scores))
 ```
 

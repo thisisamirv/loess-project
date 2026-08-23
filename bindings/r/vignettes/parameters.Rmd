@@ -91,6 +91,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(fraction = 0.3)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (fraction=0.3):\n")
 print(head(result$y))
 ```
 
@@ -102,6 +103,7 @@ points.
 ```{r parameters_2}
 model <- Loess(iterations = 3L)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (iterations=3):\n")
 print(head(result$y))
 ```
 
@@ -113,6 +115,7 @@ vignette.
 ```{r parameters_3}
 model <- Loess(degree = 2L)  # quadratic
 result <- fit(model, x, y)
+cat("First 6 smoothed values (degree=2, quadratic):\n")
 print(head(result$y))
 ```
 
@@ -125,6 +128,7 @@ faster for large datasets.
 ```{r parameters_4}
 model <- Loess(surface_mode = "direct")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (direct surface mode):\n")
 print(head(result$y))
 ```
 
@@ -142,6 +146,7 @@ model <- Loess(
     weighted_metric_weights = c(1.0, 0.5)
 )
 result <- fit(model, x2d, y)
+cat("First 6 smoothed values (2D LOESS, weighted distance):\n")
 print(head(result$y))
 ```
 
@@ -152,6 +157,7 @@ Enable parallel CPU execution (multiple cores).
 ```{r parameters_6}
 model <- Loess(parallel = TRUE)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (parallel=TRUE):\n")
 print(head(result$y))
 ```
 
@@ -162,7 +168,7 @@ Return goodness-of-fit diagnostics (R², residuals, etc.).
 ```{r parameters_7}
 model <- Loess(return_diagnostics = TRUE)
 result <- fit(model, x, y)
-print(result$diagnostics$r_squared)
+cat("R²:", result$diagnostics$r_squared, "\n")
 ```
 
 ---

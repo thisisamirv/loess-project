@@ -58,6 +58,7 @@ model <- StreamingLoess(
     overlap = 500
 )
 result <- process_chunk(model, x_chunk, y_chunk)
+cat("First 6 smoothed values (weighted_average strategy):\n")
 print(head(result$y))
 ```
 
@@ -78,6 +79,7 @@ model <- StreamingLoess(
     overlap = 500
 )
 result <- process_chunk(model, x_chunk, y_chunk)
+cat("First 6 smoothed values (average strategy):\n")
 print(head(result$y))
 ```
 
@@ -98,6 +100,7 @@ model <- StreamingLoess(
     overlap = 500
 )
 result <- process_chunk(model, x_chunk, y_chunk)
+cat("First 6 smoothed values (take_first strategy):\n")
 print(head(result$y))
 ```
 
@@ -119,6 +122,7 @@ model <- StreamingLoess(
     overlap = 500
 )
 result <- process_chunk(model, x_chunk, y_chunk)
+cat("First 6 smoothed values (take_last strategy):\n")
 print(head(result$y))
 ```
 

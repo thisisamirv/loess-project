@@ -42,6 +42,7 @@ y <- sin(x) + rnorm(200, sd = 0.2)
 
 model <- Loess(fraction = 0.3)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (1D LOESS):\n")
 print(head(result$y))
 ```
 
@@ -63,6 +64,7 @@ x2d <- cbind(lat, lon)   # n × 2 matrix
 
 model <- Loess(fraction = 0.3, dimensions = 2L)
 result <- fit(model, x2d, z)
+cat("First 6 smoothed values (2D LOESS, lat/lon):\n")
 print(head(result$y))
 ```
 
@@ -85,6 +87,7 @@ x3d <- cbind(x1, x2, x3)   # n × 3 matrix
 
 model <- Loess(fraction = 0.5, dimensions = 3L)
 result <- fit(model, x3d, y)
+cat("First 6 smoothed values (3D LOESS):\n")
 print(head(result$y))
 ```
 
@@ -110,6 +113,7 @@ model <- Loess(
     weighted_metric_weights = c(2.0, 1.0)  # lat counts twice
 )
 result <- fit(model, x2d, z)
+cat("First 6 smoothed values (2D LOESS, weighted distance):\n")
 print(head(result$y))
 ```
 
@@ -126,6 +130,7 @@ print(head(result$y))
 # Exact fit at every point — slower but no interpolation artefacts
 model <- Loess(surface_mode = "direct", fraction = 0.3, dimensions = 2L)
 result <- fit(model, x2d, z)
+cat("First 6 smoothed values (2D LOESS, direct surface):\n")
 print(head(result$y))
 ```
 
@@ -140,6 +145,7 @@ model <- Loess(
     dimensions = 2L
 )
 result <- fit(model, x2d, z)
+cat("First 6 smoothed values (2D LOESS, interpolation surface):\n")
 print(head(result$y))
 ```
 
