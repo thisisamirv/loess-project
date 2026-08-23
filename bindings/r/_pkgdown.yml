@@ -31,9 +31,14 @@ reference:
     desc: Helper types for documentation.
     contents:
       - Nullable
+  - title: GPU Backend
+    desc: Check for and install the optional GPU-accelerated backend.
+    contents:
+      - gpu_available
+      - install_gpu
 
 articles:
-  - title: Getting Started
+  - title: Introduction
     contents:
       - installation
       - quickstart
@@ -60,7 +65,7 @@ articles:
       - use-case-genomics
       - use-case-time-series
       - use-case-real-time
-  - title: Reference
+  - title: Performance
     contents:
       - benchmarks
 
