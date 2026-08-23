@@ -38,25 +38,24 @@ Standard mode for complete datasets. **Supports all features.**
 
 ### Example
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(
-        fraction=0.5,
-        iterations=3,
-        confidence_intervals=0.95,
-        prediction_intervals=0.95,
-        return_diagnostics=True,
-        parallel=True
-    )
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(
+    fraction=0.5,
+    iterations=3,
+    confidence_intervals=0.95,
+    prediction_intervals=0.95,
+    return_diagnostics=True,
+    parallel=True
+)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -91,25 +90,24 @@ Process large datasets in chunks with configurable overlap.
 
 ### Example
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.StreamingLoess(
-        fraction=0.3,
-        iterations=2,
-        chunk_size=5000,
-        overlap=500,
-        merge_strategy="average"
-    )
-    model.process_chunk(x, y)
-    result = model.finalize()
-    ```
+model = fl.StreamingLoess(
+    fraction=0.3,
+    iterations=2,
+    chunk_size=5000,
+    overlap=500,
+    merge_strategy="average"
+)
+model.process_chunk(x, y)
+result = model.finalize()
+```
 
 ---
 
@@ -145,27 +143,26 @@ Incremental updates with a sliding window for real-time data.
 
 ### Example
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.OnlineLoess(
-        fraction=0.2,
-        iterations=1,
-        window_capacity=100,
-        min_points=5,
-        update_mode="incremental"
-    )
-    for xi, yi in zip(x, y):
-        result = model.add_point(float(xi), float(yi))
-        if result is not None:
-            print(result.y)
-    ```
+model = fl.OnlineLoess(
+    fraction=0.2,
+    iterations=1,
+    window_capacity=100,
+    min_points=5,
+    update_mode="incremental"
+)
+for xi, yi in zip(x, y):
+    result = model.add_point(float(xi), float(yi))
+    if result is not None:
+        print(result.y)
+```
 
 ---
 

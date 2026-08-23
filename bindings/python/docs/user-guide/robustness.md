@@ -30,18 +30,17 @@ $$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
 
 **Use when**: General purpose, balanced approach.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(iterations=3, robustness_method="bisquare")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(iterations=3, robustness_method="bisquare")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -53,18 +52,17 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
 
 **Use when**: Moderate outliers, want to retain some influence.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(iterations=3, robustness_method="huber")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(iterations=3, robustness_method="huber")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -76,18 +74,17 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 **Use when**: Extreme outliers, want binary exclusion.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(iterations=3, robustness_method="talwar")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(iterations=3, robustness_method="talwar")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -105,22 +102,21 @@ $$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
 
 Use robustness weights to identify potential outliers:
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(iterations=5, return_robustness_weights=True)
-    result = model.fit(x, y)
+model = fl.Loess(iterations=5, return_robustness_weights=True)
+result = model.fit(x, y)
 
-    for i, w in enumerate(result.robustness_weights):
-        if w < 0.5:
-            print(f"Potential outlier at index {i}: weight = {w:.3f}")
-    ```
+for i, w in enumerate(result.robustness_weights):
+    if w < 0.5:
+        print(f"Potential outlier at index {i}: weight = {w:.3f}")
+```
 
 ---
 
@@ -136,18 +132,17 @@ Residuals are scaled before computing robustness weights. Two methods:
 
 ![Scaling Methods Comparison](../assets/diagrams/scaling_comparison.svg)
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(iterations=3, scaling_method="mad")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(iterations=3, scaling_method="mad")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -158,16 +153,14 @@ Stop iterations early when weights stabilize:
 !!! tip "Performance"
     Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(iterations=10, auto_converge=1e-6)
-    result = model.fit(x, y)
-    ```
-
+model = fl.Loess(iterations=10, auto_converge=1e-6)
+result = model.fit(x, y)
+```

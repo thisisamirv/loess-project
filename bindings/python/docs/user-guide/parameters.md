@@ -5,11 +5,6 @@ Complete reference for all LOESS configuration options.
 
 ## Quick Reference
 
-!!! note "Language-specific values"
-    **Null value** — R: `NULL` · Python: `None` · Rust: `None` · Julia: `nothing` · Node.js/WASM: `null` · C++: `NAN` (floats), `0` (integers), `{}` (vectors)
-
-    **Logical false** — R uses `FALSE`, Python uses `False`, and Rust, Julia, Node.js, WASM, and C++ use `false`.
-
 | Parameter | Default | Range/Options | Description | Adapter |
 | --- | --- | --- | --- | --- |
 | **fraction** | 0.67 | (0, 1] | Smoothing span | All |
@@ -21,23 +16,23 @@ Complete reference for all LOESS configuration options.
 | **zero_weight_fallback** | `"use_local_mean"` | 3 options | Zero-weight behavior | All |
 | **boundary_policy** | `"extend"` | 4 options | Edge handling | All |
 | **scaling_method** | `"mad"` | 3 options | Scale estimation | All |
-| **auto_converge** | Null value | tolerance | Early stopping | All |
+| **auto_converge** | `None` | tolerance | Early stopping | All |
 | **parallel** | true (false for Online) | logical | Multi-threaded execution | All |
-| **custom_weights** | Null value | positive | Per-observation weights | Batch |
-| **return_residuals** | Logical false | logical | Include residuals | All |
-| **return_robustness_weights** | Logical false | logical | Include weights | All |
-| **return_diagnostics** | Logical false | logical | Include metrics | All |
-| **confidence_intervals** | Null value | (0, 1) | CI level | Batch |
-| **prediction_intervals** | Null value | (0, 1) | PI level | Batch |
+| **custom_weights** | `None` | positive | Per-observation weights | Batch |
+| **return_residuals** | `False` | logical | Include residuals | All |
+| **return_robustness_weights** | `False` | logical | Include weights | All |
+| **return_diagnostics** | `False` | logical | Include metrics | All |
+| **confidence_intervals** | `None` | (0, 1) | CI level | Batch |
+| **prediction_intervals** | `None` | (0, 1) | PI level | Batch |
 | **distance_metric** | `"normalized"` | string option | Distance metric | All |
-| **weighted_metric_weights** | Null value | numeric | Per-dimension distance weights | All |
-| **cell** | Null value | (0, ∞) | Interpolation cell size | All |
-| **interpolation_vertices** | Null value | integer | Interpolation grid vertices | All |
-| **boundary_degree_fallback** | Logical false | logical | Degree fallback at boundaries | All |
-| **cv_method** | Null value | method | Auto-select fraction | Batch |
+| **weighted_metric_weights** | `None` | numeric | Per-dimension distance weights | All |
+| **cell** | `None` | (0, ∞) | Interpolation cell size | All |
+| **interpolation_vertices** | `None` | integer | Interpolation grid vertices | All |
+| **boundary_degree_fallback** | `False` | logical | Degree fallback at boundaries | All |
+| **cv_method** | `None` | method | Auto-select fraction | Batch |
 | **cv_k** | 5 | [2, ∞) | K-fold count | Batch |
-| **cv_fractions** | Null value | numeric | Fractions to evaluate | Batch |
-| **cv_seed** | Null value | integer | CV fold randomization seed | Batch |
+| **cv_fractions** | `None` | numeric | Fractions to evaluate | Batch |
+| **cv_seed** | `None` | integer | CV fold randomization seed | Batch |
 | **cross_validate** | — | method | Auto-select fraction (`cv_method` + `cv_k` + `cv_fractions` + `cv_seed`) | Batch |
 | **chunk_size** | 5000 | [10, ∞) | Points per chunk | Streaming |
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
@@ -45,10 +40,6 @@ Complete reference for all LOESS configuration options.
 | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
 | **min_points** | 2 | [2, window] | Min before output | Online |
 | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
-
-!!! note "Rust option values"
-    In Rust, pass option-like parameters as strings (case-insensitive), e.g. `"tricube"`, `"bisquare"`, `"extend"`, `"weighted_average"`.
-    For the weighted distance metric, use `.distance_metric("weighted").weighted_metric_weights(vec![...])`.
 
 ---
 
@@ -83,18 +74,17 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 ![Fraction Comparison](../assets/diagrams/fraction_comparison.svg)
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(fraction=0.3)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(fraction=0.3)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -109,18 +99,17 @@ Number of robustness iterations for outlier resistance.
 | 4–6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(iterations=5)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(iterations=5)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -155,18 +144,17 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 
 See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(surface_mode="direct")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(surface_mode="direct")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -184,18 +172,17 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
 | `0.2` | Moderate (default) | High | Fast |
 | `0.5` | Coarse | Lower | Faster |
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(cell=0.05)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(cell=0.05)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -206,18 +193,17 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 - **Default**: auto (derived from `cell` and data range)
 - **Adapter**: All
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(interpolation_vertices=50)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(interpolation_vertices=50)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -248,23 +234,22 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 | `"minkowski:p"` | Generalised $L_p$ norm — e.g. `"minkowski:3"` |
 | `"weighted"` | Weighted Euclidean — set `weighted_metric_weights` to one weight per dimension |
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
-    x2d = np.column_stack([x, x**2 / (2 * np.pi)**2]).ravel()
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
+x2d = np.column_stack([x, x**2 / (2 * np.pi)**2]).ravel()
 
-    model = fl.Loess(
-        dimensions=2,
-        distance_metric="weighted",
-        weighted_metric_weights=[2.0, 0.5]
-    )
-    result = model.fit(x2d, y)
-    ```
+model = fl.Loess(
+    dimensions=2,
+    distance_metric="weighted",
+    weighted_metric_weights=[2.0, 0.5]
+)
+result = model.fit(x2d, y)
+```
 
 ---
 
@@ -284,18 +269,17 @@ Distance weighting kernel for local fits.
 
 See [Weight Functions](kernels.md) for detailed comparison.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(weight_function="epanechnikov")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(weight_function="epanechnikov")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -311,18 +295,17 @@ Method for downweighting outliers during iterative refinement.
 
 See [Robustness](robustness.md) for detailed comparison.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(robustness_method="talwar")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(robustness_method="talwar")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -341,18 +324,17 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 
 For example:
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(boundary_policy="reflect")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(boundary_policy="reflect")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -366,18 +348,17 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 !!! tip
     Enable this if you observe NaN values or instability at the edges of your data when using `degree = "quadratic"` or higher.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(degree="quadratic", boundary_degree_fallback=True)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(degree="quadratic", boundary_degree_fallback=True)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -395,30 +376,17 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 
 For example:
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(scaling_method="mad")
-    result = model.fit(x, y)
-    ```
-
-=== "Node.js / WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ scaling_method: "mad" });
-    const result = model.fit(x, y);
-    ```
+model = fl.Loess(scaling_method="mad")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -436,18 +404,17 @@ Behavior when all neighborhood weights are zero.
 
 For example:
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(zero_weight_fallback="use_local_mean")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(zero_weight_fallback="use_local_mean")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -455,18 +422,17 @@ For example:
 
 Enable early stopping when robustness weights stabilize.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(iterations=20, auto_converge=1e-6)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(iterations=20, auto_converge=1e-6)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -483,18 +449,17 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
 !!! tip
     Set to `false` for fully deterministic, reproducible output when debugging, or in environments where thread safety is required.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(parallel=False)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(parallel=False)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -520,20 +485,19 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
 !!! warning "Length must match y"
     The weights vector must have the same length as `y`. A mismatch returns an error.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    weights = np.ones(len(y))
-    weights[4] = 0  # Exclude 5th point
-    model = fl.Loess()
-    result = model.fit(x, y, custom_weights=weights)
-    ```
+weights = np.ones(len(y))
+weights[4] = 0  # Exclude 5th point
+model = fl.Loess()
+result = model.fit(x, y, custom_weights=weights)
+```
 
 ---
 
@@ -543,19 +507,18 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
 
 Include residuals (`y - smoothed`) in the output.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(return_residuals=True)
-    result = model.fit(x, y)
-    print(result.residuals)
-    ```
+model = fl.Loess(return_residuals=True)
+result = model.fit(x, y)
+print(result.residuals)
+```
 
 ---
 
@@ -573,19 +536,18 @@ Include fit quality metrics (Batch and Streaming only).
 | `aic` | Akaike Information Criterion |
 | `aicc` | Corrected AIC |
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(return_diagnostics=True)
-    result = model.fit(x, y)
-    print(f"R\u00b2: {result.diagnostics.r_squared:.4f}")
-    ```
+model = fl.Loess(return_diagnostics=True)
+result = model.fit(x, y)
+print(f"R\u00b2: {result.diagnostics.r_squared:.4f}")
+```
 
 ---
 
@@ -593,19 +555,18 @@ Include fit quality metrics (Batch and Streaming only).
 
 Include final robustness weights (useful for outlier detection).
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(iterations=3, return_robustness_weights=True)
-    result = model.fit(x, y)
-    outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
-    ```
+model = fl.Loess(iterations=3, return_robustness_weights=True)
+result = model.fit(x, y)
+outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
+```
 
 ---
 
@@ -615,18 +576,17 @@ Request uncertainty estimates (Batch only).
 
 See [Intervals](intervals.md) for detailed usage.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(confidence_intervals=0.95, prediction_intervals=0.95)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(confidence_intervals=0.95, prediction_intervals=0.95)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -641,18 +601,17 @@ Selection strategy for automated parameter tuning.
 | `"kfold"` | K-Fold Cross-Validation | Fast |
 | `"loocv"` | Leave-One-Out Cross-Validation | Slow |
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(cv_method="kfold", cv_k=5)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(cv_method="kfold", cv_k=5)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -662,19 +621,18 @@ Selection strategy for automated parameter tuning.
 
 Points per chunk in Streaming mode.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.StreamingLoess(chunk_size=10000)
-    model.process_chunk(x, y)
-    result = model.finalize()
-    ```
+model = fl.StreamingLoess(chunk_size=10000)
+model.process_chunk(x, y)
+result = model.finalize()
+```
 
 ---
 
@@ -682,19 +640,18 @@ Points per chunk in Streaming mode.
 
 Overlap between chunks in Streaming mode.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.StreamingLoess(overlap=1000)
-    model.process_chunk(x, y)
-    result = model.finalize()
-    ```
+model = fl.StreamingLoess(overlap=1000)
+model.process_chunk(x, y)
+result = model.finalize()
+```
 
 ---
 
@@ -711,19 +668,18 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 
 For example:
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.StreamingLoess(merge_strategy="weighted_average")
-    model.process_chunk(x, y)
-    result = model.finalize()
-    ```
+model = fl.StreamingLoess(merge_strategy="weighted_average")
+model.process_chunk(x, y)
+result = model.finalize()
+```
 
 ---
 
@@ -731,18 +687,17 @@ For example:
 
 Maximum points held in memory for Online mode.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.OnlineLoess(window_capacity=500)
-    result = model.add_point(x[0], y[0])  # None until window fills
-    ```
+model = fl.OnlineLoess(window_capacity=500)
+result = model.add_point(x[0], y[0])  # None until window fills
+```
 
 ---
 
@@ -750,18 +705,17 @@ Maximum points held in memory for Online mode.
 
 Minimum points required before Online filter starts producing outputs.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.OnlineLoess(min_points=10)
-    result = model.add_point(x[0], y[0])  # None until 10 points seen
-    ```
+model = fl.OnlineLoess(min_points=10)
+result = model.add_point(x[0], y[0])  # None until 10 points seen
+```
 
 ---
 
@@ -776,16 +730,14 @@ Optimization strategy for Online mode updates.
 
 For example:
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.OnlineLoess(update_mode="full")
-    result = model.add_point(x[0], y[0])
-    ```
-
+model = fl.OnlineLoess(update_mode="full")
+result = model.add_point(x[0], y[0])
+```

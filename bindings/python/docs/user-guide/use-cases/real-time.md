@@ -17,30 +17,28 @@ For true real-time applications where each point must be processed immediately.
 
 ### Sensor Data Example
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    # Simulate sensor readings arriving over time
-    np.random.seed(42)
-    n_readings = 100
-    times = np.arange(n_readings, dtype=float)
-    temperatures = 20 + 5 * np.sin(times / 10) + np.random.normal(0, 1, n_readings)
+# Simulate sensor readings arriving over time
+np.random.seed(42)
+n_readings = 100
+times = np.arange(n_readings, dtype=float)
+temperatures = 20 + 5 * np.sin(times / 10) + np.random.normal(0, 1, n_readings)
 
-    # Process with online mode
-    online = fl.OnlineLoess(
-        fraction=0.3,
-        window_capacity=25,    # Keep last 25 points
-        min_points=5,          # Wait for 5 points before output
-        update_mode="incremental"
-    )
-    for xi, yi in zip(times, temperatures):
-        result = online.add_point(float(xi), float(yi))
-        if result is not None:
-            print(f"Time {xi:.0f}: smoothed = {result.y:.2f}")
-    ```
-
+# Process with online mode
+online = fl.OnlineLoess(
+    fraction=0.3,
+    window_capacity=25,    # Keep last 25 points
+    min_points=5,          # Wait for 5 points before output
+    update_mode="incremental"
+)
+for xi, yi in zip(times, temperatures):
+    result = online.add_point(float(xi), float(yi))
+    if result is not None:
+        print(f"Time {xi:.0f}: smoothed = {result.y:.2f}")
+```
 ---
 
 ## Streaming Mode: Chunk Processing
@@ -54,61 +52,57 @@ For large datasets that arrive in batches or files.
 
 ### Log File Processing
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    # Simulate large dataset arriving in chunks
-    total_points = 100000
-    chunk_size = 10000
-    
-    # All at once with streaming handles chunking internally
-    x = np.arange(total_points, dtype=float)
-    y = np.sin(x / 1000) + np.random.normal(0, 0.1, total_points)
-    
-    model = fl.StreamingLoess(
-        fraction=0.05,
-        chunk_size=10000,
-        overlap=1000,
-        merge_strategy="weighted_average"
-    )
-    model.process_chunk(x, y)
-    result = model.finalize()
-    
-    print(f"Processed {len(result.y)} points")
-    ```
+# Simulate large dataset arriving in chunks
+total_points = 100000
+chunk_size = 10000
 
+# All at once with streaming handles chunking internally
+x = np.arange(total_points, dtype=float)
+y = np.sin(x / 1000) + np.random.normal(0, 0.1, total_points)
+
+model = fl.StreamingLoess(
+    fraction=0.05,
+    chunk_size=10000,
+    overlap=1000,
+    merge_strategy="weighted_average"
+)
+model.process_chunk(x, y)
+result = model.finalize()
+
+print(f"Processed {len(result.y)} points")
+```
 ---
 
 ## Real-Time Dashboard Example
 
 The dashboard pattern uses a plain LOESS fit on a manually managed sliding window rather than `OnlineLoess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer `OnlineLoess` with `update_mode = "incremental"` to bound per-frame cost.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    # Simulated real-time dashboard sliding window
-    window_capacity = 50
-    data_x, data_y = [], []
+# Simulated real-time dashboard sliding window
+window_capacity = 50
+data_x, data_y = [], []
+
+for i in range(200):
+    x, y = i, 25.0 + 10 * np.sin(i / 20) + np.random.normal(0, 2)
+    data_x.append(x)
+    data_y.append(y)
     
-    for i in range(200):
-        x, y = i, 25.0 + 10 * np.sin(i / 20) + np.random.normal(0, 2)
-        data_x.append(x)
-        data_y.append(y)
-        
-        if len(data_x) > window_capacity:
-            data_x = data_x[-window_capacity:]
-            data_y = data_y[-window_capacity:]
-        
-        if len(data_x) >= 5:
-            model = fl.Loess(fraction=0.4)
-            result = model.fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
-            current_smoothed = result.y[-1]
-    ```
-
+    if len(data_x) > window_capacity:
+        data_x = data_x[-window_capacity:]
+        data_y = data_y[-window_capacity:]
+    
+    if len(data_x) >= 5:
+        model = fl.Loess(fraction=0.4)
+        result = model.fit(np.array(data_x, dtype=float), np.array(data_y, dtype=float))
+        current_smoothed = result.y[-1]
+```
 ---
 
 ## Choosing Parameters

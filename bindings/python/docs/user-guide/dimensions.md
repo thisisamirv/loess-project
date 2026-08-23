@@ -24,16 +24,15 @@ Standard LOESS operates on a single predictor $x$. Setting `dimensions > 1` exte
 
 Single predictor. No configuration required.
 
-=== "Python"
-    ```python
-    import numpy as np
-    import fastloess as fl
+```python
+import numpy as np
+import fastloess as fl
 
-    x = np.linspace(0, 10, 200)
-    y = np.sin(x) + np.random.normal(0, 0.2, 200)
-    model = fl.Loess(fraction=0.3)
-    result = model.fit(x, y)
-    ```
+x = np.linspace(0, 10, 200)
+y = np.sin(x) + np.random.normal(0, 0.2, 200)
+model = fl.Loess(fraction=0.3)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -41,22 +40,21 @@ Single predictor. No configuration required.
 
 Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ matrix as `x`.
 
-=== "Python"
-    ```python
-    import numpy as np
-    import fastloess as fl
+```python
+import numpy as np
+import fastloess as fl
 
-    rng = np.random.default_rng(42)
-    n = 100
-    lat = np.linspace(0, 2 * np.pi, n)
-    lon = np.linspace(0, 2 * np.pi, n)
-    z = np.sin(lat) + np.cos(lon) + rng.normal(0, 0.1, n)
+rng = np.random.default_rng(42)
+n = 100
+lat = np.linspace(0, 2 * np.pi, n)
+lon = np.linspace(0, 2 * np.pi, n)
+z = np.sin(lat) + np.cos(lon) + rng.normal(0, 0.1, n)
 
-    # x is an (n, 2) array flattened to 1D (Python binding requires flat input)
-    x2d = np.column_stack([lat, lon]).ravel()
-    model = fl.Loess(dimensions=2, fraction=0.3)
-    result = model.fit(x2d, z)
-    ```
+# x is an (n, 2) array flattened to 1D (Python binding requires flat input)
+x2d = np.column_stack([lat, lon]).ravel()
+model = fl.Loess(dimensions=2, fraction=0.3)
+result = model.fit(x2d, z)
+```
 
 ---
 
@@ -64,22 +62,21 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
 
 Three or more predictors. The neighbourhood radius grows in each additional dimension, so a larger `fraction` (or smaller dataset) is typically needed.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    n = 100
-    x1 = np.linspace(0, 2 * np.pi, n)
-    x2 = np.linspace(0, 1, n)
-    x3 = np.linspace(1, 0, n)
-    y = np.sin(x1) + x2 - x3 + rng.normal(0, 0.1, n)
+rng = np.random.default_rng(42)
+n = 100
+x1 = np.linspace(0, 2 * np.pi, n)
+x2 = np.linspace(0, 1, n)
+x3 = np.linspace(1, 0, n)
+y = np.sin(x1) + x2 - x3 + rng.normal(0, 0.1, n)
 
-    x3d = np.column_stack([x1, x2, x3]).ravel()   # (n*3,) flat
-    model = fl.Loess(dimensions=3, fraction=0.5)
-    result = model.fit(x3d, y)
-    ```
+x3d = np.column_stack([x1, x2, x3]).ravel()   # (n*3,) flat
+model = fl.Loess(dimensions=3, fraction=0.5)
+result = model.fit(x3d, y)
+```
 
 ---
 

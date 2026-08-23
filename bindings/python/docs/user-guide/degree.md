@@ -27,18 +27,17 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 **Use when**: Maximum smoothness is more important than accuracy; computationally cheapest option.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(degree="constant", fraction=0.5)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(degree="constant", fraction=0.5)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -50,18 +49,17 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 **Use when**: Default; monotone or gently curved data; boundary accuracy matters.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(degree="linear", fraction=0.5)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(degree="linear", fraction=0.5)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -73,18 +71,17 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 **Use when**: Data with pronounced peaks, valleys, or curvature; `fraction` ≥ 0.4.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(degree="quadratic", fraction=0.5)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(degree="quadratic", fraction=0.5)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -96,18 +93,17 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 **Use when**: Data has clear S-shaped curves or multiple inflection points; `fraction` ≥ 0.5.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(degree="cubic", fraction=0.6)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(degree="cubic", fraction=0.6)
+result = model.fit(x, y)
+```
 
 ---
 
@@ -119,18 +115,17 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 **Use when**: Fine oscillatory structure is physically meaningful and the dataset is large; always cross-validate.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(degree="quartic", fraction=0.7)
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(degree="quartic", fraction=0.7)
+result = model.fit(x, y)
+```
 
 ---
 

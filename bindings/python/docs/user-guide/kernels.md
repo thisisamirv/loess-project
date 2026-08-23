@@ -35,18 +35,17 @@ $$w(u) = (1 - |u|^3)^3$$
 
 **Use when**: Default choice for most applications.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(weight_function="tricube")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(weight_function="tricube")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -58,18 +57,17 @@ $$w(u) = \frac{3}{4}(1 - u^2)$$
 
 **Use when**: Optimal MSE properties desired.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(weight_function="epanechnikov")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(weight_function="epanechnikov")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -81,18 +79,17 @@ $$w(u) = \exp(-u^2/2)$$
 
 **Use when**: Maximum smoothness needed, computational cost acceptable.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(weight_function="gaussian")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(weight_function="gaussian")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -104,18 +101,17 @@ $$w(u) = (1 - u^2)^2$$
 
 **Use when**: Alternative to Tricube with slightly different properties.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(weight_function="biweight")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(weight_function="biweight")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -127,18 +123,17 @@ $$w(u) = \cos(\pi u / 2)$$
 
 **Use when**: Want smooth kernel with simple form.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(weight_function="cosine")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(weight_function="cosine")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -150,18 +145,17 @@ $$w(u) = 1 - |u|$$
 
 **Use when**: Simple, interpretable weights.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(weight_function="triangle")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(weight_function="triangle")
+result = model.fit(x, y)
+```
 
 ---
 
@@ -173,18 +167,17 @@ $$w(u) = 1$$
 
 **Use when**: Speed is critical, smoothness less important.
 
-=== "Python"
-    ```python
-    import fastloess as fl
-    import numpy as np
+```python
+import fastloess as fl
+import numpy as np
 
-    rng = np.random.default_rng(42)
-    x = np.linspace(0, 2 * np.pi, 100)
-    y = np.sin(x) + rng.normal(0, 0.3, 100)
+rng = np.random.default_rng(42)
+x = np.linspace(0, 2 * np.pi, 100)
+y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-    model = fl.Loess(weight_function="uniform")
-    result = model.fit(x, y)
-    ```
+model = fl.Loess(weight_function="uniform")
+result = model.fit(x, y)
+```
 
 ---
 
