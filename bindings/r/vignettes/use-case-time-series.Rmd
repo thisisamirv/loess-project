@@ -39,10 +39,10 @@ model <- Loess(fraction = 0.1, iterations = 3)
 result <- fit(model, t, y)
 
 plot(t, y, col = "gray", pch = ".",
-     xlab = "Time", ylab = "Value", main = "Trend Extraction")
+    xlab = "Time", ylab = "Value", main = "Trend Extraction")
 lines(result$x, result$y, col = "blue", lwd = 2)
 legend("topleft", c("Observed", "Trend (LOESS)"),
-       pch = c(1, NA), lty = c(NA, 1), col = c("gray", "blue"))
+        pch = c(1, NA), lty = c(NA, 1), col = c("gray", "blue"))
 ```
 
 ---
@@ -71,12 +71,12 @@ residual <- y - result$y
 
 par(mfrow = c(2, 1))
 plot(t, y, type = "l", col = "gray",
-     main = "Original + LOESS Trend", xlab = "Month", ylab = "Value")
+    main = "Original + LOESS Trend", xlab = "Month", ylab = "Value")
 lines(result$x, result$y, col = "blue", lwd = 2)
 
 plot(t, residual, type = "l", col = "darkgreen",
-     main = "Detrended Residual (Seasonal Component)",
-     xlab = "Month", ylab = "Residual")
+    main = "Detrended Residual (Seasonal Component)",
+    xlab = "Month", ylab = "Residual")
 abline(h = 0, lty = 2, col = "red")
 par(mfrow = c(1, 1))
 ```
@@ -96,7 +96,7 @@ model  <- Loess(fraction = 0.2, iterations = 2)
 result <- fit(model, t_irregular, y_irregular)
 
 plot(t_irregular, y_irregular, pch = 16, cex = 0.4, col = "gray",
-     xlab = "Time", ylab = "Value", main = "Irregularly Sampled Time Series")
+    xlab = "Time", ylab = "Value", main = "Irregularly Sampled Time Series")
 lines(result$x, result$y, col = "blue", lwd = 2)
 ```
 
@@ -118,8 +118,8 @@ model <- Loess(
 result <- fit(model, t, y)
 
 plot(t, y, pch = ".", col = "gray",
-     xlab = "Time", ylab = "Value",
-     main = "Trend with 95% Confidence Interval")
+    xlab = "Time", ylab = "Value",
+    main = "Trend with 95% Confidence Interval")
 polygon(c(result$x, rev(result$x)),
         c(result$confidence_upper, rev(result$confidence_lower)),
         col = rgb(0, 0, 1, 0.15), border = NA)

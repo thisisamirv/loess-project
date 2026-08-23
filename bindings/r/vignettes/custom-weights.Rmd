@@ -69,7 +69,7 @@ model <- Loess(fraction = 0.3)
 result <- fit(model, x, y, custom_weights = weights)
 
 plot(x, y, pch = 16, cex = 0.5 + weights / max(weights),
-     col = "gray", main = "Inverse-Variance Weighted LOESS")
+    col = "gray", main = "Inverse-Variance Weighted LOESS")
 lines(result$x, result$y, col = "blue", lwd = 2)
 ```
 
