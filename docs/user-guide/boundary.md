@@ -37,18 +37,6 @@ Pads beyond both endpoints by replicating the first and last observed values. Pr
     result = model.fit(x, y)
     ```
 
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ boundary_policy: "extend" });
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastloess.hpp>
@@ -92,18 +80,6 @@ Mirrors the data about both endpoints before fitting, then discards the reflecte
     result = model.fit(x, y)
     ```
 
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ boundary_policy: "reflect" });
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastloess.hpp>
@@ -145,18 +121,6 @@ Pads with zeros beyond both endpoints. Appropriate when the underlying process i
 
     model = fl.Loess(boundary_policy="zero")
     result = model.fit(x, y)
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ boundary_policy: "zero" });
-    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -203,18 +167,6 @@ Applies no padding. Each local fit uses only the points that are actually availa
 
     model = fl.Loess(boundary_policy="noboundary")
     result = model.fit(x, y)
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ boundary_policy: "noboundary" });
-    const result = model.fit(x, y);
     ```
 
 === "C++"

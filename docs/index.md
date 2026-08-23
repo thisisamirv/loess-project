@@ -99,22 +99,6 @@ Currently available for R, Python, Rust, Julia, Node.js, and WebAssembly.
     conda install -c conda-forge fastloess
     ```
 
-=== "WebAssembly"
-
-    Install from npm:
-
-    ```bash
-    npm install fastloess-wasm
-    ```
-
-    Or via CDN:
-
-    ```html
-    <script type="module">
-      import { Loess } from "https://cdn.jsdelivr.net/npm/fastloess-wasm@<version>/index.js";
-    </script>
-    ```
-
 === "C++"
 
     Install from source:
@@ -147,19 +131,6 @@ See the [Installation Guide](getting-started/installation.md) for more options a
     model = fl.Loess(fraction=0.5, iterations=3)
     result = model.fit(x, y)
     print(result.y)
-    ```
-
-=== "WebAssembly"
-
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const x = new Float64Array([1, 2, 3, 4, 5]);
-    const y = new Float64Array([2.0, 4.1, 5.9, 8.2, 9.8]);
-
-    const model = new Loess({ fraction: 0.5, iterations: 3 });
-    const result = model.fit(x, y);
-    console.log(result.y);
     ```
 
 === "C++"

@@ -35,18 +35,6 @@ Single predictor. No configuration required.
     result = model.fit(x, y)
     ```
 
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ fraction: 0.3 });
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastloess.hpp>
@@ -90,20 +78,6 @@ Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ m
     x2d = np.column_stack([lat, lon]).ravel()
     model = fl.Loess(dimensions=2, fraction=0.3)
     result = model.fit(x2d, z)
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const lat = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const lon = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const z = Float64Array.from({ length: n }, (_, i) => Math.sin(lat[i]) + Math.cos(lon[i]) + 0.05);
-    const x2d = Float64Array.from({ length: n * 2 }, (_, k) => k % 2 === 0 ? lat[k >> 1] : lon[k >> 1]);
-
-    const model = new Loess({ dimensions: 2, fraction: 0.3 });
-    const result = model.fit(x2d, z);
     ```
 
 === "C++"
@@ -156,24 +130,6 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
     x3d = np.column_stack([x1, x2, x3]).ravel()   # (n*3,) flat
     model = fl.Loess(dimensions=3, fraction=0.5)
     result = model.fit(x3d, y)
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x1 = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const x2 = Float64Array.from({ length: n }, (_, i) => i / (n - 1));
-    const x3 = Float64Array.from({ length: n }, (_, i) => 1 - i / (n - 1));
-    const y = Float64Array.from({ length: n }, (_, i) => Math.sin(x1[i]) + x2[i] - x3[i] + 0.05);
-    const x3d = Float64Array.from({ length: n * 3 }, (_, k) => {
-        const i = Math.floor(k / 3), d = k % 3;
-        return d === 0 ? x1[i] : d === 1 ? x2[i] : x3[i];
-    });
-
-    const model = new Loess({ dimensions: 3, fraction: 0.5 });
-    const result = model.fit(x3d, y);
     ```
 
 === "C++"

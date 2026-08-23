@@ -40,18 +40,6 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
     result = model.fit(x, y)
     ```
 
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ degree: "constant", fraction: 0.5 });
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastloess.hpp>
@@ -98,18 +86,6 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
     model = fl.Loess(degree="linear", fraction=0.5)
     result = model.fit(x, y)
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ degree: "linear", fraction: 0.5 });
-    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -160,18 +136,6 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
     result = model.fit(x, y)
     ```
 
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ degree: "quadratic", fraction: 0.5 });
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastloess.hpp>
@@ -220,18 +184,6 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
     result = model.fit(x, y)
     ```
 
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ degree: "cubic", fraction: 0.6 });
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastloess.hpp>
@@ -278,18 +230,6 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
     model = fl.Loess(degree="quartic", fraction=0.7)
     result = model.fit(x, y)
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ degree: "quartic", fraction: 0.7 });
-    const result = model.fit(x, y);
     ```
 
 === "C++"

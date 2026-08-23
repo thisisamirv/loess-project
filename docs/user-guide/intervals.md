@@ -38,22 +38,6 @@ Estimate uncertainty in the smoothed curve itself.
     print("CI Upper:", result.confidence_upper)
     ```
 
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ fraction: 0.5, confidence_intervals: 0.95 });
-    const result = model.fit(x, y);
-
-    result.y.forEach((y, i) => {
-        console.log(`x=${result.x[i]}: y=${y} [${result.confidence_lower[i]}, ${result.confidence_upper[i]}]`);
-    });
-    ```
-
 === "C++"
     ```cpp
     #include <fastloess.hpp>
@@ -101,19 +85,6 @@ Estimate where new observations might fall.
     print("PI Upper:", result.prediction_upper)
     ```
 
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ fraction: 0.5, prediction_intervals: 0.95 });
-    const result = model.fit(x, y);
-    console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
-    ```
-
 === "C++"
     ```cpp
     #include <fastloess.hpp>
@@ -157,22 +128,6 @@ Request both types simultaneously:
         prediction_intervals=0.95
     )
     result = model.fit(x, y)
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({
-        fraction: 0.5,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95
-    });
-    const result = model.fit(x, y);
     ```
 
 === "C++"
@@ -223,19 +178,6 @@ Common levels and their z-values:
     result = model.fit(x, y)
     ```
 
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    // 99% confidence interval
-    const model = new Loess({ confidence_intervals: 0.99 });
-    const result = model.fit(x, y);
-    ```
-
 === "C++"
     ```cpp
     #include <fastloess.hpp>
@@ -276,22 +218,6 @@ Access standard errors directly (available when intervals are computed):
     model = fl.Loess(confidence_intervals=0.95)
     result = model.fit(x, y)
     print("Standard errors:", result.standard_errors)
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { Loess } = require('fastloess-wasm');
-
-    const n = 100;
-    const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const model = new Loess({ confidence_intervals: 0.95 });
-    const result = model.fit(x, y);
-
-    result.standard_errors.forEach((se, i) => {
-        console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
-    });
     ```
 
 === "C++"

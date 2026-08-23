@@ -47,21 +47,6 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
     result = model.process_chunk(x_chunk, y_chunk)
     ```
 
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLoess } = require('fastloess-wasm');
-
-    const n = 100;
-    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess(
-        {},
-        { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
-    );
-    const result = processor.process_chunk(xChunk, yChunk);
-    ```
-
 === "C++"
     ```cpp
     #include <fastloess.hpp>
@@ -112,19 +97,6 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
     result = model.finalize()
     ```
 
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLoess } = require('fastloess-wasm');
-
-    const n = 100;
-    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess({}, { merge_strategy: "take_first" });
-    const result = processor.process_chunk(xChunk, yChunk);
-    const final_ = processor.finalize();
-    ```
-
 === "C++"
     ```cpp
     #include <fastloess.hpp>
@@ -171,19 +143,6 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
     model = StreamingLoess(merge_strategy="take_last")
     model.process_chunk(x_chunk, y_chunk)
     result = model.finalize()
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLoess } = require('fastloess-wasm');
-
-    const n = 100;
-    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess({}, { merge_strategy: "take_last" });
-    const result = processor.process_chunk(xChunk, yChunk);
-    const final_ = processor.finalize();
     ```
 
 === "C++"
@@ -240,22 +199,6 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
     )
     model.process_chunk(x_chunk, y_chunk)
     result = model.finalize()
-    ```
-
-=== "WebAssembly"
-    ```javascript
-    const { StreamingLoess } = require('fastloess-wasm');
-
-    const n = 100;
-    const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
-    const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
-
-    const processor = new StreamingLoess(
-        {},
-        { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
-    );
-    const result = processor.process_chunk(xChunk, yChunk);
-    const final_ = processor.finalize();
     ```
 
 === "C++"
