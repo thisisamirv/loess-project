@@ -88,8 +88,8 @@ library(rfastloess)
 model <- StreamingLoess(
     fraction   = 0.05,
     iterations = 2,
-    chunk_size = 50000,
-    overlap    = 2000,
+    chunk_size = 1000,
+    overlap    = 100,
     merge_strategy = "weighted_average"
 )
 

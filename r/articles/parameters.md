@@ -127,6 +127,7 @@ separately.
 # 2D fit with per-dimension scaling
 x2d <- cbind(seq(0, 1, length.out = 100), seq(0, 2, length.out = 100))
 model <- Loess(
+    dimensions = 2L,
     distance_metric = "weighted",
     weighted_metric_weights = c(1.0, 0.5)
 )

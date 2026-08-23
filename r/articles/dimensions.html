@@ -132,7 +132,7 @@ reduce computation.</p>
 <span></span>
 <span><span class="va">x2d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">lat</span>, <span class="va">lon</span><span class="op">)</span>   <span class="co"># n × 2 matrix</span></span>
 <span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.3</span>, dimensions <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
@@ -152,7 +152,7 @@ neighbourhood populated.</p>
 <span></span>
 <span><span class="va">x3d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span>, <span class="va">x3</span><span class="op">)</span>   <span class="co"># n × 3 matrix</span></span>
 <span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, dimensions <span class="op">=</span> <span class="fl">3L</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x3d</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
@@ -192,15 +192,14 @@ different metrics.</p>
 </tbody>
 </table>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Upweight time dimension relative to spatial dimension</span></span>
-<span><span class="va">x2d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">time_col</span>, <span class="va">space_col</span><span class="op">)</span></span>
-<span></span>
+<code class="sourceCode R"><span><span class="co"># Reuse the 2D spatial data from above; upweight the lat dimension</span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span></span>
 <span>    fraction <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>    dimensions <span class="op">=</span> <span class="fl">2L</span>,</span>
 <span>    distance_metric <span class="op">=</span> <span class="st">"weighted"</span>,</span>
-<span>    weighted_metric_weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.0</span>, <span class="fl">1.0</span><span class="op">)</span>  <span class="co"># time counts twice</span></span>
+<span>    weighted_metric_weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.0</span>, <span class="fl">1.0</span><span class="op">)</span>  <span class="co"># lat counts twice</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -232,7 +231,7 @@ different metrics.</p>
 </table>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Exact fit at every point — slower but no interpolation artefacts</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>surface_mode <span class="op">=</span> <span class="st">"direct"</span>, fraction <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>surface_mode <span class="op">=</span> <span class="st">"direct"</span>, fraction <span class="op">=</span> <span class="fl">0.3</span>, dimensions <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span></code></pre></div>
 <p>For large 2D or 3D datasets use <code>"interpolation"</code>
 (default) and tune <code>cell</code> and
@@ -241,8 +240,8 @@ different metrics.</p>
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span></span>
 <span>    surface_mode <span class="op">=</span> <span class="st">"interpolation"</span>,</span>
 <span>    cell <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span>    interpolation_vertices <span class="op">=</span> <span class="fl">200L</span>,</span>
-<span>    fraction <span class="op">=</span> <span class="fl">0.3</span></span>
+<span>    fraction <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>    dimensions <span class="op">=</span> <span class="fl">2L</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span></code></pre></div>
 </div>
