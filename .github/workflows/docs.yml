@@ -23,11 +23,11 @@ jobs:
   filter:
     runs-on: ubuntu-latest
     outputs:
-      cpp:    ${{ steps.f.outputs.cpp }}
-      julia:  ${{ steps.f.outputs.julia }}
+      cpp: ${{ steps.f.outputs.cpp }}
+      julia: ${{ steps.f.outputs.julia }}
       nodejs: ${{ steps.f.outputs.nodejs }}
-      r:      ${{ steps.f.outputs.r }}
-      wasm:   ${{ steps.f.outputs.wasm }}
+      r: ${{ steps.f.outputs.r }}
+      wasm: ${{ steps.f.outputs.wasm }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v3
@@ -85,9 +85,6 @@ jobs:
           version: "1"
 
       - uses: julia-actions/cache@v3
-
-      - name: Relax JLL dependency for CI
-        uses: ./.github/actions/relax-julia-jll
 
       - name: Install docs dependencies
         run: |

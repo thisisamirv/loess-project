@@ -54,7 +54,7 @@ z   <- sin(lat) + cos(lon) + rnorm(n, sd = 0.1)
 
 x2d <- cbind(lat, lon)   # n × 2 matrix
 
-model <- Loess(fraction = 0.3)
+model <- Loess(fraction = 0.3, dimensions = 2L)
 result <- fit(model, x2d, z)
 ```
 
@@ -74,7 +74,7 @@ y  <- x1 + sin(2 * pi * x2) + x3^2 + rnorm(n, sd = 0.1)
 
 x3d <- cbind(x1, x2, x3)   # n × 3 matrix
 
-model <- Loess(fraction = 0.5)
+model <- Loess(fraction = 0.5, dimensions = 3L)
 result <- fit(model, x3d, y)
 ```
 
@@ -91,15 +91,14 @@ In multivariate mode, neighbour distances can be computed with different metrics
 | `"weighted"` | Per-dimension scaling via `weighted_metric_weights` | Custom anisotropic distance |
 
 ```{r}
-# Upweight time dimension relative to spatial dimension
-x2d <- cbind(time_col, space_col)
-
+# Reuse the 2D spatial data from above; upweight the lat dimension
 model <- Loess(
     fraction = 0.3,
+    dimensions = 2L,
     distance_metric = "weighted",
-    weighted_metric_weights = c(2.0, 1.0)  # time counts twice
+    weighted_metric_weights = c(2.0, 1.0)  # lat counts twice
 )
-result <- fit(model, x2d, y)
+result <- fit(model, x2d, z)
 ```
 
 ---
@@ -113,7 +112,7 @@ result <- fit(model, x2d, y)
 
 ```{r}
 # Exact fit at every point — slower but no interpolation artefacts
-model <- Loess(surface_mode = "direct", fraction = 0.3)
+model <- Loess(surface_mode = "direct", fraction = 0.3, dimensions = 2L)
 result <- fit(model, x2d, z)
 ```
 
@@ -123,8 +122,8 @@ For large 2D or 3D datasets use `"interpolation"` (default) and tune `cell` and 
 model <- Loess(
     surface_mode = "interpolation",
     cell = 0.2,
-    interpolation_vertices = 200L,
-    fraction = 0.3
+    fraction = 0.3,
+    dimensions = 2L
 )
 result <- fit(model, x2d, z)
 ```
