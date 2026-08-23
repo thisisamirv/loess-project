@@ -53,14 +53,14 @@ LOESS (Locally Estimated Scatterplot Smoothing) implementation for
 >
 > Currently available for R, Python, Rust, Julia, Node.js, WebAssembly,
 > and C++. See the [Installation
-> Guide](https://loess.readthedocs.io/en/latest/getting-started/installation/)
-> for detailed installation instructions.
+> Guide](https://thisisamirv.github.io/loess-project/r/) for detailed
+> installation instructions.
 
 ## Documentation
 
 > \[!NOTE\]
 >
-> ### 📚 [View the full documentation](https://loess.readthedocs.io/)
+> ### 📚 [View the full documentation](https://thisisamirv.github.io/loess-project/r/)
 
 ------------------------------------------------------------------------
 
@@ -88,7 +88,7 @@ single-threaded or multi-threaded parallel execution. It is typically
 faster** on large datasets with parallel execution.
 
 For more details on the performance comparison, see the
-[Benchmarks](https://loess.readthedocs.io/en/latest/benchmarks/) page.
+[Benchmarks](https://thisisamirv.github.io/loess-project/r/) page.
 
 ### Robustness
 
