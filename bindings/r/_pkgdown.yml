@@ -41,7 +41,10 @@ articles:
   - title: User Guide
     contents:
       - parameters
-      - adapters
+      - adapter-choice
+      - batch
+      - streaming
+      - online
       - degree
       - dimensions
       - intervals
