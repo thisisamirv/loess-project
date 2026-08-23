@@ -1,0 +1,114 @@
+# Use Case: Real-Time Processing
+
+## Overview
+
+The Online adapter provides incremental smoothing for continuously
+arriving data.
+
+------------------------------------------------------------------------
+
+## Online Mode: Point-by-Point
+
+``` r
+
+library(rfastloess)
+
+set.seed(42)
+times        <- 1:100
+temperatures <- 20 + 5 * sin(times / 10) + rnorm(100)
+
+model <- OnlineLoess(
+    fraction = 0.3,
+    window_capacity = 25,
+    min_points = 5,
+    update_mode = "incremental"
+)
+for (i in seq_along(times)) {
+    result <- add_point(model, times[i], temperatures[i])
+    if (!is.null(result))
+        cat(sprintf("Time %d: %.2f\n", times[i], result$y))
+}
+```
+
+------------------------------------------------------------------------
+
+## Accumulating Results
+
+``` r
+
+library(rfastloess)
+set.seed(42)
+n      <- 200
+times  <- seq_len(n)
+signal <- 10 + 2 * sin(times / 20) + rnorm(n, sd = 1)
+
+model <- OnlineLoess(
+    fraction        = 0.3,
+    window_capacity = 30,
+    min_points      = 5
+)
+
+smoothed_x <- numeric(n)
+smoothed_y <- numeric(n)
+n_out <- 0L
+
+for (i in seq_len(n)) {
+    result <- add_point(model, times[i], signal[i])
+    if (!is.null(result)) {
+        n_out <- n_out + 1L
+        smoothed_x[n_out] <- result$x
+        smoothed_y[n_out] <- result$y
+    }
+}
+
+smoothed_x <- smoothed_x[seq_len(n_out)]
+smoothed_y <- smoothed_y[seq_len(n_out)]
+
+plot(times, signal, pch = 16, cex = 0.4, col = "gray",
+     xlab = "Time", ylab = "Value",
+     main = "Online LOESS — Accumulated Output")
+lines(smoothed_x, smoothed_y, col = "blue", lwd = 2)
+```
+
+------------------------------------------------------------------------
+
+## Update Modes
+
+| Mode            | Behaviour                     | Latency | Accuracy |
+|-----------------|-------------------------------|---------|----------|
+| `"incremental"` | Re-fits only the newest point | Low     | Moderate |
+| `"full"`        | Re-fits the entire window     | Higher  | Higher   |
+
+------------------------------------------------------------------------
+
+## Streaming Mode for Large Batches
+
+``` r
+
+library(rfastloess)
+
+model <- StreamingLoess(
+    fraction       = 0.3,
+    iterations     = 2,
+    chunk_size     = 5000,
+    overlap        = 500,
+    merge_strategy = "weighted_average"
+)
+
+set.seed(42)
+n_total <- 20000
+x_all   <- seq_len(n_total)
+y_all   <- sin(x_all / 500) + rnorm(n_total, sd = 0.5)
+
+chunk_size <- 5000
+n_chunks   <- ceiling(n_total / chunk_size)
+
+for (i in seq_len(n_chunks)) {
+    idx_from <- (i - 1) * chunk_size + 1
+    idx_to   <- min(i * chunk_size, n_total)
+    result   <- process_chunk(model, x_all[idx_from:idx_to],
+                                      y_all[idx_from:idx_to])
+}
+
+final <- finalize(model)
+```
