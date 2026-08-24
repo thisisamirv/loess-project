@@ -41,8 +41,8 @@ fn main() -> Result<(), LoessError> {
 
     let model = Loess::new().fraction(0.5f64).build()?;
     let result = model.fit(&x, &y)?;
-    println!("{}", result.fraction_used);  // 0.5
-    println!("{:?}", result.iterations_used);  // Some(3)
+    println!("Fraction used: {}", result.fraction_used);
+    println!("Iterations used: {:?}", result.iterations_used);
 
     Ok(())
 }

@@ -42,6 +42,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (constant degree): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -71,6 +72,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (linear degree): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -100,6 +102,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (quadratic degree): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -129,6 +132,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (cubic degree): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -158,6 +162,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (quartic degree): {}", result.y[0]);
     Ok(())
 }
 ```

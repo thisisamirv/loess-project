@@ -38,6 +38,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (fraction=0.3): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -65,6 +66,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x2d, &z)?;
 
+    println!("First smoothed value (2D): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -93,6 +95,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x3d, &y)?;
 
+    println!("First smoothed value (3D): {}", result.y[0]);
     Ok(())
 }
 ```

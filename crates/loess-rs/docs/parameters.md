@@ -91,6 +91,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (fraction=0.3): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -122,6 +123,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (5 iterations): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -173,6 +175,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (direct surface): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -205,6 +208,7 @@ fn main() -> Result<(), LoessError> {
     let model = Loess::new().cell(0.05).build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (cell=0.05): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -230,6 +234,7 @@ fn main() -> Result<(), LoessError> {
     let model = Loess::new().interpolation_vertices(50).build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value: {}", result.y[0]);
     Ok(())
 }
 ```
@@ -280,6 +285,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x2d, &y)?;
 
+    println!("First smoothed value (2D): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -316,6 +322,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (epanechnikov kernel): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -348,6 +355,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (talwar robustness): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -383,6 +391,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (reflect boundary): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -414,6 +423,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (quadratic degree): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -448,6 +458,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (mad scaling): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -482,6 +493,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (use_local_mean fallback): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -507,6 +519,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (auto-converge): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -540,6 +553,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (single-threaded): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -584,6 +598,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("First smoothed value (custom weights): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -680,6 +695,9 @@ fn main() -> Result<(), LoessError> {
     let result = model.fit(&x, &y)?;
     // Points with weight < 0.5 are likely outliers
 
+    if let Some(w) = &result.robustness_weights {
+        println!("First robustness weight: {}", w[0]);
+    }
     Ok(())
 }
 ```
@@ -707,6 +725,9 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    if let (Some(lo), Some(hi)) = (&result.confidence_lower, &result.confidence_upper) {
+        println!("First point 95% CI: [{}, {}]", lo[0], hi[0]);
+    }
     Ok(())
 }
 ```
@@ -740,6 +761,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    println!("Selected fraction (CV): {}", result.fraction_used);
     Ok(())
 }
 ```
@@ -766,6 +788,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.process_chunk(&x, &y)?;
 
+    println!("First smoothed value (chunk): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -790,6 +813,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.process_chunk(&x, &y)?;
 
+    println!("First smoothed value (with overlap): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -823,6 +847,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.process_chunk(&x, &y)?;
 
+    println!("First smoothed value (weighted_average merge): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -847,6 +872,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let out = model.add_point(&[x[0]], y[0])?;
 
+    println!("add_point result (window=500): {:?}", out);
     Ok(())
 }
 ```
@@ -871,6 +897,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let out = model.add_point(&[x[0]], y[0])?;
 
+    println!("add_point result (min_points=10): {:?}", out);
     Ok(())
 }
 ```
@@ -902,6 +929,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let out = model.add_point(&[x[0]], y[0])?;
 
+    println!("add_point result (full mode): {:?}", out);
     Ok(())
 }
 ```

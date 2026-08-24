@@ -101,6 +101,9 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    if let (Some(lo), Some(hi)) = (&result.confidence_lower, &result.confidence_upper) {
+        println!("First point 95% CI: [{}, {}]", lo[0], hi[0]);
+    }
     Ok(())
 }
 ```
@@ -132,6 +135,9 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.fit(&x, &y)?;
 
+    if let Some(lo) = &result.confidence_lower {
+        println!("First lower CI bound (99%): {}", lo[0]);
+    }
     Ok(())
 }
 ```

@@ -49,6 +49,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.process_chunk(&x_chunk, &y_chunk)?;;
 
+    println!("First smoothed value (average merge): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -75,6 +76,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.process_chunk(&x_chunk, &y_chunk)?;
 
+    println!("First smoothed value (take_first merge): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -101,6 +103,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.process_chunk(&x_chunk, &y_chunk)?;
 
+    println!("First smoothed value (take_last merge): {}", result.y[0]);
     Ok(())
 }
 ```
@@ -133,6 +136,7 @@ fn main() -> Result<(), LoessError> {
         .build()?;
     let result = model.process_chunk(&x_chunk, &y_chunk)?;
 
+    println!("First smoothed value (weighted_average merge): {}", result.y[0]);
     Ok(())
 }
 ```
