@@ -33,6 +33,16 @@ console.log("Selected fraction:", result.fraction_used);
 console.log("CV scores:", result.cv_scores);
 ```
 
+```output
+Selected fraction: 0.3
+CV scores: Float64Array(4) [
+  0.3393742329539785,
+  0.3312827371723965,
+  0.3811464528952913,
+  0.45459351946316834
+]
+```
+
 ---
 
 ## Leave-One-Out (LOOCV)
@@ -51,6 +61,11 @@ const model = new Loess({
     cv_fractions: [0.2, 0.3, 0.5, 0.7]
 });
 const result = model.fit(x, y);
+console.log("Fraction used:", result.fraction_used);
+```
+
+```output
+Fraction used: 0.2
 ```
 
 ---
@@ -73,6 +88,11 @@ const model = new Loess({
     cv_seed: 42
 });
 const result = model.fit(x, y);
+console.log("Fraction used:", result.fraction_used);
+```
+
+```output
+Fraction used: 0.3
 ```
 
 ---
@@ -118,12 +138,15 @@ const model = new Loess({
     cv_fractions: [0.1, 0.3, 0.5, 0.7]
 });
 const result = model.fit(x, y);
-
-// Fraction  | CV Score (MSE)
+console.log("Fraction used:", result.fraction_used);
 // 0.1       | 0.0542  ← Undersmoothed
 // 0.3       | 0.0231  ← Best
 // 0.5       | 0.0298
 // 0.7       | 0.0412  ← Oversmoothed
+```
+
+```output
+Fraction used: 0.3
 ```
 
 The fraction with **lowest CV score** is automatically selected.

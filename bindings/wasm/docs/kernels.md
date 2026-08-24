@@ -44,6 +44,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ weight_function: "tricube" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1663
 ```
 
 ---
@@ -65,6 +70,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ weight_function: "epanechnikov" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1741
 ```
 
 ---
@@ -86,6 +96,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ weight_function: "gaussian" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1708
 ```
 
 ---
@@ -107,6 +122,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ weight_function: "biweight" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1678
 ```
 
 ---
@@ -128,6 +148,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ weight_function: "cosine" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1741
 ```
 
 ---
@@ -149,6 +174,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ weight_function: "triangle" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1746
 ```
 
 ---
@@ -170,6 +200,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ weight_function: "uniform" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1640
 ```
 
 ---

@@ -39,6 +39,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ iterations: 3, robustness_method: "bisquare" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1663
 ```
 
 ---
@@ -60,6 +65,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ iterations: 3, robustness_method: "huber" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1703
 ```
 
 ---
@@ -81,6 +91,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ iterations: 3, robustness_method: "talwar" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1913
 ```
 
 ---
@@ -116,6 +131,26 @@ result.robustness_weights.forEach((w, i) => {
 });
 ```
 
+```output
+Potential outlier at index 14: weight = 0.354
+Potential outlier at index 16: weight = 0.486
+Potential outlier at index 21: weight = 0.284
+Potential outlier at index 23: weight = 0.455
+Potential outlier at index 26: weight = 0.175
+Potential outlier at index 28: weight = 0.368
+Potential outlier at index 31: weight = 0.148
+Potential outlier at index 33: weight = 0.373
+Potential outlier at index 38: weight = 0.464
+Potential outlier at index 63: weight = 0.387
+Potential outlier at index 68: weight = 0.330
+Potential outlier at index 70: weight = 0.127
+Potential outlier at index 73: weight = 0.363
+Potential outlier at index 75: weight = 0.181
+Potential outlier at index 78: weight = 0.482
+Potential outlier at index 80: weight = 0.321
+Potential outlier at index 87: weight = 0.412
+```
+
 ---
 
 ## Scale Estimation
@@ -139,6 +174,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ iterations: 3, scaling_method: "mad" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1663
 ```
 
 ---
@@ -159,4 +199,9 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ iterations: 10, auto_converge: 1e-6 });
 const result = model.fit(x, y);
+console.log("Iterations used:", result.iterations_used);
+```
+
+```output
+Iterations used: 10
 ```

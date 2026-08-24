@@ -20,6 +20,10 @@ const result = model.fit(x, y);
 console.log(`First smoothed: ${result.y[0].toFixed(4)}`);
 ```
 
+```output
+First smoothed: 0.0281
+```
+
 ---
 
 ## With Confidence Intervals
@@ -40,10 +44,17 @@ const model = new Loess({
 });
 const result = model.fit(x, y);
 
-console.log("Smoothed:", result.y);
-console.log("CI Lower:", result.confidence_lower);
-console.log("CI Upper:", result.confidence_upper);
-console.log("R²:", result.diagnostics.r_squared);
+console.log("Smoothed (first 5):", [...result.y.slice(0, 5)].map(v => v.toFixed(4)));
+console.log("CI lower (first 5):", [...result.confidence_lower.slice(0, 5)].map(v => v.toFixed(4)));
+console.log("CI upper (first 5):", [...result.confidence_upper.slice(0, 5)].map(v => v.toFixed(4)));
+console.log("R²:", result.diagnostics.r_squared.toFixed(4));
+```
+
+```output
+Smoothed (first 5): [ '0.1118', '0.1389', '0.1702', '0.2064', '0.2445' ]
+CI lower (first 5): [ '-0.0078', '0.0201', '0.0521', '0.0890', '0.1279' ]
+CI upper (first 5): [ '0.2313', '0.2577', '0.2882', '0.3237', '0.3611' ]
+R²: 0.8860
 ```
 
 ---
@@ -103,6 +114,10 @@ for (let start = 0; start <= 4000; start += chunk_size) {
 }
 const result = model.finalize();
 console.log(`Smoothed ${result.y.length} points`);
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---

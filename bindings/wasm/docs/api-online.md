@@ -14,6 +14,11 @@ The `OnlineLoess` class updates the model incrementally with new data points.
 const { OnlineLoess } = require('fastloess-wasm');
 
 const online = new OnlineLoess({ fraction: 0.5 }, { window_capacity: 50, min_points: 3 });
+console.log("typeof add_point:", typeof online.add_point);
+```
+
+```output
+typeof add_point: function
 ```
 
 * `options`: An object containing `LoessOptions` fields.
@@ -36,7 +41,11 @@ online.add_point(x[1], y[1]);  // null
 
 // Returns OnlineOutput once enough points are available
 const result = online.add_point(x[2], y[2]);
-console.log(result.y);  // 0.22659245357374927
+console.log("Smoothed y:", result.y);
+```
+
+```output
+Smoothed y: 0.22659245357374927
 ```
 
 * Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.

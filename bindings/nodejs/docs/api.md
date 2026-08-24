@@ -38,13 +38,13 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Loess({ fraction: 0.5 });
 const result = model.fit(x, y);
-console.log(result.fraction_used);   // 0.5
-console.log(result.iterations_used); // 3
+console.log("Fraction used:", result.fraction_used);
+console.log("Iterations used:", result.iterations_used);
 ```
 
 ```output
-0.5
-3
+Fraction used: 0.5
+Iterations used: 3
 ```
 
 * Fits the model to the provided `x` and `y` typed arrays.

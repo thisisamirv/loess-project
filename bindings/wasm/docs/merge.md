@@ -45,6 +45,12 @@ const processor = new StreamingLoess(
     { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
 );
 const result = processor.process_chunk(xChunk, yChunk);
+const final = processor.finalize();
+console.log("y[0]:", final.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1710
 ```
 
 ---
@@ -65,6 +71,11 @@ const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3)
 const processor = new StreamingLoess({}, { merge_strategy: "take_first" });
 const result = processor.process_chunk(xChunk, yChunk);
 const final_ = processor.finalize();
+console.log("y[0]:", final_.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1710
 ```
 
 ---
@@ -85,6 +96,11 @@ const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3)
 const processor = new StreamingLoess({}, { merge_strategy: "take_last" });
 const result = processor.process_chunk(xChunk, yChunk);
 const final_ = processor.finalize();
+console.log("y[0]:", final_.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1710
 ```
 
 ---
@@ -112,6 +128,11 @@ const processor = new StreamingLoess(
 );
 const result = processor.process_chunk(xChunk, yChunk);
 const final_ = processor.finalize();
+console.log("y[0]:", final_.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1710
 ```
 
 ---

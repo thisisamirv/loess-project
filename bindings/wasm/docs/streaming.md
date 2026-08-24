@@ -43,6 +43,11 @@ const processor = new StreamingLoess(
 
 const result = processor.process_chunk(xChunk, yChunk);
 const finalResult = processor.finalize();
+console.log("y[0]:", finalResult.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.0301
 ```
 
 ---

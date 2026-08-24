@@ -46,3 +46,7 @@ const model = new Loess({});
 const result = model.fit(x, y);
 console.log("Installed successfully!");
 ```
+
+```output
+Installed successfully!
+```
