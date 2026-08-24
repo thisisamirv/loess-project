@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 -->
 # Parameters
 
 Complete reference for all LOESS configuration options.
@@ -74,7 +73,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 
 ![Fraction Comparison](../assets/diagrams/fraction_comparison.svg)
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -84,7 +83,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(fraction=0.3)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -99,7 +99,7 @@ Number of robustness iterations for outlier resistance.
 | 4–6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -109,7 +109,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(iterations=5)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -144,7 +145,7 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 
 See [Polynomial Degree](degree.md#surface-mode) for a visual comparison.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -154,7 +155,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(surface_mode="direct")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -172,7 +174,7 @@ Cell size for the interpolation grid. Controls the density of anchor vertices wh
 | `0.2` | Moderate (default) | High | Fast |
 | `0.5` | Coarse | Lower | Faster |
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -182,7 +184,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(cell=0.05)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -193,7 +196,7 @@ Explicitly set the number of anchor vertices for the interpolation grid, overrid
 - **Default**: auto (derived from `cell` and data range)
 - **Adapter**: All
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -203,7 +206,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(interpolation_vertices=50)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -234,14 +238,14 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 | `"minkowski:p"` | Generalised $L_p$ norm — e.g. `"minkowski:3"` |
 | `"weighted"` | Weighted Euclidean — set `weighted_metric_weights` to one weight per dimension |
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
 rng = np.random.default_rng(42)
-x = np.linspace(0, 2 * np.pi, 100)
+x = np.linspace(0, 2 *np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
-x2d = np.column_stack([x, x**2 / (2 * np.pi)**2]).ravel()
+x2d = np.column_stack([x, x**2 / (2* np.pi)**2]).ravel()
 
 model = fl.Loess(
     dimensions=2,
@@ -249,7 +253,8 @@ model = fl.Loess(
     weighted_metric_weights=[2.0, 0.5]
 )
 result = model.fit(x2d, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -269,7 +274,7 @@ Distance weighting kernel for local fits.
 
 See [Weight Functions](kernels.md) for detailed comparison.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -279,7 +284,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(weight_function="epanechnikov")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -295,7 +301,7 @@ Method for downweighting outliers during iterative refinement.
 
 See [Robustness](robustness.md) for detailed comparison.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -305,7 +311,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(robustness_method="talwar")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -324,7 +331,7 @@ Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary
 
 For example:
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -334,7 +341,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(boundary_policy="reflect")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -345,10 +353,10 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 - **Default**: `false`
 - **Adapter**: All
 
-!!! tip
-    Enable this if you observe NaN values or instability at the edges of your data when using `degree = "quadratic"` or higher.
-
-```python
+:::{tip}
+Enable this if you observe NaN values or instability at the edges of your data when using `degree = "quadratic"` or higher.
+:::
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -358,7 +366,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(degree="quadratic", boundary_degree_fallback=True)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -376,7 +385,7 @@ Method for estimating residual scale during robustness iterations. See [Scaling 
 
 For example:
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -386,7 +395,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(scaling_method="mad")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -404,7 +414,7 @@ Behavior when all neighborhood weights are zero.
 
 For example:
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -414,7 +424,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(zero_weight_fallback="use_local_mean")
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -422,7 +433,7 @@ result = model.fit(x, y)
 
 Enable early stopping when robustness weights stabilize.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -432,7 +443,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(iterations=20, auto_converge=1e-6)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -443,13 +455,13 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
 - **Default**: `true` for Batch and Streaming; `false` for Online
 - **Adapter**: All
 
-!!! note
-    `OnlineLoess` defaults to `false` because it fits one point at a time. Each update touches only the sliding window, so there is no inner loop large enough to benefit from parallelism — enabling it would add thread overhead with no gain.
-
-!!! tip
-    Set to `false` for fully deterministic, reproducible output when debugging, or in environments where thread safety is required.
-
-```python
+:::{note}
+`OnlineLoess` defaults to `false` because it fits one point at a time. Each update touches only the sliding window, so there is no inner loop large enough to benefit from parallelism — enabling it would add thread overhead with no gain.
+:::
+:::{tip}
+Set to `false` for fully deterministic, reproducible output when debugging, or in environments where thread safety is required.
+:::
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -459,7 +471,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(parallel=False)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -479,13 +492,13 @@ where `K` is the distance kernel and `robustness_j` is the robustness weight (if
 | `> 1.0` | Increases the observation's influence |
 | `0 < v < 1.0` | Reduces the observation's influence |
 
-!!! note "Batch only"
-    `custom_weights` is applied in **Batch** mode only. It is ignored in Streaming and Online modes.
-
-!!! warning "Length must match y"
-    The weights vector must have the same length as `y`. A mismatch returns an error.
-
-```python
+:::{note} Batch only
+`custom_weights` is applied in **Batch** mode only. It is ignored in Streaming and Online modes.
+:::
+:::{warning} Length must match y
+The weights vector must have the same length as `y`. A mismatch returns an error.
+:::
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -497,7 +510,8 @@ weights = np.ones(len(y))
 weights[4] = 0  # Exclude 5th point
 model = fl.Loess()
 result = model.fit(x, y, custom_weights=weights)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -507,7 +521,7 @@ result = model.fit(x, y, custom_weights=weights)
 
 Include residuals (`y - smoothed`) in the output.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -518,7 +532,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Loess(return_residuals=True)
 result = model.fit(x, y)
 print(result.residuals)
-```
+:::
 
 ---
 
@@ -536,7 +550,7 @@ Include fit quality metrics (Batch and Streaming only).
 | `aic` | Akaike Information Criterion |
 | `aicc` | Corrected AIC |
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -547,7 +561,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Loess(return_diagnostics=True)
 result = model.fit(x, y)
 print(f"R\u00b2: {result.diagnostics.r_squared:.4f}")
-```
+:::
 
 ---
 
@@ -555,7 +569,7 @@ print(f"R\u00b2: {result.diagnostics.r_squared:.4f}")
 
 Include final robustness weights (useful for outlier detection).
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -566,7 +580,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Loess(iterations=3, return_robustness_weights=True)
 result = model.fit(x, y)
 outliers = [i for i, w in enumerate(result.robustness_weights) if w < 0.5]
-```
+:::
 
 ---
 
@@ -576,7 +590,7 @@ Request uncertainty estimates (Batch only).
 
 See [Intervals](intervals.md) for detailed usage.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -586,7 +600,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(confidence_intervals=0.95, prediction_intervals=0.95)
 result = model.fit(x, y)
-```
+print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
+:::
 
 ---
 
@@ -601,7 +616,7 @@ Selection strategy for automated parameter tuning.
 | `"kfold"` | K-Fold Cross-Validation | Fast |
 | `"loocv"` | Leave-One-Out Cross-Validation | Slow |
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -611,7 +626,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(cv_method="kfold", cv_k=5)
 result = model.fit(x, y)
-```
+print(f"Best fraction: {result.cv_best_fraction}  CV MSE: {result.cv_mse:.4f}")
+:::
 
 ---
 
@@ -621,7 +637,7 @@ result = model.fit(x, y)
 
 Points per chunk in Streaming mode.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -632,7 +648,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.StreamingLoess(chunk_size=10000)
 model.process_chunk(x, y)
 result = model.finalize()
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -640,7 +657,7 @@ result = model.finalize()
 
 Overlap between chunks in Streaming mode.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -651,7 +668,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.StreamingLoess(overlap=1000)
 model.process_chunk(x, y)
 result = model.finalize()
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -668,7 +686,7 @@ Method for merging overlapping chunks. See [Merge Strategies](merge.md) for a de
 
 For example:
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -679,7 +697,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.StreamingLoess(merge_strategy="weighted_average")
 model.process_chunk(x, y)
 result = model.finalize()
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -687,7 +706,7 @@ result = model.finalize()
 
 Maximum points held in memory for Online mode.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -697,7 +716,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.OnlineLoess(window_capacity=500)
 result = model.add_point(x[0], y[0])  # None until window fills
-```
+print("Online result:", result)
+:::
 
 ---
 
@@ -705,7 +725,7 @@ result = model.add_point(x[0], y[0])  # None until window fills
 
 Minimum points required before Online filter starts producing outputs.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -715,7 +735,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.OnlineLoess(min_points=10)
 result = model.add_point(x[0], y[0])  # None until 10 points seen
-```
+print("Online result:", result)
+:::
 
 ---
 
@@ -730,7 +751,7 @@ Optimization strategy for Online mode updates.
 
 For example:
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -740,4 +761,5 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.OnlineLoess(update_mode="full")
 result = model.add_point(x[0], y[0])
-```
+print("Online result:", result)
+:::

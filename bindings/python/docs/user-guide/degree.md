@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Polynomial Degree
 
 Degree of the local polynomial fitted at each point.
@@ -27,7 +26,7 @@ The fit at each point is simply a weighted mean. Produces very smooth results bu
 
 **Use when**: Maximum smoothness is more important than accuracy; computationally cheapest option.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -37,7 +36,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(degree="constant", fraction=0.5)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -49,7 +49,7 @@ Fits a weighted line through the neighbourhood. Removes first-order bias and han
 
 **Use when**: Default; monotone or gently curved data; boundary accuracy matters.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -59,7 +59,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(degree="linear", fraction=0.5)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -71,7 +72,7 @@ Fits a weighted parabola through the neighbourhood. Removes second-order bias an
 
 **Use when**: Data with pronounced peaks, valleys, or curvature; `fraction` ≥ 0.4.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -81,7 +82,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(degree="quadratic", fraction=0.5)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -93,7 +95,7 @@ Fits a weighted cubic polynomial. Captures inflection points and S-shaped local 
 
 **Use when**: Data has clear S-shaped curves or multiple inflection points; `fraction` ≥ 0.5.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -103,7 +105,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(degree="cubic", fraction=0.6)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -115,7 +118,7 @@ Fits a weighted quartic polynomial. Rarely needed in practice; only useful for c
 
 **Use when**: Fine oscillatory structure is physically meaningful and the dataset is large; always cross-validate.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -125,7 +128,8 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(degree="quartic", fraction=0.7)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 

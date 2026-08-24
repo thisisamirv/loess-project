@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Merge Strategies
 
 How overlapping chunk boundaries are reconciled in Streaming mode.
@@ -33,7 +32,7 @@ Takes the arithmetic mean of the left-chunk and right-chunk estimates in the ove
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
-```python
+:::{jupyter-execute}
 from fastloess import StreamingLoess
 import numpy as np
 
@@ -44,7 +43,7 @@ y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
 
 model = StreamingLoess(merge_strategy="average", chunk_size=5000, overlap=500)
 result = model.process_chunk(x_chunk, y_chunk)
-```
+:::
 
 ---
 
@@ -54,7 +53,7 @@ Keeps only the left-chunk estimate in the overlap zone and discards the right-ch
 
 **Use when**: You need final output values immediately after each chunk (no look-ahead revision); left-chunk data quality is higher.
 
-```python
+:::{jupyter-execute}
 from fastloess import StreamingLoess
 import numpy as np
 
@@ -66,7 +65,8 @@ y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
 model = StreamingLoess(merge_strategy="take_first")
 model.process_chunk(x_chunk, y_chunk)
 result = model.finalize()
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -76,7 +76,7 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 **Use when**: Right-chunk context improves overlap quality; you are post-processing complete data rather than streaming live.
 
-```python
+:::{jupyter-execute}
 from fastloess import StreamingLoess
 import numpy as np
 
@@ -88,7 +88,8 @@ y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
 model = StreamingLoess(merge_strategy="take_last")
 model.process_chunk(x_chunk, y_chunk)
 result = model.finalize()
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -102,7 +103,7 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 **Use when**: Minimising boundary artefacts is more important than speed; moderate overlap (10–20 % of chunk size).
 
-```python
+:::{jupyter-execute}
 from fastloess import StreamingLoess
 import numpy as np
 
@@ -118,7 +119,8 @@ model = StreamingLoess(
 )
 model.process_chunk(x_chunk, y_chunk)
 result = model.finalize()
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -132,5 +134,6 @@ result = model.finalize()
 | Post-processing, right context better | `"take_last"` |
 | Minimising boundary artefacts | `"weighted_average"` |
 
-!!! tip "Overlap size matters"
-    A larger overlap gives the merge strategy more room to blend, reducing boundary artefacts regardless of the strategy chosen. A good starting point is 10 % of `chunk_size`.
+:::{tip} Overlap size matters
+A larger overlap gives the merge strategy more room to blend, reducing boundary artefacts regardless of the strategy chosen. A good starting point is 10 % of `chunk_size`.
+:::

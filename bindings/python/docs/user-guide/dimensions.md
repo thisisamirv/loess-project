@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 -->
 # Multivariate LOESS
 
 Smoothing over multiple predictor dimensions simultaneously.
@@ -15,8 +14,9 @@ Standard LOESS operates on a single predictor $x$. Setting `dimensions > 1` exte
 | `2` | Spatial surface, 2-predictor model | `x`: n × 2 matrix |
 | `3+` | High-dimensional regression | `x`: n × d matrix |
 
-!!! warning "Computational cost"
-    Neighbourhood search scales with $d$ dimensions. For `dimensions ≥ 3` keep `fraction` small and consider increasing `delta` to activate interpolation.
+:::{warning} Computational cost
+Neighbourhood search scales with $d$ dimensions. For `dimensions ≥ 3` keep `fraction` small and consider increasing `delta` to activate interpolation.
+:::
 
 ---
 
@@ -24,7 +24,7 @@ Standard LOESS operates on a single predictor $x$. Setting `dimensions > 1` exte
 
 Single predictor. No configuration required.
 
-```python
+:::{jupyter-execute}
 import numpy as np
 import fastloess as fl
 
@@ -32,7 +32,8 @@ x = np.linspace(0, 10, 200)
 y = np.sin(x) + np.random.normal(0, 0.2, 200)
 model = fl.Loess(fraction=0.3)
 result = model.fit(x, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -40,21 +41,23 @@ result = model.fit(x, y)
 
 Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ matrix as `x`.
 
-```python
+:::{jupyter-execute}
 import numpy as np
 import fastloess as fl
 
 rng = np.random.default_rng(42)
 n = 100
-lat = np.linspace(0, 2 * np.pi, n)
-lon = np.linspace(0, 2 * np.pi, n)
+lat = np.linspace(0, 2 *np.pi, n)
+lon = np.linspace(0, 2* np.pi, n)
 z = np.sin(lat) + np.cos(lon) + rng.normal(0, 0.1, n)
 
-# x is an (n, 2) array flattened to 1D (Python binding requires flat input)
+## x is an (n, 2) array flattened to 1D (Python binding requires flat input)
+
 x2d = np.column_stack([lat, lon]).ravel()
 model = fl.Loess(dimensions=2, fraction=0.3)
 result = model.fit(x2d, z)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 
@@ -62,7 +65,7 @@ result = model.fit(x2d, z)
 
 Three or more predictors. The neighbourhood radius grows in each additional dimension, so a larger `fraction` (or smaller dataset) is typically needed.
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -76,7 +79,8 @@ y = np.sin(x1) + x2 - x3 + rng.normal(0, 0.1, n)
 x3d = np.column_stack([x1, x2, x3]).ravel()   # (n*3,) flat
 model = fl.Loess(dimensions=3, fraction=0.5)
 result = model.fit(x3d, y)
-```
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
+:::
 
 ---
 

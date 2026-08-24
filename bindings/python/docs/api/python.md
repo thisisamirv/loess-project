@@ -12,17 +12,16 @@ The `Loess` class allows configuring the LOESS parameters once and fitting multi
 
 **Constructor:**
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 
 model = fl.Loess(fraction=0.5, iterations=3)
 print(model)
-# Loess(fraction=0.5000, iterations=3, parallel=true)
-```
+:::
 
 **Methods:**
 
-```python
+:::{jupyter-execute}
 import fastloess as fl
 import numpy as np
 
@@ -32,8 +31,7 @@ y = np.sin(x) + 0.1
 model = fl.Loess(fraction=0.5)
 result = model.fit(x, y)
 print(result)
-# LoessResult(n=100, fraction_used=0.5000)
-```
+:::
 
 * Fits the model to the provided `x` and `y` array-like objects.
 * `custom_weights`: Optional array of per-observation weights. All values must be ≥ 0 and length must match `x`. Batch only.
@@ -208,19 +206,20 @@ See [python-online.md](python-online.md).
 
 ## Example
 
-```python
+:::{jupyter-execute}
 from fastloess import Loess
 import numpy as np
 
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + 0.1
 
-# Configure model
+## Configure model
+
 model = Loess(fraction=0.5)
 
-# Fit data
+## Fit data
+
 result = model.fit(x, y)
 
 print(result)
-# LoessResult(n=100, fraction_used=0.5000)
-```
+:::
