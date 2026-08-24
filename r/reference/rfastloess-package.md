@@ -3,9 +3,6 @@
 A high-performance LOESS (Locally Estimated Scatterplot Smoothing)
 implementation built on the Rust `fastLoess` crate.
 
-For comprehensive documentation, see:
-<https://github.com/thisisamirv/loess-project/tree/main/docs>
-
 ## Main Classes
 
 - [`Loess`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md):

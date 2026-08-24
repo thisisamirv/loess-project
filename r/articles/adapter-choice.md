@@ -16,10 +16,9 @@ Execution mode comparison
 
 ## Quick Decision Guide
 
-- **Data fits in memory and you need intervals or CV** → [Batch
+- **Data fits in memory and needs intervals or CV** → [Batch
   Mode](https://thisisamirv.github.io/loess-project/r/articles/batch.md)
-- **Data is too large for memory or arrives in file chunks** →
-  [Streaming
+- **Data too large for memory or in chunks** → [Streaming
   Mode](https://thisisamirv.github.io/loess-project/r/articles/streaming.md)
 - **Data arrives point-by-point in real time** → [Online
   Mode](https://thisisamirv.github.io/loess-project/r/articles/online.md)
