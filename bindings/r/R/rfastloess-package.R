@@ -4,9 +4,6 @@
 #' A high-performance LOESS (Locally Estimated Scatterplot Smoothing)
 #' implementation built on the Rust `fastLoess` crate.
 #'
-#' For comprehensive documentation, see:
-#' <https://github.com/thisisamirv/loess-project/tree/main/docs>
-#'
 #' @docType package
 #' @srrstats {G1.0} Package-level documentation for statistical software review.
 #' @srrstats {G1.1} Thin R wrapper interface for core Rust algorithms.
