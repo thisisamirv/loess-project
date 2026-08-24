@@ -44,14 +44,17 @@ fn main() -> Result<(), LoessError> {
 
     let mut model = StreamingLoess::new()
         .merge_strategy("average")
-        .chunk_size(5000)
-        .overlap(500)
         .build()?;
-    let result = model.process_chunk(&x_chunk, &y_chunk)?;;
-
+    let _ = model.process_chunk(&x_chunk[..50], &y_chunk[..50])?;
+    let _ = model.process_chunk(&x_chunk[50..], &y_chunk[50..])?;
+    let result = model.finalize()?;
     println!("First smoothed value (average merge): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (average merge): 0.38836636249409756
 ```
 
 ---
@@ -74,11 +77,16 @@ fn main() -> Result<(), LoessError> {
     let mut model = StreamingLoess::new()
         .merge_strategy("take_first")
         .build()?;
-    let result = model.process_chunk(&x_chunk, &y_chunk)?;
-
+    let _ = model.process_chunk(&x_chunk[..50], &y_chunk[..50])?;
+    let _ = model.process_chunk(&x_chunk[50..], &y_chunk[50..])?;
+    let result = model.finalize()?;
     println!("First smoothed value (take_first merge): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (take_first merge): 0.38836636249409756
 ```
 
 ---
@@ -101,11 +109,16 @@ fn main() -> Result<(), LoessError> {
     let mut model = StreamingLoess::new()
         .merge_strategy("take_last")
         .build()?;
-    let result = model.process_chunk(&x_chunk, &y_chunk)?;
-
+    let _ = model.process_chunk(&x_chunk[..50], &y_chunk[..50])?;
+    let _ = model.process_chunk(&x_chunk[50..], &y_chunk[50..])?;
+    let result = model.finalize()?;
     println!("First smoothed value (take_last merge): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (take_last merge): 0.38836636249409756
 ```
 
 ---
@@ -131,14 +144,17 @@ fn main() -> Result<(), LoessError> {
 
     let mut model = StreamingLoess::new()
         .merge_strategy("weighted_average")
-        .chunk_size(5000)
-        .overlap(500)
         .build()?;
-    let result = model.process_chunk(&x_chunk, &y_chunk)?;
-
+    let _ = model.process_chunk(&x_chunk[..50], &y_chunk[..50])?;
+    let _ = model.process_chunk(&x_chunk[50..], &y_chunk[50..])?;
+    let result = model.finalize()?;
     println!("First smoothed value (weighted_average merge): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (weighted_average merge): 0.38836636249409756
 ```
 
 ---

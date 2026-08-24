@@ -47,6 +47,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+Smoothed value: 0.22659245357374927
+```
+
 * Adds a single point `(x, y)` to the window. `x` is a slice of predictor values (one per dimension).
 * Returns `Result<Option<OnlineOutput<T>>, LoessError>`.
 

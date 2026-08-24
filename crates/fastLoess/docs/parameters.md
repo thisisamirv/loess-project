@@ -97,6 +97,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (fraction=0.3): 0.24731032286452273
+```
+
 ---
 
 ### iterations
@@ -127,6 +131,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (5 iterations): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (5 iterations): 0.38524239321263437
 ```
 
 ---
@@ -181,6 +189,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (direct surface): 0.3770070674933047
+```
+
 ---
 
 ### cell
@@ -214,6 +226,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (cell=0.05): 0.38397556953643597
+```
+
 ---
 
 ### interpolation_vertices
@@ -238,6 +254,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value: {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value: 0.3851521721408434
 ```
 
 ---
@@ -291,6 +311,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (2D): 0.059001235293146694
+```
+
 ---
 
 ### weight_function
@@ -328,6 +352,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (epanechnikov kernel): 0.3985034976621205
+```
+
 ---
 
 ### robustness_method
@@ -359,6 +387,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (talwar robustness): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (talwar robustness): 0.38439982448576715
 ```
 
 ---
@@ -397,6 +429,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (reflect boundary): 0.6490699323588787
+```
+
 ---
 
 ### boundary_degree_fallback
@@ -427,6 +463,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (quadratic degree): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (quadratic degree): 0.25022647704930756
 ```
 
 ---
@@ -464,6 +504,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (mad scaling): 0.3851521721408434
+```
+
 ---
 
 ### zero_weight_fallback
@@ -499,6 +543,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (use_local_mean fallback): 0.3851521721408434
+```
+
 ---
 
 ### auto_converge
@@ -523,6 +571,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (auto-converge): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (auto-converge): 0.38525100784395816
 ```
 
 ---
@@ -557,6 +609,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (single-threaded): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (single-threaded): 0.3851521721408434
 ```
 
 ---
@@ -604,6 +660,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (custom weights): 0.38960937887234354
+```
+
 ---
 
 ## Output Options
@@ -632,6 +692,10 @@ fn main() -> Result<(), LoessError> {
 
     Ok(())
 }
+```
+
+```output
+Residuals: [-0.28515217214084343, -0.24049135722330595, -0.19723347500443886, -0.15576361234838854, -0.11646480356362487, -0.07971701446041934, -0.04589613876408016, -0.015373010925038177, 0.01148756069915391, 0.03662973747657061, 0.06206555457505736, 0.08754380730215405, 0.11282290430727682, 0.13767167632519828, 0.16187014295347002, 0.18521023437624362, 0.20749646512836128, 0.22854655718671069, 0.24819200987986922, 0.26627861432121835, 0.2826669102940833, 0.2972325837491835, 0.3098668033138152, 0.32047649445775794, 0.32898455021193707, 0.3353299775913571, 0.3394679791327023, 0.341369969218294, 0.3410235251206626, 0.3384322729648682, 0.3334195665218195, 0.32589745397787206, 0.31602598159538453, 0.3039801505845664, 0.28994948969700285, 0.2741375693218948, 0.25676145904158254, 0.23805113083058238, 0.2182488103012432, 0.19760827860832886, 0.176394127823509, 0.15488097277810525, 0.13335262254771907, 0.11210121491488428, 0.09142631729495643, 0.0716339977454925, 0.05303586979984032, 0.035948114971050715, 0.02069048686215222, 0.0075853008928765675, -0.005471184432776055, -0.02060154417857174, -0.03751094369819993, -0.055906089573248274, -0.07549625020200855, -0.09599426607274922, -0.11711754565344251, -0.138589042887851, -0.16013821236193948, -0.18150193829449296, -0.20242543361123022, -0.22266310548214985, -0.2419793838369011, -0.2601495095220403, -0.27696027892653824, -0.2922107420771986, -0.30571285139300075, -0.3172920584860633, -0.32678785660612103, -0.33405426654428416, -0.3389602640395142, -0.34152649744124475, -0.3418434011643674, -0.3399080085601567, -0.33573340183241707, -0.329348826075162, -0.32079973822804153, -0.31014779075238663, -0.297470750093606, -0.2828623502582548, -0.2664320820953723, -0.24830491913057307, -0.2286209810568669, -0.20753513623720687, -0.18521654481935057, -0.1618481443027452, -0.13762607962888285, -0.11275908008994717, -0.08746778556472112, -0.061984024794765835, -0.03655004860700167, -0.011417721170222439, 0.015429601639464108, 0.045941067006463, 0.07975177238731193, 0.11649078914566893, 0.15578212937031563, 0.19724573306507065, 0.24049847173555358, 0.2851551643317093]
 ```
 
 ---
@@ -673,6 +737,11 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+RÂ²: 0.8989
+RMSE: 0.2237
+```
+
 ---
 
 ### return_robustness_weights
@@ -703,6 +772,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First robustness weight: 0.6033490262567007
+```
+
 ---
 
 ### confidence_intervals / prediction_intervals
@@ -731,6 +804,10 @@ fn main() -> Result<(), LoessError> {
     }
     Ok(())
 }
+```
+
+```output
+First point 95% CI: [0.26940773749223634, 0.5008966067894505]
 ```
 
 ---
@@ -767,6 +844,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+Selected fraction (CV): 0.3
+```
+
 ---
 
 ## Adapter Parameters
@@ -787,11 +868,17 @@ fn main() -> Result<(), LoessError> {
     let mut model = StreamingLoess::new()
         .chunk_size(10000)
         .build()?;
-    let result = model.process_chunk(&x, &y)?;
+    let _ = model.process_chunk(&x[..50], &y[..50])?;
+    let _ = model.process_chunk(&x[50..], &y[50..])?;
+    let result = model.finalize()?;
 
     println!("First smoothed value (chunk): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (chunk): 0.38836636249409756
 ```
 
 ---
@@ -812,11 +899,17 @@ fn main() -> Result<(), LoessError> {
     let mut model = StreamingLoess::new()
         .overlap(1000)
         .build()?;
-    let result = model.process_chunk(&x, &y)?;
+    let _ = model.process_chunk(&x[..50], &y[..50])?;
+    let _ = model.process_chunk(&x[50..], &y[50..])?;
+    let result = model.finalize()?;
 
     println!("First smoothed value (with overlap): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (with overlap): 0.38836636249409756
 ```
 
 ---
@@ -846,11 +939,17 @@ fn main() -> Result<(), LoessError> {
     let mut model = StreamingLoess::new()
         .merge_strategy("weighted_average")
         .build()?;
-    let result = model.process_chunk(&x, &y)?;
+    let _ = model.process_chunk(&x[..50], &y[..50])?;
+    let _ = model.process_chunk(&x[50..], &y[50..])?;
+    let result = model.finalize()?;
 
     println!("First smoothed value (weighted_average merge): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (weighted_average merge): 0.38836636249409756
 ```
 
 ---
@@ -878,6 +977,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+add_point result (window=500): None
+```
+
 ---
 
 ### min_points
@@ -901,6 +1004,10 @@ fn main() -> Result<(), LoessError> {
     println!("add_point result (min_points=10): {:?}", out);
     Ok(())
 }
+```
+
+```output
+add_point result (min_points=10): None
 ```
 
 ---
@@ -933,4 +1040,8 @@ fn main() -> Result<(), LoessError> {
     println!("add_point result (full mode): {:?}", out);
     Ok(())
 }
+```
+
+```output
+add_point result (full mode): None
 ```

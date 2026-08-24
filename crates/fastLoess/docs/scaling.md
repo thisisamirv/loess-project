@@ -51,6 +51,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (mad scaling): 0.3851521721408434
+```
+
 ---
 
 ## MAR — Median Absolute Residual
@@ -81,6 +85,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (mar scaling): 0.3834627834767666
+```
+
 ---
 
 ## Mean — Mean Absolute Residual
@@ -109,6 +117,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (mean scaling): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (mean scaling): 0.38367139122937155
 ```
 
 ---

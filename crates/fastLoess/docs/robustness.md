@@ -50,6 +50,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (bisquare robustness): 0.3851521721408434
+```
+
 ---
 
 ### Huber
@@ -80,6 +84,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (huber robustness): 0.38558472729724125
+```
+
 ---
 
 ### Talwar
@@ -108,6 +116,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (talwar robustness): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (talwar robustness): 0.38439982448576715
 ```
 
 ---
@@ -143,15 +155,27 @@ fn main() -> Result<(), LoessError> {
     let result = model.fit(&x, &y)?;
 
     if let Some(weights) = &result.robustness_weights {
+        let mut count = 0;
         for (i, &w) in weights.iter().enumerate() {
             if w < 0.5 {
-                println!("Potential outlier at index {}: weight = {:.3}", i, w);
+                if count < 5 {
+                    println!("Potential outlier at index {}: weight = {:.3}", i, w);
+                }
+                count += 1;
             }
         }
     }
 
     Ok(())
 }
+```
+
+```output
+Potential outlier at index 23: weight = 0.481
+Potential outlier at index 24: weight = 0.458
+Potential outlier at index 25: weight = 0.441
+Potential outlier at index 26: weight = 0.429
+Potential outlier at index 27: weight = 0.424
 ```
 
 ---
@@ -188,6 +212,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (mad scaling): 0.3851521721408434
+```
+
 ---
 
 ## Auto-Convergence
@@ -215,4 +243,8 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (auto-converge): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (auto-converge): 0.38525101179127585
 ```

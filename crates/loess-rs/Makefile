@@ -86,6 +86,8 @@ dev:
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (rust)..."
 	@$(PYTHON) dev/verify_snippets.py --lang rust --timeout 120
+	@echo "Adding Rust doc snippet outputs..."
+	@$(PYTHON) dev/add-rust-outputs.py $(LOESS_DIR)/docs
 	@echo "All $(LOESS_PKG) crate checks completed successfully!"
 
 ensure-llvm-cov:

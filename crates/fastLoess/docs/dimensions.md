@@ -43,6 +43,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (fraction=0.3): 0.24731032286452273
+```
+
 ---
 
 ## 2D — Spatial Surface
@@ -69,6 +73,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (2D): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (2D): 1.1932872258359153
 ```
 
 ---
@@ -98,6 +106,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (3D): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (3D): -0.6707908018247327
 ```
 
 ---

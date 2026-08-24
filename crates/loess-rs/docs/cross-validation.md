@@ -43,6 +43,11 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+Selected fraction: 0.2
+CV scores: [0.2654884285387097, 0.26777391643175497, 0.3496748306435043, 0.42794903516949534]
+```
+
 ---
 
 ## Leave-One-Out (LOOCV)
@@ -67,6 +72,10 @@ fn main() -> Result<(), LoessError> {
     println!("Selected fraction (CV): {}", result.fraction_used);
     Ok(())
 }
+```
+
+```output
+Selected fraction (CV): 0.2
 ```
 
 ---
@@ -95,6 +104,10 @@ fn main() -> Result<(), LoessError> {
     println!("Selected fraction (CV): {}", result.fraction_used);
     Ok(())
 }
+```
+
+```output
+Selected fraction (CV): 0.3
 ```
 
 ---
@@ -153,6 +166,10 @@ fn main() -> Result<(), LoessError> {
     println!("Selected fraction (CV): {}", result.fraction_used);
     Ok(())
 }
+```
+
+```output
+Selected fraction (CV): 0.3
 ```
 
 The fraction with **lowest CV score** is automatically selected.

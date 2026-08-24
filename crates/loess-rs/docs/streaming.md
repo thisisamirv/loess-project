@@ -56,6 +56,11 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+Chunk processed: 90 points
+Final: 10 points
+```
+
 ---
 
 !!! warning "Always call finalize()"

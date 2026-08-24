@@ -39,4 +39,8 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+RMSE: 0.1381
+```
+
 ---

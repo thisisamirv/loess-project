@@ -47,6 +47,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (constant degree): 0.705199580359118
+```
+
 ---
 
 ## Degree 1 — Local Linear (Default)
@@ -75,6 +79,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (linear degree): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (linear degree): 0.32737554007097225
 ```
 
 ---
@@ -107,6 +115,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (quadratic degree): 0.06774573827604671
+```
+
 ---
 
 ## Degree 3 — Local Cubic
@@ -137,6 +149,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (cubic degree): 0.2422340721569136
+```
+
 ---
 
 ## Degree 4 — Local Quartic
@@ -165,6 +181,10 @@ fn main() -> Result<(), LoessError> {
     println!("First smoothed value (quartic degree): {}", result.y[0]);
     Ok(())
 }
+```
+
+```output
+First smoothed value (quartic degree): 0.23853339300189033
 ```
 
 ---

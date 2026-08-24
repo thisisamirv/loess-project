@@ -44,14 +44,24 @@ fn main() -> Result<(), LoessError> {
         .update_mode("incremental")
         .build()?;
 
+    let mut count = 0;
     for i in 0..x.len() {
         if let Some(output) = processor.add_point(&[x[i]], y[i])? {
-            println!("Smoothed: {:.2}", output.y);
+            if count < 3 {
+                println!("Smoothed: {:.2}", output.y);
+            }
+            count += 1;
         }
     }
 
     Ok(())
 }
+```
+
+```output
+Smoothed: 0.35
+Smoothed: 0.41
+Smoothed: 0.47
 ```
 
 ---
