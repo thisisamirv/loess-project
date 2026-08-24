@@ -27,9 +27,8 @@ crate-type = ["staticlib", "rlib"]
 default = []
 dev = []
 
-
-
-
+[profile.release]
+strip = "symbols"
 
 [workspace]
 
