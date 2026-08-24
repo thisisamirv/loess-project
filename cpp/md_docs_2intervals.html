@@ -93,10 +93,10 @@ $(document).ready(function(){initNavTree('md_docs_2intervals.html',''); initResi
   <div class="headertitle"><div class="title">intervals</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md127"></a>
+<div class="textblock"><h1><a class="anchor" id="autotoc_md131"></a>
 Intervals</h1>
 <p>Confidence and prediction intervals for uncertainty quantification.</p>
-<h2><a class="anchor" id="autotoc_md128"></a>
+<h2><a class="anchor" id="autotoc_md132"></a>
 Overview</h2>
 <p><img src="../assets/diagrams/intervals_comparison.svg" alt="Confidence and Prediction Intervals" style="pointer-events: none;" class="inline"/></p>
 <p>!!! note "Adapter support" Confidence and prediction intervals are available in <b>all three adapters</b>: Batch, Streaming, and Online.</p>
@@ -109,7 +109,7 @@ Overview</h2>
 <td class="markdownTableBodyNone"><b>Prediction</b>   </td><td class="markdownTableBodyNone">Uncertainty for new points   </td><td class="markdownTableBodyNone">Wide   </td><td class="markdownTableBodyNone">Where will new data fall?   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md130"></a>
+<h2><a class="anchor" id="autotoc_md134"></a>
 Confidence Intervals</h2>
 <p>Estimate uncertainty in the smoothed curve itself.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -136,7 +136,7 @@ Confidence Intervals</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.256958, 0.397793]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md132"></a>
+<h2><a class="anchor" id="autotoc_md136"></a>
 Prediction Intervals</h2>
 <p>Estimate where new observations might fall.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -152,14 +152,15 @@ Prediction Intervals</h2>
 <div class="line">        y[i] = std::sin(x[i]) + 0.1;</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    fastloess::Loess model({ .fraction = 0.5, .prediction_intervals = 0.95 });</div>
+<div class="line">    fastloess::Loess model({ .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95 });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.256958, 0.397793]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md134"></a>
+<h2><a class="anchor" id="autotoc_md138"></a>
 Both Intervals</h2>
 <p>Request both types simultaneously:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -183,7 +184,7 @@ Both Intervals</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.256958, 0.397793]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md136"></a>
+<h2><a class="anchor" id="autotoc_md140"></a>
 Confidence Levels</h2>
 <p>Common levels and their z-values:</p>
 <table class="markdownTable">
@@ -217,7 +218,7 @@ Confidence Levels</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.233031, 0.537273]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md138"></a>
+<h2><a class="anchor" id="autotoc_md142"></a>
 Standard Errors</h2>
 <p>Access standard errors directly (available when intervals are computed):</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -241,7 +242,7 @@ Standard Errors</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.269408, 0.500897]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md140"></a>
+<h2><a class="anchor" id="autotoc_md144"></a>
 Availability</h2>
 <p>!!! warning "Batch Mode Only" Confidence and prediction intervals are only available in <b>Batch</b> mode. Streaming and Online modes do not support intervals.</p>
 <table class="markdownTable">

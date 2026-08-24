@@ -93,25 +93,25 @@ $(document).ready(function(){initNavTree('md_docs_2installation.html',''); initR
   <div class="headertitle"><div class="title">installation</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md119"></a>
+<div class="textblock"><h1><a class="anchor" id="autotoc_md123"></a>
 Installation</h1>
 <p>Install the LOESS library for your preferred language.</p>
-<h2><a class="anchor" id="autotoc_md120"></a>
+<h2><a class="anchor" id="autotoc_md124"></a>
 Pre-built Binaries (Linux (x64))</h2>
 <div class="fragment"><div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-x64.so</div>
 <div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp</div>
 <div class="line">g++ -o myapp myapp.cpp -L. -lfastloess-linux-x64</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md121"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md125"></a>
 Pre-built Binaries (macOS (x64))</h2>
 <div class="fragment"><div class="line">curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-macos-x64.dylib</div>
 <div class="line">curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp</div>
 <div class="line">clang++ -o myapp myapp.cpp -L. -lfastloess-macos-x64</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md122"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md126"></a>
 Pre-built Binaries (Windows (x64))</h2>
 <div class="fragment"><div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess-win32-x64.dll</div>
 <div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp</div>
 <div class="line">cl myapp.cpp /link fastloess-win32-x64.lib</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md123"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md127"></a>
 From Source</h2>
 <div class="fragment"><div class="line"># Install Rust first: https://rustup.rs/</div>
 <div class="line">git clone https://github.com/thisisamirv/loess-project</div>
@@ -124,11 +124,11 @@ From Source</h2>
 <div class="line"># Library is at: target/release/libfastloess_cpp.so (Linux)</div>
 <div class="line">#                target/release/libfastloess_cpp.dylib (macOS)</div>
 <div class="line">#                target/release/fastloess_cpp.dll (Windows)</div>
-</div><!-- fragment --><h2><a class="anchor" id="autotoc_md124"></a>
+</div><!-- fragment --><h2><a class="anchor" id="autotoc_md128"></a>
 From conda-forge</h2>
 <div class="fragment"><div class="line">conda install -c conda-forge libfastloess</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md126"></a>
+<h2><a class="anchor" id="autotoc_md130"></a>
 Verify Installation</h2>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>

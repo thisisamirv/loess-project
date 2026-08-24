@@ -93,18 +93,18 @@ $(document).ready(function(){initNavTree('md_docs_2use-case-real-time.html','');
   <div class="headertitle"><div class="title">use-case-real-time</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md301"></a>
+<div class="textblock"><h1><a class="anchor" id="autotoc_md305"></a>
 Real-Time Processing</h1>
 <p>Streaming and online LOESS for live data.</p>
-<h2><a class="anchor" id="autotoc_md302"></a>
+<h2><a class="anchor" id="autotoc_md306"></a>
 Overview</h2>
 <p>When data arrives continuously—from sensors, logs, or streaming pipelines—you need incremental smoothing that doesn't require reprocessing the entire dataset.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md304"></a>
+<h2><a class="anchor" id="autotoc_md308"></a>
 Online Mode: Point-by-Point</h2>
 <p>For true real-time applications where each point must be processed immediately.</p>
 <p><code>window_capacity = 25</code> limits the internal buffer to the 25 most recent observations; each <code>add_point</code> call costs O(window) rather than growing with total history. <code>min_points = 5</code> suppresses output until the window holds enough points for a stable fit — calls made before that threshold return <code>null</code>/<code>None</code>/<code>nothing</code>. <code>update_mode = "incremental"</code> re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.</p>
-<h3><a class="anchor" id="autotoc_md305"></a>
+<h3><a class="anchor" id="autotoc_md309"></a>
 Sensor Data Example</h3>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -234,12 +234,12 @@ Sensor Data Example</h3>
 <div class="line">Time 9.8: 19.677</div>
 <div class="line">Time 9.9: 19.5844</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md307"></a>
+<h2><a class="anchor" id="autotoc_md311"></a>
 Streaming Mode: Chunk Processing</h2>
 <p>For large datasets that arrive in batches or files.</p>
 <p><code>chunk_size</code> controls how many data points are processed in one pass; matching it to your file-read buffer or message-batch size avoids unnecessary copying. <code>overlap</code> retains that many points from the previous chunk as context so the neighbourhood at chunk boundaries is not artificially truncated. <code>merge_strategy = "weighted_average"</code> blends the overlapping region smoothly; use <code>"last"</code> if chunk boundaries are guaranteed to be well separated and no blending is needed.</p>
 <p>!!! warning "Always call finalize()" The streaming adapter buffers overlap data. Call <code>finalize()</code> after the last chunk to retrieve the buffered tail.</p>
-<h3><a class="anchor" id="autotoc_md308"></a>
+<h3><a class="anchor" id="autotoc_md312"></a>
 Log File Processing</h3>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -270,7 +270,7 @@ Log File Processing</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Processed 100 points</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md310"></a>
+<h2><a class="anchor" id="autotoc_md314"></a>
 Real-Time Dashboard Example</h2>
 <p>The dashboard pattern uses a plain LOESS fit on a manually managed sliding window rather than <code>OnlineLoess</code>. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer <code>OnlineLoess</code> with <code>update_mode = "incremental"</code> to bound per-frame cost.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -287,6 +287,7 @@ Real-Time Dashboard Example</h2>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    std::vector&lt;double&gt; windowX, windowY;</div>
+<div class="line">    std::vector&lt;double&gt; last_y;</div>
 <div class="line"> </div>
 <div class="line">    <span class="comment">// Sliding window over times/temperatures (skip until window has ≥2 points)</span></div>
 <div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = 0; i &lt; times.size(); ++i) {</div>
@@ -303,17 +304,19 @@ Real-Time Dashboard Example</h2>
 <div class="line">        sw_opts.fraction = 0.4;</div>
 <div class="line">        fastloess::Loess model(sw_opts);</div>
 <div class="line">        <span class="keyword">auto</span> result = model.fit(windowX, windowY).value();</div>
+<div class="line">        last_y = result.y_vector();</div>
 <div class="line">        <span class="keyword">const</span> <span class="keyword">auto</span> smoothed = result.y_vector().back();</div>
 <div class="line">        (void)smoothed;</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; last_y[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 32.262</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md312"></a>
+<h2><a class="anchor" id="autotoc_md316"></a>
 Choosing Parameters</h2>
-<h3><a class="anchor" id="autotoc_md313"></a>
+<h3><a class="anchor" id="autotoc_md317"></a>
 Online Mode</h3>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -325,7 +328,7 @@ Online Mode</h3>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>"incremental"</code> for speed, <code>"full"</code> for accuracy   </td></tr>
 </table>
-<h3><a class="anchor" id="autotoc_md314"></a>
+<h3><a class="anchor" id="autotoc_md318"></a>
 Streaming Mode</h3>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -338,7 +341,7 @@ Streaming Mode</h3>
 <td class="markdownTableBodyNone"><code>merge_strategy</code>   </td><td class="markdownTableBodyNone"><code>"weighted_average"</code> for best quality, <code>"average"</code> for simplicity   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md316"></a>
+<h2><a class="anchor" id="autotoc_md320"></a>
 Performance Considerations</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -351,7 +354,7 @@ Performance Considerations</h2>
 <td class="markdownTableBodyNone"><b>Batch</b>   </td><td class="markdownTableBodyNone">Full dataset   </td><td class="markdownTableBodyNone">N/A   </td><td class="markdownTableBodyNone">Analysis, reports   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md318"></a>
+<h2><a class="anchor" id="autotoc_md322"></a>
 See Also</h2>
 <ul>
 <li>Execution Modes — Detailed mode comparison</li>
