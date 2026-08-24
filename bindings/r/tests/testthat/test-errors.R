@@ -107,7 +107,8 @@ test_that("StreamingLoess rejects invalid inputs", {
     expect_error(
         process_chunk(
             StreamingLoess(fraction = 0.5),
-            as.double(1:10), as.double(1:10),
+            as.double(1:10),
+            as.double(1:10),
             extra = 1
         ),
         "unused arguments"

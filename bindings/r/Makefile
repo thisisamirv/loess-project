@@ -138,7 +138,7 @@ dev:
 	@echo '{"files":{},"package":null}' > $(R_DIR)/src/vendor/fastLoess/.cargo-checksum.json
 	@printf '\n\n[workspace]\n\n[patch.crates-io]\nloess-rs = { path = "vendor/loess-rs" }\n' >> $(R_DIR)/src/Cargo.toml
 	@(cd $(R_DIR)/src && cargo vendor -q --no-delete vendor)
-	@for d in tests benches examples doc docs .github .config; do \
+	@for d in tests benches examples doc docs assets .github .config; do \
 		rm -rf $(R_DIR)/src/vendor/"$$d" $(R_DIR)/src/vendor/*/"$$d" 2>/dev/null; done || true
 	@for f in $(R_DIR)/src/vendor/*/Makefile; do [ -f "$$f" ] && rm -f "$$f"; done || true
 	@for f in $(R_DIR)/src/vendor/*/.cargo-checksum.json; do \
