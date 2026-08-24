@@ -41,8 +41,13 @@ int main() {
     fastloess::Loess model({ .fraction = 0.3 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.24731
 ```
 
 ---
@@ -75,8 +80,13 @@ int main() {
     fastloess::Loess model(d2_opts);
     auto result = model.fit(x2d, z).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 1.19329
 ```
 
 ---
@@ -110,8 +120,13 @@ int main() {
     fastloess::Loess model(d3_opts);
     auto result = model.fit(x3d, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: -0.670791
 ```
 
 ---

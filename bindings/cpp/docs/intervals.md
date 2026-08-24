@@ -41,8 +41,13 @@ int main() {
     auto ci_lower = result.confidence_lower();
     auto ci_upper = result.confidence_upper();
 
+    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
+```
+
+```output
+95% CI: [0.256958, 0.397793]
 ```
 
 ---
@@ -68,6 +73,7 @@ int main() {
     fastloess::Loess model({ .fraction = 0.5, .prediction_intervals = 0.95 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
 ```
@@ -95,8 +101,13 @@ int main() {
     fastloess::Loess model({ .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
+```
+
+```output
+95% CI: [0.256958, 0.397793]
 ```
 
 ---
@@ -128,8 +139,13 @@ int main() {
     fastloess::Loess model({ .confidence_intervals = 0.99 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
+```
+
+```output
+95% CI: [0.233031, 0.537273]
 ```
 
 ---
@@ -155,8 +171,13 @@ int main() {
     fastloess::Loess model({ .confidence_intervals = 0.95 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
+```
+
+```output
+95% CI: [0.269408, 0.500897]
 ```
 
 ---

@@ -47,8 +47,13 @@ int main() {
     fastloess::Loess model(deg0_opts);
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.7052
 ```
 
 ---
@@ -81,8 +86,13 @@ int main() {
     fastloess::Loess model(deg1_opts);
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.327376
 ```
 
 ---
@@ -115,8 +125,13 @@ int main() {
     fastloess::Loess model(deg2_opts);
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.0677457
 ```
 
 ---
@@ -149,8 +164,13 @@ int main() {
     fastloess::Loess model(deg3_opts);
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.242234
 ```
 
 ---
@@ -183,8 +203,13 @@ int main() {
     fastloess::Loess model(deg4_opts);
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.238533
 ```
 
 ---

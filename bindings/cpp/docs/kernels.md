@@ -52,8 +52,13 @@ int main() {
     fastloess::Loess model({ .weight_function = "tricube" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385152
 ```
 
 ---
@@ -83,8 +88,13 @@ int main() {
     fastloess::Loess model({ .weight_function = "epanechnikov" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.398503
 ```
 
 ---
@@ -114,8 +124,13 @@ int main() {
     fastloess::Loess model({ .weight_function = "gaussian" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.402023
 ```
 
 ---
@@ -145,8 +160,13 @@ int main() {
     fastloess::Loess model({ .weight_function = "biweight" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.384979
 ```
 
 ---
@@ -176,8 +196,13 @@ int main() {
     fastloess::Loess model({ .weight_function = "cosine" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.396604
 ```
 
 ---
@@ -207,8 +232,13 @@ int main() {
     fastloess::Loess model({ .weight_function = "triangle" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.3921
 ```
 
 ---
@@ -238,8 +268,13 @@ int main() {
     fastloess::Loess model({ .weight_function = "uniform" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.399887
 ```
 
 ---

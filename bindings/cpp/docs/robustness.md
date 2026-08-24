@@ -47,8 +47,13 @@ int main() {
     fastloess::Loess model({ .iterations = 3, .robustness_method = "bisquare" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385152
 ```
 
 ---
@@ -78,8 +83,13 @@ int main() {
     fastloess::Loess model({ .iterations = 3, .robustness_method = "huber" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385585
 ```
 
 ---
@@ -109,8 +119,13 @@ int main() {
     fastloess::Loess model({ .iterations = 3, .robustness_method = "talwar" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.3844
 ```
 
 ---
@@ -157,6 +172,29 @@ int main() {
 }
 ```
 
+```output
+Potential outlier at 23
+Potential outlier at 24
+Potential outlier at 25
+Potential outlier at 26
+Potential outlier at 27
+Potential outlier at 28
+Potential outlier at 29
+Potential outlier at 30
+Potential outlier at 31
+Potential outlier at 32
+Potential outlier at 67
+Potential outlier at 68
+Potential outlier at 69
+Potential outlier at 70
+Potential outlier at 71
+Potential outlier at 72
+Potential outlier at 73
+Potential outlier at 74
+Potential outlier at 75
+Potential outlier at 76
+```
+
 ---
 
 ## Scale Estimation
@@ -188,8 +226,13 @@ int main() {
     fastloess::Loess model({ .iterations = 3, .scaling_method = "mad" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385152
 ```
 
 ---
@@ -218,6 +261,11 @@ int main() {
     fastloess::Loess model({ .iterations = 10, .auto_converge = 1e-6 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385251
 ```

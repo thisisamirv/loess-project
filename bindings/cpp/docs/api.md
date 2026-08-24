@@ -23,6 +23,7 @@ int main() {
     opts.fraction = 0.5;
     fastloess::Loess model(opts);
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
 ```
@@ -57,6 +58,11 @@ int main() {
 
     return 0;
 }
+```
+
+```output
+0.5
+3
 ```
 
 * Fits the model to the provided `x` and `y` data vectors.
@@ -258,4 +264,8 @@ int main() {
     }
     return 0;
 }
+```
+
+```output
+2.1 4 6.2 8 10.1
 ```

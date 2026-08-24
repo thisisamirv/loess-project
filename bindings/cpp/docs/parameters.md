@@ -95,8 +95,13 @@ int main() {
     fastloess::Loess model({ .fraction = 0.3 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.24731
 ```
 
 ---
@@ -129,8 +134,13 @@ int main() {
     fastloess::Loess model({ .iterations = 5 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385242
 ```
 
 ---
@@ -183,8 +193,13 @@ int main() {
     fastloess::Loess model({ .surface_mode = "direct" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.377007
 ```
 
 ---
@@ -220,8 +235,13 @@ int main() {
     fastloess::Loess model({ .cell = 0.05 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.383976
 ```
 
 ---
@@ -250,8 +270,13 @@ int main() {
     fastloess::Loess model({ .interpolation_vertices = 50 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385152
 ```
 
 ---
@@ -306,8 +331,13 @@ int main() {
     fastloess::Loess model(opts);
     auto result = model.fit(x2d, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.0590012
 ```
 
 ---
@@ -345,8 +375,13 @@ int main() {
     fastloess::Loess model({ .weight_function = "epanechnikov" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.398503
 ```
 
 ---
@@ -380,8 +415,13 @@ int main() {
     fastloess::Loess model({ .robustness_method = "talwar" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.3844
 ```
 
 ---
@@ -418,8 +458,13 @@ int main() {
     fastloess::Loess model({ .boundary_policy = "reflect" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.64907
 ```
 
 ---
@@ -451,8 +496,13 @@ int main() {
     fastloess::Loess model({ .degree = "quadratic", .boundary_degree_fallback = 1 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.250226
 ```
 
 ---
@@ -488,8 +538,13 @@ int main() {
     fastloess::Loess model({ .scaling_method = "mad" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385152
 ```
 
 ---
@@ -525,8 +580,13 @@ int main() {
     fastloess::Loess model({ .zero_weight_fallback = "use_local_mean" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385152
 ```
 
 ---
@@ -552,8 +612,13 @@ int main() {
     fastloess::Loess model({ .iterations = 20, .auto_converge = 1e-6 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385251
 ```
 
 ---
@@ -588,8 +653,13 @@ int main() {
     fastloess::Loess model({ .parallel = false });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385152
 ```
 
 ---
@@ -635,8 +705,13 @@ int main() {
     fastloess::Loess model;
     auto result = model.fit(x, y, custom_weights).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.389609
 ```
 
 ---
@@ -665,8 +740,13 @@ int main() {
     auto result = model.fit(x, y).value();
     auto residuals = result.residuals();
 
+    std::cout << "residuals[0]: " << result.residuals()[0] << "\n";
     return 0;
 }
+```
+
+```output
+residuals[0]: -0.285152
 ```
 
 ---
@@ -708,6 +788,10 @@ int main() {
 }
 ```
 
+```output
+R²: 0.898935
+```
+
 ---
 
 ### return_robustness_weights
@@ -732,8 +816,13 @@ int main() {
     auto result = model.fit(x, y).value();
     auto weights = result.robustness_weights();
 
+    std::cout << "robustness_weights[0]: " << result.robustness_weights()[0] << "\n";
     return 0;
 }
+```
+
+```output
+robustness_weights[0]: 0.603349
 ```
 
 ---
@@ -761,8 +850,13 @@ int main() {
     fastloess::Loess model({ .confidence_intervals = 0.95, .prediction_intervals = 0.95 });
     auto result = model.fit(x, y).value();
 
+    std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
+```
+
+```output
+95% CI: [0.269408, 0.500897]
 ```
 
 ---
@@ -799,8 +893,13 @@ int main() {
     });
     auto result = model.fit(x, y).value();
 
+    std::cout << "Fraction used: " << result.fraction_used() << "\n";
     return 0;
 }
+```
+
+```output
+Fraction used: 0.3
 ```
 
 ---
@@ -831,8 +930,13 @@ int main() {
     (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
 
+    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
     return 0;
 }
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---
@@ -861,8 +965,13 @@ int main() {
     (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
 
+    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
     return 0;
 }
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---
@@ -899,8 +1008,13 @@ int main() {
     (void)stream.process_chunk(x, y);
     auto result = stream.finalize().value();
 
+    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
     return 0;
 }
+```
+
+```output
+Smoothed 100 points
 ```
 
 ---
@@ -929,6 +1043,7 @@ int main() {
     auto out = model.add_point(x[0], y[0]).value();
     // out.has_value() == false until window fills
 
+    if (r.has_value()) { std::cout << "Online y: " << r->y << "\n"; }
     return 0;
 }
 ```
@@ -959,6 +1074,7 @@ int main() {
     auto out = model.add_point(x[0], y[0]).value();
     // out.has_value() == false until min_points reached
 
+    if (r.has_value()) { std::cout << "Online y: " << r->y << "\n"; }
     return 0;
 }
 ```
@@ -995,6 +1111,7 @@ int main() {
     fastloess::OnlineLoess model(opts);
     auto out = model.add_point(x[0], y[0]).value();
 
+    if (r.has_value()) { std::cout << "Online y: " << r->y << "\n"; }
     return 0;
 }
 ```

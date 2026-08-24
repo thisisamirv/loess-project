@@ -48,8 +48,13 @@ int main() {
     fastloess::Loess model({ .iterations = 3, .scaling_method = "mad" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.385152
 ```
 
 ---
@@ -79,8 +84,13 @@ int main() {
     fastloess::Loess model({ .iterations = 3, .scaling_method = "mar" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.383463
 ```
 
 ---
@@ -110,8 +120,13 @@ int main() {
     fastloess::Loess model({ .iterations = 3, .scaling_method = "mean" });
     auto result = model.fit(x, y).value();
 
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.383671
 ```
 
 ---
