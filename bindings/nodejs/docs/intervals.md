@@ -31,9 +31,17 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 const model = new Loess({ fraction: 0.5, confidence_intervals: 0.95 });
 const result = model.fit(x, y);
 
-result.y.forEach((y, i) => {
-    console.log(`x=${result.x[i]}: y=${y} [${result.confidence_lower[i]}, ${result.confidence_upper[i]}]`);
+result.y.slice(0, 5).forEach((y, i) => {
+    console.log(`x=${result.x[i].toFixed(4)}: y=${y.toFixed(4)} [${result.confidence_lower[i].toFixed(4)}, ${result.confidence_upper[i].toFixed(4)}]`);
 });
+```
+
+```output
+x=0.0000: y=0.1118 [-0.0078, 0.2313]
+x=0.0635: y=0.1389 [0.0201, 0.2577]
+x=0.1269: y=0.1702 [0.0521, 0.2882]
+x=0.1904: y=0.2064 [0.0890, 0.3237]
+x=0.2539: y=0.2445 [0.1279, 0.3611]
 ```
 
 ---
@@ -52,6 +60,10 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 const model = new Loess({ fraction: 0.5, prediction_intervals: 0.95 });
 const result = model.fit(x, y);
 console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
+```
+
+```output
+Prediction bounds: [-0.4048770295448013, 0.6284079607546723]
 ```
 
 ---
@@ -73,6 +85,11 @@ const model = new Loess({
     prediction_intervals: 0.95
 });
 const result = model.fit(x, y);
+console.log("95% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.confidence_upper[0].toFixed(4) + "]");
+```
+
+```output
+95% CI: [-0.0078, 0.2313]
 ```
 
 ---
@@ -97,6 +114,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 // 99% confidence interval
 const model = new Loess({ confidence_intervals: 0.99 });
 const result = model.fit(x, y);
+console.log("99% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.confidence_upper[0].toFixed(4) + "]");
+```
+
+```output
+99% CI: [0.0056, 0.3270]
 ```
 
 ---
@@ -115,9 +137,17 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 const model = new Loess({ confidence_intervals: 0.95 });
 const result = model.fit(x, y);
 
-result.standard_errors.forEach((se, i) => {
+result.standard_errors.slice(0, 5).forEach((se, i) => {
     console.log(`Point ${i}: SE = ${se.toFixed(4)}`);
 });
+```
+
+```output
+Point 0: SE = 0.0624
+Point 1: SE = 0.0622
+Point 2: SE = 0.0621
+Point 3: SE = 0.0620
+Point 4: SE = 0.0619
 ```
 
 ---

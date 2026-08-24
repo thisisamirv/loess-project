@@ -33,6 +33,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ boundary_policy: "extend" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1663
 ```
 
 ---
@@ -52,6 +57,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ boundary_policy: "reflect" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.5186
 ```
 
 ---
@@ -71,6 +81,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ boundary_policy: "zero" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.2668
 ```
 
 ---
@@ -93,6 +108,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ boundary_policy: "noboundary" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.7026
 ```
 
 ---

@@ -39,12 +39,21 @@ const processor = new OnlineLoess(
     { window_capacity: 100, min_points: 5, update_mode: "incremental" }
 );
 
+let shown = 0;
 for (let i = 0; i < n; i++) {
     const res = processor.add_point(x[i], y[i]);
-    if (res !== null) {
-        console.log(`Smoothed: ${res.y.toFixed(2)}`);
+    if (res !== null && shown++ < 5) {
+        console.log(`Smoothed at x=${x[i].toFixed(2)}: ${res.y.toFixed(4)}`);
     }
 }
+```
+
+```output
+Smoothed at x=0.25: 0.4453
+Smoothed at x=0.32: 0.1532
+Smoothed at x=0.38: 0.4599
+Smoothed at x=0.44: 0.1651
+Smoothed at x=0.51: 0.4685
 ```
 
 ---

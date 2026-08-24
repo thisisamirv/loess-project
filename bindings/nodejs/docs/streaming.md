@@ -43,6 +43,11 @@ const processor = new StreamingLoess(
 
 const result = processor.process_chunk(xChunk, yChunk);
 const finalResult = processor.finalize();
+console.log("Smoothed", finalResult.y.length, "points via streaming");
+```
+
+```output
+Smoothed 100 points via streaming
 ```
 
 ---

@@ -14,6 +14,15 @@ The `Loess` class allows configuring the LOESS parameters once and fitting multi
 const { Loess } = require('fastloess');
 
 const model = new Loess({ fraction: 0.5 });
+const result = model.fit(
+    new Float64Array([0, 1, 2, 3, 4, 5]),
+    new Float64Array([0.0, 1.1, 1.9, 3.1, 3.9, 5.0])
+);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.0000
 ```
 
 * `options`: An object containing `LoessOptions` fields.
@@ -33,6 +42,11 @@ console.log(result.fraction_used);   // 0.5
 console.log(result.iterations_used); // 3
 ```
 
+```output
+0.5
+3
+```
+
 * Fits the model to the provided `x` and `y` typed arrays.
 * Returns a `LoessResult` object containing the smoothed values and optional diagnostics.
 
@@ -44,9 +58,13 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const model = new Loess({ fraction: 0.5 });
-(async () => {
-    const result = await model.fit_async(x, y);
-})();
+model.fit_async(x, y).then(result => {
+    console.log("Async fit y[0]:", result.y[0].toFixed(4));
+});
+```
+
+```output
+Async fit y[0]: 0.3274
 ```
 
 * Async variant of `fit()`. Returns a `Promise` that resolves to a `LoessResult`.
@@ -233,4 +251,8 @@ const model = new Loess({ fraction: 0.5 });
 const result = model.fit(x, y);
 
 console.log("Smoothed Y:", result.y);
+```
+
+```output
+Smoothed Y: Float64Array(5) [ 2.1, 4, 6.2, 8, 10.1 ]
 ```

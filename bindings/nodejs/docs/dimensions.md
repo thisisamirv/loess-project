@@ -33,6 +33,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ fraction: 0.3 });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.0281
 ```
 
 ---
@@ -53,6 +58,11 @@ const x2d = Float64Array.from({ length: n * 2 }, (_, k) => k % 2 === 0 ? lat[k >
 
 const model = new Loess({ dimensions: 2, fraction: 0.3 });
 const result = model.fit(x2d, z);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 1.2204
 ```
 
 ---
@@ -76,6 +86,11 @@ const x3d = Float64Array.from({ length: n * 3 }, (_, k) => {
 
 const model = new Loess({ dimensions: 3, fraction: 0.5 });
 const result = model.fit(x3d, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: -0.6708
 ```
 
 ---

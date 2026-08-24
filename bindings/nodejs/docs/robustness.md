@@ -39,6 +39,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ iterations: 3, robustness_method: "bisquare" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1663
 ```
 
 ---
@@ -60,6 +65,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ iterations: 3, robustness_method: "huber" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1703
 ```
 
 ---
@@ -81,6 +91,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ iterations: 3, robustness_method: "talwar" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1913
 ```
 
 ---
@@ -109,11 +124,20 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 const model = new Loess({ iterations: 5, return_robustness_weights: true });
 const result = model.fit(x, y);
 
+let shown = 0;
 result.robustness_weights.forEach((w, i) => {
-    if (w < 0.5) {
+    if (w < 0.5 && shown++ < 5) {
         console.log(`Potential outlier at index ${i}: weight = ${w.toFixed(3)}`);
     }
 });
+```
+
+```output
+Potential outlier at index 14: weight = 0.354
+Potential outlier at index 16: weight = 0.486
+Potential outlier at index 21: weight = 0.284
+Potential outlier at index 23: weight = 0.455
+Potential outlier at index 26: weight = 0.175
 ```
 
 ---
@@ -139,6 +163,11 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ iterations: 3, scaling_method: "mad" });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1663
 ```
 
 ---
@@ -159,4 +188,9 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({ iterations: 10, auto_converge: 1e-6 });
 const result = model.fit(x, y);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.1649
 ```
