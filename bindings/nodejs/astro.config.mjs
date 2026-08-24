@@ -1,0 +1,79 @@
+import { defineConfig } from 'astro/config';
+import starlight from '@astrojs/starlight';
+
+export default defineConfig({
+    base: process.env.VITE_BASE ?? '/',
+    outDir: './dist',
+    integrations: [
+        starlight({
+            title: 'fastloess',
+            description: 'High-performance LOESS smoothing for Node.js',
+            sidebar: [
+                {
+                    label: 'Getting Started',
+                    items: [
+                        { label: 'Installation', slug: 'installation' },
+                        { label: 'Quick Start', slug: 'quickstart' },
+                        { label: 'Concepts', slug: 'concepts' },
+                    ],
+                },
+                {
+                    label: 'Model',
+                    items: [
+                        { label: 'Parameters', slug: 'parameters' },
+                        { label: 'Degree', slug: 'degree' },
+                        { label: 'Dimensions', slug: 'dimensions' },
+                    ],
+                },
+                {
+                    label: 'Adapters',
+                    items: [
+                        { label: 'Adapter Choice', slug: 'adapter-choice' },
+                    ],
+                },
+                {
+                    label: 'Usage',
+                    items: [
+                        { label: 'Batch', slug: 'batch' },
+                        { label: 'Streaming', slug: 'streaming' },
+                        { label: 'Online', slug: 'online' },
+                    ],
+                },
+                {
+                    label: 'Analysis',
+                    items: [
+                        { label: 'Intervals', slug: 'intervals' },
+                        { label: 'Cross-Validation', slug: 'cross-validation' },
+                    ],
+                },
+                {
+                    label: 'Customization',
+                    items: [
+                        { label: 'Kernels', slug: 'kernels' },
+                        { label: 'Robustness', slug: 'robustness' },
+                        { label: 'Scaling', slug: 'scaling' },
+                        { label: 'Boundary', slug: 'boundary' },
+                        { label: 'Merge', slug: 'merge' },
+                    ],
+                },
+                {
+                    label: 'Use Cases',
+                    items: [
+                        { label: 'Genomics', slug: 'use-case-genomics' },
+                        { label: 'Time Series', slug: 'use-case-time-series' },
+                        { label: 'Real-Time', slug: 'use-case-real-time' },
+                    ],
+                },
+                {
+                    label: 'API Guide',
+                    items: [
+                        { label: 'Batch API', slug: 'api' },
+                        { label: 'Streaming API', slug: 'api-streaming' },
+                        { label: 'Online API', slug: 'api-online' },
+                    ],
+                },
+                { label: 'API Reference', slug: 'reference/' },
+            ],
+        }),
+    ],
+});
