@@ -131,8 +131,10 @@ Overview</h2>
 <div class="line">    fastloess::Loess model({ .fraction = 0.3 });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.24731</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md114"></a>
 2D — Spatial Surface</h2>
@@ -160,8 +162,10 @@ Overview</h2>
 <div class="line">    fastloess::Loess model(d2_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x2d, z).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 1.19329</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md116"></a>
 3D and Higher</h2>
@@ -190,8 +194,10 @@ Overview</h2>
 <div class="line">    fastloess::Loess model(d3_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x3d, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: -0.670791</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md118"></a>
 Distance Metrics for Multivariate Data</h2>

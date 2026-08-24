@@ -141,8 +141,10 @@ Degree 0 — Local Constant</h2>
 <div class="line">    fastloess::Loess model(deg0_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.7052</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md96"></a>
 Degree 1 — Local Linear (Default)</h2>
@@ -170,8 +172,10 @@ Degree 1 — Local Linear (Default)</h2>
 <div class="line">    fastloess::Loess model(deg1_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.327376</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md98"></a>
 Degree 2 — Local Quadratic</h2>
@@ -199,8 +203,10 @@ Degree 2 — Local Quadratic</h2>
 <div class="line">    fastloess::Loess model(deg2_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.0677457</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md100"></a>
 Degree 3 — Local Cubic</h2>
@@ -228,8 +234,10 @@ Degree 3 — Local Cubic</h2>
 <div class="line">    fastloess::Loess model(deg3_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.242234</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md102"></a>
 Degree 4 — Local Quartic</h2>
@@ -257,8 +265,10 @@ Degree 4 — Local Quartic</h2>
 <div class="line">    fastloess::Loess model(deg4_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.238533</div>
 </div><!-- fragment --><hr  />
 <h2><a class="anchor" id="autotoc_md104"></a>
 Choosing the Right Degree</h2>
