@@ -42,6 +42,10 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(iterations = 3, robustness_method = "bisquare")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (bisquare robustness):\n")
+#> First 6 smoothed values (bisquare robustness):
+print(head(result$y))
+#> [1] 0.4897657 0.4961584 0.5029665 0.5102219 0.5179564 0.5262019
 ```
 
 ### Huber
@@ -58,6 +62,10 @@ w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}
 
 model <- Loess(iterations = 3, robustness_method = "huber")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (huber robustness):\n")
+#> First 6 smoothed values (huber robustness):
+print(head(result$y))
+#> [1] 0.4999039 0.5072430 0.5150605 0.5233922 0.5322738 0.5417411
 ```
 
 ### Talwar
@@ -74,6 +82,10 @@ w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}
 
 model <- Loess(iterations = 3, robustness_method = "talwar")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (talwar robustness):\n")
+#> First 6 smoothed values (talwar robustness):
+print(head(result$y))
+#> [1] 0.4730281 0.4784755 0.4842521 0.4903763 0.4968663 0.5037406
 ```
 
 ------------------------------------------------------------------------
@@ -109,9 +121,11 @@ plot(x, y, pch = 16, col = "gray", main = "Effect of Robustness Iterations")
 lines(result_0$x, result_0$y, col = "red", lwd = 2, lty = 2)
 lines(result_3$x, result_3$y, col = "blue", lwd = 2)
 legend("topright", c("Data", "iterations=0", "iterations=3"),
-       pch = c(16, NA, NA), lty = c(NA, 2, 1),
-       col = c("gray", "red", "blue"))
+        pch = c(16, NA, NA), lty = c(NA, 2, 1),
+        col = c("gray", "red", "blue"))
 ```
+
+![](robustness_files/figure-html/robustness_4-1.png)
 
 ------------------------------------------------------------------------
 
@@ -122,3 +136,42 @@ legend("topright", c("Data", "iterations=0", "iterations=3"),
 | `"bisquare"` | Smooth to zero          | General purpose       |
 | `"huber"`    | Linear then downweights | Mild contamination    |
 | `"talwar"`   | Hard threshold (0/1)    | Severe point outliers |
+
+``` r
+
+sessionInfo()
+#> R version 4.6.1 (2026-06-24)
+#> Platform: x86_64-pc-linux-gnu
+#> Running under: Ubuntu 24.04.4 LTS
+#> 
+#> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+#> 
+#> locale:
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+#> 
+#> time zone: UTC
+#> tzcode source: system (glibc)
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#> [1] rfastloess_1.0.0
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] digest_0.6.39       desc_1.4.3          R6_2.6.1           
+#>  [4] fastmap_1.2.0       xfun_0.60           cachem_1.1.0       
+#>  [7] knitr_1.51          BiocGenerics_0.58.1 htmltools_0.5.9    
+#> [10] generics_0.1.4      rmarkdown_2.31      lifecycle_1.0.5    
+#> [13] cli_3.6.6           sass_0.4.10         pkgdown_2.2.1      
+#> [16] textshaping_1.0.5   jquerylib_0.1.4     systemfonts_1.3.2  
+#> [19] compiler_4.6.1      tools_4.6.1         ragg_1.5.2         
+#> [22] bslib_0.12.0        evaluate_1.0.5      yaml_2.3.12        
+#> [25] otel_0.2.0          jsonlite_2.0.0      rlang_1.3.0        
+#> [28] fs_2.1.0            htmlwidgets_1.6.4
+```

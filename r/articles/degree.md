@@ -12,11 +12,11 @@ Degree comparison
 
 | Degree | Local Fit | Captures | Risk |
 |----|----|----|----|
-| `0` / `"constant"` | Weighted mean | Level only | Over-smooth, biased at edges |
+| `0` / `"constant"` | Weighted mean | Level only | Over-smooth; edge bias |
 | `1` / `"linear"` | Weighted line | Trend (default) | Rarely overfits |
 | `2` / `"quadratic"` | Parabola | Curvature | Overfits with small `fraction` |
 | `3` / `"cubic"` | Cubic curve | Inflections | Requires larger `fraction` |
-| `4` / `"quartic"` | Quartic curve | Fine structure | High variance, rarely needed |
+| `4` / `"quartic"` | Quartic curve | Fine structure | High variance, rare |
 
 Degree can be specified as an integer (`0L`–`4L`) or as a string
 (`"constant"`, `"linear"`, `"quadratic"`, `"cubic"`, `"quartic"`).
@@ -41,6 +41,10 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(degree = "constant", fraction = 0.5)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (constant/Nadaraya-Watson):\n")
+#> First 6 smoothed values (constant/Nadaraya-Watson):
+print(head(result$y))
+#> [1] 0.4694689 0.4748509 0.4785029 0.4798484 0.4836073 0.4936813
 ```
 
 ------------------------------------------------------------------------
@@ -58,6 +62,10 @@ matters.
 
 model <- Loess(degree = "linear", fraction = 0.5)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (linear local regression):\n")
+#> First 6 smoothed values (linear local regression):
+print(head(result$y))
+#> [1] 0.4758389 0.4846388 0.4944609 0.5054102 0.5169758 0.5286606
 ```
 
 ------------------------------------------------------------------------
@@ -75,6 +83,10 @@ variance.
 
 model <- Loess(degree = "quadratic", fraction = 0.5)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (quadratic local regression):\n")
+#> First 6 smoothed values (quadratic local regression):
+print(head(result$y))
+#> [1] 0.4043043 0.4131994 0.4244604 0.4384709 0.4565813 0.4791656
 ```
 
 ------------------------------------------------------------------------
@@ -92,6 +104,10 @@ needed in practice.
 
 model <- Loess(degree = "cubic", fraction = 0.6)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (cubic local regression):\n")
+#> First 6 smoothed values (cubic local regression):
+print(head(result$y))
+#> [1] 0.4183075 0.4299695 0.4442197 0.4608883 0.4798054 0.5008015
 ```
 
 ------------------------------------------------------------------------
@@ -107,6 +123,10 @@ boundaries to avoid instability.
 
 model <- Loess(degree = 2L, boundary_degree_fallback = TRUE)
 result <- fit(model, x, y)
+cat("First 6 smoothed values (quadratic, boundary fallback):\n")
+#> First 6 smoothed values (quadratic, boundary fallback):
+print(head(result$y))
+#> [1] 0.4577829 0.4682789 0.4793020 0.4908341 0.5028573 0.5153538
 ```
 
 ------------------------------------------------------------------------
@@ -124,3 +144,42 @@ result <- fit(model, x, y)
 > **Rule of thumb:** Start with `degree = 1` (default). Move to
 > `degree = 2` only if you see systematic bias in regions of high
 > curvature, and increase `fraction` at the same time.
+
+``` r
+
+sessionInfo()
+#> R version 4.6.1 (2026-06-24)
+#> Platform: x86_64-pc-linux-gnu
+#> Running under: Ubuntu 24.04.4 LTS
+#> 
+#> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+#> 
+#> locale:
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+#> 
+#> time zone: UTC
+#> tzcode source: system (glibc)
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#> [1] rfastloess_1.0.0
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] digest_0.6.39       desc_1.4.3          R6_2.6.1           
+#>  [4] fastmap_1.2.0       xfun_0.60           cachem_1.1.0       
+#>  [7] knitr_1.51          BiocGenerics_0.58.1 htmltools_0.5.9    
+#> [10] generics_0.1.4      rmarkdown_2.31      lifecycle_1.0.5    
+#> [13] cli_3.6.6           sass_0.4.10         pkgdown_2.2.1      
+#> [16] textshaping_1.0.5   jquerylib_0.1.4     systemfonts_1.3.2  
+#> [19] compiler_4.6.1      tools_4.6.1         ragg_1.5.2         
+#> [22] bslib_0.12.0        evaluate_1.0.5      yaml_2.3.12        
+#> [25] otel_0.2.0          jsonlite_2.0.0      rlang_1.3.0        
+#> [28] fs_2.1.0            htmlwidgets_1.6.4
+```

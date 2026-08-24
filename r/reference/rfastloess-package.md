@@ -17,16 +17,13 @@ For comprehensive documentation, see:
 - [`OnlineLoess`](https://thisisamirv.github.io/loess-project/r/reference/OnlineLoess.md):
   Sliding window for real-time data
 
-## Documentation
-
-For comprehensive documentation, tutorials, and API reference, see:
-<https://loess.readthedocs.io/>
-
 ## See also
 
 Useful links:
 
 - <https://github.com/thisisamirv/loess-project>
+
+- <https://thisisamirv.github.io/loess-project/r/>
 
 - Report bugs at <https://github.com/thisisamirv/loess-project/issues>
 

@@ -125,8 +125,8 @@
 <tr class="odd">
 <td><strong>zero_weight_fallback</strong></td>
 <td><code>"use_local_mean"</code></td>
-<td>3 options</td>
-<td>Zero-weight behaviour</td>
+<td>3</td>
+<td>Zero-weight</td>
 <td>All</td>
 </tr>
 <tr class="even">
@@ -211,8 +211,8 @@
 <tr class="odd">
 <td><strong>weighted_metric_weights</strong></td>
 <td><code>NULL</code></td>
-<td>numeric vector</td>
-<td>Per-dimension distance weights</td>
+<td>numeric</td>
+<td>Per-dim weights</td>
 <td>All</td>
 </tr>
 <tr class="even">
@@ -226,14 +226,14 @@
 <td><strong>interpolation_vertices</strong></td>
 <td><code>NULL</code></td>
 <td>integer</td>
-<td>Interpolation grid vertices</td>
+<td>Grid vertices</td>
 <td>All</td>
 </tr>
 <tr class="even">
 <td><strong>boundary_degree_fallback</strong></td>
 <td><code>FALSE</code></td>
 <td>logical</td>
-<td>Degree fallback at boundaries</td>
+<td>Deg fallback</td>
 <td>All</td>
 </tr>
 <tr class="odd">
@@ -281,8 +281,8 @@
 <tr class="odd">
 <td><strong>merge_strategy</strong></td>
 <td><code>"weighted_average"</code></td>
-<td>4 options</td>
-<td>Merge overlaps</td>
+<td>4</td>
+<td>Chunk merge</td>
 <td>Streaming</td>
 </tr>
 <tr class="even">
@@ -313,89 +313,56 @@
 <div class="section level2">
 <h2 id="parameter-options">Parameter Options<a class="anchor" aria-label="anchor" href="#parameter-options"></a>
 </h2>
-<table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
-<thead><tr class="header">
-<th>Parameter</th>
-<th>Available Options</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><strong>degree</strong></td>
-<td>
-<code>0</code>/<code>"constant"</code>,
+<ul>
+<li>
+<strong>degree</strong>: <code>0</code>/<code>"constant"</code>,
 <code>1</code>/<code>"linear"</code> (default),
 <code>2</code>/<code>"quadratic"</code>,
 <code>3</code>/<code>"cubic"</code>,
 <code>4</code>/<code>"quartic"</code>
-</td>
-</tr>
-<tr class="even">
-<td><strong>surface_mode</strong></td>
-<td>
-<code>"interpolation"</code> (default), <code>"direct"</code>
-</td>
-</tr>
-<tr class="odd">
-<td><strong>weight_function</strong></td>
-<td>
-<code>"tricube"</code>, <code>"epanechnikov"</code>,
-<code>"gaussian"</code>, <code>"biweight"</code>, <code>"cosine"</code>,
-<code>"triangle"</code>, <code>"uniform"</code>
-</td>
-</tr>
-<tr class="even">
-<td><strong>robustness_method</strong></td>
-<td>
-<code>"bisquare"</code>, <code>"huber"</code>,
-<code>"talwar"</code>
-</td>
-</tr>
-<tr class="odd">
-<td><strong>zero_weight_fallback</strong></td>
-<td>
-<code>"use_local_mean"</code>, <code>"return_original"</code>,
+</li>
+<li>
+<strong>surface_mode</strong>: <code>"interpolation"</code>
+(default), <code>"direct"</code>
+</li>
+<li>
+<strong>weight_function</strong>: <code>"tricube"</code> (default),
+<code>"epanechnikov"</code>, <code>"gaussian"</code>,
+<code>"biweight"</code>, <code>"cosine"</code>, <code>"triangle"</code>,
+<code>"uniform"</code>
+</li>
+<li>
+<strong>robustness_method</strong>: <code>"bisquare"</code>
+(default), <code>"huber"</code>, <code>"talwar"</code>
+</li>
+<li>
+<strong>zero_weight_fallback</strong>: <code>"use_local_mean"</code>
+(default), <code>"return_original"</code>,
 <code>"return_none"</code>
-</td>
-</tr>
-<tr class="even">
-<td><strong>boundary_policy</strong></td>
-<td>
-<code>"extend"</code>, <code>"reflect"</code>, <code>"zero"</code>,
+</li>
+<li>
+<strong>boundary_policy</strong>: <code>"extend"</code> (default),
+<code>"reflect"</code>, <code>"zero"</code>,
 <code>"noboundary"</code>
-</td>
-</tr>
-<tr class="odd">
-<td><strong>scaling_method</strong></td>
-<td>
-<code>"mad"</code>, <code>"mar"</code>, <code>"mean"</code>
-</td>
-</tr>
-<tr class="even">
-<td><strong>distance_metric</strong></td>
-<td>
-<code>"normalized"</code>, <code>"euclidean"</code>,
-<code>"weighted"</code>
-</td>
-</tr>
-<tr class="odd">
-<td><strong>merge_strategy</strong></td>
-<td>
-<code>"average"</code>, <code>"weighted_average"</code>,
-<code>"take_first"</code>, <code>"take_last"</code>
-</td>
-</tr>
-<tr class="even">
-<td><strong>update_mode</strong></td>
-<td>
-<code>"incremental"</code>, <code>"full"</code>
-</td>
-</tr>
-</tbody>
-</table>
+</li>
+<li>
+<strong>scaling_method</strong>: <code>"mad"</code> (default),
+<code>"mar"</code>, <code>"mean"</code>
+</li>
+<li>
+<strong>distance_metric</strong>: <code>"normalized"</code>
+(default), <code>"euclidean"</code>, <code>"weighted"</code>
+</li>
+<li>
+<strong>merge_strategy</strong>: <code>"weighted_average"</code>
+(default), <code>"average"</code>, <code>"take_first"</code>,
+<code>"take_last"</code>
+</li>
+<li>
+<strong>update_mode</strong>: <code>"incremental"</code> (default),
+<code>"full"</code>
+</li>
+</ul>
 <hr>
 </div>
 <div class="section level2">
@@ -442,7 +409,11 @@ important parameter.</strong></p>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (fraction=0.3):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (fraction=0.3):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.4263272 0.4353748 0.4470767 0.4624238 0.4806954 0.5011710</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="iterations">iterations<a class="anchor" aria-label="anchor" href="#iterations"></a>
@@ -451,7 +422,11 @@ important parameter.</strong></p>
 high-residual points.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>iterations <span class="op">=</span> <span class="fl">3L</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (iterations=3):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (iterations=3):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.4897657 0.4961584 0.5029665 0.5102219 0.5179564 0.5262019</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="degree">degree<a class="anchor" aria-label="anchor" href="#degree"></a>
@@ -459,7 +434,11 @@ high-residual points.</p>
 <p>Polynomial degree for local fits. See the <a href="degree.html">Polynomial Degree</a> vignette.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>degree <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span>  <span class="co"># quadratic</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (degree=2, quadratic):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (degree=2, quadratic):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.4577829 0.4682789 0.4793020 0.4908341 0.5028573 0.5153538</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="surface_mode">surface_mode<a class="anchor" aria-label="anchor" href="#surface_mode"></a>
@@ -470,7 +449,11 @@ high-residual points.</p>
 large datasets.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>surface_mode <span class="op">=</span> <span class="st">"direct"</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (direct surface mode):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (direct surface mode):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.4839495 0.4916503 0.4997001 0.5080695 0.5166623 0.5253365</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="distance_metric">distance_metric<a class="anchor" aria-label="anchor" href="#distance_metric"></a>
@@ -486,7 +469,11 @@ scale each dimension separately.</p>
 <span>    distance_metric <span class="op">=</span> <span class="st">"weighted"</span>,</span>
 <span>    weighted_metric_weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1.0</span>, <span class="fl">0.5</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (2D LOESS, weighted distance):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (2D LOESS, weighted distance):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.6347210 0.6556046 0.6881319 0.7223324 0.7409650 0.7287990</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="parallel">parallel<a class="anchor" aria-label="anchor" href="#parallel"></a>
@@ -494,7 +481,11 @@ scale each dimension separately.</p>
 <p>Enable parallel CPU execution (multiple cores).</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>parallel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (parallel=TRUE):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (parallel=TRUE):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.4897657 0.4961584 0.5029665 0.5102219 0.5179564 0.5262019</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="return_diagnostics">return_diagnostics<a class="anchor" aria-label="anchor" href="#return_diagnostics"></a>
@@ -503,7 +494,8 @@ scale each dimension separately.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>return_diagnostics <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">diagnostics</span><span class="op">$</span><span class="va">r_squared</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"R²:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">diagnostics</span><span class="op">$</span><span class="va">r_squared</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R²: 0.7227642</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -514,11 +506,16 @@ scale each dimension separately.</p>
 <h3 id="chunk_size-and-overlap">chunk_size and overlap<a class="anchor" aria-label="anchor" href="#chunk_size-and-overlap"></a>
 </h3>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
-<span>    chunk_size <span class="op">=</span> <span class="fl">5000L</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">500L</span>,</span>
+<code class="sourceCode R"><span><span class="va">chunk_size</span> <span class="op">&lt;-</span> <span class="fl">5000L</span></span>
+<span><span class="va">overlap</span>    <span class="op">&lt;-</span> <span class="fl">500L</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
+<span>    chunk_size <span class="op">=</span> <span class="va">chunk_size</span>,</span>
+<span>    overlap <span class="op">=</span> <span class="va">overlap</span>,</span>
 <span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"overlap = %d points (%.0f%% of chunk)\n"</span>,</span>
+<span>            <span class="va">overlap</span>, <span class="fl">100</span> <span class="op">*</span> <span class="va">overlap</span> <span class="op">/</span> <span class="va">chunk_size</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; overlap = 500 points (10% of chunk)</span></span></code></pre></div>
 <hr>
 </div>
 </div>
@@ -533,7 +530,45 @@ scale each dimension separately.</p>
 <span>    window_capacity <span class="op">=</span> <span class="fl">50L</span>,</span>
 <span>    min_points <span class="op">=</span> <span class="fl">5L</span>,</span>
 <span>    update_mode <span class="op">=</span> <span class="st">"incremental"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"OnlineLoess model created.\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; OnlineLoess model created.</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] rfastloess_1.0.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] digest_0.6.39       desc_1.4.3          R6_2.6.1           </span></span>
+<span><span class="co">#&gt;  [4] fastmap_1.2.0       xfun_0.60           cachem_1.1.0       </span></span>
+<span><span class="co">#&gt;  [7] knitr_1.51          BiocGenerics_0.58.1 htmltools_0.5.9    </span></span>
+<span><span class="co">#&gt; [10] generics_0.1.4      rmarkdown_2.31      lifecycle_1.0.5    </span></span>
+<span><span class="co">#&gt; [13] cli_3.6.6           sass_0.4.10         pkgdown_2.2.1      </span></span>
+<span><span class="co">#&gt; [16] textshaping_1.0.5   jquerylib_0.1.4     systemfonts_1.3.2  </span></span>
+<span><span class="co">#&gt; [19] compiler_4.6.1      tools_4.6.1         ragg_1.5.2         </span></span>
+<span><span class="co">#&gt; [22] bslib_0.12.0        evaluate_1.0.5      yaml_2.3.12        </span></span>
+<span><span class="co">#&gt; [25] otel_0.2.0          jsonlite_2.0.0      rlang_1.3.0        </span></span>
+<span><span class="co">#&gt; [28] fs_2.1.0            htmlwidgets_1.6.4</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

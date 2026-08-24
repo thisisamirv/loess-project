@@ -115,7 +115,11 @@ reduce computation.</p>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span>, sd <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (1D LOESS):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (1D LOESS):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.3808654 0.3912167 0.4028709 0.4154835 0.4286045 0.4422857</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -133,7 +137,11 @@ reduce computation.</p>
 <span><span class="va">x2d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">lat</span>, <span class="va">lon</span><span class="op">)</span>   <span class="co"># n × 2 matrix</span></span>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.3</span>, dimensions <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (2D LOESS, lat/lon):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (2D LOESS, lat/lon):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1]  0.17983519  0.02191686 -0.01849028  0.22186652  0.09969107 -0.22507546</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -153,7 +161,11 @@ neighbourhood populated.</p>
 <span><span class="va">x3d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="va">x1</span>, <span class="va">x2</span>, <span class="va">x3</span><span class="op">)</span>   <span class="co"># n × 3 matrix</span></span>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, dimensions <span class="op">=</span> <span class="fl">3L</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x3d</span>, <span class="va">y</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x3d</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (3D LOESS):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (3D LOESS):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.8070023 0.9764349 0.8780069 1.0434288 0.9838051 0.8222218</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -175,8 +187,8 @@ different metrics.</p>
 <tbody>
 <tr class="odd">
 <td><code>"normalized"</code></td>
-<td>Each dimension scaled by its range (default)</td>
-<td>Mixed-scale predictors</td>
+<td>Scaled by dimension range (default)</td>
+<td>Mixed-scale</td>
 </tr>
 <tr class="even">
 <td><code>"euclidean"</code></td>
@@ -185,9 +197,9 @@ different metrics.</p>
 </tr>
 <tr class="odd">
 <td><code>"weighted"</code></td>
-<td>Per-dimension scaling via <code>weighted_metric_weights</code>
+<td>Per-dimension via <code>weighted_metric_weights</code>
 </td>
-<td>Custom anisotropic distance</td>
+<td>Anisotropic</td>
 </tr>
 </tbody>
 </table>
@@ -199,18 +211,17 @@ different metrics.</p>
 <span>    distance_metric <span class="op">=</span> <span class="st">"weighted"</span>,</span>
 <span>    weighted_metric_weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.0</span>, <span class="fl">1.0</span><span class="op">)</span>  <span class="co"># lat counts twice</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (2D LOESS, weighted distance):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (2D LOESS, weighted distance):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1]  0.17709387  0.08359416 -0.05142187  0.14223791  0.12033868 -0.13208634</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="surface-mode">Surface Mode<a class="anchor" aria-label="anchor" href="#surface-mode"></a>
 </h2>
 <table class="table">
-<colgroup>
-<col width="33%">
-<col width="33%">
-<col width="33%">
-</colgroup>
 <thead><tr class="header">
 <th>Mode</th>
 <th>Behaviour</th>
@@ -219,7 +230,7 @@ different metrics.</p>
 <tbody>
 <tr class="odd">
 <td><code>"interpolation"</code></td>
-<td>Fit at grid vertices, interpolate elsewhere (default)</td>
+<td>Grid-fit, interpolate elsewhere (default)</td>
 <td>Fast</td>
 </tr>
 <tr class="even">
@@ -232,7 +243,11 @@ different metrics.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Exact fit at every point — slower but no interpolation artefacts</span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>surface_mode <span class="op">=</span> <span class="st">"direct"</span>, fraction <span class="op">=</span> <span class="fl">0.3</span>, dimensions <span class="op">=</span> <span class="fl">2L</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (2D LOESS, direct surface):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (2D LOESS, direct surface):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1]  0.19156485  0.02608782  0.01152671  0.22715513  0.13701873 -0.24090868</span></span></code></pre></div>
 <p>For large 2D or 3D datasets use <code>"interpolation"</code>
 (default) and tune <code>cell</code> and
 <code>interpolation_vertices</code> to control grid resolution.</p>
@@ -243,7 +258,47 @@ different metrics.</p>
 <span>    fraction <span class="op">=</span> <span class="fl">0.3</span>,</span>
 <span>    dimensions <span class="op">=</span> <span class="fl">2L</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x2d</span>, <span class="va">z</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (2D LOESS, interpolation surface):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (2D LOESS, interpolation surface):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1]  0.17983519  0.02191686 -0.01849028  0.22186652  0.09969107 -0.22507546</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] rfastloess_1.0.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] digest_0.6.39       desc_1.4.3          R6_2.6.1           </span></span>
+<span><span class="co">#&gt;  [4] fastmap_1.2.0       xfun_0.60           cachem_1.1.0       </span></span>
+<span><span class="co">#&gt;  [7] knitr_1.51          BiocGenerics_0.58.1 htmltools_0.5.9    </span></span>
+<span><span class="co">#&gt; [10] generics_0.1.4      rmarkdown_2.31      lifecycle_1.0.5    </span></span>
+<span><span class="co">#&gt; [13] cli_3.6.6           sass_0.4.10         pkgdown_2.2.1      </span></span>
+<span><span class="co">#&gt; [16] textshaping_1.0.5   jquerylib_0.1.4     systemfonts_1.3.2  </span></span>
+<span><span class="co">#&gt; [19] compiler_4.6.1      tools_4.6.1         ragg_1.5.2         </span></span>
+<span><span class="co">#&gt; [22] bslib_0.12.0        evaluate_1.0.5      yaml_2.3.12        </span></span>
+<span><span class="co">#&gt; [25] otel_0.2.0          jsonlite_2.0.0      rlang_1.3.0        </span></span>
+<span><span class="co">#&gt; [28] fs_2.1.0            htmlwidgets_1.6.4</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

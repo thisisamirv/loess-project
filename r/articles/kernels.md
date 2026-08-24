@@ -45,6 +45,10 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(weight_function = "tricube")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (tricube kernel):\n")
+#> First 6 smoothed values (tricube kernel):
+print(head(result$y))
+#> [1] 0.4897657 0.4961584 0.5029665 0.5102219 0.5179564 0.5262019
 ```
 
 ------------------------------------------------------------------------
@@ -63,6 +67,10 @@ w(u) = \frac{3}{4}(1 - u^2)
 
 model <- Loess(weight_function = "epanechnikov")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (epanechnikov kernel):\n")
+#> First 6 smoothed values (epanechnikov kernel):
+print(head(result$y))
+#> [1] 0.4827792 0.4872797 0.4919732 0.4968842 0.5020371 0.5074564
 ```
 
 ------------------------------------------------------------------------
@@ -81,6 +89,10 @@ w(u) = e^{-u^2/2}
 
 model <- Loess(weight_function = "gaussian")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (gaussian kernel):\n")
+#> First 6 smoothed values (gaussian kernel):
+print(head(result$y))
+#> [1] 0.4666483 0.4688755 0.4711491 0.4734974 0.4759493 0.4785333
 ```
 
 ------------------------------------------------------------------------
@@ -99,6 +111,10 @@ w(u) = (1 - u^2)^2
 
 model <- Loess(weight_function = "biweight")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (biweight kernel):\n")
+#> First 6 smoothed values (biweight kernel):
+print(head(result$y))
+#> [1] 0.4880718 0.4943293 0.5009666 0.5080119 0.5154932 0.5234386
 ```
 
 ------------------------------------------------------------------------
@@ -118,6 +134,10 @@ biweight.
 
 model <- Loess(weight_function = "cosine")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (cosine kernel):\n")
+#> First 6 smoothed values (cosine kernel):
+print(head(result$y))
+#> [1] 0.4829559 0.4876765 0.4926100 0.4977803 0.5032114 0.5089273
 ```
 
 ------------------------------------------------------------------------
@@ -136,6 +156,10 @@ w(u) = 1 - |u|
 
 model <- Loess(weight_function = "triangle")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (triangle kernel):\n")
+#> First 6 smoothed values (triangle kernel):
+print(head(result$y))
+#> [1] 0.4849057 0.4902049 0.4957434 0.5015419 0.5076213 0.5140023
 ```
 
 ------------------------------------------------------------------------
@@ -154,4 +178,47 @@ w(u) = \frac{1}{2}
 
 model <- Loess(weight_function = "uniform")
 result <- fit(model, x, y)
+cat("First 6 smoothed values (uniform kernel):\n")
+#> First 6 smoothed values (uniform kernel):
+print(head(result$y))
+#> [1] 0.4678518 0.4698297 0.4718536 0.4739583 0.4761782 0.4785479
+```
+
+``` r
+
+sessionInfo()
+#> R version 4.6.1 (2026-06-24)
+#> Platform: x86_64-pc-linux-gnu
+#> Running under: Ubuntu 24.04.4 LTS
+#> 
+#> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+#> 
+#> locale:
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+#> 
+#> time zone: UTC
+#> tzcode source: system (glibc)
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#> [1] rfastloess_1.0.0
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] digest_0.6.39       desc_1.4.3          R6_2.6.1           
+#>  [4] fastmap_1.2.0       xfun_0.60           cachem_1.1.0       
+#>  [7] knitr_1.51          BiocGenerics_0.58.1 htmltools_0.5.9    
+#> [10] generics_0.1.4      rmarkdown_2.31      lifecycle_1.0.5    
+#> [13] cli_3.6.6           sass_0.4.10         pkgdown_2.2.1      
+#> [16] textshaping_1.0.5   jquerylib_0.1.4     systemfonts_1.3.2  
+#> [19] compiler_4.6.1      tools_4.6.1         ragg_1.5.2         
+#> [22] bslib_0.12.0        evaluate_1.0.5      yaml_2.3.12        
+#> [25] otel_0.2.0          jsonlite_2.0.0      rlang_1.3.0        
+#> [28] fs_2.1.0            htmlwidgets_1.6.4
 ```
