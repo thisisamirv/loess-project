@@ -218,6 +218,7 @@ int main() {
     }
 
     std::vector<double> windowX, windowY;
+    std::vector<double> last_y;
 
     // Sliding window over times/temperatures (skip until window has ≥2 points)
     for (size_t i = 0; i < times.size(); ++i) {
@@ -234,13 +235,18 @@ int main() {
         sw_opts.fraction = 0.4;
         fastloess::Loess model(sw_opts);
         auto result = model.fit(windowX, windowY).value();
+        last_y = result.y_vector();
         const auto smoothed = result.y_vector().back();
         (void)smoothed;
     }
 
-    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
+    std::cout << "y[0]: " << last_y[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 32.262
 ```
 
 ---

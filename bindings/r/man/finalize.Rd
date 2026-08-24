@@ -9,7 +9,7 @@ finalize(model, ...)
 \arguments{
 \item{model}{A \code{StreamingLoess} object.}
 
-\item{...}{Not used.}
+\item{...}{Must be empty.}
 }
 \value{
 A \code{LoessResult} combining all processed chunks.

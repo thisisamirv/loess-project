@@ -15,6 +15,14 @@
   <a href="https://anaconda.org/conda-forge/libfastloess"><img src="https://img.shields.io/badge/libfastloess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastloess (C++)"></a>
   <a href="https://anaconda.org/conda-forge/r-rfastloess"><img src="https://img.shields.io/badge/rfastloess_(R)-44A833?logo=anaconda&logoColor=white" alt="rfastloess (R)"></a>
   <br>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-rust.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-rust.yml/badge.svg" alt="CI - Rust"></a>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-python.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-python.yml/badge.svg" alt="CI - Python"></a>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-r.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-r.yml/badge.svg" alt="CI - R"></a>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-julia.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-julia.yml/badge.svg" alt="CI - Julia"></a>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-nodejs.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-nodejs.yml/badge.svg" alt="CI - Node.js"></a>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-wasm.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-wasm.yml/badge.svg" alt="CI - WASM"></a>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-cpp.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-cpp.yml/badge.svg" alt="CI - C++"></a>
+  <br>
 </p>
 
 <p align="center">
@@ -44,13 +52,22 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 > [!NOTE]
 >
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://loess.readthedocs.io/en/latest/getting-started/installation/) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the documentation for your binding/crate (linked in the Documentation section above) for installation instructions.
 
 ## Documentation
 
 > [!NOTE]
 >
-> ### 📚 [View the full documentation](https://loess.readthedocs.io/)
+> | Binding / Crate | Documentation |
+> | --- | --- |
+> | `loess-rs` (Rust) | [docs.rs/loess-rs](https://docs.rs/loess-rs) |
+> | `fastLoess` (Rust) | [docs.rs/fastLoess](https://docs.rs/fastLoess) |
+> | Python | [loess.readthedocs.io](https://loess.readthedocs.io/) |
+> | R | [thisisamirv.github.io/loess-project/r](https://thisisamirv.github.io/loess-project/r/) |
+> | Julia | [thisisamirv.github.io/loess-project/julia](https://thisisamirv.github.io/loess-project/julia/) |
+> | Node.js | [thisisamirv.github.io/loess-project/nodejs](https://thisisamirv.github.io/loess-project/nodejs/) |
+> | WebAssembly | [thisisamirv.github.io/loess-project/wasm](https://thisisamirv.github.io/loess-project/wasm/) |
+> | C++ | [thisisamirv.github.io/loess-project/cpp](https://thisisamirv.github.io/loess-project/cpp/) |
 
 ---
 
@@ -74,7 +91,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is typically **5–20x faster** than R's `loess` in serial mode, and up to **200x faster** on large datasets with parallel execution.
 
-For more details on the performance comparison, see the [Benchmarks](https://loess.readthedocs.io/en/latest/benchmarks/) page.
+For more details on the performance comparison, see the Benchmarks page in the documentation for your binding/crate.
 
 ### Robustness
 
@@ -455,11 +472,11 @@ result.cv_scores()
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
+Contributions are welcome! Please see [CONTRIBUTING.md](https://github.com/thisisamirv/loess-project/blob/main/CONTRIBUTING.md) for more information.
 
 ## Changelog
 
-See [CHANGELOG.md](CHANGELOG.md) for a history of changes.
+See [CHANGELOG.md](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md) for a history of changes.
 
 ## License
 

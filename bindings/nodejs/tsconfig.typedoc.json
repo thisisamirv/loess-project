@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "strict": true,
+        "noEmit": true,
+        "skipLibCheck": true,
+        "types": [],
+        "lib": [
+            "ESNext"
+        ]
+    },
+    "include": [
+        "index.d.ts"
+    ]
+}

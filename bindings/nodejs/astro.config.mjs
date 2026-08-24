@@ -2,12 +2,16 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 export default defineConfig({
+    site: process.env.SITE,
     base: process.env.VITE_BASE ?? '/',
     outDir: './dist',
     integrations: [
         starlight({
             title: 'fastloess',
             description: 'High-performance LOESS smoothing for Node.js',
+            expressiveCode: {
+                shiki: { langAlias: { output: 'text' } },
+            },
             sidebar: [
                 {
                     label: 'Getting Started',
@@ -15,6 +19,7 @@ export default defineConfig({
                         { label: 'Installation', slug: 'installation' },
                         { label: 'Quick Start', slug: 'quickstart' },
                         { label: 'Concepts', slug: 'concepts' },
+                        { label: 'Benchmarks', slug: 'benchmarks' },
                     ],
                 },
                 {
@@ -72,7 +77,7 @@ export default defineConfig({
                         { label: 'Online API', slug: 'api-online' },
                     ],
                 },
-                { label: 'API Reference', slug: 'reference/' },
+                { label: 'API Reference', slug: 'reference' },
             ],
         }),
     ],

@@ -17,13 +17,26 @@ The `StreamingLoess` class processes data in chunks, suitable for very large dat
 #include <vector>
 
 int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
     fastloess::StreamingOptions opts;
-    opts.chunk_size = 5;
+    opts.fraction = 0.5;
+    opts.chunk_size = 50;
+    opts.overlap = 10;
     fastloess::StreamingLoess model(opts);
-
+    std::vector<double> x1(x.begin(), x.begin() + 50), y1(y.begin(), y.begin() + 50);
+    auto result = model.process_chunk(x1, y1).value();
     std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.224537
 ```
 
 * `options`: A `StreamingOptions` struct (inherits from `LoessOptions`) with additional `chunk_size` and `overlap` parameters.

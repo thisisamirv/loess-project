@@ -70,12 +70,16 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastloess::Loess model({ .fraction = 0.5, .prediction_intervals = 0.95 });
+    fastloess::Loess model({ .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95 });
     auto result = model.fit(x, y).value();
 
     std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
 }
+```
+
+```output
+95% CI: [0.256958, 0.397793]
 ```
 
 ---

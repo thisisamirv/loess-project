@@ -30,9 +30,19 @@ int main() {
     opts.min_points = 3;
     fastloess::OnlineLoess model(opts);
 
-    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
+    for (size_t i = 0; i < x.size(); ++i) {
+        auto out = model.add_point(x[i], y[i]).value();
+        if (out.has_value()) {
+            std::cout << "y[0]: " << out.y() << "\n";
+            break;
+        }
+    }
     return 0;
 }
+```
+
+```output
+y[0]: 0.226592
 ```
 
 * `options`: An `OnlineOptions` struct (inherits from `LoessOptions`) with `window_capacity`, `min_points`, and `update_mode`.

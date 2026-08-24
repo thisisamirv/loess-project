@@ -57,10 +57,10 @@ dev:
 	@echo "Linting Node.js files..."
 	@cd $(NODE_DIR) && $(NPM) install
 	@cd $(NODE_DIR) && $(NPM) audit || true
-	@cd $(NODE_DIR) && $(NPX) -y depcheck --ignores="fastloess-*,oxlint,typedoc-plugin-pages,typedoc-plugin-markdown"
+	@cd $(NODE_DIR) && $(NPX) -y depcheck --ignores="fastloess-*,oxlint,typedoc-plugin-pages,typedoc-plugin-markdown,astro:content"
 	@cd $(NODE_DIR) && ($(NPM) outdated | grep -v "fastloess-" || true)
 	@cd $(NODE_DIR) && $(NPM) ci --dry-run
-	@cd $(NODE_DIR) && $(NPX) -y -p typescript tsc index.d.ts --noEmit --allowJs --skipLibCheck
+	@cd $(NODE_DIR) && $(NPX) -y -p typescript tsc index.d.ts --noEmit --allowJs --skipLibCheck --ignoreConfig
 	@$(NPX) -y oxlint $(NODE_DIR)/index.js $(NODE_TEST_DIR)/test_fastloess.js
 	@cd $(NODE_DIR) && $(NPM) run build
 	@echo "=============================================================================="

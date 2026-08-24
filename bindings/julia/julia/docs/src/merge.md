@@ -38,18 +38,13 @@ using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using Random, Statistics
-
-rng = MersenneTwister(42)
 n = 100
 x_chunk = collect(range(0, 2π, length=n))
 y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
 
-model = StreamingLoess(; merge_strategy="average", chunk_size=5000, overlap=500)
-result = process_chunk(model, x_chunk, y_chunk)
+model = StreamingLoess(; merge_strategy="average")
+process_chunk(model, x_chunk, y_chunk)
+result = finalize(model)
 println("First smoothed value (average strategy): ", result.y[1])
 ```
 

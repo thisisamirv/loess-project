@@ -52,7 +52,9 @@ model = fl.Loess(
     cv_fractions=[0.2, 0.3, 0.5, 0.7]
 )
 result = model.fit(x, y)
-print(f"Best fraction: {result.cv_best_fraction}  CV MSE: {result.cv_mse:.4f}")
+cv_fractions = [0.2, 0.3, 0.5, 0.7]
+best_i = int(np.argmin(result.cv_scores))
+print(f"Best fraction: {cv_fractions[best_i]}  CV MSE: {result.cv_scores[best_i]:.4f}")
 :::
 
 ---
@@ -76,7 +78,9 @@ model = fl.Loess(
     cv_seed=42
 )
 result = model.fit(x, y)
-print(f"Best fraction: {result.cv_best_fraction}  CV MSE: {result.cv_mse:.4f}")
+cv_fractions = [0.3, 0.5, 0.7]
+best_i = int(np.argmin(result.cv_scores))
+print(f"Best fraction: {cv_fractions[best_i]}  CV MSE: {result.cv_scores[best_i]:.4f}")
 :::
 
 ---

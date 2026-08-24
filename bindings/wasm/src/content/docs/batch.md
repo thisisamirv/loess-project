@@ -25,8 +25,13 @@ const model = new Loess({
     iterations: 3,
     confidence_intervals: 0.95,
     prediction_intervals: 0.95,
+});
 const result = model.fit(x, y);
 console.log("CI lower[0]:", result.confidence_lower[0].toFixed(4));
+```
+
+```output
+CI lower[0]: -0.0078
 ```
 
 ---

@@ -28,6 +28,22 @@ test_that("Loess rejects invalid inputs", {
         fit(Loess(fraction = 0.5), as.double(1:7), as.double(1:5)),
         "must match y"
     )
+
+    # Extra ... args rejected by fit.Loess
+    expect_error(
+        fit(Loess(fraction = 0.5), as.double(1:10), as.double(1:10), extra = 1),
+        "unused arguments"
+    )
+
+    # Matrix x with wrong column count rejected by fit.Loess
+    expect_error(
+        fit(
+            Loess(fraction = 0.5, dimensions = 1L),
+            matrix(as.double(1:20), nrow = 10, ncol = 2),
+            as.double(1:10)
+        ),
+        "dimensions"
+    )
 })
 
 test_that("OnlineLoess rejects invalid inputs", {
@@ -55,6 +71,12 @@ test_that("OnlineLoess rejects invalid inputs", {
     ol <- OnlineLoess(fraction = 0.5)
     result <- add_point(ol, 1.0, 2.0)
     expect_true(is.null(result) || "y" %in% names(result))
+
+    # Extra ... args rejected by add_point.OnlineLoess
+    expect_error(
+        add_point(OnlineLoess(fraction = 0.5), 1.0, 2.0, extra = 1),
+        "unused arguments"
+    )
 })
 
 test_that("StreamingLoess rejects invalid inputs", {
@@ -80,4 +102,29 @@ test_that("StreamingLoess rejects invalid inputs", {
         process_chunk(sl, as.double(1:7), as.double(1:5)),
         "must match y"
     )
+
+    # Extra ... args rejected by process_chunk.StreamingLoess
+    expect_error(
+        process_chunk(
+            StreamingLoess(fraction = 0.5),
+            as.double(1:10), as.double(1:10),
+            extra = 1
+        ),
+        "unused arguments"
+    )
+
+    # Matrix x with wrong column count rejected by process_chunk.StreamingLoess
+    expect_error(
+        process_chunk(
+            StreamingLoess(fraction = 0.5, dimensions = 1L),
+            matrix(as.double(1:20), nrow = 10, ncol = 2),
+            as.double(1:10)
+        ),
+        "dimensions"
+    )
+
+    # Extra ... args rejected by finalize.StreamingLoess
+    sl2 <- StreamingLoess(fraction = 0.5)
+    process_chunk(sl2, as.double(1:10), as.double(1:10))
+    expect_error(finalize(sl2, extra = 1), "unused arguments")
 })

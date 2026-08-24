@@ -35,9 +35,13 @@ int main() {
 
     // Trend in basic_result.y_vector()
 
-    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
+    std::cout << "y[0]: " << basic_result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.149874
 ```
 
 ---
@@ -180,9 +184,13 @@ int main() {
         trends.push_back(result.y_vector());
     }
 
-    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
+    std::cout << "y[0]: " << trends.back()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.327376
 ```
 
 ---

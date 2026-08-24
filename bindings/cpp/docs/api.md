@@ -19,13 +19,23 @@ The `Loess` class allows configuring the LOESS parameters once and fitting multi
 #include <vector>
 
 int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
     fastloess::LoessOptions opts;
     opts.fraction = 0.5;
     fastloess::Loess model(opts);
-
+    auto result = model.fit(x, y).value();
     std::cout << "y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+y[0]: 0.327376
 ```
 
 * `options`: A `LoessOptions` struct containing configuration parameters.

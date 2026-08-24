@@ -140,12 +140,15 @@ fit <- function(model, ...) UseMethod("fit")
 #' @rdname fit
 #' @export
 fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
-    if (...length() > 0L) stop("unused arguments (...)")
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
     if (is.matrix(x) && ncol(x) != model$params$dimensions) {
-        stop(sprintf(
-            "x is a %d\u00d7%d matrix but model has dimensions=%d; use Loess(dimensions=%dL)",
-            nrow(x), ncol(x), model$params$dimensions, ncol(x)
-        ))
+        fmt <- paste0(
+            "x is a %d\u00d7%d matrix but model has dimensions=%d;",
+            " use Loess(dimensions=%dL)"
+        )
+        stop(sprintf(fmt, nrow(x), ncol(x), model$params$dimensions, ncol(x)))
     }
     validated_args <- validate_common_args(
         x,
@@ -174,12 +177,15 @@ process_chunk <- function(model, ...) UseMethod("process_chunk")
 #' @rdname process_chunk
 #' @export
 process_chunk.StreamingLoess <- function(model, x, y, ...) {
-    if (...length() > 0L) stop("unused arguments (...)")
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
     if (is.matrix(x) && ncol(x) != model$params$dimensions) {
-        stop(sprintf(
-            "x is a %d\u00d7%d matrix but model has dimensions=%d; use StreamingLoess(dimensions=%dL)",
-            nrow(x), ncol(x), model$params$dimensions, ncol(x)
-        ))
+        fmt <- paste0(
+            "x is a %d\u00d7%d matrix but model has dimensions=%d;",
+            " use StreamingLoess(dimensions=%dL)"
+        )
+        stop(sprintf(fmt, nrow(x), ncol(x), model$params$dimensions, ncol(x)))
     }
     args <- validate_common_args(
         x,
@@ -206,7 +212,9 @@ finalize <- function(model, ...) UseMethod("finalize")
 
 #' @export
 finalize.StreamingLoess <- function(model, ...) {
-    if (...length() > 0L) stop("unused arguments (...)")
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
     model$handle$finalize()
 }
 
@@ -227,6 +235,8 @@ add_point <- function(model, ...) UseMethod("add_point")
 #' @rdname add_point
 #' @export
 add_point.OnlineLoess <- function(model, x, y, ...) {
-    if (...length() > 0L) stop("unused arguments (...)")
+    if (...length() > 0L) {
+        stop("unused arguments (...)")
+    }
     model$handle$add_point(as.double(x), as.double(y))
 }

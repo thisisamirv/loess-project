@@ -124,6 +124,7 @@ jobs:
         run: npm run docs
         working-directory: bindings/nodejs
         env:
+          SITE: https://${{ github.repository_owner }}.github.io
           VITE_BASE: /${{ github.event.repository.name }}/nodejs/
 
       - uses: JamesIves/github-pages-deploy-action@v4
@@ -191,15 +192,16 @@ jobs:
         with:
           key: docs-wasm
 
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack
 
       - uses: actions/setup-node@v7
         with:
           node-version: "22"
 
       - name: Build WASM
-        run: wasm-pack build --target bundler --release
+        run: wasm-pack build --target nodejs --release
         working-directory: bindings/wasm
 
       - name: Install dependencies
@@ -210,6 +212,7 @@ jobs:
         run: npm run docs
         working-directory: bindings/wasm
         env:
+          SITE: https://${{ github.repository_owner }}.github.io
           VITE_BASE: /${{ github.event.repository.name }}/wasm/
 
       - uses: JamesIves/github-pages-deploy-action@v4
