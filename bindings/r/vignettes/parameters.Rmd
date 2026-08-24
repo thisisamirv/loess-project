@@ -178,9 +178,11 @@ cat("R²:", result$diagnostics$r_squared, "\n")
 ### chunk_size and overlap
 
 ```{r parameters_8}
+chunk_size <- 5000L
+overlap    <- 500L
 model <- StreamingLoess(
-    chunk_size = 5000L,
-    overlap = 500L,
+    chunk_size = chunk_size,
+    overlap = overlap,
     merge_strategy = "weighted_average"
 )
 cat(sprintf("overlap = %d points (%.0f%% of chunk)\n",
