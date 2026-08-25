@@ -6,6 +6,7 @@ var index =
     [ "Robustness Iterations", "index.html#autotoc_md68", null ],
     [ "Confidence vs Prediction Intervals", "index.html#autotoc_md70", null ],
     [ "Execution Modes", "index.html#autotoc_md72", null ],
-    [ "Key Advantages", "index.html#autotoc_md74", null ],
-    [ "Next Steps", "index.html#autotoc_md76", null ]
+    [ "Quick Decision Guide", "index.html#autotoc_md74", null ],
+    [ "Key Advantages", "index.html#autotoc_md76", null ],
+    [ "Next Steps", "index.html#autotoc_md78", null ]
 ];

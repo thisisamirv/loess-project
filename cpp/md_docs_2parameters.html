@@ -100,8 +100,8 @@ $(document).ready(function(){initNavTree('md_docs_2parameters.html',''); initRes
   <div class="headertitle"><div class="title">Parameters</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md189"></a> Complete reference for all LOESS configuration options.</p>
-<h1><a class="anchor" id="autotoc_md190"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md191"></a> Complete reference for all LOESS configuration options.</p>
+<h1><a class="anchor" id="autotoc_md192"></a>
 Quick Reference</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -175,7 +175,7 @@ Quick Reference</h1>
 </table>
 <p>!!! note "Rust option values" In Rust, pass option-like parameters as strings (case-insensitive), e.g. <code>"tricube"</code>, <code>"bisquare"</code>, <code>"extend"</code>, <code>"weighted_average"</code>. For the weighted distance metric, use <code>.distance_metric("weighted").weighted_metric_weights(vec![...])</code>.</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md192"></a>
+<h1><a class="anchor" id="autotoc_md194"></a>
 Parameter Options Summary</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -200,9 +200,9 @@ Parameter Options Summary</h1>
 <td class="markdownTableBodyNone"><b>update_mode</b>   </td><td class="markdownTableBodyNone"><code>"incremental"</code>, <code>"full"</code>   </td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md194"></a>
+<h1><a class="anchor" id="autotoc_md196"></a>
 Core Parameters</h1>
-<h2><a class="anchor" id="autotoc_md195"></a>
+<h2><a class="anchor" id="autotoc_md197"></a>
 fraction</h2>
 <p>The proportion of data used for each local fit. <b>Most important parameter.</b></p>
 <table class="markdownTable">
@@ -242,7 +242,7 @@ Fraction Comparison</div></div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.24731</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md197"></a>
+<h2><a class="anchor" id="autotoc_md199"></a>
 iterations</h2>
 <p>Number of robustness iterations for outlier resistance.</p>
 <table class="markdownTable">
@@ -278,7 +278,7 @@ iterations</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.385242</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md199"></a>
+<h2><a class="anchor" id="autotoc_md201"></a>
 degree</h2>
 <p>Polynomial degree for the local regression fits.</p>
 <div class="image">
@@ -302,7 +302,7 @@ Degree Comparison</div></div>
 <p>Higher degrees capture curvature but can overfit with small fractions. Degree 1 is appropriate for most use cases.</p>
 <p>See <a class="el" href="md_docs_2degree.html">Polynomial Degree</a> for a detailed comparison.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md201"></a>
+<h2><a class="anchor" id="autotoc_md203"></a>
 surface_mode</h2>
 <p>Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.</p>
 <table class="markdownTable">
@@ -335,7 +335,7 @@ surface_mode</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.377007</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md203"></a>
+<h2><a class="anchor" id="autotoc_md205"></a>
 cell</h2>
 <p>Cell size for the interpolation grid. Controls the density of anchor vertices when <code>surface_mode = "interpolation"</code>. Smaller values produce a finer grid, increasing accuracy at the cost of memory and computation.</p>
 <ul>
@@ -374,7 +374,7 @@ cell</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.383976</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md205"></a>
+<h2><a class="anchor" id="autotoc_md207"></a>
 interpolation_vertices</h2>
 <p>Explicitly set the number of anchor vertices for the interpolation grid, overriding the <code>cell</code>-based automatic count. Use when you need a precise vertex budget.</p>
 <ul>
@@ -402,7 +402,7 @@ interpolation_vertices</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.385152</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md207"></a>
+<h2><a class="anchor" id="autotoc_md209"></a>
 dimensions</h2>
 <p>Number of predictor variables. Enables multivariate LOESS over an n-dimensional input space.</p>
 <div class="image">
@@ -416,7 +416,7 @@ Multivariate LOESS</div></div>
 </ul>
 <p>See <a class="el" href="md_docs_2dimensions.html">Multivariate LOESS</a> for detailed usage and distance metric options.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md209"></a>
+<h2><a class="anchor" id="autotoc_md211"></a>
 distance_metric / weighted_metric_weights</h2>
 <p>Distance metric for neighbourhood calculation. Only meaningful when <code>dimensions &gt; 1</code>. The <code>"weighted"</code> metric lets you assign per-dimension importance via <code>weighted_metric_weights</code>.</p>
 <table class="markdownTable">
@@ -462,7 +462,7 @@ distance_metric / weighted_metric_weights</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.0590012</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md211"></a>
+<h2><a class="anchor" id="autotoc_md213"></a>
 weight_function</h2>
 <p>Distance weighting kernel for local fits.</p>
 <table class="markdownTable">
@@ -505,7 +505,7 @@ weight_function</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.398503</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md213"></a>
+<h2><a class="anchor" id="autotoc_md215"></a>
 robustness_method</h2>
 <p>Method for downweighting outliers during iterative refinement.</p>
 <table class="markdownTable">
@@ -540,7 +540,7 @@ robustness_method</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.3844</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md215"></a>
+<h2><a class="anchor" id="autotoc_md217"></a>
 boundary_policy</h2>
 <p>Edge handling strategy to reduce boundary bias. See <a class="el" href="md_docs_2boundary.html">Boundary Handling</a> for a detailed comparison.</p>
 <div class="image">
@@ -581,7 +581,7 @@ Boundary Policy</div></div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.64907</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md217"></a>
+<h2><a class="anchor" id="autotoc_md219"></a>
 boundary_degree_fallback</h2>
 <p>When enabled, the polynomial degree is automatically reduced to the highest degree that can be stably estimated for points near the boundary (where the local neighbourhood is one-sided). Prevents numerical failures when <code>degree ≥ 2</code> at the edges.</p>
 <ul>
@@ -610,7 +610,7 @@ boundary_degree_fallback</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.250226</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md219"></a>
+<h2><a class="anchor" id="autotoc_md221"></a>
 scaling_method</h2>
 <p>Method for estimating residual scale during robustness iterations. See <a class="el" href="md_docs_2scaling.html">Scaling Methods</a> for a detailed comparison.</p>
 <div class="image">
@@ -649,7 +649,7 @@ Scaling Methods</div></div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.385152</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md221"></a>
+<h2><a class="anchor" id="autotoc_md223"></a>
 zero_weight_fallback</h2>
 <p>Behavior when all neighborhood weights are zero.</p>
 <div class="image">
@@ -688,7 +688,7 @@ Zero-Weight Fallback Policies</div></div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.385152</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md223"></a>
+<h2><a class="anchor" id="autotoc_md225"></a>
 auto_converge</h2>
 <p>Enable early stopping when robustness weights stabilize.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -712,7 +712,7 @@ auto_converge</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.385251</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md225"></a>
+<h2><a class="anchor" id="autotoc_md227"></a>
 parallel</h2>
 <p>Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitting on datasets with more than a few hundred points.</p>
 <ul>
@@ -742,7 +742,7 @@ parallel</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.385152</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md227"></a>
+<h2><a class="anchor" id="autotoc_md229"></a>
 custom_weights</h2>
 <p>Per-observation weights applied before distance and robustness weighting. Only available in the <b>Batch</b> adapter.</p>
 <p>!!! note "Batch only" <code>custom_weights</code> is silently ignored in Streaming and Online adapters.</p>
@@ -770,9 +770,9 @@ custom_weights</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.389609</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md229"></a>
+<h1><a class="anchor" id="autotoc_md231"></a>
 Output Options</h1>
-<h2><a class="anchor" id="autotoc_md230"></a>
+<h2><a class="anchor" id="autotoc_md232"></a>
 return_residuals</h2>
 <p>Include residuals (<code>y - smoothed</code>) in the output.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -797,7 +797,7 @@ return_residuals</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">residuals[0]: -0.285152</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md232"></a>
+<h2><a class="anchor" id="autotoc_md234"></a>
 return_diagnostics</h2>
 <p>Include fit quality metrics (Batch and Streaming only).</p>
 <table class="markdownTable">
@@ -840,7 +840,7 @@ return_diagnostics</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">R²: 0.898935</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md234"></a>
+<h2><a class="anchor" id="autotoc_md236"></a>
 return_robustness_weights</h2>
 <p>Include final robustness weights (useful for outlier detection).</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -865,7 +865,7 @@ return_robustness_weights</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">robustness_weights[0]: 0.603349</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md236"></a>
+<h2><a class="anchor" id="autotoc_md238"></a>
 confidence_intervals / prediction_intervals</h2>
 <p>Request uncertainty estimates (Batch only).</p>
 <p>See <a class="el" href="md_docs_2intervals.html">Intervals</a> for detailed usage.</p>
@@ -890,9 +890,9 @@ confidence_intervals / prediction_intervals</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.269408, 0.500897]</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md238"></a>
+<h1><a class="anchor" id="autotoc_md240"></a>
 CV Methods</h1>
-<h2><a class="anchor" id="autotoc_md239"></a>
+<h2><a class="anchor" id="autotoc_md241"></a>
 cv_method</h2>
 <p>Selection strategy for automated parameter tuning.</p>
 <table class="markdownTable">
@@ -928,9 +928,9 @@ cv_method</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Fraction used: 0.3</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md241"></a>
+<h1><a class="anchor" id="autotoc_md243"></a>
 Adapter Parameters</h1>
-<h2><a class="anchor" id="autotoc_md242"></a>
+<h2><a class="anchor" id="autotoc_md244"></a>
 chunk_size</h2>
 <p>Points per chunk in Streaming mode.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -957,7 +957,7 @@ chunk_size</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md244"></a>
+<h2><a class="anchor" id="autotoc_md246"></a>
 overlap</h2>
 <p>Overlap between chunks in Streaming mode.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -984,7 +984,7 @@ overlap</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md246"></a>
+<h2><a class="anchor" id="autotoc_md248"></a>
 merge_strategy</h2>
 <p>Method for merging overlapping chunks. See <a class="el" href="md_docs_2merge.html">Merge Strategies</a> for a detailed comparison.</p>
 <table class="markdownTable">
@@ -1023,7 +1023,7 @@ merge_strategy</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md248"></a>
+<h2><a class="anchor" id="autotoc_md250"></a>
 window_capacity</h2>
 <p>Maximum points held in memory for Online mode.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -1049,7 +1049,7 @@ window_capacity</h2>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md250"></a>
+<h2><a class="anchor" id="autotoc_md252"></a>
 min_points</h2>
 <p>Minimum points required before Online filter starts producing outputs.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -1075,7 +1075,7 @@ min_points</h2>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md252"></a>
+<h2><a class="anchor" id="autotoc_md254"></a>
 update_mode</h2>
 <p>Optimization strategy for Online mode updates.</p>
 <table class="markdownTable">
