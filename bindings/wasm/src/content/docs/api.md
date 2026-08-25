@@ -5,6 +5,14 @@ The WebAssembly bindings provide a high-performance interface to the core Rust l
 
 > **StreamingLoess** and **OnlineLoess** are documented separately: [wasm-streaming.md](api-streaming.md), [wasm-online.md](api-online.md)
 
+## When to Use
+
+- Dataset fits in memory
+- Need intervals, cross-validation, or diagnostics
+- Processing complete files
+
+![Gap Handling](../assets/diagrams/gap_handling.svg)
+
 ## Classes and Functions
 
 ### `Loess`
@@ -24,7 +32,7 @@ console.log("typeof fit:", typeof model.fit);
 typeof fit: function
 ```
 
-* `options`: An object containing `LoessOptions` fields.
+- `options`: An object containing `LoessOptions` fields.
 
 **Methods:**
 
@@ -49,9 +57,9 @@ Fraction used: 0.5
 Iterations used: 3
 ```
 
-* `x`: `Float64Array` of input x values.
-* `y`: `Float64Array` of input y values.
-* Returns: A `LoessResult` object.
+- `x`: `Float64Array` of input x values.
+- `y`: `Float64Array` of input y values.
+- Returns: A `LoessResult` object.
 
 See [wasm-streaming.md](api-streaming.md) for the `StreamingLoess` class.
 
@@ -143,74 +151,74 @@ See [wasm-online.md](api-online.md) for `OnlineOutput`.
 
 *See: [Weight Functions](kernels.md)*
 
-* `"tricube"` (default)
-* `"epanechnikov"`
-* `"gaussian"`
-* `"uniform"` (alias: `"boxcar"`)
-* `"biweight"` (alias: `"bisquare"`)
-* `"triangle"` (alias: `"triangular"`)
-* `"cosine"`
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
 
 ### robustness_method
 
 *See: [Robustness](robustness.md)*
 
-* `"bisquare"` (default; alias: `"biweight"`)
-* `"huber"`
-* `"talwar"`
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
 
 ### boundary_policy
 
 *See: [Boundary Handling](boundary.md)*
 
-* `"extend"` (default; alias: `"pad"`)
-* `"reflect"` (alias: `"mirror"`)
-* `"zero"`
-* `"noboundary"` (alias: `"none"`)
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
 
 ### scaling_method
 
 *See: [Scaling Methods](scaling.md)*
 
-* `"mad"` (default; alias: `"median_absolute_deviation"`)
-* `"mar"` (alias: `"median_absolute_residual"`)
-* `"mean"` (alias: `"mean_absolute_residual"`)
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
 
 ### zero_weight_fallback
 
 *See: [Parameters](parameters.md)*
 
-* `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
-* `"return_original"` (alias: `"original"`)
-* `"return_none"` (alias: `"none"`)
+- `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
+- `"return_original"` (alias: `"original"`)
+- `"return_none"` (alias: `"none"`)
 
 ### degree
 
 *See: [Polynomial Degree](degree.md)*
 
-* `"constant"` or `"0"` (degree 0)
-* `"linear"` or `"1"` (default, degree 1)
-* `"quadratic"` or `"2"` (degree 2)
-* `"cubic"` or `"3"` (degree 3)
-* `"quartic"` or `"4"` (degree 4)
+- `"constant"` or `"0"` (degree 0)
+- `"linear"` or `"1"` (default, degree 1)
+- `"quadratic"` or `"2"` (degree 2)
+- `"cubic"` or `"3"` (degree 3)
+- `"quartic"` or `"4"` (degree 4)
 
 ### distance_metric
 
 *See: [Multivariate LOESS](dimensions.md)*
 
-* `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
-* `"euclidean"` (alias: `"euclid"`)
-* `"manhattan"` (alias: `"l1"`)
-* `"chebyshev"` (alias: `"linf"`)
-* `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
-* `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
+- `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+- `"euclidean"` (alias: `"euclid"`)
+- `"manhattan"` (alias: `"l1"`)
+- `"chebyshev"` (alias: `"linf"`)
+- `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
+- `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
 
 ### surface_mode
 
 *See: [Parameters](parameters.md)*
 
-* `"interpolation"` (default — faster, uses a spatial grid)
-* `"direct"` (fits every point exactly; slower but more accurate)
+- `"interpolation"` (default — faster, uses a spatial grid)
+- `"direct"` (fits every point exactly; slower but more accurate)
 
 ### merge_strategy
 

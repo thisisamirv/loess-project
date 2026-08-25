@@ -1,6 +1,12 @@
-# StreamingLoess — C++ API Reference
+# StreamingLoess API
 
 See also: [fastLoess C++ API Reference](api.md)
+
+## When to Use
+
+- Dataset >100,000 points
+- Memory-constrained environments
+- Batch processing pipelines
 
 ## Class
 
@@ -39,7 +45,7 @@ int main() {
 y[0]: 0.224537
 ```
 
-* `options`: A `StreamingOptions` struct (inherits from `LoessOptions`) with additional `chunk_size` and `overlap` parameters.
+- `options`: A `StreamingOptions` struct (inherits from `LoessOptions`) with additional `chunk_size` and `overlap` parameters.
 
 **Methods:**
 
@@ -74,7 +80,7 @@ int main() {
 0.5
 ```
 
-* Processes a chunk of data. Returns partial results.
+- Processes a chunk of data. Returns partial results.
 
 ```cpp
 #include <fastloess.hpp>
@@ -110,7 +116,7 @@ int main() {
 0.5
 ```
 
-* Finalizes the smoothing process and returns any remaining buffered results.
+- Finalizes the smoothing process and returns any remaining buffered results.
 
 ## Result Structure
 
@@ -147,7 +153,16 @@ See [cpp.md](api.md) for the full `LoessResult` field reference.
 
 *See: [Merge Strategies](merge.md)*
 
-* `"weighted_average"` (default; alias: `"weighted"`)
-* `"average"` (alias: `"mean"`)
-* `"take_first"` (alias: `"first"`)
-* `"take_last"` (alias: `"last"`)
+| Strategy | Alias | Behavior |
+| --- | --- | --- |
+| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
+| `"average"` | `"mean"` | Average overlapping values |
+| `"take_first"` | `"first"` | Keep left chunk values |
+| `"take_last"` | `"last"` | Keep right chunk values |
+
+![Merge Strategies](merge_comparison.svg)
+
+---
+
+!!! warning "Always call finalize()"
+    The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.

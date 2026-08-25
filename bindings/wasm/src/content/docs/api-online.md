@@ -1,7 +1,15 @@
 ---
-title: OnlineLoess — WebAssembly API Reference
+title: OnlineLoess API
 ---
-See also: [fastLoess WebAssembly API Reference](api.md)
+See also: [fastLoess](api.md)
+
+## When to Use
+
+- Data arrives incrementally (sensors, streams)
+- Need real-time smoothed values
+- Fixed memory budget
+
+![Online Adapter](../assets/diagrams/online_comparison.svg)
 
 ## Class
 
@@ -22,8 +30,8 @@ console.log("typeof add_point:", typeof online.add_point);
 typeof add_point: function
 ```
 
-* `options`: An object containing `LoessOptions` fields.
-* `onlineOptions`: An object containing `OnlineOptions` fields.
+- `options`: An object containing `LoessOptions` fields.
+- `onlineOptions`: An object containing `OnlineOptions` fields.
 
 **Methods:**
 
@@ -49,7 +57,7 @@ console.log("Smoothed y:", result.y);
 Smoothed y: 0.22659245357374927
 ```
 
-* Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
+- Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
 
 ## Options Structure
 
@@ -59,7 +67,7 @@ Smoothed y: 0.22659245357374927
 | --- | --- | --- | --- |
 | `window_capacity` | `number` | `1000` | Max points in sliding window |
 | `min_points` | `number` | `3` | Min points before smoothing starts |
-| `update_mode` | `string` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `update_mode` | `string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 | `parallel` | `boolean` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
@@ -82,5 +90,7 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 
 *See: [Execution Modes](adapter-choice.md)*
 
-* `"full"` (default; alias: `"resmooth"`)
-* `"incremental"` (alias: `"single"`)
+| Mode | Alias | Behavior | Speed |
+| --- | --- | --- | --- |
+| `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
+| `"full"` | `"resmooth"` | Recompute entire window | More accurate |

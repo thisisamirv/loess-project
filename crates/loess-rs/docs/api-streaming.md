@@ -1,6 +1,12 @@
-# StreamingLoess — Rust API Reference
+# StreamingLoess API
 
-See also: [loess_rs & loess-rs Rust API Reference](api.md)
+See also: [loess](api.md)
+
+## When to Use
+
+- Dataset >100,000 points
+- Memory-constrained environments
+- Batch processing pipelines
 
 ## Struct
 
@@ -43,7 +49,7 @@ fn main() -> Result<(), LoessError> {
 Fraction used: 0.5
 ```
 
-* Processes a chunk of data. Returns `LoessResult<T>` with partial results.
+- Processes a chunk of data. Returns `LoessResult<T>` with partial results.
 
 ```rust
 use loess_rs::prelude::*;
@@ -68,7 +74,7 @@ fn main() -> Result<(), LoessError> {
 Fraction used: 0.5
 ```
 
-* Finalizes processing and returns remaining buffered results.
+- Finalizes processing and returns remaining buffered results.
 
 ## Result Structure
 
@@ -105,7 +111,16 @@ See [rust.md](api.md) for the full `LoessResult<T>` field reference.
 
 *See: [Merge Strategies](merge.md)*
 
-* `"weighted_average"` (default; alias: `"weighted"`)
-* `"average"` (alias: `"mean"`)
-* `"take_first"` (alias: `"first"`)
-* `"take_last"` (alias: `"last"`)
+| Strategy | Alias | Behavior |
+| --- | --- | --- |
+| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
+| `"average"` | `"mean"` | Average overlapping values |
+| `"take_first"` | `"first"` | Keep left chunk values |
+| `"take_last"` | `"last"` | Keep right chunk values |
+
+![Merge Strategies](../assets/diagrams/merge_comparison.svg)
+
+---
+
+!!! warning "Always call finalize()"
+    The streaming adapter buffers overlap data. Call `finalize()` after the last chunk to retrieve the buffered tail.
