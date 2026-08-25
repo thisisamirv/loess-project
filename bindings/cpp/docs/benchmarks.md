@@ -70,3 +70,9 @@ int main() {
     return 0;
 }
 ```
+
+```output
+Serial:   2.18548 ms
+Parallel: 3.09994 ms
+Speedup:  0.705007Ã—
+```
