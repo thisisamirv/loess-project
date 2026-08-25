@@ -30,6 +30,13 @@ export LoessResult, OnlineOutput, Diagnostics
 
 import Base: finalize
 
+# Try to import JLL package first
+try
+    using fastloess_jll
+catch e
+    # JLL not available, will use fallback
+end
+
 # Library name varies by platform
 const LIBNAME =
     Sys.iswindows() ? "fastloess_jl.dll" :
@@ -44,7 +51,20 @@ function find_library()
         return lib
     end
 
-    # Option 2: Check relative paths (development mode)
+    # Option 2: Use JLL package if available (for registered package)
+    if @isdefined(fastloess_jll)
+        try
+            if hasproperty(fastloess_jll, :libfastloess_jl)
+                lib = fastloess_jll.libfastloess_jl
+                @info "Using fastloess_jll library: $lib"
+                return lib
+            end
+        catch e
+            @warn "Failed to load from fastloess_jll" exception = e
+        end
+    end
+
+    # Option 3: Check relative paths (development mode)
     # Path: julia/src/fastloess.jl -> julia/ -> bindings/julia/ -> bindings/ -> loess-project/
     src_dir = @__DIR__                        # julia/src/
     julia_dir = dirname(src_dir)              # julia/
@@ -75,7 +95,18 @@ function find_library()
     return LIBNAME
 end
 
-const libfastloess = find_library()
+const libfastloess = Ref("")
+
+function current_library()
+    if isempty(libfastloess[])
+        libfastloess[] = find_library()
+    end
+    return libfastloess[]
+end
+
+function __init__()
+    libfastloess[] = find_library()
+end
 
 """
 	Diagnostics
@@ -226,7 +257,9 @@ function convert_result(c_result::CJlLoessResult)
     if c_result.error != Ptr{Cchar}(C_NULL)
         error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
         # Free the result before throwing
-        @ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
+        @ccall current_library().jl_loess_free_result(
+            Ref(c_result)::Ptr{CJlLoessResult},
+        )::Cvoid
         error("fastloess error: $error_msg")
     end
 
@@ -237,7 +270,9 @@ function convert_result(c_result::CJlLoessResult)
     y = ptr_to_vector(c_result.y, n)
 
     if x === nothing || y === nothing
-        @ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
+        @ccall current_library().jl_loess_free_result(
+            Ref(c_result)::Ptr{CJlLoessResult},
+        )::Cvoid
         error("fastloess error: result arrays are null")
     end
 
@@ -305,7 +340,7 @@ function convert_result(c_result::CJlLoessResult)
     )
 
     # Free the C result
-    @ccall libfastloess.jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
+    @ccall current_library().jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
 
     return result
 end
@@ -425,7 +460,7 @@ mutable struct Loess
         cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
         cv_len = length(cv_fractions)
 
-        handle = @ccall libfastloess.jl_loess_new(
+        handle = @ccall current_library().jl_loess_new(
             fraction::Cdouble,
             Cint(iterations)::Cint,
             weight_function::Cstring,
@@ -464,29 +499,35 @@ mutable struct Loess
 
         # Apply optional overrides via setters
         if cell !== nothing
-            @ccall libfastloess.jl_loess_set_cell(handle::Ptr{Cvoid}, cell::Cdouble)::Cvoid
+            @ccall current_library().jl_loess_set_cell(
+                handle::Ptr{Cvoid},
+                cell::Cdouble,
+            )::Cvoid
         end
         if interpolation_vertices !== nothing
-            @ccall libfastloess.jl_loess_set_interpolation_vertices(
+            @ccall current_library().jl_loess_set_interpolation_vertices(
                 handle::Ptr{Cvoid},
                 Culong(interpolation_vertices)::Culong,
             )::Cvoid
         end
         if boundary_degree_fallback !== nothing
-            @ccall libfastloess.jl_loess_set_boundary_degree_fallback(
+            @ccall current_library().jl_loess_set_boundary_degree_fallback(
                 handle::Ptr{Cvoid},
                 Cint(boundary_degree_fallback)::Cint,
             )::Cvoid
         end
         if cv_seed !== nothing
-            @ccall libfastloess.jl_loess_set_cv_seed(
+            @ccall current_library().jl_loess_set_cv_seed(
                 handle::Ptr{Cvoid},
                 Culong(cv_seed)::Culong,
             )::Cvoid
         end
 
         obj = new(handle, dimensions)
-        finalizer(x -> @ccall(libfastloess.jl_loess_free(x.handle::Ptr{Cvoid})::Cvoid), obj)
+        finalizer(
+            x -> @ccall(current_library().jl_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
+            obj,
+        )
         return obj
     end
 end
@@ -524,7 +565,7 @@ function fit(
         end
     end
 
-    c_result = @ccall libfastloess.jl_loess_fit(
+    c_result = @ccall current_library().jl_loess_fit(
         l.handle::Ptr{Cvoid},
         x::Ptr{Cdouble},
         y::Ptr{Cdouble},
@@ -584,7 +625,7 @@ function fit(
         end
     end
 
-    c_result = @ccall libfastloess.jl_loess_fit(
+    c_result = @ccall current_library().jl_loess_fit(
         l.handle::Ptr{Cvoid},
         x_flat::Ptr{Cdouble},
         y::Ptr{Cdouble},
@@ -681,7 +722,7 @@ mutable struct StreamingLoess
             isnothing(boundary_degree_fallback) ? Cint(-1) :
             (boundary_degree_fallback ? Cint(1) : Cint(0))
 
-        handle = @ccall libfastloess.jl_streaming_loess_new(
+        handle = @ccall current_library().jl_streaming_loess_new(
             fraction::Cdouble,
             Cint(chunk_size)::Cint,
             Cint(overlap)::Cint,
@@ -717,7 +758,9 @@ mutable struct StreamingLoess
 
         obj = new(handle)
         finalizer(
-            x -> @ccall(libfastloess.jl_streaming_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
+            x -> @ccall(
+                current_library().jl_streaming_loess_free(x.handle::Ptr{Cvoid})::Cvoid
+            ),
             obj,
         )
         return obj
@@ -735,7 +778,7 @@ function process_chunk(s::StreamingLoess, x::Vector{Float64}, y::Vector{Float64}
         throw(ArgumentError("x and y must have the same length"))
     end
 
-    c_result = @ccall libfastloess.jl_streaming_loess_process_chunk(
+    c_result = @ccall current_library().jl_streaming_loess_process_chunk(
         s.handle::Ptr{Cvoid},
         x::Ptr{Cdouble},
         y::Ptr{Cdouble},
@@ -751,7 +794,7 @@ end
 Finalize streaming and return remaining buffered data.
 """
 function finalize(s::StreamingLoess)
-    c_result = @ccall libfastloess.jl_streaming_loess_finalize(
+    c_result = @ccall current_library().jl_streaming_loess_finalize(
         s.handle::Ptr{Cvoid},
     )::CJlLoessResult
 
@@ -841,7 +884,7 @@ mutable struct OnlineLoess
             isnothing(boundary_degree_fallback) ? Cint(-1) :
             (boundary_degree_fallback ? Cint(1) : Cint(0))
 
-        handle = @ccall libfastloess.jl_online_loess_new(
+        handle = @ccall current_library().jl_online_loess_new(
             fraction::Cdouble,
             Cint(window_capacity)::Cint,
             Cint(min_points)::Cint,
@@ -877,7 +920,8 @@ mutable struct OnlineLoess
 
         obj = new(handle)
         finalizer(
-            x -> @ccall(libfastloess.jl_online_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
+            x ->
+                @ccall(current_library().jl_online_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
             obj,
         )
         return obj
@@ -892,7 +936,7 @@ Returns `nothing` while the window is still filling (fewer than `min_points`
 have been seen), and an `OnlineOutput` once smoothing begins.
 """
 function add_point(o::OnlineLoess, x::Float64, y::Float64)
-    c_result = @ccall libfastloess.jl_online_loess_add_point(
+    c_result = @ccall current_library().jl_online_loess_add_point(
         o.handle::Ptr{Cvoid},
         x::Cdouble,
         y::Cdouble,
@@ -900,7 +944,7 @@ function add_point(o::OnlineLoess, x::Float64, y::Float64)
 
     if c_result.error != Ptr{Cchar}(C_NULL)
         error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
-        @ccall libfastloess.jl_online_free_output(
+        @ccall current_library().jl_online_free_output(
             Ref(c_result)::Ptr{CJlOnlineOutput},
         )::Cvoid
         error("fastloess error: $error_msg")

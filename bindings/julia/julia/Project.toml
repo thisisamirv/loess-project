@@ -1,6 +1,6 @@
 name = "FastLOESS"
 uuid = "c279703f-da8c-4b11-8b1f-668c81ca24ad"
-version = "1.0.0"
+version = "1.1.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -13,8 +13,12 @@ description = "High-performance LOESS (Locally Estimated Scatterplot Smoothing)"
 keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 
+[deps]
+fastloess_jll = "4babd41b-8569-5769-b094-a2a3f6511883"
+
 [compat]
 julia = "1.6"
+fastloess_jll = "1.1.0"
 Test = "1"
 Random = "1"
 

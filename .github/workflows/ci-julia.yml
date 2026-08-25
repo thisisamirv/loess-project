@@ -58,6 +58,9 @@ jobs:
           nm -D target/release/libfastloess_jl.so | grep -q jl_online_loess_new || exit 1
           nm -D target/release/libfastloess_jl.so | grep -q jl_loess_free_result || exit 1
 
+      - name: Relax JLL dependency for CI
+        uses: ./.github/actions/relax-julia-jll
+
       - name: Test
         shell: bash
         run: |
