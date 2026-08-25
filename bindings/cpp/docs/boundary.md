@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 -->
 # Boundary Handling
 
 Edge strategies that reduce bias near the ends of the data range.
@@ -7,7 +6,7 @@ Edge strategies that reduce bias near the ends of the data range.
 
 Standard LOESS neighbourhoods become asymmetric at the boundaries: fewer points exist on one side, pulling the local fit toward the data interior. The `boundary_policy` parameter controls how the data is padded to mitigate this effect.
 
-![Boundary Handling](../assets/diagrams/boundary_comparison.svg)
+![Boundary Handling](boundary_comparison.svg)
 
 | Policy | Padding Strategy | Best For |
 | --- | --- | --- |

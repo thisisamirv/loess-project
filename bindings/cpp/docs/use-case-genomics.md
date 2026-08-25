@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD033 -->
 # Genomic Data Smoothing
 
 LOESS for methylation profiles, ChIP-seq signals, and other genomic data.

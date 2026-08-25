@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Merge Strategies
 
 How overlapping chunk boundaries are reconciled in Streaming mode.
@@ -23,7 +22,7 @@ Overlap:            [=====]
 | `"take_last"` | Right-chunk estimate only | Low | Fastest |
 | `"weighted_average"` | Distance-weighted mean | High | Moderate |
 
-![Merge Strategies](../assets/diagrams/merge_comparison.svg)
+![Merge Strategies](merge_comparison.svg)
 
 ---
 

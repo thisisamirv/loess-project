@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 -->
 # Parameters
 
 Complete reference for all LOESS configuration options.
@@ -76,7 +75,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 | 0.5–0.7 | Heavy smoothing | Noisy data |
 | 0.7–1.0 | Very smooth | Trend extraction |
 
-![Fraction Comparison](../assets/diagrams/fraction_comparison.svg)
+![Fraction Comparison](fraction_comparison.svg)
 
 ```cpp
 #include <fastloess.hpp>
@@ -149,7 +148,7 @@ y[0]: 0.385242
 
 Polynomial degree for the local regression fits.
 
-![Degree Comparison](../assets/diagrams/degree_comparison.svg)
+![Degree Comparison](degree_comparison.svg)
 
 | Degree | Fit Type |
 | --- | --- |
@@ -285,7 +284,7 @@ y[0]: 0.385152
 
 Number of predictor variables. Enables multivariate LOESS over an n-dimensional input space.
 
-![Multivariate LOESS](../assets/diagrams/multivariate_loess.svg)
+![Multivariate LOESS](multivariate_loess.svg)
 
 - **1** (default): Standard 1D smoothing over a single predictor
 - **2**: Spatial or bi-predictor surface smoothing
@@ -430,7 +429,7 @@ y[0]: 0.3844
 
 Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary.md) for a detailed comparison.
 
-![Boundary Policy](../assets/diagrams/boundary_comparison.svg)
+![Boundary Policy](boundary_comparison.svg)
 
 | Policy | Behavior | Use Case |
 | --- | --- | --- |
@@ -511,7 +510,7 @@ y[0]: 0.250226
 
 Method for estimating residual scale during robustness iterations. See [Scaling Methods](scaling.md) for a detailed comparison.
 
-![Scaling Methods](../assets/diagrams/scaling_comparison.svg)
+![Scaling Methods](scaling_comparison.svg)
 
 | Method | Description | Robustness |
 | --- | --- | --- |
@@ -553,7 +552,7 @@ y[0]: 0.385152
 
 Behavior when all neighborhood weights are zero.
 
-![Zero-Weight Fallback Policies](../assets/diagrams/zero_weight_comparison.svg)
+![Zero-Weight Fallback Policies](zero_weight_comparison.svg)
 
 | Option | Behavior |
 | --- | --- |

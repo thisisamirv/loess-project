@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Execution Modes
 
 Choose the right adapter for your use case.
@@ -20,6 +19,6 @@ graph LR
 | **Streaming** | Large files (>100K) | Chunked | Residuals, robustness |
 | **Online** | Real-time sensors | Fixed window | Incremental updates |
 
-![Adapter Comparison](../assets/diagrams/adapter_comparison.svg)
+![Adapter Comparison](adapter_comparison.svg)
 
 ---

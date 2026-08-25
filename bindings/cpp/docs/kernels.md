@@ -1,4 +1,3 @@
-<!-- markdownlint-disable MD024 MD033 MD046 -->
 # Weight Functions
 
 Kernel functions for distance weighting.
@@ -7,7 +6,7 @@ Kernel functions for distance weighting.
 
 Weight functions (kernels) determine how neighboring points contribute to each local fit. Points closer to the target receive higher weights.
 
-![Weight Functions](../assets/diagrams/kernel_comparison.svg)
+![Weight Functions](kernel_comparison.svg)
 
 ---
 
