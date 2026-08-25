@@ -2,11 +2,10 @@
 //!
 //! This module implements a KD-tree with Eytzinger layout for cache-optimal
 //! neighborhood lookups, reducing search time from O(n) to O(log n) per query.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {G1.6} O(log n) spatial indexing for nD local window computation.
-//! @srrstats {G3.0} Eytzinger layout and node compression for cache locality.
+// ## srrstats Compliance
+//
+// @srrstats {G1.6} O(log n) spatial indexing for nD local window computation.
+// @srrstats {G3.0} Eytzinger layout and node compression for cache locality.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]

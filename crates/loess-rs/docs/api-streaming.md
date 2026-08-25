@@ -118,7 +118,7 @@ See [rust.md](api.md) for the full `LoessResult<T>` field reference.
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
 
-![Merge Strategies](../assets/diagrams/merge_comparison.svg)
+![Merge Strategies](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/loess-rs/assets/diagrams/merge_comparison.svg)
 
 ---
 

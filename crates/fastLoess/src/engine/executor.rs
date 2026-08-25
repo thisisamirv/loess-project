@@ -4,12 +4,11 @@
 //! the loess-rs crate execution engine. It enables multi-threaded execution
 //! of the local regression fits, significantly speeding up LOESS smoothing
 //! for large datasets by utilizing all available CPU cores.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {G3.0} Rayon par_iter for embarrassingly parallel local fits.
-//! @srrstats {G1.6} Tile-based processing for cache locality on large datasets.
-//! @srrstats {RE2.2} Delta optimization with parallel anchor point computation.
+// ## srrstats Compliance
+//
+// @srrstats {G3.0} Rayon par_iter for embarrassingly parallel local fits.
+// @srrstats {G1.6} Tile-based processing for cache locality on large datasets.
+// @srrstats {RE2.2} Delta optimization with parallel anchor point computation.
 
 // Imports
 use rayon::prelude::*;

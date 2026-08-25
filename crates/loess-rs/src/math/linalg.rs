@@ -2,11 +2,10 @@
 //!
 //! This module provides QR/SVD-based normal equation solvers and leverage
 //! computation via nalgebra, with SIMD batch operations for residual processing.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {G3.0} QR decomposition with SVD fallback for numerical stability.
-//! @srrstats {RE2.0} Leverage computation via X'(X'WX)\u207b\u00b9X for hat matrix diagonal.
+// ## srrstats Compliance
+//
+// @srrstats {G3.0} QR decomposition with SVD fallback for numerical stability.
+// @srrstats {RE2.0} Leverage computation via X'(X'WX)\u207b\u00b9X for hat matrix diagonal.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]

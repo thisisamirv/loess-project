@@ -3,11 +3,10 @@
 //! This module provides distance computation for multivariate (nD) LOESS,
 //! supporting Euclidean, Normalized, Manhattan, Chebyshev, Minkowski, and
 //! Weighted metrics, all backed by SIMD-optimized implementations.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {G1.6} SIMD-optimized distance kernels via the `wide` crate (f64x4, f32x8).
-//! @srrstats {G3.0} Normalized distance handles differing dimension scales automatically.
+// ## srrstats Compliance
+//
+// @srrstats {G1.6} SIMD-optimized distance kernels via the `wide` crate (f64x4, f32x8).
+// @srrstats {G3.0} Normalized distance handles differing dimension scales automatically.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]

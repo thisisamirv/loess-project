@@ -8,7 +8,7 @@ See also: [loess](api.md)
 - Need real-time smoothed values
 - Fixed memory budget
 
-![Online Adapter](../assets/diagrams/online_comparison.svg)
+![Online Adapter](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/loess-rs/assets/diagrams/online_comparison.svg)
 
 ## Struct
 

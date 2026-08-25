@@ -3,12 +3,11 @@
 //! This module provides comprehensive validation functions for LOESS
 //! configuration parameters and input data. It checks requirements
 //! such as input lengths, finite values, and parameter bounds.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {G2.0} Input validation: non-empty arrays, matching lengths, finite values.
-//! @srrstats {G2.1} Edge case handling: minimum points, parameter bounds, duplicates.
-//! @srrstats {G2.3} Informative error messages for invalid configuration.
+// ## srrstats Compliance
+//
+// @srrstats {G2.0} Input validation: non-empty arrays, matching lengths, finite values.
+// @srrstats {G2.1} Edge case handling: minimum points, parameter bounds, duplicates.
+// @srrstats {G2.3} Informative error messages for invalid configuration.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]

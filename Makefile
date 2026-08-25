@@ -105,9 +105,6 @@ ifeq ($(OS),Windows_NT)
 	endif
 endif
 
-# Documentation
-DOCS_VENV := docs-venv
-
 # ==============================================================================
 # loess-rs crate
 # ==============================================================================
@@ -231,16 +228,6 @@ check-msrv:
 # ==============================================================================
 # Documentation
 # ==============================================================================
-docs:
-	@echo "Building documentation..."
-	@if [ ! -d "$(DOCS_VENV)" ]; then $(PYTHON) -m venv $(DOCS_VENV); fi
-	@. $(DOCS_VENV)/$(if $(filter $(HOST_PLATFORM),windows),Scripts,bin)/activate && pip install -q -r docs/requirements.txt && mkdocs build --config-file docs/mkdocs.yml
-
-docs-serve:
-	@echo "Starting documentation server..."
-	@if [ ! -d "$(DOCS_VENV)" ]; then $(PYTHON) -m venv $(DOCS_VENV); fi
-	@. $(DOCS_VENV)/$(if $(filter $(HOST_PLATFORM),windows),Scripts,bin)/activate && pip install -q -r docs/requirements.txt && mkdocs serve --config-file docs/mkdocs.yml
-
 docs-test:
 	@echo "Running doc snippet tests..."
 	@if [ -f "$(PY_VENV_PYTHON)" ]; then \
@@ -248,12 +235,6 @@ docs-test:
 	else \
 		$(PYTHON) dev/verify_snippets.py --timeout 120; \
 	fi
-
-docs-clean:
-	@echo "Cleaning documentation build..."
-	@$(PYTHON) dev/kill_locked_venv.py $(DOCS_VENV)
-	@git clean -fdX -- site $(DOCS_VENV)
-	@echo "Documentation clean complete!"
 
 # ==============================================================================
 # All targets
@@ -270,8 +251,8 @@ all-coverage: loess-rs-coverage fastLoess-coverage python-coverage r-coverage
 all-clean: r-clean loess-rs-clean fastLoess-clean python-clean julia-clean nodejs-clean wasm-clean cpp-clean
 	@echo "Cleaning project root..."
 	@cargo clean
-	@$(PYTHON) dev/kill_locked_venv.py $(PY_VENV) $(DOCS_VENV)
+	@$(PYTHON) dev/kill_locked_venv.py $(PY_VENV)
 	@git clean -fdX .
 	@echo "All clean completed!"
 
-.PHONY: loess-rs loess-rs-dev loess-rs-coverage loess-rs-clean fastLoess fastLoess-dev fastLoess-coverage fastLoess-clean python python-dev python-coverage python-clean r r-dev r-coverage r-clean julia julia-dev julia-clean julia-update-commit nodejs nodejs-dev nodejs-clean wasm wasm-dev wasm-clean cpp cpp-dev cpp-clean check-msrv docs docs-serve docs-test docs-clean all all-dev all-coverage all-clean ensure-llvm-cov
+.PHONY: loess-rs loess-rs-dev loess-rs-coverage loess-rs-clean fastLoess fastLoess-dev fastLoess-coverage fastLoess-clean python python-dev python-coverage python-clean r r-dev r-coverage r-clean julia julia-dev julia-clean julia-update-commit nodejs nodejs-dev nodejs-clean wasm wasm-dev wasm-clean cpp cpp-dev cpp-clean check-msrv docs-test all all-dev all-coverage all-clean ensure-llvm-cov

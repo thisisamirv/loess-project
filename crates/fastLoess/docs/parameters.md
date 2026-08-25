@@ -76,7 +76,7 @@ The proportion of data used for each local fit. **Most important parameter.**
 | 0.5–0.7 | Heavy smoothing | Noisy data |
 | 0.7–1.0 | Very smooth | Trend extraction |
 
-![Fraction Comparison](../assets/diagrams/fraction_comparison.svg)
+![Fraction Comparison](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/fastLoess/assets/diagrams/fraction_comparison.svg)
 
 ```rust
 use fastLoess::prelude::*;
@@ -143,7 +143,7 @@ First smoothed value (5 iterations): 0.38524239321263437
 
 Polynomial degree for the local regression fits.
 
-![Degree Comparison](../assets/diagrams/degree_comparison.svg)
+![Degree Comparison](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/fastLoess/assets/diagrams/degree_comparison.svg)
 
 | Degree | Fit Type |
 | --- | --- |
@@ -266,7 +266,7 @@ First smoothed value: 0.3851521721408434
 
 Number of predictor variables. Enables multivariate LOESS over an n-dimensional input space.
 
-![Multivariate LOESS](../assets/diagrams/multivariate_loess.svg)
+![Multivariate LOESS](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/fastLoess/assets/diagrams/multivariate_loess.svg)
 
 - **1** (default): Standard 1D smoothing over a single predictor
 - **2**: Spatial or bi-predictor surface smoothing
@@ -399,7 +399,7 @@ First smoothed value (talwar robustness): 0.38439982448576715
 
 Edge handling strategy to reduce boundary bias. See [Boundary Handling](boundary.md) for a detailed comparison.
 
-![Boundary Policy](../assets/diagrams/boundary_comparison.svg)
+![Boundary Policy](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/fastLoess/assets/diagrams/boundary_comparison.svg)
 
 | Policy | Behavior | Use Case |
 | --- | --- | --- |
@@ -475,7 +475,7 @@ First smoothed value (quadratic degree): 0.25022647704930756
 
 Method for estimating residual scale during robustness iterations. See [Scaling Methods](scaling.md) for a detailed comparison.
 
-![Scaling Methods](../assets/diagrams/scaling_comparison.svg)
+![Scaling Methods](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/fastLoess/assets/diagrams/scaling_comparison.svg)
 
 | Method | Description | Robustness |
 | --- | --- | --- |
@@ -514,7 +514,7 @@ First smoothed value (mad scaling): 0.3851521721408434
 
 Behavior when all neighborhood weights are zero.
 
-![Zero-Weight Fallback Policies](../assets/diagrams/zero_weight_comparison.svg)
+![Zero-Weight Fallback Policies](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/fastLoess/assets/diagrams/zero_weight_comparison.svg)
 
 | Option | Behavior |
 | --- | --- |

@@ -3,11 +3,10 @@
 //! This module provides leverage values and delta parameters derived from the
 //! hat (smoother) matrix L, where ŷ = L * y. Used for confidence intervals
 //! and effective degrees of freedom estimation.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {RE5.0} Hat matrix diagonal (leverage) and delta parameters for SE computation.
-//! @srrstats {G1.0} Method follows Cleveland & Devlin (1988) delta1/delta2 formulation.
+// ## srrstats Compliance
+//
+// @srrstats {RE5.0} Hat matrix diagonal (leverage) and delta parameters for SE computation.
+// @srrstats {G1.0} Method follows Cleveland & Devlin (1988) delta1/delta2 formulation.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]

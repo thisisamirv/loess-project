@@ -5,12 +5,11 @@
 //! updates, convergence checking, cross-validation, and variance estimation.
 //! The executor is the central component that coordinates all lower-level
 //! algorithms to produce smoothed results.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {RE2.0} Core LOESS execution: boundary handling, iteration loop, convergence.
-//! @srrstats {G2.2} Auto-convergence tolerance for early stopping of iterations.
-//! Configurable robustness iterations with convergence monitoring.
+// ## srrstats Compliance
+//
+// @srrstats {RE2.0} Core LOESS execution: boundary handling, iteration loop, convergence.
+// @srrstats {G2.2} Auto-convergence tolerance for early stopping of iterations.
+// Configurable robustness iterations with convergence monitoring.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]

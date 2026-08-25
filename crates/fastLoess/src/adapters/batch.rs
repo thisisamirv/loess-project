@@ -3,10 +3,9 @@
 //! This module provides the batch execution adapter for LOESS smoothing.
 //! It handles complete datasets in memory with optional parallel processing,
 //! making it suitable for small to medium-sized datasets.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {G3.0} Rayon-based parallel execution for CPU-bound workloads.
+// ## srrstats Compliance
+//
+// @srrstats {G3.0} Rayon-based parallel execution for CPU-bound workloads.
 
 // Imports
 use crate::engine::executor::{smooth_pass_parallel, vertex_pass_parallel};

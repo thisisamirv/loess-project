@@ -7,7 +7,7 @@ Smoothing over multiple predictor dimensions simultaneously.
 
 Standard LOESS operates on a single predictor $x$. Setting `dimensions > 1` extends the neighbourhood search and local polynomial fit into an $n$-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets.
 
-![Multivariate LOESS](../assets/diagrams/multivariate_loess.svg)
+![Multivariate LOESS](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/loess-rs/assets/diagrams/multivariate_loess.svg)
 
 | Dimensions | Use Case | Input Shape |
 | --- | --- | --- |

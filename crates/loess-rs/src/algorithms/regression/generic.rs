@@ -2,10 +2,9 @@
 //!
 //! Uses a fixed stack buffer (64 terms) for accumulation to avoid heap
 //! allocations in the inner loop, covering all practical nD polynomial degrees.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {RE2.0} Generic WLS normal-equation accumulation for nD local fits.
+// ## srrstats Compliance
+//
+// @srrstats {RE2.0} Generic WLS normal-equation accumulation for nD local fits.
 
 // External dependencies
 use core::marker::PhantomData;

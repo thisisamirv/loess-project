@@ -5,7 +5,7 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ## Overview
 
-![Confidence and Prediction Intervals](../assets/diagrams/intervals_comparison.svg)
+![Confidence and Prediction Intervals](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/loess-rs/assets/diagrams/intervals_comparison.svg)
 
 !!! note "Adapter support"
     Confidence and prediction intervals are available in **all three adapters**: Batch, Streaming, and Online.

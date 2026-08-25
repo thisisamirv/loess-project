@@ -13,9 +13,35 @@
 //!
 //! ## Documentation
 //!
-//! > 📚 **Full Documentation**: [docs.rs/loess-rs](https://docs.rs/loess-rs)
-//! >
-//! > Comprehensive guides, API references, and tutorials.
+//! The [`doc`] module contains the full user guide, browsable on [docs.rs](https://docs.rs/loess-rs):
+//!
+//! - **Getting Started**
+//!   - [Concepts](doc::concepts)
+//!   - [Installation](doc::installation)
+//!   - [Quick Start](doc::quickstart)
+//!   - [Parameters](doc::parameters)
+//! - **API Reference**
+//!   - [Batch API](doc::api)
+//!   - [Streaming API](doc::api::streaming)
+//!   - [Online API](doc::api::online)
+//! - **Adapters**
+//!   - [Choosing an Adapter](doc::adapter_choice)
+//! - **Analysis**
+//!   - [Intervals](doc::intervals)
+//!   - [Cross-Validation](doc::cross_validation)
+//! - **Customization**
+//!   - [Kernels](doc::kernels)
+//!   - [Robustness](doc::robustness)
+//!   - [Scaling](doc::scaling)
+//!   - [Custom Weights](doc::custom_weights)
+//!   - [Boundary](doc::boundary)
+//!   - [Merge Strategies](doc::merge)
+//!   - [Degree](doc::degree)
+//!   - [Dimensions](doc::dimensions)
+//! - **Use Cases**
+//!   - [Genomics](doc::use_cases::genomics)
+//!   - [Time Series](doc::use_cases::time_series)
+//!   - [Real-Time](doc::use_cases::real_time)
 //!
 //! ## Quick Start
 //!
@@ -349,16 +375,15 @@
 //!
 //! - Cleveland, W. S. (1979). "Robust Locally Weighted Regression and Smoothing Scatterplots"
 //! - Cleveland, W. S. & Devlin, S. J. (1988). "Locally Weighted Regression: An Approach to Regression Analysis by Local Fitting"
-//!
-//! ## srrstats Compliance for rOpenSci Statistical Software Review
-//!
-//! @srrstats {G1.0} Statistical literature references documented above (Cleveland 1979, 1988).
-//! @srrstats {G1.1} This package provides LOESS smoothing, a nonparametric regression method
-//!   for fitting smooth curves to scatterplot data using locally weighted polynomial regression.
-//! @srrstats {G1.4} All exported functions and types are documented with rustdoc comments.
-//! @srrstats {G1.6} Performance characteristics documented: SIMD-optimized solvers, O(n*k)
-//!   complexity where k is the window size, supports streaming and online modes.
-//!
+// ## srrstats Compliance for rOpenSci Statistical Software Review
+//
+// @srrstats {G1.0} Statistical literature references documented above (Cleveland 1979, 1988).
+// @srrstats {G1.1} This package provides LOESS smoothing, a nonparametric regression method
+//   for fitting smooth curves to scatterplot data using locally weighted polynomial regression.
+// @srrstats {G1.4} All exported functions and types are documented with rustdoc comments.
+// @srrstats {G1.6} Performance characteristics documented: SIMD-optimized solvers, O(n*k)
+//   complexity where k is the window size, supports streaming and online modes.
+
 //! ## License
 //!
 //! See the repository for license information and contribution guidelines.

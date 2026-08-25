@@ -8,7 +8,7 @@ The Rust crates provide the core implementation and high-performance extensions.
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
 
-![Gap Handling](../assets/diagrams/gap_handling.svg)
+![Gap Handling](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/loess-rs/assets/diagrams/gap_handling.svg)
 
 ## Structs & Usage
 

@@ -23,7 +23,7 @@ Overlap:            [=====]
 | `"take_last"` | Right-chunk estimate only | Low | Fastest |
 | `"weighted_average"` | Distance-weighted mean | High | Moderate |
 
-![Merge Strategies](../assets/diagrams/merge_comparison.svg)
+![Merge Strategies](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/fastLoess/assets/diagrams/merge_comparison.svg)
 
 ---
 

@@ -2,11 +2,10 @@
 //!
 //! This module provides an interpolation surface for efficient nD LOESS evaluation
 //! by fitting at cell vertices and using n-linear interpolation.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {G1.6} Cell-based vertex interpolation reduces O(n2) to O(nxk) for dense data.
-//! @srrstats {RE2.2} n-linear interpolation between cell vertices for non-fitted values.
+// ## srrstats Compliance
+//
+// @srrstats {G1.6} Cell-based vertex interpolation reduces O(n2) to O(nxk) for dense data.
+// @srrstats {RE2.2} n-linear interpolation between cell vertices for non-fitted values.
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]

@@ -3,11 +3,10 @@
 //! This module provides a multi-threaded builder for the Eytzinger-layout KD-tree
 //! used in nearest-neighbor searches. Construction is parallelized at upper tree
 //! levels via `rayon::join` for fast initialization on large datasets.
-//!
-//! ## srrstats Compliance
-//!
-//! @srrstats {G3.0} Rayon join for parallel KD-tree construction at upper tree levels.
-//! @srrstats {RE4.0} KD-tree spatial index for fast nearest-neighbor lookup in local fits.
+// ## srrstats Compliance
+//
+// @srrstats {G3.0} Rayon join for parallel KD-tree construction at upper tree levels.
+// @srrstats {RE4.0} KD-tree spatial index for fast nearest-neighbor lookup in local fits.
 
 // Export dependencies from loess-rs crate
 use loess_rs::internals::algorithms::regression::SolverLinalg;
