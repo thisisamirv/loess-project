@@ -138,7 +138,7 @@ The dashboard pattern uses a plain LOESS fit on a manually managed sliding windo
 
 ## See Also
 
-- [Execution Modes](../user-guide/adapters.md) — Detailed mode comparison
-- [Merge Strategies](../user-guide/merge.md) — Chunk reconciliation in depth
-- [Scaling Methods](../user-guide/scaling.md) — Robustness scale estimation
-- [Time Series](time-series.md) — General time series analysis
+- [Execution Modes](adapter-choice.md) — Detailed mode comparison
+- [Merge Strategies](merge.md) — Chunk reconciliation in depth
+- [Scaling Methods](scaling.md) — Robustness scale estimation
+- [Time Series](use-case-time-series.md) — General time series analysis

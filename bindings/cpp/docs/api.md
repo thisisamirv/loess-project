@@ -2,7 +2,7 @@
 
 The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLoess** and **OnlineLoess** are documented separately: [cpp-streaming.md](cpp-streaming.md), [cpp-online.md](cpp-online.md)
+> **StreamingLoess** and **OnlineLoess** are documented separately: [cpp-streaming.md](api-streaming.md), [cpp-online.md](api-online.md)
 
 ## Classes
 
@@ -78,9 +78,9 @@ int main() {
 * Fits the model to the provided `x` and `y` data vectors.
 * Returns an `Expected<LoessResult>` — call `.has_value()` to check for errors, `.value()` to unwrap (throws `LoessError` on failure).
 
-See [cpp-streaming.md](cpp-streaming.md) for the `StreamingLoess` class.
+See [cpp-streaming.md](api-streaming.md) for the `StreamingLoess` class.
 
-See [cpp-online.md](cpp-online.md) for the `OnlineLoess` class.
+See [cpp-online.md](api-online.md) for the `OnlineLoess` class.
 
 ## Options Structures
 
@@ -117,13 +117,13 @@ See [cpp-online.md](cpp-online.md) for the `OnlineLoess` class.
 | `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (Batch only; 0 = random) |
 
-See [cpp-streaming.md](cpp-streaming.md) for `StreamingOptions`.
+See [cpp-streaming.md](api-streaming.md) for `StreamingOptions`.
 
-See [cpp-online.md](cpp-online.md) for `OnlineOptions`.
+See [cpp-online.md](api-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-See [cpp-online.md](cpp-online.md) for `OnlineOutput`.
+See [cpp-online.md](api-online.md) for `OnlineOutput`.
 
 ### `fastloess::LoessResult`
 
@@ -170,7 +170,7 @@ All accessors are const methods (not public fields):
 
 ### weight_function
 
-*See: [Weight Functions](../user-guide/kernels.md)*
+*See: [Weight Functions](kernels.md)*
 
 * `"tricube"` (default)
 * `"epanechnikov"`
@@ -182,7 +182,7 @@ All accessors are const methods (not public fields):
 
 ### robustness_method
 
-*See: [Robustness](../user-guide/robustness.md)*
+*See: [Robustness](robustness.md)*
 
 * `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
@@ -190,7 +190,7 @@ All accessors are const methods (not public fields):
 
 ### boundary_policy
 
-*See: [Boundary Handling](../user-guide/boundary.md)*
+*See: [Boundary Handling](boundary.md)*
 
 * `"extend"` (default; alias: `"pad"`)
 * `"reflect"` (alias: `"mirror"`)
@@ -199,7 +199,7 @@ All accessors are const methods (not public fields):
 
 ### scaling_method
 
-*See: [Scaling Methods](../user-guide/scaling.md)*
+*See: [Scaling Methods](scaling.md)*
 
 * `"mad"` (default; alias: `"median_absolute_deviation"`)
 * `"mar"` (alias: `"median_absolute_residual"`)
@@ -207,7 +207,7 @@ All accessors are const methods (not public fields):
 
 ### zero_weight_fallback
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
 * `"return_original"` (alias: `"original"`)
@@ -215,7 +215,7 @@ All accessors are const methods (not public fields):
 
 ### degree
 
-*See: [Polynomial Degree](../user-guide/degree.md)*
+*See: [Polynomial Degree](degree.md)*
 
 * `"constant"` or `"0"` (degree 0)
 * `"linear"` or `"1"` (default, degree 1)
@@ -225,7 +225,7 @@ All accessors are const methods (not public fields):
 
 ### distance_metric
 
-*See: [Multivariate LOESS](../user-guide/dimensions.md)*
+*See: [Multivariate LOESS](dimensions.md)*
 
 * `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
 * `"euclidean"` (alias: `"euclid"`)
@@ -236,18 +236,18 @@ All accessors are const methods (not public fields):
 
 ### surface_mode
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"interpolation"` (default — faster, uses a spatial grid)
 * `"direct"` (fits every point exactly; slower but more accurate)
 
 ### merge_strategy
 
-See [cpp-streaming.md](cpp-streaming.md).
+See [cpp-streaming.md](api-streaming.md).
 
 ### update_mode
 
-See [cpp-online.md](cpp-online.md).
+See [cpp-online.md](api-online.md).
 
 ## Example
 

@@ -1,7 +1,7 @@
 ---
 title: StreamingLoess — Node.js API Reference
 ---
-See also: [fastLoess Node.js API Reference](nodejs.md)
+See also: [fastLoess Node.js API Reference](api.md)
 
 ## Class
 
@@ -86,7 +86,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `diagnostics` | `Diagnostics \| null` | Fit metrics (if `return_diagnostics`) |
 | `dimensions` | `number` | Number of predictor dimensions |
 
-See [nodejs.md](nodejs.md) for the full `LoessResult` field reference.
+See [nodejs.md](api.md) for the full `LoessResult` field reference.
 
 ## Options Structure
 
@@ -102,7 +102,7 @@ See [nodejs.md](nodejs.md) for the full `LoessResult` field reference.
 
 ### merge_strategy
 
-*See: [Merge Strategies](../user-guide/merge.md)*
+*See: [Merge Strategies](merge.md)*
 
 * `"weighted_average"` (default; alias: `"weighted"`)
 * `"average"` (alias: `"mean"`)

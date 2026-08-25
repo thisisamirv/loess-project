@@ -130,11 +130,11 @@ flowchart TD
 ## Next Steps
 
 - [Quick Start](quickstart.md) — See it in action
-- [Parameters](../user-guide/parameters.md) — All configuration options
-- [Polynomial Degree](../user-guide/degree.md) — Constant, linear, quadratic fits
-- [Multivariate LOESS](../user-guide/dimensions.md) — 2D and n-D smoothing
-- [Boundary Handling](../user-guide/boundary.md) — Edge bias reduction strategies
-- [Robustness](../user-guide/robustness.md) — Outlier downweighting methods
-- [Scaling Methods](../user-guide/scaling.md) — MAD, MAR, Mean scale estimation
-- [Merge Strategies](../user-guide/merge.md) — Chunk reconciliation in Streaming mode
-- [Tutorials](../tutorials/index.md) — Application-specific guides
+- [Parameters](parameters.md) — All configuration options
+- [Polynomial Degree](degree.md) — Constant, linear, quadratic fits
+- [Multivariate LOESS](dimensions.md) — 2D and n-D smoothing
+- [Boundary Handling](boundary.md) — Edge bias reduction strategies
+- [Robustness](robustness.md) — Outlier downweighting methods
+- [Scaling Methods](scaling.md) — MAD, MAR, Mean scale estimation
+- [Merge Strategies](merge.md) — Chunk reconciliation in Streaming mode
+- [Tutorials](quickstart.md) — Application-specific guides

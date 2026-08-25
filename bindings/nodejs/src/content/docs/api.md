@@ -70,9 +70,9 @@ Async fit y[0]: 0.3274
 
 * Async variant of `fit()`. Returns a `Promise` that resolves to a `LoessResult`.
 
-See [nodejs-streaming.md](nodejs-streaming.md) for the `StreamingLoess` class.
+See [nodejs-streaming.md](api-streaming.md) for the `StreamingLoess` class.
 
-See [nodejs-online.md](nodejs-online.md) for the `OnlineLoess` class.
+See [nodejs-online.md](api-online.md) for the `OnlineLoess` class.
 
 ## Options Structures
 
@@ -109,13 +109,13 @@ See [nodejs-online.md](nodejs-online.md) for the `OnlineLoess` class.
 | `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
 
-See [nodejs-streaming.md](nodejs-streaming.md) for `StreamingOptions`.
+See [nodejs-streaming.md](api-streaming.md) for `StreamingOptions`.
 
-See [nodejs-online.md](nodejs-online.md) for `OnlineOptions`.
+See [nodejs-online.md](api-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
+See [nodejs-online.md](api-online.md) for `OnlineOutput`.
 
 ### `LoessResult`
 
@@ -158,7 +158,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### weight_function
 
-*See: [Weight Functions](../user-guide/kernels.md)*
+*See: [Weight Functions](kernels.md)*
 
 * `"tricube"` (default)
 * `"epanechnikov"`
@@ -170,7 +170,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### robustness_method
 
-*See: [Robustness](../user-guide/robustness.md)*
+*See: [Robustness](robustness.md)*
 
 * `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
@@ -178,7 +178,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### boundary_policy
 
-*See: [Boundary Handling](../user-guide/boundary.md)*
+*See: [Boundary Handling](boundary.md)*
 
 * `"extend"` (default; alias: `"pad"`)
 * `"reflect"` (alias: `"mirror"`)
@@ -187,7 +187,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### scaling_method
 
-*See: [Scaling Methods](../user-guide/scaling.md)*
+*See: [Scaling Methods](scaling.md)*
 
 * `"mad"` (default; alias: `"median_absolute_deviation"`)
 * `"mar"` (alias: `"median_absolute_residual"`)
@@ -195,7 +195,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### zero_weight_fallback
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
 * `"return_original"` (alias: `"original"`)
@@ -203,7 +203,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### degree
 
-*See: [Polynomial Degree](../user-guide/degree.md)*
+*See: [Polynomial Degree](degree.md)*
 
 * `"constant"` or `"0"` (degree 0)
 * `"linear"` or `"1"` (default, degree 1)
@@ -213,7 +213,7 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### distance_metric
 
-*See: [Multivariate LOESS](../user-guide/dimensions.md)*
+*See: [Multivariate LOESS](dimensions.md)*
 
 * `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
 * `"euclidean"` (alias: `"euclid"`)
@@ -224,18 +224,18 @@ See [nodejs-online.md](nodejs-online.md) for `OnlineOutput`.
 
 ### surface_mode
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"interpolation"` (default — faster, uses a spatial grid)
 * `"direct"` (fits every point exactly; slower but more accurate)
 
 ### merge_strategy
 
-See [nodejs-streaming.md](nodejs-streaming.md).
+See [nodejs-streaming.md](api-streaming.md).
 
 ### update_mode
 
-See [nodejs-online.md](nodejs-online.md).
+See [nodejs-online.md](api-online.md).
 
 ## Example
 

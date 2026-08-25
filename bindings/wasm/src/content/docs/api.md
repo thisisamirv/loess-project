@@ -3,7 +3,7 @@ title: fastLoess WebAssembly API Reference
 ---
 The WebAssembly bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLoess** and **OnlineLoess** are documented separately: [wasm-streaming.md](wasm-streaming.md), [wasm-online.md](wasm-online.md)
+> **StreamingLoess** and **OnlineLoess** are documented separately: [wasm-streaming.md](api-streaming.md), [wasm-online.md](api-online.md)
 
 ## Classes and Functions
 
@@ -53,9 +53,9 @@ Iterations used: 3
 * `y`: `Float64Array` of input y values.
 * Returns: A `LoessResult` object.
 
-See [wasm-streaming.md](wasm-streaming.md) for the `StreamingLoess` class.
+See [wasm-streaming.md](api-streaming.md) for the `StreamingLoess` class.
 
-See [wasm-online.md](wasm-online.md) for the `OnlineLoess` class.
+See [wasm-online.md](api-online.md) for the `OnlineLoess` class.
 
 ## Options Structures
 
@@ -92,13 +92,13 @@ See [wasm-online.md](wasm-online.md) for the `OnlineLoess` class.
 | `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
 
-See [wasm-streaming.md](wasm-streaming.md) for `StreamingOptions`.
+See [wasm-streaming.md](api-streaming.md) for `StreamingOptions`.
 
-See [wasm-online.md](wasm-online.md) for `OnlineOptions`.
+See [wasm-online.md](api-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
+See [wasm-online.md](api-online.md) for `OnlineOutput`.
 
 ### `LoessResult`
 
@@ -141,7 +141,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### weight_function
 
-*See: [Weight Functions](../user-guide/kernels.md)*
+*See: [Weight Functions](kernels.md)*
 
 * `"tricube"` (default)
 * `"epanechnikov"`
@@ -153,7 +153,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### robustness_method
 
-*See: [Robustness](../user-guide/robustness.md)*
+*See: [Robustness](robustness.md)*
 
 * `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
@@ -161,7 +161,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### boundary_policy
 
-*See: [Boundary Handling](../user-guide/boundary.md)*
+*See: [Boundary Handling](boundary.md)*
 
 * `"extend"` (default; alias: `"pad"`)
 * `"reflect"` (alias: `"mirror"`)
@@ -170,7 +170,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### scaling_method
 
-*See: [Scaling Methods](../user-guide/scaling.md)*
+*See: [Scaling Methods](scaling.md)*
 
 * `"mad"` (default; alias: `"median_absolute_deviation"`)
 * `"mar"` (alias: `"median_absolute_residual"`)
@@ -178,7 +178,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### zero_weight_fallback
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
 * `"return_original"` (alias: `"original"`)
@@ -186,7 +186,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### degree
 
-*See: [Polynomial Degree](../user-guide/degree.md)*
+*See: [Polynomial Degree](degree.md)*
 
 * `"constant"` or `"0"` (degree 0)
 * `"linear"` or `"1"` (default, degree 1)
@@ -196,7 +196,7 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### distance_metric
 
-*See: [Multivariate LOESS](../user-guide/dimensions.md)*
+*See: [Multivariate LOESS](dimensions.md)*
 
 * `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
 * `"euclidean"` (alias: `"euclid"`)
@@ -207,18 +207,18 @@ See [wasm-online.md](wasm-online.md) for `OnlineOutput`.
 
 ### surface_mode
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"interpolation"` (default — faster, uses a spatial grid)
 * `"direct"` (fits every point exactly; slower but more accurate)
 
 ### merge_strategy
 
-See [wasm-streaming.md](wasm-streaming.md).
+See [wasm-streaming.md](api-streaming.md).
 
 ### update_mode
 
-See [wasm-online.md](wasm-online.md).
+See [wasm-online.md](api-online.md).
 
 ## Example
 

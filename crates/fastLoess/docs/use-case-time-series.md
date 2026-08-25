@@ -231,8 +231,8 @@ RÂ²: 0.971
 
 ## See Also
 
-- [Real-Time Processing](real-time.md) — For streaming time series
-- [Cross-Validation](../user-guide/cross-validation.md) — Optimal fraction selection
-- [Polynomial Degree](../user-guide/degree.md) — Degree 2 for curved trends
-- [Boundary Handling](../user-guide/boundary.md) — Edge bias in trend extraction
-- [Parameters](../user-guide/parameters.md) — Full parameter reference
+- [Real-Time Processing](use-case-real-time.md) — For streaming time series
+- [Cross-Validation](cross-validation.md) — Optimal fraction selection
+- [Polynomial Degree](degree.md) — Degree 2 for curved trends
+- [Boundary Handling](boundary.md) — Edge bias in trend extraction
+- [Parameters](parameters.md) — Full parameter reference

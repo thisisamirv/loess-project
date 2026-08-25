@@ -1,7 +1,7 @@
 ---
 title: OnlineLoess — WebAssembly API Reference
 ---
-See also: [fastLoess WebAssembly API Reference](wasm.md)
+See also: [fastLoess WebAssembly API Reference](api.md)
 
 ## Class
 
@@ -80,7 +80,7 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
+*See: [Execution Modes](adapter-choice.md)*
 
 * `"full"` (default; alias: `"resmooth"`)
 * `"incremental"` (alias: `"single"`)

@@ -6,7 +6,7 @@ The Rust crates provide the core implementation and high-performance extensions.
 
 Both crates expose the same three entry types via their `prelude`: `Loess` for batch mode, `StreamingLoess` for chunked processing, and `OnlineLoess` for sliding-window updates.
 
-> **StreamingLoess** and **OnlineLoess** are documented separately: [rust-streaming.md](rust-streaming.md), [rust-online.md](rust-online.md)
+> **StreamingLoess** and **OnlineLoess** are documented separately: [rust-streaming.md](api-streaming.md), [rust-online.md](api-online.md)
 
 ```text
 use fastLoess::prelude::*;  // or: use loess_rs::prelude::*;
@@ -56,9 +56,9 @@ Iterations used: Some(3)
 * Fits the model to the provided `x` and `y` arrays.
 * Returns `Result<LoessResult<T>, LoessError>`.
 
-See [rust-streaming.md](rust-streaming.md) for the `StreamingLoess` struct.
+See [rust-streaming.md](api-streaming.md) for the `StreamingLoess` struct.
 
-See [rust-online.md](rust-online.md) for the `OnlineLoess` struct.
+See [rust-online.md](api-online.md) for the `OnlineLoess` struct.
 
 ## Builder Configuration
 
@@ -97,9 +97,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `cv_fractions(...)` | `Vec<f64>` | disabled | Candidate fractions to evaluate during cross-validation |
 | `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
 
-See [rust-streaming.md](rust-streaming.md) for Streaming Options.
+See [rust-streaming.md](api-streaming.md) for Streaming Options.
 
-See [rust-online.md](rust-online.md) for Online Options.
+See [rust-online.md](api-online.md) for Online Options.
 
 ## Result Structure
 
@@ -146,7 +146,7 @@ See [rust-online.md](rust-online.md) for Online Options.
 
 ### weight_function
 
-*See: [Weight Functions](../user-guide/kernels.md)*
+*See: [Weight Functions](kernels.md)*
 
 * `"tricube"` (default)
 * `"epanechnikov"`
@@ -158,7 +158,7 @@ See [rust-online.md](rust-online.md) for Online Options.
 
 ### robustness_method
 
-*See: [Robustness](../user-guide/robustness.md)*
+*See: [Robustness](robustness.md)*
 
 * `"bisquare"` (default; alias: `"biweight"`)
 * `"huber"`
@@ -166,7 +166,7 @@ See [rust-online.md](rust-online.md) for Online Options.
 
 ### boundary_policy
 
-*See: [Boundary Handling](../user-guide/boundary.md)*
+*See: [Boundary Handling](boundary.md)*
 
 * `"extend"` (default; alias: `"pad"`)
 * `"reflect"` (alias: `"mirror"`)
@@ -175,7 +175,7 @@ See [rust-online.md](rust-online.md) for Online Options.
 
 ### scaling_method
 
-*See: [Scaling Methods](../user-guide/scaling.md)*
+*See: [Scaling Methods](scaling.md)*
 
 * `"mad"` (default; alias: `"median_absolute_deviation"`)
 * `"mar"` (alias: `"median_absolute_residual"`)
@@ -183,7 +183,7 @@ See [rust-online.md](rust-online.md) for Online Options.
 
 ### zero_weight_fallback
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
 * `"return_original"` (alias: `"original"`)
@@ -191,7 +191,7 @@ See [rust-online.md](rust-online.md) for Online Options.
 
 ### distance_metric
 
-*See: [Multivariate LOESS](../user-guide/dimensions.md)*
+*See: [Multivariate LOESS](dimensions.md)*
 
 * `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
 * `"euclidean"` (alias: `"euclid"`)
@@ -202,7 +202,7 @@ See [rust-online.md](rust-online.md) for Online Options.
 
 ### degree
 
-*See: [Polynomial Degree](../user-guide/degree.md)*
+*See: [Polynomial Degree](degree.md)*
 
 * `"constant"` or `"0"` (degree 0)
 * `"linear"` or `"1"` (default, degree 1)
@@ -212,18 +212,18 @@ See [rust-online.md](rust-online.md) for Online Options.
 
 ### surface_mode
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Parameters](parameters.md)*
 
 * `"interpolation"` (default)
 * `"direct"` (fits every point exactly; slower but more accurate)
 
 ### merge_strategy
 
-See [rust-streaming.md](rust-streaming.md).
+See [rust-streaming.md](api-streaming.md).
 
 ### update_mode
 
-See [rust-online.md](rust-online.md).
+See [rust-online.md](api-online.md).
 
 ## Example
 

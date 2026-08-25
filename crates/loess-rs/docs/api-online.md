@@ -1,6 +1,6 @@
 # OnlineLoess — Rust API Reference
 
-See also: [loess_rs & loess-rs Rust API Reference](rust.md)
+See also: [loess_rs & loess-rs Rust API Reference](api.md)
 
 ## Struct
 
@@ -97,7 +97,7 @@ Returned inside `Ok(Some(...))` by `add_point()`. `None` while the window is sti
 
 ### update_mode
 
-*See: [Execution Modes](../user-guide/adapters.md)*
+*See: [Execution Modes](adapter-choice.md)*
 
 * `"full"` (default; alias: `"resmooth"`)
 * `"incremental"` (alias: `"single"`)
