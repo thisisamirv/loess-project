@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLoess: robustness</title>
+<title>fastLoess: Robustness</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,14 +97,12 @@ $(document).ready(function(){initNavTree('md_docs_2robustness.html',''); initRes
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">robustness</div></div>
+  <div class="headertitle"><div class="title">Robustness</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md257"></a>
-Robustness</h1>
-<p>Outlier handling through iterative reweighting.</p>
-<h2><a class="anchor" id="autotoc_md258"></a>
-How Robustness Works</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md263"></a> Outlier handling through iterative reweighting.</p>
+<h1><a class="anchor" id="autotoc_md264"></a>
+How Robustness Works</h1>
 <p>Standard LOESS can be biased by outliers. Robustness iterations downweight points with large residuals:</p>
 <ol type="1">
 <li>Fit initial LOESS</li>
@@ -113,13 +111,19 @@ How Robustness Works</h2>
 <li>Refit using combined distance × robustness weights</li>
 <li>Repeat steps 2–4</li>
 </ol>
-<p><img src="../assets/diagrams/robust_method_comparison.svg" alt="Robustness Methods" style="pointer-events: none;" class="inline"/></p>
-<p><img src="../assets/diagrams/robust_iter_comparison.svg" alt="Robustness Iterations" style="pointer-events: none;" class="inline"/></p>
-<hr  />
-<h2><a class="anchor" id="autotoc_md260"></a>
-Robustness Methods</h2>
-<h3><a class="anchor" id="autotoc_md261"></a>
-Bisquare (Default)</h3>
+<div class="image">
+<object type="image/svg+xml" data="robust_method_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Robustness Methods</div></div>
+    <div class="image">
+<object type="image/svg+xml" data="robust_iter_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Robustness Iterations</div></div>
+    <hr  />
+<h1><a class="anchor" id="autotoc_md266"></a>
+Robustness Methods</h1>
+<h2><a class="anchor" id="autotoc_md267"></a>
+Bisquare (Default)</h2>
 <p>Smooth downweighting. Points transition gradually from full weight to zero.</p>
 <p>$$w(u) = \begin{cases} (1 - u^2)^2 &amp; |u| &lt; 1 \ 0 &amp; |u| \geq 1 \end{cases}$$</p>
 <p><b>Use when</b>: General purpose, balanced approach.</p>
@@ -144,8 +148,8 @@ Bisquare (Default)</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.385152</div>
 </div><!-- fragment --><hr  />
-<h3><a class="anchor" id="autotoc_md263"></a>
-Huber</h3>
+<h2><a class="anchor" id="autotoc_md269"></a>
+Huber</h2>
 <p>Linear penalty beyond threshold. Less aggressive than Bisquare.</p>
 <p>$$w(u) = \begin{cases} 1 &amp; |u| \leq k \ k/|u| &amp; |u| &gt; k \end{cases}$$</p>
 <p><b>Use when</b>: Moderate outliers, want to retain some influence.</p>
@@ -170,8 +174,8 @@ Huber</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.385585</div>
 </div><!-- fragment --><hr  />
-<h3><a class="anchor" id="autotoc_md265"></a>
-Talwar</h3>
+<h2><a class="anchor" id="autotoc_md271"></a>
+Talwar</h2>
 <p>Hard threshold. Points are either fully weighted or completely excluded.</p>
 <p>$$w(u) = \begin{cases} 1 &amp; |u| \leq k \ 0 &amp; |u| &gt; k \end{cases}$$</p>
 <p><b>Use when</b>: Extreme outliers, want binary exclusion.</p>
@@ -196,8 +200,8 @@ Talwar</h3>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.3844</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md267"></a>
-Comparison</h2>
+<h1><a class="anchor" id="autotoc_md273"></a>
+Comparison</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Method   </th><th class="markdownTableHeadNone">Transition   </th><th class="markdownTableHeadNone">Aggressiveness   </th><th class="markdownTableHeadNone">Use Case    </th></tr>
@@ -209,8 +213,8 @@ Comparison</h2>
 <td class="markdownTableBodyNone"><b>Talwar</b>   </td><td class="markdownTableBodyNone">Hard   </td><td class="markdownTableBodyNone">Strong   </td><td class="markdownTableBodyNone">Extreme contamination   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md269"></a>
-Detecting Outliers</h2>
+<h1><a class="anchor" id="autotoc_md275"></a>
+Detecting Outliers</h1>
 <p>Use robustness weights to identify potential outliers:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -258,8 +262,8 @@ Detecting Outliers</h2>
 <div class="line">Potential outlier at 75</div>
 <div class="line">Potential outlier at 76</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md271"></a>
-Scale Estimation</h2>
+<h1><a class="anchor" id="autotoc_md277"></a>
+Scale Estimation</h1>
 <p>Residuals are scaled before computing robustness weights. Two methods:</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -271,8 +275,11 @@ Scale Estimation</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><b>Mean</b>   </td><td class="markdownTableBodyNone"><code>mean(\|r\|)</code>   </td><td class="markdownTableBodyNone">Less robust, fastest   </td></tr>
 </table>
-<p><img src="../assets/diagrams/scaling_comparison.svg" alt="Scaling Methods Comparison" style="pointer-events: none;" class="inline"/></p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
+<div class="image">
+<object type="image/svg+xml" data="scaling_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Scaling Methods Comparison</div></div>
+    <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
@@ -293,8 +300,8 @@ Scale Estimation</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.385152</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md273"></a>
-Auto-Convergence</h2>
+<h1><a class="anchor" id="autotoc_md279"></a>
+Auto-Convergence</h1>
 <p>Stop iterations early when weights stabilize:</p>
 <p>!!! tip "Performance" Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>

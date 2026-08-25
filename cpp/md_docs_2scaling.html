@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLoess: scaling</title>
+<title>fastLoess: Scaling Methods</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,14 +97,12 @@ $(document).ready(function(){initNavTree('md_docs_2scaling.html',''); initResiza
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">scaling</div></div>
+  <div class="headertitle"><div class="title">Scaling Methods</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md274"></a>
-Scaling Methods</h1>
-<p>Residual scale estimation during robustness iterations.</p>
-<h2><a class="anchor" id="autotoc_md275"></a>
-Overview</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md280"></a> Residual scale estimation during robustness iterations.</p>
+<h1><a class="anchor" id="autotoc_md281"></a>
+Overview</h1>
 <p>When <code>iterations &gt; 0</code>, LOESS computes robustness weights by comparing each residual to the current residual scale estimate. The <code>scaling_method</code> parameter controls how that scale is measured.</p>
 <p>The robustness weight for point $i$ is:</p>
 <p>$$w_i = B!\left(\frac{|r_i|}{6 \cdot \hat{\sigma}}\right)$$</p>
@@ -119,10 +117,13 @@ Overview</h2>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>"mean"</code>   </td><td class="markdownTableBodyNone">Mean of |residuals|   </td><td class="markdownTableBodyNone">Less robust   </td><td class="markdownTableBodyNone">Fastest   </td></tr>
 </table>
-<p><img src="../assets/diagrams/scaling_comparison.svg" alt="Scaling Methods Comparison" style="pointer-events: none;" class="inline"/></p>
-<hr  />
-<h2><a class="anchor" id="autotoc_md277"></a>
-MAD — Median Absolute Deviation (Default)</h2>
+<div class="image">
+<object type="image/svg+xml" data="scaling_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Scaling Methods Comparison</div></div>
+    <hr  />
+<h1><a class="anchor" id="autotoc_md283"></a>
+MAD — Median Absolute Deviation (Default)</h1>
 <p>$$\hat{\sigma} = \text{median}(|r_i - \text{median}(r_i)|)$$</p>
 <p>First centers residuals at their median, then takes the median of the absolute deviations. Double use of the median makes it highly resistant to extreme outliers. This is the standard choice for robust regression.</p>
 <p><b>Use when</b>: Data may contain outliers (default for most applications).</p>
@@ -147,8 +148,8 @@ MAD — Median Absolute Deviation (Default)</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.385152</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md279"></a>
-MAR — Median Absolute Residual</h2>
+<h1><a class="anchor" id="autotoc_md285"></a>
+MAR — Median Absolute Residual</h1>
 <p>$$\hat{\sigma} = \text{median}(|r_i|)$$</p>
 <p>Uses the uncentered median — unlike MAD it does not subtract the residual median first. Still robust (median-based) but slightly less resistant than MAD when residuals are systematically shifted. Faster than MAD in practice because it requires only one partial sort.</p>
 <p><b>Use when</b>: Speed matters and data have minimal systematic bias in residuals.</p>
@@ -173,8 +174,8 @@ MAR — Median Absolute Residual</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.383463</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md281"></a>
-Mean — Mean Absolute Residual</h2>
+<h1><a class="anchor" id="autotoc_md287"></a>
+Mean — Mean Absolute Residual</h1>
 <p>$$\hat{\sigma} = \frac{1}{n}\sum_i |r_i|$$</p>
 <p>Arithmetic mean of absolute residuals. Non-robust: a single extreme outlier inflates $\hat{\sigma}$, causing the algorithm to under-downweight it. Fastest to compute (no sort required). Useful when data are believed to be clean and speed is a priority.</p>
 <p><b>Use when</b>: Clean data with no outliers; maximum computation speed required.</p>
@@ -199,8 +200,8 @@ Mean — Mean Absolute Residual</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.383671</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md283"></a>
-Choosing a Scaling Method</h2>
+<h1><a class="anchor" id="autotoc_md289"></a>
+Choosing a Scaling Method</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Situation   </th><th class="markdownTableHeadNone">Recommended Method    </th></tr>

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['genomics_0',['use-case-genomics',['../md_docs_2use-case-genomics.html',1,'']]]
+  ['functions_0',['Weight Functions',['../md_docs_2kernels.html',1,'']]]
 ];

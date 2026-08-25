@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['real_20time_0',['use-case-real-time',['../md_docs_2use-case-real-time.html',1,'']]],
-  ['reference_1',['reference',['../md_docs_2api.html',1,'fastLoess C++ API Reference'],['../md_docs_2api-online.html',1,'OnlineLoess — C++ API Reference'],['../md_docs_2api-streaming.html',1,'StreamingLoess — C++ API Reference']]],
-  ['robustness_2',['robustness',['../md_docs_2robustness.html',1,'']]]
+  ['parameters_0',['Parameters',['../md_docs_2parameters.html',1,'']]],
+  ['polynomial_20degree_1',['Polynomial Degree',['../md_docs_2degree.html',1,'']]],
+  ['processing_2',['Real-Time Processing',['../md_docs_2use-case-real-time.html',1,'']]]
 ];

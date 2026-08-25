@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['installation_0',['installation',['../md_docs_2installation.html',1,'']]],
-  ['intervals_1',['intervals',['../md_docs_2intervals.html',1,'']]]
+  ['genomic_20data_20smoothing_0',['Genomic Data Smoothing',['../md_docs_2use-case-genomics.html',1,'']]]
 ];

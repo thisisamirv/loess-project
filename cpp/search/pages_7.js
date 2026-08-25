@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['kernels_0',['kernels',['../md_docs_2kernels.html',1,'']]]
+  ['handling_0',['Boundary Handling',['../md_docs_2boundary.html',1,'']]]
 ];

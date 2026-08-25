@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLoess: intervals</title>
+<title>fastLoess: Intervals</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,16 +97,17 @@ $(document).ready(function(){initNavTree('md_docs_2intervals.html',''); initResi
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">intervals</div></div>
+  <div class="headertitle"><div class="title">Intervals</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md131"></a>
-Intervals</h1>
-<p>Confidence and prediction intervals for uncertainty quantification.</p>
-<h2><a class="anchor" id="autotoc_md132"></a>
-Overview</h2>
-<p><img src="../assets/diagrams/intervals_comparison.svg" alt="Confidence and Prediction Intervals" style="pointer-events: none;" class="inline"/></p>
-<p>!!! note "Adapter support" Confidence and prediction intervals are available in <b>all three adapters</b>: Batch, Streaming, and Online.</p>
+<div class="textblock"><p><a class="anchor" id="autotoc_md143"></a> Confidence and prediction intervals for uncertainty quantification.</p>
+<h1><a class="anchor" id="autotoc_md144"></a>
+Overview</h1>
+<div class="image">
+<object type="image/svg+xml" data="intervals_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Confidence and Prediction Intervals</div></div>
+    <p>!!! note "Adapter support" Confidence and prediction intervals are available in <b>all three adapters</b>: Batch, Streaming, and Online.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Type   </th><th class="markdownTableHeadNone">Represents   </th><th class="markdownTableHeadNone">Width   </th><th class="markdownTableHeadNone">Use    </th></tr>
@@ -116,8 +117,8 @@ Overview</h2>
 <td class="markdownTableBodyNone"><b>Prediction</b>   </td><td class="markdownTableBodyNone">Uncertainty for new points   </td><td class="markdownTableBodyNone">Wide   </td><td class="markdownTableBodyNone">Where will new data fall?   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md134"></a>
-Confidence Intervals</h2>
+<h1><a class="anchor" id="autotoc_md146"></a>
+Confidence Intervals</h1>
 <p>Estimate uncertainty in the smoothed curve itself.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -143,8 +144,8 @@ Confidence Intervals</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.256958, 0.397793]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md136"></a>
-Prediction Intervals</h2>
+<h1><a class="anchor" id="autotoc_md148"></a>
+Prediction Intervals</h1>
 <p>Estimate where new observations might fall.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -167,8 +168,8 @@ Prediction Intervals</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.256958, 0.397793]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md138"></a>
-Both Intervals</h2>
+<h1><a class="anchor" id="autotoc_md150"></a>
+Both Intervals</h1>
 <p>Request both types simultaneously:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -191,8 +192,8 @@ Both Intervals</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.256958, 0.397793]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md140"></a>
-Confidence Levels</h2>
+<h1><a class="anchor" id="autotoc_md152"></a>
+Confidence Levels</h1>
 <p>Common levels and their z-values:</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -225,8 +226,8 @@ Confidence Levels</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.233031, 0.537273]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md142"></a>
-Standard Errors</h2>
+<h1><a class="anchor" id="autotoc_md154"></a>
+Standard Errors</h1>
 <p>Access standard errors directly (available when intervals are computed):</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -249,8 +250,8 @@ Standard Errors</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.269408, 0.500897]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md144"></a>
-Availability</h2>
+<h1><a class="anchor" id="autotoc_md156"></a>
+Availability</h1>
 <p>!!! warning "Batch Mode Only" Confidence and prediction intervals are only available in <b>Batch</b> mode. Streaming and Online modes do not support intervals.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">

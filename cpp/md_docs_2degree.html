@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLoess: degree</title>
+<title>fastLoess: Polynomial Degree</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,17 +97,18 @@ $(document).ready(function(){initNavTree('md_docs_2degree.html',''); initResizab
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">degree</div></div>
+  <div class="headertitle"><div class="title">Polynomial Degree</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md95"></a>
-Polynomial Degree</h1>
-<p>Degree of the local polynomial fitted at each point.</p>
-<h2><a class="anchor" id="autotoc_md96"></a>
-Overview</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md107"></a> Degree of the local polynomial fitted at each point.</p>
+<h1><a class="anchor" id="autotoc_md108"></a>
+Overview</h1>
 <p>At each target point, LOESS fits a polynomial to the neighbouring data using weighted least squares. The <code>degree</code> parameter controls the order of that polynomial.</p>
-<p><img src="../assets/diagrams/degree_comparison.svg" alt="Degree Comparison" style="pointer-events: none;" class="inline"/></p>
-<table class="markdownTable">
+<div class="image">
+<object type="image/svg+xml" data="degree_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Degree Comparison</div></div>
+    <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Degree   </th><th class="markdownTableHeadNone">Local Fit   </th><th class="markdownTableHeadNone">Captures   </th><th class="markdownTableHeadNone">Risk    </th></tr>
 <tr class="markdownTableRowOdd">
@@ -122,8 +123,8 @@ Overview</h2>
 <td class="markdownTableBodyNone"><code>4</code>   </td><td class="markdownTableBodyNone">Quartic   </td><td class="markdownTableBodyNone">Fine structure   </td><td class="markdownTableBodyNone">High variance, rarely needed   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md98"></a>
-Degree 0 — Local Constant</h2>
+<h1><a class="anchor" id="autotoc_md110"></a>
+Degree 0 — Local Constant</h1>
 <p>$$\hat{y}(x_0) = </p><ul>
 <li>\min_a \sum_i w_i(x_0)\,(y_i - a)^2$$</li>
 </ul>
@@ -153,8 +154,8 @@ Degree 0 — Local Constant</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.7052</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md100"></a>
-Degree 1 — Local Linear (Default)</h2>
+<h1><a class="anchor" id="autotoc_md112"></a>
+Degree 1 — Local Linear (Default)</h1>
 <p>$$\hat{y}(x_0) = </p><ul>
 <li>\min_{a,b} \sum_i w_i(x_0)\,(y_i - a - b x_i)^2$$</li>
 </ul>
@@ -184,8 +185,8 @@ Degree 1 — Local Linear (Default)</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.327376</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md102"></a>
-Degree 2 — Local Quadratic</h2>
+<h1><a class="anchor" id="autotoc_md114"></a>
+Degree 2 — Local Quadratic</h1>
 <p>$$\hat{y}(x_0) = </p><ul>
 <li>\min_{a,b,c} \sum_i w_i(x_0)\,(y_i - a - b x_i - c x_i^2)^2$$</li>
 </ul>
@@ -215,8 +216,8 @@ Degree 2 — Local Quadratic</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.0677457</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md104"></a>
-Degree 3 — Local Cubic</h2>
+<h1><a class="anchor" id="autotoc_md116"></a>
+Degree 3 — Local Cubic</h1>
 <p>$$\hat{y}(x_0) = </p><ul>
 <li>\min_{a,b,c,d} \sum_i w_i(x_0)\,(y_i - a - b x_i - c x_i^2 - d x_i^3)^2$$</li>
 </ul>
@@ -246,8 +247,8 @@ Degree 3 — Local Cubic</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.242234</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md106"></a>
-Degree 4 — Local Quartic</h2>
+<h1><a class="anchor" id="autotoc_md118"></a>
+Degree 4 — Local Quartic</h1>
 <p>$$\hat{y}(x_0) = </p><ul>
 <li>\min_{a,...,e} \sum_i w_i(x_0)\,(y_i - a - b x_i - \cdots - e x_i^4)^2$$</li>
 </ul>
@@ -277,8 +278,8 @@ Degree 4 — Local Quartic</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.238533</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md108"></a>
-Choosing the Right Degree</h2>
+<h1><a class="anchor" id="autotoc_md120"></a>
+Choosing the Right Degree</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Situation   </th><th class="markdownTableHeadNone">Recommended Degree    </th></tr>
@@ -298,12 +299,15 @@ Choosing the Right Degree</h2>
 <td class="markdownTableBodyNone">Very small dataset (n &lt; 50)   </td><td class="markdownTableBodyNone"><code>1</code>   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md110"></a>
-Higher Degree Effects</h2>
-<p><img src="../assets/diagrams/higher_degree_comparison.svg" alt="Higher Degree Comparison" style="pointer-events: none;" class="inline"/></p>
-<hr  />
-<h2><a class="anchor" id="autotoc_md112"></a>
-Surface Mode</h2>
+<h1><a class="anchor" id="autotoc_md122"></a>
+Higher Degree Effects</h1>
+<div class="image">
+<object type="image/svg+xml" data="higher_degree_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Higher Degree Comparison</div></div>
+    <hr  />
+<h1><a class="anchor" id="autotoc_md124"></a>
+Surface Mode</h1>
 <p>The <code>surface_mode</code> parameter controls whether LOESS evaluates the local polynomial at every query point or at a sparser grid of vertices with Hermite cubic interpolation in between.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -313,9 +317,15 @@ Surface Mode</h2>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>"direct"</code>   </td><td class="markdownTableBodyNone">Evaluate at every query point   </td><td class="markdownTableBodyNone">Exact   </td><td class="markdownTableBodyNone">Full precision   </td></tr>
 </table>
-<p><img src="../assets/diagrams/surface_comparison.svg" alt="Surface Mode Comparison" style="pointer-events: none;" class="inline"/></p>
-<p><img src="../assets/diagrams/degree_interpolation_comparison.svg" alt="Degree × Interpolation" style="pointer-events: none;" class="inline"/> </p>
-</div></div><!-- contents -->
+<div class="image">
+<object type="image/svg+xml" data="surface_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Surface Mode Comparison</div></div>
+    <div class="image">
+<object type="image/svg+xml" data="degree_interpolation_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Degree × Interpolation</div></div>
+     </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->

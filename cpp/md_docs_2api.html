@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLoess: fastLoess C++ API Reference</title>
+<title>fastLoess: API</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,16 +97,27 @@ $(document).ready(function(){initNavTree('md_docs_2api.html',''); initResizable(
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">fastLoess C++ API Reference</div></div>
+  <div class="headertitle"><div class="title">API</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md21"></a> The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.</p>
+<div class="textblock"><p><a class="anchor" id="autotoc_md24"></a> The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.</p>
 <blockquote class="doxtable">
-<p>&zwj;<b>StreamingLoess</b> and <b>OnlineLoess</b> are documented separately: cpp-streaming.md, cpp-online.md </p>
+<p>&zwj;<b>StreamingLoess</b> and <b>OnlineLoess</b> are documented separately: <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a>, <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> </p>
 </blockquote>
-<h1><a class="anchor" id="autotoc_md22"></a>
+<h1><a class="anchor" id="autotoc_md25"></a>
+When to Use</h1>
+<ul>
+<li>Dataset fits in memory</li>
+<li>Need intervals, cross-validation, or diagnostics</li>
+<li>Processing complete files</li>
+</ul>
+<div class="image">
+<object type="image/svg+xml" data="gap_handling.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Gap Handling</div></div>
+    <h1><a class="anchor" id="autotoc_md26"></a>
 Classes</h1>
-<h2><a class="anchor" id="autotoc_md23"></a>
+<h2><a class="anchor" id="autotoc_md27"></a>
 &lt;tt&gt;fastloess::Loess&lt;/tt&gt;</h2>
 <p>The <code>Loess</code> class allows configuring the LOESS parameters once and fitting multiple datasets using those parameters.</p>
 <p><b>Constructor:</b></p>
@@ -165,11 +176,11 @@ Classes</h1>
 <li>Fits the model to the provided <code>x</code> and <code>y</code> data vectors.</li>
 <li>Returns an <code>Expected&lt;LoessResult&gt;</code> — call <code>.has_value()</code> to check for errors, <code>.value()</code> to unwrap (throws <code>LoessError</code> on failure).</li>
 </ul>
-<p>See cpp-streaming.md for the <code>StreamingLoess</code> class.</p>
-<p>See cpp-online.md for the <code>OnlineLoess</code> class.</p>
-<h1><a class="anchor" id="autotoc_md24"></a>
+<p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a> for the <code>StreamingLoess</code> class.</p>
+<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for the <code>OnlineLoess</code> class.</p>
+<h1><a class="anchor" id="autotoc_md28"></a>
 Options Structures</h1>
-<h2><a class="anchor" id="autotoc_md25"></a>
+<h2><a class="anchor" id="autotoc_md29"></a>
 &lt;tt&gt;LoessOptions&lt;/tt&gt;</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -231,12 +242,12 @@ Options Structures</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>cv_seed</code>   </td><td class="markdownTableBodyNone"><code>uint64_t</code>   </td><td class="markdownTableBodyNone"><code>0</code>   </td><td class="markdownTableBodyNone">Random seed for cross-validation shuffling (Batch only; 0 = random)   </td></tr>
 </table>
-<p>See cpp-streaming.md for <code>StreamingOptions</code>.</p>
-<p>See cpp-online.md for <code>OnlineOptions</code>.</p>
-<h1><a class="anchor" id="autotoc_md26"></a>
+<p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a> for <code>StreamingOptions</code>.</p>
+<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for <code>OnlineOptions</code>.</p>
+<h1><a class="anchor" id="autotoc_md30"></a>
 Result Structure</h1>
-<p>See cpp-online.md for <code>OnlineOutput</code>.</p>
-<h2><a class="anchor" id="autotoc_md27"></a>
+<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a> for <code>OnlineOutput</code>.</p>
+<h2><a class="anchor" id="autotoc_md31"></a>
 &lt;tt&gt;fastloess::LoessResult&lt;/tt&gt;</h2>
 <p>A RAII wrapper around the C result struct <code>fastloess_CppLoessResult</code>.</p>
 <table class="markdownTable">
@@ -283,7 +294,7 @@ Result Structure</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>dimensions()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Number of predictor dimensions   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md28"></a>
+<h2><a class="anchor" id="autotoc_md32"></a>
 &lt;tt&gt;fastloess::Diagnostics&lt;/tt&gt;</h2>
 <p>All accessors are const methods (not public fields):</p>
 <table class="markdownTable">
@@ -304,11 +315,11 @@ Result Structure</h1>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>aicc()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">AICc (NaN if not computed)   </td></tr>
 </table>
-<h1><a class="anchor" id="autotoc_md29"></a>
+<h1><a class="anchor" id="autotoc_md33"></a>
 Options</h1>
-<h2><a class="anchor" id="autotoc_md30"></a>
+<h2><a class="anchor" id="autotoc_md34"></a>
 weight_function</h2>
-<p><em>See: Weight Functions</em></p>
+<p><em>See: <a class="el" href="md_docs_2kernels.html">Weight Functions</a></em></p>
 <ul>
 <li><code>"tricube"</code> (default)</li>
 <li><code>"epanechnikov"</code></li>
@@ -318,42 +329,42 @@ weight_function</h2>
 <li><code>"triangle"</code> (alias: <code>"triangular"</code>)</li>
 <li><code>"cosine"</code></li>
 </ul>
-<h2><a class="anchor" id="autotoc_md31"></a>
+<h2><a class="anchor" id="autotoc_md35"></a>
 robustness_method</h2>
-<p><em>See: Robustness</em></p>
+<p><em>See: <a class="el" href="md_docs_2robustness.html">Robustness</a></em></p>
 <ul>
 <li><code>"bisquare"</code> (default; alias: <code>"biweight"</code>)</li>
 <li><code>"huber"</code></li>
 <li><code>"talwar"</code></li>
 </ul>
-<h2><a class="anchor" id="autotoc_md32"></a>
+<h2><a class="anchor" id="autotoc_md36"></a>
 boundary_policy</h2>
-<p><em>See: Boundary Handling</em></p>
+<p><em>See: <a class="el" href="md_docs_2boundary.html">Boundary Handling</a></em></p>
 <ul>
 <li><code>"extend"</code> (default; alias: <code>"pad"</code>)</li>
 <li><code>"reflect"</code> (alias: <code>"mirror"</code>)</li>
 <li><code>"zero"</code></li>
 <li><code>"noboundary"</code> (alias: <code>"none"</code>)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md33"></a>
+<h2><a class="anchor" id="autotoc_md37"></a>
 scaling_method</h2>
-<p><em>See: Scaling Methods</em></p>
+<p><em>See: <a class="el" href="md_docs_2scaling.html">Scaling Methods</a></em></p>
 <ul>
 <li><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</li>
 <li><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</li>
 <li><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md34"></a>
+<h2><a class="anchor" id="autotoc_md38"></a>
 zero_weight_fallback</h2>
-<p><em>See: Parameters</em></p>
+<p><em>See: <a class="el" href="md_docs_2parameters.html">Parameters</a></em></p>
 <ul>
 <li><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</li>
 <li><code>"return_original"</code> (alias: <code>"original"</code>)</li>
 <li><code>"return_none"</code> (alias: <code>"none"</code>)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md35"></a>
+<h2><a class="anchor" id="autotoc_md39"></a>
 degree</h2>
-<p><em>See: Polynomial Degree</em></p>
+<p><em>See: <a class="el" href="md_docs_2degree.html">Polynomial Degree</a></em></p>
 <ul>
 <li><code>"constant"</code> or <code>"0"</code> (degree 0)</li>
 <li><code>"linear"</code> or <code>"1"</code> (default, degree 1)</li>
@@ -361,9 +372,9 @@ degree</h2>
 <li><code>"cubic"</code> or <code>"3"</code> (degree 3)</li>
 <li><code>"quartic"</code> or <code>"4"</code> (degree 4)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md36"></a>
+<h2><a class="anchor" id="autotoc_md40"></a>
 distance_metric</h2>
-<p><em>See: Multivariate LOESS</em></p>
+<p><em>See: <a class="el" href="md_docs_2dimensions.html">Multivariate LOESS</a></em></p>
 <ul>
 <li><code>"normalized"</code> (default — scales each dimension by its range; alias: <code>"norm"</code>)</li>
 <li><code>"euclidean"</code> (alias: <code>"euclid"</code>)</li>
@@ -372,20 +383,20 @@ distance_metric</h2>
 <li><code>"minkowski"</code> (Euclidean when no suffix; use <code>"minkowski:p"</code> for custom p, e.g. <code>"minkowski:3"</code>)</li>
 <li><code>"weighted"</code> plus <code>weighted_metric_weights</code> for per-dimension scaling (alias: <code>"weighted_euclidean"</code>)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md37"></a>
+<h2><a class="anchor" id="autotoc_md41"></a>
 surface_mode</h2>
-<p><em>See: Parameters</em></p>
+<p><em>See: <a class="el" href="md_docs_2parameters.html">Parameters</a></em></p>
 <ul>
 <li><code>"interpolation"</code> (default — faster, uses a spatial grid)</li>
 <li><code>"direct"</code> (fits every point exactly; slower but more accurate)</li>
 </ul>
-<h2><a class="anchor" id="autotoc_md38"></a>
+<h2><a class="anchor" id="autotoc_md42"></a>
 merge_strategy</h2>
-<p>See cpp-streaming.md.</p>
-<h2><a class="anchor" id="autotoc_md39"></a>
+<p>See <a class="el" href="md_docs_2api-streaming.html">cpp-streaming.md</a>.</p>
+<h2><a class="anchor" id="autotoc_md43"></a>
 update_mode</h2>
-<p>See cpp-online.md.</p>
-<h1><a class="anchor" id="autotoc_md40"></a>
+<p>See <a class="el" href="md_docs_2api-online.html">cpp-online.md</a>.</p>
+<h1><a class="anchor" id="autotoc_md44"></a>
 Example</h1>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &quot;fastloess.hpp&quot;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>

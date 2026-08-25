@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLoess: quickstart</title>
+<title>fastLoess: Quick Start</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,14 +97,12 @@ $(document).ready(function(){initNavTree('md_docs_2quickstart.html',''); initRes
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">quickstart</div></div>
+  <div class="headertitle"><div class="title">Quick Start</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1><a class="anchor" id="autotoc_md247"></a>
-Quick Start</h1>
-<p>Get up and running with LOESS in minutes.</p>
-<h2><a class="anchor" id="autotoc_md248"></a>
-Basic Smoothing</h2>
+<div class="textblock"><p><a class="anchor" id="autotoc_md253"></a> Get up and running with LOESS in minutes.</p>
+<h1><a class="anchor" id="autotoc_md254"></a>
+Basic Smoothing</h1>
 <p>Smooth a noisy sine wave — the kind of signal where LOESS shines. Each example recovers the underlying trend from 100 points of Gaussian noise.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -129,8 +127,8 @@ Basic Smoothing</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">First smoothed: 0.0280537  (true: 0)</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md250"></a>
-With Confidence Intervals</h2>
+<h1><a class="anchor" id="autotoc_md256"></a>
+With Confidence Intervals</h1>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -164,8 +162,8 @@ With Confidence Intervals</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.256958, 0.397793]</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md252"></a>
-Handling Outliers</h2>
+<h1><a class="anchor" id="autotoc_md258"></a>
+Handling Outliers</h1>
 <p>LOESS can robustly handle outliers through iterative reweighting:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -197,8 +195,8 @@ Handling Outliers</h2>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md254"></a>
-Streaming Mode</h2>
+<h1><a class="anchor" id="autotoc_md260"></a>
+Streaming Mode</h1>
 <p>For datasets too large to fit in memory, stream them in fixed-size chunks with overlap.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
@@ -234,27 +232,27 @@ Streaming Mode</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">Smoothed 100 points</div>
 </div><!-- fragment --><hr  />
-<h2><a class="anchor" id="autotoc_md256"></a>
-Next Steps</h2>
+<h1><a class="anchor" id="autotoc_md262"></a>
+Next Steps</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Topic   </th><th class="markdownTableHeadNone">Link    </th></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone">How LOESS works   </td><td class="markdownTableBodyNone"><a class="el" href="index.html#md_docs_2concepts">Concepts</a>    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">All parameters explained   </td><td class="markdownTableBodyNone">Parameters    </td></tr>
+<td class="markdownTableBodyNone">All parameters explained   </td><td class="markdownTableBodyNone"><a class="el" href="md_docs_2parameters.html">Parameters</a>    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Batch vs Streaming vs Online   </td><td class="markdownTableBodyNone">Execution Modes    </td></tr>
+<td class="markdownTableBodyNone">Batch vs Streaming vs Online   </td><td class="markdownTableBodyNone"><a class="el" href="md_docs_2adapter-choice.html">Execution Modes</a>    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Polynomial degree choices   </td><td class="markdownTableBodyNone">Degree    </td></tr>
+<td class="markdownTableBodyNone">Polynomial degree choices   </td><td class="markdownTableBodyNone"><a class="el" href="md_docs_2degree.html">Degree</a>    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Multivariate smoothing   </td><td class="markdownTableBodyNone">Dimensions    </td></tr>
+<td class="markdownTableBodyNone">Multivariate smoothing   </td><td class="markdownTableBodyNone"><a class="el" href="md_docs_2dimensions.html">Dimensions</a>    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Edge handling   </td><td class="markdownTableBodyNone">Boundary    </td></tr>
+<td class="markdownTableBodyNone">Edge handling   </td><td class="markdownTableBodyNone"><a class="el" href="md_docs_2boundary.html">Boundary</a>    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Outlier handling in depth   </td><td class="markdownTableBodyNone">Robustness    </td></tr>
+<td class="markdownTableBodyNone">Outlier handling in depth   </td><td class="markdownTableBodyNone"><a class="el" href="md_docs_2robustness.html">Robustness</a>    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone">Full API per language   </td><td class="markdownTableBodyNone">API Reference   </td></tr>
+<td class="markdownTableBodyNone">Full API per language   </td><td class="markdownTableBodyNone"><a class="el" href="md_docs_2api.html">API Reference</a>   </td></tr>
 </table>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

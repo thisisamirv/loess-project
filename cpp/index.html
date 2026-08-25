@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLoess: fastLoess</title>
+<title>fastLoess: Concepts</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,15 +97,12 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">fastLoess </div></div>
+  <div class="headertitle"><div class="title">Concepts </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="md_docs_2concepts"></a></p>
-<h1><a class="anchor" id="autotoc_md61"></a>
-Concepts</h1>
-<p>Understanding how LOESS works and when to use it.</p>
-<h2><a class="anchor" id="autotoc_md62"></a>
-What is LOESS?</h2>
+<div class="textblock"><p><a class="anchor" id="md_docs_2concepts"></a> Understanding how LOESS works and when to use it.</p>
+<h1><a class="anchor" id="autotoc_md62"></a>
+What is LOESS?</h1>
 <p><b>LOESS</b> (Locally Estimated Scatterplot Smoothing) is a nonparametric regression method that fits smooth curves through scatter plots without assuming a global functional form.</p>
 <p>Unlike parametric methods (linear regression, polynomial fitting), LOESS adapts locally to the data structure, making it ideal for:</p>
 <ul>
@@ -115,10 +112,13 @@ What is LOESS?</h2>
 <li><b>Genomic smoothing</b> — Smooth methylation, ChIP-seq, or expression data</li>
 </ul>
 <hr  />
-<h2><a class="anchor" id="autotoc_md64"></a>
-How It Works</h2>
-<p>&lt;figure markdown="span"&gt; <img src="../assets/diagrams/loess_concept.svg" alt="LOESS Smoothing Concept" style="pointer-events: none;" class="inline"/> &lt;figcaption&gt;LOESS fits local weighted regressions at each point, using a focused local window around each evaluation point&lt;/figcaption&gt; &lt;/figure&gt;</p>
-<p>For each point in your data, LOESS:</p>
+<h1><a class="anchor" id="autotoc_md64"></a>
+How It Works</h1>
+<div class="image">
+<object type="image/svg+xml" data="loess_concept.svg" style="pointer-events: none;"></object>
+<div class="caption">
+LOESS fits local weighted regressions at each point, using a focused local window around each evaluation point</div></div>
+    <p>For each point in your data, LOESS:</p>
 <ol type="1">
 <li><b>Selects neighbors</b> — Choose the nearest points (controlled by <code>fraction</code>)</li>
 <li><b>Assigns weights</b> — Closer points get higher weights (using a kernel function)</li>
@@ -127,11 +127,14 @@ How It Works</h2>
 <li><b>Iterates</b> (optional) — Reweight points based on residuals to reduce outlier influence</li>
 </ol>
 <hr  />
-<h2><a class="anchor" id="autotoc_md66"></a>
-The Fraction Parameter</h2>
+<h1><a class="anchor" id="autotoc_md66"></a>
+The Fraction Parameter</h1>
 <p>The <code>fraction</code> (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.</p>
-<p>&lt;figure markdown="span"&gt; <img src="../assets/diagrams/fraction_comparison.svg" alt="Fraction Effect" style="pointer-events: none;" class="inline"/> &lt;figcaption&gt;Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure&lt;/figcaption&gt; &lt;/figure&gt;</p>
-<table class="markdownTable">
+<div class="image">
+<object type="image/svg+xml" data="fraction_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure</div></div>
+    <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Fraction   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">When to Use    </th></tr>
 <tr class="markdownTableRowOdd">
@@ -145,11 +148,14 @@ The Fraction Parameter</h2>
 </table>
 <p>!!! tip "Rule of Thumb" Start with <code>fraction=0.67</code> (the default) and adjust based on visual inspection. Use cross-validation for automated selection.</p>
 <hr  />
-<h2><a class="anchor" id="autotoc_md68"></a>
-Robustness Iterations</h2>
+<h1><a class="anchor" id="autotoc_md68"></a>
+Robustness Iterations</h1>
 <p>Standard LOESS is sensitive to outliers. <b>Robustness iterations</b> downweight points with large residuals:</p>
-<p>&lt;figure markdown="span"&gt; <img src="../assets/diagrams/robust_iter_comparison.svg" alt="Robustness Effect" style="pointer-events: none;" class="inline"/> &lt;figcaption&gt;Non-robust LOESS (iterations=0) vs robust LOESS — outlier influence is suppressed through iterative reweighting&lt;/figcaption&gt; &lt;/figure&gt;</p>
-<table class="markdownTable">
+<div class="image">
+<object type="image/svg+xml" data="robust_iter_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Non-robust LOESS (iterations=0) vs robust LOESS — outlier influence is suppressed through iterative reweighting</div></div>
+    <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Iterations   </th><th class="markdownTableHeadNone">Effect   </th><th class="markdownTableHeadNone">When to Use    </th></tr>
 <tr class="markdownTableRowOdd">
@@ -162,10 +168,13 @@ Robustness Iterations</h2>
 <td class="markdownTableBodyNone"><b>7+</b>   </td><td class="markdownTableBodyNone">Very strong   </td><td class="markdownTableBodyNone">Heavy contamination   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md70"></a>
-Confidence vs Prediction Intervals</h2>
-<p>&lt;figure markdown="span"&gt; <img src="../assets/diagrams/intervals_comparison.svg" alt="Intervals" style="pointer-events: none;" class="inline"/> &lt;figcaption&gt;Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (wide, new-point uncertainty)&lt;/figcaption&gt; &lt;/figure&gt;</p>
-<table class="markdownTable">
+<h1><a class="anchor" id="autotoc_md70"></a>
+Confidence vs Prediction Intervals</h1>
+<div class="image">
+<object type="image/svg+xml" data="intervals_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (wide, new-point uncertainty)</div></div>
+    <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Interval Type   </th><th class="markdownTableHeadNone">What It Represents   </th><th class="markdownTableHeadNone">Width    </th></tr>
 <tr class="markdownTableRowOdd">
@@ -178,8 +187,8 @@ Confidence vs Prediction Intervals</h2>
 <li>Use <b>prediction intervals</b> to show where new data points might fall</li>
 </ul>
 <hr  />
-<h2><a class="anchor" id="autotoc_md72"></a>
-Execution Modes</h2>
+<h1><a class="anchor" id="autotoc_md72"></a>
+Execution Modes</h1>
 <p>Choose the right mode based on your use case:</p>
 <div class="fragment"><div class="line">flowchart TD</div>
 <div class="line">    A[Data Source] --&gt; B{Fits in memory?}</div>
@@ -201,8 +210,8 @@ Execution Modes</h2>
 <td class="markdownTableBodyNone"><b>Online</b>   </td><td class="markdownTableBodyNone">Real-time data   </td><td class="markdownTableBodyNone">Fixed window   </td><td class="markdownTableBodyNone">Incremental updates   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md74"></a>
-Key Advantages</h2>
+<h1><a class="anchor" id="autotoc_md74"></a>
+Key Advantages</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Feature   </th><th class="markdownTableHeadNone">LOESS   </th><th class="markdownTableHeadNone">Polynomial Regression   </th><th class="markdownTableHeadNone">Moving Average    </th></tr>
@@ -218,18 +227,18 @@ Key Advantages</h2>
 <td class="markdownTableBodyNone">Handles irregular sampling   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✓   </td><td class="markdownTableBodyNone">✗   </td></tr>
 </table>
 <hr  />
-<h2><a class="anchor" id="autotoc_md76"></a>
-Next Steps</h2>
+<h1><a class="anchor" id="autotoc_md76"></a>
+Next Steps</h1>
 <ul>
 <li><a class="el" href="md_docs_2quickstart.html">Quick Start</a> — See it in action</li>
-<li>Parameters — All configuration options</li>
-<li>Polynomial Degree — Constant, linear, quadratic fits</li>
-<li>Multivariate LOESS — 2D and n-D smoothing</li>
-<li>Boundary Handling — Edge bias reduction strategies</li>
-<li>Robustness — Outlier downweighting methods</li>
-<li>Scaling Methods — MAD, MAR, Mean scale estimation</li>
-<li>Merge Strategies — Chunk reconciliation in Streaming mode</li>
-<li>Tutorials — Application-specific guides </li>
+<li><a class="el" href="md_docs_2parameters.html">Parameters</a> — All configuration options</li>
+<li><a class="el" href="md_docs_2degree.html">Polynomial Degree</a> — Constant, linear, quadratic fits</li>
+<li><a class="el" href="md_docs_2dimensions.html">Multivariate LOESS</a> — 2D and n-D smoothing</li>
+<li><a class="el" href="md_docs_2boundary.html">Boundary Handling</a> — Edge bias reduction strategies</li>
+<li><a class="el" href="md_docs_2robustness.html">Robustness</a> — Outlier downweighting methods</li>
+<li><a class="el" href="md_docs_2scaling.html">Scaling Methods</a> — MAD, MAR, Mean scale estimation</li>
+<li><a class="el" href="md_docs_2merge.html">Merge Strategies</a> — Chunk reconciliation in Streaming mode</li>
+<li><a class="el" href="md_docs_2quickstart.html">Tutorials</a> — Application-specific guides </li>
 </ul>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>fastLoess: OnlineLoess — C++ API Reference</title>
+<title>fastLoess: OnlineLoess API</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -97,13 +97,24 @@ $(document).ready(function(){initNavTree('md_docs_2api-online.html',''); initRes
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">OnlineLoess — C++ API Reference</div></div>
+  <div class="headertitle"><div class="title">OnlineLoess API</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md3"></a> See also: fastLoess C++ API Reference</p>
+<div class="textblock"><p><a class="anchor" id="autotoc_md3"></a> See also: <a class="el" href="md_docs_2api.html">fastLoess</a></p>
 <h1><a class="anchor" id="autotoc_md4"></a>
+When to Use</h1>
+<ul>
+<li>Data arrives incrementally (sensors, streams)</li>
+<li>Need real-time smoothed values</li>
+<li>Fixed memory budget</li>
+</ul>
+<div class="image">
+<object type="image/svg+xml" data="online_comparison.svg" style="pointer-events: none;"></object>
+<div class="caption">
+Online Adapter</div></div>
+    <h1><a class="anchor" id="autotoc_md5"></a>
 Class</h1>
-<h2><a class="anchor" id="autotoc_md5"></a>
+<h2><a class="anchor" id="autotoc_md6"></a>
 &lt;tt&gt;fastloess::OnlineLoess&lt;/tt&gt;</h2>
 <p>The <code>OnlineLoess</code> class updates the model incrementally with new data points.</p>
 <p><b>Constructor:</b></p>
@@ -175,9 +186,9 @@ Class</h1>
 </div><!-- fragment --><ul>
 <li>Adds a single point to the sliding window. Returns <code>Expected&lt;OnlineOutput&gt;</code> — check <code>result.has_value()</code> to see whether the window is ready.</li>
 </ul>
-<h1><a class="anchor" id="autotoc_md6"></a>
+<h1><a class="anchor" id="autotoc_md7"></a>
 Options Structure</h1>
-<h2><a class="anchor" id="autotoc_md7"></a>
+<h2><a class="anchor" id="autotoc_md8"></a>
 &lt;tt&gt;OnlineOptions&lt;/tt&gt; (inherits &lt;tt&gt;LoessOptions&lt;/tt&gt;)</h2>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -187,13 +198,13 @@ Options Structure</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>min_points</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone"><code>3</code>   </td><td class="markdownTableBodyNone">Min points before smoothing starts    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone"><code>"full"</code>   </td><td class="markdownTableBodyNone">Update mode (<code>"full"</code> or <code>"incremental"</code>)    </td></tr>
+<td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone"><code>"incremental"</code>   </td><td class="markdownTableBodyNone">Update mode (<code>"full"</code> or <code>"incremental"</code>)    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>parallel</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone"><code>false</code>   </td><td class="markdownTableBodyNone">Enable parallel execution (off by default; online LOESS fits one point at a time)   </td></tr>
 </table>
-<h1><a class="anchor" id="autotoc_md8"></a>
+<h1><a class="anchor" id="autotoc_md9"></a>
 Result Structure</h1>
-<h2><a class="anchor" id="autotoc_md9"></a>
+<h2><a class="anchor" id="autotoc_md10"></a>
 &lt;tt&gt;fastloess::OnlineOutput&lt;/tt&gt;</h2>
 <p>Returned (inside <code>Expected</code>) by <code>add_point()</code>. Check <code>has_value()</code> before reading fields.</p>
 <table class="markdownTable">
@@ -212,15 +223,19 @@ Result Structure</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>iterations_used()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Robustness iterations performed (−1 if N/A)   </td></tr>
 </table>
-<h1><a class="anchor" id="autotoc_md10"></a>
+<h1><a class="anchor" id="autotoc_md11"></a>
 Options</h1>
-<h2><a class="anchor" id="autotoc_md11"></a>
+<h2><a class="anchor" id="autotoc_md12"></a>
 update_mode</h2>
-<p><em>See: Execution Modes</em></p>
-<ul>
-<li><code>"full"</code> (default; alias: <code>"resmooth"</code>)</li>
-<li><code>"incremental"</code> (alias: <code>"single"</code>) </li>
-</ul>
+<p><em>See: <a class="el" href="md_docs_2adapter-choice.html">Execution Modes</a></em></p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Mode   </th><th class="markdownTableHeadNone">Alias   </th><th class="markdownTableHeadNone">Behavior   </th><th class="markdownTableHeadNone">Speed    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"incremental"</code> (default)   </td><td class="markdownTableBodyNone"><code>"single"</code>   </td><td class="markdownTableBodyNone">Update only affected fits   </td><td class="markdownTableBodyNone">Faster    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"full"</code>   </td><td class="markdownTableBodyNone"><code>"resmooth"</code>   </td><td class="markdownTableBodyNone">Recompute entire window   </td><td class="markdownTableBodyNone">More accurate   </td></tr>
+</table>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

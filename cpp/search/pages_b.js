@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['quickstart_0',['quickstart',['../md_docs_2quickstart.html',1,'']]]
+  ['onlineloess_20api_0',['OnlineLoess API',['../md_docs_2api-online.html',1,'']]]
 ];
