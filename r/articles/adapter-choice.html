@@ -108,17 +108,26 @@ data sizes and processing needs:</p>
 <div class="section level2">
 <h2 id="quick-decision-guide">Quick Decision Guide<a class="anchor" aria-label="anchor" href="#quick-decision-guide"></a>
 </h2>
-<ul>
-<li>
-<strong>Data fits in memory and needs intervals or CV</strong> → <a href="batch.html">Batch Mode</a>
-</li>
-<li>
-<strong>Data too large for memory or in chunks</strong> → <a href="streaming.html">Streaming Mode</a>
-</li>
-<li>
-<strong>Data arrives point-by-point in real time</strong> → <a href="online.html">Online Mode</a>
-</li>
-</ul>
+<table class="table">
+<thead><tr class="header">
+<th>Situation</th>
+<th>Mode</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>Data fits in memory; needs intervals or CV</td>
+<td>Batch</td>
+</tr>
+<tr class="even">
+<td>Data too large for memory or arrives in chunks</td>
+<td>Streaming</td>
+</tr>
+<tr class="odd">
+<td>Data arrives point-by-point in real time</td>
+<td>Online</td>
+</tr>
+</tbody>
+</table>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
