@@ -1,4 +1,4 @@
-# OnlineLoess — Python API Reference
+# OnlineLoess API
 
 See also: [fastLoess](python.md)
 

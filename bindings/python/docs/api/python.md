@@ -1,4 +1,4 @@
-# fastLoess Python API Reference
+# fastLoess
 
 The Python bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 

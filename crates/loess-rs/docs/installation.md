@@ -6,11 +6,11 @@ Install the LOESS library for your preferred language.
 ```toml
 # loess-rs (no_std compatible)
 [dependencies]
-loess-rs = "0.9"
+loess-rs = "*"
 
 # loess_rs (parallel + GPU)
 [dependencies]
-loess_rs = { version = "0.9", features = ["cpu"] }
+loess_rs = { version = "*", features = ["cpu"] }
 ```
 
 ## Feature Flags

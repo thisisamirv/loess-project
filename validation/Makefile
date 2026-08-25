@@ -14,11 +14,11 @@ CARGO_DIR := fastLoess
 
 fastloess-visual:
 	@echo "Building and running fastLoess visual..."
-	@cargo run --manifest-path $(CARGO_DIR)/Cargo.toml --bin visual --release
+	@cd $(CARGO_DIR) && cargo run --bin visual --release
 
 fastloess-validate:
 	@echo "Building and running fastLoess validate..."
-	@cargo run --manifest-path $(CARGO_DIR)/Cargo.toml --bin validate --release
+	@cd $(CARGO_DIR) && cargo run --bin validate --release
 
 r-validate:
 	@echo "Running R reference validation..."

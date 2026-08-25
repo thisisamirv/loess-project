@@ -77,6 +77,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+First smoothed value (custom weights): 0.38960937887234354
+```
+
 ---
 
 ## Validation Rules

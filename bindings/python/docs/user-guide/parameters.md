@@ -519,7 +519,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(return_residuals=True)
 result = model.fit(x, y)
-print(result.residuals)
+print(result.residuals[:5])
 :::
 
 ---
