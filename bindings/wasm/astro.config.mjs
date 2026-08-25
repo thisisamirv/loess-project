@@ -37,14 +37,6 @@ export default defineConfig({
                     ],
                 },
                 {
-                    label: 'Usage',
-                    items: [
-                        { label: 'Batch', slug: 'batch' },
-                        { label: 'Streaming', slug: 'streaming' },
-                        { label: 'Online', slug: 'online' },
-                    ],
-                },
-                {
                     label: 'Analysis',
                     items: [
                         { label: 'Intervals', slug: 'intervals' },
@@ -57,6 +49,7 @@ export default defineConfig({
                         { label: 'Kernels', slug: 'kernels' },
                         { label: 'Robustness', slug: 'robustness' },
                         { label: 'Scaling', slug: 'scaling' },
+                        { label: 'Custom Weights', slug: 'custom-weights' },
                         { label: 'Boundary', slug: 'boundary' },
                         { label: 'Merge', slug: 'merge' },
                     ],
