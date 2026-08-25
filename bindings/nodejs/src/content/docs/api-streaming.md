@@ -1,7 +1,7 @@
 ---
 title: StreamingLoess — Node.js API Reference
 ---
-See also: [fastLoess Node.js API Reference](api.md)
+See also: [fastLoess](api.md)
 
 ## When to Use
 

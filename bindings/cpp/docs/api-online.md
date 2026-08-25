@@ -1,6 +1,6 @@
 # OnlineLoess API
 
-See also: [fastLoess C++ API Reference](api.md)
+See also: [fastLoess](api.md)
 
 ## When to Use
 

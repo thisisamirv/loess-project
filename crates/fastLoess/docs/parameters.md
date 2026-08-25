@@ -619,25 +619,13 @@ First smoothed value (single-threaded): 0.3851521721408434
 
 ### custom_weights
 
-Per-observation case weights that scale each point's contribution to nearby local fits.
-Equivalent to the `weights` argument in R's `stats::loess`.
-
-**Formula:** `w_ij = custom_weights[j] × K(d_ij / h) × robustness_j`
-
-where `K` is the distance kernel and `robustness_j` is the robustness weight (if `iterations > 0`).
-
-| Value | Effect |
-| --- | --- |
-| `1.0` for all | Equivalent to no weights (uniform) |
-| `0.0` | Excludes the observation from all local fits |
-| `> 1.0` | Increases the observation's influence |
-| `0 < v < 1.0` | Reduces the observation's influence |
+Per-observation weights applied before distance and robustness weighting. Only
+available in the **Batch** adapter.
 
 !!! note "Batch only"
-    `custom_weights` is applied in **Batch** mode only. It is ignored in Streaming and Online modes.
+    `custom_weights` is silently ignored in Streaming and Online adapters.
 
-!!! warning "Length must match y"
-    The weights vector must have the same length as `y`. A mismatch returns an error.
+See [Custom Weights](custom-weights.md) for a full discussion.
 
 ```rust
 use fastLoess::prelude::*;

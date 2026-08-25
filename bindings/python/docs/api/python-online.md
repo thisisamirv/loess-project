@@ -1,6 +1,14 @@
 # OnlineLoess — Python API Reference
 
-See also: [fastLoess Python API Reference](python.md)
+See also: [fastLoess](python.md)
+
+## When to Use
+
+- Data arrives incrementally (sensors, streams)
+- Need real-time smoothed values
+- Fixed memory budget
+
+![Online Adapter](../assets/diagrams/online_comparison.svg)
 
 ## Class
 
@@ -34,7 +42,7 @@ result = online.add_point(x[2], y[2])
 print(result)
 :::
 
-* Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `None` while the window is still filling.
+- Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `None` while the window is still filling.
 
 ## Options Structure
 
@@ -44,7 +52,7 @@ print(result)
 | --- | --- | --- | --- |
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
 | `min_points` | `int` | `3` | Min points before smoothing starts |
-| `update_mode` | `str` | `"full"` | Update mode (`"full"` or `"incremental"`) |
+| `update_mode` | `str` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 | `parallel` | `bool` | `False` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Result Structure
@@ -67,5 +75,7 @@ Returned by `add_point()` once the window has enough points (`None` until then).
 
 *See: [Execution Modes](../user-guide/adapters.md)*
 
-* `"full"` (default; alias: `"resmooth"`)
-* `"incremental"` (alias: `"single"`)
+| Mode | Alias | Behavior | Speed |
+| --- | --- | --- | --- |
+| `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
+| `"full"` | `"resmooth"` | Recompute entire window | More accurate |

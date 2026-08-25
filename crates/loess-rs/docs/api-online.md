@@ -98,7 +98,7 @@ Returned inside `Ok(Some(...))` by `add_point()`. `None` while the window is sti
 | --- | --- | --- | --- |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `3` | Min points before smoothing starts |
-| `update_mode(...)` | `update_mode` | `"incremental"` | Update strategy |
+| `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 | `parallel(bool)` | `bool` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
 ## Options

@@ -135,7 +135,7 @@ Incremental updates with a sliding window for real-time data.
 | Parameter | Default | Description |
 | --- | --- | --- |
 | `window_capacity` | 1000 | Max points in window |
-| `min_points` | 2 | Points before output starts |
+| `min_points` | 3 | Points before output starts |
 | `update_mode` | `"incremental"` | Update strategy |
 
 ### Update Modes

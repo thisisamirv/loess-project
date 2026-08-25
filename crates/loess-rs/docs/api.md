@@ -17,7 +17,7 @@ Both crates expose the same three entry types via their `prelude`: `Loess` for b
 > **StreamingLoess** and **OnlineLoess** are documented separately: [rust-streaming.md](api-streaming.md), [rust-online.md](api-online.md)
 
 ```text
-use loess_rs::prelude::*;  // or: use loess_rs::prelude::*;
+use loess_rs::prelude::*;  // or: use fastLoess::prelude::*;
 ```
 
 ### `Loess` (Batch)

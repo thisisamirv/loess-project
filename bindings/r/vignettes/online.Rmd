@@ -16,20 +16,20 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 Maintains a sliding window and processes each incoming point immediately.
 
-![Online adapter comparison](../man/figures/online_comparison.svg)
+![Online Adapter](../man/figures/online_comparison.svg)
 
 ## When to Use
 
-- Real-time data streams (sensors, logs)
-- Each point must be smoothed as it arrives
-- Memory-bounded processing with a fixed window
+- Data arrives incrementally (sensors, streams)
+- Need real-time smoothed values
+- Fixed memory budget
 
 ## Parameters
 
 | Parameter | Default | Description |
 | --- | --- | --- |
 | `window_capacity` | 1000 | Max points in sliding window |
-| `min_points` | 2 | Minimum points before output |
+| `min_points` | 3 | Minimum points before output |
 | `update_mode` | `"incremental"` | `"incremental"` or `"full"` refit |
 
 ## Example
@@ -50,6 +50,7 @@ for (i in seq_along(times)) {
     result <- add_point(model, times[i], temperatures[i])
     if (!is.null(result))
         cat(sprintf("Time %d: %.2f\n", times[i], result$y))
+    if (i >= 10) break  # print only the first few outputs
 }
 ```
 

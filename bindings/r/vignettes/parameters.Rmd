@@ -45,7 +45,7 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 | **overlap** | 500 | [0, chunk) | Overlap between chunks | Streaming |
 | **merge_strategy** | `"weighted_average"` | 4 | Chunk merge | Streaming |
 | **window_capacity** | 1000 | [3, ∞) | Max window size | Online |
-| **min_points** | 2 | [2, window] | Min before output | Online |
+| **min_points** | 3 | [2, window] | Min before output | Online |
 | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
 
 ---

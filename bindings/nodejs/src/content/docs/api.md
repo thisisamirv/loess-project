@@ -3,6 +3,8 @@ title: fastLoess Node.js API Reference
 ---
 The Node.js bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
+> **StreamingLoess** and **OnlineLoess** are documented separately: [nodejs-streaming.md](api-streaming.md), [nodejs-online.md](api-online.md)
+
 ## When to Use
 
 - Dataset fits in memory
