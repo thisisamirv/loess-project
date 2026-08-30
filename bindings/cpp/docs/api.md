@@ -1,8 +1,10 @@
+\page api API
+
 # API
 
 The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLoess** and **OnlineLoess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
+> **StreamingLoess** and **OnlineLoess** are documented separately: \subpage api_streaming, \subpage api_online
 
 ## When to Use Batch Adapter
 

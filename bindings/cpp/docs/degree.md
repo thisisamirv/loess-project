@@ -1,3 +1,5 @@
+\page degree Polynomial Degree
+
 # Polynomial Degree
 
 Degree of the local polynomial fitted at each point.

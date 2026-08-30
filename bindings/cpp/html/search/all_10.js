@@ -1,0 +1,20 @@
+var searchData=
+[
+  ['r_5fsquared_0',['r_squared',['../structfastloess___cpp_loess_result.html#a132c7200f95c66d78c681cdf8a9761f7',1,'fastloess_CppLoessResult::r_squared'],['../classfastloess_1_1_diagnostics.html#a894a806a8edb615ade1ded3399592d3f',1,'fastloess::Diagnostics::r_squared()']]],
+  ['readme_2emd_1',['README.md',['../_r_e_a_d_m_e_8md.html',1,'']]],
+  ['real_20time_20processing_2',['Real-Time Processing',['../use_case_real_time.html',1,'use_cases']]],
+  ['residual_3',['residual',['../structfastloess___cpp_online_output.html#ad4fc60fa0b68f44096ed1c554eb9924c',1,'fastloess_CppOnlineOutput::residual'],['../classfastloess_1_1_online_output.html#a14c856c99b4e20083c45389658a4eef0',1,'fastloess::OnlineOutput::residual()']]],
+  ['residual_5fscale_4',['residual_scale',['../structfastloess___cpp_loess_result.html#aa803f8ac7529eb3b2489dd43a712824f',1,'fastloess_CppLoessResult::residual_scale'],['../classfastloess_1_1_loess_result.html#aff88b38a8b7739a2070beef38d44fafb',1,'fastloess::LoessResult::residual_scale()']]],
+  ['residual_5fsd_5',['residual_sd',['../structfastloess___cpp_loess_result.html#aba441ea40d1363efb9d173326f6d08f9',1,'fastloess_CppLoessResult::residual_sd'],['../classfastloess_1_1_diagnostics.html#a55ee35065ab54566916827f6d8689979',1,'fastloess::Diagnostics::residual_sd()']]],
+  ['residuals_6',['residuals',['../structfastloess___cpp_loess_result.html#a316904a4afd0de4b5d5e290d9506cfb3',1,'fastloess_CppLoessResult::residuals'],['../classfastloess_1_1_loess_result.html#a58487505a731609b39152b0db373f1bd',1,'fastloess::LoessResult::residuals()']]],
+  ['return_5fdiagnostics_7',['return_diagnostics',['../structfastloess_1_1_loess_options.html#ad267d7371766a25e5e0cc6ea00364788',1,'fastloess::LoessOptions::return_diagnostics'],['../structfastloess_1_1_online_options.html#ab65b35f5a81458c4c66fe42a1e45d7b1',1,'fastloess::OnlineOptions::return_diagnostics']]],
+  ['return_5fresiduals_8',['return_residuals',['../structfastloess_1_1_loess_options.html#a16a8a2d2b8bf4591ddbbbde38a616899',1,'fastloess::LoessOptions::return_residuals'],['../structfastloess_1_1_online_options.html#a7e0be3a1a9646db9c96d657d531601ed',1,'fastloess::OnlineOptions::return_residuals']]],
+  ['return_5frobustness_5fweights_9',['return_robustness_weights',['../structfastloess_1_1_loess_options.html#ab02690d842092a13adbb68657ced2b27',1,'fastloess::LoessOptions::return_robustness_weights'],['../structfastloess_1_1_online_options.html#afba616fbfa150494ea07fe5f0deada8e',1,'fastloess::OnlineOptions::return_robustness_weights']]],
+  ['return_5fse_10',['return_se',['../structfastloess_1_1_loess_options.html#a8f9f8e56e2816fd53e23b2d3a1e09893',1,'fastloess::LoessOptions::return_se'],['../structfastloess_1_1_online_options.html#ac14b2ee3a68f379ad27918517fce4329',1,'fastloess::OnlineOptions::return_se']]],
+  ['rmse_11',['rmse',['../structfastloess___cpp_loess_result.html#a13f5cb3c9802d5cc72c750ede98ba546',1,'fastloess_CppLoessResult::rmse'],['../classfastloess_1_1_diagnostics.html#aa230ca77ba7b6e08c8508bc8066d2f34',1,'fastloess::Diagnostics::rmse()']]],
+  ['robustness_12',['Robustness',['../robustness.html',1,'customization']]],
+  ['robustness_2emd_13',['robustness.md',['../robustness_8md.html',1,'']]],
+  ['robustness_5fmethod_14',['robustness_method',['../structfastloess_1_1_loess_options.html#a4180453aa40ed05fc69716c7b9697fa8',1,'fastloess::LoessOptions::robustness_method'],['../structfastloess_1_1_online_options.html#ada7e1859a04205e0b9b1eb0e3b258915',1,'fastloess::OnlineOptions::robustness_method']]],
+  ['robustness_5fweight_15',['robustness_weight',['../structfastloess___cpp_online_output.html#a38085fbe282174f85b9c048804bbe016',1,'fastloess_CppOnlineOutput::robustness_weight'],['../classfastloess_1_1_online_output.html#a430dc4c2dbdea19ca6585ad22b35519d',1,'fastloess::OnlineOutput::robustness_weight()']]],
+  ['robustness_5fweights_16',['robustness_weights',['../structfastloess___cpp_loess_result.html#a5b10ae9c119ef91d4867e3810b77fdeb',1,'fastloess_CppLoessResult::robustness_weights'],['../classfastloess_1_1_loess_result.html#ac004d6e81b5837657f20e45382c95544',1,'fastloess::LoessResult::robustness_weights()']]]
+];

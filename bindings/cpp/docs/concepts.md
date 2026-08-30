@@ -1,3 +1,5 @@
+\page concepts Concepts
+
 # Concepts
 
 Understanding how LOESS works and when to use it.

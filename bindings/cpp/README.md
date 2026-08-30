@@ -21,7 +21,7 @@ The `loess-project` also offers bindings for Rust, Python, R, Julia, Node.js, We
 
 ## Installation & Documentation
 
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/loess-project/cpp/md_docs_2installation.html) for detailed installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/loess-project/cpp/installation.html) for detailed installation instructions.
 >
 > 📚 [View the full documentation](https://thisisamirv.github.io/loess-project/cpp/)
 
@@ -36,7 +36,7 @@ The `loess-project` also offers bindings for Rust, Python, R, Julia, Node.js, We
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-Read more about how LOESS works in the [Concepts](https://thisisamirv.github.io/loess-project/cpp/md_docs_2concepts.html).
+Read more about how LOESS works in the [Concepts](https://thisisamirv.github.io/loess-project/cpp/concepts.html).
 
 > **Note:** For a **LOWESS** implementation, use [`lowess-project`](https://github.com/thisisamirv/lowess-project).
 
@@ -48,7 +48,7 @@ Read more about how LOESS works in the [Concepts](https://thisisamirv.github.io/
 
 The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is typically **5–20x faster** than R's `loess` in serial mode, and up to **200x faster** on large datasets with parallel execution.
 
-For more details on the performance comparison, see the [Benchmarks](https://thisisamirv.github.io/loess-project/cpp/md_docs_2benchmarks.html) page.
+For more details on the performance comparison, see the [Benchmarks](https://thisisamirv.github.io/loess-project/cpp/benchmarks.html) page.
 
 ### Robustness
 

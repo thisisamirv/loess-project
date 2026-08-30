@@ -8,6 +8,7 @@ PROJECT_NAME           = "fastloess-cpp"
 PROJECT_BRIEF          = "High-performance LOESS smoothing — C++ API"
 OUTPUT_DIRECTORY       = .
 CREATE_SUBDIRS         = NO
+TOC_INCLUDE_HEADINGS   = 0
 
 # ---------------------------------------------------------------------------
 

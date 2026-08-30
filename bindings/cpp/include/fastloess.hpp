@@ -462,6 +462,9 @@ public:
     return *this;
   }
 
+  /// @param x_values Predictor values, flattened row-major across
+  /// dimensions (length must be a non-zero multiple of `y_values.size()`).
+  /// @param y_values Response values.
   /// @param custom_weights Per-observation weights (empty = no weights). Each
   /// weight multiplies the local kernel weight:
   /// w_ij = custom_weights[j] * K(d_ij/h) * rob_j. Analogous to the

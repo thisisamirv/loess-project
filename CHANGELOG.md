@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced `adapter-choice.md`/`adapters.md`'s "Overview" flowchart (mermaid in most bindings/crates, ASCII art in the C++ docs) with an equivalent decision table, unifying on a single rendering-agnostic format across every binding/crate.
 - Consolidated `parameters.md`/the auto-generated `@autodocs` parameter reference across every binding and crate (C++, Julia, Node.js, Python, WASM, `fastLoess`, `loess-rs`): merged its unique content (fraction/iterations choice guidance, and inline `zero_weight_fallback`/`surface_mode` behavior tables) into each `api.md`'s builder/options tables (Julia: into the `Loess`/`StreamingLoess`/`OnlineLoess` docstrings), and removed `parameters.md` itself along with its docs-site navigation entries, `doc::parameters` rustdoc module, and cross-references (now pointing at `api.md`) — the parameter tables, kernel/robustness/boundary/scaling/degree/distance-metric option lists, and interval/custom-weights code examples it duplicated already live on their own dedicated pages.
 
+**C++:**
+
+- Restructured the Doxygen site's navigation, which previously listed all ~20 doc pages flat in the sidebar. Added explicit `\page` IDs to every page and grouped them into five nested hub pages (`Getting Started`, `User Guide`, `Customization`, `Advanced`, `Use Cases`) via `\subpage`, mirroring the category grouping already used by the R (`_pkgdown.yml`) and Node.js/WASM (Starlight sidebar) docs sites. `StreamingLoess`/`OnlineLoess` now nest under `API` the same way, and `Customization` additionally includes `Polynomial Degree`/`Multivariate LOESS`. `Benchmarks` and `News` remain standalone top-level pages. Updated `README.md`'s hardcoded Doxygen URLs (`md_docs_2*.html`) to the new explicit page names.
+
 **R:**
 
 - Removed the `rfastloess-package` pkgdown topic, which duplicated the adapter class list, and unexported the internal `Nullable()` helper.

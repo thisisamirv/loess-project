@@ -1,3 +1,5 @@
+\page api_online OnlineLoess API
+
 # OnlineLoess API
 
 See also: [fastLoess](api.md)

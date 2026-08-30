@@ -1,3 +1,5 @@
+\page dimensions Multivariate LOESS
+
 # Multivariate LOESS
 
 Smoothing over multiple predictor dimensions simultaneously.

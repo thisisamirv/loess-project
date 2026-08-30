@@ -1,3 +1,5 @@
+\page quickstart Quick Start
+
 # Quick Start
 
 Get up and running with LOESS in minutes.

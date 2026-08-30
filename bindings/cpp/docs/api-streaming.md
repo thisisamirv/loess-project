@@ -1,3 +1,5 @@
+\page api_streaming StreamingLoess API
+
 # StreamingLoess API
 
 See also: [fastLoess](api.md)
