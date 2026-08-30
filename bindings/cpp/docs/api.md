@@ -2,15 +2,13 @@
 
 The C++ bindings provide a modern, object-oriented wrapper around the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLoess** and **OnlineLoess** are documented separately: [cpp-streaming.md](api-streaming.md), [cpp-online.md](api-online.md)
+> **StreamingLoess** and **OnlineLoess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
 
 ## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
-
-![Gap Handling](gap_handling.svg)
 
 ## Classes
 
@@ -86,9 +84,9 @@ int main() {
 - Fits the model to the provided `x` and `y` data vectors.
 - Returns an `Expected<LoessResult>` — call `.has_value()` to check for errors, `.value()` to unwrap (throws `LoessError` on failure).
 
-See [cpp-streaming.md](api-streaming.md) for the `StreamingLoess` class.
+See [Streaming Adapter](api-streaming.md) for the `StreamingLoess` class.
 
-See [cpp-online.md](api-online.md) for the `OnlineLoess` class.
+See [Online Adapter](api-online.md) for the `OnlineLoess` class.
 
 ## Options Structures
 
@@ -143,13 +141,13 @@ See [cpp-online.md](api-online.md) for the `OnlineLoess` class.
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-See [cpp-streaming.md](api-streaming.md) for `StreamingOptions`.
+See [Streaming Adapter](api-streaming.md) for `StreamingOptions`.
 
-See [cpp-online.md](api-online.md) for `OnlineOptions`.
+See [Online Adapter](api-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-See [cpp-online.md](api-online.md) for `OnlineOutput`.
+See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 ### fastloess::LoessResult
 
@@ -272,14 +270,6 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 | --- | --- | --- | --- |
 | `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
 | `"direct"` | Evaluate at every query point | Slower | Full precision |
-
-### merge_strategy
-
-See [cpp-streaming.md](api-streaming.md).
-
-### update_mode
-
-See [cpp-online.md](api-online.md).
 
 ## Example
 

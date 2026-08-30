@@ -95,4 +95,4 @@ When `dimensions > 1` you can also control how inter-point distances are compute
 | `"minkowski:p"` | Generalised Minkowski ($L_p$) norm | Custom distance geometry |
 | `"weighted"` | Per-dimension weighted Euclidean | Domain-specific importance |
 
-See [API Reference](../api/python.md#distance_metric) for the full list of options per language.
+See [API Reference](../api/api.md#distance_metric) for the full list of options per language.

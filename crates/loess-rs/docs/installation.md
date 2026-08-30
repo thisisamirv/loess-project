@@ -8,9 +8,9 @@ Install the LOESS library for your preferred language.
 [dependencies]
 loess-rs = "*"
 
-# loess_rs (parallel + GPU)
+# fastLoess (parallel + GPU)
 [dependencies]
-loess_rs = { version = "*", features = ["cpu"] }
+fastLoess = { version = "*", features = ["cpu"] }
 ```
 
 ## Feature Flags
@@ -18,8 +18,8 @@ loess_rs = { version = "*", features = ["cpu"] }
 | Crate | Feature | Description |
 | --- | --- | --- |
 | `loess-rs` | `std` | Enable standard library (default) |
-| `loess_rs` | `cpu` | Enable CPU parallelism via Rayon |
-| `loess_rs` | `gpu` | Enable GPU acceleration via wgpu (beta) |
+| `fastLoess` | `cpu` | Enable CPU parallelism via Rayon |
+| `fastLoess` | `gpu` | Enable GPU acceleration via wgpu (beta) |
 
 ---
 

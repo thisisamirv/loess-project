@@ -8,13 +8,11 @@ The Rust crates provide the core implementation and high-performance extensions.
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
 
-![Gap Handling](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/fastLoess/assets/diagrams/gap_handling.svg)
-
 ## Structs & Usage
 
 Both crates expose the same three entry types via their `prelude`: `Loess` for batch mode, `StreamingLoess` for chunked processing, and `OnlineLoess` for sliding-window updates.
 
-> **StreamingLoess** and **OnlineLoess** are documented separately: [rust-streaming.md](api-streaming.md), [rust-online.md](api-online.md)
+> **StreamingLoess** and **OnlineLoess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
 
 ```text
 use fastLoess::prelude::*;  // or: use loess_rs::prelude::*;
@@ -64,9 +62,9 @@ Iterations used: Some(3)
 - Fits the model to the provided `x` and `y` arrays.
 - Returns `Result<LoessResult<T>, LoessError>`.
 
-See [rust-streaming.md](api-streaming.md) for the `StreamingLoess` struct.
+See [Streaming Adapter](api-streaming.md) for the `StreamingLoess` struct.
 
-See [rust-online.md](api-online.md) for the `OnlineLoess` struct.
+See [Online Adapter](api-online.md) for the `OnlineLoess` struct.
 
 ## Builder Configuration
 
@@ -91,7 +89,6 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
 | `return_se()` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
-| `parallel(bool)` | `bool` | `true` | Enable parallel execution |
 | `degree(...)` | `degree` | `"linear"` | Polynomial degree — see [Polynomial Degree](degree.md) |
 | `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions — see [Multivariate LOESS](dimensions.md) |
 | `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
@@ -123,9 +120,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-See [rust-streaming.md](api-streaming.md) for Streaming Options.
+See [Streaming Adapter](api-streaming.md) for Streaming Options.
 
-See [rust-online.md](api-online.md) for Online Options.
+See [Online Adapter](api-online.md) for Online Options.
 
 ## Result Structure
 
@@ -248,14 +245,6 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 | --- | --- | --- | --- |
 | `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
 | `"direct"` | Evaluate at every query point | Slower | Full precision |
-
-### merge_strategy
-
-See [rust-streaming.md](api-streaming.md).
-
-### update_mode
-
-See [rust-online.md](api-online.md).
 
 ## Example
 

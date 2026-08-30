@@ -2,15 +2,13 @@
 
 The Python bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLoess** and **OnlineLoess** are documented separately: [python-streaming.md](python-streaming.md), [python-online.md](python-online.md)
+> **StreamingLoess** and **OnlineLoess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
 
 ## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
-
-![Gap Handling](../assets/diagrams/gap_handling.svg)
 
 ## Classes
 
@@ -45,9 +43,9 @@ print(result)
 - `custom_weights`: Optional array of per-observation weights. All values must be ≥ 0 and length must match `x`. Batch only.
 - Returns a `LoessResult` object containing the smoothed values and optional diagnostics.
 
-See [python-streaming.md](python-streaming.md) for the `StreamingLoess` class.
+See [Streaming Adapter](api-streaming.md) for the `StreamingLoess` class.
 
-See [python-online.md](python-online.md) for the `OnlineLoess` class.
+See [Online Adapter](api-online.md) for the `OnlineLoess` class.
 
 ## Options Structures
 
@@ -102,13 +100,13 @@ See [python-online.md](python-online.md) for the `OnlineLoess` class.
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-See [python-streaming.md](python-streaming.md) for `StreamingOptions`.
+See [Streaming Adapter](api-streaming.md) for `StreamingOptions`.
 
-See [python-online.md](python-online.md) for `OnlineOptions`.
+See [Online Adapter](api-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-See [python-online.md](python-online.md) for `OnlineOutput`.
+See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 ### `LoessResult`
 
@@ -227,14 +225,6 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 | --- | --- | --- | --- |
 | `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
 | `"direct"` | Evaluate at every query point | Slower | Full precision |
-
-### merge_strategy
-
-See [python-streaming.md](python-streaming.md).
-
-### update_mode
-
-See [python-online.md](python-online.md).
 
 ## Example
 

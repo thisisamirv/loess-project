@@ -133,7 +133,7 @@ print.OnlineLoess <- function(x, ...) {
 #' x <- seq(0, 10, length.out = 100)
 #' y <- sin(x) + rnorm(100, 0, 0.1)
 #' model <- Loess(fraction = 0.2)
-#' result <- fit(model, x, y)
+#' fit(model, x, y)
 #' @export
 fit <- function(model, ...) UseMethod("fit")
 
@@ -170,7 +170,7 @@ fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
 #' x <- seq(0, 10, length.out = 100)
 #' y <- sin(x) + rnorm(100, 0, 0.1)
 #' model <- StreamingLoess(fraction = 0.2, chunk_size = 50L)
-#' res <- process_chunk(model, x[1:50], y[1:50])
+#' process_chunk(model, x[1:50], y[1:50])
 #' @export
 process_chunk <- function(model, ...) UseMethod("process_chunk")
 
@@ -206,7 +206,7 @@ process_chunk.StreamingLoess <- function(model, x, y, ...) {
 #' y <- sin(x) + rnorm(100, 0, 0.1)
 #' model <- StreamingLoess(fraction = 0.2, chunk_size = 50L)
 #' invisible(process_chunk(model, x[1:50], y[1:50]))
-#' final <- finalize(model)
+#' finalize(model)
 #' @export
 finalize <- function(model, ...) UseMethod("finalize")
 
@@ -228,7 +228,7 @@ finalize.StreamingLoess <- function(model, ...) {
 #'   \code{min_points} have been added.
 #' @examples
 #' model <- OnlineLoess(fraction = 0.2, window_capacity = 20L)
-#' result <- add_point(model, 1.0, 0.5)
+#' add_point(model, 1.0, 0.5)
 #' @export
 add_point <- function(model, ...) UseMethod("add_point")
 

@@ -1,6 +1,6 @@
 # OnlineLoess API
 
-See also: [fastLoess](python.md)
+See also: [fastLoess](api.md)
 
 ## When to Use
 

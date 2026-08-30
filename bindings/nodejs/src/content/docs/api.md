@@ -3,15 +3,13 @@ title: fastLoess Node.js API Reference
 ---
 The Node.js bindings provide a high-performance interface to the core Rust library, mirroring the Rust API structure.
 
-> **StreamingLoess** and **OnlineLoess** are documented separately: [nodejs-streaming.md](api-streaming.md), [nodejs-online.md](api-online.md)
+> **StreamingLoess** and **OnlineLoess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
 
 ## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics
 - Processing complete files
-
-![Gap Handling](../assets/diagrams/gap_handling.svg)
 
 ## Classes
 
@@ -80,9 +78,9 @@ Async fit y[0]: 0.3274
 
 - Async variant of `fit()`. Returns a `Promise` that resolves to a `LoessResult`.
 
-See [nodejs-streaming.md](api-streaming.md) for the `StreamingLoess` class.
+See [Streaming Adapter](api-streaming.md) for the `StreamingLoess` class.
 
-See [nodejs-online.md](api-online.md) for the `OnlineLoess` class.
+See [Online Adapter](api-online.md) for the `OnlineLoess` class.
 
 ## Options Structures
 
@@ -137,13 +135,13 @@ See [nodejs-online.md](api-online.md) for the `OnlineLoess` class.
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-See [nodejs-streaming.md](api-streaming.md) for `StreamingOptions`.
+See [Streaming Adapter](api-streaming.md) for `StreamingOptions`.
 
-See [nodejs-online.md](api-online.md) for `OnlineOptions`.
+See [Online Adapter](api-online.md) for `OnlineOptions`.
 
 ## Result Structure
 
-See [nodejs-online.md](api-online.md) for `OnlineOutput`.
+See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 ### `LoessResult`
 
@@ -262,14 +260,6 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 | --- | --- | --- | --- |
 | `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
 | `"direct"` | Evaluate at every query point | Slower | Full precision |
-
-### merge_strategy
-
-See [nodejs-streaming.md](api-streaming.md).
-
-### update_mode
-
-See [nodejs-online.md](api-online.md).
 
 ## Example
 

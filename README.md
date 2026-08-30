@@ -33,8 +33,6 @@
 
 The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Estimated Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
 
-> [!IMPORTANT]
->
 > The `loess-project` contains a complete ecosystem for LOESS smoothing:
 >
 > - **[`loess-rs`](https://crates.io/crates/loess-rs)** - Core single-threaded Rust implementation with `no_std` support
@@ -74,7 +72,6 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-> [!TIP]
 > **Note:** For a **LOWESS** implementation, use [`lowess-project`](https://github.com/thisisamirv/lowess-project).
 
 ---

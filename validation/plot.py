@@ -680,37 +680,6 @@ def plot_higher_degree_comparison():
     save_figure(figure, "higher_degree_comparison.svg")
 
 
-def plot_gap_handling():
-    """Plot smoothing across a region with missing observations."""
-    if not check_file("gap_handling.csv"):
-        return
-    print("Plotting Gap Handling...")
-
-    df = pd.read_csv(get_input_path("gap_handling.csv"))
-    figure, ax = plt.subplots(figsize=(10, 6))
-
-    ax.plot(
-        df["x"],
-        df["y_noisy"],
-        "o",
-        markersize=4,
-        alpha=0.6,
-        color="#3b82f6",
-        label="Available Data",
-    )
-    ax.plot(df["x"], df["y_smooth"], "r-", lw=3, label="LOESS Interpolation")
-    ax.set_title(
-        "LOESS Gap Handling (Bridging Missing Regions)", fontsize=14, fontweight="bold"
-    )
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.axvspan(4.0, 7.0, color="gray", alpha=0.1, label="Missing Data Region")
-    ax.legend()
-    ax.grid(True, alpha=0.3)
-
-    save_figure(figure, "gap_handling.svg")
-
-
 def plot_cv_comparison():
     """Compare cross-validation score curves and their resulting fits."""
     if not check_file("cv_scores.csv") or not check_file("cv_fits.csv"):
@@ -1222,7 +1191,6 @@ def build_plot_targets():
         "robust_method": plot_robust_method_comparison,
         "boundary": plot_boundary_policy_comparison,
         "higher_degree": plot_higher_degree_comparison,
-        "gap": plot_gap_handling,
         "cv": plot_cv_comparison,
         "surface": plot_surface_mode_comparison,
         "scaling": plot_scaling_comparison,
