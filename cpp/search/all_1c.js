@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['zero_0',['Zero',['../md_docs_2boundary.html#autotoc_md74',1,'']]],
-  ['zero_5fweight_5ffallback_1',['zero_weight_fallback',['../md_docs_2api.html#autotoc_md56',1,'zero_weight_fallback'],['../md_docs_2parameters.html#autotoc_md241',1,'zero_weight_fallback']]]
+  ['x64_0',['x64',['../md_docs_2installation.html#autotoc_md144',1,'Pre-built Binaries (Linux (x64))'],['../md_docs_2installation.html#autotoc_md145',1,'Pre-built Binaries (macOS (x64))'],['../md_docs_2installation.html#autotoc_md146',1,'Pre-built Binaries (Windows (x64))']]]
 ];

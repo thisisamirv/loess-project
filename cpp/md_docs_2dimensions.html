@@ -24,6 +24,8 @@ MathJax.Hub.Config({
 </script>
 <script type="text/javascript" async="async" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -100,10 +102,10 @@ $(document).ready(function(){initNavTree('md_docs_2dimensions.html',''); initRes
   <div class="headertitle"><div class="title">Multivariate LOESS</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md145"></a> Smoothing over multiple predictor dimensions simultaneously.</p>
-<h1><a class="anchor" id="autotoc_md146"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md134"></a> Smoothing over multiple predictor dimensions simultaneously.</p>
+<h1><a class="anchor" id="autotoc_md135"></a>
 Overview</h1>
-<p>Standard LOESS operates on a single predictor $x$. Setting <code>dimensions &gt; 1</code> extends the neighbourhood search and local polynomial fit into an $n$-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets.</p>
+<p>Standard LOESS operates on a single predictor \(x\). Setting <code>dimensions &gt; 1</code> extends the neighbourhood search and local polynomial fit into an \(n\)-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets.</p>
 <div class="image">
 <object type="image/svg+xml" data="multivariate_loess.svg" style="pointer-events: none;"></object>
 <div class="caption">
@@ -118,9 +120,11 @@ Multivariate LOESS</div></div>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>3+</code>   </td><td class="markdownTableBodyNone">High-dimensional regression   </td><td class="markdownTableBodyNone"><code>x</code>: n × d matrix   </td></tr>
 </table>
-<p>!!! warning "Computational cost" Neighbourhood search scales with $d$ dimensions. For <code>dimensions ≥ 3</code> keep <code>fraction</code> small and consider increasing <code>delta</code> to activate interpolation.</p>
+<blockquote class="doxtable">
+<p>&zwj;<b>Computational cost:</b> Neighbourhood search scales with \(d\) dimensions. For <code>dimensions ≥ 3</code> keep <code>fraction</code> small and consider increasing <code>delta</code> to activate interpolation. </p>
+</blockquote>
 <hr  />
-<h1><a class="anchor" id="autotoc_md148"></a>
+<h1><a class="anchor" id="autotoc_md136"></a>
 1D — Standard (Default)</h1>
 <p>Single predictor. No configuration required.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -144,9 +148,9 @@ Multivariate LOESS</div></div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.24731</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md150"></a>
+<h1><a class="anchor" id="autotoc_md138"></a>
 2D — Spatial Surface</h1>
-<p>Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ matrix as <code>x</code>.</p>
+<p>Two predictors (e.g., latitude/longitude, time/altitude). Pass an \(n \times 2\) matrix as <code>x</code>.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -175,7 +179,7 @@ Multivariate LOESS</div></div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 1.19329</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md152"></a>
+<h1><a class="anchor" id="autotoc_md140"></a>
 3D and Higher</h1>
 <p>Three or more predictors. The neighbourhood radius grows in each additional dimension, so a larger <code>fraction</code> (or smaller dataset) is typically needed.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -207,7 +211,7 @@ Multivariate LOESS</div></div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: -0.670791</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md154"></a>
+<h1><a class="anchor" id="autotoc_md142"></a>
 Distance Metrics for Multivariate Data</h1>
 <p>When <code>dimensions &gt; 1</code> you can also control how inter-point distances are computed.</p>
 <table class="markdownTable">
@@ -218,11 +222,11 @@ Distance Metrics for Multivariate Data</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>"euclidean"</code>   </td><td class="markdownTableBodyNone">Raw Euclidean distance   </td><td class="markdownTableBodyNone">Predictors already on same scale    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>"minkowski:p"</code>   </td><td class="markdownTableBodyNone">Generalised Minkowski ($L_p$) norm   </td><td class="markdownTableBodyNone">Custom distance geometry    </td></tr>
+<td class="markdownTableBodyNone"><code>"minkowski:p"</code>   </td><td class="markdownTableBodyNone">Generalised Minkowski ( \(L_p\)) norm   </td><td class="markdownTableBodyNone">Custom distance geometry    </td></tr>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>"weighted"</code>   </td><td class="markdownTableBodyNone">Per-dimension weighted Euclidean   </td><td class="markdownTableBodyNone">Domain-specific importance   </td></tr>
 </table>
-<p>See <a href="parameters.md#distance_metric">Parameters</a> for the full list of options per language. </p>
+<p>See <a href="api.md#distance_metric">API Reference</a> for the full list of options per language. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

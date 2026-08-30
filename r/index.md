@@ -40,6 +40,9 @@ repository](https://github.com/thisisamirv/loess-project).
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
+Read more about how LOESS works in the
+[Concepts](https://thisisamirv.github.io/loess-project/r/articles/concepts.html).
+
 > **Note:** For a **LOWESS** implementation, use
 > [`lowess-project`](https://github.com/thisisamirv/lowess-project).
 
@@ -139,12 +142,6 @@ All implementations are **numerical twins** of R’s `loess`:
 Contributions are welcome! Please see
 [CONTRIBUTING.md](https://github.com/thisisamirv/loess-project/blob/main/CONTRIBUTING.md)
 for more information.
-
-## Changelog
-
-See
-[CHANGELOG.md](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md)
-for a history of changes.
 
 ## License
 

@@ -24,6 +24,8 @@ MathJax.Hub.Config({
 </script>
 <script type="text/javascript" async="async" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -100,8 +102,8 @@ $(document).ready(function(){initNavTree('md_docs_2benchmarks.html',''); initRes
   <div class="headertitle"><div class="title">Benchmarks</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md63"></a> </p>
-<h1><a class="anchor" id="autotoc_md64"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md56"></a> </p>
+<h1><a class="anchor" id="autotoc_md57"></a>
 CPU Benchmarks</h1>
 <p>Speedup relative to R's <code>stats::loess</code> (higher is better):</p>
 <table class="markdownTable">
@@ -132,7 +134,7 @@ CPU Benchmarks</h1>
 </table>
 <p><em>Averages across all sizes within each category.</em></p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md66"></a>
+<h1><a class="anchor" id="autotoc_md59"></a>
 Reproducing Benchmarks</h1>
 <p>Use <code>std::chrono</code> to time serial vs parallel runs:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -177,9 +179,9 @@ Reproducing Benchmarks</h1>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Speedup:  &quot;</span> &lt;&lt; serial_ms / parallel_ms &lt;&lt; <span class="stringliteral">&quot;×\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">Serial:   2.35397 ms</div>
-<div class="line">Parallel: 3.2703 ms</div>
-<div class="line">Speedup:  0.719802Ã—</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Serial:   3.33907 ms</div>
+<div class="line">Parallel: 4.00577 ms</div>
+<div class="line">Speedup:  0.833565Ã—</div>
 </div><!-- fragment --> </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

@@ -10,16 +10,8 @@
 
 ### User Guide
 
-- [Parameters
-  Reference](https://thisisamirv.github.io/loess-project/r/articles/parameters.md):
 - [Choosing an Execution
   Mode](https://thisisamirv.github.io/loess-project/r/articles/adapter-choice.md):
-- [Batch Mode
-  (Loess)](https://thisisamirv.github.io/loess-project/r/articles/batch.md):
-- [Streaming Mode
-  (StreamingLoess)](https://thisisamirv.github.io/loess-project/r/articles/streaming.md):
-- [Online Mode
-  (OnlineLoess)](https://thisisamirv.github.io/loess-project/r/articles/online.md):
 - [Polynomial
   Degree](https://thisisamirv.github.io/loess-project/r/articles/degree.md):
 - [Multivariate

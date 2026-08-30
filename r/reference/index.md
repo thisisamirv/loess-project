@@ -2,11 +2,8 @@
 
 ## Core LOESS Interface
 
-Main R6 classes for LOESS smoothing.
+Main S3 classes for LOESS smoothing.
 
-- [`rfastloess`](https://thisisamirv.github.io/loess-project/r/reference/rfastloess-package.md)
-  [`rfastloess-package`](https://thisisamirv.github.io/loess-project/r/reference/rfastloess-package.md)
-  : rfastloess: High-performance LOESS Smoothing for R
 - [`Loess()`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md)
   : LOESS Batch Smoothing
 - [`StreamingLoess()`](https://thisisamirv.github.io/loess-project/r/reference/StreamingLoess.md)
@@ -36,10 +33,3 @@ Objects returned by fit methods and helper functions.
   : Print OnlineLoess Model
 - [`print(`*`<StreamingLoess>`*`)`](https://thisisamirv.github.io/loess-project/r/reference/print.StreamingLoess.md)
   : Print StreamingLoess Model
-
-## Types
-
-Helper types for documentation.
-
-- [`Nullable()`](https://thisisamirv.github.io/loess-project/r/reference/Nullable.md)
-  : Nullable Value Wrapper

@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['quick_20start_0',['Quick Start',['../md_docs_2quickstart.html',1,'']]]
+  ['polynomial_20degree_0',['Polynomial Degree',['../md_docs_2degree.html',1,'']]],
+  ['processing_1',['Real-Time Processing',['../md_docs_2use-case-real-time.html',1,'']]]
 ];

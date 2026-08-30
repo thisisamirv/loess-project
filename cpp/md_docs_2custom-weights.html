@@ -24,6 +24,8 @@ MathJax.Hub.Config({
 </script>
 <script type="text/javascript" async="async" src="https://cdn.jsdelivr.net/npm/mathjax@2/MathJax.js"></script>
 <link href="doxygen.css" rel="stylesheet" type="text/css" />
+<link href="doxygen-awesome.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen-awesome-sidebar-only.css" rel="stylesheet" type="text/css"/>
 </head>
 <body>
 <div id="top"><!-- do not remove this div, it is closed by doxygen! -->
@@ -100,16 +102,20 @@ $(document).ready(function(){initNavTree('md_docs_2custom-weights.html',''); ini
   <div class="headertitle"><div class="title">Custom Weights</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md115"></a> Per-observation weights that encode data quality directly into the LOESS fit.</p>
-<h1><a class="anchor" id="autotoc_md116"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md106"></a> Per-observation weights that encode data quality directly into the LOESS fit.</p>
+<h1><a class="anchor" id="autotoc_md107"></a>
 How Custom Weights Work</h1>
 <p>Standard LOESS assigns equal prior trust to all observations. Custom weights let you override this assumption point by point — before any distance or robustness weighting is applied.</p>
-<p>The effective weight of observation $j$ in a local fit centred at $x_i$ is:</p>
-<p>$$w_{ij} = \text{custom_weights}[j] \times K!\left(\frac{d_{ij}}{h_i}\right) \times r_j$$</p>
-<p>where $K$ is the distance kernel, $h_i$ is the local bandwidth, and $r_j$ is the robustness weight from the current iteration.</p>
-<p>!!! note "Batch adapter only" <code>custom_weights</code> applies in <b>Batch</b> mode. It is silently ignored in Streaming and Online adapters.</p>
+<p>The effective weight of observation \(j\) in a local fit centred at \(x_i\) is:</p>
+<p class="formulaDsp">
+\[w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j\]
+</p>
+<p>where \(K\) is the distance kernel, \(h_i\) is the local bandwidth, and \(r_j\) is the robustness weight from the current iteration.</p>
+<blockquote class="doxtable">
+<p>&zwj;<b>Batch adapter only:</b> <code>custom_weights</code> applies in <b>Batch</b> mode. It is silently ignored in Streaming and Online adapters. </p>
+</blockquote>
 <hr  />
-<h1><a class="anchor" id="autotoc_md118"></a>
+<h1><a class="anchor" id="autotoc_md108"></a>
 When to Use Custom Weights</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -123,9 +129,9 @@ When to Use Custom Weights</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">Carefully calibrated measurement   </td><td class="markdownTableBodyNone"><code>&gt; 1.0</code>    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone">Measurement uncertainty $\sigma_i$   </td><td class="markdownTableBodyNone">$1 / \sigma_i^2$   </td></tr>
+<td class="markdownTableBodyNone">Measurement uncertainty \(\sigma_i\)   </td><td class="markdownTableBodyNone">\(1 / \sigma_i^2\)   </td></tr>
 </table>
-<h2><a class="anchor" id="autotoc_md119"></a>
+<h2><a class="anchor" id="autotoc_md109"></a>
 Custom Weights vs. Robustness Iterations</h2>
 <p>Both mechanisms handle unreliable data, but they serve different purposes:</p>
 <table class="markdownTable">
@@ -142,9 +148,9 @@ Custom Weights vs. Robustness Iterations</h2>
 </table>
 <p>They compose: you can use both simultaneously. Custom weights suppress <em>a priori</em> bad points; robustness iterations then handle any <em>residual</em> outliers that remain.</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md121"></a>
+<h1><a class="anchor" id="autotoc_md111"></a>
 Basic Usage</h1>
-<h2><a class="anchor" id="autotoc_md122"></a>
+<h2><a class="anchor" id="autotoc_md112"></a>
 Suppress a Known Outlier</h2>
 <p>Set the weight to <code>0</code> at the bad point — it is excluded from every local fit that would otherwise include it.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -170,7 +176,7 @@ Suppress a Known Outlier</h2>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.389609</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md124"></a>
+<h1><a class="anchor" id="autotoc_md114"></a>
 Validation Rules</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -184,13 +190,15 @@ Validation Rules</h1>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone">Uniform weights (<code>1.0</code> everywhere)   </td><td class="markdownTableBodyNone">Identical result to omitting weights   </td></tr>
 </table>
-<p>!!! warning "Zero-weight windows" If a local neighbourhood contains only zero-weight points, the fit at that centre point falls back to the behaviour specified by <code>zero_weight_fallback</code> (default: <code>"use_local_mean"</code>).</p>
+<blockquote class="doxtable">
+<p>&zwj;<b>Zero-weight windows:</b> If a local neighbourhood contains only zero-weight points, the fit at that centre point falls back to the behaviour specified by <code>zero_weight_fallback</code> (default: <code>"use_local_mean"</code>). </p>
+</blockquote>
 <hr  />
-<h1><a class="anchor" id="autotoc_md126"></a>
+<h1><a class="anchor" id="autotoc_md115"></a>
 See Also</h1>
 <ul>
 <li><a class="el" href="md_docs_2robustness.html">Robustness</a> — adaptive outlier downweighting via IRLS</li>
-<li><a href="parameters.md#custom_weights">Parameters</a> — full parameter reference </li>
+<li><a class="el" href="md_docs_2api.html">API Reference</a> — full parameter reference </li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

@@ -40,6 +40,9 @@ repository](https://github.com/thisisamirv/loess-project).
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
+Read more about how LOESS works in the
+[Concepts](https://thisisamirv.github.io/loess-project/r/articles/concepts.html).
+
 > **Note:** For a **LOWESS** implementation, use
 > [`lowess-project`](https://github.com/thisisamirv/lowess-project).
 
@@ -140,12 +143,6 @@ Contributions are welcome! Please see
 [CONTRIBUTING.md](https://github.com/thisisamirv/loess-project/blob/main/CONTRIBUTING.md)
 for more information.
 
-## Changelog
-
-See
-[CHANGELOG.md](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md)
-for a history of changes.
-
 ## License
 
 Licensed under
@@ -173,11 +170,8 @@ file or the BibTeX entry below:
 
 ## Core LOESS Interface
 
-Main R6 classes for LOESS smoothing.
+Main S3 classes for LOESS smoothing.
 
-- [`rfastloess`](https://thisisamirv.github.io/loess-project/r/reference/rfastloess-package.md)
-  [`rfastloess-package`](https://thisisamirv.github.io/loess-project/r/reference/rfastloess-package.md)
-  : rfastloess: High-performance LOESS Smoothing for R
 - [`Loess()`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md)
   : LOESS Batch Smoothing
 - [`StreamingLoess()`](https://thisisamirv.github.io/loess-project/r/reference/StreamingLoess.md)
@@ -208,13 +202,6 @@ Objects returned by fit methods and helper functions.
 - [`print(`*`<StreamingLoess>`*`)`](https://thisisamirv.github.io/loess-project/r/reference/print.StreamingLoess.md)
   : Print StreamingLoess Model
 
-## Types
-
-Helper types for documentation.
-
-- [`Nullable()`](https://thisisamirv.github.io/loess-project/r/reference/Nullable.md)
-  : Nullable Value Wrapper
-
 # Articles
 
 ### Introduction
@@ -227,16 +214,8 @@ Helper types for documentation.
 
 ### User Guide
 
-- [Parameters
-  Reference](https://thisisamirv.github.io/loess-project/r/articles/parameters.md):
 - [Choosing an Execution
   Mode](https://thisisamirv.github.io/loess-project/r/articles/adapter-choice.md):
-- [Batch Mode
-  (Loess)](https://thisisamirv.github.io/loess-project/r/articles/batch.md):
-- [Streaming Mode
-  (StreamingLoess)](https://thisisamirv.github.io/loess-project/r/articles/streaming.md):
-- [Online Mode
-  (OnlineLoess)](https://thisisamirv.github.io/loess-project/r/articles/online.md):
 - [Polynomial
   Degree](https://thisisamirv.github.io/loess-project/r/articles/degree.md):
 - [Multivariate

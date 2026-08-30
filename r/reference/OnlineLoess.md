@@ -1,6 +1,8 @@
 # LOESS Online Smoothing
 
-Create a stateful LOESS model for real-time online data.
+Create a stateful LOESS model for real-time online data. Maintains a
+sliding window and processes each incoming point immediately via
+[`add_point`](https://thisisamirv.github.io/loess-project/r/reference/add_point.md).
 
 ## Usage
 
@@ -40,15 +42,18 @@ OnlineLoess(
 
 - fraction:
 
-  Smoothing fraction (between 0 and 1).
+  Smoothing fraction, greater than 0 and up to 1. Default: 0.67. See
+  Details for guidance on choosing a value.
 
 - window_capacity:
 
-  Maximum number of points kept in the sliding window.
+  Maximum number of points kept in the sliding window, at least 3.
+  Default: 1000.
 
 - min_points:
 
-  Minimum number of points required before smoothing begins.
+  Minimum number of points required before smoothing begins, between 2
+  and `window_capacity`. Default: 3.
 
 - ...:
 
@@ -56,7 +61,8 @@ OnlineLoess(
 
 - iterations:
 
-  Number of robustness iterations (non-negative integer). Default: 3.
+  Number of robustness iterations, between 0 and 1000 (inclusive).
+  Default: 3.
 
 - weight_function:
 
@@ -145,13 +151,13 @@ OnlineLoess(
 
 - confidence_intervals:
 
-  Confidence level for confidence intervals (e.g., 0.95). `NULL`
-  (default) disables confidence intervals.
+  Confidence level for confidence intervals, greater than 0 and less
+  than 1 (e.g., 0.95). `NULL` (default) disables confidence intervals.
 
 - prediction_intervals:
 
-  Confidence level for prediction intervals (e.g., 0.95). `NULL`
-  (default) disables prediction intervals.
+  Confidence level for prediction intervals, greater than 0 and less
+  than 1 (e.g., 0.95). `NULL` (default) disables prediction intervals.
 
 - weighted_metric_weights:
 
@@ -178,6 +184,15 @@ OnlineLoess(
 ## Value
 
 An OnlineLoess object.
+
+## Details
+
+Best suited when data arrives incrementally (e.g. sensors or streams),
+real-time smoothed values are needed, or memory is fixed. For datasets
+that fit in memory, see
+[`Loess`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md);
+for large batches processed in chunks, see
+[`StreamingLoess`](https://thisisamirv.github.io/loess-project/r/reference/StreamingLoess.md).
 
 ## Examples
 

@@ -3,7 +3,6 @@
 <url><loc>https://thisisamirv.github.io/loess-project/r/CONTRIBUTING.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/LICENSE-text.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/adapter-choice.html</loc></url>
-<url><loc>https://thisisamirv.github.io/loess-project/r/articles/batch.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/benchmarks.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/boundary.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/concepts.html</loc></url>
@@ -16,12 +15,9 @@
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/intervals.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/kernels.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/merge.html</loc></url>
-<url><loc>https://thisisamirv.github.io/loess-project/r/articles/online.html</loc></url>
-<url><loc>https://thisisamirv.github.io/loess-project/r/articles/parameters.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/quickstart.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/robustness.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/scaling.html</loc></url>
-<url><loc>https://thisisamirv.github.io/loess-project/r/articles/streaming.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/use-case-genomics.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/use-case-real-time.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/use-case-time-series.html</loc></url>
@@ -29,7 +25,6 @@
 <url><loc>https://thisisamirv.github.io/loess-project/r/index.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/news/index.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/Loess.html</loc></url>
-<url><loc>https://thisisamirv.github.io/loess-project/r/reference/Nullable.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/OnlineLoess.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/StreamingLoess.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/add_point.html</loc></url>

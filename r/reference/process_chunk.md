@@ -39,5 +39,9 @@ A `LoessResult` for this chunk.
 x <- seq(0, 10, length.out = 100)
 y <- sin(x) + rnorm(100, 0, 0.1)
 model <- StreamingLoess(fraction = 0.2, chunk_size = 50L)
-res <- process_chunk(model, x[1:50], y[1:50])
+process_chunk(model, x[1:50], y[1:50])
+#> <LoessResult>
+#>   Points:            45 
+#>   Fraction Used:     0.2 
+#>   Iterations Used:   3 
 ```

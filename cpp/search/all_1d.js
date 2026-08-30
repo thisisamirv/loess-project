@@ -1,13 +1,5 @@
 var searchData=
 [
-  ['—_20local_20constant_0',['Degree 0 — Local Constant',['../md_docs_2degree.html#autotoc_md130',1,'']]],
-  ['—_20local_20cubic_1',['Degree 3 — Local Cubic',['../md_docs_2degree.html#autotoc_md136',1,'']]],
-  ['—_20local_20linear_20default_2',['Degree 1 — Local Linear (Default)',['../md_docs_2degree.html#autotoc_md132',1,'']]],
-  ['—_20local_20quadratic_3',['Degree 2 — Local Quadratic',['../md_docs_2degree.html#autotoc_md134',1,'']]],
-  ['—_20local_20quartic_4',['Degree 4 — Local Quartic',['../md_docs_2degree.html#autotoc_md138',1,'']]],
-  ['—_20mean_20absolute_20residual_5',['Mean — Mean Absolute Residual',['../md_docs_2scaling.html#autotoc_md307',1,'']]],
-  ['—_20median_20absolute_20deviation_20default_6',['MAD — Median Absolute Deviation (Default)',['../md_docs_2scaling.html#autotoc_md303',1,'']]],
-  ['—_20median_20absolute_20residual_7',['MAR — Median Absolute Residual',['../md_docs_2scaling.html#autotoc_md305',1,'']]],
-  ['—_20spatial_20surface_8',['2D — Spatial Surface',['../md_docs_2dimensions.html#autotoc_md150',1,'']]],
-  ['—_20standard_20default_9',['1D — Standard (Default)',['../md_docs_2dimensions.html#autotoc_md148',1,'']]]
+  ['zero_0',['Zero',['../md_docs_2boundary.html#autotoc_md67',1,'']]],
+  ['zero_5fweight_5ffallback_1',['zero_weight_fallback',['../md_docs_2api.html#autotoc_md51',1,'']]]
 ];
