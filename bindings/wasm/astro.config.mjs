@@ -32,7 +32,6 @@ export default defineConfig({
                 {
                     label: 'Model',
                     items: [
-                        { label: 'Parameters', slug: 'parameters' },
                         { label: 'Degree', slug: 'degree' },
                         { label: 'Dimensions', slug: 'dimensions' },
                     ],

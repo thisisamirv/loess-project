@@ -104,26 +104,44 @@ See [cpp-online.md](api-online.md) for the `OnlineLoess` class.
 | `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
-| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
-| `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
-| `prediction_intervals` | `double` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) |
+| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only; see [Custom Weights](custom-weights.md)) |
+| `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) — see [Intervals](intervals.md) |
+| `prediction_intervals` | `double` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) — see [Intervals](intervals.md) |
 | `return_diagnostics` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
 | `return_residuals` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights` | `bool` | `false` | Include robustness weights in result |
 | `return_se` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
 | `parallel` | `bool` | `true` | Enable parallel execution |
-| `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
-| `dimensions` | `int` | `1` | Number of predictor dimensions |
+| `degree` | `std::string` | `"linear"` | Polynomial degree of local fit — see [Polynomial Degree](degree.md) |
+| `dimensions` | `int` | `1` | Number of predictor dimensions — see [Multivariate LOESS](dimensions.md) |
 | `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `std::vector<double>` | `{}` | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode` | `std::string` | `"interpolation"` | Surface computation mode |
 | `cell` | `double` | `NaN` | Cell size for interpolation grid (NaN to use default; smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
 | `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = unset/library default, 0 = false, 1 = true) |
-| `cv_method` | `std::string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_method` | `std::string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) (Batch only) |
 | `cv_k` | `int` | `5` | Number of folds for k-fold CV (Batch only) |
 | `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (Batch only; 0 = random) |
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
 
 See [cpp-streaming.md](api-streaming.md) for `StreamingOptions`.
 
@@ -215,11 +233,13 @@ All accessors are const methods (not public fields):
 
 ### zero_weight_fallback
 
-*See: [Parameters](parameters.md)*
+Behavior when all neighborhood weights are zero:
 
-- `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
-- `"return_original"` (alias: `"original"`)
-- `"return_none"` (alias: `"none"`)
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
 
 ### degree
 
@@ -244,10 +264,14 @@ All accessors are const methods (not public fields):
 
 ### surface_mode
 
-*See: [Parameters](parameters.md)*
+*See: [Polynomial Degree](degree.md#surface-mode)*
 
-- `"interpolation"` (default — faster, uses a spatial grid)
-- `"direct"` (fits every point exactly; slower but more accurate)
+Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
+
+| Mode | Behavior | Speed | Accuracy |
+| --- | --- | --- | --- |
+| `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
+| `"direct"` | Evaluate at every query point | Slower | Full precision |
 
 ### merge_strategy
 

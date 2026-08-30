@@ -84,26 +84,44 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
-| `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights (Batch only) |
-| `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) |
-| `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) |
+| `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights (Batch only) — see [Custom Weights](custom-weights.md) |
+| `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) — see [Intervals](intervals.md) |
+| `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) — see [Intervals](intervals.md) |
 | `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
 | `return_se()` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution |
-| `degree(...)` | `degree` | `"linear"` | Polynomial degree |
-| `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
+| `degree(...)` | `degree` | `"linear"` | Polynomial degree — see [Polynomial Degree](degree.md) |
+| `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions — see [Multivariate LOESS](dimensions.md) |
 | `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
 | `weighted_metric_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode(...)` | `surface_mode` | `"interpolation"` | Surface computation mode |
 | `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
 | `boundary_degree_fallback(bool)` | `bool` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cv_method(...)` | `&str` | disabled | Cross-validation method |
+| `cv_method(...)` | `&str` | disabled | Cross-validation method — see [Cross-Validation](cross-validation.md) |
 | `cv_k(...)` | `usize` | disabled | Number of folds for K-fold cross-validation |
 | `cv_fractions(...)` | `Vec<f64>` | disabled | Candidate fractions to evaluate during cross-validation |
 | `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
 
 See [rust-streaming.md](api-streaming.md) for Streaming Options.
 
@@ -191,11 +209,13 @@ See [rust-online.md](api-online.md) for Online Options.
 
 ### zero_weight_fallback
 
-*See: [Parameters](parameters.md)*
+Behavior when all neighborhood weights are zero:
 
-- `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
-- `"return_original"` (alias: `"original"`)
-- `"return_none"` (alias: `"none"`)
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
 
 ### distance_metric
 
@@ -220,10 +240,14 @@ See [rust-online.md](api-online.md) for Online Options.
 
 ### surface_mode
 
-*See: [Parameters](parameters.md)*
+*See: [Polynomial Degree](degree.md#surface-mode)*
 
-- `"interpolation"` (default)
-- `"direct"` (fits every point exactly; slower but more accurate)
+Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
+
+| Mode | Behavior | Speed | Accuracy |
+| --- | --- | --- | --- |
+| `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
+| `"direct"` | Evaluate at every query point | Slower | Full precision |
 
 ### merge_strategy
 

@@ -97,4 +97,4 @@ that centre point falls back to the behaviour specified by
 ## See Also
 
 - [Robustness](robustness.md) — adaptive outlier downweighting via IRLS
-- [Parameters](parameters.md#custom_weights) — full parameter reference
+- [API Reference](api.md) — full parameter reference

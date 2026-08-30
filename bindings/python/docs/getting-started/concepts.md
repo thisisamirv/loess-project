@@ -132,7 +132,7 @@ flowchart TD
 ## Next Steps
 
 - [Quick Start](quickstart.md) — See it in action
-- [Parameters](../user-guide/parameters.md) — All configuration options
+- [API Reference](../api/python.md) — All configuration options
 - [Polynomial Degree](../user-guide/degree.md) — Constant, linear, quadratic fits
 - [Multivariate LOESS](../user-guide/dimensions.md) — 2D and n-D smoothing
 - [Boundary Handling](../user-guide/boundary.md) — Edge bias reduction strategies

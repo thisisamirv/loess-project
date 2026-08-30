@@ -79,26 +79,44 @@ See [wasm-online.md](api-online.md) for the `OnlineLoess` class.
 | `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
-| `custom_weights` | `number[]` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only) |
-| `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
-| `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
+| `custom_weights` | `number[]` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only; see [Custom Weights](custom-weights.md)) |
+| `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) — see [Intervals](intervals.md) |
+| `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) — see [Intervals](intervals.md) |
 | `return_diagnostics` | `boolean` | `false` | Compute RMSE, MAE, R², AIC |
 | `return_residuals` | `boolean` | `false` | Include residuals in result |
 | `return_robustness_weights` | `boolean` | `false` | Include robustness weights in result |
 | `return_se` | `boolean` | `false` | Compute hat-matrix statistics (enp, leverage …) |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
-| `degree` | `string` | `"linear"` | Polynomial degree of local fit |
-| `dimensions` | `number` | `1` | Number of predictor dimensions |
+| `degree` | `string` | `"linear"` | Polynomial degree of local fit — see [Polynomial Degree](degree.md) |
+| `dimensions` | `number` | `1` | Number of predictor dimensions — see [Multivariate LOESS](dimensions.md) |
 | `distance_metric` | `string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `number[]` | `null` | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode` | `string` | `"interpolation"` | Surface computation mode |
 | `cell` | `number` | `null` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `number` | `null` | Number of interpolation vertices |
 | `boundary_degree_fallback` | `boolean` | `null` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) (Batch only) |
 | `cv_k` | `number` | `5` | Number of folds for k-fold CV (Batch only) |
 | `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling (Batch only) |
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
 
 See [wasm-streaming.md](api-streaming.md) for `StreamingOptions`.
 
@@ -186,11 +204,13 @@ See [wasm-online.md](api-online.md) for `OnlineOutput`.
 
 ### zero_weight_fallback
 
-*See: [Parameters](parameters.md)*
+Behavior when all neighborhood weights are zero:
 
-- `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
-- `"return_original"` (alias: `"original"`)
-- `"return_none"` (alias: `"none"`)
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
 
 ### degree
 
@@ -215,10 +235,14 @@ See [wasm-online.md](api-online.md) for `OnlineOutput`.
 
 ### surface_mode
 
-*See: [Parameters](parameters.md)*
+*See: [Polynomial Degree](degree.md#surface-mode)*
 
-- `"interpolation"` (default — faster, uses a spatial grid)
-- `"direct"` (fits every point exactly; slower but more accurate)
+Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
+
+| Mode | Behavior | Speed | Accuracy |
+| --- | --- | --- | --- |
+| `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
+| `"direct"` | Evaluate at every query point | Slower | Full precision |
 
 ### merge_strategy
 

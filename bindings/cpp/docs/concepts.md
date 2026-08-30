@@ -112,7 +112,7 @@ Choose the right mode based on your use case:
 ## Next Steps
 
 - [Quick Start](quickstart.md) — See it in action
-- [Parameters](parameters.md) — All configuration options
+- [API Reference](api.md) — All configuration options
 - [Polynomial Degree](degree.md) — Constant, linear, quadratic fits
 - [Multivariate LOESS](dimensions.md) — 2D and n-D smoothing
 - [Boundary Handling](boundary.md) — Edge bias reduction strategies

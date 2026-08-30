@@ -49,7 +49,6 @@ makedocs(
 		"Home" => "index.md",
 		"Introduction" => ["installation.md", "quickstart.md", "concepts.md"],
 		"User Guide" => [
-			"parameters.md",
 			"degree.md",
 			"dimensions.md",
 			"adapter-choice.md",

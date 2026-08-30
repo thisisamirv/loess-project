@@ -102,4 +102,4 @@ First smoothed value (custom weights): 0.38960937887234354
 ## See Also
 
 - [Robustness](robustness.md) — adaptive outlier downweighting via IRLS
-- [Parameters](parameters.md#custom_weights) — full parameter reference
+- [API Reference](api.md) — full parameter reference

@@ -189,4 +189,4 @@ R²: 0.963
 - [Cross-Validation](cross-validation.md) — Optimal fraction selection
 - [Polynomial Degree](degree.md) — Degree 2 for curved trends
 - [Boundary Handling](boundary.md) — Edge bias in trend extraction
-- [Parameters](parameters.md) — Full parameter reference
+- [API Reference](api.md) — Full parameter reference

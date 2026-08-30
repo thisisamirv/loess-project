@@ -63,26 +63,44 @@ See [python-online.md](python-online.md) for the `OnlineLoess` class.
 | `boundary_policy` | `str` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `float` | `None` | Auto-convergence tolerance |
-| `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only) |
-| `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95) |
-| `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95) |
+| `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only; see [Custom Weights](../user-guide/custom-weights.md)) |
+| `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95) — see [Intervals](../user-guide/intervals.md) |
+| `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95) — see [Intervals](../user-guide/intervals.md) |
 | `return_diagnostics` | `bool` | `False` | Compute RMSE, MAE, R², AIC |
 | `return_residuals` | `bool` | `False` | Include residuals in result |
 | `return_robustness_weights` | `bool` | `False` | Include robustness weights in result |
 | `return_se` | `bool` | `False` | Compute hat-matrix statistics (enp, leverage …) |
 | `parallel` | `bool` | `True` | Enable parallel execution |
-| `degree` | `str` | `"linear"` | Polynomial degree of local fit |
-| `dimensions` | `int` | `1` | Number of predictor dimensions |
+| `degree` | `str` | `"linear"` | Polynomial degree of local fit — see [Polynomial Degree](../user-guide/degree.md) |
+| `dimensions` | `int` | `1` | Number of predictor dimensions — see [Multivariate LOESS](../user-guide/dimensions.md) |
 | `distance_metric` | `str` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `list[float]` | `None` | Per-dimension weights (used when `distance_metric="weighted"`) |
 | `surface_mode` | `str` | `"interpolation"` | Surface computation mode |
 | `cell` | `float` | `None` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `None` | Number of interpolation vertices |
 | `boundary_degree_fallback` | `bool \| None` | `None` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cv_method` | `str` | `"kfold"` | CV method (`"kfold"` or `"loocv"`) (Batch only) |
+| `cv_method` | `str` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) (Batch only) |
 | `cv_k` | `int` | `5` | Number of folds for k-fold CV (Batch only) |
 | `cv_fractions` | `list[float]` | `None` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `int` | `None` | Random seed for cross-validation shuffling (Batch only) |
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
 
 See [python-streaming.md](python-streaming.md) for `StreamingOptions`.
 
@@ -170,11 +188,13 @@ See [python-online.md](python-online.md) for `OnlineOutput`.
 
 ### zero_weight_fallback
 
-*See: [Parameters](../user-guide/parameters.md)*
+Behavior when all neighborhood weights are zero:
 
-- `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`)
-- `"return_original"` (alias: `"original"`)
-- `"return_none"` (alias: `"none"`)
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
 
 ### degree
 
@@ -199,10 +219,14 @@ See [python-online.md](python-online.md) for `OnlineOutput`.
 
 ### surface_mode
 
-*See: [Parameters](../user-guide/parameters.md)*
+*See: [Polynomial Degree](../user-guide/degree.md#surface-mode)*
 
-- `"interpolation"` (default — faster, uses a spatial grid)
-- `"direct"` (fits every point exactly; slower but more accurate)
+Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
+
+| Mode | Behavior | Speed | Accuracy |
+| --- | --- | --- | --- |
+| `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
+| `"direct"` | Evaluate at every query point | Slower | Full precision |
 
 ### merge_strategy
 
