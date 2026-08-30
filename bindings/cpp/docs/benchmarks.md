@@ -72,7 +72,7 @@ int main() {
 ```
 
 ```output
-Serial:   2.35397 ms
-Parallel: 3.2703 ms
-Speedup:  0.719802Ã—
+Serial:   3.33907 ms
+Parallel: 4.00577 ms
+Speedup:  0.833565Ã—
 ```

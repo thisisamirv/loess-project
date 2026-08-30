@@ -122,7 +122,7 @@ _julia_checks_internal:
 	@echo "6. Testing Julia bindings..."
 	@echo "=============================================================================="
 	@export FASTLOESS_LIB=$(JL_SHARED_LIB_ABS) && \
-	julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.resolve(); Pkg.instantiate(); Pkg.precompile()' && \
+	julia --project=$(JL_DIR)/julia -e 'using Pkg; Pkg.update("fastloess_jll"); Pkg.resolve(); Pkg.instantiate(); Pkg.precompile()' && \
 	julia --project=$(JL_DIR)/julia $(JL_TEST_DIR)/test_FastLOESS.jl
 	@echo "=============================================================================="
 	@echo "7. Aqua.jl package quality..."

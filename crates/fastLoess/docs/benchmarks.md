@@ -57,3 +57,9 @@ fn main() -> Result<(), LoessError> {
     Ok(())
 }
 ```
+
+```output
+Serial:   48.03 ms
+Parallel: 32.03 ms
+Speedup:  1.50x
+```

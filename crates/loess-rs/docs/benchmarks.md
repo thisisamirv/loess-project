@@ -51,3 +51,7 @@ fn main() -> Result<(), LoessError> {
     Ok(())
 }
 ```
+
+```output
+Fit: 44.90 ms
+```
