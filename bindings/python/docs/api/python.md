@@ -4,7 +4,7 @@ The Python bindings provide a high-performance interface to the core Rust librar
 
 > **StreamingLoess** and **OnlineLoess** are documented separately: [python-streaming.md](python-streaming.md), [python-online.md](python-online.md)
 
-## When to Use
+## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics

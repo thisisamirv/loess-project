@@ -20,7 +20,7 @@ At each target point, LOESS fits a polynomial to the neighbouring data using wei
 
 ## Degree 0 — Local Constant
 
-$$\hat{y}(x_0) = \arg\min_a \sum_i w_i(x_0)\,(y_i - a)^2$$
+\f[\hat{y}(x_0) = \arg\min_a \sum_i w_i(x_0)\,(y_i - a)^2\f]
 
 The fit at each point is simply a weighted mean. Produces very smooth results but ignores local slope, introducing bias wherever the true function changes.
 
@@ -59,7 +59,7 @@ y[0]: 0.7052
 
 ## Degree 1 — Local Linear (Default)
 
-$$\hat{y}(x_0) = \arg\min_{a,b} \sum_i w_i(x_0)\,(y_i - a - b x_i)^2$$
+\f[\hat{y}(x_0) = \arg\min_{a,b} \sum_i w_i(x_0)\,(y_i - a - b x_i)^2\f]
 
 Fits a weighted line through the neighbourhood. Removes first-order bias and handles boundary regions correctly. The right choice for the vast majority of applications.
 
@@ -98,7 +98,7 @@ y[0]: 0.327376
 
 ## Degree 2 — Local Quadratic
 
-$$\hat{y}(x_0) = \arg\min_{a,b,c} \sum_i w_i(x_0)\,(y_i - a - b x_i - c x_i^2)^2$$
+\f[\hat{y}(x_0) = \arg\min_{a,b,c} \sum_i w_i(x_0)\,(y_i - a - b x_i - c x_i^2)^2\f]
 
 Fits a weighted parabola through the neighbourhood. Removes second-order bias and captures local curvature more faithfully, but requires more data per neighbourhood — pair with a larger `fraction` (≥ 0.4) to avoid overfitting.
 
@@ -137,7 +137,7 @@ y[0]: 0.0677457
 
 ## Degree 3 — Local Cubic
 
-$$\hat{y}(x_0) = \arg\min_{a,b,c,d} \sum_i w_i(x_0)\,(y_i - a - b x_i - c x_i^2 - d x_i^3)^2$$
+\f[\hat{y}(x_0) = \arg\min_{a,b,c,d} \sum_i w_i(x_0)\,(y_i - a - b x_i - c x_i^2 - d x_i^3)^2\f]
 
 Fits a weighted cubic polynomial. Captures inflection points and S-shaped local behaviour. Requires a substantially larger neighbourhood than degree 2 — use `fraction` ≥ 0.5 and verify visually for overfitting.
 
@@ -176,7 +176,7 @@ y[0]: 0.242234
 
 ## Degree 4 — Local Quartic
 
-$$\hat{y}(x_0) = \arg\min_{a,...,e} \sum_i w_i(x_0)\,(y_i - a - b x_i - \cdots - e x_i^4)^2$$
+\f[\hat{y}(x_0) = \arg\min_{a,...,e} \sum_i w_i(x_0)\,(y_i - a - b x_i - \cdots - e x_i^4)^2\f]
 
 Fits a weighted quartic polynomial. Rarely needed in practice; only useful for capturing highly oscillatory local structure. Very prone to overfitting — require `fraction` ≥ 0.6 and cross-validate.
 

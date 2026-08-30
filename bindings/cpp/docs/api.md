@@ -4,7 +4,7 @@ The C++ bindings provide a modern, object-oriented wrapper around the core Rust 
 
 > **StreamingLoess** and **OnlineLoess** are documented separately: [cpp-streaming.md](api-streaming.md), [cpp-online.md](api-online.md)
 
-## When to Use
+## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics
@@ -14,7 +14,7 @@ The C++ bindings provide a modern, object-oriented wrapper around the core Rust 
 
 ## Classes
 
-### `fastloess::Loess`
+### fastloess::Loess
 
 The `Loess` class allows configuring the LOESS parameters once and fitting multiple datasets using those parameters.
 
@@ -92,7 +92,7 @@ See [cpp-online.md](api-online.md) for the `OnlineLoess` class.
 
 ## Options Structures
 
-### `LoessOptions`
+### LoessOptions
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -133,7 +133,7 @@ See [cpp-online.md](api-online.md) for `OnlineOptions`.
 
 See [cpp-online.md](api-online.md) for `OnlineOutput`.
 
-### `fastloess::LoessResult`
+### fastloess::LoessResult
 
 A RAII wrapper around the C result struct `fastloess_CppLoessResult`.
 
@@ -160,7 +160,7 @@ A RAII wrapper around the C result struct `fastloess_CppLoessResult`.
 | `leverage()` | `std::vector<double>` | Per-point hat-matrix diagonal (if `return_se`; empty if not computed) |
 | `dimensions()` | `int` | Number of predictor dimensions |
 
-### `fastloess::Diagnostics`
+### fastloess::Diagnostics
 
 All accessors are const methods (not public fields):
 

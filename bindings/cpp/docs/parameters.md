@@ -40,9 +40,8 @@ Complete reference for all LOESS configuration options.
 | **min_points** | 2 | [2, window] | Min before output | Online |
 | **update_mode** | `"incremental"` | 2 options | Update strategy | Online |
 
-!!! note "Rust option values"
-    In Rust, pass option-like parameters as strings (case-insensitive), e.g. `"tricube"`, `"bisquare"`, `"extend"`, `"weighted_average"`.
-    For the weighted distance metric, use `.distance_metric("weighted").weighted_metric_weights(vec![...])`.
+> **Rust option values:** In Rust, pass option-like parameters as strings (case-insensitive), e.g. `"tricube"`, `"bisquare"`, `"extend"`, `"weighted_average"`.
+> For the weighted distance metric, use `.distance_metric("weighted").weighted_metric_weights(vec![...])`.
 
 ---
 
@@ -304,7 +303,7 @@ Distance metric for neighbourhood calculation. Only meaningful when `dimensions 
 | `"euclidean"` | Raw Euclidean distance |
 | `"manhattan"` | City-block distance |
 | `"chebyshev"` | Maximum coordinate difference |
-| `"minkowski:p"` | Generalised $L_p$ norm — e.g. `"minkowski:3"` |
+| `"minkowski:p"` | Generalised \f$L_p\f$ norm — e.g. `"minkowski:3"` |
 | `"weighted"` | Weighted Euclidean — set `weighted_metric_weights` to one weight per dimension |
 
 ```cpp
@@ -475,8 +474,7 @@ When enabled, the polynomial degree is automatically reduced to the highest degr
 - **Default**: `false`
 - **Adapter**: All
 
-!!! tip
-    Enable this if you observe NaN values or instability at the edges of your data when using `degree = "quadratic"` or higher.
+> **Tip:** Enable this if you observe NaN values or instability at the edges of your data when using `degree = "quadratic"` or higher.
 
 ```cpp
 #include <fastloess.hpp>
@@ -629,11 +627,9 @@ Enable multi-threaded parallel execution via Rayon. Substantially speeds up fitt
 - **Default**: `true` for Batch and Streaming; `false` for Online
 - **Adapter**: All
 
-!!! note
-    `OnlineLoess` defaults to `false` because it fits one point at a time. Each update touches only the sliding window, so there is no inner loop large enough to benefit from parallelism — enabling it would add thread overhead with no gain.
-
-!!! tip
-    Set to `false` for fully deterministic, reproducible output when debugging, or in environments where thread safety is required.
+> **Note:** `OnlineLoess` defaults to `false` because it fits one point at a time. Each update touches only the sliding window, so there is no inner loop large enough to benefit from parallelism — enabling it would add thread overhead with no gain.
+>
+> **Tip:** Set to `false` for fully deterministic, reproducible output when debugging, or in environments where thread safety is required.
 
 ```cpp
 #include <fastloess.hpp>
@@ -668,8 +664,7 @@ y[0]: 0.385152
 Per-observation weights applied before distance and robustness weighting. Only
 available in the **Batch** adapter.
 
-!!! note "Batch only"
-    `custom_weights` is silently ignored in Streaming and Online adapters.
+> **Batch only:** `custom_weights` is silently ignored in Streaming and Online adapters.
 
 See [Custom Weights](custom-weights.md) for a full discussion.
 

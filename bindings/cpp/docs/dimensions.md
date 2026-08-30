@@ -4,7 +4,7 @@ Smoothing over multiple predictor dimensions simultaneously.
 
 ## Overview
 
-Standard LOESS operates on a single predictor $x$. Setting `dimensions > 1` extends the neighbourhood search and local polynomial fit into an $n$-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets.
+Standard LOESS operates on a single predictor \f$x\f$. Setting `dimensions > 1` extends the neighbourhood search and local polynomial fit into an \f$n\f$-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets.
 
 ![Multivariate LOESS](multivariate_loess.svg)
 
@@ -14,8 +14,7 @@ Standard LOESS operates on a single predictor $x$. Setting `dimensions > 1` exte
 | `2` | Spatial surface, 2-predictor model | `x`: n × 2 matrix |
 | `3+` | High-dimensional regression | `x`: n × d matrix |
 
-!!! warning "Computational cost"
-    Neighbourhood search scales with $d$ dimensions. For `dimensions ≥ 3` keep `fraction` small and consider increasing `delta` to activate interpolation.
+> **Computational cost:** Neighbourhood search scales with \f$d\f$ dimensions. For `dimensions ≥ 3` keep `fraction` small and consider increasing `delta` to activate interpolation.
 
 ---
 
@@ -53,7 +52,7 @@ y[0]: 0.24731
 
 ## 2D — Spatial Surface
 
-Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ matrix as `x`.
+Two predictors (e.g., latitude/longitude, time/altitude). Pass an \f$n \times 2\f$ matrix as `x`.
 
 ```cpp
 #include <fastloess.hpp>
@@ -138,7 +137,7 @@ When `dimensions > 1` you can also control how inter-point distances are compute
 | --- | --- | --- |
 | `"normalized"` | Each dimension scaled to unit range (default) | Predictors on different scales |
 | `"euclidean"` | Raw Euclidean distance | Predictors already on same scale |
-| `"minkowski:p"` | Generalised Minkowski ($L_p$) norm | Custom distance geometry |
+| `"minkowski:p"` | Generalised Minkowski (\f$L_p\f$) norm | Custom distance geometry |
 | `"weighted"` | Per-dimension weighted Euclidean | Domain-specific importance |
 
 See [Parameters](parameters.md#distance_metric) for the full list of options per language.

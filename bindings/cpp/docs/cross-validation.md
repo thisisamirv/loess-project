@@ -130,8 +130,7 @@ Fraction used: 0.3
 | **KFold(10)** | 10 | Medium | Lower | Lower |
 | **LOOCV** | N | Slow | Lowest | Lowest |
 
-!!! tip "Recommendation"
-    Use **5-fold** or **10-fold** CV for most applications. LOOCV is only worth it for small datasets (N < 100).
+> **Recommendation:** Use **5-fold** or **10-fold** CV for most applications. LOOCV is only worth it for small datasets (N < 100).
 
 ---
 
@@ -191,8 +190,7 @@ The fraction with **lowest CV score** is automatically selected.
 
 ## Availability
 
-!!! warning "Batch Mode Only"
-    Cross-validation is only available in **Batch** mode.
+> **Batch Mode Only:** Cross-validation is only available in **Batch** mode.
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |

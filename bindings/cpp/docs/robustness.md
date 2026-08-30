@@ -24,7 +24,7 @@ Standard LOESS can be biased by outliers. Robustness iterations downweight point
 
 Smooth downweighting. Points transition gradually from full weight to zero.
 
-$$w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}$$
+\f[w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}\f]
 
 **Use when**: General purpose, balanced approach.
 
@@ -60,7 +60,7 @@ y[0]: 0.385152
 
 Linear penalty beyond threshold. Less aggressive than Bisquare.
 
-$$w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}$$
+\f[w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}\f]
 
 **Use when**: Moderate outliers, want to retain some influence.
 
@@ -96,7 +96,7 @@ y[0]: 0.385585
 
 Hard threshold. Points are either fully weighted or completely excluded.
 
-$$w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}$$
+\f[w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}\f]
 
 **Use when**: Extreme outliers, want binary exclusion.
 
@@ -239,8 +239,7 @@ y[0]: 0.385152
 
 Stop iterations early when weights stabilize:
 
-!!! tip "Performance"
-    Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
+> **Performance:** Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
 
 ```cpp
 #include <fastloess.hpp>

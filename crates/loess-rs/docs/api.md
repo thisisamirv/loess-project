@@ -2,7 +2,7 @@
 
 The Rust crates provide the core implementation and high-performance extensions.
 
-## When to Use
+## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics

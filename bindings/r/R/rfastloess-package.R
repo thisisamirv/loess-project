@@ -32,4 +32,5 @@
 #' @useDynLib rfastloess, .registration = TRUE
 #' @importFrom graphics lines
 #' @importFrom stats setNames
+#' @keywords internal
 "_PACKAGE"

@@ -12,7 +12,7 @@ See also: [fastLoess](api.md)
 
 ## Class
 
-### `fastloess::OnlineLoess`
+### fastloess::OnlineLoess
 
 The `OnlineLoess` class updates the model incrementally with new data points.
 
@@ -99,7 +99,7 @@ int main() {
 
 ## Options Structure
 
-### `OnlineOptions` (inherits `LoessOptions`)
+### OnlineOptions (inherits LoessOptions)
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -110,7 +110,7 @@ int main() {
 
 ## Result Structure
 
-### `fastloess::OnlineOutput`
+### fastloess::OnlineOutput
 
 Returned (inside `Expected`) by `add_point()`. Check `has_value()` before reading fields.
 

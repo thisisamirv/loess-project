@@ -5,7 +5,7 @@ The Node.js bindings provide a high-performance interface to the core Rust libra
 
 > **StreamingLoess** and **OnlineLoess** are documented separately: [nodejs-streaming.md](api-streaming.md), [nodejs-online.md](api-online.md)
 
-## When to Use
+## When to Use Batch Adapter
 
 - Dataset fits in memory
 - Need intervals, cross-validation, or diagnostics

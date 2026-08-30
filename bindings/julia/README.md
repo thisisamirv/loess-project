@@ -35,7 +35,8 @@ The `loess-project` also offers bindings for Rust, Python, R, Julia, Node.js, We
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-> [!TIP]
+Read more about how LOESS works in the [Concepts](https://thisisamirv.github.io/loess-project/julia/concepts/).
+
 > **Note:** For a **LOWESS** implementation, use [`lowess-project`](https://github.com/thisisamirv/lowess-project).
 
 ---
