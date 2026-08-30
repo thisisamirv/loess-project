@@ -20,18 +20,12 @@ repository](https://github.com/thisisamirv/loess-project).
 
 ------------------------------------------------------------------------
 
-## Installation
+## Installation & Documentation
 
-> \[!NOTE\]
->
 > Currently available for R, Python, Rust, Julia, Node.js, WebAssembly,
 > and C++. See the [Installation
 > Guide](https://thisisamirv.github.io/loess-project/r/articles/installation.html)
 > for detailed installation instructions.
-
-## Documentation
-
-> \[!NOTE\]
 >
 > ### 📚 [View the full documentation](https://thisisamirv.github.io/loess-project/r/)
 
@@ -46,7 +40,7 @@ repository](https://github.com/thisisamirv/loess-project).
 | **Flexibility** | High (Distance metrics) | Standard |
 | **Complexity** | Higher (Matrix inversion) | Lower (Weighted average/slope) |
 
-> \[!TIP\] **Note:** For a **LOWESS** implementation, use
+> **Note:** For a **LOWESS** implementation, use
 > [`lowess-project`](https://github.com/thisisamirv/lowess-project).
 
 ------------------------------------------------------------------------
@@ -139,51 +133,6 @@ All implementations are **numerical twins** of R’s `loess`:
 | **Accuracy** | ✅ EXACT MATCH | Max diff \< 1e-12 across all scenarios |
 | **Consistency** | ✅ PERFECT | Multiple scenarios pass with strict tolerance |
 | **Robustness** | ✅ VERIFIED | Robust smoothing matches R exactly |
-
-## API Reference
-
-``` r
-library(rfastloess)
-
-model <- Loess(
-    fraction = 0.67,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    zero_weight_fallback = "use_local_mean",
-    boundary_policy = "extend",
-    scaling_method = "mad",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
-    auto_converge = NULL,
-    parallel = TRUE
-)
-custom_weights <- rep(1, length(x))
-result <- fit(model, x, y, custom_weights = custom_weights)
-
-# Result structure:
-result$x,
-result$y,
-result$standard_errors,
-result$confidence_lower,
-result$confidence_upper,
-result$prediction_lower,
-result$prediction_upper,
-result$residuals,
-result$robustness_weights,
-result$diagnostics,
-result$iterations_used,
-result$fraction_used,
-result$cv_scores
-```
-
-------------------------------------------------------------------------
 
 ## Contributing
 
