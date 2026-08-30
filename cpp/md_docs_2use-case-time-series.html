@@ -100,12 +100,12 @@ $(document).ready(function(){initNavTree('md_docs_2use-case-time-series.html',''
   <div class="headertitle"><div class="title">Time Series Analysis</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md325"></a> LOESS for trend extraction and temporal smoothing.</p>
-<h1><a class="anchor" id="autotoc_md326"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md343"></a> LOESS for trend extraction and temporal smoothing.</p>
+<h1><a class="anchor" id="autotoc_md344"></a>
 Overview</h1>
 <p>Time series data often contains noise, seasonality, and trends. LOESS provides flexible trend extraction without parametric assumptions.</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md328"></a>
+<h1><a class="anchor" id="autotoc_md346"></a>
 Basic Trend Extraction</h1>
 <p><code>fraction = 0.1</code> sizes the neighbourhood as 10% of the data at each evaluation point — narrow enough to follow a slowly varying trend without smearing periodic variation. Three robustness <code>iterations</code> down-weight noise spikes so they cannot bias the fitted curve; this is especially important when the signal-to-noise ratio is low or when occasional outliers are expected.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -134,7 +134,7 @@ Basic Trend Extraction</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.149874</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md330"></a>
+<h1><a class="anchor" id="autotoc_md348"></a>
 Detrending</h1>
 <p>Remove trend to analyze residual patterns.</p>
 <p>Setting <code>return_residuals = True</code> stores <code>observed − smoothed</code> alongside the smooth. A slightly wider <code>fraction = 0.3</code> produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.</p>
@@ -166,7 +166,7 @@ Detrending</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">residuals[0]: -0.14731</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md332"></a>
+<h1><a class="anchor" id="autotoc_md350"></a>
 Forecasting with Prediction Intervals</h1>
 <p>Prediction intervals widen the uncertainty band to include both the uncertainty in the fitted curve (confidence interval) and the expected scatter of new observations around it. <code>fraction = 0.2</code> offers a balance between local detail and stable interval width — too small a fraction produces jagged interval edges; too large a fraction underestimates local variance near turning points.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -197,7 +197,7 @@ Forecasting with Prediction Intervals</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.182287, 0.218513]</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md334"></a>
+<h1><a class="anchor" id="autotoc_md352"></a>
 Handling Missing Data</h1>
 <p>LOESS naturally handles irregular time sampling:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -221,7 +221,7 @@ Handling Missing Data</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 10.8052</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md336"></a>
+<h1><a class="anchor" id="autotoc_md354"></a>
 Multi-Scale Analysis</h1>
 <p>Use different fractions to extract features at different scales:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -250,7 +250,7 @@ Multi-Scale Analysis</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.327376</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md338"></a>
+<h1><a class="anchor" id="autotoc_md356"></a>
 Gene Expression Time Course</h1>
 <p>Biological application:</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -279,7 +279,7 @@ Gene Expression Time Course</h1>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">RÂ²: 0.993526</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md340"></a>
+<h1><a class="anchor" id="autotoc_md358"></a>
 Choosing Fraction for Time Series</h1>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -296,7 +296,7 @@ Choosing Fraction for Time Series</h1>
 <td class="markdownTableBodyNone">Clean data   </td><td class="markdownTableBodyNone">Lower   </td><td class="markdownTableBodyNone">Preserve detail   </td></tr>
 </table>
 <hr  />
-<h1><a class="anchor" id="autotoc_md342"></a>
+<h1><a class="anchor" id="autotoc_md360"></a>
 See Also</h1>
 <ul>
 <li><a class="el" href="md_docs_2use-case-real-time.html">Real-Time Processing</a> — For streaming time series</li>

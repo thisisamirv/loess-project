@@ -100,8 +100,8 @@ $(document).ready(function(){initNavTree('md_docs_2dimensions.html',''); initRes
   <div class="headertitle"><div class="title">Multivariate LOESS</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p><a class="anchor" id="autotoc_md127"></a> Smoothing over multiple predictor dimensions simultaneously.</p>
-<h1><a class="anchor" id="autotoc_md128"></a>
+<div class="textblock"><p><a class="anchor" id="autotoc_md145"></a> Smoothing over multiple predictor dimensions simultaneously.</p>
+<h1><a class="anchor" id="autotoc_md146"></a>
 Overview</h1>
 <p>Standard LOESS operates on a single predictor $x$. Setting <code>dimensions &gt; 1</code> extends the neighbourhood search and local polynomial fit into an $n$-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets.</p>
 <div class="image">
@@ -120,7 +120,7 @@ Multivariate LOESS</div></div>
 </table>
 <p>!!! warning "Computational cost" Neighbourhood search scales with $d$ dimensions. For <code>dimensions ≥ 3</code> keep <code>fraction</code> small and consider increasing <code>delta</code> to activate interpolation.</p>
 <hr  />
-<h1><a class="anchor" id="autotoc_md130"></a>
+<h1><a class="anchor" id="autotoc_md148"></a>
 1D — Standard (Default)</h1>
 <p>Single predictor. No configuration required.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -144,7 +144,7 @@ Multivariate LOESS</div></div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.24731</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md132"></a>
+<h1><a class="anchor" id="autotoc_md150"></a>
 2D — Spatial Surface</h1>
 <p>Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ matrix as <code>x</code>.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -175,7 +175,7 @@ Multivariate LOESS</div></div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 1.19329</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md134"></a>
+<h1><a class="anchor" id="autotoc_md152"></a>
 3D and Higher</h1>
 <p>Three or more predictors. The neighbourhood radius grows in each additional dimension, so a larger <code>fraction</code> (or smaller dataset) is typically needed.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;fastloess.hpp&gt;</span></div>
@@ -207,7 +207,7 @@ Multivariate LOESS</div></div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: -0.670791</div>
 </div><!-- fragment --><hr  />
-<h1><a class="anchor" id="autotoc_md136"></a>
+<h1><a class="anchor" id="autotoc_md154"></a>
 Distance Metrics for Multivariate Data</h1>
 <p>When <code>dimensions &gt; 1</code> you can also control how inter-point distances are computed.</p>
 <table class="markdownTable">
