@@ -88,6 +88,7 @@ dev:
 	@$(PYTHON) dev/verify_snippets.py --lang rust --rust-docs $(LOESS_DIR)/docs --timeout 120
 	@echo "Adding Rust doc snippet outputs..."
 	@$(PYTHON) dev/add-rust-outputs.py $(LOESS_DIR)/docs
+	@$(PYTHON) dev/update_changelogs.py
 	@echo "All $(LOESS_PKG) crate checks completed successfully!"
 
 ensure-llvm-cov:

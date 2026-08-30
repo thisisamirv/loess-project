@@ -78,6 +78,7 @@ export default defineConfig({
                     ],
                 },
                 { label: 'API Reference', slug: 'reference' },
+                { label: 'News', slug: 'news' },
             ],
         }),
     ],

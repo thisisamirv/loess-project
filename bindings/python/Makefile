@@ -91,6 +91,7 @@ dev:
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (python)..."
 	@$(PYTHON) dev/verify_snippets.py --lang python --timeout 120
+	@$(PYTHON) dev/update_changelogs.py
 	@echo "$(PY_PKG) checks completed successfully!"
 
 ensure-llvm-cov:
@@ -115,5 +116,3 @@ docs-dev:
 	@echo "Serving $(PY_PKG) docs (Sphinx autobuild)..."
 	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir sphinx-autobuild >/dev/null
 	@. $(PY_ACTIVATE) && sphinx-autobuild $(PY_DOCS_DIR) $(PY_DOCS_BUILD)/html --open-browser
-
-
