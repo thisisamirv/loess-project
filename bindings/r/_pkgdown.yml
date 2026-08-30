@@ -9,7 +9,7 @@ development:
 
 reference:
   - title: Core LOESS Interface
-    desc: Main R6 classes for LOESS smoothing.
+    desc: Main S3 classes for LOESS smoothing.
     contents:
       - Loess
       - StreamingLoess
@@ -35,11 +35,7 @@ articles:
       - concepts
   - title: User Guide
     contents:
-      - parameters
       - adapter-choice
-      - batch
-      - streaming
-      - online
       - degree
       - dimensions
       - intervals

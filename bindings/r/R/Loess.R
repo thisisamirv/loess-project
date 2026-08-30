@@ -1,7 +1,25 @@
 #' LOESS Batch Smoothing
 #'
 #' @description
-#' Create a stateful LOESS model for batch smoothing.
+#' Create a stateful LOESS model for batch smoothing. This is the default
+#' mode: it processes the entire dataset at once and supports every feature
+#' (confidence/prediction intervals, cross-validation, GPU backend).
+#'
+#' @details
+#' Best suited when the dataset fits in memory and you need intervals,
+#' cross-validation, or diagnostics. For datasets that don't fit in memory or
+#' arrive in chunks, see \code{\link{StreamingLoess}}; for point-by-point
+#' real-time data, see \code{\link{OnlineLoess}}.
+#'
+#' `fraction` is the most important parameter: it controls the size of the
+#' local neighbourhood used at each point.
+#'
+#' | Range | Effect | Use case |
+#' | --- | --- | --- |
+#' | 0.1-0.3 | Fine detail | Rapidly changing signals |
+#' | 0.3-0.5 | Balanced | General purpose |
+#' | 0.5-0.7 | Heavy smoothing | Noisy data |
+#' | 0.7-1.0 | Very smooth | Trend extraction |
 #'
 #' @srrstats {G2.0} Input validation for fraction and iterations.
 #' @srrstats {G2.1} Parameter bounds checking (fraction 0-1, iterations >= 0).
@@ -15,9 +33,10 @@
 #' @srrstats {RE5.0} O(n) scaling documented in README.
 #'
 #' @param ... Not used; forces all subsequent arguments to be named.
-#' @param fraction Smoothing fraction (between 0 and 1).
-#' @param iterations Number of robustness iterations (non-negative integer).
-#'   Default: 3.
+#' @param fraction Smoothing fraction, greater than 0 and up to 1. Default:
+#'   0.67. See Details for guidance on choosing a value.
+#' @param iterations Number of robustness iterations, between 0 and 1000
+#'   (inclusive). Default: 3.
 #' @param weight_function Kernel weight function. One of \code{"tricube"}
 #'   (default), \code{"gaussian"},
 #'   \code{"uniform"} (alias: \code{"boxcar"}),
@@ -59,15 +78,17 @@
 #' @param return_se Logical; if \code{TRUE}, compute hat-matrix statistics
 #'   (effective degrees of freedom, leverage, standard errors).
 #'   Default: \code{FALSE}.
-#' @param confidence_intervals Confidence level for confidence intervals
-#'   (e.g., 0.95). \code{NULL} (default) disables confidence intervals.
-#' @param prediction_intervals Confidence level for prediction intervals
-#'   (e.g., 0.95). \code{NULL} (default) disables prediction intervals.
+#' @param confidence_intervals Confidence level for confidence intervals,
+#'   greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
+#'   disables confidence intervals.
+#' @param prediction_intervals Confidence level for prediction intervals,
+#'   greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
+#'   disables prediction intervals.
 #' @param cv_fractions Numeric vector of candidate fractions for
 #'   cross-validation. \code{NULL} (default) disables CV.
 #' @param cv_method Cross-validation method: \code{"kfold"} (default) or
 #'   \code{"loocv"}.
-#' @param cv_k Number of folds for k-fold CV. Default: 5.
+#' @param cv_k Number of folds for k-fold CV, at least 2. Default: 5.
 #' @param weighted_metric_weights Numeric vector of per-dimension weights used
 #'   when \code{distance_metric = "weighted"}. Length must equal
 #'   \code{dimensions}. \code{NULL} (default) uses equal weights.

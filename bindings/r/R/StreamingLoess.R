@@ -1,14 +1,35 @@
 #' LOESS Streaming Smoothing
 #'
 #' @description
-#' Create a stateful LOESS model for streaming data.
+#' Create a stateful LOESS model for streaming data. Processes data in
+#' fixed-size chunks with configurable overlap: results for each chunk are
+#' returned by \code{\link{process_chunk}}, and \code{\link{finalize}}
+#' flushes any remaining buffered points after the last chunk.
+#'
+#' @details
+#' Best suited for datasets over 100,000 points, memory-constrained
+#' environments, or batch processing pipelines. For smaller datasets that fit
+#' in memory, see \code{\link{Loess}}; for point-by-point real-time data,
+#' see \code{\link{OnlineLoess}}.
+#'
+#' Overlapping regions between chunks are reconciled via `merge_strategy`:
+#'
+#' | Strategy | Behavior |
+#' | --- | --- |
+#' | `"average"` | Arithmetic mean of both estimates |
+#' | `"weighted_average"` | Distance-weighted blend (recommended, default) |
+#' | `"take_first"` | Keep left-chunk estimate |
+#' | `"take_last"` | Keep right-chunk estimate |
 #'
 #' @srrstats {G2.0} Input validation for fraction, chunk_size.
 #' @srrstats {G1.6} Memory-efficient streaming for large datasets.
 #'
 #' @inheritParams Loess
-#' @param chunk_size Number of data points per processing chunk.
-#' @param overlap Number of overlapping points between consecutive chunks.
+#' @param chunk_size Number of data points per processing chunk, at least 10.
+#'   Default: 5000.
+#' @param overlap Number of overlapping points between consecutive chunks,
+#'   less than \code{chunk_size}. \code{NULL} (default) uses the backend's
+#'   default of 500.
 #' @param merge_strategy Strategy for reconciling overlapping chunk regions:
 #'   \code{"weighted_average"} (default; alias: \code{"weighted"}),
 #'   \code{"average"} (alias: \code{"mean"}),

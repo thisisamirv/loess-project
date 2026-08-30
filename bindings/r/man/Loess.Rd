@@ -36,12 +36,13 @@ Loess(
 )
 }
 \arguments{
-\item{fraction}{Smoothing fraction (between 0 and 1).}
+\item{fraction}{Smoothing fraction, greater than 0 and up to 1. Default:
+0.67. See Details for guidance on choosing a value.}
 
 \item{...}{Not used; forces all subsequent arguments to be named.}
 
-\item{iterations}{Number of robustness iterations (non-negative integer).
-Default: 3.}
+\item{iterations}{Number of robustness iterations, between 0 and 1000
+(inclusive). Default: 3.}
 
 \item{weight_function}{Kernel weight function. One of \code{"tricube"}
 (default), \code{"gaussian"},
@@ -63,11 +64,13 @@ Default: 3.}
 \code{"mirror"}), \code{"zero"}, or
 \code{"noboundary"} (alias: \code{"none"}).}
 
-\item{confidence_intervals}{Confidence level for confidence intervals
-(e.g., 0.95). \code{NULL} (default) disables confidence intervals.}
+\item{confidence_intervals}{Confidence level for confidence intervals,
+greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
+disables confidence intervals.}
 
-\item{prediction_intervals}{Confidence level for prediction intervals
-(e.g., 0.95). \code{NULL} (default) disables prediction intervals.}
+\item{prediction_intervals}{Confidence level for prediction intervals,
+greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
+disables prediction intervals.}
 
 \item{return_diagnostics}{Logical; if \code{TRUE}, return fit-quality
 metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.}
@@ -92,7 +95,7 @@ cross-validation. \code{NULL} (default) disables CV.}
 \item{cv_method}{Cross-validation method: \code{"kfold"} (default) or
 \code{"loocv"}.}
 
-\item{cv_k}{Number of folds for k-fold CV. Default: 5.}
+\item{cv_k}{Number of folds for k-fold CV, at least 2. Default: 5.}
 
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
 
@@ -134,7 +137,24 @@ generator. \code{NULL} (default) uses a random seed.}
 A Loess object.
 }
 \description{
-Create a stateful LOESS model for batch smoothing.
+Create a stateful LOESS model for batch smoothing. This is the default
+mode: it processes the entire dataset at once and supports every feature
+(confidence/prediction intervals, cross-validation, GPU backend).
+}
+\details{
+Best suited when the dataset fits in memory and you need intervals,
+cross-validation, or diagnostics. For datasets that don't fit in memory or
+arrive in chunks, see \code{\link{StreamingLoess}}; for point-by-point
+real-time data, see \code{\link{OnlineLoess}}.
+
+\code{fraction} is the most important parameter: it controls the size of the
+local neighbourhood used at each point.\tabular{lll}{
+    Range \tab Effect \tab Use case \cr
+    0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
+    0.3-0.5 \tab Balanced \tab General purpose \cr
+    0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
+    0.7-1.0 \tab Very smooth \tab Trend extraction \cr
+}
 }
 \examples{
 x <- seq(0, 10, length.out = 100)
