@@ -119,49 +119,6 @@ All implementations are **numerical twins** of R's `loess`:
 | **Consistency** | ✅ PERFECT | Multiple scenarios pass with strict tolerance |
 | **Robustness** | ✅ VERIFIED | Robust smoothing matches R exactly |
 
-## API Reference
-
-```python
-from fastloess import Loess
-
-model = Loess(
-    fraction=0.67,
-    iterations=3,
-    weight_function="tricube",
-    robustness_method="bisquare",
-    zero_weight_fallback="use_local_mean",
-    boundary_policy="extend",
-    scaling_method="mad",
-    confidence_intervals=None,
-    prediction_intervals=None,
-    return_diagnostics=False,
-    return_residuals=False,
-    return_robustness_weights=False,
-    cv_fractions=None,
-    cv_method="kfold",
-    cv_k=5,
-    auto_converge=None,
-    parallel=True
-)
-custom_weights = [1.0] * len(x)
-result = model.fit(x, y, custom_weights=custom_weights)
-
-# Result structure:
-result.x,
-result.y,
-result.standard_errors,
-result.confidence_lower,
-result.confidence_upper,
-result.prediction_lower,
-result.prediction_upper,
-result.residuals,
-result.robustness_weights,
-result.diagnostics,
-result.iterations_used,
-result.fraction_used,
-result.cv_scores
-```
-
 ---
 
 ## Contributing

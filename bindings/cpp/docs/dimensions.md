@@ -16,7 +16,7 @@ Standard LOESS operates on a single predictor \f$x\f$. Setting `dimensions > 1` 
 
 > **Computational cost:** Neighbourhood search scales with \f$d\f$ dimensions. For `dimensions ≥ 3` keep `fraction` small and consider increasing `delta` to activate interpolation.
 
----
+<hr>
 
 ## 1D — Standard (Default)
 

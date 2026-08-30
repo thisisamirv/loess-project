@@ -25,7 +25,7 @@ The `loess-project` also offers bindings for Rust, Python, R, Julia, Node.js, We
 >
 > 📚 [View the full documentation](https://thisisamirv.github.io/loess-project/cpp/)
 
----
+<hr>
 
 ## LOESS vs. LOWESS
 
@@ -40,7 +40,7 @@ Read more about how LOESS works in the [Concepts](https://thisisamirv.github.io/
 
 > **Note:** For a **LOWESS** implementation, use [`lowess-project`](https://github.com/thisisamirv/lowess-project).
 
----
+<hr>
 
 ## Why this package?
 
@@ -118,48 +118,6 @@ All implementations are **numerical twins** of R's `loess`:
 | **Accuracy** | ✅ EXACT MATCH | Max diff < 1e-12 across all scenarios |
 | **Consistency** | ✅ PERFECT | Multiple scenarios pass with strict tolerance |
 | **Robustness** | ✅ VERIFIED | Robust smoothing matches R exactly |
-
-## API Reference
-
-```cpp
-fastloess::LoessOptions options;
-options.fraction = 0.67;
-options.iterations = 3;
-options.weight_function = "tricube";
-options.robustness_method = "bisquare";
-options.zero_weight_fallback = "use_local_mean";
-options.boundary_policy = "extend";
-options.scaling_method = "mad";
-options.confidence_intervals = 0.95;
-options.prediction_intervals = 0.95;
-options.return_diagnostics = true;
-options.return_residuals = true;
-options.return_robustness_weights = true;
-options.cv_fractions = {0.3, 0.5, 0.7};
-options.cv_method = "kfold";
-options.cv_k = 5;
-options.auto_converge = 1e-4;
-options.parallel = true;
-
-fastloess::Loess model(options);
-std::vector<double> custom_weights(x.size(), 1.0);
-const auto result = model.fit(x, y, custom_weights).value();
-
-// Result structure:
-result.x_vector(),
-result.y_vector(),
-result.standard_errors(),
-result.confidence_lower(),
-result.confidence_upper(),
-result.prediction_lower(),
-result.prediction_upper(),
-result.residuals(),
-result.robustness_weights(),
-result.diagnostics(),
-result.iterations_used(),
-result.fraction_used(),
-result.cv_scores()
-```
 
 ---
 

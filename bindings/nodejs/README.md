@@ -118,49 +118,6 @@ All implementations are **numerical twins** of R's `loess`:
 | **Consistency** | ✅ PERFECT | Multiple scenarios pass with strict tolerance |
 | **Robustness** | ✅ VERIFIED | Robust smoothing matches R exactly |
 
-## API Reference
-
-```javascript
-import { Loess } from "fastloess"
-
-const model = new Loess({
-    fraction: 0.67,
-    iterations: 3,
-    weight_function: "tricube",
-    robustness_method: "bisquare",
-    zero_weight_fallback: "use_local_mean",
-    boundary_policy: "extend",
-    scaling_method: "mad",
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95,
-    return_diagnostics: true,
-    return_residuals: true,
-    return_robustness_weights: true,
-    cv_fractions: [0.3, 0.5, 0.7],
-    cv_method: "kfold",
-    cv_k: 5,
-    auto_converge: 1e-4,
-    parallel: true
-})
-const custom_weights = Array(x.length).fill(1.0)
-const result = model.fit(x, y, custom_weights)
-
-// Result structure:
-result.x,
-result.y,
-result.standard_errors,
-result.confidence_lower,
-result.confidence_upper,
-result.prediction_lower,
-result.prediction_upper,
-result.residuals,
-result.robustness_weights,
-result.diagnostics,
-result.iterations_used,
-result.fraction_used,
-result.cv_scores
-```
-
 ---
 
 ## Contributing

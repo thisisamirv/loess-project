@@ -43,7 +43,7 @@ Complete reference for all LOESS configuration options.
 > **Rust option values:** In Rust, pass option-like parameters as strings (case-insensitive), e.g. `"tricube"`, `"bisquare"`, `"extend"`, `"weighted_average"`.
 > For the weighted distance metric, use `.distance_metric("weighted").weighted_metric_weights(vec![...])`.
 
----
+<hr>
 
 ## Parameter Options Summary
 

@@ -1,7 +1,7 @@
 ---
 title: Concepts
 ---
-<!-- markdownlint-disable MD033 -->
+<!-- markdownlint-disable MD033 MD036 -->
 Understanding how LOESS works and when to use it.
 
 ## What is LOESS?
@@ -19,10 +19,9 @@ Unlike parametric methods (linear regression, polynomial fitting), LOESS adapts 
 
 ## How It Works
 
-<figure markdown="span">
-  ![LOESS Smoothing Concept](../assets/diagrams/loess_concept.svg){ width="800" }
-  <figcaption>LOESS fits local weighted regressions at each point, using a focused local window around each evaluation point</figcaption>
-</figure>
+![LOESS Smoothing Concept](../assets/diagrams/loess_concept.svg)
+
+*LOESS fits local weighted regressions at each point, using a focused local window around each evaluation point*
 
 For each point in your data, LOESS:
 
@@ -38,10 +37,9 @@ For each point in your data, LOESS:
 
 The `fraction` (also called bandwidth or span) is the most important parameter. It controls what proportion of data is used for each local fit.
 
-<figure markdown="span">
-  ![Fraction Effect](../assets/diagrams/fraction_comparison.svg){ width="1000" }
-  <figcaption>Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure</figcaption>
-</figure>
+![Fraction Effect](../assets/diagrams/fraction_comparison.svg)
+
+*Small fraction vs large fraction — bandwidth controls how closely the fit follows local structure*
 
 | Fraction | Effect | When to Use |
 | --- | --- | --- |
@@ -60,10 +58,9 @@ Start with `fraction=0.67` (the default) and adjust based on visual inspection. 
 
 Standard LOESS is sensitive to outliers. **Robustness iterations** downweight points with large residuals:
 
-<figure markdown="span">
-  ![Robustness Effect](../assets/diagrams/robust_iter_comparison.svg){ width="800" }
-  <figcaption>Non-robust LOESS (iterations=0) vs robust LOESS — outlier influence is suppressed through iterative reweighting</figcaption>
-</figure>
+![Robustness Effect](../assets/diagrams/robust_iter_comparison.svg)
+
+*Non-robust LOESS (iterations=0) vs robust LOESS — outlier influence is suppressed through iterative reweighting*
 
 | Iterations | Effect | When to Use |
 | --- | --- | --- |
@@ -76,10 +73,9 @@ Standard LOESS is sensitive to outliers. **Robustness iterations** downweight po
 
 ## Confidence vs Prediction Intervals
 
-<figure markdown="span">
-  ![Intervals](../assets/diagrams/intervals_comparison.svg){ width="800" }
-  <figcaption>Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (wide, new-point uncertainty)</figcaption>
-</figure>
+![Intervals](../assets/diagrams/intervals_comparison.svg)
+
+*Confidence intervals (narrow, mean curve uncertainty) vs Prediction intervals (wide, new-point uncertainty)*
 
 | Interval Type | What It Represents | Width |
 | --- | --- | --- |

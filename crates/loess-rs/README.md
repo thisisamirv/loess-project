@@ -118,52 +118,6 @@ All implementations are **numerical twins** of R's `loess`:
 | **Consistency** | ✅ PERFECT | Multiple scenarios pass with strict tolerance |
 | **Robustness** | ✅ VERIFIED | Robust smoothing matches R exactly |
 
-## API Reference
-
-```rust
-use loess_rs::prelude::*;
-
-let model = Loess::new()
-    .fraction(0.67)
-    .iterations(3)
-    .weight_function("tricube")
-    .robustness_method("bisquare")
-    .zero_weight_fallback("use_local_mean")
-    .boundary_policy("extend")
-    .scaling_method("mad")
-    .confidence_intervals(0.95)
-    .prediction_intervals(0.95)
-    .return_diagnostics()
-    .return_residuals()
-    .return_robustness_weights()
-    .cv_fractions(vec![0.3, 0.5, 0.7])
-    .cv_method("kfold")
-    .cv_k(5)
-    .cv_seed(123)
-    .auto_converge(1e-4)
-    .custom_weights(vec![1.0; x.len()])
-    .build()?;
-
-let result = model.fit(&x, &y)?;
-
-// Result structure:
-pub struct LoessResult<T> {
-    pub x: Vec<T>,                           // Sorted x values
-    pub y: Vec<T>,                           // Smoothed y values
-    pub standard_errors: Option<Vec<T>>,
-    pub confidence_lower: Option<Vec<T>>,
-    pub confidence_upper: Option<Vec<T>>,
-    pub prediction_lower: Option<Vec<T>>,
-    pub prediction_upper: Option<Vec<T>>,
-    pub residuals: Option<Vec<T>>,
-    pub robustness_weights: Option<Vec<T>>,
-    pub diagnostics: Option<Diagnostics<T>>,
-    pub iterations_used: Option<usize>,
-    pub fraction_used: T,
-    pub cv_scores: Option<Vec<T>>,
-}
-```
-
 ---
 
 ## Contributing
