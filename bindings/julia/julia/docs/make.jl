@@ -1,6 +1,9 @@
 using Documenter
 using FastLOESS
 
+# Use the top-level README as the homepage instead of a separately maintained page.
+cp(joinpath(@__DIR__, "..", "README.md"), joinpath(@__DIR__, "src", "index.md"); force = true)
+
 makedocs(
     sitename = "FastLOESS.jl",
     modules = [FastLOESS],

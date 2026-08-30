@@ -48,15 +48,9 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 
 ---
 
-## Installation
+## Installation & Documentation
 
-> [!NOTE]
->
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the documentation for your binding/crate (linked in the Documentation section above) for installation instructions.
-
-## Documentation
-
-> [!NOTE]
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the documentation for your binding/crate below for installation instructions.
 >
 > | Binding / Crate | Documentation |
 > | --- | --- |

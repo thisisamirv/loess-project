@@ -19,15 +19,9 @@ The `loess-project` also offers bindings for Rust, Python, R, Julia, Node.js, We
 
 ---
 
-## Installation
+## Installation & Documentation
 
-> [!NOTE]
->
 > Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the [Installation Guide](https://thisisamirv.github.io/loess-project/cpp/md_docs_2installation.html) for detailed installation instructions.
-
-## Documentation
-
-> [!NOTE]
 >
 > ### 📚 [View the full documentation](https://thisisamirv.github.io/loess-project/cpp/)
 
