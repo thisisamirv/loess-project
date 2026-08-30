@@ -12,7 +12,7 @@ The Rust crates provide the core implementation and high-performance extensions.
 
 Both crates expose the same three entry types via their `prelude`: `Loess` for batch mode, `StreamingLoess` for chunked processing, and `OnlineLoess` for sliding-window updates.
 
-> **StreamingLoess** and **OnlineLoess** are documented separately: [Streaming Adapter](api-streaming.md), [Online Adapter](api-online.md)
+> **StreamingLoess** and **OnlineLoess** are documented separately: [Streaming Adapter](crate::doc::api::streaming), [Online Adapter](crate::doc::api::online)
 
 ```text
 use loess_rs::prelude::*;  // or: use fastLoess::prelude::*;
@@ -62,9 +62,9 @@ Iterations used: Some(3)
 - Fits the model to the provided `x` and `y` arrays.
 - Returns `Result<LoessResult<T>, LoessError>`.
 
-See [Streaming Adapter](api-streaming.md) for the `StreamingLoess` struct.
+See [Streaming Adapter](crate::doc::api::streaming) for the `StreamingLoess` struct.
 
-See [Online Adapter](api-online.md) for the `OnlineLoess` struct.
+See [Online Adapter](crate::doc::api::online) for the `OnlineLoess` struct.
 
 ## Builder Configuration
 
@@ -82,22 +82,22 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
-| `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights (Batch only) — see [Custom Weights](custom-weights.md) |
-| `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) — see [Intervals](intervals.md) |
-| `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) — see [Intervals](intervals.md) |
+| `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights (Batch only) — see [Custom Weights](crate::doc::custom_weights) |
+| `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) — see [Intervals](crate::doc::intervals) |
+| `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) — see [Intervals](crate::doc::intervals) |
 | `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
 | `return_se()` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
-| `degree(...)` | `degree` | `"linear"` | Polynomial degree — see [Polynomial Degree](degree.md) |
-| `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions — see [Multivariate LOESS](dimensions.md) |
+| `degree(...)` | `degree` | `"linear"` | Polynomial degree — see [Polynomial Degree](crate::doc::degree) |
+| `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions — see [Multivariate LOESS](crate::doc::dimensions) |
 | `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
 | `weighted_metric_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode(...)` | `surface_mode` | `"interpolation"` | Surface computation mode |
 | `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
 | `boundary_degree_fallback(bool)` | `bool` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cv_method(...)` | `&str` | disabled | Cross-validation method — see [Cross-Validation](cross-validation.md) |
+| `cv_method(...)` | `&str` | disabled | Cross-validation method — see [Cross-Validation](crate::doc::cross_validation) |
 | `cv_k(...)` | `usize` | disabled | Number of folds for K-fold cross-validation |
 | `cv_fractions(...)` | `Vec<f64>` | disabled | Candidate fractions to evaluate during cross-validation |
 | `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
@@ -120,9 +120,9 @@ These chained methods configure the builder. They correspond to the "Options Str
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-See [Streaming Adapter](api-streaming.md) for Streaming Options.
+See [Streaming Adapter](crate::doc::api::streaming) for Streaming Options.
 
-See [Online Adapter](api-online.md) for Online Options.
+See [Online Adapter](crate::doc::api::online) for Online Options.
 
 ## Result Structure
 
@@ -169,7 +169,7 @@ See [Online Adapter](api-online.md) for Online Options.
 
 ### weight_function
 
-*See: [Weight Functions](kernels.md)*
+*See: [Weight Functions](crate::doc::kernels)*
 
 - `"tricube"` (default)
 - `"epanechnikov"`
@@ -181,7 +181,7 @@ See [Online Adapter](api-online.md) for Online Options.
 
 ### robustness_method
 
-*See: [Robustness](robustness.md)*
+*See: [Robustness](crate::doc::robustness)*
 
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
@@ -189,7 +189,7 @@ See [Online Adapter](api-online.md) for Online Options.
 
 ### boundary_policy
 
-*See: [Boundary Handling](boundary.md)*
+*See: [Boundary Handling](crate::doc::boundary)*
 
 - `"extend"` (default; alias: `"pad"`)
 - `"reflect"` (alias: `"mirror"`)
@@ -198,7 +198,7 @@ See [Online Adapter](api-online.md) for Online Options.
 
 ### scaling_method
 
-*See: [Scaling Methods](scaling.md)*
+*See: [Scaling Methods](crate::doc::scaling)*
 
 - `"mad"` (default; alias: `"median_absolute_deviation"`)
 - `"mar"` (alias: `"median_absolute_residual"`)
@@ -216,7 +216,7 @@ Behavior when all neighborhood weights are zero:
 
 ### distance_metric
 
-*See: [Multivariate LOESS](dimensions.md)*
+*See: [Multivariate LOESS](crate::doc::dimensions)*
 
 - `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
 - `"euclidean"` (alias: `"euclid"`)
@@ -227,7 +227,7 @@ Behavior when all neighborhood weights are zero:
 
 ### degree
 
-*See: [Polynomial Degree](degree.md)*
+*See: [Polynomial Degree](crate::doc::degree)*
 
 - `"constant"` or `"0"` (degree 0)
 - `"linear"` or `"1"` (default, degree 1)

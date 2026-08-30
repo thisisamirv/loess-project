@@ -32,9 +32,9 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = Loess(; fraction=0.5, confidence_intervals=0.95)
 result = fit(model, x, y)
 
-for i in 1:length(result.y)
-    println("x=$(result.x[i]): y=$(result.y[i]) [$(result.confidence_lower[i]), $(result.confidence_upper[i])]")
-end
+println("Smoothed (first 5): ", result.y[1:5])
+println("CI Lower (first 5): ", result.confidence_lower[1:5])
+println("CI Upper (first 5): ", result.confidence_upper[1:5])
 ```
 
 ---
@@ -123,9 +123,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = Loess(; confidence_intervals=0.95)
 result = fit(model, x, y)
 
-for (i, se) in enumerate(result.standard_errors)
-    println("Point $i: SE = $se")
-end
+println("Standard errors (first 5): ", result.standard_errors[1:5])
 ```
 
 ---

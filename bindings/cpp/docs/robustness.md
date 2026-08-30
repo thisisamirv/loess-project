@@ -160,9 +160,11 @@ int main() {
     auto result = model.fit(x, y).value();
 
     auto weights = result.robustness_weights();
-    for (size_t i = 0; i < weights.size(); ++i) {
+    int shown = 0;
+    for (size_t i = 0; i < weights.size() && shown < 5; ++i) {
         if (weights[i] < 0.5) {
             std::cout << "Potential outlier at " << i << std::endl;
+            ++shown;
         }
     }
 
@@ -176,21 +178,6 @@ Potential outlier at 24
 Potential outlier at 25
 Potential outlier at 26
 Potential outlier at 27
-Potential outlier at 28
-Potential outlier at 29
-Potential outlier at 30
-Potential outlier at 31
-Potential outlier at 32
-Potential outlier at 67
-Potential outlier at 68
-Potential outlier at 69
-Potential outlier at 70
-Potential outlier at 71
-Potential outlier at 72
-Potential outlier at 73
-Potential outlier at 74
-Potential outlier at 75
-Potential outlier at 76
 ```
 
 ---

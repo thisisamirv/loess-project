@@ -231,8 +231,8 @@ RÂ²: 0.971
 
 ## See Also
 
-- [Real-Time Processing](use-case-real-time.md) — For streaming time series
-- [Cross-Validation](cross-validation.md) — Optimal fraction selection
-- [Polynomial Degree](degree.md) — Degree 2 for curved trends
-- [Boundary Handling](boundary.md) — Edge bias in trend extraction
-- [API Reference](api.md) — Full parameter reference
+- [Real-Time Processing](crate::doc::use_cases::real_time) — For streaming time series
+- [Cross-Validation](crate::doc::cross_validation) — Optimal fraction selection
+- [Polynomial Degree](crate::doc::degree) — Degree 2 for curved trends
+- [Boundary Handling](crate::doc::boundary) — Edge bias in trend extraction
+- [API Reference](crate::doc::api) — Full parameter reference

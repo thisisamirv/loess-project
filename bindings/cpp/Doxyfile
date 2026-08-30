@@ -4,7 +4,7 @@
 
 # ---------------------------------------------------------------------------
 
-PROJECT_NAME           = "fastLoess"
+PROJECT_NAME           = "fastloess-cpp"
 PROJECT_BRIEF          = "High-performance LOESS smoothing — C++ API"
 OUTPUT_DIRECTORY       = .
 CREATE_SUBDIRS         = NO
@@ -16,7 +16,7 @@ CREATE_SUBDIRS         = NO
 # ---------------------------------------------------------------------------
 
 INPUT                  = README.md include docs
-FILE_PATTERNS          = *.hpp*.h *.md
+FILE_PATTERNS          = *.hpp *.h *.md
 IMAGE_PATH             = assets/diagrams
 RECURSIVE              = NO
 USE_MDFILE_AS_MAINPAGE = README.md

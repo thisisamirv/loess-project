@@ -1,6 +1,6 @@
 # OnlineLoess API
 
-See also: [loess](api.md)
+See also: [loess](crate::doc::api)
 
 ## When to Use
 
@@ -104,7 +104,7 @@ Returned inside `Ok(Some(...))` by `add_point()`. `None` while the window is sti
 
 ### update_mode
 
-*See: [Execution Modes](adapter-choice.md)*
+*See: [Execution Modes](crate::doc::adapter_choice)*
 
 | Mode | Alias | Behavior | Speed |
 | --- | --- | --- | --- |

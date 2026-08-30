@@ -90,7 +90,7 @@ fn main() -> Result<(), LoessError> {
     let y_with_outlier = vec![2.0, 4.0, 6.0, 50.0, 10.0, 12.0];  // 50.0 is outlier
 
 let model = Loess::new()
-    .fraction(0.5)
+    .fraction(0.7)
     .iterations(5)                    // More iterations for outliers
     .robustness_method("bisquare")   // Default, smooth downweighting
     .return_robustness_weights()      // See which points were downweighted
@@ -154,11 +154,11 @@ Smoothed 100 points
 
 | Topic | Link |
 | --- | --- |
-| How LOESS works | [Concepts](concepts.md) |
-| All parameters explained | [API Reference](api.md) |
-| Batch vs Streaming vs Online | [Execution Modes](adapter-choice.md) |
-| Polynomial degree choices | [Degree](degree.md) |
-| Multivariate smoothing | [Dimensions](dimensions.md) |
-| Edge handling | [Boundary](boundary.md) |
-| Outlier handling in depth | [Robustness](robustness.md) |
-| Full API per language | [API Reference](api.md) |
+| How LOESS works | [Concepts](crate::doc::concepts) |
+| All parameters explained | [API Reference](crate::doc::api) |
+| Batch vs Streaming vs Online | [Execution Modes](crate::doc::adapter_choice) |
+| Polynomial degree choices | [Degree](crate::doc::degree) |
+| Multivariate smoothing | [Dimensions](crate::doc::dimensions) |
+| Edge handling | [Boundary](crate::doc::boundary) |
+| Outlier handling in depth | [Robustness](crate::doc::robustness) |
+| Full API per language | [API Reference](crate::doc::api) |

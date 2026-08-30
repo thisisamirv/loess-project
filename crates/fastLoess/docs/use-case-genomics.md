@@ -150,9 +150,9 @@ First smoothed value (streaming genome): 41.56263674751861
 
 ## See Also
 
-- [Concepts](concepts.md) — How LOESS works
-- [API Reference](api.md) — All options
-- [Robustness](robustness.md) — Outlier downweighting in depth
-- [Merge Strategies](merge.md) — Streaming chunk reconciliation
-- [Boundary Handling](boundary.md) — Edge handling for sparse regions
-- [Real-Time Processing](use-case-real-time.md) — For sequencing runs
+- [Concepts](crate::doc::concepts) — How LOESS works
+- [API Reference](crate::doc::api) — All options
+- [Robustness](crate::doc::robustness) — Outlier downweighting in depth
+- [Merge Strategies](crate::doc::merge) — Streaming chunk reconciliation
+- [Boundary Handling](crate::doc::boundary) — Edge handling for sparse regions
+- [Real-Time Processing](crate::doc::use_cases::real_time) — For sequencing runs
