@@ -84,27 +84,15 @@ result <- fit(model, x, y)
 
 cat("Best fraction:", result$fraction_used, "\n")
 #> Best fraction: 0.25
-cat("CV scores by fraction:\n")
-#> CV scores by fraction:
-print(data.frame(fraction = fractions, score = result$cv_scores))
-#>    fraction     score
-#> 1      0.10 0.3657330
-#> 2      0.15 0.3564903
-#> 3      0.20 0.3535745
-#> 4      0.25 0.3521645
-#> 5      0.30 0.3561537
-#> 6      0.35 0.3576374
-#> 7      0.40 0.3731151
-#> 8      0.45 0.3867303
-#> 9      0.50 0.4015845
-#> 10     0.55 0.4140753
-#> 11     0.60 0.4338218
-#> 12     0.65 0.4369679
-#> 13     0.70 0.4504763
-#> 14     0.75 0.4643399
-#> 15     0.80 0.4836961
-#> 16     0.85 0.4980416
-#> 17     0.90 0.5115962
+
+scores_df <- data.frame(fraction = fractions, score = result$cv_scores)
+cat("Top 3 fractions by CV score:\n")
+#> Top 3 fractions by CV score:
+print(head(scores_df[order(scores_df$score), ], 3))
+#>   fraction     score
+#> 4     0.25 0.3521645
+#> 3     0.20 0.3535745
+#> 5     0.30 0.3561537
 ```
 
 ------------------------------------------------------------------------

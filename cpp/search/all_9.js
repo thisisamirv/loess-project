@@ -1,25 +1,9 @@
 var searchData=
 [
-  ['dashboard_20example_0',['Real-Time Dashboard Example',['../md_docs_2use-case-real-time.html#autotoc_md270',1,'']]],
-  ['data_1',['data',['../md_docs_2use-case-genomics.html#autotoc_md258',1,'Best Practices for Genomic Data'],['../md_docs_2dimensions.html#autotoc_md142',1,'Distance Metrics for Multivariate Data'],['../md_docs_2use-case-time-series.html#autotoc_md288',1,'Handling Missing Data']]],
-  ['data_20example_2',['Sensor Data Example',['../md_docs_2use-case-real-time.html#autotoc_md265',1,'']]],
-  ['data_20smoothing_3',['Genomic Data Smoothing',['../md_docs_2use-case-genomics.html',1,'']]],
-  ['decision_20guide_4',['Quick Decision Guide',['../md_docs_2concepts.html#autotoc_md84',1,'']]],
-  ['default_5',['default',['../md_docs_2dimensions.html#autotoc_md136',1,'1D — Standard (Default)'],['../md_docs_2robustness.html#autotoc_md223',1,'Bisquare (Default)'],['../md_docs_2degree.html#autotoc_md121',1,'Degree 1 — Local Linear (Default)'],['../md_docs_2boundary.html#autotoc_md63',1,'Extend (Default)'],['../md_docs_2scaling.html#autotoc_md239',1,'MAD — Median Absolute Deviation (Default)'],['../md_docs_2kernels.html#autotoc_md170',1,'Tricube (Default)']]],
-  ['degree_6',['degree',['../md_docs_2degree.html#autotoc_md129',1,'Choosing the Right Degree'],['../md_docs_2api.html#autotoc_md52',1,'degree'],['../md_docs_2degree.html',1,'Polynomial Degree']]],
-  ['degree_200_20—_20local_20constant_7',['Degree 0 — Local Constant',['../md_docs_2degree.html#autotoc_md119',1,'']]],
-  ['degree_201_20—_20local_20linear_20default_8',['Degree 1 — Local Linear (Default)',['../md_docs_2degree.html#autotoc_md121',1,'']]],
-  ['degree_202_20—_20local_20quadratic_9',['Degree 2 — Local Quadratic',['../md_docs_2degree.html#autotoc_md123',1,'']]],
-  ['degree_203_20—_20local_20cubic_10',['Degree 3 — Local Cubic',['../md_docs_2degree.html#autotoc_md125',1,'']]],
-  ['degree_204_20—_20local_20quartic_11',['Degree 4 — Local Quartic',['../md_docs_2degree.html#autotoc_md127',1,'']]],
-  ['degree_20effects_12',['Higher Degree Effects',['../md_docs_2degree.html#autotoc_md131',1,'']]],
-  ['degree_2emd_13',['degree.md',['../degree_8md.html',1,'']]],
-  ['detecting_20outliers_14',['Detecting Outliers',['../md_docs_2robustness.html#autotoc_md231',1,'']]],
-  ['detrending_15',['Detrending',['../md_docs_2use-case-time-series.html#autotoc_md284',1,'']]],
-  ['development_20version_16',['fastloess (C++) (development version)',['../md_docs_2NEWS.html#autotoc_md197',1,'']]],
-  ['deviation_20default_17',['MAD — Median Absolute Deviation (Default)',['../md_docs_2scaling.html#autotoc_md239',1,'']]],
-  ['dimensions_2emd_18',['dimensions.md',['../dimensions_8md.html',1,'']]],
-  ['distance_20metrics_20for_20multivariate_20data_19',['Distance Metrics for Multivariate Data',['../md_docs_2dimensions.html#autotoc_md142',1,'']]],
-  ['distance_5fmetric_20',['distance_metric',['../md_docs_2api.html#autotoc_md53',1,'']]],
-  ['documentation_21',['Installation &amp; Documentation',['../index.html#autotoc_md2',1,'']]]
+  ['k_5fdefault_5fchunk_5fsize_0',['k_default_chunk_size',['../namespacefastloess_1_1detail.html#a6916fb8ce782a3bf44496a44cc706da6',1,'fastloess::detail']]],
+  ['k_5fdefault_5fcv_5fk_1',['k_default_cv_k',['../namespacefastloess_1_1detail.html#a42b17d52ff37e457d7fcfe8fdac29acf',1,'fastloess::detail']]],
+  ['k_5fdefault_5ffraction_2',['k_default_fraction',['../namespacefastloess_1_1detail.html#a53a2c6c2254cd2e6af4fe7f794f11a8b',1,'fastloess::detail']]],
+  ['k_5fdefault_5foverlap_3',['k_default_overlap',['../namespacefastloess_1_1detail.html#a495ea685bf82cda48f8b65bb4ca68453',1,'fastloess::detail']]],
+  ['k_5fdefault_5fwindow_5fcapacity_4',['k_default_window_capacity',['../namespacefastloess_1_1detail.html#afcf25f829cc920c546e570edbdf1c6be',1,'fastloess::detail']]],
+  ['kernels_2emd_5',['kernels.md',['../kernels_8md.html',1,'']]]
 ];

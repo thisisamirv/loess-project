@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['merge_20strategies_0',['Merge Strategies',['../md_docs_2merge.html',1,'']]],
-  ['methods_1',['Scaling Methods',['../md_docs_2scaling.html',1,'']]],
-  ['modes_2',['Execution Modes',['../md_docs_2adapter-choice.html',1,'']]],
-  ['multivariate_20loess_3',['Multivariate LOESS',['../md_docs_2dimensions.html',1,'']]]
+  ['merge_20strategies_0',['Merge Strategies',['../merge.html',1,'advanced']]],
+  ['methods_1',['Scaling Methods',['../scaling.html',1,'customization']]],
+  ['modes_2',['Execution Modes',['../adapter_choice.html',1,'user_guide']]],
+  ['multivariate_20loess_3',['Multivariate LOESS',['../dimensions.html',1,'customization']]]
 ];

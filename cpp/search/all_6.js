@@ -1,26 +1,7 @@
 var searchData=
 [
-  ['a_20kernel_0',['Choosing a Kernel',['../md_docs_2kernels.html#autotoc_md184',1,'']]],
-  ['a_20known_20outlier_1',['Suppress a Known Outlier',['../md_docs_2custom-weights.html#autotoc_md112',1,'']]],
-  ['a_20policy_2',['Choosing a Policy',['../md_docs_2boundary.html#autotoc_md71',1,'']]],
-  ['a_20scaling_20method_3',['Choosing a Scaling Method',['../md_docs_2scaling.html#autotoc_md245',1,'']]],
-  ['a_20strategy_4',['Choosing a Strategy',['../md_docs_2merge.html#autotoc_md196',1,'']]],
-  ['absolute_20deviation_20default_5',['MAD — Median Absolute Deviation (Default)',['../md_docs_2scaling.html#autotoc_md239',1,'']]],
-  ['absolute_20residual_6',['absolute residual',['../md_docs_2scaling.html#autotoc_md241',1,'MAR — Median Absolute Residual'],['../md_docs_2scaling.html#autotoc_md243',1,'Mean — Mean Absolute Residual']]],
-  ['adapter_7',['When to Use Batch Adapter',['../md_docs_2api.html#autotoc_md38',1,'']]],
-  ['adapter_2dchoice_2emd_8',['adapter-choice.md',['../adapter-choice_8md.html',1,'']]],
-  ['added_9',['added',['../md_docs_2NEWS.html#autotoc_md207',1,'Added'],['../md_docs_2NEWS.html#autotoc_md201',1,'Added']]],
-  ['advantages_10',['Key Advantages',['../md_docs_2concepts.html#autotoc_md86',1,'']]],
-  ['also_11',['also',['../md_docs_2use-case-real-time.html#autotoc_md278',1,'See Also'],['../md_docs_2custom-weights.html#autotoc_md115',1,'See Also'],['../md_docs_2use-case-genomics.html#autotoc_md260',1,'See Also'],['../md_docs_2use-case-time-series.html#autotoc_md296',1,'See Also']]],
-  ['analysis_12',['analysis',['../md_docs_2use-case-time-series.html#autotoc_md290',1,'Multi-Scale Analysis'],['../md_docs_2use-case-time-series.html',1,'Time Series Analysis']]],
-  ['and_20higher_13',['3D and Higher',['../md_docs_2dimensions.html#autotoc_md140',1,'']]],
-  ['api_14',['api',['../md_docs_2api.html',1,'API'],['../md_docs_2api-online.html',1,'OnlineLoess API'],['../md_docs_2api-streaming.html',1,'StreamingLoess API']]],
-  ['api_2donline_2emd_15',['api-online.md',['../api-online_8md.html',1,'']]],
-  ['api_2dstreaming_2emd_16',['api-streaming.md',['../api-streaming_8md.html',1,'']]],
-  ['api_2emd_17',['api.md',['../api_8md.html',1,'']]],
-  ['application_18',['Application',['../md_docs_2use-case-genomics.html#autotoc_md254',1,'']]],
-  ['auto_20convergence_19',['Auto-Convergence',['../md_docs_2robustness.html#autotoc_md235',1,'']]],
-  ['availability_20',['availability',['../md_docs_2intervals.html#autotoc_md164',1,'Availability'],['../md_docs_2cross-validation.html#autotoc_md103',1,'Availability']]],
-  ['available_20kernels_21',['Available Kernels',['../md_docs_2kernels.html#autotoc_md168',1,'']]],
-  ['average_22',['average',['../md_docs_2merge.html#autotoc_md188',1,'Average'],['../md_docs_2merge.html#autotoc_md194',1,'Weighted Average']]]
+  ['genomic_20data_20smoothing_0',['Genomic Data Smoothing',['../use_case_genomics.html',1,'use_cases']]],
+  ['getting_20started_1',['Getting Started',['../getting_started.html',1,'']]],
+  ['getting_2dstarted_2emd_2',['getting-started.md',['../getting-started_8md.html',1,'']]],
+  ['guide_3',['User Guide',['../user_guide.html',1,'']]]
 ];

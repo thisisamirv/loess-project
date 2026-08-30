@@ -20,6 +20,14 @@
   per-binding/crate `NEWS.md`/`news.md` from the root `CHANGELOG.md`.
   Wired into every docs site’s navigation, the Rust crates’ rustdoc
   module tree, and every `Makefile` `dev` target.
+- Replaced `kernels.md`’s “Choosing a Kernel” mermaid flowchart (every
+  binding/crate) with an equivalent decision table, since Doxygen and
+  rustdoc don’t render mermaid and the deeply-nested diamond chain was
+  hard to read even where it did render.
+- Replaced `adapter-choice.md`/`adapters.md`’s “Overview” flowchart
+  (mermaid in most bindings/crates, ASCII art in the C++ docs) with an
+  equivalent decision table, unifying on a single rendering-agnostic
+  format across every binding/crate.
 - Consolidated `parameters.md`/the auto-generated `@autodocs` parameter
   reference across every binding and crate (C++, Julia, Node.js, Python,
   WASM, `fastLoess`, `loess-rs`): merged its unique content
@@ -70,6 +78,29 @@
   and a new `deploy` job using the official `actions/deploy-pages`,
   which this repo pins directly. Requires the repository’s Pages source
   to be switched to “GitHub Actions” in settings.
+- Fixed the “Handling Outliers” quickstart example (every binding and
+  the `loess-rs`/`fastLoess` crates) printing nothing: with only 6
+  points and `fraction = 0.5`, the local window is small enough that
+  tricube weighting drives the farthest neighbor’s weight to ~0, leaving
+  just 2 effectively-weighted points, which a degree-1 fit reproduces
+  exactly (zero residual, no downweighting) — confirmed directly against
+  the `lowess`/`loess` core, not binding-specific. Bumped to
+  `fraction = 0.7`, which correctly downweights the injected outlier.
+- Fixed the R
+  [`OnlineLoess()`](https://thisisamirv.github.io/loess-project/r/reference/OnlineLoess.md)
+  roxygen example printing one line per point (48 lines for a 50-point
+  loop); it now collects the smoothed values and prints only
+  `head(smoothed, 5)`.
+- Fixed the R
+  [`add_point()`](https://thisisamirv.github.io/loess-project/r/reference/add_point.md)
+  roxygen example always printing `NULL`, since a single call never
+  reaches the default `min_points = 3`; it now uses `min_points = 2L`
+  and shows the second (non-`NULL`) call’s result.
+- Fixed the Julia `intervals.md` “Confidence Intervals” and “Standard
+  Errors” examples each looping over all 100 points instead of a short
+  sample; switched to
+  `result.y[1:5]`/`result.confidence_lower[1:5]`/`result.standard_errors[1:5]`-style
+  slicing, matching the already-concise Python version.
 
 ## rfastloess 1.1.0
 

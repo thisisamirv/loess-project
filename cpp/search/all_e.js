@@ -1,13 +1,10 @@
 var searchData=
 [
-  ['inherits_20loessoptions_0',['inherits loessoptions',['../md_docs_2api-online.html#autotoc_md21',1,'OnlineOptions (inherits LoessOptions)'],['../md_docs_2api-streaming.html#autotoc_md33',1,'StreamingOptions (inherits LoessOptions)']]],
-  ['installation_1',['installation',['../md_docs_2installation.html',1,'Installation'],['../md_docs_2installation.html#autotoc_md150',1,'Verify Installation']]],
-  ['installation_20documentation_2',['Installation &amp; Documentation',['../index.html#autotoc_md2',1,'']]],
-  ['installation_2emd_3',['installation.md',['../installation_8md.html',1,'']]],
-  ['interpreting_20results_4',['Interpreting Results',['../md_docs_2cross-validation.html#autotoc_md101',1,'']]],
-  ['intervals_5',['intervals',['../md_docs_2intervals.html#autotoc_md158',1,'Both Intervals'],['../md_docs_2intervals.html#autotoc_md154',1,'Confidence Intervals'],['../md_docs_2concepts.html#autotoc_md80',1,'Confidence vs Prediction Intervals'],['../md_docs_2use-case-time-series.html#autotoc_md286',1,'Forecasting with Prediction Intervals'],['../md_docs_2intervals.html',1,'Intervals'],['../md_docs_2intervals.html#autotoc_md156',1,'Prediction Intervals'],['../md_docs_2quickstart.html#autotoc_md212',1,'With Confidence Intervals']]],
-  ['intervals_2emd_6',['intervals.md',['../intervals_8md.html',1,'']]],
-  ['is_20loess_7',['What is LOESS?',['../md_docs_2concepts.html#autotoc_md73',1,'']]],
-  ['it_20works_8',['How It Works',['../md_docs_2concepts.html#autotoc_md75',1,'']]],
-  ['iterations_9',['iterations',['../md_docs_2custom-weights.html#autotoc_md109',1,'Custom Weights vs. Robustness Iterations'],['../md_docs_2concepts.html#autotoc_md78',1,'Robustness Iterations']]]
+  ['parallel_0',['parallel',['../structfastloess_1_1LoessOptions.html#adfc1281ca0bcc93f743f932c8f938bfa',1,'fastloess::LoessOptions::parallel'],['../structfastloess_1_1OnlineOptions.html#a43fdf457917e5990db1e0fe5421a8dad',1,'fastloess::OnlineOptions::parallel']]],
+  ['polynomial_20degree_1',['Polynomial Degree',['../degree.html',1,'customization']]],
+  ['prediction_5fintervals_2',['prediction_intervals',['../structfastloess_1_1LoessOptions.html#ac1383a921e36b49b08d050e7d20a4523',1,'fastloess::LoessOptions::prediction_intervals'],['../structfastloess_1_1OnlineOptions.html#ae475cd129b866732ba741fa3d8a09f0b',1,'fastloess::OnlineOptions::prediction_intervals']]],
+  ['prediction_5flower_3',['prediction_lower',['../classfastloess_1_1LoessResult.html#ae158ff272f835628ca12166ce4cdf4ff',1,'fastloess::LoessResult']]],
+  ['prediction_5fupper_4',['prediction_upper',['../classfastloess_1_1LoessResult.html#ab42584927081188be41a10fba8a89555',1,'fastloess::LoessResult']]],
+  ['process_5fchunk_5',['process_chunk',['../classfastloess_1_1StreamingLoess.html#ae5faeacb6f5a64e0f5bcd4ebbdf2cf9e',1,'fastloess::StreamingLoess']]],
+  ['processing_6',['Real-Time Processing',['../use_case_real_time.html',1,'use_cases']]]
 ];

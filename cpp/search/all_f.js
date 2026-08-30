@@ -1,9 +1,5 @@
 var searchData=
 [
-  ['k_20fold_20cross_20validation_0',['K-Fold Cross-Validation',['../md_docs_2cross-validation.html#autotoc_md92',1,'']]],
-  ['kernel_1',['Choosing a Kernel',['../md_docs_2kernels.html#autotoc_md184',1,'']]],
-  ['kernels_2',['Available Kernels',['../md_docs_2kernels.html#autotoc_md168',1,'']]],
-  ['kernels_2emd_3',['kernels.md',['../kernels_8md.html',1,'']]],
-  ['key_20advantages_4',['Key Advantages',['../md_docs_2concepts.html#autotoc_md86',1,'']]],
-  ['known_20outlier_5',['Suppress a Known Outlier',['../md_docs_2custom-weights.html#autotoc_md112',1,'']]]
+  ['quick_20start_0',['Quick Start',['../quickstart.html',1,'getting_started']]],
+  ['quickstart_2emd_1',['quickstart.md',['../quickstart_8md.html',1,'']]]
 ];

@@ -1,25 +1,5 @@
 var searchData=
 [
-  ['basic_20smoothing_0',['Basic Smoothing',['../md_docs_2quickstart.html#autotoc_md210',1,'']]],
-  ['basic_20trend_20extraction_1',['Basic Trend Extraction',['../md_docs_2use-case-time-series.html#autotoc_md282',1,'']]],
-  ['basic_20usage_2',['Basic Usage',['../md_docs_2custom-weights.html#autotoc_md111',1,'']]],
-  ['batch_20adapter_3',['When to Use Batch Adapter',['../md_docs_2api.html#autotoc_md38',1,'']]],
-  ['benchmarks_4',['benchmarks',['../md_docs_2benchmarks.html',1,'Benchmarks'],['../md_docs_2benchmarks.html#autotoc_md57',1,'CPU Benchmarks'],['../md_docs_2benchmarks.html#autotoc_md59',1,'Reproducing Benchmarks']]],
-  ['benchmarks_2emd_5',['benchmarks.md',['../benchmarks_8md.html',1,'']]],
-  ['best_20practices_6',['Best Practices',['../md_docs_2cross-validation.html#autotoc_md105',1,'']]],
-  ['best_20practices_20for_20genomic_20data_7',['Best Practices for Genomic Data',['../md_docs_2use-case-genomics.html#autotoc_md258',1,'']]],
-  ['binaries_20linux_20x64_8',['Pre-built Binaries (Linux (x64))',['../md_docs_2installation.html#autotoc_md144',1,'']]],
-  ['binaries_20macos_20x64_9',['Pre-built Binaries (macOS (x64))',['../md_docs_2installation.html#autotoc_md145',1,'']]],
-  ['binaries_20windows_20x64_10',['Pre-built Binaries (Windows (x64))',['../md_docs_2installation.html#autotoc_md146',1,'']]],
-  ['bisquare_20default_11',['Bisquare (Default)',['../md_docs_2robustness.html#autotoc_md223',1,'']]],
-  ['biweight_12',['Biweight',['../md_docs_2kernels.html#autotoc_md176',1,'']]],
-  ['both_20intervals_13',['Both Intervals',['../md_docs_2intervals.html#autotoc_md158',1,'']]],
-  ['boundary_14',['No Boundary',['../md_docs_2boundary.html#autotoc_md69',1,'']]],
-  ['boundary_20handling_15',['Boundary Handling',['../md_docs_2boundary.html',1,'']]],
-  ['boundary_2emd_16',['boundary.md',['../boundary_8md.html',1,'']]],
-  ['boundary_5fpolicy_17',['boundary_policy',['../md_docs_2api.html#autotoc_md49',1,'']]],
-  ['built_20binaries_20linux_20x64_18',['Pre-built Binaries (Linux (x64))',['../md_docs_2installation.html#autotoc_md144',1,'']]],
-  ['built_20binaries_20macos_20x64_19',['Pre-built Binaries (macOS (x64))',['../md_docs_2installation.html#autotoc_md145',1,'']]],
-  ['built_20binaries_20windows_20x64_20',['Pre-built Binaries (Windows (x64))',['../md_docs_2installation.html#autotoc_md146',1,'']]],
-  ['by_20point_21',['Online Mode: Point-by-Point',['../md_docs_2use-case-real-time.html#autotoc_md264',1,'']]]
+  ['handling_0',['Boundary Handling',['../boundary.html',1,'advanced']]],
+  ['has_5fvalue_1',['has_value',['../classfastloess_1_1Expected.html#a39ed4f05838a583dd68837af006e5f1b',1,'fastloess::Expected::has_value()'],['../classfastloess_1_1Diagnostics.html#ac5e85580bde440a5af09f3189749ddf1',1,'fastloess::Diagnostics::has_value()'],['../classfastloess_1_1OnlineOutput.html#a4a63408745a62b2d92623d854cc8351e',1,'fastloess::OnlineOutput::has_value()']]]
 ];

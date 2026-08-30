@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['news_0',['NEWS',['../md_docs_2NEWS.html',1,'']]],
-  ['news_2emd_1',['NEWS.md',['../NEWS_8md.html',1,'']]],
-  ['next_20steps_2',['next steps',['../md_docs_2concepts.html#autotoc_md88',1,'Next Steps'],['../md_docs_2quickstart.html#autotoc_md218',1,'Next Steps']]],
-  ['no_20boundary_3',['No Boundary',['../md_docs_2boundary.html#autotoc_md69',1,'']]]
+  ['time_20processing_0',['Real-Time Processing',['../use_case_real_time.html',1,'use_cases']]],
+  ['time_20series_20analysis_1',['Time Series Analysis',['../use_case_time_series.html',1,'use_cases']]],
+  ['trace_5fhat_2',['trace_hat',['../classfastloess_1_1LoessResult.html#a3a27c194a48ab892b55c10007f694bde',1,'fastloess::LoessResult']]]
 ];

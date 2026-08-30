@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['quickstart_2emd_0',['quickstart.md',['../quickstart_8md.html',1,'']]]
+  ['merge_2emd_0',['merge.md',['../merge_8md.html',1,'']]]
 ];

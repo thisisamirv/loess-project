@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['installation_2emd_0',['installation.md',['../installation_8md.html',1,'']]],
-  ['intervals_2emd_1',['intervals.md',['../intervals_8md.html',1,'']]]
+  ['fastloess_2ehpp_0',['fastloess.hpp',['../fastloess_8hpp.html',1,'']]]
 ];

@@ -1,9 +1,10 @@
 var searchData=
 [
-  ['scaling_20methods_0',['Scaling Methods',['../md_docs_2scaling.html',1,'']]],
-  ['series_20analysis_1',['Time Series Analysis',['../md_docs_2use-case-time-series.html',1,'']]],
-  ['smoothing_2',['Genomic Data Smoothing',['../md_docs_2use-case-genomics.html',1,'']]],
-  ['start_3',['Quick Start',['../md_docs_2quickstart.html',1,'']]],
-  ['strategies_4',['Merge Strategies',['../md_docs_2merge.html',1,'']]],
-  ['streamingloess_20api_5',['StreamingLoess API',['../md_docs_2api-streaming.html',1,'']]]
+  ['scaling_20methods_0',['Scaling Methods',['../scaling.html',1,'customization']]],
+  ['series_20analysis_1',['Time Series Analysis',['../use_case_time_series.html',1,'use_cases']]],
+  ['smoothing_2',['Genomic Data Smoothing',['../use_case_genomics.html',1,'use_cases']]],
+  ['start_3',['Quick Start',['../quickstart.html',1,'getting_started']]],
+  ['started_4',['Getting Started',['../getting_started.html',1,'']]],
+  ['strategies_5',['Merge Strategies',['../merge.html',1,'advanced']]],
+  ['streamingloess_20api_6',['StreamingLoess API',['../api_streaming.html',1,'api']]]
 ];

@@ -1,12 +1,8 @@
 var searchData=
 [
-  ['effects_0',['Higher Degree Effects',['../md_docs_2degree.html#autotoc_md131',1,'']]],
-  ['epanechnikov_1',['Epanechnikov',['../md_docs_2kernels.html#autotoc_md172',1,'']]],
-  ['errors_2',['Standard Errors',['../md_docs_2intervals.html#autotoc_md162',1,'']]],
-  ['estimation_3',['Scale Estimation',['../md_docs_2robustness.html#autotoc_md233',1,'']]],
-  ['example_4',['example',['../md_docs_2api.html#autotoc_md55',1,'Example'],['../md_docs_2use-case-real-time.html#autotoc_md270',1,'Real-Time Dashboard Example'],['../md_docs_2use-case-real-time.html#autotoc_md265',1,'Sensor Data Example']]],
-  ['execution_20modes_5',['execution modes',['../md_docs_2adapter-choice.html',1,'Execution Modes'],['../md_docs_2concepts.html#autotoc_md82',1,'Execution Modes']]],
-  ['expression_20time_20course_6',['Gene Expression Time Course',['../md_docs_2use-case-time-series.html#autotoc_md292',1,'']]],
-  ['extend_20default_7',['Extend (Default)',['../md_docs_2boundary.html#autotoc_md63',1,'']]],
-  ['extraction_8',['Basic Trend Extraction',['../md_docs_2use-case-time-series.html#autotoc_md282',1,'']]]
+  ['leverage_0',['leverage',['../classfastloess_1_1LoessResult.html#a480d6301864768064da2d79d0d64fc0e',1,'fastloess::LoessResult']]],
+  ['loess_1',['loess',['../classfastloess_1_1Loess.html',1,'fastloess::Loess'],['../classfastloess_1_1Loess.html#af5fdb05f52ff9ad8f7c47954b312add8',1,'fastloess::Loess::Loess(const LoessOptions &amp;options={})'],['../classfastloess_1_1Loess.html#a58efc35cd52f06e72212196cd7573efa',1,'fastloess::Loess::Loess(const Loess &amp;)=delete'],['../classfastloess_1_1Loess.html#a5276bcb66f04a81f95248d0547bfa194',1,'fastloess::Loess::Loess(Loess &amp;&amp;other) noexcept'],['../dimensions.html',1,'Multivariate LOESS']]],
+  ['loesserror_2',['loesserror',['../classfastloess_1_1LoessError.html',1,'fastloess::LoessError'],['../classfastloess_1_1LoessError.html#a80e38cef81c37e198e9996bdaf79a38f',1,'fastloess::LoessError::LoessError()']]],
+  ['loessoptions_3',['LoessOptions',['../structfastloess_1_1LoessOptions.html',1,'fastloess']]],
+  ['loessresult_4',['loessresult',['../classfastloess_1_1LoessResult.html',1,'fastloess::LoessResult'],['../classfastloess_1_1LoessResult.html#a357e152476ec2ce26d07498ef0b0d070',1,'fastloess::LoessResult::LoessResult()=default'],['../classfastloess_1_1LoessResult.html#a1ddef294baca7d287fd45072e09c3b03',1,'fastloess::LoessResult::LoessResult(const fastloess_CppLoessResult &amp;c_result)'],['../classfastloess_1_1LoessResult.html#a330817b5979c5d9322504f08bd477d47',1,'fastloess::LoessResult::LoessResult(const LoessResult &amp;)=delete'],['../classfastloess_1_1LoessResult.html#af3ecbea8f02cee27b6c8da341c906fb8',1,'fastloess::LoessResult::LoessResult(LoessResult &amp;&amp;other) noexcept']]]
 ];

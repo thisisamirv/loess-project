@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['fastloess_0',['fastLoess',['../index.html',1,'']]],
-  ['functions_1',['Weight Functions',['../md_docs_2kernels.html',1,'']]]
+  ['fastloess_20cpp_0',['fastloess-cpp',['../index.html',1,'']]],
+  ['functions_1',['Weight Functions',['../kernels.html',1,'customization']]]
 ];
