@@ -286,6 +286,63 @@ benchmark_pathological <- function(iterations = 10) {
     results
 }
 
+benchmark_large <- function(iterations = 3) {
+    results <- list()
+
+    # surface = "direct" disables loess's k-d tree interpolation shortcut,
+    # forcing an exact fit at every point; at n = 50000 this reliably takes
+    # several seconds.
+    size <- 50000
+    data <- generate_sine_data(size)
+    run_direct <- function() {
+        loess(data$y ~ data$x, span = 0.1, control = loess.control(iterations = 3, surface = "direct"))
+    }
+    results$large_direct <- run_benchmark(
+        "large_direct", size, run_direct, iterations,
+        warmup = 1
+    )
+
+    # Same workload but with the default (interpolate) surface, showing how
+    # much the k-d tree shortcut speeds things up at scale.
+    run_interp <- function() {
+        loess(data$y ~ data$x, span = 0.1, control = loess.control(iterations = 3, surface = "interpolate"))
+    }
+    results$large_interp <- run_benchmark(
+        "large_interp", size, run_interp, iterations,
+        warmup = 1
+    )
+
+    # More robustness iterations at a smaller scale (still surface =
+    # "direct"). family = "symmetric" is required for stats::loess to
+    # actually perform robustness reweighting passes; the default
+    # family = "gaussian" ignores loess.control's iterations entirely.
+    size_iter <- 15000
+    data_iter <- generate_sine_data(size_iter)
+    run_high_iter <- function() {
+        loess(
+            data_iter$y ~ data_iter$x,
+            span = 0.1, family = "symmetric",
+            control = loess.control(iterations = 10, surface = "direct")
+        )
+    }
+    results$large_high_iter <- run_benchmark(
+        "large_high_iter", size_iter, run_high_iter, iterations,
+        warmup = 1
+    )
+
+    # Larger span (wider local window) at the same scale, since span cost
+    # compounds even with the interpolation shortcut active.
+    run_high_frac <- function() {
+        loess(data$y ~ data$x, span = 0.67, control = loess.control(iterations = 3, surface = "interpolate"))
+    }
+    results$large_high_fraction <- run_benchmark(
+        "large_high_fraction", size, run_high_frac, iterations,
+        warmup = 1
+    )
+
+    results
+}
+
 # ============================================================================
 # Main Execution
 # ============================================================================
@@ -305,6 +362,7 @@ main <- function() {
     all_results$scientific <- unname(benchmark_scientific(iterations))
     all_results$genomic <- unname(benchmark_genomic(iterations))
     all_results$pathological <- unname(benchmark_pathological(iterations))
+    all_results$large <- unname(benchmark_large())
 
     # Save to shared output directory (benchmarks/output/)
     args <- commandArgs(trailingOnly = FALSE)

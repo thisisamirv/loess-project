@@ -18,6 +18,10 @@ Speedup relative to R's `stats::loess` (higher is better):
 | **Genomic** (100K) | 1× | 137× | **201×** |
 | **High Noise** | 1× | 22× | **25×** |
 | **Iterations** (1–10) | 1× | 13× | **16×** |
+| **Large** (Direct) | 1× | 0.9× | **3×** |
+| **Large** (High Fraction) | 1× | 577× | **695×** |
+| **Large** (High Iterations) | 1× | 6× | **9×** |
+| **Large** (Interpolate) | 1× | 60× | **83×** |
 | **Scale** (1K–10K) | 1× | **8×** | 8× |
 | **Scientific** (500–5K) | 1× | 4× | **5×** |
 

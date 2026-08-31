@@ -142,7 +142,7 @@ benchmark_scalability <- function(n_iter = 10) {
         model <- make_model(0.1, 3)
         results[[paste0("scale_", size)]] <- run_benchmark(
             paste0("scale_", size), size,
-            function() model$fit(d$x, d$y),
+            function() fit(model, d$x, d$y),
             n_iter
         )
     }
@@ -157,7 +157,7 @@ benchmark_fraction <- function(n_iter = 10) {
         model <- make_model(frac, 3)
         run_benchmark(
             paste0("fraction_", frac), size,
-            function() model$fit(d$x, d$y),
+            function() fit(model, d$x, d$y),
             n_iter
         )
     })
@@ -173,7 +173,7 @@ benchmark_iterations <- function(n_iter = 10) {
         model <- make_model(0.2, it)
         run_benchmark(
             paste0("iterations_", it), size,
-            function() model$fit(d$x, d$y),
+            function() fit(model, d$x, d$y),
             n_iter
         )
     })
@@ -188,7 +188,7 @@ benchmark_financial <- function(n_iter = 10) {
         model <- make_model(0.1, 2)
         results[[paste0("financial_", size)]] <- run_benchmark(
             paste0("financial_", size), size,
-            function() model$fit(d$x, d$y),
+            function() fit(model, d$x, d$y),
             n_iter
         )
     }
@@ -202,7 +202,7 @@ benchmark_scientific <- function(n_iter = 10) {
         model <- make_model(0.15, 3)
         results[[paste0("scientific_", size)]] <- run_benchmark(
             paste0("scientific_", size), size,
-            function() model$fit(d$x, d$y),
+            function() fit(model, d$x, d$y),
             n_iter
         )
     }
@@ -217,7 +217,7 @@ benchmark_genomic <- function(n_iter = 10) {
         size_str <- format(size, scientific = FALSE, trim = TRUE)
         results[[paste0("genomic_", size_str)]] <- run_benchmark(
             paste0("genomic_", size_str), size,
-            function() model$fit(d$x, d$y),
+            function() fit(model, d$x, d$y),
             n_iter
         )
     }
@@ -231,26 +231,104 @@ benchmark_pathological <- function(n_iter = 10) {
     d <- generate_clustered_data(size)
     model <- make_model(0.3, 2)
     results$clustered <- run_benchmark(
-        "clustered", size, function() model$fit(d$x, d$y), n_iter
+        "clustered", size, function() fit(model, d$x, d$y), n_iter
     )
 
     d <- generate_high_noise_data(size)
     model <- make_model(0.5, 5)
     results$high_noise <- run_benchmark(
-        "high_noise", size, function() model$fit(d$x, d$y), n_iter
+        "high_noise", size, function() fit(model, d$x, d$y), n_iter
     )
 
     d <- generate_outlier_data(size)
     model <- make_model(0.2, 10)
     results$extreme_outliers <- run_benchmark(
-        "extreme_outliers", size, function() model$fit(d$x, d$y), n_iter
+        "extreme_outliers", size, function() fit(model, d$x, d$y), n_iter
     )
 
     xk <- as.numeric(seq_len(size))
     yk <- rep(5.0, size)
     model <- make_model(0.2, 2)
     results$constant_y <- run_benchmark(
-        "constant_y", size, function() model$fit(xk, yk), n_iter
+        "constant_y", size, function() fit(model, xk, yk), n_iter
+    )
+
+    results
+}
+
+benchmark_large <- function(n_iter = 3) {
+    size <- 50000
+    d <- generate_sine_data(size)
+
+    # surface_mode = "direct" matches stats_loess.R's large_direct benchmark
+    # (disables the k-d tree interpolation shortcut); at n = 50000 this
+    # reliably takes several seconds for stats::loess and gives a fair
+    # comparison.
+    model_direct <- Loess(
+        fraction        = 0.1,
+        iterations      = 3,
+        parallel        = isTRUE(getOption("rfastloess.parallel")),
+        degree          = "linear",
+        boundary_policy = "noboundary",
+        scaling_method  = "mar",
+        surface_mode    = "direct"
+    )
+    results <- list(large_direct = run_benchmark(
+        "large_direct", size, function() fit(model_direct, d$x, d$y), n_iter,
+        warmup = 1
+    ))
+
+    # Same workload as above but with the default (interpolation) surface
+    # mode, showing how much the k-d tree shortcut speeds things up at scale.
+    model_interp <- Loess(
+        fraction        = 0.1,
+        iterations      = 3,
+        parallel        = isTRUE(getOption("rfastloess.parallel")),
+        degree          = "linear",
+        boundary_policy = "noboundary",
+        scaling_method  = "mar",
+        surface_mode    = "interpolation"
+    )
+    results$large_interp <- run_benchmark(
+        "large_interp", size, function() fit(model_interp, d$x, d$y), n_iter,
+        warmup = 1
+    )
+
+    # More robustness iterations at a smaller scale (still surface_mode =
+    # "direct", since that's what makes the iteration count matter for
+    # stats::loess's family = "symmetric" comparison).
+    size_iter <- 15000
+    d_iter <- generate_sine_data(size_iter)
+    model_high_iter <- Loess(
+        fraction        = 0.1,
+        iterations      = 10,
+        parallel        = isTRUE(getOption("rfastloess.parallel")),
+        degree          = "linear",
+        boundary_policy = "noboundary",
+        scaling_method  = "mar",
+        surface_mode    = "direct"
+    )
+    results$large_high_iter <- run_benchmark(
+        "large_high_iter", size_iter,
+        function() fit(model_high_iter, d_iter$x, d_iter$y), n_iter,
+        warmup = 1
+    )
+
+    # Larger fraction (wider local window) at the same scale, since span
+    # cost compounds even with the interpolation shortcut active.
+    model_high_frac <- Loess(
+        fraction        = 0.67,
+        iterations      = 3,
+        parallel        = isTRUE(getOption("rfastloess.parallel")),
+        degree          = "linear",
+        boundary_policy = "noboundary",
+        scaling_method  = "mar",
+        surface_mode    = "interpolation"
+    )
+    results$large_high_fraction <- run_benchmark(
+        "large_high_fraction", size,
+        function() fit(model_high_frac, d$x, d$y), n_iter,
+        warmup = 1
     )
 
     results
@@ -288,6 +366,7 @@ main <- function() {
     all_results$scientific <- unname(benchmark_scientific(n_iter))
     all_results$genomic <- unname(benchmark_genomic(n_iter))
     all_results$pathological <- unname(benchmark_pathological(n_iter))
+    all_results$large <- unname(benchmark_large())
 
     # Locate output directory relative to this script
     all_args <- commandArgs(trailingOnly = FALSE)
