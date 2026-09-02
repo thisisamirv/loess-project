@@ -34,7 +34,7 @@ nalgebra = { version = "0.35", default-features = false, features = [
     "alloc",
     "libm",
 ] }
-wide = { version = "1.6", default-features = false }
+wide = { version = "1.7", default-features = false }
 
 [dev-dependencies]
 approx = "0.5"

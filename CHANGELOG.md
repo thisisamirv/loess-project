@@ -39,6 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Updated `napi` to v3.12.
+- Updated `napi-derive` to v3.6.
+- Updated `napi-build` to v2.4.
 - Updated `typedoc-plugin-markdown` to v4.13.
 - `make nodejs-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
 
@@ -46,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated `typedoc-plugin-markdown` to v4.13.
 - `make wasm-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
+
+**loess-rs:**
+
+- Updated `wide` to v1.7.
 
 ### Fixed
 
