@@ -190,7 +190,7 @@ def main() -> None:
     if not DOCS_DIR.exists():
         sys.exit(f"Docs directory not found: {DOCS_DIR}")
 
-    md_files = sorted(DOCS_DIR.glob("*.md"))
+    md_files = sorted(DOCS_DIR.rglob("*.md"))
     tasks: list[tuple[Path, int, str]] = [
         (md, start, code)
         for md in md_files

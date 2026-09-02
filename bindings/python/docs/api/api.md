@@ -61,16 +61,16 @@ See [Online Adapter](api-online.md) for the `OnlineLoess` class.
 | `boundary_policy` | `str` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `float` | `None` | Auto-convergence tolerance |
-| `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only; see [Custom Weights](../user-guide/custom-weights.md)) |
-| `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95) — see [Intervals](../user-guide/intervals.md) |
-| `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95) — see [Intervals](../user-guide/intervals.md) |
+| `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only; see [Custom Weights](../weighting/custom-weights.md)) |
+| `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
+| `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
 | `return_diagnostics` | `bool` | `False` | Compute RMSE, MAE, R², AIC |
 | `return_residuals` | `bool` | `False` | Include residuals in result |
 | `return_robustness_weights` | `bool` | `False` | Include robustness weights in result |
 | `return_se` | `bool` | `False` | Compute hat-matrix statistics (enp, leverage …) |
 | `parallel` | `bool` | `True` | Enable parallel execution |
-| `degree` | `str` | `"linear"` | Polynomial degree of local fit — see [Polynomial Degree](../user-guide/degree.md) |
-| `dimensions` | `int` | `1` | Number of predictor dimensions — see [Multivariate LOESS](../user-guide/dimensions.md) |
+| `degree` | `str` | `"linear"` | Polynomial degree of local fit — see [Polynomial Degree](../advanced/degree.md) |
+| `dimensions` | `int` | `1` | Number of predictor dimensions — see [Multivariate LOESS](../advanced/dimensions.md) |
 | `distance_metric` | `str` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `list[float]` | `None` | Per-dimension weights (used when `distance_metric="weighted"`) |
 | `surface_mode` | `str` | `"interpolation"` | Surface computation mode |
@@ -149,7 +149,7 @@ See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 ### weight_function
 
-*See: [Weight Functions](../user-guide/kernels.md)*
+*See: [Weight Functions](../weighting/kernels.md)*
 
 - `"tricube"` (default)
 - `"epanechnikov"`
@@ -161,7 +161,7 @@ See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 ### robustness_method
 
-*See: [Robustness](../user-guide/robustness.md)*
+*See: [Robustness](../weighting/robustness.md)*
 
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
@@ -169,7 +169,7 @@ See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 ### boundary_policy
 
-*See: [Boundary Handling](../user-guide/boundary.md)*
+*See: [Boundary Handling](../advanced/boundary.md)*
 
 - `"extend"` (default; alias: `"pad"`)
 - `"reflect"` (alias: `"mirror"`)
@@ -178,7 +178,7 @@ See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 ### scaling_method
 
-*See: [Scaling Methods](../user-guide/scaling.md)*
+*See: [Scaling Methods](../weighting/scaling.md)*
 
 - `"mad"` (default; alias: `"median_absolute_deviation"`)
 - `"mar"` (alias: `"median_absolute_residual"`)
@@ -196,7 +196,7 @@ Behavior when all neighborhood weights are zero:
 
 ### degree
 
-*See: [Polynomial Degree](../user-guide/degree.md)*
+*See: [Polynomial Degree](../advanced/degree.md)*
 
 - `"constant"` or `"0"` (degree 0)
 - `"linear"` or `"1"` (default, degree 1)
@@ -206,7 +206,7 @@ Behavior when all neighborhood weights are zero:
 
 ### distance_metric
 
-*See: [Multivariate LOESS](../user-guide/dimensions.md)*
+*See: [Multivariate LOESS](../advanced/dimensions.md)*
 
 - `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
 - `"euclidean"` (alias: `"euclid"`)
@@ -217,7 +217,7 @@ Behavior when all neighborhood weights are zero:
 
 ### surface_mode
 
-*See: [Polynomial Degree](../user-guide/degree.md#surface-mode)*
+*See: [Polynomial Degree](../advanced/degree.md#surface-mode)*
 
 Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
 

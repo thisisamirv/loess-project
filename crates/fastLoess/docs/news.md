@@ -22,7 +22,7 @@
 * Fixed the R `add_point()` roxygen example always printing `NULL`, since a single call never reaches the default `min_points = 3`; it now uses `min_points = 2L` and shows the second (non-`NULL`) call's result.
 * Fixed the Julia `intervals.md` "Confidence Intervals" and "Standard Errors" examples each looping over all 100 points instead of a short sample; switched to `result.y[1:5]`/`result.confidence_lower[1:5]`/`result.standard_errors[1:5]`-style slicing, matching the already-concise Python version.
 * Fixed inline/display LaTeX math rendering as literal text on docs.rs; added a `katex-header.html` that renders it client-side with KaTeX.
-* Fixed every cross-reference link across the `loess-rs`/`fastLoess` crate docs (`quickstart.md`, `api.md`, `concepts.md`, and others) leading nowhere: these pages are embedded into rustdoc via `#![doc = include_str!(...)]`, and plain relative links like `[Concepts](concepts.md)` are rendered verbatim rather than resolved against the generated module tree. Converted every such link to a proper intra-doc link (e.g. `[Concepts](crate::doc::concepts)`), validated with `cargo doc --all-features` under `-D warnings` (zero broken-link warnings).
+* Fixed every cross-reference link across the `loess-rs`/`fastLoess` crate docs (`quickstart.md`, `api.md`, `concepts.md`, and others) leading nowhere: these pages are embedded into rustdoc via `#![doc = include_str!(...)]`, and plain relative links like `[Concepts](concepts.md)` are rendered verbatim rather than resolved against the generated module tree. Converted every such link to a proper intra-doc link (e.g. `[Concepts](crate::doc::introduction::concepts)`), validated with `cargo doc --all-features` under `-D warnings` (zero broken-link warnings).
 
 # fastLoess 1.1.0
 

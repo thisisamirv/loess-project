@@ -77,8 +77,8 @@ function processFile(filepath) {
     return { changed, errors };
 }
 
-const files = fs.readdirSync(DOCS_DIR)
-    .filter(f => f.endsWith('.md') && f !== 'index.md')
+const files = fs.readdirSync(DOCS_DIR, { recursive: true })
+    .filter(f => f.endsWith('.md') && path.basename(f) !== 'index.md')
     .sort();
 
 let updated = 0;

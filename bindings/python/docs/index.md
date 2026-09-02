@@ -96,7 +96,7 @@ Or from conda-forge:
 conda install -c conda-forge fastloess
 ```
 
-See the [Installation Guide](getting-started/installation.md) for more options and details.
+See the [Installation Guide](introduction/installation.md) for more options and details.
 
 ## Quick Example
 
@@ -114,9 +114,9 @@ print(result.y)
 
 ## Getting Started
 
-1. [Installation](getting-started/installation.md) — Set up the library for your language
-2. [Quick Start](getting-started/quickstart.md) — Basic usage examples
-3. [Concepts](getting-started/concepts.md) — Understand how LOESS works
+1. [Installation](introduction/installation.md) — Set up the library for your language
+2. [Quick Start](introduction/quickstart.md) — Basic usage examples
+3. [Concepts](introduction/concepts.md) — Understand how LOESS works
 
 ## License
 
@@ -127,8 +127,11 @@ Dual-licensed under [MIT](https://opensource.org/licenses/MIT) or [Apache-2.0](h
 :hidden:
 :caption: Documentation
 
-getting-started/index
-user-guide/index
+introduction/index
+guide/index
+weighting/index
+advanced/index
+use-case/index
 api/index
 benchmarks
 :::

@@ -36,8 +36,6 @@ articles:
   - title: User Guide
     contents:
       - adapter-choice
-      - degree
-      - dimensions
       - intervals
       - cross-validation
   - title: Weight & Robustness
@@ -50,6 +48,8 @@ articles:
     contents:
       - boundary
       - merge
+      - degree
+      - dimensions
   - title: Use Cases
     contents:
       - use-case-genomics
