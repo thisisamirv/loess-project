@@ -42,7 +42,9 @@ x_chunk = np.linspace(0, 2 * np.pi, n)
 y_chunk = np.sin(x_chunk) + rng.normal(0, 0.3, n)
 
 model = StreamingLoess(merge_strategy="average", chunk_size=5000, overlap=500)
-result = model.process_chunk(x_chunk, y_chunk)
+model.process_chunk(x_chunk, y_chunk)
+result = model.finalize()
+print(f"Smoothed y[0]: {result.y[0]:.4f}")
 :::
 
 ---

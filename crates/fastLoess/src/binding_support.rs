@@ -1000,7 +1000,7 @@ pub fn build_streaming(
 }
 
 // Build a parallel online processor.
-// Defaults: window_capacity = 1000, min_points = 3, update_mode = Full.
+// Defaults: window_capacity = 1000, min_points = 2, update_mode = Incremental.
 pub fn build_online(
     builder: LoessBuilder<f64>,
     window_capacity: Option<usize>,
@@ -1008,10 +1008,10 @@ pub fn build_online(
     update_mode: Option<&str>,
 ) -> Result<ParallelOnlineLoess<f64>, BindingError> {
     let wc = window_capacity.unwrap_or(1000);
-    let mp = min_points.unwrap_or(3);
+    let mp = min_points.unwrap_or(2);
     let um = match update_mode {
         Some(s) => map_invalid_arg(parse_update_mode(s))?,
-        None => UpdateMode::Full,
+        None => UpdateMode::Incremental,
     };
     map_loess_result(
         builder

@@ -35,39 +35,6 @@ Speedup relative to R's `stats::loess` (higher is better):
 
 *Averages across all sizes within each category.*
 
----
-
----
-
-## Reproducing Benchmarks
-
-```{r benchmarks_1, eval=FALSE}
-# install.packages("microbenchmark")
-
-library(rfastloess)
-library(microbenchmark)
-
-set.seed(42)
-n <- 5000
-x <- seq(0, 10, length.out = n)
-y <- sin(x) + rnorm(n, sd = 0.3)
-
-mb <- microbenchmark(
-    stats_loess = stats::loess(y ~ x, span = 0.67),
-    rfastloess_serial = {
-        m <- Loess(fraction = 0.67)
-        fit(m, x, y)
-    },
-    rfastloess_parallel = {
-        m <- Loess(fraction = 0.67, parallel = TRUE)
-        fit(m, x, y)
-    },
-    times = 50
-)
-cat("Benchmark results:\n")
-print(mb)
-```
-
 ```{r session-info}
 sessionInfo()
 ```

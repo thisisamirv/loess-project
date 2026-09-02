@@ -90,12 +90,6 @@ using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using Random, Statistics
-
-rng = MersenneTwister(42)
 
 # Irregular time points (gaps in data)
 t_irregular = sort(rand(200) .*100.0)
@@ -140,8 +134,6 @@ using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 hours = collect(range(0, 24, step=0.5))
 expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hours)) .* 10.0

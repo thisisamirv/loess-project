@@ -50,19 +50,23 @@ int main() {
 
     fastloess::StreamingOptions opts;
     opts.merge_strategy = "average";
-    opts.chunk_size = 5000;
-    opts.overlap = 500;
+    opts.chunk_size = 60;
+    opts.overlap = 20;
     fastloess::StreamingLoess stream(opts);
-    (void)stream.process_chunk(x, y);
-    auto result = stream.finalize().value();
+    std::vector<double> x1(x.begin(), x.begin() + 60), y1(y.begin(), y.begin() + 60);
+    std::vector<double> x2(x.begin() + 60, x.end()), y2(y.begin() + 60, y.end());
+    (void)stream.process_chunk(x1, y1).value();
+    // The second chunk's overlap region (its first 20 points) is where
+    // merge_strategy actually blends the two chunks' estimates.
+    auto result = stream.process_chunk(x2, y2).value();
 
-    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
+    std::cout << "Merged value in overlap region (average): " << result.y_vector()[5] << "\n";
     return 0;
 }
 ```
 
 ```output
-Smoothed 100 points
+Merged value in overlap region (average): 0.324852
 ```
 
 ---
@@ -89,17 +93,21 @@ int main() {
 
     fastloess::StreamingOptions s_opts;
     s_opts.merge_strategy = "take_first";
+    s_opts.chunk_size = 60;
+    s_opts.overlap = 20;
     fastloess::StreamingLoess stream(s_opts);
-    (void)stream.process_chunk(x, y);
-    auto result = stream.finalize().value();
+    std::vector<double> x1(x.begin(), x.begin() + 60), y1(y.begin(), y.begin() + 60);
+    std::vector<double> x2(x.begin() + 60, x.end()), y2(y.begin() + 60, y.end());
+    (void)stream.process_chunk(x1, y1).value();
+    auto result = stream.process_chunk(x2, y2).value();
 
-    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
+    std::cout << "Merged value in overlap region (take_first): " << result.y_vector()[5] << "\n";
     return 0;
 }
 ```
 
 ```output
-Smoothed 100 points
+Merged value in overlap region (take_first): 0.353763
 ```
 
 ---
@@ -126,17 +134,21 @@ int main() {
 
     fastloess::StreamingOptions s_opts;
     s_opts.merge_strategy = "take_last";
+    s_opts.chunk_size = 60;
+    s_opts.overlap = 20;
     fastloess::StreamingLoess stream(s_opts);
-    (void)stream.process_chunk(x, y);
-    auto result = stream.finalize().value();
+    std::vector<double> x1(x.begin(), x.begin() + 60), y1(y.begin(), y.begin() + 60);
+    std::vector<double> x2(x.begin() + 60, x.end()), y2(y.begin() + 60, y.end());
+    (void)stream.process_chunk(x1, y1).value();
+    auto result = stream.process_chunk(x2, y2).value();
 
-    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
+    std::cout << "Merged value in overlap region (take_last): " << result.y_vector()[5] << "\n";
     return 0;
 }
 ```
 
 ```output
-Smoothed 100 points
+Merged value in overlap region (take_last): 0.295941
 ```
 
 ---
@@ -167,17 +179,21 @@ int main() {
 
     fastloess::StreamingOptions s_opts;
     s_opts.merge_strategy = "weighted_average";
+    s_opts.chunk_size = 60;
+    s_opts.overlap = 20;
     fastloess::StreamingLoess stream(s_opts);
-    (void)stream.process_chunk(x, y);
-    auto result = stream.finalize().value();
+    std::vector<double> x1(x.begin(), x.begin() + 60), y1(y.begin(), y.begin() + 60);
+    std::vector<double> x2(x.begin() + 60, x.end()), y2(y.begin() + 60, y.end());
+    (void)stream.process_chunk(x1, y1).value();
+    auto result = stream.process_chunk(x2, y2).value();
 
-    std::cout << "Smoothed " << result.y_vector().size() << " points\n";
+    std::cout << "Merged value in overlap region (weighted_average): " << result.y_vector()[5] << "\n";
     return 0;
 }
 ```
 
 ```output
-Smoothed 100 points
+Merged value in overlap region (weighted_average): 0.339308
 ```
 
 ---

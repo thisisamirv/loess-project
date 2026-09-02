@@ -28,8 +28,9 @@ Single predictor. No configuration required.
 import numpy as np
 import fastloess as fl
 
+rng = np.random.default_rng(42)
 x = np.linspace(0, 10, 200)
-y = np.sin(x) + np.random.normal(0, 0.2, 200)
+y = np.sin(x) + rng.normal(0, 0.2, 200)
 model = fl.Loess(fraction=0.3)
 result = model.fit(x, y)
 print(f"Smoothed y[0]: {result.y[0]:.4f}")

@@ -87,9 +87,9 @@ export interface StreamingOptions {
 export interface OnlineOptions {
     /** Maximum number of points to retain in the sliding window. Default: 1000. */
     window_capacity?: number;
-    /** Minimum points required before smoothing starts. Default: 3. */
+    /** Minimum points required before smoothing starts. Default: 2. */
     min_points?: number;
-    /** Update strategy (\"full\" or \"incremental\"). Default: \"full\". */
+    /** Update strategy (\"full\" or \"incremental\"). Default: \"incremental\". */
     update_mode?: string;
 }
 

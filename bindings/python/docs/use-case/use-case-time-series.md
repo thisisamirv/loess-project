@@ -217,7 +217,7 @@ print(f"R²: {result.diagnostics.r_squared:.3f}")
 
 ## See Also
 
-- [Real-Time Processing](real-time.md) — For streaming time series
+- [Real-Time Processing](use-case-real-time.md) — For streaming time series
 - [Cross-Validation](../guide/cross-validation.md) — Optimal fraction selection
 - [Polynomial Degree](../advanced/degree.md) — Degree 2 for curved trends
 - [Boundary Handling](../advanced/boundary.md) — Edge bias in trend extraction

@@ -126,6 +126,8 @@ flowchart TD
 | Robust to outliers | ✓ | ✗ | ✗ |
 | Uncertainty estimates | ✓ | ✓ | ✗ |
 | Handles irregular sampling | ✓ | ✓ | ✗ |
+| Multivariate predictors | ✓ | ✓ | ✗ |
+| Adjustable polynomial degree | ✓ (0–4) | ✓ | ✗ |
 
 ---
 
@@ -139,4 +141,3 @@ flowchart TD
 - [Robustness](../weighting/robustness.md) — Outlier downweighting methods
 - [Scaling Methods](../weighting/scaling.md) — MAD, MAR, Mean scale estimation
 - [Merge Strategies](../advanced/merge.md) — Chunk reconciliation in Streaming mode
-- [Tutorials](../guide/index.md) — Application-specific guides

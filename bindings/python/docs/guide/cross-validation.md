@@ -124,7 +124,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Loess(cv_method="kfold", cv_k=5,
                    cv_fractions=[0.1, 0.3, 0.5, 0.7])
 result = model.fit(x, y)
-
+print(f"Selected fraction: {result.fraction_used}")
 :::
 
 The fraction with **lowest CV score** is automatically selected.

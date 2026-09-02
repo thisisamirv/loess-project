@@ -33,7 +33,7 @@ import numpy as np
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + 0.1
 
-online = fl.OnlineLoess(fraction=0.5, window_capacity=50)
+online = fl.OnlineLoess(fraction=0.5, window_capacity=50, min_points=3)
 
 result = online.add_point(x[0], y[0])  # None
 result = online.add_point(x[1], y[1])  # None
@@ -51,7 +51,7 @@ print(result)
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
-| `min_points` | `int` | `3` | Min points before smoothing starts |
+| `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `str` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 | `parallel` | `bool` | `False` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 
@@ -73,7 +73,7 @@ Returned by `add_point()` once the window has enough points (`None` until then).
 
 ### update_mode
 
-*See: [Execution Modes](../guide/adapters.md)*
+*See: [Execution Modes](../guide/adapter-choice.md)*
 
 | Mode | Alias | Behavior | Speed |
 | --- | --- | --- | --- |

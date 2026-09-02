@@ -22,3 +22,22 @@ Choose the first row below whose condition applies:
 ![Adapter Comparison](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/loess-rs/assets/diagrams/adapter_comparison.svg)
 
 ---
+
+## Feature Comparison
+
+| Feature | Batch | Streaming | Online |
+| --- | --- | --- | --- |
+| Confidence intervals | ✓ | ✗ | ✗ |
+| Prediction intervals | ✓ | ✗ | ✗ |
+| Cross-validation | ✓ | ✗ | ✗ |
+| Diagnostics | ✓ | ✓ | ✗ |
+| Residuals | ✓ | ✓ | ✓ |
+| Robustness weights | ✓ | ✓ | ✓ |
+| Parallel execution | ✓ | ✓ | ✗ |
+
+---
+
+## Next Steps
+
+- [API Reference](crate::doc::api) — All configuration options
+- [Tutorials](crate::doc::use_case::real_time) — Real-time processing guide

@@ -194,8 +194,8 @@ struct OnlineOptions {
   uint64_t cv_seed = 0;
   // Online-specific fields
   int window_capacity = detail::k_default_window_capacity;
-  int min_points = 3;
-  std::string update_mode = "full";
+  int min_points = 2;
+  std::string update_mode = "incremental";
 };
 
 /**

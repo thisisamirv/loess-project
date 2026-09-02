@@ -83,6 +83,113 @@ First smoothed value (custom weights): 0.38960937887234354
 
 ---
 
+### Emphasize Important Points
+
+Assign high weights to measurements you trust most — calibration standards,
+reference instruments, or low-noise observations.
+
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
+
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let calibration_indices = vec![5usize, 20, 40, 60, 80];
+    let mut weights = vec![1.0_f64; x.len()];
+    for &i in &calibration_indices {
+        weights[i] = 10.0; // trust calibration 10× more
+    }
+
+    let model = Loess::new()
+        .fraction(0.5)
+        .custom_weights(weights)
+        .build()?;
+    let result = model.fit(&x, &y)?;
+
+    println!("First smoothed value (custom weights): {}", result.y[0]);
+    Ok(())
+}
+```
+
+```output
+First smoothed value (custom weights): 0.31339241393541983
+```
+
+---
+
+### Propagate Measurement Uncertainty
+
+If each observation has a known standard deviation \f$\sigma_i\f$, set
+\f$w_i = 1 / \sigma_i^2\f$ to give the fit information-theoretically optimal
+weighting.
+
+```rust
+use loess_rs::prelude::*;
+use std::f64::consts::TAU;
+
+fn main() -> Result<(), LoessError> {
+    let n = 100usize;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
+
+    let sigma: Vec<f64> = (0..n).map(|i| 0.1 + (i % 4) as f64 * 0.1).collect();
+    let weights: Vec<f64> = sigma.iter().map(|s| 1.0 / (s * s)).collect();
+
+    let model = Loess::new()
+        .fraction(0.5)
+        .custom_weights(weights)
+        .build()?;
+    let result = model.fit(&x, &y)?;
+
+    println!("First smoothed value (custom weights): {}", result.y[0]);
+    Ok(())
+}
+```
+
+```output
+First smoothed value (custom weights): 0.3283957068912162
+```
+
+---
+
+## Combined with Robustness Iterations
+
+Custom weights and robustness iterations compose naturally: use custom weights
+for *known* bad points and robustness for *unknown* contamination.
+
+```rust
+use loess_rs::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|v| v * 1.5).collect();
+    y[3]  = -50.0; // known bad
+    y[12] = 80.0;  // unknown outlier
+
+    let mut weights = vec![1.0_f64; 20];
+    weights[3] = 0.0;
+
+    let model = Loess::new()
+        .fraction(0.4)
+        .iterations(3)
+        .custom_weights(weights)
+        .build()?;
+    let result = model.fit(&x, &y)?;
+
+    println!("First smoothed value (custom weights): {}", result.y[0]);
+    Ok(())
+}
+```
+
+```output
+First smoothed value (custom weights): 0.8673742206424481
+```
+
+---
+
 ## Validation Rules
 
 | Rule | Effect |

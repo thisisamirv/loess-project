@@ -108,6 +108,8 @@ Choose the right mode based on your use case:
 | Robust to outliers | ✓ | ✗ | ✗ |
 | Uncertainty estimates | ✓ | ✓ | ✗ |
 | Handles irregular sampling | ✓ | ✓ | ✗ |
+| Multivariate predictors | ✓ | ✓ | ✗ |
+| Adjustable polynomial degree | ✓ (0–4) | ✓ | ✗ |
 
 ---
 
@@ -121,4 +123,3 @@ Choose the right mode based on your use case:
 - [Robustness](crate::doc::weighting::robustness) — Outlier downweighting methods
 - [Scaling Methods](crate::doc::weighting::scaling) — MAD, MAR, Mean scale estimation
 - [Merge Strategies](crate::doc::advanced::merge) — Chunk reconciliation in Streaming mode
-- [Tutorials](crate::doc::introduction::quickstart) — Application-specific guides

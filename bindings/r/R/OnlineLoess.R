@@ -18,11 +18,11 @@
 #' @param window_capacity Maximum number of points kept in the sliding
 #'   window, at least 3. Default: 1000.
 #' @param min_points Minimum number of points required before smoothing
-#'   begins, between 2 and \code{window_capacity}. Default: 3.
-#' @param update_mode Window update strategy: \code{"full"} (default; alias:
-#'   \code{"resmooth"}) re-smooths all window points after each addition;
-#'   \code{"incremental"} (alias: \code{"single"}) updates only the newest
-#'   point.
+#'   begins, between 2 and \code{window_capacity}. Default: 2.
+#' @param update_mode Window update strategy: \code{"incremental"} (default;
+#'   alias: \code{"single"}) updates only the newest point;
+#'   \code{"full"} (alias: \code{"resmooth"}) re-smooths all window points
+#'   after each addition.
 #'
 #' @return An OnlineLoess object.
 #' @examples
@@ -39,14 +39,14 @@
 OnlineLoess <- function(
     fraction = 0.67,
     window_capacity = 1000L,
-    min_points = 3L,
+    min_points = 2L,
     ...,
     iterations = 3L,
     weight_function = "tricube",
     robustness_method = "bisquare",
     scaling_method = "mad",
     boundary_policy = "extend",
-    update_mode = "full",
+    update_mode = "incremental",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
     return_diagnostics = FALSE,

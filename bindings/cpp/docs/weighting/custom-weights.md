@@ -86,6 +86,118 @@ y[0]: 0.389609
 
 ---
 
+### Emphasize Important Points
+
+Assign high weights to measurements you trust most — calibration standards,
+reference instruments, or low-noise observations.
+
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
+
+    std::vector<std::size_t> calibration_indices = {5, 20, 40, 60, 80};
+    std::vector<double> weights(x.size(), 1.0);
+    for (std::size_t idx : calibration_indices) weights[idx] = 10.0;
+
+    fastloess::Loess model;
+    auto result = model.fit(x, y, weights).value();
+
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
+    return 0;
+}
+```
+
+```output
+y[0]: 0.3739
+```
+
+---
+
+### Propagate Measurement Uncertainty
+
+If each observation has a known standard deviation \f$\sigma_i\f$, set
+\f$w_i = 1 / \sigma_i^2\f$ to give the fit information-theoretically optimal
+weighting.
+
+```cpp
+#include <fastloess.hpp>
+#include <cmath>
+#include <iostream>
+#include <vector>
+
+int main() {
+    const int n = 100;
+    std::vector<double> x(n), y(n);
+    for (int i = 0; i < n; ++i) {
+        x[i] = i * 2 * M_PI / (n - 1);
+        y[i] = std::sin(x[i]) + 0.1;
+    }
+
+    std::vector<double> sigma(n);
+    for (int i = 0; i < n; ++i) sigma[i] = 0.1 + (i % 4) * 0.1;
+    std::vector<double> weights(sigma.size());
+    for (std::size_t i = 0; i < sigma.size(); ++i) weights[i] = 1.0 / (sigma[i] * sigma[i]);
+
+    fastloess::Loess model;
+    auto result = model.fit(x, y, weights).value();
+
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
+    return 0;
+}
+```
+
+```output
+y[0]: 0.367038
+```
+
+---
+
+## Combined with Robustness Iterations
+
+Custom weights and robustness iterations compose naturally: use custom weights
+for *known* bad points and robustness for *unknown* contamination.
+
+```cpp
+#include <fastloess.hpp>
+#include <iostream>
+#include <vector>
+
+int main() {
+    std::vector<double> x(20), y(20);
+    for (int i = 0; i < 20; ++i) {
+        x[i] = static_cast<double>(i);
+        y[i] = x[i] * 1.5;
+    }
+    y[3]  = -50.0; // known bad
+    y[12] = 80.0;  // unknown outlier
+
+    std::vector<double> weights(20, 1.0);
+    weights[3] = 0.0;
+
+    fastloess::Loess model({ .fraction = 0.4, .iterations = 3 });
+    auto result = model.fit(x, y, weights).value();
+
+    std::cout << "y[0]: " << result.y_vector()[0] << "\n";
+    return 0;
+}
+```
+
+```output
+y[0]: 0.867374
+```
+
+---
+
 ## Validation Rules
 
 | Rule | Effect |

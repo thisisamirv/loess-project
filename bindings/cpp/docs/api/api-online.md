@@ -106,7 +106,7 @@ int main() {
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
-| `min_points` | `int` | `3` | Min points before smoothing starts |
+| `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `std::string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 | `parallel` | `bool` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 

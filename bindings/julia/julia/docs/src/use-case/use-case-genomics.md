@@ -27,12 +27,6 @@ rng = MersenneTwister(42)
 positions = collect(0.0:10.0:10000.0)
 observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
 
-using Random
-
-rng = MersenneTwister(42)
-positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
 # positions and observed are your methylation data
 model = Loess(;
     fraction=0.1,
@@ -58,12 +52,6 @@ ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help identif
 
 ```@example use-case-genomics
 using FastLOESS
-using Random
-
-rng = MersenneTwister(42)
-positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
 using Random, Statistics
 
 rng = MersenneTwister(42)
@@ -89,12 +77,6 @@ For whole-genome data that doesn't fit in memory:
 
 ```@example use-case-genomics
 using FastLOESS
-using Random
-
-rng = MersenneTwister(42)
-positions = collect(0.0:10.0:10000.0)
-observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positions)) .* 5.0
-
 using Random
 
 rng = MersenneTwister(42)

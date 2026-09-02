@@ -102,6 +102,7 @@ metrics.
 | --- | --- | --- |
 | `"normalized"` | Scaled by dimension range (default) | Mixed-scale |
 | `"euclidean"` | Raw Euclidean distance | Same-scale predictors |
+| `"minkowski:p"` | Generalised Minkowski ($L_p$) norm, e.g. `"minkowski:3"` | Custom distance geometry |
 | `"weighted"` | Per-dimension via `weighted_metric_weights` | Anisotropic |
 
 ```{r dimensions_4}
@@ -119,7 +120,7 @@ print(head(result$y))
 
 ---
 
-## Surface Mode
+## Surface Mode for Multivariate Data
 
 | Mode | Behaviour | Speed |
 | --- | --- | --- |

@@ -147,7 +147,7 @@ for i in range(200):
 
 ## See Also
 
-- [Execution Modes](../guide/adapters.md) — Detailed mode comparison
+- [Execution Modes](../guide/adapter-choice.md) — Detailed mode comparison
 - [Merge Strategies](../advanced/merge.md) — Chunk reconciliation in depth
 - [Scaling Methods](../weighting/scaling.md) — Robustness scale estimation
-- [Time Series](time-series.md) — General time series analysis
+- [Time Series](use-case-time-series.md) — General time series analysis

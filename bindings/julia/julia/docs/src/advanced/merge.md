@@ -61,12 +61,6 @@ using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using Random, Statistics
-
-rng = MersenneTwister(42)
 n = 100
 x_chunk = collect(range(0, 2π, length=n))
 y_chunk = sin.(x_chunk) .+ randn(rng, n) .* 0.3
@@ -87,12 +81,6 @@ Keeps only the right-chunk estimate in the overlap zone. The right chunk sees mo
 
 ```@example merge
 using FastLOESS
-using Random, Statistics
-
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
 using Random, Statistics
 
 rng = MersenneTwister(42)
@@ -120,12 +108,6 @@ where $w_L$ and $w_R$ are linear distance weights from the chunk centres.
 
 ```@example merge
 using FastLOESS
-using Random, Statistics
-
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
 using Random, Statistics
 
 rng = MersenneTwister(42)

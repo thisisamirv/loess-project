@@ -120,6 +120,8 @@ Choose the right mode based on your use case:
 | Robust to outliers | ✓ | ✗ | ✗ |
 | Uncertainty estimates | ✓ | ✓ | ✗ |
 | Handles irregular sampling | ✓ | ✓ | ✗ |
+| Multivariate predictors | ✓ | ✓ | ✗ |
+| Adjustable polynomial degree | ✓ (0–4) | ✓ | ✗ |
 
 ---
 

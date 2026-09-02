@@ -71,7 +71,7 @@ Smoothed y: 0.22659245357374927
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `window_capacity` | `number` | `1000` | Max points in sliding window |
-| `min_points` | `number` | `3` | Min points before smoothing starts |
+| `min_points` | `number` | `2` | Min points before smoothing starts |
 | `update_mode` | `string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 | `parallel` | `boolean` | `false` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
 

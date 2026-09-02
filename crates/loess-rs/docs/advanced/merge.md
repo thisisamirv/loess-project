@@ -44,17 +44,20 @@ fn main() -> Result<(), LoessError> {
 
     let mut model = StreamingLoess::new()
         .merge_strategy("average")
+        .chunk_size(60usize)
+        .overlap(20usize)
         .build()?;
-    let _ = model.process_chunk(&x_chunk[..50], &y_chunk[..50])?;
-    let _ = model.process_chunk(&x_chunk[50..], &y_chunk[50..])?;
-    let result = model.finalize()?;
-    println!("First smoothed value (average merge): {}", result.y[0]);
+    let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
+    // The second chunk's overlap region (its first 20 points) is where
+    // merge_strategy actually blends the two chunks' estimates.
+    let result = model.process_chunk(&x_chunk[60..], &y_chunk[60..])?;
+    println!("Merged value in overlap region (average): {}", result.y[5]);
     Ok(())
 }
 ```
 
 ```output
-First smoothed value (average merge): 0.38836636249409756
+Merged value in overlap region (average): 0.3676296872490885
 ```
 
 ---
@@ -76,17 +79,18 @@ fn main() -> Result<(), LoessError> {
 
     let mut model = StreamingLoess::new()
         .merge_strategy("take_first")
+        .chunk_size(60usize)
+        .overlap(20usize)
         .build()?;
-    let _ = model.process_chunk(&x_chunk[..50], &y_chunk[..50])?;
-    let _ = model.process_chunk(&x_chunk[50..], &y_chunk[50..])?;
-    let result = model.finalize()?;
-    println!("First smoothed value (take_first merge): {}", result.y[0]);
+    let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
+    let result = model.process_chunk(&x_chunk[60..], &y_chunk[60..])?;
+    println!("Merged value in overlap region (take_first): {}", result.y[5]);
     Ok(())
 }
 ```
 
 ```output
-First smoothed value (take_first merge): 0.38836636249409756
+Merged value in overlap region (take_first): 0.3576370673373696
 ```
 
 ---
@@ -108,17 +112,18 @@ fn main() -> Result<(), LoessError> {
 
     let mut model = StreamingLoess::new()
         .merge_strategy("take_last")
+        .chunk_size(60usize)
+        .overlap(20usize)
         .build()?;
-    let _ = model.process_chunk(&x_chunk[..50], &y_chunk[..50])?;
-    let _ = model.process_chunk(&x_chunk[50..], &y_chunk[50..])?;
-    let result = model.finalize()?;
-    println!("First smoothed value (take_last merge): {}", result.y[0]);
+    let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
+    let result = model.process_chunk(&x_chunk[60..], &y_chunk[60..])?;
+    println!("Merged value in overlap region (take_last): {}", result.y[5]);
     Ok(())
 }
 ```
 
 ```output
-First smoothed value (take_last merge): 0.38836636249409756
+Merged value in overlap region (take_last): 0.3776223071608074
 ```
 
 ---
@@ -144,17 +149,18 @@ fn main() -> Result<(), LoessError> {
 
     let mut model = StreamingLoess::new()
         .merge_strategy("weighted_average")
+        .chunk_size(60usize)
+        .overlap(20usize)
         .build()?;
-    let _ = model.process_chunk(&x_chunk[..50], &y_chunk[..50])?;
-    let _ = model.process_chunk(&x_chunk[50..], &y_chunk[50..])?;
-    let result = model.finalize()?;
-    println!("First smoothed value (weighted_average merge): {}", result.y[0]);
+    let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
+    let result = model.process_chunk(&x_chunk[60..], &y_chunk[60..])?;
+    println!("Merged value in overlap region (weighted_average): {}", result.y[5]);
     Ok(())
 }
 ```
 
 ```output
-First smoothed value (weighted_average merge): 0.38836636249409756
+Merged value in overlap region (weighted_average): 0.36263337729322903
 ```
 
 ---

@@ -105,7 +105,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(confidence_intervals=0.90)
 result = model.fit(x, y)
-print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
+print(f"90% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
 :::
 
 ---

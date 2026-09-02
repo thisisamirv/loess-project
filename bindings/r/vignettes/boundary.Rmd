@@ -127,6 +127,17 @@ for (i in seq_along(policies)) {
 legend("topright", policies, col = colors, lwd = 2)
 ```
 
+---
+
+## Choosing a Policy
+
+| Situation | Recommended Policy |
+| --- | --- |
+| General purpose | `"extend"` (default) |
+| Periodic signal (angle, day-of-year) | `"reflect"` |
+| Signal known to be zero at boundaries | `"zero"` |
+| Replicating original Cleveland behaviour | `"noboundary"` |
+
 ```{r session-info}
 sessionInfo()
 ```

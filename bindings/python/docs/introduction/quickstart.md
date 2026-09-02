@@ -114,7 +114,7 @@ print(f"Smoothed {len(result.y)} points in streaming mode")
 | --- | --- |
 | How LOESS works | [Concepts](concepts.md) |
 | All parameters explained | [API Reference](../api/api.md) |
-| Batch vs Streaming vs Online | [Execution Modes](../guide/adapters.md) |
+| Batch vs Streaming vs Online | [Execution Modes](../guide/adapter-choice.md) |
 | Polynomial degree choices | [Degree](../advanced/degree.md) |
 | Multivariate smoothing | [Dimensions](../advanced/dimensions.md) |
 | Edge handling | [Boundary](../advanced/boundary.md) |

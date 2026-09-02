@@ -77,6 +77,86 @@ y[0]: 0.1663
 
 ---
 
+### Emphasize Important Points
+
+Assign high weights to measurements you trust most — calibration standards,
+reference instruments, or low-noise observations.
+
+```javascript
+const { Loess } = require('fastloess-wasm');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
+
+const calibrationIndices = [5, 20, 40, 60, 80];
+const weights = new Float64Array(x.length).fill(1.0);
+for (const i of calibrationIndices) weights[i] = 10.0;
+
+const model = new Loess({ fraction: 0.5 });
+const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.3134
+```
+
+---
+
+### Propagate Measurement Uncertainty
+
+If each observation has a known standard deviation $\sigma_i$, set
+$w_i = 1 / \sigma_i^2$ to give the fit information-theoretically optimal
+weighting.
+
+```javascript
+const { Loess } = require('fastloess-wasm');
+
+const n = 100;
+const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
+const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
+
+const sigma = Float64Array.from({ length: n }, (_, i) => 0.1 + (i % 4) * 0.1);
+const weights = Float64Array.from(sigma, s => 1.0 / (s * s));
+const model = new Loess({ fraction: 0.5 });
+const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.3284
+```
+
+---
+
+## Combined with Robustness Iterations
+
+Custom weights and robustness iterations compose naturally: use custom weights
+for *known* bad points and robustness for *unknown* contamination.
+
+```javascript
+const { Loess } = require('fastloess-wasm');
+
+const x = Float64Array.from({ length: 20 }, (_, i) => i);
+const y = Float64Array.from({ length: 20 }, (_, i) => i * 1.5);
+y[3]  = -50.0;  // known bad
+y[12] = 80.0;   // unknown outlier
+
+const weights = new Float64Array(20).fill(1.0);
+weights[3] = 0.0;
+
+const model = new Loess({ fraction: 0.4, iterations: 3 });
+const result = model.fit(x, y, weights);
+console.log("y[0]:", result.y[0].toFixed(4));
+```
+
+```output
+y[0]: 0.8674
+```
+
+---
+
 ## Validation Rules
 
 | Rule | Effect |

@@ -97,7 +97,7 @@ Returned inside `Ok(Some(...))` by `add_point()`. `None` while the window is sti
 | Method | Argument Type | Default | Description |
 | --- | --- | --- | --- |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
-| `min_points(usize)` | `usize` | `3` | Min points before smoothing starts |
+| `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 
 ## Options

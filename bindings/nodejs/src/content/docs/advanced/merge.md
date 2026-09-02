@@ -43,15 +43,17 @@ const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3)
 
 const processor = new StreamingLoess(
     {},
-    { merge_strategy: "average", chunk_size: 5000, overlap: 500 }
+    { merge_strategy: "average", chunk_size: 60, overlap: 20 }
 );
-processor.process_chunk(xChunk, yChunk);
-const finalResult = processor.finalize();
-console.log("average: smoothed", finalResult.y.length, "points, y[0]:", finalResult.y[0].toFixed(4));
+processor.process_chunk(xChunk.slice(0, 60), yChunk.slice(0, 60));
+// The second chunk's overlap region (its first 20 points) is where
+// merge_strategy actually blends the two chunks' estimates.
+const result = processor.process_chunk(xChunk.slice(60), yChunk.slice(60));
+console.log("Merged value in overlap region (average):", result.y[5].toFixed(4));
 ```
 
 ```output
-average: smoothed 100 points, y[0]: 0.1710
+Merged value in overlap region (average): 0.2143
 ```
 
 ---
@@ -69,14 +71,14 @@ const n = 100;
 const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const processor = new StreamingLoess({}, { merge_strategy: "take_first" });
-const result = processor.process_chunk(xChunk, yChunk);
-const final_ = processor.finalize();
-console.log("Smoothed", final_.y.length, "points via streaming");
+const processor = new StreamingLoess({}, { merge_strategy: "take_first", chunk_size: 60, overlap: 20 });
+processor.process_chunk(xChunk.slice(0, 60), yChunk.slice(0, 60));
+const result = processor.process_chunk(xChunk.slice(60), yChunk.slice(60));
+console.log("Merged value in overlap region (take_first):", result.y[5].toFixed(4));
 ```
 
 ```output
-Smoothed 100 points via streaming
+Merged value in overlap region (take_first): 0.2282
 ```
 
 ---
@@ -94,14 +96,14 @@ const n = 100;
 const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const processor = new StreamingLoess({}, { merge_strategy: "take_last" });
-const result = processor.process_chunk(xChunk, yChunk);
-const final_ = processor.finalize();
-console.log("Smoothed", final_.y.length, "points via streaming");
+const processor = new StreamingLoess({}, { merge_strategy: "take_last", chunk_size: 60, overlap: 20 });
+processor.process_chunk(xChunk.slice(0, 60), yChunk.slice(0, 60));
+const result = processor.process_chunk(xChunk.slice(60), yChunk.slice(60));
+console.log("Merged value in overlap region (take_last):", result.y[5].toFixed(4));
 ```
 
 ```output
-Smoothed 100 points via streaming
+Merged value in overlap region (take_last): 0.2004
 ```
 
 ---
@@ -125,15 +127,15 @@ const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3)
 
 const processor = new StreamingLoess(
     {},
-    { merge_strategy: "weighted_average", chunk_size: 5000, overlap: 500 }
+    { merge_strategy: "weighted_average", chunk_size: 60, overlap: 20 }
 );
-const result = processor.process_chunk(xChunk, yChunk);
-const final_ = processor.finalize();
-console.log("Smoothed", final_.y.length, "points via streaming");
+processor.process_chunk(xChunk.slice(0, 60), yChunk.slice(0, 60));
+const result = processor.process_chunk(xChunk.slice(60), yChunk.slice(60));
+console.log("Merged value in overlap region (weighted_average):", result.y[5].toFixed(4));
 ```
 
 ```output
-Smoothed 100 points via streaming
+Merged value in overlap region (weighted_average): 0.2213
 ```
 
 ---

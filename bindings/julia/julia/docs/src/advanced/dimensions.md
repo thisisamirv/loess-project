@@ -48,12 +48,6 @@ using FastLOESS
 using Random, Statistics
 
 rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
-using Random, Statistics
-
-rng = MersenneTwister(42)
 n = 100
 lat = collect(range(0, 2π, length=n))
 lon = collect(range(0, 2π, length=n))
@@ -74,12 +68,6 @@ Three or more predictors. The neighbourhood radius grows in each additional dime
 
 ```@example dimensions
 using FastLOESS
-using Random, Statistics
-
-rng = MersenneTwister(42)
-x = collect(range(0, 2π, length=100))
-y = sin.(x) .+ randn(rng, 100) .* 0.3
-
 using Random, Statistics
 
 rng = MersenneTwister(42)

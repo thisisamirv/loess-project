@@ -108,6 +108,8 @@ Choose the right mode based on your use case:
 | Robust to outliers | ✓ | ✗ | ✗ |
 | Uncertainty estimates | ✓ | ✓ | ✗ |
 | Handles irregular sampling | ✓ | ✓ | ✗ |
+| Multivariate predictors | ✓ | ✓ | ✗ |
+| Adjustable polynomial degree | ✓ (0–4) | ✓ | ✗ |
 
 ---
 
@@ -121,4 +123,3 @@ Choose the right mode based on your use case:
 - [Robustness](robustness.md) — Outlier downweighting methods
 - [Scaling Methods](scaling.md) — MAD, MAR, Mean scale estimation
 - [Merge Strategies](merge.md) — Chunk reconciliation in Streaming mode
-- [Tutorials](quickstart.md) — Application-specific guides

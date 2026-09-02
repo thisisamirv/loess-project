@@ -34,36 +34,6 @@ Overlap:            [=====]
 
 ---
 
-## Weighted Average (Default)
-
-Assigns each overlap point a weight proportional to its proximity to the centre
-of its respective chunk: points near the left-chunk centre favour the left
-estimate; points near the right-chunk centre favour the right. Minimises
-boundary artefacts.
-
-**Use when**: Minimising boundary artefacts is more important than speed;
-moderate overlap (10–20% of chunk size) is used.
-
-```{r merge_1}
-library(rfastloess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
-x_chunk <- x[seq_len(50)]
-y_chunk <- y[seq_len(50)]
-
-model <- StreamingLoess(
-    merge_strategy = "weighted_average",
-    chunk_size = 5000,
-    overlap = 500
-)
-result <- process_chunk(model, x_chunk, y_chunk)
-cat("First 6 smoothed values (weighted_average strategy):\n")
-print(head(result$y))
-```
-
----
-
 ## Average
 
 Takes the arithmetic mean of the left-chunk and right-chunk estimates in the
@@ -72,15 +42,19 @@ quality.
 
 **Use when**: Chunks are large and the overlap region has uniform data density.
 
-```{r merge_2}
-model <- StreamingLoess(
-    merge_strategy = "average",
-    chunk_size = 5000,
-    overlap = 500
-)
-result <- process_chunk(model, x_chunk, y_chunk)
-cat("First 6 smoothed values (average strategy):\n")
-print(head(result$y))
+```{r merge_1}
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- StreamingLoess(merge_strategy = "average", chunk_size = 60, overlap = 20)
+invisible(process_chunk(model, x[1:60], y[1:60]))
+# The second chunk's overlap region (its first 20 points) is where
+# merge_strategy actually blends the two chunks' estimates.
+result <- process_chunk(model, x[61:100], y[61:100])
+cat("Merged value in overlap region (average):\n")
+print(result$y[6])
 ```
 
 ---
@@ -93,15 +67,12 @@ right-chunk estimate. Produces a left-flush output.
 **Use when**: You need final output values immediately after each chunk (no
 look-ahead revision); left-chunk context dominates.
 
-```{r merge_3}
-model <- StreamingLoess(
-    merge_strategy = "take_first",
-    chunk_size = 5000,
-    overlap = 500
-)
-result <- process_chunk(model, x_chunk, y_chunk)
-cat("First 6 smoothed values (take_first strategy):\n")
-print(head(result$y))
+```{r merge_2}
+model <- StreamingLoess(merge_strategy = "take_first", chunk_size = 60, overlap = 20)
+invisible(process_chunk(model, x[1:60], y[1:60]))
+result <- process_chunk(model, x[61:100], y[61:100])
+cat("Merged value in overlap region (take_first):\n")
+print(result$y[6])
 ```
 
 ---
@@ -115,16 +86,49 @@ overlap region.
 **Use when**: Right-chunk context improves overlap quality; you are
 post-processing complete data rather than streaming in real time.
 
-```{r merge_4}
-model <- StreamingLoess(
-    merge_strategy = "take_last",
-    chunk_size = 5000,
-    overlap = 500
-)
-result <- process_chunk(model, x_chunk, y_chunk)
-cat("First 6 smoothed values (take_last strategy):\n")
-print(head(result$y))
+```{r merge_3}
+model <- StreamingLoess(merge_strategy = "take_last", chunk_size = 60, overlap = 20)
+invisible(process_chunk(model, x[1:60], y[1:60]))
+result <- process_chunk(model, x[61:100], y[61:100])
+cat("Merged value in overlap region (take_last):\n")
+print(result$y[6])
 ```
+
+---
+
+## Weighted Average
+
+Assigns each overlap point a weight proportional to its proximity to the centre
+of its respective chunk: points near the left-chunk centre favour the left
+estimate; points near the right-chunk centre favour the right. Minimises
+boundary artefacts.
+
+**Use when**: Minimising boundary artefacts is more important than speed;
+moderate overlap (10–20% of chunk size) is used.
+
+```{r merge_4}
+model <- StreamingLoess(merge_strategy = "weighted_average", chunk_size = 60, overlap = 20)
+invisible(process_chunk(model, x[1:60], y[1:60]))
+result <- process_chunk(model, x[61:100], y[61:100])
+cat("Merged value in overlap region (weighted_average):\n")
+print(result$y[6])
+```
+
+---
+
+## Choosing a Strategy
+
+| Situation | Recommended Strategy |
+| --- | --- |
+| General purpose | `"weighted_average"` |
+| Maximum throughput | `"average"` |
+| Immediate finalised output | `"take_first"` |
+| Post-processing, right context better | `"take_last"` |
+| Minimising boundary artefacts | `"weighted_average"` |
+
+> **Overlap size matters:** A larger overlap gives the merge strategy more room
+> to blend, reducing boundary artefacts regardless of the strategy chosen. A
+> good starting point is 10% of `chunk_size`.
 
 ---
 

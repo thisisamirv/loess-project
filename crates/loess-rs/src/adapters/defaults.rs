@@ -21,7 +21,7 @@ pub const DEFAULT_STREAMING_MERGE_STRATEGY: &str = "weighted_average";
 pub const DEFAULT_ONLINE_WINDOW_CAPACITY: usize = 1_000;
 
 // Default minimum number of points required before output is produced.
-pub const DEFAULT_ONLINE_MIN_POINTS: usize = 3;
+pub const DEFAULT_ONLINE_MIN_POINTS: usize = 2;
 
 // Default number of robustness iterations for the **Online** adapter.
 pub const DEFAULT_ONLINE_ITERATIONS: usize = 1;
