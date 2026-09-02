@@ -41,11 +41,12 @@
         "fastloess-win32-x64-msvc": "^1.1.0"
     },
     "devDependencies": {
+        "@astrojs/markdown-remark": "^7.3",
         "@astrojs/starlight": "^0.41",
         "@napi-rs/cli": "^3.8",
         "astro": "^7.2",
         "katex": "^0.18",
-        "oxlint": "^1.80",
+        "oxlint": "^1.81",
         "rehype-katex": "^7.0",
         "remark-math": "^6.0",
         "typedoc": "^0.28",

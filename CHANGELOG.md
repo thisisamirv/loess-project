@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Updated `oxlint` to v1.81.
 - Updated `napi` to v3.12.
 - Updated `napi-derive` to v3.6.
 - Updated `napi-build` to v2.4.
@@ -61,6 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Updated `oxlint` to v1.81.
 - Updated `typedoc-plugin-markdown` to v4.13.
 - `make wasm-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
 
@@ -102,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the docs homepage never showing the README content ("Get Started" jumped straight to Installation): a new `dev/add-readme-to-docs.js` script embeds `README.md` below the hero (stripping its redundant `# LOESS Project` H1, since the hero already shows the title), wired into `npm run docs` and `make nodejs-dev`.
 - Fixed the docs build always emitting a `[@astrojs/sitemap] The Sitemap integration requires the site astro.config option` warning when the `SITE` environment variable isn't set (e.g. local builds); `astro.config.mjs` now falls back to the production GitHub Pages URL.
 - Fixed every link on the "API Reference" page 404ing: TypeDoc's markdown output preserves the original TypeScript symbol casing (e.g. `classes/Loess.md`) and Astro renders those relative links verbatim, but Starlight always lowercases content-collection route slugs (e.g. `classes/loess/`) and never actually strips the `.md` extension automatically. A new `dev/lowercase-typedoc-refs.js` script lowercases every generated reference file name and rewrites their internal links (stripped of `.md`, also lowercased) after `typedoc` runs and before `astro build`, wired into `npm run docs`.
+- Fixed `astro build` failing since Astro 7 no longer bundles `@astrojs/markdown-remark` by default, which `astro.config.mjs`'s KaTeX plugins need; added it as an explicit devDependency.
 
 **WASM:**
 
@@ -110,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed inline/display LaTeX math rendering as literal text; wired `remark-math`/`rehype-katex` into `astro.config.mjs`.
 - Fixed the same `@astrojs/sitemap` warning as Node.js, with the same fallback in `astro.config.mjs`.
 - Fixed the same "API Reference" 404s as Node.js, via the same `dev/lowercase-typedoc-refs.js` script.
+- Fixed the same `astro build` `@astrojs/markdown-remark` failure as Node.js; added the same explicit devDependency.
 
 **Python:**
 
