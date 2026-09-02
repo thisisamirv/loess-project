@@ -20,6 +20,8 @@
         "targets": [
             "x86_64-unknown-linux-gnu",
             "aarch64-unknown-linux-gnu",
+            "aarch64-unknown-linux-musl",
+            "armv7-unknown-linux-gnueabihf",
             "x86_64-unknown-linux-musl",
             "x86_64-pc-windows-msvc",
             "aarch64-pc-windows-msvc",
@@ -31,6 +33,8 @@
         "fastloess-darwin-arm64": "^1.1.0",
         "fastloess-darwin-x64": "^1.1.0",
         "fastloess-linux-arm64-gnu": "^1.1.0",
+        "fastloess-linux-arm64-musl": "^1.1.0",
+        "fastloess-linux-arm-gnueabihf": "^1.1.0",
         "fastloess-linux-x64-gnu": "^1.1.0",
         "fastloess-linux-x64-musl": "^1.1.0",
         "fastloess-win32-arm64-msvc": "^1.1.0",
