@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.15)
 project(fastloess-cpp VERSION 1.1.0 LANGUAGES CXX)
 
 include(FetchContent)
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
 
 # Import Corrosion for Rust integration
 FetchContent_Declare(
@@ -16,6 +18,8 @@ corrosion_import_crate(MANIFEST_PATH Cargo.toml)
 
 # The target name is derived from [package] name in Cargo.toml ("fastloess-cpp")
 
+set_target_properties(fastloess_cpp PROPERTIES EXPORT_NAME fastloess)
+
 # Configure include directories
 # This ensures that #include "fastloess.hpp" works for consumers
 target_include_directories(
@@ -29,7 +33,19 @@ target_include_directories(
 add_library(fastloess::fastloess ALIAS fastloess_cpp)
 
 # Installation configuration
-include(GNUInstallDirs)
+set(fastloess_install_cmakedir "${CMAKE_INSTALL_LIBDIR}/cmake/fastloess")
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/fastloessConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/fastloessConfig.cmake"
+    INSTALL_DESTINATION "${fastloess_install_cmakedir}"
+)
+
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/fastloessConfigVersion.cmake"
+    VERSION "${PROJECT_VERSION}"
+    COMPATIBILITY SameMajorVersion
+)
 
 install(
     TARGETS fastloess_cpp
@@ -44,7 +60,25 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 export(
     EXPORT fastloessTargets
     FILE "${CMAKE_CURRENT_BINARY_DIR}/fastloessTargets.cmake"
+    NAMESPACE fastloess::
 )
+
+install(
+    EXPORT fastloessTargets
+    FILE fastloessTargets.cmake
+    NAMESPACE fastloess::
+    DESTINATION "${fastloess_install_cmakedir}"
+)
+
+install(
+    FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/fastloessConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/fastloessConfigVersion.cmake"
+    DESTINATION "${fastloess_install_cmakedir}"
+)
+
+set(CMAKE_EXPORT_PACKAGE_REGISTRY ON)
+export(PACKAGE fastloess)
 
 # Tests
 enable_testing()

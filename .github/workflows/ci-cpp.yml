@@ -75,6 +75,110 @@ jobs:
       - name: make cpp-dev
         run: make cpp-dev
 
+  clangcl:
+    name: C++ (windows-latest, clang-cl)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install GNU Make (Windows)
+        run: choco install make -y
+      - name: Install cppcheck (Windows)
+        run: |
+          winget install --id Cppcheck.Cppcheck --exact --accept-source-agreements --accept-package-agreements
+          $cppcheckExe = Get-ChildItem -Path "C:\Program Files\Cppcheck","$env:LOCALAPPDATA\Programs\Cppcheck" -Filter cppcheck.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $cppcheckExe) { throw "cppcheck.exe not found after winget install" }
+          $cppcheckExe.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cpp-windows-clangcl
+      - name: make cpp-dev (clang-cl toolset)
+        run: make cpp-dev CPP_CMAKE_TOOLSET="-T ClangCL"
+
+  clang-linux:
+    name: C++ (ubuntu-latest, clang)
+    runs-on: ubuntu-latest
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Install clang and cppcheck
+        run: sudo apt-get install -y --no-install-recommends clang cppcheck
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cpp-clang-linux
+      - name: make cpp-dev
+        run: make cpp-dev
+
+  # Native MinGW-w64 (not the Rtools cross-compiler pinned in the workspace
+  # .cargo/config.toml for the R binding, which lacks libgcc_eh — see docs/NEWS.md).
+  mingw:
+    name: C++ (windows-latest, MinGW-w64)
+    runs-on: windows-latest
+    continue-on-error: true
+    env:
+      CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: gcc
+      CARGO_TARGET_X86_64_PC_WINDOWS_GNU_AR: gcc-ar
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-gnu
+      - name: Install GNU Make (Windows)
+        run: choco install make -y
+      - name: Install native MinGW-w64
+        run: |
+          choco install mingw -y
+          $gcc = Get-ChildItem -Path "C:\ProgramData\mingw64","C:\ProgramData\chocolatey\lib\mingw","C:\tools\mingw64" -Filter gcc.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $gcc) { throw "gcc.exe not found after choco install mingw" }
+          $gcc.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+      - name: Install cppcheck (Windows)
+        run: |
+          winget install --id Cppcheck.Cppcheck --exact --accept-source-agreements --accept-package-agreements
+          $cppcheckExe = Get-ChildItem -Path "C:\Program Files\Cppcheck","$env:LOCALAPPDATA\Programs\Cppcheck" -Filter cppcheck.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $cppcheckExe) { throw "cppcheck.exe not found after winget install" }
+          $cppcheckExe.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cpp-windows-mingw
+      - name: make cpp-dev
+        run: make cpp-dev CPP_WIN_TOOLCHAIN=mingw
+
+  # Intel oneAPI C++ compiler (icpx) as a consumer of the C ABI header. Only
+  # exercises the test harness build, not the Rust cdylib itself.
+  # Non-blocking: the multi-GB apt package can be slow/flaky in CI.
+  intel-oneapi:
+    name: C++ (ubuntu-latest, Intel oneAPI)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: cpp-intel-oneapi
+      - name: Install cppcheck
+        run: sudo apt-get install -y cppcheck
+      - name: Install Intel oneAPI C++ compiler
+        run: |
+          wget -qO- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+            | sudo gpg --dearmor -o /usr/share/keyrings/oneapi-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
+            | sudo tee /etc/apt/sources.list.d/oneAPI.list
+          sudo apt-get update
+          sudo apt-get install -y intel-oneapi-compiler-dpcpp-cpp
+      - name: make cpp-dev (icpx)
+        env:
+          CC: icx
+          CXX: icpx
+        run: |
+          source /opt/intel/oneapi/setvars.sh
+          make cpp-dev
+
   asan:
     name: C++ ASAN
     runs-on: ubuntu-latest

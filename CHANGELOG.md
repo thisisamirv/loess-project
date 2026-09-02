@@ -21,6 +21,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added two prebuilt targets, `aarch64-unknown-linux-musl` (via cargo-zigbuild) and `armv7-unknown-linux-gnueabihf` (via an apt cross toolchain), with matching optional npm subpackages.
 
+**C++:**
+
+- Added CMake package-config support (`fastloessConfig.cmake`/`fastloessConfigVersion.cmake`, generated via `configure_package_config_file()`/`write_basic_package_version_file()` from the existing `cmake/fastloessConfig.cmake.in` template, which was already present but never wired into `CMakeLists.txt`), so consumers can `find_package(fastloess)` and link against `fastloess::fastloess` regardless of their own compiler/build setup. Also sets `EXPORT_NAME fastloess` on the underlying `fastloess_cpp` target, installs the exported targets file and both config files under `lib/cmake/fastloess`, and registers the build tree via `export(PACKAGE fastloess)`.
+- Added CI coverage for four additional compiler/toolchain combinations in `ci-cpp.yml`, matching lowess-project: `clang-cl` on Windows (`make cpp-dev CPP_CMAKE_TOOLSET="-T ClangCL"`), `clang` on Linux, native MinGW-w64 (`make cpp-dev CPP_WIN_TOOLCHAIN=mingw`, non-blocking), and Intel oneAPI's `icpx`/`icx` (non-blocking). `bindings/cpp/Makefile` gained the underlying `CPP_WIN_TOOLCHAIN` (`msvc`/`mingw`) and `CPP_CMAKE_TOOLSET` variables to support them — previously only a single hardcoded MSVC/`x86_64-pc-windows-msvc` path existed.
+
 ### Changed
 
 **Monorepo:**
