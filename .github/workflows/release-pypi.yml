@@ -3,7 +3,12 @@ name: Release PyPI
 on:
   release:
     types: [published]
-  workflow_dispatch: # Allow manual trigger for testing
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "Commit SHA to build from (optional, defaults to the triggering ref)"
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -25,6 +30,8 @@ jobs:
         python: ["3.8"]
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -51,6 +58,8 @@ jobs:
         python: ["3.8"]
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -77,6 +86,8 @@ jobs:
         python: ["3.8"]
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -110,6 +121,8 @@ jobs:
         python: ["3.8"]
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -143,6 +156,8 @@ jobs:
         python: ["3.8"]
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v7
@@ -173,6 +188,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Build sdist
         uses: PyO3/maturin-action@v1
@@ -210,6 +227,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
 
       - name: Download all artifacts
         uses: actions/download-artifact@v8
