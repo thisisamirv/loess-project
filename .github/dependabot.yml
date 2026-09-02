@@ -1,0 +1,74 @@
+version: 2
+
+updates:
+  # GitHub Actions used across all workflow files and composite actions.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns: ["*"]
+    labels: ["dependencies", "github-actions"]
+    commit-message:
+      prefix: "chore(ci)"
+
+  # Rust workspace: crates/{loess-rs,fastLoess}, all bindings except R,
+  # validation/fastLoess (see root Cargo.toml members).
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      rust-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "rust"]
+    commit-message:
+      prefix: "chore(cargo)"
+
+  # R binding's Rust crate: standalone Cargo project, excluded from the
+  # workspace above (see bindings/r/src/Cargo.toml, cross-compiled via Rtools).
+  - package-ecosystem: "cargo"
+    directory: "/bindings/r/src"
+    schedule:
+      interval: "weekly"
+    groups:
+      rust-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "rust", "r"]
+    commit-message:
+      prefix: "chore(r)"
+
+  - package-ecosystem: "npm"
+    directory: "/bindings/nodejs"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "nodejs"]
+    commit-message:
+      prefix: "chore(nodejs)"
+
+  - package-ecosystem: "npm"
+    directory: "/bindings/wasm"
+    schedule:
+      interval: "weekly"
+    groups:
+      npm-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "wasm"]
+    commit-message:
+      prefix: "chore(wasm)"
+
+  - package-ecosystem: "pip"
+    directory: "/bindings/python"
+    schedule:
+      interval: "weekly"
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "python"]
+    commit-message:
+      prefix: "chore(python)"
