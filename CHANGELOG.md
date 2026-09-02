@@ -118,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Fixed the "API Reference" page rendering empty: its `api/index.md` toctree still referenced the pre-rename `python`/`python-streaming`/`python-online` document names; updated to `api`/`api-streaming`/`api-online`, matching the files' current names. Sphinx toctree entries omit the `.md` extension, so this was missed by the earlier rename's link verification.
+- Fixed `release-pypi.yml`'s macOS/Windows jobs printing a pip version-check notice on every run; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"` to the workflow's `env`.
 
 **Rust:**
 
