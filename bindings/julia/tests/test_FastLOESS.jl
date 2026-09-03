@@ -602,6 +602,22 @@ using FastLOESS
             @test r_w.y ≈ r_no_w.y atol = 1e-6
         end
 
+        @testset "high weight pulls fit toward spike" begin
+            n = 15
+            x_spike = collect(0.0:((n-1)*1.0))
+            y_spike = zeros(Float64, n)
+            y_spike[8] = 10.0  # spike at index 8 (1-based)
+
+            weights_high = ones(Float64, n)
+            weights_high[8] = 100.0
+
+            model = Loess(fraction = 0.6, iterations = 0)
+            result_high = fit(model, x_spike, y_spike; custom_weights = weights_high)
+            result_equal = fit(model, x_spike, y_spike)
+
+            @test result_high.y[8] > result_equal.y[8]
+        end
+
         @testset "wrong length raises error" begin
             y = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
             w_bad = [1.0, 1.0, 1.0]

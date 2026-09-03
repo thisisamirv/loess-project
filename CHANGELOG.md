@@ -107,6 +107,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the Documenter homepage: it was a stale, separately maintained `index.md`; `make.jl` now regenerates it from `README.md` on every build.
 - Fixed `release-julia-register.yml` pulling release notes from the root `CHANGELOG.md` (every binding's entries); it now extracts from the Julia-filtered `NEWS.md`.
 - Fixed `make julia-dev` failing to resolve an already-pinned but outdated `fastloess_jll`; the `dev` target now runs `Pkg.update("fastloess_jll")` before `Pkg.resolve()`.
+- Fixed `dev/runners/julia.py`'s Windows mojibake bug (missed by the earlier encoding fix to the other runners); `subprocess.run` now decodes with explicit UTF-8.
+- Fixed `make.jl` and `FastLOESS.jl` using tab indentation instead of the project's 4-space JuliaFormatter style; reformatted both files.
+- Fixed `README.md`/`index.md` linking to `lowess-project`'s domain and pre-restructure doc paths for the Installation Guide, Concepts, and Benchmarks pages.
+- Ported a missing "high weight pulls fit toward spike" custom-weights test case from `fastlowess`'s Julia test suite.
 
 **Node.js:**
 
