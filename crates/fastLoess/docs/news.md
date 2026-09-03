@@ -39,6 +39,8 @@
 * Fixed the Julia `intervals.md` "Confidence Intervals" and "Standard Errors" examples each looping over all 100 points instead of a short sample; switched to `result.y[1:5]`/`result.confidence_lower[1:5]`/`result.standard_errors[1:5]`-style slicing, matching the already-concise Python version.
 * Fixed inline/display LaTeX math rendering as literal text on docs.rs; added a `katex-header.html` that renders it client-side.
 * Fixed every cross-reference link across the Rust crate docs leading nowhere, since plain relative links aren't resolved against the rustdoc module tree; converted them to proper intra-doc links (e.g. `crate::doc::concepts`).
+* Added the missing `dev/check_links.py --lang rust` step to `crates/loess-rs/Makefile`'s and `crates/fastLoess/Makefile`'s dev targets.
+* Added `#[allow(clippy::excessive_precision)]` to `math/kernel.rs`'s `SQRT_2PI`/`SQRT_PI` constants, matching `fastlowess`.
 
 # fastLoess 1.1.0
 

@@ -6,7 +6,8 @@
 //
 // Multiple kernel functions: Tricube (default), Gaussian, Epanechnikov,
 //   Biweight, Triangle, Cosine, Uniform. Each implements distance-based weighting.
-// @srrstats {G1.2} Mathematical properties documented for each kernel.
+// @srrstats {G1.2} Mathematical properties documented for each kernel: integrator (c_K),
+//   variance (mu_2), roughness (R), and AMISE efficiency relative to Epanechnikov.
 
 // External dependencies
 use core::f64::consts::{PI, SQRT_2};
@@ -15,9 +16,11 @@ use num_traits::Float;
 // Internal dependencies
 
 // Square root of 2*pi, used in Gaussian kernel calculations.
+#[allow(clippy::excessive_precision)]
 const SQRT_2PI: f64 = 2.5066282746310005024157652848110452530069867406099_f64;
 
 // Square root of pi, used in kernel property calculations.
+#[allow(clippy::excessive_precision)]
 const SQRT_PI: f64 = 1.772453850905516027298167483341145182797_f64;
 
 // pi/2, used in cosine kernel calculations.

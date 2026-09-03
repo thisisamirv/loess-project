@@ -148,6 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed inline/display LaTeX math rendering as literal text on docs.rs; added a `katex-header.html` that renders it client-side.
 - Fixed every cross-reference link across the Rust crate docs leading nowhere, since plain relative links aren't resolved against the rustdoc module tree; converted them to proper intra-doc links (e.g. `crate::doc::concepts`).
+- Added `#[allow(clippy::excessive_precision)]` to `math/kernel.rs`'s `SQRT_2PI`/`SQRT_PI` constants, matching `fastlowess`.
 
 ## 1.1.0
 
