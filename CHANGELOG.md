@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
-- Updated `oxlint` to v1.81, `napi` to v3.12, `napi-derive` to v3.6, `napi-build` to v2.4, and `typedoc-plugin-markdown` to v4.13.
+- Updated `oxlint` to v1.81, `napi` to v3.12, `napi-derive` to v3.6, `@napi-rs/cli` to v3.9, `napi-build` to v2.4, and `typedoc-plugin-markdown` to v4.13.
 - `make nodejs-dev` now runs `npm update` after `npm install`, so dependencies are kept current.
 
 **WASM:**
@@ -125,6 +125,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `concepts.md` figures (MkDocs-only `<figure>`/attr_list syntax) not rendering; converted to plain images with italicized captions.
 - Fixed inline/display LaTeX math rendering as literal text; wired `remark-math`/`rehype-katex` into `astro.config.mjs`.
 - Fixed the same `@astrojs/sitemap` warning, "API Reference" 404s, and `astro build`/`@astrojs/markdown-remark` failure as Node.js, via the same fixes.
+- Fixed `src/lib.rs`'s generated `.d.ts` doc comments rendering literal backslashes (e.g. `\"tricube\"`) instead of quotes, since raw Rust strings don't process escape sequences; removed the unnecessary escaping.
 
 **Python:**
 

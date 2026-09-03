@@ -46,6 +46,9 @@ title: News
 * Fixed `concepts.md` figures (MkDocs-only `<figure>`/attr_list syntax) not rendering; converted to plain images with italicized captions.
 * Fixed inline/display LaTeX math rendering as literal text; wired `remark-math`/`rehype-katex` into `astro.config.mjs`.
 * Fixed the same `@astrojs/sitemap` warning, "API Reference" 404s, and `astro build`/`@astrojs/markdown-remark` failure as Node.js, via the same fixes.
+* Added the missing `dev/check_links.py --lang wasm` step to `bindings/wasm/Makefile`'s dev target.
+* Fixed `README.md`/`index.md` linking to pre-restructure doc paths for the Installation Guide and Concepts pages.
+* Fixed `src/lib.rs`'s generated `.d.ts` doc comments rendering literal backslashes (e.g. `\"tricube\"`) instead of quotes, since raw Rust strings don't process escape sequences; removed the unnecessary escaping.
 
 # fastloess-wasm 1.1.0
 

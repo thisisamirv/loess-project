@@ -21,15 +21,15 @@ export interface SmoothOptions {
     fraction?: number;
     /** Number of robustness iterations. Default: 3. */
     iterations?: number;
-    /** Kernel function (\"tricube\", \"epanechnikov\", \"gaussian\", \"uniform\", \"biweight\", \"triangle\", \"cosine\"). Default: \"tricube\". */
+    /** Kernel function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
     weight_function?: string;
-    /** Robustness method (\"bisquare\", \"huber\", \"talwar\"). Default: \"bisquare\". */
+    /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
     robustness_method?: string;
-    /** Fallback when all weights are zero (\"use_local_mean\", \"return_original\", \"return_none\"). Default: \"use_local_mean\". */
+    /** Fallback when all weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
     zero_weight_fallback?: string;
-    /** Boundary handling (\"extend\", \"reflect\", \"zero\", \"noboundary\"). Default: \"extend\". */
+    /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
     boundary_policy?: string;
-    /** Scaling method (\"mad\", \"mar\", \"mean\"). Default: \"mad\". */
+    /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
     scaling_method?: string;
     /** Auto-convergence tolerance. Disabled when absent. */
     auto_converge?: number;
@@ -37,7 +37,7 @@ export interface SmoothOptions {
     return_residuals?: boolean;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
-    /** Compute diagnostics (RMSE, MAE, R-squared, etc.). Default: false. */
+    /** Compute diagnostics (RMSE, MAE, R2, etc.). Default: false. */
     return_diagnostics?: boolean;
     /** Confidence interval level (e.g. 0.95). Disabled when absent. */
     confidence_intervals?: number;
@@ -47,17 +47,17 @@ export interface SmoothOptions {
     parallel?: boolean;
     /** Fractions to test for cross-validation. CV disabled when absent. */
     cv_fractions?: number[];
-    /** CV method (\"kfold\" or \"loocv\"). Default: \"kfold\". */
+    /** CV method ("kfold" or "loocv"). Default: "kfold". */
     cv_method?: string;
     /** Number of folds for k-fold CV. Default: 5. */
     cv_k?: number;
-    /** Polynomial degree (\"constant\", \"linear\", \"quadratic\", \"cubic\", \"quartic\"). Default: \"linear\". */
+    /** Polynomial degree ("constant", "linear", "quadratic", "cubic", "quartic"). Default: "linear". */
     degree?: string;
     /** Number of predictor dimensions. Default: 1. */
     dimensions?: number;
-    /** Distance metric (\"normalized\", \"euclidean\", \"manhattan\", \"chebyshev\", \"minkowski:p\", \"weighted\"). Default: \"normalized\". */
+    /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
     distance_metric?: string;
-    /** Surface computation mode (\"interpolation\" or \"direct\"). Default: \"interpolation\". */
+    /** Surface computation mode ("interpolation" or "direct"). Default: "interpolation". */
     surface_mode?: string;
     /** Include standard errors in result. Default: false. */
     return_se?: boolean;
@@ -79,7 +79,7 @@ export interface StreamingOptions {
     chunk_size?: number;
     /** Overlap between adjacent chunks. Default: chunk_size / 10, min. 1. */
     overlap?: number;
-    /** Strategy for merging chunks (\"average\", \"weighted_average\", \"take_first\", \"take_last\"). Default: \"weighted_average\". */
+    /** Strategy for merging chunks ("average", "weighted_average", "take_first", "take_last"). Default: "weighted_average". */
     merge_strategy?: string;
 }
 
@@ -89,7 +89,7 @@ export interface OnlineOptions {
     window_capacity?: number;
     /** Minimum points required before smoothing starts. Default: 2. */
     min_points?: number;
-    /** Update strategy (\"full\" or \"incremental\"). Default: \"incremental\". */
+    /** Update strategy ("full" or "incremental"). Default: "incremental". */
     update_mode?: string;
 }
 
@@ -163,6 +163,7 @@ pub struct SmoothOptions {
     pub return_diagnostics: Option<bool>,
     pub confidence_intervals: Option<f64>,
     pub prediction_intervals: Option<f64>,
+    #[serde(rename = "parallel")]
     pub parallel: Option<bool>,
     pub cv_fractions: Option<Vec<f64>>,
     pub cv_method: Option<String>,
@@ -270,7 +271,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = "standard_errors")]
+    #[wasm_bindgen(getter, js_name = standard_errors)]
     pub fn standard_errors(&self) -> Option<Float64Array> {
         self.inner
             .standard_errors
@@ -278,7 +279,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = "confidence_lower")]
+    #[wasm_bindgen(getter, js_name = confidence_lower)]
     pub fn confidence_lower(&self) -> Option<Float64Array> {
         self.inner
             .confidence_lower
@@ -286,7 +287,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = "confidence_upper")]
+    #[wasm_bindgen(getter, js_name = confidence_upper)]
     pub fn confidence_upper(&self) -> Option<Float64Array> {
         self.inner
             .confidence_upper
@@ -294,7 +295,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = "prediction_lower")]
+    #[wasm_bindgen(getter, js_name = prediction_lower)]
     pub fn prediction_lower(&self) -> Option<Float64Array> {
         self.inner
             .prediction_lower
@@ -302,7 +303,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = "prediction_upper")]
+    #[wasm_bindgen(getter, js_name = prediction_upper)]
     pub fn prediction_upper(&self) -> Option<Float64Array> {
         self.inner
             .prediction_upper
@@ -310,7 +311,7 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = "robustness_weights")]
+    #[wasm_bindgen(getter, js_name = robustness_weights)]
     pub fn robustness_weights(&self) -> Option<Float64Array> {
         self.inner
             .robustness_weights
@@ -331,7 +332,7 @@ impl LoessResult {
         })
     }
 
-    #[wasm_bindgen(getter, js_name = "cv_scores")]
+    #[wasm_bindgen(getter, js_name = cv_scores)]
     pub fn cv_scores(&self) -> Option<Float64Array> {
         self.inner
             .cv_scores
@@ -339,12 +340,12 @@ impl LoessResult {
             .map(|v| unsafe { Float64Array::view(v) })
     }
 
-    #[wasm_bindgen(getter, js_name = "fraction_used")]
+    #[wasm_bindgen(getter, js_name = fraction_used)]
     pub fn fraction_used(&self) -> f64 {
         self.inner.fraction_used
     }
 
-    #[wasm_bindgen(getter, js_name = "iterations_used")]
+    #[wasm_bindgen(getter, js_name = iterations_used)]
     pub fn iterations_used(&self) -> Option<u32> {
         self.inner.iterations_used.map(|i| i as u32)
     }
@@ -530,14 +531,13 @@ impl StreamingLoess {
     ) -> Result<LoessResult, JsValue> {
         let x_vec = x.to_vec();
         let y_vec = y.to_vec();
-        let result: ::fastLoess::prelude::LoessResult<f64> =
-            map_runtime(self.inner.process_chunk(&x_vec, &y_vec))?;
+        let result: InnerLoessResult<f64> = map_runtime(self.inner.process_chunk(&x_vec, &y_vec))?;
         Ok(LoessResult { inner: result })
     }
 
     #[wasm_bindgen(skip_typescript)]
     pub fn finalize(&mut self) -> Result<LoessResult, JsValue> {
-        let result: ::fastLoess::prelude::LoessResult<f64> = map_runtime(self.inner.finalize())?;
+        let result: InnerLoessResult<f64> = map_runtime(self.inner.finalize())?;
         Ok(LoessResult { inner: result })
     }
 }
@@ -579,8 +579,6 @@ impl OnlineLoess {
         Ok(OnlineLoess { inner: model })
     }
 
-    // Add a single point and return its smoothed value, or null if the
-    // window is not yet full enough to produce a result.
     #[wasm_bindgen(js_name = "add_point", skip_typescript)]
     pub fn add_point(&mut self, x: f64, y: f64) -> Result<JsValue, JsValue> {
         let output = map_invalid_arg(self.inner.add_point(&[x], y))?;
