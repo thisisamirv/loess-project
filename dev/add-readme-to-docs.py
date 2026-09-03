@@ -2,6 +2,9 @@
 """Embed a binding's top-level README.md as its docs-site home page.
 
 Auto-detects the docs-site flavor from what exists in the binding directory:
+  - Hugo (bindings/go): writes docs/_index.md (the content root mounted by
+    docs-site/hugo.toml, i.e. Hugo's "home" page kind) with generated
+    frontmatter (title read from docs-site/hugo.toml).
   - Starlight (bindings/nodejs, bindings/wasm): rewrites the body of the
     already-existing src/content/docs/index.md, preserving its own
     hand-authored frontmatter (hero, etc.) above it.
@@ -10,9 +13,9 @@ Auto-detects the docs-site flavor from what exists in the binding directory:
     site navigation is defined inline in the root doc, unlike Starlight's
     separate nav file).
 
-In both cases the README's redundant top-level `# LOESS Project` heading is
-stripped, since the page's own title (Starlight hero / Sphinx toctree owner)
-already covers it.
+In all cases the README's redundant top-level `# LOESS Project` heading is
+stripped, since the page's own title (Hugo frontmatter / Starlight hero /
+Sphinx toctree owner) already covers it.
 
 Usage:
     python dev/add-readme-to-docs.py <binding_dir>
@@ -43,6 +46,18 @@ def _read_readme() -> str:
     return README_PATH.read_text(encoding="utf-8").replace("\r\n", "\n")
 
 
+def _embed_hugo(hugo_toml: Path, index_path: Path) -> None:
+    text = hugo_toml.read_text(encoding="utf-8")
+    m = re.search(r'^title\s*=\s*"([^"]*)"', text, re.MULTILINE)
+    if not m:
+        raise ValueError(f"No `title` found in {hugo_toml}")
+    title = m.group(1)
+
+    body = H1_RE.sub(lambda m: m.group(1) or "", _read_readme(), count=1)
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    index_path.write_text(f'---\ntitle: "{title}"\n---\n\n{body}', encoding="utf-8")
+
+
 def _embed_starlight(index_path: Path) -> None:
     existing = index_path.read_text(encoding="utf-8").replace("\r\n", "\n")
     fm_match = re.match(r"^---\n[\s\S]*?\n---\n", existing)
@@ -70,10 +85,14 @@ def _embed_sphinx(index_path: Path) -> None:
 
 
 def main() -> None:
+    hugo_toml = BINDING_DIR / "docs-site" / "hugo.toml"
     starlight_index = BINDING_DIR / "src" / "content" / "docs" / "index.md"
     sphinx_conf = BINDING_DIR / "docs" / "conf.py"
 
-    if starlight_index.exists():
+    if hugo_toml.exists():
+        index_path = BINDING_DIR / "docs" / "_index.md"
+        _embed_hugo(hugo_toml, index_path)
+    elif starlight_index.exists():
         index_path = starlight_index
         _embed_starlight(index_path)
     elif sphinx_conf.exists():
@@ -81,8 +100,8 @@ def main() -> None:
         _embed_sphinx(index_path)
     else:
         sys.exit(
-            f"Don't know how to embed README for {BINDING_DIR}: neither "
-            f"{starlight_index} nor {sphinx_conf} exist."
+            f"Don't know how to embed README for {BINDING_DIR}: none of "
+            f"{hugo_toml}, {starlight_index}, {sphinx_conf} exist."
         )
 
     print(f"Embedded README.md into {index_path.relative_to(REPO_ROOT)}")

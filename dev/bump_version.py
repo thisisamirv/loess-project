@@ -35,6 +35,7 @@ CARGO_PACKAGE_FILES = [
     "crates/loess-rs/Cargo.toml",
     "crates/fastLoess/Cargo.toml",
     "bindings/cpp/Cargo.toml",
+    "bindings/go/Cargo.toml",
     "bindings/julia/Cargo.toml",
     "bindings/nodejs/Cargo.toml",
     "bindings/python/Cargo.toml",
@@ -47,6 +48,7 @@ CARGO_PACKAGE_FILES = [
 # (major.minor only -- these are SemVer caret requirements, not exact pins).
 FASTLOESS_DEP_FILES = [
     "bindings/cpp/Cargo.toml",
+    "bindings/go/Cargo.toml",
     "bindings/julia/Cargo.toml",
     "bindings/nodejs/Cargo.toml",
     "bindings/python/Cargo.toml",
@@ -175,6 +177,15 @@ def build_targets(
             "bindings/julia/julia/Project.toml",
             re.compile(r'^version = "\d+\.\d+\.\d+"$', re.MULTILINE),
             f'version = "{new_version}"',
+            1,
+        )
+    )
+
+    targets.append(
+        (
+            "bindings/go/fastloess/version.go",
+            re.compile(r'const version = "\d+\.\d+\.\d+"'),
+            f'const version = "{new_version}"',
             1,
         )
     )

@@ -13,6 +13,7 @@ Usage
     python dev/verify_snippets.py --lang wasm        # WebAssembly only
     python dev/verify_snippets.py --lang rust        # Rust only
     python dev/verify_snippets.py --lang cpp         # C++ only
+    python dev/verify_snippets.py --lang go          # Go only
     python dev/verify_snippets.py --file docs/api/python.md
     python dev/verify_snippets.py --dry-run          # list snippets, don't run
     python dev/verify_snippets.py --verbose          # show snippet source on failure
@@ -21,9 +22,9 @@ Usage
     python dev/verify_snippets.py --stop-on-fail     # exit after first failure
     python dev/verify_snippets.py --lang cpp --update-outputs
         # also inject/update ```output blocks in the docs for languages whose
-        # stdout should be embedded (cpp, rust, nodejs, wasm) -- replaces the
-        # former dev/add-{cpp,rust,nodejs,wasm}-outputs scripts, which are no
-        # longer needed.
+        # stdout should be embedded (cpp, go, rust, nodejs, wasm) -- replaces
+        # the former dev/add-{cpp,go,rust,nodejs,wasm}-outputs scripts, which
+        # are no longer needed.
 """
 
 from __future__ import annotations
@@ -45,6 +46,7 @@ from runners import RUNNERS, SKIP_CHECKS
 from runners.base import (
     CPP_BINDING_DOCS_DIR,
     DOCS_DIR,
+    GO_BINDING_DOCS_DIR,
     JULIA_DOCS_DIR,
     NODEJS_BINDING_DOCS_DIR,
     REPO_ROOT,
@@ -332,7 +334,7 @@ def should_skip(snippet: Snippet, runner: str) -> str | None:
 # excluded here.
 # ---------------------------------------------------------------------------
 
-OUTPUT_CAPABLE_RUNNERS = {"cpp", "rust", "nodejs", "wasm"}
+OUTPUT_CAPABLE_RUNNERS = {"cpp", "go", "rust", "nodejs", "wasm"}
 
 
 def _splice_output_block(lines: list[str], res: RunResult) -> None:
@@ -433,6 +435,8 @@ def iter_md_files(
         yield from sorted(WASM_BINDING_DOCS_DIR.rglob("*.md"))
     if CPP_BINDING_DOCS_DIR.exists():
         yield from sorted(CPP_BINDING_DOCS_DIR.rglob("*.md"))
+    if GO_BINDING_DOCS_DIR.exists():
+        yield from sorted(GO_BINDING_DOCS_DIR.rglob("*.md"))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -447,7 +451,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--lang",
-        choices=["python", "julia", "nodejs", "r", "wasm", "rust", "cpp", "all"],
+        choices=["python", "julia", "nodejs", "r", "wasm", "rust", "cpp", "go", "all"],
         default="all",
         help="Which language runner to use (default: all)",
     )

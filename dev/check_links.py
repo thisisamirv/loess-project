@@ -3,11 +3,12 @@
 
 Checks Markdown `[text](target)` links, resolving them relative to the
 linking file and failing if the target doesn't exist. Image references
-(`![alt](src)`) are intentionally skipped: Doxygen (C++) resolves images via
-its own asset-path mechanism (`IMAGE_PATH`) rather than literal relative
-paths, so validating them here would be noisy and incorrect. External URLs,
-anchors-only links, and rustdoc intra-doc paths (`crate::doc::api`) are also
-skipped, since none of those are filesystem paths.
+(`![alt](src)`) are intentionally skipped: Doxygen (C++) and Hugo (Go) each
+resolve images via their own asset-path mechanism (`IMAGE_PATH`, static
+mounts) rather than literal relative paths, so validating them here would be
+noisy and incorrect. External URLs, anchors-only links, and rustdoc
+intra-doc paths (`crate::doc::api`) are also skipped, since none of those
+are filesystem paths.
 
 Usage:
     python dev/check_links.py                # check every binding/crate
@@ -24,6 +25,7 @@ from pathlib import Path
 from runners.base import (
     CPP_BINDING_DOCS_DIR,
     DOCS_DIR,
+    GO_BINDING_DOCS_DIR,
     JULIA_DOCS_DIR,
     NODEJS_BINDING_DOCS_DIR,
     REPO_ROOT,
@@ -39,6 +41,7 @@ TARGETS: dict[str, list[Path]] = {
     "nodejs": [NODEJS_BINDING_DOCS_DIR],
     "wasm": [WASM_BINDING_DOCS_DIR],
     "cpp": [CPP_BINDING_DOCS_DIR],
+    "go": [GO_BINDING_DOCS_DIR],
     "rust": RUST_CRATE_DOCS_DIRS,
 }
 

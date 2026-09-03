@@ -219,6 +219,18 @@ cpp-clean:
 	@"$(MAKE)" -f bindings/cpp/Makefile clean
 
 # ==============================================================================
+# Go bindings
+# ==============================================================================
+go:
+	@"$(MAKE)" -f bindings/go/Makefile
+
+go-dev:
+	@"$(MAKE)" -f bindings/go/Makefile dev
+
+go-clean:
+	@"$(MAKE)" -f bindings/go/Makefile clean
+
+# ==============================================================================
 # Development checks
 # ==============================================================================
 check-msrv:
@@ -239,10 +251,10 @@ docs-test:
 # ==============================================================================
 # All targets
 # ==============================================================================
-all: loess-rs fastLoess python r julia nodejs wasm cpp check-msrv
+all: loess-rs fastLoess python r julia nodejs wasm cpp go check-msrv
 	@echo "All checks completed successfully!"
 
-all-dev: loess-rs-dev fastLoess-dev python-dev r-dev julia-dev nodejs-dev wasm-dev cpp-dev check-msrv
+all-dev: loess-rs-dev fastLoess-dev python-dev r-dev julia-dev nodejs-dev wasm-dev cpp-dev go-dev check-msrv
 	@echo "All dev checks completed successfully!"
 
 all-coverage: loess-rs-coverage fastLoess-coverage python-coverage r-coverage

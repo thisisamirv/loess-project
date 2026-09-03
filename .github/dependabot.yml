@@ -72,3 +72,37 @@ updates:
     labels: ["dependencies", "python"]
     commit-message:
       prefix: "chore(python)"
+
+  - package-ecosystem: "gomod"
+    directory: "/bindings/go/fastloess"
+    schedule:
+      interval: "weekly"
+    groups:
+      go-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "go"]
+    commit-message:
+      prefix: "chore(go)"
+
+  - package-ecosystem: "gomod"
+    directory: "/bindings/go/tests"
+    schedule:
+      interval: "weekly"
+    groups:
+      go-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "go"]
+    commit-message:
+      prefix: "chore(go)"
+
+  # Hugo module dependencies (theme imports) for the Go binding's docs site.
+  - package-ecosystem: "gomod"
+    directory: "/bindings/go/docs-site"
+    schedule:
+      interval: "weekly"
+    groups:
+      go-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "go", "docs"]
+    commit-message:
+      prefix: "chore(docs)"

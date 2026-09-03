@@ -41,6 +41,20 @@ PINS = [
         "repo": "jothepro/doxygen-awesome-css",
     },
     {
+        "name": "golangci-lint (install script)",
+        "file": REPO_ROOT / "bindings/go/Makefile",
+        "pattern": re.compile(
+            r"GOLANGCI_LINT_VERSION\s*:=\s*v(?P<version>\d+\.\d+\.\d+)"
+        ),
+        "repo": "golangci/golangci-lint",
+    },
+    {
+        "name": "Hugo (go install in docs.yml)",
+        "file": REPO_ROOT / ".github/workflows/docs.yml",
+        "pattern": re.compile(r"gohugoio/hugo@v(?P<version>\d+\.\d+\.\d+)"),
+        "repo": "gohugoio/hugo",
+    },
+    {
         "name": "rextendr scaffold (DESCRIPTION)",
         "file": REPO_ROOT / "bindings/r/DESCRIPTION",
         "pattern": re.compile(r"Config/rextendr/version:\s*(?P<version>\d+\.\d+\.\d+)"),

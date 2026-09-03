@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.
 - Added `dev/check_links.py`, which validates every Markdown cross-reference link across every binding/crate's docs, failing on missing targets.
 
+**Go:**
+
+- Added a new Go binding (`bindings/go`): a `cgo`-based `fastloess` package wrapping the Rust core via a dedicated `fastloess-go` FFI crate, with `Loess`/`StreamingLoess`/`OnlineLoess` types, a Hugo (`hugo-book`) docs site, `Makefile`/`ci-go.yml`/`release-go.yml`, and full doc-snippet/test coverage.
+
 **Node.js:**
 
 - Added two prebuilt targets, `aarch64-unknown-linux-musl` (via cargo-zigbuild) and `armv7-unknown-linux-gnueabihf` (via an apt cross toolchain), with matching optional npm subpackages.

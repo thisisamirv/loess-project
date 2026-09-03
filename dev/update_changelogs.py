@@ -54,6 +54,12 @@ TARGETS = [
         "output": "bindings/julia/julia/docs/src/NEWS.md",
     },
     {
+        "labels": ["Go"],
+        "package": "fastloess (Go)",
+        "output": "bindings/go/docs/NEWS.md",
+        "hugo_weight": 100,
+    },
+    {
         "labels": ["Node.js"],
         "package": "fastloess (Node.js)",
         "output": "bindings/nodejs/src/content/docs/NEWS.md",
@@ -138,11 +144,14 @@ def render_news(
     versions: list[tuple[str, dict[str, list[str]]]],
     frontmatter_title: str | None = None,
     doxygen_page: str | None = None,
+    hugo_weight: int | None = None,
 ) -> str:
     header = "<!-- markdownlint-disable MD024 MD025 -->"
     if doxygen_page:
         header = f"{doxygen_page}\n\n{header}"
-    if frontmatter_title:
+    if hugo_weight is not None:
+        header = f'---\ntitle: "News"\nweight: {hugo_weight}\n---\n\n{header}'
+    elif frontmatter_title:
         header = f"---\ntitle: {frontmatter_title}\n---\n{header}"
     blocks = []
     for version, sections in versions:
@@ -174,6 +183,7 @@ def main() -> None:
                 versions,
                 target.get("frontmatter_title"),
                 target.get("doxygen_page"),
+                target.get("hugo_weight"),
             ),
             encoding="utf-8",
         )
