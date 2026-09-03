@@ -11,19 +11,42 @@
 PYTHON ?= python
 
 REPO_ROOT := $(abspath ..)
-R_DIR     := $(REPO_ROOT)/bindings/r
-DEV_DIR   := $(REPO_ROOT)/dev
+R_DIR := $(REPO_ROOT)/bindings/r
+DEV_DIR := $(REPO_ROOT)/dev
 
-R_PKG_NAME    := rfastloess
-R_PKG_VERSION  = $(shell grep "^Version:" $(R_DIR)/DESCRIPTION | sed 's/Version: //')
-R_PKG_TARBALL  = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
+R_PKG_NAME := rfastloess
+R_PKG_VERSION = $(shell grep "^Version:" $(R_DIR)/DESCRIPTION | sed 's/Version: //')
+R_PKG_TARBALL = $(R_PKG_NAME)_$(R_PKG_VERSION).tar.gz
 
 R_CARGO_TARGET :=
-R_CROSS_ENV    :=
+R_CROSS_ENV :=
 ifeq ($(OS),Windows_NT)
 	R_CARGO_TARGET := --target x86_64-pc-windows-gnu
 	R_CROSS_ENV    := PATH="/c/rtools45/x86_64-w64-mingw32.static.posix/bin:$$PATH"
 endif
+
+# jq (used to patch vendored .cargo-checksum.json files). Not preinstalled
+# on plain Windows/macOS dev machines the way it is on GitHub-hosted CI
+# runners, so fall back to downloading a static binary if it's not already
+# on PATH.
+JQ_DIR := $(R_DIR)/.bin
+ifeq ($(OS),Windows_NT)
+	JQ_LOCAL := $(JQ_DIR)/jq.exe
+	JQ_ASSET := jq-windows-amd64.exe
+else ifeq ($(shell uname -s),Darwin)
+	JQ_LOCAL := $(JQ_DIR)/jq
+	JQ_ASSET := jq-macos-amd64
+else
+	JQ_LOCAL := $(JQ_DIR)/jq
+	JQ_ASSET := jq-linux-amd64
+endif
+JQ := $(shell command -v jq 2>/dev/null || echo $(JQ_LOCAL))
+JQ_ENSURE_CMD := if ! command -v jq >/dev/null 2>&1 && [ ! -x "$(JQ_LOCAL)" ]; then \
+	echo "jq not found on PATH — downloading a static binary..."; \
+	mkdir -p $(JQ_DIR); \
+	curl -fLsS -o "$(JQ_LOCAL)" "https://github.com/jqlang/jq/releases/latest/download/$(JQ_ASSET)"; \
+	chmod +x "$(JQ_LOCAL)"; \
+	fi
 
 .PHONY: all install build bench-r bench-rfastloess-serial bench-rfastloess-parallel compare clean
 
@@ -82,16 +105,19 @@ build:
 	@# Strip test/bench/example/doc dirs to reduce archive size
 	@find $(R_DIR)/src/vendor -mindepth 2 -maxdepth 2 -type d \
 		\( -name tests -o -name benches -o -name examples \
-		   -o -name doc -o -name docs -o -name .github -o -name .config \) \
+		-o -name doc -o -name docs -o -name .github -o -name .config \) \
 		-exec rm -rf {} \; 2>/dev/null || true
-	@# Reset checksums — cargo accepts {"files":{}} for vendored crates
-	@find $(R_DIR)/src/vendor -name '.cargo-checksum.json' \
-		-exec sh -c 'echo '"'"'{"files":{},"package":null}'"'"' > "$$1"' _ {} \;
+	@# Reset checksums — cargo accepts {"files":{}} for vendored crates.
+	@# Must preserve each crate's "package" checksum (only "files" is reset),
+	@# otherwise cargo can't verify crates.io-sourced deps against Cargo.lock.
+	@$(JQ_ENSURE_CMD)
+	@for f in $(R_DIR)/src/vendor/*/.cargo-checksum.json; do \
+		[ -f "$$f" ] && $(JQ) '.files = {}' "$$f" > "$$f.tmp" && mv "$$f.tmp" "$$f"; done
 	@echo "  Creating vendor.tar.xz..."
 	@(cd $(R_DIR)/src && \
 	  (tar --sort=name --mtime='1970-01-01 00:00:00Z' --owner=0 --group=0 --numeric-owner \
-	       --xz -cf vendor.tar.xz vendor Cargo.lock 2>/dev/null \
-	   || tar --xz -cf vendor.tar.xz vendor Cargo.lock))
+	  --xz -cf vendor.tar.xz vendor Cargo.lock 2>/dev/null \
+	  || tar --xz -cf vendor.tar.xz vendor Cargo.lock))
 	@rm -rf $(R_DIR)/src/vendor
 	@(cd $(R_DIR)/src && tar -xf vendor.tar.xz) \
 	 && rm -f $(R_DIR)/src/vendor/*/CITATION.cff $(R_DIR)/src/vendor/*/CITATION
