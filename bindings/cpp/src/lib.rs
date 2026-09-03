@@ -649,14 +649,14 @@ pub unsafe extern "C" fn cpp_online_set_prediction_intervals(
 /// Fit the model.
 ///
 /// # Safety
-/// `ptr` must be a valid CppLoess pointer. `x` must be a valid array of length `x_n`
-/// (= n_observations * dimensions), `y` must be a valid array of length `y_n` (= n_observations).
+/// `ptr` must be a valid CppLoess pointer. `x_values` must be a valid array of length `x_n`
+/// (= n_observations * dimensions), `y_values` must be a valid array of length `y_n` (= n_observations).
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_fit(
     ptr: *mut CppLoess,
-    x: *const c_double,
+    x_values: *const c_double,
     x_n: c_ulong,
-    y: *const c_double,
+    y_values: *const c_double,
     y_n: c_ulong,
     custom_weights: *const c_double,
     custom_weights_n: c_ulong,
@@ -665,13 +665,13 @@ pub unsafe extern "C" fn cpp_loess_fit(
         if ptr.is_null() {
             return error_result(shared_parse::MODEL_POINTER_IS_NULL);
         }
-        if x.is_null() || y.is_null() || x_n == 0 || y_n == 0 {
+        if x_values.is_null() || y_values.is_null() || x_n == 0 || y_n == 0 {
             return error_result(shared_parse::INVALID_DATA_INPUTS);
         }
 
         let loess = &mut *ptr;
-        let x_slice = std::slice::from_raw_parts(x, x_n as usize);
-        let y_slice = std::slice::from_raw_parts(y, y_n as usize);
+        let x_slice = std::slice::from_raw_parts(x_values, x_n as usize);
+        let y_slice = std::slice::from_raw_parts(y_values, y_n as usize);
 
         let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_n as usize);
 
@@ -866,14 +866,14 @@ pub unsafe extern "C" fn cpp_streaming_new(
 /// Process a chunk of data.
 ///
 /// # Safety
-/// `ptr` must be valid. `x` must be a valid array of length `x_n` (= n_observations * dimensions),
-/// `y` must be a valid array of length `y_n` (= n_observations).
+/// `ptr` must be valid. `x_values` must be a valid array of length `x_n` (= n_observations * dimensions),
+/// `y_values` must be a valid array of length `y_n` (= n_observations).
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_streaming_process(
     ptr: *mut CppStreamingLoess,
-    x: *const c_double,
+    x_values: *const c_double,
     x_n: c_ulong,
-    y: *const c_double,
+    y_values: *const c_double,
     y_n: c_ulong,
 ) -> CppLoessResult {
     with_panic_result(|| {
@@ -881,11 +881,11 @@ pub unsafe extern "C" fn cpp_streaming_process(
             return error_result(shared_parse::MODEL_POINTER_IS_NULL);
         }
         let loess = &mut *ptr;
-        if x.is_null() || y.is_null() || x_n == 0 || y_n == 0 {
+        if x_values.is_null() || y_values.is_null() || x_n == 0 || y_n == 0 {
             return error_result(shared_parse::INVALID_DATA_INPUTS);
         }
-        let x_slice = std::slice::from_raw_parts(x, x_n as usize);
-        let y_slice = std::slice::from_raw_parts(y, y_n as usize);
+        let x_slice = std::slice::from_raw_parts(x_values, x_n as usize);
+        let y_slice = std::slice::from_raw_parts(y_values, y_n as usize);
 
         if let Some(model) = &mut loess.model {
             match map_runtime_result(model.process_chunk(x_slice, y_slice)) {

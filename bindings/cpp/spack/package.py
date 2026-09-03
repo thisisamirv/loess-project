@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 #
 # This file is the source of truth for the fastloess-cpp Spack recipe. It
-# is mirrored into spack/spack-packages by dev/spack_open_pr.sh, which runs
-# on every GitHub release (see .github/workflows/release-cpp.yml).
+# is mirrored into spack/spack-packages by the spack-release job in
+# .github/workflows/release-cpp.yml, which runs on every GitHub release.
 #
 # Spack's package API (spack.package, spack_repo.builtin.*) only resolves
 # inside a full Spack installation, which isn't present in this workspace.
@@ -26,8 +26,8 @@ class FastloessCpp(CargoPackage):
 
     license("MIT OR Apache-2.0", checked_by="thisisamirv")
 
-    # version() lines below are appended/updated by dev/spack_release.py on
-    # every release; keep newest first.
+    # version() lines below are appended/updated by release-cpp.yml's
+    # spack-release job on every release; keep newest first.
     version(
         "1.1.0",
         sha256="ba786a2984431bb18480f055fc29dc52c4f0c69f44a961be35541bca07549869",
