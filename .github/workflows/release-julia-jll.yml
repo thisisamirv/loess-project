@@ -10,7 +10,7 @@ on:
         required: true
         type: string
       commit:
-        description: "Commit SHA to build from (optional, defaults to the triggering ref)"
+        description: "Commit SHA to build from (defaults to HEAD of the workflow's own ref)"
         required: false
         type: string
 

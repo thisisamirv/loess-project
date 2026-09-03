@@ -101,18 +101,23 @@ jobs:
           set -x
           cd fastloess-feedstock
 
+          # Create a new branch
           BRANCH="update-to-v$VERSION"
           git checkout -b "$BRANCH"
 
-          # recipe.yaml uses rattler-build v1 format: context.version and plain sha256
-          sed -i "s/^  version: \".*\"/  version: \"$VERSION\"/" recipe/recipe.yaml
+          # Update version and SHA256 in recipe.yaml (rattler-build format: the
+          # version lives in a `context.version` block, not the old meta.yaml's
+          # `{% set version = "..." %}` Jinja2 directive).
+          sed -i "s/version: \"[0-9]\+\.[0-9]\+\.[0-9]\+\"/version: \"$VERSION\"/" recipe/recipe.yaml
           sed -i "s/sha256: .*/sha256: $SHA256/" recipe/recipe.yaml
           sed -i "s/number: .*/number: 0/" recipe/recipe.yaml
 
-          echo "=== Updated recipe/recipe.yaml ==="
-          cat recipe/recipe.yaml
-          echo "=================================="
+          # Show the changes for debugging
+          echo "=== Updated recipe.yaml (context/source/build) ==="
+          grep -A1 -E "^context:|^source:|^build:" recipe/recipe.yaml
+          echo "=========================="
 
+          # Commit changes
           git add recipe/
           git commit -m "Update to version $VERSION"
 
