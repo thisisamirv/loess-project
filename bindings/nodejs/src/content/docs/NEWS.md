@@ -47,6 +47,8 @@ title: News
 * Fixed the docs build emitting an `@astrojs/sitemap` warning when `SITE` isn't set locally; `astro.config.mjs` now falls back to the production URL.
 * Fixed every "API Reference" link 404ing due to a TypeDoc/Starlight casing mismatch; a new `dev/lowercase-typedoc-refs.js` script normalizes generated file names and links.
 * Fixed `astro build` failing since Astro 7 no longer bundles `@astrojs/markdown-remark`; added it as an explicit devDependency.
+* Added the missing `dev/check_links.py --lang nodejs` step to `bindings/nodejs/Makefile`'s dev target.
+* Fixed `README.md`/`index.md` linking to pre-restructure doc paths for the Installation Guide and Concepts pages (missing the `introduction/` path segment).
 
 # fastloess (Node.js) 1.1.0
 

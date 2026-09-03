@@ -43,7 +43,6 @@
 * Fixed `dev/runners/julia.py`'s Windows mojibake bug (missed by the earlier encoding fix to the other runners); `subprocess.run` now decodes with explicit UTF-8.
 * Fixed `make.jl` and `FastLOESS.jl` using tab indentation instead of the project's 4-space JuliaFormatter style; reformatted both files.
 * Fixed `README.md`/`index.md` linking to `lowess-project`'s domain and pre-restructure doc paths for the Installation Guide, Concepts, and Benchmarks pages.
-* Added the missing `dev/check_links.py --lang julia` step to `bindings/julia/Makefile`'s dev target.
 * Ported a missing "high weight pulls fit toward spike" custom-weights test case from `fastlowess`'s Julia test suite.
 
 # FastLOESS.jl 1.1.0
