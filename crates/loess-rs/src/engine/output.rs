@@ -82,7 +82,7 @@ pub struct LoessResult<T> {
     // Used as the denominator for residual scale estimation.
     pub delta1: Option<T>,
 
-    // Delta2 for SE computation: tr(((I-L)(I-L)')²).
+    // Delta2 for SE computation: tr(((I-L)(I-L)')^2).
     // Used for confidence interval width adjustment.
     pub delta2: Option<T>,
 

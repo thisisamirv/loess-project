@@ -221,14 +221,14 @@ int main() {
     });
     auto result = gene_model.fit(hours, expression).value();
 
-    std::cout << "R²: " << result.diagnostics().r_squared() << std::endl;
+    std::cout << "R2: " << result.diagnostics().r_squared() << std::endl;
 
     return 0;
 }
 ```
 
 ```output
-RÂ²: 0.993526
+R2: 0.993526
 ```
 
 ---
@@ -248,7 +248,7 @@ RÂ²: 0.993526
 ## See Also
 
 - [Real-Time Processing](use-case-real-time.md) — For streaming time series
-- [Cross-Validation](cross-validation.md) — Optimal fraction selection
-- [Polynomial Degree](degree.md) — Degree 2 for curved trends
-- [Boundary Handling](boundary.md) — Edge bias in trend extraction
-- [API Reference](api.md) — Full parameter reference
+- [Cross-Validation](../guide/cross-validation.md) — Optimal fraction selection
+- [Polynomial Degree](../advanced/degree.md) — Degree 2 for curved trends
+- [Boundary Handling](../advanced/boundary.md) — Edge bias in trend extraction
+- [API Reference](../api/api.md) — Full parameter reference

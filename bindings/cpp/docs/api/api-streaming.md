@@ -153,7 +153,7 @@ See [cpp.md](api.md) for the full `LoessResult` field reference.
 
 ### merge_strategy
 
-*See: [Merge Strategies](merge.md)*
+*See: [Merge Strategies](../advanced/merge.md)*
 
 | Strategy | Alias | Behavior |
 | --- | --- | --- |

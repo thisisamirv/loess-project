@@ -93,7 +93,7 @@ y[0]: 0.1069
 
 ## Real-Time Dashboard Example
 
-The dashboard pattern uses a plain LOESS fit on a manually managed sliding window rather than `OnlineLoess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window²) refit on every tick; for high-frequency streams prefer `OnlineLoess` with `update_mode = "incremental"` to bound per-frame cost.
+The dashboard pattern uses a plain LOESS fit on a manually managed sliding window rather than `OnlineLoess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window^2) refit on every tick; for high-frequency streams prefer `OnlineLoess` with `update_mode = "incremental"` to bound per-frame cost.
 
 ```javascript
 const { Loess } = require('fastloess-wasm');

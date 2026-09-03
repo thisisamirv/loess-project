@@ -55,7 +55,7 @@ pub struct SurfaceCell<T: Float> {
 // 3. Interpolating within cells using n-linear interpolation
 #[derive(Debug, Clone)]
 pub struct InterpolationSurface<T: Float> {
-    // Fitted data at each vertex: [val, ∂/∂x₁, ∂/∂x₂, ...] for each vertex.
+    // Fitted data at each vertex: [val, ∂/∂x_1, ∂/∂x_2, ...] for each vertex.
     // Layout: vertex 0 data, vertex 1 data, ... with (d+1) values per vertex.
     pub vertex_data: Vec<T>,
     // Vertex coordinates (stored for refitting).

@@ -204,7 +204,7 @@ fn main() -> Result<(), LoessError> {
 
     let result = model.fit(&hours, &expression)?;
     if let Some(diag) = &result.diagnostics {
-        println!("R²: {:.3}", diag.r_squared);
+        println!("R2: {:.3}", diag.r_squared);
     }
 
     Ok(())
@@ -212,7 +212,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-RÂ²: 0.971
+R2: 0.971
 ```
 
 ---

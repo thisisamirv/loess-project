@@ -64,7 +64,7 @@ See [Online Adapter](api-online.md) for the `OnlineLoess` class.
 | `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only; see [Custom Weights](../weighting/custom-weights.md)) |
 | `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
 | `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
-| `return_diagnostics` | `bool` | `False` | Compute RMSE, MAE, R², AIC |
+| `return_diagnostics` | `bool` | `False` | Compute RMSE, MAE, R2, AIC |
 | `return_residuals` | `bool` | `False` | Include residuals in result |
 | `return_robustness_weights` | `bool` | `False` | Include robustness weights in result |
 | `return_se` | `bool` | `False` | Compute hat-matrix statistics (enp, leverage …) |

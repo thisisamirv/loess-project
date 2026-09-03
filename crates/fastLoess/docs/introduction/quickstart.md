@@ -111,6 +111,10 @@ let result = model.fit(&x, &y_with_outlier)?;
 }
 ```
 
+```output
+Point 3 is likely an outlier (weight: 0.000)
+```
+
 ---
 
 ## Streaming Mode

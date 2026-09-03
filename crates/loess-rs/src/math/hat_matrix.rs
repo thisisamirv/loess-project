@@ -29,7 +29,7 @@ pub struct HatMatrixStats<T> {
     // Delta1 = tr((I-L)(I-L)') for residual scale estimation.
     pub delta1: T,
 
-    // Delta2 = tr(((I-L)(I-L)')²) for SE computation.
+    // Delta2 = tr(((I-L)(I-L)')^2) for SE computation.
     pub delta2: T,
 }
 
@@ -38,13 +38,13 @@ impl<T: Float> HatMatrixStats<T> {
     //
     // This provides an approximation of delta1 and delta2 when the full
     // hat matrix is not available. Uses the approximation:
-    // - delta1 ≈ n - 2*tr(L) + tr(L²) ≈ n - 2*tr(L) + tr(L)²/n
-    // - delta2 ≈ delta1² / n
+    // - delta1 ~= n - 2*tr(L) + tr(L^2) ~= n - 2*tr(L) + tr(L)^2/n
+    // - delta2 ~= delta1^2 / n
     pub fn from_leverage(leverage: Vec<T>) -> Self {
         let n = T::from(leverage.len()).unwrap();
         let trace = leverage.iter().fold(T::zero(), |acc, &l| acc + l);
 
-        // Approximate tr(L*L') ≈ sum(l_ii²) (assuming L is approximately diagonal)
+        // Approximate tr(L*L') ~= sum(l_ii^2) (assuming L is approximately diagonal)
         let trace_l_sq = leverage.iter().fold(T::zero(), |acc, &l| acc + l * l);
 
         // delta1 = n - 2*tr(L) + tr(L*L')

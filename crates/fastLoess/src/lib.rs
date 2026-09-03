@@ -137,7 +137,7 @@
 //! LOESS Diagnostics:
 //!   RMSE:         0.191925
 //!   MAE:          0.181676
-//!   R²:           0.998205
+//!   R2:           0.998205
 //!   Residual SD:  0.297750
 //!   Effective DF: 8.00
 //!   AIC:          -10.41
@@ -246,7 +246,7 @@
 //! - **`surface_mode(m: &str)`** — How the fitted surface is evaluated.
 //!   - `"interpolation"` (**default**): fits at a sparse grid of vertices then interpolates —
 //!     fast for large datasets.
-//!   - `"direct"`: fits exactly at every data point — exact but O(n²).
+//!   - `"direct"`: fits exactly at every data point — exact but O(n^2).
 //!
 //! - **`cell(c: T)`** — Cell size for the interpolation vertex grid (default: `0.2`).
 //!   Smaller → more vertices, higher accuracy, slower.
@@ -264,10 +264,10 @@
 //!
 //! - **`distance_metric(m: &str)`** — Distance metric for neighbor selection.
 //!   - `"normalized"` (**default**): each dimension scaled to `[0, 1]`
-//!   - `"euclidean"`: standard L² distance
-//!   - `"manhattan"`: L¹ distance
+//!   - `"euclidean"`: standard L2 distance
+//!   - `"manhattan"`: L1 distance
 //!   - `"chebyshev"`: L∞ (max) distance
-//!   - `"minkowski:p"`: Lᵖ distance for arbitrary `p`
+//!   - `"minkowski:p"`: Lp distance for arbitrary `p`
 //!   - `"weighted"`: dimension-weighted Euclidean — use together with `weighted_metric_weights`
 //!
 //! - **`weighted_metric_weights(weights: Vec<T>)`** — Per-dimension scale factors for the
@@ -292,7 +292,7 @@
 //! ### Output Options
 //!
 //! - **`return_diagnostics()`** — Include fit-quality diagnostics in the result (RMSE, MAE,
-//!   R², AIC, effective degrees of freedom, residual SD, etc.).
+//!   R2, AIC, effective degrees of freedom, residual SD, etc.).
 //!
 //! - **`return_residuals()`** — Include raw residuals `r_i = y_i − ŷ_i` in the result.
 //!

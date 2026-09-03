@@ -80,7 +80,7 @@ See [Online Adapter](api-online.md) for the `OnlineLoess` class.
 | `custom_weights` | `number[]` | `null` | Per-observation case weights — passed to `fit()`, not the options object (Batch only; see [Custom Weights](../weighting/custom-weights.md)) |
 | `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
 | `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) — see [Intervals](../guide/intervals.md) |
-| `return_diagnostics` | `boolean` | `false` | Compute RMSE, MAE, R², AIC |
+| `return_diagnostics` | `boolean` | `false` | Compute RMSE, MAE, R2, AIC |
 | `return_residuals` | `boolean` | `false` | Include residuals in result |
 | `return_robustness_weights` | `boolean` | `false` | Include robustness weights in result |
 | `return_se` | `boolean` | `false` | Compute hat-matrix statistics (enp, leverage …) |
@@ -233,7 +233,7 @@ Behavior when all neighborhood weights are zero:
 
 ### surface_mode
 
-*See: [Polynomial Degree](degree.md#surface-mode)*
+*See: [Polynomial Degree](../advanced/degree.md#surface-mode)*
 
 Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
 

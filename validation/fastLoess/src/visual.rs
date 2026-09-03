@@ -1483,7 +1483,7 @@ fn run_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
 /// With uniformly-spaced x the normal equations decouple into orthogonal even/odd
 /// subsystems: adding an odd-degree term (cubic) cannot change the intercept, so
 /// cubic == quadratic. Non-uniform spacing breaks this symmetry — the odd moments
-/// Σ w·(xᵢ−x₀)^k (k odd) become non-zero, and cubic genuinely captures local
+/// sum(w*(x_i-x_0)^k) (k odd) become non-zero, and cubic genuinely captures local
 /// asymmetry that quadratic cannot.  All four degrees then have distinct RMSEs.
 fn run_higher_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
     let n = 300;
@@ -1503,9 +1503,9 @@ fn run_higher_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
 
     // Signal: cubic + quartic polynomial so that each degree family is the
     // limiting factor for a different reason:
-    //   Linear   misses x² + x³ + x⁴ → largest RMSE
-    //   Quadratic misses x³ + x⁴      → medium-large RMSE
-    //   Cubic    misses only x⁴        → small RMSE
+    //   Linear   misses x^2 + x^3 + x^4 → largest RMSE
+    //   Quadratic misses x^3 + x^4      → medium-large RMSE
+    //   Cubic    misses only x^4        → small RMSE
     //   Quartic  fits the signal exactly → RMSE ≈ noise floor
     let mut y_true: Vec<f64> = Vec::with_capacity(n);
     let mut y: Vec<f64> = Vec::with_capacity(n);

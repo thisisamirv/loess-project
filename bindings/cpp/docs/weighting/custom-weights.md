@@ -216,4 +216,4 @@ y[0]: 0.867374
 ## See Also
 
 - [Robustness](robustness.md) — adaptive outlier downweighting via IRLS
-- [API Reference](api.md) — full parameter reference
+- [API Reference](../api/api.md) — full parameter reference

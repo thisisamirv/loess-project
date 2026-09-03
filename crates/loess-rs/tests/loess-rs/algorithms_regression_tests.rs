@@ -586,7 +586,7 @@ fn approx_eq(a: f64, b: f64, tol: f64) -> bool {
 
 #[test]
 fn test_weighted_mean_nd() {
-    // 3 points in 2D with y = x₁ + x₂
+    // 3 points in 2D with y = x_1 + x_2
     let x: [f64; 6] = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
     let y: [f64; 3] = [0.0, 1.0, 1.0];
     let scales: [f64; 2] = [1.0, 1.0];
@@ -625,14 +625,14 @@ fn test_weighted_mean_nd() {
 
 #[test]
 fn test_linear_fit_nd_2d() {
-    // 4 points in 2D forming a plane: y = 1 + x₁ + 2*x₂
+    // 4 points in 2D forming a plane: y = 1 + x_1 + 2*x_2
     let x: [f64; 8] = [
         0.0, 0.0, // (0, 0)
         1.0, 0.0, // (1, 0)
         0.0, 1.0, // (0, 1)
         1.0, 1.0, // (1, 1)
     ];
-    let y: [f64; 4] = [1.0, 2.0, 3.0, 4.0]; // y = 1 + x₁ + 2*x₂
+    let y: [f64; 4] = [1.0, 2.0, 3.0, 4.0]; // y = 1 + x_1 + 2*x_2
     let scales: [f64; 2] = [1.0, 1.0];
 
     // Query at center (0.5, 0.5) - expected y = 1 + 0.5 + 1.0 = 2.5
@@ -689,7 +689,7 @@ fn test_polynomial_terms_linear_2d() {
     let mut terms = vec![0.0; 3];
 
     PolynomialDegree::Linear.build_terms(&point, &center, &mut terms);
-    assert_eq!(terms.len(), 3); // [1, x₁-c₁, x₂-c₂]
+    assert_eq!(terms.len(), 3); // [1, x_1-c_1, x_2-c_2]
     assert_eq!(terms[0], 1.0);
     assert_eq!(terms[1], 2.0); // 3 - 1
     assert_eq!(terms[2], 3.0); // 5 - 2
@@ -702,14 +702,14 @@ fn test_polynomial_terms_quadratic_2d() {
     let mut terms = vec![0.0; 6];
 
     PolynomialDegree::Quadratic.build_terms(&point, &center, &mut terms);
-    // [1, x₁, x₂, x₁², x₁x₂, x₂²] = [1, 2, 3, 4, 6, 9]
+    // [1, x_1, x_2, x_1^2, x_1*x_2, x_2^2] = [1, 2, 3, 4, 6, 9]
     assert_eq!(terms.len(), 6);
     assert_eq!(terms[0], 1.0);
     assert_eq!(terms[1], 2.0);
     assert_eq!(terms[2], 3.0);
-    assert_eq!(terms[3], 4.0); // 2²
+    assert_eq!(terms[3], 4.0); // 2^2
     assert_eq!(terms[4], 6.0); // 2*3
-    assert_eq!(terms[5], 9.0); // 3²
+    assert_eq!(terms[5], 9.0); // 3^2
 }
 
 #[test]

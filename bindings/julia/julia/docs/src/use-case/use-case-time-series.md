@@ -146,7 +146,7 @@ model = Loess(;
 )
 result = fit(model, hours, expression)
 
-println("R²: ", result.diagnostics.r_squared)
+println("R2: ", result.diagnostics.r_squared)
 ```
 
 ---

@@ -49,14 +49,14 @@ const result = model.fit(x, y);
 console.log("Smoothed (first 5):", [...result.y.slice(0, 5)].map(v => v.toFixed(4)));
 console.log("CI lower (first 5):", [...result.confidence_lower.slice(0, 5)].map(v => v.toFixed(4)));
 console.log("CI upper (first 5):", [...result.confidence_upper.slice(0, 5)].map(v => v.toFixed(4)));
-console.log("R²:", result.diagnostics.r_squared.toFixed(4));
+console.log("R2:", result.diagnostics.r_squared.toFixed(4));
 ```
 
 ```output
 Smoothed (first 5): [ '0.1118', '0.1389', '0.1702', '0.2064', '0.2445' ]
 CI lower (first 5): [ '-0.0078', '0.0201', '0.0521', '0.0890', '0.1279' ]
 CI upper (first 5): [ '0.2313', '0.2577', '0.2882', '0.3237', '0.3611' ]
-R²: 0.8860
+R2: 0.8860
 ```
 
 ---
@@ -85,6 +85,10 @@ result.robustness_weights.forEach((w, i) => {
         console.log(`Point ${i} is likely an outlier (weight: ${w.toFixed(3)})`);
     }
 });
+```
+
+```output
+Point 3 is likely an outlier (weight: 0.000)
 ```
 
 ---

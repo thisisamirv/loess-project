@@ -148,11 +148,11 @@ const expression = Float64Array.from(hours, h => 5 + 3 * Math.sin(h * Math.PI / 
 const model = new Loess({ fraction: 0.3, iterations: 3, return_diagnostics: true });
 const result = model.fit(hours, expression);
 
-console.log("R²:", result.diagnostics?.r_squared);
+console.log("R2:", result.diagnostics?.r_squared);
 ```
 
 ```output
-R²: 0.9864121418777019
+R2: 0.9864121418777019
 ```
 
 ---

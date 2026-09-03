@@ -238,7 +238,7 @@
 //! - **`surface_mode(m: SurfaceMode)`** — How the fitted surface is evaluated.
 //!   - `Interpolation` / `"interpolation"` (**default**): fits at a sparse grid of vertices then interpolates —
 //!     fast for large datasets.
-//!   - `Direct` / `"direct"`: fits exactly at every data point — exact but O(n²).
+//!   - `Direct` / `"direct"`: fits exactly at every data point — exact but O(n^2).
 //!
 //! - **`cell(c: T)`** — Cell size for the interpolation vertex grid (default: `0.2`).
 //!   Smaller → more vertices, higher accuracy, slower.
@@ -256,10 +256,10 @@
 //!
 //! - **`distance_metric(m: DistanceMetric<T>)`** — Distance metric for neighbor selection.
 //!   - `Normalized` / `"normalized"` (**default**): each dimension scaled to `[0, 1]`
-//!   - `Euclidean` / `"euclidean"`: standard L² distance
-//!   - `Manhattan` / `"manhattan"`: L¹ distance
+//!   - `Euclidean` / `"euclidean"`: standard L2 distance
+//!   - `Manhattan` / `"manhattan"`: L1 distance
 //!   - `Chebyshev` / `"chebyshev"`: L∞ (max) distance
-//!   - `Minkowski(p)` / `"minkowski:p"`: Lᵖ distance for arbitrary `p`
+//!   - `Minkowski(p)` / `"minkowski:p"`: Lp distance for arbitrary `p`
 //!   - `Weighted(w)`: dimension-weighted Euclidean (no string form — requires a weights vector)
 //!
 //! ### Boundary Handling
@@ -282,7 +282,7 @@
 //! ### Output Options
 //!
 //! - **`return_diagnostics()`** — Include fit-quality diagnostics in the result (RMSE, MAE,
-//!   R², AIC, effective degrees of freedom, residual SD, etc.).
+//!   R2, AIC, effective degrees of freedom, residual SD, etc.).
 //!
 //! - **`return_residuals()`** — Include raw residuals `r_i = y_i − ŷ_i` in the result.
 //!

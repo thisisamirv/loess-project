@@ -401,7 +401,7 @@ Stateful batch LOESS smoother.
 - `boundary_policy::String = "extend"`: Handling of edge effects
 - `confidence_intervals::Float64 = NaN`: Confidence level (e.g., 0.95), NaN to disable
 - `prediction_intervals::Float64 = NaN`: Prediction interval level, NaN to disable
-- `return_diagnostics::Bool = false`: Whether to compute RMSE, MAE, R², etc.
+- `return_diagnostics::Bool = false`: Whether to compute RMSE, MAE, R2, etc.
 - `return_residuals::Bool = false`: Whether to include residuals
 - `return_robustness_weights::Bool = false`: Whether to include robustness weights
 - `zero_weight_fallback::String = "use_local_mean"`: Fallback when all weights are zero. See Notes for a description of each option.
@@ -856,7 +856,7 @@ Stateful online LOESS smoother.
   per-dimension weights.
 - `surface_mode::String = "interpolation"`: Surface mode
 - `return_se::Bool = false`: Compute hat-matrix statistics
-- `return_diagnostics::Bool = false`: Compute diagnostics (RMSE, MAE, R², etc.)
+- `return_diagnostics::Bool = false`: Compute diagnostics (RMSE, MAE, R2, etc.)
 - `return_residuals::Bool = false`: Include residuals in the result
 - `confidence_intervals::Float64 = NaN`: Confidence level (e.g. 0.95). NaN disables CI.
 - `prediction_intervals::Float64 = NaN`: Prediction level (e.g. 0.95). NaN disables PI.

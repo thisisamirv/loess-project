@@ -198,7 +198,7 @@ model = fl.Loess(
 )
 result = model.fit(hours, expression)
 
-print(f"R²: {result.diagnostics.r_squared:.3f}")
+print(f"R2: {result.diagnostics.r_squared:.3f}")
 :::
 
 ---

@@ -85,7 +85,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights (Batch only) — see [Custom Weights](crate::doc::weighting::custom_weights) |
 | `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) — see [Intervals](crate::doc::guide::intervals) |
 | `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) — see [Intervals](crate::doc::guide::intervals) |
-| `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R², AIC |
+| `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R2, AIC |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
 | `return_se()` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
@@ -237,7 +237,7 @@ Behavior when all neighborhood weights are zero:
 
 ### surface_mode
 
-*See: [Polynomial Degree](degree.md#surface-mode)*
+*See: [Polynomial Degree](../advanced/degree.md#surface-mode)*
 
 Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
 

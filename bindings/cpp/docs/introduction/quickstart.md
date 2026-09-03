@@ -116,6 +116,10 @@ int main() {
 }
 ```
 
+```output
+Point 3 is outlier (weight: 0)
+```
+
 ---
 
 ## Streaming Mode
@@ -168,10 +172,10 @@ Smoothed 100 points
 | Topic | Link |
 | --- | --- |
 | How LOESS works | [Concepts](concepts.md) |
-| All parameters explained | [API Reference](api.md) |
-| Batch vs Streaming vs Online | [Execution Modes](adapter-choice.md) |
-| Polynomial degree choices | [Degree](degree.md) |
-| Multivariate smoothing | [Dimensions](dimensions.md) |
-| Edge handling | [Boundary](boundary.md) |
-| Outlier handling in depth | [Robustness](robustness.md) |
-| Full API per language | [API Reference](api.md) |
+| All parameters explained | [API Reference](../api/api.md) |
+| Batch vs Streaming vs Online | [Execution Modes](../guide/adapter-choice.md) |
+| Polynomial degree choices | [Degree](../advanced/degree.md) |
+| Multivariate smoothing | [Dimensions](../advanced/dimensions.md) |
+| Edge handling | [Boundary](../advanced/boundary.md) |
+| Outlier handling in depth | [Robustness](../weighting/robustness.md) |
+| Full API per language | [API Reference](../api/api.md) |

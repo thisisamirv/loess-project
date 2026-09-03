@@ -162,11 +162,11 @@ const model = new fl.Loess({
 });
 const result = model.fit(hours, expression);
 
-console.log(`R²: ${result.diagnostics.r_squared.toFixed(3)}`);
+console.log(`R2: ${result.diagnostics.r_squared.toFixed(3)}`);
 ```
 
 ```output
-R²: 0.963
+R2: 0.963
 ```
 
 ---

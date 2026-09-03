@@ -130,7 +130,7 @@ Selected fraction (CV): 0.3
 Cross-validation uses MSE (Mean Squared Error) by default:
 
 ```text
-MSE = mean((y_true - y_pred)²)
+MSE = mean((y_true - y_pred)^2)
 ```
 
 Lower MSE indicates better fit on held-out data.

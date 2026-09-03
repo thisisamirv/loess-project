@@ -168,23 +168,23 @@ impl DistanceLinalg for f32 {
 // Distance metric for nD LOESS neighborhood computation.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum DistanceMetric<T> {
-    // Standard Euclidean distance: √(Σ(xᵢ - yᵢ)²)
+    // Standard Euclidean distance: sqrt(sum((x_i - y_i)^2))
     Euclidean,
 
     // Normalized Euclidean distance.
     #[default]
     Normalized,
 
-    // Manhattan distance (L1 norm): Σ|xᵢ - yᵢ|
+    // Manhattan distance (L1 norm): sum(|x_i - y_i|)
     Manhattan,
 
-    // Chebyshev distance (L∞ norm): max|xᵢ - yᵢ|
+    // Chebyshev distance (L-infinity norm): max|x_i - y_i|
     Chebyshev,
 
-    // Minkowski distance (Lp norm): (Σ|xᵢ - yᵢ|^p)^(1/p)
+    // Minkowski distance (Lp norm): (sum(|x_i - y_i|^p))^(1/p)
     Minkowski(T),
 
-    // Weighted Euclidean distance: √(Σ wᵢ(xᵢ - yᵢ)²)
+    // Weighted Euclidean distance: sqrt(sum(w_i(x_i - y_i)^2))
     Weighted(Vec<T>),
 }
 

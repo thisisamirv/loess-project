@@ -116,10 +116,10 @@ Choose the right mode based on your use case:
 ## Next Steps
 
 - [Quick Start](quickstart.md) — See it in action
-- [API Reference](api.md) — All configuration options
-- [Polynomial Degree](degree.md) — Constant, linear, quadratic fits
-- [Multivariate LOESS](dimensions.md) — 2D and n-D smoothing
-- [Boundary Handling](boundary.md) — Edge bias reduction strategies
-- [Robustness](robustness.md) — Outlier downweighting methods
-- [Scaling Methods](scaling.md) — MAD, MAR, Mean scale estimation
-- [Merge Strategies](merge.md) — Chunk reconciliation in Streaming mode
+- [API Reference](../api/api.md) — All configuration options
+- [Polynomial Degree](../advanced/degree.md) — Constant, linear, quadratic fits
+- [Multivariate LOESS](../advanced/dimensions.md) — 2D and n-D smoothing
+- [Boundary Handling](../advanced/boundary.md) — Edge bias reduction strategies
+- [Robustness](../weighting/robustness.md) — Outlier downweighting methods
+- [Scaling Methods](../weighting/scaling.md) — MAD, MAR, Mean scale estimation
+- [Merge Strategies](../advanced/merge.md) — Chunk reconciliation in Streaming mode

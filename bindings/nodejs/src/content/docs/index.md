@@ -118,7 +118,7 @@ A variety of features, supporting a range of use cases:
 | Streaming Mode                | yes           | no               |
 | Confidence Intervals          | yes           | no               |
 | Prediction Intervals          | yes           | no               |
-| Diagnostics (RMSE, R², AIC)   | yes           | no               |
+| Diagnostics (RMSE, R2, AIC)   | yes           | no               |
 | Cross-Validation              | 2 options     | no               |
 | Parallel Execution            | yes           | no               |
 | `no-std` Support              | yes           | no               |
