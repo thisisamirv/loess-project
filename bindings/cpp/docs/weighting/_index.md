@@ -1,6 +1,6 @@
-\page weighting Weighting
+\page weighting Weight & Robustness
 
-# Weighting
+# Weight & Robustness
 
 Weight functions, outlier handling, and residual scaling.
 

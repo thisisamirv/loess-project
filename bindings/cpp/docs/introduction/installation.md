@@ -12,6 +12,14 @@ wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastl
 g++ -o myapp myapp.cpp -L. -lfastloess-linux-x64
 ```
 
+## Pre-built Binaries (Linux (ARM64))
+
+```bash
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-arm64.so
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+g++ -o myapp myapp.cpp -L. -lfastloess-linux-arm64
+```
+
 ## Pre-built Binaries (macOS (x64))
 
 ```bash
@@ -20,12 +28,28 @@ curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/f
 clang++ -o myapp myapp.cpp -L. -lfastloess-macos-x64
 ```
 
+## Pre-built Binaries (macOS (ARM64))
+
+```bash
+curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-macos-arm64.dylib
+curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+clang++ -o myapp myapp.cpp -L. -lfastloess-macos-arm64
+```
+
 ## Pre-built Binaries (Windows (x64))
 
 ```powershell
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess-win32-x64.dll
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
 cl myapp.cpp /link fastloess-win32-x64.lib
+```
+
+## Pre-built Binaries (Windows (ARM64))
+
+```powershell
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess-win32-arm64.dll
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+cl myapp.cpp /link fastloess-win32-arm64.lib
 ```
 
 ## From Source
@@ -48,6 +72,12 @@ cargo build --release
 
 ```bash
 conda install -c conda-forge libfastloess
+```
+
+## From Spack
+
+```bash
+spack install fastloess-cpp
 ```
 
 ---
