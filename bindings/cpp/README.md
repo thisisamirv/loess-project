@@ -4,6 +4,7 @@
 <p align="center">
   <a href="https://github.com/thisisamirv/loess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white" alt="C++"></a>
   <a href="https://anaconda.org/conda-forge/libfastloess"><img src="https://img.shields.io/badge/libfastloess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastloess (C++)"></a>
+  <a href="https://packages.spack.io/package.html?name=fastloess-cpp"><img src="https://img.shields.io/badge/fastloess--cpp-Spack-1A73E8" alt="fastloess-cpp (Spack)"></a>
   <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-cpp.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-cpp.yml/badge.svg" alt="CI"></a>
 </p>
 

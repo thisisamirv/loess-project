@@ -44,6 +44,9 @@
 * Fixed `make.jl` and `FastLOESS.jl` using tab indentation instead of the project's 4-space JuliaFormatter style; reformatted both files.
 * Fixed `README.md`/`index.md` linking to `lowess-project`'s domain and pre-restructure doc paths for the Installation Guide, Concepts, and Benchmarks pages.
 * Ported a missing "high weight pulls fit toward spike" custom-weights test case from `fastlowess`'s Julia test suite.
+* Fixed `cell`, `interpolation_vertices`, `boundary_degree_fallback`, and `cv_seed` being silently non-functional in `Loess()`: the `jl_loess_set_*` FFI setters backing these keyword arguments were no-op stubs that discarded their input, despite `FastLOESS.jl`'s constructor calling them as post-construction overrides. They now mutate the pending builder before the model is fit.
+* Fixed `jl_streaming_loess_new` computing `dimensions` as `(dimensions as usize).max(1)`, which wraps a negative `dimensions` to a huge value instead of clamping to `1`; standardized all three constructors on the clamp-before-cast form already used by `jl_loess_new`.
+* Simplified a few redundant `Ptr{Cdouble}(C_NULL)`/`Ptr{Cchar}(C_NULL)` comparisons in `FastLOESS.jl` to plain `C_NULL`, matching the file's dominant style.
 
 # FastLOESS.jl 1.1.0
 

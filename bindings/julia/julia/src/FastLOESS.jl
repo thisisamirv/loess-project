@@ -246,7 +246,7 @@ struct CJlLoessResult
 end
 
 function ptr_to_vector(ptr::Ptr{Cdouble}, n::Int)
-    if ptr == Ptr{Cdouble}(C_NULL)
+    if ptr == C_NULL
         return nothing
     end
     return unsafe_wrap(Array, ptr, n, own = false) |> copy
@@ -254,7 +254,7 @@ end
 
 function convert_result(c_result::CJlLoessResult)
     # Check for error
-    if c_result.error != Ptr{Cchar}(C_NULL)
+    if c_result.error != C_NULL
         error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
         # Free the result before throwing
         @ccall current_library().jl_loess_free_result(
@@ -310,7 +310,7 @@ function convert_result(c_result::CJlLoessResult)
         nothing
     end
 
-    cv_scores = if c_result.cv_scores != Ptr{Cdouble}(C_NULL) && c_result.cv_scores_len > 0
+    cv_scores = if c_result.cv_scores != C_NULL && c_result.cv_scores_len > 0
         unsafe_wrap(Array, c_result.cv_scores, Int(c_result.cv_scores_len), own = false) |> copy
     else
         nothing
@@ -969,7 +969,7 @@ function add_point(o::OnlineLoess, x::Float64, y::Float64)
         y::Cdouble,
     )::CJlOnlineOutput
 
-    if c_result.error != Ptr{Cchar}(C_NULL)
+    if c_result.error != C_NULL
         error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
         @ccall current_library().jl_online_free_output(
             Ref(c_result)::Ptr{CJlOnlineOutput},

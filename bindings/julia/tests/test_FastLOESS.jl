@@ -481,6 +481,64 @@ using FastLOESS
             @test r.leverage !== nothing
         end
 
+        @testset "Loess: cell / interpolation_vertices / boundary_degree_fallback take effect" begin
+            xdense = collect(range(0, 100, length = 500))
+            ydense = sin.(xdense ./ 10)
+            base =
+                fit(Loess(fraction = 0.2, surface_mode = "interpolation"), xdense, ydense)
+            with_cell = fit(
+                Loess(fraction = 0.2, surface_mode = "interpolation", cell = 0.9),
+                xdense,
+                ydense,
+            )
+            with_vertices = fit(
+                Loess(
+                    fraction = 0.2,
+                    surface_mode = "interpolation",
+                    interpolation_vertices = 5,
+                ),
+                xdense,
+                ydense,
+            )
+            @test base.y != with_cell.y
+            @test base.y != with_vertices.y
+
+            @test_throws ErrorException fit(
+                Loess(fraction = 0.2, surface_mode = "interpolation", cell = 2.0),
+                xdense,
+                ydense,
+            )
+
+            # Smoke test: boundary_degree_fallback is accepted and does not error.
+            r_bdf = fit(
+                Loess(
+                    fraction = 0.2,
+                    surface_mode = "interpolation",
+                    degree = "quadratic",
+                    boundary_degree_fallback = false,
+                ),
+                xdense,
+                ydense,
+            )
+            @test length(r_bdf.y) == length(xdense)
+        end
+
+        @testset "Loess: cv_seed reproducibility" begin
+            xcv = collect(range(0, 100, length = 100))
+            ycv = sin.(xcv ./ 10) .+ 0.1 .* sin.(xcv)
+            m1 = fit(
+                Loess(fraction = 0.3, cv_fractions = [0.2, 0.3, 0.4], cv_seed = 42),
+                xcv,
+                ycv,
+            )
+            m2 = fit(
+                Loess(fraction = 0.3, cv_fractions = [0.2, 0.3, 0.4], cv_seed = 42),
+                xcv,
+                ycv,
+            )
+            @test m1.cv_scores == m2.cv_scores
+        end
+
         @testset "StreamingLoess: merge_strategy" begin
             xlong = collect(range(0, 100, length = 200))
             ylong = sin.(xlong ./ 10)

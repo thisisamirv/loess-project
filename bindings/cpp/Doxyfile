@@ -3,9 +3,8 @@
 # Project
 
 # ---------------------------------------------------------------------------
-
 PROJECT_NAME           = "fastloess-cpp"
-PROJECT_BRIEF          = "High-performance LOESS smoothing — C++ API"
+PROJECT_BRIEF          = "High-performance LOESS smoothing"
 OUTPUT_DIRECTORY       = .
 CREATE_SUBDIRS         = NO
 TOC_INCLUDE_HEADINGS   = 0
@@ -15,7 +14,6 @@ TOC_INCLUDE_HEADINGS   = 0
 # Input
 
 # ---------------------------------------------------------------------------
-
 INPUT                  = README.md include docs
 FILE_PATTERNS          = *.hpp *.h *.md
 IMAGE_PATH             = assets/diagrams
@@ -27,7 +25,6 @@ USE_MDFILE_AS_MAINPAGE = README.md
 # Extraction
 
 # ---------------------------------------------------------------------------
-
 EXTRACT_ALL            = YES
 EXTRACT_STATIC         = YES
 JAVADOC_AUTOBRIEF      = YES
@@ -37,7 +34,6 @@ JAVADOC_AUTOBRIEF      = YES
 # HTML output
 
 # ---------------------------------------------------------------------------
-
 GENERATE_HTML          = YES
 HTML_OUTPUT            = html
 GENERATE_TREEVIEW      = YES
@@ -45,6 +41,8 @@ DISABLE_INDEX          = NO
 FULL_SIDEBAR           = NO
 HTML_COLORSTYLE        = LIGHT
 # renovate: doxygen-awesome-css version: v2.4.2 (https://github.com/jothepro/doxygen-awesome-css)
+# Vendored as static files, not fetched at build time — re-vendor manually
+# after this comment's version is bumped (see dev/check_pinned_versions.py).
 HTML_EXTRA_STYLESHEET  = docs/doxygen-awesome-css/doxygen-awesome.css \
                          docs/doxygen-awesome-css/doxygen-awesome-sidebar-only.css
 
@@ -53,7 +51,6 @@ HTML_EXTRA_STYLESHEET  = docs/doxygen-awesome-css/doxygen-awesome.css \
 # Disable non-HTML formats
 
 # ---------------------------------------------------------------------------
-
 GENERATE_LATEX         = NO
 GENERATE_MAN           = NO
 GENERATE_RTF           = NO
@@ -64,7 +61,6 @@ GENERATE_XML           = NO
 # Warnings
 
 # ---------------------------------------------------------------------------
-
 QUIET                  = YES
 WARN_IF_UNDOCUMENTED   = NO
 WARN_NO_PARAMDOC       = NO

@@ -39,6 +39,10 @@ CPP_CARGO_PROFILE := --profile release-c
 CPP_LIBRARY_DIR := target/release-c
 CPP_CARGO_TARGET :=
 
+# Windows toolchain: msvc (default) or mingw, e.g. `CPP_WIN_TOOLCHAIN=mingw` to
+# cross-build/test against the native MinGW-w64 target x86_64-pc-windows-gnu.
+CPP_WIN_TOOLCHAIN ?= msvc
+
 ifeq ($(OS),Windows_NT)
 	ifeq ($(CPP_WIN_TOOLCHAIN),mingw)
 		CPP_CARGO_TARGET := --target x86_64-pc-windows-gnu
@@ -48,10 +52,6 @@ ifeq ($(OS),Windows_NT)
 		CPP_LIBRARY_DIR  := target/x86_64-pc-windows-msvc/release-c
 	endif
 endif
-
-# Windows toolchain: msvc (default) or mingw, e.g. `CPP_WIN_TOOLCHAIN=mingw` to
-# cross-build/test against the native MinGW-w64 target x86_64-pc-windows-gnu.
-CPP_WIN_TOOLCHAIN ?= msvc
 
 # Optional Windows CMake toolset override, e.g. `CPP_CMAKE_TOOLSET="-T ClangCL"`
 # to build the test harness with clang-cl instead of cl.exe.
@@ -201,6 +201,7 @@ dev:
 	fi
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (cpp)..."
+	@$(PYTHON) dev/check_links.py --lang cpp
 	@$(PYTHON) dev/verify_snippets.py --lang cpp --timeout 120 --update-outputs
 	@$(PYTHON) dev/update_changelogs.py
 	@echo "$(CPP_PKG) checks completed successfully!"

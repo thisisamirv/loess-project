@@ -39,12 +39,6 @@ fn null_with_last_error<T>(msg: &str) -> *mut T {
     null_mut()
 }
 
-fn setter_unsupported_constructor_only(name: &str) {
-    set_last_error_message(&shared_parse::setter_unsupported_constructor_only_message(
-        name,
-    ));
-}
-
 /// Export the last error message set by a failed constructor.
 ///
 /// Returns a null pointer when no error has been set since the last successful
@@ -501,25 +495,22 @@ pub unsafe extern "C" fn jl_loess_free(ptr: *mut JlLoessConfig) {
     }
 }
 
-/// Legacy setter retained for ABI compatibility.
-///
-/// Configure `cell` in `jl_loess_new` instead.
+/// Set the interpolation cell size tuning parameter for a config.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_set_cell(config_ptr: *mut JlLoessConfig, cell: c_double) {
-    let _ = cell;
     if config_ptr.is_null() {
         set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
         return;
     }
-    setter_unsupported_constructor_only("jl_loess_set_cell");
+    let config = unsafe { &mut *config_ptr };
+    let builder = std::mem::replace(&mut config.base_builder, LoessBuilder::<f64>::new());
+    config.base_builder = builder.cell(cell);
 }
 
-/// Legacy setter retained for ABI compatibility.
-///
-/// Configure `interpolation_vertices` in `jl_loess_new` instead.
+/// Set the maximum number of interpolation vertices for a config.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
@@ -528,17 +519,16 @@ pub unsafe extern "C" fn jl_loess_set_interpolation_vertices(
     config_ptr: *mut JlLoessConfig,
     vertices: c_ulong,
 ) {
-    let _ = vertices;
     if config_ptr.is_null() {
         set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
         return;
     }
-    setter_unsupported_constructor_only("jl_loess_set_interpolation_vertices");
+    let config = unsafe { &mut *config_ptr };
+    let builder = std::mem::replace(&mut config.base_builder, LoessBuilder::<f64>::new());
+    config.base_builder = builder.interpolation_vertices(vertices as usize);
 }
 
-/// Legacy setter retained for ABI compatibility.
-///
-/// Configure `boundary_degree_fallback` in `jl_loess_new` instead.
+/// Set whether to reduce polynomial degree at boundary vertices for a config.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
@@ -547,29 +537,29 @@ pub unsafe extern "C" fn jl_loess_set_boundary_degree_fallback(
     config_ptr: *mut JlLoessConfig,
     enabled: c_int,
 ) {
-    let _ = enabled;
     if config_ptr.is_null() {
         set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
         return;
     }
-    setter_unsupported_constructor_only("jl_loess_set_boundary_degree_fallback");
+    let config = unsafe { &mut *config_ptr };
+    let builder = std::mem::replace(&mut config.base_builder, LoessBuilder::<f64>::new());
+    config.base_builder = builder.boundary_degree_fallback(enabled != 0);
 }
 
-/// Legacy setter retained for ABI compatibility.
-///
-/// Configure `cv_seed` in `jl_loess_new` instead.
+/// Set the cross-validation random seed for a config.
 ///
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
 #[unsafe(no_mangle)]
 #[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Linux/macOS
 pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, seed: c_ulong) {
-    let _ = seed;
     if config_ptr.is_null() {
         set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
         return;
     }
-    setter_unsupported_constructor_only("jl_loess_set_cv_seed");
+    let config = unsafe { &mut *config_ptr };
+    let builder = std::mem::replace(&mut config.base_builder, LoessBuilder::<f64>::new());
+    config.base_builder = builder.cv_seed(u64::from(seed));
 }
 
 // ============================================================================
@@ -677,7 +667,7 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
         );
         let effective_metric =
             shared_parse::resolve_distance_metric_for_builder(Some(dm_str), weighted_metric);
-        let configured_dimensions = (dimensions as usize).max(1);
+        let configured_dimensions = dimensions.max(1) as usize;
 
         let (builder, _) = match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -924,11 +914,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
         );
         let effective_metric =
             shared_parse::resolve_distance_metric_for_builder(Some(dm_str), weighted_metric);
-        let configured_dimensions = if dimensions > 0 {
-            dimensions as usize
-        } else {
-            1
-        };
+        let configured_dimensions = dimensions.max(1) as usize;
 
         let (builder, _) = match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
