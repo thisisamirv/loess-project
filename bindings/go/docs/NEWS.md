@@ -13,7 +13,7 @@ weight: 100
 * Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo, grouped per directory into a single weekly PR.
 * Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.
 * Added `dev/check_links.py`, which validates every Markdown cross-reference link across every binding/crate's docs, failing on missing targets.
-* Added a new Go binding (`bindings/go`), mirroring `lowess-project`'s Go binding: a `cgo`-based `fastloess` package wrapping the Rust core via a dedicated `fastloess-go` FFI crate, with `Loess`/`StreamingLoess`/`OnlineLoess` types, a Hugo (`hugo-book`) docs site, `Makefile`/`ci-go.yml`/`release-go.yml`, and full doc-snippet/test coverage.
+* Added a new Go binding (`bindings/go`): a `cgo`-based `fastloess` package wrapping the Rust core via a dedicated `fastloess-go` FFI crate, with `Loess`/`StreamingLoess`/`OnlineLoess` types, a Hugo (`hugo-book`) docs site, `Makefile`/`ci-go.yml`/`release-go.yml`, and full doc-snippet/test coverage.
 
 ## Changed
 
@@ -21,6 +21,7 @@ weight: 100
 * Merged `dev/add-cpp-outputs.py`, `dev/add-rust-outputs.py`, `dev/add-nodejs-outputs.js`, and `dev/add-wasm-outputs.js` into `dev/verify_snippets.py` as a new `--update-outputs` flag, removing the four standalone scripts.
 * Replaced Unicode superscript/subscript characters used as ASCII-alphanumeric stand-ins (`R²` → `R2`, `O(n²)` → `O(n^2)`, `xᵢ` → `x_i`, etc.) with plain ASCII throughout every doc page, README, and Rust doc-comment/test-comment, including the `Diagnostics` `Display` impl (now prints `R2`). Regenerated the affected ```output blocks, which also caught a handful of pre-existing `RÂ²` mojibake blocks left over from before the Windows encoding fix above.
 * Added `dev/add-readme-to-docs.py`, which auto-detects the docs-site flavor (Starlight for Node.js/WASM, Sphinx for Python) and embeds `README.md` as the home page accordingly. Not wired into Python's `Makefile` yet, since the Sphinx branch currently embeds the raw GitHub README verbatim rather than anything tailored to the Sphinx site.
+* Changed `check-versions.yml` to no longer fail CI when `dev/check_pinned_versions.py` finds an outdated or unreachable pin; it now opens a GitHub issue titled "Outdated pinned versions" with the check output (or comments on the existing open one), so a stale pin no longer blocks unrelated work.
 * Harmonized the docs-site directory structure across every binding and crate (`introduction/`, `guide/`, `weighting/`, `advanced/`, `use-case/`, `api/`, each grouped under a hub page). Also fixed the doc-tooling scripts, which enumerated files via a non-recursive glob and would have silently stopped finding snippets in the newly-nested pages.
 * Consolidated every crate/binding README: merged the "Installation" and "Documentation" sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant "API Reference" and "Changelog" sections (each now has its own docs-site page), and added a "Read more" link to the Concepts page.
 * Renamed the batch adapter's "When to Use" heading to "When to Use Batch Adapter" across every binding/crate's API docs.
@@ -29,6 +30,7 @@ weight: 100
 * Replaced `kernels.md`'s "Choosing a Kernel" mermaid flowchart (every binding/crate) with an equivalent decision table, since Doxygen and rustdoc don't render mermaid.
 * Replaced `adapter-choice.md`/`adapters.md`'s "Overview" flowchart with an equivalent decision table, unifying on a single rendering-agnostic format across every binding/crate.
 * Consolidated `parameters.md`/the auto-generated `@autodocs` parameter reference into each `api.md`'s builder/options tables, and removed `parameters.md` itself.
+* Added a `dev/check_pinned_versions.py` pin for the Go binding's docs-site MathJax CDN version (`bindings/go/docs-site/layouts/_partials/docs/inject/head.html`), which was previously unchecked.
 
 ## Fixed
 
