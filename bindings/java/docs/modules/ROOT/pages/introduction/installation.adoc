@@ -1,0 +1,48 @@
+= Installation
+
+== Requirements
+
+* Java 17+ (this binding targets Java 25 LTS by default; see the https://github.com/thisisamirv/loess-project/blob/main/bindings/java/pom.xml[pom.xml] `maven.compiler.release` property)
+* A prebuilt copy of the native `fastloess_java` library (JNI shared library) on the JVM's native library search path
+
+== Within the `loess-project` monorepo
+
+If you're working inside a checkout of https://github.com/thisisamirv/loess-project[`loess-project`], the root `Makefile` handles building the native library for you:
+
+[source,sh]
+----
+make java        # build the Rust JNI crate, then `mvn package`
+make java-dev     # full dev checks: fmt, clippy, export verification, mvn test
+----
+
+`NativeBridge` loads the native library from the path given by the `fastloess.native.dir` system property (or `-Dfastloess.native.dir=...`), which defaults to `../../target/debug` relative to `bindings/java` — where `cargo build -p fastloess-java` places the shared library within this repo's layout.
+
+== As a standalone dependency
+
+Outside the monorepo, add the Maven coordinate to your `pom.xml`:
+
+[source,xml]
+----
+<dependency>
+    <groupId>io.github.thisisamirv</groupId>
+    <artifactId>fastloess</artifactId>
+    <version>1.1.0</version>
+</dependency>
+----
+
+Then point the JVM at a prebuilt native library, either via the `fastloess.native.dir` system property or by placing it on `java.library.path`:
+
+[source,sh]
+----
+java -Dfastloess.native.dir=/path/to/native/lib -cp your-app.jar com.example.Main
+----
+
+Build the native library yourself from the https://github.com/thisisamirv/loess-project[`loess-project`] source:
+
+[source,sh]
+----
+git clone https://github.com/thisisamirv/loess-project
+cd loess-project
+cargo build -p fastloess-java --release
+----
+

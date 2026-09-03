@@ -4,8 +4,8 @@
 Covers: Cargo.toml package versions (Rust crates + all bindings), the internal
 fastLoess/loess-rs path-dependency version requirements (major.minor), each
 binding's own version file (package.json, pyproject-adjacent __version__.py,
-DESCRIPTION, Project.toml, CMakeLists.txt), CITATION.cff, and the Spack
-recipe's example `url`.
+DESCRIPTION, Project.toml, version.go, CMakeLists.txt, pom.xml, FastLoess.java),
+CITATION.cff, and the Spack recipe's example `url`.
 
 Does NOT touch: CHANGELOG.md (write that by hand), generated NEWS.md/docs-site
 content (regenerated via `make <lang>-dev` / dev/update_changelogs.py), or the
@@ -36,6 +36,7 @@ CARGO_PACKAGE_FILES = [
     "crates/fastLoess/Cargo.toml",
     "bindings/cpp/Cargo.toml",
     "bindings/go/Cargo.toml",
+    "bindings/java/Cargo.toml",
     "bindings/julia/Cargo.toml",
     "bindings/nodejs/Cargo.toml",
     "bindings/python/Cargo.toml",
@@ -49,6 +50,7 @@ CARGO_PACKAGE_FILES = [
 FASTLOESS_DEP_FILES = [
     "bindings/cpp/Cargo.toml",
     "bindings/go/Cargo.toml",
+    "bindings/java/Cargo.toml",
     "bindings/julia/Cargo.toml",
     "bindings/nodejs/Cargo.toml",
     "bindings/python/Cargo.toml",
@@ -186,6 +188,25 @@ def build_targets(
             "bindings/go/fastloess/version.go",
             re.compile(r'const version = "\d+\.\d+\.\d+"'),
             f'const version = "{new_version}"',
+            1,
+        )
+    )
+
+    targets.append(
+        (
+            "bindings/java/pom.xml",
+            re.compile(
+                r"(<artifactId>fastloess</artifactId>\s*\n\s*)<version>\d+\.\d+\.\d+</version>"
+            ),
+            rf"\g<1><version>{new_version}</version>",
+            1,
+        )
+    )
+    targets.append(
+        (
+            "bindings/java/src/main/java/fastloess/FastLoess.java",
+            re.compile(r'public static final String VERSION = "\d+\.\d+\.\d+";'),
+            f'public static final String VERSION = "{new_version}";',
             1,
         )
     )

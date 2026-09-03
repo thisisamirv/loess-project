@@ -1,0 +1,168 @@
+= Multivariate LOESS
+
+Smoothing over multiple predictor dimensions simultaneously.
+
+== Overview
+
+Standard LOESS operates on a single predictor stem:[x]. Setting `dimensions > 1` extends the neighbourhood search and local polynomial fit into an stem:[n]-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets. `x` is passed as a flat, row-major array of length `y.length * dimensions`.
+
+image::multivariate_loess.svg[Multivariate LOESS]
+
+[cols="1,1,1",options="header"]
+|===
+|Dimensions |Use Case |Input Shape
+
+|`1` |Time series, 1D signal (default) |`x`: length `n`
+|`2` |Spatial surface, 2-predictor model |`x`: length `n*2`, row-major
+|`3+` |High-dimensional regression |`x`: length `n*d`, row-major
+|===
+
+[NOTE]
+====
+*Computational cost:* Neighbourhood search scales with `d` dimensions. For `dimensions >= 3` keep `fraction` small.
+====
+
+'''
+
+== 1D — Standard (Default)
+
+Single predictor. No configuration required.
+
+[source,java]
+----
+import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .fraction(0.3)
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (1D LOESS): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (1D LOESS): 0.2473103228645228
+----
+
+'''
+
+== 2D — Spatial Surface
+
+Two predictors (e.g., latitude/longitude, time/altitude). Pass a flat, row-major array of length `n*2` as `x`.
+
+[source,java]
+----
+import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x2d = new double[n * 2]; // row-major: [lat0, lon0, lat1, lon1, ...]
+        double[] z = new double[n];
+        for (int i = 0; i < n; i++) {
+            double lat = i * 2 * Math.PI / (n - 1);
+            double lon = i * 2 * Math.PI / (n - 1);
+            x2d[i * 2] = lat;
+            x2d[i * 2 + 1] = lon;
+            z[i] = Math.sin(lat) + Math.cos(lon);
+        }
+
+        Options options = Options.builder()
+                .dimensions(2)
+                .fraction(0.3)
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x2d, z);
+            System.out.println("First smoothed value (2D LOESS, lat/lon): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (2D LOESS, lat/lon): 1.1519559634974357
+----
+
+'''
+
+== 3D and Higher
+
+Three or more predictors. The neighbourhood radius grows in each additional dimension, so a larger `fraction` (or smaller dataset) is typically needed.
+
+[source,java]
+----
+import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x3d = new double[n * 3]; // row-major: [x1_0, x2_0, x3_0, x1_1, x2_1, x3_1, ...]
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            double x1 = i * 2 * Math.PI / (n - 1);
+            double x2 = (double) i / (n - 1);
+            double x3 = 1.0 - (double) i / (n - 1);
+            x3d[i * 3] = x1;
+            x3d[i * 3 + 1] = x2;
+            x3d[i * 3 + 2] = x3;
+            y[i] = Math.sin(x1) + x2 - x3;
+        }
+
+        Options options = Options.builder()
+                .dimensions(3)
+                .fraction(0.5)
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x3d, y);
+            System.out.println("First smoothed value (3D LOESS): " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+First smoothed value (3D LOESS): -0.786686517390919
+----
+
+'''
+
+== Distance Metrics for Multivariate Data
+
+When `dimensions > 1` you can also control how inter-point distances are computed.
+
+[cols="1,1,1",options="header"]
+|===
+|Metric |Description |When to Use
+
+|`"normalized"` |Each dimension scaled to unit range (default) |Predictors on different scales
+|`"euclidean"` |Raw Euclidean distance |Predictors already on same scale
+|`"minkowski:p"` |Generalised Minkowski (stem:[L_p]) norm |Custom distance geometry
+|`"weighted"` |Per-dimension weighted Euclidean |Domain-specific importance
+|===
+
+See xref:./../api/api.adoc[API Reference] for the full list of options.

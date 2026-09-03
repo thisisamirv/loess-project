@@ -1,0 +1,27 @@
+[package]
+name = "fastloess-java"
+version = "1.1.0"
+authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/thisisamirv/loess-project"
+homepage = "https://github.com/thisisamirv/loess-project"
+documentation = "https://thisisamirv.github.io/loess-project/java/"
+rust-version = "1.89"
+readme = "README.md"
+description = "High-performance LOESS (Locally Estimated Scatterplot Smoothing)"
+keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
+categories = ["science", "algorithms"]
+
+[lib]
+name = "fastloess_java"
+crate-type = ["cdylib"]
+
+[dependencies]
+fastLoess = { path = "../../crates/fastLoess", version = "1.1", features = [
+    "dev",
+] }
+jni = "0.22"
+
+[features]
+default = []

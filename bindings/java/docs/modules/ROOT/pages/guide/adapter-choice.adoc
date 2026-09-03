@@ -1,0 +1,52 @@
+= Execution Modes
+
+Choose the right adapter for your use case.
+
+== Overview
+
+Choose the first row below whose condition applies:
+
+[cols="1,1",options="header"]
+|===
+|Condition |Adapter
+
+|Data too large to fit in memory |`StreamingLoess`
+|Fits in memory, need real-time/incremental updates |`OnlineLoess`
+|Fits in memory, no real-time requirement |`Loess`
+|===
+
+[cols="1,1,1,1",options="header"]
+|===
+|Mode |Use Case |Memory |Features
+
+|*Batch* (`Loess`) |Complete datasets |Full |All features
+|*Streaming* (`StreamingLoess`) |Large files (>100K) |Chunked |Residuals, robustness
+|*Online* (`OnlineLoess`) |Real-time sensors |Fixed window |Incremental updates
+|===
+
+image::adapter_comparison.svg[Adapter Comparison]
+
+'''
+
+== Feature Comparison
+
+[cols="1,1,1,1",options="header"]
+|===
+|Feature |Batch |Streaming |Online
+
+|Confidence intervals |✓ |✗ |✗
+|Prediction intervals |✓ |✗ |✗
+|Cross-validation |✓ |✗ |✗
+|Diagnostics |✓ |✓ |✗
+|Residuals |✓ |✓ |✓
+|Robustness weights |✓ |✓ |✓
+|Parallel execution |✓ |✓ |✗
+|===
+
+'''
+
+== Next Steps
+
+* xref:../api/api.adoc[API Reference] — All configuration options
+* xref:../api/api-streaming.adoc[Streaming API] · xref:../api/api-online.adoc[Online API]
+

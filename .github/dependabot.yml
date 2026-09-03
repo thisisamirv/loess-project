@@ -73,6 +73,17 @@ updates:
     commit-message:
       prefix: "chore(python)"
 
+  - package-ecosystem: "maven"
+    directory: "/bindings/java"
+    schedule:
+      interval: "weekly"
+    groups:
+      maven-dependencies:
+        patterns: ["*"]
+    labels: ["dependencies", "java"]
+    commit-message:
+      prefix: "chore(java)"
+
   - package-ecosystem: "gomod"
     directory: "/bindings/go/fastloess"
     schedule:

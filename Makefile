@@ -231,6 +231,18 @@ go-clean:
 	@"$(MAKE)" -f bindings/go/Makefile clean
 
 # ==============================================================================
+# Java bindings
+# ==============================================================================
+java:
+	@"$(MAKE)" -f bindings/java/Makefile
+
+java-dev:
+	@"$(MAKE)" -f bindings/java/Makefile dev
+
+java-clean:
+	@"$(MAKE)" -f bindings/java/Makefile clean
+
+# ==============================================================================
 # Development checks
 # ==============================================================================
 check-msrv:
@@ -251,10 +263,10 @@ docs-test:
 # ==============================================================================
 # All targets
 # ==============================================================================
-all: loess-rs fastLoess python r julia nodejs wasm cpp go check-msrv
+all: loess-rs fastLoess python r julia nodejs wasm cpp go java check-msrv
 	@echo "All checks completed successfully!"
 
-all-dev: loess-rs-dev fastLoess-dev python-dev r-dev julia-dev nodejs-dev wasm-dev cpp-dev go-dev check-msrv
+all-dev: loess-rs-dev fastLoess-dev python-dev r-dev julia-dev nodejs-dev wasm-dev cpp-dev go-dev java-dev check-msrv
 	@echo "All dev checks completed successfully!"
 
 all-coverage: loess-rs-coverage fastLoess-coverage python-coverage r-coverage
@@ -267,4 +279,4 @@ all-clean: r-clean loess-rs-clean fastLoess-clean python-clean julia-clean nodej
 	@git clean -fdX .
 	@echo "All clean completed!"
 
-.PHONY: loess-rs loess-rs-dev loess-rs-coverage loess-rs-clean fastLoess fastLoess-dev fastLoess-coverage fastLoess-clean python python-dev python-coverage python-clean r r-dev r-coverage r-clean julia julia-dev julia-clean julia-update-commit nodejs nodejs-dev nodejs-clean wasm wasm-dev wasm-clean cpp cpp-dev cpp-clean check-msrv docs-test all all-dev all-coverage all-clean ensure-llvm-cov
+.PHONY: loess-rs loess-rs-dev loess-rs-coverage loess-rs-clean fastLoess fastLoess-dev fastLoess-coverage fastLoess-clean python python-dev python-coverage python-clean r r-dev r-coverage r-clean julia julia-dev julia-clean julia-update-commit nodejs nodejs-dev nodejs-clean wasm wasm-dev wasm-clean cpp cpp-dev cpp-clean go go-dev go-clean java java-dev java-clean check-msrv docs-test all all-dev all-coverage all-clean ensure-llvm-cov

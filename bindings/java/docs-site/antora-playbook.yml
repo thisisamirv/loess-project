@@ -1,0 +1,19 @@
+site:
+  title: fastloess (Java)
+  url: https://thisisamirv.github.io/loess-project/java
+  start_page: ROOT::index.adoc
+
+content:
+  sources:
+    - url: ../../..
+      start_path: bindings/java/docs
+      branches: HEAD
+
+ui:
+  bundle:
+    url: https://gitlab.com/antora/antora-ui-default/-/jobs/artifacts/HEAD/raw/build/ui-bundle.zip?job=bundle-stable
+    snapshot: true
+  supplemental_files: ./supplemental-ui
+
+output:
+  dir: ./public

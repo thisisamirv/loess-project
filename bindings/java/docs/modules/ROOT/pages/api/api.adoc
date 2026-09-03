@@ -1,0 +1,252 @@
+= API
+
+Batch `Loess` reference. Best suited when the dataset fits in memory and you need intervals, cross-validation, or diagnostics.
+
+[NOTE]
+====
+*StreamingLoess* and *OnlineLoess* are documented separately: xref:./api-streaming.adoc[StreamingLoess API], xref:./api-online.adoc[OnlineLoess API]
+====
+
+== `Options.builder() Options.Builder`
+
+Returns a fluent builder pre-populated with recommended defaults. Start from this and override only the settings you need:
+
+[source,java]
+----
+Options options = Options.builder()
+        .fraction(0.3)
+        .returnDiagnostics(true)
+        .build();
+----
+
+== `Options` settings
+
+[cols="1,1,1,1",options="header"]
+|===
+|Setting |Type |Default |Description
+
+|`fraction` |`double` |`0.67` |Smoothing fraction, in (0, 1].
+|`iterations` |`int` |`3` |Robustness iterations, in [0, 1000].
+|`weightFunction` |`String` |`"tricube"` |Kernel: `tricube`, `gaussian`, `uniform`, `cosine`, `epanechnikov`, `biweight`, `triangle`.
+|`robustnessMethod` |`String` |`"bisquare"` |Outlier downweighting: `bisquare`, `huber`, `talwar`.
+|`scalingMethod` |`String` |`"mad"` |Residual scale estimator: `mad`, `mar`, `mean`.
+|`boundaryPolicy` |`String` |`"extend"` |Boundary handling: `extend`, `reflect`, `zero`, `noboundary`.
+|`zeroWeightFallback` |`String` |`"use_local_mean"` |Fallback when all robustness weights hit zero: `use_local_mean`, `return_original`, `return_none`.
+|`degree` |`String` |`"linear"` |Local polynomial degree: `constant`, `linear`, `quadratic`, `cubic`, `quartic`.
+|`dimensions` |`int` |`1` |Number of predictor dimensions. `x` is flattened row-major with length `y.length * dimensions`.
+|`distanceMetric` |`String` |`"normalized"` |Neighborhood distance metric: `normalized`, `euclidean`, `manhattan`, `chebyshev`, `minkowski:p`, `weighted`.
+|`weightedMetricWeights` |`double[]` |`null` |Per-dimension weights, used when `distanceMetric` is `weighted`.
+|`surfaceMode` |`String` |`"interpolation"` |Fitting surface: `interpolation` (fast, k-d tree of vertices) or `direct` (exact).
+|`cell` |`double` |`NaN` (auto) |Interpolation cell size tuning parameter, in (0, 1]. Only applies when `surfaceMode` is `interpolation`.
+|`interpolationVertices` |`int` |`-1` (auto) |Caps the number of interpolation vertices. Only applies when `surfaceMode` is `interpolation`.
+|`boundaryDegreeFallback` |`Boolean` |`null` (auto) |Whether to reduce the polynomial degree near boundary vertices to avoid extrapolation artifacts.
+|`confidenceIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
+|`predictionIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
+|`autoConverge` |`double` |`NaN` (disabled) |Convergence tolerance for early stopping.
+|`returnDiagnostics` |`boolean` |`false` |Populate `Result.diagnostics()`.
+|`returnResiduals` |`boolean` |`false` |Populate `Result.residuals()`.
+|`returnRobustnessWeights` |`boolean` |`false` |Populate `Result.robustnessWeights()`.
+|`returnSe` |`boolean` |`false` |Populate `Result.standardErrors()` and `Result.hatMatrix()`.
+|`cvFractions` |`double[]` |`null` (disabled) |Candidate fractions for cross-validation.
+|`cvMethod` |`String` |`"kfold"` |`kfold` or `loocv`.
+|`cvK` |`int` |`5` |Number of folds for k-fold CV.
+|`cvSeed` |`long` (boxed) |`null` (random) |RNG seed for reproducible k-fold splits.
+|`parallel` |`boolean` |`true` |Enable parallel processing.
+|===
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+[cols="1,1,1",options="header"]
+|===
+|Range |Effect |Use case
+
+|0.1-0.3 |Fine detail |Rapidly changing signals
+|0.3-0.5 |Balanced |General purpose
+|0.5-0.7 |Heavy smoothing |Noisy data
+|0.7-1.0 |Very smooth |Trend extraction
+|===
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+[cols="1,1,1",options="header"]
+|===
+|Value |Effect |Performance
+
+|0 |No robustness |Fastest
+|1-3 |Moderate |Recommended
+|4-6 |Strong |Contaminated data
+|7+ |Very strong |Heavy outliers
+|===
+
+== `new Loess(Options options)`
+
+Creates a new batch model. Throws `RuntimeException` if any option is out of range (some validation is eager at construction, e.g. `iterations`; some is deferred to `fit`, e.g. `fraction`).
+
+== `Loess.fit(double[] x, double[] y) Result`
+
+== `Loess.fit(double[] x, double[] y, double[] customWeights) Result`
+
+Smooths `y` as a function of `x`. `x` and `y` must be non-empty and the same length. An optional `customWeights` array (same length) applies per-observation case weights; pass `null` (or use the two-argument overload) for uniform weights.
+
+== `Loess.close()`
+
+Releases native resources. Safe to call multiple times. Implements `AutoCloseable`, so prefer try-with-resources over relying on the garbage collector.
+
+== `Result` accessors
+
+[cols="1,1,1",options="header"]
+|===
+|Accessor |Type |Populated when
+
+|`x()`, `y()` |`double[]` |Always.
+|`standardErrors()` |`Optional<double[]>` |`returnSe`
+|`confidenceLower()`, `confidenceUpper()` |`Optional<double[]>` |`confidenceIntervals` set
+|`predictionLower()`, `predictionUpper()` |`Optional<double[]>` |`predictionIntervals` set
+|`residuals()` |`Optional<double[]>` |`returnResiduals`
+|`robustnessWeights()` |`Optional<double[]>` |`returnRobustnessWeights`
+|`cvScores()` |`Optional<double[]>` |`cvFractions` set
+|`fractionUsed()` |`double` |Always.
+|`iterationsUsed()` |`OptionalInt` |Always (empty if not available).
+|`dimensions()` |`int` |Always.
+|`diagnostics()` |`Optional<Diagnostics>` |`returnDiagnostics`
+|`hatMatrix()` |`Optional<HatMatrixStats>` |`returnSe`
+|===
+
+`Diagnostics` holds `rmse()`, `mae()`, `rSquared()`, `aic()`, `aicc()`, `effectiveDf()`, `residualSd()` (the last three are `Optional<Double>`).
+
+`HatMatrixStats` holds `enp()`, `traceHat()`, `delta1()`, `delta2()`, `residualScale()`, `leverage()` (per-point hat-matrix diagonal).
+
+== Options
+
+=== weightFunction
+
+_See: xref:../weighting/kernels.adoc[Weight Functions]_
+
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
+* `"cosine"`
+
+=== robustnessMethod
+
+_See: xref:../weighting/robustness.adoc[Robustness]_
+
+* `"bisquare"` (default; alias: `"biweight"`)
+* `"huber"`
+* `"talwar"`
+
+=== boundaryPolicy
+
+_See: xref:../advanced/boundary.adoc[Boundary Handling]_
+
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
+* `"zero"`
+* `"noboundary"` (alias: `"none"`)
+
+=== scalingMethod
+
+_See: xref:../weighting/scaling.adoc[Scaling Methods]_
+
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
+
+=== zeroWeightFallback
+
+Behavior when all neighborhood weights are zero:
+
+[cols="1,1",options="header"]
+|===
+|Option |Behavior
+
+|`"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) |Use the mean of the neighborhood
+|`"return_original"` (alias: `"original"`) |Return the original y value
+|`"return_none"` (alias: `"none"`) |Return `NaN`
+|===
+
+=== degree
+
+_See: xref:../advanced/degree.adoc[Polynomial Degree]_
+
+* `"constant"`
+* `"linear"` (default)
+* `"quadratic"`
+* `"cubic"`
+* `"quartic"`
+
+=== dimensions and distanceMetric
+
+_See: xref:../advanced/dimensions.adoc[Multivariate LOESS]_
+
+`dimensions` (default `1`) controls how many predictor columns `x` carries; `distanceMetric` (default `"normalized"`) controls how inter-point distances are computed for `dimensions > 1`: `normalized`, `euclidean`, `manhattan`, `chebyshev`, `minkowski:p`, or `weighted` (requires `weightedMetricWeights`).
+
+=== surfaceMode
+
+_See: xref:../advanced/degree.adoc[Polynomial Degree]_
+
+* `"interpolation"` (default) — evaluate at anchor vertices, blend via Hermite cubic (`cell`/`interpolationVertices` tune the vertex grid).
+* `"direct"` — evaluate at every query point, exact.
+
+== Custom weights
+
+[source,java]
+----
+double[] weights = new double[x.length];
+java.util.Arrays.fill(weights, 1.0);
+weights[0] = 5.0; // trust the first observation more
+
+try (Loess model = new Loess(Options.builder().build())) {
+    Result result = model.fit(x, y, weights);
+}
+----
+
+== Cross-validation
+
+[source,java]
+----
+Options options = Options.builder()
+        .cvFractions(new double[] { 0.1, 0.2, 0.3, 0.5 })
+        .cvMethod("kfold")
+        .cvK(5)
+        .cvSeed(42L)
+        .build();
+
+try (Loess model = new Loess(options)) {
+    Result result = model.fit(x, y);
+    System.out.println(java.util.Arrays.toString(result.cvScores().orElseThrow()));
+    System.out.println(result.fractionUsed()); // the CV-selected fraction
+}
+----
+
+== Example
+
+[source,java]
+----
+import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        double[] x = {1, 2, 3, 4, 5};
+        double[] y = {2.1, 4.0, 6.2, 8.0, 10.1};
+
+        Options options = Options.builder().fraction(0.5).build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println(java.util.Arrays.toString(result.y()));
+        }
+    }
+}
+----
+
+[source,console]
+----
+[2.1, 4.0, 6.2, 8.0, 10.1]
+----
+

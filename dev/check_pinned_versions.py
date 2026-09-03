@@ -49,6 +49,13 @@ PINS = [
         "repo": "golangci/golangci-lint",
     },
     {
+        "name": "Checkstyle (standalone jar)",
+        "file": REPO_ROOT / "bindings/java/Makefile",
+        "pattern": re.compile(r"CHECKSTYLE_VERSION\s*:=\s*(?P<version>\d+\.\d+\.\d+)"),
+        "repo": "checkstyle/checkstyle",
+        "tag_prefix": "checkstyle-",
+    },
+    {
         "name": "Hugo (go install in docs.yml)",
         "file": REPO_ROOT / ".github/workflows/docs.yml",
         "pattern": re.compile(r"gohugoio/hugo@v(?P<version>\d+\.\d+\.\d+)"),
@@ -59,6 +66,13 @@ PINS = [
         "file": REPO_ROOT
         / "bindings/go/docs-site/layouts/_partials/docs/inject/head.html",
         "pattern": re.compile(r"mathjax/(?P<version>\d+\.\d+\.\d+)/tex-mml-chtml"),
+        "repo": "mathjax/MathJax",
+    },
+    {
+        "name": "MathJax (java binding docs-site CDN)",
+        "file": REPO_ROOT
+        / "bindings/java/docs-site/supplemental-ui/partials/footer-scripts.hbs",
+        "pattern": re.compile(r"mathjax@(?P<version>\d+\.\d+\.\d+)/tex-mml-chtml"),
         "repo": "mathjax/MathJax",
     },
     {
