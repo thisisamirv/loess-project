@@ -140,6 +140,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed the "API Reference" page rendering empty: its `api/index.md` toctree still referenced the pre-rename document names; updated to match the files' current names.
 - Fixed `release-pypi.yml`'s macOS/Windows jobs printing a pip version-check notice on every run; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"`.
+- Added `[tool.pyright] reportMissingModuleSource = "none"` to `pyproject.toml`, suppressing a false-positive warning about the compiled `_core` extension module's stub.
+- Converted three plain `//` comments in `src/lib.rs` to proper `///` doc comments so they render in `cargo doc`.
+- Ported two missing custom-weights test cases ("high weight pulls fit toward spike", "custom weights compose with robustness iterations") from `fastlowess`'s Python test suite.
 
 **Rust:**
 

@@ -36,9 +36,12 @@ dependencies = ["numpy>=1.20.0"]
 [project.urls]
 Documentation = "https://loess.readthedocs.io/"
 Repository = "https://github.com/thisisamirv/loess-project"
-Changelog = "https://loess.readthedocs.io/changelog/"
+Changelog = "https://github.com/thisisamirv/loess-project/CHANGELOG.md"
 
 [tool.maturin]
 python-source = "python"
 module-name = "fastloess._core"
 exclude = ["docs/**", "examples/**", "tests/**", "target/**", ".github/**"]
+
+[tool.pyright]
+reportMissingModuleSource = "none"

@@ -24,11 +24,7 @@ else
 	NPX := npx
 endif
 
-ifeq ($(OS),Windows_NT)
-	PYTHON ?= python
-else
-	PYTHON ?= python3
-endif
+PYTHON ?= python3
 PYO3_PYTHON ?= $(PYTHON)
 NODE ?= node
 
@@ -90,6 +86,7 @@ dev:
 	@. $(PY_ACTIVATE) && python -m pytest $(PY_TEST_DIR) -q
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (python)..."
+	@$(PYTHON) dev/check_links.py --lang python
 	@$(PYTHON) dev/verify_snippets.py --lang python --timeout 120
 	@$(PYTHON) dev/update_changelogs.py
 	@echo "$(PY_PKG) checks completed successfully!"

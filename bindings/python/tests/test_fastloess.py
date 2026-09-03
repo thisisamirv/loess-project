@@ -776,6 +776,37 @@ class TestCustomWeights:
 
         np.testing.assert_allclose(result_w.y, result_no_w.y, rtol=1e-6)
 
+    def test_custom_weights_high_pulls_fit(self):
+        """A very high weight on a spike should pull the fit toward it."""
+        x = np.arange(15, dtype=float)
+        y = np.zeros(15)
+        y[7] = 10.0  # spike
+
+        weights_high = np.ones(15)
+        weights_high[7] = 100.0
+
+        loess = fastloess.Loess(fraction=0.6, iterations=0)
+        result_high = loess.fit(x, y, custom_weights=weights_high)
+        result_equal = loess.fit(x, y)
+
+        assert result_high.y[7] > result_equal.y[7], (
+            f"high weight at spike should pull fit up "
+            f"(high={result_high.y[7]:.3f}, equal={result_equal.y[7]:.3f})"
+        )
+
+    def test_custom_weights_with_robustness(self):
+        """custom_weights should compose correctly with robustness iterations."""
+        x = np.arange(30, dtype=float)
+        y = x * 0.5 + np.sin(x * 0.3)
+        weights = (1.0 + 0.1 * x).tolist()
+
+        result = fastloess.Loess(fraction=0.4, iterations=3).fit(
+            x, y, custom_weights=np.asarray(weights)
+        )
+
+        assert len(result.y) == 30
+        assert np.all(np.isfinite(result.y))
+
     def test_custom_weights_wrong_length_raises(self):
         """Weights with wrong length should raise an error."""
         y = np.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0])

@@ -38,7 +38,7 @@ fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
 // Python Classes
 // ============================================================================
 
-// Diagnostic statistics for LOESS fit quality.
+/// Diagnostic statistics for LOESS fit quality.
 #[pyclass(name = "Diagnostics", from_py_object)]
 #[derive(Clone)]
 pub struct PyDiagnostics {
@@ -81,7 +81,7 @@ impl PyDiagnostics {
     }
 }
 
-// Result from LOESS smoothing.
+/// Result from LOESS smoothing.
 #[pyclass(name = "LoessResult")]
 pub struct PyLoessResult {
     inner: LoessResult<f64>,
@@ -405,7 +405,7 @@ impl PyStreamingLoess {
     }
 }
 
-// Result from a single online update step.
+/// Result from a single online update step.
 #[pyclass(name = "OnlineOutput", from_py_object)]
 #[derive(Clone)]
 pub struct PyOnlineOutput {

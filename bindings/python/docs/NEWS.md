@@ -39,6 +39,12 @@
 * Fixed the Julia `intervals.md` "Confidence Intervals" and "Standard Errors" examples each looping over all 100 points instead of a short sample; switched to `result.y[1:5]`/`result.confidence_lower[1:5]`/`result.standard_errors[1:5]`-style slicing, matching the already-concise Python version.
 * Fixed the "API Reference" page rendering empty: its `api/index.md` toctree still referenced the pre-rename document names; updated to match the files' current names.
 * Fixed `release-pypi.yml`'s macOS/Windows jobs printing a pip version-check notice on every run; added `PIP_DISABLE_PIP_VERSION_CHECK: "1"`.
+* Added the missing `dev/check_links.py --lang python` step to `bindings/python/Makefile`'s dev target, and simplified its Windows/non-Windows `PYTHON` variable split to a single `python3` default, matching every other binding's Makefile.
+* Fixed `pyproject.toml`'s `Changelog` URL pointing at a nonexistent `/changelog/` page (the actual page is `NEWS.md`); now points directly at the GitHub `CHANGELOG.md`.
+* Fixed `README.md` linking to the pre-restructure `getting-started/` doc path for the Installation Guide and Concepts pages instead of `introduction/`.
+* Added `[tool.pyright] reportMissingModuleSource = "none"` to `pyproject.toml`, suppressing a false-positive warning about the compiled `_core` extension module's stub.
+* Converted three plain `//` comments in `src/lib.rs` to proper `///` doc comments so they render in `cargo doc`.
+* Ported two missing custom-weights test cases ("high weight pulls fit toward spike", "custom weights compose with robustness iterations") from `fastlowess`'s Python test suite.
 
 # fastloess (Python) 1.1.0
 
