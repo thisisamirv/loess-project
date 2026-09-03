@@ -80,6 +80,7 @@ default:
 
 dev:
 	@echo "Running $(R_PKG_NAME) checks..."
+	@# Sync version from Cargo.toml to DESCRIPTION
 	@VERSION=$$(grep "^version =" $(R_DIR)/src/Cargo.toml | head -n1 | sed 's/version = "\(.*\)"/\1/'); \
 	sed -i.bak "s/^Version: .*/Version: $$VERSION/" $(R_DIR)/DESCRIPTION; \
 	rm -f $(R_DIR)/DESCRIPTION.bak; \
@@ -181,6 +182,7 @@ dev:
 	  -e "tryCatch(pkgcheck(use_cache = FALSE), error = function(err) { msg <- conditionMessage(err); if (grepl('GitHub API error|rate limit exceeded|timeout|could not resolve host', msg, ignore.case = TRUE) || grepl('could not find function', msg, fixed = TRUE)) { message('Skipping pkgcheck due to known incompatibility or network failure: ', msg); return(invisible(NULL)) }; stop(err) })"
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (r)..."
+	@$(PYTHON) dev/check_links.py --lang r
 	@$(PYTHON) dev/verify_snippets.py --lang r --timeout 120
 	@echo "All $(R_PKG_NAME) checks completed successfully!"
 

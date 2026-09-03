@@ -46,12 +46,12 @@ OnlineLoess <- function(
     robustness_method = "bisquare",
     scaling_method = "mad",
     boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
     update_mode = "incremental",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
     return_diagnostics = FALSE,
     return_residuals = FALSE,
-    zero_weight_fallback = "use_local_mean",
     parallel = FALSE,
     degree = "linear",
     dimensions = 1L,
@@ -72,24 +72,7 @@ OnlineLoess <- function(
         min_points = min_points
     )
     handle <- do.call(ROnlineLoess$new, env_args(online_params))
-    .make_online_loess(
-        handle,
-        fraction,
-        window_capacity,
-        min_points,
-        iterations,
-        parallel
-    )
-}
 
-.make_online_loess <- function(
-    handle,
-    fraction,
-    window_capacity,
-    min_points,
-    iterations,
-    parallel
-) {
     structure(
         list(
             handle = handle,

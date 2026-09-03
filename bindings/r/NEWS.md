@@ -41,6 +41,13 @@
 * Fixed the R `OnlineLoess()` roxygen example printing one line per point (48 lines for a 50-point loop); it now collects the smoothed values and prints only `head(smoothed, 5)`.
 * Fixed the R `add_point()` roxygen example always printing `NULL`, since a single call never reaches the default `min_points = 3`; it now uses `min_points = 2L` and shows the second (non-`NULL`) call's result.
 * Fixed the Julia `intervals.md` "Confidence Intervals" and "Standard Errors" examples each looping over all 100 points instead of a short sample; switched to `result.y[1:5]`/`result.confidence_lower[1:5]`/`result.standard_errors[1:5]`-style slicing, matching the already-concise Python version.
+* Added the missing `dev/check_links.py --lang r` step to `bindings/r/Makefile`'s dev target.
+* Reformatted `configure` from mixed spaces to tabs, matching the project's shell-script style.
+* Fixed `.Rbuildignore`'s `.r-lib` exclusion not covering files within the directory; added an explicit nested-path pattern, and a missing exclusion for built vignette HTML output.
+* Removed the empty `R/params.R` stub (its content was already inlined into `R/Loess.R`'s docs).
+* Simplified `plot.LoessResult()` to return `NULL` invisibly instead of the input object, matching R's usual plot-method convention; dropped the now-inaccurate `RE6.1` srr-stats tag.
+* Inlined the `.make_loess`/`.make_streaming_loess`/`.make_online_loess` helper functions directly into their respective constructors.
+* Consolidated `utils.R`'s single-purpose parameter validators (`validate_fraction`, `validate_iterations`, `validate_window_capacity`, `validate_min_points`, `validate_chunk_size`) into two generic helpers, `validate_scalar_numeric()` and `validate_optional_count()`.
 
 # rfastloess 1.1.0
 

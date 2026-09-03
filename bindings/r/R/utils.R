@@ -24,7 +24,7 @@
 #' @srrstats {G2.16} Inf/NaN validation in input vectors.
 #' @srrstats {G3.0} Tolerance-based comparisons used in robustness weights.
 #' @noRd
-check_xy_inputs <- function(x, y) {
+validate_common_args <- function(x, y, fraction, iterations) {
     n_y <- length(y)
     if (length(x) == 0 || n_y == 0 || length(x) %% n_y != 0) {
         stop("x must match y's length or be its multiple for multi-dim input")
@@ -32,29 +32,15 @@ check_xy_inputs <- function(x, y) {
     if (length(x) < 3) {
         stop("At least 3 data points are required")
     }
-}
-
-#' @noRd
-check_fraction_arg <- function(fraction) {
     if (!is.numeric(fraction) || length(fraction) != 1) {
         stop("fraction must be a single numeric value")
     }
     if (fraction <= 0 || fraction > 1) {
         stop("fraction must be between 0 and 1")
     }
-}
-
-#' @noRd
-check_iterations_arg <- function(iterations) {
     if (!is.numeric(iterations) || length(iterations) != 1 || iterations < 0) {
         stop("iterations must be a non-negative integer")
     }
-}
-
-validate_common_args <- function(x, y, fraction, iterations) {
-    check_xy_inputs(x, y)
-    check_fraction_arg(fraction)
-    check_iterations_arg(iterations)
     list(
         x = as.double(x),
         y = as.double(y),
@@ -63,65 +49,28 @@ validate_common_args <- function(x, y, fraction, iterations) {
     )
 }
 
-#' Validate the fraction parameter
-#' @noRd
-validate_fraction <- function(fraction) {
-    if (!is.numeric(fraction) || length(fraction) != 1 || is.na(fraction)) {
-        stop("fraction must be a single numeric value")
-    }
-    if (fraction < 0 || fraction > 1) {
-        stop("fraction must be between 0 and 1")
+
+validate_scalar_numeric <- function(value, name) {
+    if (!is.numeric(value) || length(value) != 1L || is.na(value)) {
+        stop(sprintf("%s must be a single numeric value", name))
     }
 }
 
-#' Validate the iterations parameter (optional)
-#' @noRd
-validate_iterations <- function(iterations) {
-    if (is.null(iterations)) {
-        return(invisible(NULL))
-    }
-    cond1 <- !is.numeric(iterations)
-    cond2 <- length(iterations) != 1
-    cond3 <- is.na(iterations)
-    if (cond1 || cond2 || cond3) {
-        stop("iterations must be a single numeric value")
-    }
-    if (iterations < 0) {
-        stop("iterations must be a non-negative integer")
-    }
-}
 
-#' Validate the window_capacity parameter (optional)
-#' @noRd
-validate_window_capacity <- function(window_capacity) {
-    if (is.null(window_capacity)) {
+validate_optional_count <- function(value, name, allow_zero = TRUE) {
+    if (is.null(value)) {
         return(invisible(NULL))
     }
-    if (window_capacity <= 0) {
-        stop("window_capacity must be a positive integer")
-    }
-}
 
-#' Validate the min_points parameter (optional)
-#' @noRd
-validate_min_points <- function(min_points) {
-    if (is.null(min_points)) {
-        return(invisible(NULL))
+    validate_scalar_numeric(value, name)
+    if (allow_zero && value < 0) {
+        stop(sprintf("%s must be a non-negative integer", name))
     }
-    if (min_points < 0) {
-        stop("min_points must be a non-negative integer")
+    if (!allow_zero && value <= 0) {
+        stop(sprintf("%s must be a positive integer", name))
     }
-}
 
-#' Validate the chunk_size parameter (optional)
-#' @noRd
-validate_chunk_size <- function(chunk_size) {
-    if (is.null(chunk_size)) {
-        return(invisible(NULL))
-    }
-    if (chunk_size <= 0) {
-        stop("chunk_size must be a positive integer")
-    }
+    invisible(NULL)
 }
 
 #' Reject more than one unnamed positional argument
@@ -168,11 +117,19 @@ validate_params <- function(
     min_points = NULL,
     chunk_size = NULL
 ) {
-    validate_fraction(fraction)
-    validate_iterations(iterations)
-    validate_window_capacity(window_capacity)
-    validate_min_points(min_points)
-    validate_chunk_size(chunk_size)
+    validate_scalar_numeric(fraction, "fraction")
+    if (fraction < 0 || fraction > 1) {
+        stop("fraction must be between 0 and 1")
+    }
+
+    validate_optional_count(iterations, "iterations")
+    validate_optional_count(
+        window_capacity,
+        "window_capacity",
+        allow_zero = FALSE
+    )
+    validate_optional_count(min_points, "min_points")
+    validate_optional_count(chunk_size, "chunk_size", allow_zero = FALSE)
 }
 
 #' Coerce optional values to Nullable
@@ -186,16 +143,13 @@ coerce_nullable <- function(...) {
 #' Parameter type registry for Rust FFI coercion
 #' @noRd
 param_types <- list(
-    # Numeric parameters
     fraction = "double",
-    # Integer parameters
     iterations = "integer",
     window_capacity = "integer",
     min_points = "integer",
     chunk_size = "integer",
     cv_k = "integer",
     dimensions = "integer",
-    # Character parameters
     weight_function = "character",
     robustness_method = "character",
     scaling_method = "character",
@@ -207,13 +161,11 @@ param_types <- list(
     distance_metric = "character",
     surface_mode = "character",
     merge_strategy = "character",
-    # Logical parameters
     return_diagnostics = "logical",
     return_residuals = "logical",
     return_robustness_weights = "logical",
-    parallel = "logical",
     return_se = "logical",
-    # Nullable parameters (optional, NULL -> Nullable(NULL))
+    parallel = "logical",
     overlap = "nullable",
     confidence_intervals = "nullable",
     prediction_intervals = "nullable",

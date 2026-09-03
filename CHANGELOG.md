@@ -112,6 +112,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `README.md`/`index.md` linking to `lowess-project`'s domain and pre-restructure doc paths for the Installation Guide, Concepts, and Benchmarks pages.
 - Ported a missing "high weight pulls fit toward spike" custom-weights test case from `fastlowess`'s Julia test suite.
 
+**R:**
+
+- Reformatted `configure` from mixed spaces to tabs, matching the project's shell-script style.
+- Fixed `.Rbuildignore`'s `.r-lib` exclusion not covering files within the directory; added an explicit nested-path pattern, and a missing exclusion for built vignette HTML output.
+- Removed the empty `R/params.R` stub (its content was already inlined into `R/Loess.R`'s docs).
+- Simplified `plot.LoessResult()` to return `NULL` invisibly instead of the input object, matching R's usual plot-method convention; dropped the now-inaccurate `RE6.1` srr-stats tag.
+- Inlined the `.make_loess`/`.make_streaming_loess`/`.make_online_loess` helper functions directly into their respective constructors.
+- Consolidated `utils.R`'s single-purpose parameter validators (`validate_fraction`, `validate_iterations`, `validate_window_capacity`, `validate_min_points`, `validate_chunk_size`) into two generic helpers, `validate_scalar_numeric()` and `validate_optional_count()`.
+
 **Node.js:**
 
 - Fixed the docs homepage never showing the README content: `dev/add-readme-to-docs.py` now embeds `README.md` below the hero, wired into `npm run docs` and `make nodejs-dev`.

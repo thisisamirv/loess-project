@@ -77,24 +77,7 @@ StreamingLoess <- function(
     reject_extra_positional_args(sys.call(), "chunk_size")
     validate_params(fraction = fraction, chunk_size = chunk_size)
     handle <- do.call(RStreamingLoess$new, env_args(streaming_params))
-    .make_streaming_loess(
-        handle,
-        fraction,
-        chunk_size,
-        iterations,
-        parallel,
-        dimensions
-    )
-}
 
-.make_streaming_loess <- function(
-    handle,
-    fraction,
-    chunk_size,
-    iterations,
-    parallel,
-    dimensions
-) {
     structure(
         list(
             handle = handle,

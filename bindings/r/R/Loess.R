@@ -144,34 +144,7 @@ Loess <- function(
     reject_extra_positional_args(sys.call(), "fraction")
     validate_params(fraction = fraction, iterations = iterations)
     handle <- do.call(RLoess$new, env_args(loess_params))
-    .make_loess(
-        handle,
-        fraction,
-        iterations,
-        weight_function,
-        robustness_method,
-        scaling_method,
-        parallel,
-        degree,
-        dimensions,
-        distance_metric,
-        surface_mode
-    )
-}
 
-.make_loess <- function(
-    handle,
-    fraction,
-    iterations,
-    weight_function,
-    robustness_method,
-    scaling_method,
-    parallel,
-    degree,
-    dimensions,
-    distance_metric,
-    surface_mode
-) {
     structure(
         list(
             handle = handle,

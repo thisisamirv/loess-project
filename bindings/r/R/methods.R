@@ -51,7 +51,6 @@ print.LoessResult <- function(x, ...) {
 #' @param main Plot title.
 #' @param ... Additional arguments passed to plot() and lines().
 #' @srrstats {RE6.0} Default S3 plot method implemented.
-#' @srrstats {RE6.1} Plot method returns the input object invisibly.
 #' @srrstats {RE6.2} Plot shows fitted values with confidence intervals.
 #' @examples
 #' x <- seq(0, 10, length.out = 100)
@@ -59,7 +58,7 @@ print.LoessResult <- function(x, ...) {
 #' model <- Loess(fraction = 0.2)
 #' res <- fit(model, x, y)
 #' plot(res)
-#' @return The input object \code{x}, invisibly.
+#' @return NULL, invisibly. Called for side effects (plotting).
 #' @importFrom graphics lines
 #' @export
 plot.LoessResult <- function(x, main = "LOESS Fit", ...) {
@@ -81,8 +80,6 @@ plot.LoessResult <- function(x, main = "LOESS Fit", ...) {
         lines(x$x, x$confidence_lower, lty = 2, col = "gray")
         lines(x$x, x$confidence_upper, lty = 2, col = "gray")
     }
-
-    invisible(x)
 }
 
 #' Print StreamingLoess Model

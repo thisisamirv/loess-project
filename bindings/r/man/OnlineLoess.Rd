@@ -5,33 +5,33 @@
 \title{LOESS Online Smoothing}
 \usage{
 OnlineLoess(
-  fraction = 0.67,
-  window_capacity = 1000L,
-  min_points = 2L,
-  ...,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  update_mode = "incremental",
-  auto_converge = NULL,
-  return_robustness_weights = FALSE,
-  return_diagnostics = FALSE,
-  return_residuals = FALSE,
-  zero_weight_fallback = "use_local_mean",
-  parallel = FALSE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  return_se = FALSE,
-  confidence_intervals = NULL,
-  prediction_intervals = NULL,
-  weighted_metric_weights = NULL,
-  cell = NULL,
-  interpolation_vertices = NULL,
-  boundary_degree_fallback = NULL
+    fraction = 0.67,
+    window_capacity = 1000L,
+    min_points = 2L,
+    ...,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
+    update_mode = "incremental",
+    auto_converge = NULL,
+    return_robustness_weights = FALSE,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    parallel = FALSE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    return_se = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL
 )
 }
 \arguments{
@@ -69,6 +69,11 @@ begins, between 2 and \code{window_capacity}. Default: 2.}
 \code{"mirror"}), \code{"zero"}, or
 \code{"noboundary"} (alias: \code{"none"}).}
 
+\item{zero_weight_fallback}{Fallback policy when all robustness weights drop
+to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
+\code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
+\code{"return_none"} (alias: \code{"none"}).}
+
 \item{update_mode}{Window update strategy: \code{"incremental"} (default;
 alias: \code{"single"}) updates only the newest point;
 \code{"full"} (alias: \code{"resmooth"}) re-smooths all window points
@@ -85,11 +90,6 @@ metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.}
 
 \item{return_residuals}{Logical; if \code{TRUE}, return residuals in the
 result. Default: \code{FALSE}.}
-
-\item{zero_weight_fallback}{Fallback policy when all robustness weights drop
-to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
-\code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
-\code{"return_none"} (alias: \code{"none"}).}
 
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
 

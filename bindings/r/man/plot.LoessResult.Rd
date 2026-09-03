@@ -14,7 +14,7 @@
 \item{...}{Additional arguments passed to plot() and lines().}
 }
 \value{
-The input object \code{x}, invisibly.
+NULL, invisibly. Called for side effects (plotting).
 }
 \description{
 Plot Loess Result
