@@ -36,7 +36,7 @@ MathJax.Hub.Config({
   <td id="projectalign">
    <div id="projectname">fastloess-cpp
    </div>
-   <div id="projectbrief">High-performance LOESS smoothing — C++ API</div>
+   <div id="projectbrief">High-performance LOESS smoothing</div>
   </td>
  </tr>
  </tbody>
@@ -146,12 +146,12 @@ Online Adapter</div></div>
 <div class="line">    }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastloess_1_1OnlineLoess_html"><div class="ttname"><a href="classfastloess_1_1OnlineLoess.html">fastloess::OnlineLoess</a></div><div class="ttdoc">Online LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:641</div></div>
+<div class="ttc" id="aclassfastloess_1_1OnlineLoess_html"><div class="ttname"><a href="classfastloess_1_1OnlineLoess.html">fastloess::OnlineLoess</a></div><div class="ttdoc">Online LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:644</div></div>
 <div class="ttc" id="afastloess_8hpp_html"><div class="ttname"><a href="fastloess_8hpp.html">fastloess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLoess library.</div></div>
-<div class="ttc" id="astructfastloess_1_1OnlineOptions_html"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html">fastloess::OnlineOptions</a></div><div class="ttdoc">Options for online LOESS.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:167</div></div>
-<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_a277ba38ed5f101d0a678ceaee011a179"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#a277ba38ed5f101d0a678ceaee011a179">fastloess::OnlineOptions::window_capacity</a></div><div class="ttdeci">int window_capacity</div><div class="ttdef"><b>Definition</b> fastloess.hpp:196</div></div>
-<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_a2895219e8670848f4bb5f170e1e862e4"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#a2895219e8670848f4bb5f170e1e862e4">fastloess::OnlineOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdef"><b>Definition</b> fastloess.hpp:168</div></div>
-<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_ae27d7713b713d920996edab73a7e7b98"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#ae27d7713b713d920996edab73a7e7b98">fastloess::OnlineOptions::min_points</a></div><div class="ttdeci">int min_points</div><div class="ttdef"><b>Definition</b> fastloess.hpp:197</div></div>
+<div class="ttc" id="astructfastloess_1_1OnlineOptions_html"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html">fastloess::OnlineOptions</a></div><div class="ttdoc">Options for online LOESS.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:170</div></div>
+<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_a277ba38ed5f101d0a678ceaee011a179"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#a277ba38ed5f101d0a678ceaee011a179">fastloess::OnlineOptions::window_capacity</a></div><div class="ttdeci">int window_capacity</div><div class="ttdef"><b>Definition</b> fastloess.hpp:199</div></div>
+<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_a2895219e8670848f4bb5f170e1e862e4"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#a2895219e8670848f4bb5f170e1e862e4">fastloess::OnlineOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdef"><b>Definition</b> fastloess.hpp:171</div></div>
+<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_ae27d7713b713d920996edab73a7e7b98"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#ae27d7713b713d920996edab73a7e7b98">fastloess::OnlineOptions::min_points</a></div><div class="ttdeci">int min_points</div><div class="ttdef"><b>Definition</b> fastloess.hpp:200</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.226592</div>
 </div><!-- fragment --><ul>
 <li><code>options</code>: An <code>OnlineOptions</code> struct (inherits from <code>LoessOptions</code>) with <code>window_capacity</code>, <code>min_points</code>, and <code>update_mode</code>.</li>
@@ -200,7 +200,7 @@ Online Adapter</div></div>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>window_capacity</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone"><code>1000</code>   </td><td class="markdownTableBodyNone">Max points in sliding window    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>min_points</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone"><code>3</code>   </td><td class="markdownTableBodyNone">Min points before smoothing starts    </td></tr>
+<td class="markdownTableBodyNone"><code>min_points</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone"><code>2</code>   </td><td class="markdownTableBodyNone">Min points before smoothing starts    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone"><code>"incremental"</code>   </td><td class="markdownTableBodyNone">Update mode (<code>"full"</code> or <code>"incremental"</code>)    </td></tr>
 <tr class="markdownTableRowEven">

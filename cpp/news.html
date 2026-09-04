@@ -36,7 +36,7 @@ MathJax.Hub.Config({
   <td id="projectalign">
    <div id="projectname">fastloess-cpp
    </div>
-   <div id="projectbrief">High-performance LOESS smoothing — C++ API</div>
+   <div id="projectbrief">High-performance LOESS smoothing</div>
   </td>
  </tr>
  </tbody>
@@ -102,33 +102,52 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
   <div class="headertitle"><div class="title">News</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1>fastloess (C++) (development version)</h1>
+<div class="textblock"><h1>fastloess (C++) 1.2.0</h1>
+<h2>Added</h2>
+<ul>
+<li>Added <code>dev/bump_version.py --version X.Y.Z</code> to bump every crate/binding's version files, <code>CITATION.cff</code>, and the Spack recipe in one pass (supports <code>--dry-run</code>).</li>
+<li>Added <code>dev/check_pinned_versions.py</code> and a weekly <code>check-versions.yml</code> to catch hardcoded version pins that Dependabot can't see.</li>
+<li>Added <code>.github/dependabot.yml</code>, covering every dependency ecosystem, grouped per directory into a single weekly PR.</li>
+<li>Added an optional <code>commit</code> input to every release workflow's <code>workflow_dispatch</code> trigger, to pin the built commit for manual runs.</li>
+<li>Added <code>dev/check_links.py</code> to validate every Markdown cross-reference link across all docs.</li>
+<li>Added CMake package-config support so consumers can <code>find_package(fastloess)</code>.</li>
+<li>Added CI coverage for <code>clang-cl</code> (Windows), <code>clang</code> (Linux), MinGW-w64, and Intel oneAPI.</li>
+<li>Added ARM64 release binaries for Linux/Windows/macOS; also fixed the macOS x64 job silently shipping a mislabeled arm64 binary.</li>
+<li>Renamed <code>cpp_loess_fit</code>/<code>cpp_streaming_process</code>'s <code>x</code>/<code>y</code> params to <code>x_values</code>/<code>y_values</code>, avoiding a collision with <code>CppLoessResult</code>'s own <code>x</code>/<code>y</code> fields.</li>
+</ul>
 <h2>Changed</h2>
 <ul>
-<li>Consolidated every crate/binding README: merged the "Installation" and "Documentation" sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant "API Reference" and "Changelog" sections (each now has its own docs-site page), and added a "Read more" link to the Concepts page. The top-level repository README is unchanged, since it's only ever viewed on GitHub.</li>
-<li>Renamed the batch adapter's "When to Use" heading to "When to Use Batch Adapter" across every binding/crate's API docs.</li>
-<li>Vendored the <a href="https://github.com/jothepro/doxygen-awesome-css">doxygen-awesome-css</a> theme (v2.4.2) for a modern, sidebar-only cpp Doxygen site with automatic dark mode.</li>
-<li>Added <code>dev/update_changelogs.py</code>, which regenerates a per-binding/crate <code><a class="el" href="NEWS_8md.html">NEWS.md</a></code>/<code>news.md</code> from the root <code>CHANGELOG.md</code>. Wired into every docs site's navigation, the Rust crates' rustdoc module tree, and every <code>Makefile</code> <code>dev</code> target.</li>
-<li>Replaced <code><a class="el" href="kernels_8md.html">kernels.md</a></code>'s "Choosing a Kernel" mermaid flowchart (every binding/crate) with an equivalent decision table, since Doxygen and rustdoc don't render mermaid and the deeply-nested diamond chain was hard to read even where it did render.</li>
-<li>Replaced <code><a class="el" href="adapter-choice_8md.html">adapter-choice.md</a></code>/<code>adapters.md</code>'s "Overview" flowchart (mermaid in most bindings/crates, ASCII art in the C++ docs) with an equivalent decision table, unifying on a single rendering-agnostic format across every binding/crate.</li>
-<li>Consolidated <code>parameters.md</code>/the auto-generated <code>@autodocs</code> parameter reference across every binding and crate (C++, Julia, Node.js, Python, WASM, <code>fastLoess</code>, <code>loess-rs</code>): merged its unique content (fraction/iterations choice guidance, and inline <code>zero_weight_fallback</code>/<code>surface_mode</code> behavior tables) into each <code><a class="el" href="api_8md.html">api.md</a></code>'s builder/options tables (Julia: into the <code>Loess</code>/<code>StreamingLoess</code>/<code>OnlineLoess</code> docstrings), and removed <code>parameters.md</code> itself along with its docs-site navigation entries, <code>doc::parameters</code> rustdoc module, and cross-references (now pointing at <code><a class="el" href="api_8md.html">api.md</a></code>) — the parameter tables, kernel/robustness/boundary/scaling/degree/distance-metric option lists, and interval/custom-weights code examples it duplicated already live on their own dedicated pages.</li>
-<li>Documented the previously-undocumented <code>x_values</code>/<code>y_values</code> parameters of <code>Loess::fit()</code>, fixing a Doxygen "parameters are not documented" warning.</li>
-<li>Restructured the Doxygen site's navigation, which previously listed all ~20 doc pages flat in the sidebar. Added explicit <code>\page</code> IDs to every page and grouped them into five nested hub pages (<code>Getting Started</code>, <code>User Guide</code>, <code>Customization</code>, <code>Advanced</code>, <code>Use Cases</code>) via <code>\subpage</code>, mirroring the category grouping already used by the R (<code>_pkgdown.yml</code>) and Node.js/WASM (Starlight sidebar) docs sites. <code>StreamingLoess</code>/<code>OnlineLoess</code> now nest under <code>API</code> the same way, and <code>Customization</code> additionally includes <code>Polynomial Degree</code>/<code>Multivariate LOESS</code>. <code>Benchmarks</code> and <code>News</code> remain standalone top-level pages. Updated <code><a class="el" href="README_8md.html">README.md</a></code>'s hardcoded Doxygen URLs (<code>md_docs_2*.html</code>) to the new explicit page names.</li>
-<li>Added a Spack recipe (<code>bindings/cpp/spack/package.py</code>, a <code>CargoPackage</code> with custom <code>build()</code>/<code>install()</code> phases since <code>fastloess-cpp</code> builds a cdylib rather than a <code>cargo install</code>-able binary). <code>release-cpp.yml</code> now updates the recipe's <code>version()</code>/<code>sha256</code> on every release and opens a PR to <code>spack/spack-packages</code> (via <code>dev/spack_release.py</code> and <code>dev/spack_open_pr.sh</code>), so <code>fastloess-cpp</code> stays installable via <code>spack install fastloess-cpp</code>.</li>
+<li>Added a <code>large</code> benchmark category (exact-fit, high-iteration, high-fraction) to the R/Rust benchmarks.</li>
+<li>Merged the standalone <code>dev/add-{cpp,rust,nodejs,wasm}-outputs</code> scripts into <code>dev/verify_snippets.py --update-outputs</code>.</li>
+<li>Replaced Unicode super/subscript stand-ins (<code>R²</code>, <code>xᵢ</code>, etc.) with plain ASCII throughout docs, READMEs, and Rust comments, also catching some leftover mojibake.</li>
+<li>Added <code>dev/add-readme-to-docs.py</code> to auto-embed <code><a class="el" href="README_8md.html">README.md</a></code> as the docs homepage (Starlight/Sphinx-aware); not yet wired into Python's <code>Makefile</code>.</li>
+<li>Harmonized the docs-site directory structure across every binding/crate, and fixed doc-tooling scripts that missed snippets in the newly-nested pages.</li>
+<li>Consolidated every README: merged Installation/Documentation sections, dropped GitHub-only alert syntax, and removed sections now covered by dedicated docs-site pages.</li>
+<li>Renamed "When to Use" to "When to Use Batch Adapter" across every binding's API docs.</li>
+<li>Vendored doxygen-awesome-css v2.4.2 for a modern cpp Doxygen theme.</li>
+<li>Added <code>dev/update_changelogs.py</code> to regenerate each binding/crate's <code><a class="el" href="NEWS_8md.html">NEWS.md</a></code>/<code>news.md</code> from the root changelog.</li>
+<li>Replaced the <code><a class="el" href="kernels_8md.html">kernels.md</a></code>/<code><a class="el" href="adapter-choice_8md.html">adapter-choice.md</a></code> mermaid flowcharts with rendering-agnostic tables (Doxygen/rustdoc don't render mermaid).</li>
+<li>Consolidated <code>parameters.md</code>/<code>@autodocs</code> into each <code><a class="el" href="api_8md.html">api.md</a></code>'s option tables, removing <code>parameters.md</code>.</li>
+<li>Documented <code>x_values</code>/<code>y_values</code> params, fixing a Doxygen warning.</li>
+<li>Restructured Doxygen nav from ~20 flat pages into 5 hub pages, mirroring other bindings.</li>
+<li>Added a Spack recipe, auto-updated by <code>release-cpp.yml</code> on release.</li>
+<li>Bumped the vendored Corrosion CMake module to v0.6.1.</li>
 </ul>
 <h2>Fixed</h2>
 <ul>
-<li>Fixed <code>docs.yml</code> triggering GitHub's "pages build and deployment" once per docs job; per-language jobs now upload artifacts, and a single final <code>deploy</code> job pushes to <code>gh-pages</code> once per run.</li>
-<li>Fixed <code>docs.yml</code>'s reliance on GitHub's legacy branch-based Pages deployment, which auto-triggers an unpinned, GitHub-managed "pages build and deployment" job on every <code>gh-pages</code> push (surfacing deprecation warnings, e.g. for Node.js 20, that aren't fixable from this repo). The former <code>deploy</code> job is now <code>build</code>, which still pushes the merged <code>_site</code> to <code>gh-pages</code> as a cache for future incremental runs, but publishing now goes through <code>actions/upload-pages-artifact</code> and a new <code>deploy</code> job using the official <code>actions/deploy-pages</code>, which this repo pins directly. Requires the repository's Pages source to be switched to "GitHub Actions" in settings.</li>
-<li>Fixed the "Handling Outliers" quickstart example (every binding and the <code>loess-rs</code>/<code>fastLoess</code> crates) printing nothing: with only 6 points and <code>fraction = 0.5</code>, the local window is small enough that tricube weighting drives the farthest neighbor's weight to ~0, leaving just 2 effectively-weighted points, which a degree-1 fit reproduces exactly (zero residual, no downweighting) — confirmed directly against the <code>lowess</code>/<code>loess</code> core, not binding-specific. Bumped to <code>fraction = 0.7</code>, which correctly downweights the injected outlier.</li>
-<li>Fixed the R <code>OnlineLoess()</code> roxygen example printing one line per point (48 lines for a 50-point loop); it now collects the smoothed values and prints only <code>head(smoothed, 5)</code>.</li>
-<li>Fixed the R <code>add_point()</code> roxygen example always printing <code>NULL</code>, since a single call never reaches the default <code>min_points = 3</code>; it now uses <code>min_points = 2L</code> and shows the second (non-<code>NULL</code>) call's result.</li>
-<li>Fixed the Julia <code><a class="el" href="intervals_8md.html">intervals.md</a></code> "Confidence Intervals" and "Standard Errors" examples each looping over all 100 points instead of a short sample; switched to <code>result.y[1:5]</code>/<code>result.confidence_lower[1:5]</code>/<code>result.standard_errors[1:5]</code>-style slicing, matching the already-concise Python version.</li>
-<li>Fixed several Doxygen rendering bugs: the homepage showed <code><a class="el" href="concepts_8md.html">concepts.md</a></code> instead of <code><a class="el" href="README_8md.html">README.md</a></code>; blockquotes, heading+codespan combinations, MkDocs-only admonitions, inline/display math, and <code>---</code> after a blockquote all rendered as literal or broken text. <code><a class="el" href="README_8md.html">README.md</a></code> is now the Doxygen main page, and the affected docs use Doxygen-native syntax (<code>\f$...\f$</code>/<code>\f[...\f]</code> math, blockquote admonitions, explicit <code>&lt;hr&gt;</code>).</li>
-<li>Fixed <code>ci-cpp.yml</code>'s macOS job warning that the pre-installed <code>aws/tap</code> Homebrew tap is untrusted; <code>brew untap aws/tap</code> now runs before <code>brew install llvm cppcheck</code>, since that tap isn't needed for this build.</li>
-<li>Fixed <code>ci-cpp.yml</code>'s Windows job installing <code>cppcheck</code> via Chocolatey, whose package is missing its <code>cfg/std.cfg</code> library files, causing <code>make cpp-dev</code>'s static analysis pass to be silently skipped; it now installs <code>cppcheck</code> via <code>winget</code> instead (matching the already-working <code>install-tools</code> target), with its install directory added to <code>$GITHUB_PATH</code>.</li>
-<li>Fixed <code>Doxyfile</code>'s <code>PROJECT_NAME</code> showing <code>"fastLoess"</code> (the separate Rust crate's name) instead of the actual CMake project/library name; changed to <code>"fastloess-cpp"</code>.</li>
-<li>Fixed <code>Doxyfile</code>'s <code>FILE_PATTERNS</code> missing a space (<code>*.hpp*.h</code>), which Doxygen parses as a single malformed glob instead of two separate <code>*.hpp</code>/<code>*.h</code> patterns; changed to <code>*.hpp *.h *.md</code>.</li>
+<li>Fixed the R benchmark script calling <code>fit</code> as a field instead of the S3 generic <code>fit(model, x, y)</code>.</li>
+<li>Fixed <code>release-conda.yml</code>'s version-line <code>sed</code> pattern to match any indentation.</li>
+<li>Fixed benchmark vendoring nulling every crate's checksum instead of just the two local path crates.</li>
+<li>Fixed the benchmark README's inaccurate "Iterations" scenario count.</li>
+<li>Fixed <code>docs.yml</code>'s Pages deployment: merged per-language jobs into one artifact upload/deploy job, using <code>upload/deploy-pages</code> actions instead of legacy branch-based deployment.</li>
+<li>Fixed 51 broken doc cross-reference links left over from the docs-site restructure (found via new <code>dev/check_links.py</code>).</li>
+<li>Fixed several <code>OnlineLoess</code>/<code>StreamingLoess</code> defaults silently diverging from every binding's docs and actual behavior: <code>min_points</code> (was 3, now 2), <code>update_mode</code> (was <code>"full"</code>, now <code>"incremental"</code>), and the internal robustness-iteration defaults (streaming 2→3, online 1→3) that only the Rust crates' bare prelude API could ever see.</li>
+<li>Fixed the "Handling Outliers" quickstart example printing nothing with only 6 points at <code>fraction = 0.5</code>; bumped to <code>0.7</code> so the outlier is actually downweighted.</li>
+<li>Fixed two R roxygen examples: <code>OnlineLoess()</code> printing 48 lines instead of a <code>head(smoothed, 5)</code> sample, and <code>add_point()</code> always printing <code>NULL</code> due to the default <code>min_points</code>.</li>
+<li>Fixed Julia's <code><a class="el" href="intervals_8md.html">intervals.md</a></code> examples looping over all 100 points instead of a short sample, matching the concise Python version.</li>
+<li>Fixed several Doxygen rendering bugs (wrong homepage, broken blockquotes/math/admonitions); <code><a class="el" href="README_8md.html">README.md</a></code> is now the native Doxygen homepage.</li>
+<li>Fixed <code>ci-cpp.yml</code>'s untrusted Homebrew tap warning and a broken Windows <code>cppcheck</code> install.</li>
+<li>Fixed <code>Doxyfile</code>'s wrong <code>PROJECT_NAME</code> and a malformed <code>FILE_PATTERNS</code> glob.</li>
 </ul>
 <h1>fastloess (C++) 1.1.0</h1>
 <h2>Added</h2>

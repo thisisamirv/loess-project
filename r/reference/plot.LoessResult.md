@@ -25,7 +25,7 @@ plot(x, main = "LOESS Fit", ...)
 
 ## Value
 
-The input object `x`, invisibly.
+NULL, invisibly. Called for side effects (plotting).
 
 ## Examples
 

@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['handling_0',['Boundary Handling',['../boundary.html',1,'advanced']]],
-  ['has_5fvalue_1',['has_value',['../classfastloess_1_1Expected.html#a39ed4f05838a583dd68837af006e5f1b',1,'fastloess::Expected::has_value()'],['../classfastloess_1_1Diagnostics.html#ac5e85580bde440a5af09f3189749ddf1',1,'fastloess::Diagnostics::has_value()'],['../classfastloess_1_1OnlineOutput.html#a4a63408745a62b2d92623d854cc8351e',1,'fastloess::OnlineOutput::has_value()']]]
+  ['genomic_20data_20smoothing_0',['Genomic Data Smoothing',['../use_case_genomics.html',1,'use_case']]],
+  ['getting_20started_1',['Getting Started',['../getting_started.html',1,'']]],
+  ['guide_2',['User Guide',['../user_guide.html',1,'']]]
 ];

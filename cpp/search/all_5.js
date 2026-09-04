@@ -1,12 +1,9 @@
 var searchData=
 [
-  ['fastloess_0',['fastloess',['../namespacefastloess.html',1,'']]],
-  ['fastloess_20cpp_1',['fastloess-cpp',['../index.html',1,'']]],
-  ['fastloess_2ehpp_2',['fastloess.hpp',['../fastloess_8hpp.html',1,'']]],
-  ['fastloess_3a_3adetail_3',['detail',['../namespacefastloess_1_1detail.html',1,'fastloess']]],
-  ['finalize_4',['finalize',['../classfastloess_1_1StreamingLoess.html#a1a7873b246d8cc285add37f4262e2e0d',1,'fastloess::StreamingLoess']]],
-  ['fit_5',['fit',['../classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4',1,'fastloess::Loess']]],
-  ['fraction_6',['fraction',['../structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce',1,'fastloess::LoessOptions::fraction'],['../structfastloess_1_1OnlineOptions.html#a2895219e8670848f4bb5f170e1e862e4',1,'fastloess::OnlineOptions::fraction']]],
-  ['fraction_5fused_7',['fraction_used',['../classfastloess_1_1LoessResult.html#a01861ed7fd59cdff22a37ad4b70dd15e',1,'fastloess::LoessResult']]],
-  ['functions_8',['Weight Functions',['../kernels.html',1,'customization']]]
+  ['effective_5fdf_0',['effective_df',['../classfastloess_1_1Diagnostics.html#aebc5b72ce3f41e69ab3025f46dba54d8',1,'fastloess::Diagnostics']]],
+  ['enp_1',['enp',['../classfastloess_1_1LoessResult.html#abfbc8a27ad24b2e4574201f75f8cec45',1,'fastloess::LoessResult']]],
+  ['error_2',['error',['../classfastloess_1_1Expected.html#a08435a873803c3c9a95a273889a08e5f',1,'fastloess::Expected::error()'],['../classfastloess_1_1LoessResult.html#ae0f541f5dcfe5a3dbb943654c9f510fa',1,'fastloess::LoessResult::error()']]],
+  ['errortag_3',['ErrorTag',['../structfastloess_1_1Expected_1_1ErrorTag.html',1,'fastloess::Expected']]],
+  ['execution_20modes_4',['Execution Modes',['../adapter_choice.html',1,'user_guide']]],
+  ['expected_5',['expected',['../classfastloess_1_1Expected.html',1,'fastloess::Expected&lt; T &gt;'],['../classfastloess_1_1OnlineOutput.html#a815f6718ecaf8321aab0587f5e62d048',1,'fastloess::OnlineOutput::Expected'],['../classfastloess_1_1Expected.html#ae3a243adc18bc220b86cb5d913f7e565',1,'fastloess::Expected::Expected()']]]
 ];

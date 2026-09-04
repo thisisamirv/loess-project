@@ -11,11 +11,11 @@ All](https://raw.githubusercontent.com/thisisamirv/loess-project/main/dev/logo.p
 
 The fastest, most robust, and most feature-complete language-agnostic
 LOESS (Locally Estimated Scatterplot Smoothing) implementation for
-**Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and
-**WebAssembly**.
+**Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, **Go**,
+**Java**, and **WebAssembly**.
 
 The `loess-project` also offers bindings for Rust, Python, R, Julia,
-Node.js, WebAssembly, and C++ — see the [full
+Node.js, WebAssembly, C++, Go, and Java — see the [full
 repository](https://github.com/thisisamirv/loess-project).
 
 ------------------------------------------------------------------------
@@ -122,7 +122,7 @@ A variety of features, supporting a range of use cases:
 | Streaming Mode              |     yes      |       no        |
 | Confidence Intervals        |     yes      |       no        |
 | Prediction Intervals        |     yes      |       no        |
-| Diagnostics (RMSE, R², AIC) |     yes      |       no        |
+| Diagnostics (RMSE, R2, AIC) |     yes      |       no        |
 | Cross-Validation            |  2 options   |       no        |
 | Parallel Execution          |     yes      |       no        |
 | `no-std` Support            |     yes      |       no        |

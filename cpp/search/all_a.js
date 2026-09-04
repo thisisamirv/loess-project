@@ -1,8 +1,10 @@
 var searchData=
 [
-  ['leverage_0',['leverage',['../classfastloess_1_1LoessResult.html#a480d6301864768064da2d79d0d64fc0e',1,'fastloess::LoessResult']]],
-  ['loess_1',['loess',['../classfastloess_1_1Loess.html',1,'fastloess::Loess'],['../classfastloess_1_1Loess.html#af5fdb05f52ff9ad8f7c47954b312add8',1,'fastloess::Loess::Loess(const LoessOptions &amp;options={})'],['../classfastloess_1_1Loess.html#a58efc35cd52f06e72212196cd7573efa',1,'fastloess::Loess::Loess(const Loess &amp;)=delete'],['../classfastloess_1_1Loess.html#a5276bcb66f04a81f95248d0547bfa194',1,'fastloess::Loess::Loess(Loess &amp;&amp;other) noexcept'],['../dimensions.html',1,'Multivariate LOESS']]],
-  ['loesserror_2',['loesserror',['../classfastloess_1_1LoessError.html',1,'fastloess::LoessError'],['../classfastloess_1_1LoessError.html#a80e38cef81c37e198e9996bdaf79a38f',1,'fastloess::LoessError::LoessError()']]],
-  ['loessoptions_3',['LoessOptions',['../structfastloess_1_1LoessOptions.html',1,'fastloess']]],
-  ['loessresult_4',['loessresult',['../classfastloess_1_1LoessResult.html',1,'fastloess::LoessResult'],['../classfastloess_1_1LoessResult.html#a357e152476ec2ce26d07498ef0b0d070',1,'fastloess::LoessResult::LoessResult()=default'],['../classfastloess_1_1LoessResult.html#a1ddef294baca7d287fd45072e09c3b03',1,'fastloess::LoessResult::LoessResult(const fastloess_CppLoessResult &amp;c_result)'],['../classfastloess_1_1LoessResult.html#a330817b5979c5d9322504f08bd477d47',1,'fastloess::LoessResult::LoessResult(const LoessResult &amp;)=delete'],['../classfastloess_1_1LoessResult.html#af3ecbea8f02cee27b6c8da341c906fb8',1,'fastloess::LoessResult::LoessResult(LoessResult &amp;&amp;other) noexcept']]]
+  ['k_5fdefault_5fchunk_5fsize_0',['k_default_chunk_size',['../namespacefastloess_1_1detail.html#a6916fb8ce782a3bf44496a44cc706da6',1,'fastloess::detail']]],
+  ['k_5fdefault_5fcv_5fk_1',['k_default_cv_k',['../namespacefastloess_1_1detail.html#a42b17d52ff37e457d7fcfe8fdac29acf',1,'fastloess::detail']]],
+  ['k_5fdefault_5ffraction_2',['k_default_fraction',['../namespacefastloess_1_1detail.html#a53a2c6c2254cd2e6af4fe7f794f11a8b',1,'fastloess::detail']]],
+  ['k_5fdefault_5fmin_5fpoints_3',['k_default_min_points',['../namespacefastloess_1_1detail.html#a4d08bbc70b0687ab42a23f30c268ddab',1,'fastloess::detail']]],
+  ['k_5fdefault_5foverlap_4',['k_default_overlap',['../namespacefastloess_1_1detail.html#a495ea685bf82cda48f8b65bb4ca68453',1,'fastloess::detail']]],
+  ['k_5fdefault_5fwindow_5fcapacity_5',['k_default_window_capacity',['../namespacefastloess_1_1detail.html#afcf25f829cc920c546e570edbdf1c6be',1,'fastloess::detail']]],
+  ['kernels_2emd_6',['kernels.md',['../kernels_8md.html',1,'']]]
 ];

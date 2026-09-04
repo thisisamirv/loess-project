@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Polynomial Degree :: fastloess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/advanced/degree.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/loess-project/java">fastloess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastloess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastloess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-streaming.html">StreamingLoess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-online.html">OnlineLoess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="degree.html">Polynomial Degree</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="dimensions.html">Multivariate LOESS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="merge.html">Merge Strategies</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastloess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastloess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastloess (Java)</a></li>
+    <li>Advanced</li>
+    <li><a href="degree.html">Polynomial Degree</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/loess-project/edit/main/bindings/java/docs/modules/ROOT/pages/advanced/degree.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Polynomial Degree</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Degree of the local polynomial fitted at each point.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="overview"><a class="anchor" href="#overview"></a>Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>At each target point, LOESS fits a polynomial to the neighbouring data using weighted least squares. The <code>degree</code> parameter controls the order of that polynomial.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../_images/degree_comparison.svg" alt="Degree Comparison">
+</div>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Degree</th>
+<th class="tableblock halign-left valign-top">Local Fit</th>
+<th class="tableblock halign-left valign-top">Captures</th>
+<th class="tableblock halign-left valign-top">Risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"constant"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Constant</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Level only</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Over-smooth, biased at edges</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"linear"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Linear</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Trend (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rarely overfits</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"quadratic"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Quadratic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Curvature</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Overfits with small <code>fraction</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"cubic"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cubic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Inflections</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Requires larger <code>fraction</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"quartic"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Quartic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fine structure</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">High variance, rarely needed</p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="constant-local-constant"><a class="anchor" href="#constant-local-constant"></a>Constant — Local Constant</h2>
+<div class="sectionbody">
+<div class="stemblock">
+<div class="content">
+\[\hat{y}(x_0) = \arg\min_a \sum_i w_i(x_0)\,(y_i - a)^2\]
+</div>
+</div>
+<div class="paragraph">
+<p>The fit at each point is simply a weighted mean. Produces very smooth results but ignores local slope, introducing bias wherever the true function changes.</p>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Maximum smoothness is more important than accuracy; computationally cheapest option.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .degree("constant")
+                .fraction(0.5)
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (constant/Nadaraya-Watson): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (constant/Nadaraya-Watson): 0.705199580359118</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="linear-local-linear-default"><a class="anchor" href="#linear-local-linear-default"></a>Linear — Local Linear (Default)</h2>
+<div class="sectionbody">
+<div class="stemblock">
+<div class="content">
+\[\hat{y}(x_0) = \arg\min_{a,b} \sum_i w_i(x_0)\,(y_i - a - b x_i)^2\]
+</div>
+</div>
+<div class="paragraph">
+<p>Fits a weighted line through the neighbourhood. Removes first-order bias and handles boundary regions correctly. The right choice for the vast majority of applications.</p>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Default; monotone or gently curved data; boundary accuracy matters.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .degree("linear")
+                .fraction(0.5)
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (linear local regression): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (linear local regression): 0.3273755400709721</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="quadratic-local-quadratic"><a class="anchor" href="#quadratic-local-quadratic"></a>Quadratic — Local Quadratic</h2>
+<div class="sectionbody">
+<div class="stemblock">
+<div class="content">
+\[\hat{y}(x_0) = \arg\min_{a,b,c} \sum_i w_i(x_0)\,(y_i - a - b x_i - c x_i^2)^2\]
+</div>
+</div>
+<div class="paragraph">
+<p>Fits a weighted parabola through the neighbourhood. Removes second-order bias and captures local curvature more faithfully, but requires more data per neighbourhood — pair with a larger <code>fraction</code> (&gt;= 0.4) to avoid overfitting.</p>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Data with pronounced peaks, valleys, or curvature; <code>fraction</code> &gt;= 0.4.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .degree("quadratic")
+                .fraction(0.5)
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (quadratic local regression): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (quadratic local regression): 0.06774573827606048</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="cubic-local-cubic"><a class="anchor" href="#cubic-local-cubic"></a>Cubic — Local Cubic</h2>
+<div class="sectionbody">
+<div class="stemblock">
+<div class="content">
+\[\hat{y}(x_0) = \arg\min_{a,b,c,d} \sum_i w_i(x_0)\,(y_i - a - b x_i - c x_i^2 - d x_i^3)^2\]
+</div>
+</div>
+<div class="paragraph">
+<p>Fits a weighted cubic polynomial. Captures inflection points and S-shaped local behaviour. Requires a substantially larger neighbourhood than quadratic — use <code>fraction</code> &gt;= 0.5 and verify visually for overfitting.</p>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Data has clear S-shaped curves or multiple inflection points; <code>fraction</code> &gt;= 0.5.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .degree("cubic")
+                .fraction(0.6)
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (cubic local regression): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (cubic local regression): 0.24223407215691237</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="quartic-local-quartic"><a class="anchor" href="#quartic-local-quartic"></a>Quartic — Local Quartic</h2>
+<div class="sectionbody">
+<div class="stemblock">
+<div class="content">
+\[\hat{y}(x_0) = \arg\min_{a,...,e} \sum_i w_i(x_0)\,(y_i - a - b x_i - \cdots - e x_i^4)^2\]
+</div>
+</div>
+<div class="paragraph">
+<p>Fits a weighted quartic polynomial. Rarely needed in practice; only useful for capturing highly oscillatory local structure. Very prone to overfitting — require <code>fraction</code> &gt;= 0.6 and cross-validate.</p>
+</div>
+<div class="paragraph">
+<p><strong>Use when</strong>: Fine oscillatory structure is physically meaningful and the dataset is large; always cross-validate.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i &lt; n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder()
+                .degree("quartic")
+                .fraction(0.7)
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("First smoothed value (quartic local regression): " + result.y()[0]);
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">First smoothed value (quartic local regression): 0.23853339298087425</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="choosing-the-right-degree"><a class="anchor" href="#choosing-the-right-degree"></a>Choosing the Right Degree</h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Situation</th>
+<th class="tableblock halign-left valign-top">Recommended Degree</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Monotone trend, general purpose</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"linear"</code> (default)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Maximum smoothness, speed</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"constant"</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Clear peaks / valleys / inflections</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"quadratic"</code> (with <code>fraction</code> &gt;= 0.4)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">S-shaped curves, multiple inflections</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"cubic"</code> (with <code>fraction</code> &gt;= 0.5)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fine oscillatory structure (rare)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"quartic"</code> (with <code>fraction</code> &gt;= 0.6, cross-validate)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary accuracy is critical</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"linear"</code> or <code>"quadratic"</code> (not <code>"constant"</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Very small dataset (n &lt; 50)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"linear"</code></p></td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="higher-degree-effects"><a class="anchor" href="#higher-degree-effects"></a>Higher Degree Effects</h2>
+<div class="sectionbody">
+<div class="imageblock">
+<div class="content">
+<img src="../_images/higher_degree_comparison.svg" alt="Higher Degree Comparison">
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="surface-mode"><a class="anchor" href="#surface-mode"></a>Surface Mode</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>surfaceMode</code> parameter controls whether LOESS evaluates the local polynomial at every query point or at a sparser grid of vertices with Hermite cubic interpolation in between.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Mode</th>
+<th class="tableblock halign-left valign-top">Behaviour</th>
+<th class="tableblock halign-left valign-top">Speed</th>
+<th class="tableblock halign-left valign-top">Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"interpolation"</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Evaluate at anchor vertices, blend via Hermite cubic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Faster</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Slight approximation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"direct"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Evaluate at every query point</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exact</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Full precision</p></td>
+</tr>
+</tbody>
+</table>
+<div class="imageblock">
+<div class="content">
+<img src="../_images/surface_comparison.svg" alt="Surface Mode Comparison">
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../_images/degree_interpolation_comparison.svg" alt="Degree x Interpolation">
+</div>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="../_/js/site.js" data-ui-root-path="../_"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>  </body>
+</html>

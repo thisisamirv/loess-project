@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -111,36 +111,6 @@ Overlap:            [=====]</code></pre>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="weighted-average-default">Weighted Average (Default)<a class="anchor" aria-label="anchor" href="#weighted-average-default"></a>
-</h2>
-<p>Assigns each overlap point a weight proportional to its proximity to
-the centre of its respective chunk: points near the left-chunk centre
-favour the left estimate; points near the right-chunk centre favour the
-right. Minimises boundary artefacts.</p>
-<p><strong>Use when</strong>: Minimising boundary artefacts is more
-important than speed; moderate overlap (10–20% of chunk size) is
-used.</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
-<span><span class="va">x_chunk</span> <span class="op">&lt;-</span> <span class="va">x</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">50</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">y_chunk</span> <span class="op">&lt;-</span> <span class="va">y</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">50</span><span class="op">)</span><span class="op">]</span></span>
-<span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
-<span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span>,</span>
-<span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
-<span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (weighted_average strategy):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (weighted_average strategy):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
-<hr>
-</div>
-<div class="section level2">
 <h2 id="average">Average<a class="anchor" aria-label="anchor" href="#average"></a>
 </h2>
 <p>Takes the arithmetic mean of the left-chunk and right-chunk estimates
@@ -148,17 +118,25 @@ in the overlap region. Fast and sufficient when both chunks have similar
 smoothing quality.</p>
 <p><strong>Use when</strong>: Chunks are large and the overlap region
 has uniform data density.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
 <span>    merge_strategy <span class="op">=</span> <span class="st">"average"</span>,</span>
-<span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
+<span>    chunk_size <span class="op">=</span> <span class="fl">60</span>,</span>
+<span>    overlap <span class="op">=</span> <span class="fl">20</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (average strategy):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (average strategy):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># The second chunk's overlap region (its first 20 points) is where</span></span>
+<span><span class="co"># merge_strategy actually blends the two chunks' estimates.</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Merged value in overlap region (average):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Merged value in overlap region (average):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">6</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.2286069</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -169,17 +147,18 @@ the right-chunk estimate. Produces a left-flush output.</p>
 <p><strong>Use when</strong>: You need final output values immediately
 after each chunk (no look-ahead revision); left-chunk context
 dominates.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
 <span>    merge_strategy <span class="op">=</span> <span class="st">"take_first"</span>,</span>
-<span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
+<span>    chunk_size <span class="op">=</span> <span class="fl">60</span>,</span>
+<span>    overlap <span class="op">=</span> <span class="fl">20</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (take_first strategy):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (take_first strategy):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Merged value in overlap region (take_first):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Merged value in overlap region (take_first):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">6</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.236299</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -191,17 +170,81 @@ accurate in the overlap region.</p>
 <p><strong>Use when</strong>: Right-chunk context improves overlap
 quality; you are post-processing complete data rather than streaming in
 real time.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
 <span>    merge_strategy <span class="op">=</span> <span class="st">"take_last"</span>,</span>
-<span>    chunk_size <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">500</span></span>
+<span>    chunk_size <span class="op">=</span> <span class="fl">60</span>,</span>
+<span>    overlap <span class="op">=</span> <span class="fl">20</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_chunk</span>, <span class="va">y_chunk</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (take_last strategy):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (take_last strategy):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Merged value in overlap region (take_last):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Merged value in overlap region (take_last):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">6</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.2209148</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="weighted-average">Weighted Average<a class="anchor" aria-label="anchor" href="#weighted-average"></a>
+</h2>
+<p>Assigns each overlap point a weight proportional to its proximity to
+the centre of its respective chunk: points near the left-chunk centre
+favour the left estimate; points near the right-chunk centre favour the
+right. Minimises boundary artefacts.</p>
+<p><strong>Use when</strong>: Minimising boundary artefacts is more
+important than speed; moderate overlap (10–20% of chunk size) is
+used.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
+<span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span>,</span>
+<span>    chunk_size <span class="op">=</span> <span class="fl">60</span>,</span>
+<span>    overlap <span class="op">=</span> <span class="fl">20</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Merged value in overlap region (weighted_average):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Merged value in overlap region (weighted_average):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">6</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.232453</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="choosing-a-strategy">Choosing a Strategy<a class="anchor" aria-label="anchor" href="#choosing-a-strategy"></a>
+</h2>
+<table class="table">
+<thead><tr class="header">
+<th>Situation</th>
+<th>Recommended Strategy</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>General purpose</td>
+<td><code>"weighted_average"</code></td>
+</tr>
+<tr class="even">
+<td>Maximum throughput</td>
+<td><code>"average"</code></td>
+</tr>
+<tr class="odd">
+<td>Immediate finalised output</td>
+<td><code>"take_first"</code></td>
+</tr>
+<tr class="even">
+<td>Post-processing, right context better</td>
+<td><code>"take_last"</code></td>
+</tr>
+<tr class="odd">
+<td>Minimising boundary artefacts</td>
+<td><code>"weighted_average"</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Overlap size matters:</strong> A larger overlap gives the
+merge strategy more room to blend, reducing boundary artefacts
+regardless of the strategy chosen. A good starting point is 10% of
+<code>chunk_size</code>.</p>
+</blockquote>
 <hr>
 </div>
 <div class="section level2">
@@ -245,12 +288,12 @@ real time.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastloess_1.1.0</span></span>
+<span><span class="co">#&gt; [1] rfastloess_1.2.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
 <span><span class="co">#&gt;  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
-<span><span class="co">#&gt;  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      </span></span>
+<span><span class="co">#&gt;  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      </span></span>
 <span><span class="co">#&gt; [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
 <span><span class="co">#&gt; [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     </span></span>
 <span><span class="co">#&gt; [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>

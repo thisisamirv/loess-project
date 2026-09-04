@@ -1,7 +1,4 @@
 var searchData=
 [
-  ['_7eloess_0',['~Loess',['../classfastloess_1_1Loess.html#aba57fc6dd2703a9ce8f4558e6196b3bf',1,'fastloess::Loess']]],
-  ['_7eloessresult_1',['~LoessResult',['../classfastloess_1_1LoessResult.html#afda0f9272a5c488bc8965b8d4bbc11e5',1,'fastloess::LoessResult']]],
-  ['_7eonlineloess_2',['~OnlineLoess',['../classfastloess_1_1OnlineLoess.html#a09eb4581a98a7f7ef4eed2cf1eb3c56a',1,'fastloess::OnlineLoess']]],
-  ['_7estreamingloess_3',['~StreamingLoess',['../classfastloess_1_1StreamingLoess.html#a080c3f06f5227a803f9bc73098f51c12',1,'fastloess::StreamingLoess']]]
+  ['zero_5fweight_5ffallback_0',['zero_weight_fallback',['../structfastloess_1_1LoessOptions.html#a61d79c6825660fe9af58fb6eadf7f660',1,'fastloess::LoessOptions::zero_weight_fallback'],['../structfastloess_1_1OnlineOptions.html#afa4ea728f66b036e5bf056ff0fd3895f',1,'fastloess::OnlineOptions::zero_weight_fallback']]]
 ];

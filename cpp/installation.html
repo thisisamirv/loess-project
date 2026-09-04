@@ -36,7 +36,7 @@ MathJax.Hub.Config({
   <td id="projectalign">
    <div id="projectname">fastloess-cpp
    </div>
-   <div id="projectbrief">High-performance LOESS smoothing — C++ API</div>
+   <div id="projectbrief">High-performance LOESS smoothing</div>
   </td>
  </tr>
  </tbody>
@@ -108,14 +108,26 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="fragment"><div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-x64.so</div>
 <div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp</div>
 <div class="line">g++ -o myapp myapp.cpp -L. -lfastloess-linux-x64</div>
+</div><!-- fragment --><h2>Pre-built Binaries (Linux (ARM64))</h2>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-arm64.so</div>
+<div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp</div>
+<div class="line">g++ -o myapp myapp.cpp -L. -lfastloess-linux-arm64</div>
 </div><!-- fragment --><h2>Pre-built Binaries (macOS (x64))</h2>
 <div class="fragment"><div class="line">curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-macos-x64.dylib</div>
 <div class="line">curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp</div>
 <div class="line">clang++ -o myapp myapp.cpp -L. -lfastloess-macos-x64</div>
+</div><!-- fragment --><h2>Pre-built Binaries (macOS (ARM64))</h2>
+<div class="fragment"><div class="line">curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-macos-arm64.dylib</div>
+<div class="line">curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp</div>
+<div class="line">clang++ -o myapp myapp.cpp -L. -lfastloess-macos-arm64</div>
 </div><!-- fragment --><h2>Pre-built Binaries (Windows (x64))</h2>
 <div class="fragment"><div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess-win32-x64.dll</div>
 <div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp</div>
 <div class="line">cl myapp.cpp /link fastloess-win32-x64.lib</div>
+</div><!-- fragment --><h2>Pre-built Binaries (Windows (ARM64))</h2>
+<div class="fragment"><div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess-win32-arm64.dll</div>
+<div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp</div>
+<div class="line">cl myapp.cpp /link fastloess-win32-arm64.lib</div>
 </div><!-- fragment --><h2>From Source</h2>
 <div class="fragment"><div class="line"># Install Rust first: https://rustup.rs/</div>
 <div class="line">git clone https://github.com/thisisamirv/loess-project</div>
@@ -130,6 +142,8 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="line">#                target/release/fastloess_cpp.dll (Windows)</div>
 </div><!-- fragment --><h2>From conda-forge</h2>
 <div class="fragment"><div class="line">conda install -c conda-forge libfastloess</div>
+</div><!-- fragment --><h2>From Spack</h2>
+<div class="fragment"><div class="line">spack install fastloess-cpp</div>
 </div><!-- fragment --><hr  />
 <h2>Verify Installation</h2>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastloess_8hpp.html">fastloess.hpp</a>&gt;</span></div>
@@ -146,9 +160,9 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="line">std::cout &lt;&lt; <span class="stringliteral">&quot;Installed successfully!&quot;</span> &lt;&lt; std::endl;</div>
 <div class="line"><span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastloess_1_1Expected_html_a8d42c6a77cf5c282230aee46b48da418"><div class="ttname"><a href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">fastloess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastloess.hpp:62</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:412</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:472</div></div>
+<div class="ttc" id="aclassfastloess_1_1Expected_html_a8d42c6a77cf5c282230aee46b48da418"><div class="ttname"><a href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">fastloess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastloess.hpp:63</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:415</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:475</div></div>
 <div class="ttc" id="afastloess_8hpp_html"><div class="ttname"><a href="fastloess_8hpp.html">fastloess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLoess library.</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">Installed successfully!</div>
 </div><!-- fragment --> </div></div><!-- contents -->

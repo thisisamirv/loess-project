@@ -12,10 +12,6 @@
 
 - [Choosing an Execution
   Mode](https://thisisamirv.github.io/loess-project/r/articles/adapter-choice.md):
-- [Polynomial
-  Degree](https://thisisamirv.github.io/loess-project/r/articles/degree.md):
-- [Multivariate
-  LOESS](https://thisisamirv.github.io/loess-project/r/articles/dimensions.md):
 - [Confidence and Prediction
   Intervals](https://thisisamirv.github.io/loess-project/r/articles/intervals.md):
 - [Cross-Validation](https://thisisamirv.github.io/loess-project/r/articles/cross-validation.md):
@@ -36,6 +32,10 @@
   Handling](https://thisisamirv.github.io/loess-project/r/articles/boundary.md):
 - [Merge
   Strategies](https://thisisamirv.github.io/loess-project/r/articles/merge.md):
+- [Polynomial
+  Degree](https://thisisamirv.github.io/loess-project/r/articles/degree.md):
+- [Multivariate
+  LOESS](https://thisisamirv.github.io/loess-project/r/articles/dimensions.md):
 
 ### Use Cases
 

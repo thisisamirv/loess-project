@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,29 +35,47 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="rfastloess-development-version">rfastloess (development version)<a class="anchor" aria-label="anchor" href="#rfastloess-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.2.0" id="rfastloess-120">rfastloess 1.2.0<a class="anchor" aria-label="anchor" href="#rfastloess-120"></a></h2>
 <div class="section level3">
-<h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
-<ul><li>Consolidated every crate/binding README: merged the “Installation” and “Documentation” sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant “API Reference” and “Changelog” sections (each now has its own docs-site page), and added a “Read more” link to the Concepts page. The top-level repository README is unchanged, since it’s only ever viewed on GitHub.</li>
-<li>Renamed the batch adapter’s “When to Use” heading to “When to Use Batch Adapter” across every binding/crate’s API docs.</li>
-<li>Vendored the <a href="https://github.com/jothepro/doxygen-awesome-css" class="external-link">doxygen-awesome-css</a> theme (v2.4.2) for a modern, sidebar-only cpp Doxygen site with automatic dark mode.</li>
-<li>Added <code>dev/update_changelogs.py</code>, which regenerates a per-binding/crate <code>NEWS.md</code>/<code>news.md</code> from the root <code>CHANGELOG.md</code>. Wired into every docs site’s navigation, the Rust crates’ rustdoc module tree, and every <code>Makefile</code> <code>dev</code> target.</li>
-<li>Replaced <code>kernels.md</code>’s “Choosing a Kernel” mermaid flowchart (every binding/crate) with an equivalent decision table, since Doxygen and rustdoc don’t render mermaid and the deeply-nested diamond chain was hard to read even where it did render.</li>
-<li>Replaced <code>adapter-choice.md</code>/<code>adapters.md</code>’s “Overview” flowchart (mermaid in most bindings/crates, ASCII art in the C++ docs) with an equivalent decision table, unifying on a single rendering-agnostic format across every binding/crate.</li>
-<li>Consolidated <code>parameters.md</code>/the auto-generated <code>@autodocs</code> parameter reference across every binding and crate (C++, Julia, Node.js, Python, WASM, <code>fastLoess</code>, <code>loess-rs</code>): merged its unique content (fraction/iterations choice guidance, and inline <code>zero_weight_fallback</code>/<code>surface_mode</code> behavior tables) into each <code>api.md</code>’s builder/options tables (Julia: into the <code>Loess</code>/<code>StreamingLoess</code>/<code>OnlineLoess</code> docstrings), and removed <code>parameters.md</code> itself along with its docs-site navigation entries, <code>doc::parameters</code> rustdoc module, and cross-references (now pointing at <code>api.md</code>) — the parameter tables, kernel/robustness/boundary/scaling/degree/distance-metric option lists, and interval/custom-weights code examples it duplicated already live on their own dedicated pages.</li>
-<li>Removed the <code>rfastloess-package</code> pkgdown topic, which duplicated the adapter class list, and unexported the internal <code>Nullable()</code> helper.</li>
-<li>Fixed <code>_pkgdown.yml</code> describing the core interface as “R6 classes” when the package actually uses S3 classes.</li>
-<li>Merged <code>vignettes/parameters.Rmd</code>’s parameter reference (ranges, defaults, and fraction-choice guidance) into the <code>@param</code>/<code>@details</code> roxygen docs of <code><a href="../reference/Loess.html">Loess()</a></code>, <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, and <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>, and removed the now-redundant vignette.</li>
-<li>Merged <code>vignettes/batch.Rmd</code>, <code>streaming.Rmd</code>, and <code>online.Rmd</code>’s unique content (When to Use guidance, merge strategy comparison) into the <code>@description</code>/<code>@details</code> roxygen docs of <code><a href="../reference/Loess.html">Loess()</a></code>, <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, and <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>, and removed the now-redundant vignettes and their orphaned <code>gap_handling.svg</code>/<code>online_comparison.svg</code> diagrams.</li>
+<h3 id="added-1-2-0">Added<a class="anchor" aria-label="anchor" href="#added-1-2-0"></a></h3>
+<ul><li>Added <code>dev/bump_version.py --version X.Y.Z</code> to bump every crate/binding’s version files, <code>CITATION.cff</code>, and the Spack recipe in one pass (supports <code>--dry-run</code>).</li>
+<li>Added <code>dev/check_pinned_versions.py</code> and a weekly <code>check-versions.yml</code> to catch hardcoded version pins that Dependabot can’t see.</li>
+<li>Added <code>.github/dependabot.yml</code>, covering every dependency ecosystem, grouped per directory into a single weekly PR.</li>
+<li>Added an optional <code>commit</code> input to every release workflow’s <code>workflow_dispatch</code> trigger, to pin the built commit for manual runs.</li>
+<li>Added <code>dev/check_links.py</code> to validate every Markdown cross-reference link across all docs.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
-<ul><li>Fixed <code>docs.yml</code> triggering GitHub’s “pages build and deployment” once per docs job; per-language jobs now upload artifacts, and a single final <code>deploy</code> job pushes to <code>gh-pages</code> once per run.</li>
-<li>Fixed <code>docs.yml</code>’s reliance on GitHub’s legacy branch-based Pages deployment, which auto-triggers an unpinned, GitHub-managed “pages build and deployment” job on every <code>gh-pages</code> push (surfacing deprecation warnings, e.g. for Node.js 20, that aren’t fixable from this repo). The former <code>deploy</code> job is now <code>build</code>, which still pushes the merged <code>_site</code> to <code>gh-pages</code> as a cache for future incremental runs, but publishing now goes through <code>actions/upload-pages-artifact</code> and a new <code>deploy</code> job using the official <code>actions/deploy-pages</code>, which this repo pins directly. Requires the repository’s Pages source to be switched to “GitHub Actions” in settings.</li>
-<li>Fixed the “Handling Outliers” quickstart example (every binding and the <code>loess-rs</code>/<code>fastLoess</code> crates) printing nothing: with only 6 points and <code>fraction = 0.5</code>, the local window is small enough that tricube weighting drives the farthest neighbor’s weight to ~0, leaving just 2 effectively-weighted points, which a degree-1 fit reproduces exactly (zero residual, no downweighting) — confirmed directly against the <code>lowess</code>/<code>loess</code> core, not binding-specific. Bumped to <code>fraction = 0.7</code>, which correctly downweights the injected outlier.</li>
-<li>Fixed the R <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> roxygen example printing one line per point (48 lines for a 50-point loop); it now collects the smoothed values and prints only <code>head(smoothed, 5)</code>.</li>
-<li>Fixed the R <code><a href="../reference/add_point.html">add_point()</a></code> roxygen example always printing <code>NULL</code>, since a single call never reaches the default <code>min_points = 3</code>; it now uses <code>min_points = 2L</code> and shows the second (non-<code>NULL</code>) call’s result.</li>
-<li>Fixed the Julia <code>intervals.md</code> “Confidence Intervals” and “Standard Errors” examples each looping over all 100 points instead of a short sample; switched to <code>result.y[1:5]</code>/<code>result.confidence_lower[1:5]</code>/<code>result.standard_errors[1:5]</code>-style slicing, matching the already-concise Python version.</li>
+<h3 id="changed-1-2-0">Changed<a class="anchor" aria-label="anchor" href="#changed-1-2-0"></a></h3>
+<ul><li>Added a <code>large</code> benchmark category (exact-fit, high-iteration, high-fraction) to the R/Rust benchmarks.</li>
+<li>Merged the standalone <code>dev/add-{cpp,rust,nodejs,wasm}-outputs</code> scripts into <code>dev/verify_snippets.py --update-outputs</code>.</li>
+<li>Replaced Unicode super/subscript stand-ins (<code>R²</code>, <code>xᵢ</code>, etc.) with plain ASCII throughout docs, READMEs, and Rust comments, also catching some leftover mojibake.</li>
+<li>Added <code>dev/add-readme-to-docs.py</code> to auto-embed <code>README.md</code> as the docs homepage (Starlight/Sphinx-aware); not yet wired into Python’s <code>Makefile</code>.</li>
+<li>Harmonized the docs-site directory structure across every binding/crate, and fixed doc-tooling scripts that missed snippets in the newly-nested pages.</li>
+<li>Consolidated every README: merged Installation/Documentation sections, dropped GitHub-only alert syntax, and removed sections now covered by dedicated docs-site pages.</li>
+<li>Renamed “When to Use” to “When to Use Batch Adapter” across every binding’s API docs.</li>
+<li>Vendored doxygen-awesome-css v2.4.2 for a modern cpp Doxygen theme.</li>
+<li>Added <code>dev/update_changelogs.py</code> to regenerate each binding/crate’s <code>NEWS.md</code>/<code>news.md</code> from the root changelog.</li>
+<li>Replaced the <code>kernels.md</code>/<code>adapter-choice.md</code> mermaid flowcharts with rendering-agnostic tables (Doxygen/rustdoc don’t render mermaid).</li>
+<li>Consolidated <code>parameters.md</code>/<code>@autodocs</code> into each <code>api.md</code>’s option tables, removing <code>parameters.md</code>.</li>
+<li>Removed the redundant <code>rfastloess-package</code> pkgdown topic and the internal <code>Nullable()</code> helper.</li>
+<li>Fixed <code>_pkgdown.yml</code> mislabeling the S3-based interface as “R6 classes”.</li>
+<li>Merged <code>parameters.Rmd</code>/<code>batch.Rmd</code>/<code>streaming.Rmd</code>/<code>online.Rmd</code> into the constructors’ roxygen docs, removing the now-redundant vignettes.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-1-2-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-1-2-0"></a></h3>
+<ul><li>Fixed the R benchmark script calling <code>fit</code> as a field instead of the S3 generic <code>fit(model, x, y)</code>.</li>
+<li>Fixed <code>release-conda.yml</code>’s version-line <code>sed</code> pattern to match any indentation.</li>
+<li>Fixed benchmark vendoring nulling every crate’s checksum instead of just the two local path crates.</li>
+<li>Fixed the benchmark README’s inaccurate “Iterations” scenario count.</li>
+<li>Fixed <code>docs.yml</code>’s Pages deployment: merged per-language jobs into one artifact upload/deploy job, using <code>upload/deploy-pages</code> actions instead of legacy branch-based deployment.</li>
+<li>Fixed 51 broken doc cross-reference links left over from the docs-site restructure (found via new <code>dev/check_links.py</code>).</li>
+<li>Fixed several <code>OnlineLoess</code>/<code>StreamingLoess</code> defaults silently diverging from every binding’s docs and actual behavior: <code>min_points</code> (was 3, now 2), <code>update_mode</code> (was <code>"full"</code>, now <code>"incremental"</code>), and the internal robustness-iteration defaults (streaming 2→3, online 1→3) that only the Rust crates’ bare prelude API could ever see.</li>
+<li>Fixed the “Handling Outliers” quickstart example printing nothing with only 6 points at <code>fraction = 0.5</code>; bumped to <code>0.7</code> so the outlier is actually downweighted.</li>
+<li>Fixed two R roxygen examples: <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> printing 48 lines instead of a <code>head(smoothed, 5)</code> sample, and <code><a href="../reference/add_point.html">add_point()</a></code> always printing <code>NULL</code> due to the default <code>min_points</code>.</li>
+<li>Fixed Julia’s <code>intervals.md</code> examples looping over all 100 points instead of a short sample, matching the concise Python version.</li>
+<li>Reformatted <code>configure</code> to tabs and fixed <code>.Rbuildignore</code> missing exclusions.</li>
+<li>Removed the empty <code>R/params.R</code> stub and simplified <code><a href="../reference/plot.LoessResult.html">plot.LoessResult()</a></code> to return <code>NULL</code> invisibly.</li>
+<li>Inlined the <code>.make_*</code> constructor helpers, and consolidated <code>utils.R</code>’s parameter validators into two generic helpers.</li>
 </ul></div>
 </div>
     <div class="section level2">

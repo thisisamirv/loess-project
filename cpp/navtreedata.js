@@ -27,20 +27,19 @@ var NAVTREE =
   [ "fastloess-cpp", "index.html", [
     [ "Advanced", "advanced.html", [
       [ "Boundary Handling", "boundary.html", null ],
-      [ "Merge Strategies", "merge.html", null ]
+      [ "Merge Strategies", "merge.html", null ],
+      [ "Polynomial Degree", "degree.html", null ],
+      [ "Multivariate LOESS", "dimensions.html", null ]
     ] ],
     [ "API", "api.html", [
       [ "StreamingLoess API", "api_streaming.html", null ],
       [ "OnlineLoess API", "api_online.html", null ]
     ] ],
     [ "Benchmarks", "benchmarks.html", null ],
-    [ "Customization", "customization.html", [
-      [ "Weight Functions", "kernels.html", null ],
-      [ "Robustness", "robustness.html", null ],
-      [ "Scaling Methods", "scaling.html", null ],
-      [ "Custom Weights", "custom_weights.html", null ],
-      [ "Polynomial Degree", "degree.html", null ],
-      [ "Multivariate LOESS", "dimensions.html", null ]
+    [ "User Guide", "user_guide.html", [
+      [ "Execution Modes", "adapter_choice.html", null ],
+      [ "Intervals", "intervals.html", null ],
+      [ "Cross-Validation", "cross_validation.html", null ]
     ] ],
     [ "Getting Started", "getting_started.html", [
       [ "Installation", "installation.html", null ],
@@ -48,15 +47,16 @@ var NAVTREE =
       [ "Concepts", "concepts.html", null ]
     ] ],
     [ "News", "news.html", null ],
-    [ "Use Cases", "use_cases.html", [
+    [ "Use Cases", "use_case.html", [
       [ "Genomic Data Smoothing", "use_case_genomics.html", null ],
       [ "Time Series Analysis", "use_case_time_series.html", null ],
       [ "Real-Time Processing", "use_case_real_time.html", null ]
     ] ],
-    [ "User Guide", "user_guide.html", [
-      [ "Execution Modes", "adapter_choice.html", null ],
-      [ "Intervals", "intervals.html", null ],
-      [ "Cross-Validation", "cross_validation.html", null ]
+    [ "Weight & Robustness", "weighting.html", [
+      [ "Weight Functions", "kernels.html", null ],
+      [ "Robustness", "robustness.html", null ],
+      [ "Scaling Methods", "scaling.html", null ],
+      [ "Custom Weights", "custom_weights.html", null ]
     ] ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
@@ -85,7 +85,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "adapter_choice.html",
-"structfastloess_1_1LoessOptions.html#a61d79c6825660fe9af58fb6eadf7f660"
+"structfastloess_1_1LoessOptions.html#a4a6c82009faa2d814982cdaa2615ae10"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

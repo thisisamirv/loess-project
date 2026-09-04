@@ -11,13 +11,13 @@ Source:
 [`inst/CITATION`](https://github.com/thisisamirv/loess-project/blob/main/inst/CITATION)
 
 Valizadeh A (2025). *High-Performance LOESS Smoothing for R*. R package
-version 1.1.0, <https://github.com/thisisamirv/loess-project>.
+version 1.2.0, <https://github.com/thisisamirv/loess-project>.
 
     @Manual{,
       title = {High-Performance LOESS Smoothing for R},
       author = {Amir Valizadeh},
       year = {2025},
-      note = {R package version 1.1.0},
+      note = {R package version 1.2.0},
       url = {https://github.com/thisisamirv/loess-project},
     }
 
@@ -85,6 +85,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Lokathor <zefria@gmail.com>
     License: Zlib OR Apache-2.0 OR MIT
     ----------------------------------------
+    Package: bytes (1.12.1)
+    Authors: Carl Lerche <me@carllerche.com>, Sean McArthur <sean@seanmonstar.com>
+    License: MIT
+    ----------------------------------------
     Package: cast (0.3.0)
     Authors: Jorge Aparicio <jorge@japaric.io>
     License: MIT OR Apache-2.0
@@ -116,6 +120,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Package: colorchoice (1.0.5)
     Authors:
     License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: combine (4.6.8)
+    Authors: Markus Westerlind <marwes91@gmail.com>
+    License: MIT
     ----------------------------------------
     Package: console_error_panic_hook (0.1.7)
     Authors: Nick Fitzgerald <fitzgen@gmail.com>
@@ -223,6 +231,22 @@ Scatterplots.” *Journal of the American Statistical Association*,
     ----------------------------------------
     Package: itoa (1.0.18)
     Authors: David Tolnay <dtolnay@gmail.com>
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: jni (0.22.4)
+    Authors: jni team
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: jni-macros (0.22.4)
+    Authors:
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: jni-sys (0.4.1)
+    Authors: Steven Fackler <sfackler@gmail.com>, Robert Bragg <robert@sixbynine.org>
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: jni-sys-macros (0.4.1)
+    Authors: Robert Bragg <robert@sixbynine.org>
     License: MIT OR Apache-2.0
     ----------------------------------------
     Package: js-sys (0.3.104)
@@ -393,6 +417,10 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: The Rust Project Developers
     License: Apache-2.0 OR MIT
     ----------------------------------------
+    Package: rustc_version (0.4.1)
+    Authors:
+    License: MIT OR Apache-2.0
+    ----------------------------------------
     Package: rustix (1.1.4)
     Authors: Dan Gohman <dev@sunfishcode.online>, Jakub Konka <kubkon@jakubkonka.com>
     License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
@@ -445,6 +473,14 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: sebcrozet <developer@crozet.re>
     License: Apache-2.0
     ----------------------------------------
+    Package: simd_cesu8 (1.2.0)
+    Authors: Sean C. Roach <me@seancroach.dev>
+    License: Apache-2.0 OR MIT
+    ----------------------------------------
+    Package: simdutf8 (0.1.5)
+    Authors: Hans Kratz <hans@appfour.com>
+    License: MIT OR Apache-2.0
+    ----------------------------------------
     Package: slab (0.4.12)
     Authors: Carl Lerche <me@carllerche.com>
     License: MIT
@@ -463,6 +499,14 @@ Scatterplots.” *Journal of the American Statistical Association*,
     ----------------------------------------
     Package: tempfile (3.27.0)
     Authors: Steven Allen <steven@stebalien.com>, The Rust Project Developers, Ashley Mannix <ashleymannix@live.com.au>, Jason White <me@jasonwhite.io>
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: thiserror (2.0.20)
+    Authors: David Tolnay <dtolnay@gmail.com>
+    License: MIT OR Apache-2.0
+    ----------------------------------------
+    Package: thiserror-impl (2.0.20)
+    Authors: David Tolnay <dtolnay@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
     Package: toml (0.9.12+spec-1.1.0)

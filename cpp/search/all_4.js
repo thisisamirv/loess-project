@@ -1,9 +1,12 @@
 var searchData=
 [
-  ['effective_5fdf_0',['effective_df',['../classfastloess_1_1Diagnostics.html#aebc5b72ce3f41e69ab3025f46dba54d8',1,'fastloess::Diagnostics']]],
-  ['enp_1',['enp',['../classfastloess_1_1LoessResult.html#abfbc8a27ad24b2e4574201f75f8cec45',1,'fastloess::LoessResult']]],
-  ['error_2',['error',['../classfastloess_1_1Expected.html#a08435a873803c3c9a95a273889a08e5f',1,'fastloess::Expected::error()'],['../classfastloess_1_1LoessResult.html#ae0f541f5dcfe5a3dbb943654c9f510fa',1,'fastloess::LoessResult::error()']]],
-  ['errortag_3',['ErrorTag',['../structfastloess_1_1Expected_1_1ErrorTag.html',1,'fastloess::Expected']]],
-  ['execution_20modes_4',['Execution Modes',['../adapter_choice.html',1,'user_guide']]],
-  ['expected_5',['expected',['../classfastloess_1_1Expected.html',1,'fastloess::Expected&lt; T &gt;'],['../classfastloess_1_1OnlineOutput.html#a815f6718ecaf8321aab0587f5e62d048',1,'fastloess::OnlineOutput::Expected'],['../classfastloess_1_1Expected.html#ae3a243adc18bc220b86cb5d913f7e565',1,'fastloess::Expected::Expected()']]]
+  ['data_20smoothing_0',['Genomic Data Smoothing',['../use_case_genomics.html',1,'use_case']]],
+  ['degree_1',['degree',['../structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc',1,'fastloess::LoessOptions::degree'],['../structfastloess_1_1OnlineOptions.html#a0ef0d2a76392b4704a051e1a1669adfd',1,'fastloess::OnlineOptions::degree'],['../degree.html',1,'Polynomial Degree']]],
+  ['degree_2emd_2',['degree.md',['../degree_8md.html',1,'']]],
+  ['delta1_3',['delta1',['../classfastloess_1_1LoessResult.html#a8675e65bb90b8177b8c46cccc8d55ad0',1,'fastloess::LoessResult']]],
+  ['delta2_4',['delta2',['../classfastloess_1_1LoessResult.html#af8d0f6d7b9f75c5ce81a80253c60cb44',1,'fastloess::LoessResult']]],
+  ['diagnostics_5',['diagnostics',['../classfastloess_1_1Diagnostics.html#aa692aa60715ef77210075acc26283000',1,'fastloess::Diagnostics::Diagnostics()=default'],['../classfastloess_1_1Diagnostics.html#aa1fe8cec6b1adb46fb1451f7052f530a',1,'fastloess::Diagnostics::Diagnostics(const fastloess_CppLoessResult &amp;result)'],['../classfastloess_1_1LoessResult.html#ac8a3fcf5f9d70733c405dfa88cdabea3',1,'fastloess::LoessResult::diagnostics()'],['../classfastloess_1_1Diagnostics.html',1,'fastloess::Diagnostics']]],
+  ['dimensions_6',['dimensions',['../structfastloess_1_1LoessOptions.html#a4b136efcebfc6170575c896083b78708',1,'fastloess::LoessOptions::dimensions'],['../structfastloess_1_1OnlineOptions.html#a555ef64b30df5ebc704abfecc78a25b1',1,'fastloess::OnlineOptions::dimensions'],['../classfastloess_1_1LoessResult.html#ad3179819aa89dabb280bc2f17ddc45df',1,'fastloess::LoessResult::dimensions()']]],
+  ['dimensions_2emd_7',['dimensions.md',['../dimensions_8md.html',1,'']]],
+  ['distance_5fmetric_8',['distance_metric',['../structfastloess_1_1LoessOptions.html#afa69867ebb3910666a4b4fa836a016ae',1,'fastloess::LoessOptions::distance_metric'],['../structfastloess_1_1OnlineOptions.html#aa62938e243e0a33307032d4855edad78',1,'fastloess::OnlineOptions::distance_metric']]]
 ];

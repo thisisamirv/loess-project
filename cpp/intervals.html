@@ -36,7 +36,7 @@ MathJax.Hub.Config({
   <td id="projectalign">
    <div id="projectname">fastloess-cpp
    </div>
-   <div id="projectbrief">High-performance LOESS smoothing — C++ API</div>
+   <div id="projectbrief">High-performance LOESS smoothing</div>
   </td>
  </tr>
  </tbody>
@@ -110,7 +110,7 @@ $(document).ready(function(){initNavTree('intervals.html',''); initResizable(); 
 <div class="caption">
 Confidence and Prediction Intervals</div></div>
     <blockquote class="doxtable">
-<p>&zwj;<b>Adapter support:</b> Confidence and prediction intervals are available in <b>all three adapters</b>: Batch, Streaming, and Online. </p>
+<p>&zwj;<b>Adapter support:</b> Confidence and prediction intervals are available in <b>Batch</b> mode only. Streaming and Online modes do not support intervals. </p>
 </blockquote>
 <table class="markdownTable">
 <tr class="markdownTableHead">
@@ -145,9 +145,9 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastloess_1_1Expected_html_a8d42c6a77cf5c282230aee46b48da418"><div class="ttname"><a href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">fastloess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastloess.hpp:62</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:412</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:472</div></div>
+<div class="ttc" id="aclassfastloess_1_1Expected_html_a8d42c6a77cf5c282230aee46b48da418"><div class="ttname"><a href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">fastloess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastloess.hpp:63</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:415</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:475</div></div>
 <div class="ttc" id="afastloess_8hpp_html"><div class="ttname"><a href="fastloess_8hpp.html">fastloess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLoess library.</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.256958, 0.397793]</div>
 </div><!-- fragment --><hr  />
@@ -166,13 +166,13 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">        y[i] = std::sin(x[i]) + 0.1;</div>
 <div class="line">    }</div>
 <div class="line"> </div>
-<div class="line">    <a class="code hl_class" href="classfastloess_1_1Loess.html">fastloess::Loess</a> model({ .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95 });</div>
+<div class="line">    <a class="code hl_class" href="classfastloess_1_1Loess.html">fastloess::Loess</a> model({ .fraction = 0.5, .prediction_intervals = 0.95 });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).<a class="code hl_function" href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">value</a>();</div>
 <div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Prediction bounds: [&quot;</span> &lt;&lt; result.prediction_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.prediction_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.256958, 0.397793]</div>
+</div><!-- fragment --><div class="fragment"><div class="line">Prediction bounds: [-0.0363338, 0.691085]</div>
 </div><!-- fragment --><hr  />
 <h2>Both Intervals</h2>
 <p>Request both types simultaneously:</p>
@@ -225,10 +225,10 @@ Confidence and Prediction Intervals</div></div>
 <div class="line">    <a class="code hl_class" href="classfastloess_1_1Loess.html">fastloess::Loess</a> model({ .confidence_intervals = 0.99 });</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).<a class="code hl_function" href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">value</a>();</div>
 <div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;95% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
+<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;99% CI: [&quot;</span> &lt;&lt; result.confidence_lower()[0] &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; result.confidence_upper()[0] &lt;&lt; <span class="stringliteral">&quot;]\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">95% CI: [0.233031, 0.537273]</div>
+</div><!-- fragment --><div class="fragment"><div class="line">99% CI: [0.233031, 0.537273]</div>
 </div><!-- fragment --><hr  />
 <h2>Standard Errors</h2>
 <p>Access standard errors directly (available when intervals are computed):</p>

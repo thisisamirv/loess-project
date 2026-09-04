@@ -8,33 +8,33 @@ sliding window and processes each incoming point immediately via
 
 ``` r
 OnlineLoess(
-  fraction = 0.67,
-  window_capacity = 1000L,
-  min_points = 3L,
-  ...,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  update_mode = "full",
-  auto_converge = NULL,
-  return_robustness_weights = FALSE,
-  return_diagnostics = FALSE,
-  return_residuals = FALSE,
-  zero_weight_fallback = "use_local_mean",
-  parallel = FALSE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  return_se = FALSE,
-  confidence_intervals = NULL,
-  prediction_intervals = NULL,
-  weighted_metric_weights = NULL,
-  cell = NULL,
-  interpolation_vertices = NULL,
-  boundary_degree_fallback = NULL
+    fraction = 0.67,
+    window_capacity = 1000L,
+    min_points = 2L,
+    ...,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
+    update_mode = "incremental",
+    auto_converge = NULL,
+    return_robustness_weights = FALSE,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    parallel = FALSE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    return_se = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL
 )
 ```
 
@@ -53,7 +53,7 @@ OnlineLoess(
 - min_points:
 
   Minimum number of points required before smoothing begins, between 2
-  and `window_capacity`. Default: 3.
+  and `window_capacity`. Default: 2.
 
 - ...:
 
@@ -89,11 +89,18 @@ OnlineLoess(
   `"reflect"` (alias: `"mirror"`), `"zero"`, or `"noboundary"` (alias:
   `"none"`).
 
+- zero_weight_fallback:
+
+  Fallback policy when all robustness weights drop to zero:
+  `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`),
+  `"return_original"` (alias: `"original"`), or `"return_none"` (alias:
+  `"none"`).
+
 - update_mode:
 
-  Window update strategy: `"full"` (default; alias: `"resmooth"`)
-  re-smooths all window points after each addition; `"incremental"`
-  (alias: `"single"`) updates only the newest point.
+  Window update strategy: `"incremental"` (default; alias: `"single"`)
+  updates only the newest point; `"full"` (alias: `"resmooth"`)
+  re-smooths all window points after each addition.
 
 - auto_converge:
 
@@ -113,13 +120,6 @@ OnlineLoess(
 - return_residuals:
 
   Logical; if `TRUE`, return residuals in the result. Default: `FALSE`.
-
-- zero_weight_fallback:
-
-  Fallback policy when all robustness weights drop to zero:
-  `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`),
-  `"return_original"` (alias: `"original"`), or `"return_none"` (alias:
-  `"none"`).
 
 - parallel:
 
@@ -206,5 +206,5 @@ for (i in seq_along(x)) {
     if (!is.null(result)) smoothed <- c(smoothed, result$y)
 }
 head(smoothed, 5)
-#> [1] 0.1898465 0.3098642 0.3037980 0.4955887 0.5883635
+#> [1] 0.1201261 0.1898465 0.3098642 0.3037980 0.4955887
 ```

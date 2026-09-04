@@ -1,8 +1,6 @@
 var searchData=
 [
-  ['weight_20functions_0',['Weight Functions',['../kernels.html',1,'customization']]],
-  ['weight_5ffunction_1',['weight_function',['../structfastloess_1_1LoessOptions.html#a5158756d51ab7523e2151eddeb8c465e',1,'fastloess::LoessOptions::weight_function'],['../structfastloess_1_1OnlineOptions.html#af2bfcf51695223edb346d21ccb3b5399',1,'fastloess::OnlineOptions::weight_function']]],
-  ['weighted_5fmetric_5fweights_2',['weighted_metric_weights',['../structfastloess_1_1LoessOptions.html#a43b259baa804c25879bfbc3c371b854b',1,'fastloess::LoessOptions::weighted_metric_weights'],['../structfastloess_1_1OnlineOptions.html#aa66bd7d32f0c35993990a5425697b712',1,'fastloess::OnlineOptions::weighted_metric_weights']]],
-  ['weights_3',['Custom Weights',['../custom_weights.html',1,'customization']]],
-  ['window_5fcapacity_4',['window_capacity',['../structfastloess_1_1OnlineOptions.html#a277ba38ed5f101d0a678ceaee011a179',1,'fastloess::OnlineOptions']]]
+  ['valid_0',['valid',['../classfastloess_1_1LoessResult.html#a8174edf3e71ffda61d3e1213387e4f05',1,'fastloess::LoessResult']]],
+  ['validation_1',['Cross-Validation',['../cross_validation.html',1,'user_guide']]],
+  ['value_2',['value',['../classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418',1,'fastloess::Expected::value() &amp;'],['../classfastloess_1_1Expected.html#a4bf36dc02f3e9050c043b5ef94a6b215',1,'fastloess::Expected::value() const &amp;'],['../classfastloess_1_1Expected.html#ad8958a19728964670c33133afee0faa2',1,'fastloess::Expected::value() &amp;&amp;']]]
 ];

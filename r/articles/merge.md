@@ -26,39 +26,6 @@ Merge strategy comparison
 
 ------------------------------------------------------------------------
 
-## Weighted Average (Default)
-
-Assigns each overlap point a weight proportional to its proximity to the
-centre of its respective chunk: points near the left-chunk centre favour
-the left estimate; points near the right-chunk centre favour the right.
-Minimises boundary artefacts.
-
-**Use when**: Minimising boundary artefacts is more important than
-speed; moderate overlap (10–20% of chunk size) is used.
-
-``` r
-
-library(rfastloess)
-set.seed(42)
-x <- seq(0, 2 * pi, length.out = 100)
-y <- sin(x) + rnorm(100, sd = 0.3)
-x_chunk <- x[seq_len(50)]
-y_chunk <- y[seq_len(50)]
-
-model <- StreamingLoess(
-    merge_strategy = "weighted_average",
-    chunk_size = 5000,
-    overlap = 500
-)
-result <- process_chunk(model, x_chunk, y_chunk)
-cat("First 6 smoothed values (weighted_average strategy):\n")
-#> First 6 smoothed values (weighted_average strategy):
-print(head(result$y))
-#> numeric(0)
-```
-
-------------------------------------------------------------------------
-
 ## Average
 
 Takes the arithmetic mean of the left-chunk and right-chunk estimates in
@@ -70,16 +37,24 @@ density.
 
 ``` r
 
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
 model <- StreamingLoess(
     merge_strategy = "average",
-    chunk_size = 5000,
-    overlap = 500
+    chunk_size = 60,
+    overlap = 20
 )
-result <- process_chunk(model, x_chunk, y_chunk)
-cat("First 6 smoothed values (average strategy):\n")
-#> First 6 smoothed values (average strategy):
-print(head(result$y))
-#> numeric(0)
+invisible(process_chunk(model, x[1:60], y[1:60]))
+# The second chunk's overlap region (its first 20 points) is where
+# merge_strategy actually blends the two chunks' estimates.
+result <- process_chunk(model, x[61:100], y[61:100])
+cat("Merged value in overlap region (average):\n")
+#> Merged value in overlap region (average):
+print(result$y[6])
+#> [1] 0.2286069
 ```
 
 ------------------------------------------------------------------------
@@ -96,14 +71,15 @@ right-chunk estimate. Produces a left-flush output.
 
 model <- StreamingLoess(
     merge_strategy = "take_first",
-    chunk_size = 5000,
-    overlap = 500
+    chunk_size = 60,
+    overlap = 20
 )
-result <- process_chunk(model, x_chunk, y_chunk)
-cat("First 6 smoothed values (take_first strategy):\n")
-#> First 6 smoothed values (take_first strategy):
-print(head(result$y))
-#> numeric(0)
+invisible(process_chunk(model, x[1:60], y[1:60]))
+result <- process_chunk(model, x[61:100], y[61:100])
+cat("Merged value in overlap region (take_first):\n")
+#> Merged value in overlap region (take_first):
+print(result$y[6])
+#> [1] 0.236299
 ```
 
 ------------------------------------------------------------------------
@@ -121,15 +97,59 @@ post-processing complete data rather than streaming in real time.
 
 model <- StreamingLoess(
     merge_strategy = "take_last",
-    chunk_size = 5000,
-    overlap = 500
+    chunk_size = 60,
+    overlap = 20
 )
-result <- process_chunk(model, x_chunk, y_chunk)
-cat("First 6 smoothed values (take_last strategy):\n")
-#> First 6 smoothed values (take_last strategy):
-print(head(result$y))
-#> numeric(0)
+invisible(process_chunk(model, x[1:60], y[1:60]))
+result <- process_chunk(model, x[61:100], y[61:100])
+cat("Merged value in overlap region (take_last):\n")
+#> Merged value in overlap region (take_last):
+print(result$y[6])
+#> [1] 0.2209148
 ```
+
+------------------------------------------------------------------------
+
+## Weighted Average
+
+Assigns each overlap point a weight proportional to its proximity to the
+centre of its respective chunk: points near the left-chunk centre favour
+the left estimate; points near the right-chunk centre favour the right.
+Minimises boundary artefacts.
+
+**Use when**: Minimising boundary artefacts is more important than
+speed; moderate overlap (10–20% of chunk size) is used.
+
+``` r
+
+model <- StreamingLoess(
+    merge_strategy = "weighted_average",
+    chunk_size = 60,
+    overlap = 20
+)
+invisible(process_chunk(model, x[1:60], y[1:60]))
+result <- process_chunk(model, x[61:100], y[61:100])
+cat("Merged value in overlap region (weighted_average):\n")
+#> Merged value in overlap region (weighted_average):
+print(result$y[6])
+#> [1] 0.232453
+```
+
+------------------------------------------------------------------------
+
+## Choosing a Strategy
+
+| Situation                             | Recommended Strategy |
+|---------------------------------------|----------------------|
+| General purpose                       | `"weighted_average"` |
+| Maximum throughput                    | `"average"`          |
+| Immediate finalised output            | `"take_first"`       |
+| Post-processing, right context better | `"take_last"`        |
+| Minimising boundary artefacts         | `"weighted_average"` |
+
+> **Overlap size matters:** A larger overlap gives the merge strategy
+> more room to blend, reducing boundary artefacts regardless of the
+> strategy chosen. A good starting point is 10% of `chunk_size`.
 
 ------------------------------------------------------------------------
 
@@ -177,12 +197,12 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.1.0
+#> [1] rfastloess_1.2.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
 #>  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-#>  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
+#>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     
 #> [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   

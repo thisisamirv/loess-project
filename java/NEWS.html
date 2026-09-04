@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>News :: fastloess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/NEWS.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="./_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/loess-project/java">fastloess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="index.html">fastloess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="index.html">fastloess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/cross-validation.html">Cross-Validation</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api-streaming.html">StreamingLoess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api-online.html">OnlineLoess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/degree.html">Polynomial Degree</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/dimensions.html">Multivariate LOESS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/merge.html">Merge Strategies</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastloess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="index.html">fastloess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">fastloess (Java)</a></li>
+    <li><a href="NEWS.html">News</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="https://github.com/thisisamirv/loess-project/edit/main/bindings/java/docs/modules/ROOT/pages/NEWS.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">News</h1>
+<div class="sect1">
+<h2 id="fastloess-java-1-2-0"><a class="anchor" href="#fastloess-java-1-2-0"></a>fastloess (Java) 1.2.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="added"><a class="anchor" href="#added"></a>Added</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Added <code>dev/bump_version.py --version X.Y.Z</code> to bump every crate/binding&#8217;s version files, <code>CITATION.cff</code>, and the Spack recipe in one pass (supports <code>--dry-run</code>).</p>
+</li>
+<li>
+<p>Added <code>dev/check_pinned_versions.py</code> and a weekly <code>check-versions.yml</code> to catch hardcoded version pins that Dependabot can&#8217;t see.</p>
+</li>
+<li>
+<p>Added <code>.github/dependabot.yml</code>, covering every dependency ecosystem, grouped per directory into a single weekly PR.</p>
+</li>
+<li>
+<p>Added an optional <code>commit</code> input to every release workflow&#8217;s <code>workflow_dispatch</code> trigger, to pin the built commit for manual runs.</p>
+</li>
+<li>
+<p>Added <code>dev/check_links.py</code> to validate every Markdown cross-reference link across all docs.</p>
+</li>
+<li>
+<p>Added a new Java binding (<code>bindings/java</code>): JNI-based <code>fastloess</code> Maven package with <code>Loess</code>/<code>StreamingLoess</code>/<code>OnlineLoess</code> classes (including LOESS-specific options like <code>degree</code>, <code>dimensions</code>, <code>distanceMetric</code>, <code>surfaceMode</code>, plus hat-matrix stats via <code>Result.hatMatrix()</code>), an Antora docs site, CI/release workflows, and full doc-snippet/test coverage.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="changed"><a class="anchor" href="#changed"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Added a <code>large</code> benchmark category (exact-fit, high-iteration, high-fraction) to the R/Rust benchmarks.</p>
+</li>
+<li>
+<p>Merged the standalone <code>dev/add-\{cpp,rust,nodejs,wasm\}-outputs</code> scripts into <code>dev/verify_snippets.py --update-outputs</code>.</p>
+</li>
+<li>
+<p>Replaced Unicode super/subscript stand-ins (<code>R²</code>, <code>xᵢ</code>, etc.) with plain ASCII throughout docs, READMEs, and Rust comments, also catching some leftover mojibake.</p>
+</li>
+<li>
+<p>Added <code>dev/add-readme-to-docs.py</code> to auto-embed <code>README.md</code> as the docs homepage (Starlight/Sphinx-aware); not yet wired into Python&#8217;s <code>Makefile</code>.</p>
+</li>
+<li>
+<p>Harmonized the docs-site directory structure across every binding/crate, and fixed doc-tooling scripts that missed snippets in the newly-nested pages.</p>
+</li>
+<li>
+<p>Consolidated every README: merged Installation/Documentation sections, dropped GitHub-only alert syntax, and removed sections now covered by dedicated docs-site pages.</p>
+</li>
+<li>
+<p>Renamed "When to Use" to "When to Use Batch Adapter" across every binding&#8217;s API docs.</p>
+</li>
+<li>
+<p>Vendored doxygen-awesome-css v2.4.2 for a modern cpp Doxygen theme.</p>
+</li>
+<li>
+<p>Added <code>dev/update_changelogs.py</code> to regenerate each binding/crate&#8217;s <code>NEWS.md</code>/<code>news.md</code> from the root changelog.</p>
+</li>
+<li>
+<p>Replaced the <code>kernels.md</code>/<code>adapter-choice.md</code> mermaid flowcharts with rendering-agnostic tables (Doxygen/rustdoc don&#8217;t render mermaid).</p>
+</li>
+<li>
+<p>Consolidated <code>parameters.md</code>/<code>@autodocs</code> into each <code>api.md&#8217;s option tables, removing `parameters.md</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fixed"><a class="anchor" href="#fixed"></a>Fixed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Fixed the R benchmark script calling <code>fit</code> as a field instead of the S3 generic <code>fit(model, x, y)</code>.</p>
+</li>
+<li>
+<p>Fixed <code>release-conda.yml&#8217;s version-line `sed</code> pattern to match any indentation.</p>
+</li>
+<li>
+<p>Fixed benchmark vendoring nulling every crate&#8217;s checksum instead of just the two local path crates.</p>
+</li>
+<li>
+<p>Fixed the benchmark README&#8217;s inaccurate "Iterations" scenario count.</p>
+</li>
+<li>
+<p>Fixed <code>docs.yml&#8217;s Pages deployment: merged per-language jobs into one artifact upload/deploy job, using `upload/deploy-pages</code> actions instead of legacy branch-based deployment.</p>
+</li>
+<li>
+<p>Fixed 51 broken doc cross-reference links left over from the docs-site restructure (found via new <code>dev/check_links.py</code>).</p>
+</li>
+<li>
+<p>Fixed several <code>OnlineLoess</code>/<code>StreamingLoess</code> defaults silently diverging from every binding&#8217;s docs and actual behavior: <code>min_points</code> (was 3, now 2), <code>update_mode</code> (was <code>"full"</code>, now <code>"incremental"</code>), and the internal robustness-iteration defaults (streaming 2→3, online 1→3) that only the Rust crates' bare prelude API could ever see.</p>
+</li>
+<li>
+<p>Fixed the "Handling Outliers" quickstart example printing nothing with only 6 points at <code>fraction = 0.5</code>; bumped to <code>0.7</code> so the outlier is actually downweighted.</p>
+</li>
+<li>
+<p>Fixed two R roxygen examples: <code>OnlineLoess()</code> printing 48 lines instead of a <code>head(smoothed, 5)</code> sample, and <code>add_point()</code> always printing <code>NULL</code> due to the default <code>min_points</code>.</p>
+</li>
+<li>
+<p>Fixed Julia&#8217;s <code>intervals.md</code> examples looping over all 100 points instead of a short sample, matching the concise Python version.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastloess-java-1-1-0"><a class="anchor" href="#fastloess-java-1-1-0"></a>fastloess (Java) 1.1.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="added-2"><a class="anchor" href="#added-2"></a>Added</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Added a GitHub Pages landing page at the repository root, built from <code>README.md</code> via pandoc and deployed by <code>docs.yml</code>.</p>
+</li>
+<li>
+<p>Added a GitHub workflow for running validation scripts.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="changed-2"><a class="anchor" href="#changed-2"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Split the monolithic <code>.github/workflows/ci.yml</code> into seven per-language workflow files: <code>ci-rust.yml</code>, <code>ci-python.yml</code>, <code>ci-julia.yml</code>, <code>ci-nodejs.yml</code>, <code>ci-wasm.yml</code>, <code>ci-cpp.yml</code>, and <code>ci-r.yml</code>. Each file carries the relevant <code>ci</code> (multi-OS matrix), <code>asan</code>, and <code>gpu</code> jobs for its language.</p>
+</li>
+<li>
+<p>Each crate/binding sub-Makefile now runs <code>dev/verify_snippets.py --lang &lt;lang&gt;</code> for its own language as the final step of <code>make default</code>. The root <code>docs-test</code> target remains as a convenience to run all languages at once.</p>
+</li>
+<li>
+<p>Split every sub-Makefile <code>default:</code> into <code>default:</code> (build and system install) and <code>dev:</code> (full quality-check workflow). Both root Makefiles gain <code>&lt;name&gt;-dev</code> targets for each binding and crate, and an <code>all-dev</code> aggregate target.</p>
+</li>
+<li>
+<p>Split <code>dev/verify_snippets.py</code> into a lean orchestrator and a <code>dev/runners/</code> package. Each language has its own module (<code>python.py</code>, <code>julia.py</code>, <code>nodejs.py</code>, <code>r.py</code>, <code>wasm.py</code>, <code>rust.py</code>, <code>cpp.py</code>) containing its <code>run_&lt;lang&gt;()</code> function and a <code>skip_reason()</code> predicate. Shared types (<code>Snippet</code>, <code>RunResult</code>) and utilities live in <code>runners/base.py</code>; the registry (<code>RUNNERS</code>, <code>SKIP_CHECKS</code>) is exported from <code>runners/<em>init</em>.py</code>.</p>
+</li>
+<li>
+<p>Moved CHANGELOG and CONTRIBUTING guides to project root.</p>
+</li>
+<li>
+<p>Updated README files to be binding/crate specific instead of one generic README for all bindings/crates.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="fixed-2"><a class="anchor" href="#fixed-2"></a>Fixed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Fixed <code>.cargo/config.toml</code> hardcoding absolute <code>c:/rtools45/&#8230;&#8203;</code> paths for the <code>x86_64-pc-windows-gnu</code> linker and ar tool. Replaced with bare tool names resolved via <code>PATH</code>, matching the existing fix in <code>bindings/r/src/cargo-config.toml</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastloess-java-1-0-0"><a class="anchor" href="#fastloess-java-1-0-0"></a>fastloess (Java) 1.0.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="changed-3"><a class="anchor" href="#changed-3"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Removed <code>dev/isolate_cargo.py</code>, <code>dev/check_root_cargo.py</code>, <code>dev/fix_doc_snippets.py</code>, and <code>check_js_licenses.js</code> — workspace isolation, doc-snippet transformation, and license checks are no longer needed.</p>
+</li>
+<li>
+<p>Split the monolithic root <code>Makefile</code> into per-crate/binding sub-Makefiles (e.g. <code>crates/loess-rs/Makefile</code>, <code>bindings/r/Makefile</code>), each invokable directly via <code>make -f path/Makefile</code>. The root <code>Makefile</code> now only aggregates (<code>docs</code>, <code>check-msrv</code>, <code>all*</code>).</p>
+</li>
+<li>
+<p>Moved Rust and binding tests into their respective crate/binding directories (e.g. <code>tests/loess-rs/</code> → <code>crates/loess-rs/tests/loess-rs/</code>, <code>tests/cpp/</code> → <code>bindings/cpp/tests/</code>). Removed the standalone <code>tests/</code> workspace packages.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="fastloess-java-0-9-0"><a class="anchor" href="#fastloess-java-0-9-0"></a>fastloess (Java) 0.9.0</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="added-3"><a class="anchor" href="#added-3"></a>Added</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Added Python, R, WASM, Node.js, C++, and Julia bindings.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="changed-4"><a class="anchor" href="#changed-4"></a>Changed</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>Implement monorepo structure.</p>
+</li>
+<li>
+<p>Converted all documentation tables to compact single-space format.</p>
+</li>
+<li>
+<p>Updated <code>.clang-tidy</code> to configure <code>lower_case</code> as the required naming convention for functions and member functions, matching the new snake_case public API.</p>
+</li>
+<li>
+<p>Moved <code>BENCHMARKS.md</code>, <code>CHANGELOG.md</code>, and <code>CONTRIBUTING.md</code> from the repository root into <code>docs/</code> and added them to the documentation site navigation.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For the full changelog, see:
+<a href="https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md" class="bare">https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md</a></p>
+</div>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="./_/js/site.js" data-ui-root-path="./_"></script>
+<script async src="./_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>  </body>
+</html>

@@ -1,9 +1,14 @@
 var searchData=
 [
-  ['benchmarks_0',['Benchmarks',['../benchmarks.html',1,'']]],
-  ['benchmarks_2emd_1',['benchmarks.md',['../benchmarks_8md.html',1,'']]],
-  ['boundary_20handling_2',['Boundary Handling',['../boundary.html',1,'advanced']]],
-  ['boundary_2emd_3',['boundary.md',['../boundary_8md.html',1,'']]],
-  ['boundary_5fdegree_5ffallback_4',['boundary_degree_fallback',['../structfastloess_1_1LoessOptions.html#abbf7224b5cf961b2ef8ce6c3a971dd1f',1,'fastloess::LoessOptions::boundary_degree_fallback'],['../structfastloess_1_1OnlineOptions.html#aa86a34860d280dfd5b4480efd7e6ed5c',1,'fastloess::OnlineOptions::boundary_degree_fallback']]],
-  ['boundary_5fpolicy_5',['boundary_policy',['../structfastloess_1_1LoessOptions.html#a0b8da75bf52c485d72d9fde22551a60f',1,'fastloess::LoessOptions::boundary_policy'],['../structfastloess_1_1OnlineOptions.html#ae540061c39857a9bffc32f4008eb4926',1,'fastloess::OnlineOptions::boundary_policy']]]
+  ['adapter_2dchoice_2emd_0',['adapter-choice.md',['../adapter-choice_8md.html',1,'']]],
+  ['add_5fpoint_1',['add_point',['../classfastloess_1_1OnlineLoess.html#a0f67617858b5e747e6c74870cd3b6e80',1,'fastloess::OnlineLoess']]],
+  ['advanced_2',['Advanced',['../advanced.html',1,'']]],
+  ['aic_3',['aic',['../classfastloess_1_1Diagnostics.html#abbb0a3e875b89a6c56bd3d76989af8e4',1,'fastloess::Diagnostics']]],
+  ['aicc_4',['aicc',['../classfastloess_1_1Diagnostics.html#a383fb038e2fd9ce942dc74cc443bff42',1,'fastloess::Diagnostics']]],
+  ['analysis_5',['Time Series Analysis',['../use_case_time_series.html',1,'use_case']]],
+  ['api_6',['api',['../api.html',1,'API'],['../api_online.html',1,'OnlineLoess API'],['../api_streaming.html',1,'StreamingLoess API']]],
+  ['api_2donline_2emd_7',['api-online.md',['../api-online_8md.html',1,'']]],
+  ['api_2dstreaming_2emd_8',['api-streaming.md',['../api-streaming_8md.html',1,'']]],
+  ['api_2emd_9',['api.md',['../api_8md.html',1,'']]],
+  ['auto_5fconverge_10',['auto_converge',['../structfastloess_1_1LoessOptions.html#afa7fe9985f50d54f165629f4a31e8ef6',1,'fastloess::LoessOptions::auto_converge'],['../structfastloess_1_1OnlineOptions.html#a80fe3fa9e57af18963e067ab306cedbd',1,'fastloess::OnlineOptions::auto_converge']]]
 ];

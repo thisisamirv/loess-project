@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['fastloess_2ehpp_0',['fastloess.hpp',['../fastloess_8hpp.html',1,'']]]
+  ['degree_2emd_0',['degree.md',['../degree_8md.html',1,'']]],
+  ['dimensions_2emd_1',['dimensions.md',['../dimensions_8md.html',1,'']]]
 ];

@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['zero_5fweight_5ffallback_0',['zero_weight_fallback',['../structfastloess_1_1LoessOptions.html#a61d79c6825660fe9af58fb6eadf7f660',1,'fastloess::LoessOptions::zero_weight_fallback'],['../structfastloess_1_1OnlineOptions.html#afa4ea728f66b036e5bf056ff0fd3895f',1,'fastloess::OnlineOptions::zero_weight_fallback']]]
+  ['y_0',['y',['../classfastloess_1_1OnlineOutput.html#a36e9c3a9db54c93bd62859c746cfbefa',1,'fastloess::OnlineOutput']]],
+  ['y_5fvalue_1',['y_value',['../classfastloess_1_1LoessResult.html#ae1102440c17fe901d4778afdb4efb786',1,'fastloess::LoessResult']]],
+  ['y_5fvector_2',['y_vector',['../classfastloess_1_1LoessResult.html#a69f239c01bca8dd309880702ced9ac1f',1,'fastloess::LoessResult']]]
 ];

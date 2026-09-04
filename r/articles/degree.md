@@ -91,14 +91,14 @@ print(head(result$y))
 
 ------------------------------------------------------------------------
 
-## Degree 3 and 4 — Higher-Order Fits
+## Degree 3 — Local Cubic
 
-Cubic and quartic local fits capture inflections and fine structure but
-require a sufficiently large neighbourhood to remain stable. Rarely
-needed in practice.
+Fits a weighted cubic polynomial. Captures inflections and fine
+structure but requires a sufficiently large neighbourhood to remain
+stable.
 
-**Use when**: Highly non-linear local structure; combine with a larger
-`fraction`.
+**Use when**: Data has clear S-shaped curves or multiple inflection
+points; use `fraction` \>= 0.5.
 
 ``` r
 
@@ -108,6 +108,27 @@ cat("First 6 smoothed values (cubic local regression):\n")
 #> First 6 smoothed values (cubic local regression):
 print(head(result$y))
 #> [1] 0.4183075 0.4299695 0.4442197 0.4608883 0.4798054 0.5008015
+```
+
+------------------------------------------------------------------------
+
+## Degree 4 — Local Quartic
+
+Fits a weighted quartic polynomial. Rarely needed in practice; only
+useful for capturing highly oscillatory local structure. Very prone to
+overfitting.
+
+**Use when**: Fine oscillatory structure is physically meaningful and
+the dataset is large; always cross-validate.
+
+``` r
+
+model <- Loess(degree = "quartic", fraction = 0.7)
+result <- fit(model, x, y)
+cat("First 6 smoothed values (quartic local regression):\n")
+#> First 6 smoothed values (quartic local regression):
+print(head(result$y))
+#> [1] 0.3964750 0.4064069 0.4182002 0.4319700 0.4478315 0.4658997
 ```
 
 ------------------------------------------------------------------------
@@ -131,15 +152,34 @@ print(head(result$y))
 
 ------------------------------------------------------------------------
 
+## Surface Mode
+
+The `surface_mode` parameter controls whether LOESS evaluates the local
+polynomial at every query point or at a sparser grid of vertices with
+Hermite cubic interpolation in between.
+
+| Mode | Behaviour | Speed | Accuracy |
+|----|----|----|----|
+| `"interpolation"` (default) | Evaluate at anchor vertices, blend via Hermite cubic | Faster | Slight approximation |
+| `"direct"` | Evaluate at every query point | Exact | Full precision |
+
+See [Multivariate
+LOESS](https://thisisamirv.github.io/loess-project/r/articles/dimensions.md)
+for runnable `surface_mode` examples.
+
+------------------------------------------------------------------------
+
 ## Choosing a Degree
 
-| Situation                           | Recommended Degree |
-|-------------------------------------|--------------------|
-| Flat or slowly varying signal       | `0`                |
-| General purpose                     | `1` (default)      |
-| Visibly curved signal               | `2`                |
-| Strong non-linearity, large dataset | `3`                |
-| Benchmark / exploratory only        | `4`                |
+| Situation | Recommended Degree |
+|----|----|
+| Monotone trend, general purpose | `1` (default) |
+| Maximum smoothness, speed | `0` |
+| Clear peaks / valleys / inflections | `2` (with `fraction` \>= 0.4) |
+| S-shaped curves, multiple inflections | `3` (with `fraction` \>= 0.5) |
+| Fine oscillatory structure (rare) | `4` (with `fraction` \>= 0.6, cross-validate) |
+| Boundary accuracy is critical | `1` or `2` (not `0`) |
+| Very small dataset (n \< 50) | `1` |
 
 > **Rule of thumb:** Start with `degree = 1` (default). Move to
 > `degree = 2` only if you see systematic bias in regions of high
@@ -169,12 +209,12 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.1.0
+#> [1] rfastloess_1.2.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
 #>  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
-#>  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
+#>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     
 #> [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -192,13 +192,13 @@ extrema; use a larger <code>fraction</code> to stabilise the fit.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="degree-3-and-4-higher-order-fits">Degree 3 and 4 — Higher-Order Fits<a class="anchor" aria-label="anchor" href="#degree-3-and-4-higher-order-fits"></a>
+<h2 id="degree-3-local-cubic">Degree 3 — Local Cubic<a class="anchor" aria-label="anchor" href="#degree-3-local-cubic"></a>
 </h2>
-<p>Cubic and quartic local fits capture inflections and fine structure
-but require a sufficiently large neighbourhood to remain stable. Rarely
-needed in practice.</p>
-<p><strong>Use when</strong>: Highly non-linear local structure; combine
-with a larger <code>fraction</code>.</p>
+<p>Fits a weighted cubic polynomial. Captures inflections and fine
+structure but requires a sufficiently large neighbourhood to remain
+stable.</p>
+<p><strong>Use when</strong>: Data has clear S-shaped curves or multiple
+inflection points; use <code>fraction</code> &gt;= 0.5.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>degree <span class="op">=</span> <span class="st">"cubic"</span>, fraction <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
@@ -209,13 +209,30 @@ with a larger <code>fraction</code>.</p>
 <hr>
 </div>
 <div class="section level2">
+<h2 id="degree-4-local-quartic">Degree 4 — Local Quartic<a class="anchor" aria-label="anchor" href="#degree-4-local-quartic"></a>
+</h2>
+<p>Fits a weighted quartic polynomial. Rarely needed in practice; only
+useful for capturing highly oscillatory local structure. Very prone to
+overfitting.</p>
+<p><strong>Use when</strong>: Fine oscillatory structure is physically
+meaningful and the dataset is large; always cross-validate.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>degree <span class="op">=</span> <span class="st">"quartic"</span>, fraction <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (quartic local regression):\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; First 6 smoothed values (quartic local regression):</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.3964750 0.4064069 0.4182002 0.4319700 0.4478315 0.4658997</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
 <h2 id="degree-and-boundary-fallback">Degree and Boundary Fallback<a class="anchor" aria-label="anchor" href="#degree-and-boundary-fallback"></a>
 </h2>
 <p>At the dataset boundary, the neighbourhood is one-sided and may not
 contain enough points to support the requested degree. Setting
 <code>boundary_degree_fallback = TRUE</code> automatically reduces the
 degree at boundaries to avoid instability.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>degree <span class="op">=</span> <span class="fl">2L</span>, boundary_degree_fallback <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (quadratic, boundary fallback):\n"</span><span class="op">)</span></span>
@@ -225,34 +242,90 @@ degree at boundaries to avoid instability.</p>
 <hr>
 </div>
 <div class="section level2">
+<h2 id="surface-mode">Surface Mode<a class="anchor" aria-label="anchor" href="#surface-mode"></a>
+</h2>
+<p>The <code>surface_mode</code> parameter controls whether LOESS
+evaluates the local polynomial at every query point or at a sparser grid
+of vertices with Hermite cubic interpolation in between.</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th>Mode</th>
+<th>Behaviour</th>
+<th>Speed</th>
+<th>Accuracy</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>
+<code>"interpolation"</code> (default)</td>
+<td>Evaluate at anchor vertices, blend via Hermite cubic</td>
+<td>Faster</td>
+<td>Slight approximation</td>
+</tr>
+<tr class="even">
+<td><code>"direct"</code></td>
+<td>Evaluate at every query point</td>
+<td>Exact</td>
+<td>Full precision</td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="dimensions.html">Multivariate LOESS</a> for runnable
+<code>surface_mode</code> examples.</p>
+<hr>
+</div>
+<div class="section level2">
 <h2 id="choosing-a-degree">Choosing a Degree<a class="anchor" aria-label="anchor" href="#choosing-a-degree"></a>
 </h2>
 <table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
 <thead><tr class="header">
 <th>Situation</th>
 <th>Recommended Degree</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td>Flat or slowly varying signal</td>
-<td><code>0</code></td>
-</tr>
-<tr class="even">
-<td>General purpose</td>
+<td>Monotone trend, general purpose</td>
 <td>
 <code>1</code> (default)</td>
 </tr>
+<tr class="even">
+<td>Maximum smoothness, speed</td>
+<td><code>0</code></td>
+</tr>
 <tr class="odd">
-<td>Visibly curved signal</td>
-<td><code>2</code></td>
+<td>Clear peaks / valleys / inflections</td>
+<td>
+<code>2</code> (with <code>fraction</code> &gt;= 0.4)</td>
 </tr>
 <tr class="even">
-<td>Strong non-linearity, large dataset</td>
-<td><code>3</code></td>
+<td>S-shaped curves, multiple inflections</td>
+<td>
+<code>3</code> (with <code>fraction</code> &gt;= 0.5)</td>
 </tr>
 <tr class="odd">
-<td>Benchmark / exploratory only</td>
-<td><code>4</code></td>
+<td>Fine oscillatory structure (rare)</td>
+<td>
+<code>4</code> (with <code>fraction</code> &gt;= 0.6,
+cross-validate)</td>
+</tr>
+<tr class="even">
+<td>Boundary accuracy is critical</td>
+<td>
+<code>1</code> or <code>2</code> (not <code>0</code>)</td>
+</tr>
+<tr class="odd">
+<td>Very small dataset (n &lt; 50)</td>
+<td><code>1</code></td>
 </tr>
 </tbody>
 </table>
@@ -262,7 +335,7 @@ degree at boundaries to avoid instability.</p>
 bias in regions of high curvature, and increase <code>fraction</code> at
 the same time.</p>
 </blockquote>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -285,12 +358,12 @@ the same time.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastloess_1.1.0</span></span>
+<span><span class="co">#&gt; [1] rfastloess_1.2.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>
 <span><span class="co">#&gt;  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  </span></span>
-<span><span class="co">#&gt;  [9] rmarkdown_2.31    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      </span></span>
+<span><span class="co">#&gt;  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      </span></span>
 <span><span class="co">#&gt; [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2</span></span>
 <span><span class="co">#&gt; [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     </span></span>
 <span><span class="co">#&gt; [21] evaluate_1.0.5    yaml_2.3.12       otel_0.2.0        jsonlite_2.0.0   </span></span>

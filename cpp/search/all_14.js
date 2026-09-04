@@ -1,6 +1,9 @@
 var searchData=
 [
-  ['valid_0',['valid',['../classfastloess_1_1LoessResult.html#a8174edf3e71ffda61d3e1213387e4f05',1,'fastloess::LoessResult']]],
-  ['validation_1',['Cross-Validation',['../cross_validation.html',1,'user_guide']]],
-  ['value_2',['value',['../classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418',1,'fastloess::Expected::value() &amp;'],['../classfastloess_1_1Expected.html#a4bf36dc02f3e9050c043b5ef94a6b215',1,'fastloess::Expected::value() const &amp;'],['../classfastloess_1_1Expected.html#ad8958a19728964670c33133afee0faa2',1,'fastloess::Expected::value() &amp;&amp;']]]
+  ['update_5fmode_0',['update_mode',['../structfastloess_1_1OnlineOptions.html#a8cf77897a122e88a823a179bd7bbc1b3',1,'fastloess::OnlineOptions']]],
+  ['use_20cases_1',['Use Cases',['../use_case.html',1,'']]],
+  ['use_2dcase_2dgenomics_2emd_2',['use-case-genomics.md',['../use-case-genomics_8md.html',1,'']]],
+  ['use_2dcase_2dreal_2dtime_2emd_3',['use-case-real-time.md',['../use-case-real-time_8md.html',1,'']]],
+  ['use_2dcase_2dtime_2dseries_2emd_4',['use-case-time-series.md',['../use-case-time-series_8md.html',1,'']]],
+  ['user_20guide_5',['User Guide',['../user_guide.html',1,'']]]
 ];

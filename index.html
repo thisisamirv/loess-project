@@ -104,6 +104,8 @@
   <a href="https://juliahub.com/ui/Packages/General/FastLOESS"><img src="https://img.shields.io/badge/Julia-9558B2?logo=julia&logoColor=white" alt="Julia"></a>
   <a href="https://www.npmjs.com/package/fastloess-wasm"><img src="https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white" alt="WASM"></a>
   <a href="https://github.com/thisisamirv/loess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white" alt="C++"></a>
+  <a href="https://pkg.go.dev/github.com/thisisamirv/loess-project/bindings/go/fastloess"><img src="https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white" alt="Go"></a>
+  <a href="https://central.sonatype.com/artifact/io.github.thisisamirv/fastloess"><img src="https://img.shields.io/badge/Maven_Central-C71A36?logo=apachemaven&logoColor=white" alt="Maven Central"></a>
   <br>
   <a href="https://anaconda.org/conda-forge/fastloess"><img src="https://img.shields.io/badge/fastloess_(Python)-44A833?logo=anaconda&logoColor=white" alt="fastloess (Python)"></a>
   <a href="https://anaconda.org/conda-forge/libfastloess"><img src="https://img.shields.io/badge/libfastloess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastloess (C++)"></a>
@@ -116,6 +118,8 @@
   <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-nodejs.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-nodejs.yml/badge.svg" alt="CI - Node.js"></a>
   <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-wasm.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-wasm.yml/badge.svg" alt="CI - WASM"></a>
   <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-cpp.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-cpp.yml/badge.svg" alt="CI - C++"></a>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-go.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-go.yml/badge.svg" alt="CI - Go"></a>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-java.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-java.yml/badge.svg" alt="CI - Java"></a>
   <br>
 </p>
 
@@ -129,7 +133,8 @@
 LOESS (Locally Estimated Scatterplot Smoothing) implementation for
 <strong>Rust</strong>, <strong>Python</strong>, <strong>R</strong>,
 <strong>Julia</strong>, <strong>JavaScript</strong>,
-<strong>C++</strong>, and <strong>WebAssembly</strong>.</p>
+<strong>C++</strong>, <strong>Go</strong>, <strong>Java</strong>, and
+<strong>WebAssembly</strong>.</p>
 <blockquote>
 <p>The <code>loess-project</code> contains a complete ecosystem for
 LOESS smoothing:</p>
@@ -159,6 +164,12 @@ href="https://www.npmjs.com/package/fastloess-wasm"><code>WebAssembly bindings</
 <li><strong><a
 href="https://github.com/thisisamirv/loess-project/releases/latest"><code>C++ bindings</code></a></strong>
 - Native C++ binding with CMake integration</li>
+<li><strong><a
+href="https://pkg.go.dev/github.com/thisisamirv/loess-project/bindings/go/fastloess"><code>Go bindings</code></a></strong>
+- cgo-based Go binding</li>
+<li><strong><a
+href="https://central.sonatype.com/artifact/io.github.thisisamirv/fastloess"><code>Java bindings</code></a></strong>
+- JNI-based Java binding</li>
 </ul>
 </blockquote>
 <hr />
@@ -166,8 +177,8 @@ href="https://github.com/thisisamirv/loess-project/releases/latest"><code>C++ bi
 Documentation</h2>
 <blockquote>
 <p>Currently available for R, Python, Rust, Julia, Node.js, WebAssembly,
-and C++. See the documentation for your binding/crate below for
-installation instructions.</p>
+C++, Go, and Java. See the documentation for your binding/crate below
+for installation instructions.</p>
 <table>
 <thead>
 <tr class="header">
@@ -213,6 +224,16 @@ href="https://thisisamirv.github.io/loess-project/wasm/">thisisamirv.github.io/l
 <td>C++</td>
 <td><a
 href="https://thisisamirv.github.io/loess-project/cpp/">thisisamirv.github.io/loess-project/cpp</a></td>
+</tr>
+<tr class="odd">
+<td>Go</td>
+<td><a
+href="https://thisisamirv.github.io/loess-project/go/">thisisamirv.github.io/loess-project/go</a></td>
+</tr>
+<tr class="even">
+<td>Java</td>
+<td><a
+href="https://thisisamirv.github.io/loess-project/java/">thisisamirv.github.io/loess-project/java</a></td>
 </tr>
 </tbody>
 </table>
@@ -374,7 +395,7 @@ neighborhoods.</li>
 <td style="text-align: center;">no</td>
 </tr>
 <tr class="odd">
-<td>Diagnostics (RMSE, R², AIC)</td>
+<td>Diagnostics (RMSE, R2, AIC)</td>
 <td style="text-align: center;">yes</td>
 <td style="text-align: center;">no</td>
 </tr>

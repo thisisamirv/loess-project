@@ -36,7 +36,7 @@ MathJax.Hub.Config({
   <td id="projectalign">
    <div id="projectname">fastloess-cpp
    </div>
-   <div id="projectbrief">High-performance LOESS smoothing — C++ API</div>
+   <div id="projectbrief">High-performance LOESS smoothing</div>
   </td>
  </tr>
  </tbody>
@@ -127,66 +127,20 @@ $(document).ready(function(){initNavTree('benchmarks.html',''); initResizable();
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><b>Iterations</b> (1–10)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">13×   </td><td class="markdownTableBodyNone"><b>16×</b>    </td></tr>
 <tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><b>Large</b> (Direct)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">0.9×   </td><td class="markdownTableBodyNone"><b>3×</b>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><b>Large</b> (High Fraction)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">577×   </td><td class="markdownTableBodyNone"><b>695×</b>    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><b>Large</b> (High Iterations)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">6×   </td><td class="markdownTableBodyNone"><b>9×</b>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><b>Large</b> (Interpolate)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">60×   </td><td class="markdownTableBodyNone"><b>83×</b>    </td></tr>
+<tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><b>Scale</b> (1K–10K)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone"><b>8×</b>   </td><td class="markdownTableBodyNone">8×    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><b>Scientific</b> (500–5K)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">4×   </td><td class="markdownTableBodyNone"><b>5×</b>   </td></tr>
 </table>
-<p><em>Averages across all sizes within each category.</em></p>
-<hr  />
-<h2>Reproducing Benchmarks</h2>
-<p>Use <code>std::chrono</code> to time serial vs parallel runs:</p>
-<div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastloess_8hpp.html">fastloess.hpp</a>&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;chrono&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
-<div class="line"><span class="preprocessor">#include &lt;vector&gt;</span></div>
-<div class="line"> </div>
-<div class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Fn&gt;</div>
-<div class="line"><span class="keyword">static</span> <span class="keywordtype">double</span> bench_ms(Fn fn, <span class="keywordtype">int</span> reps = 10) {</div>
-<div class="line">    <span class="comment">// Warm-up</span></div>
-<div class="line">    fn();</div>
-<div class="line">    <span class="keyword">auto</span> t0 = std::chrono::high_resolution_clock::now();</div>
-<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; reps; ++i) fn();</div>
-<div class="line">    <span class="keyword">auto</span> t1 = std::chrono::high_resolution_clock::now();</div>
-<div class="line">    <span class="keywordflow">return</span> std::chrono::duration&lt;double, std::milli&gt;(t1 - t0).count() / reps;</div>
-<div class="line">}</div>
-<div class="line"> </div>
-<div class="line"><span class="keywordtype">int</span> main() {</div>
-<div class="line">    <span class="keyword">const</span> <span class="keywordtype">int</span> n = 5000;</div>
-<div class="line">    std::vector&lt;double&gt; x(n), y(n);</div>
-<div class="line">    <span class="keywordflow">for</span> (<span class="keywordtype">int</span> i = 0; i &lt; n; ++i) {</div>
-<div class="line">        x[i] = <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(i) / (n - 1) * 10.0;</div>
-<div class="line">        y[i] = std::sin(x[i]) + ((i * 7 + 3) % 17 / 17.0 - 0.5) * 0.6;</div>
-<div class="line">    }</div>
-<div class="line"> </div>
-<div class="line">    <a class="code hl_struct" href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a> opts;</div>
-<div class="line">    opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fraction</a> = 0.67;</div>
-<div class="line"> </div>
-<div class="line">    <span class="keyword">auto</span> serial_ms = bench_ms([&amp;] {</div>
-<div class="line">        opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#adfc1281ca0bcc93f743f932c8f938bfa">parallel</a> = <span class="keyword">false</span>;</div>
-<div class="line">        <a class="code hl_class" href="classfastloess_1_1Loess.html">fastloess::Loess</a>(opts).<a class="code hl_function" href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fit</a>(x, y);</div>
-<div class="line">    });</div>
-<div class="line"> </div>
-<div class="line">    <span class="keyword">auto</span> parallel_ms = bench_ms([&amp;] {</div>
-<div class="line">        opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#adfc1281ca0bcc93f743f932c8f938bfa">parallel</a> = <span class="keyword">true</span>;</div>
-<div class="line">        <a class="code hl_class" href="classfastloess_1_1Loess.html">fastloess::Loess</a>(opts).<a class="code hl_function" href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fit</a>(x, y);</div>
-<div class="line">    });</div>
-<div class="line"> </div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Serial:   &quot;</span> &lt;&lt; serial_ms   &lt;&lt; <span class="stringliteral">&quot; ms\n&quot;</span>;</div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Parallel: &quot;</span> &lt;&lt; parallel_ms &lt;&lt; <span class="stringliteral">&quot; ms\n&quot;</span>;</div>
-<div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Speedup:  &quot;</span> &lt;&lt; serial_ms / parallel_ms &lt;&lt; <span class="stringliteral">&quot;×\n&quot;</span>;</div>
-<div class="line">    <span class="keywordflow">return</span> 0;</div>
-<div class="line">}</div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:412</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:472</div></div>
-<div class="ttc" id="afastloess_8hpp_html"><div class="ttname"><a href="fastloess_8hpp.html">fastloess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLoess library.</div></div>
-<div class="ttc" id="astructfastloess_1_1LoessOptions_html"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a></div><div class="ttdoc">Options for configuring LOESS smoothing.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:104</div></div>
-<div class="ttc" id="astructfastloess_1_1LoessOptions_html_a74cd5ca0f18e82875093bb3aecfde3ce"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fastloess::LoessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastloess.hpp:105</div></div>
-<div class="ttc" id="astructfastloess_1_1LoessOptions_html_adfc1281ca0bcc93f743f932c8f938bfa"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#adfc1281ca0bcc93f743f932c8f938bfa">fastloess::LoessOptions::parallel</a></div><div class="ttdeci">bool parallel</div><div class="ttdef"><b>Definition</b> fastloess.hpp:122</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">Serial:   3.33907 ms</div>
-<div class="line">Parallel: 4.00577 ms</div>
-<div class="line">Speedup:  0.833565Ã—</div>
-</div><!-- fragment --> </div></div><!-- contents -->
+<p><em>Averages across all sizes within each category.</em> </p>
+</div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
 <!-- start footer part -->

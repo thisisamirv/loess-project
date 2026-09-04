@@ -1,10 +1,5 @@
 var searchData=
 [
-  ['onlineloess_0',['onlineloess',['../classfastloess_1_1OnlineLoess.html',1,'fastloess::OnlineLoess'],['../classfastloess_1_1OnlineOutput.html#a3c070350333cf129719db3dbf99cc7f6',1,'fastloess::OnlineOutput::OnlineLoess'],['../classfastloess_1_1OnlineLoess.html#ab8e66801eb2eea982e50de49836625fa',1,'fastloess::OnlineLoess::OnlineLoess(const OnlineOptions &amp;options={})'],['../classfastloess_1_1OnlineLoess.html#a3a3db21c068d08967bc166483147d642',1,'fastloess::OnlineLoess::OnlineLoess(const OnlineLoess &amp;)=delete'],['../classfastloess_1_1OnlineLoess.html#ab15c411f1b883d4172349efe4267f651',1,'fastloess::OnlineLoess::OnlineLoess(OnlineLoess &amp;&amp;other) noexcept']]],
-  ['onlineloess_20api_1',['OnlineLoess API',['../api_online.html',1,'api']]],
-  ['onlineoptions_2',['OnlineOptions',['../structfastloess_1_1OnlineOptions.html',1,'fastloess']]],
-  ['onlineoutput_3',['OnlineOutput',['../classfastloess_1_1OnlineOutput.html',1,'fastloess']]],
-  ['operator_20bool_4',['operator bool',['../classfastloess_1_1Expected.html#aeb96aaeed792d49f383d733bed2b4b54',1,'fastloess::Expected']]],
-  ['operator_3d_5',['operator=',['../classfastloess_1_1LoessResult.html#a5100b03d20bd2ffff013f205525cf836',1,'fastloess::LoessResult::operator=(const LoessResult &amp;)=delete'],['../classfastloess_1_1LoessResult.html#a9c55b1659472c9749f3a720bea7884dc',1,'fastloess::LoessResult::operator=(LoessResult &amp;&amp;other) noexcept'],['../classfastloess_1_1Loess.html#a0022cf922874eea4ee9a8f1a7157e03c',1,'fastloess::Loess::operator=(const Loess &amp;)=delete'],['../classfastloess_1_1Loess.html#a1af1680e46eb2dfe05e301dc39626a46',1,'fastloess::Loess::operator=(Loess &amp;&amp;other) noexcept'],['../classfastloess_1_1StreamingLoess.html#a1d4fe401014cc93df34ebebdc7516d38',1,'fastloess::StreamingLoess::operator=(const StreamingLoess &amp;)=delete'],['../classfastloess_1_1StreamingLoess.html#a2f87e5bcc659dc93bb65ab1087af0bfa',1,'fastloess::StreamingLoess::operator=(StreamingLoess &amp;&amp;other) noexcept'],['../classfastloess_1_1OnlineLoess.html#a95b7b6f29f8bf4a71ae2201f2e5f87d9',1,'fastloess::OnlineLoess::operator=(const OnlineLoess &amp;)=delete'],['../classfastloess_1_1OnlineLoess.html#af95055e8eac0da6246362e1f758a719e',1,'fastloess::OnlineLoess::operator=(OnlineLoess &amp;&amp;other) noexcept']]],
-  ['overlap_6',['overlap',['../structfastloess_1_1StreamingOptions.html#a98f8b3b29440ae83cf42f8574ffb6090',1,'fastloess::StreamingOptions']]]
+  ['news_0',['News',['../news.html',1,'']]],
+  ['news_2emd_1',['NEWS.md',['../NEWS_8md.html',1,'']]]
 ];
