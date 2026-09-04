@@ -62,7 +62,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (bisquare robustness): 0.38260776436644134
+First smoothed value (bisquare robustness): 0.3851521721408434
 ----
 
 '''
@@ -109,7 +109,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (huber robustness): 0.381704958772818
+First smoothed value (huber robustness): 0.3855847272972413
 ----
 
 '''
@@ -156,7 +156,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (talwar robustness): 0.37877937542419027
+First smoothed value (talwar robustness): 0.38439982448576715
 ----
 
 '''
@@ -212,6 +212,98 @@ public class Example {
 ----
 Point 3 is likely an outlier (weight: 0.000)
 ----
+
+'''
+
+== Scale Estimation
+
+Residuals are scaled before computing robustness weights. Two methods:
+
+[cols="1,1,1",options="header"]
+|===
+|Method |Formula |Robustness
+
+|*MAD* |`median(\|r - median(r)\|)` |Very robust (default)
+|*MAR* |`median(\|r\|)` |Robust, uncentered
+|*Mean* |`mean(\|r\|)` |Less robust, fastest
+|===
+
+image::scaling_comparison.svg[Scaling Methods Comparison]
+
+[source,java]
+----
+import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().iterations(3).scalingMethod("mad").build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("y[0]: " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+y[0]: 0.3851521721408434
+----
+
+'''
+
+== Auto-Convergence
+
+Stop iterations early when weights stabilize:
+
+[NOTE]
+====
+*Performance:* Auto-convergence can significantly reduce computation when weights stabilize before reaching max iterations.
+====
+
+[source,java]
+----
+import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class Example {
+    public static void main(String[] args) {
+        int n = 100;
+        double[] x = new double[n];
+        double[] y = new double[n];
+        for (int i = 0; i < n; i++) {
+            x[i] = i * 2 * Math.PI / (n - 1);
+            y[i] = Math.sin(x[i]) + 0.1;
+        }
+
+        Options options = Options.builder().iterations(10).autoConverge(1e-6).build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            System.out.println("y[0]: " + result.y()[0]);
+        }
+    }
+}
+----
+
+[source,console]
+----
+y[0]: 0.385251011791276
+----
+
+'''
 
 All examples above use the same 100-point noisy sine wave (see xref:./kernels.adoc#choosing-a-kernel[Weight Functions] for the generation code), except the outlier-detection example above, which uses a small dataset with a deliberate spike.
 

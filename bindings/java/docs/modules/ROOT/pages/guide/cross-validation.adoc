@@ -50,7 +50,7 @@ public class Example {
 [source,console]
 ----
 Selected fraction: 0.2
-CV scores: [0.2660065925434151, 0.26663733476135043, 0.36243048571062464, 0.4466813477111353]
+CV scores: [0.26548842853870985, 0.2677739164317553, 0.34967483064350474, 0.42794903516949534]
 ----
 
 '''
@@ -132,7 +132,7 @@ public class Example {
 
 [source,console]
 ----
-Selected fraction (CV): 0.7
+Selected fraction (CV): 0.3
 ----
 
 '''

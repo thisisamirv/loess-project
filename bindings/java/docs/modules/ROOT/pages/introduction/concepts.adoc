@@ -137,6 +137,8 @@ See xref:../guide/adapter-choice.adoc[Execution Modes] for a fuller comparison.
 |Robust to outliers |✓ |✗ |✗
 |Uncertainty estimates |✓ |✓ |✗
 |Handles irregular sampling |✓ |✓ |✗
+|Multivariate predictors |✓ |✓ |✗
+|Adjustable polynomial degree |✓ (0–4) |✓ |✗
 |===
 
 '''

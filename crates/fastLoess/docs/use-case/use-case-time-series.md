@@ -21,7 +21,7 @@ fn main() -> Result<(), LoessError> {
     let t: Vec<f64> = (0..n).map(|i| i as f64 * 100.0 / (n - 1) as f64).collect();
     let y: Vec<f64> = t.iter().enumerate()
         .map(|(i, &ti)| 10.0 + 0.5 * ti + 3.0 * (ti / 10.0).sin()
-                      + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 3.0)
+                      + (((i * 7 + 3) % 17) as f64 / 17.0 - 0.5) * 3.0)
         .collect();
 
     let model = Loess::new()
@@ -38,7 +38,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (fraction=0.1): 11.54944263534345
+First smoothed value (fraction=0.1): 10.093542139519055
 ```
 
 ---
@@ -192,7 +192,7 @@ fn main() -> Result<(), LoessError> {
     let hours: Vec<f64> = (0..49).map(|i| i as f64 * 0.5).collect(); // 0.0..24.0 step 0.5
     let expression: Vec<f64> = hours.iter().enumerate()
         .map(|(i, &h)| 100.0 * (1.0 + 0.5 * (h * PI / 12.0).sin())
-                      + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 10.0)
+                      + (((i * 7 + 3) % 17) as f64 / 17.0 - 0.5) * 10.0)
         .collect();
 
     let model = Loess::new()
@@ -212,7 +212,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-R2: 0.971
+R2: 0.984
 ```
 
 ---

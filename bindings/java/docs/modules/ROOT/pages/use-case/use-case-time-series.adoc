@@ -25,7 +25,7 @@ public class Example {
         double[] y = new double[n];
         for (int i = 0; i < n; i++) {
             t[i] = i * 100.0 / (n - 1);
-            y[i] = 10.0 + 0.5 * t[i] + 3.0 * Math.sin(t[i] / 10.0) + (((i * 7 + 3) % 1.7) - 0.85) * 3.0;
+            y[i] = 10.0 + 0.5 * t[i] + 3.0 * Math.sin(t[i] / 10.0) + (((i * 7 + 3) % 17) / 17.0 - 0.5) * 3.0;
         }
 
         Options options = Options.builder().fraction(0.1).iterations(3).build();
@@ -40,7 +40,7 @@ public class Example {
 
 [source,console]
 ----
-y[0]: 11.321590922416165
+y[0]: 10.093542139519055
 ----
 
 '''
@@ -84,7 +84,7 @@ public class Example {
 
 [source,console]
 ----
-residuals[0]: -0.15824361645514948
+residuals[0]: -0.1473103228645228
 ----
 
 '''
@@ -128,7 +128,7 @@ public class Example {
 
 [source,console]
 ----
-95% PI: [0.15801046224996323, 0.29088272144925953]
+95% PI: [0.1402960819308543, 0.26050444694480085]
 ----
 
 '''
@@ -165,7 +165,7 @@ public class Example {
 
 [source,console]
 ----
-y[0]: 11.327309510260003
+y[0]: 10.80520953165426
 ----
 
 '''
@@ -203,9 +203,9 @@ public class Example {
 
 [source,console]
 ----
-fraction=0.05: y[0] = 0.13171195982828227
-fraction=0.2: y[0] = 0.22444659184961138
-fraction=0.5: y[0] = 0.33437036041791557
+fraction=0.05: y[0] = 0.01070320999232197
+fraction=0.2: y[0] = 0.20040026443782757
+fraction=0.5: y[0] = 0.3273755400709721
 ----
 
 '''
@@ -227,7 +227,7 @@ public class Example {
         double[] expression = new double[n];
         for (int i = 0; i < n; i++) {
             hours[i] = i * 0.5;
-            expression[i] = 100.0 * (1.0 + 0.5 * Math.sin(hours[i] * Math.PI / 12.0)) + (((i * 7 + 3) % 1.7) - 0.85) * 10.0;
+            expression[i] = 100.0 * (1.0 + 0.5 * Math.sin(hours[i] * Math.PI / 12.0)) + (((i * 7 + 3) % 17) / 17.0 - 0.5) * 10.0;
         }
 
         Options options = Options.builder()
@@ -247,7 +247,7 @@ public class Example {
 
 [source,console]
 ----
-R2: 0.973
+R2: 0.984
 ----
 
 '''

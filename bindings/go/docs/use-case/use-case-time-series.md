@@ -32,7 +32,7 @@ func main() {
  y := make([]float64, n)
  for i := 0; i < n; i++ {
   t[i] = float64(i) * 100.0 / float64(n-1)
-  y[i] = 10.0 + 0.5*t[i] + 3.0*math.Sin(t[i]/10.0) + (math.Mod(float64(i*7+3), 1.7)-0.85)*3.0
+  y[i] = 10.0 + 0.5*t[i] + 3.0*math.Sin(t[i]/10.0) + (math.Mod(float64(i*7+3), 17.0)/17.0-0.5)*3.0
  }
 
  opts := fastloess.DefaultOptions()
@@ -54,7 +54,7 @@ func main() {
 ```
 
 ```output
-y[0]: 11.54944263534345
+y[0]: 10.093542139519055
 ```
 
 ---
@@ -279,7 +279,7 @@ func main() {
  expression := make([]float64, n)
  for i := 0; i < n; i++ {
   hours[i] = float64(i) * 0.5
-  expression[i] = 100.0*(1.0+0.5*math.Sin(hours[i]*math.Pi/12.0)) + (math.Mod(float64(i*7+3), 1.7)-0.85)*10.0
+  expression[i] = 100.0*(1.0+0.5*math.Sin(hours[i]*math.Pi/12.0)) + (math.Mod(float64(i*7+3), 17.0)/17.0-0.5)*10.0
  }
 
  opts := fastloess.DefaultOptions()
@@ -302,7 +302,7 @@ func main() {
 ```
 
 ```output
-R2: 0.971
+R2: 0.984
 ```
 
 ---

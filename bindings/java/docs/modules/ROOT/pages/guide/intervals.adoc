@@ -62,9 +62,9 @@ public class Example {
 
 [source,console]
 ----
-x=0.00: y=0.33 [0.29, 0.37]
-x=0.06: y=0.36 [0.32, 0.40]
-x=0.13: y=0.39 [0.34, 0.43]
+x=0.00: y=0.33 [0.26, 0.40]
+x=0.06: y=0.35 [0.28, 0.42]
+x=0.13: y=0.38 [0.31, 0.45]
 ----
 
 '''
@@ -105,7 +105,7 @@ public class Example {
 
 [source,console]
 ----
-Prediction bounds: [-0.04, 0.71]
+Prediction bounds: [-0.04, 0.69]
 ----
 
 '''
@@ -147,7 +147,7 @@ public class Example {
 
 [source,console]
 ----
-First point 95% CI: [0.29412988645250643, 0.3746108343833247]
+First point 95% CI: [0.2569579331671811, 0.3977931469747631]
 ----
 
 '''
@@ -194,7 +194,7 @@ public class Example {
 
 [source,console]
 ----
-First lower CI bound (99%): 0.31714272639100155
+First lower CI bound (99%): 0.2330309151741024
 ----
 
 '''
@@ -234,9 +234,9 @@ public class Example {
 
 [source,console]
 ----
-Point 0: SE = 0.0254
-Point 1: SE = 0.0269
-Point 2: SE = 0.0283
+Point 0: SE = 0.0591
+Point 1: SE = 0.0589
+Point 2: SE = 0.0588
 ----
 
 '''

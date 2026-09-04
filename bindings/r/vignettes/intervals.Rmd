@@ -15,8 +15,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ![Confidence and prediction intervals](../man/figures/intervals_comparison.svg)
 
-> **Note:** Confidence and prediction intervals are available in **Batch**,
-> **Streaming**, and **Online** modes.
+> **Note:** Confidence and prediction intervals are available in **Batch**
+> mode only. Streaming and Online modes do not support intervals.
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |

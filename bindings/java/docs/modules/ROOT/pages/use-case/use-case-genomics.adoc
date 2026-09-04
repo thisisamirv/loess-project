@@ -53,7 +53,7 @@ public class Example {
 
 [source,console]
 ----
-95% CI: [51.67728847225472, 68.73718630709101]
+95% CI: [42.17239405009363, 76.55944292060059]
 ----
 
 '''
@@ -103,8 +103,8 @@ public class Example {
 
 [source,console]
 ----
-y[0]: 59.951990929979125
-Peak count: 26
+y[0]: 59.94968692455523
+Peak count: 29
 ----
 
 '''
@@ -148,7 +148,7 @@ public class Example {
 
 [source,console]
 ----
-y[0]: 41.29765849569398
+y[0]: 41.56263674751861
 ----
 
 '''

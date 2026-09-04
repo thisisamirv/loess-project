@@ -119,7 +119,7 @@ public class Example {
 
 [source,console]
 ----
-y[0]: 0.516484
+y[0]: 0.405725
 ----
 
 '''
@@ -177,7 +177,7 @@ public class Example {
 
 [source,console]
 ----
-Smoothed (dashboard, latest tick): -0.06634730089857355
+Smoothed (dashboard, latest tick): -0.004114623979934418
 ----
 
 '''

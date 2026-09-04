@@ -16,7 +16,7 @@ fn main() -> Result<(), LoessError> {
     let n = 100usize;
     let x: Vec<f64> = (0..n).map(|i| i as f64 * TAU / (n - 1) as f64).collect();
     let y: Vec<f64> = x.iter().enumerate()
-        .map(|(i, &xi)| xi.sin() + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 0.3)
+        .map(|(i, &xi)| xi.sin() + ((i * 7 + 3) % 17) as f64 / 17.0 * 0.6 - 0.3)
         .collect();
 
     let model = Loess::new()
@@ -31,7 +31,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed: 0.2376  (true: 0.0000)
+First smoothed: 0.0281  (true: 0.0000)
 ```
 
 ---
@@ -130,7 +130,7 @@ fn main() -> Result<(), LoessError> {
     let x: Vec<f64> = (0..n).map(|i| i as f64 * 10.0 * PI / (n - 1) as f64).collect();
     let y: Vec<f64> = x.iter().enumerate()
         .map(|(i, &xi)| (xi / PI).sin() * (-xi / 30.0).exp()
-                       + ((i * 7 + 3) as f64 % 1.7 - 0.85) * 0.15)
+                       + (((i * 7 + 3) % 17) as f64 / 17.0 * 0.3 - 0.15))
         .collect();
 
     let mut model = StreamingLoess::new()

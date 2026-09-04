@@ -83,6 +83,6 @@ public class Example {
 
 [source,console]
 ----
-y[0]: 17.6391
+y[0]: 18.1000
 ----
 
