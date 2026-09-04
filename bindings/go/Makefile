@@ -91,6 +91,7 @@ dev:
 	@echo "=============================================================================="
 	@echo "2. Go formatting, vetting & testing..."
 	@echo "=============================================================================="
+	@cd $(GO_DIR)/fastloess && gofmt -w .
 	@cd $(GO_DIR)/fastloess && test -z "$$(gofmt -l .)" || (echo "Error: gofmt found unformatted files"; gofmt -l .; exit 1)
 	@cd $(GO_DIR)/fastloess && go vet ./...
 	@cd $(GO_DIR)/tests && test -z "$$(gofmt -l .)" || (echo "Error: gofmt found unformatted files"; gofmt -l .; exit 1)
