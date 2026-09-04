@@ -62,26 +62,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restructured Doxygen nav from ~20 flat pages into 5 hub pages, mirroring other bindings.
 - Added a Spack recipe, auto-updated by `release-cpp.yml` on release.
 - Bumped the vendored Corrosion CMake module to v0.6.1.
+- Removed the dead `confidence_intervals`, `prediction_intervals`, `return_diagnostics`, `return_residuals`, and `return_se` fields from `OnlineOptions` (a standalone struct, not inherited from `LoessOptions` as the docs previously and incorrectly claimed). Breaking change for `OnlineOptions` callers; `parallel` is unaffected.
+- `StreamingOptions` (which inherits `LoessOptions` and still has `confidence_intervals`/`prediction_intervals`/`return_se` structurally) no longer forwards them to the native constructor, since Streaming never computed them.
 
 **R:**
 
 - Removed the redundant `rfastloess-package` pkgdown topic and the internal `Nullable()` helper.
 - Fixed `_pkgdown.yml` mislabeling the S3-based interface as "R6 classes".
 - Merged `parameters.Rmd`/`batch.Rmd`/`streaming.Rmd`/`online.Rmd` into the constructors' roxygen docs, removing the now-redundant vignettes.
+- Removed `confidence_intervals`, `prediction_intervals`, and `return_se` from `StreamingLoess()`'s constructor, and those plus `return_diagnostics`/`return_residuals` from `OnlineLoess()`'s constructor — none of these were ever computed by either adapter. Breaking change; `parallel` (real for both) is unaffected.
 
 **Node.js:**
 
 - Updated `oxlint`, `napi`/`napi-derive`/`@napi-rs/cli`/`napi-build`, and `typedoc-plugin-markdown`.
 - `make nodejs-dev` now runs `npm update` after `npm install`.
+- `StreamingLoess`/`OnlineLoess` now ignore `confidence_intervals`, `prediction_intervals`, `return_se`, `cv_fractions`, `cv_method`, `cv_k`, and `cv_seed` when passed via `SmoothOptions` (Batch-only options that were previously applied unconditionally); `OnlineLoess` also now ignores `return_diagnostics`/`return_residuals`. `Loess` and `parallel` (real for all three adapters here) are unaffected.
 
 **WASM:**
 
 - Updated `oxlint` and `typedoc-plugin-markdown`.
 - `make wasm-dev` now runs `npm update` after `npm install`.
+- Same gating fix as Node.js, applied to `options_to_builder`.
 
 **loess-rs:**
 
 - Updated `wide` to v1.7.
+- Removed the dead `compute_residuals`/`backend` fields from `OnlineLoessBuilder` (residual is always computed regardless of the flag; `backend` was never read for Online). `StreamingLoessBuilder` lost its unused `backend` field too — `Backend` currently has only a `CPU` variant and is read only by the Batch adapter, as a placeholder for future GPU support.
+
+**fastLoess:**
+
+- Same dead-field removal as loess-rs, mirrored in `OnlineLoessBuilder`/`StreamingLoessBuilder`.
+- Removed `.confidenceIntervals()`, `.predictionIntervals()`, and `.returnSe()` from the `StreamingLoess`/`OnlineLoess` entry-point wrapper structs — these leaked in via the shared builder macro and were silently ignored (neither adapter computes confidence/prediction intervals or standard errors). Breaking change for direct Rust consumers; `Loess`'s own methods are unaffected. Note: unlike `lowess`/`fastLowess`, `parallel` is real for `OnlineLoess` here (it gates internal KD-tree/interval-pass dispatch) and was kept.
+
+**Python:**
+
+- Removed `confidence_intervals`, `prediction_intervals`, and `return_se` from `StreamingLoess`'s constructor — never computed for Streaming. Breaking change.
+- Removed `confidence_intervals`, `prediction_intervals`, `return_se`, `return_diagnostics`, and `return_residuals` from `OnlineLoess`'s constructor, for the same reason (plus `OnlineOutput` has no diagnostics field and always includes a residual regardless of the flag). Breaking change. `parallel` is unaffected — it's real for `OnlineLoess`.
+
+**Julia:**
+
+- Removed the same fields as Python, from `StreamingLoess`/`OnlineLoess` keyword arguments. Also fixed a misleading `parallel` docstring on `OnlineLoess` implying it does nothing; it actually gates internal KD-tree/interval-pass dispatch. Breaking change.
+
+**Go:**
+
+- `StreamingOptions` and `OnlineOptions` no longer embed the shared `Options` struct (they now declare only the fields they actually support). `StreamingOptions` lost `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSE`/`CVFractions`/`CVMethod`/`CVK`/`CVSeed`; `OnlineOptions` additionally lost `ReturnDiagnostics`/`ReturnResiduals`. Breaking change; `Options`'s own fields and `Parallel` (real for both) are unaffected.
+
+**Java:**
+
+- Removed `confidenceIntervals`/`predictionIntervals`/`returnSe` builder methods from `StreamingOptions.Builder`, and those plus `returnDiagnostics`/`returnResiduals` from `OnlineOptions.Builder`. Breaking change; `Options.Builder`'s own methods and `parallel` (real for both) are unaffected.
 
 ### Fixed
 

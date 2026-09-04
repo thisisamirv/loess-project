@@ -53,8 +53,7 @@ RStreamingLoess$new <- function(
     scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
     return_diagnostics, return_residuals, return_robustness_weights,
     merge_strategy, parallel, degree, dimensions,
-    distance_metric, weighted_metric_weights, surface_mode, return_se,
-    confidence_intervals, prediction_intervals,
+    distance_metric, weighted_metric_weights, surface_mode,
     cell, interpolation_vertices, boundary_degree_fallback
 ) {
     .Call(
@@ -64,8 +63,7 @@ RStreamingLoess$new <- function(
         auto_converge, return_diagnostics,
         return_residuals, return_robustness_weights, merge_strategy, parallel,
         degree, dimensions, distance_metric,
-        weighted_metric_weights, surface_mode, return_se,
-        confidence_intervals, prediction_intervals,
+        weighted_metric_weights, surface_mode,
         cell, interpolation_vertices, boundary_degree_fallback
     )
 }
@@ -94,20 +92,18 @@ ROnlineLoess$new <- function(
     fraction, window_capacity, min_points, iterations,
     weight_function, robustness_method,
     scaling_method, boundary_policy, zero_weight_fallback, update_mode,
-    auto_converge, return_robustness_weights, return_diagnostics,
-    return_residuals, parallel, degree, dimensions, distance_metric,
-    weighted_metric_weights, surface_mode, return_se,
-    confidence_intervals, prediction_intervals,
+    auto_converge, return_robustness_weights,
+    parallel, degree, dimensions, distance_metric,
+    weighted_metric_weights, surface_mode,
     cell, interpolation_vertices, boundary_degree_fallback
 ) {
     .Call(
         wrap__ROnlineLoess__new, fraction, window_capacity, min_points,
         iterations, weight_function, robustness_method, scaling_method,
         boundary_policy, zero_weight_fallback, update_mode, auto_converge,
-        return_robustness_weights, return_diagnostics, return_residuals,
+        return_robustness_weights,
         parallel, degree, dimensions, distance_metric,
-        weighted_metric_weights, surface_mode, return_se,
-        confidence_intervals, prediction_intervals,
+        weighted_metric_weights, surface_mode,
         cell, interpolation_vertices, boundary_degree_fallback
     )
 }

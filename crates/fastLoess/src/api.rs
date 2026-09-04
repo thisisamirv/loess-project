@@ -173,14 +173,6 @@ macro_rules! impl_common_builder {
                 self.0 = self.0.iterations(i);
                 self
             }
-            pub fn confidence_intervals(mut self, level: f64) -> Self {
-                self.0 = self.0.confidence_intervals(level);
-                self
-            }
-            pub fn prediction_intervals(mut self, level: f64) -> Self {
-                self.0 = self.0.prediction_intervals(level);
-                self
-            }
             pub fn auto_converge(mut self, tol: f64) -> Self {
                 self.0 = self.0.auto_converge(tol);
                 self
@@ -206,29 +198,12 @@ macro_rules! impl_common_builder {
                 self
             }
             // flag options (no argument)
-            pub fn return_se(mut self) -> Self {
-                self.0 = self.0.return_se();
-                self
-            }
-            pub fn return_diagnostics(mut self) -> Self {
-                self.0 = self.0.return_diagnostics();
-                self
-            }
-            pub fn return_residuals(mut self) -> Self {
-                self.0 = self.0.return_residuals();
-                self
-            }
             pub fn return_robustness_weights(mut self) -> Self {
                 self.0 = self.0.return_robustness_weights();
                 self
             }
             pub fn parallel(mut self, p: bool) -> Self {
                 self.0 = self.0.parallel(p);
-                self
-            }
-            #[doc(hidden)]
-            pub fn backend(mut self, b: Backend) -> Self {
-                self.0 = self.0.backend(b);
                 self
             }
         }
@@ -241,6 +216,31 @@ impl_common_builder!(Loess);
 impl Loess {
     pub fn custom_weights(mut self, w: Vec<f64>) -> Self {
         self.0 = self.0.custom_weights(w);
+        self
+    }
+    pub fn confidence_intervals(mut self, level: f64) -> Self {
+        self.0 = self.0.confidence_intervals(level);
+        self
+    }
+    pub fn prediction_intervals(mut self, level: f64) -> Self {
+        self.0 = self.0.prediction_intervals(level);
+        self
+    }
+    pub fn return_se(mut self) -> Self {
+        self.0 = self.0.return_se();
+        self
+    }
+    pub fn return_diagnostics(mut self) -> Self {
+        self.0 = self.0.return_diagnostics();
+        self
+    }
+    pub fn return_residuals(mut self) -> Self {
+        self.0 = self.0.return_residuals();
+        self
+    }
+    #[doc(hidden)]
+    pub fn backend(mut self, b: Backend) -> Self {
+        self.0 = self.0.backend(b);
         self
     }
     pub fn cv_method(mut self, m: &str) -> Self {
@@ -269,6 +269,14 @@ impl Loess {
 pub struct StreamingLoess(LoessBuilder<f64>);
 impl_common_builder!(StreamingLoess);
 impl StreamingLoess {
+    pub fn return_diagnostics(mut self) -> Self {
+        self.0 = self.0.return_diagnostics();
+        self
+    }
+    pub fn return_residuals(mut self) -> Self {
+        self.0 = self.0.return_residuals();
+        self
+    }
     pub fn chunk_size(mut self, s: usize) -> Self {
         self.0 = self.0.chunk_size(s);
         self

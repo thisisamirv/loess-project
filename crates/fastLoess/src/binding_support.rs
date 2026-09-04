@@ -1272,12 +1272,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // Set the execution backend.
-    pub fn backend(mut self, backend: Backend) -> Self {
-        self.base.backend = Some(backend);
-        self
-    }
-
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.base.fraction = fraction;
@@ -1400,12 +1394,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self
     }
 
-    // Set whether to compute residuals.
-    pub fn compute_residuals(mut self, compute: bool) -> Self {
-        self.base.compute_residuals = compute;
-        self
-    }
-
     // Set whether to return robustness weights.
     pub fn return_robustness_weights(mut self, ret: bool) -> Self {
         self.base.return_robustness_weights = ret;
@@ -1447,12 +1435,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     // Set parallel execution mode.
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.base.parallel = Some(parallel);
-        self
-    }
-
-    // Set the execution backend.
-    pub fn backend(mut self, backend: Backend) -> Self {
-        self.base.backend = Some(backend);
         self
     }
 

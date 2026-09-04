@@ -1000,9 +1000,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(ip) = builder.custom_interval_pass {
             result.custom_interval_pass = Some(ip);
         }
-        if let Some(b) = builder.backend {
-            result.backend = Some(b);
-        }
         if let Some(p) = builder.parallel {
             result.parallel = Some(p);
         }
@@ -1060,9 +1057,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
             result.zero_weight_fallback = zwf;
         }
 
-        if let Some(cr) = builder.compute_residuals {
-            result.compute_residuals = cr;
-        }
         if let Some(rw) = builder.return_robustness_weights {
             result.return_robustness_weights = rw;
         }
@@ -1108,9 +1102,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         }
         if let Some(ip) = builder.custom_interval_pass {
             result.custom_interval_pass = Some(ip);
-        }
-        if let Some(b) = builder.backend {
-            result.backend = Some(b);
         }
         if let Some(p) = builder.parallel {
             result.parallel = Some(p);

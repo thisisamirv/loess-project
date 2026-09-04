@@ -254,28 +254,33 @@ pub struct SmoothOptions {
     /// Auto-convergence tolerance. Default: None.
     #[napi(js_name = "auto_converge")]
     pub auto_converge: Option<f64>,
-    /// Return residuals in result. Default: false.
+    /// Return residuals in result. Ignored by `OnlineLoess`. Default: false.
     #[napi(js_name = "return_residuals")]
     pub return_residuals: Option<bool>,
     /// Return robustness weights in result. Default: false.
     #[napi(js_name = "return_robustness_weights")]
     pub return_robustness_weights: Option<bool>,
-    /// Return diagnostics (RMSE, etc.). Default: false.
+    /// Return diagnostics (RMSE, etc.). Ignored by `OnlineLoess`. Default: false.
     #[napi(js_name = "return_diagnostics")]
     pub return_diagnostics: Option<bool>,
-    /// Calculate confidence intervals (e.g., 0.95). Default: None.
+    /// Calculate confidence intervals (e.g., 0.95). Batch (`Loess`) only;
+    /// ignored by `StreamingLoess`/`OnlineLoess`. Default: None.
     #[napi(js_name = "confidence_intervals")]
     pub confidence_intervals: Option<f64>,
-    /// Calculate prediction intervals. Default: None.
+    /// Calculate prediction intervals. Batch (`Loess`) only; ignored by
+    /// `StreamingLoess`/`OnlineLoess`. Default: None.
     #[napi(js_name = "prediction_intervals")]
     pub prediction_intervals: Option<f64>,
-    /// Fractions to use for cross-validation.
+    /// Fractions to use for cross-validation. Batch (`Loess`) only; ignored
+    /// by `StreamingLoess`/`OnlineLoess`.
     #[napi(js_name = "cv_fractions")]
     pub cv_fractions: Option<Vec<f64>>,
-    /// CV method ("loocv", "kfold"). Default: "kfold".
+    /// CV method ("loocv", "kfold"). Batch (`Loess`) only; ignored by
+    /// `StreamingLoess`/`OnlineLoess`. Default: "kfold".
     #[napi(js_name = "cv_method")]
     pub cv_method: Option<String>,
-    /// Number of folds for K-Fold CV. Default: 5.
+    /// Number of folds for K-Fold CV. Batch (`Loess`) only; ignored by
+    /// `StreamingLoess`/`OnlineLoess`. Default: 5.
     #[napi(js_name = "cv_k")]
     pub cv_k: Option<u32>,
     /// Enable parallel execution. Default: true.
@@ -293,7 +298,8 @@ pub struct SmoothOptions {
     /// Surface mode ("interpolation" or "direct"). Default: "interpolation".
     #[napi(js_name = "surface_mode")]
     pub surface_mode: Option<String>,
-    /// Compute hat-matrix statistics (enp, trace_hat, etc.). Default: false.
+    /// Compute hat-matrix statistics (enp, trace_hat, etc.). Batch (`Loess`)
+    /// only; ignored by `StreamingLoess`/`OnlineLoess`. Default: false.
     #[napi(js_name = "return_se")]
     pub return_se: Option<bool>,
     /// Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy.
@@ -304,15 +310,34 @@ pub struct SmoothOptions {
     /// Reduce polynomial degree to linear at boundary vertices (default true).
     #[napi(js_name = "boundary_degree_fallback")]
     pub boundary_degree_fallback: Option<bool>,
-    /// Random seed for reproducible K-fold cross-validation splits.
+    /// Random seed for reproducible K-fold cross-validation splits. Batch
+    /// (`Loess`) only; ignored by `StreamingLoess`/`OnlineLoess`.
     #[napi(js_name = "cv_seed")]
     pub cv_seed: Option<u32>,
 }
 
-/// Build a LoessBuilder from an optional SmoothOptions, applying all fields.
-/// cv_fractions / cv_method / cv_k / cv_seed are forwarded but ignored by
-/// build_streaming and build_online (they are batch-only CV options).
-fn options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder<f64>> {
+/// Which adapter `options_to_builder` is configuring a builder for.
+///
+/// `confidence_intervals`/`prediction_intervals`/`return_se`/`cv_fractions`/
+/// `cv_method`/`cv_k`/`cv_seed` are Batch-only. `return_diagnostics`/
+/// `return_residuals` are additionally no-ops for Online (its output always
+/// includes a residual regardless of the flag, and it has no diagnostics
+/// field). `parallel` is real for all three modes.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum AdapterKind {
+    Batch,
+    Streaming,
+    Online,
+}
+
+/// Build a LoessBuilder from an optional SmoothOptions, applying all fields
+/// relevant to `kind`.
+fn options_to_builder(
+    opts: Option<&SmoothOptions>,
+    kind: AdapterKind,
+) -> Result<LoessBuilder<f64>> {
+    let is_batch = kind == AdapterKind::Batch;
+    let supports_diagnostics = kind != AdapterKind::Online;
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
         let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
@@ -326,25 +351,26 @@ fn options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder<f64>>
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_residuals: opts.return_residuals.unwrap_or(false),
+                return_residuals: supports_diagnostics && opts.return_residuals.unwrap_or(false),
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
-                confidence_intervals: opts.confidence_intervals,
-                prediction_intervals: opts.prediction_intervals,
+                return_diagnostics: supports_diagnostics
+                    && opts.return_diagnostics.unwrap_or(false),
+                confidence_intervals: is_batch.then_some(opts.confidence_intervals).flatten(),
+                prediction_intervals: is_batch.then_some(opts.prediction_intervals).flatten(),
                 parallel: opts.parallel,
                 degree: opts.degree.as_deref(),
                 dimensions: opts.dimensions.map(|v| v as usize),
                 distance_metric: opts.distance_metric.as_deref(),
                 weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
                 surface_mode: opts.surface_mode.as_deref(),
-                return_se: opts.return_se.unwrap_or(false),
+                return_se: is_batch && opts.return_se.unwrap_or(false),
                 cell: opts.cell,
                 interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
                 boundary_degree_fallback: opts.boundary_degree_fallback,
-                cv_fractions: opts.cv_fractions.as_deref(),
-                cv_method: opts.cv_method.as_deref(),
-                cv_k: opts.cv_k.map(|v| v as usize),
-                cv_seed: opts.cv_seed.map(|s| s as u64),
+                cv_fractions: is_batch.then_some(opts.cv_fractions.as_deref()).flatten(),
+                cv_method: is_batch.then_some(opts.cv_method.as_deref()).flatten(),
+                cv_k: is_batch.then_some(opts.cv_k.map(|v| v as usize)).flatten(),
+                cv_seed: is_batch.then_some(opts.cv_seed.map(|s| s as u64)).flatten(),
             },
         ))?;
         builder = configured_builder;
@@ -406,7 +432,7 @@ impl Loess {
     }
 
     fn create_builder(&self) -> Result<LoessBuilder<f64>> {
-        options_to_builder(self.options.as_ref())
+        options_to_builder(self.options.as_ref(), AdapterKind::Batch)
     }
 }
 
@@ -457,7 +483,7 @@ impl StreamingLoess {
         options: Option<SmoothOptions>,
         streaming_opts: Option<StreamingOptions>,
     ) -> Result<Self> {
-        let builder = options_to_builder(options.as_ref())?;
+        let builder = options_to_builder(options.as_ref(), AdapterKind::Streaming)?;
 
         let (chunk_size, overlap, merge_strategy) = match streaming_opts {
             Some(s) => (
@@ -519,7 +545,7 @@ impl OnlineLoess {
     /// Create a new online LOESS smoother.
     #[napi(constructor)]
     pub fn new(options: Option<SmoothOptions>, online_opts: Option<OnlineOptions>) -> Result<Self> {
-        let builder = options_to_builder(options.as_ref())?;
+        let builder = options_to_builder(options.as_ref(), AdapterKind::Online)?;
 
         let (window_capacity, min_points, update_mode) = match online_opts {
             Some(o) => (

@@ -149,6 +149,8 @@ See [cpp.md](api.md) for the full `LoessResult` field reference.
 | `overlap` | `int` | `500` | Overlap between chunks |
 | `merge_strategy` | `std::string` | `"weighted_average"` | Strategy for blending overlap regions |
 
+Confidence/prediction intervals, standard errors, and cross-validation are Batch-only and not available here; see [fastLoess](api.md) for those.
+
 ## Options
 
 ### merge_strategy

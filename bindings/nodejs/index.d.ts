@@ -132,21 +132,36 @@ export interface SmoothOptions {
   scaling_method?: string
   /** Auto-convergence tolerance. Default: None. */
   auto_converge?: number
-  /** Return residuals in result. Default: false. */
+  /** Return residuals in result. Ignored by `OnlineLoess`. Default: false. */
   return_residuals?: boolean
   /** Return robustness weights in result. Default: false. */
   return_robustness_weights?: boolean
-  /** Return diagnostics (RMSE, etc.). Default: false. */
+  /** Return diagnostics (RMSE, etc.). Ignored by `OnlineLoess`. Default: false. */
   return_diagnostics?: boolean
-  /** Calculate confidence intervals (e.g., 0.95). Default: None. */
+  /**
+   * Calculate confidence intervals (e.g., 0.95). Batch (`Loess`) only;
+   * ignored by `StreamingLoess`/`OnlineLoess`. Default: None.
+   */
   confidence_intervals?: number
-  /** Calculate prediction intervals. Default: None. */
+  /**
+   * Calculate prediction intervals. Batch (`Loess`) only; ignored by
+   * `StreamingLoess`/`OnlineLoess`. Default: None.
+   */
   prediction_intervals?: number
-  /** Fractions to use for cross-validation. */
+  /**
+   * Fractions to use for cross-validation. Batch (`Loess`) only; ignored
+   * by `StreamingLoess`/`OnlineLoess`.
+   */
   cv_fractions?: Array<number>
-  /** CV method ("loocv", "kfold"). Default: "kfold". */
+  /**
+   * CV method ("loocv", "kfold"). Batch (`Loess`) only; ignored by
+   * `StreamingLoess`/`OnlineLoess`. Default: "kfold".
+   */
   cv_method?: string
-  /** Number of folds for K-Fold CV. Default: 5. */
+  /**
+   * Number of folds for K-Fold CV. Batch (`Loess`) only; ignored by
+   * `StreamingLoess`/`OnlineLoess`. Default: 5.
+   */
   cv_k?: number
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
@@ -160,7 +175,10 @@ export interface SmoothOptions {
   weighted_metric_weights?: Array<number>
   /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
   surface_mode?: string
-  /** Compute hat-matrix statistics (enp, trace_hat, etc.). Default: false. */
+  /**
+   * Compute hat-matrix statistics (enp, trace_hat, etc.). Batch (`Loess`)
+   * only; ignored by `StreamingLoess`/`OnlineLoess`. Default: false.
+   */
   return_se?: boolean
   /** Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy. */
   cell?: number
@@ -168,7 +186,10 @@ export interface SmoothOptions {
   interpolation_vertices?: number
   /** Reduce polynomial degree to linear at boundary vertices (default true). */
   boundary_degree_fallback?: boolean
-  /** Random seed for reproducible K-fold cross-validation splits. */
+  /**
+   * Random seed for reproducible K-fold cross-validation splits. Batch
+   * (`Loess`) only; ignored by `StreamingLoess`/`OnlineLoess`.
+   */
   cv_seed?: number
 }
 

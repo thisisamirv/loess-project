@@ -34,7 +34,6 @@ use crate::math::distance::{DistanceLinalg, DistanceMetric};
 use crate::math::kernel::WeightFunction;
 use crate::math::linalg::FloatLinalg;
 use crate::math::scaling::ScalingMethod;
-use crate::primitives::backend::Backend;
 use crate::primitives::errors::LoessError;
 
 // Update mode for online LOESS processing.
@@ -83,9 +82,6 @@ pub struct OnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
 
     // Policy for handling data boundaries
     pub boundary_policy: BoundaryPolicy,
-
-    // Whether to return residuals
-    pub compute_residuals: bool,
 
     // Whether to return robustness weights
     pub return_robustness_weights: bool,
@@ -145,10 +141,6 @@ pub struct OnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     #[doc(hidden)]
     pub custom_kdtree_builder: Option<KDTreeBuilderFn<T>>,
 
-    // Execution backend hint.
-    #[doc(hidden)]
-    pub backend: Option<Backend>,
-
     // Parallel execution hint.
     #[doc(hidden)]
     pub parallel: Option<bool>,
@@ -176,7 +168,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
             boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
-            compute_residuals: DEFAULT_RETURN_RESIDUALS,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             auto_converge: default_auto_converge(),
             deferred_error: None,
@@ -197,7 +188,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
             custom_fit_pass: None,
             custom_vertex_pass: None,
             custom_kdtree_builder: None,
-            backend: None,
             parallel: None,
         }
     }
@@ -390,7 +380,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     custom_vertex_pass: self.config.custom_vertex_pass,
                     custom_kdtree_builder: self.config.custom_kdtree_builder,
                     parallel: self.config.parallel.unwrap_or(false),
-                    backend: self.config.backend,
+                    backend: None,
                 };
 
                 let result = LoessExecutor::run_with_config(x_vec, y_vec, config);
@@ -451,7 +441,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     custom_vertex_pass: self.config.custom_vertex_pass,
                     custom_kdtree_builder: self.config.custom_kdtree_builder,
                     parallel: self.config.parallel.unwrap_or(false),
-                    backend: self.config.backend,
+                    backend: None,
                 };
 
                 let result = LoessExecutor::run_with_config(x_vec, y_vec, config.clone());

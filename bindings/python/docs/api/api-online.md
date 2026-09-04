@@ -53,7 +53,9 @@ print(result)
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `str` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
-| `parallel` | `bool` | `False` | Enable parallel execution (off by default; online LOESS fits one point at a time) |
+| `parallel` | `bool` | `False` | Enable parallel execution (used for internal KD-tree/interval-pass dispatch; off by default since online updates are latency-sensitive) |
+
+Confidence/prediction intervals, standard errors, cross-validation, `return_diagnostics`, and `return_residuals` are Batch-only and not available here; see [fastLoess](api.md) for those.
 
 ## Result Structure
 

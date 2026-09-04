@@ -795,13 +795,11 @@ func TestOnlineLoess(t *testing.T) {
 		}
 	})
 
-	t.Run("Diagnostics", func(t *testing.T) {
+	t.Run("Basic", func(t *testing.T) {
 		opts := fastloess.DefaultOnlineOptions()
 		opts.Fraction = 0.5
 		opts.WindowCapacity = 50
 		opts.MinPoints = 5
-		opts.ReturnDiagnostics = true
-		opts.ReturnResiduals = true
 		model, err := fastloess.NewOnlineLoess(opts)
 		if err != nil {
 			t.Fatalf("NewOnlineLoess failed: %v", err)

@@ -165,7 +165,10 @@ struct StreamingOptions : public LoessOptions {
  * @brief Options for online LOESS.
  *
  * Identical fields to LoessOptions but defaults parallel to false, since
- * online LOESS processes one point at a time and parallelism rarely helps.
+ * online LOESS processes one point at a time; parallel still gates internal
+ * KD-tree/interval-pass dispatch. Confidence/prediction intervals, standard
+ * errors, cross-validation, and diagnostics/residuals are Batch-only (or
+ * Batch/Streaming-only) and have no equivalent here.
  */
 struct OnlineOptions {
   double fraction = detail::k_default_fraction;
@@ -175,26 +178,17 @@ struct OnlineOptions {
   std::string scaling_method = "mad";
   std::string boundary_policy = "extend";
   std::string zero_weight_fallback = "use_local_mean";
-  double confidence_intervals = NAN;
-  double prediction_intervals = NAN;
   double auto_converge = NAN;
-  bool return_diagnostics = false;
-  bool return_residuals = false;
   bool return_robustness_weights = false;
-  bool return_se = false;
   bool parallel = false; ///< Parallelism rarely helps for single-point updates
   std::string degree = "linear";
   int dimensions = 1;
   std::string distance_metric = "normalized";
   std::string surface_mode = "interpolation";
-  std::vector<double> cv_fractions;
-  std::string cv_method = "kfold";
-  int cv_k = detail::k_default_cv_k;
   std::vector<double> weighted_metric_weights;
   double cell = NAN;
   int interpolation_vertices = 0;
   int boundary_degree_fallback = -1;
-  uint64_t cv_seed = 0;
   // Online-specific fields
   int window_capacity = detail::k_default_window_capacity;
   int min_points = detail::k_default_min_points;
@@ -518,10 +512,8 @@ public:
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
             : nullptr,
-        options.surface_mode.c_str(), options.return_se ? 1 : 0,
-        options.confidence_intervals, options.prediction_intervals,
-        options.cell, options.interpolation_vertices,
-        options.boundary_degree_fallback,
+        options.surface_mode.c_str(), options.cell,
+        options.interpolation_vertices, options.boundary_degree_fallback,
         options.weighted_metric_weights.empty()
             ? nullptr
             : options.weighted_metric_weights.data(),
@@ -649,17 +641,14 @@ public:
         options.robustness_method.c_str(), options.scaling_method.c_str(),
         options.boundary_policy.c_str(),
         options.return_robustness_weights ? 1 : 0,
-        options.return_diagnostics ? 1 : 0, options.return_residuals ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.parallel ? 1 : 0, options.window_capacity, options.min_points,
         options.update_mode.c_str(), options.degree.c_str(), options.dimensions,
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
             : nullptr,
-        options.surface_mode.c_str(), options.return_se ? 1 : 0,
-        options.confidence_intervals, options.prediction_intervals,
-        options.cell, options.interpolation_vertices,
-        options.boundary_degree_fallback,
+        options.surface_mode.c_str(), options.cell,
+        options.interpolation_vertices, options.boundary_degree_fallback,
         options.weighted_metric_weights.empty()
             ? nullptr
             : options.weighted_metric_weights.data(),

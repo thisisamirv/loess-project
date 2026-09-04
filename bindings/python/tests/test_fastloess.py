@@ -668,7 +668,7 @@ class TestParameterCoverage:
 
     def test_streaming_misc_params(self):
         """Cover: overlap, scaling_method, boundary_policy, auto_converge,
-        return_diagnostics, return_robustness_weights, degree, surface_mode, return_se.
+        return_diagnostics, return_robustness_weights, degree, surface_mode.
         """
         x = np.linspace(0, 100, 200)
         y = np.sin(x / 10)
@@ -683,7 +683,6 @@ class TestParameterCoverage:
             return_robustness_weights=True,
             degree="quadratic",
             surface_mode="direct",
-            return_se=True,
         )
         r1 = s.process_chunk(x, y)
         r2 = s.finalize()
@@ -724,14 +723,13 @@ class TestParameterCoverage:
 
     def test_online_misc_params(self):
         """Cover: auto_converge, return_robustness_weights, degree, scaling_method,
-        boundary_policy, surface_mode, return_se, parallel."""
+        boundary_policy, surface_mode, parallel."""
         x = np.linspace(0, 10, 30)
         y = np.sin(x)
         o = fastloess.OnlineLoess(
             fraction=0.5,
             window_capacity=20,
             degree="quadratic",
-            return_se=True,
             auto_converge=1e-3,
             scaling_method="mean",
             boundary_policy="zero",

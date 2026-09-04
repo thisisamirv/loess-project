@@ -288,12 +288,9 @@ impl PyStreamingLoess {
         distance_metric="normalized",
         weighted_metric_weights=None,
         surface_mode="interpolation",
-        return_se=false,
         cell=None,
         interpolation_vertices=None,
-        boundary_degree_fallback=None,
-        confidence_intervals=None,
-        prediction_intervals=None
+        boundary_degree_fallback=None
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -317,12 +314,9 @@ impl PyStreamingLoess {
         distance_metric: &str,
         weighted_metric_weights: Option<Vec<f64>>,
         surface_mode: &str,
-        return_se: bool,
         cell: Option<f64>,
         interpolation_vertices: Option<usize>,
         boundary_degree_fallback: Option<bool>,
-        confidence_intervals: Option<f64>,
-        prediction_intervals: Option<f64>,
     ) -> PyResult<Self> {
         let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -338,15 +332,15 @@ impl PyStreamingLoess {
                 return_residuals,
                 return_robustness_weights,
                 return_diagnostics,
-                confidence_intervals,
-                prediction_intervals,
+                confidence_intervals: None,
+                prediction_intervals: None,
                 parallel: Some(parallel),
                 degree: Some(degree),
                 dimensions: Some(dimensions),
                 distance_metric: Some(distance_metric),
                 weighted_metric_weights: weighted_metric_weights.as_deref(),
                 surface_mode: Some(surface_mode),
-                return_se,
+                return_se: false,
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,
@@ -462,14 +456,9 @@ impl PyOnlineLoess {
         distance_metric="normalized",
         weighted_metric_weights=None,
         surface_mode="interpolation",
-        return_se=false,
-        return_diagnostics=false,
-        return_residuals=false,
         cell=None,
         interpolation_vertices=None,
-        boundary_degree_fallback=None,
-        confidence_intervals=None,
-        prediction_intervals=None
+        boundary_degree_fallback=None
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -491,14 +480,9 @@ impl PyOnlineLoess {
         distance_metric: &str,
         weighted_metric_weights: Option<Vec<f64>>,
         surface_mode: &str,
-        return_se: bool,
-        return_diagnostics: bool,
-        return_residuals: bool,
         cell: Option<f64>,
         interpolation_vertices: Option<usize>,
         boundary_degree_fallback: Option<bool>,
-        confidence_intervals: Option<f64>,
-        prediction_intervals: Option<f64>,
     ) -> PyResult<Self> {
         let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -511,18 +495,18 @@ impl PyOnlineLoess {
                 boundary_policy: Some(boundary_policy),
                 scaling_method: Some(scaling_method),
                 auto_converge,
-                return_residuals,
+                return_residuals: false,
                 return_robustness_weights,
-                return_diagnostics,
-                confidence_intervals,
-                prediction_intervals,
+                return_diagnostics: false,
+                confidence_intervals: None,
+                prediction_intervals: None,
                 parallel: Some(parallel),
                 degree: Some(degree),
                 dimensions: Some(dimensions),
                 distance_metric: Some(distance_metric),
                 weighted_metric_weights: weighted_metric_weights.as_deref(),
                 surface_mode: Some(surface_mode),
-                return_se,
+                return_se: false,
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,

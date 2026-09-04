@@ -38,7 +38,6 @@ use crate::math::distance::{DistanceLinalg, DistanceMetric};
 use crate::math::kernel::WeightFunction;
 use crate::math::linalg::FloatLinalg;
 use crate::math::scaling::ScalingMethod;
-use crate::primitives::backend::Backend;
 use crate::primitives::errors::LoessError;
 
 // Strategy for merging overlapping regions between streaming chunks.
@@ -160,10 +159,6 @@ pub struct StreamingLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg>
     #[doc(hidden)]
     pub custom_kdtree_builder: Option<KDTreeBuilderFn<T>>,
 
-    // Execution backend hint.
-    #[doc(hidden)]
-    pub backend: Option<Backend>,
-
     // Parallel execution hint.
     #[doc(hidden)]
     pub parallel: Option<bool>,
@@ -215,7 +210,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
             custom_fit_pass: None,
             custom_vertex_pass: None,
             custom_kdtree_builder: None,
-            backend: None,
             parallel: None,
         }
     }
@@ -339,7 +333,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             custom_vertex_pass: self.config.custom_vertex_pass,
             custom_kdtree_builder: self.config.custom_kdtree_builder,
             parallel: self.config.parallel.unwrap_or(false),
-            backend: self.config.backend,
+            backend: None,
         };
         // Execute LOESS on combined data
         let result = LoessExecutor::run_with_config(&combined_x, &combined_y, config);

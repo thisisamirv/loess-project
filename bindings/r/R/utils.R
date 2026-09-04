@@ -213,8 +213,7 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(
-            type,
+        switch(type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),
@@ -271,16 +270,11 @@ online_params <- c(
     "update_mode",
     "auto_converge",
     "return_robustness_weights",
-    "return_diagnostics",
-    "return_residuals",
     "parallel",
     "degree",
     "dimensions",
     "distance_metric",
     "surface_mode",
-    "return_se",
-    "confidence_intervals",
-    "prediction_intervals",
     "weighted_metric_weights",
     "cell",
     "interpolation_vertices",
@@ -307,9 +301,6 @@ streaming_params <- c(
     "dimensions",
     "distance_metric",
     "surface_mode",
-    "return_se",
-    "confidence_intervals",
-    "prediction_intervals",
     "weighted_metric_weights",
     "cell",
     "interpolation_vertices",

@@ -124,46 +124,6 @@ public final class OnlineOptions {
         }
 
         /**
-         * @param confidenceIntervals the confidence level
-         * @return this builder, for chaining
-         * @see Options.Builder#confidenceIntervals(double)
-         */
-        public Builder confidenceIntervals(double confidenceIntervals) {
-            common.confidenceIntervals(confidenceIntervals);
-            return this;
-        }
-
-        /**
-         * @param predictionIntervals the prediction level
-         * @return this builder, for chaining
-         * @see Options.Builder#predictionIntervals(double)
-         */
-        public Builder predictionIntervals(double predictionIntervals) {
-            common.predictionIntervals(predictionIntervals);
-            return this;
-        }
-
-        /**
-         * @param returnDiagnostics whether to compute diagnostics
-         * @return this builder, for chaining
-         * @see Options.Builder#returnDiagnostics(boolean)
-         */
-        public Builder returnDiagnostics(boolean returnDiagnostics) {
-            common.returnDiagnostics(returnDiagnostics);
-            return this;
-        }
-
-        /**
-         * @param returnResiduals whether to include residuals in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnResiduals(boolean)
-         */
-        public Builder returnResiduals(boolean returnResiduals) {
-            common.returnResiduals(returnResiduals);
-            return this;
-        }
-
-        /**
          * @param returnRobustnessWeights whether to include robustness weights
          * in the result
          * @return this builder, for chaining
@@ -231,16 +191,6 @@ public final class OnlineOptions {
          */
         public Builder surfaceMode(String surfaceMode) {
             common.surfaceMode(surfaceMode);
-            return this;
-        }
-
-        /**
-         * @param returnSe whether to return standard errors
-         * @return this builder, for chaining
-         * @see Options.Builder#returnSe(boolean)
-         */
-        public Builder returnSe(boolean returnSe) {
-            common.returnSe(returnSe);
             return this;
         }
 

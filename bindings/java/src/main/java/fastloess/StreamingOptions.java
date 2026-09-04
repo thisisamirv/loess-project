@@ -122,26 +122,6 @@ public final class StreamingOptions {
         }
 
         /**
-         * @param confidenceIntervals the confidence level
-         * @return this builder, for chaining
-         * @see Options.Builder#confidenceIntervals(double)
-         */
-        public Builder confidenceIntervals(double confidenceIntervals) {
-            common.confidenceIntervals(confidenceIntervals);
-            return this;
-        }
-
-        /**
-         * @param predictionIntervals the prediction level
-         * @return this builder, for chaining
-         * @see Options.Builder#predictionIntervals(double)
-         */
-        public Builder predictionIntervals(double predictionIntervals) {
-            common.predictionIntervals(predictionIntervals);
-            return this;
-        }
-
-        /**
          * @param returnDiagnostics whether to compute diagnostics
          * @return this builder, for chaining
          * @see Options.Builder#returnDiagnostics(boolean)
@@ -229,16 +209,6 @@ public final class StreamingOptions {
          */
         public Builder surfaceMode(String surfaceMode) {
             common.surfaceMode(surfaceMode);
-            return this;
-        }
-
-        /**
-         * @param returnSe whether to return standard errors
-         * @return this builder, for chaining
-         * @see Options.Builder#returnSe(boolean)
-         */
-        public Builder returnSe(boolean returnSe) {
-            common.returnSe(returnSe);
             return this;
         }
 

@@ -224,14 +224,11 @@ class StreamingLoess:
         dimensions: int = 1,
         distance_metric: str = "normalized",
         surface_mode: str = "interpolation",
-        return_se: bool = False,
         merge_strategy: str = "weighted_average",
         weighted_metric_weights: Sequence[float] | None = None,
         cell: float | None = None,
         interpolation_vertices: int | None = None,
         boundary_degree_fallback: bool | None = None,
-        confidence_intervals: float | None = None,
-        prediction_intervals: float | None = None,
     ) -> None:
         """Initialize the streaming processor."""
 
@@ -264,15 +261,10 @@ class OnlineLoess:
         dimensions: int = 1,
         distance_metric: str = "normalized",
         surface_mode: str = "interpolation",
-        return_se: bool = False,
         weighted_metric_weights: Sequence[float] | None = None,
-        return_diagnostics: bool = False,
-        return_residuals: bool = False,
         cell: float | None = None,
         interpolation_vertices: int | None = None,
         boundary_degree_fallback: bool | None = None,
-        confidence_intervals: float | None = None,
-        prediction_intervals: float | None = None,
     ) -> None:
         """Initialize the online processor."""
 
