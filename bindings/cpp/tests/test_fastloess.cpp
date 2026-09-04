@@ -49,18 +49,26 @@ constexpr size_t k_seven_count = 7;
 
 // ── Test fixture data ──────────────────────────────────────────────────────
 // Constexpr arrays: literals in constexpr initializers are not magic numbers.
-constexpr std::array<double, k_small_count> k_simple_x = {1.0, 2.0, 3.0, 4.0,
-                                                          5.0};
-constexpr std::array<double, k_small_count> k_simple_y_noisy = {2.0, 4.1, 5.9,
-                                                                8.2, 9.8};
+constexpr std::array<double, k_small_count> k_simple_x = {
+    1.0, 2.0, 3.0, 4.0, 5.0,
+};
+constexpr std::array<double, k_small_count> k_simple_y_noisy = {
+    2.0, 4.1, 5.9, 8.2, 9.8,
+};
 constexpr std::array<double, k_small_count> k_simple_y_outlier = {
-    2.0, 4.1, 100.0, 8.2, 9.8};
-constexpr std::array<double, k_small_count> k_reuse_x2 = {10.0, 20.0, 30.0,
-                                                          40.0, 50.0};
-constexpr std::array<double, k_small_count> k_reuse_y2 = {20.0, 40.0, 60.0,
-                                                          80.0, 100.0};
-constexpr std::array<double, k_mismatch_x_count> k_mismatch_x_arr = {1.0, 2.0,
-                                                                     3.0};
+    2.0, 4.1, 100.0, 8.2, 9.8,
+};
+constexpr std::array<double, k_small_count> k_reuse_x2 = {
+    10.0, 20.0, 30.0, 40.0, 50.0,
+};
+constexpr std::array<double, k_small_count> k_reuse_y2 = {
+    20.0, 40.0, 60.0, 80.0, 100.0,
+};
+constexpr std::array<double, k_mismatch_x_count> k_mismatch_x_arr = {
+    1.0,
+    2.0,
+    3.0,
+};
 constexpr std::array<double, k_mismatch_y_count> k_mismatch_y_arr = {2.0, 4.0};
 
 // ── Assert helpers ─────────────────────────────────────────────────────────
@@ -630,9 +638,9 @@ void testStreamingMergeStrategies() {
 
 void testStreamingOverlapAndParams() {
   std::cout << "Running testStreamingOverlapAndParams...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
+  const auto data = makeLinear30();
+  const auto x_vals = data.first;
+  const auto y_vals = data.second;
   StreamingOptions opts;
   opts.fraction = k_fraction_half;
   opts.chunk_size = k_chunk_half;
@@ -644,8 +652,8 @@ void testStreamingOverlapAndParams() {
   opts.surface_mode = "direct";
   opts.return_se = true;
   StreamingLoess stream(opts);
-  auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
-  auto final_res = stream.finalize().value();
+  const auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
+  const auto final_res = stream.finalize().value();
   assertTrue(chunk_res.y_vector().size() + final_res.y_vector().size() ==
              k_thirty_count);
 }
