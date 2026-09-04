@@ -46,6 +46,7 @@ fn main() -> Result<(), LoessError> {
         .merge_strategy("average")
         .chunk_size(60usize)
         .overlap(20usize)
+        .iterations(3)
         .build()?;
     let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
     // The second chunk's overlap region (its first 20 points) is where
@@ -57,7 +58,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-Merged value in overlap region (average): 0.3676296872490885
+Merged value in overlap region (average): 0.32485200482802645
 ```
 
 ---
@@ -81,6 +82,7 @@ fn main() -> Result<(), LoessError> {
         .merge_strategy("take_first")
         .chunk_size(60usize)
         .overlap(20usize)
+        .iterations(3)
         .build()?;
     let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
     let result = model.process_chunk(&x_chunk[60..], &y_chunk[60..])?;
@@ -90,7 +92,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-Merged value in overlap region (take_first): 0.3576370673373696
+Merged value in overlap region (take_first): 0.3537634002807739
 ```
 
 ---
@@ -114,6 +116,7 @@ fn main() -> Result<(), LoessError> {
         .merge_strategy("take_last")
         .chunk_size(60usize)
         .overlap(20usize)
+        .iterations(3)
         .build()?;
     let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
     let result = model.process_chunk(&x_chunk[60..], &y_chunk[60..])?;
@@ -123,7 +126,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-Merged value in overlap region (take_last): 0.3776223071608074
+Merged value in overlap region (take_last): 0.29594060937527905
 ```
 
 ---
@@ -151,6 +154,7 @@ fn main() -> Result<(), LoessError> {
         .merge_strategy("weighted_average")
         .chunk_size(60usize)
         .overlap(20usize)
+        .iterations(3)
         .build()?;
     let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
     let result = model.process_chunk(&x_chunk[60..], &y_chunk[60..])?;
@@ -160,7 +164,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-Merged value in overlap region (weighted_average): 0.36263337729322903
+Merged value in overlap region (weighted_average): 0.3393077025544002
 ```
 
 ---

@@ -16,7 +16,7 @@ Standard LOESS operates on a single predictor \f$x\f$. Setting `dimensions > 1` 
 | `2` | Spatial surface, 2-predictor model | `x`: n × 2 matrix |
 | `3+` | High-dimensional regression | `x`: n × d matrix |
 
-> **Computational cost:** Neighbourhood search scales with \f$d\f$ dimensions. For `dimensions ≥ 3` keep `fraction` small and consider increasing `delta` to activate interpolation.
+> **Computational cost:** Neighbourhood search scales with \f$d\f$ dimensions. For `dimensions ≥ 3` keep `fraction` small.
 
 <hr>
 

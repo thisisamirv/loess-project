@@ -10,7 +10,7 @@ pub const DEFAULT_STREAMING_CHUNK_SIZE: usize = 5_000;
 pub const DEFAULT_STREAMING_OVERLAP: usize = 500;
 
 // Default number of robustness iterations for the **Streaming** adapter.
-pub const DEFAULT_STREAMING_ITERATIONS: usize = 2;
+pub const DEFAULT_STREAMING_ITERATIONS: usize = 3;
 
 // Default merge strategy for overlapping chunk regions.
 pub const DEFAULT_STREAMING_MERGE_STRATEGY_ENUM: MergeStrategy = MergeStrategy::WeightedAverage;
@@ -24,7 +24,7 @@ pub const DEFAULT_ONLINE_WINDOW_CAPACITY: usize = 1_000;
 pub const DEFAULT_ONLINE_MIN_POINTS: usize = 2;
 
 // Default number of robustness iterations for the **Online** adapter.
-pub const DEFAULT_ONLINE_ITERATIONS: usize = 1;
+pub const DEFAULT_ONLINE_ITERATIONS: usize = 3;
 
 // Default update mode for the **Online** adapter.
 pub const DEFAULT_ONLINE_UPDATE_MODE_ENUM: UpdateMode = UpdateMode::Incremental;

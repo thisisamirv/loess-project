@@ -52,14 +52,14 @@ public class Example {
             y[i] = Math.sin(x[i]) + 0.1;
         }
 
-        StreamingOptions options = StreamingOptions.builder().overlap(10).mergeStrategy("average").build();
+        StreamingOptions options = StreamingOptions.builder().chunkSize(60).overlap(20).mergeStrategy("average").build();
 
         try (StreamingLoess model = new StreamingLoess(options)) {
-            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 50), java.util.Arrays.copyOfRange(y, 0, 50));
-            model.processChunk(java.util.Arrays.copyOfRange(x, 50, x.length), java.util.Arrays.copyOfRange(y, 50, y.length));
-
-            Result result = model.finish();
-            System.out.println("First smoothed value (average merge): " + result.y()[0]);
+            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 60), java.util.Arrays.copyOfRange(y, 0, 60));
+            // The second chunk's overlap region (its first 20 points) is where
+            // mergeStrategy actually blends the two chunks' estimates.
+            Result result = model.processChunk(java.util.Arrays.copyOfRange(x, 60, x.length), java.util.Arrays.copyOfRange(y, 60, y.length));
+            System.out.println("Merged value in overlap region (average): " + result.y()[5]);
         }
     }
 }
@@ -67,7 +67,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (average merge): -0.4085108268565776
+Merged value in overlap region (average): 0.32485200482802645
 ----
 
 '''
@@ -94,14 +94,12 @@ public class Example {
             y[i] = Math.sin(x[i]) + 0.1;
         }
 
-        StreamingOptions options = StreamingOptions.builder().overlap(10).mergeStrategy("take_first").build();
+        StreamingOptions options = StreamingOptions.builder().chunkSize(60).overlap(20).mergeStrategy("take_first").build();
 
         try (StreamingLoess model = new StreamingLoess(options)) {
-            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 50), java.util.Arrays.copyOfRange(y, 0, 50));
-            model.processChunk(java.util.Arrays.copyOfRange(x, 50, x.length), java.util.Arrays.copyOfRange(y, 50, y.length));
-
-            Result result = model.finish();
-            System.out.println("First smoothed value (take_first merge): " + result.y()[0]);
+            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 60), java.util.Arrays.copyOfRange(y, 0, 60));
+            Result result = model.processChunk(java.util.Arrays.copyOfRange(x, 60, x.length), java.util.Arrays.copyOfRange(y, 60, y.length));
+            System.out.println("Merged value in overlap region (take_first): " + result.y()[5]);
         }
     }
 }
@@ -109,7 +107,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (take_first merge): -0.4085108268565776
+Merged value in overlap region (take_first): 0.3537634002807739
 ----
 
 '''
@@ -136,14 +134,12 @@ public class Example {
             y[i] = Math.sin(x[i]) + 0.1;
         }
 
-        StreamingOptions options = StreamingOptions.builder().overlap(10).mergeStrategy("take_last").build();
+        StreamingOptions options = StreamingOptions.builder().chunkSize(60).overlap(20).mergeStrategy("take_last").build();
 
         try (StreamingLoess model = new StreamingLoess(options)) {
-            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 50), java.util.Arrays.copyOfRange(y, 0, 50));
-            model.processChunk(java.util.Arrays.copyOfRange(x, 50, x.length), java.util.Arrays.copyOfRange(y, 50, y.length));
-
-            Result result = model.finish();
-            System.out.println("First smoothed value (take_last merge): " + result.y()[0]);
+            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 60), java.util.Arrays.copyOfRange(y, 0, 60));
+            Result result = model.processChunk(java.util.Arrays.copyOfRange(x, 60, x.length), java.util.Arrays.copyOfRange(y, 60, y.length));
+            System.out.println("Merged value in overlap region (take_last): " + result.y()[5]);
         }
     }
 }
@@ -151,7 +147,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (take_last merge): -0.4085108268565776
+Merged value in overlap region (take_last): 0.29594060937527905
 ----
 
 '''
@@ -185,14 +181,12 @@ public class Example {
             y[i] = Math.sin(x[i]) + 0.1;
         }
 
-        StreamingOptions options = StreamingOptions.builder().overlap(10).mergeStrategy("weighted_average").build(); // Default merge strategy
+        StreamingOptions options = StreamingOptions.builder().chunkSize(60).overlap(20).mergeStrategy("weighted_average").build(); // Default merge strategy
 
         try (StreamingLoess model = new StreamingLoess(options)) {
-            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 50), java.util.Arrays.copyOfRange(y, 0, 50));
-            model.processChunk(java.util.Arrays.copyOfRange(x, 50, x.length), java.util.Arrays.copyOfRange(y, 50, y.length));
-
-            Result result = model.finish();
-            System.out.println("First smoothed value (weighted_average merge): " + result.y()[0]);
+            model.processChunk(java.util.Arrays.copyOfRange(x, 0, 60), java.util.Arrays.copyOfRange(y, 0, 60));
+            Result result = model.processChunk(java.util.Arrays.copyOfRange(x, 60, x.length), java.util.Arrays.copyOfRange(y, 60, y.length));
+            System.out.println("Merged value in overlap region (weighted_average): " + result.y()[5]);
         }
     }
 }
@@ -200,7 +194,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (weighted_average merge): -0.4085108268565776
+Merged value in overlap region (weighted_average): 0.3393077025544002
 ----
 
 '''
