@@ -10,6 +10,8 @@
   <a href="https://juliahub.com/ui/Packages/General/FastLOESS"><img src="https://img.shields.io/badge/Julia-9558B2?logo=julia&logoColor=white" alt="Julia"></a>
   <a href="https://www.npmjs.com/package/fastloess-wasm"><img src="https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white" alt="WASM"></a>
   <a href="https://github.com/thisisamirv/loess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white" alt="C++"></a>
+  <a href="https://pkg.go.dev/github.com/thisisamirv/loess-project/bindings/go/fastloess"><img src="https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white" alt="Go"></a>
+  <a href="https://central.sonatype.com/artifact/io.github.thisisamirv/fastloess"><img src="https://img.shields.io/badge/Maven_Central-C71A36?logo=apachemaven&logoColor=white" alt="Maven Central"></a>
   <br>
   <a href="https://anaconda.org/conda-forge/fastloess"><img src="https://img.shields.io/badge/fastloess_(Python)-44A833?logo=anaconda&logoColor=white" alt="fastloess (Python)"></a>
   <a href="https://anaconda.org/conda-forge/libfastloess"><img src="https://img.shields.io/badge/libfastloess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastloess (C++)"></a>
@@ -22,6 +24,8 @@
   <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-nodejs.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-nodejs.yml/badge.svg" alt="CI - Node.js"></a>
   <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-wasm.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-wasm.yml/badge.svg" alt="CI - WASM"></a>
   <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-cpp.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-cpp.yml/badge.svg" alt="CI - C++"></a>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-go.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-go.yml/badge.svg" alt="CI - Go"></a>
+  <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-java.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-java.yml/badge.svg" alt="CI - Java"></a>
   <br>
 </p>
 
@@ -31,7 +35,7 @@
   <em>One LOESS to Rule Them All</em>
 </p>
 
-The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Estimated Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
+The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Estimated Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, **Go**, **Java**, and **WebAssembly**.
 
 > The `loess-project` contains a complete ecosystem for LOESS smoothing:
 >
@@ -43,12 +47,14 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 > - **[`JavaScript bindings`](https://www.npmjs.com/package/fastloess)** - Node.js binding
 > - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastloess-wasm)** - WASM binding
 > - **[`C++ bindings`](https://github.com/thisisamirv/loess-project/releases/latest)** - Native C++ binding with CMake integration
+> - **[`Go bindings`](https://pkg.go.dev/github.com/thisisamirv/loess-project/bindings/go/fastloess)** - cgo-based Go binding
+> - **[`Java bindings`](https://central.sonatype.com/artifact/io.github.thisisamirv/fastloess)** - JNI-based Java binding
 
 ---
 
 ## Installation & Documentation
 
-> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, and C++. See the documentation for your binding/crate below for installation instructions.
+> Currently available for R, Python, Rust, Julia, Node.js, WebAssembly, C++, Go, and Java. See the documentation for your binding/crate below for installation instructions.
 >
 > | Binding / Crate | Documentation |
 > | --- | --- |
@@ -60,6 +66,8 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 > | Node.js | [thisisamirv.github.io/loess-project/nodejs](https://thisisamirv.github.io/loess-project/nodejs/) |
 > | WebAssembly | [thisisamirv.github.io/loess-project/wasm](https://thisisamirv.github.io/loess-project/wasm/) |
 > | C++ | [thisisamirv.github.io/loess-project/cpp](https://thisisamirv.github.io/loess-project/cpp/) |
+> | Go | [thisisamirv.github.io/loess-project/go](https://thisisamirv.github.io/loess-project/go/) |
+> | Java | [thisisamirv.github.io/loess-project/java](https://thisisamirv.github.io/loess-project/java/) |
 
 ---
 

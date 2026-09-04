@@ -14,9 +14,9 @@
   <em>One LOESS to Rule Them All</em>
 </p>
 
-The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Estimated Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, and **WebAssembly**.
+The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Estimated Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, **Go**, **Java**, and **WebAssembly**.
 
-The `loess-project` also offers bindings for Rust, Python, R, Julia, Node.js, WebAssembly, and C++ — see the [full repository](https://github.com/thisisamirv/loess-project).
+The `loess-project` also offers bindings for Rust, Python, R, Julia, Node.js, WebAssembly, C++, Go, and Java — see the [full repository](https://github.com/thisisamirv/loess-project).
 
 ---
 

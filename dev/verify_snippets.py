@@ -14,6 +14,7 @@ Usage
     python dev/verify_snippets.py --lang rust        # Rust only
     python dev/verify_snippets.py --lang cpp         # C++ only
     python dev/verify_snippets.py --lang go          # Go only
+    python dev/verify_snippets.py --lang java        # Java only
     python dev/verify_snippets.py --file docs/api/python.md
     python dev/verify_snippets.py --dry-run          # list snippets, don't run
     python dev/verify_snippets.py --verbose          # show snippet source on failure
@@ -22,9 +23,9 @@ Usage
     python dev/verify_snippets.py --stop-on-fail     # exit after first failure
     python dev/verify_snippets.py --lang cpp --update-outputs
         # also inject/update ```output blocks in the docs for languages whose
-        # stdout should be embedded (cpp, go, rust, nodejs, wasm) -- replaces
-        # the former dev/add-{cpp,go,rust,nodejs,wasm}-outputs scripts, which
-        # are no longer needed.
+        # stdout should be embedded (cpp, go, java, rust, nodejs, wasm) --
+        # replaces the former dev/add-{cpp,go,java,rust,nodejs,wasm}-outputs
+        # scripts, which are no longer needed.
 """
 
 from __future__ import annotations
@@ -47,6 +48,7 @@ from runners.base import (
     CPP_BINDING_DOCS_DIR,
     DOCS_DIR,
     GO_BINDING_DOCS_DIR,
+    JAVA_BINDING_DOCS_DIR,
     JULIA_DOCS_DIR,
     NODEJS_BINDING_DOCS_DIR,
     REPO_ROOT,
@@ -123,6 +125,38 @@ def _find_python_with_fastloess() -> str:
 # ---------------------------------------------------------------------------
 
 _TAB_RE = re.compile(r'^[ \t]*===\s+"([^"]+)"', re.MULTILINE)
+_ADOC_SOURCE_RE = re.compile(r"^\[source,(\w+)\]\s*$")
+
+
+def _extract_adoc_snippets(adoc_file: Path) -> list[Snippet]:
+    """Extract `[source,LANG]` / `----` ... `----` blocks from an AsciiDoc file."""
+    lines = adoc_file.read_text(encoding="utf-8").splitlines()
+    result: list[Snippet] = []
+    i = 0
+    while i < len(lines):
+        m = _ADOC_SOURCE_RE.match(lines[i])
+        if m and i + 1 < len(lines) and lines[i + 1].strip() == "----":
+            lang_tag = m.group(1)
+            start_line = i + 1  # 1-based line of the `[source,lang]` attribute
+            i += 2
+            code_lines: list[str] = []
+            while i < len(lines) and lines[i].strip() != "----":
+                code_lines.append(lines[i])
+                i += 1
+            if i < len(lines):
+                i += 1  # consume closing ----
+            result.append(
+                Snippet(
+                    file=adoc_file,
+                    line=start_line,
+                    lang_tag=lang_tag,
+                    tab=None,
+                    code="\n".join(code_lines),
+                )
+            )
+            continue
+        i += 1
+    return result
 
 
 def _rmd_chunk_is_runnable(opts_str: str) -> bool:
@@ -137,6 +171,8 @@ def extract_snippets(md_file: Path) -> list[Snippet]:
     For .Rmd files all runnable R chunks are combined into one snippet, since
     Rmd chunks share state (later chunks depend on variables set by earlier ones).
     """
+    if md_file.suffix.lower() == ".adoc":
+        return _extract_adoc_snippets(md_file)
     text = md_file.read_text(encoding="utf-8")
     lines = text.splitlines()
     result: list[Snippet] = []
@@ -326,20 +362,23 @@ def should_skip(snippet: Snippet, runner: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# ```output block injection (merges the former dev/add-{cpp,rust,nodejs,
-# wasm}-outputs.{py,js} scripts into this one). A runner is "output-capable"
-# when its snippets are standalone programs/scripts whose stdout should be
-# embedded back into the docs as a ```output block; R, Julia, and Python
-# docs execute at their own doc-build time instead, so they're intentionally
-# excluded here.
+# ```output block injection (merges the former dev/add-{cpp,go,java,rust,
+# nodejs,wasm}-outputs.{py,js} scripts into this one). A runner is
+# "output-capable" when its snippets are standalone programs/scripts whose
+# stdout should be embedded back into the docs as a ```output block; R,
+# Julia, and Python docs execute at their own doc-build time instead, so
+# they're intentionally excluded here.
 # ---------------------------------------------------------------------------
 
-OUTPUT_CAPABLE_RUNNERS = {"cpp", "go", "rust", "nodejs", "wasm"}
+OUTPUT_CAPABLE_RUNNERS = {"cpp", "go", "java", "rust", "nodejs", "wasm"}
 
 
 def _splice_output_block(lines: list[str], res: RunResult) -> None:
     """Insert/update/remove the ```output block following one snippet, in place."""
     snippet = res.snippet
+    if snippet.file.suffix.lower() == ".adoc":
+        _splice_adoc_output_block(lines, res)
+        return
     code_line_count = len(snippet.code.split("\n"))
     open_idx = snippet.line - 1  # 0-based index of the opening ``` fence
     close_idx = open_idx + 1 + code_line_count  # 0-based index of the closing ``` fence
@@ -363,6 +402,42 @@ def _splice_output_block(lines: list[str], res: RunResult) -> None:
 
     new_block = (
         ["", "```output", *res.stdout.rstrip().split("\n"), "```"]
+        if res.stdout.strip()
+        else []  # passed with no output -> drop any stale block
+    )
+    if end_of_existing is not None:
+        lines[close_idx + 1 : end_of_existing + 1] = new_block
+    else:
+        lines[close_idx + 1 : close_idx + 1] = new_block
+
+
+def _splice_adoc_output_block(lines: list[str], res: RunResult) -> None:
+    """AsciiDoc analogue of `_splice_output_block`, for `[source,console]` blocks."""
+    snippet = res.snippet
+    code_line_count = len(snippet.code.split("\n"))
+    open_idx = snippet.line - 1  # 0-based index of the `[source,lang]` attribute
+    close_idx = open_idx + 2 + code_line_count  # 0-based index of the closing `----`
+    if close_idx >= len(lines) or lines[close_idx].strip() != "----":
+        return  # file has drifted from what was parsed; don't risk corrupting it
+
+    end_of_existing = None
+    if (
+        close_idx + 2 < len(lines)
+        and lines[close_idx + 1] == ""
+        and lines[close_idx + 2].strip() == "[source,console]"
+        and lines[close_idx + 3].strip() == "----"
+    ):
+        j = close_idx + 4
+        while j < len(lines) and lines[j].strip() != "----":
+            j += 1
+        if j < len(lines):
+            end_of_existing = j
+
+    if res.skipped or not res.passed:
+        return  # leave any existing output block untouched
+
+    new_block = (
+        ["", "[source,console]", "----", *res.stdout.rstrip().split("\n"), "----"]
         if res.stdout.strip()
         else []  # passed with no output -> drop any stale block
     )
@@ -437,6 +512,8 @@ def iter_md_files(
         yield from sorted(CPP_BINDING_DOCS_DIR.rglob("*.md"))
     if GO_BINDING_DOCS_DIR.exists():
         yield from sorted(GO_BINDING_DOCS_DIR.rglob("*.md"))
+    if JAVA_BINDING_DOCS_DIR.exists():
+        yield from sorted(JAVA_BINDING_DOCS_DIR.rglob("*.adoc"))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -451,7 +528,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--lang",
-        choices=["python", "julia", "nodejs", "r", "wasm", "rust", "cpp", "go", "all"],
+        choices=[
+            "python",
+            "julia",
+            "nodejs",
+            "r",
+            "wasm",
+            "rust",
+            "cpp",
+            "go",
+            "java",
+            "all",
+        ],
         default="all",
         help="Which language runner to use (default: all)",
     )
