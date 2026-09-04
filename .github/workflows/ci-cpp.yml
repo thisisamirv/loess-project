@@ -39,19 +39,31 @@ jobs:
           components: rustfmt, clippy
 
       - name: Install Rust GNU (Windows)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && runner.arch != 'ARM64'
         run: rustup toolchain install stable-x86_64-pc-windows-gnu
 
       - name: Install GNU Make (Windows)
         if: runner.os == 'Windows'
         run: choco install make -y
 
+      # The x64-only step above bundles objdump via its GNU/MinGW sysroot, but
+      # that GNU binutils build lacks full arm64 PE/COFF export-table support
+      # (silently produced no exports), so arm64 uses LLVM's objdump instead,
+      # which parses any PE machine type uniformly.
+      - name: Install llvm-objdump (Windows arm64)
+        if: runner.os == 'Windows' && runner.arch == 'ARM64'
+        run: |
+          choco install llvm -y
+          $llvmObjdump = Get-ChildItem -Path "C:\Program Files\LLVM" -Filter llvm-objdump.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $llvmObjdump) { throw "llvm-objdump.exe not found after choco install llvm" }
+          $llvmObjdump.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
       - name: Install cppcheck (Windows)
         if: runner.os == 'Windows'
         run: |
-          winget install --id Cppcheck.Cppcheck --exact --accept-source-agreements --accept-package-agreements
-          $cppcheckExe = Get-ChildItem -Path "C:\Program Files\Cppcheck","$env:LOCALAPPDATA\Programs\Cppcheck" -Filter cppcheck.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-          if (-not $cppcheckExe) { throw "cppcheck.exe not found after winget install" }
+          choco install cppcheck -y
+          $cppcheckExe = Get-ChildItem -Path "C:\Program Files\Cppcheck" -Filter cppcheck.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $cppcheckExe) { throw "cppcheck.exe not found after choco install" }
           $cppcheckExe.DirectoryName | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
 
       - name: Install cppcheck (Linux)
@@ -80,7 +92,13 @@ jobs:
           cargo clippy --all-targets -- -D warnings
 
       - name: make cpp-dev
-        run: make cpp-dev
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
+            make cpp-dev CPP_CARGO_TARGET="--target aarch64-pc-windows-msvc" CPP_LIBRARY_DIR="target/aarch64-pc-windows-msvc/release-c" CPP_EXPORT_SCAN="llvm-objdump -p target/aarch64-pc-windows-msvc/release-c/fastloess_cpp.dll"
+          else
+            make cpp-dev
+          fi
 
   clangcl:
     name: C++ (windows-latest, clang-cl)

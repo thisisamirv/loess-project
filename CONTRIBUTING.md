@@ -64,6 +64,18 @@ To develop across all platforms, you will need the following tools installed. Yo
 - **Tools**: `cmake`, `make`, `clang-tidy`, `cppcheck`, `valgrind`
 - **cbindgen**: Install via `cargo install cbindgen` (for header generation)
 
+**Go**:
+
+- **Go**: 1.21+ (with `go` in PATH)
+- **cgo**: `CGO_ENABLED=1` and a C compiler (GCC/Clang; on Windows, a MinGW-w64 toolchain, since Go's `cgo` invokes `gcc` rather than MSVC's `cl.exe`)
+- **golangci-lint**: auto-installed by `make go-dev` if not found (via the official install script)
+
+**Java**:
+
+- **JDK**: 25+ (with `java`/`javac` in PATH, and `JAVA_HOME` pointing at it — some JDK installers add older JDKs earlier on `PATH`, which can silently shadow a newer `JAVA_HOME`)
+- **Maven**: 3.9+ (with `mvn` in PATH)
+- **Checkstyle**: auto-installed by `make java-dev` if not found (downloads the standalone jar)
+
 ### Clone and Branch
 
 ```bash
@@ -142,6 +154,22 @@ make cpp-dev   # Format, lint, cbindgen, cmake tests, valgrind, doc snippets
 make cpp-clean # Clean build artifacts
 ```
 
+### Go Bindings
+
+```bash
+make go       # Build Rust FFI crate + `go build ./...`
+make go-dev   # Format, lint (golangci-lint), build, export verification, test, doc snippets
+make go-clean # Clean build artifacts
+```
+
+### Java Bindings
+
+```bash
+make java       # Build Rust JNI crate + `mvn package`
+make java-dev   # Lint (Checkstyle), build, export verification, test, doc snippets
+make java-clean # Clean build artifacts
+```
+
 ### Full Workspace
 
 ```bash
@@ -199,11 +227,15 @@ loess-project/
 │   ├── julia/            # C-API + Julia wrapper (FastLOESS.jl)
 │   ├── nodejs/           # NAPI-RS bindings
 │   ├── wasm/             # wasm-bindgen bindings
-│   └── cpp/              # C++17 wrapper
+│   ├── cpp/              # C++17 wrapper
+│   ├── go/               # cgo bindings
+│   └── java/             # JNI bindings
 ├── validation/           # R vs loess-rs parity validation
 ├── benchmarks/           # Performance benchmarks (Criterion)
 └── Makefile              # Build automation
 ```
+
+Documentation lives alongside each crate/binding rather than in a shared top-level directory: `crates/*/src/doc.rs` (rustdoc, via `#[cfg(doc)]` modules) and `bindings/*/docs`/`docs-site` (Sphinx, Documenter.jl, Doxygen, Antora, Starlight, Hugo, or pkgdown, depending on the language).
 
 ## Pull Requests
 
@@ -217,7 +249,7 @@ loess-project/
 We follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 - Use `feat`, `fix`, `docs`, `refactor`, `perf`, `test`, or `chore` types.
-- Scopes are optional but helpful (e.g., `loess-rs`, `fastLoess`, `python`, `r`, `julia`, `nodejs`, `wasm`, `cpp`, `docs`).
+- Scopes are optional but helpful (e.g., `loess-rs`, `fastLoess`, `python`, `r`, `julia`, `nodejs`, `wasm`, `cpp`, `go`, `java`, `docs`).
 
 Examples:
 
@@ -258,6 +290,12 @@ cd bindings/cpp/tests/build
 cmake -DFASTLOESS_LIB="$(pwd)/../../../target/release-c/libfastloess_cpp.so" \
       -DFASTLOESS_LIB_DIR="$(pwd)/../../../target/release-c" ..
 make && ./test_fastloess_suite
+
+# Go tests (requires prior: cargo build -p fastloess-go --profile release-c)
+cd bindings/go/fastloess && go test ./... -v
+
+# Java tests (requires prior: cargo build -p fastloess-java)
+cd bindings/java && mvn test
 ```
 
 ## License

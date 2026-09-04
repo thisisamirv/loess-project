@@ -1,56 +1,53 @@
 \page news News
 
 <!-- markdownlint-disable MD024 MD025 -->
-# fastloess (C++) (development version)
+# fastloess (C++) 1.2.0
 
 ## Added
 
-* Added `dev/bump_version.py --version X.Y.Z`, which updates the version across every crate/binding's version files, `CITATION.cff`, and the Spack recipe in one pass. Supports `--dry-run`.
-* Added `dev/check_pinned_versions.py` and a weekly `.github/workflows/check-versions.yml`, which check hardcoded tool/library version pins that Dependabot can't see and fail CI if any are outdated.
-* Added `.github/dependabot.yml`, covering every dependency ecosystem in the repo, grouped per directory into a single weekly PR.
-* Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, so a manual run can pin the checked-out/built commit instead of always building from the triggering ref.
-* Added `dev/check_links.py`, which validates every Markdown cross-reference link across every binding/crate's docs, failing on missing targets.
-* Added CMake package-config support (`fastloessConfig.cmake`/`fastloessConfigVersion.cmake`), so consumers can `find_package(fastloess)` and link against `fastloess::fastloess` regardless of their own compiler/build setup.
-* Added CI coverage for four additional compiler/toolchain combinations in `ci-cpp.yml`: `clang-cl` on Windows, `clang` on Linux, native MinGW-w64, and Intel oneAPI (last two non-blocking).
-* Added ARM64 release binaries to `release-cpp.yml` for Linux, Windows, and macOS. Also re-pinned the macOS x64 job to `macos-13`, since `macos-latest` had been silently shipping an arm64 binary mislabeled as x64.
-* Set `no_includes = true` in `cbindgen.toml` and renamed `cpp_loess_fit`/`cpp_streaming_process`'s `x`/`y` parameters to `x_values`/`y_values`, avoiding a naming collision with `CppLoessResult`'s own `x`/`y` output fields.
+* Added `dev/bump_version.py --version X.Y.Z` to bump every crate/binding's version files, `CITATION.cff`, and the Spack recipe in one pass (supports `--dry-run`).
+* Added `dev/check_pinned_versions.py` and a weekly `check-versions.yml` to catch hardcoded version pins that Dependabot can't see.
+* Added `.github/dependabot.yml`, covering every dependency ecosystem, grouped per directory into a single weekly PR.
+* Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
+* Added `dev/check_links.py` to validate every Markdown cross-reference link across all docs.
+* Added CMake package-config support so consumers can `find_package(fastloess)`.
+* Added CI coverage for `clang-cl` (Windows), `clang` (Linux), MinGW-w64, and Intel oneAPI.
+* Added ARM64 release binaries for Linux/Windows/macOS; also fixed the macOS x64 job silently shipping a mislabeled arm64 binary.
+* Renamed `cpp_loess_fit`/`cpp_streaming_process`'s `x`/`y` params to `x_values`/`y_values`, avoiding a collision with `CppLoessResult`'s own `x`/`y` fields.
 
 ## Changed
 
-* Added a `large` benchmark category to `benchmarks/rfastloess.R`/`stats_loess.R` stressing exact-fit, high-iteration, and high-fraction scenarios at scale, and documented it in `benchmarks/README.md` with measured `stats::loess` vs. fastLoess median times.
-* Merged `dev/add-cpp-outputs.py`, `dev/add-rust-outputs.py`, `dev/add-nodejs-outputs.js`, and `dev/add-wasm-outputs.js` into `dev/verify_snippets.py` as a new `--update-outputs` flag, removing the four standalone scripts.
-* Replaced Unicode superscript/subscript characters used as ASCII-alphanumeric stand-ins (`R²` → `R2`, `O(n²)` → `O(n^2)`, `xᵢ` → `x_i`, etc.) with plain ASCII throughout every doc page, README, and Rust doc-comment/test-comment, including the `Diagnostics` `Display` impl (now prints `R2`). Regenerated the affected ```output blocks, which also caught a handful of pre-existing `RÂ²` mojibake blocks left over from before the Windows encoding fix above.
-* Added `dev/add-readme-to-docs.py`, which auto-detects the docs-site flavor (Starlight for Node.js/WASM, Sphinx for Python) and embeds `README.md` as the home page accordingly. Not wired into Python's `Makefile` yet, since the Sphinx branch currently embeds the raw GitHub README verbatim rather than anything tailored to the Sphinx site.
-* Changed `check-versions.yml` to no longer fail CI when `dev/check_pinned_versions.py` finds an outdated or unreachable pin; it now opens a GitHub issue titled "Outdated pinned versions" with the check output (or comments on the existing open one), so a stale pin no longer blocks unrelated work.
-* Harmonized the docs-site directory structure across every binding and crate (`introduction/`, `guide/`, `weighting/`, `advanced/`, `use-case/`, `api/`, each grouped under a hub page). Also fixed the doc-tooling scripts, which enumerated files via a non-recursive glob and would have silently stopped finding snippets in the newly-nested pages.
-* Consolidated every crate/binding README: merged the "Installation" and "Documentation" sections, replaced GitHub-only alert syntax with plain blockquotes, removed the redundant "API Reference" and "Changelog" sections (each now has its own docs-site page), and added a "Read more" link to the Concepts page.
-* Renamed the batch adapter's "When to Use" heading to "When to Use Batch Adapter" across every binding/crate's API docs.
-* Vendored the [doxygen-awesome-css](https://github.com/jothepro/doxygen-awesome-css) theme (v2.4.2) for a modern, sidebar-only cpp Doxygen site with automatic dark mode.
-* Added `dev/update_changelogs.py`, which regenerates a per-binding/crate `NEWS.md`/`news.md` from the root `CHANGELOG.md`.
-* Replaced `kernels.md`'s "Choosing a Kernel" mermaid flowchart (every binding/crate) with an equivalent decision table, since Doxygen and rustdoc don't render mermaid.
-* Replaced `adapter-choice.md`/`adapters.md`'s "Overview" flowchart with an equivalent decision table, unifying on a single rendering-agnostic format across every binding/crate.
-* Consolidated `parameters.md`/the auto-generated `@autodocs` parameter reference into each `api.md`'s builder/options tables, and removed `parameters.md` itself.
-* Documented the previously-undocumented `x_values`/`y_values` parameters of `Loess::fit()`, fixing a Doxygen "parameters are not documented" warning.
-* Restructured the Doxygen site's navigation, previously ~20 flat pages, into five nested hub pages (`Getting Started`, `User Guide`, `Customization`, `Advanced`, `Use Cases`) via `\subpage`, mirroring the R/Node.js/WASM sidebar grouping.
-* Added a Spack recipe (`bindings/cpp/spack/package.py`); `release-cpp.yml` now updates its `version()`/`sha256` and opens a PR to `spack/spack-packages` on every release, so `fastloess-cpp` stays installable via `spack install`.
-* Bumped the vendored Corrosion CMake module from `v0.5.1` to `v0.6.1`.
+* Added a `large` benchmark category (exact-fit, high-iteration, high-fraction) to the R/Rust benchmarks.
+* Merged the standalone `dev/add-{cpp,rust,nodejs,wasm}-outputs` scripts into `dev/verify_snippets.py --update-outputs`.
+* Replaced Unicode super/subscript stand-ins (`R²`, `xᵢ`, etc.) with plain ASCII throughout docs, READMEs, and Rust comments, also catching some leftover mojibake.
+* Added `dev/add-readme-to-docs.py` to auto-embed `README.md` as the docs homepage (Starlight/Sphinx-aware); not yet wired into Python's `Makefile`.
+* Harmonized the docs-site directory structure across every binding/crate, and fixed doc-tooling scripts that missed snippets in the newly-nested pages.
+* Consolidated every README: merged Installation/Documentation sections, dropped GitHub-only alert syntax, and removed sections now covered by dedicated docs-site pages.
+* Renamed "When to Use" to "When to Use Batch Adapter" across every binding's API docs.
+* Vendored doxygen-awesome-css v2.4.2 for a modern cpp Doxygen theme.
+* Added `dev/update_changelogs.py` to regenerate each binding/crate's `NEWS.md`/`news.md` from the root changelog.
+* Replaced the `kernels.md`/`adapter-choice.md` mermaid flowcharts with rendering-agnostic tables (Doxygen/rustdoc don't render mermaid).
+* Consolidated `parameters.md`/`@autodocs` into each `api.md`'s option tables, removing `parameters.md`.
+* Documented `x_values`/`y_values` params, fixing a Doxygen warning.
+* Restructured Doxygen nav from ~20 flat pages into 5 hub pages, mirroring other bindings.
+* Added a Spack recipe, auto-updated by `release-cpp.yml` on release.
+* Bumped the vendored Corrosion CMake module to v0.6.1.
 
 ## Fixed
 
-* Fixed every benchmark category in `benchmarks/rfastloess.R` failing with `attempt to apply non-function`: it called `model$fit(x, y)`, but `fit` is an S3 generic (`fit(model, x, y)`), not a field on the `Loess` object.
-* Fixed `release-conda.yml`'s `sed` pattern for `recipe.yaml`'s version, which only matched an exactly 2-space-indented `version:` line; now matches any `version: "X.Y.Z"` line by semver shape.
-* Fixed `benchmarks/Makefile`'s vendoring step nulling out the original package checksum for every crates.io dependency, not just the two local path crates; now uses `jq '.files = {}'` to reset only the `files` map.
-* Fixed `benchmarks/README.md`'s "Iterations" scenario row claiming "0 – 10 (6 levels)"; `stats::loess` has no meaningful `iterations = 0` setting, so it only ever ran 5 levels.
-* Fixed `docs.yml`'s Pages deployment: consolidated per-language jobs into a single artifact upload/deploy job, then switched from legacy branch-based deployment to `actions/upload-pages-artifact`/`actions/deploy-pages`, eliminating GitHub's automatic "pages build and deployment" trigger. Requires the repository's Pages source to be switched to "GitHub Actions" in settings.
-* Fixed 51 broken relative cross-reference links across C++, Julia, Node.js, WASM, and both Rust crates' docs, left over from the earlier docs-site restructuring into hub-grouped subdirectories. Found via the new `dev/check_links.py`.
-* Fixed `OnlineLoess`'s `min_points` default being `3` instead of `2`, and `update_mode` defaulting to `"full"` instead of `"incremental"` — both diverging from every binding's docs. Originated in the Rust core and `fastLoess`'s shared `build_online` fallback, so every binding that duplicated the defaults had inherited the bug: C++, Julia, Python, and R. Updated the "Default" column in every binding's `api-online.md` to match and fixed a Rust core test that asserted the old threshold.
-* Fixed the "Handling Outliers" quickstart example (every binding and both Rust crates) printing nothing: with only 6 points and `fraction = 0.5`, the local window was small enough that a degree-1 fit reproduced the outlier exactly (zero residual). Bumped to `fraction = 0.7`, which correctly downweights it.
-* Fixed the R `OnlineLoess()` roxygen example printing one line per point (48 lines for a 50-point loop); it now collects the smoothed values and prints only `head(smoothed, 5)`.
-* Fixed the R `add_point()` roxygen example always printing `NULL`, since a single call never reaches the default `min_points = 3`; it now uses `min_points = 2L` and shows the second (non-`NULL`) call's result.
-* Fixed the Julia `intervals.md` "Confidence Intervals" and "Standard Errors" examples each looping over all 100 points instead of a short sample; switched to `result.y[1:5]`/`result.confidence_lower[1:5]`/`result.standard_errors[1:5]`-style slicing, matching the already-concise Python version.
-* Fixed several Doxygen rendering bugs: wrong homepage, and blockquotes/math/admonitions rendering as literal or broken text. `README.md` is now the Doxygen main page, using Doxygen-native syntax.
-* Fixed `ci-cpp.yml`'s macOS job warning about the untrusted `aws/tap` Homebrew tap, and its Windows job installing a broken `cppcheck` via Chocolatey (missing `cfg/std.cfg`); `brew untap aws/tap` now runs first on macOS, and `cppcheck` now installs via `winget` on Windows.
-* Fixed `Doxyfile`'s `PROJECT_NAME` showing `"fastLoess"` (the Rust crate's name) instead of `"fastloess-cpp"`, and its `FILE_PATTERNS` missing a space (`*.hpp*.h`, parsed as one malformed glob); changed to `*.hpp *.h *.md`.
+* Fixed the R benchmark script calling `fit` as a field instead of the S3 generic `fit(model, x, y)`.
+* Fixed `release-conda.yml`'s version-line `sed` pattern to match any indentation.
+* Fixed benchmark vendoring nulling every crate's checksum instead of just the two local path crates.
+* Fixed the benchmark README's inaccurate "Iterations" scenario count.
+* Fixed `docs.yml`'s Pages deployment: merged per-language jobs into one artifact upload/deploy job, using `upload/deploy-pages` actions instead of legacy branch-based deployment.
+* Fixed 51 broken doc cross-reference links left over from the docs-site restructure (found via new `dev/check_links.py`).
+* Fixed several `OnlineLoess`/`StreamingLoess` defaults silently diverging from every binding's docs and actual behavior: `min_points` (was 3, now 2), `update_mode` (was `"full"`, now `"incremental"`), and the internal robustness-iteration defaults (streaming 2→3, online 1→3) that only the Rust crates' bare prelude API could ever see.
+* Fixed the "Handling Outliers" quickstart example printing nothing with only 6 points at `fraction = 0.5`; bumped to `0.7` so the outlier is actually downweighted.
+* Fixed two R roxygen examples: `OnlineLoess()` printing 48 lines instead of a `head(smoothed, 5)` sample, and `add_point()` always printing `NULL` due to the default `min_points`.
+* Fixed Julia's `intervals.md` examples looping over all 100 points instead of a short sample, matching the concise Python version.
+* Fixed several Doxygen rendering bugs (wrong homepage, broken blockquotes/math/admonitions); `README.md` is now the native Doxygen homepage.
+* Fixed `ci-cpp.yml`'s untrusted Homebrew tap warning and a broken Windows `cppcheck` install.
+* Fixed `Doxyfile`'s wrong `PROJECT_NAME` and a malformed `FILE_PATTERNS` glob.
 
 # fastloess (C++) 1.1.0
 

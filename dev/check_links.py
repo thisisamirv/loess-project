@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """Validate relative cross-reference links across every binding/crate's docs.
 
-Checks Markdown `[text](target)` links, resolving them relative to the
-linking file and failing if the target doesn't exist. Image references
-(`![alt](src)`) are intentionally skipped: Doxygen (C++) and Hugo (Go) each
-resolve images via their own asset-path mechanism (`IMAGE_PATH`, static
-mounts) rather than literal relative paths, so validating them here would be
-noisy and incorrect. External URLs, anchors-only links, and rustdoc
-intra-doc paths (`crate::doc::api`) are also skipped, since none of those
-are filesystem paths.
+Checks Markdown `[text](target)` links and AsciiDoc `xref:target[]` references,
+resolving them relative to the linking file and failing if the target doesn't
+exist. Image references (`![alt](src)`, `image::name[]`) are intentionally
+skipped: Doxygen (C++), Hugo (Go), and Antora (Java) each resolve images via
+their own asset-path mechanism (`IMAGE_PATH`, static mounts, basename search)
+rather than literal relative paths, so validating them here would be noisy
+and incorrect. External URLs, anchors-only links, rustdoc intra-doc paths
+(`crate::doc::api`), and Documenter.jl `@ref`/`@id` targets are also skipped,
+since none of those are filesystem paths.
 
 Usage:
     python dev/check_links.py                # check every binding/crate
@@ -26,6 +27,7 @@ from runners.base import (
     CPP_BINDING_DOCS_DIR,
     DOCS_DIR,
     GO_BINDING_DOCS_DIR,
+    JAVA_BINDING_DOCS_DIR,
     JULIA_DOCS_DIR,
     NODEJS_BINDING_DOCS_DIR,
     REPO_ROOT,
@@ -42,10 +44,12 @@ TARGETS: dict[str, list[Path]] = {
     "wasm": [WASM_BINDING_DOCS_DIR],
     "cpp": [CPP_BINDING_DOCS_DIR],
     "go": [GO_BINDING_DOCS_DIR],
+    "java": [JAVA_BINDING_DOCS_DIR],
     "rust": RUST_CRATE_DOCS_DIRS,
 }
 
 _MD_LINK_RE = re.compile(r"(!?)\[[^\]]*\]\(([^)]+)\)")
+_XREF_RE = re.compile(r"xref:([^\[]+)\[")
 
 
 def _is_skippable(target: str) -> bool:
@@ -71,9 +75,39 @@ def _check_markdown_file(f: Path) -> list[str]:
             if not t or t.startswith("/"):
                 continue
             resolved = (f.parent / t).resolve()
-            if not (resolved.exists() or Path(f"{resolved}.md").exists()):
+            # R vignettes conventionally cross-reference the *rendered*
+            # sibling.html, since R CMD build renders each .Rmd to .html.
+            rmd_candidate = resolved.with_suffix(".Rmd")
+            if not (
+                resolved.exists()
+                or Path(f"{resolved}.md").exists()
+                or (resolved.suffix == ".html" and rmd_candidate.exists())
+            ):
                 errors.append(
                     f"{f.relative_to(REPO_ROOT)}:{lineno}: broken link -> {target}"
+                )
+    return errors
+
+
+def _check_adoc_file(f: Path) -> list[str]:
+    errors = []
+    # Antora resolves nav.adoc xrefs relative to the module's pages/ directory,
+    # not nav.adoc's own physical location (which sits one level above it).
+    base_dir = f.parent / "pages" if f.name == "nav.adoc" else f.parent
+    text = f.read_text(encoding="utf-8", errors="replace")
+    for lineno, line in enumerate(text.split("\n"), 1):
+        for m in _XREF_RE.finditer(line):
+            target = m.group(1)
+            if target.startswith("http"):
+                continue
+            t = target.split("#")[0]
+            if not t or ":" in t:  # component:module:page - cross-component, skip
+                continue
+            t = t.removeprefix("./")
+            resolved = (base_dir / t).resolve()
+            if not resolved.exists():
+                errors.append(
+                    f"{f.relative_to(REPO_ROOT)}:{lineno}: broken xref -> {target}"
                 )
     return errors
 
@@ -86,6 +120,8 @@ def check_lang(lang: str) -> list[str]:
         for ext in ("*.md", "*.mdx", "*.Rmd"):
             for f in sorted(root.rglob(ext)):
                 errors.extend(_check_markdown_file(f))
+        for f in sorted(root.rglob("*.adoc")):
+            errors.extend(_check_adoc_file(f))
     return errors
 
 

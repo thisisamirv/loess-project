@@ -88,7 +88,7 @@ dev:
 	@echo "Doc snippet tests (python)..."
 	@$(PYTHON) dev/check_links.py --lang python
 	@$(PYTHON) dev/verify_snippets.py --lang python --timeout 120
-	@$(PYTHON) dev/update_changelogs.py
+	@$(PYTHON) dev/update_changelogs.py python
 	@echo "$(PY_PKG) checks completed successfully!"
 
 ensure-llvm-cov:

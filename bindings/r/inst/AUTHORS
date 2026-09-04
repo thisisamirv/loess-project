@@ -44,6 +44,10 @@ Package: bytemuck (1.25.2)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------
+Package: bytes (1.12.1)
+Authors: Carl Lerche <me@carllerche.com>, Sean McArthur <sean@seanmonstar.com>
+License: MIT
+----------------------------------------
 Package: cast (0.3.0)
 Authors: Jorge Aparicio <jorge@japaric.io>
 License: MIT OR Apache-2.0
@@ -75,6 +79,10 @@ License: MIT OR Apache-2.0
 Package: colorchoice (1.0.5)
 Authors: 
 License: MIT OR Apache-2.0
+----------------------------------------
+Package: combine (4.6.8)
+Authors: Markus Westerlind <marwes91@gmail.com>
+License: MIT
 ----------------------------------------
 Package: console_error_panic_hook (0.1.7)
 Authors: Nick Fitzgerald <fitzgen@gmail.com>
@@ -182,6 +190,22 @@ License: MIT OR Apache-2.0
 ----------------------------------------
 Package: itoa (1.0.18)
 Authors: David Tolnay <dtolnay@gmail.com>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: jni (0.22.4)
+Authors: jni team
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: jni-macros (0.22.4)
+Authors: 
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: jni-sys (0.4.1)
+Authors: Steven Fackler <sfackler@gmail.com>, Robert Bragg <robert@sixbynine.org>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: jni-sys-macros (0.4.1)
+Authors: Robert Bragg <robert@sixbynine.org>
 License: MIT OR Apache-2.0
 ----------------------------------------
 Package: js-sys (0.3.104)
@@ -352,6 +376,10 @@ Package: rustc-hash (2.1.3)
 Authors: The Rust Project Developers
 License: Apache-2.0 OR MIT
 ----------------------------------------
+Package: rustc_version (0.4.1)
+Authors: 
+License: MIT OR Apache-2.0
+----------------------------------------
 Package: rustix (1.1.4)
 Authors: Dan Gohman <dev@sunfishcode.online>, Jakub Konka <kubkon@jakubkonka.com>
 License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
@@ -404,6 +432,14 @@ Package: simba (0.10.2)
 Authors: sebcrozet <developer@crozet.re>
 License: Apache-2.0
 ----------------------------------------
+Package: simd_cesu8 (1.2.0)
+Authors: Sean C. Roach <me@seancroach.dev>
+License: Apache-2.0 OR MIT
+----------------------------------------
+Package: simdutf8 (0.1.5)
+Authors: Hans Kratz <hans@appfour.com>
+License: MIT OR Apache-2.0
+----------------------------------------
 Package: slab (0.4.12)
 Authors: Carl Lerche <me@carllerche.com>
 License: MIT
@@ -422,6 +458,14 @@ License: Apache-2.0 WITH LLVM-exception
 ----------------------------------------
 Package: tempfile (3.27.0)
 Authors: Steven Allen <steven@stebalien.com>, The Rust Project Developers, Ashley Mannix <ashleymannix@live.com.au>, Jason White <me@jasonwhite.io>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: thiserror (2.0.20)
+Authors: David Tolnay <dtolnay@gmail.com>
+License: MIT OR Apache-2.0
+----------------------------------------
+Package: thiserror-impl (2.0.20)
+Authors: David Tolnay <dtolnay@gmail.com>
 License: MIT OR Apache-2.0
 ----------------------------------------
 Package: toml (0.9.12+spec-1.1.0)
@@ -492,7 +536,7 @@ Package: wasm-bindgen-test-shared (0.2.127)
 Authors: The wasm-bindgen Developers
 License: MIT OR Apache-2.0
 ----------------------------------------
-Package: wide (1.6.1)
+Package: wide (1.7.0)
 Authors: Lokathor <zefria@gmail.com>
 License: Zlib OR Apache-2.0 OR MIT
 ----------------------------------------

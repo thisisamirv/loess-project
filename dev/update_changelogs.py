@@ -20,6 +20,7 @@ Versions with no matching entries are skipped entirely.
 """
 
 import re
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -41,53 +42,62 @@ COMMON_LABELS = ["docs", "Monorepo"]
 # used in the "# <package> <version>" heading; use None to resolve it from
 # bindings/r/DESCRIPTION's Package field instead.
 TARGETS = [
-    {"labels": ["R"], "package": None, "output": "bindings/r/NEWS.md"},
+    {"key": "r", "labels": ["R"], "package": None, "output": "bindings/r/NEWS.md"},
     {
+        "key": "cpp",
         "labels": ["C++"],
         "package": "fastloess (C++)",
         "output": "bindings/cpp/docs/NEWS.md",
         "doxygen_page": "\\page news News",
     },
     {
+        "key": "julia",
         "labels": ["Julia"],
         "package": "FastLOESS.jl",
         "output": "bindings/julia/julia/docs/src/NEWS.md",
     },
     {
+        "key": "go",
         "labels": ["Go"],
         "package": "fastloess (Go)",
         "output": "bindings/go/docs/NEWS.md",
         "hugo_weight": 100,
     },
     {
+        "key": "java",
         "labels": ["Java"],
         "package": "fastloess (Java)",
         "output": "bindings/java/docs/modules/ROOT/pages/NEWS.adoc",
         "asciidoc": True,
     },
     {
+        "key": "nodejs",
         "labels": ["Node.js"],
         "package": "fastloess (Node.js)",
         "output": "bindings/nodejs/src/content/docs/NEWS.md",
         "frontmatter_title": "News",
     },
     {
+        "key": "python",
         "labels": ["Python"],
         "package": "fastloess (Python)",
         "output": "bindings/python/docs/NEWS.md",
     },
     {
+        "key": "wasm",
         "labels": ["WASM", "WebAssembly"],
         "package": "fastloess-wasm",
         "output": "bindings/wasm/src/content/docs/NEWS.md",
         "frontmatter_title": "News",
     },
     {
+        "key": "fastloess",
         "labels": ["fastLoess", "loess-rs and fastLoess", "Rust"],
         "package": "fastLoess",
         "output": "crates/fastLoess/docs/news.md",
     },
     {
+        "key": "loess-rs",
         "labels": ["loess-rs", "loess-rs and fastLoess", "Rust"],
         "package": "loess-rs",
         "output": "crates/loess-rs/docs/news.md",
@@ -246,26 +256,37 @@ def _render_news_asciidoc(
 
 
 def main() -> None:
+    if len(sys.argv) != 2:
+        keys = ", ".join(t["key"] for t in TARGETS)
+        raise SystemExit(
+            f"Usage: update_changelogs.py <target>\nAvailable targets: {keys}"
+        )
+    key = sys.argv[1]
+    try:
+        target = next(t for t in TARGETS if t["key"] == key)
+    except StopIteration:
+        keys = ", ".join(t["key"] for t in TARGETS)
+        raise SystemExit(f"Unknown target {key!r}. Available targets: {keys}") from None
+
     changelog_text = CHANGELOG_PATH.read_text(encoding="utf-8")
-    for target in TARGETS:
-        package = target["package"] or read_description_field("Package") or "package"
-        versions = parse_entries(changelog_text, target["labels"] + COMMON_LABELS)
-        output_path = REPO_ROOT / target["output"]
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            render_news(
-                package,
-                versions,
-                target.get("frontmatter_title"),
-                target.get("doxygen_page"),
-                target.get("hugo_weight"),
-                target.get("asciidoc", False),
-            ),
-            encoding="utf-8",
-        )
-        print(
-            f"Wrote {output_path.relative_to(REPO_ROOT)} from {len(versions)} changelog version(s)"
-        )
+    package = target["package"] or read_description_field("Package") or "package"
+    versions = parse_entries(changelog_text, target["labels"] + COMMON_LABELS)
+    output_path = REPO_ROOT / target["output"]
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(
+        render_news(
+            package,
+            versions,
+            target.get("frontmatter_title"),
+            target.get("doxygen_page"),
+            target.get("hugo_weight"),
+            target.get("asciidoc", False),
+        ),
+        encoding="utf-8",
+    )
+    print(
+        f"Wrote {output_path.relative_to(REPO_ROOT)} from {len(versions)} changelog version(s)"
+    )
 
 
 if __name__ == "__main__":

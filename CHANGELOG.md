@@ -139,11 +139,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed noisy pip version-check output in `release-pypi.yml` and a Pyright false-positive warning.
 - Converted 3 plain comments to doc comments and ported 2 missing custom-weights test cases from `fastlowess`.
 
-**Rust:**
+**loess-rs:**
 
 - Fixed LaTeX math rendering as literal text on docs.rs.
 - Fixed cross-reference links not resolving against the rustdoc module tree.
-- Added `#[allow(clippy::excessive_precision)]` to kernel constants, matching `fastlowess`.
+
+**fastLoess:**
+
+- Fixed cross-reference links not resolving against the rustdoc module tree.
+- Fixed LaTeX math rendering as literal text on docs.rs.
+- Added `#[allow(clippy::excessive_precision)]` to kernel constants.
+- Fixed `fastLoess`'s `build_streaming`/`build_online` hardcoding `chunk_size`/`window_capacity`/`min_points` fallback defaults as bare numeric literals instead of referencing `loess-rs`'s named `DEFAULT_*` constants, unlike every other default in the same file; a future change to those constants would have silently drifted from what the FFI layer actually applies.
 
 ## 1.1.0
 

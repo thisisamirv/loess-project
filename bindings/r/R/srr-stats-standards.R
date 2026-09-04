@@ -26,7 +26,7 @@ NULL
 #' @srrstatsNA {RE4.12, RE4.13} No data transformations applied.
 #' @srrstatsNA {RE4.14, RE4.15} No forecasting - smoothing only.
 #' @srrstatsNA {RE4.16} No categorical groups.
-#' @srrstatsNA {RE6.3} Default plot method is standard S3.
+#' @srrstatsNA {RE6.1, RE6.3} Default plot method is standard S3.
 #' @srrstatsNA {RE7.0, RE7.0a, RE7.1, RE7.1a} Exact input not special-cased.
 #' @srrstatsNA {RE7.2, RE7.3, RE7.4} No row names or accessor tests needed.
 #' @noRd

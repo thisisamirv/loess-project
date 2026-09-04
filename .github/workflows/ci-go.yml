@@ -21,7 +21,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os:
+          [
+            ubuntu-latest,
+            ubuntu-24.04-arm,
+            macos-latest,
+            windows-latest,
+            windows-11-arm,
+          ]
         go-version: ["1.23", "stable"]
     steps:
       - uses: actions/checkout@v7
@@ -35,12 +42,35 @@ jobs:
             bindings/go/fastloess/go.mod
             bindings/go/tests/go.mod
 
-      - name: Install Rust GNU + GNU Make (Windows)
+      - name: Install Rust GNU + GNU Make (Windows x64)
         if: matrix.os == 'windows-latest'
         run: |
           rustup toolchain install stable-x86_64-pc-windows-gnu
           rustup target add x86_64-pc-windows-gnu
           choco install make mingw -y
+
+      # cgo needs a GNU-flavor C toolchain (MSVC .lib archives aren't
+      # cgo-compatible). aarch64-pc-windows-gnu doesn't exist as a Rust
+      # target/rustup toolchain, so this cross-compiles via the gnullvm ABI
+      # using llvm-mingw's aarch64-w64-mingw32-clang, matching release-go.yml.
+      - name: Install llvm-mingw + GNU Make (Windows arm64)
+        if: matrix.os == 'windows-11-arm'
+        shell: pwsh
+        run: |
+          rustup target add aarch64-pc-windows-gnullvm
+          $ver = "20241030"
+          $url = "https://github.com/mstorsjo/llvm-mingw/releases/download/$ver/llvm-mingw-$ver-ucrt-x86_64.zip"
+          Invoke-WebRequest -Uri $url -OutFile llvm-mingw.zip
+          Expand-Archive -Path llvm-mingw.zip -DestinationPath C:\llvm-mingw
+          $bin = (Get-ChildItem -Path C:\llvm-mingw -Directory | Select-Object -First 1).FullName + "\bin"
+          Add-Content -Path $env:GITHUB_PATH -Value $bin
+          # Linker for this target comes from the repo's root .cargo/config.toml.
+          # Go's cgo compiles runtime/cgo's own arch-specific .S files via $CC,
+          # so it must resolve to the target-prefixed wrapper, not a generic
+          # clang/gcc that could default to the wrong triple.
+          Add-Content -Path $env:GITHUB_ENV -Value "CC=aarch64-w64-mingw32-clang"
+          Add-Content -Path $env:GITHUB_ENV -Value "CXX=aarch64-w64-mingw32-clang++"
+          choco install make -y
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -53,4 +83,14 @@ jobs:
           cargo clippy --all-targets -- -D warnings
 
       - name: make go-dev
-        run: make go-dev
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-11-arm" ]; then
+            export GOOS=windows GOARCH=arm64
+            echo "--- diagnostics ---"
+            go env GOOS GOARCH CC CXX CGO_ENABLED
+            echo "-------------------"
+            make go-dev GO_CARGO_TARGET="--target aarch64-pc-windows-gnullvm" GO_LIBRARY_DIR="target/aarch64-pc-windows-gnullvm/release-c"
+          else
+            make go-dev
+          fi

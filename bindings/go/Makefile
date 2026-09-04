@@ -23,10 +23,19 @@ GO_CARGO_TARGET :=
 
 # Go's cgo drives a GCC-compatible C compiler (MinGW-w64 on Windows), so the
 # native library must be built for the GNU ABI on Windows, unlike the C++
-# binding which targets MSVC.
+# binding which targets MSVC. There's no aarch64-pc-windows-gnu Rust target,
+# so arm64 hosts use the gnullvm ABI (llvm-mingw) instead.
 ifeq ($(HOST_PLATFORM),windows)
-	GO_CARGO_TARGET := --target x86_64-pc-windows-gnu
-	GO_LIBRARY_DIR  := target/x86_64-pc-windows-gnu/release-c
+	# make/bash on windows-11-arm runners are usually x64 binaries running
+	# under emulation, so PROCESSOR_ARCHITECTURE reports AMD64 there; the true
+	# host arch only shows up in PROCESSOR_ARCHITEW6432 in that case.
+	ifneq (,$(filter ARM64,$(PROCESSOR_ARCHITECTURE) $(PROCESSOR_ARCHITEW6432)))
+		GO_CARGO_TARGET := --target aarch64-pc-windows-gnullvm
+		GO_LIBRARY_DIR  := target/aarch64-pc-windows-gnullvm/release-c
+	else
+		GO_CARGO_TARGET := --target x86_64-pc-windows-gnu
+		GO_LIBRARY_DIR  := target/x86_64-pc-windows-gnu/release-c
+	endif
 else
 	GO_LIBRARY_DIR  := target/release-c
 endif
@@ -100,7 +109,7 @@ dev:
 	@echo "Doc snippet tests (go)..."
 	@$(PYTHON) dev/check_links.py --lang go
 	@$(PYTHON) dev/verify_snippets.py --lang go --timeout 120 --update-outputs
-	@$(PYTHON) dev/update_changelogs.py
+	@$(PYTHON) dev/update_changelogs.py go
 	@echo "$(GO_PKG) checks completed successfully!"
 
 clean:

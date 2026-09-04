@@ -48,7 +48,11 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-model <- StreamingLoess(merge_strategy = "average", chunk_size = 60, overlap = 20)
+model <- StreamingLoess(
+    merge_strategy = "average",
+    chunk_size = 60,
+    overlap = 20
+)
 invisible(process_chunk(model, x[1:60], y[1:60]))
 # The second chunk's overlap region (its first 20 points) is where
 # merge_strategy actually blends the two chunks' estimates.
@@ -68,7 +72,11 @@ right-chunk estimate. Produces a left-flush output.
 look-ahead revision); left-chunk context dominates.
 
 ```{r merge_2}
-model <- StreamingLoess(merge_strategy = "take_first", chunk_size = 60, overlap = 20)
+model <- StreamingLoess(
+    merge_strategy = "take_first",
+    chunk_size = 60,
+    overlap = 20
+)
 invisible(process_chunk(model, x[1:60], y[1:60]))
 result <- process_chunk(model, x[61:100], y[61:100])
 cat("Merged value in overlap region (take_first):\n")
@@ -87,7 +95,11 @@ overlap region.
 post-processing complete data rather than streaming in real time.
 
 ```{r merge_3}
-model <- StreamingLoess(merge_strategy = "take_last", chunk_size = 60, overlap = 20)
+model <- StreamingLoess(
+    merge_strategy = "take_last",
+    chunk_size = 60,
+    overlap = 20
+)
 invisible(process_chunk(model, x[1:60], y[1:60]))
 result <- process_chunk(model, x[61:100], y[61:100])
 cat("Merged value in overlap region (take_last):\n")
@@ -107,7 +119,11 @@ boundary artefacts.
 moderate overlap (10–20% of chunk size) is used.
 
 ```{r merge_4}
-model <- StreamingLoess(merge_strategy = "weighted_average", chunk_size = 60, overlap = 20)
+model <- StreamingLoess(
+    merge_strategy = "weighted_average",
+    chunk_size = 60,
+    overlap = 20
+)
 invisible(process_chunk(model, x[1:60], y[1:60]))
 result <- process_chunk(model, x[61:100], y[61:100])
 cat("Merged value in overlap region (weighted_average):\n")

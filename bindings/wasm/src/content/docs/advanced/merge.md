@@ -53,7 +53,7 @@ console.log("Merged value in overlap region (average):", result.y[5].toFixed(4))
 ```
 
 ```output
-Merged value in overlap region (average): 0.2143
+Merged value in overlap region (average): 0.2134
 ```
 
 ---
@@ -78,7 +78,7 @@ console.log("Merged value in overlap region (take_first):", result.y[5].toFixed(
 ```
 
 ```output
-Merged value in overlap region (take_first): 0.2282
+Merged value in overlap region (take_first): 0.2280
 ```
 
 ---
@@ -103,7 +103,7 @@ console.log("Merged value in overlap region (take_last):", result.y[5].toFixed(4
 ```
 
 ```output
-Merged value in overlap region (take_last): 0.2004
+Merged value in overlap region (take_last): 0.1988
 ```
 
 ---
@@ -135,7 +135,7 @@ console.log("Merged value in overlap region (weighted_average):", result.y[5].to
 ```
 
 ```output
-Merged value in overlap region (weighted_average): 0.2213
+Merged value in overlap region (weighted_average): 0.2207
 ```
 
 ---

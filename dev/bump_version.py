@@ -4,8 +4,9 @@
 Covers: Cargo.toml package versions (Rust crates + all bindings), the internal
 fastLoess/loess-rs path-dependency version requirements (major.minor), each
 binding's own version file (package.json, pyproject-adjacent __version__.py,
-DESCRIPTION, Project.toml, version.go, CMakeLists.txt, pom.xml, FastLoess.java),
-CITATION.cff, and the Spack recipe's example `url`.
+DESCRIPTION, Project.toml (incl. the fastloess_jll compat floor), version.go,
+CMakeLists.txt, pom.xml, FastLoess.java), CITATION.cff, and the Spack recipe's
+example `url`.
 
 Does NOT touch: CHANGELOG.md (write that by hand), generated NEWS.md/docs-site
 content (regenerated via `make <lang>-dev` / dev/update_changelogs.py), or the
@@ -179,6 +180,17 @@ def build_targets(
             "bindings/julia/julia/Project.toml",
             re.compile(r'^version = "\d+\.\d+\.\d+"$', re.MULTILINE),
             f'version = "{new_version}"',
+            1,
+        )
+    )
+    # `make julia-dev`/CI relax this compat floor to an OR-list of the actual
+    # latest-registered JLL version at test-time (see bindings/julia/Makefile),
+    # so it's safe to bump this to the not-yet-registered version here.
+    targets.append(
+        (
+            "bindings/julia/julia/Project.toml",
+            re.compile(r'^fastloess_jll = "\d+\.\d+\.\d+"$', re.MULTILINE),
+            f'fastloess_jll = "{new_version}"',
             1,
         )
     )

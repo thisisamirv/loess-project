@@ -47,6 +47,9 @@ ifeq ($(OS),Windows_NT)
 	ifeq ($(CPP_WIN_TOOLCHAIN),mingw)
 		CPP_CARGO_TARGET := --target x86_64-pc-windows-gnu
 		CPP_LIBRARY_DIR  := target/x86_64-pc-windows-gnu/release-c
+	else ifneq (,$(filter ARM64,$(PROCESSOR_ARCHITECTURE) $(PROCESSOR_ARCHITEW6432)))
+		CPP_CARGO_TARGET := --target aarch64-pc-windows-msvc
+		CPP_LIBRARY_DIR  := target/aarch64-pc-windows-msvc/release-c
 	else
 		CPP_CARGO_TARGET := --target x86_64-pc-windows-msvc
 		CPP_LIBRARY_DIR  := target/x86_64-pc-windows-msvc/release-c
@@ -203,7 +206,7 @@ dev:
 	@echo "Doc snippet tests (cpp)..."
 	@$(PYTHON) dev/check_links.py --lang cpp
 	@$(PYTHON) dev/verify_snippets.py --lang cpp --timeout 120 --update-outputs
-	@$(PYTHON) dev/update_changelogs.py
+	@$(PYTHON) dev/update_changelogs.py cpp
 	@echo "$(CPP_PKG) checks completed successfully!"
 
 clean:

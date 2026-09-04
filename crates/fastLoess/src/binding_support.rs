@@ -983,7 +983,7 @@ pub fn build_streaming(
     overlap: Option<usize>,
     merge_strategy: Option<&str>,
 ) -> Result<ParallelStreamingLoess<f64>, BindingError> {
-    let cs = chunk_size.unwrap_or(5000);
+    let cs = chunk_size.unwrap_or(loess_rs::internals::defaults::DEFAULT_STREAMING_CHUNK_SIZE);
     let ov = overlap.unwrap_or_else(|| default_overlap(cs));
     let ms = match merge_strategy {
         Some(s) => map_invalid_arg(parse_merge_strategy(s))?,
@@ -1007,8 +1007,9 @@ pub fn build_online(
     min_points: Option<usize>,
     update_mode: Option<&str>,
 ) -> Result<ParallelOnlineLoess<f64>, BindingError> {
-    let wc = window_capacity.unwrap_or(1000);
-    let mp = min_points.unwrap_or(2);
+    let wc =
+        window_capacity.unwrap_or(loess_rs::internals::defaults::DEFAULT_ONLINE_WINDOW_CAPACITY);
+    let mp = min_points.unwrap_or(loess_rs::internals::defaults::DEFAULT_ONLINE_MIN_POINTS);
     let um = match update_mode {
         Some(s) => map_invalid_arg(parse_update_mode(s))?,
         None => UpdateMode::Incremental,

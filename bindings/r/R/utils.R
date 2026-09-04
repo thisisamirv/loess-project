@@ -24,23 +24,44 @@
 #' @srrstats {G2.16} Inf/NaN validation in input vectors.
 #' @srrstats {G3.0} Tolerance-based comparisons used in robustness weights.
 #' @noRd
-validate_common_args <- function(x, y, fraction, iterations) {
+validate_xy_dims <- function(x, y) {
     n_y <- length(y)
     if (length(x) == 0 || n_y == 0 || length(x) %% n_y != 0) {
         stop("x must match y's length or be its multiple for multi-dim input")
     }
-    if (length(x) < 3) {
-        stop("At least 3 data points are required")
+}
+
+
+validate_min_points <- function(x, min_n = 3L) {
+    if (length(x) < min_n) {
+        stop(sprintf("At least %d data points are required", min_n))
     }
+}
+
+
+validate_fraction <- function(fraction) {
     if (!is.numeric(fraction) || length(fraction) != 1) {
         stop("fraction must be a single numeric value")
     }
     if (fraction <= 0 || fraction > 1) {
         stop("fraction must be between 0 and 1")
     }
+}
+
+
+validate_iterations <- function(iterations) {
     if (!is.numeric(iterations) || length(iterations) != 1 || iterations < 0) {
         stop("iterations must be a non-negative integer")
     }
+}
+
+
+validate_common_args <- function(x, y, fraction, iterations) {
+    validate_xy_dims(x, y)
+    validate_min_points(x)
+    validate_fraction(fraction)
+    validate_iterations(iterations)
+
     list(
         x = as.double(x),
         y = as.double(y),
