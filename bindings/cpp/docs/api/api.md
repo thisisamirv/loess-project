@@ -157,7 +157,7 @@ A RAII wrapper around the C result struct `fastloess_CppLoessResult`.
 
 | Method | Return Type | Description |
 | --- | --- | --- |
-| `x_vector()` | `std::vector<double>` | Sorted x values |
+| `x_vector()` | `std::vector<double>` | x values (same order as input) |
 | `y_vector()` | `std::vector<double>` | Smoothed y values |
 | `fraction_used()` | `double` | Fraction used (set or selected by CV) |
 | `iterations_used()` | `int` | Robustness iterations actually performed (-1 = N/A) |

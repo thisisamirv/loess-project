@@ -470,6 +470,8 @@ class TestEdgeCases:
         loess = fastloess.Loess(fraction=0.7)
         result = loess.fit(x, y)
         assert len(result.y) == 5
+        # result.x preserves the input's original order; it is not re-sorted.
+        np.testing.assert_array_equal(result.x, x)
 
     def test_duplicate_x_values(self):
         """Test with duplicate x values."""

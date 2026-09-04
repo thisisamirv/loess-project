@@ -130,7 +130,7 @@ See [Online Adapter](crate::doc::api::online) for Online Options.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `x` | `Vec<T>` | Sorted x values |
+| `x` | `Vec<T>` | x values (same order as input) |
 | `y` | `Vec<T>` | Smoothed y values |
 | `fraction_used` | `T` | Fraction used (set or selected by CV) |
 | `iterations_used` | `Option<usize>` | Robustness iterations actually performed |

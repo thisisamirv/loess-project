@@ -6,7 +6,7 @@ typedef struct fastloess_GoStreamingLoess fastloess_GoStreamingLoess;
 
 typedef struct fastloess_GoLoessResult {
   /**
-   * Sorted x values (length = n)
+   * x values, in the same order as the input (length = n)
    */
   double *x;
   /**
