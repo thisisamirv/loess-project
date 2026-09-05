@@ -1,0 +1,59 @@
+name: Release Rust
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "Commit SHA to build from (defaults to the workflow's own ref)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  # ============================================================================
+  # PUBLISH loess-rs
+  # ============================================================================
+  publish-loess-rs:
+    name: Publish loess-rs to crates.io
+    runs-on: ubuntu-latest
+    environment: crates-io
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish loess-rs
+        run: cargo publish -p loess-rs
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  # ============================================================================
+  # PUBLISH fastLoess (after crates.io index has picked up loess-rs)
+  # ============================================================================
+  publish-fastloess:
+    name: Publish fastLoess to crates.io
+    needs: publish-loess-rs
+    runs-on: ubuntu-latest
+    environment: crates-io
+    steps:
+      - name: Wait for crates.io index to pick up loess-rs
+        run: sleep 180
+
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.inputs.commit || github.sha }}
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Publish fastLoess
+        run: cargo publish -p fastLoess
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
