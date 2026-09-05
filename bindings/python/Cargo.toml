@@ -1,6 +1,6 @@
 [package]
 name = "fastLoess-py"
-version = "1.2.0"
+version = "2.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -14,7 +14,7 @@ keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 
 [dependencies]
-fastLoess = { path = "../../crates/fastLoess", version = "1.2", features = [
+fastLoess = { path = "../../crates/fastLoess", version = "2.0", features = [
     "dev",
 ] }
 pyo3 = { version = "0.29", features = ["abi3-py38"] }

@@ -136,6 +136,10 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
+```output
+Last smoothed value: 19.770474663630313
+```
+
 ---
 
 ## Choosing Parameters

@@ -38,6 +38,8 @@ class TestLoess:
         loess = fastloess.Loess(fraction=0.5, parallel=False)
         result = loess.fit(x, y)
 
+        assert len(result.y) == len(x)
+
     def test_missing_drop_removes_nan_rows(self):
         """Test Loess with missing="drop" removes non-finite rows."""
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
@@ -55,9 +57,6 @@ class TestLoess:
 
         with pytest.raises(ValueError):
             fastloess.Loess(fraction=0.5).fit(x, y)
-
-        assert isinstance(result, fastloess.LoessResult)
-        assert len(result.y) == len(x)
 
     def test_loess_with_diagnostics(self):
         """Test loess with diagnostics enabled."""

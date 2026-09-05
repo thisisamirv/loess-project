@@ -97,8 +97,8 @@ for i in 0:199
     push!(data_y, y)
 
     if length(data_x) > window_capacity
-        data_x = data_x[end-window_capacity+1:end]
-        data_y = data_y[end-window_capacity+1:end]
+        global data_x = data_x[end-window_capacity+1:end]
+        global data_y = data_y[end-window_capacity+1:end]
     end
 
     if length(data_x) >= 5

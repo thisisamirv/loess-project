@@ -19,7 +19,7 @@ class FastloessCpp(CargoPackage):
     C++ bindings, implemented in Rust."""
 
     homepage = "https://github.com/thisisamirv/loess-project"
-    url = "https://github.com/thisisamirv/loess-project/archive/refs/tags/v1.2.0.tar.gz"
+    url = "https://github.com/thisisamirv/loess-project/archive/refs/tags/v2.0.0.tar.gz"
     git = "https://github.com/thisisamirv/loess-project.git"
 
     maintainers("thisisamirv")

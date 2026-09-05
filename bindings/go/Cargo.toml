@@ -1,6 +1,6 @@
 [package]
 name = "fastloess-go"
-version = "1.2.0"
+version = "2.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -18,7 +18,7 @@ name = "fastloess_go"
 crate-type = ["staticlib"]
 
 [dependencies]
-fastLoess = { path = "../../crates/fastLoess", version = "1.2", features = [
+fastLoess = { path = "../../crates/fastLoess", version = "2.0", features = [
     "dev",
 ] }
 libc = "0.2"

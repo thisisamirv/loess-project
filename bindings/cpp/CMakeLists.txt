@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(fastloess-cpp VERSION 1.2.0 LANGUAGES CXX)
+project(fastloess-cpp VERSION 2.0.0 LANGUAGES CXX)
 
 include(FetchContent)
 include(CMakePackageConfigHelpers)

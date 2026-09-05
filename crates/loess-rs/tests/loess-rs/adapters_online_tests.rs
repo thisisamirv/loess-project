@@ -1031,6 +1031,13 @@ fn test_online_missing_drop_ignores_nan_point() {
     let result = processor
         .add_point(&[1.0], f64::NAN)
         .expect("missing=\"drop\" should not error on a non-finite point");
-    assert_eq!(result, None, "the non-finite point should be silently ignored");
-    assert_eq!(processor.window_size(), 0, "the point must not enter the window");
+    assert_eq!(
+        result, None,
+        "the non-finite point should be silently ignored"
+    );
+    assert_eq!(
+        processor.window_size(),
+        0,
+        "the point must not enter the window"
+    );
 }
