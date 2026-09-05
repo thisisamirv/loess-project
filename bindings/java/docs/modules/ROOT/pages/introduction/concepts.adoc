@@ -147,6 +147,8 @@ See xref:../guide/adapter-choice.adoc[Execution Modes] for a fuller comparison.
 
 * xref:./getting-started.adoc[Getting Started] — See it in action
 * xref:../api/api.adoc[API Reference] — All configuration options
+* xref:../advanced/degree.adoc[Polynomial Degree] — Constant, linear, quadratic fits
+* xref:../advanced/dimensions.adoc[Multivariate LOESS] — 2D and n-D smoothing
 * xref:../advanced/boundary.adoc[Boundary Handling] — Edge bias reduction strategies
 * xref:../weighting/robustness.adoc[Robustness] — Outlier downweighting methods
 * xref:../weighting/scaling.adoc[Scaling Methods] — MAD, MAR, Mean scale estimation

@@ -158,8 +158,8 @@ func main() {
  opts := fastloess.DefaultStreamingOptions()
  opts.Fraction = 0.05
  opts.Iterations = 3
- opts.ChunkSize = 50
- opts.Overlap = 10
+ opts.ChunkSize = 100000
+ opts.Overlap = 10000
  opts.MergeStrategy = "weighted_average"
 
  model, err := fastloess.NewStreamingLoess(opts)

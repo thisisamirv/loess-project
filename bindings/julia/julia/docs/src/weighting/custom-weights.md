@@ -161,4 +161,4 @@ println("First smoothed value (custom weights + robust fitting): ", result.y[1])
 ## See Also
 
 - [Robustness](robustness.md) — adaptive outlier downweighting via IRLS
-- [API Reference](../api.md) — full parameter reference
+- [API Reference](../api/api.md) — full parameter reference

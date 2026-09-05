@@ -35,7 +35,9 @@ Smoothed 10 points via streaming
 - `options`: An object containing `StreamingSmoothOptions` fields (a subset of the Batch `LoessOptions` fields — see below).
 - `streamingOptions`: An object containing `StreamingOptions` fields.
 
-**Methods:**
+#### `process_chunk(x, y)`
+
+Processes a chunk of data. Returns partial results.
 
 ```javascript
 const { StreamingLoess } = require('fastloess');
@@ -53,7 +55,9 @@ console.log("Fraction used:", partialResult.fraction_used);
 Fraction used: 0.5
 ```
 
-- Processes a chunk of data. Returns partial results.
+#### `finalize()`
+
+Finalizes the smoothing process and returns any remaining buffered results.
 
 ```javascript
 const { StreamingLoess } = require('fastloess');
@@ -73,8 +77,6 @@ console.log("Fraction used:", finalResult.fraction_used);
 Fraction used: 0.5
 ```
 
-- Finalizes the smoothing process and returns any remaining buffered results.
-
 ## Options Structures
 
 ### `StreamingSmoothOptions`
@@ -83,22 +85,22 @@ Fraction used: 0.5
 | --- | --- | --- | --- |
 | `fraction` | `number` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations` | `number` | `3` | Number of robustifying iterations |
-| `weight_function` | `string` | `"tricube"` | Kernel weight function |
-| `robustness_method` | `string` | `"bisquare"` | Robustness method |
+| `weight_function` | `string` | `"tricube"` | Weight function name |
+| `robustness_method` | `string` | `"bisquare"` | Robustness method name |
 | `scaling_method` | `string` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling |
+| `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
-| `return_diagnostics` | `boolean` | `false` | Compute RMSE, MAE, R2, AIC |
+| `return_diagnostics` | `boolean` | `false` | Include diagnostics in result |
 | `return_residuals` | `boolean` | `false` | Include residuals in result |
-| `return_robustness_weights` | `boolean` | `false` | Include robustness weights in result |
+| `return_robustness_weights` | `boolean` | `false` | Include weights in result |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
 | `degree` | `string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `number` | `1` | Number of predictor dimensions |
 | `distance_metric` | `string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `number[]` | `null` | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode` | `string` | `"interpolation"` | Surface computation mode |
-| `cell` | `number` | `null` | Cell size for interpolation grid |
+| `cell` | `number` | `null` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `number` | `null` | Number of interpolation vertices |
 | `boundary_degree_fallback` | `boolean` | `null` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
 
@@ -191,7 +193,7 @@ Convergence tolerance for early stopping of robustness iterations. `null` (defau
 
 ### return_diagnostics
 
-Include a `Diagnostics` object (RMSE, MAE, R², residual SD) in the result.
+Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always `null` here.
 
 - `false` (default) — leaves `result.diagnostics` as `null`
 - `true` — populates `result.diagnostics`
@@ -268,7 +270,7 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 
 ### cell
 
-Cell size for the interpolation grid, as a fraction of the data range. Only applies when `surface_mode = "interpolation"`.
+Cell size for the interpolation grid, as a fraction of the data range. Smaller values place more vertices (denser grid), improving accuracy at the cost of speed. Only applies when `surface_mode = "interpolation"`.
 
 - `null` (default) — uses the library default (`0.2`)
 - Any number in `(0, 1]`
@@ -282,7 +284,7 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 
 ### boundary_degree_fallback
 
-Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there. Only applies when `surface_mode = "interpolation"`.
+Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surface_mode = "interpolation"`.
 
 - `null` (default) — uses the library default (enabled)
 - `true` — falls back to a lower degree at boundaries
@@ -296,7 +298,7 @@ Number of points processed per call to `process_chunk()`. Larger chunks reduce p
 
 Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `merge_strategy`. A good starting point is 10–20% of `chunk_size`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
 
-- `null` (default) — computes `chunk_size / 10`, clamped to at least 1 and less than `chunk_size`
+- `null` (default) — computes `chunk_size / 10`, clamped to at least 1 and at most `chunk_size - 10`
 - Any integer `>= 1` and `< chunk_size`
 
 ### merge_strategy
@@ -324,12 +326,28 @@ Returned by `process_chunk()` and `finalize()`.
 | `y` | `Float64Array` | Smoothed y values |
 | `fraction_used` | `number` | Fraction used |
 | `iterations_used` | `number \| null` | Robustness iterations actually performed |
+| `standard_errors` | `Float64Array \| null` | Always `null` (Batch only) |
+| `confidence_lower` | `Float64Array \| null` | Always `null` (Batch only) |
+| `confidence_upper` | `Float64Array \| null` | Always `null` (Batch only) |
+| `prediction_lower` | `Float64Array \| null` | Always `null` (Batch only) |
+| `prediction_upper` | `Float64Array \| null` | Always `null` (Batch only) |
 | `residuals` | `Float64Array \| null` | Residuals (if `return_residuals`) |
 | `robustness_weights` | `Float64Array \| null` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `Float64Array \| null` | Always `null` (Batch only) |
 | `diagnostics` | `Diagnostics \| null` | Fit metrics (if `return_diagnostics`) |
 | `dimensions` | `number` | Number of predictor dimensions |
 
-See [nodejs.md](api.md) for the full `LoessResult` field reference.
+### `Diagnostics`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `rmse` | `number` | Root Mean Squared Error |
+| `mae` | `number` | Mean Absolute Error |
+| `r_squared` | `number` | R-squared |
+| `residual_sd` | `number` | Residual standard deviation |
+| `effective_df` | `number \| null` | Always `null` (requires standard errors, Batch only) |
+| `aic` | `number \| null` | Always `null` (requires `effective_df`, Batch only) |
+| `aicc` | `number \| null` | Always `null` (requires `effective_df`, Batch only) |
 
 ---
 

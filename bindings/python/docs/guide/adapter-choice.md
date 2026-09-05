@@ -112,7 +112,7 @@ print(f"Smoothed y[0]: {result.y[0]:.4f}")
 ---
 
 :::{warning} Always call finalize()
-In Rust, always call `processor.finalize()` after processing all chunks to retrieve buffered overlap data.
+The streaming adapter buffers overlap data. Call `model.finalize()` after processing all chunks to retrieve the buffered tail.
 :::
 
 ## Online Adapter

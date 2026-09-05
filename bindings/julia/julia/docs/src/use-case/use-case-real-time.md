@@ -80,6 +80,35 @@ println("First smoothed value (streaming mode): ", result.y[1])
 
 The dashboard pattern uses a plain LOESS fit on a manually managed sliding window rather than `OnlineLoess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window^2) refit on every tick; for high-frequency streams prefer `OnlineLoess` with `update_mode = "incremental"` to bound per-frame cost.
 
+```@example dashboard
+using FastLOESS
+using Random, Statistics
+
+# Simulated real-time dashboard sliding window
+window_capacity = 50
+data_x = Float64[]
+data_y = Float64[]
+
+current_smoothed = 0.0
+for i in 0:199
+    x = Float64(i)
+    y = 25.0 + 10 * sin(i / 20) + randn() * 2
+    push!(data_x, x)
+    push!(data_y, y)
+
+    if length(data_x) > window_capacity
+        data_x = data_x[end-window_capacity+1:end]
+        data_y = data_y[end-window_capacity+1:end]
+    end
+
+    if length(data_x) >= 5
+        model = Loess(; fraction=0.4)
+        result = fit(model, data_x, data_y)
+        global current_smoothed = result.y[end]
+    end
+end
+```
+
 ---
 
 ## Choosing Parameters

@@ -7,6 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- markdownlint-disable MD024 -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
@@ -47,8 +49,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(iterations = 3, scaling_method = "mad")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (MAD scaling):\n")
-print(head(result$y))
+cat("Smoothed y[0]:", result$y[1], "\n")
 ```
 
 ---
@@ -65,8 +66,7 @@ first. Still robust (median-based), faster (one partial sort instead of two).
 ```{r scaling_2}
 model <- Loess(iterations = 3, scaling_method = "mar")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (MAR scaling):\n")
-print(head(result$y))
+cat("Smoothed y[0]:", result$y[1], "\n")
 ```
 
 ---
@@ -84,9 +84,21 @@ under-downweight other outliers.
 ```{r scaling_3}
 model <- Loess(iterations = 3, scaling_method = "mean")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (mean scaling):\n")
-print(head(result$y))
+cat("Smoothed y[0]:", result$y[1], "\n")
 ```
+
+---
+
+## Choosing a Scaling Method
+
+| Situation | Recommended Method |
+| --- | --- |
+| General purpose, possible outliers | `"mad"` (default) |
+| Speed matters; residuals have minimal systematic bias | `"mar"` |
+| Clean data, no outliers | `"mean"` |
+
+See `vignette("robustness", package = "rfastloess")` for a broader discussion
+of outlier handling.
 
 ---
 

@@ -28,8 +28,8 @@ opts.ReturnDiagnostics = true
 | `ScalingMethod` | `string` | `"mad"` | Residual scale estimator: `mad`, `mar`, `mean`. |
 | `BoundaryPolicy` | `string` | `"extend"` | Boundary handling: `extend`, `reflect`, `zero`, `noboundary`. |
 | `ZeroWeightFallback` | `string` | `"use_local_mean"` | Fallback when all robustness weights hit zero: `use_local_mean`, `return_original`, `return_none`. |
-| `Degree` | `string` | `"linear"` | Polynomial degree of the local fit — see [Polynomial Degree](../advanced/degree.md). |
-| `Dimensions` | `int` | `1` | Number of predictor dimensions — see [Multivariate LOESS](../advanced/dimensions.md). |
+| `Degree` | `string` | `"linear"` | Polynomial degree of the local fit. |
+| `Dimensions` | `int` | `1` | Number of predictor dimensions. |
 | `DistanceMetric` | `string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p. |
 | `WeightedMetricWeights` | `[]float64` | `nil` | Per-dimension weights (used when `DistanceMetric = "weighted"`). |
 | `SurfaceMode` | `string` | `"interpolation"` | Surface computation mode. |

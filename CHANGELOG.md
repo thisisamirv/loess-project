@@ -107,6 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed the same fields as Python, from `StreamingLoess`/`OnlineLoess` keyword arguments. Breaking change. `parallel` was subsequently also removed from `OnlineLoess`'s keyword arguments — it gated real internal KD-tree/interval-pass dispatch, but was dropped for consistency with `fastlowess`'s `OnlineLowess`; Online now always runs sequentially.
 - `weighted_metric_weights` no longer auto-selects the `"weighted"` distance metric for `Loess`/`StreamingLoess`/`OnlineLoess`; `distance_metric = "weighted"` must now be set explicitly, matching Python, and omitting it while providing weights raises an error. Breaking change.
+- `StreamingLoess`'s `overlap` keyword argument default changed from a fixed `500` to `-1` (a sentinel meaning "use the library default"), so it now resolves dynamically to `chunk_size / 10` like every other language binding, instead of always passing a concrete `500` regardless of `chunk_size`. Breaking change for callers relying on the previous flat default.
 
 **Go:**
 

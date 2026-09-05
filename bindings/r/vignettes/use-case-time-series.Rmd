@@ -7,6 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- markdownlint-disable MD024 -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
@@ -102,7 +104,14 @@ lines(result$x, result$y, col = "blue", lwd = 2)
 
 ---
 
-## Uncertainty Bands
+## Forecasting with Prediction Intervals
+
+Prediction intervals widen the uncertainty band to include both the
+uncertainty in the fitted curve (confidence interval) and the expected
+scatter of new observations around it. `fraction = 0.2` offers a balance
+between local detail and stable interval width — too small a fraction
+produces jagged interval edges; too large a fraction underestimates local
+variance near turning points.
 
 ```{r use_case_time_series_4}
 library(rfastloess)
@@ -113,18 +122,112 @@ y <- 10 + 0.3 * t + sin(t / 5) + rnorm(500, sd = 2)
 model <- Loess(
     fraction = 0.2,
     iterations = 3,
-    confidence_intervals = 0.95
+    confidence_intervals = 0.95,
+    prediction_intervals = 0.95
 )
 result <- fit(model, t, y)
 
 plot(t, y, pch = ".", col = "gray",
     xlab = "Time", ylab = "Value",
-    main = "Trend with 95% Confidence Interval")
+    main = "Trend with 95% Prediction Interval")
 polygon(c(result$x, rev(result$x)),
-        c(result$confidence_upper, rev(result$confidence_lower)),
+        c(result$prediction_upper, rev(result$prediction_lower)),
         col = rgb(0, 0, 1, 0.15), border = NA)
 lines(result$x, result$y, col = "blue", lwd = 2)
 ```
+
+---
+
+## Handling Missing Data
+
+LOESS naturally handles irregular time sampling:
+
+```{r use_case_time_series_5}
+library(rfastloess)
+set.seed(42)
+
+t_irregular <- sort(runif(200, 0, 100))
+y_irregular <- 10 + t_irregular * 0.3 + rnorm(200, sd = 2)
+
+model <- Loess(fraction = 0.2)
+result <- fit(model, t_irregular, y_irregular)
+cat("Smoothed y[0]:", result$y[1], "\n")
+```
+
+---
+
+## Multi-Scale Analysis
+
+Use different fractions to extract features at different scales:
+
+```{r use_case_time_series_6}
+library(rfastloess)
+set.seed(42)
+t <- seq(0, 100, length.out = 500)
+trend_true <- 10 + 0.5 * t + 3 * sin(t / 10)
+y <- trend_true + rnorm(length(t), sd = 3)
+
+fractions <- c(0.05, 0.2, 0.5)
+
+plot(t, y, col = "gray", pch = ".",
+    xlab = "Time", ylab = "Value", main = "Multi-Scale LOESS")
+
+for (f in fractions) {
+    model <- Loess(fraction = f)
+    result <- fit(model, t, y)
+    lines(result$x, result$y, lwd = 2)
+}
+legend("topleft", paste0("fraction=", fractions), lty = 1)
+```
+
+---
+
+## Gene Expression Time Course
+
+Biological application:
+
+```{r use_case_time_series_7}
+library(rfastloess)
+set.seed(42)
+
+hours <- seq(0, 24, by = 0.5)
+expression <- 100 * (1 + 0.5 * sin(hours * pi / 12)) +
+    rnorm(length(hours), sd = 10)
+
+model <- Loess(
+    fraction = 0.3,
+    iterations = 3,
+    confidence_intervals = 0.95,
+    return_diagnostics = TRUE
+)
+result <- fit(model, hours, expression)
+
+cat("R2:", result$diagnostics$r_squared, "\n")
+```
+
+---
+
+## Choosing Fraction for Time Series
+
+| Data Type | Recommended Fraction | Rationale |
+| --- | --- | --- |
+| Daily data (years) | 0.3–0.5 | Capture annual trends |
+| Hourly data (days) | 0.1–0.2 | Capture daily patterns |
+| Sensor data (minutes) | 0.05–0.1 | Preserve short-term features |
+| Noisy data | Higher | Reduce noise impact |
+| Clean data | Lower | Preserve detail |
+
+---
+
+## See Also
+
+- `vignette("use-case-real-time", package = "rfastloess")` — For
+  streaming time series
+- `vignette("cross-validation", package = "rfastloess")` — Optimal
+  fraction selection
+- `vignette("degree", package = "rfastloess")` — Degree 2 for curved trends
+- `vignette("boundary", package = "rfastloess")` — Edge bias in trend extraction
+- `?Loess` — Full parameter reference
 
 ```{r session-info}
 sessionInfo()

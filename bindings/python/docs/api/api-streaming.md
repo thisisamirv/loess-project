@@ -274,7 +274,7 @@ Number of points processed per chunk. Larger chunks reduce per-chunk overhead an
 
 Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `merge_strategy`. A good starting point is 10–20% of `chunk_size`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
 
-- `None` (default) — computes `chunk_size / 10`, clamped to at least 1 and less than `chunk_size`
+- `None` (default) — computes `chunk_size / 10`, clamped to at least 1 and at most `chunk_size - 10`
 - Any integer `>= 1` and `< chunk_size`
 
 ### merge_strategy

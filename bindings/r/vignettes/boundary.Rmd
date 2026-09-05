@@ -7,6 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- markdownlint-disable MD024 -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
@@ -45,8 +47,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(boundary_policy = "extend")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (extend policy):\n")
-print(head(result$y))
+cat("Smoothed y[0]:", result$y[1], "\n")
 ```
 
 ---
@@ -63,8 +64,7 @@ quantities, or when the derivative at the boundary is expected to be zero.
 ```{r boundary_2}
 model <- Loess(boundary_policy = "reflect")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (reflect policy):\n")
-print(head(result$y))
+cat("Smoothed y[0]:", result$y[1], "\n")
 ```
 
 ---
@@ -80,26 +80,27 @@ value.
 ```{r boundary_3}
 model <- Loess(boundary_policy = "zero")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (zero policy):\n")
-print(head(result$y))
+cat("Smoothed y[0]:", result$y[1], "\n")
 ```
 
 ---
 
-## No Boundary Padding
+## No Boundary
 
 Applies no padding. Each local fit uses only the points that are actually
-available, which may be fewer than the requested neighbourhood at the endpoints.
-This reproduces the original Cleveland (1979) algorithm exactly.
+available, which may be fewer than the requested neighbourhood at the
+endpoints. This reproduces the original Cleveland (1979) algorithm exactly.
 
-**Use when**: Reproducing reference results; you prefer the raw LOESS boundary
-behaviour.
+**Use when**: Reproducing reference results; you prefer the raw LOESS
+boundary behaviour.
+
+> **Note:** Without padding, boundary fits can have higher variance and
+> visible edge artefacts, particularly with small `fraction` values.
 
 ```{r boundary_4}
 model <- Loess(boundary_policy = "noboundary")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (noboundary policy):\n")
-print(head(result$y))
+cat("Smoothed y[0]:", result$y[1], "\n")
 ```
 
 ---

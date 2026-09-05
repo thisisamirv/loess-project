@@ -49,7 +49,9 @@ y[0]: 0.224537
 
 - `options`: A `StreamingOptions` struct (inherits from `LoessOptions`) with additional `chunk_size` and `overlap` parameters.
 
-**Methods:**
+#### `process_chunk(x, y)`
+
+Processes a chunk of data. Returns partial results.
 
 ```cpp
 #include <fastloess.hpp>
@@ -82,7 +84,9 @@ int main() {
 0.5
 ```
 
-- Processes a chunk of data. Returns partial results.
+#### `finalize()`
+
+Finalizes the smoothing process and returns any remaining buffered results.
 
 ```cpp
 #include <fastloess.hpp>
@@ -117,8 +121,6 @@ int main() {
 ```output
 0.5
 ```
-
-- Finalizes the smoothing process and returns any remaining buffered results.
 
 ## Options Structure
 
@@ -171,9 +173,13 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `x_vector()` | `std::vector<double>` | x values (same order as input) |
 | `y_vector()` | `std::vector<double>` | Smoothed y values |
 | `fraction_used()` | `double` | Fraction used |
-| `iterations_used()` | `int` | Robustness iterations (-1 = N/A) |
+| `iterations_used()` | `int` | Robustness iterations actually performed (-1 = N/A) |
+| `standard_errors()` | `std::vector<double>` | Always empty (Batch only) |
+| `confidence_lower()`, `confidence_upper()` | `std::vector<double>` | Always empty (Batch only) |
+| `prediction_lower()`, `prediction_upper()` | `std::vector<double>` | Always empty (Batch only) |
 | `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`; empty if not) |
 | `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not) |
+| `cv_scores()` | `std::vector<double>` | Always empty (Batch only) |
 | `diagnostics()` | `Diagnostics` | Fit metrics — check `has_value()` (if `return_diagnostics`) |
 | `dimensions()` | `int` | Number of predictor dimensions |
 

@@ -113,7 +113,7 @@ println("First smoothed value (streaming ChIP-seq): ", result.y[1])
 ## See Also
 
 - [Concepts](../introduction/concepts.md) — How LOESS works
-- [API Reference](../api.md) — All options
+- [API Reference](../api/api.md) — All options
 - [Robustness](../weighting/robustness.md) — Outlier downweighting in depth
 - [Merge Strategies](../advanced/merge.md) — Streaming chunk reconciliation
 - [Boundary Handling](../advanced/boundary.md) — Edge handling for sparse regions

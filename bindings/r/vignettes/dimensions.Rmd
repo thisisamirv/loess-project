@@ -7,16 +7,20 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- markdownlint-disable MD024 -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## Overview
 
-Standard LOESS operates on a single predictor `x`. LOESS extends this to an
-**n-dimensional predictor space** by passing a matrix as `x`, enabling surface
-smoothing over spatial grids, time–altitude combinations, and similar
-multi-predictor datasets.
+Standard LOESS operates on a single predictor `x`. Setting `dimensions > 1`
+extends the neighbourhood search and local polynomial fit into an
+**n-dimensional predictor space**, enabling surface smoothing over spatial
+grids, time–altitude combinations, and similar multi-predictor datasets.
+
+![Multivariate LOESS](../man/figures/multivariate_loess.svg)
 
 | Dimensions | Use Case | `x` Input Shape |
 | --- | --- | --- |
@@ -93,16 +97,16 @@ print(head(result$y))
 
 ---
 
-## Distance Metrics
+## Distance Metrics for Multivariate Data
 
-In multivariate mode, neighbour distances can be computed with different
-metrics.
+When `dimensions > 1` you can also control how inter-point distances are
+computed.
 
 | Metric | Description | When to Use |
 | --- | --- | --- |
 | `"normalized"` | Scaled by dimension range (default) | Mixed-scale |
 | `"euclidean"` | Raw Euclidean distance | Same-scale predictors |
-| `"minkowski:p"` | Generalised Minkowski ($L_p$) norm, e.g. `"minkowski:3"` | Custom distance geometry |
+| `"minkowski:p"` | Minkowski ($L_p$) norm | Custom geometry |
 | `"weighted"` | Per-dimension via `weighted_metric_weights` | Anisotropic |
 
 ```{r dimensions_4}

@@ -7,6 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- markdownlint-disable MD024 -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
@@ -138,6 +140,30 @@ print(head(result$y))
 
 ---
 
+## Choosing the Right Degree
+
+| Situation | Recommended Degree |
+| --- | --- |
+| Monotone trend, general purpose | `1` (default) |
+| Maximum smoothness, speed | `0` |
+| Clear peaks / valleys / inflections | `2` (with `fraction` >= 0.4) |
+| S-shaped curves, multiple inflections | `3` (with `fraction` >= 0.5) |
+| Fine oscillatory structure (rare) | `4` (fraction >= 0.6, CV) |
+| Boundary accuracy is critical | `1` or `2` (not `0`) |
+| Very small dataset (n < 50) | `1` |
+
+> **Rule of thumb:** Start with `degree = 1` (default). Move to `degree = 2`
+> only if you see systematic bias in regions of high curvature, and increase
+> `fraction` at the same time.
+
+---
+
+## Higher Degree Effects
+
+![Higher Degree Comparison](../man/figures/higher_degree_comparison.svg)
+
+---
+
 ## Surface Mode
 
 The `surface_mode` parameter controls whether LOESS evaluates the local
@@ -146,28 +172,15 @@ cubic interpolation in between.
 
 | Mode | Behaviour | Speed | Accuracy |
 | --- | --- | --- | --- |
-| `"interpolation"` (default) | Evaluate at anchor vertices, blend via Hermite cubic | Faster | Slight approximation |
+| `"interpolation"` (default) | Anchor + Hermite blend | Faster | Approx |
 | `"direct"` | Evaluate at every query point | Exact | Full precision |
 
-See [Multivariate LOESS](dimensions.html) for runnable `surface_mode` examples.
+![Surface Mode Comparison](../man/figures/surface_comparison.svg)
 
----
+![Degree x Interpolation](../man/figures/degree_interpolation_comparison.svg)
 
-## Choosing a Degree
-
-| Situation | Recommended Degree |
-| --- | --- |
-| Monotone trend, general purpose | `1` (default) |
-| Maximum smoothness, speed | `0` |
-| Clear peaks / valleys / inflections | `2` (with `fraction` >= 0.4) |
-| S-shaped curves, multiple inflections | `3` (with `fraction` >= 0.5) |
-| Fine oscillatory structure (rare) | `4` (with `fraction` >= 0.6, cross-validate) |
-| Boundary accuracy is critical | `1` or `2` (not `0`) |
-| Very small dataset (n < 50) | `1` |
-
-> **Rule of thumb:** Start with `degree = 1` (default). Move to `degree = 2`
-> only if you see systematic bias in regions of high curvature, and increase
-> `fraction` at the same time.
+See `vignette("dimensions", package = "rfastloess")` for runnable
+`surface_mode` examples.
 
 ```{r session-info}
 sessionInfo()

@@ -119,4 +119,4 @@ print(f"Smoothed {len(result.y)} points in streaming mode")
 | Multivariate smoothing | [Dimensions](../advanced/dimensions.md) |
 | Edge handling | [Boundary](../advanced/boundary.md) |
 | Outlier handling in depth | [Robustness](../weighting/robustness.md) |
-| Full API per language | [API Reference](../api/index.md) |
+| Full API per language | [API Reference](../api/api.md) |

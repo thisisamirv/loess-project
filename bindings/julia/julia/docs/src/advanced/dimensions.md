@@ -5,15 +5,15 @@ Smoothing over multiple predictor dimensions simultaneously.
 
 ## Overview
 
-Standard LOESS operates on a single predictor $x$. Setting `dimensions > 1` extends the neighbourhood search and local polynomial fit into an $n$-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets.
+Standard LOESS operates on a single predictor $x$. Setting `dimensions > 1` extends the neighbourhood search and local polynomial fit into an $n$-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets. `x` is passed as a flat, row-major array of length `length(y) * dimensions`.
 
 ![Multivariate LOESS](../assets/multivariate_loess.svg)
 
 | Dimensions | Use Case | Input Shape |
 | --- | --- | --- |
 | `1` | Time series, 1D signal (default) | `x`: 1-D array |
-| `2` | Spatial surface, 2-predictor model | `x`: n × 2 matrix |
-| `3+` | High-dimensional regression | `x`: n × d matrix |
+| `2` | Spatial surface, 2-predictor model | `x`: flat array of length `n*2`, row-major |
+| `3+` | High-dimensional regression | `x`: flat array of length `n*d`, row-major |
 
 !!! warning "Computational cost"
     Neighbourhood search scales with $d$ dimensions. For `dimensions ≥ 3` keep `fraction` small.
@@ -41,7 +41,7 @@ println("First smoothed value (1D LOESS): ", result.y[1])
 
 ## 2D — Spatial Surface
 
-Two predictors (e.g., latitude/longitude, time/altitude). Pass an $n \times 2$ matrix as `x`.
+Two predictors (e.g., latitude/longitude, time/altitude). Pass a flat, row-major array of length `n*2` as `x`.
 
 ```@example dimensions
 using FastLOESS
@@ -97,4 +97,4 @@ When `dimensions > 1` you can also control how inter-point distances are compute
 | `"minkowski:p"` | Generalised Minkowski ($L_p$) norm | Custom distance geometry |
 | `"weighted"` | Per-dimension weighted Euclidean | Domain-specific importance |
 
-See [API Reference](../api/api.md) for the full list of options per language.
+See [API Reference](../api/api.md#distance_metric) for the full list of options per language.

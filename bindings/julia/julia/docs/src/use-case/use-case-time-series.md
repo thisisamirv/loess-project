@@ -169,4 +169,4 @@ println("R2: ", result.diagnostics.r_squared)
 - [Cross-Validation](../guide/cross-validation.md) — Optimal fraction selection
 - [Polynomial Degree](../advanced/degree.md) — Degree 2 for curved trends
 - [Boundary Handling](../advanced/boundary.md) — Edge bias in trend extraction
-- [API Reference](../api.md) — Full parameter reference
+- [API Reference](../api/api.md) — Full parameter reference

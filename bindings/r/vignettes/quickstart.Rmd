@@ -7,14 +7,16 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- markdownlint-disable MD024 -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
 
 ## Basic Smoothing
 
-Smooth a noisy sine wave. `fraction = 0.3` and `iterations = 3` are good
-starting values for most signals.
+Smooth a noisy sine wave — the kind of signal where LOESS shines. `fraction
+= 0.3` and `iterations = 3` are good starting values for most signals.
 
 ```{r quickstart_1}
 library(rfastloess)
@@ -33,10 +35,7 @@ cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
 
 ---
 
-## With Confidence and Prediction Intervals
-
-Set `confidence_intervals` and/or `prediction_intervals` to a coverage level
-(0–1).
+## With Confidence Intervals
 
 ```{r quickstart_2}
 library(rfastloess)
@@ -53,42 +52,68 @@ model <- Loess(
 )
 result <- fit(model, x, y)
 
-cat("Confidence lower bounds (first 5):\n")
-print(head(result$confidence_lower, 5))
-cat("Confidence upper bounds (first 5):\n")
-print(head(result$confidence_upper, 5))
+cat("Smoothed (first 5):", head(result$y, 5), "\n")
+cat("CI Lower (first 5):", head(result$confidence_lower, 5), "\n")
+cat("CI Upper (first 5):", head(result$confidence_upper, 5), "\n")
 cat("R2:", result$diagnostics$r_squared, "\n")
+```
+
+---
+
+## Handling Outliers
+
+LOESS can robustly handle outliers through iterative reweighting:
+
+```{r quickstart_3}
+library(rfastloess)
+
+x_out <- 1:6
+y_with_outlier <- c(2.0, 4.0, 6.0, 50.0, 10.0, 12.0)
+
+model <- Loess(
+    fraction = 0.7,
+    iterations = 5,
+    robustness_method = "bisquare",
+    return_robustness_weights = TRUE
+)
+result <- fit(model, x_out, y_with_outlier)
+
+# Check which points were downweighted
+for (i in seq_along(result$robustness_weights)) {
+    if (result$robustness_weights[i] < 0.5) {
+        cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n",
+                    i, result$robustness_weights[i]))
+    }
+}
 ```
 
 ---
 
 ## Streaming Mode
 
-For large datasets (>100K points) that may not fit in memory.
+For datasets too large to fit in memory, stream them in fixed-size chunks
+with overlap.
 
-```{r quickstart_3}
+```{r quickstart_4}
 library(rfastloess)
 set.seed(42)
-x <- seq(0, 2 * pi, length.out = 10000)
-y <- sin(x) + rnorm(10000, sd = 0.3)
+x <- seq(0, 10 * pi, length.out = 5000)
+y <- sin(x / pi) * exp(-x / 30) + rnorm(5000, sd = 0.15)
 
 model <- StreamingLoess(
-    fraction = 0.3,
-    iterations = 2,
-    chunk_size = 5000,
-    overlap = 500,
+    fraction = 0.2,
+    chunk_size = 1000,
+    overlap = 100,
     merge_strategy = "weighted_average"
 )
 
-# Process one chunk at a time
-chunk_x <- x[1:5000]
-chunk_y <- y[1:5000]
-result <- process_chunk(model, chunk_x, chunk_y)
-
-# Finalize after all chunks
-final <- finalize(model)
-cat("First 6 smoothed values (streaming, weighted_average merge):\n")
-print(head(final$y))
+chunk_size <- 1000
+for (start in seq(1, 4001, by = chunk_size)) {
+    end <- min(start + chunk_size - 1, length(x))
+    process_chunk(model, x[start:end], y[start:end])
+}
+result <- finalize(model)
+cat("Smoothed", length(result$y), "points in streaming mode\n")
 ```
 
 ---
@@ -97,7 +122,7 @@ print(head(final$y))
 
 For real-time / point-by-point processing.
 
-```{r quickstart_4}
+```{r quickstart_5}
 library(rfastloess)
 set.seed(42)
 times <- 1:100
@@ -122,7 +147,7 @@ for (i in seq_along(times)) {
 
 ## Plotting Results
 
-```{r quickstart_5}
+```{r quickstart_6}
 library(rfastloess)
 set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
@@ -139,6 +164,20 @@ legend("topright", c("Data", "Smoothed", "95% CI"),
         pch = c(16, NA, NA), lty = c(NA, 1, 2),
         col = c("gray", "blue", "blue"))
 ```
+
+---
+
+## Next Steps
+
+| Topic | Link |
+| --- | --- |
+| How LOESS works | `vignette("concepts", package = "rfastloess")` |
+| All parameters explained | `?Loess` |
+| Batch vs Streaming vs Online | `vignette("adapter-choice")` |
+| Polynomial degree choices | `vignette("degree", package = "rfastloess")` |
+| Multivariate smoothing | `vignette("dimensions", package = "rfastloess")` |
+| Edge handling | `vignette("boundary", package = "rfastloess")` |
+| Outlier handling in depth | `vignette("robustness", package = "rfastloess")` |
 
 ```{r session-info}
 sessionInfo()

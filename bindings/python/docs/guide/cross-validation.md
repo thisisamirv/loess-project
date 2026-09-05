@@ -121,10 +121,23 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
+## Example output
+
 model = fl.Loess(cv_method="kfold", cv_k=5,
                    cv_fractions=[0.1, 0.3, 0.5, 0.7])
 result = model.fit(x, y)
-print(f"Selected fraction: {result.fraction_used}")
+
+## Fraction  | CV Score (MSE)
+
+## 0.1       | 0.0542  ← Undersmoothed
+
+## 0.3       | 0.0231  ← Best
+
+## 0.5       | 0.0298
+
+## 0.7       | 0.0412  ← Oversmoothed
+
+print(f"y[0]: {result.y[0]:.4f}")
 :::
 
 The fraction with **lowest CV score** is automatically selected.

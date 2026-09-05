@@ -6,15 +6,15 @@ Smoothing over multiple predictor dimensions simultaneously.
 
 ## Overview
 
-Standard LOESS operates on a single predictor \f$x\f$. Setting `dimensions > 1` extends the neighbourhood search and local polynomial fit into an \f$n\f$-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets.
+Standard LOESS operates on a single predictor \f$x\f$. Setting `dimensions > 1` extends the neighbourhood search and local polynomial fit into an \f$n\f$-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets. `x` is passed as a flat, row-major vector of length `y.size() * dimensions`.
 
 ![Multivariate LOESS](multivariate_loess.svg)
 
 | Dimensions | Use Case | Input Shape |
 | --- | --- | --- |
 | `1` | Time series, 1D signal (default) | `x`: 1-D array |
-| `2` | Spatial surface, 2-predictor model | `x`: n × 2 matrix |
-| `3+` | High-dimensional regression | `x`: n × d matrix |
+| `2` | Spatial surface, 2-predictor model | `x`: flat array of length `n*2`, row-major |
+| `3+` | High-dimensional regression | `x`: flat array of length `n*d`, row-major |
 
 > **Computational cost:** Neighbourhood search scales with \f$d\f$ dimensions. For `dimensions ≥ 3` keep `fraction` small.
 
@@ -54,7 +54,7 @@ y[0]: 0.24731
 
 ## 2D — Spatial Surface
 
-Two predictors (e.g., latitude/longitude, time/altitude). Pass an \f$n \times 2\f$ matrix as `x`.
+Two predictors (e.g., latitude/longitude, time/altitude). Pass a flat, row-major array of length `n*2` as `x`.
 
 ```cpp
 #include <fastloess.hpp>

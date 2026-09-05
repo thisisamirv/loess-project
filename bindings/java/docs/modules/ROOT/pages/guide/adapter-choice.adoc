@@ -28,6 +28,158 @@ image::adapter_comparison.svg[Adapter Comparison]
 
 '''
 
+== Batch Adapter
+
+Standard mode for complete datasets. **Supports all features.**
+
+=== When to Use
+
+* Dataset fits in memory
+* Need intervals, cross-validation, or diagnostics
+* Processing complete files
+
+=== Example
+
+[source,java]
+----
+Options options = Options.builder()
+        .fraction(0.5)
+        .iterations(3)
+        .confidenceIntervals(0.95)
+        .predictionIntervals(0.95)
+        .returnDiagnostics(true)
+        .parallel(true)
+        .build();
+
+try (Loess model = new Loess(options)) {
+    Result result = model.fit(x, y);
+    System.out.println("95% CI at midpoint: [" + result.confidenceLower().get()[50] + ", " + result.confidenceUpper().get()[50] + "]");
+    System.out.println("R2: " + result.diagnostics().get().rSquared());
+}
+----
+
+'''
+
+== Streaming Adapter
+
+Process large datasets in chunks with configurable overlap.
+
+=== When to Use
+
+* Dataset >100,000 points
+* Memory-constrained environments
+* Batch processing pipelines
+
+=== Parameters
+
+[cols="1,1,1",options="header"]
+|===
+|Parameter |Default |Description
+
+|`chunkSize` |5000 |Points per chunk
+|`overlap` |500 |Overlap between chunks
+|`mergeStrategy` |`"weighted_average"` |How to merge overlaps
+|===
+
+=== Merge Strategies
+
+[cols="1,1",options="header"]
+|===
+|Strategy |Behavior
+
+|`"average"` |Average overlapping values
+|`"weighted_average"` |Distance-weighted blend (default)
+|`"take_first"` |Keep left chunk values
+|`"take_last"` |Keep right chunk values
+|===
+
+image::merge_comparison.svg[Merge Strategies]
+
+=== Example
+
+[source,java]
+----
+StreamingOptions options = StreamingOptions.builder()
+        .fraction(0.3)
+        .iterations(2)
+        .chunkSize(5000)
+        .overlap(500)
+        .mergeStrategy("average")
+        .build();
+
+try (StreamingLoess model = new StreamingLoess(options)) {
+    model.processChunk(x, y);
+    Result result = model.finish();
+    System.out.println("Smoothed y[0]: " + result.y()[0]);
+}
+----
+
+'''
+
+[NOTE]
+====
+*Always call finalize():* The streaming adapter buffers overlap data. Call `finish()` after processing all chunks to retrieve the buffered tail.
+====
+
+== Online Adapter
+
+Incremental updates with a sliding window for real-time data.
+
+=== When to Use
+
+* Data arrives incrementally (sensors, streams)
+* Need real-time smoothed values
+* Fixed memory budget
+
+image::online_comparison.svg[Online Adapter]
+
+=== Parameters
+
+[cols="1,1,1",options="header"]
+|===
+|Parameter |Default |Description
+
+|`windowCapacity` |1000 |Max points in window
+|`minPoints` |2 |Points before output starts
+|`updateMode` |`"incremental"` |Update strategy
+|===
+
+=== Update Modes
+
+[cols="1,1,1",options="header"]
+|===
+|Mode |Behavior |Speed
+
+|`"incremental"` |Update only affected fits |Faster
+|`"full"` |Recompute entire window |More accurate
+|===
+
+=== Example
+
+[source,java]
+----
+OnlineOptions options = OnlineOptions.builder()
+        .fraction(0.2)
+        .iterations(1)
+        .windowCapacity(100)
+        .minPoints(5)
+        .updateMode("incremental")
+        .build();
+
+try (OnlineLoess model = new OnlineLoess(options)) {
+    int shown = 0;
+    for (int i = 0; i < x.length && shown < 5; i++) {
+        Optional<PointResult> result = model.addPoint(x[i], y[i]);
+        if (result.isPresent()) {
+            System.out.println(result.get().y());
+            shown++;
+        }
+    }
+}
+----
+
+'''
+
 == Feature Comparison
 
 [cols="1,1,1,1",options="header"]

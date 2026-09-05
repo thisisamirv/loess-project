@@ -31,7 +31,7 @@ OnlineOptions options = OnlineOptions.builder()
 
 == `OnlineLoess.addPoint(double x, double y) Optional<PointResult>`
 
-Adds a single observation. Returns `Optional.empty()` while the window is still filling (fewer than `minPoints` seen so far); once populated, the `PointResult` holds the smoothed value for the most recently added point.
+Adds a single observation. Returns `Optional.empty()` while the window is still filling (fewer than `minPoints` seen so far); once populated, the `PointResult` holds the smoothed value for the most recently added point. Once the window reaches `windowCapacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `updateMode` controls how much work each call does: `incremental` re-fits only the newest point, while `full` re-smooths the entire window for a more accurate but slower result.
 
 == `OnlineLoess.close()`
 
@@ -41,7 +41,7 @@ Releases native resources. Safe to call multiple times. Implements `AutoCloseabl
 
 === windowCapacity
 
-Maximum number of points retained in the sliding window. Older points are evicted as new ones arrive.
+Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `addPoint` call costs O(`windowCapacity`) rather than growing with total history.
 
 === minPoints
 
@@ -68,11 +68,13 @@ See xref:./api.adoc[API] for the descriptions of all inherited settings (`fracti
 |Accessor |Type |Notes
 
 |`y()` |`double` |Smoothed value.
-|`standardError()` |`OptionalDouble` |Empty if not computed.
-|`residual()` |`OptionalDouble` |Empty if not computed.
-|`robustnessWeight()` |`OptionalDouble` |Empty if not computed.
-|`iterationsUsed()` |`OptionalInt` |Empty if not applicable.
+|`standardError()` |`OptionalDouble` |Always empty — standard errors require confidence intervals, which are Batch-only.
+|`residual()` |`OptionalDouble` |Residual y − smoothed; always present (there is no `returnResiduals` option for Online).
+|`robustnessWeight()` |`OptionalDouble` |Robustness weight, if `returnRobustnessWeights` was set.
+|`iterationsUsed()` |`OptionalInt` |Robustness iterations performed; empty if not applicable.
 |===
+
+There is no `Diagnostics` type or `returnDiagnostics` option for `OnlineLoess`: `PointResult` carries no diagnostics accessor, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
 
 == Example
 

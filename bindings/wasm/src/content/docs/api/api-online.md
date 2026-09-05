@@ -33,7 +33,9 @@ typeof add_point: function
 - `options`: An object containing `OnlineSmoothOptions` fields (a subset of the Batch `LoessOptions` fields — see below).
 - `onlineOptions`: An object containing `OnlineOptions` fields.
 
-**Methods:**
+#### `add_point(x, y)`
+
+Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
 
 ```javascript
 const { OnlineLoess } = require('fastloess-wasm');
@@ -57,8 +59,6 @@ console.log("Smoothed y:", result.y);
 Smoothed y: 0.22659245357374927
 ```
 
-- Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
-
 ## Options Structures
 
 ### `OnlineSmoothOptions`
@@ -67,11 +67,11 @@ Smoothed y: 0.22659245357374927
 | --- | --- | --- | --- |
 | `fraction` | `number` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations` | `number` | `3` | Number of robustifying iterations |
-| `weight_function` | `string` | `"tricube"` | Kernel weight function |
-| `robustness_method` | `string` | `"bisquare"` | Robustness method |
+| `weight_function` | `string` | `"tricube"` | Weight function name |
+| `robustness_method` | `string` | `"bisquare"` | Robustness method name |
 | `scaling_method` | `string` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling |
+| `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
 | `return_robustness_weights` | `boolean` | `false` | Include robustness weight in result |
 | `degree` | `string` | `"linear"` | Polynomial degree of local fit |
@@ -79,7 +79,7 @@ Smoothed y: 0.22659245357374927
 | `distance_metric` | `string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `number[]` | `null` | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode` | `string` | `"interpolation"` | Surface computation mode |
-| `cell` | `number` | `null` | Cell size for interpolation grid |
+| `cell` | `number` | `null` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `number` | `null` | Number of interpolation vertices |
 | `boundary_degree_fallback` | `boolean` | `null` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
 
@@ -172,7 +172,7 @@ Convergence tolerance for early stopping of robustness iterations. `null` (defau
 
 ### return_robustness_weights
 
-Include the robustness weight from the latest point's fit in the result.
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
 
 - `false` (default) — leaves `result.robustness_weight` as `undefined`
 - `true` — populates `result.robustness_weight`
@@ -228,7 +228,7 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 
 ### cell
 
-Cell size for the interpolation grid, as a fraction of the data range. Only applies when `surface_mode = "interpolation"`.
+Cell size for the interpolation grid, as a fraction of the data range. Smaller values place more vertices (denser grid), improving accuracy at the cost of speed. Only applies when `surface_mode = "interpolation"`.
 
 - `null` (default) — uses the library default (`0.2`)
 - Any number in `(0, 1]`
@@ -242,7 +242,7 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 
 ### boundary_degree_fallback
 
-Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there. Only applies when `surface_mode = "interpolation"`.
+Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surface_mode = "interpolation"`.
 
 - `null` (default) — uses the library default (enabled)
 - `true` — falls back to a lower degree at boundaries
@@ -250,7 +250,7 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 ### window_capacity
 
-Maximum number of points retained in the sliding window. Older points are evicted as new ones arrive.
+Maximum number of most recent points kept in the sliding window; older points are evicted as new ones arrive. Each `add_point()` call costs O(`window_capacity`) rather than growing with total history.
 
 ### min_points
 
@@ -274,7 +274,9 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 | Field | Type | Description |
 | --- | --- | --- |
 | `y` | `number` | Smoothed value for the latest point |
-| `standard_error` | `number \| undefined` | Standard error (if requested) |
-| `residual` | `number \| undefined` | Residual y − smoothed (if requested) |
-| `robustness_weight` | `number \| undefined` | Robustness weight (if requested) |
+| `standard_error` | `number \| undefined` | Always `undefined` — standard errors require confidence intervals, which are Batch-only |
+| `residual` | `number \| undefined` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
+| `robustness_weight` | `number \| undefined` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used` | `number \| undefined` | Robustness iterations performed |
+
+There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

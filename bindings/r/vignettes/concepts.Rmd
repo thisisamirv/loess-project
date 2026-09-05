@@ -7,6 +7,8 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+<!-- markdownlint-disable MD024 -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 ```
@@ -100,11 +102,15 @@ points with large residuals:
 | **Streaming** | >100K points | One chunk | Residuals, robustness |
 | **Online** | Real-time data | Fixed window | Incremental updates |
 
-Decision guide:
+---
 
-- Data fits in memory and no real-time requirement → **Batch**
-- Data does not fit in memory → **Streaming**
-- Real-time / point-by-point processing needed → **Online**
+## Quick Decision Guide
+
+| Situation | Mode |
+| --- | --- |
+| Data fits in memory; needs intervals or CV | Batch |
+| Data too large for memory or arrives in chunks | Streaming |
+| Data arrives point-by-point in real time | Online |
 
 ---
 
@@ -119,6 +125,24 @@ Decision guide:
 | Handles irregular sampling | ✓ | ✓ | ✗ |
 | Multivariate predictors | ✓ | ✓ | ✗ |
 | Adjustable polynomial degree | ✓ (0–4) | ✓ | ✗ |
+
+---
+
+## Next Steps
+
+- `vignette("quickstart", package = "rfastloess")` — See it in action
+- `?Loess` — All configuration options
+- `vignette("degree", package = "rfastloess")` — Constant, linear,
+  quadratic fits
+- `vignette("dimensions", package = "rfastloess")` — 2D and n-D smoothing
+- `vignette("boundary", package = "rfastloess")` — Edge bias reduction
+  strategies
+- `vignette("robustness", package = "rfastloess")` — Outlier
+  downweighting methods
+- `vignette("scaling", package = "rfastloess")` — MAD, MAR, Mean scale
+  estimation
+- `vignette("merge", package = "rfastloess")` — Chunk reconciliation in
+  Streaming mode
 
 ```{r session-info}
 sessionInfo()

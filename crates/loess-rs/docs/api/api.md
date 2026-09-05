@@ -10,8 +10,6 @@ The Rust crates provide the core implementation and high-performance extensions.
 
 ## Structs & Usage
 
-Both crates expose the same three entry types via their `prelude`: `Loess` for batch mode, `StreamingLoess` for chunked processing, and `OnlineLoess` for sliding-window updates.
-
 > **StreamingLoess** and **OnlineLoess** are documented separately: [Streaming Adapter](crate::doc::api::streaming), [Online Adapter](crate::doc::api::online)
 
 ```text
@@ -34,7 +32,9 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
-**Methods:**
+#### `fit(&x, &y)`
+
+Fits the model to the provided `x` and `y` arrays. Returns `Result<LoessResult<T>, LoessError>`.
 
 ```rust
 use loess_rs::prelude::*;
@@ -59,13 +59,6 @@ Fraction used: 0.5
 Iterations used: Some(3)
 ```
 
-- Fits the model to the provided `x` and `y` arrays.
-- Returns `Result<LoessResult<T>, LoessError>`.
-
-See [Streaming Adapter](crate::doc::api::streaming) for the `StreamingLoess` struct.
-
-See [Online Adapter](crate::doc::api::online) for the `OnlineLoess` struct.
-
 ## Builder Configuration
 
 These chained methods configure the builder. They correspond to the "Options Structures" in other bindings.
@@ -82,25 +75,29 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
-| `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights (Batch only) — see [Custom Weights](crate::doc::weighting::custom_weights) |
-| `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) — see [Intervals](crate::doc::guide::intervals) |
-| `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) — see [Intervals](crate::doc::guide::intervals) |
-| `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R2, AIC |
+| `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) |
+| `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) |
+| `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
-| `return_robustness_weights()` | `bool` | `false` | Include robustness weights in result |
+| `return_robustness_weights()` | `bool` | `false` | Include weights in result |
 | `return_se()` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
-| `degree(...)` | `degree` | `"linear"` | Polynomial degree — see [Polynomial Degree](crate::doc::advanced::degree) |
-| `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions — see [Multivariate LOESS](crate::doc::advanced::dimensions) |
+| `degree(...)` | `degree` | `"linear"` | Polynomial degree |
+| `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
 | `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
 | `weighted_metric_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode(...)` | `surface_mode` | `"interpolation"` | Surface computation mode |
 | `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
 | `boundary_degree_fallback(bool)` | `bool` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cv_method(...)` | `&str` | disabled | Cross-validation method — see [Cross-Validation](crate::doc::guide::cross_validation) |
+| `cv_method(...)` | `&str` | disabled | Cross-validation method |
 | `cv_k(...)` | `usize` | disabled | Number of folds for K-fold cross-validation |
 | `cv_fractions(...)` | `Vec<f64>` | disabled | Candidate fractions to evaluate during cross-validation |
 | `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
+| `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights |
+
+## Options
+
+### fraction
 
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
@@ -111,6 +108,8 @@ These chained methods configure the builder. They correspond to the "Options Str
 | 0.5-0.7 | Heavy smoothing | Noisy data |
 | 0.7-1.0 | Very smooth | Trend extraction |
 
+### iterations
+
 `iterations` controls robustness to outliers, at the cost of speed.
 
 | Value | Effect | Performance |
@@ -119,12 +118,6 @@ These chained methods configure the builder. They correspond to the "Options Str
 | 1-3 | Moderate | Recommended |
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
-
-See [Streaming Adapter](crate::doc::api::streaming) for Streaming Options.
-
-See [Online Adapter](crate::doc::api::online) for Online Options.
-
-## Options
 
 ### weight_function
 
@@ -178,12 +171,6 @@ Behavior when all neighborhood weights are zero:
 *See: [Robustness](crate::doc::weighting::robustness#auto-convergence)*
 
 Convergence tolerance for early stopping of robustness iterations. Disabled by default.
-
-### custom_weights
-
-*See: [Custom Weights](crate::doc::weighting::custom_weights)*
-
-Per-observation case weights. Must have the same length as `y`; all values must be non-negative.
 
 ### confidence_intervals
 
@@ -277,6 +264,12 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method` is `"loocv"`.
 - `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
 - `cv_seed`: Seed for reproducible k-fold shuffling. Disabled by default (uses a random seed).
+
+### custom_weights
+
+*See: [Custom Weights](crate::doc::weighting::custom_weights)*
+
+Per-observation case weights. Must have the same length as `y`; all values must be non-negative.
 
 ## Result Structure
 

@@ -57,7 +57,9 @@ y[0]: 0.226592
 
 - `options`: An `OnlineOptions` struct with `window_capacity`, `min_points`, and `update_mode`.
 
-**Methods:**
+#### `add_point(x, y)`
+
+Adds a single point to the sliding window. Returns `Expected<OnlineOutput>` — check `result.has_value()` to see whether the window is ready.
 
 ```cpp
 #include <fastloess.hpp>
@@ -97,8 +99,6 @@ int main() {
 0.226592
 ```
 
-- Adds a single point to the sliding window. Returns `Expected<OnlineOutput>` — check `result.has_value()` to see whether the window is ready.
-
 ## Options Structure
 
 ### OnlineOptions
@@ -107,11 +107,11 @@ int main() {
 | --- | --- | --- | --- |
 | `fraction` | `double` | `0.67` | Smoothing fraction (bandwidth) |
 | `iterations` | `int` | `3` | Number of robustifying iterations |
-| `weight_function` | `std::string` | `"tricube"` | Kernel weight function |
-| `robustness_method` | `std::string` | `"bisquare"` | Robustness method |
+| `weight_function` | `std::string` | `"tricube"` | Weight function name |
+| `robustness_method` | `std::string` | `"bisquare"` | Robustness method name |
 | `scaling_method` | `std::string` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling |
+| `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
 | `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
 | `return_robustness_weights` | `bool` | `false` | Include robustness weight in result |
 | `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
@@ -119,7 +119,7 @@ int main() {
 | `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `std::vector<double>` | `{}` | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode` | `std::string` | `"interpolation"` | Surface computation mode |
-| `cell` | `double` | `NaN` | Cell size for interpolation grid |
+| `cell` | `double` | `NaN` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
 | `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = unset/library default, 0 = false, 1 = true) |
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
@@ -207,7 +207,7 @@ Convergence tolerance for early stopping of robustness iterations. `NaN` (defaul
 
 ### return_robustness_weights
 
-Include the robustness weight from the latest point's fit in the result.
+Include the robustness weight for the latest point (from the last robustness iteration) in the result.
 
 - `false` (default) — leaves `robustness_weight()` as NaN
 - `true` — populates `robustness_weight()`
@@ -238,7 +238,7 @@ Number of predictor dimensions. Set to match the number of columns in a multivar
 - `"euclidean"` (alias: `"euclid"`)
 - `"manhattan"` (alias: `"l1"`)
 - `"chebyshev"` (alias: `"linf"`)
-- `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
+- `"minkowski"` (use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
 - `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
 
 ### weighted_metric_weights
@@ -263,7 +263,7 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 
 ### cell
 
-Cell size for the interpolation grid, as a fraction of the data range. Only applies when `surface_mode = "interpolation"`.
+Cell size for the interpolation grid, as a fraction of the data range. Smaller values place more vertices (denser grid), improving accuracy at the cost of speed. Only applies when `surface_mode = "interpolation"`.
 
 - `NaN` (default) — uses the library default (`0.2`)
 - Any value in `(0, 1]`
@@ -277,7 +277,7 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 
 ### boundary_degree_fallback
 
-Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there. Only applies when `surface_mode = "interpolation"`.
+Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surface_mode = "interpolation"`.
 
 - `-1` (default) — uses the library default (enabled)
 - `1` — falls back to a lower degree at boundaries
@@ -285,7 +285,7 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 ### window_capacity
 
-Maximum number of points retained in the sliding window. Older points are evicted as new ones arrive.
+Maximum number of most recent points kept in the sliding window; older points are evicted as new ones arrive. Each `add_point()` call costs O(`window_capacity`) rather than growing with total history.
 
 ### min_points
 
@@ -310,7 +310,9 @@ Returned (inside `Expected`) by `add_point()`. Check `has_value()` before readin
 | --- | --- | --- |
 | `has_value()` | `bool` | `false` while window fills; `true` when output is ready |
 | `y()` | `double` | Smoothed value for the latest point |
-| `standard_error()` | `double` | Standard error (NaN if not computed) |
-| `residual()` | `double` | Residual y − smoothed (NaN if not computed) |
-| `robustness_weight()` | `double` | Robustness weight (NaN if not computed) |
+| `standard_error()` | `double` | Always `NaN` — standard errors require confidence intervals, which are Batch-only |
+| `residual()` | `double` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
+| `robustness_weight()` | `double` | Robustness weight, if `return_robustness_weights` was set (`NaN` otherwise) |
 | `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |
+
+There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

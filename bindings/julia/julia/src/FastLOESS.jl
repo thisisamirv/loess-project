@@ -691,7 +691,7 @@ Stateful streaming LOESS smoother.
 # Keyword Arguments
 - `fraction::Float64 = 0.67`: Smoothing fraction
 - `chunk_size::Int = 5000`: Size of each processing chunk
-- `overlap::Int = 500`: Overlap between chunks
+- `overlap::Int = -1`: Overlap between chunks. Negative (the default) means "use the library default" (`chunk_size / 10`, clamped to `[1, chunk_size - 10]`).
 - `iterations::Int = 3`: Number of robustness iterations
 - `weight_function::String = "tricube"`: Kernel function
 - `robustness_method::String = "bisquare"`: Robustness method
@@ -726,7 +726,7 @@ mutable struct StreamingLoess
 	function StreamingLoess(;
 		fraction::Float64 = 0.67,
 		chunk_size::Int = 5000,
-		overlap::Int = 500,
+		overlap::Int = -1,
 		iterations::Int = 3,
 		weight_function::String = "tricube",
 		robustness_method::String = "bisquare",

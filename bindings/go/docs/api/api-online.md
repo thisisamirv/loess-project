@@ -29,7 +29,7 @@ opts.MinPoints = 10
 
 ## `(*OnlineLoess) AddPoint(x, y float64) (res PointResult, ok bool, err error)`
 
-Adds a single observation. `ok` is `false` while the window is still filling (fewer than `MinPoints` seen so far); once `ok` is `true`, `res` holds the smoothed value for the most recently added point.
+Adds a single observation. `ok` is `false` while the window is still filling (fewer than `MinPoints` seen so far); once `ok` is `true`, `res` holds the smoothed value for the most recently added point. Once the window reaches `WindowCapacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `UpdateMode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
 
 ## `(*OnlineLoess) Close() error`
 
@@ -39,7 +39,7 @@ Releases native resources. Safe to call multiple times.
 
 ### WindowCapacity
 
-Maximum number of points retained in the sliding window. Older points are evicted as new ones arrive.
+Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `AddPoint` call costs O(`WindowCapacity`) rather than growing with total history.
 
 ### MinPoints
 
@@ -61,10 +61,12 @@ See [API](api.md) for the descriptions of all inherited fields (`Fraction`, `Wei
 | Field | Type | Notes |
 | --- | --- | --- |
 | `Y` | `float64` | Smoothed value. |
-| `StandardError` | `float64` | `NaN` if not computed. |
-| `Residual` | `float64` | `NaN` if not computed. |
-| `RobustnessWeight` | `float64` | `NaN` if not computed. |
-| `IterationsUsed` | `int` | `-1` if not applicable. |
+| `StandardError` | `float64` | Always `NaN` — standard errors require confidence intervals, which are Batch-only. |
+| `Residual` | `float64` | Residual y − smoothed; always present (there is no `ReturnResiduals` option for Online). |
+| `RobustnessWeight` | `float64` | Robustness weight, if `ReturnRobustnessWeights` was set (`NaN` otherwise). |
+| `IterationsUsed` | `int` | Robustness iterations performed (`-1` if not applicable). |
+
+There is no `Diagnostics` type or `ReturnDiagnostics` option for `OnlineLoess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
 
 ## Example
 

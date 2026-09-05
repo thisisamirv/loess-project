@@ -163,7 +163,7 @@ Assigns each overlap point a weight proportional to its proximity to the centre 
 
 where stem:[w_L] and stem:[w_R] are linear distance weights from the chunk centres.
 
-*Use when*: Minimising boundary artefacts is more important than speed; moderate overlap (10–20% of chunk size).
+*Use when*: Minimising boundary artefacts is more important than speed; moderate overlap (10–20 % of chunk size).
 
 [source,java]
 ----
@@ -214,7 +214,7 @@ Merged value in overlap region (weighted_average): 0.3393077025544002
 
 [NOTE]
 ====
-*Overlap size matters:* A larger overlap gives the merge strategy more room to blend, reducing boundary artefacts regardless of the strategy chosen. A good starting point is 10% of `chunkSize`.
+*Overlap size matters:* A larger overlap gives the merge strategy more room to blend, reducing boundary artefacts regardless of the strategy chosen. A good starting point is 10 % of `chunkSize`.
 ====
 
 All examples above use the same 100-point noisy sine wave (see xref:../weighting/kernels.adoc#choosing-a-kernel[Weight Functions] for the generation code).

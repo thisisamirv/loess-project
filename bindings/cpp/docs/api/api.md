@@ -48,7 +48,9 @@ y[0]: 0.327376
 
 - `options`: A `LoessOptions` struct containing configuration parameters.
 
-**Methods:**
+#### `fit(x, y)`
+
+Fits the model to the provided `x` and `y` data vectors. Returns an `Expected<LoessResult>` — call `.has_value()` to check for errors, `.value()` to unwrap (throws `LoessError` on failure).
 
 ```cpp
 #include <fastloess.hpp>
@@ -83,13 +85,6 @@ int main() {
 3
 ```
 
-- Fits the model to the provided `x` and `y` data vectors.
-- Returns an `Expected<LoessResult>` — call `.has_value()` to check for errors, `.value()` to unwrap (throws `LoessError` on failure).
-
-See [Streaming Adapter](api-streaming.md) for the `StreamingLoess` class.
-
-See [Online Adapter](api-online.md) for the `OnlineLoess` class.
-
 ## Options Structures
 
 ### LoessOptions
@@ -104,26 +99,26 @@ See [Online Adapter](api-online.md) for the `OnlineLoess` class.
 | `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
-| `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) — see [Intervals](../guide/intervals.md) |
-| `prediction_intervals` | `double` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) — see [Intervals](../guide/intervals.md) |
-| `return_diagnostics` | `bool` | `false` | Compute RMSE, MAE, R2, AIC |
+| `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
+| `prediction_intervals` | `double` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) |
+| `return_diagnostics` | `bool` | `false` | Include diagnostics in result |
 | `return_residuals` | `bool` | `false` | Include residuals in result |
-| `return_robustness_weights` | `bool` | `false` | Include robustness weights in result |
+| `return_robustness_weights` | `bool` | `false` | Include weights in result |
 | `return_se` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
 | `parallel` | `bool` | `true` | Enable parallel execution |
-| `degree` | `std::string` | `"linear"` | Polynomial degree of local fit — see [Polynomial Degree](../advanced/degree.md) |
-| `dimensions` | `int` | `1` | Number of predictor dimensions — see [Multivariate LOESS](../advanced/dimensions.md) |
+| `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
+| `dimensions` | `int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `std::vector<double>` | `{}` | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode` | `std::string` | `"interpolation"` | Surface computation mode |
 | `cell` | `double` | `NaN` | Cell size for interpolation grid (NaN to use default; smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
 | `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = unset/library default, 0 = false, 1 = true) |
-| `cv_method` | `std::string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) (Batch only) |
-| `cv_k` | `int` | `5` | Number of folds for k-fold CV (Batch only) |
-| `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation (Batch only) |
-| `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (Batch only; 0 = random) |
-| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only; see [Custom Weights](../weighting/custom-weights.md)) |
+| `cv_method` | `std::string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
+| `cv_k` | `int` | `5` | Number of folds for k-fold CV |
+| `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation |
+| `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (0 = random) |
+| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
 
 ## Options
 

@@ -104,6 +104,38 @@ First smoothed value (streaming log): 0.4057250297655017
 
 The dashboard pattern uses a plain LOESS fit on a manually managed sliding window rather than `OnlineLoess`. This is the simplest approach when your UI framework already owns the data buffer and you only need the most recent smoothed value per frame. The trade-off is a full O(window^2) refit on every tick; for high-frequency streams prefer `OnlineLoess` with `update_mode = "incremental"` to bound per-frame cost.
 
+```rust
+use fastLoess::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let window_capacity = 50usize;
+    let mut data_x: Vec<f64> = Vec::new();
+    let mut data_y: Vec<f64> = Vec::new();
+
+    let mut current_smoothed = 0.0f64;
+    for i in 0..200 {
+        let x = i as f64;
+        let y = 25.0 + 10.0 * (x / 20.0).sin() + (x * 1.7).sin() * 2.0;
+        data_x.push(x);
+        data_y.push(y);
+
+        if data_x.len() > window_capacity {
+            data_x = data_x[data_x.len() - window_capacity..].to_vec();
+            data_y = data_y[data_y.len() - window_capacity..].to_vec();
+        }
+
+        if data_x.len() >= 5 {
+            let model = Loess::new().fraction(0.4f64).build()?;
+            let result = model.fit(&data_x, &data_y)?;
+            current_smoothed = result.y[result.y.len() - 1];
+        }
+    }
+    println!("Last smoothed value: {}", current_smoothed);
+
+    Ok(())
+}
+```
+
 ---
 
 ## Choosing Parameters
