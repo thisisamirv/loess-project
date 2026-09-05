@@ -100,7 +100,7 @@ Fraction used: 0.5
 | `interpolation_vertices` | `number` | `null` | Number of interpolation vertices |
 | `boundary_degree_fallback` | `boolean` | `null` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
 
-Confidence/prediction intervals, standard errors, and cross-validation are Batch-only and not available here; see [fastLoess](api.md) for those.
+Confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` are Batch-only and not available here; see [fastLoess](api.md) for those.
 
 ### `StreamingOptions`
 

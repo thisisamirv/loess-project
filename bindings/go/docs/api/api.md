@@ -34,6 +34,7 @@ opts.ReturnDiagnostics = true
 | `WeightedMetricWeights` | `[]float64` | `nil` | Per-dimension weights (used when `DistanceMetric = "weighted"`). |
 | `SurfaceMode` | `string` | `"interpolation"` | Surface computation mode. |
 | `ReturnSE` | `bool` | `false` | Populate `Result.StandardErrors`/`Result.HatMatrix` (hat-matrix statistics). |
+| `ReturnSorted` | `bool` | `false` | Return results sorted ascending by `X` instead of in original input order. |
 | `Cell` | `*float64` | `nil` (auto) | Interpolation cell size tuning parameter, in (0, 1]. Only applies when `SurfaceMode` is `"interpolation"`. |
 | `InterpolationVertices` | `*int` | `nil` (auto) | Caps the number of interpolation vertices. Only applies when `SurfaceMode` is `"interpolation"`. |
 | `BoundaryDegreeFallback` | `*bool` | `nil` (auto) | Reduce polynomial degree near boundary vertices to avoid extrapolation artifacts. |
@@ -259,6 +260,11 @@ Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/d
 
 - `false` (default) — leaves `Result.StandardErrors` and `Result.HatMatrix` as `nil`
 - `true` — computes standard errors and hat-matrix statistics
+
+### ReturnSorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `X` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. via `sort.Slice`) instead of calling `Fit` twice.
 
 ### Parallel
 

@@ -287,6 +287,7 @@ pub unsafe extern "C" fn jl_loess_new(
     distance_metric: *const c_char,
     surface_mode: *const c_char,
     return_se: c_int,
+    return_sorted: c_int,
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
 ) -> *mut JlLoessConfig {
@@ -373,6 +374,7 @@ pub unsafe extern "C" fn jl_loess_new(
                     weighted_metric_weights: wmw_slice,
                     surface_mode: Some(surf_str),
                     return_se: return_se != 0,
+                    return_sorted: return_sorted != 0,
                     cell: None,
                     interpolation_vertices: None,
                     boundary_degree_fallback: None,

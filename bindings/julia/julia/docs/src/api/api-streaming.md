@@ -81,7 +81,7 @@ println("First smoothed value: ", result.y[1])
 | `overlap` | `Int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `String` | `"weighted_average"` | Strategy for blending overlap regions |
 
-Confidence/prediction intervals, standard errors, and cross-validation are Batch-only and not available here; see [Batch Adapter](api.md) for those.
+Confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` are Batch-only and not available here; see [Batch Adapter](api.md) for those.
 
 ## Options
 

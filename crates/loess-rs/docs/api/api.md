@@ -81,6 +81,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include weights in result |
 | `return_se()` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
+| `return_sorted()` | `bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
 | `degree(...)` | `degree` | `"linear"` | Polynomial degree |
 | `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
 | `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
@@ -199,6 +200,10 @@ Populates `LoessResult::robustness_weights` with the final per-point robustness 
 ### return_se
 
 Computes hat-matrix statistics (`enp`, `trace_hat`, `delta1`, `delta2`, `residual_scale`, `leverage`) in addition to standard errors. `false` by default.
+
+### return_sorted
+
+Reorders every result field (residuals, intervals, etc.) ascending by `x`, instead of leaving them in original input order. To get both orderings, sort the default result client-side instead of calling `.fit()` twice. `false` by default.
 
 ### degree
 

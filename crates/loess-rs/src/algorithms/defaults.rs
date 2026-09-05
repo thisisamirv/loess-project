@@ -34,3 +34,6 @@ pub const DEFAULT_RETURN_RESIDUALS: bool = false;
 
 // False means do not compute or return robustness weights.
 pub const DEFAULT_RETURN_ROBUSTNESS_WEIGHTS: bool = false;
+
+// False means return results in original input order (not sorted by x).
+pub const DEFAULT_RETURN_SORTED: bool = false;

@@ -77,6 +77,7 @@ Iterations used: 3
 | `return_residuals` | `boolean` | `false` | Include residuals in result |
 | `return_robustness_weights` | `boolean` | `false` | Include weights in result |
 | `return_se` | `boolean` | `false` | Compute hat-matrix statistics (enp, leverage …) |
+| `return_sorted` | `boolean` | `false` | Return results sorted ascending by `x` instead of in original input order |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
 | `degree` | `string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `number` | `1` | Number of predictor dimensions |
@@ -212,6 +213,11 @@ Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/d
 
 - `false` (default) — leaves `standard_errors` and the hat-matrix fields as `undefined`
 - `true` — computes standard errors and hat-matrix statistics
+
+### return_sorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. by the returned `x` array's sort order) instead of calling `fit()` twice.
 
 ### parallel
 

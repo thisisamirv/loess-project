@@ -16,7 +16,7 @@ OnlineOptions options = OnlineOptions.builder()
         .build();
 ----
 
-`OnlineOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSe`, `returnDiagnostics`, `returnResiduals`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, and `parallel`, which are Batch-only or Batch/Streaming-only). Online always runs sequentially. Additional settings:
+`OnlineOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSe`, `returnSorted`, `returnDiagnostics`, `returnResiduals`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, and `parallel`, which are Batch-only or Batch/Streaming-only). Online always runs sequentially. Additional settings:
 
 [cols="1,1,1,1",options="header"]
 |===

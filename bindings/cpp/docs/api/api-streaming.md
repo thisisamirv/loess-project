@@ -134,7 +134,7 @@ int main() {
 | `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `std::string` | `"weighted_average"` | Strategy for blending overlap regions |
 
-Confidence/prediction intervals, standard errors, and cross-validation are Batch-only; setting these inherited fields has no effect on `StreamingLoess` — see [fastLoess](api.md) for those.
+Confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` are Batch-only; setting these inherited fields has no effect on `StreamingLoess` — see [fastLoess](api.md) for those.
 
 ## Options
 

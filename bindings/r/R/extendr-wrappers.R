@@ -15,7 +15,7 @@ RLoess$new <- function(
     auto_converge, cv_fractions, cv_method, cv_k, parallel,
     degree, dimensions, distance_metric,
     weighted_metric_weights,
-    surface_mode, return_se,
+    surface_mode, return_se, return_sorted,
     cell, interpolation_vertices, boundary_degree_fallback, cv_seed
 ) {
     .Call(
@@ -26,7 +26,7 @@ RLoess$new <- function(
         auto_converge, cv_fractions, cv_method, cv_k, parallel,
         degree, dimensions, distance_metric,
         weighted_metric_weights,
-        surface_mode, return_se,
+        surface_mode, return_se, return_sorted,
         cell, interpolation_vertices, boundary_degree_fallback, cv_seed
     )
 }

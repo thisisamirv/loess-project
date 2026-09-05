@@ -14,7 +14,7 @@ StreamingOptions options = StreamingOptions.builder()
         .build();
 ----
 
-`StreamingOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSe`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, which are batch-only), plus:
+`StreamingOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSe`, `returnSorted`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, which are batch-only), plus:
 
 [cols="1,1,1,1",options="header"]
 |===

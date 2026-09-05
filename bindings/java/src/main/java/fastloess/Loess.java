@@ -37,6 +37,7 @@ public final class Loess implements AutoCloseable {
                 options.distanceMetric,
                 options.surfaceMode,
                 options.returnSe,
+                options.returnSorted,
                 options.cell,
                 options.interpolationVertices,
                 NativeBridge.boolSentinel(options.boundaryDegreeFallback),

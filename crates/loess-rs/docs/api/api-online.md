@@ -103,7 +103,7 @@ fn main() -> Result<(), LoessError> {
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 
-Confidence/prediction intervals, standard errors, cross-validation, `return_diagnostics`, and `return_residuals` are Batch-only (or Batch/Streaming-only) and not available here; see [API](crate::doc::api) for those.
+Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, and `return_residuals` are Batch-only (or Batch/Streaming-only) and not available here; see [API](crate::doc::api) for those.
 
 ## Options
 

@@ -105,6 +105,7 @@ int main() {
 | `return_residuals` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights` | `bool` | `false` | Include weights in result |
 | `return_se` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
+| `return_sorted` | `bool` | false | Return results sorted ascending by `x` instead of in original input order |
 | `parallel` | `bool` | `true` | Enable parallel execution |
 | `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `int` | `1` | Number of predictor dimensions |
@@ -240,6 +241,11 @@ Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/d
 
 - `false` (default) — leaves `standard_errors()` and the hat-matrix accessors empty/NaN
 - `true` — computes standard errors and hat-matrix statistics
+
+### return_sorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. via `std::sort` over an index vector) instead of calling `fit()` twice.
 
 ### parallel
 

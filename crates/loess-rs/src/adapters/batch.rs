@@ -87,6 +87,9 @@ pub struct BatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
+    // Whether to return results sorted ascending by x instead of in original input order
+    pub return_sorted: bool,
+
     // Policy for handling zero-weight neighborhoods
     pub zero_weight_fallback: ZeroWeightFallback,
 
@@ -185,6 +188,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
             return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
             compute_residuals: DEFAULT_RETURN_RESIDUALS,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            return_sorted: DEFAULT_RETURN_SORTED,
             zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
             boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
             polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
@@ -397,17 +401,67 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             None
         };
 
+        // Reorder all outputs ascending by x (lexicographic across dimensions),
+        // unless `return_sorted` was requested, in which case they are returned
+        // in the original input order.
+        let (
+            x_out,
+            y_out,
+            se_out,
+            residuals_out,
+            rob_weights_out,
+            cl_out,
+            cu_out,
+            pl_out,
+            pu_out,
+            leverage_out,
+        ) = if self.config.return_sorted {
+            let dims = self.config.dimensions;
+            let mut perm: Vec<usize> = (0..y_smooth.len()).collect();
+            perm.sort_by(|&a, &b| {
+                x[a * dims..a * dims + dims]
+                    .partial_cmp(&x[b * dims..b * dims + dims])
+                    .unwrap_or(core::cmp::Ordering::Equal)
+            });
+
+            (
+                gather_flat(x, &perm, dims),
+                gather(&y_smooth, &perm),
+                std_errors.as_ref().map(|v| gather(v, &perm)),
+                residuals_out.as_ref().map(|v| gather(v, &perm)),
+                rob_weights_out.as_ref().map(|v| gather(v, &perm)),
+                conf_lower.as_ref().map(|v| gather(v, &perm)),
+                conf_upper.as_ref().map(|v| gather(v, &perm)),
+                pred_lower.as_ref().map(|v| gather(v, &perm)),
+                pred_upper.as_ref().map(|v| gather(v, &perm)),
+                leverage_out.as_ref().map(|v| gather(v, &perm)),
+            )
+        } else {
+            (
+                x.to_vec(),
+                y_smooth,
+                std_errors,
+                residuals_out,
+                rob_weights_out,
+                conf_lower,
+                conf_upper,
+                pred_lower,
+                pred_upper,
+                leverage_out,
+            )
+        };
+
         Ok(LoessResult {
-            x: x.to_vec(),
+            x: x_out,
             dimensions: self.config.dimensions,
             distance_metric: self.config.distance_metric.clone(),
             polynomial_degree: self.config.polynomial_degree,
-            y: y_smooth,
-            standard_errors: std_errors,
-            confidence_lower: conf_lower,
-            confidence_upper: conf_upper,
-            prediction_lower: pred_lower,
-            prediction_upper: pred_upper,
+            y: y_out,
+            standard_errors: se_out,
+            confidence_lower: cl_out,
+            confidence_upper: cu_out,
+            prediction_lower: pl_out,
+            prediction_upper: pu_out,
             residuals: residuals_out,
             robustness_weights: rob_weights_out,
             fraction_used,
@@ -422,4 +476,18 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             leverage: leverage_out,
         })
     }
+}
+
+// Reorder a per-point vector according to a permutation: `out[i] = data[perm[i]]`.
+fn gather<T: Clone>(data: &[T], perm: &[usize]) -> Vec<T> {
+    perm.iter().map(|&i| data[i].clone()).collect()
+}
+
+// Reorder a flat nD-point array (blocks of `dims` values per point) by permutation.
+fn gather_flat<T: Clone>(data: &[T], perm: &[usize], dims: usize) -> Vec<T> {
+    let mut out = Vec::with_capacity(data.len());
+    for &i in perm {
+        out.extend_from_slice(&data[i * dims..i * dims + dims]);
+    }
+    out
 }

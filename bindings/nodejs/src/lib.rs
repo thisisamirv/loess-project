@@ -296,6 +296,10 @@ pub struct SmoothOptions {
     /// Compute hat-matrix statistics (enp, trace_hat, etc.). Default: false.
     #[napi(js_name = "return_se")]
     pub return_se: Option<bool>,
+    /// Return results sorted ascending by x instead of in original input order
+    /// (Batch only). Default: false.
+    #[napi(js_name = "return_sorted")]
+    pub return_sorted: Option<bool>,
     /// Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy.
     pub cell: Option<f64>,
     /// Maximum number of interpolation vertices.
@@ -456,6 +460,7 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
                 weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
                 surface_mode: opts.surface_mode.as_deref(),
                 return_se: opts.return_se.unwrap_or(false),
+                return_sorted: opts.return_sorted.unwrap_or(false),
                 cell: opts.cell,
                 interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
                 boundary_degree_fallback: opts.boundary_degree_fallback,

@@ -28,6 +28,7 @@ Loess(
   distance_metric = "normalized",
   surface_mode = "interpolation",
   return_se = FALSE,
+  return_sorted = FALSE,
   weighted_metric_weights = NULL,
   cell = NULL,
   interpolation_vertices = NULL,
@@ -115,6 +116,12 @@ Use \code{"minkowski:p"} to set a custom \emph{p} value.}
 \item{return_se}{Logical; if \code{TRUE}, compute hat-matrix statistics
 (effective degrees of freedom, leverage, standard errors).
 Default: \code{FALSE}.}
+
+\item{return_sorted}{Logical; if \code{TRUE}, return results sorted
+ascending by \code{x} instead of in the original input order. Default:
+\code{FALSE}. To get both orderings without re-fitting, sort the default
+(unsorted) result client-side (e.g. \code{order(result$x)}) rather than
+calling \code{fit()} twice.}
 
 \item{weighted_metric_weights}{Numeric vector of per-dimension weights.
 Length must equal \code{dimensions}. Only used when

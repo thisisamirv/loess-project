@@ -62,6 +62,7 @@ println("First smoothed value: ", result.y[1])
 | `return_residuals` | `Bool` | `false` | Include residuals in result |
 | `return_robustness_weights` | `Bool` | `false` | Include weights in result |
 | `return_se` | `Bool` | `false` | Return standard errors |
+| `return_sorted` | `Bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
 | `parallel` | `Bool` | `true` | Enable parallel execution |
 | `degree` | `String` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `Int` | `1` | Number of predictor dimensions |
@@ -194,6 +195,11 @@ Include the final per-point robustness weights (from the last robustness iterati
 *See: [Intervals](../guide/intervals.md#standard-errors)*
 
 Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
+
+### return_sorted
+
+When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. `sortperm(result.x)`) instead of calling `fit` twice.
 
 ### parallel
 

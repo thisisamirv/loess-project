@@ -344,6 +344,43 @@ using FastLOESS
 			@test length(result.y) == 5
 		end
 
+		@testset "return_sorted defaults to original input order" begin
+			x = [3.0, 1.0, 5.0, 2.0, 4.0]
+			y = [6.0, 2.0, 10.0, 4.0, 8.0]
+
+			model = Loess(fraction = 0.7)
+			result = fit(model, x, y)
+			@test result.x == x
+		end
+
+		@testset "return_sorted = true returns results sorted ascending by x" begin
+			x = [3.0, 1.0, 5.0, 2.0, 4.0]
+			y = [6.0, 2.0, 10.0, 4.0, 8.0]
+
+			model = Loess(
+				fraction = 0.7,
+				return_residuals = true,
+				return_robustness_weights = true,
+				return_sorted = true,
+			)
+			result = fit(model, x, y)
+
+			@test issorted(result.x)
+			@test result.x != x
+
+			unsorted_model = Loess(
+				fraction = 0.7,
+				return_residuals = true,
+				return_robustness_weights = true,
+			)
+			unsorted_result = fit(unsorted_model, x, y)
+
+			@test sort(collect(zip(result.x, result.y))) ==
+				  sort(collect(zip(unsorted_result.x, unsorted_result.y)))
+			@test length(result.residuals) == length(x)
+			@test length(result.robustness_weights) == length(x)
+		end
+
 		@testset "duplicate x values" begin
 			x = [1.0, 1.0, 2.0, 2.0, 3.0]
 			y = [2.0, 2.1, 4.0, 3.9, 6.0]

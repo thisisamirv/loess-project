@@ -26,6 +26,7 @@ public final class Options {
     final boolean returnRobustnessWeights;
     final boolean parallel;
     final boolean returnSe;
+    final boolean returnSorted;
     final String degree;
     final int dimensions;
     final String distanceMetric;
@@ -55,6 +56,7 @@ public final class Options {
         this.returnRobustnessWeights = b.returnRobustnessWeights;
         this.parallel = b.parallel;
         this.returnSe = b.returnSe;
+        this.returnSorted = b.returnSorted;
         this.degree = b.degree;
         this.dimensions = b.dimensions;
         this.distanceMetric = b.distanceMetric;
@@ -98,6 +100,7 @@ public final class Options {
         boolean returnRobustnessWeights = false;
         boolean parallel = true;
         boolean returnSe = false;
+        boolean returnSorted = false;
         String degree = null;
         int dimensions = 1;
         String distanceMetric = null;
@@ -289,6 +292,20 @@ public final class Options {
          */
         public Builder returnSe(boolean returnSe) {
             this.returnSe = returnSe;
+            return this;
+        }
+
+        /**
+         * Whether to return results sorted ascending by x instead of in the
+         * original input order (Batch only). To get both orderings without
+         * re-fitting, sort the default (unsorted) result client-side rather
+         * than calling {@link Loess#fit} twice.
+         *
+         * @param returnSorted whether to return results sorted ascending by x
+         * @return this builder, for chaining
+         */
+        public Builder returnSorted(boolean returnSorted) {
+            this.returnSorted = returnSorted;
             return this;
         }
 

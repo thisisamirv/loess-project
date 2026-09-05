@@ -126,7 +126,7 @@ int main() {
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `std::string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 
-Confidence/prediction intervals, standard errors, cross-validation, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLoess](api.md) for those. Online always runs sequentially.
+Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLoess](api.md) for those. Online always runs sequentially.
 
 ## Options
 

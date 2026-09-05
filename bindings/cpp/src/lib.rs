@@ -326,6 +326,7 @@ pub unsafe extern "C" fn cpp_loess_new(
     distance_metric: *const c_char,
     surface_mode: *const c_char,
     return_se: c_int,
+    return_sorted: c_int,
     // Advanced options
     cell: c_double,
     interpolation_vertices: c_int,
@@ -410,6 +411,7 @@ pub unsafe extern "C" fn cpp_loess_new(
                     ),
                 ),
                 return_se: return_se != 0,
+                return_sorted: return_sorted != 0,
                 cell: None,
                 interpolation_vertices: None,
                 boundary_degree_fallback: None,

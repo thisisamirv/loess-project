@@ -58,6 +58,11 @@ type Options struct {
 	// ReturnSE requests hat-matrix statistics (effective degrees of
 	// freedom, leverage, standard errors). Batch model only.
 	ReturnSE bool
+	// ReturnSorted requests results sorted ascending by X instead of in the
+	// original input order. Batch model only. To get both orderings without
+	// re-fitting, sort the default (unsorted) result client-side rather than
+	// calling Fit twice.
+	ReturnSorted bool
 
 	// Cell is the interpolation cell size tuning parameter, in (0, 1].
 	// Nil uses the library default. Only applies when SurfaceMode is
@@ -205,6 +210,7 @@ func NewLoess(opts Options) (*Loess, error) {
 			distanceMetric,
 			surfaceMode,
 			boolToCInt(opts.ReturnSE),
+			boolToCInt(opts.ReturnSorted),
 			optFloat(cell, cellSet),
 			interpolationVertices,
 			boundaryDegreeFallback,

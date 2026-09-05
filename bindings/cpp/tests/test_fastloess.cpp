@@ -1,4 +1,5 @@
 #include "../include/fastloess.hpp"
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -188,6 +189,38 @@ void testLoessWithRobustnessWeights() {
   for (const double weight : weights) {
     assertTrue(weight >= 0 && weight <= 1, "Weight out of range");
   }
+}
+
+void testLoessReturnSorted() {
+  std::cout << "Running testLoessReturnSorted...\n";
+
+  const std::vector<double> unsorted_x = {3.0, 1.0, 5.0, 2.0, 4.0};
+  const std::vector<double> unsorted_y = {6.0, 2.0, 10.0, 4.0, 8.0};
+
+  LoessOptions default_options;
+  default_options.fraction = k_fraction_seventh;
+  Loess default_loess(default_options);
+  auto default_result = default_loess.fit(unsorted_x, unsorted_y).value();
+  assertTrue(default_result.x_vector() == unsorted_x,
+             "return_sorted should default to original input order");
+
+  LoessOptions sorted_options;
+  sorted_options.fraction = k_fraction_seventh;
+  sorted_options.return_residuals = true;
+  sorted_options.return_robustness_weights = true;
+  sorted_options.return_sorted = true;
+  Loess sorted_loess(sorted_options);
+  auto sorted_result = sorted_loess.fit(unsorted_x, unsorted_y).value();
+
+  const auto sorted_x = sorted_result.x_vector();
+  assertTrue(std::is_sorted(sorted_x.begin(), sorted_x.end()),
+             "return_sorted x should be ascending");
+  assertTrue(sorted_x != unsorted_x,
+             "sorted x should differ from unsorted input order");
+  assertTrue(sorted_result.residuals().size() == unsorted_x.size(),
+             "Residuals missing under return_sorted");
+  assertTrue(sorted_result.robustness_weights().size() == unsorted_x.size(),
+             "Robustness weights missing under return_sorted");
 }
 
 void testLoessWithConfidenceIntervals() {
@@ -697,6 +730,7 @@ int main() {
     testLoessWithDiagnostics();
     testLoessWithResiduals();
     testLoessWithRobustnessWeights();
+    testLoessReturnSorted();
     testLoessWithConfidenceIntervals();
     testLoessWithPredictionIntervals();
     testLoessReuse();

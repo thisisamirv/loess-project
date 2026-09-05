@@ -256,6 +256,10 @@ impl Loess {
         self.0 = self.0.cv_seed(s);
         self
     }
+    pub fn return_sorted(mut self) -> Self {
+        self.0 = self.0.return_sorted();
+        self
+    }
 
     pub fn build(self) -> Result<ParallelBatchLoess<f64>, LoessError> {
         Batch::convert(self.0).build()

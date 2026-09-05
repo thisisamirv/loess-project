@@ -108,7 +108,7 @@ Fraction used: 0.5
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
 
-Confidence/prediction intervals, standard errors, cross-validation, and `backend` are Batch-only and not available here; see [API](crate::doc::api) for those.
+Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, and `backend` are Batch-only and not available here; see [API](crate::doc::api) for those.
 
 ## Options
 

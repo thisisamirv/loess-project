@@ -241,6 +241,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
     distance_metric: JString<'local>,
     surface_mode: JString<'local>,
     return_se: jboolean,
+    return_sorted: jboolean,
     cell: jdouble,
     interpolation_vertices: jint,
     boundary_degree_fallback: jint,
@@ -292,6 +293,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
                 weighted_metric_weights: weighted_metric_weights_vec.as_deref(),
                 surface_mode: surface_mode_str.as_deref(),
                 return_se,
+                return_sorted,
                 ..Default::default()
             },
         )?;

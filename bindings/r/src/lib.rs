@@ -89,6 +89,7 @@ impl RLoess {
         weighted_metric_weights: Nullable<Vec<f64>>,
         surface_mode: &str,
         return_se: bool,
+        return_sorted: bool,
         cell: Nullable<f64>,
         interpolation_vertices: Nullable<i32>,
         boundary_degree_fallback: Nullable<bool>,
@@ -143,6 +144,7 @@ impl RLoess {
                 weighted_metric_weights: weighted_weights.as_deref(),
                 surface_mode: Some(surface_mode),
                 return_se,
+                return_sorted,
                 cell: match cell {
                     NotNull(v) => Some(v),
                     Null => None,

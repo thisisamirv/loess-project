@@ -172,6 +172,7 @@ class Loess:
         distance_metric: str = "normalized",
         surface_mode: str = "interpolation",
         return_se: bool = False,
+        return_sorted: bool = False,
         weighted_metric_weights: Sequence[float] | None = None,
         cell: float | None = None,
         interpolation_vertices: int | None = None,

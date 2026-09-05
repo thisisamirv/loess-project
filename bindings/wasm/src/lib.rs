@@ -61,6 +61,8 @@ export interface SmoothOptions {
     surface_mode?: string;
     /** Include standard errors in result. Default: false. */
     return_se?: boolean;
+    /** Return results sorted ascending by x instead of in original input order (Batch only). Default: false. */
+    return_sorted?: boolean;
     /** Per-dimension weights for the weighted distance metric. */
     weighted_metric_weights?: number[];
     /** Cell parameter for interpolation (fraction of data). Default: 0.2. */
@@ -255,6 +257,7 @@ pub struct SmoothOptions {
     pub distance_metric: Option<String>,
     pub surface_mode: Option<String>,
     pub return_se: Option<bool>,
+    pub return_sorted: Option<bool>,
     pub weighted_metric_weights: Option<Vec<f64>>,
     pub cell: Option<f64>,
     pub interpolation_vertices: Option<usize>,
@@ -575,6 +578,7 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<
                 weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
                 surface_mode: opts.surface_mode.as_deref(),
                 return_se: opts.return_se.unwrap_or(false),
+                return_sorted: opts.return_sorted.unwrap_or(false),
                 cell: opts.cell,
                 interpolation_vertices: opts.interpolation_vertices,
                 boundary_degree_fallback: opts.boundary_degree_fallback,

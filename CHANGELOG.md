@@ -18,17 +18,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
 - Added `dev/check_links.py` to validate every Markdown cross-reference link across all docs.
 
+**loess-rs:**
+
+- Added `.return_sorted()` to the batch builder, to return results sorted ascending by `x` instead of input order. Default `false`.
+
+**fastLoess:**
+
+- Added `return_sorted` to `BuilderOptionSet`/`TypedBuilderOptionSet` and the `Loess` (Batch) builder.
+
+**Python:**
+
+- Added a `return_sorted` option to `Loess`.
+
+**R:**
+
+- Added a `return_sorted` option to `Loess()`.
+
+**Julia:**
+
+- Added a `return_sorted` option to `Loess`.
+
 **Go:**
 
 - Added a new Go binding (`bindings/go`): `cgo`-based `fastloess` package with `Loess`/`StreamingLoess`/`OnlineLoess` types, a Hugo docs site, CI/release workflows, and full doc-snippet/test coverage.
+- Added a `ReturnSorted` option to `Options`.
 
 **Java:**
 
 - Added a new Java binding (`bindings/java`): JNI-based `fastloess` Maven package with `Loess`/`StreamingLoess`/`OnlineLoess` classes (including LOESS-specific options like `degree`, `dimensions`, `distanceMetric`, `surfaceMode`, plus hat-matrix stats via `Result.hatMatrix()`), an Antora docs site, CI/release workflows, and full doc-snippet/test coverage.
+- Added a `returnSorted` option to `Options`.
 
 **Node.js:**
 
 - Added `aarch64-unknown-linux-musl` and `armv7-unknown-linux-gnueabihf` prebuilt targets with matching optional npm subpackages.
+- Added a `return_sorted` option to `Loess`'s `SmoothOptions`.
+
+**WASM:**
+
+- Added a `return_sorted` option to `Loess`'s `SmoothOptions`.
 
 **C++:**
 
@@ -36,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added CI coverage for `clang-cl` (Windows), `clang` (Linux), MinGW-w64, and Intel oneAPI.
 - Added ARM64 release binaries for Linux/Windows/macOS; also fixed the macOS x64 job silently shipping a mislabeled arm64 binary.
 - Renamed `cpp_loess_fit`/`cpp_streaming_process`'s `x`/`y` params to `x_values`/`y_values`, avoiding a collision with `CppLoessResult`'s own `x`/`y` fields.
+- Added a `return_sorted` option to `LoessOptions`.
 
 ### Changed
 

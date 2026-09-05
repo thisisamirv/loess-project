@@ -422,6 +422,10 @@ Stateful batch LOESS smoother.
   is set.
 - `surface_mode::String = "interpolation"`: Surface mode ("interpolation" or "direct")
 - `return_se::Bool = false`: Whether to compute hat-matrix statistics (enp, trace_hat, etc.)
+- `return_sorted::Bool = false`: Return results sorted ascending by `x` instead
+  of in the original input order. To get both orderings without re-fitting, sort
+  the default (unsorted) result client-side (e.g. `sortperm(result.x)`) rather
+  than calling `fit` twice.
 - `cell::Union{Float64, Nothing} = nothing`: Cell size tuning parameter for the
   interpolation grid, in `(0, 1]`. `nothing` (default) uses the library default (`0.2`).
   Only applies when `surface_mode = "interpolation"`.
@@ -496,6 +500,7 @@ mutable struct Loess
 		weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing,
 		surface_mode::String = "interpolation",
 		return_se::Bool = false,
+		return_sorted::Bool = false,
 		cell::Union{Float64, Nothing} = nothing,
 		interpolation_vertices::Union{Int, Nothing} = nothing,
 		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
@@ -528,6 +533,7 @@ mutable struct Loess
 			distance_metric::Cstring,
 			surface_mode::Cstring,
 			Cint(return_se)::Cint,
+			Cint(return_sorted)::Cint,
 			(
 				weighted_metric_weights !== nothing ? pointer(weighted_metric_weights) :
 				Ptr{Cdouble}(C_NULL)

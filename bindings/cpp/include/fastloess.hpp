@@ -124,6 +124,8 @@ struct LoessOptions {
   bool return_residuals = false;
   bool return_robustness_weights = false;
   bool return_se = false; ///< Compute standard errors and hat-matrix statistics
+  /// Return results sorted ascending by x instead of in original input order.
+  bool return_sorted = false;
   bool parallel = true;
 
   // LOESS-specific options
@@ -427,7 +429,8 @@ public:
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
             : nullptr,
-        options.surface_mode.c_str(), options.return_se ? 1 : 0, options.cell,
+        options.surface_mode.c_str(), options.return_se ? 1 : 0,
+        options.return_sorted ? 1 : 0, options.cell,
         options.interpolation_vertices, options.boundary_degree_fallback,
         options.weighted_metric_weights.empty()
             ? nullptr

@@ -78,6 +78,11 @@
 #' @param return_se Logical; if \code{TRUE}, compute hat-matrix statistics
 #'   (effective degrees of freedom, leverage, standard errors).
 #'   Default: \code{FALSE}.
+#' @param return_sorted Logical; if \code{TRUE}, return results sorted
+#'   ascending by \code{x} instead of in the original input order. Default:
+#'   \code{FALSE}. To get both orderings without re-fitting, sort the default
+#'   (unsorted) result client-side (e.g. \code{order(result$x)}) rather than
+#'   calling \code{fit()} twice.
 #' @param confidence_intervals Confidence level for confidence intervals,
 #'   greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
 #'   disables confidence intervals.
@@ -138,6 +143,7 @@ Loess <- function(
     distance_metric = "normalized",
     surface_mode = "interpolation",
     return_se = FALSE,
+    return_sorted = FALSE,
     weighted_metric_weights = NULL,
     cell = NULL,
     interpolation_vertices = NULL,

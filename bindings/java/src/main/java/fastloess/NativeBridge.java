@@ -124,6 +124,7 @@ final class NativeBridge {
             String distanceMetric,
             String surfaceMode,
             boolean returnSe,
+            boolean returnSorted,
             double cell,
             int interpolationVertices,
             int boundaryDegreeFallback,
