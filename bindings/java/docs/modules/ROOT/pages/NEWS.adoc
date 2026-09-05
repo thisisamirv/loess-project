@@ -10,6 +10,7 @@
 * Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
 * Added `dev/check_links.py` to validate every Markdown cross-reference link across all docs.
 * Added a new Java binding (`bindings/java`): JNI-based `fastloess` Maven package with `Loess`/`StreamingLoess`/`OnlineLoess` classes (including LOESS-specific options like `degree`, `dimensions`, `distanceMetric`, `surfaceMode`, plus hat-matrix stats via `Result.hatMatrix()`), an Antora docs site, CI/release workflows, and full doc-snippet/test coverage.
+* Added a `returnSorted` option to `Options`.
 
 === Changed
 
@@ -24,6 +25,9 @@
 * Added `dev/update_changelogs.py` to regenerate each binding/crate's `NEWS.md`/`news.md` from the root changelog.
 * Replaced the `kernels.md`/`adapter-choice.md` mermaid flowcharts with rendering-agnostic tables (Doxygen/rustdoc don't render mermaid).
 * Consolidated `parameters.md`/`@autodocs` into each `api.md`'s option tables, removing `parameters.md`.
+* Removed `confidenceIntervals`/`predictionIntervals`/`returnSe` builder methods from `StreamingOptions.Builder`, and those plus `returnDiagnostics`/`returnResiduals` from `OnlineOptions.Builder`. Breaking change. `Options.Builder`'s own methods are unaffected; `parallel` remains real for `StreamingOptions.Builder` but was subsequently also removed from `OnlineOptions.Builder` for consistency with `fastlowess`'s `OnlineOptions.Builder` — Online now always runs sequentially.
+* `weightedMetricWeights` no longer auto-selects the `"weighted"` distance metric for `Options.Builder`/`StreamingOptions.Builder`/`OnlineOptions.Builder`; `distanceMetric("weighted")` must now be set explicitly, matching Python, and omitting it while providing weights raises an error. Breaking change.
+* Mirrored the Python API docs' structure (complete field tables in canonical order, a `## Options` subsection per field, `## Result Structure` moved to the end) to every remaining crate/binding: `loess-rs`, `fastLoess`, Julia (docstrings), Node.js, WASM, C++, Go, and Java. Along the way, corrected several real accuracy/consistency issues found by auditing docs against source:
 
 === Fixed
 

@@ -17,7 +17,7 @@
 #' | Strategy | Behavior |
 #' | --- | --- |
 #' | \code{"average"} | Arithmetic mean of both estimates |
-#' | \code{"weighted_average"} | Distance-weighted blend (recommended, default) |
+#' | \code{"weighted_average"} | Distance-weighted blend (default) |
 #' | \code{"take_first"} | Keep left-chunk estimate |
 #' | \code{"take_last"} | Keep right-chunk estimate |
 #'
@@ -69,7 +69,8 @@ StreamingLoess <- function(
     weighted_metric_weights = NULL,
     cell = NULL,
     interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL
+    boundary_degree_fallback = NULL,
+    missing = "error"
 ) {
     reject_extra_positional_args(sys.call(), "chunk_size")
     validate_params(fraction = fraction, chunk_size = chunk_size)

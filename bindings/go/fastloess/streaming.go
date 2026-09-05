@@ -38,6 +38,12 @@ type StreamingOptions struct {
 	// drop to zero: "use_local_mean" (default, aliases "local_mean", "mean"),
 	// "return_original" (alias "original"), or "return_none" (alias "none").
 	ZeroWeightFallback string
+	// Missing controls how non-finite (NaN/Inf) values in the input are
+	// handled: "error" (default) rejects them, "drop" silently removes rows
+	// where any X dimension or Y is non-finite before merging the chunk with
+	// the overlap buffer. A length mismatch between X and Y always errors,
+	// even under "drop".
+	Missing string
 
 	// Degree is the local polynomial degree: "constant", "linear" (default),
 	// "quadratic", "cubic", or "quartic".
@@ -103,6 +109,7 @@ func DefaultStreamingOptions() StreamingOptions {
 		ScalingMethod:      "mad",
 		BoundaryPolicy:     "extend",
 		ZeroWeightFallback: "use_local_mean",
+		Missing:            "error",
 		Degree:             "linear",
 		Dimensions:         1,
 		DistanceMetric:     "normalized",
@@ -134,6 +141,8 @@ func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
 	defer freeCString(bp)
 	zwf := cStringOrNil(opts.ZeroWeightFallback)
 	defer freeCString(zwf)
+	missing := cStringOrNil(opts.Missing)
+	defer freeCString(missing)
 	ms := cStringOrNil(opts.MergeStrategy)
 	defer freeCString(ms)
 	degree := cStringOrNil(opts.Degree)
@@ -183,6 +192,7 @@ func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
 			interpolationVertices,
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
+			missing,
 		)
 		if ptr == nil {
 			errMsg = lastError()

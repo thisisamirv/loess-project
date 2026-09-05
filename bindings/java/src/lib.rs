@@ -246,6 +246,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
     interpolation_vertices: jint,
     boundary_degree_fallback: jint,
     weighted_metric_weights: JDoubleArray<'local>,
+    missing: JString<'local>,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -267,6 +268,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
         let distance_metric_str = jstring_to_option(env, &distance_metric);
         let surface_mode_str = jstring_to_option(env, &surface_mode);
         let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights);
+        let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let iterations = shared_parse::require_non_negative_usize("iterations", iterations)?;
 
@@ -294,6 +296,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
                 surface_mode: surface_mode_str.as_deref(),
                 return_se,
                 return_sorted,
+                missing: Some(&missing_str),
                 ..Default::default()
             },
         )?;
@@ -421,6 +424,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
     interpolation_vertices: jint,
     boundary_degree_fallback: jint,
     weighted_metric_weights: JDoubleArray<'local>,
+    missing: JString<'local>,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -441,6 +445,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
         let distance_metric_str = jstring_to_option(env, &distance_metric);
         let surface_mode_str = jstring_to_option(env, &surface_mode);
         let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights);
+        let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let chunk_size = shared_parse::require_positive_usize("chunkSize", chunk_size)?;
 
@@ -472,6 +477,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
                     .then_some(interpolation_vertices as usize),
                 boundary_degree_fallback: (boundary_degree_fallback >= 0)
                     .then_some(boundary_degree_fallback != 0),
+                missing: Some(&missing_str),
                 ..Default::default()
             },
         )?;
@@ -577,6 +583,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
     interpolation_vertices: jint,
     boundary_degree_fallback: jint,
     weighted_metric_weights: JDoubleArray<'local>,
+    missing: JString<'local>,
 ) -> jlong {
     env.with_env(|env| -> AppResult<jlong> {
         let wf = jstring_or_default(env, &weight_function, shared_parse::DEFAULT_WEIGHT_FUNCTION);
@@ -597,6 +604,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
         let distance_metric_str = jstring_to_option(env, &distance_metric);
         let surface_mode_str = jstring_to_option(env, &surface_mode);
         let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights);
+        let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let window_capacity =
             shared_parse::require_positive_usize("windowCapacity", window_capacity)?;
@@ -631,6 +639,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
                     .then_some(interpolation_vertices as usize),
                 boundary_degree_fallback: (boundary_degree_fallback >= 0)
                     .then_some(boundary_degree_fallback != 0),
+                missing: Some(&missing_str),
                 ..Default::default()
             },
         )?;

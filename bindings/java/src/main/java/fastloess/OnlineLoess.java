@@ -36,7 +36,8 @@ public final class OnlineLoess implements AutoCloseable {
                 c.cell,
                 c.interpolationVertices,
                 NativeBridge.boolSentinel(c.boundaryDegreeFallback),
-                c.weightedMetricWeights);
+                c.weightedMetricWeights,
+                c.missing);
     }
 
     /**

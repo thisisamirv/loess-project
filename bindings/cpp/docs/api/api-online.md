@@ -112,6 +112,7 @@ int main() {
 | `scaling_method` | `std::string` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
+| `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
 | `return_robustness_weights` | `bool` | `false` | Include robustness weight in result |
 | `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
@@ -198,6 +199,15 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### missing
+
+Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point`:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error |
+| `"drop"` | Silently ignore the point — the returned `OnlineOutput` has `has_value() == false` instead of adding it to the window |
 
 ### auto_converge
 

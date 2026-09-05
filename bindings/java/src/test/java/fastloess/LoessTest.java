@@ -125,4 +125,35 @@ class LoessTest {
             assertEquals(x.length, result.robustnessWeights().orElseThrow().length);
         }
     }
+
+    @Test
+    void missingDefaultRejectsNaN() {
+        double[] x = {1.0, 2.0, 3.0, 4.0, 5.0};
+        double[] y = {2.0, Double.NaN, 6.0, 8.0, 10.0};
+
+        try (Loess model = new Loess(Options.builder().fraction(0.5).build())) {
+            RuntimeException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                    RuntimeException.class, () -> model.fit(x, y));
+            assertNotNull(ex);
+        }
+    }
+
+    @Test
+    void missingDropRemovesNaNRows() {
+        double[] x = {1.0, 2.0, 3.0, 4.0, 5.0};
+        double[] y = {2.0, Double.NaN, 6.0, 8.0, 10.0};
+
+        try (Loess model = new Loess(Options.builder().fraction(0.5).missing("drop").build())) {
+            Result result = model.fit(x, y);
+            assertEquals(x.length - 1, result.y().length);
+        }
+    }
+
+    @Test
+    void invalidMissingPolicyThrows() {
+        RuntimeException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> new Loess(Options.builder().fraction(0.5).missing("invalid").build()));
+        assertNotNull(ex);
+    }
 }

@@ -288,6 +288,52 @@ test('OnlineOptions: update_mode', () => {
     }
 });
 
+test('SmoothOptions: missing default ("error") rejects NaN', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, NaN, 6, 8, 10]);
+
+    const model = new fastloess.Loess({ fraction: 0.5 });
+    assert.throws(() => model.fit(x, y));
+});
+
+test('SmoothOptions: missing = "drop" removes non-finite rows', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, NaN, 6, 8, 10]);
+
+    const model = new fastloess.Loess({ fraction: 0.5, missing: 'drop' });
+    const result = model.fit(x, y);
+    assert.strictEqual(result.y.length, 4);
+});
+
+test('StreamingOptions: missing = "drop" removes non-finite rows', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    const y = new Float64Array([2, 4, NaN, 8, 10, 12, 14, 16, 18, 20]);
+
+    const streamer = new fastloess.StreamingLoess(
+        { fraction: 0.5, missing: 'drop' },
+        { chunk_size: 10 }
+    );
+    const result = streamer.process_chunk(x, y);
+    const finalResult = streamer.finalize();
+    assert.strictEqual(result.y.length + finalResult.y.length, 9);
+});
+
+test('OnlineOptions: missing = "drop" ignores non-finite point', () => {
+    const online = new fastloess.OnlineLoess(
+        { fraction: 0.5, missing: 'drop' },
+        { window_capacity: 10 }
+    );
+    const r = online.add_point(1.0, NaN);
+    assert.strictEqual(r, null);
+});
+
+test('SmoothOptions: invalid missing policy throws', () => {
+    const x = new Float64Array([1, 2, 3]);
+    const y = new Float64Array([1, 2, 3]);
+    const model = new fastloess.Loess({ fraction: 0.5, missing: 'invalid' });
+    assert.throws(() => model.fit(x, y));
+});
+
 test('custom weights: zero on outlier reduces error', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7]);
     const yOutlier = new Float64Array([1, 2, 3, 100, 5, 6, 7]);

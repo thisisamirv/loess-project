@@ -212,6 +212,49 @@ test('WASM online: update mode via options', () => {
     assert.ok(lastSmoothed !== undefined && lastSmoothed !== null);
 });
 
+test('WASM smooth: missing default ("error") rejects NaN', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, NaN, 6, 8, 10]);
+
+    assert.throws(() => new fastloess.Loess({ fraction: 0.5 }).fit(x, y));
+});
+
+test('WASM smooth: missing = "drop" removes non-finite rows', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, NaN, 6, 8, 10]);
+
+    const result = new fastloess.Loess({ fraction: 0.5, missing: 'drop' }).fit(x, y);
+    assert.strictEqual(result.y.length, 4);
+});
+
+test('WASM streaming: missing = "drop" removes non-finite rows', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    const y = new Float64Array([2, 4, NaN, 8, 10, 12, 14, 16, 18, 20]);
+
+    const streamer = new fastloess.StreamingLoess(
+        { fraction: 0.5, missing: 'drop' },
+        { chunk_size: 10 }
+    );
+    const r1 = streamer.process_chunk(x, y);
+    const r2 = streamer.finalize();
+    assert.strictEqual(r1.y.length + r2.y.length, 9);
+});
+
+test('WASM online: missing = "drop" ignores non-finite point', () => {
+    const online = new fastloess.OnlineLoess(
+        { fraction: 0.5, missing: 'drop' },
+        { window_capacity: 10 }
+    );
+    const r = online.add_point(1.0, NaN);
+    assert.ok(r === undefined || r === null);
+});
+
+test('WASM smooth: invalid missing policy throws', () => {
+    const x = new Float64Array([1, 2, 3]);
+    const y = new Float64Array([1, 2, 3]);
+    assert.throws(() => new fastloess.Loess({ fraction: 0.5, missing: 'invalid' }).fit(x, y));
+});
+
 test('WASM custom weights: zero on outlier reduces error', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7]);
     const yOutlier = new Float64Array([1, 2, 3, 100, 5, 6, 7]);

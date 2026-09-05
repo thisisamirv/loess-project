@@ -23,6 +23,10 @@
 #'   alias: \code{"single"}) updates only the newest point;
 #'   \code{"full"} (alias: \code{"resmooth"}) re-smooths all window points
 #'   after each addition.
+#' @param missing Policy for a non-finite (NaN/Inf) \code{x} or \code{y} value
+#'   passed to \code{\link{add_point}}: \code{"error"} (default) raises an
+#'   error, \code{"drop"} silently ignores the point (returns \code{NULL})
+#'   instead of adding it to the window.
 #'
 #' @return An OnlineLoess object.
 #' @examples
@@ -57,7 +61,8 @@ OnlineLoess <- function(
     weighted_metric_weights = NULL,
     cell = NULL,
     interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL
+    boundary_degree_fallback = NULL,
+    missing = "error"
 ) {
     reject_extra_positional_args(sys.call(), "min_points")
     validate_params(

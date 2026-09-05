@@ -145,6 +145,10 @@ macro_rules! impl_common_builder {
                 self.0 = self.0.zero_weight_fallback(s);
                 self
             }
+            pub fn missing(mut self, s: &str) -> Self {
+                self.0 = self.0.missing(s);
+                self
+            }
             pub fn boundary_policy(mut self, s: &str) -> Self {
                 self.0 = self.0.boundary_policy(s);
                 self

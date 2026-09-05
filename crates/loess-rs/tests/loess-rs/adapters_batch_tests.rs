@@ -769,6 +769,138 @@ fn test_batch_2d_smoothing() {
     );
     assert!(result.y.iter().all(|v| v.is_finite()));
 }
+
+// ============================================================================
+// Missing Value Handling (`missing`)
+// ============================================================================
+
+#[test]
+fn test_batch_missing_error_default_rejects_nan() {
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|v| v * 2.0).collect();
+    y[3] = f64::NAN;
+
+    let result = Loess::new()
+        .fraction(0.5)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y);
+
+    assert!(
+        matches!(result, Err(LoessError::InvalidNumericValue(_))),
+        "default missing=\"error\" should reject non-finite y values"
+    );
+}
+
+#[test]
+fn test_batch_missing_error_explicit_rejects_nan() {
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|v| v * 2.0).collect();
+    y[3] = f64::NAN;
+
+    let result = Loess::new()
+        .fraction(0.5)
+        .missing("error")
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y);
+
+    assert!(matches!(result, Err(LoessError::InvalidNumericValue(_))));
+}
+
+#[test]
+fn test_batch_missing_drop_removes_nan_rows() {
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|v| v * 2.0).collect();
+    y[3] = f64::NAN;
+    y[7] = f64::INFINITY;
+
+    let result = Loess::new()
+        .fraction(0.5)
+        .missing("drop")
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("missing=\"drop\" should silently remove non-finite rows");
+
+    assert_eq!(result.y.len(), x.len() - 2);
+    assert!(result.y.iter().all(|v| v.is_finite()));
+}
+
+#[test]
+fn test_batch_missing_drop_removes_nan_rows_2d() {
+    // Row 2 has a non-finite value in its second dimension; it should be dropped.
+    let x: Vec<f64> = vec![0.0, 0.0, 1.0, 1.0, 2.0, f64::NAN, 3.0, 3.0, 4.0, 4.0];
+    let y: Vec<f64> = vec![0.0, 2.0, 4.0, 6.0, 8.0];
+
+    let result = Loess::new()
+        .dimensions(2)
+        .fraction(1.0)
+        .missing("drop")
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("missing=\"drop\" should remove rows with a non-finite dimension");
+
+    assert_eq!(result.y.len(), 4);
+    assert!(result.y.iter().all(|v| v.is_finite()));
+}
+
+#[test]
+fn test_batch_missing_drop_filters_custom_weights_in_lockstep() {
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|v| v * 2.0).collect();
+    y[4] = f64::NAN;
+    let weights: Vec<f64> = (0..10).map(|i| 1.0 + i as f64 * 0.1).collect();
+
+    let result = Loess::new()
+        .fraction(0.5)
+        .missing("drop")
+        .custom_weights(weights)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .expect("custom_weights should be filtered in lockstep with dropped rows");
+
+    assert_eq!(result.y.len(), x.len() - 1);
+}
+
+#[test]
+fn test_batch_missing_invalid_string_rejected() {
+    let result = Loess::<f64>::new()
+        .missing("invalid")
+        .adapter(Batch)
+        .build();
+
+    assert!(
+        matches!(result, Err(LoessError::ParseErrors(_))),
+        "invalid missing policy string should be rejected at build time"
+    );
+}
+
+#[test]
+fn test_batch_missing_drop_still_rejects_mismatched_lengths() {
+    let x: Vec<f64> = vec![1.0, 2.0, 3.0];
+    let y: Vec<f64> = vec![1.0, 2.0];
+
+    let result = Loess::new()
+        .missing("drop")
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y);
+
+    assert!(
+        matches!(result, Err(LoessError::MismatchedInputs { .. })),
+        "a length mismatch is a caller error and must not be masked by missing=\"drop\""
+    );
+}
+
 // ============================================================================
 // New Edge Case Tests
 // ============================================================================

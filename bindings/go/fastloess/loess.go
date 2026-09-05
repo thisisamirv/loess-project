@@ -37,6 +37,12 @@ type Options struct {
 	// drop to zero: "use_local_mean" (default, aliases "local_mean", "mean"),
 	// "return_original" (alias "original"), or "return_none" (alias "none").
 	ZeroWeightFallback string
+	// Missing controls how non-finite (NaN/Inf) values in the input are
+	// handled: "error" (default) rejects them, "drop" silently removes
+	// observations (rows) where any X dimension or Y is non-finite (and the
+	// matching CustomWeights entry) before fitting. A length mismatch
+	// between X and Y always errors, even under "drop".
+	Missing string
 
 	// Degree is the local polynomial degree: "constant", "linear" (default),
 	// "quadratic", "cubic", or "quartic".
@@ -120,6 +126,7 @@ func DefaultOptions() Options {
 		ScalingMethod:      "mad",
 		BoundaryPolicy:     "extend",
 		ZeroWeightFallback: "use_local_mean",
+		Missing:            "error",
 		Degree:             "linear",
 		Dimensions:         1,
 		DistanceMetric:     "normalized",
@@ -159,6 +166,8 @@ func NewLoess(opts Options) (*Loess, error) {
 	defer freeCString(bp)
 	zwf := cStringOrNil(opts.ZeroWeightFallback)
 	defer freeCString(zwf)
+	missing := cStringOrNil(opts.Missing)
+	defer freeCString(missing)
 	cvMethod := cStringOrNil(opts.CVMethod)
 	defer freeCString(cvMethod)
 	degree := cStringOrNil(opts.Degree)
@@ -215,6 +224,7 @@ func NewLoess(opts Options) (*Loess, error) {
 			interpolationVertices,
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
+			missing,
 		)
 		if ptr == nil {
 			errMsg = lastError()

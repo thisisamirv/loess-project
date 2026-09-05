@@ -30,7 +30,7 @@ use crate::engine::executor::{
     SurfaceMode, VertexPassFn,
 };
 use crate::engine::output::LoessResult;
-use crate::engine::validator::Validator;
+use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::diagnostics::DiagnosticsState;
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
@@ -90,6 +90,9 @@ pub struct StreamingLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg>
 
     // Policy for handling zero-weight neighborhoods
     pub zero_weight_fallback: ZeroWeightFallback,
+
+    // Policy for non-finite (NaN/Inf) values in input data
+    pub missing: MissingPolicy,
 
     // Merging strategy for overlapping chunks
     pub merge_strategy: MergeStrategy,
@@ -187,6 +190,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
             robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
+            missing: DEFAULT_MISSING_POLICY_ENUM,
             merge_strategy: DEFAULT_STREAMING_MERGE_STRATEGY_ENUM,
             compute_residuals: DEFAULT_RETURN_RESIDUALS,
             return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
@@ -266,6 +270,21 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 {
     // Process a chunk of data.
     pub fn process_chunk(&mut self, x: &[T], y: &[T]) -> Result<LoessResult<T>, LoessError> {
+        Validator::validate_lengths(x, y, self.config.dimensions)?;
+
+        // Apply the missing-value policy before any other validation, so a
+        // `Drop` policy sees the filtered data and `Error` sees the raw data.
+        let (x_owned, y_owned);
+        let (x, y): (&[T], &[T]) = match self.config.missing {
+            MissingPolicy::Drop => {
+                let (xo, yo, _) = Validator::drop_non_finite(x, y, self.config.dimensions, None);
+                x_owned = xo;
+                y_owned = yo;
+                (&x_owned, &y_owned)
+            }
+            MissingPolicy::Error => (x, y),
+        };
+
         // Validate inputs using standard validator
         Validator::validate_inputs(x, y, self.config.dimensions)?;
 

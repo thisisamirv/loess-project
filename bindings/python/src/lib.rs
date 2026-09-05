@@ -290,7 +290,8 @@ impl PyStreamingLoess {
         surface_mode="interpolation",
         cell=None,
         interpolation_vertices=None,
-        boundary_degree_fallback=None
+        boundary_degree_fallback=None,
+        missing="error"
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -317,6 +318,7 @@ impl PyStreamingLoess {
         cell: Option<f64>,
         interpolation_vertices: Option<usize>,
         boundary_degree_fallback: Option<bool>,
+        missing: &str,
     ) -> PyResult<Self> {
         let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -344,6 +346,7 @@ impl PyStreamingLoess {
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,
+                missing: Some(missing),
                 ..Default::default()
             },
         ))?;
@@ -457,7 +460,8 @@ impl PyOnlineLoess {
         surface_mode="interpolation",
         cell=None,
         interpolation_vertices=None,
-        boundary_degree_fallback=None
+        boundary_degree_fallback=None,
+        missing="error"
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -481,6 +485,7 @@ impl PyOnlineLoess {
         cell: Option<f64>,
         interpolation_vertices: Option<usize>,
         boundary_degree_fallback: Option<bool>,
+        missing: &str,
     ) -> PyResult<Self> {
         let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -508,6 +513,7 @@ impl PyOnlineLoess {
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,
+                missing: Some(missing),
                 ..Default::default()
             },
         ))?;
@@ -591,7 +597,8 @@ impl PyLoess {
         cell=None,
         interpolation_vertices=None,
         boundary_degree_fallback=None,
-        cv_seed=None
+        cv_seed=None,
+        missing="error"
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -623,6 +630,7 @@ impl PyLoess {
         interpolation_vertices: Option<usize>,
         boundary_degree_fallback: Option<bool>,
         cv_seed: Option<u64>,
+        missing: &str,
     ) -> PyResult<Self> {
         let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -655,6 +663,7 @@ impl PyLoess {
                 cv_method: Some(cv_method),
                 cv_k: Some(cv_k),
                 cv_seed,
+                missing: Some(missing),
             },
         ))?;
 

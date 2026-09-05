@@ -290,6 +290,7 @@ pub unsafe extern "C" fn jl_loess_new(
     return_sorted: c_int,
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
+    missing: *const c_char,
 ) -> *mut JlLoessConfig {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -337,6 +338,9 @@ pub unsafe extern "C" fn jl_loess_new(
         let surf_str = unsafe {
             shared_parse::parse_c_str_or_default(surface_mode, shared_parse::DEFAULT_SURFACE_MODE)
         };
+        let missing_str = unsafe {
+            shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY)
+        };
 
         let wmw_slice = shared_parse::option_slice_from_ptr(
             weighted_metric_weights,
@@ -382,6 +386,7 @@ pub unsafe extern "C" fn jl_loess_new(
                     cv_method: Some(cv_method_str),
                     cv_k: Some(cv_k as usize),
                     cv_seed: None,
+                    missing: Some(missing_str),
                 },
             )) {
                 Ok(v) => v,
@@ -598,6 +603,7 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
     boundary_degree_fallback: c_int,
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
+    missing: *const c_char,
 ) -> *mut JlStreamingLoess {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -648,6 +654,9 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
                 shared_parse::DEFAULT_DISTANCE_METRIC,
             )
         };
+        let missing_str = unsafe {
+            shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY)
+        };
 
         let chunk_size_usize = unwrap_or_return_null!(shared_parse::require_positive_usize(
             "chunk_size",
@@ -692,6 +701,7 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
                     .then_some(interpolation_vertices as usize),
                 boundary_degree_fallback: (boundary_degree_fallback >= 0)
                     .then_some(boundary_degree_fallback != 0),
+                missing: Some(missing_str),
                 ..Default::default()
             },
         )) {
@@ -833,6 +843,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
     boundary_degree_fallback: c_int,
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
+    missing: *const c_char,
 ) -> *mut JlOnlineLoess {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -880,6 +891,9 @@ pub unsafe extern "C" fn jl_online_loess_new(
                 distance_metric,
                 shared_parse::DEFAULT_DISTANCE_METRIC,
             )
+        };
+        let missing_str = unsafe {
+            shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY)
         };
 
         let iterations_usize = unwrap_or_return_null!(shared_parse::require_non_negative_usize(
@@ -929,6 +943,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
                     .then_some(interpolation_vertices as usize),
                 boundary_degree_fallback: (boundary_degree_fallback >= 0)
                     .then_some(boundary_degree_fallback != 0),
+                missing: Some(missing_str),
                 ..Default::default()
             },
         )) {

@@ -28,7 +28,7 @@ use crate::engine::executor::{
     SurfaceMode, VertexPassFn,
 };
 use crate::engine::output::LoessResult;
-use crate::engine::validator::Validator;
+use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::diagnostics::Diagnostics;
 use crate::evaluation::intervals::IntervalMethod;
@@ -92,6 +92,9 @@ pub struct BatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
 
     // Policy for handling zero-weight neighborhoods
     pub zero_weight_fallback: ZeroWeightFallback,
+
+    // Policy for non-finite (NaN/Inf) values in input data
+    pub missing: MissingPolicy,
 
     // Policy for handling data boundaries
     pub boundary_policy: BoundaryPolicy,
@@ -190,6 +193,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             return_sorted: DEFAULT_RETURN_SORTED,
             zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
+            missing: DEFAULT_MISSING_POLICY_ENUM,
             boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
             polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
             dimensions: DEFAULT_DIMENSIONS,
@@ -260,10 +264,26 @@ pub struct BatchLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
 impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLinalg> BatchLoess<T> {
     // Perform LOESS smoothing on the provided data.
     pub fn fit(self, x: &[T], y: &[T]) -> Result<LoessResult<T>, LoessError> {
+        Validator::validate_lengths(x, y, self.config.dimensions)?;
+
+        // Apply the missing-value policy before any other validation, so a
+        // `Drop` policy sees the filtered data and `Error` sees the raw data.
+        let (x_owned, y_owned, custom_weights) = match self.config.missing {
+            MissingPolicy::Drop => Validator::drop_non_finite(
+                x,
+                y,
+                self.config.dimensions,
+                self.config.custom_weights.as_deref(),
+            ),
+            MissingPolicy::Error => (x.to_vec(), y.to_vec(), self.config.custom_weights.clone()),
+        };
+        let x: &[T] = &x_owned;
+        let y: &[T] = &y_owned;
+
         Validator::validate_inputs(x, y, self.config.dimensions)?;
 
         // Validate custom_weights length if provided
-        if let Some(ref uw) = self.config.custom_weights {
+        if let Some(ref uw) = custom_weights {
             Validator::validate_custom_weights(uw, y.len())?;
         }
 
@@ -308,7 +328,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             interpolation_vertices: self.config.interpolation_vertices,
             cell: self.config.cell,
             boundary_degree_fallback: self.config.boundary_degree_fallback,
-            custom_weights: self.config.custom_weights,
+            custom_weights,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++

@@ -8,6 +8,8 @@
 * Added `.github/dependabot.yml`, covering every dependency ecosystem, grouped per directory into a single weekly PR.
 * Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
 * Added `dev/check_links.py` to validate every Markdown cross-reference link across all docs.
+* Added a `return_sorted` option to `Loess()`.
+* Added a `missing` option to `Loess()`, `StreamingLoess()`, and `OnlineLoess()`.
 
 ## Changed
 
@@ -25,6 +27,9 @@
 * Removed the redundant `rfastloess-package` pkgdown topic and the internal `Nullable()` helper.
 * Fixed `_pkgdown.yml` mislabeling the S3-based interface as "R6 classes".
 * Merged `parameters.Rmd`/`batch.Rmd`/`streaming.Rmd`/`online.Rmd` into the constructors' roxygen docs, removing the now-redundant vignettes.
+* Removed `confidence_intervals`, `prediction_intervals`, and `return_se` from `StreamingLoess()`'s constructor, and those plus `return_diagnostics`/`return_residuals` from `OnlineLoess()`'s constructor — none of these were ever computed by either adapter. Breaking change. Also removed `parallel` from `OnlineLoess()`'s constructor for consistency with `lowess`/`fastLowess` — it gated real internal dispatch there, unlike the fields above, but Online now always runs sequentially; `parallel` remains real and unaffected for `StreamingLoess()`.
+* Mirrored the Python API docs' structure (complete field tables in canonical order, a `## Options` subsection per field, `## Result Structure` moved to the end) to every remaining crate/binding: `loess-rs`, `fastLoess`, Julia (docstrings), Node.js, WASM, C++, Go, and Java. Along the way, corrected several real accuracy/consistency issues found by auditing docs against source:
+* Fixed `bindings/r/R/StreamingLoess.R`, which was corrupted to contain a duplicate (and outdated) copy of `OnlineLoess.R`'s content with a mangled fragment of the real `StreamingLoess()` body appended — meaning `StreamingLoess()` was not callable from R at all. Reconstructed from `man/StreamingLoess.Rd`, `utils.R`'s `streaming_params`, and the surrounding constructors' conventions; verified via `roxygen2::roxygenise()` and the full `testthat` suite (187 passed). Also fixed a stale `test-extendr-wrappers.R` fixture with 3 extra positional arguments left over from before `cell`/`interpolation_vertices`/`boundary_degree_fallback` were added to `RStreamingLoess$new`.
 
 ## Fixed
 
@@ -42,6 +47,7 @@
 * Reformatted `configure` to tabs and fixed `.Rbuildignore` missing exclusions.
 * Removed the empty `R/params.R` stub and simplified `plot.LoessResult()` to return `NULL` invisibly.
 * Inlined the `.make_*` constructor helpers, and consolidated `utils.R`'s parameter validators into two generic helpers.
+* Fixed `utils.R`'s internal `validate_min_points()` guard (used by `fit()`/`process_chunk()`) hardcoding a stricter minimum of 3 data points, diverging from the Rust core's actual minimum of 2 and every other binding's equivalent examples; lowered its default to 2.
 
 # rfastloess 1.1.0
 

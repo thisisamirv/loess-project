@@ -65,6 +65,12 @@
 #'   to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 #'   \code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
 #'   \code{"return_none"} (alias: \code{"none"}).
+#' @param missing Policy for non-finite (NaN/Inf) values in the input data:
+#'   \code{"error"} (default) raises an error, \code{"drop"} silently removes
+#'   observations (rows) where any x dimension or y is non-finite (and the
+#'   matching \code{custom_weights} entry) before fitting. A length mismatch
+#'   between \code{x} and \code{y} always raises an error, even under
+#'   \code{"drop"}.
 #' @param parallel Logical; enable parallel processing. Default: \code{TRUE}.
 #' @param degree Local polynomial degree: \code{"constant"}, \code{"linear"}
 #'   (default), \code{"quadratic"}, \code{"cubic"}, or \code{"quartic"}.
@@ -148,7 +154,8 @@ Loess <- function(
     cell = NULL,
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL,
-    cv_seed = NULL
+    cv_seed = NULL,
+    missing = "error"
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
     validate_params(fraction = fraction, iterations = iterations)

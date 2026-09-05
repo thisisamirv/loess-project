@@ -153,6 +153,8 @@ struct LoessOptions {
   int boundary_degree_fallback = -1;
   /// Seed for cross-validation RNG (0 = unset / random).
   uint64_t cv_seed = 0;
+  /// Policy for non-finite (NaN/Inf) values in input data ("error", "drop").
+  std::string missing = "error";
 };
 
 /**
@@ -194,6 +196,9 @@ struct OnlineOptions {
   double cell = NAN;
   int interpolation_vertices = 0;
   int boundary_degree_fallback = -1;
+  /// Policy for non-finite (NaN/Inf) \`x\`/\`y\` values passed to \`add_point\`
+  /// ("error", "drop").
+  std::string missing = "error";
   // Online-specific fields
   int window_capacity = detail::k_default_window_capacity;
   int min_points = detail::k_default_min_points;
@@ -435,7 +440,8 @@ public:
         options.weighted_metric_weights.empty()
             ? nullptr
             : options.weighted_metric_weights.data(),
-        static_cast<unsigned long>(options.weighted_metric_weights.size()));
+        static_cast<unsigned long>(options.weighted_metric_weights.size()),
+        options.missing.c_str());
     if (options.cv_seed > 0) {
       cpp_loess_set_cv_seed(ptr_, static_cast<unsigned long>(options.cv_seed));
     }
@@ -523,7 +529,8 @@ public:
         options.weighted_metric_weights.empty()
             ? nullptr
             : options.weighted_metric_weights.data(),
-        static_cast<unsigned long>(options.weighted_metric_weights.size()));
+        static_cast<unsigned long>(options.weighted_metric_weights.size()),
+        options.missing.c_str());
   }
 
   ~StreamingLoess() {
@@ -658,7 +665,8 @@ public:
         options.weighted_metric_weights.empty()
             ? nullptr
             : options.weighted_metric_weights.data(),
-        static_cast<unsigned long>(options.weighted_metric_weights.size()));
+        static_cast<unsigned long>(options.weighted_metric_weights.size()),
+        options.missing.c_str());
   }
 
   ~OnlineLoess() {

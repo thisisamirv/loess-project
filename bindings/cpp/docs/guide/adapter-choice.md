@@ -65,6 +65,11 @@ int main() {
 }
 ```
 
+```output
+95% CI at midpoint: [0.00041048, 0.142915]
+R2: 0.961446
+```
+
 ---
 
 ## Streaming Adapter
@@ -124,6 +129,10 @@ int main() {
     std::cout << "Smoothed y[0]: " << result.y_vector()[0] << "\n";
     return 0;
 }
+```
+
+```output
+Smoothed y[0]: 0.130843
 ```
 
 ---
@@ -191,6 +200,14 @@ int main() {
     }
     return 0;
 }
+```
+
+```output
+0.351148
+0.412033
+0.471662
+0.529795
+0.586197
 ```
 
 ---

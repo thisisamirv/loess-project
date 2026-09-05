@@ -16,7 +16,7 @@ RLoess$new <- function(
     degree, dimensions, distance_metric,
     weighted_metric_weights,
     surface_mode, return_se, return_sorted,
-    cell, interpolation_vertices, boundary_degree_fallback, cv_seed
+    cell, interpolation_vertices, boundary_degree_fallback, cv_seed, missing
 ) {
     .Call(
         wrap__RLoess__new, fraction, iterations, weight_function,
@@ -27,7 +27,7 @@ RLoess$new <- function(
         degree, dimensions, distance_metric,
         weighted_metric_weights,
         surface_mode, return_se, return_sorted,
-        cell, interpolation_vertices, boundary_degree_fallback, cv_seed
+        cell, interpolation_vertices, boundary_degree_fallback, cv_seed, missing
     )
 }
 
@@ -54,7 +54,7 @@ RStreamingLoess$new <- function(
     return_diagnostics, return_residuals, return_robustness_weights,
     merge_strategy, parallel, degree, dimensions,
     distance_metric, weighted_metric_weights, surface_mode,
-    cell, interpolation_vertices, boundary_degree_fallback
+    cell, interpolation_vertices, boundary_degree_fallback, missing
 ) {
     .Call(
         wrap__RStreamingLoess__new, fraction, chunk_size, overlap, iterations,
@@ -64,7 +64,7 @@ RStreamingLoess$new <- function(
         return_residuals, return_robustness_weights, merge_strategy, parallel,
         degree, dimensions, distance_metric,
         weighted_metric_weights, surface_mode,
-        cell, interpolation_vertices, boundary_degree_fallback
+        cell, interpolation_vertices, boundary_degree_fallback, missing
     )
 }
 
@@ -95,7 +95,7 @@ ROnlineLoess$new <- function(
     auto_converge, return_robustness_weights,
     degree, dimensions, distance_metric,
     weighted_metric_weights, surface_mode,
-    cell, interpolation_vertices, boundary_degree_fallback
+    cell, interpolation_vertices, boundary_degree_fallback, missing
 ) {
     .Call(
         wrap__ROnlineLoess__new, fraction, window_capacity, min_points,
@@ -104,7 +104,7 @@ ROnlineLoess$new <- function(
         return_robustness_weights,
         degree, dimensions, distance_metric,
         weighted_metric_weights, surface_mode,
-        cell, interpolation_vertices, boundary_degree_fallback
+        cell, interpolation_vertices, boundary_degree_fallback, missing
     )
 }
 

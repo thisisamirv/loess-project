@@ -178,6 +178,7 @@ class Loess:
         interpolation_vertices: int | None = None,
         boundary_degree_fallback: bool | None = None,
         cv_seed: int | None = None,
+        missing: str = "error",
     ) -> None:
         """Initialize the batch LOESS processor."""
 
@@ -230,6 +231,7 @@ class StreamingLoess:
         cell: float | None = None,
         interpolation_vertices: int | None = None,
         boundary_degree_fallback: bool | None = None,
+        missing: str = "error",
     ) -> None:
         """Initialize the streaming processor."""
 
@@ -265,6 +267,7 @@ class OnlineLoess:
         cell: float | None = None,
         interpolation_vertices: int | None = None,
         boundary_degree_fallback: bool | None = None,
+        missing: str = "error",
     ) -> None:
         """Initialize the online processor."""
 

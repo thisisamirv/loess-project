@@ -12,12 +12,28 @@
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
 use alloc::format;
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use std::vec::Vec;
 
 // External dependencies
 use num_traits::Float;
 
 // Internal dependencies
 use crate::primitives::errors::LoessError;
+
+// Policy for handling non-finite (NaN/Inf) values in input data.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum MissingPolicy {
+    // Return an error if any input value is non-finite (default).
+    #[default]
+    Error,
+
+    // Silently remove observations (rows) where any x dimension or y is
+    // non-finite before fitting.
+    Drop,
+}
 
 // Validation utility for LOESS configuration and input data.
 //
@@ -27,18 +43,18 @@ use crate::primitives::errors::LoessError;
 pub struct Validator;
 
 impl Validator {
-    // Validate input arrays for LOESS smoothing.
-    pub fn validate_inputs<T: Float>(
+    // Validate non-empty arrays and matching lengths (`x.len() == y.len() *
+    // dimensions`). Runs ahead of any missing-value filtering, since a length
+    // mismatch is a caller error, not a data-quality issue that
+    // `MissingPolicy::Drop` should mask.
+    pub fn validate_lengths<T: Float>(
         x: &[T],
         y: &[T],
         dimensions: usize,
     ) -> Result<(), LoessError> {
-        // Check 1: Non-empty arrays
         if x.is_empty() || y.is_empty() {
             return Err(LoessError::EmptyInput);
         }
-
-        // Check 2: Matching lengths (x.len() should be y.len() * dimensions)
         let n_y = y.len();
         if x.len() != n_y * dimensions {
             return Err(LoessError::MismatchedInputs {
@@ -47,13 +63,52 @@ impl Validator {
                 dimensions,
             });
         }
+        Ok(())
+    }
 
-        // Check 3: Sufficient points for regression
+    // Remove observations (rows) where any x dimension or y is non-finite,
+    // keeping any `custom_weights` in lockstep. Used when `MissingPolicy::Drop`
+    // is set.
+    pub fn drop_non_finite<T: Float>(
+        x: &[T],
+        y: &[T],
+        dimensions: usize,
+        custom_weights: Option<&[T]>,
+    ) -> (Vec<T>, Vec<T>, Option<Vec<T>>) {
+        let n = y.len();
+        let mut xs = Vec::with_capacity(x.len());
+        let mut ys = Vec::with_capacity(n);
+        let mut ws = custom_weights.map(|w| Vec::with_capacity(w.len().min(n)));
+        for i in 0..n {
+            let row = &x[i * dimensions..i * dimensions + dimensions];
+            if row.iter().all(|v| v.is_finite()) && y[i].is_finite() {
+                xs.extend_from_slice(row);
+                ys.push(y[i]);
+                if let (Some(w), Some(wv)) = (custom_weights, ws.as_mut())
+                    && i < w.len()
+                {
+                    wv.push(w[i]);
+                }
+            }
+        }
+        (xs, ys, ws)
+    }
+
+    // Validate input arrays for LOESS smoothing.
+    pub fn validate_inputs<T: Float>(
+        x: &[T],
+        y: &[T],
+        dimensions: usize,
+    ) -> Result<(), LoessError> {
+        Self::validate_lengths(x, y, dimensions)?;
+        let n_y = y.len();
+
+        // Check: Sufficient points for regression
         if n_y < 2 {
             return Err(LoessError::TooFewPoints { got: n_y, min: 2 });
         }
 
-        // Check 4: All values finite (combined loop for cache locality)
+        // Check: All values finite (combined loop for cache locality)
         for (i, &val) in x.iter().enumerate() {
             if !val.is_finite() {
                 return Err(LoessError::InvalidNumericValue(format!(

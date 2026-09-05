@@ -32,7 +32,7 @@ validate_xy_dims <- function(x, y) {
 }
 
 
-validate_min_points <- function(x, min_n = 3L) {
+validate_min_points <- function(x, min_n = 2L) {
     if (length(x) < min_n) {
         stop(sprintf("At least %d data points are required", min_n))
     }
@@ -182,6 +182,7 @@ param_types <- list(
     distance_metric = "character",
     surface_mode = "character",
     merge_strategy = "character",
+    missing = "character",
     return_diagnostics = "logical",
     return_residuals = "logical",
     return_robustness_weights = "logical",
@@ -214,7 +215,8 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(type,
+        switch(
+            type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),
@@ -256,7 +258,8 @@ loess_params <- c(
     "cell",
     "interpolation_vertices",
     "boundary_degree_fallback",
-    "cv_seed"
+    "cv_seed",
+    "missing"
 )
 
 online_params <- c(
@@ -279,7 +282,8 @@ online_params <- c(
     "weighted_metric_weights",
     "cell",
     "interpolation_vertices",
-    "boundary_degree_fallback"
+    "boundary_degree_fallback",
+    "missing"
 )
 
 streaming_params <- c(
@@ -305,5 +309,6 @@ streaming_params <- c(
     "weighted_metric_weights",
     "cell",
     "interpolation_vertices",
-    "boundary_degree_fallback"
+    "boundary_degree_fallback",
+    "missing"
 )

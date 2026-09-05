@@ -800,3 +800,53 @@ fn test_streaming_finalize_multiple_times() {
     let result3 = processor.finalize().unwrap();
     assert!(result3.x.is_empty());
 }
+
+// ============================================================================
+// Missing Value Handling (`missing`)
+// ============================================================================
+
+#[test]
+fn test_streaming_missing_error_default_rejects_nan() {
+    let mut processor = Loess::new()
+        .fraction(0.5)
+        .surface_mode("direct")
+        .chunk_size(10)
+        .overlap(1)
+        .adapter(Streaming)
+        .build()
+        .unwrap();
+
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|&xi| xi * 2.0).collect();
+    y[3] = f64::NAN;
+
+    let result = processor.process_chunk(&x, &y);
+    assert!(
+        matches!(result, Err(LoessError::InvalidNumericValue(_))),
+        "default missing=\"error\" should reject non-finite values in a chunk"
+    );
+}
+
+#[test]
+fn test_streaming_missing_drop_removes_nan_rows() {
+    let mut processor = Loess::new()
+        .fraction(0.5)
+        .missing("drop")
+        .surface_mode("direct")
+        .chunk_size(10)
+        .overlap(0)
+        .adapter(Streaming)
+        .build()
+        .unwrap();
+
+    let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|&xi| xi * 2.0).collect();
+    y[3] = f64::NAN;
+
+    let result = processor
+        .process_chunk(&x, &y)
+        .expect("missing=\"drop\" should silently remove the non-finite row");
+    let final_result = processor.finalize().unwrap();
+
+    assert_eq!(result.x.len() + final_result.x.len(), x.len() - 1);
+}

@@ -27,7 +27,7 @@ use crate::engine::executor::{
     CVPassFn, FitPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig, LoessExecutor, SmoothPassFn,
     SurfaceMode, VertexPassFn,
 };
-use crate::engine::validator::Validator;
+use crate::engine::validator::{MissingPolicy, Validator};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
@@ -79,6 +79,9 @@ pub struct OnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
 
     // Policy for handling zero-weight neighborhoods
     pub zero_weight_fallback: ZeroWeightFallback,
+
+    // Policy for non-finite (NaN/Inf) values in input data
+    pub missing: MissingPolicy,
 
     // Policy for handling data boundaries
     pub boundary_policy: BoundaryPolicy,
@@ -163,6 +166,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
             robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
+            missing: DEFAULT_MISSING_POLICY_ENUM,
             boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             auto_converge: default_auto_converge(),
@@ -261,10 +265,19 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 dimensions,
             });
         }
-        for &xi in x {
-            Validator::validate_scalar(xi, "x")?;
+        match self.config.missing {
+            MissingPolicy::Error => {
+                for &xi in x {
+                    Validator::validate_scalar(xi, "x")?;
+                }
+                Validator::validate_scalar(y, "y")?;
+            }
+            MissingPolicy::Drop => {
+                if x.iter().any(|xi| !xi.is_finite()) || !y.is_finite() {
+                    return Ok(None);
+                }
+            }
         }
-        Validator::validate_scalar(y, "y")?;
 
         // Add to window
         for &xi in x {

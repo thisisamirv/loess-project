@@ -14,6 +14,7 @@
 * Added CI coverage for `clang-cl` (Windows), `clang` (Linux), MinGW-w64, and Intel oneAPI.
 * Added ARM64 release binaries for Linux/Windows/macOS; also fixed the macOS x64 job silently shipping a mislabeled arm64 binary.
 * Renamed `cpp_loess_fit`/`cpp_streaming_process`'s `x`/`y` params to `x_values`/`y_values`, avoiding a collision with `CppLoessResult`'s own `x`/`y` fields.
+* Added a `return_sorted` option to `LoessOptions`.
 
 ## Changed
 
@@ -32,6 +33,11 @@
 * Restructured Doxygen nav from ~20 flat pages into 5 hub pages, mirroring other bindings.
 * Added a Spack recipe, auto-updated by `release-cpp.yml` on release.
 * Bumped the vendored Corrosion CMake module to v0.6.1.
+* Removed the dead `confidence_intervals`, `prediction_intervals`, `return_diagnostics`, `return_residuals`, and `return_se` fields from `OnlineOptions` (a standalone struct, not inherited from `LoessOptions` as the docs previously and incorrectly claimed). Breaking change for `OnlineOptions` callers. Also removed `parallel` from `OnlineOptions` — unlike the fields above, it gated real internal KD-tree/interval-pass dispatch, but was dropped for consistency with `fastLowess`'s `OnlineLowess`; Online now always runs sequentially. `StreamingOptions`/`LoessOptions` keep `parallel` unaffected.
+* `StreamingOptions` (which inherits `LoessOptions` and still has `confidence_intervals`/`prediction_intervals`/`return_se` structurally) no longer forwards them to the native constructor, since Streaming never computed them.
+* `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (a sentinel meaning "use the library default"), so it now resolves dynamically to `chunk_size / 10` like every other language binding, instead of always passing a concrete `500` to the native constructor regardless of `chunk_size`. Breaking change for callers relying on the previous flat default.
+* `weighted_metric_weights` no longer auto-selects the `"weighted"` distance metric: previously, providing weights silently overrode any explicit `distance_metric` via `resolve_distance_metric_for_builder`; now `distance_metric = "weighted"` must be set explicitly, matching Python/R/Node.js/WASM, and omitting it while providing weights raises an error. Breaking change.
+* Mirrored the Python API docs' structure (complete field tables in canonical order, a `## Options` subsection per field, `## Result Structure` moved to the end) to every remaining crate/binding: `loess-rs`, `fastLoess`, Julia (docstrings), Node.js, WASM, C++, Go, and Java. Along the way, corrected several real accuracy/consistency issues found by auditing docs against source:
 
 ## Fixed
 

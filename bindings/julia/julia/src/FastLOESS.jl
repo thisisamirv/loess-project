@@ -438,6 +438,8 @@ Stateful batch LOESS smoother.
   `surface_mode = "interpolation"`.
 - `cv_seed::Union{Int, Nothing} = nothing`: Random seed for reproducible k-fold
   cross-validation shuffling. `nothing` (default) uses a random seed.
+- `missing::String = "error"`: Policy for non-finite (NaN/Inf) values in input
+  data. See Notes for a description of each option.
 
 # Notes
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
@@ -465,6 +467,15 @@ Stateful batch LOESS smoother.
 | `"use_local_mean"` (default) | Use the mean of the neighborhood |
 | `"return_original"` | Return the original y value |
 | `"return_none"` | Return `NaN` |
+
+`missing` controls the behavior when `x`/`y` (or `custom_weights`) contain non-finite (NaN/Inf) values:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Raise an error if any value is non-finite |
+| `"drop"` | Silently remove observations (rows) where any x dimension or y is non-finite before fitting |
+
+A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
 # Example
 ```julia
@@ -505,6 +516,7 @@ mutable struct Loess
 		interpolation_vertices::Union{Int, Nothing} = nothing,
 		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
 		cv_seed::Union{Int, Nothing} = nothing,
+		missing::String = "error",
 	)
 		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
@@ -541,6 +553,7 @@ mutable struct Loess
 			Culong(
 				weighted_metric_weights !== nothing ? length(weighted_metric_weights) : 0,
 			)::Culong,
+			missing::Cstring,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -725,6 +738,8 @@ Stateful streaming LOESS smoother.
 - `interpolation_vertices::Union{Int, Nothing} = nothing`: Number of interpolation vertices.
 - `boundary_degree_fallback::Union{Bool, Nothing} = nothing`: Fall back to lower polynomial
   degree at boundaries when higher degrees fail.
+- `missing::String = "error"`: Policy for non-finite (NaN/Inf) values in each chunk.
+  See `Loess` for a description of each option.
 """
 mutable struct StreamingLoess
 	handle::Ptr{Cvoid}
@@ -753,6 +768,7 @@ mutable struct StreamingLoess
 		cell::Union{Float64, Nothing} = nothing,
 		interpolation_vertices::Union{Int, Nothing} = nothing,
 		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
+		missing::String = "error",
 	)
 		# Resolve weighted metric arguments
 		wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
@@ -791,6 +807,7 @@ mutable struct StreamingLoess
 			bdf_val::Cint,
 			wm_ptr::Ptr{Cdouble},
 			wm_len::Culong,
+			missing::Cstring,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -874,6 +891,9 @@ Stateful online LOESS smoother.
 - `interpolation_vertices::Union{Int, Nothing} = nothing`: Number of interpolation vertices.
 - `boundary_degree_fallback::Union{Bool, Nothing} = nothing`: Fall back to lower polynomial
   degree at boundaries when higher degrees fail.
+- `missing::String = "error"`: Policy for non-finite (NaN/Inf) `x`/`y` values passed
+  to `add_point`. `"error"` (default) raises, `"drop"` silently ignores the point
+  (returns `nothing` instead of adding it to the window).
 """
 mutable struct OnlineLoess
 	handle::Ptr{Cvoid}
@@ -899,6 +919,7 @@ mutable struct OnlineLoess
 		cell::Union{Float64, Nothing} = nothing,
 		interpolation_vertices::Union{Int, Nothing} = nothing,
 		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
+		missing::String = "error",
 	)
 		# Resolve weighted metric arguments
 		wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
@@ -934,6 +955,7 @@ mutable struct OnlineLoess
 			bdf_val::Cint,
 			wm_ptr::Ptr{Cdouble},
 			wm_len::Culong,
+			missing::Cstring,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL

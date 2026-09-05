@@ -993,3 +993,44 @@ fn test_online_builder_dimensions_setter() {
     }
     assert!(processor.window_size() > 0);
 }
+
+// ============================================================================
+// Missing Value Handling (`missing`)
+// ============================================================================
+
+#[test]
+fn test_online_missing_error_default_rejects_nan() {
+    let mut processor = Loess::new()
+        .fraction(1.0)
+        .surface_mode("direct")
+        .window_capacity(5)
+        .min_points(2)
+        .adapter(Online)
+        .build()
+        .expect("Builder should succeed");
+
+    let result = processor.add_point(&[1.0], f64::NAN);
+    assert!(
+        matches!(result, Err(LoessError::InvalidNumericValue(_))),
+        "default missing=\"error\" should reject a non-finite y value"
+    );
+}
+
+#[test]
+fn test_online_missing_drop_ignores_nan_point() {
+    let mut processor = Loess::new()
+        .fraction(1.0)
+        .missing("drop")
+        .surface_mode("direct")
+        .window_capacity(5)
+        .min_points(2)
+        .adapter(Online)
+        .build()
+        .expect("Builder should succeed");
+
+    let result = processor
+        .add_point(&[1.0], f64::NAN)
+        .expect("missing=\"drop\" should not error on a non-finite point");
+    assert_eq!(result, None, "the non-finite point should be silently ignored");
+    assert_eq!(processor.window_size(), 0, "the point must not enter the window");
+}

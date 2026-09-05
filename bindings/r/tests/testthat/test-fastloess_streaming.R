@@ -152,6 +152,19 @@ test_that("StreamingLoess: zero_weight_fallback", {
     expect_length(result$y, length(y))
 })
 
+test_that("StreamingLoess: missing = \"drop\" removes non-finite rows", {
+    x <- as.double(1:10)
+    y <- as.double(c(2, 4, NaN, 8, 10, 12, 14, 16, 18, 20))
+    result <- bulk_stream(
+        x,
+        y,
+        fraction = 0.5,
+        chunk_size = 10,
+        missing = "drop"
+    )
+    expect_length(result$y, length(y) - 1)
+})
+
 test_that("StreamingLoess: return_residuals", {
     x <- as.double(seq(0, 10, length.out = 200))
     y <- sin(x)

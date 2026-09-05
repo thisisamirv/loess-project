@@ -119,6 +119,7 @@ int main() {
 | `cv_k` | `int` | `5` | Number of folds for k-fold CV |
 | `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation |
 | `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (0 = random) |
+| `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
 
 ## Options
@@ -191,6 +192,17 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### missing
+
+Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `custom_weights`):
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Throw an error if any value is non-finite |
+| `"drop"` | Silently remove observations (rows) where any x dimension or y is non-finite before fitting |
+
+**Note:** A length mismatch between `x` and `y` always throws, even under `"drop"`.
 
 ### auto_converge
 

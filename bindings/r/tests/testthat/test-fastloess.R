@@ -161,7 +161,7 @@ test_that("Loess return_sorted defaults to original input order", {
 
     result <- fit(Loess(fraction = 0.7), x, y)
 
-    expect_equal(result$x, x)
+    expect_identical(result$x, x)
 })
 
 test_that("Loess return_sorted = TRUE returns results sorted ascending by x", {
@@ -196,7 +196,7 @@ test_that("Loess return_sorted = TRUE returns results sorted ascending by x", {
 
     sorted_order <- order(result$x)
     unsorted_order <- order(unsorted_result$x)
-    expect_equal(result$y[sorted_order], unsorted_result$y[unsorted_order])
+    expect_identical(result$y[sorted_order], unsorted_result$y[unsorted_order])
 
     expect_length(result$residuals, length(x))
     expect_length(result$robustness_weights, length(x))
@@ -270,6 +270,25 @@ test_that("Loess: scaling_method, boundary_policy, zero_weight_fallback", {
     }
     r <- fit(Loess(fraction = 0.5, auto_converge = 1e-4), x, y)
     expect_length(r$y, 5)
+})
+
+test_that("Loess: missing default (\"error\") rejects NaN", {
+    x <- as.double(1:5)
+    y <- c(2, NaN, 6, 8, 10)
+
+    expect_error(fit(Loess(fraction = 0.5), x, y))
+})
+
+test_that("Loess: missing = \"drop\" removes non-finite rows", {
+    x <- as.double(1:5)
+    y <- c(2, NaN, 6, 8, 10)
+
+    r <- fit(Loess(fraction = 0.5, missing = "drop"), x, y)
+    expect_length(r$y, 4)
+})
+
+test_that("Loess: invalid missing policy raises error", {
+    expect_error(Loess(fraction = 0.5, missing = "invalid"))
 })
 
 test_that("Loess: degree, distance_metric, surface_mode", {

@@ -423,6 +423,72 @@ void testMismatchedLengths() {
   assertTrue(!res.error().empty());
 }
 
+void testLoessMissingPolicy() {
+  std::cout << "Running testLoessMissingPolicy...\n";
+  const std::vector<double> x_vals = {1.0, 2.0, 3.0, 4.0, 5.0};
+  const std::vector<double> y_vals = {2.0, std::nan(""), 6.0, 8.0, 10.0};
+
+  {
+    LoessOptions opts;
+    opts.fraction = k_fraction_half;
+    Loess loess(opts);
+    auto res = loess.fit(x_vals, y_vals);
+    assertTrue(!res.has_value(), "default missing policy should reject NaN");
+  }
+
+  {
+    LoessOptions opts;
+    opts.fraction = k_fraction_half;
+    opts.missing = "drop";
+    Loess loess(opts);
+    auto res = loess.fit(x_vals, y_vals).value();
+    assertTrue(res.y_vector().size() == x_vals.size() - 1);
+  }
+
+  {
+    LoessOptions opts;
+    opts.fraction = k_fraction_half;
+    opts.missing = "invalid";
+    Loess loess(opts);
+    auto res = loess.fit(x_vals, y_vals);
+    assertTrue(!res.has_value(), "invalid missing policy should error");
+  }
+}
+
+void testStreamingMissingPolicy() {
+  std::cout << "Running testStreamingMissingPolicy...\n";
+  std::vector<double> x_vals(k_window_capacity);
+  std::vector<double> y_vals(k_window_capacity);
+  for (size_t i = 0; i < k_window_capacity; ++i) {
+    x_vals[i] = static_cast<double>(i + 1);
+    y_vals[i] = k_linear_slope * x_vals[i];
+  }
+  y_vals[2] = std::nan("");
+
+  StreamingOptions opts;
+  opts.fraction = k_fraction_half;
+  opts.chunk_size = k_window_capacity;
+  opts.missing = "drop";
+  StreamingLoess streamer(opts);
+  auto chunk_res = streamer.process_chunk(x_vals, y_vals).value();
+  auto final_res = streamer.finalize().value();
+  assertTrue(chunk_res.y_vector().size() + final_res.y_vector().size() ==
+             x_vals.size() - 1);
+}
+
+void testOnlineMissingPolicy() {
+  std::cout << "Running testOnlineMissingPolicy...\n";
+  OnlineOptions opts;
+  opts.fraction = k_fraction_half;
+  opts.window_capacity = k_window_capacity;
+  opts.missing = "drop";
+  OnlineLoess online(opts);
+  auto res = online.add_point(1.0, std::nan(""));
+  assertTrue(res.has_value(), "add_point should not error under missing=drop");
+  assertTrue(!res.value().has_value(),
+             "dropped point should not produce an output");
+}
+
 // ── Parameter coverage tests ───────────────────────────────────────────────
 
 // Helper: 30-point linear data y = 2x+1
@@ -742,6 +808,9 @@ int main() {
     testOnlineBasic();
 
     testMismatchedLengths();
+    testLoessMissingPolicy();
+    testStreamingMissingPolicy();
+    testOnlineMissingPolicy();
 
     testLoessScalingMethods();
     testLoessBoundaryPolicies();

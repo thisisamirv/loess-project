@@ -2,6 +2,7 @@
 
 use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
+use crate::engine::validator::MissingPolicy;
 
 // Default number of robustness iterations for the **Batch** adapter.
 pub const DEFAULT_ITERATIONS: usize = 3;
@@ -15,6 +16,11 @@ pub const DEFAULT_ROBUSTNESS_METHOD: &str = "bisquare";
 pub const DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM: ZeroWeightFallback = ZeroWeightFallback::UseLocalMean;
 #[cfg(feature = "dev")]
 pub const DEFAULT_ZERO_WEIGHT_FALLBACK: &str = "use_local_mean";
+
+// Default policy for non-finite (NaN/Inf) values in input data.
+pub const DEFAULT_MISSING_POLICY_ENUM: MissingPolicy = MissingPolicy::Error;
+#[cfg(feature = "dev")]
+pub const DEFAULT_MISSING_POLICY: &str = "error";
 
 // Default polynomial degree for local regression.
 pub const DEFAULT_POLYNOMIAL_DEGREE_ENUM: PolynomialDegree = PolynomialDegree::Linear;

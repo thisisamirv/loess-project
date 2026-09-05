@@ -32,6 +32,7 @@ Options options = Options.builder()
 |`scalingMethod` |`String` |`"mad"` |Residual scale estimator: `mad`, `mar`, `mean`.
 |`boundaryPolicy` |`String` |`"extend"` |Boundary handling: `extend`, `reflect`, `zero`, `noboundary`.
 |`zeroWeightFallback` |`String` |`"use_local_mean"` |Fallback when all robustness weights hit zero: `use_local_mean`, `return_original`, `return_none`.
+|`missing` |`String` |`"error"` |Policy for non-finite (NaN/Inf) values in input data: `error`, `drop`.
 |`degree` |`String` |`"linear"` |Local polynomial degree: `constant`, `linear`, `quadratic`, `cubic`, `quartic`.
 |`dimensions` |`int` |`1` |Number of predictor dimensions. `x` is flattened row-major with length `y.length * dimensions`.
 |`distanceMetric` |`String` |`"normalized"` |Neighborhood distance metric: `normalized`, `euclidean`, `manhattan`, `chebyshev`, `minkowski:p`, `weighted`.
@@ -168,6 +169,20 @@ Behavior when all neighborhood weights are zero:
 |`"return_original"` (alias: `"original"`) |Return the original y value
 |`"return_none"` (alias: `"none"`) |Return `NaN`
 |===
+
+=== missing
+
+Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `customWeights`):
+
+[cols="1,1",options="header"]
+|===
+|Option |Behavior
+
+|`"error"` (default) |Throw an error if any value is non-finite
+|`"drop"` |Silently remove observations (rows) where any x dimension or y is non-finite before fitting
+|===
+
+NOTE: A length mismatch between `x` and `y` always throws, even under `"drop"`.
 
 === degree
 

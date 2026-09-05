@@ -72,6 +72,7 @@ Smoothed y: 0.22659245357374927
 | `scaling_method` | `string` | `"mad"` | Residual scaling method |
 | `boundary_policy` | `string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling strategy |
+| `missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
 | `return_robustness_weights` | `boolean` | `false` | Include robustness weight in result |
 | `degree` | `string` | `"linear"` | Polynomial degree of local fit |
@@ -163,6 +164,15 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### missing
+
+Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point`:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Throw an error |
+| `"drop"` | Silently ignore the point — `add_point` returns `undefined`/`null` instead of adding it to the window |
 
 ### auto_converge
 

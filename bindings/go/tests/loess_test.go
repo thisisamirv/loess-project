@@ -490,6 +490,50 @@ func TestLoess(t *testing.T) {
 			t.Fatal("expected Diagnostics on both fits")
 		}
 	})
+
+	t.Run("MissingDefaultRejectsNaN", func(t *testing.T) {
+		x := []float64{1.0, 2.0, 3.0, 4.0, 5.0}
+		y := []float64{2.0, math.NaN(), 6.0, 8.0, 10.0}
+		opts := fastloess.DefaultOptions()
+		opts.Fraction = 0.5
+		model, err := fastloess.NewLoess(opts)
+		if err != nil {
+			t.Fatalf("NewLoess failed: %v", err)
+		}
+		defer model.Close()
+		if _, err := model.Fit(x, y); err == nil {
+			t.Fatal("expected an error for NaN under the default missing policy")
+		}
+	})
+
+	t.Run("MissingDropRemovesNaNRows", func(t *testing.T) {
+		x := []float64{1.0, 2.0, 3.0, 4.0, 5.0}
+		y := []float64{2.0, math.NaN(), 6.0, 8.0, 10.0}
+		opts := fastloess.DefaultOptions()
+		opts.Fraction = 0.5
+		opts.Missing = "drop"
+		model, err := fastloess.NewLoess(opts)
+		if err != nil {
+			t.Fatalf("NewLoess failed: %v", err)
+		}
+		defer model.Close()
+		res, err := model.Fit(x, y)
+		if err != nil {
+			t.Fatalf("Fit failed: %v", err)
+		}
+		if len(res.Y) != len(x)-1 {
+			t.Fatalf("expected %d rows after dropping, got %d", len(x)-1, len(res.Y))
+		}
+	})
+
+	t.Run("InvalidMissingPolicy", func(t *testing.T) {
+		opts := fastloess.DefaultOptions()
+		opts.Fraction = 0.5
+		opts.Missing = "invalid"
+		if _, err := fastloess.NewLoess(opts); err == nil {
+			t.Fatal("expected an error for an invalid missing policy")
+		}
+	})
 }
 
 // ---------------------------------------------------------------------------
@@ -680,6 +724,34 @@ func TestStreamingLoess(t *testing.T) {
 			t.Fatalf("expected %d total points, got %d", len(x), total)
 		}
 	})
+
+	t.Run("MissingDropRemovesNaNRows", func(t *testing.T) {
+		x := []float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+		y := []float64{2, 4, math.NaN(), 8, 10, 12, 14, 16, 18, 20}
+
+		opts := fastloess.DefaultStreamingOptions()
+		opts.Fraction = 0.5
+		opts.ChunkSize = 10
+		opts.Missing = "drop"
+		model, err := fastloess.NewStreamingLoess(opts)
+		if err != nil {
+			t.Fatalf("NewStreamingLoess failed: %v", err)
+		}
+		defer model.Close()
+
+		chunkRes, err := model.ProcessChunk(x, y)
+		if err != nil {
+			t.Fatalf("ProcessChunk failed: %v", err)
+		}
+		finalRes, err := model.Finalize()
+		if err != nil {
+			t.Fatalf("Finalize failed: %v", err)
+		}
+		total := len(chunkRes.Y) + len(finalRes.Y)
+		if total != len(x)-1 {
+			t.Fatalf("expected %d total points after dropping, got %d", len(x)-1, total)
+		}
+	})
 }
 
 // ---------------------------------------------------------------------------
@@ -823,6 +895,26 @@ func TestOnlineLoess(t *testing.T) {
 		}
 		if !sawValue {
 			t.Fatal("expected at least one point result once the window filled")
+		}
+	})
+
+	t.Run("MissingDropIgnoresNaNPoint", func(t *testing.T) {
+		opts := fastloess.DefaultOnlineOptions()
+		opts.Fraction = 0.5
+		opts.WindowCapacity = 10
+		opts.Missing = "drop"
+		model, err := fastloess.NewOnlineLoess(opts)
+		if err != nil {
+			t.Fatalf("NewOnlineLoess failed: %v", err)
+		}
+		defer model.Close()
+
+		_, ok, err := model.AddPoint(1.0, math.NaN())
+		if err != nil {
+			t.Fatalf("AddPoint unexpectedly failed: %v", err)
+		}
+		if ok {
+			t.Fatal("expected the NaN point to be silently ignored (ok == false)")
 		}
 	})
 }

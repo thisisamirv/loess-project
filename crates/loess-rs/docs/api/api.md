@@ -74,6 +74,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
 | `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
+| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
 | `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) |
 | `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) |
@@ -166,6 +167,17 @@ Behavior when all neighborhood weights are zero:
 | `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
 | `"return_original"` (alias: `"original"`) | Return the original y value |
 | `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### missing
+
+Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and, `custom_weights`):
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error if any value is non-finite |
+| `"drop"` | Silently remove observations (rows) where any x dimension or y is non-finite before fitting |
+
+**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
 ### auto_converge
 

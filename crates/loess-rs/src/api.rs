@@ -38,6 +38,7 @@ pub use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
 pub use crate::algorithms::robustness::RobustnessMethod;
 pub use crate::engine::executor::SurfaceMode;
 pub use crate::engine::output::LoessResult;
+pub use crate::engine::validator::MissingPolicy;
 pub use crate::math::boundary::BoundaryPolicy;
 pub use crate::math::distance::DistanceMetric;
 pub use crate::math::kernel::WeightFunction;
@@ -81,6 +82,7 @@ macro_rules! impl_into_enum_for {
 
 impl_into_enum_for!(BoundaryPolicy);
 impl_into_enum_for!(MergeStrategy);
+impl_into_enum_for!(MissingPolicy);
 impl_into_enum_for!(PolynomialDegree);
 impl_into_enum_for!(RobustnessMethod);
 impl_into_enum_for!(ScalingMethod);
@@ -187,6 +189,9 @@ pub struct LoessBuilder<
 
     // Behavior when local neighborhood weights are zero (default: UseLocalMean).
     pub zero_weight_fallback: Option<ZeroWeightFallback>,
+
+    // Policy for non-finite (NaN/Inf) values in input data (default: Error).
+    pub missing: Option<MissingPolicy>,
 
     // Merging strategy for overlapping chunks (Streaming only).
     pub merge_strategy: Option<MergeStrategy>,
@@ -310,6 +315,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             return_sorted: None,
             boundary_policy: None,
             zero_weight_fallback: None,
+            missing: None,
             merge_strategy: None,
             update_mode: None,
             chunk_size: None,
@@ -345,6 +351,18 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         }
         match policy.into_enum() {
             Ok(p) => self.zero_weight_fallback = Some(p),
+            Err(e) => self.parse_errors.push(e),
+        }
+        self
+    }
+
+    // Set the policy for non-finite (NaN/Inf) values in input data.
+    pub fn missing(mut self, policy: impl IntoEnum<MissingPolicy>) -> Self {
+        if self.missing.is_some() {
+            self.duplicate_param = Some("missing");
+        }
+        match policy.into_enum() {
+            Ok(p) => self.missing = Some(p),
             Err(e) => self.parse_errors.push(e),
         }
         self
@@ -860,6 +878,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(rs) = builder.return_sorted {
             result.return_sorted = rs;
         }
+        if let Some(m) = builder.missing {
+            result.missing = m;
+        }
         if let Some(pd) = builder.polynomial_degree {
             result.polynomial_degree = pd;
         }
@@ -975,6 +996,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
         }
+        if let Some(m) = builder.missing {
+            result.missing = m;
+        }
         if let Some(pd) = builder.polynomial_degree {
             result.polynomial_degree = pd;
         }
@@ -1077,6 +1101,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         }
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
+        }
+        if let Some(m) = builder.missing {
+            result.missing = m;
         }
         if let Some(pd) = builder.polynomial_degree {
             result.polynomial_degree = pd;
@@ -1310,6 +1337,24 @@ impl FromStr for ZeroWeightFallback {
     }
 }
 
+// MissingPolicy
+
+impl FromStr for MissingPolicy {
+    type Err = LoessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "error" => Ok(MissingPolicy::Error),
+            "drop" => Ok(MissingPolicy::Drop),
+            _ => Err(LoessError::InvalidOption {
+                option: "missing",
+                value: s.to_string(),
+                valid: "error, drop",
+            }),
+        }
+    }
+}
+
 // MergeStrategy
 
 impl FromStr for MergeStrategy {
@@ -1359,7 +1404,7 @@ impl FromStr for UpdateMode {
 #[cfg(feature = "dev")]
 pub mod helpers {
     use super::{
-        BoundaryPolicy, DistanceMetric, LoessError, MergeStrategy, PolynomialDegree,
+        BoundaryPolicy, DistanceMetric, LoessError, MergeStrategy, MissingPolicy, PolynomialDegree,
         RobustnessMethod, ScalingMethod, SurfaceMode, UpdateMode, WeightFunction,
         ZeroWeightFallback,
     };
@@ -1406,6 +1451,10 @@ pub mod helpers {
         s.parse()
     }
 
+    pub fn parse_missing_policy(s: &str) -> Result<MissingPolicy, LoessError> {
+        s.parse()
+    }
+
     // Canonical-name helpers
     //
     // Round-trip guarantee: `X_str(v).parse::<X>().unwrap() == v` for all `v`.
@@ -1445,6 +1494,13 @@ pub mod helpers {
             ZeroWeightFallback::UseLocalMean => "use_local_mean",
             ZeroWeightFallback::ReturnOriginal => "return_original",
             ZeroWeightFallback::ReturnNone => "return_none",
+        }
+    }
+
+    pub fn missing_policy_str(v: MissingPolicy) -> &'static str {
+        match v {
+            MissingPolicy::Error => "error",
+            MissingPolicy::Drop => "drop",
         }
     }
 

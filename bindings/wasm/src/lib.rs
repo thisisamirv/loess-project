@@ -73,6 +73,8 @@ export interface SmoothOptions {
     boundary_degree_fallback?: boolean;
     /** Random seed for cross-validation. */
     cv_seed?: number;
+    /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
+    missing?: string;
 }
 
 /** Configuration options for streaming LOESS smoothing. A subset of `SmoothOptions`: confidence/prediction intervals, standard errors, and cross-validation have no equivalent here. */
@@ -117,6 +119,8 @@ export interface StreamingSmoothOptions {
     interpolation_vertices?: number;
     /** Fall back to lower polynomial degree at boundaries. Default: true. */
     boundary_degree_fallback?: boolean;
+    /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */
+    missing?: string;
 }
 
 /** Configuration options for online LOESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, confidence/prediction intervals, standard errors, and cross-validation have no equivalent here. */
@@ -155,6 +159,8 @@ export interface OnlineSmoothOptions {
     interpolation_vertices?: number;
     /** Fall back to lower polynomial degree at boundaries. Default: true. */
     boundary_degree_fallback?: boolean;
+    /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `add_point` ("error", "drop"). Default: "error". */
+    missing?: string;
 }
 
 /** Configuration options for streaming LOESS. */
@@ -263,6 +269,7 @@ pub struct SmoothOptions {
     pub interpolation_vertices: Option<usize>,
     pub boundary_degree_fallback: Option<bool>,
     pub cv_seed: Option<u64>,
+    pub missing: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -301,6 +308,7 @@ pub struct StreamingSmoothOptions {
     pub cell: Option<f64>,
     pub interpolation_vertices: Option<usize>,
     pub boundary_degree_fallback: Option<bool>,
+    pub missing: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -322,6 +330,7 @@ pub struct OnlineSmoothOptions {
     pub cell: Option<f64>,
     pub interpolation_vertices: Option<usize>,
     pub boundary_degree_fallback: Option<bool>,
+    pub missing: Option<String>,
 }
 
 #[wasm_bindgen]
@@ -586,6 +595,7 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<
                 cv_method: opts.cv_method.as_deref(),
                 cv_k: opts.cv_k.map(|v| v as usize),
                 cv_seed: opts.cv_seed,
+                missing: opts.missing.as_deref(),
             },
         ))?
         .0;
@@ -622,6 +632,7 @@ fn streaming_options_to_builder(
                 cell: opts.cell,
                 interpolation_vertices: opts.interpolation_vertices,
                 boundary_degree_fallback: opts.boundary_degree_fallback,
+                missing: opts.missing.as_deref(),
                 ..Default::default()
             },
         ))?
@@ -656,6 +667,7 @@ fn online_options_to_builder(
                 cell: opts.cell,
                 interpolation_vertices: opts.interpolation_vertices,
                 boundary_degree_fallback: opts.boundary_degree_fallback,
+                missing: opts.missing.as_deref(),
                 ..Default::default()
             },
         ))?

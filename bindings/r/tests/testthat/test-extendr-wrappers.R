@@ -29,10 +29,12 @@ test_that("RLoess generated accessors dispatch fit methods", {
         null_value,
         "interpolation",
         FALSE,
+        FALSE,
         null_value,
         null_value,
         null_value,
-        null_value
+        null_value,
+        "error"
     )
 
     x <- as.double(1:10)
@@ -70,7 +72,8 @@ test_that("RStreamingLoess generated accessors dispatch chunked methods", {
         "interpolation",
         null_value,
         null_value,
-        null_value
+        null_value,
+        "error"
     )
 
     x <- as.double(1:10)
@@ -105,7 +108,8 @@ test_that("ROnlineLoess generated accessors dispatch add_point", {
         surface_mode = "interpolation",
         cell = null_value,
         interpolation_vertices = null_value,
-        boundary_degree_fallback = null_value
+        boundary_degree_fallback = null_value,
+        missing = "error"
     )
 
     x <- as.double(1:10)

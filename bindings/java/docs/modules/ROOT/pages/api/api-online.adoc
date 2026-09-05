@@ -59,6 +59,18 @@ _See: xref:../guide/adapter-choice.adoc[Execution Modes]_
 |`"full"` |`"resmooth"` |Recompute entire window |More accurate
 |===
 
+=== missing
+
+Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `addPoint` (overrides the row-dropping behavior described in xref:./api.adoc[API] since Online processes one point at a time):
+
+[cols="1,1",options="header"]
+|===
+|Option |Behavior
+
+|`"error"` (default) |Throw an error
+|`"drop"` |Silently ignore the point — `addPoint` returns `Optional.empty()` instead of adding it to the window
+|===
+
 See xref:./api.adoc[API] for the descriptions of all inherited settings (`fraction`, `weightFunction`, `distanceMetric`, `weightedMetricWeights`, etc.).
 
 == `PointResult` accessors

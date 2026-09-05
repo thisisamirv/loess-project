@@ -54,6 +54,15 @@ Minimum number of points required before `AddPoint` starts returning `ok == true
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
+### Missing
+
+Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `AddPoint` (overrides the row-dropping behavior described in [API](api.md) since Online processes one point at a time):
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error |
+| `"drop"` | Silently ignore the point — `AddPoint` returns `ok == false` instead of adding it to the window |
+
 See [API](api.md) for the descriptions of all inherited fields (`Fraction`, `WeightFunction`, `DistanceMetric`, `WeightedMetricWeights`, etc.).
 
 ## `PointResult` fields

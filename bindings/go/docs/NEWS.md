@@ -14,6 +14,7 @@ weight: 100
 * Added an optional `commit` input to every release workflow's `workflow_dispatch` trigger, to pin the built commit for manual runs.
 * Added `dev/check_links.py` to validate every Markdown cross-reference link across all docs.
 * Added a new Go binding (`bindings/go`): `cgo`-based `fastloess` package with `Loess`/`StreamingLoess`/`OnlineLoess` types, a Hugo docs site, CI/release workflows, and full doc-snippet/test coverage.
+* Added a `ReturnSorted` option to `Options`.
 
 ## Changed
 
@@ -28,6 +29,9 @@ weight: 100
 * Added `dev/update_changelogs.py` to regenerate each binding/crate's `NEWS.md`/`news.md` from the root changelog.
 * Replaced the `kernels.md`/`adapter-choice.md` mermaid flowcharts with rendering-agnostic tables (Doxygen/rustdoc don't render mermaid).
 * Consolidated `parameters.md`/`@autodocs` into each `api.md`'s option tables, removing `parameters.md`.
+* `StreamingOptions` and `OnlineOptions` no longer embed the shared `Options` struct (they now declare only the fields they actually support). `StreamingOptions` lost `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSE`/`CVFractions`/`CVMethod`/`CVK`/`CVSeed`; `OnlineOptions` additionally lost `ReturnDiagnostics`/`ReturnResiduals`. Breaking change. `Options`'s own fields are unaffected; `Parallel` remains real for `StreamingOptions` but was subsequently also removed from `OnlineOptions` for consistency with `fastlowess`'s `OnlineOptions` — Online now always runs sequentially.
+* `WeightedMetricWeights` no longer auto-selects the `"weighted"` distance metric for `Options`/`StreamingOptions`/`OnlineOptions`; `DistanceMetric = "weighted"` must now be set explicitly, matching Python, and omitting it while providing weights raises an error. Breaking change.
+* Mirrored the Python API docs' structure (complete field tables in canonical order, a `## Options` subsection per field, `## Result Structure` moved to the end) to every remaining crate/binding: `loess-rs`, `fastLoess`, Julia (docstrings), Node.js, WASM, C++, Go, and Java. Along the way, corrected several real accuracy/consistency issues found by auditing docs against source:
 
 ## Fixed
 

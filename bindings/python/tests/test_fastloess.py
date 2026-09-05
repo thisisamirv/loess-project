@@ -38,6 +38,24 @@ class TestLoess:
         loess = fastloess.Loess(fraction=0.5, parallel=False)
         result = loess.fit(x, y)
 
+    def test_missing_drop_removes_nan_rows(self):
+        """Test Loess with missing="drop" removes non-finite rows."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        y = np.array([2.0, np.nan, 6.0, 8.0, 10.0])
+
+        loess = fastloess.Loess(fraction=0.5, missing="drop")
+        result = loess.fit(x, y)
+
+        assert len(result.y) == len(x) - 1
+
+    def test_missing_error_default_rejects_nan(self):
+        """Test Loess default missing="error" raises on NaN."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        y = np.array([2.0, np.nan, 6.0, 8.0, 10.0])
+
+        with pytest.raises(ValueError):
+            fastloess.Loess(fraction=0.5).fit(x, y)
+
         assert isinstance(result, fastloess.LoessResult)
         assert len(result.y) == len(x)
 
@@ -274,6 +292,21 @@ class TestStreamingLoess:
         total_points = len(chunk_result.y) + len(final_result.y)
         assert total_points == len(x)
 
+    def test_streaming_missing_drop_removes_nan_rows(self):
+        """Test streaming with missing="drop" removes non-finite rows."""
+        x = np.linspace(0, 100, 50)
+        y = np.sin(x / 10)
+        y[5] = np.nan
+
+        streaming = fastloess.StreamingLoess(
+            fraction=0.1, chunk_size=50, missing="drop"
+        )
+        chunk_result = streaming.process_chunk(x, y)
+        final_result = streaming.finalize()
+
+        total_points = len(chunk_result.y) + len(final_result.y)
+        assert total_points == len(x) - 1
+
 
 class TestOnlineLoess:
     """Tests for the OnlineLoess class."""
@@ -289,6 +322,13 @@ class TestOnlineLoess:
 
         for i in range(len(x)):
             online.add_point(x[i], y[i])
+
+    def test_online_missing_drop_ignores_nan_point(self):
+        """Test online with missing="drop" ignores non-finite points."""
+        online = fastloess.OnlineLoess(fraction=0.5, window_capacity=10, missing="drop")
+
+        result = online.add_point(1.0, float("nan"))
+        assert result is None
 
     def test_online_basic(self):
         """Test basic online smoothing."""
@@ -436,6 +476,11 @@ class TestErrorHandling:
         with pytest.raises(ValueError):
             loess = fastloess.Loess(cv_fractions=[0.5], cv_method="invalid")
             loess.fit(x, y)
+
+    def test_invalid_missing_policy(self):
+        """Test error on invalid missing policy."""
+        with pytest.raises(ValueError):
+            fastloess.Loess(fraction=0.5, missing="invalid")
 
 
 class TestEdgeCases:

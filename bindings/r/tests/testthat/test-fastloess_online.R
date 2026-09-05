@@ -169,6 +169,12 @@ test_that("OnlineLoess: zero_weight_fallback", {
     }
 })
 
+test_that("OnlineLoess: missing = \"drop\" ignores non-finite point", {
+    ol <- OnlineLoess(fraction = 0.5, window_capacity = 10, missing = "drop")
+    result <- add_point(ol, 1.0, NaN)
+    expect_null(result)
+})
+
 test_that("OnlineLoess: degree, distance_metric, surface_mode, return_se", {
     x <- as.double(seq(0, 10, length.out = 30))
     y <- sin(x)

@@ -38,6 +38,11 @@ type OnlineOptions struct {
 	// drop to zero: "use_local_mean" (default, aliases "local_mean", "mean"),
 	// "return_original" (alias "original"), or "return_none" (alias "none").
 	ZeroWeightFallback string
+	// Missing controls how a non-finite (NaN/Inf) x or y value passed to
+	// AddPoint is handled: "error" (default) returns an error, "drop"
+	// silently ignores the point (ok is false) instead of adding it to the
+	// window.
+	Missing string
 
 	// Degree is the local polynomial degree: "constant", "linear" (default),
 	// "quadratic", "cubic", or "quartic".
@@ -98,6 +103,7 @@ func DefaultOnlineOptions() OnlineOptions {
 		ScalingMethod:      "mad",
 		BoundaryPolicy:     "extend",
 		ZeroWeightFallback: "use_local_mean",
+		Missing:            "error",
 		Degree:             "linear",
 		Dimensions:         1,
 		DistanceMetric:     "normalized",
@@ -130,6 +136,8 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 	defer freeCString(bp)
 	zwf := cStringOrNil(opts.ZeroWeightFallback)
 	defer freeCString(zwf)
+	missing := cStringOrNil(opts.Missing)
+	defer freeCString(missing)
 	um := cStringOrNil(opts.UpdateMode)
 	defer freeCString(um)
 	degree := cStringOrNil(opts.Degree)
@@ -176,6 +184,7 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 			interpolationVertices,
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
+			missing,
 		)
 		if ptr == nil {
 			errMsg = lastError()

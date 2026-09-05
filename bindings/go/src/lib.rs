@@ -331,6 +331,7 @@ pub unsafe extern "C" fn go_loess_new(
     boundary_degree_fallback: c_int,
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
+    missing: *const c_char,
 ) -> *mut GoLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -354,6 +355,8 @@ pub unsafe extern "C" fn go_loess_new(
             zero_weight_fallback,
             shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
         );
+        let missing_str =
+            shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let iterations = match shared_parse::require_non_negative_usize("iterations", iterations) {
             Ok(v) => v,
@@ -414,6 +417,7 @@ pub unsafe extern "C" fn go_loess_new(
                 cell: None,
                 interpolation_vertices: None,
                 boundary_degree_fallback: None,
+                missing: Some(missing_str),
                 ..Default::default()
             },
         ) {
@@ -560,6 +564,7 @@ pub unsafe extern "C" fn go_streaming_new(
     boundary_degree_fallback: c_int,
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
+    missing: *const c_char,
 ) -> *mut GoStreamingLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -587,6 +592,8 @@ pub unsafe extern "C" fn go_streaming_new(
             merge_strategy,
             shared_parse::DEFAULT_MERGE_STRATEGY,
         );
+        let missing_str =
+            shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let chunk_size = match shared_parse::require_positive_usize("chunk_size", chunk_size) {
             Ok(v) => v,
@@ -637,6 +644,7 @@ pub unsafe extern "C" fn go_streaming_new(
                     .then_some(interpolation_vertices as usize),
                 boundary_degree_fallback: (boundary_degree_fallback >= 0)
                     .then_some(boundary_degree_fallback != 0),
+                missing: Some(missing_str),
                 ..Default::default()
             },
         ) {
@@ -758,6 +766,7 @@ pub unsafe extern "C" fn go_online_new(
     boundary_degree_fallback: c_int,
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
+    missing: *const c_char,
 ) -> *mut GoOnlineLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -783,6 +792,8 @@ pub unsafe extern "C" fn go_online_new(
         );
         let um_str =
             shared_parse::parse_c_str_or_default(update_mode, shared_parse::DEFAULT_UPDATE_MODE);
+        let missing_str =
+            shared_parse::parse_c_str_or_default(missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let window_capacity =
             match shared_parse::require_positive_usize("window_capacity", window_capacity) {
@@ -840,6 +851,7 @@ pub unsafe extern "C" fn go_online_new(
                     .then_some(interpolation_vertices as usize),
                 boundary_degree_fallback: (boundary_degree_fallback >= 0)
                     .then_some(boundary_degree_fallback != 0),
+                missing: Some(missing_str),
                 ..Default::default()
             },
         ) {

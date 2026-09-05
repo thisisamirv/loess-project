@@ -5,27 +5,28 @@
 \title{LOESS Online Smoothing}
 \usage{
 OnlineLoess(
-  fraction = 0.67,
-  window_capacity = 1000L,
-  min_points = 2L,
-  ...,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  zero_weight_fallback = "use_local_mean",
-  update_mode = "incremental",
-  auto_converge = NULL,
-  return_robustness_weights = FALSE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  weighted_metric_weights = NULL,
-  cell = NULL,
-  interpolation_vertices = NULL,
-  boundary_degree_fallback = NULL
+    fraction = 0.67,
+    window_capacity = 1000L,
+    min_points = 2L,
+    ...,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
+    update_mode = "incremental",
+    auto_converge = NULL,
+    return_robustness_weights = FALSE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL,
+    missing = "error"
 )
 }
 \arguments{
@@ -108,6 +109,11 @@ error. \code{NULL} (default) has no effect unless
 \item{boundary_degree_fallback}{Logical; if \code{TRUE}, fall back to lower
 polynomial degree at boundaries when fitting at the requested degree
 fails. \code{NULL} (default) uses the library default.}
+
+\item{missing}{Policy for a non-finite (NaN/Inf) \code{x} or \code{y} value
+passed to \code{\link{add_point}}: \code{"error"} (default) raises an
+error, \code{"drop"} silently ignores the point (returns \code{NULL})
+instead of adding it to the window.}
 }
 \value{
 An OnlineLoess object.

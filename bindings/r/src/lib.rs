@@ -94,6 +94,7 @@ impl RLoess {
         interpolation_vertices: Nullable<i32>,
         boundary_degree_fallback: Nullable<bool>,
         cv_seed: Nullable<i32>,
+        missing: &str,
     ) -> Result<Self> {
         let weighted_weights = match weighted_metric_weights {
             NotNull(v) => Some(v),
@@ -158,6 +159,7 @@ impl RLoess {
                 cv_method: Some(cv_method),
                 cv_k: Some(cv_k),
                 cv_seed: seed,
+                missing: Some(missing),
             },
         ))?;
 
@@ -215,6 +217,7 @@ impl RStreamingLoess {
         cell: Nullable<f64>,
         interpolation_vertices: Nullable<i32>,
         boundary_degree_fallback: Nullable<bool>,
+        missing: &str,
     ) -> Result<Self> {
         let chunk_size = require_positive_usize("chunk_size", chunk_size)?;
         let overlap_size = match overlap {
@@ -265,6 +268,7 @@ impl RStreamingLoess {
                     NotNull(v) => Some(v),
                     Null => None,
                 },
+                missing: Some(missing),
                 ..Default::default()
             },
         ))?;
@@ -322,6 +326,7 @@ impl ROnlineLoess {
         cell: Nullable<f64>,
         interpolation_vertices: Nullable<i32>,
         boundary_degree_fallback: Nullable<bool>,
+        missing: &str,
     ) -> Result<Self> {
         let weighted_weights = match weighted_metric_weights {
             NotNull(v) => Some(v),
@@ -368,6 +373,7 @@ impl ROnlineLoess {
                     NotNull(v) => Some(v),
                     Null => None,
                 },
+                missing: Some(missing),
                 ..Default::default()
             },
         ))?;

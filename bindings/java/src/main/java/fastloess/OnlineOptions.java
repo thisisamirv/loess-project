@@ -112,6 +112,20 @@ public final class OnlineOptions {
         }
 
         /**
+         * Policy for handling a non-finite (NaN/Inf) x or y value passed to
+         * {@code addPoint} (default {@code "error"}). {@code "drop"} silently
+         * ignores the point instead of adding it to the window.
+         *
+         * @param missing the missing-value policy name
+         * @return this builder, for chaining
+         * @see Options.Builder#missing(String)
+         */
+        public Builder missing(String missing) {
+            common.missing(missing);
+            return this;
+        }
+
+        /**
          * @param autoConverge the auto-convergence tolerance
          * @return this builder, for chaining
          * @see Options.Builder#autoConverge(double)

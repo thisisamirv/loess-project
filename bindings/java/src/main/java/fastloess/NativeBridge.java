@@ -128,7 +128,8 @@ final class NativeBridge {
             double cell,
             int interpolationVertices,
             int boundaryDegreeFallback,
-            double[] weightedMetricWeights);
+            double[] weightedMetricWeights,
+            String missing);
 
     static native void loessSetCvSeed(long handle, long seed);
 
@@ -159,7 +160,8 @@ final class NativeBridge {
             double cell,
             int interpolationVertices,
             int boundaryDegreeFallback,
-            double[] weightedMetricWeights);
+            double[] weightedMetricWeights,
+            String missing);
 
     static native NativeResult streamingProcess(long handle, double[] x, double[] y);
 
@@ -187,7 +189,8 @@ final class NativeBridge {
             double cell,
             int interpolationVertices,
             int boundaryDegreeFallback,
-            double[] weightedMetricWeights);
+            double[] weightedMetricWeights,
+            String missing);
 
     static native NativeOnlineOutput onlineAddPoint(long handle, double x, double y);
 

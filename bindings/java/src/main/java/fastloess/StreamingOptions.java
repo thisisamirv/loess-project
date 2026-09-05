@@ -112,6 +112,16 @@ public final class StreamingOptions {
         }
 
         /**
+         * @param missing the missing-value policy name
+         * @return this builder, for chaining
+         * @see Options.Builder#missing(String)
+         */
+        public Builder missing(String missing) {
+            common.missing(missing);
+            return this;
+        }
+
+        /**
          * @param autoConverge the auto-convergence tolerance
          * @return this builder, for chaining
          * @see Options.Builder#autoConverge(double)
@@ -257,7 +267,8 @@ public final class StreamingOptions {
 
         /**
          * Number of points overlapped between consecutive chunks (default:
-         * library default of {@code 500}). Any negative value means "use the
+         * library default of {@code chunk_size / 10}, clamped to
+         * {@code [1, chunk_size - 10]}). Any negative value means "use the
          * library default".
          *
          * @param overlap the overlap size

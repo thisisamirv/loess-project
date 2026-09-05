@@ -106,7 +106,7 @@ result <- fit(model, positions, observed)
 threshold <- quantile(result$y, 0.75)
 peaks <- positions[result$y > threshold]
 cat(sprintf("Found %d peak positions (first 5): %s\n",
-            length(peaks), paste(head(peaks, 5), collapse = ", ")))
+            length(peaks), toString(head(peaks, 5))))
 ```
 
 ---

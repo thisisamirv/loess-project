@@ -136,7 +136,8 @@ struct fastloess_GoLoess *go_loess_new(double fraction,
                                        int interpolation_vertices,
                                        int boundary_degree_fallback,
                                        const double *weighted_metric_weights,
-                                       unsigned long weighted_metric_weights_len);
+                                       unsigned long weighted_metric_weights_len,
+                                       const char *missing);
 
 /**
  * Set CV seed for reproducible K-fold splits.
@@ -198,7 +199,8 @@ struct fastloess_GoStreamingLoess *go_streaming_new(double fraction,
                                                     int interpolation_vertices,
                                                     int boundary_degree_fallback,
                                                     const double *weighted_metric_weights,
-                                                    unsigned long weighted_metric_weights_len);
+                                                    unsigned long weighted_metric_weights_len,
+                                                    const char *missing);
 
 /**
  * Process a chunk of data.
@@ -255,7 +257,8 @@ struct fastloess_GoOnlineLoess *go_online_new(double fraction,
                                               int interpolation_vertices,
                                               int boundary_degree_fallback,
                                               const double *weighted_metric_weights,
-                                              unsigned long weighted_metric_weights_len);
+                                              unsigned long weighted_metric_weights_len,
+                                              const char *missing);
 
 /**
  * Add a single point to the model and return its smoothed value.
