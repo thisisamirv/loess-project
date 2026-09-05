@@ -58,7 +58,7 @@
 <li>Added <code>dev/update_changelogs.py</code> to regenerate each binding/crate’s <code>NEWS.md</code>/<code>news.md</code> from the root changelog.</li>
 <li>Replaced the <code>kernels.md</code>/<code>adapter-choice.md</code> mermaid flowcharts with tables (Doxygen/rustdoc don’t render mermaid).</li>
 <li>Consolidated <code>parameters.md</code>/<code>@autodocs</code> into each <code>api.md</code>’s option tables, removing <code>parameters.md</code>.</li>
-<li>Removed the redundant <code>rfastloess-package</code> pkgdown topic and the internal <code>Nullable()</code> helper.</li>
+<li>Removed the redundant <code>rfastloess-package</code> pkgdown topic and the internal <code><a href="https://rdrr.io/pkg/rfastloess/man/Nullable.html" class="external-link">Nullable()</a></code> helper.</li>
 <li>Fixed <code>_pkgdown.yml</code> mislabeling the S3-based interface as “R6 classes”.</li>
 <li>Merged <code>parameters.Rmd</code>/<code>batch.Rmd</code>/<code>streaming.Rmd</code>/<code>online.Rmd</code> into the constructors’ roxygen docs, removing the now-redundant vignettes.</li>
 <li>Removed <code>confidence_intervals</code>/<code>prediction_intervals</code>/<code>return_se</code> from <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, and those plus <code>return_diagnostics</code>/<code>return_residuals</code>/<code>parallel</code> from <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> — none were ever computed by either adapter, and Online now always runs sequentially. Breaking change; <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>’s <code>parallel</code> is unaffected.</li>

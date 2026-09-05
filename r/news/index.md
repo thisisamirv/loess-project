@@ -56,7 +56,9 @@
 - Consolidated `parameters.md`/`@autodocs` into each `api.md`’s option
   tables, removing `parameters.md`.
 - Removed the redundant `rfastloess-package` pkgdown topic and the
-  internal `Nullable()` helper.
+  internal
+  [`Nullable()`](https://rdrr.io/pkg/rfastloess/man/Nullable.html)
+  helper.
 - Fixed `_pkgdown.yml` mislabeling the S3-based interface as “R6
   classes”.
 - Merged `parameters.Rmd`/`batch.Rmd`/`streaming.Rmd`/`online.Rmd` into

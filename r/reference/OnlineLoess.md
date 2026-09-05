@@ -182,5 +182,5 @@ for (i in seq_along(x)) {
     if (!is.null(result)) smoothed <- c(smoothed, result$y)
 }
 head(smoothed, 5)
-#> [1] 0.1201261 0.1898465 0.3098642 0.3037980 0.4955887
+#> [1] 0.1898465 0.3098642 0.3037980 0.4955887 0.5883635
 ```
