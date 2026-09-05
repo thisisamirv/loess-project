@@ -57,7 +57,7 @@ export declare class LoessResult {
 /** Online LOESS smoother for real-time data. */
 export declare class OnlineLoess {
   /** Create a new online LOESS smoother. */
-  constructor(options?: SmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
+  constructor(options?: OnlineSmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
   /** Add a single point and get the smoothed value if enough points are available. */
   add_point(x: number, y: number): OnlineOutput | null
 }
@@ -65,7 +65,7 @@ export declare class OnlineLoess {
 /** Streaming LOESS smoother for large datasets. */
 export declare class StreamingLoess {
   /** Create a new streaming LOESS smoother. */
-  constructor(options?: SmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
+  constructor(options?: StreamingSmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
   /** Process a chunk of data. */
   process_chunk(x: Float64Array, y: Float64Array): LoessResult
   /** Finalize the stream and return remaining data. */
@@ -114,6 +114,52 @@ export interface OnlineOutput {
   iterations_used?: number
 }
 
+/**
+ * Configuration options for online LOESS smoothing.
+ *
+ * A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
+ * confidence/prediction intervals, standard errors, and cross-validation are
+ * all no-ops for online processing (it handles one point at a time, always
+ * runs sequentially, and always returns a residual/SE inline), so they
+ * aren't fields on this type.
+ */
+export interface OnlineSmoothOptions {
+  /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+  fraction?: number
+  /** Number of robustness iterations. Default: 3. */
+  iterations?: number
+  /** Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
+  weight_function?: string
+  /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
+  robustness_method?: string
+  /** Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
+  zero_weight_fallback?: string
+  /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
+  boundary_policy?: string
+  /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+  scaling_method?: string
+  /** Auto-convergence tolerance. Default: None. */
+  auto_converge?: number
+  /** Return robustness weights in result. Default: false. */
+  return_robustness_weights?: boolean
+  /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
+  degree?: string
+  /** Number of predictor dimensions. Default: 1. */
+  dimensions?: number
+  /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
+  distance_metric?: string
+  /** Per-dimension weights for the "weighted" distance metric. */
+  weighted_metric_weights?: Array<number>
+  /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
+  surface_mode?: string
+  /** Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy. */
+  cell?: number
+  /** Maximum number of interpolation vertices. */
+  interpolation_vertices?: number
+  /** Reduce polynomial degree to linear at boundary vertices (default true). */
+  boundary_degree_fallback?: boolean
+}
+
 /** Configuration options for LOESS smoothing. */
 export interface SmoothOptions {
   /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -132,36 +178,21 @@ export interface SmoothOptions {
   scaling_method?: string
   /** Auto-convergence tolerance. Default: None. */
   auto_converge?: number
-  /** Return residuals in result. Ignored by `OnlineLoess`. Default: false. */
+  /** Return residuals in result. Default: false. */
   return_residuals?: boolean
   /** Return robustness weights in result. Default: false. */
   return_robustness_weights?: boolean
-  /** Return diagnostics (RMSE, etc.). Ignored by `OnlineLoess`. Default: false. */
+  /** Return diagnostics (RMSE, etc.). Default: false. */
   return_diagnostics?: boolean
-  /**
-   * Calculate confidence intervals (e.g., 0.95). Batch (`Loess`) only;
-   * ignored by `StreamingLoess`/`OnlineLoess`. Default: None.
-   */
+  /** Calculate confidence intervals (e.g., 0.95). Default: None. */
   confidence_intervals?: number
-  /**
-   * Calculate prediction intervals. Batch (`Loess`) only; ignored by
-   * `StreamingLoess`/`OnlineLoess`. Default: None.
-   */
+  /** Calculate prediction intervals. Default: None. */
   prediction_intervals?: number
-  /**
-   * Fractions to use for cross-validation. Batch (`Loess`) only; ignored
-   * by `StreamingLoess`/`OnlineLoess`.
-   */
+  /** Fractions to use for cross-validation. */
   cv_fractions?: Array<number>
-  /**
-   * CV method ("loocv", "kfold"). Batch (`Loess`) only; ignored by
-   * `StreamingLoess`/`OnlineLoess`. Default: "kfold".
-   */
+  /** CV method ("loocv", "kfold"). Default: "kfold". */
   cv_method?: string
-  /**
-   * Number of folds for K-Fold CV. Batch (`Loess`) only; ignored by
-   * `StreamingLoess`/`OnlineLoess`. Default: 5.
-   */
+  /** Number of folds for K-Fold CV. Default: 5. */
   cv_k?: number
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
@@ -175,10 +206,7 @@ export interface SmoothOptions {
   weighted_metric_weights?: Array<number>
   /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
   surface_mode?: string
-  /**
-   * Compute hat-matrix statistics (enp, trace_hat, etc.). Batch (`Loess`)
-   * only; ignored by `StreamingLoess`/`OnlineLoess`. Default: false.
-   */
+  /** Compute hat-matrix statistics (enp, trace_hat, etc.). Default: false. */
   return_se?: boolean
   /** Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy. */
   cell?: number
@@ -186,10 +214,7 @@ export interface SmoothOptions {
   interpolation_vertices?: number
   /** Reduce polynomial degree to linear at boundary vertices (default true). */
   boundary_degree_fallback?: boolean
-  /**
-   * Random seed for reproducible K-fold cross-validation splits. Batch
-   * (`Loess`) only; ignored by `StreamingLoess`/`OnlineLoess`.
-   */
+  /** Random seed for reproducible K-fold cross-validation splits. */
   cv_seed?: number
 }
 
@@ -201,4 +226,54 @@ export interface StreamingOptions {
   overlap?: number
   /** Strategy for merging chunk overlaps ("average", "weighted_average", "take_first", "take_last"). */
   merge_strategy?: string
+}
+
+/**
+ * Configuration options for streaming LOESS smoothing.
+ *
+ * A subset of [`SmoothOptions`]: confidence/prediction intervals, standard
+ * errors, and cross-validation are Batch-only and have no equivalent here,
+ * so they aren't fields on this type.
+ */
+export interface StreamingSmoothOptions {
+  /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+  fraction?: number
+  /** Number of robustness iterations. Default: 3. */
+  iterations?: number
+  /** Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
+  weight_function?: string
+  /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
+  robustness_method?: string
+  /** Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
+  zero_weight_fallback?: string
+  /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
+  boundary_policy?: string
+  /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+  scaling_method?: string
+  /** Auto-convergence tolerance. Default: None. */
+  auto_converge?: number
+  /** Return residuals in result. Default: false. */
+  return_residuals?: boolean
+  /** Return robustness weights in result. Default: false. */
+  return_robustness_weights?: boolean
+  /** Return diagnostics (RMSE, etc.). Default: false. */
+  return_diagnostics?: boolean
+  /** Enable parallel execution. Default: true. */
+  parallel?: boolean
+  /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
+  degree?: string
+  /** Number of predictor dimensions. Default: 1. */
+  dimensions?: number
+  /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
+  distance_metric?: string
+  /** Per-dimension weights for the "weighted" distance metric. */
+  weighted_metric_weights?: Array<number>
+  /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
+  surface_mode?: string
+  /** Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy. */
+  cell?: number
+  /** Maximum number of interpolation vertices. */
+  interpolation_vertices?: number
+  /** Reduce polynomial degree to linear at boundary vertices (default true). */
+  boundary_degree_fallback?: boolean
 }

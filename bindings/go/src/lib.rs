@@ -375,10 +375,6 @@ pub unsafe extern "C" fn go_loess_new(
                 distance_metric,
                 shared_parse::DEFAULT_DISTANCE_METRIC,
             ));
-        let effective_metric = shared_parse::resolve_distance_metric_for_builder(
-            distance_metric_str,
-            weighted_metric_weights_slice,
-        );
 
         let (builder, _) = match shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -404,7 +400,7 @@ pub unsafe extern "C" fn go_loess_new(
                     shared_parse::DEFAULT_DEGREE,
                 )),
                 dimensions: (dimensions > 0).then_some(dimensions as usize),
-                distance_metric: effective_metric,
+                distance_metric: distance_metric_str,
                 weighted_metric_weights: weighted_metric_weights_slice,
                 surface_mode: (!surface_mode.is_null()).then_some(
                     shared_parse::parse_c_str_or_default(
@@ -610,10 +606,6 @@ pub unsafe extern "C" fn go_streaming_new(
             weighted_metric_weights,
             weighted_metric_weights_len as usize,
         );
-        let effective_metric = shared_parse::resolve_distance_metric_for_builder(
-            distance_metric_str,
-            weighted_metric_weights_slice,
-        );
 
         let (builder, _) = match shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -634,7 +626,7 @@ pub unsafe extern "C" fn go_streaming_new(
                 parallel: Some(parallel != 0),
                 degree: degree_str,
                 dimensions: (dimensions > 0).then_some(dimensions as usize),
-                distance_metric: effective_metric,
+                distance_metric: distance_metric_str,
                 weighted_metric_weights: weighted_metric_weights_slice,
                 surface_mode: surface_mode_str,
                 return_se: false,
@@ -749,7 +741,6 @@ pub unsafe extern "C" fn go_online_new(
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
     auto_converge: c_double,
-    parallel: c_int,
     // opts
     window_capacity: c_int,
     min_points: c_int,
@@ -818,10 +809,6 @@ pub unsafe extern "C" fn go_online_new(
             weighted_metric_weights,
             weighted_metric_weights_len as usize,
         );
-        let effective_metric = shared_parse::resolve_distance_metric_for_builder(
-            distance_metric_str,
-            weighted_metric_weights_slice,
-        );
 
         let (builder, _) = match shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -839,10 +826,10 @@ pub unsafe extern "C" fn go_online_new(
                 return_diagnostics: false,
                 confidence_intervals: None,
                 prediction_intervals: None,
-                parallel: Some(parallel != 0),
+                parallel: None,
                 degree: degree_str,
                 dimensions: (dimensions > 0).then_some(configured_dimensions),
-                distance_metric: effective_metric,
+                distance_metric: distance_metric_str,
                 weighted_metric_weights: weighted_metric_weights_slice,
                 surface_mode: surface_mode_str,
                 return_se: false,

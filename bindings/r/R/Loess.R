@@ -89,9 +89,12 @@
 #' @param cv_method Cross-validation method: \code{"kfold"} (default) or
 #'   \code{"loocv"}.
 #' @param cv_k Number of folds for k-fold CV, at least 2. Default: 5.
-#' @param weighted_metric_weights Numeric vector of per-dimension weights used
-#'   when \code{distance_metric = "weighted"}. Length must equal
-#'   \code{dimensions}. \code{NULL} (default) uses equal weights.
+#' @param weighted_metric_weights Numeric vector of per-dimension weights.
+#'   Length must equal \code{dimensions}. Only used when
+#'   \code{distance_metric = "weighted"}; setting
+#'   \code{distance_metric = "weighted"} without providing this raises an
+#'   error. \code{NULL} (default) has no effect unless
+#'   \code{distance_metric = "weighted"} is set.
 #' @param cell Cell size tuning parameter for the interpolation grid.
 #'   \code{NULL} (default) uses the library default.
 #' @param interpolation_vertices Number of vertices in the interpolation grid.

@@ -140,10 +140,6 @@ pub struct OnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     // Custom KD-tree builder function.
     #[doc(hidden)]
     pub custom_kdtree_builder: Option<KDTreeBuilderFn<T>>,
-
-    // Parallel execution hint.
-    #[doc(hidden)]
-    pub parallel: Option<bool>,
 }
 
 impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Default
@@ -188,7 +184,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
             custom_fit_pass: None,
             custom_vertex_pass: None,
             custom_kdtree_builder: None,
-            parallel: None,
         }
     }
 
@@ -379,7 +374,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     custom_fit_pass: self.config.custom_fit_pass,
                     custom_vertex_pass: self.config.custom_vertex_pass,
                     custom_kdtree_builder: self.config.custom_kdtree_builder,
-                    parallel: self.config.parallel.unwrap_or(false),
+                    parallel: false,
                     backend: None,
                 };
 
@@ -440,7 +435,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     custom_fit_pass: self.config.custom_fit_pass,
                     custom_vertex_pass: self.config.custom_vertex_pass,
                     custom_kdtree_builder: self.config.custom_kdtree_builder,
-                    parallel: self.config.parallel.unwrap_or(false),
+                    parallel: false,
                     backend: None,
                 };
 

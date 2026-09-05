@@ -270,7 +270,6 @@ online_params <- c(
     "update_mode",
     "auto_converge",
     "return_robustness_weights",
-    "parallel",
     "degree",
     "dimensions",
     "distance_metric",

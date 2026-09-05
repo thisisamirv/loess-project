@@ -35,7 +35,7 @@ Options options = Options.builder()
 |`degree` |`String` |`"linear"` |Local polynomial degree: `constant`, `linear`, `quadratic`, `cubic`, `quartic`.
 |`dimensions` |`int` |`1` |Number of predictor dimensions. `x` is flattened row-major with length `y.length * dimensions`.
 |`distanceMetric` |`String` |`"normalized"` |Neighborhood distance metric: `normalized`, `euclidean`, `manhattan`, `chebyshev`, `minkowski:p`, `weighted`.
-|`weightedMetricWeights` |`double[]` |`null` |Per-dimension weights, used when `distanceMetric` is `weighted`.
+|`weightedMetricWeights` |`double[]` |`null` |Per-dimension weights (used when `distanceMetric = "weighted"`).
 |`surfaceMode` |`String` |`"interpolation"` |Fitting surface: `interpolation` (fast, k-d tree of vertices) or `direct` (exact).
 |`cell` |`double` |`NaN` (auto) |Interpolation cell size tuning parameter, in (0, 1]. Only applies when `surfaceMode` is `interpolation`.
 |`interpolationVertices` |`int` |`-1` (auto) |Caps the number of interpolation vertices. Only applies when `surfaceMode` is `interpolation`.
@@ -178,11 +178,31 @@ _See: xref:../advanced/degree.adoc[Polynomial Degree]_
 * `"cubic"`
 * `"quartic"`
 
-=== dimensions and distanceMetric
+=== dimensions
 
 _See: xref:../advanced/dimensions.adoc[Multivariate LOESS]_
 
-`dimensions` (default `1`) controls how many predictor columns `x` carries; `distanceMetric` (default `"normalized"`) controls how inter-point distances are computed for `dimensions > 1`: `normalized`, `euclidean`, `manhattan`, `chebyshev`, `minkowski:p`, or `weighted` (requires `weightedMetricWeights`).
+`dimensions` (default `1`) controls how many predictor columns `x` carries; `x` is flattened row-major with length `y.length * dimensions`.
+
+=== distanceMetric
+
+_See: xref:../advanced/dimensions.adoc[Multivariate LOESS]_
+
+* `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+* `"euclidean"` (alias: `"euclid"`)
+* `"manhattan"` (alias: `"l1"`)
+* `"chebyshev"` (alias: `"linf"`)
+* `"minkowski"` (use `"minkowski:p"` string for custom exponent, e.g. `"minkowski:3"`)
+* `"weighted"` plus `weightedMetricWeights` for per-dimension scaling (alias: `"weighted_euclidean"`)
+
+=== weightedMetricWeights
+
+_See: xref:../advanced/dimensions.adoc[Multivariate LOESS]_
+
+Per-dimension weights, one per dimension declared in `dimensions`. Only used when `distanceMetric = "weighted"`; setting `distanceMetric = "weighted"` without providing this raises an error.
+
+* `null` (default) — has no effect unless `distanceMetric = "weighted"` is set
+* A non-empty `double[]` of per-dimension weights, required when `distanceMetric = "weighted"`
 
 === surfaceMode
 
@@ -190,6 +210,92 @@ _See: xref:../advanced/degree.adoc[Polynomial Degree]_
 
 * `"interpolation"` (default) — evaluate at anchor vertices, blend via Hermite cubic (`cell`/`interpolationVertices` tune the vertex grid).
 * `"direct"` — evaluate at every query point, exact.
+
+=== cell
+
+Cell size for the interpolation grid, as a fraction of the data range. Smaller values place more vertices (denser grid), improving accuracy at the cost of speed. Only applies when `surfaceMode` is `"interpolation"`.
+
+* `NaN` (default) — uses the library default (`0.2`)
+* Any value in `(0, 1]`
+
+=== interpolationVertices
+
+Caps the maximum number of interpolation vertices, overriding the count implied by `cell`. Only applies when `surfaceMode` is `"interpolation"`.
+
+* `-1` (default) — uses the library default (no explicit cap)
+* Any integer `>= 1`
+
+=== boundaryDegreeFallback
+
+Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surfaceMode` is `"interpolation"`.
+
+* `null` (default) — uses the library default (enabled)
+* `true` — falls back to a lower degree at boundaries
+* `false` — raises an error instead of silently falling back
+
+=== autoConverge
+
+_See: xref:../weighting/robustness.adoc[Robustness]_
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+=== confidenceIntervals
+
+_See: xref:../guide/intervals.adoc[Intervals]_
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
+
+=== predictionIntervals
+
+_See: xref:../guide/intervals.adoc[Intervals]_
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
+
+=== returnDiagnostics
+
+Populate `Result.diagnostics()` (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/effective degrees of freedom additionally require `returnSe(true)` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
+
+* `false` (default) — leaves `Result.diagnostics()` empty
+* `true` — populates `Result.diagnostics()`
+
+=== returnResiduals
+
+Populate `Result.residuals()` (`y - fitted`).
+
+* `false` (default) — leaves `Result.residuals()` empty
+* `true` — populates `Result.residuals()`
+
+=== returnRobustnessWeights
+
+Populate `Result.robustnessWeights()` (from the last robustness iteration).
+
+* `false` (default) — leaves `Result.robustnessWeights()` empty
+* `true` — populates `Result.robustnessWeights()`
+
+=== returnSe
+
+_See: xref:../guide/intervals.adoc[Intervals]_
+
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
+
+* `false` (default) — leaves `Result.standardErrors()` and `Result.hatMatrix()` empty
+* `true` — computes standard errors and hat-matrix statistics
+
+=== CV Options
+
+_See: xref:../guide/cross-validation.adoc[Cross-Validation]_
+
+* `cvMethod`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cvK` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+* `cvK`: Number of folds for k-fold CV. Ignored when `cvMethod` is `"loocv"`.
+* `cvFractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
+* `cvSeed`: Seed for reproducible k-fold shuffling. `null` (default) uses a random seed.
+
+=== parallel
+
+Enable multi-threaded execution via Rayon.
+
+* `true` (default) — parallelizes the local regression fits across CPU cores
+* `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
 
 == Custom weights
 

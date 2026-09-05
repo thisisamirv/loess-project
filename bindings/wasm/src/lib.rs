@@ -33,23 +33,23 @@ export interface SmoothOptions {
     scaling_method?: string;
     /** Auto-convergence tolerance. Disabled when absent. */
     auto_converge?: number;
-    /** Include residuals in result. Ignored by OnlineLoess. Default: false. */
+    /** Include residuals in result. Default: false. */
     return_residuals?: boolean;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
-    /** Compute diagnostics (RMSE, MAE, R2, etc.). Ignored by OnlineLoess. Default: false. */
+    /** Compute diagnostics (RMSE, MAE, R2, etc.). Default: false. */
     return_diagnostics?: boolean;
-    /** Confidence interval level (e.g. 0.95). Batch (Loess) only; ignored by StreamingLoess/OnlineLoess. Disabled when absent. */
+    /** Confidence interval level (e.g. 0.95). Disabled when absent. */
     confidence_intervals?: number;
-    /** Prediction interval level (e.g. 0.95). Batch (Loess) only; ignored by StreamingLoess/OnlineLoess. Disabled when absent. */
+    /** Prediction interval level (e.g. 0.95). Disabled when absent. */
     prediction_intervals?: number;
     /** Enable parallel execution. Default: true. */
     parallel?: boolean;
-    /** Fractions to test for cross-validation. Batch (Loess) only; ignored by StreamingLoess/OnlineLoess. CV disabled when absent. */
+    /** Fractions to test for cross-validation. CV disabled when absent. */
     cv_fractions?: number[];
-    /** CV method ("kfold" or "loocv"). Batch (Loess) only; ignored by StreamingLoess/OnlineLoess. Default: "kfold". */
+    /** CV method ("kfold" or "loocv"). Default: "kfold". */
     cv_method?: string;
-    /** Number of folds for k-fold CV. Batch (Loess) only; ignored by StreamingLoess/OnlineLoess. Default: 5. */
+    /** Number of folds for k-fold CV. Default: 5. */
     cv_k?: number;
     /** Polynomial degree ("constant", "linear", "quadratic", "cubic", "quartic"). Default: "linear". */
     degree?: string;
@@ -59,7 +59,7 @@ export interface SmoothOptions {
     distance_metric?: string;
     /** Surface computation mode ("interpolation" or "direct"). Default: "interpolation". */
     surface_mode?: string;
-    /** Include standard errors in result. Batch (Loess) only; ignored by StreamingLoess/OnlineLoess. Default: false. */
+    /** Include standard errors in result. Default: false. */
     return_se?: boolean;
     /** Per-dimension weights for the weighted distance metric. */
     weighted_metric_weights?: number[];
@@ -69,8 +69,90 @@ export interface SmoothOptions {
     interpolation_vertices?: number;
     /** Fall back to lower polynomial degree at boundaries. Default: true. */
     boundary_degree_fallback?: boolean;
-    /** Random seed for cross-validation. Batch (Loess) only; ignored by StreamingLoess/OnlineLoess. */
+    /** Random seed for cross-validation. */
     cv_seed?: number;
+}
+
+/** Configuration options for streaming LOESS smoothing. A subset of `SmoothOptions`: confidence/prediction intervals, standard errors, and cross-validation have no equivalent here. */
+export interface StreamingSmoothOptions {
+    /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+    fraction?: number;
+    /** Number of robustness iterations. Default: 3. */
+    iterations?: number;
+    /** Kernel function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
+    weight_function?: string;
+    /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
+    robustness_method?: string;
+    /** Fallback when all weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
+    zero_weight_fallback?: string;
+    /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
+    boundary_policy?: string;
+    /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+    scaling_method?: string;
+    /** Auto-convergence tolerance. Disabled when absent. */
+    auto_converge?: number;
+    /** Include residuals in result. Default: false. */
+    return_residuals?: boolean;
+    /** Include robustness weights in result. Default: false. */
+    return_robustness_weights?: boolean;
+    /** Compute diagnostics (RMSE, MAE, R2, etc.). Default: false. */
+    return_diagnostics?: boolean;
+    /** Enable parallel execution. Default: true. */
+    parallel?: boolean;
+    /** Polynomial degree ("constant", "linear", "quadratic", "cubic", "quartic"). Default: "linear". */
+    degree?: string;
+    /** Number of predictor dimensions. Default: 1. */
+    dimensions?: number;
+    /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
+    distance_metric?: string;
+    /** Surface computation mode ("interpolation" or "direct"). Default: "interpolation". */
+    surface_mode?: string;
+    /** Per-dimension weights for the weighted distance metric. */
+    weighted_metric_weights?: number[];
+    /** Cell parameter for interpolation (fraction of data). Default: 0.2. */
+    cell?: number;
+    /** Number of interpolation vertices. Default: auto. */
+    interpolation_vertices?: number;
+    /** Fall back to lower polynomial degree at boundaries. Default: true. */
+    boundary_degree_fallback?: boolean;
+}
+
+/** Configuration options for online LOESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, confidence/prediction intervals, standard errors, and cross-validation have no equivalent here. */
+export interface OnlineSmoothOptions {
+    /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+    fraction?: number;
+    /** Number of robustness iterations. Default: 3. */
+    iterations?: number;
+    /** Kernel function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
+    weight_function?: string;
+    /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
+    robustness_method?: string;
+    /** Fallback when all weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
+    zero_weight_fallback?: string;
+    /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
+    boundary_policy?: string;
+    /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+    scaling_method?: string;
+    /** Auto-convergence tolerance. Disabled when absent. */
+    auto_converge?: number;
+    /** Include robustness weights in result. Default: false. */
+    return_robustness_weights?: boolean;
+    /** Polynomial degree ("constant", "linear", "quadratic", "cubic", "quartic"). Default: "linear". */
+    degree?: string;
+    /** Number of predictor dimensions. Default: 1. */
+    dimensions?: number;
+    /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
+    distance_metric?: string;
+    /** Surface computation mode ("interpolation" or "direct"). Default: "interpolation". */
+    surface_mode?: string;
+    /** Per-dimension weights for the weighted distance metric. */
+    weighted_metric_weights?: number[];
+    /** Cell parameter for interpolation (fraction of data). Default: 0.2. */
+    cell?: number;
+    /** Number of interpolation vertices. Default: auto. */
+    interpolation_vertices?: number;
+    /** Fall back to lower polynomial degree at boundaries. Default: true. */
+    boundary_degree_fallback?: boolean;
 }
 
 /** Configuration options for streaming LOESS. */
@@ -104,7 +186,7 @@ export class Loess {
 /** Streaming LOESS smoother for large datasets. */
 export class StreamingLoess {
     free(): void;
-    constructor(options?: SmoothOptions, streamingOpts?: StreamingOptions);
+    constructor(options?: StreamingSmoothOptions, streamingOpts?: StreamingOptions);
     /** Process a chunk of data. */
     process_chunk(x: Float64Array, y: Float64Array): LoessResult;
     /** Finalize the stream and return remaining data. */
@@ -114,7 +196,7 @@ export class StreamingLoess {
 /** Online LOESS smoother for real-time data. */
 export class OnlineLoess {
     free(): void;
-    constructor(options?: SmoothOptions, onlineOpts?: OnlineOptions);
+    constructor(options?: OnlineSmoothOptions, onlineOpts?: OnlineOptions);
     /** Add a single point and get the smoothed value, or null if not enough points yet. */
     add_point(x: number, y: number): OnlineOutput | null;
 }
@@ -192,6 +274,51 @@ pub struct OnlineOptions {
     pub window_capacity: Option<usize>,
     pub min_points: Option<usize>,
     pub update_mode: Option<String>,
+}
+
+#[derive(Deserialize)]
+pub struct StreamingSmoothOptions {
+    pub fraction: Option<f64>,
+    pub iterations: Option<usize>,
+    pub weight_function: Option<String>,
+    pub robustness_method: Option<String>,
+    pub zero_weight_fallback: Option<String>,
+    pub boundary_policy: Option<String>,
+    pub scaling_method: Option<String>,
+    pub auto_converge: Option<f64>,
+    pub return_residuals: Option<bool>,
+    pub return_robustness_weights: Option<bool>,
+    pub return_diagnostics: Option<bool>,
+    pub parallel: Option<bool>,
+    pub degree: Option<String>,
+    pub dimensions: Option<usize>,
+    pub distance_metric: Option<String>,
+    pub surface_mode: Option<String>,
+    pub weighted_metric_weights: Option<Vec<f64>>,
+    pub cell: Option<f64>,
+    pub interpolation_vertices: Option<usize>,
+    pub boundary_degree_fallback: Option<bool>,
+}
+
+#[derive(Deserialize)]
+pub struct OnlineSmoothOptions {
+    pub fraction: Option<f64>,
+    pub iterations: Option<usize>,
+    pub weight_function: Option<String>,
+    pub robustness_method: Option<String>,
+    pub zero_weight_fallback: Option<String>,
+    pub boundary_policy: Option<String>,
+    pub scaling_method: Option<String>,
+    pub auto_converge: Option<f64>,
+    pub return_robustness_weights: Option<bool>,
+    pub degree: Option<String>,
+    pub dimensions: Option<usize>,
+    pub distance_metric: Option<String>,
+    pub surface_mode: Option<String>,
+    pub weighted_metric_weights: Option<Vec<f64>>,
+    pub cell: Option<f64>,
+    pub interpolation_vertices: Option<usize>,
+    pub boundary_degree_fallback: Option<bool>,
 }
 
 #[wasm_bindgen]
@@ -421,29 +548,11 @@ impl Loess {
     }
 }
 
-// Which adapter `options_to_builder` is configuring a builder for.
-//
-// confidence_intervals/prediction_intervals/return_se/cv_fractions/cv_method/
-// cv_k/cv_seed are Batch-only. return_diagnostics/return_residuals are
-// additionally no-ops for Online. parallel is real for all three modes.
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum AdapterKind {
-    Batch,
-    Streaming,
-    Online,
-}
-
-// Build a LoessBuilder from an optional SmoothOptions, applying all fields
-// relevant to `kind`.
-fn options_to_builder(
-    opts: Option<SmoothOptions>,
-    kind: AdapterKind,
-) -> Result<LoessBuilder<f64>, JsValue> {
-    let is_batch = kind == AdapterKind::Batch;
-    let supports_diagnostics = kind != AdapterKind::Online;
+// Build a LoessBuilder from Batch options, applying every field.
+fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<f64>, JsValue> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
-        let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+        builder = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
                 fraction: opts.fraction,
@@ -454,29 +563,99 @@ fn options_to_builder(
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_residuals: supports_diagnostics && opts.return_residuals.unwrap_or(false),
+                return_residuals: opts.return_residuals.unwrap_or(false),
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                return_diagnostics: supports_diagnostics
-                    && opts.return_diagnostics.unwrap_or(false),
-                confidence_intervals: is_batch.then_some(opts.confidence_intervals).flatten(),
-                prediction_intervals: is_batch.then_some(opts.prediction_intervals).flatten(),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
                 degree: opts.degree.as_deref(),
                 dimensions: opts.dimensions,
                 distance_metric: opts.distance_metric.as_deref(),
                 weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
                 surface_mode: opts.surface_mode.as_deref(),
-                return_se: is_batch && opts.return_se.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false),
                 cell: opts.cell,
                 interpolation_vertices: opts.interpolation_vertices,
                 boundary_degree_fallback: opts.boundary_degree_fallback,
-                cv_fractions: is_batch.then_some(opts.cv_fractions.as_deref()).flatten(),
-                cv_method: is_batch.then_some(opts.cv_method.as_deref()).flatten(),
-                cv_k: is_batch.then_some(opts.cv_k.map(|v| v as usize)).flatten(),
-                cv_seed: is_batch.then_some(opts.cv_seed).flatten(),
+                cv_fractions: opts.cv_fractions.as_deref(),
+                cv_method: opts.cv_method.as_deref(),
+                cv_k: opts.cv_k.map(|v| v as usize),
+                cv_seed: opts.cv_seed,
             },
-        ))?;
-        builder = configured_builder;
+        ))?
+        .0;
+    }
+    Ok(builder)
+}
+
+// Build a LoessBuilder from Streaming options, applying every field.
+fn streaming_options_to_builder(
+    opts: Option<StreamingSmoothOptions>,
+) -> Result<LoessBuilder<f64>, JsValue> {
+    let mut builder = LoessBuilder::<f64>::new();
+    if let Some(opts) = opts {
+        builder = map_invalid_arg(shared_parse::apply_builder_options(
+            builder,
+            shared_parse::BuilderOptionSet {
+                fraction: opts.fraction,
+                iterations: opts.iterations,
+                weight_function: opts.weight_function.as_deref(),
+                robustness_method: opts.robustness_method.as_deref(),
+                zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                boundary_policy: opts.boundary_policy.as_deref(),
+                scaling_method: opts.scaling_method.as_deref(),
+                auto_converge: opts.auto_converge,
+                return_residuals: opts.return_residuals.unwrap_or(false),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                parallel: opts.parallel,
+                degree: opts.degree.as_deref(),
+                dimensions: opts.dimensions,
+                distance_metric: opts.distance_metric.as_deref(),
+                weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
+                surface_mode: opts.surface_mode.as_deref(),
+                cell: opts.cell,
+                interpolation_vertices: opts.interpolation_vertices,
+                boundary_degree_fallback: opts.boundary_degree_fallback,
+                ..Default::default()
+            },
+        ))?
+        .0;
+    }
+    Ok(builder)
+}
+
+// Build a LoessBuilder from Online options, applying every field.
+fn online_options_to_builder(
+    opts: Option<OnlineSmoothOptions>,
+) -> Result<LoessBuilder<f64>, JsValue> {
+    let mut builder = LoessBuilder::<f64>::new();
+    if let Some(opts) = opts {
+        builder = map_invalid_arg(shared_parse::apply_builder_options(
+            builder,
+            shared_parse::BuilderOptionSet {
+                fraction: opts.fraction,
+                iterations: opts.iterations,
+                weight_function: opts.weight_function.as_deref(),
+                robustness_method: opts.robustness_method.as_deref(),
+                zero_weight_fallback: opts.zero_weight_fallback.as_deref(),
+                boundary_policy: opts.boundary_policy.as_deref(),
+                scaling_method: opts.scaling_method.as_deref(),
+                auto_converge: opts.auto_converge,
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                degree: opts.degree.as_deref(),
+                dimensions: opts.dimensions,
+                distance_metric: opts.distance_metric.as_deref(),
+                weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
+                surface_mode: opts.surface_mode.as_deref(),
+                cell: opts.cell,
+                interpolation_vertices: opts.interpolation_vertices,
+                boundary_degree_fallback: opts.boundary_degree_fallback,
+                ..Default::default()
+            },
+        ))?
+        .0;
     }
     Ok(builder)
 }
@@ -492,7 +671,7 @@ fn smooth(
     } else {
         None
     };
-    let builder = options_to_builder(opts, AdapterKind::Batch)?;
+    let builder = batch_options_to_builder(opts)?;
 
     let x_vec = x.to_vec();
     let y_vec = y.to_vec();
@@ -516,11 +695,13 @@ impl StreamingLoess {
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, streamingOpts: JsValue) -> Result<StreamingLoess, JsValue> {
         let opts = if !options.is_undefined() && !options.is_null() {
-            Some(serde_wasm_bindgen::from_value::<SmoothOptions>(options)?)
+            Some(serde_wasm_bindgen::from_value::<StreamingSmoothOptions>(
+                options,
+            )?)
         } else {
             None
         };
-        let builder = options_to_builder(opts, AdapterKind::Streaming)?;
+        let builder = streaming_options_to_builder(opts)?;
 
         let (chunk_size, overlap, merge_strategy) =
             if !streamingOpts.is_undefined() && !streamingOpts.is_null() {
@@ -572,11 +753,13 @@ impl OnlineLoess {
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, onlineOpts: JsValue) -> Result<OnlineLoess, JsValue> {
         let opts = if !options.is_undefined() && !options.is_null() {
-            Some(serde_wasm_bindgen::from_value::<SmoothOptions>(options)?)
+            Some(serde_wasm_bindgen::from_value::<OnlineSmoothOptions>(
+                options,
+            )?)
         } else {
             None
         };
-        let builder = options_to_builder(opts, AdapterKind::Online)?;
+        let builder = online_options_to_builder(opts)?;
 
         let (window_capacity, min_points, update_mode) =
             if !onlineOpts.is_undefined() && !onlineOpts.is_null() {

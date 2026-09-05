@@ -16,7 +16,7 @@ OnlineOptions options = OnlineOptions.builder()
         .build();
 ----
 
-`OnlineOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSe`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, which are batch-only). Note `parallel` defaults to `false` for online use, since per-point updates rarely benefit from parallelism. Additional settings:
+`OnlineOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSe`, `returnDiagnostics`, `returnResiduals`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, and `parallel`, which are Batch-only or Batch/Streaming-only). Online always runs sequentially. Additional settings:
 
 [cols="1,1,1,1",options="header"]
 |===
@@ -36,6 +36,30 @@ Adds a single observation. Returns `Optional.empty()` while the window is still 
 == `OnlineLoess.close()`
 
 Releases native resources. Safe to call multiple times. Implements `AutoCloseable`.
+
+== Options
+
+=== windowCapacity
+
+Maximum number of points retained in the sliding window. Older points are evicted as new ones arrive.
+
+=== minPoints
+
+Minimum number of points required before `addPoint` starts returning a populated `Optional`.
+
+=== updateMode
+
+_See: xref:../guide/adapter-choice.adoc[Execution Modes]_
+
+[cols="1,1,1,1",options="header"]
+|===
+|Mode |Alias |Behavior |Speed
+
+|`"incremental"` (default) |`"single"` |Update only affected fits |Faster
+|`"full"` |`"resmooth"` |Recompute entire window |More accurate
+|===
+
+See xref:./api.adoc[API] for the descriptions of all inherited settings (`fraction`, `weightFunction`, `distanceMetric`, `weightedMetricWeights`, etc.).
 
 == `PointResult` accessors
 

@@ -50,7 +50,6 @@ OnlineLoess <- function(
     update_mode = "incremental",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
-    parallel = FALSE,
     degree = "linear",
     dimensions = 1L,
     distance_metric = "normalized",
@@ -75,8 +74,7 @@ OnlineLoess <- function(
                 fraction = fraction,
                 window_capacity = window_capacity,
                 min_points = min_points,
-                iterations = iterations,
-                parallel = parallel
+                iterations = iterations
             )
         ),
         class = "OnlineLoess"

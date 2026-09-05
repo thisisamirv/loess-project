@@ -920,9 +920,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(chunk_size) = builder.chunk_size {
             result.chunk_size = chunk_size;
         }
-        if let Some(overlap) = builder.overlap {
-            result.overlap = overlap;
-        }
+        result.overlap = builder
+            .overlap
+            .unwrap_or_else(|| crate::adapters::defaults::default_overlap(result.chunk_size));
         if let Some(fraction) = builder.fraction {
             result.fraction = fraction;
         }
@@ -1102,9 +1102,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         }
         if let Some(ip) = builder.custom_interval_pass {
             result.custom_interval_pass = Some(ip);
-        }
-        if let Some(p) = builder.parallel {
-            result.parallel = Some(p);
         }
         result.duplicate_param = builder.duplicate_param;
 

@@ -5,19 +5,13 @@
 //! smoothed values for new points as they arrive.
 // ## srrstats Compliance
 //
-// @srrstats {G1.6} Sliding window with optional parallel re-smoothing.
+// @srrstats {G1.6} Sliding window for real-time incremental updates (always sequential).
 // @srrstats {G2.1} Configurable min_points threshold before smoothing starts.
 
 // External dependencies
 use num_traits::Float;
 use std::fmt::Debug;
 use std::result::Result;
-
-// Internal dependencies
-use crate::engine::executor::{smooth_pass_parallel, vertex_pass_parallel};
-use crate::evaluation::cv::cv_pass_parallel;
-use crate::evaluation::intervals::interval_pass_parallel;
-use crate::math::neighborhood::build_kdtree_parallel;
 
 // Export dependencies from loess-rs crate
 use loess_rs::internals::adapters::online::{OnlineLoessBuilder, OnlineOutput};
@@ -51,9 +45,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
 {
     // Create a new online LOESS builder with default parameters.
     fn new() -> Self {
-        let mut base = OnlineLoessBuilder::default();
-        // Default to false for online (latency-sensitive)
-        base.parallel = Some(false);
+        let base = OnlineLoessBuilder::default();
         Self {
             base,
             parse_errors: Vec::new(),
@@ -90,15 +82,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         }
 
         // Configure parallel callbacks before building
-        let mut builder = self.base;
-
-        if builder.parallel.unwrap_or(true) {
-            builder.custom_smooth_pass = Some(smooth_pass_parallel);
-            builder.custom_cv_pass = Some(cv_pass_parallel);
-            builder.custom_interval_pass = Some(interval_pass_parallel);
-            builder.custom_vertex_pass = Some(vertex_pass_parallel);
-            builder.custom_kdtree_builder = Some(build_kdtree_parallel);
-        }
+        let builder = self.base;
 
         let processor = builder.build()?;
         Ok(ParallelOnlineLoess { processor })

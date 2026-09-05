@@ -27,7 +27,9 @@ namespace detail {
 constexpr double k_default_fraction = 0.67;
 constexpr int k_default_cv_k = 5;
 constexpr int k_default_chunk_size = 5000;
-constexpr int k_default_overlap = 500;
+/// Sentinel meaning "use the library default" (chunk_size / 10, clamped to
+/// [1, chunk_size - 10]); negative values are never sent to the FFI layer.
+constexpr int k_default_overlap = -1;
 constexpr int k_default_window_capacity = 1000;
 constexpr int k_default_min_points = 2;
 } // namespace detail
@@ -156,6 +158,8 @@ struct LoessOptions {
  */
 struct StreamingOptions : public LoessOptions {
   int chunk_size = detail::k_default_chunk_size;
+  /// Negative (the default) means "use the library default"
+  /// (chunk_size / 10, clamped to [1, chunk_size - 10]).
   int overlap = detail::k_default_overlap;
   std::string merge_strategy =
       "weighted_average"; ///< weighted_average, average, take_first, take_last
@@ -164,11 +168,11 @@ struct StreamingOptions : public LoessOptions {
 /**
  * @brief Options for online LOESS.
  *
- * Identical fields to LoessOptions but defaults parallel to false, since
- * online LOESS processes one point at a time; parallel still gates internal
- * KD-tree/interval-pass dispatch. Confidence/prediction intervals, standard
- * errors, cross-validation, and diagnostics/residuals are Batch-only (or
- * Batch/Streaming-only) and have no equivalent here.
+ * Identical fields to LoessOptions but has no `parallel` option: online
+ * LOESS processes one point at a time and always runs sequentially.
+ * Confidence/prediction intervals, standard errors, cross-validation, and
+ * diagnostics/residuals are Batch-only (or Batch/Streaming-only) and have
+ * no equivalent here.
  */
 struct OnlineOptions {
   double fraction = detail::k_default_fraction;
@@ -180,7 +184,6 @@ struct OnlineOptions {
   std::string zero_weight_fallback = "use_local_mean";
   double auto_converge = NAN;
   bool return_robustness_weights = false;
-  bool parallel = false; ///< Parallelism rarely helps for single-point updates
   std::string degree = "linear";
   int dimensions = 1;
   std::string distance_metric = "normalized";
@@ -642,7 +645,7 @@ public:
         options.boundary_policy.c_str(),
         options.return_robustness_weights ? 1 : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
-        options.parallel ? 1 : 0, options.window_capacity, options.min_points,
+        options.window_capacity, options.min_points,
         options.update_mode.c_str(), options.degree.c_str(), options.dimensions,
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()

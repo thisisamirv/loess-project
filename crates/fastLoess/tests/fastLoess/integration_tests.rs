@@ -269,23 +269,6 @@ fn test_streaming_reset_with_processor() {
     let _ = processor.process_chunk(&x[..15], &y[..15]).unwrap();
 }
 
-/// Explicitly setting `parallel(true)` on the Online adapter exercises the
-/// `#[cfg(feature = "dev")]` callback-injection block in `build()`.
-#[test]
-fn test_online_parallel_true() {
-    let mut processor = OnlineLoess::new()
-        .min_points(3)
-        .window_capacity(15)
-        .parallel(true)
-        .build()
-        .unwrap();
-
-    for i in 0..5i32 {
-        let _ = processor.add_point(&[i as f64], i as f64 * 2.0).unwrap();
-    }
-    let _ = processor.window_size();
-}
-
 // ============================================================================
 // Custom Weights Tests
 // ============================================================================

@@ -17,7 +17,7 @@ opts.WindowCapacity = 200
 opts.MinPoints = 10
 ```
 
-`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CVFractions`/`CVMethod`/`CVK`/`CVSeed`, which are batch-only). Note `Parallel` defaults to `false` for online use, since per-point updates rarely benefit from parallelism. `AddPoint` only accepts a single x coordinate: online mode does not support multivariate predictors even if `Dimensions` was set on construction. Additional fields:
+`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CVFractions`/`CVMethod`/`CVK`/`CVSeed`, and `Parallel`, which are batch-only). `AddPoint` only accepts a single x coordinate: online mode does not support multivariate predictors even if `Dimensions` was set on construction. Additional fields:
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -34,6 +34,27 @@ Adds a single observation. `ok` is `false` while the window is still filling (fe
 ## `(*OnlineLoess) Close() error`
 
 Releases native resources. Safe to call multiple times.
+
+## Options
+
+### WindowCapacity
+
+Maximum number of points retained in the sliding window. Older points are evicted as new ones arrive.
+
+### MinPoints
+
+Minimum number of points required before `AddPoint` starts returning `ok == true`.
+
+### UpdateMode
+
+*See: [Execution Modes](../guide/adapter-choice.md)*
+
+| Mode | Alias | Behavior | Speed |
+| --- | --- | --- | --- |
+| `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
+| `"full"` | `"resmooth"` | Recompute entire window | More accurate |
+
+See [API](api.md) for the descriptions of all inherited fields (`Fraction`, `WeightFunction`, `DistanceMetric`, `WeightedMetricWeights`, etc.).
 
 ## `PointResult` fields
 

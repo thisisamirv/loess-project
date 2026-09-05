@@ -101,6 +101,8 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `cv_k(...)` | `usize` | disabled | Number of folds for K-fold cross-validation |
 | `cv_fractions(...)` | `Vec<f64>` | disabled | Candidate fractions to evaluate during cross-validation |
 | `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
+| `parallel(bool)` | `bool` | `true` | Enable parallel execution across CPU cores |
+| `backend(Backend)` | `Backend` | `Backend::CPU` | Execution backend (currently only `CPU` is implemented) |
 
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
@@ -123,6 +125,168 @@ These chained methods configure the builder. They correspond to the "Options Str
 See [Streaming Adapter](crate::doc::api::streaming) for Streaming Options.
 
 See [Online Adapter](crate::doc::api::online) for Online Options.
+
+## Options
+
+### weight_function
+
+*See: [Weight Functions](crate::doc::weighting::kernels)*
+
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
+
+### robustness_method
+
+*See: [Robustness](crate::doc::weighting::robustness)*
+
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
+
+### scaling_method
+
+*See: [Scaling Methods](crate::doc::weighting::scaling)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### boundary_policy
+
+*See: [Boundary Handling](crate::doc::advanced::boundary)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### auto_converge
+
+*See: [Robustness](crate::doc::weighting::robustness#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. Disabled by default.
+
+### custom_weights
+
+*See: [Custom Weights](crate::doc::weighting::custom_weights)*
+
+Per-observation case weights. Must have the same length as `y`; all values must be non-negative.
+
+### confidence_intervals
+
+*See: [Intervals](crate::doc::guide::intervals)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Disabled by default.
+
+### prediction_intervals
+
+*See: [Intervals](crate::doc::guide::intervals)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). Disabled by default.
+
+### return_diagnostics
+
+Populates `LoessResult::diagnostics` with RMSE, MAE, R2, AIC/AICc, and effective degrees of freedom. `aic`/`aicc`/`effective_df` additionally require `.return_se()` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics. `false` by default.
+
+### return_residuals
+
+Populates `LoessResult::residuals` (`y - fitted`). `false` by default.
+
+### return_robustness_weights
+
+Populates `LoessResult::robustness_weights` with the final per-point robustness weights. `false` by default.
+
+### return_se
+
+Computes hat-matrix statistics (`enp`, `trace_hat`, `delta1`, `delta2`, `residual_scale`, `leverage`) in addition to standard errors. `false` by default.
+
+### parallel
+
+Enables multi-threaded execution via Rayon, parallelizing the local regression fits across CPU cores. `true` by default; set to `false` to force single-threaded execution.
+
+### backend
+
+Execution backend. Currently only `Backend::CPU` is implemented — this is a placeholder for future GPU support.
+
+### degree
+
+*See: [Polynomial Degree](crate::doc::advanced::degree)*
+
+- `"constant"` or `"0"` (degree 0)
+- `"linear"` or `"1"` (default, degree 1)
+- `"quadratic"` or `"2"` (degree 2)
+- `"cubic"` or `"3"` (degree 3)
+- `"quartic"` or `"4"` (degree 4)
+
+### dimensions
+
+*See: [Multivariate LOESS](crate::doc::advanced::dimensions)*
+
+Number of predictor dimensions. `1` (default) is univariate; set to match the number of columns in a multivariate `x`.
+
+### distance_metric
+
+*See: [Multivariate LOESS](crate::doc::advanced::dimensions)*
+
+- `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+- `"euclidean"` (alias: `"euclid"`)
+- `"manhattan"` (alias: `"l1"`)
+- `"chebyshev"` (alias: `"linf"`)
+- `"minkowski"` or `"minkowski:p"` for a custom exponent
+- `"weighted"` plus `.weighted_metric_weights(vec![...])` (alias: `"weighted_euclidean"`)
+
+### weighted_metric_weights
+
+*See: [Multivariate LOESS](crate::doc::advanced::dimensions)*
+
+Per-dimension weights, one per dimension. Only used when `distance_metric` is `"weighted"`; calling `.distance_metric("weighted")` without also calling this returns a `LoessError`.
+
+### surface_mode
+
+*See: [Polynomial Degree](../advanced/degree.md#surface-mode)*
+
+Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
+
+| Mode | Behavior | Speed | Accuracy |
+| --- | --- | --- | --- |
+| `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
+| `"direct"` | Evaluate at every query point | Slower | Full precision |
+
+### cell
+
+Cell size for the interpolation grid, as a fraction of the data range in `(0, 1]`. Disabled by default (uses the library default `0.2`). Only applies when `surface_mode` is `"interpolation"`.
+
+### interpolation_vertices
+
+Caps the maximum number of interpolation vertices, overriding the count implied by `cell`. Disabled by default (no explicit cap). Only applies when `surface_mode` is `"interpolation"`.
+
+### boundary_degree_fallback
+
+Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there. `true` by default. Only applies when `surface_mode` is `"interpolation"`.
+
+### CV Options
+
+*See: [Cross-Validation](crate::doc::guide::cross_validation)*
+
+- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method` is `"loocv"`.
+- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
+- `cv_seed`: Seed for reproducible k-fold shuffling. Disabled by default (uses a random seed).
 
 ## Result Structure
 
@@ -164,87 +328,6 @@ See [Online Adapter](crate::doc::api::online) for Online Options.
 | `effective_df` | `Option<T>` | Effective degrees of freedom |
 | `aic` | `Option<T>` | AIC |
 | `aicc` | `Option<T>` | AICc |
-
-## Options
-
-### weight_function
-
-*See: [Weight Functions](crate::doc::weighting::kernels)*
-
-- `"tricube"` (default)
-- `"epanechnikov"`
-- `"gaussian"`
-- `"uniform"` (alias: `"boxcar"`)
-- `"biweight"` (alias: `"bisquare"`)
-- `"triangle"` (alias: `"triangular"`)
-- `"cosine"`
-
-### robustness_method
-
-*See: [Robustness](crate::doc::weighting::robustness)*
-
-- `"bisquare"` (default; alias: `"biweight"`)
-- `"huber"`
-- `"talwar"`
-
-### boundary_policy
-
-*See: [Boundary Handling](crate::doc::advanced::boundary)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### scaling_method
-
-*See: [Scaling Methods](crate::doc::weighting::scaling)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### distance_metric
-
-*See: [Multivariate LOESS](crate::doc::advanced::dimensions)*
-
-- `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
-- `"euclidean"` (alias: `"euclid"`)
-- `"manhattan"` (alias: `"l1"`)
-- `"chebyshev"` (alias: `"linf"`)
-- `"minkowski"` or `"minkowski:p"` for a custom exponent
-- `"weighted"` plus `.weighted_metric_weights(vec![...])` (alias: `"weighted_euclidean"`)
-
-### degree
-
-*See: [Polynomial Degree](crate::doc::advanced::degree)*
-
-- `"constant"` or `"0"` (degree 0)
-- `"linear"` or `"1"` (default, degree 1)
-- `"quadratic"` or `"2"` (degree 2)
-- `"cubic"` or `"3"` (degree 3)
-- `"quartic"` or `"4"` (degree 4)
-
-### surface_mode
-
-*See: [Polynomial Degree](../advanced/degree.md#surface-mode)*
-
-Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
-
-| Mode | Behavior | Speed | Accuracy |
-| --- | --- | --- | --- |
-| `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
-| `"direct"` | Evaluate at every query point | Slower | Full precision |
 
 ## Example
 

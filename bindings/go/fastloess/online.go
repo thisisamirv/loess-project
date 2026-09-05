@@ -11,8 +11,8 @@ import (
 )
 
 // OnlineOptions configures an OnlineLoess model. Confidence/prediction
-// intervals, standard errors, cross-validation, and diagnostics/residuals
-// are Batch-only (or Batch/Streaming-only) and have no effect here.
+// intervals, standard errors, cross-validation, diagnostics/residuals, and
+// Parallel are Batch-only (or Batch/Streaming-only) and have no effect here.
 type OnlineOptions struct {
 	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
 	Fraction float64
@@ -76,10 +76,6 @@ type OnlineOptions struct {
 
 	// ReturnRobustnessWeights requests per-point robustness weights in the result.
 	ReturnRobustnessWeights bool
-	// Parallel enables parallel processing (used for internal KD-tree/
-	// interval-pass dispatch). Default: false (online updates are
-	// latency-sensitive).
-	Parallel bool
 
 	// WindowCapacity is the maximum number of recent points retained.
 	// Default: 1000.
@@ -92,9 +88,7 @@ type OnlineOptions struct {
 	UpdateMode string
 }
 
-// DefaultOnlineOptions returns recommended defaults for online use. Note
-// Parallel defaults to false, since per-point updates rarely benefit from
-// parallelism.
+// DefaultOnlineOptions returns recommended defaults for online use.
 func DefaultOnlineOptions() OnlineOptions {
 	return OnlineOptions{
 		Fraction:           0.67,
@@ -108,7 +102,6 @@ func DefaultOnlineOptions() OnlineOptions {
 		Dimensions:         1,
 		DistanceMetric:     "normalized",
 		SurfaceMode:        "interpolation",
-		Parallel:           false,
 		WindowCapacity:     1000,
 		MinPoints:          2,
 		UpdateMode:         "incremental",
@@ -172,7 +165,6 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 			boolToCInt(opts.ReturnRobustnessWeights),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
-			boolToCInt(opts.Parallel),
 			C.int(opts.WindowCapacity),
 			C.int(opts.MinPoints),
 			um,

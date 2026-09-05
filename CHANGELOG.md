@@ -62,54 +62,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Restructured Doxygen nav from ~20 flat pages into 5 hub pages, mirroring other bindings.
 - Added a Spack recipe, auto-updated by `release-cpp.yml` on release.
 - Bumped the vendored Corrosion CMake module to v0.6.1.
-- Removed the dead `confidence_intervals`, `prediction_intervals`, `return_diagnostics`, `return_residuals`, and `return_se` fields from `OnlineOptions` (a standalone struct, not inherited from `LoessOptions` as the docs previously and incorrectly claimed). Breaking change for `OnlineOptions` callers; `parallel` is unaffected.
+- Removed the dead `confidence_intervals`, `prediction_intervals`, `return_diagnostics`, `return_residuals`, and `return_se` fields from `OnlineOptions` (a standalone struct, not inherited from `LoessOptions` as the docs previously and incorrectly claimed). Breaking change for `OnlineOptions` callers. Also removed `parallel` from `OnlineOptions` — unlike the fields above, it gated real internal KD-tree/interval-pass dispatch, but was dropped for consistency with `fastLowess`'s `OnlineLowess`; Online now always runs sequentially. `StreamingOptions`/`LoessOptions` keep `parallel` unaffected.
 - `StreamingOptions` (which inherits `LoessOptions` and still has `confidence_intervals`/`prediction_intervals`/`return_se` structurally) no longer forwards them to the native constructor, since Streaming never computed them.
+- `StreamingOptions::overlap`'s default changed from a fixed `500` to `-1` (a sentinel meaning "use the library default"), so it now resolves dynamically to `chunk_size / 10` like every other language binding, instead of always passing a concrete `500` to the native constructor regardless of `chunk_size`. Breaking change for callers relying on the previous flat default.
+- `weighted_metric_weights` no longer auto-selects the `"weighted"` distance metric: previously, providing weights silently overrode any explicit `distance_metric` via `resolve_distance_metric_for_builder`; now `distance_metric = "weighted"` must be set explicitly, matching Python/R/Node.js/WASM, and omitting it while providing weights raises an error. Breaking change.
 
 **R:**
 
 - Removed the redundant `rfastloess-package` pkgdown topic and the internal `Nullable()` helper.
 - Fixed `_pkgdown.yml` mislabeling the S3-based interface as "R6 classes".
 - Merged `parameters.Rmd`/`batch.Rmd`/`streaming.Rmd`/`online.Rmd` into the constructors' roxygen docs, removing the now-redundant vignettes.
-- Removed `confidence_intervals`, `prediction_intervals`, and `return_se` from `StreamingLoess()`'s constructor, and those plus `return_diagnostics`/`return_residuals` from `OnlineLoess()`'s constructor — none of these were ever computed by either adapter. Breaking change; `parallel` (real for both) is unaffected.
+- Removed `confidence_intervals`, `prediction_intervals`, and `return_se` from `StreamingLoess()`'s constructor, and those plus `return_diagnostics`/`return_residuals` from `OnlineLoess()`'s constructor — none of these were ever computed by either adapter. Breaking change. Also removed `parallel` from `OnlineLoess()`'s constructor for consistency with `lowess`/`fastLowess` — it gated real internal dispatch there, unlike the fields above, but Online now always runs sequentially; `parallel` remains real and unaffected for `StreamingLoess()`.
 
 **Node.js:**
 
 - Updated `oxlint`, `napi`/`napi-derive`/`@napi-rs/cli`/`napi-build`, and `typedoc-plugin-markdown`.
 - `make nodejs-dev` now runs `npm update` after `npm install`.
-- `StreamingLoess`/`OnlineLoess` now ignore `confidence_intervals`, `prediction_intervals`, `return_se`, `cv_fractions`, `cv_method`, `cv_k`, and `cv_seed` when passed via `SmoothOptions` (Batch-only options that were previously applied unconditionally); `OnlineLoess` also now ignores `return_diagnostics`/`return_residuals`. `Loess` and `parallel` (real for all three adapters here) are unaffected.
+- `StreamingLoess`/`OnlineLoess` no longer accept `SmoothOptions` (the Batch options type); each now has its own dedicated `StreamingSmoothOptions`/`OnlineSmoothOptions` type that only declares the fields it actually supports, so `confidence_intervals`, `prediction_intervals`, `return_se`, `cv_fractions`, `cv_method`, `cv_k`, and `cv_seed` (Batch-only) are gone from both, and `return_diagnostics`/`return_residuals`/`parallel` are additionally gone from `OnlineSmoothOptions` (previously accepted and silently ignored/gated at runtime). Breaking change for TypeScript consumers relying on the old shared type; `Loess`'s `SmoothOptions` is unaffected.
 
 **WASM:**
 
 - Updated `oxlint` and `typedoc-plugin-markdown`.
 - `make wasm-dev` now runs `npm update` after `npm install`.
-- Same gating fix as Node.js, applied to `options_to_builder`.
+- Same `StreamingSmoothOptions`/`OnlineSmoothOptions` split as Node.js, applied to the TypeScript interfaces and `options_to_builder` equivalents.
 
 **loess-rs:**
 
 - Updated `wide` to v1.7.
 - Removed the dead `compute_residuals`/`backend` fields from `OnlineLoessBuilder` (residual is always computed regardless of the flag; `backend` was never read for Online). `StreamingLoessBuilder` lost its unused `backend` field too — `Backend` currently has only a `CPU` variant and is read only by the Batch adapter, as a placeholder for future GPU support.
+- `Streaming::convert()` (used by the `StreamingLoess::new()...build()` type-alias API) no longer resolves `overlap` to a flat `500` when unset; it now resolves dynamically to `chunk_size / 10` (clamped to `[1, chunk_size - 10]`) via the new `adapters::defaults::default_overlap()`, matching every language binding's `build_streaming()` helper. Removed the now-superseded `DEFAULT_STREAMING_OVERLAP` constant. Breaking change for callers relying on the previous flat default with a customized `chunk_size`.
 
 **fastLoess:**
 
 - Same dead-field removal as loess-rs, mirrored in `OnlineLoessBuilder`/`StreamingLoessBuilder`.
-- Removed `.confidenceIntervals()`, `.predictionIntervals()`, and `.returnSe()` from the `StreamingLoess`/`OnlineLoess` entry-point wrapper structs — these leaked in via the shared builder macro and were silently ignored (neither adapter computes confidence/prediction intervals or standard errors). Breaking change for direct Rust consumers; `Loess`'s own methods are unaffected. Note: unlike `lowess`/`fastLowess`, `parallel` is real for `OnlineLoess` here (it gates internal KD-tree/interval-pass dispatch) and was kept.
+- Removed `.confidenceIntervals()`, `.predictionIntervals()`, and `.returnSe()` from the `StreamingLoess`/`OnlineLoess` entry-point wrapper structs — these leaked in via the shared builder macro and were silently ignored (neither adapter computes confidence/prediction intervals or standard errors). Breaking change for direct Rust consumers; `Loess`'s own methods are unaffected. `parallel` was initially kept as real for `OnlineLoess` here (unlike `lowess`/`fastLowess`), since it gated internal KD-tree/interval-pass dispatch, but was subsequently also removed from `OnlineLoess`/`ParallelOnlineLoessBuilder` for cross-project consistency — Online now always runs sequentially. `Loess`/`StreamingLoess` keep `.parallel()` unaffected.
+- Fixed a misleading comment on `binding_support::default_overlap()` claiming only cpp/julia/python/r used this formula while wasm/nodejs used a flat `500`; every binding actually computes `chunk_size / 10` via the same `build_streaming()` helper. No behavior changed there, only the comment.
 
 **Python:**
 
 - Removed `confidence_intervals`, `prediction_intervals`, and `return_se` from `StreamingLoess`'s constructor — never computed for Streaming. Breaking change.
-- Removed `confidence_intervals`, `prediction_intervals`, `return_se`, `return_diagnostics`, and `return_residuals` from `OnlineLoess`'s constructor, for the same reason (plus `OnlineOutput` has no diagnostics field and always includes a residual regardless of the flag). Breaking change. `parallel` is unaffected — it's real for `OnlineLoess`.
+- Removed `confidence_intervals`, `prediction_intervals`, `return_se`, `return_diagnostics`, and `return_residuals` from `OnlineLoess`'s constructor, for the same reason (plus `OnlineOutput` has no diagnostics field and always includes a residual regardless of the flag). Breaking change. Also removed `parallel` from `OnlineLoess`'s constructor — it gated real internal KD-tree/interval-pass dispatch (unlike the fields above), but was dropped for consistency with `fastlowess`'s `OnlineLowess`; Online now always runs sequentially. `Loess`/`StreamingLoess` are unaffected.
 
 **Julia:**
 
-- Removed the same fields as Python, from `StreamingLoess`/`OnlineLoess` keyword arguments. Also fixed a misleading `parallel` docstring on `OnlineLoess` implying it does nothing; it actually gates internal KD-tree/interval-pass dispatch. Breaking change.
+- Removed the same fields as Python, from `StreamingLoess`/`OnlineLoess` keyword arguments. Breaking change. `parallel` was subsequently also removed from `OnlineLoess`'s keyword arguments — it gated real internal KD-tree/interval-pass dispatch, but was dropped for consistency with `fastlowess`'s `OnlineLowess`; Online now always runs sequentially.
+- `weighted_metric_weights` no longer auto-selects the `"weighted"` distance metric for `Loess`/`StreamingLoess`/`OnlineLoess`; `distance_metric = "weighted"` must now be set explicitly, matching Python, and omitting it while providing weights raises an error. Breaking change.
 
 **Go:**
 
-- `StreamingOptions` and `OnlineOptions` no longer embed the shared `Options` struct (they now declare only the fields they actually support). `StreamingOptions` lost `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSE`/`CVFractions`/`CVMethod`/`CVK`/`CVSeed`; `OnlineOptions` additionally lost `ReturnDiagnostics`/`ReturnResiduals`. Breaking change; `Options`'s own fields and `Parallel` (real for both) are unaffected.
+- `StreamingOptions` and `OnlineOptions` no longer embed the shared `Options` struct (they now declare only the fields they actually support). `StreamingOptions` lost `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSE`/`CVFractions`/`CVMethod`/`CVK`/`CVSeed`; `OnlineOptions` additionally lost `ReturnDiagnostics`/`ReturnResiduals`. Breaking change. `Options`'s own fields are unaffected; `Parallel` remains real for `StreamingOptions` but was subsequently also removed from `OnlineOptions` for consistency with `fastlowess`'s `OnlineOptions` — Online now always runs sequentially.
+- `WeightedMetricWeights` no longer auto-selects the `"weighted"` distance metric for `Options`/`StreamingOptions`/`OnlineOptions`; `DistanceMetric = "weighted"` must now be set explicitly, matching Python, and omitting it while providing weights raises an error. Breaking change.
 
 **Java:**
 
-- Removed `confidenceIntervals`/`predictionIntervals`/`returnSe` builder methods from `StreamingOptions.Builder`, and those plus `returnDiagnostics`/`returnResiduals` from `OnlineOptions.Builder`. Breaking change; `Options.Builder`'s own methods and `parallel` (real for both) are unaffected.
+- Removed `confidenceIntervals`/`predictionIntervals`/`returnSe` builder methods from `StreamingOptions.Builder`, and those plus `returnDiagnostics`/`returnResiduals` from `OnlineOptions.Builder`. Breaking change. `Options.Builder`'s own methods are unaffected; `parallel` remains real for `StreamingOptions.Builder` but was subsequently also removed from `OnlineOptions.Builder` for consistency with `fastlowess`'s `OnlineOptions.Builder` — Online now always runs sequentially.
+- `weightedMetricWeights` no longer auto-selects the `"weighted"` distance metric for `Options.Builder`/`StreamingOptions.Builder`/`OnlineOptions.Builder`; `distanceMetric("weighted")` must now be set explicitly, matching Python, and omitting it while providing weights raises an error. Breaking change.
+
+**docs:**
+
+- Mirrored the Python API docs' structure (complete field tables in canonical order, a `## Options` subsection per field, `## Result Structure` moved to the end) to every remaining crate/binding: `loess-rs`, `fastLoess`, Julia (docstrings), Node.js, WASM, C++, Go, and Java. Along the way, corrected several real accuracy/consistency issues found by auditing docs against source:
+  - `weighted_metric_weights` previously auto-selected the `"weighted"` distance metric on C++/Go/Java/Julia (via `resolve_distance_metric_for_builder`), silently overriding any explicit `distance_metric`, while Python/R/Node.js/WASM required `distance_metric = "weighted"` to be set explicitly. Rather than just documenting the discrepancy, unified the behavior: C++/Go/Java/Julia now also require `distance_metric = "weighted"` explicitly and raise an error if weights are missing (see each binding's own changelog entry above).
+  - Fixed C++'s `StreamingOptions` hardcoding `overlap` to a fixed `500` default (bypassing the Rust-side dynamic resolution since it always passed a concrete, non-negative value); its default is now `-1` (matching Go/Java's "negative means use the library default" convention), so it resolves dynamically like every other binding.
+  - Docs previously showed a flat `500` for `overlap` for several bindings that actually use the dynamic default (Node.js, WASM, Go, Java, R).
+  - Fixed Java's `api-online.adoc` disclaimer omitting `returnDiagnostics`/`returnResiduals` from the list of Batch/Streaming-only settings.
+  - Fixed Julia's `Loess()`/`StreamingLoess()`/`OnlineLoess()` docstrings missing several real, accepted keyword arguments entirely (`weighted_metric_weights`, `cell`, `interpolation_vertices`, `boundary_degree_fallback`, `cv_seed` for `Loess()`).
+
+**R:**
+
+- Fixed `bindings/r/R/StreamingLoess.R`, which was corrupted to contain a duplicate (and outdated) copy of `OnlineLoess.R`'s content with a mangled fragment of the real `StreamingLoess()` body appended — meaning `StreamingLoess()` was not callable from R at all. Reconstructed from `man/StreamingLoess.Rd`, `utils.R`'s `streaming_params`, and the surrounding constructors' conventions; verified via `roxygen2::roxygenise()` and the full `testthat` suite (187 passed). Also fixed a stale `test-extendr-wrappers.R` fixture with 3 extra positional arguments left over from before `cell`/`interpolation_vertices`/`boundary_degree_fallback` were added to `RStreamingLoess$new`.
 
 ### Fixed
 

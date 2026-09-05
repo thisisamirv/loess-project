@@ -5,30 +5,30 @@
 \title{LOESS Streaming Smoothing}
 \usage{
 StreamingLoess(
-    fraction = 0.67,
-    chunk_size = 5000L,
-    ...,
-    overlap = NULL,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    merge_strategy = "weighted_average",
-    parallel = TRUE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL
+  fraction = 0.67,
+  chunk_size = 5000L,
+  ...,
+  overlap = NULL,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  merge_strategy = "weighted_average",
+  parallel = TRUE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL
 )
 }
 \arguments{
@@ -41,8 +41,8 @@ Default: 5000.}
 \item{...}{Not used; forces all subsequent arguments to be named.}
 
 \item{overlap}{Number of overlapping points between consecutive chunks,
-less than \code{chunk_size}. \code{NULL} (default) uses the backend's
-default of 500.}
+less than \code{chunk_size}. \code{NULL} (default) uses
+\code{chunk_size / 10} (clamped to \code{[1, chunk_size - 10]}).}
 
 \item{iterations}{Number of robustness iterations, between 0 and 1000
 (inclusive). Default: 3.}
@@ -105,9 +105,12 @@ Use \code{"minkowski:p"} to set a custom \emph{p} value.}
 \item{surface_mode}{Surface evaluation mode: \code{"interpolation"}
 (default) or \code{"direct"}.}
 
-\item{weighted_metric_weights}{Numeric vector of per-dimension weights used
-when \code{distance_metric = "weighted"}. Length must equal
-\code{dimensions}. \code{NULL} (default) uses equal weights.}
+\item{weighted_metric_weights}{Numeric vector of per-dimension weights.
+Length must equal \code{dimensions}. Only used when
+\code{distance_metric = "weighted"}; setting
+\code{distance_metric = "weighted"} without providing this raises an
+error. \code{NULL} (default) has no effect unless
+\code{distance_metric = "weighted"} is set.}
 
 \item{cell}{Cell size tuning parameter for the interpolation grid.
 \code{NULL} (default) uses the library default.}
@@ -135,11 +138,11 @@ in memory, see \code{\link{Loess}}; for point-by-point real-time data,
 see \code{\link{OnlineLoess}}.
 
 Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{ll}{
-    Strategy \tab Behavior \cr
-    \code{"average"} \tab Arithmetic mean of both estimates \cr
-    \code{"weighted_average"} \tab Distance-weighted blend (recommended, default) \cr
-    \code{"take_first"} \tab Keep left-chunk estimate \cr
-    \code{"take_last"} \tab Keep right-chunk estimate \cr
+   Strategy \tab Behavior \cr
+   \code{"average"} \tab Arithmetic mean of both estimates \cr
+   \code{"weighted_average"} \tab Distance-weighted blend (recommended, default) \cr
+   \code{"take_first"} \tab Keep left-chunk estimate \cr
+   \code{"take_last"} \tab Keep right-chunk estimate \cr
 }
 }
 \examples{

@@ -179,7 +179,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
     fn new() -> Self {
         Self {
             chunk_size: DEFAULT_STREAMING_CHUNK_SIZE,
-            overlap: DEFAULT_STREAMING_OVERLAP,
+            overlap: default_overlap(DEFAULT_STREAMING_CHUNK_SIZE),
             fraction: T::from(DEFAULT_FRACTION).unwrap(),
             iterations: DEFAULT_STREAMING_ITERATIONS,
             weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,

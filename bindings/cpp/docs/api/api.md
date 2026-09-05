@@ -104,7 +104,6 @@ See [Online Adapter](api-online.md) for the `OnlineLoess` class.
 | `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
 | `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling |
 | `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
-| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only; see [Custom Weights](../weighting/custom-weights.md)) |
 | `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) — see [Intervals](../guide/intervals.md) |
 | `prediction_intervals` | `double` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) — see [Intervals](../guide/intervals.md) |
 | `return_diagnostics` | `bool` | `false` | Compute RMSE, MAE, R2, AIC |
@@ -124,6 +123,11 @@ See [Online Adapter](api-online.md) for the `OnlineLoess` class.
 | `cv_k` | `int` | `5` | Number of folds for k-fold CV (Batch only) |
 | `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation (Batch only) |
 | `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (Batch only; 0 = random) |
+| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor (Batch only; see [Custom Weights](../weighting/custom-weights.md)) |
+
+## Options
+
+### fraction
 
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
@@ -134,6 +138,8 @@ See [Online Adapter](api-online.md) for the `OnlineLoess` class.
 | 0.5-0.7 | Heavy smoothing | Noisy data |
 | 0.7-1.0 | Very smooth | Trend extraction |
 
+### iterations
+
 `iterations` controls robustness to outliers, at the cost of speed.
 
 | Value | Effect | Performance |
@@ -143,13 +149,197 @@ See [Online Adapter](api-online.md) for the `OnlineLoess` class.
 | 4-6 | Strong | Contaminated data |
 | 7+ | Very strong | Heavy outliers |
 
-See [Streaming Adapter](api-streaming.md) for `StreamingOptions`.
+### weight_function
 
-See [Online Adapter](api-online.md) for `OnlineOptions`.
+*See: [Weight Functions](../weighting/kernels.md)*
+
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
+
+### robustness_method
+
+*See: [Robustness](../weighting/robustness.md)*
+
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
+
+### return_diagnostics
+
+*See: [`Diagnostics`](#fastloessdiagnostics)*
+
+Include a `Diagnostics` object (RMSE, MAE, R², AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/effective degrees of freedom additionally require `return_se = true` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
+
+- `false` (default) — leaves `diagnostics()` empty
+- `true` — populates `diagnostics()`
+
+### return_residuals
+
+Include per-point residuals (`y - fitted`) in the result.
+
+- `false` (default) — leaves `residuals()` empty
+- `true` — populates `residuals()`
+
+### return_robustness_weights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+- `false` (default) — leaves `robustness_weights()` empty
+- `true` — populates `robustness_weights()`
+
+### return_se
+
+*See: [Intervals](../guide/intervals.md#standard-errors)*
+
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
+
+- `false` (default) — leaves `standard_errors()` and the hat-matrix accessors empty/NaN
+- `true` — computes standard errors and hat-matrix statistics
+
+### parallel
+
+Enable multi-threaded execution via Rayon.
+
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
+
+### degree
+
+*See: [Polynomial Degree](../advanced/degree.md)*
+
+- `"constant"` or `"0"` (degree 0)
+- `"linear"` or `"1"` (default, degree 1)
+- `"quadratic"` or `"2"` (degree 2)
+- `"cubic"` or `"3"` (degree 3)
+- `"quartic"` or `"4"` (degree 4)
+
+### dimensions
+
+*See: [Multivariate LOESS](../advanced/dimensions.md)*
+
+Number of predictor dimensions. Set to match the number of columns in a multivariate `x` array.
+
+- Any integer `>= 1`; `1` (default) is univariate
+
+### distance_metric
+
+*See: [Multivariate LOESS](../advanced/dimensions.md)*
+
+- `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+- `"euclidean"` (alias: `"euclid"`)
+- `"manhattan"` (alias: `"l1"`)
+- `"chebyshev"` (alias: `"linf"`)
+- `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
+- `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
+
+### weighted_metric_weights
+
+*See: [Multivariate LOESS](../advanced/dimensions.md)*
+
+Per-dimension weights, one per dimension declared in `dimensions`. Only used when `distance_metric = "weighted"`; setting `distance_metric = "weighted"` without providing this raises an error.
+
+- `{}` (default, empty vector) — has no effect unless `distance_metric = "weighted"` is set
+- A non-empty `std::vector<double>` of per-dimension weights, required when `distance_metric = "weighted"`
+
+### surface_mode
+
+*See: [Polynomial Degree](../advanced/degree.md#surface-mode)*
+
+Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
+
+| Mode | Behavior | Speed | Accuracy |
+| --- | --- | --- | --- |
+| `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
+| `"direct"` | Evaluate at every query point | Slower | Full precision |
+
+### cell
+
+Cell size for the interpolation grid, as a fraction of the data range. Smaller values place more vertices (denser grid), improving accuracy at the cost of speed. Only applies when `surface_mode = "interpolation"`.
+
+- `NaN` (default) — uses the library default (`0.2`)
+- Any value in `(0, 1]`
+
+### interpolation_vertices
+
+Caps the maximum number of interpolation vertices, overriding the count implied by `cell`. Only applies when `surface_mode = "interpolation"`.
+
+- `0` (default) — uses the library default (no explicit cap)
+- Any integer `>= 1`
+
+### boundary_degree_fallback
+
+Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surface_mode = "interpolation"`.
+
+- `-1` (default) — uses the library default (enabled)
+- `1` — falls back to a lower degree at boundaries
+- `0` — raises an error instead of silently falling back
+
+### CV Options
+
+*See: [Cross-Validation](../guide/cross-validation.md)*
+
+- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method = "loocv"`.
+- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
+- `cv_seed`: Seed for reproducible k-fold shuffling. `0` (default) uses a random seed.
+
+### custom_weights
+
+*See: [Custom Weights](../weighting/custom-weights.md)*
+
+Per-observation weights, passed to `fit()` rather than the constructor.
 
 ## Result Structure
-
-See [Online Adapter](api-online.md) for `OnlineOutput`.
 
 ### fastloess::LoessResult
 
@@ -191,87 +381,6 @@ All accessors are const methods (not public fields):
 | `effective_df()` | `double` | Effective degrees of freedom (NaN if not computed) |
 | `aic()` | `double` | AIC (NaN if not computed) |
 | `aicc()` | `double` | AICc (NaN if not computed) |
-
-## Options
-
-### weight_function
-
-*See: [Weight Functions](../weighting/kernels.md)*
-
-- `"tricube"` (default)
-- `"epanechnikov"`
-- `"gaussian"`
-- `"uniform"` (alias: `"boxcar"`)
-- `"biweight"` (alias: `"bisquare"`)
-- `"triangle"` (alias: `"triangular"`)
-- `"cosine"`
-
-### robustness_method
-
-*See: [Robustness](../weighting/robustness.md)*
-
-- `"bisquare"` (default; alias: `"biweight"`)
-- `"huber"`
-- `"talwar"`
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### scaling_method
-
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### degree
-
-*See: [Polynomial Degree](../advanced/degree.md)*
-
-- `"constant"` or `"0"` (degree 0)
-- `"linear"` or `"1"` (default, degree 1)
-- `"quadratic"` or `"2"` (degree 2)
-- `"cubic"` or `"3"` (degree 3)
-- `"quartic"` or `"4"` (degree 4)
-
-### distance_metric
-
-*See: [Multivariate LOESS](../advanced/dimensions.md)*
-
-- `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
-- `"euclidean"` (alias: `"euclid"`)
-- `"manhattan"` (alias: `"l1"`)
-- `"chebyshev"` (alias: `"linf"`)
-- `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
-- `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
-
-### surface_mode
-
-*See: [Polynomial Degree](../advanced/degree.md#surface-mode)*
-
-Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
-
-| Mode | Behavior | Speed | Accuracy |
-| --- | --- | --- | --- |
-| `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
-| `"direct"` | Evaluate at every query point | Slower | Full precision |
 
 ## Example
 

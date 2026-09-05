@@ -20,7 +20,7 @@ opts.Overlap = 200
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `ChunkSize` | `int` | `5000` | Number of points processed per chunk. |
-| `Overlap` | `int` | library default | Points shared between consecutive chunks. Negative means "use the library default". |
+| `Overlap` | `int` | `ChunkSize / 10` | Points shared between consecutive chunks, reducing boundary artifacts at chunk edges. Negative (the `DefaultStreamingOptions()` value, `-1`) means "use the library default", clamped to `[1, ChunkSize - 10]`. |
 | `MergeStrategy` | `string` | `"weighted_average"` | How overlapping chunk results are combined. |
 
 *See also: [Merge Strategies](../advanced/merge.md)*
@@ -40,6 +40,10 @@ Flushes any buffered data and returns the final merged result. Call once after t
 ## `(*StreamingLoess) Close() error`
 
 Releases native resources. Safe to call multiple times.
+
+## Result
+
+`ProcessChunk` and `Finalize` return the same [`Result`](api.md#result-fields) type as `Loess.Fit`. Fields tied to Batch-only options (`ConfidenceLower`/`ConfidenceUpper`, `PredictionLower`/`PredictionUpper`, `CVScores`) are always left at their zero value here.
 
 ## Example
 

@@ -341,8 +341,6 @@ pub unsafe extern "C" fn jl_loess_new(
             weighted_metric_weights,
             weighted_metric_weights_len as usize,
         );
-        let effective_metric =
-            shared_parse::resolve_distance_metric_for_builder(Some(dm_str), wmw_slice);
 
         let cv_fractions_slice =
             shared_parse::option_slice_from_ptr(cv_fractions, cv_fractions_len as usize);
@@ -371,7 +369,7 @@ pub unsafe extern "C" fn jl_loess_new(
                     parallel: Some(parallel != 0),
                     degree: Some(deg_str),
                     dimensions: Some(configured_dimensions),
-                    distance_metric: effective_metric,
+                    distance_metric: Some(dm_str),
                     weighted_metric_weights: wmw_slice,
                     surface_mode: Some(surf_str),
                     return_se: return_se != 0,
@@ -662,8 +660,6 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
             weighted_metric_weights,
             weighted_metric_weights_len as usize,
         );
-        let effective_metric =
-            shared_parse::resolve_distance_metric_for_builder(Some(dm_str), weighted_metric);
         let configured_dimensions = dimensions.max(1) as usize;
 
         let (builder, _) = match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
@@ -685,7 +681,7 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
                 parallel: Some(parallel != 0),
                 degree: Some(deg_str),
                 dimensions: Some(configured_dimensions),
-                distance_metric: effective_metric,
+                distance_metric: Some(dm_str),
                 weighted_metric_weights: weighted_metric,
                 surface_mode: Some(surf_str),
                 return_se: false,
@@ -824,7 +820,6 @@ pub unsafe extern "C" fn jl_online_loess_new(
     auto_converge: c_double,
     return_robustness_weights: c_int,
     zero_weight_fallback: *const c_char,
-    parallel: c_int,
     // LOESS-specific options
     degree: *const c_char,
     dimensions: c_int,
@@ -902,8 +897,6 @@ pub unsafe extern "C" fn jl_online_loess_new(
             weighted_metric_weights,
             weighted_metric_weights_len as usize,
         );
-        let effective_metric =
-            shared_parse::resolve_distance_metric_for_builder(Some(dm_str), weighted_metric);
         let configured_dimensions = dimensions.max(1) as usize;
 
         let (builder, _) = match shared_parse::map_invalid_arg(shared_parse::apply_builder_options(
@@ -922,10 +915,10 @@ pub unsafe extern "C" fn jl_online_loess_new(
                 return_diagnostics: false,
                 confidence_intervals: None,
                 prediction_intervals: None,
-                parallel: Some(parallel != 0),
+                parallel: None,
                 degree: Some(deg_str),
                 dimensions: Some(configured_dimensions),
-                distance_metric: effective_metric,
+                distance_metric: Some(dm_str),
                 weighted_metric_weights: weighted_metric,
                 surface_mode: Some(surf_str),
                 return_se: false,

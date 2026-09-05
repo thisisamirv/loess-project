@@ -98,14 +98,11 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'sta
     type Output = ParallelOnlineLoessBuilder<T>;
 
     fn convert<Mode>(builder: LoessBuilder<T, Mode>) -> Self::Output {
-        // Determine parallel mode: user choice OR default to false for fastLoess Online
-        let parallel = builder.parallel.unwrap_or(false);
         // Extract fastLoess-specific fields before the base convert consumes the builder
         let weighted_metric_weights = builder.weighted_metric_weights.clone();
 
         // Delegate to base implementation to create base builder
-        let mut base = <BaseOnline as LoessAdapter<T>>::convert(builder);
-        base.parallel = Some(parallel);
+        let base = <BaseOnline as LoessAdapter<T>>::convert(builder);
 
         // Wrap with extension fields
         ParallelOnlineLoessBuilder {
@@ -202,10 +199,6 @@ macro_rules! impl_common_builder {
                 self.0 = self.0.return_robustness_weights();
                 self
             }
-            pub fn parallel(mut self, p: bool) -> Self {
-                self.0 = self.0.parallel(p);
-                self
-            }
         }
     };
 }
@@ -216,6 +209,10 @@ impl_common_builder!(Loess);
 impl Loess {
     pub fn custom_weights(mut self, w: Vec<f64>) -> Self {
         self.0 = self.0.custom_weights(w);
+        self
+    }
+    pub fn parallel(mut self, p: bool) -> Self {
+        self.0 = self.0.parallel(p);
         self
     }
     pub fn confidence_intervals(mut self, level: f64) -> Self {
@@ -275,6 +272,10 @@ impl StreamingLoess {
     }
     pub fn return_residuals(mut self) -> Self {
         self.0 = self.0.return_residuals();
+        self
+    }
+    pub fn parallel(mut self, p: bool) -> Self {
+        self.0 = self.0.parallel(p);
         self
     }
     pub fn chunk_size(mut self, s: usize) -> Self {

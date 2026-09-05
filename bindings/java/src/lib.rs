@@ -266,10 +266,6 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
         let distance_metric_str = jstring_to_option(env, &distance_metric);
         let surface_mode_str = jstring_to_option(env, &surface_mode);
         let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights);
-        let effective_metric = shared_parse::resolve_distance_metric_for_builder(
-            distance_metric_str.as_deref(),
-            weighted_metric_weights_vec.as_deref(),
-        );
 
         let iterations = shared_parse::require_non_negative_usize("iterations", iterations)?;
 
@@ -292,7 +288,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
                 parallel: Some(parallel),
                 degree: degree_str.as_deref(),
                 dimensions: (dimensions > 0).then_some(dimensions as usize),
-                distance_metric: effective_metric,
+                distance_metric: distance_metric_str.as_deref(),
                 weighted_metric_weights: weighted_metric_weights_vec.as_deref(),
                 surface_mode: surface_mode_str.as_deref(),
                 return_se,
@@ -443,10 +439,6 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
         let distance_metric_str = jstring_to_option(env, &distance_metric);
         let surface_mode_str = jstring_to_option(env, &surface_mode);
         let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights);
-        let effective_metric = shared_parse::resolve_distance_metric_for_builder(
-            distance_metric_str.as_deref(),
-            weighted_metric_weights_vec.as_deref(),
-        );
 
         let chunk_size = shared_parse::require_positive_usize("chunkSize", chunk_size)?;
 
@@ -469,7 +461,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
                 parallel: Some(parallel),
                 degree: degree_str.as_deref(),
                 dimensions: (dimensions > 0).then_some(dimensions as usize),
-                distance_metric: effective_metric,
+                distance_metric: distance_metric_str.as_deref(),
                 weighted_metric_weights: weighted_metric_weights_vec.as_deref(),
                 surface_mode: surface_mode_str.as_deref(),
                 return_se: false,
@@ -572,7 +564,6 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
     return_robustness_weights: jboolean,
     zero_weight_fallback: JString<'local>,
     auto_converge: jdouble,
-    parallel: jboolean,
     window_capacity: jint,
     min_points: jint,
     update_mode: JString<'local>,
@@ -604,10 +595,6 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
         let distance_metric_str = jstring_to_option(env, &distance_metric);
         let surface_mode_str = jstring_to_option(env, &surface_mode);
         let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights);
-        let effective_metric = shared_parse::resolve_distance_metric_for_builder(
-            distance_metric_str.as_deref(),
-            weighted_metric_weights_vec.as_deref(),
-        );
 
         let window_capacity =
             shared_parse::require_positive_usize("windowCapacity", window_capacity)?;
@@ -630,10 +617,10 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
                 return_diagnostics: false,
                 confidence_intervals: None,
                 prediction_intervals: None,
-                parallel: Some(parallel),
+                parallel: None,
                 degree: degree_str.as_deref(),
                 dimensions: (dimensions > 0).then_some(configured_dimensions),
-                distance_metric: effective_metric,
+                distance_metric: distance_metric_str.as_deref(),
                 weighted_metric_weights: weighted_metric_weights_vec.as_deref(),
                 surface_mode: surface_mode_str.as_deref(),
                 return_se: false,

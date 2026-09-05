@@ -93,7 +93,7 @@ ROnlineLoess$new <- function(
     weight_function, robustness_method,
     scaling_method, boundary_policy, zero_weight_fallback, update_mode,
     auto_converge, return_robustness_weights,
-    parallel, degree, dimensions, distance_metric,
+    degree, dimensions, distance_metric,
     weighted_metric_weights, surface_mode,
     cell, interpolation_vertices, boundary_degree_fallback
 ) {
@@ -102,7 +102,7 @@ ROnlineLoess$new <- function(
         iterations, weight_function, robustness_method, scaling_method,
         boundary_policy, zero_weight_fallback, update_mode, auto_converge,
         return_robustness_weights,
-        parallel, degree, dimensions, distance_metric,
+        degree, dimensions, distance_metric,
         weighted_metric_weights, surface_mode,
         cell, interpolation_vertices, boundary_degree_fallback
     )

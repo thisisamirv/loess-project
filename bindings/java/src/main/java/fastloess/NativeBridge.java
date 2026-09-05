@@ -176,7 +176,6 @@ final class NativeBridge {
             boolean returnRobustnessWeights,
             String zeroWeightFallback,
             double autoConverge,
-            boolean parallel,
             int windowCapacity,
             int minPoints,
             String updateMode,

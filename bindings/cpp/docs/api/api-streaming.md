@@ -120,6 +120,46 @@ int main() {
 
 - Finalizes the smoothing process and returns any remaining buffered results.
 
+## Options Structure
+
+### StreamingOptions (inherits LoessOptions)
+
+`StreamingOptions` inherits every field from `LoessOptions` (see [fastLoess](api.md#loessoptions)) and adds:
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `chunk_size` | `int` | `5000` | Data chunk size |
+| `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
+| `merge_strategy` | `std::string` | `"weighted_average"` | Strategy for blending overlap regions |
+
+Confidence/prediction intervals, standard errors, and cross-validation are Batch-only; setting these inherited fields has no effect on `StreamingLoess` — see [fastLoess](api.md) for those.
+
+## Options
+
+### chunk_size
+
+Number of points processed per call to `process_chunk()`. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.
+
+### overlap
+
+Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `merge_strategy`. A good starting point is 10–20% of `chunk_size`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
+
+- `-1` (the `StreamingOptions` default) — "use the library default", computing `chunk_size / 10` clamped to `[1, chunk_size - 10]`
+- Any non-negative integer `< chunk_size`
+
+### merge_strategy
+
+*See: [Merge Strategies](../advanced/merge.md)*
+
+| Strategy | Alias | Behavior |
+| --- | --- | --- |
+| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
+| `"average"` | `"mean"` | Average overlapping values |
+| `"take_first"` | `"first"` | Keep left chunk values |
+| `"take_last"` | `"last"` | Keep right chunk values |
+
+![Merge Strategies](merge_comparison.svg)
+
 ## Result Structure
 
 ### fastloess::LoessResult
@@ -138,33 +178,6 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `dimensions()` | `int` | Number of predictor dimensions |
 
 See [cpp.md](api.md) for the full `LoessResult` field reference.
-
-## Options Structure
-
-### StreamingOptions (inherits LoessOptions)
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `chunk_size` | `int` | `5000` | Data chunk size |
-| `overlap` | `int` | `500` | Overlap between chunks |
-| `merge_strategy` | `std::string` | `"weighted_average"` | Strategy for blending overlap regions |
-
-Confidence/prediction intervals, standard errors, and cross-validation are Batch-only and not available here; see [fastLoess](api.md) for those.
-
-## Options
-
-### merge_strategy
-
-*See: [Merge Strategies](../advanced/merge.md)*
-
-| Strategy | Alias | Behavior |
-| --- | --- | --- |
-| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
-| `"average"` | `"mean"` | Average overlapping values |
-| `"take_first"` | `"first"` | Keep left chunk values |
-| `"take_last"` | `"last"` | Keep right chunk values |
-
-![Merge Strategies](merge_comparison.svg)
 
 ---
 

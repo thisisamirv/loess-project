@@ -415,8 +415,25 @@ Stateful batch LOESS smoother.
 - `distance_metric::String = "normalized"`: Distance metric ("normalized", "euclidean",
   "manhattan", "chebyshev", "minkowski"). Use "minkowski:p" to set a custom p value,
   e.g. `distance_metric="minkowski:3"`.
+- `weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing`: Per-dimension
+  weights, one per dimension declared in `dimensions`. Only used when
+  `distance_metric="weighted"`; setting `distance_metric="weighted"` without providing
+  this raises an error. `nothing` (default) has no effect unless `distance_metric="weighted"`
+  is set.
 - `surface_mode::String = "interpolation"`: Surface mode ("interpolation" or "direct")
 - `return_se::Bool = false`: Whether to compute hat-matrix statistics (enp, trace_hat, etc.)
+- `cell::Union{Float64, Nothing} = nothing`: Cell size tuning parameter for the
+  interpolation grid, in `(0, 1]`. `nothing` (default) uses the library default (`0.2`).
+  Only applies when `surface_mode = "interpolation"`.
+- `interpolation_vertices::Union{Int, Nothing} = nothing`: Caps the number of
+  interpolation vertices. `nothing` (default) uses the library default (no explicit cap).
+  Only applies when `surface_mode = "interpolation"`.
+- `boundary_degree_fallback::Union{Bool, Nothing} = nothing`: Whether to reduce the
+  polynomial degree at boundary vertices when the requested `degree` can't be fit there.
+  `nothing` (default) uses the library default (enabled). Only applies when
+  `surface_mode = "interpolation"`.
+- `cv_seed::Union{Int, Nothing} = nothing`: Random seed for reproducible k-fold
+  cross-validation shuffling. `nothing` (default) uses a random seed.
 
 # Notes
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
@@ -690,13 +707,13 @@ Stateful streaming LOESS smoother.
 - `dimensions::Int = 1`: Number of predictor dimensions
 - `distance_metric::String = "normalized"`: Distance metric ("normalized", "euclidean",
   "manhattan", "chebyshev", "minkowski"). Use "minkowski:p" for a custom p value.
-  Pass `distance_metric = "weighted"` together with `weighted_metric_weights` to use
-  per-dimension weights.
 - `surface_mode::String = "interpolation"`: Surface mode
 - `merge_strategy::String = "weighted_average"`: Strategy for merging overlapping chunk regions:
   "average", "weighted_average", "take_first", "take_last"
 - `weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing`: Per-dimension
-  weights for the "weighted" distance metric.
+  weights, one per dimension declared in `dimensions`. Only used when
+  `distance_metric="weighted"`; setting `distance_metric="weighted"` without providing
+  this raises an error.
 - `cell::Union{Float64, Nothing} = nothing`: Cell size tuning parameter for the
   interpolation grid.
 - `interpolation_vertices::Union{Int, Nothing} = nothing`: Number of interpolation vertices.
@@ -837,17 +854,15 @@ Stateful online LOESS smoother.
 - `auto_converge::Float64 = NaN`: Auto-convergence tolerance
 - `return_robustness_weights::Bool = false`: Include weights
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling
-- `parallel::Bool = false`: Enable parallel execution (used for internal KD-tree/interval-pass
-  dispatch; off by default since online updates are latency-sensitive)
 - `degree::String = "linear"`: Polynomial degree
 - `dimensions::Int = 1`: Number of predictor dimensions
 - `distance_metric::String = "normalized"`: Distance metric ("normalized", "euclidean",
   "manhattan", "chebyshev", "minkowski"). Use "minkowski:p" for a custom p value.
-  Pass `distance_metric = "weighted"` together with `weighted_metric_weights` to use
-  per-dimension weights.
 - `surface_mode::String = "interpolation"`: Surface mode
 - `weighted_metric_weights::Union{Vector{Float64}, Nothing} = nothing`: Per-dimension
-  weights for the "weighted" distance metric.
+  weights, one per dimension declared in `dimensions`. Only used when
+  `distance_metric="weighted"`; setting `distance_metric="weighted"` without providing
+  this raises an error.
 - `cell::Union{Float64, Nothing} = nothing`: Cell size tuning parameter for the
   interpolation grid.
 - `interpolation_vertices::Union{Int, Nothing} = nothing`: Number of interpolation vertices.
@@ -870,7 +885,6 @@ mutable struct OnlineLoess
 		auto_converge::Float64 = NaN,
 		return_robustness_weights::Bool = false,
 		zero_weight_fallback::String = "use_local_mean",
-		parallel::Bool = false,
 		degree::String = "linear",
 		dimensions::Int = 1,
 		distance_metric::String = "normalized",
@@ -905,7 +919,6 @@ mutable struct OnlineLoess
 			auto_converge::Cdouble,
 			Cint(return_robustness_weights)::Cint,
 			zero_weight_fallback::Cstring,
-			Cint(parallel)::Cint,
 			degree::Cstring,
 			Cint(dimensions)::Cint,
 			distance_metric::Cstring,

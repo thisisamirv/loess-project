@@ -170,6 +170,15 @@ Behavior when all neighborhood weights are zero:
 - `"minkowski"` (Euclidean when no suffix; use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
 - `"weighted"` plus `WeightedMetricWeights` for per-dimension scaling (alias: `"weighted_euclidean"`)
 
+### WeightedMetricWeights
+
+*See: [Multivariate LOESS](../advanced/dimensions.md)*
+
+Per-dimension weights, one per dimension declared in `Dimensions`. Only used when `DistanceMetric = "weighted"`; setting `DistanceMetric = "weighted"` without providing this raises an error.
+
+- `nil` (default) — has no effect unless `DistanceMetric = "weighted"` is set
+- A non-empty `[]float64` of per-dimension weights, required when `DistanceMetric = "weighted"`
+
 ### SurfaceMode
 
 *See: [Polynomial Degree](../advanced/degree.md#surface-mode)*
@@ -180,6 +189,83 @@ Controls whether the local polynomial is evaluated at every query point or at a 
 | --- | --- | --- | --- |
 | `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
 | `"direct"` | Evaluate at every query point | Slower | Full precision |
+
+### Cell
+
+Cell size for the interpolation grid, as a fraction of the data range. Smaller values place more vertices (denser grid), improving accuracy at the cost of speed. Only applies when `SurfaceMode` is `"interpolation"`.
+
+- `nil` (default) — uses the library default (`0.2`)
+- Any value in `(0, 1]`
+
+### InterpolationVertices
+
+Caps the maximum number of interpolation vertices, overriding the count implied by `Cell`. Only applies when `SurfaceMode` is `"interpolation"`.
+
+- `nil` (default) — uses the library default (no explicit cap)
+- Any integer `>= 1`
+
+### BoundaryDegreeFallback
+
+Whether to reduce the polynomial degree at boundary vertices when the requested `Degree` can't be fit there (e.g., not enough neighbours). Only applies when `SurfaceMode` is `"interpolation"`.
+
+- `nil` (default) — uses the library default (enabled)
+- `true` — falls back to a lower degree at boundaries
+- `false` — raises an error instead of silently falling back
+
+### AutoConverge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
+
+### ConfidenceIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). `nil` (default) disables confidence intervals.
+
+### PredictionIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). `nil` (default) disables prediction intervals.
+
+### ReturnDiagnostics
+
+Populate `Result.Diagnostics` (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/`EffectiveDF` additionally require `ReturnSE: true` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
+
+- `false` (default) — leaves `Result.Diagnostics` as `nil`
+- `true` — populates `Result.Diagnostics`
+
+### ReturnResiduals
+
+Populate `Result.Residuals` (`y - fitted`).
+
+- `false` (default) — leaves `Result.Residuals` as `nil`
+- `true` — populates `Result.Residuals`
+
+### ReturnRobustnessWeights
+
+Populate `Result.RobustnessWeights` (from the last robustness iteration).
+
+- `false` (default) — leaves `Result.RobustnessWeights` as `nil`
+- `true` — populates `Result.RobustnessWeights`
+
+### ReturnSE
+
+*See: [Intervals](../guide/intervals.md#standard-errors)*
+
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
+
+- `false` (default) — leaves `Result.StandardErrors` and `Result.HatMatrix` as `nil`
+- `true` — computes standard errors and hat-matrix statistics
+
+### Parallel
+
+Enable multi-threaded execution via Rayon.
+
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
 
 ## Custom weights
 

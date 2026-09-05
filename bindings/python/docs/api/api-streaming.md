@@ -22,7 +22,9 @@ import fastloess as fl
 stream = fl.StreamingLoess(chunk_size=50, overlap=10)
 :::
 
-**Methods:**
+#### `process_chunk(x, y)`
+
+Feeds one chunk of data into the model. Each chunk is fit together with the trailing `overlap` points buffered from the previous call, then only the points that are fully resolved are returned — the tail of the chunk (the next `overlap` points) is held back internally, since it will be refit once the following chunk arrives and its estimate reconciled via `merge_strategy`. This is what lets the adapter process a dataset far larger than memory allows, one bounded-size chunk at a time, without ever materializing the whole dataset at once.
 
 :::{jupyter-execute}
 import fastloess as fl
@@ -36,7 +38,9 @@ partial_result = stream.process_chunk(x[:50], y[:50])
 print(partial_result)
 :::
 
-- Processes a chunk of data. Returns partial results.
+#### `finalize()`
+
+Flushes the overlap points still buffered from the last `process_chunk()` call. Because each call withholds its tail until the next chunk arrives to resolve it, the final chunk's tail would never be emitted otherwise — always call `finalize()` once after the last chunk to retrieve it.
 
 :::{jupyter-execute}
 import fastloess as fl
@@ -52,7 +56,237 @@ final_result = stream.finalize()
 print(final_result)
 :::
 
-- Finalizes the smoothing process and returns any remaining buffered results.
+## Options Structure
+
+### `StreamingOptions` (inherits `LoessOptions`)
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fraction` | `float` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations` | `int` | `3` | Number of robustifying iterations |
+| `weight_function` | `str` | `"tricube"` | Weight function name |
+| `robustness_method` | `str` | `"bisquare"` | Robustness method name |
+| `scaling_method` | `str` | `"mad"` | Residual scaling method |
+| `boundary_policy` | `str` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling strategy |
+| `auto_converge` | `float` | `None` | Auto-convergence tolerance |
+| `return_diagnostics` | `bool` | `False` | Include diagnostics in result |
+| `return_residuals` | `bool` | `False` | Include residuals in result |
+| `return_robustness_weights` | `bool` | `False` | Include weights in result |
+| `parallel` | `bool` | `True` | Enable parallel execution |
+| `degree` | `str` | `"linear"` | Polynomial degree of local fit |
+| `dimensions` | `int` | `1` | Number of predictor dimensions |
+| `distance_metric` | `str` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
+| `weighted_metric_weights` | `list[float]` | `None` | Per-dimension weights (used when `distance_metric="weighted"`) |
+| `surface_mode` | `str` | `"interpolation"` | Surface computation mode |
+| `cell` | `float` | `None` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
+| `interpolation_vertices` | `int` | `None` | Number of interpolation vertices |
+| `boundary_degree_fallback` | `bool \| None` | `None` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `chunk_size` | `int` | `5000` | Data chunk size |
+| `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
+| `merge_strategy` | `str` | `"weighted_average"` | Strategy for blending overlap regions |
+
+Confidence/prediction intervals, standard errors, and cross-validation are Batch-only and not available here; see [fastLoess](api.md) for those.
+
+## Options
+
+### fraction
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
+
+### iterations
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
+
+### weight_function
+
+*See: [Weight Functions](../weighting/kernels.md)*
+
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
+
+### robustness_method
+
+*See: [Robustness](../weighting/robustness.md)*
+
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `None` (default) disables early stopping.
+
+### return_diagnostics
+
+*See: [`Diagnostics`](#diagnostics)*
+
+Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always `None` here.
+
+- `False` (default) — leaves `result.diagnostics` as `None`
+- `True` — populates `result.diagnostics`
+
+### return_residuals
+
+Include per-point residuals (`y - fitted`) in the result.
+
+- `False` (default) — leaves `result.residuals` as `None`
+- `True` — populates `result.residuals`
+
+### return_robustness_weights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+- `False` (default) — leaves `result.robustness_weights` as `None`
+- `True` — populates `result.robustness_weights`
+
+### parallel
+
+Enable multi-threaded execution via Rayon.
+
+- `True` (default) — parallelizes the local regression fits across CPU cores
+- `False` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
+
+### degree
+
+*See: [Polynomial Degree](../advanced/degree.md)*
+
+- `"constant"` or `"0"` (degree 0)
+- `"linear"` or `"1"` (default, degree 1)
+- `"quadratic"` or `"2"` (degree 2)
+- `"cubic"` or `"3"` (degree 3)
+- `"quartic"` or `"4"` (degree 4)
+
+### dimensions
+
+*See: [Multivariate LOESS](../advanced/dimensions.md)*
+
+Number of predictor dimensions. Set to match the number of columns in a multivariate `x` array.
+
+- Any integer `>= 1`; `1` (default) is univariate
+
+### distance_metric
+
+*See: [Multivariate LOESS](../advanced/dimensions.md)*
+
+- `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+- `"euclidean"` (alias: `"euclid"`)
+- `"manhattan"` (alias: `"l1"`)
+- `"chebyshev"` (alias: `"linf"`)
+- `"minkowski"` (use `"minkowski:p"` string for custom exponent, e.g. `"minkowski:3"`)
+- `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
+
+### weighted_metric_weights
+
+*See: [Multivariate LOESS](../advanced/dimensions.md)*
+
+Per-dimension weights, one per dimension declared in `dimensions`. Only used when `distance_metric="weighted"`; setting `distance_metric="weighted"` without providing this raises an error.
+
+- `None` (default) — has no effect unless `distance_metric="weighted"` is set
+- A `list[float]` of per-dimension weights, required when `distance_metric="weighted"`
+
+### surface_mode
+
+*See: [Polynomial Degree](../advanced/degree.md#surface-mode)*
+
+Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
+
+| Mode | Behavior | Speed | Accuracy |
+| --- | --- | --- | --- |
+| `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
+| `"direct"` | Evaluate at every query point | Slower | Full precision |
+
+### cell
+
+Cell size for the interpolation grid, as a fraction of the data range. Smaller values place more vertices (denser grid), improving accuracy at the cost of speed. Only applies when `surface_mode="interpolation"`.
+
+- `None` (default) — uses the library default (`0.2`)
+- Any float in `(0, 1]`
+
+### interpolation_vertices
+
+Caps the maximum number of interpolation vertices, overriding the count implied by `cell`. Only applies when `surface_mode="interpolation"`.
+
+- `None` (default) — uses the library default (no explicit cap)
+- Any integer `>= 1`
+
+### boundary_degree_fallback
+
+Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surface_mode="interpolation"`.
+
+- `None` (default) — uses the library default (enabled)
+- `True` — falls back to a lower degree at boundaries
+- `False` — raises an error instead of silently falling back
+
+### chunk_size
+
+Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.
+
+### overlap
+
+Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `merge_strategy`. A good starting point is 10–20% of `chunk_size`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
+
+- `None` (default) — computes `chunk_size / 10`, clamped to at least 1 and less than `chunk_size`
+- Any integer `>= 1` and `< chunk_size`
+
+### merge_strategy
+
+*See: [Merge Strategies](../advanced/merge.md)*
+
+| Strategy | Alias | Behavior |
+| --- | --- | --- |
+| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
+| `"average"` | `"mean"` | Average overlapping values |
+| `"take_first"` | `"first"` | Keep left chunk values |
+| `"take_last"` | `"last"` | Keep right chunk values |
 
 ## Result Structure
 
@@ -66,34 +300,25 @@ Returned by `process_chunk()` and `finalize()`.
 | `y` | `ndarray` | Smoothed y values |
 | `fraction_used` | `float` | Fraction used |
 | `iterations_used` | `int \| None` | Robustness iterations actually performed |
+| `standard_errors` | `ndarray \| None` | Always `None` (Batch only) |
+| `confidence_lower` | `ndarray \| None` | Always `None` (Batch only) |
+| `confidence_upper` | `ndarray \| None` | Always `None` (Batch only) |
+| `prediction_lower` | `ndarray \| None` | Always `None` (Batch only) |
+| `prediction_upper` | `ndarray \| None` | Always `None` (Batch only) |
 | `residuals` | `ndarray \| None` | Residuals (if `return_residuals`) |
 | `robustness_weights` | `ndarray \| None` | Robustness weights (if `return_robustness_weights`) |
+| `cv_scores` | `ndarray \| None` | Always `None` (Batch only) |
 | `diagnostics` | `Diagnostics \| None` | Fit metrics (if `return_diagnostics`) |
 | `dimensions` | `int` | Number of predictor dimensions |
 
-See [api.md](api.md) for the full `LoessResult` field reference.
+### `Diagnostics`
 
-## Options Structure
-
-### `StreamingOptions` (inherits `LoessOptions`)
-
-| Field | Type | Default | Description |
-| --- | --- | --- | --- |
-| `chunk_size` | `int` | `5000` | Data chunk size |
-| `overlap` | `int` | `500` | Overlap between chunks |
-| `merge_strategy` | `str` | `"weighted_average"` | Strategy for blending overlap regions |
-
-Confidence/prediction intervals, standard errors, and cross-validation are Batch-only and not available here; see [fastLoess](api.md) for those.
-
-## Options
-
-### merge_strategy
-
-*See: [Merge Strategies](../advanced/merge.md)*
-
-| Strategy | Alias | Behavior |
+| Field | Type | Description |
 | --- | --- | --- |
-| `"weighted_average"` (default) | `"weighted"` | Distance-weighted blend |
-| `"average"` | `"mean"` | Average overlapping values |
-| `"take_first"` | `"first"` | Keep left chunk values |
-| `"take_last"` | `"last"` | Keep right chunk values |
+| `rmse` | `float` | Root Mean Squared Error |
+| `mae` | `float` | Mean Absolute Error |
+| `r_squared` | `float` | R-squared |
+| `residual_sd` | `float` | Residual standard deviation |
+| `effective_df` | `float \| None` | Always `None` (requires standard errors, Batch only) |
+| `aic` | `float \| None` | Always `None` (requires `effective_df`, Batch only) |
+| `aicc` | `float \| None` | Always `None` (requires `effective_df`, Batch only) |

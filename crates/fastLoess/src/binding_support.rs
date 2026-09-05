@@ -276,21 +276,6 @@ pub unsafe fn option_vec_from_ptr<T: Clone>(ptr: *const T, len: usize) -> Option
     unsafe { option_slice_from_ptr(ptr, len) }.map(<[T]>::to_vec)
 }
 
-// Resolves the effective distance metric string to pass to apply_builder_options.
-// If weights are provided they imply "weighted" regardless of the user's metric string.
-// If the user explicitly asks for "weighted" without weights, the string is passed through
-// as-is so apply_builder_options can return a clear error.
-pub fn resolve_distance_metric_for_builder<'a>(
-    distance_metric: Option<&'a str>,
-    weighted_metric_weights: Option<&'a [f64]>,
-) -> Option<&'a str> {
-    if weighted_metric_weights.is_some() {
-        Some("weighted")
-    } else {
-        distance_metric
-    }
-}
-
 // Message returned by setter stubs on streaming/online models (C++ binding).
 pub fn setter_unsupported_eager_message(name: &str) -> String {
     format!(
@@ -954,8 +939,7 @@ pub fn parse_merge_strategy(name: &str) -> Result<MergeStrategy, String> {
 // batch, streaming, and online constructors.
 
 // Compute the default overlap size from a chunk size when the caller does not
-// specify one. cpp, julia, python, and r all use this same formula instead of
-// the flat 500-point default used by wasm/nodejs.
+// specify one. Every binding uses this same formula via `build_streaming()`.
 pub fn default_overlap(chunk_size: usize) -> usize {
     let default = chunk_size / 10;
     default.min(chunk_size.saturating_sub(10)).max(1)
@@ -1266,12 +1250,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     ParallelOnlineLoessBuilder<T>
 {
-    // Set parallel execution mode.
-    pub fn parallel(mut self, parallel: bool) -> Self {
-        self.base.parallel = Some(parallel);
-        self
-    }
-
     // Set the smoothing fraction (span).
     pub fn fraction(mut self, fraction: T) -> Self {
         self.base.fraction = fraction;

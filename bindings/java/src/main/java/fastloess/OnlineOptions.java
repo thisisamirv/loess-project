@@ -38,8 +38,6 @@ public final class OnlineOptions {
         String updateMode = null;
 
         Builder() {
-            // Per-point updates rarely benefit from parallelism, unlike Batch/Streaming.
-            common.parallel(false);
         }
 
         /**
@@ -131,16 +129,6 @@ public final class OnlineOptions {
          */
         public Builder returnRobustnessWeights(boolean returnRobustnessWeights) {
             common.returnRobustnessWeights(returnRobustnessWeights);
-            return this;
-        }
-
-        /**
-         * @param parallel whether to enable parallel execution
-         * @return this builder, for chaining
-         * @see Options.Builder#parallel(boolean)
-         */
-        public Builder parallel(boolean parallel) {
-            common.parallel(parallel);
             return this;
         }
 

@@ -723,7 +723,7 @@ class TestParameterCoverage:
 
     def test_online_misc_params(self):
         """Cover: auto_converge, return_robustness_weights, degree, scaling_method,
-        boundary_policy, surface_mode, parallel."""
+        boundary_policy, surface_mode."""
         x = np.linspace(0, 10, 30)
         y = np.sin(x)
         o = fastloess.OnlineLoess(
@@ -735,7 +735,6 @@ class TestParameterCoverage:
             boundary_policy="zero",
             return_robustness_weights=True,
             surface_mode="direct",
-            parallel=True,
         )
         results = [o.add_point(xi, yi) for xi, yi in zip(x, y)]
         assert any(r is not None for r in results)

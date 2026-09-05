@@ -146,8 +146,7 @@ test_that("OnlineLoess constructor coerces all param types via env_args", {
         fraction = 0.2,
         window_capacity = 20L,
         min_points = 3L,
-        update_mode = "incremental",
-        parallel = FALSE
+        update_mode = "incremental"
     )
     expect_s3_class(model, "OnlineLoess")
 })

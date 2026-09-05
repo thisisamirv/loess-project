@@ -256,7 +256,6 @@ class OnlineLoess:
         auto_converge: float | None = None,
         return_robustness_weights: bool = False,
         zero_weight_fallback: str = "use_local_mean",
-        parallel: bool = False,
         degree: str = "linear",
         dimensions: int = 1,
         distance_metric: str = "normalized",

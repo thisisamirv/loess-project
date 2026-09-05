@@ -5,28 +5,27 @@
 \title{LOESS Online Smoothing}
 \usage{
 OnlineLoess(
-    fraction = 0.67,
-    window_capacity = 1000L,
-    min_points = 2L,
-    ...,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    update_mode = "incremental",
-    auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    parallel = FALSE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL
+  fraction = 0.67,
+  window_capacity = 1000L,
+  min_points = 2L,
+  ...,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  update_mode = "incremental",
+  auto_converge = NULL,
+  return_robustness_weights = FALSE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL
 )
 }
 \arguments{
@@ -80,8 +79,6 @@ iterations. \code{NULL} (default) disables early stopping.}
 \item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
 robustness weights. Default: \code{FALSE}.}
 
-\item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
-
 \item{degree}{Local polynomial degree: \code{"constant"}, \code{"linear"}
 (default), \code{"quadratic"}, \code{"cubic"}, or \code{"quartic"}.}
 
@@ -95,9 +92,12 @@ Use \code{"minkowski:p"} to set a custom \emph{p} value.}
 \item{surface_mode}{Surface evaluation mode: \code{"interpolation"}
 (default) or \code{"direct"}.}
 
-\item{weighted_metric_weights}{Numeric vector of per-dimension weights used
-when \code{distance_metric = "weighted"}. Length must equal
-\code{dimensions}. \code{NULL} (default) uses equal weights.}
+\item{weighted_metric_weights}{Numeric vector of per-dimension weights.
+Length must equal \code{dimensions}. Only used when
+\code{distance_metric = "weighted"}; setting
+\code{distance_metric = "weighted"} without providing this raises an
+error. \code{NULL} (default) has no effect unless
+\code{distance_metric = "weighted"} is set.}
 
 \item{cell}{Cell size tuning parameter for the interpolation grid.
 \code{NULL} (default) uses the library default.}
