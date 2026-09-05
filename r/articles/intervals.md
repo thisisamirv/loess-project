@@ -7,14 +7,14 @@ intervals](../reference/figures/intervals_comparison.svg)
 
 Confidence and prediction intervals
 
-> **Note:** Confidence and prediction intervals are available in
-> **Batch** mode only. Streaming and Online modes do not support
+> **Adapter support:** Confidence and prediction intervals are available
+> in **Batch** mode only. Streaming and Online modes do not support
 > intervals.
 
-| Type           | Represents             | Width  | Use                       |
-|----------------|------------------------|--------|---------------------------|
-| **Confidence** | Mean curve uncertainty | Narrow | Where is the true trend?  |
-| **Prediction** | New-point uncertainty  | Wide   | Where will new data fall? |
+| Type           | Represents                 | Width  | Use                   |
+|----------------|----------------------------|--------|-----------------------|
+| **Confidence** | Uncertainty in mean curve  | Narrow | Where is the trend?   |
+| **Prediction** | Uncertainty for new points | Wide   | Where will data fall? |
 
 ------------------------------------------------------------------------
 
@@ -42,12 +42,19 @@ lines(result$x, result$confidence_upper, col = "blue", lty = 2)
 
 ![](intervals_files/figure-html/intervals_1-1.png)
 
+``` r
+
+
+cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
+    result$confidence_upper[50], "]\n")
+#> 95% CI at midpoint: [ -0.102212 ,  0.1763286 ]
+```
+
 ------------------------------------------------------------------------
 
 ## Prediction Intervals
 
-Wider than confidence intervals — cover where new observations will
-fall.
+Estimate where new observations might fall.
 
 ``` r
 
@@ -68,9 +75,19 @@ lines(result$x, result$prediction_upper, col = "red", lty = 2)
 
 ![](intervals_files/figure-html/intervals_2-1.png)
 
+``` r
+
+
+cat("Prediction bounds: [", result$prediction_lower[1], ", ",
+    result$prediction_upper[1], "]\n")
+#> Prediction bounds: [ -0.1439302 ,  1.095608 ]
+```
+
 ------------------------------------------------------------------------
 
-## Both Intervals Together
+## Both Intervals
+
+Request both types simultaneously:
 
 ``` r
 
@@ -106,20 +123,62 @@ legend("topright",
 
 ![](intervals_files/figure-html/intervals_3-1.png)
 
+``` r
+
+
+cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
+    result$confidence_upper[50], "]\n")
+#> 95% CI at midpoint: [ -0.102212 ,  0.1763286 ]
+```
+
 ------------------------------------------------------------------------
 
-## Choosing a Coverage Level
+## Confidence Levels
+
+Common levels and their z-values:
+
+| Level | z-value | Interpretation                      |
+|-------|---------|-------------------------------------|
+| 0.90  | 1.645   | 90% of intervals contain true value |
+| 0.95  | 1.960   | 95% of intervals contain true value |
+| 0.99  | 2.576   | 99% of intervals contain true value |
 
 ``` r
 
-# 99% confidence intervals
+# 99% confidence interval
 model <- Loess(fraction = 0.5, confidence_intervals = 0.99)
 result <- fit(model, x, y)
-cat("First 6 smoothed values (99% CI):\n")
-#> First 6 smoothed values (99% CI):
-print(head(result$y))
-#> [1] 0.4758389 0.4846388 0.4944609 0.5054102 0.5169758 0.5286606
+cat("First lower CI bound (99%):", result$confidence_lower[1], "\n")
+#> First lower CI bound (99%): 0.2948638
 ```
+
+------------------------------------------------------------------------
+
+## Standard Errors
+
+Access standard errors directly (available when intervals are computed):
+
+``` r
+
+model <- Loess(fraction = 0.5, return_se = TRUE)
+result <- fit(model, x, y)
+cat("Standard errors (first 5):", head(result$standard_errors, 5), "\n")
+#> Standard errors (first 5): 0.0702543 0.07094242 0.0716677 0.07241371 0.07315985
+```
+
+------------------------------------------------------------------------
+
+## Availability
+
+> **Batch Mode Only:** Confidence and prediction intervals are only
+> available in **Batch** mode. Streaming and Online modes do not support
+> intervals.
+
+| Feature              | Batch | Streaming | Online |
+|----------------------|-------|-----------|--------|
+| Confidence intervals | ✓     | ✗         | ✗      |
+| Prediction intervals | ✓     | ✗         | ✗      |
+| Standard errors      | ✓     | ✗         | ✗      |
 
 ``` r
 
@@ -145,7 +204,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.2.0
+#> [1] rfastloess_2.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

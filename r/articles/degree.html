@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,7 @@
 
     
     
+<!-- markdownlint-disable MD024 -->
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -242,52 +243,9 @@ degree at boundaries to avoid instability.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="surface-mode">Surface Mode<a class="anchor" aria-label="anchor" href="#surface-mode"></a>
-</h2>
-<p>The <code>surface_mode</code> parameter controls whether LOESS
-evaluates the local polynomial at every query point or at a sparser grid
-of vertices with Hermite cubic interpolation in between.</p>
-<table class="table">
-<colgroup>
-<col width="25%">
-<col width="25%">
-<col width="25%">
-<col width="25%">
-</colgroup>
-<thead><tr class="header">
-<th>Mode</th>
-<th>Behaviour</th>
-<th>Speed</th>
-<th>Accuracy</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>
-<code>"interpolation"</code> (default)</td>
-<td>Evaluate at anchor vertices, blend via Hermite cubic</td>
-<td>Faster</td>
-<td>Slight approximation</td>
-</tr>
-<tr class="even">
-<td><code>"direct"</code></td>
-<td>Evaluate at every query point</td>
-<td>Exact</td>
-<td>Full precision</td>
-</tr>
-</tbody>
-</table>
-<p>See <a href="dimensions.html">Multivariate LOESS</a> for runnable
-<code>surface_mode</code> examples.</p>
-<hr>
-</div>
-<div class="section level2">
-<h2 id="choosing-a-degree">Choosing a Degree<a class="anchor" aria-label="anchor" href="#choosing-a-degree"></a>
+<h2 id="choosing-the-right-degree">Choosing the Right Degree<a class="anchor" aria-label="anchor" href="#choosing-the-right-degree"></a>
 </h2>
 <table class="table">
-<colgroup>
-<col width="50%">
-<col width="50%">
-</colgroup>
 <thead><tr class="header">
 <th>Situation</th>
 <th>Recommended Degree</th>
@@ -315,8 +273,7 @@ of vertices with Hermite cubic interpolation in between.</p>
 <tr class="odd">
 <td>Fine oscillatory structure (rare)</td>
 <td>
-<code>4</code> (with <code>fraction</code> &gt;= 0.6,
-cross-validate)</td>
+<code>4</code> (fraction &gt;= 0.6, CV)</td>
 </tr>
 <tr class="even">
 <td>Boundary accuracy is critical</td>
@@ -335,6 +292,59 @@ cross-validate)</td>
 bias in regions of high curvature, and increase <code>fraction</code> at
 the same time.</p>
 </blockquote>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="higher-degree-effects">Higher Degree Effects<a class="anchor" aria-label="anchor" href="#higher-degree-effects"></a>
+</h2>
+<div class="float">
+<img src="../reference/figures/higher_degree_comparison.svg" alt="Higher Degree Comparison"><div class="figcaption">Higher Degree Comparison</div>
+</div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="surface-mode">Surface Mode<a class="anchor" aria-label="anchor" href="#surface-mode"></a>
+</h2>
+<p>The <code>surface_mode</code> parameter controls whether LOESS
+evaluates the local polynomial at every query point or at a sparser grid
+of vertices with Hermite cubic interpolation in between.</p>
+<table class="table">
+<colgroup>
+<col width="25%">
+<col width="25%">
+<col width="25%">
+<col width="25%">
+</colgroup>
+<thead><tr class="header">
+<th>Mode</th>
+<th>Behaviour</th>
+<th>Speed</th>
+<th>Accuracy</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>
+<code>"interpolation"</code> (default)</td>
+<td>Anchor + Hermite blend</td>
+<td>Faster</td>
+<td>Approx</td>
+</tr>
+<tr class="even">
+<td><code>"direct"</code></td>
+<td>Evaluate at every query point</td>
+<td>Exact</td>
+<td>Full precision</td>
+</tr>
+</tbody>
+</table>
+<div class="float">
+<img src="../reference/figures/surface_comparison.svg" alt="Surface Mode Comparison"><div class="figcaption">Surface Mode Comparison</div>
+</div>
+<div class="float">
+<img src="../reference/figures/degree_interpolation_comparison.svg" alt="Degree x Interpolation"><div class="figcaption">Degree x Interpolation</div>
+</div>
+<p>See <code><a href="../articles/dimensions.html">vignette("dimensions", package = "rfastloess")</a></code> for
+runnable <code>surface_mode</code> examples.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
@@ -358,7 +368,7 @@ the same time.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastloess_1.2.0</span></span>
+<span><span class="co">#&gt; [1] rfastloess_2.0.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>

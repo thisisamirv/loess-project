@@ -45,10 +45,8 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(iterations = 3, scaling_method = "mad")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (MAD scaling):\n")
-#> First 6 smoothed values (MAD scaling):
-print(head(result$y))
-#> [1] 0.4897657 0.4961584 0.5029665 0.5102219 0.5179564 0.5262019
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4897657
 ```
 
 ------------------------------------------------------------------------
@@ -70,10 +68,8 @@ residuals.
 
 model <- Loess(iterations = 3, scaling_method = "mar")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (MAR scaling):\n")
-#> First 6 smoothed values (MAR scaling):
-print(head(result$y))
-#> [1] 0.5096452 0.5176529 0.5262527 0.5354995 0.5454482 0.5561534
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.5096452
 ```
 
 ------------------------------------------------------------------------
@@ -95,11 +91,23 @@ required.
 
 model <- Loess(iterations = 3, scaling_method = "mean")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (mean scaling):\n")
-#> First 6 smoothed values (mean scaling):
-print(head(result$y))
-#> [1] 0.5127460 0.5210276 0.5299371 0.5395344 0.5498791 0.5610310
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.512746
 ```
+
+------------------------------------------------------------------------
+
+## Choosing a Scaling Method
+
+| Situation                                             | Recommended Method |
+|-------------------------------------------------------|--------------------|
+| General purpose, possible outliers                    | `"mad"` (default)  |
+| Speed matters; residuals have minimal systematic bias | `"mar"`            |
+| Clean data, no outliers                               | `"mean"`           |
+
+See
+[`vignette("robustness", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/robustness.md)
+for a broader discussion of outlier handling.
 
 ------------------------------------------------------------------------
 
@@ -154,7 +162,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.2.0
+#> [1] rfastloess_2.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

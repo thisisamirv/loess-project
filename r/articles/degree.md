@@ -152,6 +152,33 @@ print(head(result$y))
 
 ------------------------------------------------------------------------
 
+## Choosing the Right Degree
+
+| Situation                             | Recommended Degree            |
+|---------------------------------------|-------------------------------|
+| Monotone trend, general purpose       | `1` (default)                 |
+| Maximum smoothness, speed             | `0`                           |
+| Clear peaks / valleys / inflections   | `2` (with `fraction` \>= 0.4) |
+| S-shaped curves, multiple inflections | `3` (with `fraction` \>= 0.5) |
+| Fine oscillatory structure (rare)     | `4` (fraction \>= 0.6, CV)    |
+| Boundary accuracy is critical         | `1` or `2` (not `0`)          |
+| Very small dataset (n \< 50)          | `1`                           |
+
+> **Rule of thumb:** Start with `degree = 1` (default). Move to
+> `degree = 2` only if you see systematic bias in regions of high
+> curvature, and increase `fraction` at the same time.
+
+------------------------------------------------------------------------
+
+## Higher Degree Effects
+
+![Higher Degree
+Comparison](../reference/figures/higher_degree_comparison.svg)
+
+Higher Degree Comparison
+
+------------------------------------------------------------------------
+
 ## Surface Mode
 
 The `surface_mode` parameter controls whether LOESS evaluates the local
@@ -160,30 +187,21 @@ Hermite cubic interpolation in between.
 
 | Mode | Behaviour | Speed | Accuracy |
 |----|----|----|----|
-| `"interpolation"` (default) | Evaluate at anchor vertices, blend via Hermite cubic | Faster | Slight approximation |
+| `"interpolation"` (default) | Anchor + Hermite blend | Faster | Approx |
 | `"direct"` | Evaluate at every query point | Exact | Full precision |
 
-See [Multivariate
-LOESS](https://thisisamirv.github.io/loess-project/r/articles/dimensions.md)
+![Surface Mode Comparison](../reference/figures/surface_comparison.svg)
+
+Surface Mode Comparison
+
+![Degree x
+Interpolation](../reference/figures/degree_interpolation_comparison.svg)
+
+Degree x Interpolation
+
+See
+[`vignette("dimensions", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/dimensions.md)
 for runnable `surface_mode` examples.
-
-------------------------------------------------------------------------
-
-## Choosing a Degree
-
-| Situation | Recommended Degree |
-|----|----|
-| Monotone trend, general purpose | `1` (default) |
-| Maximum smoothness, speed | `0` |
-| Clear peaks / valleys / inflections | `2` (with `fraction` \>= 0.4) |
-| S-shaped curves, multiple inflections | `3` (with `fraction` \>= 0.5) |
-| Fine oscillatory structure (rare) | `4` (with `fraction` \>= 0.6, cross-validate) |
-| Boundary accuracy is critical | `1` or `2` (not `0`) |
-| Very small dataset (n \< 50) | `1` |
-
-> **Rule of thumb:** Start with `degree = 1` (default). Move to
-> `degree = 2` only if you see systematic bias in regions of high
-> curvature, and increase `fraction` at the same time.
 
 ``` r
 
@@ -209,7 +227,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.2.0
+#> [1] rfastloess_2.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

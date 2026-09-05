@@ -136,17 +136,18 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastloess_1_1StreamingLoess_html"><div class="ttname"><a href="classfastloess_1_1StreamingLoess.html">fastloess::StreamingLoess</a></div><div class="ttdoc">Streaming LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:505</div></div>
+<div class="ttc" id="aclassfastloess_1_1StreamingLoess_html"><div class="ttname"><a href="classfastloess_1_1StreamingLoess.html">fastloess::StreamingLoess</a></div><div class="ttdoc">Streaming LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:511</div></div>
 <div class="ttc" id="afastloess_8hpp_html"><div class="ttname"><a href="fastloess_8hpp.html">fastloess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLoess library.</div></div>
-<div class="ttc" id="astructfastloess_1_1LoessOptions_html_a74cd5ca0f18e82875093bb3aecfde3ce"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fastloess::LoessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastloess.hpp:108</div></div>
-<div class="ttc" id="astructfastloess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastloess_1_1StreamingOptions.html">fastloess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOESS.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:157</div></div>
-<div class="ttc" id="astructfastloess_1_1StreamingOptions_html_a98f8b3b29440ae83cf42f8574ffb6090"><div class="ttname"><a href="structfastloess_1_1StreamingOptions.html#a98f8b3b29440ae83cf42f8574ffb6090">fastloess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdef"><b>Definition</b> fastloess.hpp:159</div></div>
-<div class="ttc" id="astructfastloess_1_1StreamingOptions_html_ae2c3404649b3a143e31b2f62c88a1de5"><div class="ttname"><a href="structfastloess_1_1StreamingOptions.html#ae2c3404649b3a143e31b2f62c88a1de5">fastloess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastloess.hpp:158</div></div>
+<div class="ttc" id="astructfastloess_1_1LoessOptions_html_a74cd5ca0f18e82875093bb3aecfde3ce"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fastloess::LoessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastloess.hpp:110</div></div>
+<div class="ttc" id="astructfastloess_1_1StreamingOptions_html"><div class="ttname"><a href="structfastloess_1_1StreamingOptions.html">fastloess::StreamingOptions</a></div><div class="ttdoc">Options for streaming LOESS.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:163</div></div>
+<div class="ttc" id="astructfastloess_1_1StreamingOptions_html_a98f8b3b29440ae83cf42f8574ffb6090"><div class="ttname"><a href="structfastloess_1_1StreamingOptions.html#a98f8b3b29440ae83cf42f8574ffb6090">fastloess::StreamingOptions::overlap</a></div><div class="ttdeci">int overlap</div><div class="ttdoc">Negative (the default) means &quot;use the library default&quot; (chunk_size / 10, clamped to [1,...</div><div class="ttdef"><b>Definition</b> fastloess.hpp:167</div></div>
+<div class="ttc" id="astructfastloess_1_1StreamingOptions_html_ae2c3404649b3a143e31b2f62c88a1de5"><div class="ttname"><a href="structfastloess_1_1StreamingOptions.html#ae2c3404649b3a143e31b2f62c88a1de5">fastloess::StreamingOptions::chunk_size</a></div><div class="ttdeci">int chunk_size</div><div class="ttdef"><b>Definition</b> fastloess.hpp:164</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.224537</div>
 </div><!-- fragment --><ul>
 <li><code>options</code>: A <code>StreamingOptions</code> struct (inherits from <code>LoessOptions</code>) with additional <code>chunk_size</code> and <code>overlap</code> parameters.</li>
 </ul>
-<p><b>Methods:</b></p>
+<h4><code>process_chunk(x, y)</code></h4>
+<p>Processes a chunk of data. Returns partial results.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastloess_8hpp.html">fastloess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -172,9 +173,8 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">0.5</div>
-</div><!-- fragment --><ul>
-<li>Processes a chunk of data. Returns partial results.</li>
-</ul>
+</div><!-- fragment --><h4><code>finalize()</code></h4>
+<p>Finalizes the smoothing process and returns any remaining buffered results.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastloess_8hpp.html">fastloess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -203,46 +203,29 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
 </div><!-- fragment --><div class="fragment"><div class="line">0.5</div>
-</div><!-- fragment --><ul>
-<li>Finalizes the smoothing process and returns any remaining buffered results.</li>
-</ul>
-<h2>Result Structure</h2>
-<h3><a class="el" href="classfastloess_1_1LoessResult.html" title="Result of LOESS smoothing operation.">fastloess::LoessResult</a></h3>
-<p>Returned (inside <code>Expected</code>) by <code>process_chunk()</code> and <code>finalize()</code>.</p>
-<table class="markdownTable">
-<tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Method   </th><th class="markdownTableHeadNone">Return Type   </th><th class="markdownTableHeadNone">Description    </th></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>x_vector()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Sorted x values    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>y_vector()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Smoothed y values    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>fraction_used()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Fraction used    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>iterations_used()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Robustness iterations (-1 = N/A)    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>residuals()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Residuals (if <code>return_residuals</code>; empty if not)    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>robustness_weights()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Robustness weights (if <code>return_robustness_weights</code>; empty if not)    </td></tr>
-<tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>has_value()</code> (if <code>return_diagnostics</code>)    </td></tr>
-<tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>dimensions()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Number of predictor dimensions   </td></tr>
-</table>
-<p>See <a class="el" href="api_8md.html">cpp.md</a> for the full <code>LoessResult</code> field reference.</p>
-<h2>Options Structure</h2>
+</div><!-- fragment --><h2>Options Structure</h2>
 <h3>StreamingOptions (inherits LoessOptions)</h3>
+<p><code>StreamingOptions</code> inherits every field from <code>LoessOptions</code> (see <a href="api.md#loessoptions">fastLoess</a>) and adds:</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
 <th class="markdownTableHeadNone">Field   </th><th class="markdownTableHeadNone">Type   </th><th class="markdownTableHeadNone">Default   </th><th class="markdownTableHeadNone">Description    </th></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>chunk_size</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone"><code>5000</code>   </td><td class="markdownTableBodyNone">Data chunk size    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>overlap</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone"><code>500</code>   </td><td class="markdownTableBodyNone">Overlap between chunks    </td></tr>
+<td class="markdownTableBodyNone"><code>overlap</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone"><code>chunk_size / 10</code>   </td><td class="markdownTableBodyNone">Overlap between chunks    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>merge_strategy</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone"><code>"weighted_average"</code>   </td><td class="markdownTableBodyNone">Strategy for blending overlap regions   </td></tr>
 </table>
+<p>Confidence/prediction intervals, standard errors, cross-validation, and <code>return_sorted</code> are Batch-only; setting these inherited fields has no effect on <code>StreamingLoess</code> — see <a class="el" href="api_8md.html">fastLoess</a> for those.</p>
 <h2>Options</h2>
+<h3>chunk_size</h3>
+<p>Number of points processed per call to <code>process_chunk()</code>. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.</p>
+<h3>overlap</h3>
+<p>Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via <code>merge_strategy</code>. A good starting point is 10–20% of <code>chunk_size</code>: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.</p>
+<ul>
+<li><code>-1</code> (the <code>StreamingOptions</code> default) — "use the library default", computing <code>chunk_size / 10</code> clamped to <code>[1, chunk_size - 10]</code></li>
+<li>Any non-negative integer <code>&lt; chunk_size</code></li>
+</ul>
 <h3>merge_strategy</h3>
 <p><em>See: <a class="el" href="merge_8md.html">Merge Strategies</a></em></p>
 <table class="markdownTable">
@@ -261,7 +244,39 @@ $(document).ready(function(){initNavTree('api_streaming.html',''); initResizable
 <object type="image/svg+xml" data="merge_comparison.svg" style="pointer-events: none;"></object>
 <div class="caption">
 Merge Strategies</div></div>
-    <hr  />
+    <h2>Result Structure</h2>
+<h3><a class="el" href="classfastloess_1_1LoessResult.html" title="Result of LOESS smoothing operation.">fastloess::LoessResult</a></h3>
+<p>Returned (inside <code>Expected</code>) by <code>process_chunk()</code> and <code>finalize()</code>.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Method   </th><th class="markdownTableHeadNone">Return Type   </th><th class="markdownTableHeadNone">Description    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>x_vector()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">x values (same order as input)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>y_vector()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Smoothed y values    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>fraction_used()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Fraction used    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>iterations_used()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Robustness iterations actually performed (-1 = N/A)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>standard_errors()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>confidence_lower()</code>, <code>confidence_upper()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>prediction_lower()</code>, <code>prediction_upper()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>residuals()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Residuals (if <code>return_residuals</code>; empty if not)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>robustness_weights()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Robustness weights (if <code>return_robustness_weights</code>; empty if not)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>cv_scores()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Always empty (Batch only)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>diagnostics()</code>   </td><td class="markdownTableBodyNone"><code>Diagnostics</code>   </td><td class="markdownTableBodyNone">Fit metrics — check <code>has_value()</code> (if <code>return_diagnostics</code>)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>dimensions()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Number of predictor dimensions   </td></tr>
+</table>
+<p>See <a class="el" href="api_8md.html">cpp.md</a> for the full <code>LoessResult</code> field reference.</p>
+<hr  />
 <blockquote class="doxtable">
 <p>&zwj;<b>Always call finalize():</b> The streaming adapter buffers overlap data. Call <code>finalize()</code> after the last chunk to retrieve the buffered tail. </p>
 </blockquote>

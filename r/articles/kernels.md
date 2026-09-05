@@ -2,13 +2,15 @@
 
 ## Overview
 
-Kernel functions determine how neighbouring points contribute to each
-local fit. Points closer to the target receive higher weights.
+Weight functions (kernels) determine how neighboring points contribute
+to each local fit. Points closer to the target receive higher weights.
 
 ![Weight function
 comparison](../reference/figures/kernel_comparison.svg)
 
 Weight function comparison
+
+------------------------------------------------------------------------
 
 ## Available Kernels
 
@@ -45,144 +47,147 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(weight_function = "tricube")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (tricube kernel):\n")
-#> First 6 smoothed values (tricube kernel):
-print(head(result$y))
-#> [1] 0.4897657 0.4961584 0.5029665 0.5102219 0.5179564 0.5262019
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4897657
 ```
 
 ------------------------------------------------------------------------
 
 ## Epanechnikov
 
-Optimal in the AMISE sense. Slightly more angular than tricube.
+Theoretically optimal for kernel density estimation.
 
 ``` math
 w(u) = \frac{3}{4}(1 - u^2)
 ```
 
-**Use when**: Statistical optimality matters; compact support desired.
+**Use when**: Optimal MSE properties desired.
 
 ``` r
 
 model <- Loess(weight_function = "epanechnikov")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (epanechnikov kernel):\n")
-#> First 6 smoothed values (epanechnikov kernel):
-print(head(result$y))
-#> [1] 0.4827792 0.4872797 0.4919732 0.4968842 0.5020371 0.5074564
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4827792
 ```
 
 ------------------------------------------------------------------------
 
 ## Gaussian
 
-Unbounded support — all points have non-zero weight.
+Infinitely smooth. No boundary effects.
 
 ``` math
-w(u) = e^{-u^2/2}
+w(u) = \exp(-u^2/2)
 ```
 
-**Use when**: Smooth transitions at boundaries; periodic data.
+**Use when**: Maximum smoothness needed, computational cost acceptable.
 
 ``` r
 
 model <- Loess(weight_function = "gaussian")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (gaussian kernel):\n")
-#> First 6 smoothed values (gaussian kernel):
-print(head(result$y))
-#> [1] 0.4666483 0.4688755 0.4711491 0.4734974 0.4759493 0.4785333
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4666483
 ```
 
 ------------------------------------------------------------------------
 
 ## Biweight
 
-Very smooth, compact support.
+Good balance of efficiency and smoothness.
 
 ``` math
 w(u) = (1 - u^2)^2
 ```
 
-**Use when**: Extra smoothness required; robust to heavy tails.
+**Use when**: Alternative to Tricube with slightly different properties.
 
 ``` r
 
 model <- Loess(weight_function = "biweight")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (biweight kernel):\n")
-#> First 6 smoothed values (biweight kernel):
-print(head(result$y))
-#> [1] 0.4880718 0.4943293 0.5009666 0.5080119 0.5154932 0.5234386
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4880718
 ```
 
 ------------------------------------------------------------------------
 
 ## Cosine
 
-Smooth, cosine-shaped weight. Efficient and compact.
+Smooth and computationally efficient.
 
 ``` math
-w(u) = \frac{\pi}{4}\cos\!\left(\frac{\pi u}{2}\right)
+w(u) = \cos(\pi u / 2)
 ```
 
-**Use when**: Smooth result with compact support; slightly faster than
-biweight.
+**Use when**: Want smooth kernel with simple form.
 
 ``` r
 
 model <- Loess(weight_function = "cosine")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (cosine kernel):\n")
-#> First 6 smoothed values (cosine kernel):
-print(head(result$y))
-#> [1] 0.4829559 0.4876765 0.4926100 0.4977803 0.5032114 0.5089273
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4829559
 ```
 
 ------------------------------------------------------------------------
 
 ## Triangle
 
-Linear decrease from centre. Simple, moderate smoothness.
+Simple linear taper.
 
 ``` math
 w(u) = 1 - |u|
 ```
 
-**Use when**: Simple linear decay desired; interpretability matters.
+**Use when**: Simple, interpretable weights.
 
 ``` r
 
 model <- Loess(weight_function = "triangle")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (triangle kernel):\n")
-#> First 6 smoothed values (triangle kernel):
-print(head(result$y))
-#> [1] 0.4849057 0.4902049 0.4957434 0.5015419 0.5076213 0.5140023
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4849057
 ```
 
 ------------------------------------------------------------------------
 
 ## Uniform
 
-Flat weight — equal contribution within the neighbourhood.
+Equal weights within window. Fastest but least smooth.
 
 ``` math
-w(u) = \frac{1}{2}
+w(u) = 1
 ```
 
-**Use when**: Unweighted local regression; baseline comparisons.
+**Use when**: Speed is critical, smoothness less important.
 
 ``` r
 
 model <- Loess(weight_function = "uniform")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (uniform kernel):\n")
-#> First 6 smoothed values (uniform kernel):
-print(head(result$y))
-#> [1] 0.4678518 0.4698297 0.4718536 0.4739583 0.4761782 0.4785479
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4678518
 ```
+
+------------------------------------------------------------------------
+
+## Choosing a Kernel
+
+Choose the first row below whose condition applies:
+
+| Condition                   | Kernel           |
+|-----------------------------|------------------|
+| Need maximum smoothness     | `"gaussian"`     |
+| Default is acceptable       | `"tricube"`      |
+| Need optimal asymptotic MSE | `"epanechnikov"` |
+| Speed is critical           | `"uniform"`      |
+| None of the above           | `"biweight"`     |
+
+> **Recommendation:** Stick with **Tricube** (default) unless you have
+> specific requirements. The differences between kernels are usually
+> small in practice.
 
 ``` r
 
@@ -208,7 +213,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.2.0
+#> [1] rfastloess_2.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

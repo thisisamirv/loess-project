@@ -39,10 +39,8 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(boundary_policy = "extend")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (extend policy):\n")
-#> First 6 smoothed values (extend policy):
-print(head(result$y))
-#> [1] 0.4897657 0.4961584 0.5029665 0.5102219 0.5179564 0.5262019
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4897657
 ```
 
 ------------------------------------------------------------------------
@@ -61,10 +59,8 @@ to be zero.
 
 model <- Loess(boundary_policy = "reflect")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (reflect policy):\n")
-#> First 6 smoothed values (reflect policy):
-print(head(result$y))
-#> [1] 0.6080511 0.6030950 0.5991682 0.5963540 0.5947357 0.5943968
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.6080511
 ```
 
 ------------------------------------------------------------------------
@@ -81,15 +77,13 @@ boundary value.
 
 model <- Loess(boundary_policy = "zero")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (zero policy):\n")
-#> First 6 smoothed values (zero policy):
-print(head(result$y))
-#> [1] 0.2536630 0.2693578 0.2857017 0.3027509 0.3205618 0.3391908
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.253663
 ```
 
 ------------------------------------------------------------------------
 
-## No Boundary Padding
+## No Boundary
 
 Applies no padding. Each local fit uses only the points that are
 actually available, which may be fewer than the requested neighbourhood
@@ -99,14 +93,15 @@ algorithm exactly.
 **Use when**: Reproducing reference results; you prefer the raw LOESS
 boundary behaviour.
 
+> **Note:** Without padding, boundary fits can have higher variance and
+> visible edge artefacts, particularly with small `fraction` values.
+
 ``` r
 
 model <- Loess(boundary_policy = "noboundary")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (noboundary policy):\n")
-#> First 6 smoothed values (noboundary policy):
-print(head(result$y))
-#> [1] 0.6893051 0.6846546 0.6806210 0.6770430 0.6737592 0.6706086
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.6893051
 ```
 
 ------------------------------------------------------------------------
@@ -172,7 +167,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.2.0
+#> [1] rfastloess_2.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

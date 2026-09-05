@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,16 +61,20 @@
 
     
     
+<!-- markdownlint-disable MD024 -->
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>The Online adapter provides incremental smoothing for continuously
-arriving data.</p>
+<p>When data arrives continuously — from sensors, logs, or streaming
+pipelines — you need incremental smoothing that doesn’t require
+reprocessing the entire dataset.</p>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="online-mode-point-by-point">Online Mode: Point-by-Point<a class="anchor" aria-label="anchor" href="#online-mode-point-by-point"></a>
 </h2>
+<p>For true real-time applications where each point must be processed
+immediately.</p>
 <p><code>window_capacity = 25</code> limits the internal buffer to the
 25 most recent observations; each <code>add_point</code> call costs
 O(window) rather than growing with total history.
@@ -107,12 +111,10 @@ latency at a modest accuracy cost.</p>
 <span><span class="co">#&gt; Time 8: 23.49</span></span>
 <span><span class="co">#&gt; Time 9: 25.94</span></span>
 <span><span class="co">#&gt; Time 10: 24.14</span></span></code></pre></div>
-<hr>
 </div>
-</div>
-<div class="section level2">
-<h2 id="accumulating-results">Accumulating Results<a class="anchor" aria-label="anchor" href="#accumulating-results"></a>
-</h2>
+<div class="section level3">
+<h3 id="accumulating-results">Accumulating Results<a class="anchor" aria-label="anchor" href="#accumulating-results"></a>
+</h3>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
@@ -149,68 +151,201 @@ latency at a modest accuracy cost.</p>
 <p><img src="use-case-real-time_files/figure-html/use_case_real_time_2-1.png" class="r-plt" alt="" width="700"></p>
 <hr>
 </div>
+</div>
 <div class="section level2">
-<h2 id="update-modes">Update Modes<a class="anchor" aria-label="anchor" href="#update-modes"></a>
+<h2 id="streaming-mode-chunk-processing">Streaming Mode: Chunk Processing<a class="anchor" aria-label="anchor" href="#streaming-mode-chunk-processing"></a>
+</h2>
+<p>For large datasets that arrive in batches or files.</p>
+<p><code>chunk_size</code> controls how many data points are processed
+in one pass; matching it to your file-read buffer or message-batch size
+avoids unnecessary copying. <code>overlap</code> retains that many
+points from the previous chunk as context so the neighbourhood at chunk
+boundaries is not artificially truncated.
+<code>merge_strategy = "weighted_average"</code> blends the overlapping
+region smoothly; use <code>"take_last"</code> if chunk boundaries are
+guaranteed to be well separated and no blending is needed.</p>
+<blockquote>
+<p><strong>Always call finalize():</strong> The streaming adapter
+buffers overlap data. Call <code>finalize(model)</code> after the last
+chunk to retrieve the buffered tail.</p>
+</blockquote>
+<div class="section level3">
+<h3 id="log-file-processing">Log File Processing<a class="anchor" aria-label="anchor" href="#log-file-processing"></a>
+</h3>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">total_points</span> <span class="op">&lt;-</span> <span class="fl">100000</span></span>
+<span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fl">0</span><span class="op">:</span><span class="op">(</span><span class="va">total_points</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span> <span class="op">/</span> <span class="fl">1000</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">total_points</span>, sd <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
+<span>    fraction       <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>    chunk_size     <span class="op">=</span> <span class="fl">10000</span>,</span>
+<span>    overlap        <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;LoessResult&gt;</span></span>
+<span><span class="co">#&gt;   Points:            99000 </span></span>
+<span><span class="co">#&gt;   Fraction Used:     0.05 </span></span>
+<span><span class="co">#&gt;   Iterations Used:   3</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/finalize.html">finalize</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Processed"</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span>, <span class="st">"points\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Processed 1000 points</span></span></code></pre></div>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="real-time-dashboard-example">Real-Time Dashboard Example<a class="anchor" aria-label="anchor" href="#real-time-dashboard-example"></a>
+</h2>
+<p>The dashboard pattern uses a plain LOESS fit on a manually managed
+sliding window rather than <code>OnlineLoess</code>. This is the
+simplest approach when your UI framework already owns the data buffer
+and you only need the most recent smoothed value per frame. The
+trade-off is a full O(window^2) refit on every tick; for high-frequency
+streams prefer <code>OnlineLoess</code> with
+<code>update_mode = "incremental"</code> to bound per-frame cost.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">window_capacity</span> <span class="op">&lt;-</span> <span class="fl">50</span></span>
+<span><span class="va">data_x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
+<span><span class="va">data_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
+<span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">0</span><span class="op">:</span><span class="fl">199</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">xi</span> <span class="op">&lt;-</span> <span class="va">i</span></span>
+<span>    <span class="va">yi</span> <span class="op">&lt;-</span> <span class="fl">25.0</span> <span class="op">+</span> <span class="fl">10</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">i</span> <span class="op">/</span> <span class="fl">20</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1</span>, sd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span>    <span class="va">data_x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">data_x</span>, <span class="va">xi</span><span class="op">)</span></span>
+<span>    <span class="va">data_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">data_y</span>, <span class="va">yi</span><span class="op">)</span></span>
+<span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">data_x</span><span class="op">)</span> <span class="op">&gt;</span> <span class="va">window_capacity</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="va">data_x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">data_x</span>, <span class="va">window_capacity</span><span class="op">)</span></span>
+<span>        <span class="va">data_y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">data_y</span>, <span class="va">window_capacity</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">data_x</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span></span>
+<span>        <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">data_x</span>, <span class="va">data_y</span><span class="op">)</span></span>
+<span>        <span class="va">current_smoothed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">tail</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span>, <span class="fl">1</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="choosing-parameters">Choosing Parameters<a class="anchor" aria-label="anchor" href="#choosing-parameters"></a>
+</h2>
+<div class="section level3">
+<h3 id="online-mode">Online Mode<a class="anchor" aria-label="anchor" href="#online-mode"></a>
+</h3>
+<table class="table">
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Guidance</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>window_capacity</code></td>
+<td>Enough history for <code>fraction</code> to work</td>
+</tr>
+<tr class="even">
+<td><code>min_points</code></td>
+<td>2–5 typically; higher for stability</td>
+</tr>
+<tr class="odd">
+<td><code>update_mode</code></td>
+<td>
+<code>"incremental"</code> for speed, <code>"full"</code> for
+accuracy</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3">
+<h3 id="streaming-mode">Streaming Mode<a class="anchor" aria-label="anchor" href="#streaming-mode"></a>
+</h3>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Guidance</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>chunk_size</code></td>
+<td>Balance memory vs. processing overhead</td>
+</tr>
+<tr class="even">
+<td><code>overlap</code></td>
+<td>10–20% of chunk_size for smooth transitions</td>
+</tr>
+<tr class="odd">
+<td><code>merge_strategy</code></td>
+<td>
+<code>"weighted_average"</code> (quality) vs <code>"average"</code>
+(simple)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="performance-considerations">Performance Considerations<a class="anchor" aria-label="anchor" href="#performance-considerations"></a>
 </h2>
 <table class="table">
 <thead><tr class="header">
 <th>Mode</th>
-<th>Behaviour</th>
+<th>Memory</th>
 <th>Latency</th>
-<th>Accuracy</th>
+<th>Use Case</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
-<td><code>"incremental"</code></td>
-<td>Re-fits only the newest point</td>
-<td>Low</td>
-<td>Moderate</td>
+<td><strong>Online</strong></td>
+<td>Fixed (window)</td>
+<td>~1ms/point</td>
+<td>Sensors, dashboards</td>
 </tr>
 <tr class="even">
-<td><code>"full"</code></td>
-<td>Re-fits the entire window</td>
-<td>Higher</td>
-<td>Higher</td>
+<td><strong>Streaming</strong></td>
+<td>~chunk_size</td>
+<td>~100ms/chunk</td>
+<td>Large files, ETL</td>
+</tr>
+<tr class="odd">
+<td><strong>Batch</strong></td>
+<td>Full dataset</td>
+<td>N/A</td>
+<td>Analysis, reports</td>
 </tr>
 </tbody>
 </table>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="streaming-mode-for-large-batches">Streaming Mode for Large Batches<a class="anchor" aria-label="anchor" href="#streaming-mode-for-large-batches"></a>
+<h2 id="see-also">See Also<a class="anchor" aria-label="anchor" href="#see-also"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
-<span>    fraction       <span class="op">=</span> <span class="fl">0.3</span>,</span>
-<span>    iterations     <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>    chunk_size     <span class="op">=</span> <span class="fl">5000</span>,</span>
-<span>    overlap        <span class="op">=</span> <span class="fl">500</span>,</span>
-<span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="va">n_total</span> <span class="op">&lt;-</span> <span class="fl">20000</span></span>
-<span><span class="va">x_all</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_total</span><span class="op">)</span></span>
-<span><span class="va">y_all</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x_all</span> <span class="op">/</span> <span class="fl">500</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_total</span>, sd <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">chunk_size</span> <span class="op">&lt;-</span> <span class="fl">5000</span></span>
-<span><span class="va">n_chunks</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">ceiling</a></span><span class="op">(</span><span class="va">n_total</span> <span class="op">/</span> <span class="va">chunk_size</span><span class="op">)</span></span>
-<span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_chunks</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">idx_from</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">i</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="va">chunk_size</span> <span class="op">+</span> <span class="fl">1</span></span>
-<span>    <span class="va">idx_to</span>   <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">i</span> <span class="op">*</span> <span class="va">chunk_size</span>, <span class="va">n_total</span><span class="op">)</span></span>
-<span>    <span class="va">result</span>   <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_all</span><span class="op">[</span><span class="va">idx_from</span><span class="op">:</span><span class="va">idx_to</span><span class="op">]</span>,</span>
-<span>                                    <span class="va">y_all</span><span class="op">[</span><span class="va">idx_from</span><span class="op">:</span><span class="va">idx_to</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="va">final</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/finalize.html">finalize</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (streaming, weighted_average merge):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (streaming, weighted_average merge):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">final</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.8375773 0.8384586 0.8393410 0.8402243 0.8411086 0.8419938</span></span></code></pre></div>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<ul>
+<li>
+<code><a href="../articles/adapter-choice.html">vignette("adapter-choice", package = "rfastloess")</a></code> —
+Detailed mode comparison</li>
+<li>
+<code><a href="../articles/merge.html">vignette("merge", package = "rfastloess")</a></code> — Chunk
+reconciliation in depth</li>
+<li>
+<code><a href="../articles/scaling.html">vignette("scaling", package = "rfastloess")</a></code> —
+Robustness scale estimation</li>
+<li>
+<code><a href="../articles/use-case-time-series.html">vignette("use-case-time-series", package = "rfastloess")</a></code>
+— General time series analysis</li>
+</ul>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -233,7 +368,7 @@ latency at a modest accuracy cost.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastloess_1.2.0</span></span>
+<span><span class="co">#&gt; [1] rfastloess_2.0.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>

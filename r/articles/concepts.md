@@ -103,11 +103,15 @@ Confidence and prediction intervals
 | **Streaming** | \>100K points     | One chunk      | Residuals, robustness |
 | **Online**    | Real-time data    | Fixed window   | Incremental updates   |
 
-Decision guide:
+------------------------------------------------------------------------
 
-- Data fits in memory and no real-time requirement → **Batch**
-- Data does not fit in memory → **Streaming**
-- Real-time / point-by-point processing needed → **Online**
+## Quick Decision Guide
+
+| Situation                                      | Mode      |
+|------------------------------------------------|-----------|
+| Data fits in memory; needs intervals or CV     | Batch     |
+| Data too large for memory or arrives in chunks | Streaming |
+| Data arrives point-by-point in real time       | Online    |
 
 ------------------------------------------------------------------------
 
@@ -122,6 +126,27 @@ Decision guide:
 | Handles irregular sampling   | ✓       | ✓                     | ✗              |
 | Multivariate predictors      | ✓       | ✓                     | ✗              |
 | Adjustable polynomial degree | ✓ (0–4) | ✓                     | ✗              |
+
+------------------------------------------------------------------------
+
+## Next Steps
+
+- [`vignette("quickstart", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/quickstart.md)
+  — See it in action
+- [`?Loess`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md)
+  — All configuration options
+- [`vignette("degree", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/degree.md)
+  — Constant, linear, quadratic fits
+- [`vignette("dimensions", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/dimensions.md)
+  — 2D and n-D smoothing
+- [`vignette("boundary", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/boundary.md)
+  — Edge bias reduction strategies
+- [`vignette("robustness", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/robustness.md)
+  — Outlier downweighting methods
+- [`vignette("scaling", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/scaling.md)
+  — MAD, MAR, Mean scale estimation
+- [`vignette("merge", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/merge.md)
+  — Chunk reconciliation in Streaming mode
 
 ``` r
 

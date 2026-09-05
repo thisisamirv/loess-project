@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,7 @@
 
     
     
+<!-- markdownlint-disable MD024 -->
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -123,10 +124,8 @@ general-purpose smoothing.</p>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>boundary_policy <span class="op">=</span> <span class="st">"extend"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (extend policy):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (extend policy):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.4897657 0.4961584 0.5029665 0.5102219 0.5179564 0.5262019</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Smoothed y[0]: 0.4897657</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -141,10 +140,8 @@ expected to be zero.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>boundary_policy <span class="op">=</span> <span class="st">"reflect"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (reflect policy):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (reflect policy):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.6080511 0.6030950 0.5991682 0.5963540 0.5947357 0.5943968</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Smoothed y[0]: 0.6080511</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -158,14 +155,12 @@ is a meaningful boundary value.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>boundary_policy <span class="op">=</span> <span class="st">"zero"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (zero policy):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (zero policy):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.2536630 0.2693578 0.2857017 0.3027509 0.3205618 0.3391908</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Smoothed y[0]: 0.253663</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="no-boundary-padding">No Boundary Padding<a class="anchor" aria-label="anchor" href="#no-boundary-padding"></a>
+<h2 id="no-boundary">No Boundary<a class="anchor" aria-label="anchor" href="#no-boundary"></a>
 </h2>
 <p>Applies no padding. Each local fit uses only the points that are
 actually available, which may be fewer than the requested neighbourhood
@@ -173,13 +168,16 @@ at the endpoints. This reproduces the original Cleveland (1979)
 algorithm exactly.</p>
 <p><strong>Use when</strong>: Reproducing reference results; you prefer
 the raw LOESS boundary behaviour.</p>
+<blockquote>
+<p><strong>Note:</strong> Without padding, boundary fits can have higher
+variance and visible edge artefacts, particularly with small
+<code>fraction</code> values.</p>
+</blockquote>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>boundary_policy <span class="op">=</span> <span class="st">"noboundary"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (noboundary policy):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (noboundary policy):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.6893051 0.6846546 0.6806210 0.6770430 0.6737592 0.6706086</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Smoothed y[0]: 0.6893051</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -258,7 +256,7 @@ the raw LOESS boundary behaviour.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastloess_1.2.0</span></span>
+<span><span class="co">#&gt; [1] rfastloess_2.0.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>

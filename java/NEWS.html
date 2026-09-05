@@ -185,29 +185,38 @@
 <article class="doc">
 <h1 class="page">News</h1>
 <div class="sect1">
-<h2 id="fastloess-java-1-2-0"><a class="anchor" href="#fastloess-java-1-2-0"></a>fastloess (Java) 1.2.0</h2>
+<h2 id="fastloess-java-2-0-0"><a class="anchor" href="#fastloess-java-2-0-0"></a>fastloess (Java) 2.0.0</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="added"><a class="anchor" href="#added"></a>Added</h3>
 <div class="ulist">
 <ul>
 <li>
-<p>Added <code>dev/bump_version.py --version X.Y.Z</code> to bump every crate/binding&#8217;s version files, <code>CITATION.cff</code>, and the Spack recipe in one pass (supports <code>--dry-run</code>).</p>
+<p>Added an "Ideas for Contribution" section to <code>CONTRIBUTING.md</code>, listing concrete Batch/Streaming/Online feature gaps (out-of-sample prediction, per-point local gradients, adaptive fraction selection, <code>cell</code>/<code>interpolation_vertices</code> tuning, bootstrap intervals, GPU backend, concurrent chunk processing, checkpointable streaming state, <code>OnlineOutput.standard_error</code>, distance-based window eviction, configurable warm-up).</p>
 </li>
 <li>
-<p>Added <code>dev/check_pinned_versions.py</code> and a weekly <code>check-versions.yml</code> to catch hardcoded version pins that Dependabot can&#8217;t see.</p>
+<p>Added <code>dev/bump_version.py --version X.Y.Z</code> to bump every crate/binding version file, <code>CITATION.cff</code>, the Spack recipe, and <code>CONTRIBUTING.md&#8217;s example version in one pass (supports `--dry-run</code>).</p>
 </li>
 <li>
-<p>Added <code>.github/dependabot.yml</code>, covering every dependency ecosystem, grouped per directory into a single weekly PR.</p>
+<p>Added <code>dev/check_pinned_versions.py</code> and a weekly <code>check-versions.yml</code> to catch hardcoded version pins Dependabot can&#8217;t see.</p>
 </li>
 <li>
-<p>Added an optional <code>commit</code> input to every release workflow&#8217;s <code>workflow_dispatch</code> trigger, to pin the built commit for manual runs.</p>
+<p>Added <code>.github/dependabot.yml</code>, covering every dependency ecosystem in one weekly PR per directory.</p>
 </li>
 <li>
-<p>Added <code>dev/check_links.py</code> to validate every Markdown cross-reference link across all docs.</p>
+<p>Added an optional <code>commit</code> input to release workflows' <code>workflow_dispatch</code> trigger, to pin the built commit for manual runs.</p>
 </li>
 <li>
-<p>Added a new Java binding (<code>bindings/java</code>): JNI-based <code>fastloess</code> Maven package with <code>Loess</code>/<code>StreamingLoess</code>/<code>OnlineLoess</code> classes (including LOESS-specific options like <code>degree</code>, <code>dimensions</code>, <code>distanceMetric</code>, <code>surfaceMode</code>, plus hat-matrix stats via <code>Result.hatMatrix()</code>), an Antora docs site, CI/release workflows, and full doc-snippet/test coverage.</p>
+<p>Added <code>dev/check_links.py</code> to validate Markdown cross-reference links across all docs.</p>
+</li>
+<li>
+<p>Added a new Java binding (<code>bindings/java</code>): JNI-based <code>fastloess</code> Maven package with <code>Loess</code>/<code>StreamingLoess</code>/<code>OnlineLoess</code> classes (LOESS-specific options like <code>degree</code>, <code>dimensions</code>, <code>distanceMetric</code>, <code>surfaceMode</code>, hat-matrix stats via <code>Result.hatMatrix()</code>; <code>StreamingOptions</code>/<code>OnlineOptions</code> each declare only the fields they support, and Online always runs sequentially), an Antora docs site, CI/release workflows, and full doc-snippet/test coverage.</p>
+</li>
+<li>
+<p>Added <code>returnSorted</code> and <code>missing</code> options to <code>Options</code>/<code>StreamingOptions</code>/<code>OnlineOptions</code>.</p>
+</li>
+<li>
+<p><code>weightedMetricWeights</code> requires <code>distanceMetric("weighted")</code> to be set explicitly (errors otherwise), matching Python.</p>
 </li>
 </ul>
 </div>
@@ -223,7 +232,7 @@
 <p>Merged the standalone <code>dev/add-\{cpp,rust,nodejs,wasm\}-outputs</code> scripts into <code>dev/verify_snippets.py --update-outputs</code>.</p>
 </li>
 <li>
-<p>Replaced Unicode super/subscript stand-ins (<code>R²</code>, <code>xᵢ</code>, etc.) with plain ASCII throughout docs, READMEs, and Rust comments, also catching some leftover mojibake.</p>
+<p>Replaced Unicode super/subscript stand-ins (<code>R²</code>, <code>xᵢ</code>, etc.) with plain ASCII throughout docs and comments, catching some leftover mojibake.</p>
 </li>
 <li>
 <p>Added <code>dev/add-readme-to-docs.py</code> to auto-embed <code>README.md</code> as the docs homepage (Starlight/Sphinx-aware); not yet wired into Python&#8217;s <code>Makefile</code>.</p>
@@ -232,22 +241,22 @@
 <p>Harmonized the docs-site directory structure across every binding/crate, and fixed doc-tooling scripts that missed snippets in the newly-nested pages.</p>
 </li>
 <li>
-<p>Consolidated every README: merged Installation/Documentation sections, dropped GitHub-only alert syntax, and removed sections now covered by dedicated docs-site pages.</p>
+<p>Consolidated every README (merged Installation/Documentation sections, dropped GitHub-only alert syntax, removed sections now covered by docs-site pages) and renamed "When to Use" to "When to Use Batch Adapter" everywhere.</p>
 </li>
 <li>
-<p>Renamed "When to Use" to "When to Use Batch Adapter" across every binding&#8217;s API docs.</p>
-</li>
-<li>
-<p>Vendored doxygen-awesome-css v2.4.2 for a modern cpp Doxygen theme.</p>
+<p>Vendored doxygen-awesome-css v2.4.2 for a modern C++ Doxygen theme.</p>
 </li>
 <li>
 <p>Added <code>dev/update_changelogs.py</code> to regenerate each binding/crate&#8217;s <code>NEWS.md</code>/<code>news.md</code> from the root changelog.</p>
 </li>
 <li>
-<p>Replaced the <code>kernels.md</code>/<code>adapter-choice.md</code> mermaid flowcharts with rendering-agnostic tables (Doxygen/rustdoc don&#8217;t render mermaid).</p>
+<p>Replaced the <code>kernels.md</code>/<code>adapter-choice.md</code> mermaid flowcharts with tables (Doxygen/rustdoc don&#8217;t render mermaid).</p>
 </li>
 <li>
 <p>Consolidated <code>parameters.md</code>/<code>@autodocs</code> into each <code>api.md&#8217;s option tables, removing `parameters.md</code>.</p>
+</li>
+<li>
+<p>Mirrored the Python API docs' structure (field tables, <code><mark> Options</code> per field, <code></mark> Result Structure</code> at the end) to every remaining crate/binding. Along the way, unified <code>weighted_metric_weights</code> to require explicit <code>distance_metric = "weighted"</code> on C/Go/Java/Julia (previously auto-selected); fixed C's <code>StreamingOptions.overlap</code> hardcoded <code>500</code> default; corrected several bindings' docs showing a flat <code>500</code> for <code>overlap</code> when they actually use the dynamic default (Node.js, WASM, Go, Java, R); fixed Java&#8217;s <code>api-online.adoc</code> disclaimer and Julia&#8217;s constructor docstrings missing several accepted keyword arguments.</p>
 </li>
 </ul>
 </div>
@@ -256,6 +265,9 @@
 <h3 id="fixed"><a class="anchor" href="#fixed"></a>Fixed</h3>
 <div class="ulist">
 <ul>
+<li>
+<p>Fixed <code>CONTRIBUTING.md&#8217;s stale Go prerequisite (`1.21+</code> → <code>1.23+</code>), <code>air</code> auto-install target (<code>make r</code> → <code>make r-dev</code>), and example crate version (<code>0.9.0</code> → <code>1.2.0</code>).</p>
+</li>
 <li>
 <p>Fixed the R benchmark script calling <code>fit</code> as a field instead of the S3 generic <code>fit(model, x, y)</code>.</p>
 </li>
@@ -269,22 +281,25 @@
 <p>Fixed the benchmark README&#8217;s inaccurate "Iterations" scenario count.</p>
 </li>
 <li>
-<p>Fixed <code>docs.yml&#8217;s Pages deployment: merged per-language jobs into one artifact upload/deploy job, using `upload/deploy-pages</code> actions instead of legacy branch-based deployment.</p>
+<p>Fixed <code>docs.yml&#8217;s Pages deployment: merged per-language jobs into one artifact upload/deploy job using `upload/deploy-pages</code> actions instead of legacy branch-based deployment.</p>
 </li>
 <li>
-<p>Fixed 51 broken doc cross-reference links left over from the docs-site restructure (found via new <code>dev/check_links.py</code>).</p>
+<p>Fixed 51 broken doc cross-reference links left over from the docs-site restructure (found via <code>dev/check_links.py</code>).</p>
 </li>
 <li>
-<p>Fixed several <code>OnlineLoess</code>/<code>StreamingLoess</code> defaults silently diverging from every binding&#8217;s docs and actual behavior: <code>min_points</code> (was 3, now 2), <code>update_mode</code> (was <code>"full"</code>, now <code>"incremental"</code>), and the internal robustness-iteration defaults (streaming 2→3, online 1→3) that only the Rust crates' bare prelude API could ever see.</p>
+<p>Fixed <code>OnlineLoess</code>/<code>StreamingLoess</code> defaults silently diverging from docs: <code>min_points</code> (3→2), <code>update_mode</code> (<code>"full"</code>→<code>"incremental"</code>), and internal robustness-iteration defaults (streaming 2→3, online 1→3).</p>
 </li>
 <li>
-<p>Fixed the "Handling Outliers" quickstart example printing nothing with only 6 points at <code>fraction = 0.5</code>; bumped to <code>0.7</code> so the outlier is actually downweighted.</p>
+<p>Fixed every binding&#8217;s docs describing <code>LoessResult.x</code> as "sorted"; it&#8217;s actually returned in input order (sorted internally, then mapped back). Strengthened Python&#8217;s <code>test_unsorted_input</code> to assert this.</p>
 </li>
 <li>
-<p>Fixed two R roxygen examples: <code>OnlineLoess()</code> printing 48 lines instead of a <code>head(smoothed, 5)</code> sample, and <code>add_point()</code> always printing <code>NULL</code> due to the default <code>min_points</code>.</p>
+<p>Fixed the "Handling Outliers" quickstart example printing nothing at <code>fraction = 0.5</code> with only 6 points; bumped to <code>0.7</code>.</p>
 </li>
 <li>
-<p>Fixed Julia&#8217;s <code>intervals.md</code> examples looping over all 100 points instead of a short sample, matching the concise Python version.</p>
+<p>Fixed two R roxygen examples printing too much/nothing (<code>OnlineLoess()</code>, <code>add_point()</code>).</p>
+</li>
+<li>
+<p>Fixed Julia&#8217;s <code>intervals.md</code> examples looping over all 100 points instead of a short sample.</p>
 </li>
 </ul>
 </div>

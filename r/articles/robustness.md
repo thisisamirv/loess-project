@@ -11,21 +11,23 @@ downweight points with large residuals:
 4.  Refit using combined distance × robustness weights
 5.  Repeat steps 2–4
 
+![Robustness Methods](../reference/figures/robust_method_comparison.svg)
+
+Robustness Methods
+
+![Robustness
+Iterations](../reference/figures/robust_iter_comparison.svg)
+
+Robustness Iterations
+
 ------------------------------------------------------------------------
 
 ## Robustness Methods
 
-![Robustness method
-comparison](../reference/figures/robust_method_comparison.svg)
-
-Robustness method comparison
-
-![Effect of robustness
-iterations](../reference/figures/robust_iter_comparison.svg)
-
-Effect of robustness iterations
-
 ### Bisquare (Default)
+
+Smooth downweighting. Points transition gradually from full weight to
+zero.
 
 ``` math
 w(u) = \begin{cases} (1 - u^2)^2 & |u| < 1 \\ 0 & |u| \geq 1 \end{cases}
@@ -42,11 +44,11 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(iterations = 3, robustness_method = "bisquare")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (bisquare robustness):\n")
-#> First 6 smoothed values (bisquare robustness):
-print(head(result$y))
-#> [1] 0.4897657 0.4961584 0.5029665 0.5102219 0.5179564 0.5262019
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4897657
 ```
+
+------------------------------------------------------------------------
 
 ### Huber
 
@@ -62,15 +64,15 @@ w(u) = \begin{cases} 1 & |u| \leq k \\ k/|u| & |u| > k \end{cases}
 
 model <- Loess(iterations = 3, robustness_method = "huber")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (huber robustness):\n")
-#> First 6 smoothed values (huber robustness):
-print(head(result$y))
-#> [1] 0.4999039 0.5072430 0.5150605 0.5233922 0.5322738 0.5417411
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4999039
 ```
+
+------------------------------------------------------------------------
 
 ### Talwar
 
-Hard threshold — points above the threshold are excluded completely.
+Hard threshold. Points are either fully weighted or completely excluded.
 
 ``` math
 w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}
@@ -82,60 +84,103 @@ w(u) = \begin{cases} 1 & |u| \leq k \\ 0 & |u| > k \end{cases}
 
 model <- Loess(iterations = 3, robustness_method = "talwar")
 result <- fit(model, x, y)
-cat("First 6 smoothed values (talwar robustness):\n")
-#> First 6 smoothed values (talwar robustness):
-print(head(result$y))
-#> [1] 0.4730281 0.4784755 0.4842521 0.4903763 0.4968663 0.5037406
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4730281
 ```
 
 ------------------------------------------------------------------------
 
-## Choosing the Number of Iterations
+## Comparison
 
-| Iterations | Effect                  | When to Use                |
-|------------|-------------------------|----------------------------|
-| 0          | No robustness (fastest) | Clean data, speed-critical |
-| 1–3        | Moderate                | Most applications          |
-| 4–6        | Strong                  | Data with clear outliers   |
-| 7+         | Very strong             | Heavy contamination        |
+| Method       | Transition | Aggressiveness | Use Case              |
+|--------------|------------|----------------|-----------------------|
+| **Bisquare** | Smooth     | Moderate       | General purpose       |
+| **Huber**    | Gradual    | Mild           | Preserve influence    |
+| **Talwar**   | Hard       | Strong         | Extreme contamination |
+
+------------------------------------------------------------------------
+
+## Detecting Outliers
+
+Use robustness weights to identify potential outliers:
 
 ``` r
 
 library(rfastloess)
 set.seed(42)
-x <- 1:100
-y <- sin(x / 10) + rnorm(100, sd = 0.3)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+y[c(20, 50, 80)] <- y[c(20, 50, 80)] + 5  # inject outliers
 
-# Inject outliers
-y[c(25, 50, 75)] <- y[c(25, 50, 75)] + 5
+model <- Loess(iterations = 5, return_robustness_weights = TRUE)
+result <- fit(model, x, y)
 
-# Without robustness
-model_0 <- Loess(iterations = 0)
-result_0 <- fit(model_0, x, y)
-
-# With robustness
-model_3 <- Loess(iterations = 3)
-result_3 <- fit(model_3, x, y)
-
-plot(x, y, pch = 16, col = "gray", main = "Effect of Robustness Iterations")
-lines(result_0$x, result_0$y, col = "red", lwd = 2, lty = 2)
-lines(result_3$x, result_3$y, col = "blue", lwd = 2)
-legend("topright", c("Data", "iterations=0", "iterations=3"),
-        pch = c(16, NA, NA), lty = c(NA, 2, 1),
-        col = c("gray", "red", "blue"))
+shown <- 0
+for (i in seq_along(result$robustness_weights)) {
+    if (result$robustness_weights[i] < 0.5 && shown < 5) {
+        cat(sprintf("Potential outlier at index %d: weight = %.3f\n",
+                    i, result$robustness_weights[i]))
+        shown <- shown + 1
+    }
+}
+#> Potential outlier at index 2: weight = 0.245
+#> Potential outlier at index 9: weight = 0.363
+#> Potential outlier at index 12: weight = 0.052
+#> Potential outlier at index 18: weight = 0.383
+#> Potential outlier at index 20: weight = 0.000
 ```
-
-![](robustness_files/figure-html/robustness_4-1.png)
 
 ------------------------------------------------------------------------
 
-## Method Comparison
+## Scale Estimation
 
-| Method       | Handling                | Best For              |
-|--------------|-------------------------|-----------------------|
-| `"bisquare"` | Smooth to zero          | General purpose       |
-| `"huber"`    | Linear then downweights | Mild contamination    |
-| `"talwar"`   | Hard threshold (0/1)    | Severe point outliers |
+Residuals are scaled before computing robustness weights. Two methods:
+
+| Method   | Formula                     | Robustness            |
+|----------|-----------------------------|-----------------------|
+| **MAD**  | `median(\|r - median(r)\|)` | Very robust (default) |
+| **MAR**  | `median(\|r\|)`             | Robust, uncentered    |
+| **Mean** | `mean(\|r\|)`               | Less robust, fastest  |
+
+![Scaling Methods
+Comparison](../reference/figures/scaling_comparison.svg)
+
+Scaling Methods Comparison
+
+``` r
+
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Loess(iterations = 3, scaling_method = "mad")
+result <- fit(model, x, y)
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4897657
+```
+
+------------------------------------------------------------------------
+
+## Auto-Convergence
+
+Stop iterations early when weights stabilize:
+
+> **Performance:** Auto-convergence can significantly reduce computation
+> when weights stabilize before reaching max iterations.
+
+``` r
+
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 100)
+y <- sin(x) + rnorm(100, sd = 0.3)
+
+model <- Loess(iterations = 10, auto_converge = 1e-6)
+result <- fit(model, x, y)
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 0.4777674
+```
 
 ``` r
 
@@ -161,7 +206,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.2.0
+#> [1] rfastloess_2.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

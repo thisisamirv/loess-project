@@ -11,7 +11,7 @@ add_point."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,20 +61,15 @@ sliding window and processes each incoming point immediately via
 <span>    update_mode <span class="op">=</span> <span class="st">"incremental"</span>,</span>
 <span>    auto_converge <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    return_robustness_weights <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    return_diagnostics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    return_residuals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    parallel <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    degree <span class="op">=</span> <span class="st">"linear"</span>,</span>
 <span>    dimensions <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>    distance_metric <span class="op">=</span> <span class="st">"normalized"</span>,</span>
 <span>    surface_mode <span class="op">=</span> <span class="st">"interpolation"</span>,</span>
-<span>    return_se <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    confidence_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    prediction_intervals <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    weighted_metric_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    cell <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    interpolation_vertices <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    boundary_degree_fallback <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>    boundary_degree_fallback <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    missing <span class="op">=</span> <span class="st">"error"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -158,20 +153,6 @@ iterations. <code>NULL</code> (default) disables early stopping.</p></dd>
 robustness weights. Default: <code>FALSE</code>.</p></dd>
 
 
-<dt id="arg-return-diagnostics">return_diagnostics<a class="anchor" aria-label="anchor" href="#arg-return-diagnostics"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, return fit-quality
-metrics (RMSE, MAE, R-squared, AIC, etc.). Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-return-residuals">return_residuals<a class="anchor" aria-label="anchor" href="#arg-return-residuals"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, return residuals in the
-result. Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
-<dd><p>Logical; enable parallel processing. Default: <code>TRUE</code>.</p></dd>
-
-
 <dt id="arg-degree">degree<a class="anchor" aria-label="anchor" href="#arg-degree"></a></dt>
 <dd><p>Local polynomial degree: <code>"constant"</code>, <code>"linear"</code>
 (default), <code>"quadratic"</code>, <code>"cubic"</code>, or <code>"quartic"</code>.</p></dd>
@@ -193,28 +174,13 @@ Use <code>"minkowski:p"</code> to set a custom <em>p</em> value.</p></dd>
 (default) or <code>"direct"</code>.</p></dd>
 
 
-<dt id="arg-return-se">return_se<a class="anchor" aria-label="anchor" href="#arg-return-se"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, compute hat-matrix statistics
-(effective degrees of freedom, leverage, standard errors).
-Default: <code>FALSE</code>.</p></dd>
-
-
-<dt id="arg-confidence-intervals">confidence_intervals<a class="anchor" aria-label="anchor" href="#arg-confidence-intervals"></a></dt>
-<dd><p>Confidence level for confidence intervals,
-greater than 0 and less than 1 (e.g., 0.95). <code>NULL</code> (default)
-disables confidence intervals.</p></dd>
-
-
-<dt id="arg-prediction-intervals">prediction_intervals<a class="anchor" aria-label="anchor" href="#arg-prediction-intervals"></a></dt>
-<dd><p>Confidence level for prediction intervals,
-greater than 0 and less than 1 (e.g., 0.95). <code>NULL</code> (default)
-disables prediction intervals.</p></dd>
-
-
 <dt id="arg-weighted-metric-weights">weighted_metric_weights<a class="anchor" aria-label="anchor" href="#arg-weighted-metric-weights"></a></dt>
-<dd><p>Numeric vector of per-dimension weights used
-when <code>distance_metric = "weighted"</code>. Length must equal
-<code>dimensions</code>. <code>NULL</code> (default) uses equal weights.</p></dd>
+<dd><p>Numeric vector of per-dimension weights.
+Length must equal <code>dimensions</code>. Only used when
+<code>distance_metric = "weighted"</code>; setting
+<code>distance_metric = "weighted"</code> without providing this raises an
+error. <code>NULL</code> (default) has no effect unless
+<code>distance_metric = "weighted"</code> is set.</p></dd>
 
 
 <dt id="arg-cell">cell<a class="anchor" aria-label="anchor" href="#arg-cell"></a></dt>
@@ -231,6 +197,13 @@ when <code>distance_metric = "weighted"</code>. Length must equal
 <dd><p>Logical; if <code>TRUE</code>, fall back to lower
 polynomial degree at boundaries when fitting at the requested degree
 fails. <code>NULL</code> (default) uses the library default.</p></dd>
+
+
+<dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
+<dd><p>Policy for a non-finite (NaN/Inf) <code>x</code> or <code>y</code> value
+passed to <code><a href="add_point.html">add_point</a></code>: <code>"error"</code> (default) raises an
+error, <code>"drop"</code> silently ignores the point (returns <code>NULL</code>)
+instead of adding it to the window.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -2,8 +2,9 @@
 
 ## Basic Smoothing
 
-Smooth a noisy sine wave. `fraction = 0.3` and `iterations = 3` are good
-starting values for most signals.
+Smooth a noisy sine wave — the kind of signal where LOESS shines.
+`fraction = 0.3` and `iterations = 3` are good starting values for most
+signals.
 
 ``` r
 
@@ -24,10 +25,7 @@ cat(sprintf("First smoothed value: %.4f (true: %.4f)\n",
 
 ------------------------------------------------------------------------
 
-## With Confidence and Prediction Intervals
-
-Set `confidence_intervals` and/or `prediction_intervals` to a coverage
-level (0–1).
+## With Confidence Intervals
 
 ``` r
 
@@ -45,50 +43,76 @@ model <- Loess(
 )
 result <- fit(model, x, y)
 
-cat("Confidence lower bounds (first 5):\n")
-#> Confidence lower bounds (first 5):
-print(head(result$confidence_lower, 5))
-#> [1] 0.3381404 0.3455916 0.3539923 0.3634793 0.3735825
-cat("Confidence upper bounds (first 5):\n")
-#> Confidence upper bounds (first 5):
-print(head(result$confidence_upper, 5))
-#> [1] 0.6135373 0.6236859 0.6349296 0.6473410 0.6603691
+cat("Smoothed (first 5):", head(result$y, 5), "\n")
+#> Smoothed (first 5): 0.4758389 0.4846388 0.4944609 0.5054102 0.5169758
+cat("CI Lower (first 5):", head(result$confidence_lower, 5), "\n")
+#> CI Lower (first 5): 0.3381404 0.3455916 0.3539923 0.3634793 0.3735825
+cat("CI Upper (first 5):", head(result$confidence_upper, 5), "\n")
+#> CI Upper (first 5): 0.6135373 0.6236859 0.6349296 0.647341 0.6603691
 cat("R2:", result$diagnostics$r_squared, "\n")
 #> R2: 0.78173
 ```
 
 ------------------------------------------------------------------------
 
+## Handling Outliers
+
+LOESS can robustly handle outliers through iterative reweighting:
+
+``` r
+
+library(rfastloess)
+
+x_out <- 1:6
+y_with_outlier <- c(2.0, 4.0, 6.0, 50.0, 10.0, 12.0)
+
+model <- Loess(
+    fraction = 0.7,
+    iterations = 5,
+    robustness_method = "bisquare",
+    return_robustness_weights = TRUE
+)
+result <- fit(model, x_out, y_with_outlier)
+
+# Check which points were downweighted
+for (i in seq_along(result$robustness_weights)) {
+    if (result$robustness_weights[i] < 0.5) {
+        cat(sprintf("Point %d is likely an outlier (weight: %.3f)\n",
+                    i, result$robustness_weights[i]))
+    }
+}
+#> Point 4 is likely an outlier (weight: 0.000)
+```
+
+------------------------------------------------------------------------
+
 ## Streaming Mode
 
-For large datasets (\>100K points) that may not fit in memory.
+For datasets too large to fit in memory, stream them in fixed-size
+chunks with overlap.
 
 ``` r
 
 library(rfastloess)
 set.seed(42)
-x <- seq(0, 2 * pi, length.out = 10000)
-y <- sin(x) + rnorm(10000, sd = 0.3)
+x <- seq(0, 10 * pi, length.out = 5000)
+y <- sin(x / pi) * exp(-x / 30) + rnorm(5000, sd = 0.15)
 
 model <- StreamingLoess(
-    fraction = 0.3,
-    iterations = 2,
-    chunk_size = 5000,
-    overlap = 500,
+    fraction = 0.2,
+    chunk_size = 1000,
+    overlap = 100,
     merge_strategy = "weighted_average"
 )
 
-# Process one chunk at a time
-chunk_x <- x[1:5000]
-chunk_y <- y[1:5000]
-result <- process_chunk(model, chunk_x, chunk_y)
-
-# Finalize after all chunks
-final <- finalize(model)
-cat("First 6 smoothed values (streaming, weighted_average merge):\n")
-#> First 6 smoothed values (streaming, weighted_average merge):
-print(head(final$y))
-#> [1] 0.3231448 0.3226993 0.3222537 0.3218081 0.3213625 0.3209169
+chunk_size <- 1000
+for (start in seq(1, 4001, by = chunk_size)) {
+    end <- min(start + chunk_size - 1, length(x))
+    process_chunk(model, x[start:end], y[start:end])
+}
+result <- finalize(model)
+cat("Smoothed", length(result$y), "points in streaming mode\n")
+#> Smoothed 100 points in streaming mode
 ```
 
 ------------------------------------------------------------------------
@@ -148,7 +172,21 @@ legend("topright", c("Data", "Smoothed", "95% CI"),
         col = c("gray", "blue", "blue"))
 ```
 
-![](quickstart_files/figure-html/quickstart_5-1.png)
+![](quickstart_files/figure-html/quickstart_6-1.png)
+
+------------------------------------------------------------------------
+
+## Next Steps
+
+| Topic | Link |
+|----|----|
+| How LOESS works | [`vignette("concepts", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/concepts.md) |
+| All parameters explained | [`?Loess`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md) |
+| Batch vs Streaming vs Online | [`vignette("adapter-choice")`](https://thisisamirv.github.io/loess-project/r/articles/adapter-choice.md) |
+| Polynomial degree choices | [`vignette("degree", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/degree.md) |
+| Multivariate smoothing | [`vignette("dimensions", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/dimensions.md) |
+| Edge handling | [`vignette("boundary", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/boundary.md) |
+| Outlier handling in depth | [`vignette("robustness", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/robustness.md) |
 
 ``` r
 
@@ -174,7 +212,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.2.0
+#> [1] rfastloess_2.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

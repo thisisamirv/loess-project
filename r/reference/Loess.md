@@ -31,11 +31,13 @@ Loess(
     distance_metric = "normalized",
     surface_mode = "interpolation",
     return_se = FALSE,
+    return_sorted = FALSE,
     weighted_metric_weights = NULL,
     cell = NULL,
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL,
-    cv_seed = NULL
+    cv_seed = NULL,
+    missing = "error"
 )
 ```
 
@@ -157,11 +159,22 @@ Loess(
   Logical; if `TRUE`, compute hat-matrix statistics (effective degrees
   of freedom, leverage, standard errors). Default: `FALSE`.
 
+- return_sorted:
+
+  Logical; if `TRUE`, return results sorted ascending by `x` instead of
+  in the original input order. Default: `FALSE`. To get both orderings
+  without re-fitting, sort the default (unsorted) result client-side
+  (e.g. `order(result$x)`) rather than calling
+  [`fit()`](https://thisisamirv.github.io/loess-project/r/reference/fit.md)
+  twice.
+
 - weighted_metric_weights:
 
-  Numeric vector of per-dimension weights used when
-  `distance_metric = "weighted"`. Length must equal `dimensions`. `NULL`
-  (default) uses equal weights.
+  Numeric vector of per-dimension weights. Length must equal
+  `dimensions`. Only used when `distance_metric = "weighted"`; setting
+  `distance_metric = "weighted"` without providing this raises an error.
+  `NULL` (default) has no effect unless `distance_metric = "weighted"`
+  is set.
 
 - cell:
 
@@ -183,6 +196,14 @@ Loess(
 
   Integer seed for the cross-validation random number generator. `NULL`
   (default) uses a random seed.
+
+- missing:
+
+  Policy for non-finite (NaN/Inf) values in the input data: `"error"`
+  (default) raises an error, `"drop"` silently removes observations
+  (rows) where any x dimension or y is non-finite (and the matching
+  `custom_weights` entry) before fitting. A length mismatch between `x`
+  and `y` always raises an error, even under `"drop"`.
 
 ## Value
 

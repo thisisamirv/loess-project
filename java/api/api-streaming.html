@@ -207,7 +207,7 @@
 </div>
 </div>
 <div class="paragraph">
-<p><code>StreamingOptions.Builder</code> exposes all the same settings as <a href="api.html" class="xref page"><code>Options.Builder</code></a> (except <code>returnSe</code>, <code>cvFractions</code>/<code>cvMethod</code>/<code>cvK</code>/<code>cvSeed</code>, which are batch-only), plus:</p>
+<p><code>StreamingOptions.Builder</code> exposes all the same settings as <a href="api.html" class="xref page"><code>Options.Builder</code></a> (except <code>returnSe</code>, <code>returnSorted</code>, <code>cvFractions</code>/<code>cvMethod</code>/<code>cvK</code>/<code>cvSeed</code>, which are batch-only), plus:</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -229,19 +229,55 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>chunkSize</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>5000</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Number of points processed per chunk.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>overlap</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>int</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">library default</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Points shared between consecutive chunks. Negative means "use the library default" (<code>500</code>).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>chunkSize / 10</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn&#8217;t artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via <code>mergeStrategy</code>. A good starting point is 10–20% of <code>chunkSize</code>: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice. Negative (the builder default, <code>-1</code>) means "use the library default", clamped to <code>[1, chunkSize - 10]</code>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>mergeStrategy</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted_average"</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">How overlapping chunk results are combined.</p></td>
+</tr>
+</tbody>
+</table>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Strategy</th>
+<th class="tableblock halign-left valign-top">Alias</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted_average"</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Distance-weighted blend</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"average"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"mean"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Average overlapping values</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"take_first"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"first"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keep left chunk values</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"take_last"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"last"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Keep right chunk values</p></td>
 </tr>
 </tbody>
 </table>
@@ -265,7 +301,7 @@
 <h2 id="streamingloess-processchunkdouble-x-double-y-result"><a class="anchor" href="#streamingloess-processchunkdouble-x-double-y-result"></a><code>StreamingLoess.processChunk(double[] x, double[] y) Result</code></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Fits and returns the result for one chunk. Call repeatedly as chunks arrive.</p>
+<p>Fits and returns the result for one chunk. Each chunk is fit together with the trailing <code>overlap</code> points buffered from the previous call, then only the points that are fully resolved are returned — the tail of the chunk (the next <code>overlap</code> points) is held back internally, since it will be refit once the following chunk arrives and its estimate reconciled via <code>mergeStrategy</code>. This is what lets the adapter process a dataset far larger than memory allows, one bounded-size chunk at a time, without ever materializing the whole dataset at once. Call repeatedly as chunks arrive.</p>
 </div>
 </div>
 </div>
@@ -273,7 +309,7 @@
 <h2 id="streamingloess-finish-result"><a class="anchor" href="#streamingloess-finish-result"></a><code>StreamingLoess.finish() Result</code></h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Flushes any buffered data and returns the final merged result. Call once after the last <code>processChunk</code>.</p>
+<p>Flushes the overlap points still buffered from the last <code>processChunk</code> call. Because each call withholds its tail until the next chunk arrives to resolve it, the final chunk&#8217;s tail would never be emitted otherwise — always call <code>finish</code> once after the last chunk to retrieve it.</p>
 </div>
 </div>
 </div>
@@ -282,6 +318,14 @@
 <div class="sectionbody">
 <div class="paragraph">
 <p>Releases native resources. Safe to call multiple times. Implements <code>AutoCloseable</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="result"><a class="anchor" href="#result"></a>Result</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>processChunk</code> and <code>finish</code> return the same <code>Result</code> type as <code>Loess.fit</code>, described in <a href="api.html" class="xref page">API</a>. Fields tied to Batch-only options (<code>standardErrors()</code>, <code>confidenceLower()</code>/<code>confidenceUpper()</code>, <code>predictionLower()</code>/<code>predictionUpper()</code>, <code>cvScores()</code>, <code>hatMatrix()</code>) are always empty here.</p>
 </div>
 </div>
 </div>

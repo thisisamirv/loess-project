@@ -85,7 +85,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "adapter_choice.html",
-"structfastloess_1_1LoessOptions.html#a4a6c82009faa2d814982cdaa2615ae10"
+"structfastloess_1_1LoessOptions.html#a43b259baa804c25879bfbc3c371b854b"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

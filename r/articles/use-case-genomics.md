@@ -58,57 +58,108 @@ legend("topright", c("Observed", "Smoothed", "95% CI"),
 
 ## ChIP-seq Signal Smoothing
 
+### Application
+
+ChIP-seq experiments produce sparse, noisy coverage data. LOESS can help
+identify binding regions.
+
+`fraction = 0.05` provides high spatial resolution — important for
+resolving narrow binding peaks that would otherwise be smeared into the
+background. The larger `iterations = 5` is deliberate:
+Poisson-distributed read counts produce tall, isolated spikes, and extra
+robustness iterations progressively down-weight them so the estimated
+background level is not inflated by a handful of extreme counts.
+
 ``` r
 
 library(rfastloess)
-set.seed(42)
+set.seed(123)
 
-n <- 500
-positions    <- seq(1, 50000, length.out = n)
-signal       <- 10 + 5 * dnorm(positions, mean = 25000, sd = 5000) * 1000
-noise        <- rpois(n, lambda = 2)
-signal_noisy <- signal + noise
-signal_noisy[c(100, 200, 300)] <- signal_noisy[c(100, 200, 300)] * 5
+positions <- seq(0, 9990, by = 10)
+n <- length(positions)
 
-model  <- Loess(fraction = 0.1, iterations = 3)
-result <- fit(model, positions, signal_noisy)
+background <- 10
+peak1 <- 50 * exp(-((positions - 2000)^2) / (2 * 200^2))
+peak2 <- 80 * exp(-((positions - 5000)^2) / (2 * 300^2))
+peak3 <- 40 * exp(-((positions - 8000)^2) / (2 * 150^2))
 
-plot(positions, signal_noisy, pch = 16, cex = 0.4, col = "gray",
-    xlab = "Genomic Position", ylab = "Read Count",
-    main = "ChIP-seq Signal Smoothing")
-lines(result$x, result$y, col = "blue", lwd = 2)
+true_signal <- background + peak1 + peak2 + peak3
+observed <- rpois(n, true_signal)
+
+model <- Loess(
+    fraction = 0.05,   # Very local smoothing
+    iterations = 5,    # Strong robustness
+    return_residuals = TRUE
+)
+result <- fit(model, positions, observed)
+
+# Identify peaks (smoothed signal significantly above background)
+threshold <- quantile(result$y, 0.75)
+peaks <- positions[result$y > threshold]
+cat(sprintf("Found %d peak positions (first 5): %s\n",
+            length(peaks), toString(head(peaks, 5))))
+#> Found 250 peak positions (first 5): 1630, 1640, 1650, 1660, 1670
 ```
-
-![](use-case-genomics_files/figure-html/use_case_genomics_2-1.png)
 
 ------------------------------------------------------------------------
 
-## Large Genomic Datasets (Streaming)
+## Large Genome Coverage (Streaming)
+
+For whole-genome data that doesn’t fit in memory:
 
 ``` r
 
 library(rfastloess)
+set.seed(42)
 
+positions <- seq(0, 9990, by = 10)
+coverage  <- rpois(length(positions), 50)
+
+# Process chromosome-by-chromosome or in chunks
 model <- StreamingLoess(
     fraction   = 0.05,
-    iterations = 2,
-    chunk_size = 1000,
-    overlap    = 100,
+    chunk_size = 100000,   # 100kb chunks
+    overlap    = 10000,    # 10kb overlap
     merge_strategy = "weighted_average"
 )
-
-set.seed(42)
-for (chunk_i in 1:5) {
-    pos_chunk <- seq((chunk_i - 1) * 1e5 + 1, chunk_i * 1e5, length.out = 1000)
-    val_chunk <- sin(pos_chunk / 1e4) + rnorm(1000, sd = 0.2)
-    result    <- process_chunk(model, pos_chunk, val_chunk)
-}
-final <- finalize(model)
-cat("First 6 smoothed values (streaming, weighted_average merge):\n")
-#> First 6 smoothed values (streaming, weighted_average merge):
-print(head(final$y))
-#> [1] -0.9433074 -0.9406127 -0.9372087 -0.9331898 -0.9286503 -0.9236845
+process_chunk(model, positions, coverage)
+#> <LoessResult>
+#>   Points:            0 
+#>   Fraction Used:     0.05 
+#>   Iterations Used:   3
+result <- finalize(model)
+cat("Smoothed y[0]:", result$y[1], "\n")
+#> Smoothed y[0]: 56.83401
 ```
+
+------------------------------------------------------------------------
+
+## Best Practices for Genomic Data
+
+| Consideration            | Recommendation                      |
+|--------------------------|-------------------------------------|
+| **Fraction**             | 0.05–0.15 (preserve local features) |
+| **Iterations**           | 3–5 (handle sequencing outliers)    |
+| **Large data**           | Use streaming mode                  |
+| **Sparse regions**       | Use `boundary_policy = "extend"`    |
+| **Multiple chromosomes** | Process separately or ensure sorted |
+
+------------------------------------------------------------------------
+
+## See Also
+
+- [`vignette("concepts", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/concepts.md)
+  — How LOESS works
+- [`?Loess`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md)
+  — All options
+- [`vignette("robustness", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/robustness.md)
+  — Outlier downweighting in depth
+- [`vignette("merge", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/merge.md)
+  — Streaming chunk reconciliation
+- [`vignette("boundary", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/boundary.md)
+  — Edge handling for sparse regions
+- [`vignette("use-case-real-time", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/use-case-real-time.md)
+  — For sequencing runs
 
 ``` r
 
@@ -134,7 +185,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.2.0
+#> [1] rfastloess_2.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

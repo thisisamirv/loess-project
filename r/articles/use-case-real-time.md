@@ -2,12 +2,16 @@
 
 ## Overview
 
-The Online adapter provides incremental smoothing for continuously
-arriving data.
+When data arrives continuously — from sensors, logs, or streaming
+pipelines — you need incremental smoothing that doesn’t require
+reprocessing the entire dataset.
 
 ------------------------------------------------------------------------
 
 ## Online Mode: Point-by-Point
+
+For true real-time applications where each point must be processed
+immediately.
 
 `window_capacity = 25` limits the internal buffer to the 25 most recent
 observations; each `add_point` call costs O(window) rather than growing
@@ -47,9 +51,7 @@ for (i in seq_along(times)) {
 #> Time 10: 24.14
 ```
 
-------------------------------------------------------------------------
-
-## Accumulating Results
+### Accumulating Results
 
 ``` r
 
@@ -91,50 +93,131 @@ lines(smoothed_x, smoothed_y, col = "blue", lwd = 2)
 
 ------------------------------------------------------------------------
 
-## Update Modes
+## Streaming Mode: Chunk Processing
 
-| Mode            | Behaviour                     | Latency | Accuracy |
-|-----------------|-------------------------------|---------|----------|
-| `"incremental"` | Re-fits only the newest point | Low     | Moderate |
-| `"full"`        | Re-fits the entire window     | Higher  | Higher   |
+For large datasets that arrive in batches or files.
 
-------------------------------------------------------------------------
+`chunk_size` controls how many data points are processed in one pass;
+matching it to your file-read buffer or message-batch size avoids
+unnecessary copying. `overlap` retains that many points from the
+previous chunk as context so the neighbourhood at chunk boundaries is
+not artificially truncated. `merge_strategy = "weighted_average"` blends
+the overlapping region smoothly; use `"take_last"` if chunk boundaries
+are guaranteed to be well separated and no blending is needed.
 
-## Streaming Mode for Large Batches
+> **Always call finalize():** The streaming adapter buffers overlap
+> data. Call `finalize(model)` after the last chunk to retrieve the
+> buffered tail.
+
+### Log File Processing
 
 ``` r
 
 library(rfastloess)
+set.seed(42)
+
+total_points <- 100000
+x <- 0:(total_points - 1)
+y <- sin(x / 1000) + rnorm(total_points, sd = 0.1)
 
 model <- StreamingLoess(
-    fraction       = 0.3,
-    iterations     = 2,
-    chunk_size     = 5000,
-    overlap        = 500,
+    fraction       = 0.05,
+    chunk_size     = 10000,
+    overlap        = 1000,
     merge_strategy = "weighted_average"
 )
-
-set.seed(42)
-n_total <- 20000
-x_all   <- seq_len(n_total)
-y_all   <- sin(x_all / 500) + rnorm(n_total, sd = 0.5)
-
-chunk_size <- 5000
-n_chunks   <- ceiling(n_total / chunk_size)
-
-for (i in seq_len(n_chunks)) {
-    idx_from <- (i - 1) * chunk_size + 1
-    idx_to   <- min(i * chunk_size, n_total)
-    result   <- process_chunk(model, x_all[idx_from:idx_to],
-                                    y_all[idx_from:idx_to])
-}
-
-final <- finalize(model)
-cat("First 6 smoothed values (streaming, weighted_average merge):\n")
-#> First 6 smoothed values (streaming, weighted_average merge):
-print(head(final$y))
-#> [1] 0.8375773 0.8384586 0.8393410 0.8402243 0.8411086 0.8419938
+process_chunk(model, x, y)
+#> <LoessResult>
+#>   Points:            99000 
+#>   Fraction Used:     0.05 
+#>   Iterations Used:   3
+result <- finalize(model)
+cat("Processed", length(result$y), "points\n")
+#> Processed 1000 points
 ```
+
+------------------------------------------------------------------------
+
+## Real-Time Dashboard Example
+
+The dashboard pattern uses a plain LOESS fit on a manually managed
+sliding window rather than `OnlineLoess`. This is the simplest approach
+when your UI framework already owns the data buffer and you only need
+the most recent smoothed value per frame. The trade-off is a full
+O(window^2) refit on every tick; for high-frequency streams prefer
+`OnlineLoess` with `update_mode = "incremental"` to bound per-frame
+cost.
+
+``` r
+
+library(rfastloess)
+set.seed(42)
+
+window_capacity <- 50
+data_x <- numeric(0)
+data_y <- numeric(0)
+
+for (i in 0:199) {
+    xi <- i
+    yi <- 25.0 + 10 * sin(i / 20) + rnorm(1, sd = 2)
+    data_x <- c(data_x, xi)
+    data_y <- c(data_y, yi)
+
+    if (length(data_x) > window_capacity) {
+        data_x <- tail(data_x, window_capacity)
+        data_y <- tail(data_y, window_capacity)
+    }
+
+    if (length(data_x) >= 5) {
+        model <- Loess(fraction = 0.4)
+        result <- fit(model, data_x, data_y)
+        current_smoothed <- tail(result$y, 1)
+    }
+}
+```
+
+------------------------------------------------------------------------
+
+## Choosing Parameters
+
+### Online Mode
+
+| Parameter         | Guidance                                         |
+|-------------------|--------------------------------------------------|
+| `window_capacity` | Enough history for `fraction` to work            |
+| `min_points`      | 2–5 typically; higher for stability              |
+| `update_mode`     | `"incremental"` for speed, `"full"` for accuracy |
+
+### Streaming Mode
+
+| Parameter        | Guidance                                               |
+|------------------|--------------------------------------------------------|
+| `chunk_size`     | Balance memory vs. processing overhead                 |
+| `overlap`        | 10–20% of chunk_size for smooth transitions            |
+| `merge_strategy` | `"weighted_average"` (quality) vs `"average"` (simple) |
+
+------------------------------------------------------------------------
+
+## Performance Considerations
+
+| Mode          | Memory         | Latency      | Use Case            |
+|---------------|----------------|--------------|---------------------|
+| **Online**    | Fixed (window) | ~1ms/point   | Sensors, dashboards |
+| **Streaming** | ~chunk_size    | ~100ms/chunk | Large files, ETL    |
+| **Batch**     | Full dataset   | N/A          | Analysis, reports   |
+
+------------------------------------------------------------------------
+
+## See Also
+
+- [`vignette("adapter-choice", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/adapter-choice.md)
+  — Detailed mode comparison
+- [`vignette("merge", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/merge.md)
+  — Chunk reconciliation in depth
+- [`vignette("scaling", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/scaling.md)
+  — Robustness scale estimation
+- [`vignette("use-case-time-series", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/use-case-time-series.md)
+  — General time series analysis
 
 ``` r
 
@@ -160,7 +243,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.2.0
+#> [1] rfastloess_2.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

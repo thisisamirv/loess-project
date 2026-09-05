@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,14 +61,18 @@
 
     
     
+<!-- markdownlint-disable MD024 -->
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>Standard LOESS operates on a single predictor <code>x</code>. LOESS
-extends this to an <strong>n-dimensional predictor space</strong> by
-passing a matrix as <code>x</code>, enabling surface smoothing over
-spatial grids, time–altitude combinations, and similar multi-predictor
-datasets.</p>
+<p>Standard LOESS operates on a single predictor <code>x</code>. Setting
+<code>dimensions &gt; 1</code> extends the neighbourhood search and
+local polynomial fit into an <strong>n-dimensional predictor
+space</strong>, enabling surface smoothing over spatial grids,
+time–altitude combinations, and similar multi-predictor datasets.</p>
+<div class="float">
+<img src="../reference/figures/multivariate_loess.svg" alt="Multivariate LOESS"><div class="figcaption">Multivariate LOESS</div>
+</div>
 <table class="table">
 <thead><tr class="header">
 <th>Dimensions</th>
@@ -169,10 +173,10 @@ neighbourhood populated.</p>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="distance-metrics">Distance Metrics<a class="anchor" aria-label="anchor" href="#distance-metrics"></a>
+<h2 id="distance-metrics-for-multivariate-data">Distance Metrics for Multivariate Data<a class="anchor" aria-label="anchor" href="#distance-metrics-for-multivariate-data"></a>
 </h2>
-<p>In multivariate mode, neighbour distances can be computed with
-different metrics.</p>
+<p>When <code>dimensions &gt; 1</code> you can also control how
+inter-point distances are computed.</p>
 <table class="table">
 <colgroup>
 <col width="33%">
@@ -197,11 +201,10 @@ different metrics.</p>
 </tr>
 <tr class="odd">
 <td><code>"minkowski:p"</code></td>
-<td>Generalised Minkowski
+<td>Minkowski
 (<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mi>p</mi></msub><annotation encoding="application/x-tex">L_p</annotation></semantics></math>)
-norm, e.g. <code>"minkowski:3"</code>
-</td>
-<td>Custom distance geometry</td>
+norm</td>
+<td>Custom geometry</td>
 </tr>
 <tr class="even">
 <td><code>"weighted"</code></td>
@@ -294,7 +297,7 @@ norm, e.g. <code>"minkowski:3"</code>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastloess_1.2.0</span></span>
+<span><span class="co">#&gt; [1] rfastloess_2.0.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>

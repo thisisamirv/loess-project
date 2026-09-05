@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,47 +35,54 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.2.0" id="rfastloess-120">rfastloess 1.2.0<a class="anchor" aria-label="anchor" href="#rfastloess-120"></a></h2>
+<h2 class="pkg-version" data-toc-text="2.0.0" id="rfastloess-200">rfastloess 2.0.0<a class="anchor" aria-label="anchor" href="#rfastloess-200"></a></h2>
 <div class="section level3">
-<h3 id="added-1-2-0">Added<a class="anchor" aria-label="anchor" href="#added-1-2-0"></a></h3>
-<ul><li>Added <code>dev/bump_version.py --version X.Y.Z</code> to bump every crate/binding’s version files, <code>CITATION.cff</code>, and the Spack recipe in one pass (supports <code>--dry-run</code>).</li>
-<li>Added <code>dev/check_pinned_versions.py</code> and a weekly <code>check-versions.yml</code> to catch hardcoded version pins that Dependabot can’t see.</li>
-<li>Added <code>.github/dependabot.yml</code>, covering every dependency ecosystem, grouped per directory into a single weekly PR.</li>
-<li>Added an optional <code>commit</code> input to every release workflow’s <code>workflow_dispatch</code> trigger, to pin the built commit for manual runs.</li>
-<li>Added <code>dev/check_links.py</code> to validate every Markdown cross-reference link across all docs.</li>
+<h3 id="added-2-0-0">Added<a class="anchor" aria-label="anchor" href="#added-2-0-0"></a></h3>
+<ul><li>Added an “Ideas for Contribution” section to <code>CONTRIBUTING.md</code>, listing concrete Batch/Streaming/Online feature gaps (out-of-sample prediction, per-point local gradients, adaptive fraction selection, <code>cell</code>/<code>interpolation_vertices</code> tuning, bootstrap intervals, GPU backend, concurrent chunk processing, checkpointable streaming state, <code>OnlineOutput.standard_error</code>, distance-based window eviction, configurable warm-up).</li>
+<li>Added <code>dev/bump_version.py --version X.Y.Z</code> to bump every crate/binding version file, <code>CITATION.cff</code>, the Spack recipe, and <code>CONTRIBUTING.md</code>’s example version in one pass (supports <code>--dry-run</code>).</li>
+<li>Added <code>dev/check_pinned_versions.py</code> and a weekly <code>check-versions.yml</code> to catch hardcoded version pins Dependabot can’t see.</li>
+<li>Added <code>.github/dependabot.yml</code>, covering every dependency ecosystem in one weekly PR per directory.</li>
+<li>Added an optional <code>commit</code> input to release workflows’ <code>workflow_dispatch</code> trigger, to pin the built commit for manual runs.</li>
+<li>Added <code>dev/check_links.py</code> to validate Markdown cross-reference links across all docs.</li>
+<li>Added <code>return_sorted</code> and <code>missing</code> options to <code><a href="../reference/Loess.html">Loess()</a></code>, <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, and <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="changed-1-2-0">Changed<a class="anchor" aria-label="anchor" href="#changed-1-2-0"></a></h3>
+<h3 id="changed-2-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-2-0-0"></a></h3>
 <ul><li>Added a <code>large</code> benchmark category (exact-fit, high-iteration, high-fraction) to the R/Rust benchmarks.</li>
 <li>Merged the standalone <code>dev/add-{cpp,rust,nodejs,wasm}-outputs</code> scripts into <code>dev/verify_snippets.py --update-outputs</code>.</li>
-<li>Replaced Unicode super/subscript stand-ins (<code>R²</code>, <code>xᵢ</code>, etc.) with plain ASCII throughout docs, READMEs, and Rust comments, also catching some leftover mojibake.</li>
+<li>Replaced Unicode super/subscript stand-ins (<code>R²</code>, <code>xᵢ</code>, etc.) with plain ASCII throughout docs and comments, catching some leftover mojibake.</li>
 <li>Added <code>dev/add-readme-to-docs.py</code> to auto-embed <code>README.md</code> as the docs homepage (Starlight/Sphinx-aware); not yet wired into Python’s <code>Makefile</code>.</li>
 <li>Harmonized the docs-site directory structure across every binding/crate, and fixed doc-tooling scripts that missed snippets in the newly-nested pages.</li>
-<li>Consolidated every README: merged Installation/Documentation sections, dropped GitHub-only alert syntax, and removed sections now covered by dedicated docs-site pages.</li>
-<li>Renamed “When to Use” to “When to Use Batch Adapter” across every binding’s API docs.</li>
-<li>Vendored doxygen-awesome-css v2.4.2 for a modern cpp Doxygen theme.</li>
+<li>Consolidated every README (merged Installation/Documentation sections, dropped GitHub-only alert syntax, removed sections now covered by docs-site pages) and renamed “When to Use” to “When to Use Batch Adapter” everywhere.</li>
+<li>Vendored doxygen-awesome-css v2.4.2 for a modern C++ Doxygen theme.</li>
 <li>Added <code>dev/update_changelogs.py</code> to regenerate each binding/crate’s <code>NEWS.md</code>/<code>news.md</code> from the root changelog.</li>
-<li>Replaced the <code>kernels.md</code>/<code>adapter-choice.md</code> mermaid flowcharts with rendering-agnostic tables (Doxygen/rustdoc don’t render mermaid).</li>
+<li>Replaced the <code>kernels.md</code>/<code>adapter-choice.md</code> mermaid flowcharts with tables (Doxygen/rustdoc don’t render mermaid).</li>
 <li>Consolidated <code>parameters.md</code>/<code>@autodocs</code> into each <code>api.md</code>’s option tables, removing <code>parameters.md</code>.</li>
 <li>Removed the redundant <code>rfastloess-package</code> pkgdown topic and the internal <code>Nullable()</code> helper.</li>
 <li>Fixed <code>_pkgdown.yml</code> mislabeling the S3-based interface as “R6 classes”.</li>
 <li>Merged <code>parameters.Rmd</code>/<code>batch.Rmd</code>/<code>streaming.Rmd</code>/<code>online.Rmd</code> into the constructors’ roxygen docs, removing the now-redundant vignettes.</li>
+<li>Removed <code>confidence_intervals</code>/<code>prediction_intervals</code>/<code>return_se</code> from <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, and those plus <code>return_diagnostics</code>/<code>return_residuals</code>/<code>parallel</code> from <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> — none were ever computed by either adapter, and Online now always runs sequentially. Breaking change; <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>’s <code>parallel</code> is unaffected.</li>
+<li>Mirrored the Python API docs’ structure (field tables, <code>## Options</code> per field, <code>## Result Structure</code> at the end) to every remaining crate/binding. Along the way, unified <code>weighted_metric_weights</code> to require explicit <code>distance_metric = "weighted"</code> on C++/Go/Java/Julia (previously auto-selected); fixed C++‘s <code>StreamingOptions.overlap</code> hardcoded <code>500</code> default; corrected several bindings’ docs showing a flat <code>500</code> for <code>overlap</code> when they actually use the dynamic default (Node.js, WASM, Go, Java, R); fixed Java’s <code>api-online.adoc</code> disclaimer and Julia’s constructor docstrings missing several accepted keyword arguments.</li>
+<li>Fixed <code>bindings/r/R/StreamingLoess.R</code>, which was corrupted (a duplicate of <code>OnlineLoess.R</code> with a mangled fragment appended), making <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code> uncallable. Reconstructed from <code>man/StreamingLoess.Rd</code>/<code>utils.R</code>, verified via <code><a href="https://roxygen2.r-lib.org/reference/roxygenize.html" class="external-link">roxygen2::roxygenise()</a></code> and the full <code>testthat</code> suite (187 passed). Also fixed a stale <code>test-extendr-wrappers.R</code> fixture with 3 extra positional args.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="fixed-1-2-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-1-2-0"></a></h3>
-<ul><li>Fixed the R benchmark script calling <code>fit</code> as a field instead of the S3 generic <code>fit(model, x, y)</code>.</li>
+<h3 id="fixed-2-0-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-2-0-0"></a></h3>
+<ul><li>Fixed <code>CONTRIBUTING.md</code>’s stale Go prerequisite (<code>1.21+</code> → <code>1.23+</code>), <code>air</code> auto-install target (<code>make r</code> → <code>make r-dev</code>), and example crate version (<code>0.9.0</code> → <code>1.2.0</code>).</li>
+<li>Fixed the R benchmark script calling <code>fit</code> as a field instead of the S3 generic <code>fit(model, x, y)</code>.</li>
 <li>Fixed <code>release-conda.yml</code>’s version-line <code>sed</code> pattern to match any indentation.</li>
 <li>Fixed benchmark vendoring nulling every crate’s checksum instead of just the two local path crates.</li>
 <li>Fixed the benchmark README’s inaccurate “Iterations” scenario count.</li>
-<li>Fixed <code>docs.yml</code>’s Pages deployment: merged per-language jobs into one artifact upload/deploy job, using <code>upload/deploy-pages</code> actions instead of legacy branch-based deployment.</li>
-<li>Fixed 51 broken doc cross-reference links left over from the docs-site restructure (found via new <code>dev/check_links.py</code>).</li>
-<li>Fixed several <code>OnlineLoess</code>/<code>StreamingLoess</code> defaults silently diverging from every binding’s docs and actual behavior: <code>min_points</code> (was 3, now 2), <code>update_mode</code> (was <code>"full"</code>, now <code>"incremental"</code>), and the internal robustness-iteration defaults (streaming 2→3, online 1→3) that only the Rust crates’ bare prelude API could ever see.</li>
-<li>Fixed the “Handling Outliers” quickstart example printing nothing with only 6 points at <code>fraction = 0.5</code>; bumped to <code>0.7</code> so the outlier is actually downweighted.</li>
-<li>Fixed two R roxygen examples: <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> printing 48 lines instead of a <code>head(smoothed, 5)</code> sample, and <code><a href="../reference/add_point.html">add_point()</a></code> always printing <code>NULL</code> due to the default <code>min_points</code>.</li>
-<li>Fixed Julia’s <code>intervals.md</code> examples looping over all 100 points instead of a short sample, matching the concise Python version.</li>
+<li>Fixed <code>docs.yml</code>’s Pages deployment: merged per-language jobs into one artifact upload/deploy job using <code>upload/deploy-pages</code> actions instead of legacy branch-based deployment.</li>
+<li>Fixed 51 broken doc cross-reference links left over from the docs-site restructure (found via <code>dev/check_links.py</code>).</li>
+<li>Fixed <code>OnlineLoess</code>/<code>StreamingLoess</code> defaults silently diverging from docs: <code>min_points</code> (3→2), <code>update_mode</code> (<code>"full"</code>→<code>"incremental"</code>), and internal robustness-iteration defaults (streaming 2→3, online 1→3).</li>
+<li>Fixed every binding’s docs describing <code>LoessResult.x</code> as “sorted”; it’s actually returned in input order (sorted internally, then mapped back). Strengthened Python’s <code>test_unsorted_input</code> to assert this.</li>
+<li>Fixed the “Handling Outliers” quickstart example printing nothing at <code>fraction = 0.5</code> with only 6 points; bumped to <code>0.7</code>.</li>
+<li>Fixed two R roxygen examples printing too much/nothing (<code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>, <code><a href="../reference/add_point.html">add_point()</a></code>).</li>
+<li>Fixed Julia’s <code>intervals.md</code> examples looping over all 100 points instead of a short sample.</li>
 <li>Reformatted <code>configure</code> to tabs and fixed <code>.Rbuildignore</code> missing exclusions.</li>
 <li>Removed the empty <code>R/params.R</code> stub and simplified <code><a href="../reference/plot.LoessResult.html">plot.LoessResult()</a></code> to return <code>NULL</code> invisibly.</li>
 <li>Inlined the <code>.make_*</code> constructor helpers, and consolidated <code>utils.R</code>’s parameter validators into two generic helpers.</li>
+<li>Fixed <code>utils.R</code>’s internal <code>validate_min_points()</code> guard hardcoding a stricter minimum of 3 points, diverging from the Rust core’s actual minimum of 2; lowered to 2.</li>
 </ul></div>
 </div>
     <div class="section level2">

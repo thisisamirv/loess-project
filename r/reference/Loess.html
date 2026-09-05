@@ -11,7 +11,7 @@ mode: it processes the entire dataset at once and supports every feature
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,11 +71,13 @@ mode: it processes the entire dataset at once and supports every feature
 <span>    distance_metric <span class="op">=</span> <span class="st">"normalized"</span>,</span>
 <span>    surface_mode <span class="op">=</span> <span class="st">"interpolation"</span>,</span>
 <span>    return_se <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    return_sorted <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    weighted_metric_weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    cell <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    interpolation_vertices <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    boundary_degree_fallback <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    cv_seed <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>    cv_seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    missing <span class="op">=</span> <span class="st">"error"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -209,10 +211,21 @@ Use <code>"minkowski:p"</code> to set a custom <em>p</em> value.</p></dd>
 Default: <code>FALSE</code>.</p></dd>
 
 
+<dt id="arg-return-sorted">return_sorted<a class="anchor" aria-label="anchor" href="#arg-return-sorted"></a></dt>
+<dd><p>Logical; if <code>TRUE</code>, return results sorted
+ascending by <code>x</code> instead of in the original input order. Default:
+<code>FALSE</code>. To get both orderings without re-fitting, sort the default
+(unsorted) result client-side (e.g. <code>order(result$x)</code>) rather than
+calling <code><a href="fit.html">fit()</a></code> twice.</p></dd>
+
+
 <dt id="arg-weighted-metric-weights">weighted_metric_weights<a class="anchor" aria-label="anchor" href="#arg-weighted-metric-weights"></a></dt>
-<dd><p>Numeric vector of per-dimension weights used
-when <code>distance_metric = "weighted"</code>. Length must equal
-<code>dimensions</code>. <code>NULL</code> (default) uses equal weights.</p></dd>
+<dd><p>Numeric vector of per-dimension weights.
+Length must equal <code>dimensions</code>. Only used when
+<code>distance_metric = "weighted"</code>; setting
+<code>distance_metric = "weighted"</code> without providing this raises an
+error. <code>NULL</code> (default) has no effect unless
+<code>distance_metric = "weighted"</code> is set.</p></dd>
 
 
 <dt id="arg-cell">cell<a class="anchor" aria-label="anchor" href="#arg-cell"></a></dt>
@@ -234,6 +247,15 @@ fails. <code>NULL</code> (default) uses the library default.</p></dd>
 <dt id="arg-cv-seed">cv_seed<a class="anchor" aria-label="anchor" href="#arg-cv-seed"></a></dt>
 <dd><p>Integer seed for the cross-validation random number
 generator. <code>NULL</code> (default) uses a random seed.</p></dd>
+
+
+<dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
+<dd><p>Policy for non-finite (NaN/Inf) values in the input data:
+<code>"error"</code> (default) raises an error, <code>"drop"</code> silently removes
+observations (rows) where any x dimension or y is non-finite (and the
+matching <code>custom_weights</code> entry) before fitting. A length mismatch
+between <code>x</code> and <code>y</code> always raises an error, even under
+<code>"drop"</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -21,20 +21,15 @@ OnlineLoess(
     update_mode = "incremental",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    parallel = FALSE,
     degree = "linear",
     dimensions = 1L,
     distance_metric = "normalized",
     surface_mode = "interpolation",
-    return_se = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
     weighted_metric_weights = NULL,
     cell = NULL,
     interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL
+    boundary_degree_fallback = NULL,
+    missing = "error"
 )
 ```
 
@@ -112,19 +107,6 @@ OnlineLoess(
   Logical; if `TRUE`, return per-point robustness weights. Default:
   `FALSE`.
 
-- return_diagnostics:
-
-  Logical; if `TRUE`, return fit-quality metrics (RMSE, MAE, R-squared,
-  AIC, etc.). Default: `FALSE`.
-
-- return_residuals:
-
-  Logical; if `TRUE`, return residuals in the result. Default: `FALSE`.
-
-- parallel:
-
-  Logical; enable parallel processing. Default: `TRUE`.
-
 - degree:
 
   Local polynomial degree: `"constant"`, `"linear"` (default),
@@ -144,26 +126,13 @@ OnlineLoess(
 
   Surface evaluation mode: `"interpolation"` (default) or `"direct"`.
 
-- return_se:
-
-  Logical; if `TRUE`, compute hat-matrix statistics (effective degrees
-  of freedom, leverage, standard errors). Default: `FALSE`.
-
-- confidence_intervals:
-
-  Confidence level for confidence intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables confidence intervals.
-
-- prediction_intervals:
-
-  Confidence level for prediction intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables prediction intervals.
-
 - weighted_metric_weights:
 
-  Numeric vector of per-dimension weights used when
-  `distance_metric = "weighted"`. Length must equal `dimensions`. `NULL`
-  (default) uses equal weights.
+  Numeric vector of per-dimension weights. Length must equal
+  `dimensions`. Only used when `distance_metric = "weighted"`; setting
+  `distance_metric = "weighted"` without providing this raises an error.
+  `NULL` (default) has no effect unless `distance_metric = "weighted"`
+  is set.
 
 - cell:
 
@@ -180,6 +149,13 @@ OnlineLoess(
   Logical; if `TRUE`, fall back to lower polynomial degree at boundaries
   when fitting at the requested degree fails. `NULL` (default) uses the
   library default.
+
+- missing:
+
+  Policy for a non-finite (NaN/Inf) `x` or `y` value passed to
+  [`add_point`](https://thisisamirv.github.io/loess-project/r/reference/add_point.md):
+  `"error"` (default) raises an error, `"drop"` silently ignores the
+  point (returns `NULL`) instead of adding it to the window.
 
 ## Value
 

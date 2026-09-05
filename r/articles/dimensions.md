@@ -2,10 +2,15 @@
 
 ## Overview
 
-Standard LOESS operates on a single predictor `x`. LOESS extends this to
-an **n-dimensional predictor space** by passing a matrix as `x`,
-enabling surface smoothing over spatial grids, time–altitude
-combinations, and similar multi-predictor datasets.
+Standard LOESS operates on a single predictor `x`. Setting
+`dimensions > 1` extends the neighbourhood search and local polynomial
+fit into an **n-dimensional predictor space**, enabling surface
+smoothing over spatial grids, time–altitude combinations, and similar
+multi-predictor datasets.
+
+![Multivariate LOESS](../reference/figures/multivariate_loess.svg)
+
+Multivariate LOESS
 
 | Dimensions | Use Case                           | `x` Input Shape |
 |------------|------------------------------------|-----------------|
@@ -91,16 +96,16 @@ print(head(result$y))
 
 ------------------------------------------------------------------------
 
-## Distance Metrics
+## Distance Metrics for Multivariate Data
 
-In multivariate mode, neighbour distances can be computed with different
-metrics.
+When `dimensions > 1` you can also control how inter-point distances are
+computed.
 
 | Metric | Description | When to Use |
 |----|----|----|
 | `"normalized"` | Scaled by dimension range (default) | Mixed-scale |
 | `"euclidean"` | Raw Euclidean distance | Same-scale predictors |
-| `"minkowski:p"` | Generalised Minkowski ($`L_p`$) norm, e.g. `"minkowski:3"` | Custom distance geometry |
+| `"minkowski:p"` | Minkowski ($`L_p`$) norm | Custom geometry |
 | `"weighted"` | Per-dimension via `weighted_metric_weights` | Anisotropic |
 
 ``` r
@@ -181,7 +186,7 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_1.2.0
+#> [1] rfastloess_2.0.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    

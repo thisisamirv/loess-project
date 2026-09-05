@@ -32,13 +32,11 @@ StreamingLoess(
     dimensions = 1L,
     distance_metric = "normalized",
     surface_mode = "interpolation",
-    return_se = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
     weighted_metric_weights = NULL,
     cell = NULL,
     interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL
+    boundary_degree_fallback = NULL,
+    missing = "error"
 )
 ```
 
@@ -61,7 +59,8 @@ StreamingLoess(
 - overlap:
 
   Number of overlapping points between consecutive chunks, less than
-  `chunk_size`. `NULL` (default) uses the backend's default of 500.
+  `chunk_size`. `NULL` (default) uses `chunk_size / 10` (clamped to
+  `[1, chunk_size - 10]`).
 
 - iterations:
 
@@ -149,26 +148,13 @@ StreamingLoess(
 
   Surface evaluation mode: `"interpolation"` (default) or `"direct"`.
 
-- return_se:
-
-  Logical; if `TRUE`, compute hat-matrix statistics (effective degrees
-  of freedom, leverage, standard errors). Default: `FALSE`.
-
-- confidence_intervals:
-
-  Confidence level for confidence intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables confidence intervals.
-
-- prediction_intervals:
-
-  Confidence level for prediction intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables prediction intervals.
-
 - weighted_metric_weights:
 
-  Numeric vector of per-dimension weights used when
-  `distance_metric = "weighted"`. Length must equal `dimensions`. `NULL`
-  (default) uses equal weights.
+  Numeric vector of per-dimension weights. Length must equal
+  `dimensions`. Only used when `distance_metric = "weighted"`; setting
+  `distance_metric = "weighted"` without providing this raises an error.
+  `NULL` (default) has no effect unless `distance_metric = "weighted"`
+  is set.
 
 - cell:
 
@@ -186,6 +172,14 @@ StreamingLoess(
   when fitting at the requested degree fails. `NULL` (default) uses the
   library default.
 
+- missing:
+
+  Policy for non-finite (NaN/Inf) values in the input data: `"error"`
+  (default) raises an error, `"drop"` silently removes observations
+  (rows) where any x dimension or y is non-finite (and the matching
+  `custom_weights` entry) before fitting. A length mismatch between `x`
+  and `y` always raises an error, even under `"drop"`.
+
 ## Value
 
 A StreamingLoess object.
@@ -201,13 +195,13 @@ for point-by-point real-time data, see
 
 Overlapping regions between chunks are reconciled via `merge_strategy`:
 
-|                      |                                                |
-|----------------------|------------------------------------------------|
-| Strategy             | Behavior                                       |
-| `"average"`          | Arithmetic mean of both estimates              |
-| `"weighted_average"` | Distance-weighted blend (recommended, default) |
-| `"take_first"`       | Keep left-chunk estimate                       |
-| `"take_last"`        | Keep right-chunk estimate                      |
+|                      |                                   |
+|----------------------|-----------------------------------|
+| Strategy             | Behavior                          |
+| `"average"`          | Arithmetic mean of both estimates |
+| `"weighted_average"` | Distance-weighted blend (default) |
+| `"take_first"`       | Keep left-chunk estimate          |
+| `"take_last"`        | Keep right-chunk estimate         |
 
 ## Examples
 

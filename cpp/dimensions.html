@@ -105,7 +105,7 @@ $(document).ready(function(){initNavTree('dimensions.html',''); initResizable();
 <div class="textblock"><h1>Multivariate LOESS</h1>
 <p>Smoothing over multiple predictor dimensions simultaneously.</p>
 <h2>Overview</h2>
-<p>Standard LOESS operates on a single predictor \(x\). Setting <code>dimensions &gt; 1</code> extends the neighbourhood search and local polynomial fit into an \(n\)-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets.</p>
+<p>Standard LOESS operates on a single predictor \(x\). Setting <code>dimensions &gt; 1</code> extends the neighbourhood search and local polynomial fit into an \(n\)-dimensional predictor space, enabling surface smoothing over spatial grids, time–altitude combinations, and similar multi-predictor datasets. <code>x</code> is passed as a flat, row-major vector of length <code>y.size() * dimensions</code>.</p>
 <div class="image">
 <object type="image/svg+xml" data="multivariate_loess.svg" style="pointer-events: none;"></object>
 <div class="caption">
@@ -116,9 +116,9 @@ Multivariate LOESS</div></div>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>1</code>   </td><td class="markdownTableBodyNone">Time series, 1D signal (default)   </td><td class="markdownTableBodyNone"><code>x</code>: 1-D array    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>2</code>   </td><td class="markdownTableBodyNone">Spatial surface, 2-predictor model   </td><td class="markdownTableBodyNone"><code>x</code>: n × 2 matrix    </td></tr>
+<td class="markdownTableBodyNone"><code>2</code>   </td><td class="markdownTableBodyNone">Spatial surface, 2-predictor model   </td><td class="markdownTableBodyNone"><code>x</code>: flat array of length <code>n*2</code>, row-major    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>3+</code>   </td><td class="markdownTableBodyNone">High-dimensional regression   </td><td class="markdownTableBodyNone"><code>x</code>: n × d matrix   </td></tr>
+<td class="markdownTableBodyNone"><code>3+</code>   </td><td class="markdownTableBodyNone">High-dimensional regression   </td><td class="markdownTableBodyNone"><code>x</code>: flat array of length <code>n*d</code>, row-major   </td></tr>
 </table>
 <blockquote class="doxtable">
 <p>&zwj;<b>Computational cost:</b> Neighbourhood search scales with \(d\) dimensions. For <code>dimensions ≥ 3</code> keep <code>fraction</code> small. </p>
@@ -145,14 +145,14 @@ Multivariate LOESS</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastloess_1_1Expected_html_a8d42c6a77cf5c282230aee46b48da418"><div class="ttname"><a href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">fastloess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastloess.hpp:63</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:415</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:475</div></div>
+<div class="ttc" id="aclassfastloess_1_1Expected_html_a8d42c6a77cf5c282230aee46b48da418"><div class="ttname"><a href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">fastloess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastloess.hpp:65</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:419</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:481</div></div>
 <div class="ttc" id="afastloess_8hpp_html"><div class="ttname"><a href="fastloess_8hpp.html">fastloess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLoess library.</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.24731</div>
 </div><!-- fragment --><hr  />
 <h2>2D — Spatial Surface</h2>
-<p>Two predictors (e.g., latitude/longitude, time/altitude). Pass an \(n \times 2\) matrix as <code>x</code>.</p>
+<p>Two predictors (e.g., latitude/longitude, time/altitude). Pass a flat, row-major array of length <code>n*2</code> as <code>x</code>.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastloess_8hpp.html">fastloess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;cmath&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>
@@ -179,9 +179,9 @@ Multivariate LOESS</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="astructfastloess_1_1LoessOptions_html"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a></div><div class="ttdoc">Options for configuring LOESS smoothing.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:107</div></div>
-<div class="ttc" id="astructfastloess_1_1LoessOptions_html_a4b136efcebfc6170575c896083b78708"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a4b136efcebfc6170575c896083b78708">fastloess::LoessOptions::dimensions</a></div><div class="ttdeci">int dimensions</div><div class="ttdoc">Number of predictor dimensions.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:130</div></div>
-<div class="ttc" id="astructfastloess_1_1LoessOptions_html_a74cd5ca0f18e82875093bb3aecfde3ce"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fastloess::LoessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastloess.hpp:108</div></div>
+<div class="ttc" id="astructfastloess_1_1LoessOptions_html"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a></div><div class="ttdoc">Options for configuring LOESS smoothing.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:109</div></div>
+<div class="ttc" id="astructfastloess_1_1LoessOptions_html_a4b136efcebfc6170575c896083b78708"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a4b136efcebfc6170575c896083b78708">fastloess::LoessOptions::dimensions</a></div><div class="ttdeci">int dimensions</div><div class="ttdoc">Number of predictor dimensions.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:134</div></div>
+<div class="ttc" id="astructfastloess_1_1LoessOptions_html_a74cd5ca0f18e82875093bb3aecfde3ce"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fastloess::LoessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastloess.hpp:110</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 1.19329</div>
 </div><!-- fragment --><hr  />
 <h2>3D and Higher</h2>

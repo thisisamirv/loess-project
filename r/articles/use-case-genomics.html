@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,7 @@
 
     
     
+<!-- markdownlint-disable MD024 -->
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -121,52 +122,133 @@ apparent in the plot.</p>
 <div class="section level2">
 <h2 id="chip-seq-signal-smoothing">ChIP-seq Signal Smoothing<a class="anchor" aria-label="anchor" href="#chip-seq-signal-smoothing"></a>
 </h2>
+<div class="section level3">
+<h3 id="application">Application<a class="anchor" aria-label="anchor" href="#application"></a>
+</h3>
+<p>ChIP-seq experiments produce sparse, noisy coverage data. LOESS can
+help identify binding regions.</p>
+<p><code>fraction = 0.05</code> provides high spatial resolution —
+important for resolving narrow binding peaks that would otherwise be
+smeared into the background. The larger <code>iterations = 5</code> is
+deliberate: Poisson-distributed read counts produce tall, isolated
+spikes, and extra robustness iterations progressively down-weight them
+so the estimated background level is not inflated by a handful of
+extreme counts.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">123</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">positions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">9990</span>, by <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">positions</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">background</span> <span class="op">&lt;-</span> <span class="fl">10</span></span>
+<span><span class="va">peak1</span> <span class="op">&lt;-</span> <span class="fl">50</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="op">(</span><span class="op">(</span><span class="va">positions</span> <span class="op">-</span> <span class="fl">2000</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="fl">200</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">peak2</span> <span class="op">&lt;-</span> <span class="fl">80</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="op">(</span><span class="op">(</span><span class="va">positions</span> <span class="op">-</span> <span class="fl">5000</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="fl">300</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">peak3</span> <span class="op">&lt;-</span> <span class="fl">40</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="op">(</span><span class="op">(</span><span class="va">positions</span> <span class="op">-</span> <span class="fl">8000</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="fl">150</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">true_signal</span> <span class="op">&lt;-</span> <span class="va">background</span> <span class="op">+</span> <span class="va">peak1</span> <span class="op">+</span> <span class="va">peak2</span> <span class="op">+</span> <span class="va">peak3</span></span>
+<span><span class="va">observed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">true_signal</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span></span>
+<span>    fraction <span class="op">=</span> <span class="fl">0.05</span>,   <span class="co"># Very local smoothing</span></span>
+<span>    iterations <span class="op">=</span> <span class="fl">5</span>,    <span class="co"># Strong robustness</span></span>
+<span>    return_residuals <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">positions</span>, <span class="va">observed</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Identify peaks (smoothed signal significantly above background)</span></span>
+<span><span class="va">threshold</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span>, <span class="fl">0.75</span><span class="op">)</span></span>
+<span><span class="va">peaks</span> <span class="op">&lt;-</span> <span class="va">positions</span><span class="op">[</span><span class="va">result</span><span class="op">$</span><span class="va">y</span> <span class="op">&gt;</span> <span class="va">threshold</span><span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Found %d peak positions (first 5): %s\n"</span>,</span>
+<span>            <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">peaks</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/toString.html" class="external-link">toString</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">peaks</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Found 250 peak positions (first 5): 1630, 1640, 1650, 1660, 1670</span></span></code></pre></div>
+<hr>
+</div>
+</div>
+<div class="section level2">
+<h2 id="large-genome-coverage-streaming">Large Genome Coverage (Streaming)<a class="anchor" aria-label="anchor" href="#large-genome-coverage-streaming"></a>
+</h2>
+<p>For whole-genome data that doesn’t fit in memory:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">500</span></span>
-<span><span class="va">positions</span>    <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">50000</span>, length.out <span class="op">=</span> <span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">signal</span>       <span class="op">&lt;-</span> <span class="fl">10</span> <span class="op">+</span> <span class="fl">5</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm</a></span><span class="op">(</span><span class="va">positions</span>, mean <span class="op">=</span> <span class="fl">25000</span>, sd <span class="op">=</span> <span class="fl">5000</span><span class="op">)</span> <span class="op">*</span> <span class="fl">1000</span></span>
-<span><span class="va">noise</span>        <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="va">n</span>, lambda <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">signal_noisy</span> <span class="op">&lt;-</span> <span class="va">signal</span> <span class="op">+</span> <span class="va">noise</span></span>
-<span><span class="va">signal_noisy</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">200</span>, <span class="fl">300</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">signal_noisy</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">200</span>, <span class="fl">300</span><span class="op">)</span><span class="op">]</span> <span class="op">*</span> <span class="fl">5</span></span>
+<span><span class="va">positions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">9990</span>, by <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="va">coverage</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">positions</span><span class="op">)</span>, <span class="fl">50</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">model</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.1</span>, iterations <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">positions</span>, <span class="va">signal_noisy</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">positions</span>, <span class="va">signal_noisy</span>, pch <span class="op">=</span> <span class="fl">16</span>, cex <span class="op">=</span> <span class="fl">0.4</span>, col <span class="op">=</span> <span class="st">"gray"</span>,</span>
-<span>    xlab <span class="op">=</span> <span class="st">"Genomic Position"</span>, ylab <span class="op">=</span> <span class="st">"Read Count"</span>,</span>
-<span>    main <span class="op">=</span> <span class="st">"ChIP-seq Signal Smoothing"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/lines.html" class="external-link">lines</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">x</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span>, col <span class="op">=</span> <span class="st">"blue"</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
-<p><img src="use-case-genomics_files/figure-html/use_case_genomics_2-1.png" class="r-plt" alt="" width="700"></p>
+<span><span class="co"># Process chromosome-by-chromosome or in chunks</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
+<span>    fraction   <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>    chunk_size <span class="op">=</span> <span class="fl">100000</span>,   <span class="co"># 100kb chunks</span></span>
+<span>    overlap    <span class="op">=</span> <span class="fl">10000</span>,    <span class="co"># 10kb overlap</span></span>
+<span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">positions</span>, <span class="va">coverage</span><span class="op">)</span></span>
+<span><span class="co">#&gt; &lt;LoessResult&gt;</span></span>
+<span><span class="co">#&gt;   Points:            0 </span></span>
+<span><span class="co">#&gt;   Fraction Used:     0.05 </span></span>
+<span><span class="co">#&gt;   Iterations Used:   3</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/finalize.html">finalize</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed y[0]:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Smoothed y[0]: 56.83401</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
-<h2 id="large-genomic-datasets-streaming">Large Genomic Datasets (Streaming)<a class="anchor" aria-label="anchor" href="#large-genomic-datasets-streaming"></a>
+<h2 id="best-practices-for-genomic-data">Best Practices for Genomic Data<a class="anchor" aria-label="anchor" href="#best-practices-for-genomic-data"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
-<span>    fraction   <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>    iterations <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>    chunk_size <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>    overlap    <span class="op">=</span> <span class="fl">100</span>,</span>
-<span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">chunk_i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">pos_chunk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">(</span><span class="va">chunk_i</span> <span class="op">-</span> <span class="fl">1</span><span class="op">)</span> <span class="op">*</span> <span class="fl">1e5</span> <span class="op">+</span> <span class="fl">1</span>, <span class="va">chunk_i</span> <span class="op">*</span> <span class="fl">1e5</span>, length.out <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
-<span>    <span class="va">val_chunk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">pos_chunk</span> <span class="op">/</span> <span class="fl">1e4</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1000</span>, sd <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
-<span>    <span class="va">result</span>    <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">pos_chunk</span>, <span class="va">val_chunk</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span><span class="va">final</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/finalize.html">finalize</a></span><span class="op">(</span><span class="va">model</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (streaming, weighted_average merge):\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First 6 smoothed values (streaming, weighted_average merge):</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">final</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] -0.9433074 -0.9406127 -0.9372087 -0.9331898 -0.9286503 -0.9236845</span></span></code></pre></div>
+<table class="table">
+<thead><tr class="header">
+<th>Consideration</th>
+<th>Recommendation</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><strong>Fraction</strong></td>
+<td>0.05–0.15 (preserve local features)</td>
+</tr>
+<tr class="even">
+<td><strong>Iterations</strong></td>
+<td>3–5 (handle sequencing outliers)</td>
+</tr>
+<tr class="odd">
+<td><strong>Large data</strong></td>
+<td>Use streaming mode</td>
+</tr>
+<tr class="even">
+<td><strong>Sparse regions</strong></td>
+<td>Use <code>boundary_policy = "extend"</code>
+</td>
+</tr>
+<tr class="odd">
+<td><strong>Multiple chromosomes</strong></td>
+<td>Process separately or ensure sorted</td>
+</tr>
+</tbody>
+</table>
+<hr>
+</div>
+<div class="section level2">
+<h2 id="see-also">See Also<a class="anchor" aria-label="anchor" href="#see-also"></a>
+</h2>
+<ul>
+<li>
+<code><a href="../articles/concepts.html">vignette("concepts", package = "rfastloess")</a></code> — How
+LOESS works</li>
+<li>
+<code><a href="../reference/Loess.html">?Loess</a></code> — All options</li>
+<li>
+<code><a href="../articles/robustness.html">vignette("robustness", package = "rfastloess")</a></code> —
+Outlier downweighting in depth</li>
+<li>
+<code><a href="../articles/merge.html">vignette("merge", package = "rfastloess")</a></code> — Streaming
+chunk reconciliation</li>
+<li>
+<code><a href="../articles/boundary.html">vignette("boundary", package = "rfastloess")</a></code> — Edge
+handling for sparse regions</li>
+<li>
+<code><a href="../articles/use-case-real-time.html">vignette("use-case-real-time", package = "rfastloess")</a></code>
+— For sequencing runs</li>
+</ul>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.6.1 (2026-06-24)</span></span>
@@ -190,7 +272,7 @@ apparent in the plot.</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] rfastloess_1.2.0</span></span>
+<span><span class="co">#&gt; [1] rfastloess_2.0.0</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    </span></span>

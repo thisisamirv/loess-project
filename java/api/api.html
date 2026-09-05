@@ -284,6 +284,12 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Fallback when all robustness weights hit zero: <code>use_local_mean</code>, <code>return_original</code>, <code>return_none</code>.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>missing</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Policy for non-finite (NaN/Inf) values in input data: <code>error</code>, <code>drop</code>.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>degree</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"linear"</code></p></td>
@@ -305,7 +311,7 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>weightedMetricWeights</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>double[]</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>null</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Per-dimension weights, used when <code>distanceMetric</code> is <code>weighted</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Per-dimension weights (used when <code>distanceMetric = "weighted"</code>).</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>surfaceMode</code></p></td>
@@ -372,6 +378,12 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Populate <code>Result.standardErrors()</code> and <code>Result.hatMatrix()</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSorted</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return results sorted ascending by <code>x</code> instead of in original input order.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvFractions</code></p></td>
@@ -729,6 +741,46 @@
 </table>
 </div>
 <div class="sect2">
+<h3 id="missing"><a class="anchor" href="#missing"></a>missing</h3>
+<div class="paragraph">
+<p>Policy for handling non-finite (NaN/Inf) values in <code>x</code>/<code>y</code> (and <code>customWeights</code>):</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Throw an error if any value is non-finite</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"drop"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Silently remove observations (rows) where any x dimension or y is non-finite before fitting</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+A length mismatch between <code>x</code> and <code>y</code> always throws, even under <code>"drop"</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
 <h3 id="degree"><a class="anchor" href="#degree"></a>degree</h3>
 <div class="paragraph">
 <p><em>See: <a href="../advanced/degree.html" class="xref page">Polynomial Degree</a></em></p>
@@ -754,12 +806,59 @@
 </div>
 </div>
 <div class="sect2">
-<h3 id="dimensions-and-distancemetric"><a class="anchor" href="#dimensions-and-distancemetric"></a>dimensions and distanceMetric</h3>
+<h3 id="dimensions"><a class="anchor" href="#dimensions"></a>dimensions</h3>
 <div class="paragraph">
 <p><em>See: <a href="../advanced/dimensions.html" class="xref page">Multivariate LOESS</a></em></p>
 </div>
 <div class="paragraph">
-<p><code>dimensions</code> (default <code>1</code>) controls how many predictor columns <code>x</code> carries; <code>distanceMetric</code> (default <code>"normalized"</code>) controls how inter-point distances are computed for <code>dimensions &gt; 1</code>: <code>normalized</code>, <code>euclidean</code>, <code>manhattan</code>, <code>chebyshev</code>, <code>minkowski:p</code>, or <code>weighted</code> (requires <code>weightedMetricWeights</code>).</p>
+<p><code>dimensions</code> (default <code>1</code>) controls how many predictor columns <code>x</code> carries; <code>x</code> is flattened row-major with length <code>y.length * dimensions</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="distancemetric"><a class="anchor" href="#distancemetric"></a>distanceMetric</h3>
+<div class="paragraph">
+<p><em>See: <a href="../advanced/dimensions.html" class="xref page">Multivariate LOESS</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"normalized"</code> (default — scales each dimension by its range; alias: <code>"norm"</code>)</p>
+</li>
+<li>
+<p><code>"euclidean"</code> (alias: <code>"euclid"</code>)</p>
+</li>
+<li>
+<p><code>"manhattan"</code> (alias: <code>"l1"</code>)</p>
+</li>
+<li>
+<p><code>"chebyshev"</code> (alias: <code>"linf"</code>)</p>
+</li>
+<li>
+<p><code>"minkowski"</code> (use <code>"minkowski:p"</code> string for custom exponent, e.g. <code>"minkowski:3"</code>)</p>
+</li>
+<li>
+<p><code>"weighted"</code> plus <code>weightedMetricWeights</code> for per-dimension scaling (alias: <code>"weighted_euclidean"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="weightedmetricweights"><a class="anchor" href="#weightedmetricweights"></a>weightedMetricWeights</h3>
+<div class="paragraph">
+<p><em>See: <a href="../advanced/dimensions.html" class="xref page">Multivariate LOESS</a></em></p>
+</div>
+<div class="paragraph">
+<p>Per-dimension weights, one per dimension declared in <code>dimensions</code>. Only used when <code>distanceMetric = "weighted"</code>; setting <code>distanceMetric = "weighted"</code> without providing this raises an error.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>null</code> (default) — has no effect unless <code>distanceMetric = "weighted"</code> is set</p>
+</li>
+<li>
+<p>A non-empty <code>double[]</code> of per-dimension weights, required when <code>distanceMetric = "weighted"</code></p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect2">
@@ -774,6 +873,196 @@
 </li>
 <li>
 <p><code>"direct"</code> — evaluate at every query point, exact.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="cell"><a class="anchor" href="#cell"></a>cell</h3>
+<div class="paragraph">
+<p>Cell size for the interpolation grid, as a fraction of the data range. Smaller values place more vertices (denser grid), improving accuracy at the cost of speed. Only applies when <code>surfaceMode</code> is <code>"interpolation"</code>.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>NaN</code> (default) — uses the library default (<code>0.2</code>)</p>
+</li>
+<li>
+<p>Any value in <code>(0, 1]</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="interpolationvertices"><a class="anchor" href="#interpolationvertices"></a>interpolationVertices</h3>
+<div class="paragraph">
+<p>Caps the maximum number of interpolation vertices, overriding the count implied by <code>cell</code>. Only applies when <code>surfaceMode</code> is <code>"interpolation"</code>.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>-1</code> (default) — uses the library default (no explicit cap)</p>
+</li>
+<li>
+<p>Any integer <code>&gt;= 1</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="boundarydegreefallback"><a class="anchor" href="#boundarydegreefallback"></a>boundaryDegreeFallback</h3>
+<div class="paragraph">
+<p>Whether to reduce the polynomial degree at boundary vertices when the requested <code>degree</code> can&#8217;t be fit there (e.g., not enough neighbours). Only applies when <code>surfaceMode</code> is <code>"interpolation"</code>.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>null</code> (default) — uses the library default (enabled)</p>
+</li>
+<li>
+<p><code>true</code> — falls back to a lower degree at boundaries</p>
+</li>
+<li>
+<p><code>false</code> — raises an error instead of silently falling back</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="autoconverge"><a class="anchor" href="#autoconverge"></a>autoConverge</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/robustness.html" class="xref page">Robustness</a></em></p>
+</div>
+<div class="paragraph">
+<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="confidenceintervals"><a class="anchor" href="#confidenceintervals"></a>confidenceIntervals</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Confidence level for the confidence interval around the mean response (e.g. <code>0.95</code>). <code>NaN</code> (default) disables confidence intervals.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="predictionintervals"><a class="anchor" href="#predictionintervals"></a>predictionIntervals</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Confidence level for the prediction interval for new observations (e.g. <code>0.95</code>). <code>NaN</code> (default) disables prediction intervals.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returndiagnostics"><a class="anchor" href="#returndiagnostics"></a>returnDiagnostics</h3>
+<div class="paragraph">
+<p>Populate <code>Result.diagnostics()</code> (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/effective degrees of freedom additionally require <code>returnSe(true)</code> (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.diagnostics()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.diagnostics()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnresiduals"><a class="anchor" href="#returnresiduals"></a>returnResiduals</h3>
+<div class="paragraph">
+<p>Populate <code>Result.residuals()</code> (<code>y - fitted</code>).</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.residuals()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.residuals()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnrobustnessweights"><a class="anchor" href="#returnrobustnessweights"></a>returnRobustnessWeights</h3>
+<div class="paragraph">
+<p>Populate <code>Result.robustnessWeights()</code> (from the last robustness iteration).</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.robustnessWeights()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.robustnessWeights()</code></p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnse"><a class="anchor" href="#returnse"></a>returnSe</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.standardErrors()</code> and <code>Result.hatMatrix()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — computes standard errors and hat-matrix statistics</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returnsorted"><a class="anchor" href="#returnsorted"></a>returnSorted</h3>
+<div class="paragraph">
+<p>When set to <code>true</code>, it reorders every result field (residuals, intervals, etc.) by <code>x</code> in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. via a <code>Comparator</code> over the returned <code>x()</code> array) instead of calling <code>fit()</code> twice.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="cv-options"><a class="anchor" href="#cv-options"></a>CV Options</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/cross-validation.html" class="xref page">Cross-Validation</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>cvMethod</code>: <code>"kfold"</code> (default) — fast, evaluates each candidate fraction over <code>cvK</code> folds; <code>"loocv"</code> — slow, exhaustive leave-one-out cross-validation</p>
+</li>
+<li>
+<p><code>cvK</code>: Number of folds for k-fold CV. Ignored when <code>cvMethod</code> is <code>"loocv"</code>.</p>
+</li>
+<li>
+<p><code>cvFractions</code>: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.</p>
+</li>
+<li>
+<p><code>cvSeed</code>: Seed for reproducible k-fold shuffling. <code>null</code> (default) uses a random seed.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="parallel"><a class="anchor" href="#parallel"></a>parallel</h3>
+<div class="paragraph">
+<p>Enable multi-threaded execution via Rayon.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>true</code> (default) — parallelizes the local regression fits across CPU cores</p>
+</li>
+<li>
+<p><code>false</code> — forces single-threaded execution (useful for benchmarking or deterministic profiling)</p>
 </li>
 </ul>
 </div>

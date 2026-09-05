@@ -1,20 +1,33 @@
 # Changelog
 
-## rfastloess 1.2.0
+## rfastloess 2.0.0
 
 ### Added
 
+- Added an “Ideas for Contribution” section to `CONTRIBUTING.md`,
+  listing concrete Batch/Streaming/Online feature gaps (out-of-sample
+  prediction, per-point local gradients, adaptive fraction selection,
+  `cell`/`interpolation_vertices` tuning, bootstrap intervals, GPU
+  backend, concurrent chunk processing, checkpointable streaming state,
+  `OnlineOutput.standard_error`, distance-based window eviction,
+  configurable warm-up).
 - Added `dev/bump_version.py --version X.Y.Z` to bump every
-  crate/binding’s version files, `CITATION.cff`, and the Spack recipe in
-  one pass (supports `--dry-run`).
+  crate/binding version file, `CITATION.cff`, the Spack recipe, and
+  `CONTRIBUTING.md`’s example version in one pass (supports
+  `--dry-run`).
 - Added `dev/check_pinned_versions.py` and a weekly `check-versions.yml`
-  to catch hardcoded version pins that Dependabot can’t see.
-- Added `.github/dependabot.yml`, covering every dependency ecosystem,
-  grouped per directory into a single weekly PR.
-- Added an optional `commit` input to every release workflow’s
+  to catch hardcoded version pins Dependabot can’t see.
+- Added `.github/dependabot.yml`, covering every dependency ecosystem in
+  one weekly PR per directory.
+- Added an optional `commit` input to release workflows’
   `workflow_dispatch` trigger, to pin the built commit for manual runs.
-- Added `dev/check_links.py` to validate every Markdown cross-reference
-  link across all docs.
+- Added `dev/check_links.py` to validate Markdown cross-reference links
+  across all docs.
+- Added `return_sorted` and `missing` options to
+  [`Loess()`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md),
+  [`StreamingLoess()`](https://thisisamirv.github.io/loess-project/r/reference/StreamingLoess.md),
+  and
+  [`OnlineLoess()`](https://thisisamirv.github.io/loess-project/r/reference/OnlineLoess.md).
 
 ### Changed
 
@@ -23,24 +36,23 @@
 - Merged the standalone `dev/add-{cpp,rust,nodejs,wasm}-outputs` scripts
   into `dev/verify_snippets.py --update-outputs`.
 - Replaced Unicode super/subscript stand-ins (`R²`, `xᵢ`, etc.) with
-  plain ASCII throughout docs, READMEs, and Rust comments, also catching
-  some leftover mojibake.
+  plain ASCII throughout docs and comments, catching some leftover
+  mojibake.
 - Added `dev/add-readme-to-docs.py` to auto-embed `README.md` as the
   docs homepage (Starlight/Sphinx-aware); not yet wired into Python’s
   `Makefile`.
 - Harmonized the docs-site directory structure across every
   binding/crate, and fixed doc-tooling scripts that missed snippets in
   the newly-nested pages.
-- Consolidated every README: merged Installation/Documentation sections,
-  dropped GitHub-only alert syntax, and removed sections now covered by
-  dedicated docs-site pages.
-- Renamed “When to Use” to “When to Use Batch Adapter” across every
-  binding’s API docs.
-- Vendored doxygen-awesome-css v2.4.2 for a modern cpp Doxygen theme.
+- Consolidated every README (merged Installation/Documentation sections,
+  dropped GitHub-only alert syntax, removed sections now covered by
+  docs-site pages) and renamed “When to Use” to “When to Use Batch
+  Adapter” everywhere.
+- Vendored doxygen-awesome-css v2.4.2 for a modern C++ Doxygen theme.
 - Added `dev/update_changelogs.py` to regenerate each binding/crate’s
   `NEWS.md`/`news.md` from the root changelog.
 - Replaced the `kernels.md`/`adapter-choice.md` mermaid flowcharts with
-  rendering-agnostic tables (Doxygen/rustdoc don’t render mermaid).
+  tables (Doxygen/rustdoc don’t render mermaid).
 - Consolidated `parameters.md`/`@autodocs` into each `api.md`’s option
   tables, removing `parameters.md`.
 - Removed the redundant `rfastloess-package` pkgdown topic and the
@@ -49,9 +61,38 @@
   classes”.
 - Merged `parameters.Rmd`/`batch.Rmd`/`streaming.Rmd`/`online.Rmd` into
   the constructors’ roxygen docs, removing the now-redundant vignettes.
+- Removed `confidence_intervals`/`prediction_intervals`/`return_se` from
+  [`StreamingLoess()`](https://thisisamirv.github.io/loess-project/r/reference/StreamingLoess.md),
+  and those plus `return_diagnostics`/`return_residuals`/`parallel` from
+  [`OnlineLoess()`](https://thisisamirv.github.io/loess-project/r/reference/OnlineLoess.md)
+  — none were ever computed by either adapter, and Online now always
+  runs sequentially. Breaking change;
+  [`StreamingLoess()`](https://thisisamirv.github.io/loess-project/r/reference/StreamingLoess.md)’s
+  `parallel` is unaffected.
+- Mirrored the Python API docs’ structure (field tables, `## Options`
+  per field, `## Result Structure` at the end) to every remaining
+  crate/binding. Along the way, unified `weighted_metric_weights` to
+  require explicit `distance_metric = "weighted"` on C++/Go/Java/Julia
+  (previously auto-selected); fixed C++‘s `StreamingOptions.overlap`
+  hardcoded `500` default; corrected several bindings’ docs showing a
+  flat `500` for `overlap` when they actually use the dynamic default
+  (Node.js, WASM, Go, Java, R); fixed Java’s `api-online.adoc`
+  disclaimer and Julia’s constructor docstrings missing several accepted
+  keyword arguments.
+- Fixed `bindings/r/R/StreamingLoess.R`, which was corrupted (a
+  duplicate of `OnlineLoess.R` with a mangled fragment appended), making
+  [`StreamingLoess()`](https://thisisamirv.github.io/loess-project/r/reference/StreamingLoess.md)
+  uncallable. Reconstructed from `man/StreamingLoess.Rd`/`utils.R`,
+  verified via
+  [`roxygen2::roxygenise()`](https://roxygen2.r-lib.org/reference/roxygenize.html)
+  and the full `testthat` suite (187 passed). Also fixed a stale
+  `test-extendr-wrappers.R` fixture with 3 extra positional args.
 
 ### Fixed
 
+- Fixed `CONTRIBUTING.md`’s stale Go prerequisite (`1.21+` → `1.23+`),
+  `air` auto-install target (`make r` → `make r-dev`), and example crate
+  version (`0.9.0` → `1.2.0`).
 - Fixed the R benchmark script calling `fit` as a field instead of the
   S3 generic `fit(model, x, y)`.
 - Fixed `release-conda.yml`’s version-line `sed` pattern to match any
@@ -60,25 +101,24 @@
   just the two local path crates.
 - Fixed the benchmark README’s inaccurate “Iterations” scenario count.
 - Fixed `docs.yml`’s Pages deployment: merged per-language jobs into one
-  artifact upload/deploy job, using `upload/deploy-pages` actions
-  instead of legacy branch-based deployment.
+  artifact upload/deploy job using `upload/deploy-pages` actions instead
+  of legacy branch-based deployment.
 - Fixed 51 broken doc cross-reference links left over from the docs-site
-  restructure (found via new `dev/check_links.py`).
-- Fixed several `OnlineLoess`/`StreamingLoess` defaults silently
-  diverging from every binding’s docs and actual behavior: `min_points`
-  (was 3, now 2), `update_mode` (was `"full"`, now `"incremental"`), and
-  the internal robustness-iteration defaults (streaming 2→3, online 1→3)
-  that only the Rust crates’ bare prelude API could ever see.
-- Fixed the “Handling Outliers” quickstart example printing nothing with
-  only 6 points at `fraction = 0.5`; bumped to `0.7` so the outlier is
-  actually downweighted.
-- Fixed two R roxygen examples:
-  [`OnlineLoess()`](https://thisisamirv.github.io/loess-project/r/reference/OnlineLoess.md)
-  printing 48 lines instead of a `head(smoothed, 5)` sample, and
-  [`add_point()`](https://thisisamirv.github.io/loess-project/r/reference/add_point.md)
-  always printing `NULL` due to the default `min_points`.
+  restructure (found via `dev/check_links.py`).
+- Fixed `OnlineLoess`/`StreamingLoess` defaults silently diverging from
+  docs: `min_points` (3→2), `update_mode` (`"full"`→`"incremental"`),
+  and internal robustness-iteration defaults (streaming 2→3, online
+  1→3).
+- Fixed every binding’s docs describing `LoessResult.x` as “sorted”;
+  it’s actually returned in input order (sorted internally, then mapped
+  back). Strengthened Python’s `test_unsorted_input` to assert this.
+- Fixed the “Handling Outliers” quickstart example printing nothing at
+  `fraction = 0.5` with only 6 points; bumped to `0.7`.
+- Fixed two R roxygen examples printing too much/nothing
+  ([`OnlineLoess()`](https://thisisamirv.github.io/loess-project/r/reference/OnlineLoess.md),
+  [`add_point()`](https://thisisamirv.github.io/loess-project/r/reference/add_point.md)).
 - Fixed Julia’s `intervals.md` examples looping over all 100 points
-  instead of a short sample, matching the concise Python version.
+  instead of a short sample.
 - Reformatted `configure` to tabs and fixed `.Rbuildignore` missing
   exclusions.
 - Removed the empty `R/params.R` stub and simplified
@@ -86,6 +126,9 @@
   to return `NULL` invisibly.
 - Inlined the `.make_*` constructor helpers, and consolidated
   `utils.R`’s parameter validators into two generic helpers.
+- Fixed `utils.R`’s internal `validate_min_points()` guard hardcoding a
+  stricter minimum of 3 points, diverging from the Rust core’s actual
+  minimum of 2; lowered to 2.
 
 ## rfastloess 1.1.0
 
