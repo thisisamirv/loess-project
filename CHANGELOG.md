@@ -6,6 +6,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+**loess-rs:**
+
+- Cleaned up `loess_rs::prelude` of accidentally-leaked internals: removed `LoessBuilder` and `Batch`/`Online`/`Streaming` adapter markers (use the `Loess`/`StreamingLoess`/`OnlineLoess` type aliases directly - each already builds without needing `.adapter(...)`).
+
 ## 2.0.0
 
 ### Added
