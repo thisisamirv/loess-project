@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+**loess-rs:**
+
+- Flattened the `tests/loess-rs/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+
+**fastLoess:**
+
+- Flattened the `tests/fastLoess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+
 ### Fixed
 
 **loess-rs:**
