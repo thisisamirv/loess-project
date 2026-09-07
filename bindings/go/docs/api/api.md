@@ -321,7 +321,7 @@ package main
 import (
  "fmt"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
 )
 
 func main() {

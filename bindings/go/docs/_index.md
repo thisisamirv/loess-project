@@ -4,7 +4,7 @@ title: "fastloess (Go)"
 
 <!-- markdownlint-disable MD024 MD033 -->
 <p align="center">
-  <a href="https://pkg.go.dev/github.com/thisisamirv/loess-project/bindings/go/fastloess"><img src="https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white" alt="Go"></a>
+  <a href="https://pkg.go.dev/github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"><img src="https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white" alt="Go"></a>
   <a href="https://github.com/thisisamirv/loess-project/actions/workflows/ci-go.yml"><img src="https://github.com/thisisamirv/loess-project/actions/workflows/ci-go.yml/badge.svg" alt="CI"></a>
 </p>
 
