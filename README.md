@@ -35,7 +35,7 @@
   <em>One LOESS to Rule Them All</em>
 </p>
 
-The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Estimated Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **JavaScript**, **C++**, **Go**, **Java**, and **WebAssembly**.
+The fastest, most robust, and most feature-complete language-agnostic LOESS (Locally Estimated Scatterplot Smoothing) implementation for **Rust**, **Python**, **R**, **Julia**, **Node.js**, **C++**, **Go**, **Java**, and **WebAssembly**.
 
 > The `loess-project` contains a complete ecosystem for LOESS smoothing:
 >
@@ -44,7 +44,7 @@ The fastest, most robust, and most feature-complete language-agnostic LOESS (Loc
 > - **[`R bindings`](https://thisisamirv.r-universe.dev/rfastloess)** - extendr-based R binding
 > - **[`Python bindings`](https://pypi.org/project/fastloess/)** - PyO3-based Python binding
 > - **[`Julia bindings`](https://juliahub.com/ui/Packages/General/FastLOESS)** - Native Julia binding with C FFI
-> - **[`JavaScript bindings`](https://www.npmjs.com/package/fastloess)** - Node.js binding
+> - **[`Node.js bindings`](https://www.npmjs.com/package/fastloess)** - Node.js binding
 > - **[`WebAssembly bindings`](https://www.npmjs.com/package/fastloess-wasm)** - WASM binding
 > - **[`C++ bindings`](https://github.com/thisisamirv/loess-project/releases/latest)** - Native C++ binding with CMake integration
 > - **[`Go bindings`](https://pkg.go.dev/github.com/thisisamirv/loess-project/bindings/go/fastloess)** - cgo-based Go binding
