@@ -11,7 +11,7 @@
   <a href="https://www.npmjs.com/package/fastloess-wasm"><img src="https://img.shields.io/badge/WASM-654FF0?logo=webassembly&logoColor=white" alt="WASM"></a>
   <a href="https://github.com/thisisamirv/loess-project/releases/latest"><img src="https://img.shields.io/badge/C++-00599C?logo=cplusplus&logoColor=white" alt="C++"></a>
   <a href="https://pkg.go.dev/github.com/thisisamirv/loess-project/bindings/go/fastloess"><img src="https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white" alt="Go"></a>
-  <a href="https://central.sonatype.com/artifact/io.github.thisisamirv/fastloess"><img src="https://img.shields.io/badge/Maven_Central-C71A36?logo=apachemaven&logoColor=white" alt="Maven Central"></a>
+  <a href="https://central.sonatype.com/artifact/io.github.thisisamirv/fastloess"><img src="https://img.shields.io/badge/Java-007396?logo=openjdk&logoColor=white" alt="Java"></a>
   <br>
   <a href="https://anaconda.org/conda-forge/fastloess"><img src="https://img.shields.io/badge/fastloess_(Python)-44A833?logo=anaconda&logoColor=white" alt="fastloess (Python)"></a>
   <a href="https://anaconda.org/conda-forge/libfastloess"><img src="https://img.shields.io/badge/libfastloess_(C++)-44A833?logo=anaconda&logoColor=white" alt="libfastloess (C++)"></a>
