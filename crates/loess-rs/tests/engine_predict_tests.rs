@@ -566,7 +566,9 @@ fn test_predict_extrapolation_linear_respects_max_distance() {
 /// A query point can sit inside every dimension's per-dimension bounding box yet be far
 /// from any real training point (an "empty corner" for non-rectangularly distributed
 /// data). `max_neighbor_distance` should catch this even though the bbox check alone
-/// would treat the point as in-range.
+/// would treat the point as in-range. Uses the default (`Normalized`) distance metric
+/// deliberately: the cap is measured in raw coordinate units regardless of which metric
+/// was used to select the neighborhood.
 #[test]
 fn test_predict_max_neighbor_distance_catches_bbox_corner() {
     // Training data only along the diagonal (i, i): the bounding box is the full square
@@ -583,7 +585,6 @@ fn test_predict_max_neighbor_distance_catches_bbox_corner() {
         .fraction(0.3)
         .iterations(0)
         .dimensions(2)
-        .distance_metric("euclidean")
         .retain_model(true)
         .build()
         .unwrap()

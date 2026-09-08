@@ -180,9 +180,10 @@ pub enum LoessError {
     // non-rectangularly distributed data). This guard is opt-in (the option defaults to
     // `None`, preserving the original silent-extrapolation behavior).
     SparseNeighborhood {
-        // Distance to the farthest point in the query's k-nearest-neighbor window.
+        // Raw (metric-independent) Euclidean distance to the farthest point in the
+        // query's k-nearest-neighbor window.
         distance: f64,
-        // The configured maximum allowed distance.
+        // The configured maximum allowed distance, in the same raw-coordinate units.
         max_distance: f64,
     },
 }

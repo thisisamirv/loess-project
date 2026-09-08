@@ -81,9 +81,13 @@ pub struct PredictOptions<T> {
     // against the per-dimension bounding-box range check's blind spot: a point can sit
     // inside every dimension's min/max range yet fall in an empty region far from any
     // real training data (e.g. an empty "corner" of non-rectangularly distributed data).
-    // `None` (default) preserves the original behavior of silently extrapolating there.
-    // Applies regardless of `extrapolation`/whether the bounding-box check flagged the
-    // point as out-of-range.
+    // Measured as a plain (raw-coordinate) Euclidean distance, independent of
+    // `distance_metric` - the same unit space as `max_extrapolation_distance`, so the two
+    // caps can be reasoned about together regardless of which metric the model was fit
+    // with (e.g. under the default `Normalized` metric, `neighborhood` search distances
+    // are metric-space, not raw-coordinate, values). `None` (default) preserves the
+    // original behavior of silently extrapolating there. Applies regardless of
+    // `extrapolation`/whether the bounding-box check flagged the point as out-of-range.
     pub max_neighbor_distance: Option<T>,
 }
 
@@ -343,13 +347,30 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
         neighborhood,
     );
 
-    if let Some(max_dist) = options.max_neighbor_distance
-        && neighborhood.max_distance > max_dist
-    {
-        return Err(LoessError::SparseNeighborhood {
-            distance: neighborhood.max_distance.to_f64().unwrap_or(0.0),
-            max_distance: max_dist.to_f64().unwrap_or(0.0),
-        });
+    if let Some(max_dist) = options.max_neighbor_distance {
+        // Recomputed as a plain Euclidean distance (not `neighborhood.max_distance`,
+        // which is measured in whatever `distance_metric` space the KD-tree search used -
+        // e.g. dimensionless under the default `Normalized` metric), so this cap lives in
+        // the same raw-coordinate units as `max_extrapolation_distance` above.
+        let mut farthest = T::zero();
+        for &idx in &neighborhood.indices {
+            let neighbor_point = &state.x[idx * dims..idx * dims + dims];
+            let mut sq_dist = T::zero();
+            for d in 0..dims {
+                let diff = eval_point[d] - neighbor_point[d];
+                sq_dist = sq_dist + diff * diff;
+            }
+            let dist = sq_dist.sqrt();
+            if dist > farthest {
+                farthest = dist;
+            }
+        }
+        if farthest > max_dist {
+            return Err(LoessError::SparseNeighborhood {
+                distance: farthest.to_f64().unwrap_or(0.0),
+                max_distance: max_dist.to_f64().unwrap_or(0.0),
+            });
+        }
     }
 
     let gradient = if need_gradient {
