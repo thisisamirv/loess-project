@@ -72,6 +72,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+**Java:**
+
+- Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed (e.g. `-1` became `18446744073709551615`) instead of raising an error, since the `long` value was cast to `u64` via Rust's unchecked `as` operator. Now validated and rejected with a clear error before the cast.
+
+**R:**
+
+- Fixed the same `cv_seed` negative-value cast bug in `Loess()`.
+
 **Monorepo:**
 
 - `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
