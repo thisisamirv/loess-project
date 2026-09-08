@@ -16,6 +16,7 @@ use crate::evaluation::intervals::interval_pass_parallel;
 use num_traits::Float;
 use std::fmt::Debug;
 use std::result::Result;
+use std::sync::Arc;
 
 // Export dependencies from loess-rs crate
 use loess_rs::internals::adapters::batch::BatchLoessBuilder;
@@ -174,7 +175,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
 
         // Inject the Rayon-parallel predict pass into the retained model state (if any),
         // so `LoessResult::predict()` also runs in parallel when `.retain_model(true)` was set.
-        if use_parallel && let Some(state) = result.predict_state.as_mut() {
+        // `get_mut` succeeds here since this `Arc` was just created by `fit()` and hasn't
+        // been cloned/shared yet.
+        if use_parallel && let Some(state) = result.predict_state.as_mut().and_then(Arc::get_mut) {
             state.custom_predict_pass = Some(predict_pass_parallel);
         }
 

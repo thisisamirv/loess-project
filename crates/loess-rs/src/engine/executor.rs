@@ -13,7 +13,11 @@
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
+use alloc::sync::Arc;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use std::sync::Arc;
 #[cfg(feature = "std")]
 use std::vec;
 #[cfg(feature = "std")]
@@ -236,7 +240,7 @@ pub struct ExecutorOutput<T: FloatLinalg> {
     pub leverage: Option<Vec<T>>,
 
     // Retained fitted-model state for `LoessResult::predict()`, if `retain_model` was set.
-    pub predict_state: Option<PredictState<T>>,
+    pub predict_state: Option<Arc<PredictState<T>>>,
 }
 
 // Configuration for LOESS execution.
@@ -1402,7 +1406,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 sigma * approx_leverage.sqrt()
             };
 
-            PredictState {
+            Arc::new(PredictState {
                 x: ax.clone(),
                 dimensions: dims,
                 y: ay.clone(),
@@ -1428,7 +1432,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     s
                 }),
                 custom_predict_pass: None,
-            }
+            })
         });
 
         ExecutorOutput {

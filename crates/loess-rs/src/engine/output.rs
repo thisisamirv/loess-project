@@ -6,7 +6,11 @@
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
+use alloc::sync::Arc;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use std::sync::Arc;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
@@ -97,9 +101,10 @@ pub struct LoessResult<T: Float> {
     // l_ii measures how much influence point i has on its own fitted value.
     pub leverage: Option<Vec<T>>,
 
-    // Retained fitted-model state enabling `predict()`, if `.retain_model(true)` was set
-    // on the builder (Batch adapter only).
-    pub predict_state: Option<PredictState<T>>,
+    // Retained fitted-model state for `predict()`, if `retain_model` was set. Wrapped in
+    // `Arc` so cloning a `LoessResult` (e.g. to hand to multiple worker threads) is a
+    // cheap refcount bump instead of deep-copying the whole padded training set.
+    pub predict_state: Option<Arc<PredictState<T>>>,
 }
 
 impl<T: Float> LoessResult<T> {
