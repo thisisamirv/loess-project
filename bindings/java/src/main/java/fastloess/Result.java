@@ -24,6 +24,8 @@ import java.util.OptionalInt;
  * @param diagnostics fit diagnostics, if requested
  * @param hatMatrix hat-matrix statistics, if {@code returnSe} was requested
  * (batch model only)
+ * @param predictModel retained fitted-model state enabling out-of-sample
+ * {@code predict()}, if {@code retainModel} was requested (batch model only)
  */
 public record Result(
         double[] x,
@@ -40,7 +42,8 @@ public record Result(
         OptionalInt iterationsUsed,
         int dimensions,
         Optional<Diagnostics> diagnostics,
-        Optional<HatMatrixStats> hatMatrix) {
+        Optional<HatMatrixStats> hatMatrix,
+        Optional<PredictModel> predictModel) {
 
     static Result fromNative(NativeResult r) {
         return new Result(
@@ -58,6 +61,7 @@ public record Result(
                 r.iterationsUsed < 0 ? OptionalInt.empty() : OptionalInt.of(r.iterationsUsed),
                 r.dimensions,
                 r.hasDiagnostics ? Optional.of(Diagnostics.fromNative(r)) : Optional.empty(),
-                r.hasStats ? Optional.of(HatMatrixStats.fromNative(r)) : Optional.empty());
+                r.hasStats ? Optional.of(HatMatrixStats.fromNative(r)) : Optional.empty(),
+                r.predictHandle == 0 ? Optional.empty() : Optional.of(new PredictModel(r.predictHandle)));
     }
 }

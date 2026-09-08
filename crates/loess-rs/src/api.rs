@@ -39,6 +39,7 @@ use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::executor::SurfaceMode;
 pub use crate::engine::output::LoessResult;
+use crate::engine::predict::ExtrapolationPolicy;
 use crate::engine::validator::MissingPolicy;
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::distance::DistanceMetric;
@@ -1423,6 +1424,25 @@ impl FromStr for UpdateMode {
     }
 }
 
+// ExtrapolationPolicy
+
+impl FromStr for ExtrapolationPolicy {
+    type Err = LoessError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "clamp" => Ok(ExtrapolationPolicy::Clamp),
+            "linear" => Ok(ExtrapolationPolicy::Linear),
+            "error" => Ok(ExtrapolationPolicy::Error),
+            _ => Err(LoessError::InvalidOption {
+                option: "extrapolation",
+                value: s.to_string(),
+                valid: "clamp, linear, error",
+            }),
+        }
+    }
+}
+
 // Binding helpers (only with the `dev` feature)
 //
 // Parse and canonical-name wrappers used by the binding layer.  Only compiled
@@ -1432,9 +1452,9 @@ impl FromStr for UpdateMode {
 #[cfg(feature = "dev")]
 pub mod helpers {
     use super::{
-        BoundaryPolicy, DistanceMetric, LoessError, MergeStrategy, MissingPolicy, PolynomialDegree,
-        RobustnessMethod, ScalingMethod, SurfaceMode, UpdateMode, WeightFunction,
-        ZeroWeightFallback,
+        BoundaryPolicy, DistanceMetric, ExtrapolationPolicy, LoessError, MergeStrategy,
+        MissingPolicy, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode, UpdateMode,
+        WeightFunction, ZeroWeightFallback,
     };
 
     // Parse helpers
@@ -1480,6 +1500,10 @@ pub mod helpers {
     }
 
     pub fn parse_missing_policy(s: &str) -> Result<MissingPolicy, LoessError> {
+        s.parse()
+    }
+
+    pub fn parse_extrapolation_policy(s: &str) -> Result<ExtrapolationPolicy, LoessError> {
         s.parse()
     }
 
@@ -1571,6 +1595,14 @@ pub mod helpers {
             MergeStrategy::WeightedAverage => "weighted_average",
             MergeStrategy::TakeFirst => "take_first",
             MergeStrategy::TakeLast => "take_last",
+        }
+    }
+
+    pub fn extrapolation_policy_str(v: ExtrapolationPolicy) -> &'static str {
+        match v {
+            ExtrapolationPolicy::Clamp => "clamp",
+            ExtrapolationPolicy::Linear => "linear",
+            ExtrapolationPolicy::Error => "error",
         }
     }
 }

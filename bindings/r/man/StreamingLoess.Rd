@@ -5,31 +5,31 @@
 \title{LOESS Streaming Smoothing}
 \usage{
 StreamingLoess(
-    fraction = 0.67,
-    chunk_size = 5000L,
-    ...,
-    overlap = NULL,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    merge_strategy = "weighted_average",
-    parallel = TRUE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL,
-    missing = "error"
+  fraction = 0.67,
+  chunk_size = 5000L,
+  ...,
+  overlap = NULL,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  merge_strategy = "weighted_average",
+  parallel = TRUE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL,
+  missing = "error"
 )
 }
 \arguments{
@@ -146,11 +146,11 @@ in memory, see \code{\link{Loess}}; for point-by-point real-time data,
 see \code{\link{OnlineLoess}}.
 
 Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{ll}{
-    Strategy \tab Behavior \cr
-    \code{"average"} \tab Arithmetic mean of both estimates \cr
-    \code{"weighted_average"} \tab Distance-weighted blend (default) \cr
-    \code{"take_first"} \tab Keep left-chunk estimate \cr
-    \code{"take_last"} \tab Keep right-chunk estimate \cr
+   Strategy \tab Behavior \cr
+   \code{"average"} \tab Arithmetic mean of both estimates \cr
+   \code{"weighted_average"} \tab Distance-weighted blend (default) \cr
+   \code{"take_first"} \tab Keep left-chunk estimate \cr
+   \code{"take_last"} \tab Keep right-chunk estimate \cr
 }
 }
 \examples{

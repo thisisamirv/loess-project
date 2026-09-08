@@ -42,7 +42,8 @@ public final class Loess implements AutoCloseable {
                 options.interpolationVertices,
                 NativeBridge.boolSentinel(options.boundaryDegreeFallback),
                 options.weightedMetricWeights,
-                options.missing);
+                options.missing,
+                options.retainModel);
         if (options.cvSeed != null) {
             NativeBridge.loessSetCvSeed(handle, options.cvSeed);
         }

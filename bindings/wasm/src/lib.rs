@@ -75,6 +75,44 @@ export interface SmoothOptions {
     cv_seed?: number;
     /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
     missing?: string;
+    /** Retain the fitted model's training data, enabling `LoessResult.predict()`. Default: false. */
+    retain_model?: boolean;
+}
+
+/** Options for `LoessResult.predict()`. */
+export interface PredictOptions {
+    /** Include standard errors in the output. Default: false. */
+    return_se?: boolean;
+    /** Confidence interval coverage level (e.g. 0.95). Disabled when absent. */
+    confidence_level?: number;
+    /** Prediction interval coverage level (e.g. 0.95). Disabled when absent. */
+    prediction_level?: number;
+    /** Include the local fit's gradient in the output. Default: false. */
+    return_derivative?: boolean;
+    /** Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp". */
+    extrapolation?: string;
+    /** Under "linear" extrapolation, the maximum allowed distance beyond the training boundary before `predict()` errors instead of returning an unbounded value. */
+    max_extrapolation_distance?: number;
+    /** Maximum allowed distance to the farthest point in a query's neighbor window before `predict()` errors, catching in-range-but-sparse query points. */
+    max_neighbor_distance?: number;
+}
+
+/** Result of `LoessResult.predict()`. */
+export interface PredictOutput {
+    /** Predicted y values, one per query point. */
+    readonly y: Float64Array;
+    /** Standard errors (if requested). */
+    readonly standard_errors: Float64Array | undefined;
+    /** Lower confidence interval bounds (if requested). */
+    readonly confidence_lower: Float64Array | undefined;
+    /** Upper confidence interval bounds (if requested). */
+    readonly confidence_upper: Float64Array | undefined;
+    /** Lower prediction interval bounds (if requested). */
+    readonly prediction_lower: Float64Array | undefined;
+    /** Upper prediction interval bounds (if requested). */
+    readonly prediction_upper: Float64Array | undefined;
+    /** Local fit's gradient at each query point (if requested). */
+    readonly derivative: Float64Array | undefined;
 }
 
 /** Configuration options for streaming LOESS smoothing. A subset of `SmoothOptions`: confidence/prediction intervals, standard errors, and cross-validation have no equivalent here. */
@@ -270,6 +308,18 @@ pub struct SmoothOptions {
     pub boundary_degree_fallback: Option<bool>,
     pub cv_seed: Option<u64>,
     pub missing: Option<String>,
+    pub retain_model: Option<bool>,
+}
+
+#[derive(Deserialize)]
+pub struct PredictOptionsJs {
+    pub return_se: Option<bool>,
+    pub confidence_level: Option<f64>,
+    pub prediction_level: Option<f64>,
+    pub return_derivative: Option<bool>,
+    pub extrapolation: Option<String>,
+    pub max_extrapolation_distance: Option<f64>,
+    pub max_neighbor_distance: Option<f64>,
 }
 
 #[derive(Deserialize)]
@@ -526,6 +576,107 @@ impl LoessResult {
     pub fn dimensions(&self) -> u32 {
         self.inner.dimensions as u32
     }
+
+    /// Evaluate the fitted model at out-of-sample query points not in the training set.
+    ///
+    /// Requires `retain_model: true` to have been set on the builder before `fit()`.
+    #[wasm_bindgen(skip_typescript)]
+    pub fn predict(
+        &self,
+        new_x: &Float64Array,
+        options: JsValue,
+    ) -> Result<PredictOutput, JsValue> {
+        let opts: PredictOptionsJs = if options.is_undefined() || options.is_null() {
+            PredictOptionsJs {
+                return_se: None,
+                confidence_level: None,
+                prediction_level: None,
+                return_derivative: None,
+                extrapolation: None,
+                max_extrapolation_distance: None,
+                max_neighbor_distance: None,
+            }
+        } else {
+            serde_wasm_bindgen::from_value(options)?
+        };
+        let new_x_vec = new_x.to_vec();
+        let output = map_invalid_arg(shared_parse::run_predict(
+            &self.inner,
+            &new_x_vec,
+            shared_parse::PredictOptionSet {
+                return_se: opts.return_se.unwrap_or(false),
+                confidence_level: opts.confidence_level,
+                prediction_level: opts.prediction_level,
+                return_derivative: opts.return_derivative.unwrap_or(false),
+                extrapolation: opts.extrapolation.as_deref(),
+                max_extrapolation_distance: opts.max_extrapolation_distance,
+                max_neighbor_distance: opts.max_neighbor_distance,
+            },
+        ))?;
+        Ok(PredictOutput { inner: output })
+    }
+}
+
+/// Result of `LoessResult.predict()`.
+#[wasm_bindgen(skip_typescript)]
+pub struct PredictOutput {
+    inner: shared_parse::PredictOutput<f64>,
+}
+
+#[wasm_bindgen]
+impl PredictOutput {
+    #[wasm_bindgen(getter)]
+    pub fn y(&self) -> Float64Array {
+        unsafe { Float64Array::view(&self.inner.y) }
+    }
+
+    #[wasm_bindgen(getter, js_name = standard_errors)]
+    pub fn standard_errors(&self) -> Option<Float64Array> {
+        self.inner
+            .standard_errors
+            .as_ref()
+            .map(|v| unsafe { Float64Array::view(v) })
+    }
+
+    #[wasm_bindgen(getter, js_name = confidence_lower)]
+    pub fn confidence_lower(&self) -> Option<Float64Array> {
+        self.inner
+            .confidence_lower
+            .as_ref()
+            .map(|v| unsafe { Float64Array::view(v) })
+    }
+
+    #[wasm_bindgen(getter, js_name = confidence_upper)]
+    pub fn confidence_upper(&self) -> Option<Float64Array> {
+        self.inner
+            .confidence_upper
+            .as_ref()
+            .map(|v| unsafe { Float64Array::view(v) })
+    }
+
+    #[wasm_bindgen(getter, js_name = prediction_lower)]
+    pub fn prediction_lower(&self) -> Option<Float64Array> {
+        self.inner
+            .prediction_lower
+            .as_ref()
+            .map(|v| unsafe { Float64Array::view(v) })
+    }
+
+    #[wasm_bindgen(getter, js_name = prediction_upper)]
+    pub fn prediction_upper(&self) -> Option<Float64Array> {
+        self.inner
+            .prediction_upper
+            .as_ref()
+            .map(|v| unsafe { Float64Array::view(v) })
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn derivative(&self) -> Option<Float64Array> {
+        self.inner
+            .derivative
+            .as_ref()
+            .map(|v| unsafe { Float64Array::view(v) })
+    }
 }
 
 // LOESS smoother.
@@ -596,6 +747,7 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<
                 cv_k: opts.cv_k.map(|v| v as usize),
                 cv_seed: opts.cv_seed,
                 missing: opts.missing.as_deref(),
+                retain_model: opts.retain_model,
             },
         ))?
         .0;

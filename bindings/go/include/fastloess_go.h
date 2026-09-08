@@ -2,6 +2,8 @@ typedef struct fastloess_GoLoess fastloess_GoLoess;
 
 typedef struct fastloess_GoOnlineLoess fastloess_GoOnlineLoess;
 
+typedef struct fastloess_GoPredictHandle fastloess_GoPredictHandle;
+
 typedef struct fastloess_GoStreamingLoess fastloess_GoStreamingLoess;
 
 typedef struct fastloess_GoLoessResult {
@@ -85,10 +87,60 @@ typedef struct fastloess_GoLoessResult {
   double *cv_scores;
   unsigned long cv_scores_len;
   /**
+   * Opaque handle for `go_predict()`, non-NULL only if `retain_model` was set to 1.
+   * Must eventually be freed via `go_predict_handle_free`.
+   */
+  struct fastloess_GoPredictHandle *predict_handle;
+  /**
    * Error message (NULL if no error)
    */
   char *error;
 } fastloess_GoLoessResult;
+
+typedef struct fastloess_GoPredictResult {
+  /**
+   * Predicted y values, one per query point (length = n)
+   */
+  double *y;
+  /**
+   * Number of query points
+   */
+  unsigned long n;
+  /**
+   * Standard errors (NULL if not requested)
+   */
+  double *standard_errors;
+  /**
+   * Lower confidence bounds (NULL if not requested)
+   */
+  double *confidence_lower;
+  /**
+   * Upper confidence bounds (NULL if not requested)
+   */
+  double *confidence_upper;
+  /**
+   * Lower prediction bounds (NULL if not requested)
+   */
+  double *prediction_lower;
+  /**
+   * Upper prediction bounds (NULL if not requested)
+   */
+  double *prediction_upper;
+  /**
+   * Local fit's gradient at each query point, `dimensions` values per point,
+   * flattened (NULL if not requested)
+   */
+  double *derivative;
+  /**
+   * Number of predictor dimensions (needed to know `derivative`'s true length,
+   * `dimensions * n`, when freeing it)
+   */
+  int dimensions;
+  /**
+   * Error message (NULL if no error)
+   */
+  char *error;
+} fastloess_GoPredictResult;
 
 typedef struct fastloess_GoOnlineOutput {
   int has_value;
@@ -137,7 +189,8 @@ struct fastloess_GoLoess *go_loess_new(double fraction,
                                        int boundary_degree_fallback,
                                        const double *weighted_metric_weights,
                                        unsigned long weighted_metric_weights_len,
-                                       const char *missing);
+                                       const char *missing,
+                                       int retain_model);
 
 /**
  * Set CV seed for reproducible K-fold splits.
@@ -169,6 +222,42 @@ struct fastloess_GoLoessResult go_loess_fit(struct fastloess_GoLoess *ptr,
  * `ptr` must be a valid pointer returned by `go_loess_new` or null.
  */
 void go_loess_free(struct fastloess_GoLoess *ptr);
+
+/**
+ * Evaluate a fitted model (retained via `retain_model = 1`) at out-of-sample query
+ * points not in the training set.
+ *
+ * # Safety
+ * `handle` must be a valid pointer returned via `GoLoessResult::predict_handle`.
+ * `new_x` must be a valid array of length `new_x_len`. `extrapolation` must be a
+ * valid null-terminated string or null (defaults to "clamp").
+ */
+struct fastloess_GoPredictResult go_predict(struct fastloess_GoPredictHandle *handle,
+                                            const double *new_x,
+                                            unsigned long new_x_len,
+                                            int return_se,
+                                            double confidence_level,
+                                            double prediction_level,
+                                            int return_derivative,
+                                            const char *extrapolation,
+                                            double max_extrapolation_distance,
+                                            double max_neighbor_distance);
+
+/**
+ * Free a GoPredictResult's heap-allocated buffers.
+ *
+ * # Safety
+ * `result` must be a valid pointer to a GoPredictResult struct.
+ */
+void go_predict_free_result(struct fastloess_GoPredictResult *result);
+
+/**
+ * Free a `GoPredictHandle` returned via `GoLoessResult::predict_handle`.
+ *
+ * # Safety
+ * `ptr` must be a valid pointer returned via `GoLoessResult::predict_handle`, or null.
+ */
+void go_predict_handle_free(struct fastloess_GoPredictHandle *ptr);
 
 /**
  * Create a new Streaming Loess model.

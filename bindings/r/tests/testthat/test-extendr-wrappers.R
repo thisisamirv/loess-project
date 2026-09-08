@@ -34,7 +34,8 @@ test_that("RLoess generated accessors dispatch fit methods", {
         null_value,
         null_value,
         null_value,
-        "error"
+        "error",
+        FALSE
     )
 
     x <- as.double(1:10)

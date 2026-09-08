@@ -189,6 +189,7 @@ param_types <- list(
     return_se = "logical",
     return_sorted = "logical",
     parallel = "logical",
+    retain_model = "logical",
     overlap = "nullable",
     confidence_intervals = "nullable",
     prediction_intervals = "nullable",
@@ -215,8 +216,7 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(
-            type,
+        switch(type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),
@@ -259,7 +259,8 @@ loess_params <- c(
     "interpolation_vertices",
     "boundary_degree_fallback",
     "cv_seed",
-    "missing"
+    "missing",
+    "retain_model"
 )
 
 online_params <- c(

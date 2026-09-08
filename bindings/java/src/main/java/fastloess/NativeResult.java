@@ -34,6 +34,7 @@ final class NativeResult {
     final double[] leverage;
     final int dimensions;
     final boolean hasStats;
+    final long predictHandle;
 
     // Constructed exclusively by the native layer (JNI bypasses normal access checks).
     @SuppressWarnings("unused") // called by JNI
@@ -65,7 +66,8 @@ final class NativeResult {
             double residualScale,
             double[] leverage,
             int dimensions,
-            boolean hasStats) {
+            boolean hasStats,
+            long predictHandle) {
         this.x = x;
         this.y = y;
         this.standardErrors = standardErrors;
@@ -94,5 +96,6 @@ final class NativeResult {
         this.leverage = leverage;
         this.dimensions = dimensions;
         this.hasStats = hasStats;
+        this.predictHandle = predictHandle;
     }
 }

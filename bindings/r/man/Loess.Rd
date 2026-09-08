@@ -5,36 +5,37 @@
 \title{LOESS Batch Smoothing}
 \usage{
 Loess(
-    fraction = 0.67,
-    ...,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
-    parallel = TRUE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    return_se = FALSE,
-    return_sorted = FALSE,
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL,
-    cv_seed = NULL,
-    missing = "error"
+  fraction = 0.67,
+  ...,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  cv_fractions = NULL,
+  cv_method = "kfold",
+  cv_k = 5L,
+  parallel = TRUE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  return_se = FALSE,
+  return_sorted = FALSE,
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL,
+  cv_seed = NULL,
+  missing = "error",
+  retain_model = FALSE
 )
 }
 \arguments{
@@ -150,6 +151,10 @@ observations (rows) where any x dimension or y is non-finite (and the
 matching \code{custom_weights} entry) before fitting. A length mismatch
 between \code{x} and \code{y} always raises an error, even under
 \code{"drop"}.}
+
+\item{retain_model}{Logical; if \code{TRUE}, retain the fitted model's
+training data, enabling \code{\link{predict.Loess}} for out-of-sample
+prediction. Default: \code{FALSE}.}
 }
 \value{
 A Loess object.
@@ -167,11 +172,11 @@ real-time data, see \code{\link{OnlineLoess}}.
 
 \code{fraction} is the most important parameter: it controls the size of the
 local neighbourhood used at each point.\tabular{lll}{
-    Range \tab Effect \tab Use case \cr
-    0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
-    0.3-0.5 \tab Balanced \tab General purpose \cr
-    0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
-    0.7-1.0 \tab Very smooth \tab Trend extraction \cr
+   Range \tab Effect \tab Use case \cr
+   0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
+   0.3-0.5 \tab Balanced \tab General purpose \cr
+   0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
+   0.7-1.0 \tab Very smooth \tab Trend extraction \cr
 }
 }
 \examples{

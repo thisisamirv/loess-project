@@ -115,6 +115,9 @@
 #'   fails. \code{NULL} (default) uses the library default.
 #' @param cv_seed Integer seed for the cross-validation random number
 #'   generator. \code{NULL} (default) uses a random seed.
+#' @param retain_model Logical; if \code{TRUE}, retain the fitted model's
+#'   training data, enabling \code{\link{predict.Loess}} for out-of-sample
+#'   prediction. Default: \code{FALSE}.
 #'
 #' @return A Loess object.
 #' @examples
@@ -155,7 +158,8 @@ Loess <- function(
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL,
     cv_seed = NULL,
-    missing = "error"
+    missing = "error",
+    retain_model = FALSE
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
     validate_params(fraction = fraction, iterations = iterations)

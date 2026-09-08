@@ -227,6 +227,129 @@ impl LoessResult {
     pub fn get_dimensions(&self) -> u32 {
         self.inner.dimensions as u32
     }
+
+    /// Evaluate the fitted model at out-of-sample query points not in the training set.
+    ///
+    /// Requires `retain_model: true` to have been set on the builder before `fit()`.
+    #[napi]
+    pub fn predict(
+        &self,
+        new_x: Float64Array,
+        options: Option<PredictOptions>,
+    ) -> Result<PredictOutput> {
+        let opts = options.unwrap_or_default();
+        let output = map_invalid_arg(shared_parse::run_predict(
+            &self.inner,
+            new_x.as_ref(),
+            shared_parse::PredictOptionSet {
+                return_se: opts.return_se.unwrap_or(false),
+                confidence_level: opts.confidence_level,
+                prediction_level: opts.prediction_level,
+                return_derivative: opts.return_derivative.unwrap_or(false),
+                extrapolation: opts.extrapolation.as_deref(),
+                max_extrapolation_distance: opts.max_extrapolation_distance,
+                max_neighbor_distance: opts.max_neighbor_distance,
+            },
+        ))?;
+        Ok(PredictOutput { inner: output })
+    }
+}
+
+/// Options for `LoessResult.predict()`.
+#[napi(object)]
+#[derive(Default)]
+pub struct PredictOptions {
+    /// Include standard errors in the output. Default: false.
+    #[napi(js_name = "return_se")]
+    pub return_se: Option<bool>,
+    /// Confidence interval coverage level (e.g. 0.95). Default: None.
+    #[napi(js_name = "confidence_level")]
+    pub confidence_level: Option<f64>,
+    /// Prediction interval coverage level (e.g. 0.95). Default: None.
+    #[napi(js_name = "prediction_level")]
+    pub prediction_level: Option<f64>,
+    /// Include the local fit's gradient in the output. Default: false.
+    #[napi(js_name = "return_derivative")]
+    pub return_derivative: Option<bool>,
+    /// Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp".
+    pub extrapolation: Option<String>,
+    /// Under "linear" extrapolation, the maximum allowed distance beyond the training
+    /// boundary before `predict()` errors instead of returning an unbounded value.
+    #[napi(js_name = "max_extrapolation_distance")]
+    pub max_extrapolation_distance: Option<f64>,
+    /// Maximum allowed distance to the farthest point in a query's neighbor window
+    /// before `predict()` errors, catching in-range-but-sparse query points.
+    #[napi(js_name = "max_neighbor_distance")]
+    pub max_neighbor_distance: Option<f64>,
+}
+
+/// Result of `LoessResult.predict()`.
+#[napi]
+pub struct PredictOutput {
+    inner: shared_parse::PredictOutput<f64>,
+}
+
+#[napi]
+impl PredictOutput {
+    /// Predicted y values, one per query point.
+    #[napi(getter)]
+    pub fn get_y(&self) -> Float64Array {
+        Float64Array::from(self.inner.y.as_slice())
+    }
+
+    /// Standard errors (if requested).
+    #[napi(getter, js_name = "standard_errors")]
+    pub fn get_standard_errors(&self) -> Option<Float64Array> {
+        self.inner
+            .standard_errors
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    /// Lower confidence interval bounds (if requested).
+    #[napi(getter, js_name = "confidence_lower")]
+    pub fn get_confidence_lower(&self) -> Option<Float64Array> {
+        self.inner
+            .confidence_lower
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    /// Upper confidence interval bounds (if requested).
+    #[napi(getter, js_name = "confidence_upper")]
+    pub fn get_confidence_upper(&self) -> Option<Float64Array> {
+        self.inner
+            .confidence_upper
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    /// Lower prediction interval bounds (if requested).
+    #[napi(getter, js_name = "prediction_lower")]
+    pub fn get_prediction_lower(&self) -> Option<Float64Array> {
+        self.inner
+            .prediction_lower
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    /// Upper prediction interval bounds (if requested).
+    #[napi(getter, js_name = "prediction_upper")]
+    pub fn get_prediction_upper(&self) -> Option<Float64Array> {
+        self.inner
+            .prediction_upper
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    /// Local fit's gradient at each query point (if requested).
+    #[napi(getter)]
+    pub fn get_derivative(&self) -> Option<Float64Array> {
+        self.inner
+            .derivative
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
 }
 
 /// Configuration options for LOESS smoothing.
@@ -314,6 +437,9 @@ pub struct SmoothOptions {
     /// Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error".
     #[napi(js_name = "missing")]
     pub missing: Option<String>,
+    /// Retain the fitted model's training data, enabling `LoessResult.predict()`. Default: false.
+    #[napi(js_name = "retain_model")]
+    pub retain_model: Option<bool>,
 }
 
 /// Configuration options for streaming LOESS smoothing.
@@ -478,6 +604,7 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
                 cv_k: opts.cv_k.map(|v| v as usize),
                 cv_seed: opts.cv_seed.map(|s| s as u64),
                 missing: opts.missing.as_deref(),
+                retain_model: opts.retain_model,
             },
         ))?;
         builder = configured_builder;

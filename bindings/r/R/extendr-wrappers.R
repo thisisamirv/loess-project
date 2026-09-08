@@ -16,7 +16,8 @@ RLoess$new <- function(
     degree, dimensions, distance_metric,
     weighted_metric_weights,
     surface_mode, return_se, return_sorted,
-    cell, interpolation_vertices, boundary_degree_fallback, cv_seed, missing
+    cell, interpolation_vertices, boundary_degree_fallback, cv_seed, missing,
+    retain_model
 ) {
     .Call(
         wrap__RLoess__new, fraction, iterations, weight_function,
@@ -27,12 +28,17 @@ RLoess$new <- function(
         degree, dimensions, distance_metric,
         weighted_metric_weights,
         surface_mode, return_se, return_sorted,
-        cell, interpolation_vertices, boundary_degree_fallback, cv_seed, missing
+        cell, interpolation_vertices, boundary_degree_fallback, cv_seed, missing,
+        retain_model
     )
 }
 
 RLoess$fit <- function(x, y, custom_weights = NULL) {
     .Call(wrap__RLoess__fit, self, x, y, custom_weights)
+}
+
+RLoess$predict <- function(new_x, return_se, confidence_level, prediction_level, return_derivative, extrapolation, max_extrapolation_distance, max_neighbor_distance) {
+    .Call(wrap__RLoess__predict, self, new_x, return_se, confidence_level, prediction_level, return_derivative, extrapolation, max_extrapolation_distance, max_neighbor_distance)
 }
 
 #' @export

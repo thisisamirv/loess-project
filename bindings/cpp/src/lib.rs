@@ -12,6 +12,7 @@ use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::ptr;
 use std::slice::from_raw_parts;
+use std::sync::Arc;
 
 use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
@@ -166,6 +167,10 @@ pub struct CppLoessResult {
     pub cv_scores: *mut c_double,
     pub cv_scores_len: c_ulong,
 
+    /// Opaque handle for `cpp_predict()`, non-NULL only if `retain_model` was set to 1.
+    /// Must eventually be freed via `cpp_predict_handle_free`.
+    pub predict_handle: *mut CppPredictHandle,
+
     /// Error message (NULL if no error)
     pub error: *mut c_char,
 }
@@ -201,6 +206,7 @@ impl Default for CppLoessResult {
             dimensions: 1,
             cv_scores: ptr::null_mut(),
             cv_scores_len: 0,
+            predict_handle: ptr::null_mut(),
             error: ptr::null_mut(),
         }
     }
@@ -246,6 +252,10 @@ impl From<LoessResult<f64>> for CppLoessResult {
             dimensions: p.dimensions,
             cv_scores: p.cv_scores,
             cv_scores_len: p.cv_scores_len as c_ulong,
+            predict_handle: p
+                .predict_state
+                .map(|state| Box::into_raw(Box::new(CppPredictHandle { state })))
+                .unwrap_or(ptr::null_mut()),
             error: ptr::null_mut(),
         }
     }
@@ -287,6 +297,13 @@ pub struct CppStreamingLoess {
 // Opaque handle to an online Loess model.
 pub struct CppOnlineLoess {
     model: Option<ParallelOnlineLoess<f64>>,
+}
+
+// Opaque handle retained by `cpp_loess_fit` (in `CppLoessResult::predict_handle`, if
+// `retain_model` was set to 1), enabling `cpp_predict()`. Wraps just the lightweight
+// `Arc<PredictState<f64>>` extracted from the fitted model, not the whole result.
+pub struct CppPredictHandle {
+    state: Arc<shared_parse::PredictState<f64>>,
 }
 
 fn setter_unsupported_eager_lifecycle(name: &str) {
@@ -331,6 +348,7 @@ pub unsafe extern "C" fn cpp_loess_new(
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
     missing: *const c_char,
+    retain_model: c_int,
 ) -> *mut CppLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -416,6 +434,7 @@ pub unsafe extern "C" fn cpp_loess_new(
                 interpolation_vertices: None,
                 boundary_degree_fallback: None,
                 missing: Some(missing_str),
+                retain_model: Some(retain_model != 0),
                 ..Default::default()
             },
         ) {
@@ -714,6 +733,164 @@ pub unsafe extern "C" fn cpp_loess_fit(
 /// `ptr` must be a valid pointer returned by `cpp_loess_new` or null.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_loess_free(ptr: *mut CppLoess) {
+    with_panic_void(|| {
+        if !ptr.is_null() {
+            let _ = Box::from_raw(ptr);
+        }
+    });
+}
+
+// Result of `cpp_predict()`. All arrays are allocated by Rust and must be freed via
+// `cpp_predict_free_result`.
+#[repr(C)]
+pub struct CppPredictResult {
+    /// Predicted y values, one per query point (length = n)
+    pub y: *mut c_double,
+    /// Number of query points
+    pub n: c_ulong,
+    /// Standard errors (NULL if not requested)
+    pub standard_errors: *mut c_double,
+    /// Lower confidence bounds (NULL if not requested)
+    pub confidence_lower: *mut c_double,
+    /// Upper confidence bounds (NULL if not requested)
+    pub confidence_upper: *mut c_double,
+    /// Lower prediction bounds (NULL if not requested)
+    pub prediction_lower: *mut c_double,
+    /// Upper prediction bounds (NULL if not requested)
+    pub prediction_upper: *mut c_double,
+    /// Local fit's gradient at each query point, `dimensions` values per point,
+    /// flattened (NULL if not requested)
+    pub derivative: *mut c_double,
+    /// Number of predictor dimensions (needed to know `derivative`'s true length,
+    /// `dimensions * n`, when freeing it)
+    pub dimensions: c_int,
+    /// Error message (NULL if no error)
+    pub error: *mut c_char,
+}
+
+impl Default for CppPredictResult {
+    fn default() -> Self {
+        CppPredictResult {
+            y: ptr::null_mut(),
+            n: 0,
+            standard_errors: ptr::null_mut(),
+            confidence_lower: ptr::null_mut(),
+            confidence_upper: ptr::null_mut(),
+            prediction_lower: ptr::null_mut(),
+            prediction_upper: ptr::null_mut(),
+            derivative: ptr::null_mut(),
+            dimensions: 1,
+            error: ptr::null_mut(),
+        }
+    }
+}
+
+fn predict_error_result(msg: &str) -> CppPredictResult {
+    CppPredictResult {
+        error: shared_parse::into_raw_error_c_string(msg),
+        ..Default::default()
+    }
+}
+
+/// Evaluate a fitted model (retained via `retain_model = 1`) at out-of-sample query
+/// points not in the training set.
+///
+/// # Safety
+/// `handle` must be a valid pointer returned via `CppLoessResult::predict_handle`.
+/// `new_x` must be a valid array of length `new_x_len`. `extrapolation` must be a
+/// valid null-terminated string or null (defaults to "clamp").
+#[unsafe(no_mangle)]
+#[allow(clippy::too_many_arguments)]
+pub unsafe extern "C" fn cpp_predict(
+    handle: *mut CppPredictHandle,
+    new_x: *const c_double,
+    new_x_len: c_ulong,
+    return_se: c_int,
+    confidence_level: c_double,
+    prediction_level: c_double,
+    return_derivative: c_int,
+    extrapolation: *const c_char,
+    max_extrapolation_distance: c_double,
+    max_neighbor_distance: c_double,
+) -> CppPredictResult {
+    match catch_unwind(AssertUnwindSafe(|| {
+        if handle.is_null() {
+            return predict_error_result(shared_parse::MODEL_POINTER_IS_NULL);
+        }
+        if new_x.is_null() || new_x_len == 0 {
+            return predict_error_result(shared_parse::INVALID_DATA_INPUTS);
+        }
+        let new_x_slice = from_raw_parts(new_x, new_x_len as usize);
+        let extrapolation_str = (!extrapolation.is_null())
+            .then_some(shared_parse::parse_c_str_or_default(extrapolation, "clamp"));
+
+        let state = &(*handle).state;
+        let output = match shared_parse::run_predict_state(
+            state,
+            new_x_slice,
+            shared_parse::PredictOptionSet {
+                return_se: return_se != 0,
+                confidence_level: (!confidence_level.is_nan()).then_some(confidence_level),
+                prediction_level: (!prediction_level.is_nan()).then_some(prediction_level),
+                return_derivative: return_derivative != 0,
+                extrapolation: extrapolation_str,
+                max_extrapolation_distance: (!max_extrapolation_distance.is_nan())
+                    .then_some(max_extrapolation_distance),
+                max_neighbor_distance: (!max_neighbor_distance.is_nan())
+                    .then_some(max_neighbor_distance),
+            },
+        ) {
+            Ok(o) => o,
+            Err(e) => return predict_error_result(&e.message),
+        };
+
+        CppPredictResult {
+            n: output.y.len() as c_ulong,
+            y: shared_parse::vec_to_raw_ptr(output.y),
+            standard_errors: shared_parse::opt_vec_to_raw_ptr(output.standard_errors),
+            confidence_lower: shared_parse::opt_vec_to_raw_ptr(output.confidence_lower),
+            confidence_upper: shared_parse::opt_vec_to_raw_ptr(output.confidence_upper),
+            prediction_lower: shared_parse::opt_vec_to_raw_ptr(output.prediction_lower),
+            prediction_upper: shared_parse::opt_vec_to_raw_ptr(output.prediction_upper),
+            derivative: shared_parse::opt_vec_to_raw_ptr(output.derivative),
+            dimensions: state.dimensions as c_int,
+            error: ptr::null_mut(),
+        }
+    })) {
+        Ok(v) => v,
+        Err(_) => predict_error_result(shared_parse::panic_fallback_message()),
+    }
+}
+
+/// Free a CppPredictResult's heap-allocated buffers.
+///
+/// # Safety
+/// `result` must be a valid pointer to a CppPredictResult struct.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_predict_free_result(result: *mut CppPredictResult) {
+    with_panic_void(|| {
+        if result.is_null() {
+            return;
+        }
+        let r = &mut *result;
+        let n = r.n as usize;
+        shared_parse::free_raw_f64_buffer(r.y, n);
+        shared_parse::free_raw_f64_buffer(r.standard_errors, n);
+        shared_parse::free_raw_f64_buffer(r.confidence_lower, n);
+        shared_parse::free_raw_f64_buffer(r.confidence_upper, n);
+        shared_parse::free_raw_f64_buffer(r.prediction_lower, n);
+        shared_parse::free_raw_f64_buffer(r.prediction_upper, n);
+        shared_parse::free_raw_f64_buffer(r.derivative, n * r.dimensions.max(1) as usize);
+        shared_parse::free_raw_c_string(r.error);
+    });
+}
+
+/// Free a `CppPredictHandle` returned via `CppLoessResult::predict_handle`.
+///
+/// # Safety
+/// `ptr` must be a valid pointer returned via `CppLoessResult::predict_handle`, or null.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_predict_handle_free(ptr: *mut CppPredictHandle) {
     with_panic_void(|| {
         if !ptr.is_null() {
             let _ = Box::from_raw(ptr);

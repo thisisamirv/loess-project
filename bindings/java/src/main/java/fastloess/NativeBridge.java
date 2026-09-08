@@ -149,13 +149,27 @@ final class NativeBridge {
             int interpolationVertices,
             int boundaryDegreeFallback,
             double[] weightedMetricWeights,
-            String missing);
+            String missing,
+            boolean retainModel);
 
     static native void loessSetCvSeed(long handle, long seed);
 
     static native NativeResult loessFit(long handle, double[] x, double[] y, double[] customWeights);
 
     static native void loessFree(long handle);
+
+    static native NativePredictResult predict(
+            long handle,
+            double[] newX,
+            boolean returnSe,
+            double confidenceLevel,
+            double predictionLevel,
+            boolean returnDerivative,
+            String extrapolation,
+            double maxExtrapolationDistance,
+            double maxNeighborDistance);
+
+    static native void predictHandleFree(long handle);
 
     static native long streamingNew(
             double fraction,

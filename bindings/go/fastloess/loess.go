@@ -113,6 +113,10 @@ type Options struct {
 
 	// Parallel enables parallel processing. Default: true.
 	Parallel bool
+
+	// RetainModel retains the fitted model's training data, enabling
+	// Result.PredictModel for out-of-sample prediction. Batch model only.
+	RetainModel bool
 }
 
 // DefaultOptions returns the library's recommended defaults. Start from this
@@ -225,6 +229,7 @@ func NewLoess(opts Options) (*Loess, error) {
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
 			missing,
+			boolToCInt(opts.RetainModel),
 		)
 		if ptr == nil {
 			errMsg = lastError()
