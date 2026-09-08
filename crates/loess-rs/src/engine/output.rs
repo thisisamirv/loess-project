@@ -136,6 +136,11 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
     //
     // Requires `.retain_model(true)` on the builder (Batch adapter only); returns
     // `LoessError::PredictionUnavailable` otherwise.
+    //
+    // Always fits an exact local regression at each query point, unlike `fit()` under the
+    // default `SurfaceMode::Interpolation` (which only fits exactly at a coarser vertex grid
+    // and interpolates the rest). So predicting at an x already in the training set may not
+    // exactly reproduce that point's `fit()` output unless `surface_mode("direct")` was used.
     pub fn predict(
         &self,
         new_x: &[T],

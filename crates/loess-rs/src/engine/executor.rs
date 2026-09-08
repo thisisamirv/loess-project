@@ -1401,6 +1401,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 train_min,
                 train_max,
                 kdtree: kdtree.clone(),
+                surface: _surface_opt.clone(),
                 custom_predict_pass: None,
             }
         });

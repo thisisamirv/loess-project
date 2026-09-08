@@ -128,6 +128,30 @@ fn test_predict_at_training_points_matches_fit() {
     }
 }
 
+#[test]
+fn test_predict_at_training_points_matches_fit_interpolation_mode() {
+    // Same as `test_predict_at_training_points_matches_fit`, but with the *default*
+    // `SurfaceMode::Interpolation`: `predict()` reuses the retained interpolation surface
+    // for in-range points, so it should still exactly reproduce `fit()`'s `y_smooth` here
+    // instead of diverging via a separate exact per-point regression.
+    let (x, y) = linear_series(40, 3.0, -2.0);
+    let result = Loess::new()
+        .fraction(0.6)
+        .iterations(0)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let output = result
+        .predict(&x, &PredictOptions::default())
+        .expect("predict should succeed");
+    for (&fitted, &pred) in result.y.iter().zip(output.y.iter()) {
+        assert_relative_eq!(fitted, pred, epsilon = 1e-10);
+    }
+}
+
 // ============================================================================
 // Input Validation
 // ============================================================================

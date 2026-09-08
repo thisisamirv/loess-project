@@ -20,6 +20,7 @@ use core::fmt::Debug;
 use num_traits::Float;
 
 // Internal dependencies
+use crate::algorithms::interpolation::InterpolationSurface;
 use crate::algorithms::regression::{
     PolynomialDegree, RegressionContext, SolverLinalg, ZeroWeightFallback,
 };
@@ -174,13 +175,21 @@ pub struct PredictState<T: Float> {
     // `predict()` call (it would otherwise need to be reconstructed from scratch each time).
     pub kdtree: KDTree<T>,
 
+    // Interpolation surface built during `fit()`, retained when `surface_mode()` was
+    // `Interpolation` (the default). `predict_one_full` reuses it (via `evaluate()`) for
+    // in-range query points, so the returned value matches `fit()`'s own `y_smooth` at
+    // training points instead of diverging via a separate exact per-point regression.
+    // `None` under `SurfaceMode::Direct`.
+    pub surface: Option<InterpolationSurface<T>>,
+
     // Custom (e.g. parallel) predict pass, injected by extension crates like fastLoess.
     #[doc(hidden)]
     pub custom_predict_pass: Option<PredictPassFn<T>>,
 }
 
-// Manual `PartialEq` that ignores `custom_predict_pass` - function pointer comparisons
-// are not meaningful (addresses aren't guaranteed unique across codegen units).
+// Manual `PartialEq` that ignores `kdtree`/`surface` (cached derived structures, not part
+// of model identity) and `custom_predict_pass` (function pointer comparisons aren't
+// meaningful - addresses aren't guaranteed unique across codegen units).
 impl<T: Float + PartialEq> PartialEq for PredictState<T> {
     fn eq(&self, other: &Self) -> bool {
         self.x == other.x
@@ -263,6 +272,20 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     let extrapolate_linear = out_of_range && options.extrapolation == ExtrapolationPolicy::Linear;
     let eval_point = clamped;
 
+    let need_gradient = options.return_derivative || extrapolate_linear;
+
+    // Fast path: for an in-range query point with no gradient/SE requested, an available
+    // interpolation surface (`SurfaceMode::Interpolation`, the default) can answer the
+    // query directly - no neighborhood search or regression solve needed, and (unlike the
+    // exact per-point fit below) it matches `fit()`'s own `y_smooth` at training points.
+    if !out_of_range
+        && !need_gradient
+        && !need_se
+        && let Some(surface) = &state.surface
+    {
+        return Ok((surface.evaluate(query_point), None, None));
+    }
+
     kdtree.find_k_nearest(
         &eval_point,
         state.window_size,
@@ -271,8 +294,6 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
         search_buffer,
         neighborhood,
     );
-
-    let need_gradient = options.return_derivative || extrapolate_linear;
 
     let gradient = if need_gradient {
         // `fit_with_coefficients()` only has a buffered implementation (the non-buffered
@@ -327,6 +348,13 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
         context = context.with_custom_weights(cw);
     }
     let (mut y, leverage) = context.fit().unwrap_or((T::zero(), T::zero()));
+
+    // In-range but SE/gradient was requested (so the fast path above was skipped): prefer
+    // the surface's value for `y` anyway, so it still matches `fit()`'s `y_smooth` at
+    // training points. SE/gradient keep coming from the exact fit above either way.
+    if !out_of_range && let Some(surface) = &state.surface {
+        y = surface.evaluate(query_point);
+    }
 
     if extrapolate_linear {
         let grad = gradient.as_deref().unwrap_or(&[]);
