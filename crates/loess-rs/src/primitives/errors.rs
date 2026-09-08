@@ -171,6 +171,20 @@ pub enum LoessError {
         // The configured maximum allowed distance.
         max_distance: f64,
     },
+
+    // A `predict()` query point passed the per-dimension bounding-box range check (so it
+    // wasn't caught by `ExtrapolationPolicy`) but its actual nearest-neighbor window is
+    // farther away than `PredictOptions::max_neighbor_distance` allows. An axis-aligned
+    // bounding box isn't a convex hull: a point can sit inside every dimension's range
+    // yet fall in an empty "corner" far from any real training data (e.g. diagonally or
+    // non-rectangularly distributed data). This guard is opt-in (the option defaults to
+    // `None`, preserving the original silent-extrapolation behavior).
+    SparseNeighborhood {
+        // Distance to the farthest point in the query's k-nearest-neighbor window.
+        distance: f64,
+        // The configured maximum allowed distance.
+        max_distance: f64,
+    },
 }
 
 impl Display for LoessError {
@@ -314,6 +328,16 @@ impl Display for LoessError {
                 "predict() query point on dimension {dimension} is {distance} past the \
                  training boundary, exceeding max_extrapolation_distance ({max_distance}) \
                  (ExtrapolationPolicy::Linear)"
+            ),
+            Self::SparseNeighborhood {
+                distance,
+                max_distance,
+            } => write!(
+                f,
+                "predict() query point is within the training bounding box, but its \
+                 nearest-neighbor window extends {distance}, exceeding \
+                 max_neighbor_distance ({max_distance}); the point likely falls in a \
+                 sparse region far from real training data"
             ),
         }
     }

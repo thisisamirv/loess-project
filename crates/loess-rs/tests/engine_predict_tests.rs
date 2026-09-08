@@ -563,6 +563,54 @@ fn test_predict_extrapolation_linear_respects_max_distance() {
         .expect("max_extrapolation_distance should not apply under Clamp");
 }
 
+/// A query point can sit inside every dimension's per-dimension bounding box yet be far
+/// from any real training point (an "empty corner" for non-rectangularly distributed
+/// data). `max_neighbor_distance` should catch this even though the bbox check alone
+/// would treat the point as in-range.
+#[test]
+fn test_predict_max_neighbor_distance_catches_bbox_corner() {
+    // Training data only along the diagonal (i, i): the bounding box is the full square
+    // [0, 19] x [0, 19], but the corner (19, 0) is far from any actual training point.
+    let mut x = Vec::new();
+    let mut y = Vec::new();
+    for i in 0..20 {
+        x.push(i as f64);
+        x.push(i as f64);
+        y.push(i as f64);
+    }
+
+    let result = Loess::new()
+        .fraction(0.3)
+        .iterations(0)
+        .dimensions(2)
+        .distance_metric("euclidean")
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    // No cap: the empty corner is silently treated as in-range (original behavior).
+    result
+        .predict(&[19.0, 0.0], &PredictOptions::default())
+        .expect("uncapped predict should not error, even in the empty corner");
+
+    // With a cap: the corner's neighbor window is much farther than a point actually on
+    // the diagonal, so it should be rejected.
+    let options = PredictOptions {
+        max_neighbor_distance: Some(5.0),
+        ..PredictOptions::default()
+    };
+    let err = result.predict(&[19.0, 0.0], &options).unwrap_err();
+    assert!(matches!(err, LoessError::SparseNeighborhood { .. }));
+
+    // A point actually on the diagonal has a tight neighbor window and should still
+    // succeed under the same cap.
+    result
+        .predict(&[10.0, 10.0], &options)
+        .expect("a point on the diagonal should have a tight neighbor window");
+}
+
 // ============================================================================
 // Repeated Calls (cached KD-tree)
 // ============================================================================

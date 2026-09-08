@@ -75,6 +75,16 @@ pub struct PredictOptions<T> {
     // extension's unbounded value. `None` (default) preserves the original, uncapped
     // behavior. Ignored under `Clamp`/`Error`.
     pub max_extrapolation_distance: Option<T>,
+
+    // Maximum allowed distance to the farthest point in a query's k-nearest-neighbor
+    // window before `predict()` errors with `LoessError::SparseNeighborhood`. Guards
+    // against the per-dimension bounding-box range check's blind spot: a point can sit
+    // inside every dimension's min/max range yet fall in an empty region far from any
+    // real training data (e.g. an empty "corner" of non-rectangularly distributed data).
+    // `None` (default) preserves the original behavior of silently extrapolating there.
+    // Applies regardless of `extrapolation`/whether the bounding-box check flagged the
+    // point as out-of-range.
+    pub max_neighbor_distance: Option<T>,
 }
 
 impl<T: FloatLinalg> Default for PredictOptions<T> {
@@ -86,6 +96,7 @@ impl<T: FloatLinalg> Default for PredictOptions<T> {
             return_derivative: false,
             extrapolation: ExtrapolationPolicy::default(),
             max_extrapolation_distance: None,
+            max_neighbor_distance: None,
         }
     }
 }
@@ -303,6 +314,10 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
 
     let need_gradient = options.return_derivative || extrapolate_linear;
 
+    // A requested neighbor-sparsity check needs a real KD-tree search to measure against,
+    // so it must bypass the surface-only fast path below even when nothing else would.
+    let need_neighborhood_check = options.max_neighbor_distance.is_some();
+
     // Fast path: for an in-range query point with no gradient requested, an available
     // interpolation surface (`SurfaceMode::Interpolation`, the default) can answer the query
     // directly - no neighborhood search or regression solve needed, and (unlike the exact
@@ -312,6 +327,7 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     // value from a fit that `y` no longer even depends on.
     if !out_of_range
         && !need_gradient
+        && !need_neighborhood_check
         && let Some(surface) = &state.surface
     {
         let se = need_se.then_some(state.interpolation_se);
@@ -326,6 +342,15 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
         search_buffer,
         neighborhood,
     );
+
+    if let Some(max_dist) = options.max_neighbor_distance
+        && neighborhood.max_distance > max_dist
+    {
+        return Err(LoessError::SparseNeighborhood {
+            distance: neighborhood.max_distance.to_f64().unwrap_or(0.0),
+            max_distance: max_dist.to_f64().unwrap_or(0.0),
+        });
+    }
 
     let gradient = if need_gradient {
         // `fit_with_coefficients()` only has a buffered implementation (the non-buffered
