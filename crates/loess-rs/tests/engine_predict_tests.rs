@@ -45,6 +45,30 @@ fn test_predict_without_retain_model_errors() {
     assert!(matches!(err, LoessError::PredictionUnavailable));
 }
 
+#[test]
+fn test_predict_after_cross_validation() {
+    // `.retain_model(true)` combined with CV bandwidth selection: only the final fit (at
+    // the CV-selected best fraction) should retain model state; candidate fold/fraction
+    // fits must not pay for building it (see engine::executor::run_with_config).
+    let (x, y) = linear_series(40, 2.0, 1.0);
+    let result = Loess::new()
+        .iterations(0)
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_fractions(vec![0.3, 0.5, 0.7])
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(result.has_cv_scores());
+    let output = result
+        .predict(&[10.5], &PredictOptions::default())
+        .expect("predict should succeed after CV selected the best fraction");
+    assert_relative_eq!(output.y[0], 2.0 * 10.5 + 1.0, epsilon = 1e-1);
+}
+
 // ============================================================================
 // 1D Linear Reproduction
 // ============================================================================

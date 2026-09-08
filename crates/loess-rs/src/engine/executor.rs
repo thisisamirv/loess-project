@@ -779,6 +779,10 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     ref mut cv_buffer, ..
                 } = workspace;
 
+                // CV candidate fits only ever read `.smoothed`; never retain model state for
+                // them, avoiding wasted `PredictState` clones per candidate fraction/fold.
+                let cv_executor = executor.clone().retain_model(false);
+
                 cv_kind.run(
                     x,
                     y,
@@ -786,7 +790,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     cv_fracs,
                     config.cv_seed,
                     |tx, ty, f| {
-                        executor
+                        cv_executor
                             .run(tx, ty, Some(f), None, None, None, None)
                             .smoothed
                     },
