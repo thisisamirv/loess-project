@@ -165,6 +165,13 @@ pub struct PredictState<T: Float> {
     // Used to widen prediction intervals beyond the local standard error.
     pub residual_sd: T,
 
+    // Standard error for in-range queries under `SurfaceMode::Interpolation`, precomputed
+    // with the exact same uniform approximate-leverage heuristic `fit()` itself falls back
+    // to there (`sigma * sqrt(eff_fraction / n)`). Keeps `predict()`'s SE self-consistent
+    // with whichever surface mode produced `y`, instead of pairing a fast/approximate `y`
+    // with an unrelated exact-leverage SE. Unused (and meaningless) when `surface` is `None`.
+    pub interpolation_se: T,
+
     // Per-dimension minimum/maximum of the REAL (unpadded) training predictors, used to
     // decide whether a query point is out-of-range for `ExtrapolationPolicy`. `x` above is
     // boundary-*padded* and can extend well beyond this range on each dimension.
@@ -204,6 +211,7 @@ impl<T: Float + PartialEq> PartialEq for PredictState<T> {
             && self.scales == other.scales
             && self.custom_weights == other.custom_weights
             && self.residual_sd == other.residual_sd
+            && self.interpolation_se == other.interpolation_se
             && self.train_min == other.train_min
             && self.train_max == other.train_max
     }
@@ -274,16 +282,19 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
 
     let need_gradient = options.return_derivative || extrapolate_linear;
 
-    // Fast path: for an in-range query point with no gradient/SE requested, an available
-    // interpolation surface (`SurfaceMode::Interpolation`, the default) can answer the
-    // query directly - no neighborhood search or regression solve needed, and (unlike the
-    // exact per-point fit below) it matches `fit()`'s own `y_smooth` at training points.
+    // Fast path: for an in-range query point with no gradient requested, an available
+    // interpolation surface (`SurfaceMode::Interpolation`, the default) can answer the query
+    // directly - no neighborhood search or regression solve needed, and (unlike the exact
+    // per-point fit below) it matches `fit()`'s own `y_smooth`/SE at training points. SE, if
+    // requested, uses the same uniform approximate-leverage heuristic `fit()` itself falls
+    // back to under `SurfaceMode::Interpolation`, rather than an unrelated exact-leverage
+    // value from a fit that `y` no longer even depends on.
     if !out_of_range
         && !need_gradient
-        && !need_se
         && let Some(surface) = &state.surface
     {
-        return Ok((surface.evaluate(query_point), None, None));
+        let se = need_se.then_some(state.interpolation_se);
+        return Ok((surface.evaluate(query_point), None, se));
     }
 
     kdtree.find_k_nearest(
@@ -349,10 +360,14 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     }
     let (mut y, leverage) = context.fit().unwrap_or((T::zero(), T::zero()));
 
-    // In-range but SE/gradient was requested (so the fast path above was skipped): prefer
-    // the surface's value for `y` anyway, so it still matches `fit()`'s `y_smooth` at
-    // training points. SE/gradient keep coming from the exact fit above either way.
-    if !out_of_range && let Some(surface) = &state.surface {
+    // In-range (so the fast path above was skipped only because a gradient was needed):
+    // prefer the surface's value for `y` anyway, so it still matches `fit()`'s `y_smooth` at
+    // training points. The gradient always keeps coming from the exact fit above regardless
+    // (never from the surface - see the module-level note on `return_derivative`).
+    let surface_active = !out_of_range && state.surface.is_some();
+    if let Some(surface) = &state.surface
+        && !out_of_range
+    {
         y = surface.evaluate(query_point);
     }
 
@@ -364,7 +379,16 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
         }
     }
 
-    let se = need_se.then(|| state.residual_sd * leverage.max(T::zero()).sqrt());
+    // Same reasoning as the fast path above: keep SE consistent with whichever surface mode
+    // produced `y`, rather than always using the exact-leverage value from this fit (which,
+    // when a surface is active, only ran here to obtain the gradient, not `y`).
+    let se = need_se.then(|| {
+        if surface_active {
+            state.interpolation_se
+        } else {
+            state.residual_sd * leverage.max(T::zero()).sqrt()
+        }
+    });
 
     Ok((y, gradient, se))
 }

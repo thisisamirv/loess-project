@@ -1385,6 +1385,23 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 .collect();
             let residual_sd = IntervalMethod::calculate_residual_sd(&residuals, None);
 
+            // Mirrors fit()'s own `SurfaceMode::Interpolation` SE fallback exactly (same
+            // uncentered median-abs-residual and `eff_fraction/n` approximate leverage), so
+            // `predict()` stays self-consistent with whichever mode produced `y` instead of
+            // always falling back to a per-point exact-leverage value from an unrelated fit.
+            let interpolation_se = {
+                let mut abs_residuals: Vec<T> = residuals.iter().map(|r| r.abs()).collect();
+                let median_idx = n / 2;
+                if median_idx < abs_residuals.len() {
+                    abs_residuals.select_nth_unstable_by(median_idx, |a: &T, b| {
+                        a.partial_cmp(b).unwrap_or(Equal)
+                    });
+                }
+                let sigma = abs_residuals[median_idx] * T::from(1.4826).unwrap();
+                let approx_leverage = eff_fraction / T::from(n).unwrap();
+                sigma * approx_leverage.sqrt()
+            };
+
             PredictState {
                 x: ax.clone(),
                 dimensions: dims,
@@ -1398,6 +1415,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 scales: scales_local.to_vec(),
                 custom_weights: custom_weights_aug.clone(),
                 residual_sd,
+                interpolation_se,
                 train_min,
                 train_max,
                 kdtree: kdtree.clone(),

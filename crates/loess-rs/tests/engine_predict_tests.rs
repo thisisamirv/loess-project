@@ -308,6 +308,68 @@ fn test_predict_standard_errors() {
     }
 }
 
+/// Under `SurfaceMode::Interpolation` (the default), predict()'s SE at a training point
+/// should match the SAME uniform approximate-leverage heuristic fit() itself falls back to
+/// there, not an unrelated per-point exact-leverage value from a fit that `y` no longer
+/// even depends on.
+#[test]
+fn test_predict_se_matches_fit_interpolation_mode() {
+    let (x, y) = linear_series(60, 2.0, 1.0);
+    let result = Loess::new()
+        .fraction(0.3)
+        .iterations(0)
+        .return_se()
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let fit_se = result.standard_errors.as_ref().expect("fit() SE requested")[10];
+
+    let options = PredictOptions {
+        return_se: true,
+        ..PredictOptions::default()
+    };
+    let output = result
+        .predict(&[x[10]], &options)
+        .expect("predict should succeed");
+    let predict_se = output.standard_errors.expect("standard errors requested")[0];
+
+    assert_relative_eq!(fit_se, predict_se, epsilon = 1e-10);
+}
+
+/// Under `SurfaceMode::Direct`, predict()'s SE should still come from an exact per-point
+/// leverage computation (unaffected by the Interpolation-mode consistency fix above).
+#[test]
+fn test_predict_se_uses_exact_leverage_direct_mode() {
+    let (x, y) = linear_series(60, 2.0, 1.0);
+    let result = Loess::new()
+        .fraction(0.3)
+        .iterations(0)
+        .surface_mode("direct")
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let options = PredictOptions {
+        return_se: true,
+        ..PredictOptions::default()
+    };
+    let output = result
+        .predict(&[x[5], x[40]], &options)
+        .expect("predict should succeed");
+    let se = output.standard_errors.expect("standard errors requested");
+
+    // Exact per-point leverage varies across points (unlike the uniform Interpolation-mode
+    // heuristic), so the two SE values at these differently-positioned points shouldn't be
+    // forced equal by construction.
+    assert!(se[0].is_finite() && se[0] >= 0.0);
+    assert!(se[1].is_finite() && se[1] >= 0.0);
+}
+
 #[test]
 fn test_predict_confidence_and_prediction_intervals() {
     let (x, y) = linear_series(50, 2.0, 1.0);
