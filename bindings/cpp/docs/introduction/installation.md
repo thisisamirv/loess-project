@@ -20,6 +20,22 @@ wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastl
 g++ -o myapp myapp.cpp -L. -lfastloess-linux-arm64
 ```
 
+## Pre-built Binaries (Linux (x64), musl/Alpine)
+
+```bash
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-x64-musl.so
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+g++ -o myapp myapp.cpp -L. -lfastloess-linux-x64-musl
+```
+
+## Pre-built Binaries (Linux (ARM64), musl/Alpine)
+
+```bash
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-arm64-musl.so
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+g++ -o myapp myapp.cpp -L. -lfastloess-linux-arm64-musl
+```
+
 ## Pre-built Binaries (macOS (x64))
 
 ```bash
