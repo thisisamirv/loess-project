@@ -1401,7 +1401,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 train_min,
                 train_max,
                 kdtree: kdtree.clone(),
-                surface: _surface_opt.clone(),
+                // `evaluate()` only needs `cells`/`vertex_data`/`vertices`; drop the much
+                // larger per-vertex neighborhood cache (only needed for refitting during
+                // `fit()`'s own robustness iterations, already done by this point) so
+                // `.retain_model(true)` doesn't pay for it.
+                surface: _surface_opt.clone().map(|mut s| {
+                    s.vertex_neighborhoods = Vec::new();
+                    s
+                }),
                 custom_predict_pass: None,
             }
         });

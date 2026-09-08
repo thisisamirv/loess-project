@@ -213,6 +213,45 @@ fn test_predict_multivariate() {
     assert_relative_eq!(output.y[0], 9.0, epsilon = 1.0);
 }
 
+#[test]
+fn test_predict_at_training_points_matches_fit_multivariate_interpolation() {
+    // Broader coverage for the interpolation-surface reuse fix: nD (3), quadratic degree,
+    // and a non-default distance metric, all under the default `SurfaceMode::Interpolation`.
+    // Predicting at every training point (including the first/last, i.e. the boundary of
+    // the surface's cell tree) should still exactly match `fit()`'s own `y_smooth`.
+    let mut x = Vec::new();
+    let mut y = Vec::new();
+    for i in 0..8 {
+        for j in 0..8 {
+            for k in 0..8 {
+                x.push(i as f64);
+                x.push(j as f64);
+                x.push(k as f64);
+                y.push((i * i + j * j + k * k) as f64);
+            }
+        }
+    }
+
+    let result = Loess::new()
+        .fraction(0.4)
+        .iterations(0)
+        .dimensions(3)
+        .degree("quadratic")
+        .distance_metric("manhattan")
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let output = result
+        .predict(&x, &PredictOptions::default())
+        .expect("predict should succeed");
+    for (&fitted, &pred) in result.y.iter().zip(output.y.iter()) {
+        assert_relative_eq!(fitted, pred, epsilon = 1e-8);
+    }
+}
+
 // ============================================================================
 // Polynomial Degree
 // ============================================================================
