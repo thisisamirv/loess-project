@@ -157,6 +157,20 @@ pub enum LoessError {
         // Maximum of the training range for this dimension.
         max: f64,
     },
+
+    // A `predict()` query point under `ExtrapolationPolicy::Linear` fell farther beyond
+    // the training range than `PredictOptions::max_extrapolation_distance` allows. The
+    // first-order Taylor extension has no inherent cap, so an unbounded distance can
+    // produce arbitrarily extreme values; this guard is opt-in (the option defaults to
+    // `None`, preserving the original unbounded behavior).
+    ExtrapolationTooFar {
+        // Index of the out-of-range predictor dimension.
+        dimension: usize,
+        // Distance beyond the training boundary on this dimension.
+        distance: f64,
+        // The configured maximum allowed distance.
+        max_distance: f64,
+    },
 }
 
 impl Display for LoessError {
@@ -290,6 +304,16 @@ impl Display for LoessError {
                 f,
                 "predict() query point is out of range on dimension {dimension}: {query} \
                  not in [{min}, {max}] (ExtrapolationPolicy::Error)"
+            ),
+            Self::ExtrapolationTooFar {
+                dimension,
+                distance,
+                max_distance,
+            } => write!(
+                f,
+                "predict() query point on dimension {dimension} is {distance} past the \
+                 training boundary, exceeding max_extrapolation_distance ({max_distance}) \
+                 (ExtrapolationPolicy::Linear)"
             ),
         }
     }

@@ -525,6 +525,44 @@ fn test_predict_extrapolation_linear_policy() {
     assert_relative_eq!(output.y[0], expected, epsilon = 1.0);
 }
 
+#[test]
+fn test_predict_extrapolation_linear_respects_max_distance() {
+    let (x, y) = linear_series(30, 2.0, 1.0);
+    let result = Loess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .boundary_policy("noboundary")
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    // Within the cap: still succeeds.
+    let options = PredictOptions {
+        extrapolation: ExtrapolationPolicy::Linear,
+        max_extrapolation_distance: Some(10.0),
+        ..PredictOptions::default()
+    };
+    result
+        .predict(&[35.0], &options)
+        .expect("within max_extrapolation_distance should succeed");
+
+    // Beyond the cap: errors instead of returning an unbounded Taylor-extended value.
+    let err = result.predict(&[100.0], &options).unwrap_err();
+    assert!(matches!(err, LoessError::ExtrapolationTooFar { .. }));
+
+    // The cap is ignored under Clamp/Error.
+    let clamp_options = PredictOptions {
+        extrapolation: ExtrapolationPolicy::Clamp,
+        max_extrapolation_distance: Some(10.0),
+        ..PredictOptions::default()
+    };
+    result
+        .predict(&[100.0], &clamp_options)
+        .expect("max_extrapolation_distance should not apply under Clamp");
+}
+
 // ============================================================================
 // Repeated Calls (cached KD-tree)
 // ============================================================================
