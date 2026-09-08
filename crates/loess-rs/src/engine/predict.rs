@@ -17,6 +17,7 @@ use std::vec::Vec;
 
 // External dependencies
 use core::fmt::Debug;
+use num_traits::Float;
 
 // Internal dependencies
 use crate::algorithms::regression::{
@@ -124,7 +125,7 @@ pub type PredictPassFn<T> = fn(
 // used for local fitting (not the shorter, unpadded arrays returned in `LoessResult`), so
 // that predictions near the edges of the training range are consistent with `fit()`.
 #[derive(Debug, Clone)]
-pub struct PredictState<T> {
+pub struct PredictState<T: Float> {
     // Boundary-padded, flattened training predictors (`x.len() == dimensions * n_total`).
     pub x: Vec<T>,
 
@@ -169,6 +170,10 @@ pub struct PredictState<T> {
     pub train_min: Vec<T>,
     pub train_max: Vec<T>,
 
+    // KD-tree over `x`, built once when the model is retained rather than rebuilt on every
+    // `predict()` call (it would otherwise need to be reconstructed from scratch each time).
+    pub kdtree: KDTree<T>,
+
     // Custom (e.g. parallel) predict pass, injected by extension crates like fastLoess.
     #[doc(hidden)]
     pub custom_predict_pass: Option<PredictPassFn<T>>,
@@ -176,7 +181,7 @@ pub struct PredictState<T> {
 
 // Manual `PartialEq` that ignores `custom_predict_pass` - function pointer comparisons
 // are not meaningful (addresses aren't guaranteed unique across codegen units).
-impl<T: PartialEq> PartialEq for PredictState<T> {
+impl<T: Float + PartialEq> PartialEq for PredictState<T> {
     fn eq(&self, other: &Self) -> bool {
         self.x == other.x
             && self.dimensions == other.dimensions
@@ -347,7 +352,6 @@ fn predict_batch_serial<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     let n_train = state.x.len() / dims.max(1);
     let n_query = new_x.len() / dims.max(1);
 
-    let kdtree = KDTree::new(&state.x, dims);
     let dist_calc = LoessDistanceCalculator {
         metric: state.distance_metric.clone(),
         scales: &state.scales,
@@ -366,7 +370,7 @@ fn predict_batch_serial<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
         let (yi, grad, sei) = predict_one_full(
             state,
             query_point,
-            &kdtree,
+            &state.kdtree,
             &dist_calc,
             &mut search_buffer,
             &mut neighborhood,

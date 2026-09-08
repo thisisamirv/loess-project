@@ -1400,6 +1400,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 residual_sd,
                 train_min,
                 train_max,
+                kdtree: kdtree.clone(),
                 custom_predict_pass: None,
             }
         });

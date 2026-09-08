@@ -25,7 +25,7 @@ use crate::primitives::errors::LoessError;
 
 // Comprehensive LOESS output containing smoothed values and diagnostics.
 #[derive(Debug, Clone, PartialEq)]
-pub struct LoessResult<T> {
+pub struct LoessResult<T: Float> {
     // Input x-values (independent variable). Flattened for nD.
     pub x: Vec<T>,
 

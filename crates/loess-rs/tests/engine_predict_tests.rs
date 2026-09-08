@@ -379,3 +379,29 @@ fn test_predict_extrapolation_linear_policy() {
     let expected = 2.0 * 35.0 + 1.0;
     assert_relative_eq!(output.y[0], expected, epsilon = 1.0);
 }
+
+// ============================================================================
+// Repeated Calls (cached KD-tree)
+// ============================================================================
+
+#[test]
+fn test_predict_repeated_calls_are_consistent() {
+    // `PredictState`'s KD-tree is built once at `retain_model` time and reused by every
+    // `predict()` call; repeated calls (including single-point ones) must keep returning
+    // identical results rather than drifting due to any rebuild-related state issues.
+    let (x, y) = linear_series(50, 2.0, 1.0);
+    let result = Loess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let first = result.predict(&[10.5], &PredictOptions::default()).unwrap();
+    for _ in 0..5 {
+        let again = result.predict(&[10.5], &PredictOptions::default()).unwrap();
+        assert_relative_eq!(again.y[0], first.y[0], epsilon = 1e-12);
+    }
+}

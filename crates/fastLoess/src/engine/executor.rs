@@ -382,7 +382,6 @@ where
     let dims = state.dimensions.max(1);
     let n_query = new_x.len() / dims;
 
-    let kdtree = KDTree::new(&state.x, state.dimensions);
     let dist_calc = ExecutorLoessDistanceCalculator {
         metric: state.distance_metric.clone(),
         scales: &state.scales,
@@ -402,7 +401,7 @@ where
                 predict_one_full(
                     state,
                     query_point,
-                    &kdtree,
+                    &state.kdtree,
                     &dist_calc,
                     search_buffer,
                     neighborhood,
