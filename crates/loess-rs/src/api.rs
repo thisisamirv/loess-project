@@ -33,17 +33,17 @@ use crate::math::linalg::FloatLinalg;
 use crate::primitives::backend::Backend;
 
 // Publicly re-exported types
-pub use crate::adapters::online::UpdateMode;
-pub use crate::adapters::streaming::MergeStrategy;
-pub use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
-pub use crate::algorithms::robustness::RobustnessMethod;
-pub use crate::engine::executor::SurfaceMode;
+use crate::adapters::online::UpdateMode;
+use crate::adapters::streaming::MergeStrategy;
+use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
+use crate::algorithms::robustness::RobustnessMethod;
+use crate::engine::executor::SurfaceMode;
 pub use crate::engine::output::LoessResult;
-pub use crate::engine::validator::MissingPolicy;
-pub use crate::math::boundary::BoundaryPolicy;
-pub use crate::math::distance::DistanceMetric;
-pub use crate::math::kernel::WeightFunction;
-pub use crate::math::scaling::ScalingMethod;
+use crate::engine::validator::MissingPolicy;
+use crate::math::boundary::BoundaryPolicy;
+use crate::math::distance::DistanceMetric;
+use crate::math::kernel::WeightFunction;
+use crate::math::scaling::ScalingMethod;
 pub use crate::primitives::errors::LoessError;
 
 // Converts a value into a typed enum, either infallibly (enum variant) or

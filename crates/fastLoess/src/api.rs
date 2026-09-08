@@ -23,9 +23,10 @@ use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
 
 // Publicly re-exported types
-pub use loess_rs::internals::api::{LoessAdapter, LoessBuilder};
+use loess_rs::internals::api::LoessAdapter;
+pub use loess_rs::internals::api::LoessBuilder;
 pub use loess_rs::internals::engine::output::LoessResult;
-pub use loess_rs::internals::primitives::backend::Backend;
+use loess_rs::internals::primitives::backend::Backend;
 pub use loess_rs::internals::primitives::errors::LoessError;
 
 // Adapter selection namespace — exposed via internals::api::Adapter in dev builds.
