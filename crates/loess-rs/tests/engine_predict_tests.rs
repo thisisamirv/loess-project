@@ -178,6 +178,26 @@ fn test_predict_rejects_mismatched_new_x_length() {
     assert!(matches!(err, LoessError::InvalidInput(_)));
 }
 
+#[test]
+fn test_predict_rejects_non_finite_new_x() {
+    let (x, y) = linear_series(40, 2.0, 1.0);
+    let result = Loess::new()
+        .fraction(0.5)
+        .iterations(0)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        let err = result
+            .predict(&[5.0, bad, 10.0], &PredictOptions::default())
+            .unwrap_err();
+        assert!(matches!(err, LoessError::InvalidNumericValue(_)));
+    }
+}
+
 // ============================================================================
 // Multivariate (nD)
 // ============================================================================
