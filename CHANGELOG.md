@@ -49,6 +49,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cleaned up `loess_rs::prelude` of accidentally-leaked internals: removed `LoessBuilder` and `Batch`/`Online`/`Streaming` adapter markers (use the `Loess`/`StreamingLoess`/`OnlineLoess` type aliases directly - each already builds without needing `.adapter(...)`).
 
+**Monorepo:**
+
+- `make loess-rs-dev`/`make fastLoess-dev` now also run `cargo test --doc` for each tested feature set; doctests in `.rs` source files were previously never checked by any `make` target (only markdown-doc code snippets are covered by `dev/verify_snippets.py`).
+
 **Go:**
 
 - Fixed the Go module's import path missing the required `/v2` major version suffix (Go's "major version suffix" rule: any module tagged `v2.0.0` or higher must end its module path with `/vN`, or the Go toolchain silently ignores all such tags and resolves only pseudo-versions). Changed `github.com/thisisamirv/loess-project/bindings/go/fastloess` to `.../fastloess/v2` in `go.mod`, all doc snippets, the doc-snippet runner, and the test module. This is a **breaking change** for any code importing the old unsuffixed path; existing tags were affected and require a new release for pkg.go.dev to resolve real (non-pseudo) versions correctly.

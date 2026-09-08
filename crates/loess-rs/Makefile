@@ -78,10 +78,12 @@ dev:
 	@echo "3. Testing..."
 	@echo "=============================================================================="
 	@echo "Testing (no-default-features)..."
-	@cargo test -q -p $(LOESS_PKG) --test $(LOESS_PKG) --no-default-features
+	@cargo test -q -p $(LOESS_PKG) --tests --no-default-features
+	@cargo test -q -p $(LOESS_PKG) --doc --no-default-features
 	@for feature in $(LOESS_FEATURES); do \
 		echo "Testing ($$feature)..."; \
-		cargo test -q -p $(LOESS_PKG) --test $(LOESS_PKG) --features $$feature || exit 1; \
+		cargo test -q -p $(LOESS_PKG) --tests --features $$feature || exit 1; \
+		cargo test -q -p $(LOESS_PKG) --doc --features $$feature || exit 1; \
 	done
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (rust)..."
@@ -95,7 +97,7 @@ ensure-llvm-cov:
 
 coverage: ensure-llvm-cov
 	@echo "Running $(LOESS_PKG) coverage..."
-	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(LOESS_PKG) --test $(LOESS_PKG) --all-features \
+	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(LOESS_PKG) --tests --all-features \
 		--ignore-filename-regex 'crates[/\\]fastLoess[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
 
 clean:

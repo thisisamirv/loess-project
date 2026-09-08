@@ -69,10 +69,12 @@ dev:
 	@echo "3. Testing..."
 	@echo "=============================================================================="
 	@echo "Testing (no-default-features)..."
-	@cargo test -q -p $(FASTLOESS_PKG) --test $(FASTLOESS_PKG) --no-default-features
+	@cargo test -q -p $(FASTLOESS_PKG) --tests --no-default-features
+	@cargo test -q -p $(FASTLOESS_PKG) --doc --no-default-features
 	@for feature in $(FASTLOESS_FEATURES); do \
 		echo "Testing ($$feature)..."; \
-		cargo test -q -p $(FASTLOESS_PKG) --test $(FASTLOESS_PKG) --features $$feature || exit 1; \
+		cargo test -q -p $(FASTLOESS_PKG) --tests --features $$feature || exit 1; \
+		cargo test -q -p $(FASTLOESS_PKG) --doc --features $$feature || exit 1; \
 	done
 	@echo "=============================================================================="
 	@echo "=============================================================================="
@@ -87,7 +89,7 @@ ensure-llvm-cov:
 
 coverage: ensure-llvm-cov
 	@echo "Running $(FASTLOESS_PKG) coverage..."
-	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(FASTLOESS_PKG) --test $(FASTLOESS_PKG) --all-features \
+	@LLVM_COV=llvm-cov LLVM_PROFDATA=llvm-profdata cargo llvm-cov -p $(FASTLOESS_PKG) --tests --all-features \
 		--ignore-filename-regex 'crates[/\\]loess-rs[/\\]|bindings[/\\]|benchmarks[/\\]|examples[/\\]|tests[/\\]'
 
 clean:

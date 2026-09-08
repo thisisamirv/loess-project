@@ -39,7 +39,6 @@ pub use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
 pub use crate::algorithms::robustness::RobustnessMethod;
 pub use crate::engine::executor::SurfaceMode;
 pub use crate::engine::output::LoessResult;
-pub use crate::engine::predict::{ExtrapolationPolicy, PredictOptions, PredictOutput};
 pub use crate::engine::validator::MissingPolicy;
 pub use crate::math::boundary::BoundaryPolicy;
 pub use crate::math::distance::DistanceMetric;
