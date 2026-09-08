@@ -151,6 +151,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         new_x: &[T],
         options: &PredictOptions<T>,
     ) -> Result<PredictOutput<T>, LoessError> {
+        if let Some(e) = &options.pending_error {
+            return Err(e.clone());
+        }
         let state = self
             .predict_state
             .as_ref()

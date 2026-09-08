@@ -92,6 +92,7 @@ impl_into_enum_for!(SurfaceMode);
 impl_into_enum_for!(UpdateMode);
 impl_into_enum_for!(WeightFunction);
 impl_into_enum_for!(ZeroWeightFallback);
+impl_into_enum_for!(ExtrapolationPolicy);
 
 // IntoEnum for DistanceMetric<T>.
 //

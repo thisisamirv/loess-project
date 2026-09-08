@@ -96,6 +96,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `cv_fractions(...)` | `Vec<f64>` | disabled | Candidate fractions to evaluate during cross-validation |
 | `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights |
+| `retain_model(bool)` | `bool` | `false` | Retain training data, enabling `predict()` on the result |
 
 ## Options
 
@@ -288,6 +289,12 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 Per-observation case weights. Must have the same length as `y`; all values must be non-negative.
 
+### retain_model
+
+*See: [Predict](crate::doc::guide::predict)*
+
+Retains the fitted model's training data, enabling `LoessResult::predict(new_x, options)` to evaluate the fit at out-of-sample query points not in the training set. Off by default (no extra memory/clone cost unless requested).
+
 ## Result Structure
 
 ### `LoessResult<T>`
@@ -328,6 +335,12 @@ Per-observation case weights. Must have the same length as `y`; all values must 
 | `effective_df` | `Option<T>` | Effective degrees of freedom |
 | `aic` | `Option<T>` | AIC |
 | `aicc` | `Option<T>` | AICc |
+
+### `predict(new_x, &options) -> PredictOutput<T>`
+
+*See: [Predict](crate::doc::guide::predict)*
+
+Evaluates the fitted model at out-of-sample query points (flattened, `dimensions` values per point). Requires `.retain_model(true)` on the builder before `fit()`, otherwise returns `LoessError::PredictionUnavailable`.
 
 ## Example
 
