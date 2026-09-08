@@ -546,6 +546,7 @@ where
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     })
 }
 

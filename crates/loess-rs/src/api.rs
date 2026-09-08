@@ -38,6 +38,7 @@ pub use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
 pub use crate::algorithms::robustness::RobustnessMethod;
 pub use crate::engine::executor::SurfaceMode;
 pub use crate::engine::output::LoessResult;
+pub use crate::engine::predict::{ExtrapolationPolicy, PredictOptions, PredictOutput};
 pub use crate::engine::validator::MissingPolicy;
 pub use crate::math::boundary::BoundaryPolicy;
 pub use crate::math::distance::DistanceMetric;
@@ -239,6 +240,10 @@ pub struct LoessBuilder<
     // Must have the same length as `y`. Only used in Batch mode.
     pub custom_weights: Option<Vec<T>>,
 
+    // Retain the fitted model's training data/weights, enabling `LoessResult::predict()`.
+    // Off by default (no extra memory/clone cost unless requested). Only used in Batch mode.
+    pub retain_model: Option<bool>,
+
     // CV method string for string-based cross-validation API ("kfold" or "loocv").
     pub cv_method_str: Option<String>,
 
@@ -330,6 +335,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             interpolation_vertices: None,
             boundary_degree_fallback: None,
             custom_weights: None,
+            retain_model: None,
             cv_method_str: None,
             cv_k_val: DEFAULT_CV_K_FOLDS,
             weighted_metric_weights: None,
@@ -701,6 +707,15 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self
     }
 
+    // Retain the fitted model's (boundary-padded) training data, robustness weights, and
+    // normalization scales, enabling `LoessResult::predict(new_x)` to evaluate the local
+    // polynomial fit at arbitrary out-of-sample query points. Off by default (no extra
+    // memory/clone cost unless requested). Only applied in Batch mode.
+    pub fn retain_model(mut self, retain: bool) -> Self {
+        self.retain_model = Some(retain);
+        self
+    }
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -909,6 +924,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         }
         if let Some(uw) = builder.custom_weights {
             result.custom_weights = Some(uw);
+        }
+        if let Some(rm) = builder.retain_model {
+            result.retain_model = rm;
         }
 
         // ++++++++++++++++++++++++++++++++++++++

@@ -1,3 +1,4 @@
+#![cfg(feature = "dev")]
 use loess_rs::internals::api::{Batch, Online, Streaming};
 use loess_rs::prelude::*;
 

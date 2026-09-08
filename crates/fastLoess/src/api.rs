@@ -215,6 +215,10 @@ impl Loess {
         self.0 = self.0.custom_weights(w);
         self
     }
+    pub fn retain_model(mut self, retain: bool) -> Self {
+        self.0 = self.0.retain_model(retain);
+        self
+    }
     pub fn parallel(mut self, p: bool) -> Self {
         self.0 = self.0.parallel(p);
         self

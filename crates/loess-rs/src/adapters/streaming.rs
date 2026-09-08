@@ -342,6 +342,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             cell: self.config.cell,
             boundary_degree_fallback: self.config.boundary_degree_fallback,
             custom_weights: None,
+            retain_model: false,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++
@@ -495,6 +496,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             delta2: None,
             residual_scale: None,
             leverage: None,
+            predict_state: None,
         })
     }
 
@@ -524,6 +526,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 delta2: None,
                 residual_scale: None,
                 leverage: None,
+                predict_state: None,
             });
         }
 
@@ -575,6 +578,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             delta2: None,
             residual_scale: None,
             leverage: None,
+            predict_state: None,
         };
 
         // Clear buffers

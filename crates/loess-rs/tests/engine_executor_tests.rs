@@ -156,6 +156,7 @@ fn test_config_custom() {
         cell: Some(0.2),
         boundary_degree_fallback: true,
         custom_weights: None,
+        retain_model: false,
     };
 
     assert_eq!(config.fraction, Some(0.5));
@@ -187,6 +188,7 @@ fn test_executor_output_basic() {
         cv_scores: None,
         robustness_weights: vec![1.0, 1.0, 1.0],
         leverage: None,
+        predict_state: None,
     };
 
     assert_eq!(output.smoothed, vec![1.0, 2.0, 3.0]);
@@ -209,6 +211,7 @@ fn test_executor_output_complete() {
         cv_scores: Some(vec![0.1, 0.2, 0.3]),
         robustness_weights: vec![1.0, 1.0, 1.0],
         leverage: None,
+        predict_state: None,
     };
 
     assert_eq!(output.smoothed.len(), 3);
@@ -231,6 +234,7 @@ fn test_executor_output_empty() {
         cv_scores: None,
         robustness_weights: vec![],
         leverage: None,
+        predict_state: None,
     };
 
     assert!(output.smoothed.is_empty());
@@ -362,6 +366,7 @@ fn test_config_f32() {
         cell: Some(0.2),
         boundary_degree_fallback: true,
         custom_weights: None,
+        retain_model: false,
     };
 
     assert_eq!(config.fraction, Some(0.5f32));
@@ -380,6 +385,7 @@ fn test_output_f32() {
         cv_scores: None,
         robustness_weights: vec![1.0f32, 1.0f32, 1.0f32],
         leverage: None,
+        predict_state: None,
     };
 
     assert_eq!(output.smoothed.len(), 3);
@@ -427,6 +433,7 @@ fn test_executor_convergence_zero_tolerance() {
         cell: Some(0.2),
         boundary_degree_fallback: true,
         custom_weights: None,
+        retain_model: false,
     };
 
     let output = LoessExecutor::run_with_config(&x, &y, config);
@@ -509,6 +516,7 @@ fn test_output_clone() {
         cv_scores: Some(vec![0.1, 0.2]),
         robustness_weights: vec![1.0, 1.0, 1.0],
         leverage: None,
+        predict_state: None,
     };
 
     let output2 = output1.clone();

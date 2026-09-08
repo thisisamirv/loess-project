@@ -33,6 +33,7 @@ use crate::algorithms::regression::{
 };
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::defaults::*;
+use crate::engine::predict::PredictState;
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::math::boundary::BoundaryPolicy;
@@ -233,6 +234,9 @@ pub struct ExecutorOutput<T: FloatLinalg> {
     // Leverage values (hat matrix diagonal) for each point.
     // Only computed when intervals are requested.
     pub leverage: Option<Vec<T>>,
+
+    // Retained fitted-model state for `LoessResult::predict()`, if `retain_model` was set.
+    pub predict_state: Option<PredictState<T>>,
 }
 
 // Configuration for LOESS execution.
@@ -305,6 +309,10 @@ pub struct LoessConfig<T: FloatLinalg + SolverLinalg> {
     // Must have the same length as `y`. Only supported for Batch mode.
     pub custom_weights: Option<Vec<T>>,
 
+    // Retain the fitted model's training data/weights, enabling `LoessResult::predict()`.
+    // Off by default (no extra memory/clone cost unless requested). Only supported for Batch mode.
+    pub retain_model: bool,
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -366,6 +374,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Defau
             cell: None,
             boundary_degree_fallback: DEFAULT_BOUNDARY_DEGREE_FALLBACK,
             custom_weights: None,
+            retain_model: false,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
@@ -425,6 +434,9 @@ pub struct LoessExecutor<T: FloatLinalg + SolverLinalg> {
 
     // User-defined case weights (one per observation). See `LoessConfig::custom_weights`.
     pub custom_weights: Option<Vec<T>>,
+
+    // Retain the fitted model's training data/weights, enabling `LoessResult::predict()`.
+    pub retain_model: bool,
 
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
@@ -491,6 +503,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             cell: None,
             boundary_degree_fallback: DEFAULT_BOUNDARY_DEGREE_FALLBACK,
             custom_weights: None,
+            retain_model: false,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
@@ -520,6 +533,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             .interpolation_vertices(config.interpolation_vertices)
             .cell(config.cell)
             .boundary_degree_fallback(config.boundary_degree_fallback)
+            .retain_model(config.retain_model)
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++
@@ -624,6 +638,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // Set User-defined case weights (one per observation).
     pub fn custom_weights(mut self, weights: Vec<T>) -> Self {
         self.custom_weights = Some(weights);
+        self
+    }
+
+    // Set whether to retain the fitted model's training data, enabling `LoessResult::predict()`.
+    pub fn retain_model(mut self, retain: bool) -> Self {
+        self.retain_model = retain;
         self
     }
 
@@ -1340,6 +1360,46 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             workspace.executor_buffer.robustness_weights[..n].to_vec()
         };
 
+        let predict_state = self.retain_model.then(|| {
+            let mut train_min = x[..dims].to_vec();
+            let mut train_max = x[..dims].to_vec();
+            for i in 1..n {
+                for d in 0..dims {
+                    let val = x[i * dims + d];
+                    if val < train_min[d] {
+                        train_min[d] = val;
+                    }
+                    if val > train_max[d] {
+                        train_max[d] = val;
+                    }
+                }
+            }
+            let residuals: Vec<T> = y[..n]
+                .iter()
+                .zip(y_smooth[..n].iter())
+                .map(|(&yi, &fi)| yi - fi)
+                .collect();
+            let residual_sd = IntervalMethod::calculate_residual_sd(&residuals, None);
+
+            PredictState {
+                x: ax.clone(),
+                dimensions: dims,
+                y: ay.clone(),
+                robustness_weights: workspace.executor_buffer.robustness_weights.to_vec(),
+                window_size,
+                weight_function: self.weight_function,
+                zero_weight_fallback: self.zero_weight_fallback,
+                polynomial_degree: self.polynomial_degree,
+                distance_metric: self.distance_metric.clone(),
+                scales: scales_local.to_vec(),
+                custom_weights: custom_weights_aug.clone(),
+                residual_sd,
+                train_min,
+                train_max,
+                custom_predict_pass: None,
+            }
+        });
+
         ExecutorOutput {
             smoothed: y_smooth,
             std_errors: se,
@@ -1350,6 +1410,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             cv_scores: None,
             robustness_weights: final_robustness_weights,
             leverage: leverage_values,
+            predict_state,
         }
     }
 

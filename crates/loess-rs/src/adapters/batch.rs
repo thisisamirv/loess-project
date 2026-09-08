@@ -163,6 +163,9 @@ pub struct BatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
 
     // User-defined case weights (one per observation).
     pub custom_weights: Option<Vec<T>>,
+
+    // Retain the fitted model's training data/weights, enabling `LoessResult::predict()`.
+    pub retain_model: bool,
 }
 
 impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Default
@@ -215,6 +218,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
             parallel: None,
             backend: None,
             custom_weights: None,
+            retain_model: false,
         }
     }
 
@@ -340,6 +344,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             custom_kdtree_builder: self.config.custom_kdtree_builder,
             parallel: self.config.parallel.unwrap_or(false),
             backend: self.config.backend,
+            retain_model: self.config.retain_model,
         };
 
         // Execute unified LOESS (KD-Tree handles unsorted data)
@@ -350,6 +355,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         let iterations_used = result.iterations;
         let fraction_used = result.used_fraction;
         let cv_scores = result.cv_scores;
+        let predict_state = result.predict_state;
 
         // Calculate residuals (data is in original order, no unsorting needed)
         let residuals: Vec<T> = y
@@ -494,6 +500,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             delta2,
             residual_scale,
             leverage: leverage_out,
+            predict_state,
         })
     }
 }

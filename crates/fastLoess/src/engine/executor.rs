@@ -23,6 +23,10 @@ use loess_rs::internals::algorithms::regression::{
     PolynomialDegree, SolverLinalg, ZeroWeightFallback,
 };
 
+use loess_rs::internals::engine::executor::LoessDistanceCalculator as ExecutorLoessDistanceCalculator;
+use loess_rs::internals::engine::predict::{
+    PredictOptions, PredictState, RawPredictValues, predict_one_full,
+};
 use loess_rs::internals::math::distance::{DistanceLinalg, DistanceMetric};
 use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
@@ -357,4 +361,75 @@ pub fn vertex_pass_parallel<T>(
             output_neighborhoods.push(cached);
         }
     }
+}
+
+// Evaluate a retained Batch model at a batch of out-of-sample query points in parallel.
+//
+// This function is designed to be injected via `PredictState::custom_predict_pass`.
+// It parallelizes the per-point local fits using rayon, delegating the actual local
+// polynomial fit / gradient / leverage math to `predict_one_full` (shared with the
+// serial fallback in loess-rs) so both paths stay in sync.
+pub fn predict_pass_parallel<T>(
+    state: &PredictState<T>,
+    new_x: &[T],
+    options: &PredictOptions<T>,
+    need_se: bool,
+) -> RawPredictValues<T>
+where
+    T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Sync + 'static,
+{
+    let dims = state.dimensions.max(1);
+    let n_query = new_x.len() / dims;
+
+    let kdtree = KDTree::new(&state.x, state.dimensions);
+    let dist_calc = ExecutorLoessDistanceCalculator {
+        metric: state.distance_metric.clone(),
+        scales: &state.scales,
+    };
+
+    let results: Vec<(T, Option<Vec<T>>, Option<T>)> = (0..n_query)
+        .into_par_iter()
+        .map_init(
+            || {
+                (
+                    NeighborhoodSearchBuffer::<NodeDistance<T>>::new(state.window_size),
+                    Neighborhood::<T>::new(),
+                )
+            },
+            |(search_buffer, neighborhood), i| {
+                let query_point = &new_x[i * dims..(i + 1) * dims];
+                predict_one_full(
+                    state,
+                    query_point,
+                    &kdtree,
+                    &dist_calc,
+                    search_buffer,
+                    neighborhood,
+                    options,
+                    need_se,
+                )
+            },
+        )
+        .collect::<Result<Vec<_>, _>>()?;
+
+    let mut y = Vec::with_capacity(n_query);
+    let mut derivative = options
+        .return_derivative
+        .then(|| Vec::with_capacity(n_query * dims));
+    let mut se = need_se.then(|| Vec::with_capacity(n_query));
+
+    for (yi, grad, sei) in results {
+        y.push(yi);
+        if let Some(d) = derivative.as_mut() {
+            match grad {
+                Some(g) => d.extend_from_slice(&g),
+                None => d.extend(core::iter::repeat_n(T::zero(), dims)),
+            }
+        }
+        if let Some(s) = se.as_mut() {
+            s.push(sei.unwrap_or(T::zero()));
+        }
+    }
+
+    Ok((y, derivative, se))
 }

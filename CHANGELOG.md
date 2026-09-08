@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+**loess-rs:**
+
+- Added out-of-sample prediction to the Batch adapter: `.retain_model(true)` on the builder retains the fitted model's (boundary-padded) training data, final robustness weights, residual SD, and normalization scales, enabling a new `LoessResult::predict(new_x, options)` method that evaluates the local polynomial fit at arbitrary out-of-sample query points not in the training set (like R's `predict.loess(model, newdata)`). Supports the full nD / polynomial-degree / distance-metric generality of the Batch adapter, reusing the same `RegressionContext` and `KDTree` neighbor search used during fitting; `new_x` is flattened (`dimensions` values per query point). `PredictOptions` controls `return_se`/`confidence_level`/`prediction_level` (same z-score convention as `fit()`'s existing intervals, using per-point leverage from `RegressionContext::fit()` scaled by the global MAD-based residual SD), `return_derivative` (the local fit's gradient — `dimensions` values per query point — via `RegressionContext::fit_with_coefficients()`), and `extrapolation` (`Clamp` default: clamps each out-of-range dimension to its training boundary; `Linear`: first-order Taylor expansion from that boundary point's own gradient; `Error`: fails with the new `LoessError::PredictOutOfRange` if any dimension falls outside the training range). Returns a `PredictOutput` struct and `LoessError::PredictionUnavailable` if called without `.retain_model(true)`. Off by default (no extra memory/clone cost unless requested).
+
+**fastLoess:**
+
+- Added a Rayon-parallel predict pass for `LoessResult::predict()`, wired into the Batch adapter's `fit()` alongside the existing parallel smooth/CV/interval/vertex passes; computes the same SE/derivative/extrapolation options in parallel by reusing loess-rs's own `predict_one_full()` per query point.
+
 **Monorepo:**
 
 - Added Linux musl (Alpine) release binaries alongside the existing glibc ones: Python (`release-pypi.yml` now publishes `musllinux_1_2` wheels for x86_64/aarch64), C++ (`release-cpp.yml` builds natively inside `alpine:latest` containers on `ubuntu-latest`/`ubuntu-24.04-arm`, publishing `libfastloess-linux-{x64,arm64}-musl.so`), Go (`release-go.yml`, same container approach, publishing `libfastloess_go-linux-{x64,arm64}-musl.a`), and Julia (removed the `libc(p) != "musl"` filter from `dev/build_tarballs_julia.jl`, letting Yggdrasil build musl JLLs again). GPU wheels/libraries (`release-gpu.yml`) are not covered by this change. Java is intentionally left as-is (no prebuilt natives for any platform yet).

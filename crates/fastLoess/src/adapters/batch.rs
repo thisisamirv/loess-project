@@ -8,7 +8,7 @@
 // @srrstats {G3.0} Rayon-based parallel execution for CPU-bound workloads.
 
 // Imports
-use crate::engine::executor::{smooth_pass_parallel, vertex_pass_parallel};
+use crate::engine::executor::{predict_pass_parallel, smooth_pass_parallel, vertex_pass_parallel};
 use crate::evaluation::cv::cv_pass_parallel;
 use crate::evaluation::intervals::interval_pass_parallel;
 
@@ -153,6 +153,8 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
 
         // Configure the base builder with parallel callback if enabled
         let mut builder = self.config.base;
+        let use_parallel = matches!(builder.backend.unwrap_or(Backend::CPU), Backend::CPU)
+            && builder.parallel.unwrap_or(true);
 
         match builder.backend.unwrap_or(Backend::CPU) {
             Backend::CPU => {
@@ -168,6 +170,14 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
 
         // Delegate execution to the base implementation
         let processor = builder.build()?;
-        processor.fit(x_slice, y_slice)
+        let mut result = processor.fit(x_slice, y_slice)?;
+
+        // Inject the Rayon-parallel predict pass into the retained model state (if any),
+        // so `LoessResult::predict()` also runs in parallel when `.retain_model(true)` was set.
+        if use_parallel && let Some(state) = result.predict_state.as_mut() {
+            state.custom_predict_pass = Some(predict_pass_parallel);
+        }
+
+        Ok(result)
     }
 }

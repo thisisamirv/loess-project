@@ -140,6 +140,23 @@ pub enum LoessError {
     //
     // Collects all parse errors from string builder methods and reports them together at `build()`.
     ParseErrors(Vec<LoessError>),
+
+    // `LoessResult::predict()` was called without `.retain_model(true)` on the builder
+    // (Batch adapter only), so no fitted-model state was retained to evaluate against.
+    PredictionUnavailable,
+
+    // A `predict()` query point fell outside the training data's per-dimension range
+    // while `ExtrapolationPolicy::Error` was in effect.
+    PredictOutOfRange {
+        // Index of the out-of-range predictor dimension.
+        dimension: usize,
+        // The out-of-range query value.
+        query: f64,
+        // Minimum of the training range for this dimension.
+        min: f64,
+        // Maximum of the training range for this dimension.
+        max: f64,
+    },
 }
 
 impl Display for LoessError {
@@ -260,6 +277,20 @@ impl Display for LoessError {
                 }
                 Ok(())
             }
+            Self::PredictionUnavailable => write!(
+                f,
+                "predict() requires .retain_model(true) on the Batch builder before build()"
+            ),
+            Self::PredictOutOfRange {
+                dimension,
+                query,
+                min,
+                max,
+            } => write!(
+                f,
+                "predict() query point is out of range on dimension {dimension}: {query} \
+                 not in [{min}, {max}] (ExtrapolationPolicy::Error)"
+            ),
         }
     }
 }

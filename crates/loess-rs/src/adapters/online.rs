@@ -378,6 +378,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     cell: self.config.cell,
                     boundary_degree_fallback: self.config.boundary_degree_fallback,
                     custom_weights: None,
+                    retain_model: false,
                     // ++++++++++++++++++++++++++++++++++++++
                     // +               DEV                  +
                     // ++++++++++++++++++++++++++++++++++++++
@@ -439,6 +440,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     cell: self.config.cell,
                     boundary_degree_fallback: self.config.boundary_degree_fallback,
                     custom_weights: None,
+                    retain_model: false,
                     // ++++++++++++++++++++++++++++++++++++++
                     // +               DEV                  +
                     // ++++++++++++++++++++++++++++++++++++++

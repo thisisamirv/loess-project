@@ -101,6 +101,7 @@ fn test_has_confidence_intervals_true() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(
@@ -137,6 +138,7 @@ fn test_has_confidence_intervals_false() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(
@@ -173,6 +175,7 @@ fn test_has_prediction_intervals_true() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(
@@ -209,6 +212,7 @@ fn test_has_prediction_intervals_false() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(
@@ -245,6 +249,7 @@ fn test_has_cv_scores_true() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(lr.has_cv_scores(), "Should have CV scores");
@@ -278,6 +283,7 @@ fn test_has_cv_scores_false() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(!lr.has_cv_scores(), "Should not have CV scores");
@@ -316,6 +322,7 @@ fn test_smoothed_accessor() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert_eq!(lr.smoothed(), &y_vals[..]);
@@ -349,6 +356,7 @@ fn test_best_cv_score_present() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     let best = lr.best_cv_score();
@@ -384,6 +392,7 @@ fn test_best_cv_score_none() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(lr.best_cv_score().is_none());
@@ -417,6 +426,7 @@ fn test_best_cv_score_single() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     let best = lr.best_cv_score();
@@ -456,6 +466,7 @@ fn test_confidence_width() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     let widths = lr.confidence_width().expect("Should have widths");
@@ -493,6 +504,7 @@ fn test_confidence_width_none() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(lr.confidence_width().is_none());
@@ -526,6 +538,7 @@ fn test_prediction_width() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     let widths = lr.prediction_width().expect("Should have widths");
@@ -563,6 +576,7 @@ fn test_prediction_width_none() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(lr.prediction_width().is_none());
@@ -596,6 +610,7 @@ fn test_prediction_wider_than_confidence() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     let conf_w = lr.confidence_width().unwrap();
@@ -638,6 +653,7 @@ fn test_minimal_result() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(!lr.has_confidence_intervals());
@@ -684,6 +700,7 @@ fn test_maximal_result() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(lr.has_confidence_intervals());
@@ -722,6 +739,7 @@ fn test_empty_cv_scores() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     assert!(lr.has_cv_scores());
@@ -760,6 +778,7 @@ fn test_display_basic() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     let output = format!("{}", lr);
@@ -800,6 +819,7 @@ fn test_best_cv_score_with_nan() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     let best = result.best_cv_score();
@@ -833,6 +853,7 @@ fn test_best_cv_score_all_equal() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     let best = result.best_cv_score();
@@ -865,6 +886,7 @@ fn test_display_with_empty_vectors() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     let display_str = format!("{}", result);
@@ -907,6 +929,7 @@ fn test_display_with_all_fields() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     let output = format!("{}", lr);
@@ -953,6 +976,7 @@ fn test_display_large_dataset() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        predict_state: None,
     };
 
     let output = format!("{}", lr);

@@ -15,7 +15,6 @@ The Batch adapter already covers a comprehensive set of options (polynomial degr
 
 **Batch:**
 
-- **Expose out-of-sample prediction**: `LoessExecutor::predict()` ([executor.rs](crates/loess-rs/src/engine/executor.rs)) already implements evaluating the fitted surface at arbitrary new points via KD-tree neighbor search + local regression, and is used internally by cross-validation — but there's no public `predict(new_x)` method on `Loess`/`BatchLoess` after `fit()`. Retaining the fitted KD-tree/training state and exposing it (like R's `predict.loess(model, newdata)`) would reuse most of the existing internals.
 - **Expose per-point local gradient**: each local polynomial fit (degree ≥ linear) already computes per-dimension coefficients internally (`fit_with_coefficients`), but only the fitted `y` is kept. A `return_gradient` option exposing the per-dimension partial derivatives at each point would enable sensitivity/rate-of-change analysis in nD with minimal new computation.
 - **Adaptive/automatic fraction selection**: CV-based bandwidth selection currently requires hand-picking a `cv_fractions` grid. A continuous search (e.g. golden-section over `(0, 1]` minimizing CV error or AICc) would remove the hardest tuning decision.
 - **Automatic `cell`/`interpolation_vertices` tuning**: these interpolation-grid knobs currently must be chosen manually; heuristics based on `dimensions`/`n`/`fraction` (similar to R's `loess` internals) would remove another hard-to-tune, nD-specific parameter.

@@ -168,6 +168,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
                 delta2: None,
                 residual_scale: None,
                 leverage: None,
+                predict_state: None,
             })
         }
     }

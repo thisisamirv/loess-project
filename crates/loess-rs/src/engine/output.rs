@@ -93,6 +93,10 @@ pub struct LoessResult<T> {
     // Leverage (hat matrix diagonal) at each point.
     // l_ii measures how much influence point i has on its own fitted value.
     pub leverage: Option<Vec<T>>,
+
+    // Retained fitted-model state enabling `predict()`, if `.retain_model(true)` was set
+    // on the builder (Batch adapter only).
+    pub predict_state: Option<crate::engine::predict::PredictState<T>>,
 }
 
 impl<T: Float> LoessResult<T> {
@@ -119,6 +123,37 @@ impl<T: Float> LoessResult<T> {
                 .copied()
                 .min_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
         })
+    }
+}
+
+impl<
+    T: crate::math::linalg::FloatLinalg
+        + crate::math::distance::DistanceLinalg
+        + crate::algorithms::regression::SolverLinalg
+        + Debug
+        + Send
+        + Sync,
+> LoessResult<T>
+{
+    // Evaluate the fitted Batch model at arbitrary out-of-sample query points (flattened,
+    // `dimensions` values per point), per `options`. Returns a `PredictOutput` with one
+    // entry per query point.
+    //
+    // Requires `.retain_model(true)` on the builder (Batch adapter only); returns
+    // `LoessError::PredictionUnavailable` otherwise.
+    pub fn predict(
+        &self,
+        new_x: &[T],
+        options: &crate::engine::predict::PredictOptions<T>,
+    ) -> core::result::Result<
+        crate::engine::predict::PredictOutput<T>,
+        crate::primitives::errors::LoessError,
+    > {
+        let state = self
+            .predict_state
+            .as_ref()
+            .ok_or(crate::primitives::errors::LoessError::PredictionUnavailable)?;
+        crate::engine::predict::predict_batch(state, new_x, options)
     }
 }
 
