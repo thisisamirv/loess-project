@@ -17,6 +17,8 @@ use loess_rs::internals::math::neighborhood::KDTree;
 use num_traits::Float;
 
 // External dependencies
+use core::cmp::Ordering::Equal;
+use core::ptr::copy_nonoverlapping;
 use rayon::join;
 
 // Parallel KD-tree builder using Rayon.
@@ -77,9 +79,7 @@ fn build_recursive_parallel<T>(
     indices.select_nth_unstable_by(mid, |&a, &b| {
         let val_a = points[a * dimensions + axis];
         let val_b = points[b * dimensions + axis];
-        val_a
-            .partial_cmp(&val_b)
-            .unwrap_or(core::cmp::Ordering::Equal)
+        val_a.partial_cmp(&val_b).unwrap_or(Equal)
     });
 
     // Write to the current node and permuted points
@@ -93,7 +93,7 @@ fn build_recursive_parallel<T>(
         let src_offset = indices[mid] * dimensions;
         let dest_ptr = (permuted_ptr as *mut T).add(dest_offset);
         let src_ptr = points.as_ptr().add(src_offset);
-        std::ptr::copy_nonoverlapping(src_ptr, dest_ptr, dimensions);
+        copy_nonoverlapping(src_ptr, dest_ptr, dimensions);
     }
 
     let (left_indices, right_indices_with_mid) = indices.split_at_mut(mid);
@@ -170,9 +170,7 @@ fn build_recursive_sequential<T>(
     indices.select_nth_unstable_by(mid, |&a, &b| {
         let val_a = points[a * dimensions + axis];
         let val_b = points[b * dimensions + axis];
-        val_a
-            .partial_cmp(&val_b)
-            .unwrap_or(core::cmp::Ordering::Equal)
+        val_a.partial_cmp(&val_b).unwrap_or(Equal)
     });
 
     unsafe {
@@ -184,7 +182,7 @@ fn build_recursive_sequential<T>(
         let src_offset = indices[mid] * dimensions;
         let dest_ptr = (permuted_ptr as *mut T).add(dest_offset);
         let src_ptr = points.as_ptr().add(src_offset);
-        std::ptr::copy_nonoverlapping(src_ptr, dest_ptr, dimensions);
+        copy_nonoverlapping(src_ptr, dest_ptr, dimensions);
     }
 
     let (left_indices, right_indices_with_mid) = indices.split_at_mut(mid);

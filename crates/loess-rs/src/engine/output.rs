@@ -12,13 +12,16 @@ use std::vec::Vec;
 
 // External dependencies
 use core::cmp::Ordering::Equal;
-use core::fmt::{Debug, Display, Formatter, Result};
+use core::fmt::{Debug, Display, Formatter};
 use num_traits::Float;
 
 // Internal dependencies
-use crate::algorithms::regression::PolynomialDegree;
+use crate::algorithms::regression::{PolynomialDegree, SolverLinalg};
+use crate::engine::predict::{PredictOptions, PredictOutput, PredictState, predict_batch};
 use crate::evaluation::diagnostics::Diagnostics;
-use crate::math::distance::DistanceMetric;
+use crate::math::distance::{DistanceLinalg, DistanceMetric};
+use crate::math::linalg::FloatLinalg;
+use crate::primitives::errors::LoessError;
 
 // Comprehensive LOESS output containing smoothed values and diagnostics.
 #[derive(Debug, Clone, PartialEq)]
@@ -96,7 +99,7 @@ pub struct LoessResult<T> {
 
     // Retained fitted-model state enabling `predict()`, if `.retain_model(true)` was set
     // on the builder (Batch adapter only).
-    pub predict_state: Option<crate::engine::predict::PredictState<T>>,
+    pub predict_state: Option<PredictState<T>>,
 }
 
 impl<T: Float> LoessResult<T> {
@@ -126,15 +129,7 @@ impl<T: Float> LoessResult<T> {
     }
 }
 
-impl<
-    T: crate::math::linalg::FloatLinalg
-        + crate::math::distance::DistanceLinalg
-        + crate::algorithms::regression::SolverLinalg
-        + Debug
-        + Send
-        + Sync,
-> LoessResult<T>
-{
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> LoessResult<T> {
     // Evaluate the fitted Batch model at arbitrary out-of-sample query points (flattened,
     // `dimensions` values per point), per `options`. Returns a `PredictOutput` with one
     // entry per query point.
@@ -144,21 +139,18 @@ impl<
     pub fn predict(
         &self,
         new_x: &[T],
-        options: &crate::engine::predict::PredictOptions<T>,
-    ) -> core::result::Result<
-        crate::engine::predict::PredictOutput<T>,
-        crate::primitives::errors::LoessError,
-    > {
+        options: &PredictOptions<T>,
+    ) -> Result<PredictOutput<T>, LoessError> {
         let state = self
             .predict_state
             .as_ref()
-            .ok_or(crate::primitives::errors::LoessError::PredictionUnavailable)?;
-        crate::engine::predict::predict_batch(state, new_x, options)
+            .ok_or(LoessError::PredictionUnavailable)?;
+        predict_batch(state, new_x, options)
     }
 }
 
 impl<T: Float + Display + Debug> Display for LoessResult<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "Summary:")?;
         let n = self.y.len();
         writeln!(f, "  Data points: {}", n)?;

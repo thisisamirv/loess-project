@@ -16,6 +16,7 @@
 //! 5. **Boundary Conditions** - Edge cases and invalid inputs
 
 use approx::assert_relative_eq;
+use core::fmt::Debug;
 use num_traits::Float;
 
 use loess_rs::internals::algorithms::regression::{
@@ -48,7 +49,7 @@ fn compute_weighted_sum<T: Float>(values: &[T], weights: &[T], left: usize, righ
 }
 
 #[allow(clippy::too_many_arguments)]
-fn fit_1d_helper<T: FloatLinalg + std::fmt::Debug + SolverLinalg>(
+fn fit_1d_helper<T: FloatLinalg + Debug + SolverLinalg>(
     x: &[T],
     y: &[T],
     idx: usize,
@@ -104,7 +105,7 @@ fn fit_1d_helper<T: FloatLinalg + std::fmt::Debug + SolverLinalg>(
     ctx.fit().map(|(v, _)| v)
 }
 
-fn local_wls_helper<T: FloatLinalg + std::fmt::Debug + SolverLinalg>(
+fn local_wls_helper<T: FloatLinalg + Debug + SolverLinalg>(
     x: &[T],
     y: &[T],
     weights: &[T],

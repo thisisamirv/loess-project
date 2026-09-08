@@ -11,6 +11,7 @@ use std::ffi::CString;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::ptr;
+use std::slice::from_raw_parts;
 
 use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
@@ -46,16 +47,12 @@ fn error_result_from(err: shared_parse::BindingError) -> CppLoessResult {
 }
 
 #[allow(clippy::result_large_err)]
-fn map_invalid_arg_result<T, E: ToString>(
-    result: std::result::Result<T, E>,
-) -> std::result::Result<T, CppLoessResult> {
+fn map_invalid_arg_result<T, E: ToString>(result: Result<T, E>) -> Result<T, CppLoessResult> {
     shared_parse::map_invalid_arg(result).map_err(error_result_from)
 }
 
 #[allow(clippy::result_large_err)]
-fn map_runtime_result<T, E: ToString>(
-    result: std::result::Result<T, E>,
-) -> std::result::Result<T, CppLoessResult> {
+fn map_runtime_result<T, E: ToString>(result: Result<T, E>) -> Result<T, CppLoessResult> {
     shared_parse::map_runtime(result).map_err(error_result_from)
 }
 
@@ -671,8 +668,8 @@ pub unsafe extern "C" fn cpp_loess_fit(
         }
 
         let loess = &mut *ptr;
-        let x_slice = std::slice::from_raw_parts(x_values, x_n as usize);
-        let y_slice = std::slice::from_raw_parts(y_values, y_n as usize);
+        let x_slice = from_raw_parts(x_values, x_n as usize);
+        let y_slice = from_raw_parts(y_values, y_n as usize);
 
         let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_n as usize);
 
@@ -880,8 +877,8 @@ pub unsafe extern "C" fn cpp_streaming_process(
         if x_values.is_null() || y_values.is_null() || x_n == 0 || y_n == 0 {
             return error_result(shared_parse::INVALID_DATA_INPUTS);
         }
-        let x_slice = std::slice::from_raw_parts(x_values, x_n as usize);
-        let y_slice = std::slice::from_raw_parts(y_values, y_n as usize);
+        let x_slice = from_raw_parts(x_values, x_n as usize);
+        let y_slice = from_raw_parts(y_values, y_n as usize);
 
         if let Some(model) = &mut loess.model {
             match map_runtime_result(model.process_chunk(x_slice, y_slice)) {

@@ -19,7 +19,8 @@ use core::fmt::Debug;
 use core::marker::PhantomData;
 
 // Internal dependencies
-use crate::adapters::batch::BatchLoessBuilder;
+use crate::adapters::batch::{BatchLoess, BatchLoessBuilder};
+use crate::adapters::defaults::default_overlap;
 use crate::adapters::online::OnlineLoessBuilder;
 use crate::adapters::streaming::StreamingLoessBuilder;
 use crate::algorithms::regression::SolverLinalg;
@@ -106,7 +107,7 @@ impl<T> IntoEnum<DistanceMetric<T>> for DistanceMetric<T> {
 
 impl<T> IntoEnum<DistanceMetric<T>> for &str
 where
-    T: num_traits::Float + core::str::FromStr,
+    T: Float + FromStr,
 {
     #[inline]
     fn into_enum(self) -> Result<DistanceMetric<T>, LoessError> {
@@ -116,7 +117,7 @@ where
 
 impl<T> IntoEnum<DistanceMetric<T>> for String
 where
-    T: num_traits::Float + core::str::FromStr,
+    T: Float + FromStr,
 {
     #[inline]
     fn into_enum(self) -> Result<DistanceMetric<T>, LoessError> {
@@ -761,7 +762,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static>
     LoessBuilder<T, BatchMode>
 {
-    pub fn build(self) -> Result<crate::adapters::batch::BatchLoess<T>, LoessError> {
+    pub fn build(self) -> Result<BatchLoess<T>, LoessError> {
         Batch::convert(self).build()
     }
 }
@@ -789,6 +790,8 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'sta
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static>
     LoessBuilder<T, StreamingMode>
 {
+    // Note: `crate::adapters::streaming::StreamingLoess` is used fully-qualified here to
+    // disambiguate from this module's own `StreamingLoess` type alias.
     pub fn build(self) -> Result<crate::adapters::streaming::StreamingLoess<T>, LoessError> {
         Streaming::convert(self).build()
     }
@@ -799,6 +802,8 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'sta
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static>
     LoessBuilder<T, OnlineMode>
 {
+    // Note: `crate::adapters::online::OnlineLoess` is used fully-qualified here to
+    // disambiguate from this module's own `OnlineLoess` type alias.
     pub fn build(self) -> Result<crate::adapters::online::OnlineLoess<T>, LoessError> {
         Online::convert(self).build()
     }
@@ -976,7 +981,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         }
         result.overlap = builder
             .overlap
-            .unwrap_or_else(|| crate::adapters::defaults::default_overlap(result.chunk_size));
+            .unwrap_or_else(|| default_overlap(result.chunk_size));
         if let Some(fraction) = builder.fraction {
             result.fraction = fraction;
         }

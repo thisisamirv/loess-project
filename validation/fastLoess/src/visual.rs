@@ -17,17 +17,18 @@
 //! 13. Auto-Convergence Comparison
 
 use fastLoess::prelude::*;
-use std::fs::File;
+use std::error::Error;
+use std::fs::{File, create_dir_all};
 use std::io::Write;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("Running All Visualization Examples...");
     println!("=====================================");
     println!();
 
     // Ensure output directory exists
     let output_dir = "../output/visual/";
-    std::fs::create_dir_all(output_dir)?;
+    create_dir_all(output_dir)?;
     println!("Output directory: {}", output_dir);
     println!();
 
@@ -90,7 +91,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 2. Fraction Comparison
-fn run_fraction_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_fraction_comparison() -> Result<(), Box<dyn Error>> {
     let n = 150;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -153,7 +154,7 @@ fn run_fraction_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 3. Intervals Comparison
-fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_intervals_comparison() -> Result<(), Box<dyn Error>> {
     let n = 100;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -246,7 +247,7 @@ fn run_intervals_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 4. Robustness Comparison
-fn run_robust_iter_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_robust_iter_comparison() -> Result<(), Box<dyn Error>> {
     let n = 150;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -323,7 +324,7 @@ fn run_robust_iter_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 5. LOESS Concept
-fn run_loess_concept() -> Result<(), Box<dyn std::error::Error>> {
+fn run_loess_concept() -> Result<(), Box<dyn Error>> {
     let n = 80;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -424,7 +425,7 @@ fn run_loess_concept() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 7. Kernel Comparison
-fn run_kernel_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_kernel_comparison() -> Result<(), Box<dyn Error>> {
     let n = 150;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -485,7 +486,7 @@ fn run_kernel_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 8. Robustness Method Comparison
-fn run_robust_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_robust_method_comparison() -> Result<(), Box<dyn Error>> {
     // 250 clean sine points + 75 genuine outliers with random (x, y).
     // Outliers are confined to x ∈ [0, 2] and x ∈ [4, 5] so the scatter
     // looks clearly localised, leaving the middle and right of the sine
@@ -586,7 +587,7 @@ fn run_robust_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 9. Boundary Policy Comparison
-fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_boundary_policy_comparison() -> Result<(), Box<dyn Error>> {
     let n = 100;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -635,7 +636,7 @@ fn run_boundary_policy_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 12. Cross-Validation Comparison
-fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_cv_comparison() -> Result<(), Box<dyn Error>> {
     let n = 150;
     let pi = std::f64::consts::PI;
     let mut x = Vec::with_capacity(n);
@@ -732,7 +733,7 @@ fn run_cv_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 13. Surface Mode Comparison
-fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_surface_mode_comparison() -> Result<(), Box<dyn Error>> {
     let n = 200;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -801,7 +802,7 @@ fn run_surface_mode_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 14. Scaling Method Comparison
-fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_scaling_method_comparison() -> Result<(), Box<dyn Error>> {
     let n = 200;
     let pi = std::f64::consts::PI;
     let mut x = Vec::with_capacity(n);
@@ -947,7 +948,7 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 15. Zero Weight Fallback Comparison
-fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn Error>> {
     // Compare ZeroWeightFallback policies: UseLocalMean, ReturnOriginal, ReturnNone.
     //
     // When every k-nearest neighbour carries a zero Talwar robustness weight the
@@ -1068,7 +1069,7 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn std::error::Error
 }
 
 /// 16. Streaming Comparison
-fn run_merge_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_merge_comparison() -> Result<(), Box<dyn Error>> {
     let n = 600;
     let chunk_size = 150;
     let overlap = 90; // 60 % overlap — large overlap zone = more points where strategies differ
@@ -1165,7 +1166,7 @@ fn run_merge_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 17. Online Comparison
-fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_online_comparison() -> Result<(), Box<dyn Error>> {
     let n = 600;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -1244,7 +1245,7 @@ fn run_online_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 18. Auto-Convergence Comparison
-fn run_adapter_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_adapter_comparison() -> Result<(), Box<dyn Error>> {
     // x ∈ [0, 4π]: two full sine periods over 200 evenly-spaced points.
     // fraction = 0.15 → window ≈ 30 pts ≈ 1.88 x-units ≈ 0.30 periods, so
     // a local-linear fit captures the sinusoidal shape well.
@@ -1407,7 +1408,7 @@ fn run_adapter_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 1. Degree Comparison (Linear vs Quadratic)
-fn run_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_degree_comparison() -> Result<(), Box<dyn Error>> {
     let n = 200;
     let mut x = Vec::with_capacity(n);
     let mut y = Vec::with_capacity(n);
@@ -1485,7 +1486,7 @@ fn run_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
 /// cubic == quadratic. Non-uniform spacing breaks this symmetry — the odd moments
 /// sum(w*(x_i-x_0)^k) (k odd) become non-zero, and cubic genuinely captures local
 /// asymmetry that quadratic cannot.  All four degrees then have distinct RMSEs.
-fn run_higher_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_higher_degree_comparison() -> Result<(), Box<dyn Error>> {
     let n = 300;
 
     // Non-uniform x: deterministic xorshift pseudo-random, sorted.
@@ -1572,7 +1573,7 @@ fn run_higher_degree_comparison() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 /// 10. Multivariate LOESS (2-D surface)
-fn run_multivariate_loess() -> Result<(), Box<dyn std::error::Error>> {
+fn run_multivariate_loess() -> Result<(), Box<dyn Error>> {
     let grid_n = 25usize; // 25×25 grid = 625 points
     let mut xs: Vec<[f64; 2]> = Vec::with_capacity(grid_n * grid_n);
     let mut z_true_vec = Vec::with_capacity(grid_n * grid_n);
@@ -1644,7 +1645,7 @@ fn run_multivariate_loess() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn run_degree_interpolation_comparison() -> Result<(), Box<dyn std::error::Error>> {
+fn run_degree_interpolation_comparison() -> Result<(), Box<dyn Error>> {
     let n = 200;
     let mut x = Vec::with_capacity(n);
     let mut y_true = Vec::with_capacity(n);

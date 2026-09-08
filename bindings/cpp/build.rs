@@ -1,4 +1,5 @@
 use std::env;
+use std::fs::create_dir_all;
 use std::path::PathBuf;
 
 fn main() {
@@ -8,7 +9,7 @@ fn main() {
         .join("fastloess.h");
 
     // Create include directory if it doesn't exist
-    std::fs::create_dir_all(PathBuf::from(&crate_dir).join("include")).unwrap();
+    create_dir_all(PathBuf::from(&crate_dir).join("include")).unwrap();
 
     // Generate C header
     cbindgen::Builder::new()

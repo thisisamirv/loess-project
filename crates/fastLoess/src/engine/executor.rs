@@ -14,6 +14,7 @@
 use rayon::prelude::*;
 
 // External dependencies
+use core::iter::repeat_n;
 use num_traits::Float;
 use std::fmt::Debug;
 
@@ -423,7 +424,7 @@ where
         if let Some(d) = derivative.as_mut() {
             match grad {
                 Some(g) => d.extend_from_slice(&g),
-                None => d.extend(core::iter::repeat_n(T::zero(), dims)),
+                None => d.extend(repeat_n(T::zero(), dims)),
             }
         }
         if let Some(s) = se.as_mut() {

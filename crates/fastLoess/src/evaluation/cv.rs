@@ -13,6 +13,7 @@ use rayon::prelude::*;
 
 // External dependencies
 use num_traits::Float;
+use std::cmp::Ordering::Equal;
 use std::fmt::Debug;
 use std::vec::Vec;
 
@@ -50,7 +51,7 @@ where
     let best_idx = scores
         .iter()
         .enumerate()
-        .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+        .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(Equal))
         .map(|(idx, _)| idx)
         .unwrap_or(0);
 
@@ -163,8 +164,7 @@ where
                         .map(|(&xi, &yi)| (xi, yi))
                         .collect();
 
-                    train_data
-                        .sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+                    train_data.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
                     let (sorted_tx, sorted_smooth): (Vec<T>, Vec<T>) =
                         train_data.into_iter().unzip();
 

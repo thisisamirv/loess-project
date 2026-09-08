@@ -8,6 +8,7 @@
 use ptr::null_mut;
 use std::cell::RefCell;
 use std::ffi::CString;
+use std::mem::replace;
 use std::os::raw::{c_char, c_double, c_int, c_ulong};
 use std::panic::catch_unwind;
 use std::ptr;
@@ -189,9 +190,7 @@ fn error_result_from(err: shared_parse::BindingError) -> JlLoessResult {
     error_result(&err.message)
 }
 
-fn map_runtime_result<T, E: ToString>(
-    result: std::result::Result<T, E>,
-) -> std::result::Result<T, Box<JlLoessResult>> {
+fn map_runtime_result<T, E: ToString>(result: Result<T, E>) -> Result<T, Box<JlLoessResult>> {
     shared_parse::map_runtime(result).map_err(|e| Box::new(error_result_from(e)))
 }
 
@@ -511,7 +510,7 @@ pub unsafe extern "C" fn jl_loess_set_cell(config_ptr: *mut JlLoessConfig, cell:
         return;
     }
     let config = unsafe { &mut *config_ptr };
-    let builder = std::mem::replace(&mut config.base_builder, LoessBuilder::<f64>::new());
+    let builder = replace(&mut config.base_builder, LoessBuilder::<f64>::new());
     config.base_builder = builder.cell(cell);
 }
 
@@ -529,7 +528,7 @@ pub unsafe extern "C" fn jl_loess_set_interpolation_vertices(
         return;
     }
     let config = unsafe { &mut *config_ptr };
-    let builder = std::mem::replace(&mut config.base_builder, LoessBuilder::<f64>::new());
+    let builder = replace(&mut config.base_builder, LoessBuilder::<f64>::new());
     config.base_builder = builder.interpolation_vertices(vertices as usize);
 }
 
@@ -547,7 +546,7 @@ pub unsafe extern "C" fn jl_loess_set_boundary_degree_fallback(
         return;
     }
     let config = unsafe { &mut *config_ptr };
-    let builder = std::mem::replace(&mut config.base_builder, LoessBuilder::<f64>::new());
+    let builder = replace(&mut config.base_builder, LoessBuilder::<f64>::new());
     config.base_builder = builder.boundary_degree_fallback(enabled != 0);
 }
 
@@ -563,7 +562,7 @@ pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, se
         return;
     }
     let config = unsafe { &mut *config_ptr };
-    let builder = std::mem::replace(&mut config.base_builder, LoessBuilder::<f64>::new());
+    let builder = replace(&mut config.base_builder, LoessBuilder::<f64>::new());
     config.base_builder = builder.cv_seed(u64::from(seed));
 }
 

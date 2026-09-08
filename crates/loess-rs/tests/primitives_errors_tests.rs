@@ -1,5 +1,8 @@
 #![cfg(feature = "dev")]
 
+#[cfg(feature = "std")]
+use std::error::Error;
+
 use loess_rs::internals::primitives::errors::LoessError;
 
 #[test]
@@ -160,6 +163,6 @@ fn test_loess_error_properties() {
 #[cfg(feature = "std")]
 #[test]
 fn test_loess_error_is_std_error() {
-    fn assert_error<T: std::error::Error>() {}
+    fn assert_error<T: Error>() {}
     assert_error::<LoessError>();
 }

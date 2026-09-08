@@ -15,6 +15,7 @@ use alloc::vec::Vec;
 use std::vec::Vec;
 
 // External dependencies
+use core::cmp::Ordering::Equal;
 use core::fmt::Debug;
 
 // Internal dependencies
@@ -447,7 +448,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             perm.sort_by(|&a, &b| {
                 x[a * dims..a * dims + dims]
                     .partial_cmp(&x[b * dims..b * dims + dims])
-                    .unwrap_or(core::cmp::Ordering::Equal)
+                    .unwrap_or(Equal)
             });
 
             (
