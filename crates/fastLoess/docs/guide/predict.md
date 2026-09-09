@@ -69,7 +69,7 @@ Maximum allowed distance to the farthest point in a query's k-nearest-neighbor w
 ### Basic Usage
 
 ```rust
-use loess_rs::prelude::*;
+use fastLoess::prelude::*;
 
 fn main() -> Result<(), LoessError> {
     let x = vec![1.0_f64, 2.0, 3.0, 4.0, 5.0];
@@ -93,7 +93,7 @@ Predicted y: [3.05, 9.05]
 ### Standard Errors and Derivative
 
 ```rust
-use loess_rs::prelude::*;
+use fastLoess::prelude::*;
 
 fn main() -> Result<(), LoessError> {
     let x = vec![1.0_f64, 2.0, 3.0, 4.0, 5.0];
@@ -122,7 +122,7 @@ Derivative: Some([2.2])
 ### Linear Extrapolation
 
 ```rust
-use loess_rs::prelude::*;
+use fastLoess::prelude::*;
 
 fn main() -> Result<(), LoessError> {
     let x = vec![1.0_f64, 2.0, 3.0, 4.0, 5.0];
