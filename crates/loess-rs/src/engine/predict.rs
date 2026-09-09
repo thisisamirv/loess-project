@@ -223,10 +223,12 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Predi
     // Requires `.retain_model(true)` on the builder that produced `result` (Batch adapter
     // only); returns `LoessError::PredictionUnavailable` otherwise.
     //
-    // Always fits an exact local regression at each query point, unlike `fit()` under the
-    // default `SurfaceMode::Interpolation` (which only fits exactly at a coarser vertex grid
-    // and interpolates the rest). So predicting at an x already in the training set may not
-    // exactly reproduce that point's `fit()` output unless `surface_mode("direct")` was used.
+    // Reuses `fit()`'s own interpolation surface (when built under the default
+    // `SurfaceMode::Interpolation`) for in-range query points, so it exactly reproduces
+    // `fit()`'s value at any point already in the training set, regardless of
+    // `surface_mode()`. A fresh local regression is only run when `return_derivative`,
+    // an out-of-range extrapolation, or `max_neighbor_distance` needs the actual
+    // gradient/leverage at the query point.
     pub fn call(
         &self,
         result: &LoessResult<T>,

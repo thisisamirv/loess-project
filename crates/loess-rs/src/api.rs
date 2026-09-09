@@ -715,11 +715,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // polynomial fit at arbitrary out-of-sample query points. Off by default (no extra
     // memory/clone cost unless requested). Only applied in Batch mode.
     //
-    // Note: `predict()` always fits an exact local regression at each query point,
-    // regardless of `surface_mode()`. Under the default `SurfaceMode::Interpolation`,
-    // `fit()` itself only fits exactly at a coarser vertex grid and interpolates the rest,
-    // so `predict()` at an x already in the training set may not exactly reproduce that
-    // point's `fit()` output unless `surface_mode("direct")` was used.
+    // Note: `predict()` reuses `fit()`'s own interpolation surface (when built under the
+    // default `SurfaceMode::Interpolation`) for in-range query points, so it exactly
+    // reproduces `fit()`'s value at any point already in the training set, regardless of
+    // `surface_mode()`. A fresh local regression is only run when `return_derivative`,
+    // an out-of-range extrapolation, or `max_neighbor_distance` needs the actual
+    // gradient/leverage at the query point.
     pub fn retain_model(mut self, retain: bool) -> Self {
         self.retain_model = Some(retain);
         self

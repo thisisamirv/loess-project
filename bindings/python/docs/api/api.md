@@ -77,6 +77,7 @@ print(result)
 | `cv_fractions` | `list[float]` | `None` | Fractions to test for cross-validation |
 | `cv_seed` | `int` | `None` | Random seed for cross-validation shuffling |
 | `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor |
+| `retain_model` | `bool` | `False` | Retain training data, enabling `predict()` on the result |
 
 ## Options
 
@@ -308,6 +309,12 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 Per-observation weights, passed to `fit()` rather than the constructor.
 
+### retain_model
+
+*See: [Predict](../guide/predict.md)*
+
+Retains the fitted model's training data, enabling `LoessResult.predict(new_x, ...)` to evaluate the fit at out-of-sample query points not in the training set. `False` (default) — no extra memory/copy cost unless requested.
+
 ## Result Structure
 
 ### `LoessResult`
@@ -346,6 +353,12 @@ Per-observation weights, passed to `fit()` rather than the constructor.
 | `effective_df` | `float \| None` | Effective degrees of freedom (`None` if not computed) |
 | `aic` | `float \| None` | AIC (`None` if not computed) |
 | `aicc` | `float \| None` | AICc (`None` if not computed) |
+
+## Predict
+
+### `LoessResult.predict(new_x, ...) -> PredictOutput`
+
+Evaluates the fitted model at out-of-sample query points (flattened, `dimensions` values per point). Requires `retain_model=True` on the constructor before `fit()`, otherwise raises `LoessError`.
 
 ## Example
 

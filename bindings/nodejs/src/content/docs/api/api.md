@@ -115,6 +115,7 @@ Async fit y[0]: 0.3274
 | `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation |
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`/`fitAsync()`, not the options object |
+| `retain_model` | `boolean` | `false` | Retain training data, enabling `result.predict()` |
 
 ## Options
 
@@ -346,6 +347,12 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 Per-observation weights, passed to `fit()`/`fitAsync()` rather than the options object.
 
+### retain_model
+
+*See: [Predict](../guide/predict.md)*
+
+Retains the fitted model's training data, enabling `result.predict(newX, options)` to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+
 ## Result Structure
 
 ### `LoessResult`
@@ -384,6 +391,12 @@ Per-observation weights, passed to `fit()`/`fitAsync()` rather than the options 
 | `effective_df` | `number` \| `undefined` | Effective degrees of freedom |
 | `aic` | `number` \| `undefined` | AIC |
 | `aicc` | `number` \| `undefined` | AICc |
+
+## Predict
+
+### `result.predict(newX, options) -> PredictOutput`
+
+Evaluates the fitted model at out-of-sample query points (flattened, `dimensions` values per point). Requires `retain_model: true` on the constructor before `fit()`, otherwise throws.
 
 ## Example
 

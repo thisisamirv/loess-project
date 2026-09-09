@@ -121,6 +121,7 @@ int main() {
 | `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (0 = random) |
 | `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
+| `retain_model` | `bool` | `false` | Retain training data, enabling `LoessResult::predict_model()` |
 
 ## Options
 
@@ -352,6 +353,12 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 Per-observation weights, passed to `fit()` rather than the constructor.
 
+### retain_model
+
+*See: [Predict](../guide/predict.md)*
+
+Retains the fitted model's training data, enabling `LoessResult::predict_model()` to obtain a `PredictModel` for out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+
 ## Result Structure
 
 ### fastloess::LoessResult
@@ -394,6 +401,12 @@ All accessors are const methods (not public fields):
 | `effective_df()` | `double` | Effective degrees of freedom (NaN if not computed) |
 | `aic()` | `double` | AIC (NaN if not computed) |
 | `aicc()` | `double` | AICc (NaN if not computed) |
+
+## Predict
+
+### `fastloess::PredictModel::predict(new_x, options) -> PredictResult`
+
+Obtained via `LoessResult::predict_model()` (moves the retained state out; only valid once, and only when `retain_model = true` was set — check `PredictModel::valid()`). Evaluates the fitted model at out-of-sample query points (flattened, `dimensions` values per point).
 
 ## Example
 

@@ -50,6 +50,7 @@ opts.ReturnDiagnostics = true
 | `CVK` | `int` | `5` | Number of folds for k-fold CV. |
 | `CVSeed` | `*uint64` | `nil` (random) | RNG seed for reproducible k-fold splits. |
 | `Parallel` | `bool` | `true` | Enable parallel processing. |
+| `RetainModel` | `bool` | `false` | Retain training data, enabling `Result.PredictModel` for out-of-sample prediction. |
 
 `Fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
@@ -101,6 +102,16 @@ Releases native resources. Safe to call multiple times. A finalizer is registere
 `Diagnostics` holds `RMSE`, `MAE`, `RSquared`, `AIC`, `AICc`, `EffectiveDF`, `ResidualSD`.
 
 `HatMatrixStats` holds `ENP`, `TraceHat`, `Delta1`, `Delta2`, `ResidualScale`, `Leverage`.
+
+## Predict
+
+*See: [Predict](../guide/predict.md)*
+
+`Result.PredictModel` is non-nil only when `Options.RetainModel` was set to `true`. Call `Close()` on it when done (or let its finalizer run).
+
+### `(*PredictModel) Predict(newX []float64, opts PredictOptions) (PredictResult, error)`
+
+Evaluates the fitted model at out-of-sample query points (flattened, `Dimensions` values per point).
 
 ## Options
 

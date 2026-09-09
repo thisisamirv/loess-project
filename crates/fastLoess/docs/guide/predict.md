@@ -10,7 +10,7 @@ Evaluate a fitted Batch model at query points that were not in the training set.
 
 `Predict::new()...build()?.call(&result, new_x)` evaluates the fit at arbitrary query points, like R's `predict(model, newdata)`. Query points are flattened, `dimensions` values per point.
 
-It always fits exactly, unlike `fit()`'s default `SurfaceMode::Interpolation` — so predicting at a training point may not exactly match `fit()`'s output unless `.surface_mode("direct")` was used.
+It reuses `fit()`'s own interpolation surface (when built under the default `SurfaceMode::Interpolation`) for in-range query points — so predicting at a training point always exactly matches that point's `fit()` output, regardless of `surface_mode()`. A fresh local regression is only run when `return_derivative`, an out-of-range extrapolation, or `max_neighbor_distance` needs the actual gradient/leverage at the query point.
 
 Requires `.retain_model(true)` on the builder before `fit()`, otherwise `.call(...)` returns `LoessError::PredictionUnavailable`.
 

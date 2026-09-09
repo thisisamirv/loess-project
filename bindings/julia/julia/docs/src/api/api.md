@@ -78,6 +78,7 @@ println("First smoothed value: ", result.y[1])
 | `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation |
 | `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling |
 | `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation case weights — passed to `fit`, not the constructor |
+| `retain_model` | `Bool` | `false` | Retain training data, enabling `predict(model, new_x; ...)` on the result |
 
 ## Options
 
@@ -306,6 +307,12 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 Per-observation weights, passed to `fit` rather than the constructor.
 
+### retain_model
+
+*See: [Predict](../guide/predict.md)*
+
+Retains the fitted model's training data, populating `result.predict_model` with a `PredictModel` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+
 ## Result Structure
 
 ### `LoessResult`
@@ -344,6 +351,12 @@ Per-observation weights, passed to `fit` rather than the constructor.
 | `effective_df` | `Union{Float64, Nothing}` | Effective degrees of freedom |
 | `aic` | `Union{Float64, Nothing}` | AIC |
 | `aicc` | `Union{Float64, Nothing}` | AICc |
+
+## Predict
+
+### `predict(model::PredictModel, new_x::Vector{Float64}; kwargs...) -> PredictResult`
+
+`model` comes from `result.predict_model`, populated only when `retain_model=true` was passed to `Loess`. Evaluates the fitted model at out-of-sample query points (flattened, `dimensions` values per point).
 
 ## Example
 
