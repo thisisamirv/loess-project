@@ -52,7 +52,7 @@ Predicted y: [3.05, 9.05]
 | `max_extrapolation_distance` | `T` | none | Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `T` | none | Max allowed distance to the farthest point in a query's k-nearest-neighbor window before erroring |
 
-`Predict` is configured the same way as the `Loess` builder itself: `Predict::new()` (or `::default()`), chained setter methods, and a mandatory `.build()?` to validate (e.g. an invalid `.extrapolation("bogus")` string) and obtain the ready-to-call configuration. Standard errors/intervals use the same z-score convention as `fit()`'s existing intervals, using per-point leverage scaled by the global MAD-based residual SD.
+`Predict` is configured the same way as the `Loess` builder itself: `Predict::new()` (or `::default()`), chained setter methods, and a mandatory `.build()?` to validate (e.g. an invalid `.extrapolation("bogus")` string) and obtain the ready-to-call configuration. Standard errors/intervals use the same z-score convention as `fit()`'s existing intervals. Prediction intervals widen using the same residual scale `fit()` used for its own intervals (`sqrt(RSS / delta1)`, populated when `.return_se()` plus an interval method was set under `.surface_mode("direct")`); otherwise a MAD-based fallback is used.
 
 ```rust
 use loess_rs::prelude::*;
@@ -118,15 +118,3 @@ Extrapolated y: [10.1]
 Under `"linear"`, `.max_extrapolation_distance(...)` caps how far beyond the boundary (per dimension) the extrapolation may extend before `.call(...)` fails with `LoessError::ExtrapolationTooFar`, instead of returning an unbounded value.
 
 `.max_neighbor_distance(...)` guards a separate blind spot: a query point can sit inside every dimension's min/max range yet fall in an empty region far from any real training data (e.g. an empty "corner" of non-rectangularly distributed data). Setting it makes `.call(...)` fail with `LoessError::SparseNeighborhood` instead of silently extrapolating there. It applies regardless of `extrapolation`, and is measured as a plain (raw-coordinate) Euclidean distance, independent of `distance_metric`.
-
----
-
-## Availability
-
-!!! warning "Batch Mode Only"
-    Out-of-sample prediction is only available in **Batch** mode. Streaming and Online modes do not support it.
-
-| Feature | Batch | Streaming | Online |
-| --- | --- | --- | --- |
-| `retain_model` | ✓ | ✗ | ✗ |
-| `Predict::call()` | ✓ | ✗ | ✗ |

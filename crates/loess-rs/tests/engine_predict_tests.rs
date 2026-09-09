@@ -436,6 +436,49 @@ fn test_predict_confidence_and_prediction_intervals() {
     }
 }
 
+/// When `.return_se()` and an interval method were set on the original `fit()` under
+/// `SurfaceMode::Direct` (the only mode that computes exact leverage/`residual_scale`),
+/// `predict()`'s prediction intervals should widen using `LoessResult::residual_scale`
+/// (`sqrt(RSS / delta1)`), the exact same scale `fit()` uses for its own intervals - not
+/// a freshly recomputed MAD-based fallback.
+#[test]
+fn test_predict_intervals_use_fit_residual_scale_when_available() {
+    let (x, y) = linear_series(60, 2.0, 1.0);
+    let result = Loess::new()
+        .fraction(0.3)
+        .iterations(0)
+        .surface_mode("direct")
+        .return_se()
+        .prediction_intervals(0.95)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let residual_scale = result
+        .residual_scale
+        .expect("residual_scale populated by return_se() + prediction_intervals() + Direct mode");
+
+    let options = PredictBuilder::new()
+        .return_se()
+        .prediction_intervals(0.95)
+        .build()
+        .unwrap();
+    let output = options
+        .call(&result, &[x[20]])
+        .expect("predict should succeed");
+
+    let se = output.standard_errors.expect("standard errors requested")[0];
+    let pl = output.prediction_lower.expect("prediction lower")[0];
+    let pu = output.prediction_upper.expect("prediction upper")[0];
+
+    let z = 1.960_f64;
+    let expected_half_width = z * (se * se + residual_scale * residual_scale).sqrt();
+    let actual_half_width = (pu - pl) / 2.0;
+    assert_relative_eq!(actual_half_width, expected_half_width, epsilon = 1e-6);
+}
+
 // ============================================================================
 // Derivative
 // ============================================================================

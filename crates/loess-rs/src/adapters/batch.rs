@@ -10,7 +10,11 @@
 
 // Feature-gated imports
 #[cfg(not(feature = "std"))]
+use alloc::sync::Arc;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use std::sync::Arc;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
@@ -356,7 +360,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         let iterations_used = result.iterations;
         let fraction_used = result.used_fraction;
         let cv_scores = result.cv_scores;
-        let predict_state = result.predict_state;
+        let mut predict_state = result.predict_state;
 
         // Calculate residuals (data is in original order, no unsorting needed)
         let residuals: Vec<T> = y
@@ -403,6 +407,18 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             } else {
                 (None, None, None, None, None, None)
             };
+
+        // Prefer the same `sqrt(RSS / delta1)` scale `fit()` itself uses for its own
+        // intervals (only available when `.return_se()` was set) over `PredictState`'s
+        // MAD-based fallback, so `Predict::call()`'s intervals use the same scale as
+        // `fit()`'s. `Arc::get_mut` succeeds here since `predict_state` was just built
+        // and hasn't been cloned/shared yet.
+        if let (Some(rs), Some(state)) = (
+            residual_scale,
+            predict_state.as_mut().and_then(Arc::get_mut),
+        ) {
+            state.residual_sd = rs;
+        }
 
         // Compute intervals
         let (conf_lower, conf_upper, pred_lower, pred_upper) =

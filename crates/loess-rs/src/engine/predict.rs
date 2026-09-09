@@ -319,8 +319,10 @@ pub struct PredictState<T: Float> {
     // Per-observation case weights, aligned with `x`/`y`, if provided.
     pub custom_weights: Option<Vec<T>>,
 
-    // Global residual standard deviation (MAD-based), matching `Diagnostics.residual_sd`.
-    // Used to widen prediction intervals beyond the local standard error.
+    // Global residual scale used to widen prediction intervals beyond the local standard
+    // error: the same `sqrt(RSS / delta1)` value as `LoessResult::residual_scale` if
+    // `.return_se()` was set on the original `fit()`, otherwise a MAD-based fallback
+    // (matching `Diagnostics.residual_sd`).
     pub residual_sd: T,
 
     // Standard error for in-range queries under `SurfaceMode::Interpolation`, precomputed
