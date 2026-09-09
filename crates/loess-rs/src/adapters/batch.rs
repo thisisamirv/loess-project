@@ -165,7 +165,7 @@ pub struct BatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     // User-defined case weights (one per observation).
     pub custom_weights: Option<Vec<T>>,
 
-    // Retain the fitted model's training data/weights, enabling `LoessResult::predict()`.
+    // Retain the fitted model's training data/weights, enabling `Predict::call()`.
     pub retain_model: bool,
 }
 

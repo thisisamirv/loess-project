@@ -141,7 +141,7 @@ pub enum LoessError {
     // Collects all parse errors from string builder methods and reports them together at `build()`.
     ParseErrors(Vec<LoessError>),
 
-    // `LoessResult::predict()` was called without `.retain_model(true)` on the builder
+    // `Predict::call()` was called without `.retain_model(true)` on the builder
     // (Batch adapter only), so no fitted-model state was retained to evaluate against.
     PredictionUnavailable,
 

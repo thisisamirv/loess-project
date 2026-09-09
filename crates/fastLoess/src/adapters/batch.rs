@@ -174,7 +174,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
         let mut result = processor.fit(x_slice, y_slice)?;
 
         // Inject the Rayon-parallel predict pass into the retained model state (if any),
-        // so `LoessResult::predict()` also runs in parallel when `.retain_model(true)` was set.
+        // so `Predict::call()` also runs in parallel when `.retain_model(true)` was set.
         // `get_mut` succeeds here since this `Arc` was just created by `fit()` and hasn't
         // been cloned/shared yet.
         if use_parallel && let Some(state) = result.predict_state.as_mut().and_then(Arc::get_mut) {

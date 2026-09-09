@@ -166,7 +166,7 @@ pub fn map_loess_result<T>(result: Result<T, LoessError>) -> Result<T, BindingEr
     })
 }
 
-// Primitive-friendly, per-call options for `LoessResult::predict()`, mirroring
+// Primitive-friendly, per-call options for `Predict::call()`, mirroring
 // `BuilderOptionSet`'s role for the builder: every binding constructs one of these
 // from its own native option type and passes it to `run_predict`, instead of each
 // binding re-implementing extrapolation-policy string parsing/error mapping itself.

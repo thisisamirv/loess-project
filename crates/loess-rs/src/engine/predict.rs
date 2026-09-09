@@ -52,7 +52,7 @@ pub enum ExtrapolationPolicy {
     Error,
 }
 
-// Options controlling a `LoessResult::predict()` call.
+// Options controlling a `Predict::call()` invocation.
 #[derive(Debug, Clone)]
 pub struct Predict<T> {
     // Include standard errors in the output.
@@ -208,7 +208,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Predi
     }
 }
 
-// Result of a `LoessResult::predict()` call.
+// Result of a `Predict::call()` invocation.
 #[derive(Debug, Clone)]
 pub struct PredictOutput<T> {
     // Predicted y-values, one per query point in `new_x`.
@@ -246,7 +246,7 @@ pub type PredictPassFn<T> = fn(
 ) -> RawPredictValues<T>;
 
 // Fitted-model state retained by a Batch `fit()` call when `.retain_model(true)` was set,
-// enabling `LoessResult::predict()` to evaluate the fit at out-of-sample query points.
+// enabling `Predict::call()` to evaluate the fit at out-of-sample query points.
 //
 // `x`/`y`/`robustness_weights`/`custom_weights` are the boundary-*padded* arrays actually
 // used for local fitting (not the shorter, unpadded arrays returned in `LoessResult`), so

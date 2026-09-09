@@ -103,7 +103,7 @@ impl<T: Float> IntervalMethod<T> {
     // - If delta1 is provided: sigma = sqrt(RSS / delta1)
     // - Fallback: sigma_hat = 1.4826 * MAD(residuals).
     //
-    // `pub(crate)` so `LoessResult::predict()` can compute a residual scale for
+    // `pub(crate)` so `Predict::call()` can compute a residual scale for
     // out-of-sample prediction intervals regardless of whether the original `fit()`
     // call requested intervals.
     pub(crate) fn calculate_residual_sd(residuals: &[T], delta1: Option<T>) -> T {

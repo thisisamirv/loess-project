@@ -242,7 +242,7 @@ pub struct LoessBuilder<
     // Must have the same length as `y`. Only used in Batch mode.
     pub custom_weights: Option<Vec<T>>,
 
-    // Retain the fitted model's training data/weights, enabling `LoessResult::predict()`.
+    // Retain the fitted model's training data/weights, enabling `Predict::call()`.
     // Off by default (no extra memory/clone cost unless requested). Only used in Batch mode.
     pub retain_model: Option<bool>,
 
@@ -710,7 +710,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Retain the fitted model's (boundary-padded) training data, robustness weights, and
-    // normalization scales, enabling `LoessResult::predict(new_x)` to evaluate the local
+    // normalization scales, enabling `Predict::call(&result, new_x)` to evaluate the local
     // polynomial fit at arbitrary out-of-sample query points. Off by default (no extra
     // memory/clone cost unless requested). Only applied in Batch mode.
     //

@@ -239,7 +239,7 @@ pub struct ExecutorOutput<T: FloatLinalg> {
     // Only computed when intervals are requested.
     pub leverage: Option<Vec<T>>,
 
-    // Retained fitted-model state for `LoessResult::predict()`, if `retain_model` was set.
+    // Retained fitted-model state for `Predict::call()`, if `retain_model` was set.
     pub predict_state: Option<Arc<PredictState<T>>>,
 }
 
@@ -313,7 +313,7 @@ pub struct LoessConfig<T: FloatLinalg + SolverLinalg> {
     // Must have the same length as `y`. Only supported for Batch mode.
     pub custom_weights: Option<Vec<T>>,
 
-    // Retain the fitted model's training data/weights, enabling `LoessResult::predict()`.
+    // Retain the fitted model's training data/weights, enabling `Predict::call()`.
     // Off by default (no extra memory/clone cost unless requested). Only supported for Batch mode.
     pub retain_model: bool,
 
@@ -439,7 +439,7 @@ pub struct LoessExecutor<T: FloatLinalg + SolverLinalg> {
     // User-defined case weights (one per observation). See `LoessConfig::custom_weights`.
     pub custom_weights: Option<Vec<T>>,
 
-    // Retain the fitted model's training data/weights, enabling `LoessResult::predict()`.
+    // Retain the fitted model's training data/weights, enabling `Predict::call()`.
     pub retain_model: bool,
 
     // ++++++++++++++++++++++++++++++++++++++
@@ -645,7 +645,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self
     }
 
-    // Set whether to retain the fitted model's training data, enabling `LoessResult::predict()`.
+    // Set whether to retain the fitted model's training data, enabling `Predict::call()`.
     pub fn retain_model(mut self, retain: bool) -> Self {
         self.retain_model = retain;
         self
