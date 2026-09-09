@@ -40,6 +40,7 @@ use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::executor::SurfaceMode;
 pub use crate::engine::output::LoessResult;
 use crate::engine::predict::ExtrapolationPolicy;
+pub use crate::engine::predict::Predict;
 use crate::engine::validator::MissingPolicy;
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::distance::DistanceMetric;
