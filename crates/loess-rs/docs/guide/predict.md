@@ -45,8 +45,8 @@ Predicted y: [3.05, 9.05]
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `return_se` | `bool` | `false` | Include standard errors in the output |
-| `confidence_level` | `Option<T>` | `None` | Confidence interval coverage level (e.g. `Some(0.95)`) |
-| `prediction_level` | `Option<T>` | `None` | Prediction interval coverage level (e.g. `Some(0.95)`) |
+| `confidence_intervals` | `Option<T>` | `None` | Confidence interval coverage level (e.g. `Some(0.95)`) |
+| `prediction_intervals` | `Option<T>` | `None` | Prediction interval coverage level (e.g. `Some(0.95)`) |
 | `return_derivative` | `bool` | `false` | Include the local fit's gradient (`dimensions` values per point, flattened) |
 | `extrapolation` | `&str` | `"clamp"` | Behavior for query points outside the training range, on any dimension |
 | `max_extrapolation_distance` | `T` | none | Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring |

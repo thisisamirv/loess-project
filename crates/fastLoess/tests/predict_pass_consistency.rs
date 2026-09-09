@@ -33,8 +33,8 @@ fn test_predict_pass_consistency() {
     let options = PredictBuilder::new()
         .return_se()
         .return_derivative()
-        .confidence_level(0.95)
-        .prediction_level(0.95)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
         .build()
         .unwrap();
 

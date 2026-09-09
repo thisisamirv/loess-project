@@ -414,8 +414,8 @@ fn test_predict_confidence_and_prediction_intervals() {
         .unwrap();
 
     let options = PredictBuilder::new()
-        .confidence_level(0.95)
-        .prediction_level(0.95)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
         .build()
         .unwrap();
     let output = options
