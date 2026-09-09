@@ -78,6 +78,7 @@ print(result)
 | `cv_seed` | `int` | `None` | Random seed for cross-validation shuffling |
 | `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor |
 | `retain_model` | `bool` | `False` | Retain training data, enabling `predict()` on the result |
+| `return_gradient` | `bool` | `False` | Include the per-point local fit gradient in the result (`surface_mode="direct"` only) |
 
 ## Options
 
@@ -315,6 +316,10 @@ Per-observation weights, passed to `fit()` rather than the constructor.
 
 Retains the fitted model's training data, enabling `LoessResult.predict(new_x, ...)` to evaluate the fit at out-of-sample query points not in the training set. `False` (default) — no extra memory/copy cost unless requested.
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `LoessResult.gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `None` there. `False` by default.
+
 ## Result Structure
 
 ### `LoessResult`
@@ -340,6 +345,7 @@ Retains the fitted model's training data, enabling `LoessResult.predict(new_x, .
 | `delta2` | `float \| None` | Second delta statistic (if `return_se`) |
 | `residual_scale` | `float \| None` | Residual scale estimate (if `return_se`) |
 | `leverage` | `ndarray \| None` | Per-point hat-matrix diagonal (if `return_se`) |
+| `gradient` | `ndarray \| None` | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode="direct"` only) |
 | `dimensions` | `int` | Number of predictor dimensions |
 
 ### `Diagnostics`

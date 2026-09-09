@@ -100,6 +100,7 @@ Fraction used: 0.5
 | `cell` | `number` | `null` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `number` | `null` | Number of interpolation vertices |
 | `boundary_degree_fallback` | `boolean` | `null` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `return_gradient` | `boolean` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 
 Confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` are Batch-only and not available here; see [fastLoess](api.md) for those.
 
@@ -322,6 +323,10 @@ Number of points retained from the previous chunk as context, so the neighbourho
 
 ![Merge Strategies](../../assets/diagrams/merge_comparison.svg)
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `undefined` in the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+
 ## Result Structure
 
 ### `LoessResult`
@@ -343,6 +348,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `robustness_weights` | `Float64Array \| undefined` | Robustness weights (if `return_robustness_weights`) |
 | `cv_scores` | `Float64Array \| undefined` | Always `undefined` (Batch only) |
 | `diagnostics` | `Diagnostics \| undefined` | Fit metrics (if `return_diagnostics`) |
+| `gradient` | `Float64Array \| undefined` | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode = "direct"` only) |
 | `dimensions` | `number` | Number of predictor dimensions |
 
 ### `Diagnostics`

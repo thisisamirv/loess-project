@@ -55,6 +55,7 @@ Options options = Options.builder()
 |`cvSeed` |`long` (boxed) |`null` (random) |RNG seed for reproducible k-fold splits.
 |`parallel` |`boolean` |`true` |Enable parallel processing.
 |`retainModel` |`boolean` |`false` |Retain training data, enabling `Result.predictModel()`.
+|`returnGradient` |`boolean` |`false` |Populate `Result.gradient()` with the per-point local fit gradient, flattened (`surfaceMode = "direct"` only).
 |===
 
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
@@ -113,6 +114,7 @@ Releases native resources. Safe to call multiple times. Implements `AutoCloseabl
 |`dimensions()` |`int` |Always.
 |`diagnostics()` |`Optional<Diagnostics>` |`returnDiagnostics`
 |`hatMatrix()` |`Optional<HatMatrixStats>` |`returnSe`
+|`gradient()` |`Optional<double[]>` |`returnGradient` (`surfaceMode = "direct"` only)
 |===
 
 `Diagnostics` holds `rmse()`, `mae()`, `rSquared()`, `aic()`, `aicc()`, `effectiveDf()`, `residualSd()` (the last three are `Optional<Double>`).
@@ -332,6 +334,13 @@ Enable multi-threaded execution via Rayon.
 _See: xref:../guide/predict.adoc[Predict]_
 
 Retains the fitted model's training data, populating `Result.predictModel()` with an `Optional<PredictModel>` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+
+=== returnGradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) via `Result.gradient()`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when `surfaceMode = "direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient()` stays empty there.
+
+* `false` (default) — leaves `Result.gradient()` empty
+* `true` — populates `Result.gradient()`
 
 == Custom weights
 

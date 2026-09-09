@@ -79,6 +79,7 @@ println("First smoothed value: ", result.y[1])
 | `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling |
 | `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation case weights — passed to `fit`, not the constructor |
 | `retain_model` | `Bool` | `false` | Retain training data, enabling `predict(model, new_x; ...)` on the result |
+| `return_gradient` | `Bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode="direct"` only) |
 
 ## Options
 
@@ -313,6 +314,10 @@ Per-observation weights, passed to `fit` rather than the constructor.
 
 Retains the fitted model's training data, populating `result.predict_model` with a `PredictModel` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `result.gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `nothing` there. `false` by default.
+
 ## Result Structure
 
 ### `LoessResult`
@@ -338,6 +343,7 @@ Retains the fitted model's training data, populating `result.predict_model` with
 | `delta2` | `Union{Float64, Nothing}` | Second delta statistic (if `return_se`) |
 | `residual_scale` | `Union{Float64, Nothing}` | Residual scale estimate (if `return_se`) |
 | `leverage` | `Union{Vector{Float64}, Nothing}` | Per-point hat-matrix diagonal (if `return_se`) |
+| `gradient` | `Union{Vector{Float64}, Nothing}` | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode="direct"` only) |
 | `dimensions` | `Int` | Number of predictor dimensions |
 
 ### `Diagnostics`

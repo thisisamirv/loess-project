@@ -83,6 +83,7 @@ Smoothed y: 0.22659245357374927
 | `cell` | `number` | `null` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `number` | `null` | Number of interpolation vertices |
 | `boundary_degree_fallback` | `boolean` | `null` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `return_gradient` | `boolean` | `false` | Include the latest point's local fit gradient in the result (`surface_mode = "direct"` only) |
 
 Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLoess](api.md) for those. Online always runs sequentially.
 
@@ -275,6 +276,10 @@ Minimum number of points required before `add_point()` starts returning smoothed
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `undefined` in the default `"interpolation"` mode. `false` by default.
+
 ## Result Structure
 
 ### `OnlineOutput`
@@ -288,5 +293,6 @@ Returned by `add_point()` once the window has enough points (`null` until then).
 | `residual` | `number \| undefined` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
 | `robustness_weight` | `number \| undefined` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used` | `number \| undefined` | Robustness iterations performed |
+| `gradient` | `Float64Array \| undefined` | Latest point's local fit gradient (`dimensions` values), if `return_gradient` was set |
 
 There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

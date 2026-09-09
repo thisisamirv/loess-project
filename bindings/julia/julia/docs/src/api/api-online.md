@@ -78,6 +78,7 @@ end
 | `window_capacity` | `Int` | `1000` | Max points in sliding window |
 | `min_points` | `Int` | `2` | Min points before smoothing starts |
 | `update_mode` | `String` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
+| `return_gradient` | `Bool` | `false` | Include the latest point's local fit gradient in the result (`surface_mode="direct"` only) |
 
 Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [Batch Adapter](api.md) for those. Online always runs sequentially.
 
@@ -262,6 +263,10 @@ Minimum number of points required before smoothing starts. `add_point` returns `
 | `"incremental"` (default) | Update only affected fits | Faster |
 | `"full"` | Recompute entire window | More accurate |
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `nothing` in the default `"interpolation"` mode. `false` by default.
+
 ## Result Structure
 
 ### `OnlineOutput`
@@ -275,6 +280,7 @@ Returned by `add_point` once the window has enough points (`nothing` until then)
 | `residual` | `Union{Float64, Nothing}` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
 | `robustness_weight` | `Union{Float64, Nothing}` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used` | `Union{Int, Nothing}` | Robustness iterations performed |
+| `gradient` | `Union{Vector{Float64}, Nothing}` | Latest point's local fit gradient (`dimensions` values), if `return_gradient` was set |
 
 There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R2 need more than one point's worth of history to be meaningful.
 

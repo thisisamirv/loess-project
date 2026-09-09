@@ -116,6 +116,7 @@ Async fit y[0]: 0.3274
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`/`fitAsync()`, not the options object |
 | `retain_model` | `boolean` | `false` | Retain training data, enabling `result.predict()` |
+| `return_gradient` | `boolean` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 
 ## Options
 
@@ -353,6 +354,10 @@ Per-observation weights, passed to `fit()`/`fitAsync()` rather than the options 
 
 Retains the fitted model's training data, enabling `result.predict(newX, options)` to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `result.gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `null` there. `false` by default.
+
 ## Result Structure
 
 ### `LoessResult`
@@ -378,6 +383,7 @@ Retains the fitted model's training data, enabling `result.predict(newX, options
 | `delta2` | number \| null | Second delta statistic (if `return_se`) |
 | `residual_scale` | number \| null | Residual scale estimate (if `return_se`) |
 | `leverage` | Float64Array \| null | Per-point hat-matrix diagonal (if `return_se`) |
+| `gradient` | Float64Array \| null | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode = "direct"` only) |
 | `dimensions` | `number` | Number of predictor dimensions |
 
 ### `Diagnostics`

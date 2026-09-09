@@ -20,6 +20,27 @@ StreamingOptions options = StreamingOptions.builder()
 |===
 |Setting |Type |Default |Description
 
+|`fraction` |`double` |`0.67` |Smoothing fraction (bandwidth)
+|`iterations` |`int` |`3` |Number of robustifying iterations
+|`weightFunction` |`String` |`"tricube"` |Kernel weight function
+|`robustnessMethod` |`String` |`"bisquare"` |Robustness method
+|`scalingMethod` |`String` |`"mad"` |Residual scaling method
+|`boundaryPolicy` |`String` |`"extend"` |Boundary handling policy
+|`zeroWeightFallback` |`String` |`"use_local_mean"` |Zero-weight handling
+|`missing` |`String` |`"error"` |Policy for non-finite (NaN/Inf) values in each chunk
+|`autoConverge` |`double` |`NaN` (disabled) |Auto-convergence tolerance
+|`returnDiagnostics` |`boolean` |`false` |Compute RMSE, MAE, R2
+|`returnResiduals` |`boolean` |`false` |Include residuals in result
+|`returnRobustnessWeights` |`boolean` |`false` |Include weights in result
+|`degree` |`String` |`"linear"` |Polynomial degree
+|`dimensions` |`int` |`1` |Number of predictor dimensions
+|`distanceMetric` |`String` |`"normalized"` |Distance metric
+|`weightedMetricWeights` |`double[]` |`null` |Per-dimension weights (used when `distanceMetric = "weighted"`)
+|`surfaceMode` |`String` |`"interpolation"` |Surface computation mode
+|`cell` |`double` |`NaN` (auto) |Cell size for interpolation grid (smaller → more vertices, higher accuracy)
+|`interpolationVertices` |`int` |`-1` (auto) |Number of interpolation vertices
+|`boundaryDegreeFallback` |`Boolean` |`null` (auto) |Fall back to lower polynomial degree at boundaries when higher degrees fail
+|`returnGradient` |`boolean` |`false` |Include the per-point local fit gradient in the result (`surfaceMode = "direct"` only)
 |`chunkSize` |`int` |`5000` |Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.
 |`overlap` |`int` |`chunkSize / 10` |Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `mergeStrategy`. A good starting point is 10–20% of `chunkSize`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice. Negative (the builder default, `-1`) means "use the library default", clamped to `[1, chunkSize - 10]`.
 |`mergeStrategy` |`String` |`"weighted_average"` |How overlapping chunk results are combined.
@@ -39,6 +60,8 @@ _See also: xref:../advanced/merge.adoc[Merge Strategies]_
 
 image::merge_comparison.svg[Merge Strategies]
 
+Confidence/prediction intervals, standard errors, cross-validation, and `returnSorted` are Batch-only and not available here; see xref:./api.adoc[API] for those.
+
 == `new StreamingLoess(StreamingOptions options)`
 
 == `StreamingLoess.processChunk(double[] x, double[] y) Result`
@@ -53,9 +76,227 @@ Flushes the overlap points still buffered from the last `processChunk` call. Bec
 
 Releases native resources. Safe to call multiple times. Implements `AutoCloseable`.
 
+== Options
+
+=== fraction
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+[cols="1,1,1",options="header"]
+|===
+|Range |Effect |Use case
+
+|0.1-0.3 |Fine detail |Rapidly changing signals
+|0.3-0.5 |Balanced |General purpose
+|0.5-0.7 |Heavy smoothing |Noisy data
+|0.7-1.0 |Very smooth |Trend extraction
+|===
+
+=== iterations
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+[cols="1,1,1",options="header"]
+|===
+|Value |Effect |Performance
+
+|0 |No robustness |Fastest
+|1-3 |Moderate |Recommended
+|4-6 |Strong |Contaminated data
+|7+ |Very strong |Heavy outliers
+|===
+
+=== weightFunction
+
+_See: xref:../weighting/kernels.adoc[Weight Functions]_
+
+* `"tricube"` (default)
+* `"epanechnikov"`
+* `"gaussian"`
+* `"uniform"` (alias: `"boxcar"`)
+* `"biweight"` (alias: `"bisquare"`)
+* `"triangle"` (alias: `"triangular"`)
+* `"cosine"`
+
+=== robustnessMethod
+
+_See: xref:../weighting/robustness.adoc[Robustness]_
+
+* `"bisquare"` (default; alias: `"biweight"`)
+* `"huber"`
+* `"talwar"`
+
+=== scalingMethod
+
+_See: xref:../weighting/scaling.adoc[Scaling Methods]_
+
+* `"mad"` (default; alias: `"median_absolute_deviation"`)
+* `"mar"` (alias: `"median_absolute_residual"`)
+* `"mean"` (alias: `"mean_absolute_residual"`)
+
+=== boundaryPolicy
+
+_See: xref:../advanced/boundary.adoc[Boundary Handling]_
+
+* `"extend"` (default; alias: `"pad"`)
+* `"reflect"` (alias: `"mirror"`)
+* `"zero"`
+* `"noboundary"` (alias: `"none"`)
+
+=== zeroWeightFallback
+
+Behavior when all neighborhood weights are zero:
+
+[cols="1,1",options="header"]
+|===
+|Option |Behavior
+
+|`"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) |Use the mean of the neighborhood
+|`"return_original"` (alias: `"original"`) |Return the original y value
+|`"return_none"` (alias: `"none"`) |Return `NaN`
+|===
+
+=== missing
+
+Policy for handling non-finite (NaN/Inf) values within each chunk:
+
+[cols="1,1",options="header"]
+|===
+|Option |Behavior
+
+|`"error"` (default) |Throw an error if any value in the chunk is non-finite
+|`"drop"` |Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer
+|===
+
+NOTE: A length mismatch between `x` and `y` always throws, even under `"drop"`.
+
+=== autoConverge
+
+_See: xref:../weighting/robustness.adoc[Robustness]_
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+=== returnDiagnostics
+
+Populate `Result.diagnostics()` with RMSE, MAE, R², and residual_sd. `effectiveDf`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always empty here.
+
+* `false` (default) — leaves `Result.diagnostics()` empty
+* `true` — populates `Result.diagnostics()`
+
+=== returnResiduals
+
+Populate `Result.residuals()` (`y - fitted`).
+
+* `false` (default) — leaves `Result.residuals()` empty
+* `true` — populates `Result.residuals()`
+
+=== returnRobustnessWeights
+
+Populate `Result.robustnessWeights()` with the final per-point robustness weights (from the last robustness iteration).
+
+* `false` (default) — leaves `Result.robustnessWeights()` empty
+* `true` — populates `Result.robustnessWeights()`
+
+=== degree
+
+_See: xref:../advanced/degree.adoc[Polynomial Degree]_
+
+* `"constant"`
+* `"linear"` (default)
+* `"quadratic"`
+* `"cubic"`
+* `"quartic"`
+
+=== dimensions
+
+_See: xref:../advanced/dimensions.adoc[Multivariate LOESS]_
+
+Number of predictor dimensions. Set to match the number of columns in a multivariate `x` array. `1` (default) is univariate.
+
+=== distanceMetric
+
+_See: xref:../advanced/dimensions.adoc[Multivariate LOESS]_
+
+* `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+* `"euclidean"` (alias: `"euclid"`)
+* `"manhattan"` (alias: `"l1"`)
+* `"chebyshev"` (alias: `"linf"`)
+* `"minkowski"` (use `"minkowski:p"` string for custom exponent, e.g. `"minkowski:3"`)
+* `"weighted"` plus `weightedMetricWeights` for per-dimension scaling (alias: `"weighted_euclidean"`)
+
+=== weightedMetricWeights
+
+_See: xref:../advanced/dimensions.adoc[Multivariate LOESS]_
+
+Per-dimension weights, one per dimension declared in `dimensions`. Only used when `distanceMetric = "weighted"`; setting `distanceMetric = "weighted"` without providing this raises an error.
+
+* `null` (default) — has no effect unless `distanceMetric = "weighted"` is set
+* A non-empty `double[]` of per-dimension weights, required when `distanceMetric = "weighted"`
+
+=== surfaceMode
+
+_See: xref:../advanced/degree.adoc[Polynomial Degree]_
+
+* `"interpolation"` (default) — evaluate at anchor vertices, blend via Hermite cubic (`cell`/`interpolationVertices` tune the vertex grid).
+* `"direct"` — evaluate at every query point, exact.
+
+=== cell
+
+Cell size for the interpolation grid, as a fraction of the data range. Smaller values place more vertices (denser grid), improving accuracy at the cost of speed. Only applies when `surfaceMode` is `"interpolation"`.
+
+* `NaN` (default) — uses the library default (`0.2`)
+* Any value in `(0, 1]`
+
+=== interpolationVertices
+
+Caps the maximum number of interpolation vertices, overriding the count implied by `cell`. Only applies when `surfaceMode` is `"interpolation"`.
+
+* `-1` (default) — uses the library default (no explicit cap)
+* Any integer `>= 1`
+
+=== boundaryDegreeFallback
+
+Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surfaceMode` is `"interpolation"`.
+
+* `null` (default) — uses the library default (enabled)
+* `true` — falls back to a lower degree at boundaries
+* `false` — raises an error instead of silently falling back
+
+=== returnGradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) via `Result.gradient()` at effectively no extra computation cost. Only supported when `surfaceMode = "direct"` — stays empty in the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `mergeStrategy`.
+
+=== chunkSize
+
+Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.
+
+=== overlap
+
+Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `mergeStrategy`. A good starting point is 10–20% of `chunkSize`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice.
+
+* Negative (default, `-1`) — computes `chunkSize / 10`, clamped to at least 1 and at most `chunkSize - 10`
+* Any `int >= 1` and `< chunkSize`
+
+=== mergeStrategy
+
+_See: xref:../advanced/merge.adoc[Merge Strategies]_
+
+[cols="1,1,1",options="header"]
+|===
+|Strategy |Alias |Behavior
+
+|`"weighted_average"` (default) |`"weighted"` |Distance-weighted blend
+|`"average"` |`"mean"` |Average overlapping values
+|`"take_first"` |`"first"` |Keep left chunk values
+|`"take_last"` |`"last"` |Keep right chunk values
+|===
+
+image::merge_comparison.svg[Merge Strategies]
+
 == Result
 
 `processChunk` and `finish` return the same `Result` type as `Loess.fit`, described in xref:./api.adoc[API]. Fields tied to Batch-only options (`standardErrors()`, `confidenceLower()`/`confidenceUpper()`, `predictionLower()`/`predictionUpper()`, `cvScores()`, `hatMatrix()`) are always empty here.
+
 
 == Example
 

@@ -126,6 +126,7 @@ int main() {
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `std::string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
+| `return_gradient` | `bool` | `false` | Include the latest point's local fit gradient in the result (`surface_mode = "direct"` only) |
 
 Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLoess](api.md) for those. Online always runs sequentially.
 
@@ -310,6 +311,10 @@ Minimum number of points required before `add_point()` starts returning smoothed
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput::gradient()` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays empty in the default `"interpolation"` mode. `false` by default.
+
 ## Result Structure
 
 ### fastloess::OnlineOutput
@@ -324,5 +329,6 @@ Returned (inside `Expected`) by `add_point()`. Check `has_value()` before readin
 | `residual()` | `double` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
 | `robustness_weight()` | `double` | Robustness weight, if `return_robustness_weights` was set (`NaN` otherwise) |
 | `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |
+| `gradient()` | `std::vector<double>` | Latest point's local fit gradient (`dimensions` values), if `return_gradient` was set (empty otherwise) |
 
 There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

@@ -81,6 +81,7 @@ println("First smoothed value: ", result.y[1])
 | `chunk_size` | `Int` | `5000` | Points per chunk |
 | `overlap` | `Int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `String` | `"weighted_average"` | Strategy for blending overlap regions |
+| `return_gradient` | `Bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode="direct"` only) |
 
 Confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` are Batch-only and not available here; see [Batch Adapter](api.md) for those.
 
@@ -297,6 +298,10 @@ Number of points retained from the previous chunk as context, so the neighbourho
 
 ![Merge Strategies](../assets/merge_comparison.svg)
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `nothing` in the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+
 ---
 
 !!! warning "Always call finalize()"
@@ -323,6 +328,7 @@ Returned by `process_chunk` and `finalize`.
 | `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `return_robustness_weights`) |
 | `cv_scores` | `Union{Vector{Float64}, Nothing}` | Always `nothing` (Batch only) |
 | `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `return_diagnostics`) |
+| `gradient` | `Union{Vector{Float64}, Nothing}` | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode="direct"` only) |
 | `dimensions` | `Int` | Number of predictor dimensions |
 
 ### `Diagnostics`

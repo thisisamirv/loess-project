@@ -51,6 +51,7 @@ opts.ReturnDiagnostics = true
 | `CVSeed` | `*uint64` | `nil` (random) | RNG seed for reproducible k-fold splits. |
 | `Parallel` | `bool` | `true` | Enable parallel processing. |
 | `RetainModel` | `bool` | `false` | Retain training data, enabling `Result.PredictModel` for out-of-sample prediction. |
+| `ReturnGradient` | `bool` | `false` | Populate `Result.Gradient` with the per-point local fit gradient, flattened (`surface_mode = "direct"` only). |
 
 `Fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
@@ -98,6 +99,7 @@ Releases native resources. Safe to call multiple times. A finalizer is registere
 | `Dimensions` | `int` | Always. |
 | `Diagnostics` | `*Diagnostics` | `ReturnDiagnostics` |
 | `HatMatrix` | `*HatMatrixStats` | `ReturnSE` |
+| `Gradient` | `[]float64` | `ReturnGradient` (`SurfaceMode = "direct"` only) |
 
 `Diagnostics` holds `RMSE`, `MAE`, `RSquared`, `AIC`, `AICc`, `EffectiveDF`, `ResidualSD`.
 

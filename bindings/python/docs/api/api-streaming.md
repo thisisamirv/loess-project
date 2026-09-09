@@ -86,6 +86,7 @@ print(final_result)
 | `chunk_size` | `int` | `5000` | Data chunk size |
 | `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `str` | `"weighted_average"` | Strategy for blending overlap regions |
+| `return_gradient` | `bool` | `False` | Include the per-point local fit gradient in the result (`surface_mode="direct"` only) |
 
 Confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` are Batch-only and not available here; see [fastLoess](api.md) for those.
 
@@ -300,6 +301,10 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_first"` | `"first"` | Keep left chunk values |
 | `"take_last"` | `"last"` | Keep right chunk values |
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `None` in the default `"interpolation"` mode. `False` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+
 ## Result Structure
 
 ### `LoessResult`
@@ -321,6 +326,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `robustness_weights` | `ndarray \| None` | Robustness weights (if `return_robustness_weights`) |
 | `cv_scores` | `ndarray \| None` | Always `None` (Batch only) |
 | `diagnostics` | `Diagnostics \| None` | Fit metrics (if `return_diagnostics`) |
+| `gradient` | `ndarray \| None` | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode="direct"` only) |
 | `dimensions` | `int` | Number of predictor dimensions |
 
 ### `Diagnostics`

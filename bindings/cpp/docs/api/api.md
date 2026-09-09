@@ -122,6 +122,7 @@ int main() {
 | `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
 | `retain_model` | `bool` | `false` | Retain training data, enabling `LoessResult::predict_model()` |
+| `return_gradient` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 
 ## Options
 
@@ -359,6 +360,13 @@ Per-observation weights, passed to `fit()` rather than the constructor.
 
 Retains the fitted model's training data, enabling `LoessResult::predict_model()` to obtain a `PredictModel` for out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) via `LoessResult::gradient()`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when `surface_mode = "direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient()` stays empty there.
+
+- `false` (default) — leaves `gradient()` empty
+- `true` — populates `gradient()`
+
 ## Result Structure
 
 ### fastloess::LoessResult
@@ -386,6 +394,7 @@ A RAII wrapper around the C result struct `fastloess_CppLoessResult`.
 | `delta2()` | `double` | Second delta statistic (NaN if not computed) |
 | `residual_scale()` | `double` | Residual scale estimate (NaN if not computed) |
 | `leverage()` | `std::vector<double>` | Per-point hat-matrix diagonal (if `return_se`; empty if not computed) |
+| `gradient()` | `std::vector<double>` | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode = "direct"` only; empty if not computed) |
 | `dimensions()` | `int` | Number of predictor dimensions |
 
 ### fastloess::Diagnostics

@@ -124,12 +124,31 @@ int main() {
 
 ## Options Structure
 
-### StreamingOptions (inherits LoessOptions)
-
-`StreamingOptions` inherits every field from `LoessOptions` (see [fastLoess](api.md#loessoptions)) and adds:
+### StreamingOptions
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
+| `fraction` | `double` | `0.67` | Smoothing fraction (bandwidth) |
+| `iterations` | `int` | `3` | Number of robustifying iterations |
+| `weight_function` | `std::string` | `"tricube"` | Weight function name |
+| `robustness_method` | `std::string` | `"bisquare"` | Robustness method name |
+| `scaling_method` | `std::string` | `"mad"` | Residual scaling method |
+| `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
+| `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
+| `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
+| `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
+| `return_diagnostics` | `bool` | `false` | Compute RMSE, MAE, R2 |
+| `return_residuals` | `bool` | `false` | Include residuals in result |
+| `return_robustness_weights` | `bool` | `false` | Include weights in result |
+| `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
+| `dimensions` | `int` | `1` | Number of predictor dimensions |
+| `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
+| `weighted_metric_weights` | `std::vector<double>` | `{}` | Per-dimension weights (used when `distance_metric = "weighted"`) |
+| `surface_mode` | `std::string` | `"interpolation"` | Surface computation mode |
+| `cell` | `double` | `NaN` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
+| `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
+| `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = unset/library default, 0 = false, 1 = true) |
+| `return_gradient` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 | `chunk_size` | `int` | `5000` | Data chunk size |
 | `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `std::string` | `"weighted_average"` | Strategy for blending overlap regions |
@@ -137,6 +156,188 @@ int main() {
 Confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` are Batch-only; setting these inherited fields has no effect on `StreamingLoess` — see [fastLoess](api.md) for those.
 
 ## Options
+
+### fraction
+
+`fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
+
+| Range | Effect | Use case |
+| --- | --- | --- |
+| 0.1-0.3 | Fine detail | Rapidly changing signals |
+| 0.3-0.5 | Balanced | General purpose |
+| 0.5-0.7 | Heavy smoothing | Noisy data |
+| 0.7-1.0 | Very smooth | Trend extraction |
+
+### iterations
+
+`iterations` controls robustness to outliers, at the cost of speed.
+
+| Value | Effect | Performance |
+| --- | --- | --- |
+| 0 | No robustness | Fastest |
+| 1-3 | Moderate | Recommended |
+| 4-6 | Strong | Contaminated data |
+| 7+ | Very strong | Heavy outliers |
+
+### weight_function
+
+*See: [Weight Functions](../weighting/kernels.md)*
+
+- `"tricube"` (default)
+- `"epanechnikov"`
+- `"gaussian"`
+- `"uniform"` (alias: `"boxcar"`)
+- `"biweight"` (alias: `"bisquare"`)
+- `"triangle"` (alias: `"triangular"`)
+- `"cosine"`
+
+### robustness_method
+
+*See: [Robustness](../weighting/robustness.md)*
+
+- `"bisquare"` (default; alias: `"biweight"`)
+- `"huber"`
+- `"talwar"`
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### missing
+
+Policy for handling non-finite (NaN/Inf) values within each chunk:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error if any value in the chunk is non-finite |
+| `"drop"` | Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer |
+
+**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+### return_diagnostics
+
+Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always empty here.
+
+- `false` (default) — leaves `diagnostics()` empty
+- `true` — populates `diagnostics()`
+
+### return_residuals
+
+Include per-point residuals (`y - fitted`) in the result.
+
+- `false` (default) — leaves `residuals()` empty
+- `true` — populates `residuals()`
+
+### return_robustness_weights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+- `false` (default) — leaves `robustness_weights()` empty
+- `true` — populates `robustness_weights()`
+
+### degree
+
+*See: [Polynomial Degree](../advanced/degree.md)*
+
+- `"constant"` or `"0"` (degree 0)
+- `"linear"` or `"1"` (default, degree 1)
+- `"quadratic"` or `"2"` (degree 2)
+- `"cubic"` or `"3"` (degree 3)
+- `"quartic"` or `"4"` (degree 4)
+
+### dimensions
+
+*See: [Multivariate LOESS](../advanced/dimensions.md)*
+
+Number of predictor dimensions. Set to match the number of columns in a multivariate `x` array.
+
+- Any integer `>= 1`; `1` (default) is univariate
+
+### distance_metric
+
+*See: [Multivariate LOESS](../advanced/dimensions.md)*
+
+- `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+- `"euclidean"` (alias: `"euclid"`)
+- `"manhattan"` (alias: `"l1"`)
+- `"chebyshev"` (alias: `"linf"`)
+- `"minkowski"` (use `"minkowski:p"` for custom p, e.g. `"minkowski:3"`)
+- `"weighted"` plus `weighted_metric_weights` for per-dimension scaling (alias: `"weighted_euclidean"`)
+
+### weighted_metric_weights
+
+*See: [Multivariate LOESS](../advanced/dimensions.md)*
+
+Per-dimension weights, one per dimension declared in `dimensions`. Only used when `distance_metric = "weighted"`; setting `distance_metric = "weighted"` without providing this raises an error.
+
+- `{}` (default, empty vector) — has no effect unless `distance_metric = "weighted"` is set
+- A non-empty `std::vector<double>` of per-dimension weights, required when `distance_metric = "weighted"`
+
+### surface_mode
+
+*See: [Polynomial Degree](../advanced/degree.md#surface-mode)*
+
+Controls whether the local polynomial is evaluated at every query point or at a sparser grid of anchor vertices with Hermite cubic interpolation in between.
+
+| Mode | Behavior | Speed | Accuracy |
+| --- | --- | --- | --- |
+| `"interpolation"` (default) | Evaluate at vertices, interpolate between | Faster | Slight approximation |
+| `"direct"` | Evaluate at every query point | Slower | Full precision |
+
+### cell
+
+Cell size for the interpolation grid, as a fraction of the data range. Smaller values place more vertices (denser grid), improving accuracy at the cost of speed. Only applies when `surface_mode = "interpolation"`.
+
+- `NaN` (default) — uses the library default (`0.2`)
+- Any value in `(0, 1]`
+
+### interpolation_vertices
+
+Caps the maximum number of interpolation vertices, overriding the count implied by `cell`. Only applies when `surface_mode = "interpolation"`.
+
+- `0` (default) — uses the library default (no explicit cap)
+- Any integer `>= 1`
+
+### boundary_degree_fallback
+
+Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surface_mode = "interpolation"`.
+
+- `-1` (default) — uses the library default (enabled)
+- `1` — falls back to a lower degree at boundaries
+- `0` — raises an error instead of silently falling back
+
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `gradient()` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays empty in the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
 
 ### chunk_size
 
@@ -181,7 +382,22 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not) |
 | `cv_scores()` | `std::vector<double>` | Always empty (Batch only) |
 | `diagnostics()` | `Diagnostics` | Fit metrics — check `has_value()` (if `return_diagnostics`) |
+| `gradient()` | `std::vector<double>` | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode = "direct"` only; empty if not computed) |
 | `dimensions()` | `int` | Number of predictor dimensions |
+
+### fastloess::Diagnostics
+
+All accessors are const methods (not public fields):
+
+| Method | Return Type | Description |
+| --- | --- | --- |
+| `rmse()` | `double` | Root Mean Squared Error |
+| `mae()` | `double` | Mean Absolute Error |
+| `r_squared()` | `double` | R-squared |
+| `residual_sd()` | `double` | Residual standard deviation |
+| `effective_df()` | `double` | Always `NaN` (requires standard errors, Batch only) |
+| `aic()` | `double` | Always `NaN` (requires `effective_df`, Batch only) |
+| `aicc()` | `double` | Always `NaN` (requires `effective_df`, Batch only) |
 
 See [cpp.md](api.md) for the full `LoessResult` field reference.
 

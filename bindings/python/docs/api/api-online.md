@@ -71,6 +71,7 @@ print(result)
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `str` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
+| `return_gradient` | `bool` | `False` | Include the latest point's local fit gradient in the result (`surface_mode="direct"` only) |
 
 Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLoess](api.md) for those.
 
@@ -255,6 +256,10 @@ Minimum number of points required before smoothing starts. `add_point()` returns
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `None` in the default `"interpolation"` mode. `False` by default.
+
 ## Result Structure
 
 ### `OnlineOutput`
@@ -268,5 +273,6 @@ Returned by `add_point()` once the window has enough points (`None` until then).
 | `residual` | `float \| None` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
 | `robustness_weight` | `float \| None` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used` | `int \| None` | Robustness iterations performed |
+| `gradient` | `ndarray \| None` | Local fit gradient (`dimensions` values) for the latest point, if `return_gradient` was set |
 
 There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
