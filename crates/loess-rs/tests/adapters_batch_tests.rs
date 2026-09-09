@@ -1157,3 +1157,111 @@ fn test_batch_custom_weights_duplicate_detected() {
         "setting custom_weights twice should produce DuplicateParameter error"
     );
 }
+
+// ============================================================================
+// Per-Point Local Fit Gradient (`return_gradient`)
+// ============================================================================
+
+/// `gradient` should be `None` when `.return_gradient()` is not requested.
+#[test]
+fn test_batch_gradient_none_by_default() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&v| 3.0 * v + 1.0).collect();
+
+    let result = Loess::new()
+        .surface_mode("direct")
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(
+        result.gradient.is_none(),
+        "gradient should be None unless return_gradient() was requested"
+    );
+}
+
+/// `return_gradient()` should recover the exact slope of a perfectly linear
+/// 1D function in `SurfaceMode::Direct` (an exact WLS fit of collinear data
+/// has zero residual, so the local gradient is exact regardless of window
+/// position/symmetry).
+#[test]
+fn test_batch_return_gradient_direct_mode_linear() {
+    let x: Vec<f64> = (0..40).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&v| 3.0 * v + 1.0).collect();
+
+    let result = Loess::new()
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .return_gradient()
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let gradient = result.gradient.expect("gradient should be Some");
+    assert_eq!(gradient.len(), x.len());
+    for g in gradient {
+        assert_relative_eq!(g, 3.0, epsilon = 1e-6);
+    }
+}
+
+/// `return_gradient()` is only supported in `SurfaceMode::Direct` — the default
+/// `SurfaceMode::Interpolation` only stores value+gradient at sparse vertices,
+/// not enough to reconstruct an exact per-point gradient, so it stays `None`.
+#[test]
+fn test_batch_return_gradient_interpolation_mode_is_none() {
+    let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&v| 3.0 * v + 1.0).collect();
+
+    let result = Loess::new()
+        .return_gradient()
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(
+        result.gradient.is_none(),
+        "gradient should be None in the default SurfaceMode::Interpolation"
+    );
+}
+
+/// `return_gradient()` in 2D should recover each partial derivative of a
+/// perfectly linear plane.
+#[test]
+fn test_batch_return_gradient_2d() {
+    let nx = 10;
+    let ny = 10;
+    let mut x = Vec::with_capacity(nx * ny * 2);
+    let mut y = Vec::with_capacity(nx * ny);
+
+    for i in 0..nx {
+        for j in 0..ny {
+            x.push(i as f64);
+            x.push(j as f64);
+            y.push(2.0 * i as f64 + 5.0 * j as f64 + 1.0);
+        }
+    }
+
+    let result = Loess::new()
+        .dimensions(2)
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .return_gradient()
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let gradient = result.gradient.expect("gradient should be Some");
+    assert_eq!(gradient.len(), x.len());
+    for pair in gradient.chunks(2) {
+        assert_relative_eq!(pair[0], 2.0, epsilon = 1e-6);
+        assert_relative_eq!(pair[1], 5.0, epsilon = 1e-6);
+    }
+}

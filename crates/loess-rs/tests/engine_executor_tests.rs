@@ -157,6 +157,8 @@ fn test_config_custom() {
         boundary_degree_fallback: true,
         custom_weights: None,
         retain_model: false,
+        return_gradient: false,
+        custom_gradient_pass: None,
     };
 
     assert_eq!(config.fraction, Some(0.5));
@@ -188,6 +190,7 @@ fn test_executor_output_basic() {
         cv_scores: None,
         robustness_weights: vec![1.0, 1.0, 1.0],
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -211,6 +214,7 @@ fn test_executor_output_complete() {
         cv_scores: Some(vec![0.1, 0.2, 0.3]),
         robustness_weights: vec![1.0, 1.0, 1.0],
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -234,6 +238,7 @@ fn test_executor_output_empty() {
         cv_scores: None,
         robustness_weights: vec![],
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -367,6 +372,8 @@ fn test_config_f32() {
         boundary_degree_fallback: true,
         custom_weights: None,
         retain_model: false,
+        return_gradient: false,
+        custom_gradient_pass: None,
     };
 
     assert_eq!(config.fraction, Some(0.5f32));
@@ -385,6 +392,7 @@ fn test_output_f32() {
         cv_scores: None,
         robustness_weights: vec![1.0f32, 1.0f32, 1.0f32],
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -434,6 +442,8 @@ fn test_executor_convergence_zero_tolerance() {
         boundary_degree_fallback: true,
         custom_weights: None,
         retain_model: false,
+        return_gradient: false,
+        custom_gradient_pass: None,
     };
 
     let output = LoessExecutor::run_with_config(&x, &y, config);
@@ -516,6 +526,7 @@ fn test_output_clone() {
         cv_scores: Some(vec![0.1, 0.2]),
         robustness_weights: vec![1.0, 1.0, 1.0],
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 

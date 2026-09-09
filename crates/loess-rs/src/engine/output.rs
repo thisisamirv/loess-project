@@ -99,6 +99,11 @@ pub struct LoessResult<T: Float> {
     // l_ii measures how much influence point i has on its own fitted value.
     pub leverage: Option<Vec<T>>,
 
+    // Per-point local fit gradient (flattened, `dimensions` values per point), if
+    // `return_gradient` was set. Only computed in `SurfaceMode::Direct`; `None` in
+    // `SurfaceMode::Interpolation`.
+    pub gradient: Option<Vec<T>>,
+
     // Retained fitted-model state for `predict()`, if `retain_model` was set. Wrapped in
     // `Arc` so cloning a `LoessResult` (e.g. to hand to multiple worker threads) is a
     // cheap refcount bump instead of deep-copying the whole padded training set.

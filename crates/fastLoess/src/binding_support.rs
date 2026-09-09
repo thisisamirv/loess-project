@@ -630,6 +630,7 @@ where
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     })
 }

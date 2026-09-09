@@ -106,3 +106,39 @@ fn test_parallel_minkowski_distance() {
 
     assert!(!res.y.is_empty());
 }
+
+/// Rayon-parallel `gradient_pass_parallel` should agree with the serial
+/// gradient pass (Direct mode) to within numerical precision.
+#[test]
+fn test_gradient_pass_consistency() {
+    let n = 60;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1 * xi).collect();
+
+    let seq_res = Loess::new()
+        .fraction(0.3)
+        .surface_mode("direct")
+        .return_gradient()
+        .parallel(false)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let par_res = Loess::new()
+        .fraction(0.3)
+        .surface_mode("direct")
+        .return_gradient()
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let seq_gradient = seq_res.gradient.expect("serial gradient should be Some");
+    let par_gradient = par_res.gradient.expect("parallel gradient should be Some");
+    assert_eq!(seq_gradient.len(), par_gradient.len());
+    for (s, p) in seq_gradient.iter().zip(par_gradient.iter()) {
+        assert_abs_diff_eq!(s, p, epsilon = 1e-9);
+    }
+}

@@ -101,6 +101,7 @@ fn test_has_confidence_intervals_true() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -138,6 +139,7 @@ fn test_has_confidence_intervals_false() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -175,6 +177,7 @@ fn test_has_prediction_intervals_true() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -212,6 +215,7 @@ fn test_has_prediction_intervals_false() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -249,6 +253,7 @@ fn test_has_cv_scores_true() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -283,6 +288,7 @@ fn test_has_cv_scores_false() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -322,6 +328,7 @@ fn test_smoothed_accessor() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -356,6 +363,7 @@ fn test_best_cv_score_present() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -392,6 +400,7 @@ fn test_best_cv_score_none() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -426,6 +435,7 @@ fn test_best_cv_score_single() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -466,6 +476,7 @@ fn test_confidence_width() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -504,6 +515,7 @@ fn test_confidence_width_none() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -538,6 +550,7 @@ fn test_prediction_width() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -576,6 +589,7 @@ fn test_prediction_width_none() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -610,6 +624,7 @@ fn test_prediction_wider_than_confidence() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -653,6 +668,7 @@ fn test_minimal_result() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -700,6 +716,7 @@ fn test_maximal_result() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -739,6 +756,7 @@ fn test_empty_cv_scores() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -778,6 +796,7 @@ fn test_display_basic() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -819,6 +838,7 @@ fn test_best_cv_score_with_nan() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -853,6 +873,7 @@ fn test_best_cv_score_all_equal() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -886,6 +907,7 @@ fn test_display_with_empty_vectors() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -929,6 +951,7 @@ fn test_display_with_all_fields() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -976,6 +999,7 @@ fn test_display_large_dataset() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 

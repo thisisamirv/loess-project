@@ -97,6 +97,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights |
 | `retain_model(bool)` | `bool` | `false` | Retain training data, enabling `predict()` on the result |
+| `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 
 ## Options
 
@@ -295,6 +296,10 @@ Per-observation case weights. Must have the same length as `y`; all values must 
 
 Retains the fitted model's training data, enabling `Predict::call(&result, new_x)` to evaluate the fit at out-of-sample query points not in the training set. Off by default (no extra memory/clone cost unless requested).
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `LoessResult::gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `None` there. `false` by default.
+
 ## Result Structure
 
 ### `LoessResult<T>`
@@ -320,6 +325,7 @@ Retains the fitted model's training data, enabling `Predict::call(&result, new_x
 | `delta2` | `Option<T>` | Second delta statistic (if `return_se()`) |
 | `residual_scale` | `Option<T>` | Residual scale estimate (if `return_se()`) |
 | `leverage` | `Option<Vec<T>>` | Per-point hat-matrix diagonal (if `return_se()`) |
+| `gradient` | `Option<Vec<T>>` | Per-point local fit gradient, flattened (if `return_gradient()`, `surface_mode = "direct"` only) |
 | `dimensions` | `usize` | Number of predictor dimensions |
 | `polynomial_degree` | `PolynomialDegree` (internal) | Polynomial degree used; implements `Display` (e.g. `"linear"`) |
 | `distance_metric` | `DistanceMetric<T>` (internal) | Distance metric used; implements `Display` (e.g. `"normalized"`) |

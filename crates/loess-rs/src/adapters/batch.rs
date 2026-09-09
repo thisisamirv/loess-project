@@ -29,8 +29,8 @@ use crate::algorithms::regression::{PolynomialDegree, SolverLinalg, ZeroWeightFa
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::defaults::*;
 use crate::engine::executor::{
-    CVPassFn, FitPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig, LoessExecutor, SmoothPassFn,
-    SurfaceMode, VertexPassFn,
+    CVPassFn, FitPassFn, GradientPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig,
+    LoessExecutor, SmoothPassFn, SurfaceMode, VertexPassFn,
 };
 use crate::engine::output::LoessResult;
 use crate::engine::validator::{MissingPolicy, Validator};
@@ -127,6 +127,10 @@ pub struct BatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     // Set to `false` to match R's loess behavior exactly.
     pub boundary_degree_fallback: bool,
 
+    // Whether to include the per-point local fit gradient in the output. Only computed
+    // in `SurfaceMode::Direct`; `None` in `SurfaceMode::Interpolation`.
+    pub return_gradient: bool,
+
     // Tracks if any parameter was set multiple times (for validation)
     #[doc(hidden)]
     pub(crate) duplicate_param: Option<&'static str>,
@@ -145,6 +149,10 @@ pub struct BatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
+
+    // Custom gradient pass function.
+    #[doc(hidden)]
+    pub custom_gradient_pass: Option<GradientPassFn<T>>,
 
     // Custom fit pass function.
     #[doc(hidden)]
@@ -210,6 +218,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
             interpolation_vertices: None,
             surface_mode: DEFAULT_SURFACE_MODE_ENUM,
             boundary_degree_fallback: DEFAULT_BOUNDARY_DEGREE_FALLBACK,
+            return_gradient: DEFAULT_RETURN_GRADIENT,
             duplicate_param: None,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
@@ -217,6 +226,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
+            custom_gradient_pass: None,
             custom_fit_pass: None,
             custom_vertex_pass: None,
             custom_kdtree_builder: None,
@@ -344,12 +354,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             custom_smooth_pass: self.config.custom_smooth_pass,
             custom_cv_pass: self.config.custom_cv_pass,
             custom_interval_pass: self.config.custom_interval_pass,
+            custom_gradient_pass: self.config.custom_gradient_pass,
             custom_fit_pass: self.config.custom_fit_pass,
             custom_vertex_pass: self.config.custom_vertex_pass,
             custom_kdtree_builder: self.config.custom_kdtree_builder,
             parallel: self.config.parallel.unwrap_or(false),
             backend: self.config.backend,
             retain_model: self.config.retain_model,
+            return_gradient: self.config.return_gradient,
         };
 
         // Execute unified LOESS (KD-Tree handles unsorted data)
@@ -360,6 +372,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         let iterations_used = result.iterations;
         let fraction_used = result.used_fraction;
         let cv_scores = result.cv_scores;
+        let gradient = result.gradient;
         let mut predict_state = result.predict_state;
 
         // Calculate residuals (data is in original order, no unsorting needed)
@@ -458,6 +471,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             pl_out,
             pu_out,
             leverage_out,
+            gradient_out,
         ) = if self.config.return_sorted {
             let dims = self.config.dimensions;
             let mut perm: Vec<usize> = (0..y_smooth.len()).collect();
@@ -478,6 +492,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 pred_lower.as_ref().map(|v| gather(v, &perm)),
                 pred_upper.as_ref().map(|v| gather(v, &perm)),
                 leverage_out.as_ref().map(|v| gather(v, &perm)),
+                gradient.as_ref().map(|v| gather_flat(v, &perm, dims)),
             )
         } else {
             (
@@ -491,6 +506,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 pred_lower,
                 pred_upper,
                 leverage_out,
+                gradient,
             )
         };
 
@@ -517,6 +533,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             delta2,
             residual_scale,
             leverage: leverage_out,
+            gradient: gradient_out,
             predict_state,
         })
     }

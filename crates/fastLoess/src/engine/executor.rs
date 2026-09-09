@@ -203,6 +203,96 @@ pub fn smooth_pass_parallel<T>(
     y_smooth[..n].copy_from_slice(&smoothed_values);
 }
 
+// Perform a parallel pass collecting the per-point local fit gradient (Direct mode only).
+//
+// This function is designed to be injected via the `GradientPassFn` hook. It mirrors
+// `smooth_pass_parallel`'s structure but calls `fit_with_coefficients()` instead of
+// `fit()`, since the gradient (unlike `y`) isn't produced by `fit()`.
+#[allow(clippy::too_many_arguments)]
+pub fn gradient_pass_parallel<T>(
+    x: &[T],
+    x_search: &[T], // Augmented data
+    y_search: &[T], // Augmented values
+    dims: usize,
+    window_size: usize,
+    robustness_weights: &[T],
+    weight_function: WeightFunction,
+    zero_weight_fallback: ZeroWeightFallback,
+    polynomial_degree: PolynomialDegree,
+    distance_metric: &DistanceMetric<T>,
+    scales: &[T],
+    custom_weights: Option<&[T]>,
+) -> Vec<T>
+where
+    T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Sync + 'static,
+{
+    let n = x.len() / dims;
+    if n == 0 {
+        return Vec::new();
+    }
+
+    // Build KD-Tree for efficient neighbor finding on AUGMENTED data
+    let kdtree = KDTree::new(x_search, dims);
+
+    let per_point: Vec<Vec<T>> = (0..n)
+        .into_par_iter()
+        .map_init(
+            || {
+                (
+                    NeighborhoodSearchBuffer::<NodeDistance<T>>::new(window_size),
+                    Neighborhood::<T>::new(),
+                    FittingBuffer::new(window_size, dims),
+                )
+            },
+            |(search_buffer, neighborhood, fitting_buffer), i| {
+                let dist_calc = LoessDistanceCalculator {
+                    metric: distance_metric,
+                    scales,
+                };
+
+                let query_offset = i * dims;
+                let query_point = &x[query_offset..query_offset + dims];
+
+                kdtree.find_k_nearest(
+                    query_point,
+                    window_size,
+                    &dist_calc,
+                    None,
+                    search_buffer,
+                    neighborhood,
+                );
+
+                let mut context = RegressionContext::new(
+                    x_search,
+                    dims,
+                    y_search,
+                    i,
+                    Some(query_point),
+                    neighborhood,
+                    true, // use_robustness (final pass always uses the converged weights)
+                    robustness_weights,
+                    weight_function,
+                    zero_weight_fallback,
+                    polynomial_degree,
+                    false, // compute_leverage
+                    Some(fitting_buffer),
+                );
+
+                if let Some(uw) = custom_weights {
+                    context = context.with_custom_weights(uw);
+                }
+
+                match context.fit_with_coefficients() {
+                    Some(c) => c[1..=dims].to_vec(),
+                    None => vec![T::zero(); dims],
+                }
+            },
+        )
+        .collect();
+
+    per_point.into_iter().flatten().collect()
+}
+
 // Perform a parallel vertex pass for interpolation mode.
 #[allow(clippy::too_many_arguments)]
 pub fn vertex_pass_parallel<T>(

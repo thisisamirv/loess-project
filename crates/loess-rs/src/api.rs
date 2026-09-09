@@ -247,6 +247,9 @@ pub struct LoessBuilder<
     // Off by default (no extra memory/clone cost unless requested). Only used in Batch mode.
     pub retain_model: Option<bool>,
 
+    // Include the per-point local fit gradient in the output (Batch, Direct mode only).
+    pub return_gradient: Option<bool>,
+
     // CV method string for string-based cross-validation API ("kfold" or "loocv").
     pub cv_method_str: Option<String>,
 
@@ -339,6 +342,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             boundary_degree_fallback: None,
             custom_weights: None,
             retain_model: None,
+            return_gradient: None,
             cv_method_str: None,
             cv_k_val: DEFAULT_CV_K_FOLDS,
             weighted_metric_weights: None,
@@ -603,6 +607,16 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // Include final robustness weights in output.
     pub fn return_robustness_weights(mut self) -> Self {
         self.return_robustness_weights = Some(true);
+        self
+    }
+
+    // Include the per-point local fit gradient (rate of change of the smoothed surface) in
+    // the output as `LoessResult::gradient`. Each local polynomial fit (degree >= linear)
+    // already computes per-dimension coefficients internally, so this adds minimal extra
+    // computation. Only supported in `SurfaceMode::Direct` (Batch mode); `None` in
+    // `SurfaceMode::Interpolation`.
+    pub fn return_gradient(mut self) -> Self {
+        self.return_gradient = Some(true);
         self
     }
 
@@ -941,6 +955,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         }
         if let Some(rm) = builder.retain_model {
             result.retain_model = rm;
+        }
+        if let Some(rg) = builder.return_gradient {
+            result.return_gradient = rg;
         }
 
         // ++++++++++++++++++++++++++++++++++++++

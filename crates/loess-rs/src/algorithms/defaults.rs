@@ -43,3 +43,6 @@ pub const DEFAULT_RETURN_ROBUSTNESS_WEIGHTS: bool = false;
 
 // False means return results in original input order (not sorted by x).
 pub const DEFAULT_RETURN_SORTED: bool = false;
+
+// False means do not compute or return the per-point local fit gradient.
+pub const DEFAULT_RETURN_GRADIENT: bool = false;

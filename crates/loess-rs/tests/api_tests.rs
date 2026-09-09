@@ -587,6 +587,7 @@ fn test_loess_rs_result_helpers() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
 
@@ -623,6 +624,7 @@ fn test_has_cv_scores() {
         delta2: None,
         residual_scale: None,
         leverage: None,
+        gradient: None,
         predict_state: None,
     };
     assert!(lr_with.has_cv_scores());

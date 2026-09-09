@@ -15,7 +15,6 @@ The Batch adapter already covers a comprehensive set of options (polynomial degr
 
 **Batch:**
 
-- **Expose per-point local gradient**: each local polynomial fit (degree ≥ linear) already computes per-dimension coefficients internally (`fit_with_coefficients`), but only the fitted `y` is kept. A `return_gradient` option exposing the per-dimension partial derivatives at each point would enable sensitivity/rate-of-change analysis in nD with minimal new computation.
 - **Adaptive/automatic fraction selection**: CV-based bandwidth selection currently requires hand-picking a `cv_fractions` grid. A continuous search (e.g. golden-section over `(0, 1]` minimizing CV error or AICc) would remove the hardest tuning decision.
 - **Automatic `cell`/`interpolation_vertices` tuning**: these interpolation-grid knobs currently must be chosen manually; heuristics based on `dimensions`/`n`/`fraction` (similar to R's `loess` internals) would remove another hard-to-tune, nD-specific parameter.
 - **Bootstrap-based intervals**: an alternative to the existing analytic hat-matrix SE-based confidence/prediction intervals, useful when the residual-normality assumption is questionable.

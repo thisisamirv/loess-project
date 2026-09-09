@@ -83,6 +83,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `return_robustness_weights()` | `bool` | `false` | Include weights in result |
 | `return_se()` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
 | `return_sorted()` | `bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
+| `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 | `degree(...)` | `degree` | `"linear"` | Polynomial degree |
 | `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
 | `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
@@ -299,6 +300,10 @@ Per-observation case weights. Must have the same length as `y`; all values must 
 
 Retains the fitted model's training data, enabling `Predict::call(&result, new_x)` to evaluate the fit at out-of-sample query points not in the training set. Off by default (no extra memory/clone cost unless requested).
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `LoessResult::gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Computed in parallel (like the smoothing pass itself) when `parallel` is enabled. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `None` there. `false` by default.
+
 ## Result Structure
 
 ### `LoessResult<T>`
@@ -324,6 +329,7 @@ Retains the fitted model's training data, enabling `Predict::call(&result, new_x
 | `delta2` | `Option<T>` | Second delta statistic (if `return_se()`) |
 | `residual_scale` | `Option<T>` | Residual scale estimate (if `return_se()`) |
 | `leverage` | `Option<Vec<T>>` | Per-point hat-matrix diagonal (if `return_se()`) |
+| `gradient` | `Option<Vec<T>>` | Per-point local fit gradient, flattened (if `return_gradient()`, `surface_mode = "direct"` only) |
 | `dimensions` | `usize` | Number of predictor dimensions |
 | `polynomial_degree` | `PolynomialDegree` (internal) | Polynomial degree used; implements `Display` (e.g. `"linear"`) |
 | `distance_metric` | `DistanceMetric<T>` (internal) | Distance metric used; implements `Display` (e.g. `"normalized"`) |

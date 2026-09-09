@@ -245,6 +245,10 @@ impl Loess {
         self.0 = self.0.return_residuals();
         self
     }
+    pub fn return_gradient(mut self) -> Self {
+        self.0 = self.0.return_gradient();
+        self
+    }
     #[doc(hidden)]
     pub fn backend(mut self, b: Backend) -> Self {
         self.0 = self.0.backend(b);

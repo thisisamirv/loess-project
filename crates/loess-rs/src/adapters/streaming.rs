@@ -343,12 +343,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             boundary_degree_fallback: self.config.boundary_degree_fallback,
             custom_weights: None,
             retain_model: false,
+            return_gradient: false,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++
             custom_smooth_pass: self.config.custom_smooth_pass,
             custom_cv_pass: self.config.custom_cv_pass,
             custom_interval_pass: self.config.custom_interval_pass,
+            custom_gradient_pass: None,
             custom_fit_pass: self.config.custom_fit_pass,
             custom_vertex_pass: self.config.custom_vertex_pass,
             custom_kdtree_builder: self.config.custom_kdtree_builder,
@@ -496,6 +498,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             delta2: None,
             residual_scale: None,
             leverage: None,
+            gradient: None,
             predict_state: None,
         })
     }
@@ -526,6 +529,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 delta2: None,
                 residual_scale: None,
                 leverage: None,
+                gradient: None,
                 predict_state: None,
             });
         }
@@ -578,6 +582,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             delta2: None,
             residual_scale: None,
             leverage: None,
+            gradient: None,
             predict_state: None,
         };
 

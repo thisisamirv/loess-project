@@ -214,6 +214,23 @@ pub type VertexPassFn<T> = fn(
 #[doc(hidden)]
 pub type KDTreeBuilderFn<T> = fn(points: &[T], dims: usize) -> KDTree<T>;
 
+// Signature for custom gradient pass function (Direct mode only).
+#[doc(hidden)]
+pub type GradientPassFn<T> = fn(
+    &[T],               // x (query points)
+    &[T],               // x_search (augmented data for neighbor search)
+    &[T],               // y_search (augmented data for fitting)
+    usize,              // dimensions
+    usize,              // window_size
+    &[T],               // robustness_weights (final, converged values)
+    WeightFunction,     // weight_function
+    ZeroWeightFallback, // zero_weight_fallback
+    PolynomialDegree,   // polynomial_degree
+    &DistanceMetric<T>, // distance_metric
+    &[T],               // scales (normalization scales per dimension)
+    Option<&[T]>,       // custom_weights (per-observation user weights)
+) -> Vec<T>; // flattened per-point gradient (n * dimensions)
+
 // Output from LOESS execution.
 #[derive(Debug, Clone)]
 pub struct ExecutorOutput<T: FloatLinalg> {
@@ -238,6 +255,10 @@ pub struct ExecutorOutput<T: FloatLinalg> {
     // Leverage values (hat matrix diagonal) for each point.
     // Only computed when intervals are requested.
     pub leverage: Option<Vec<T>>,
+
+    // Per-point local fit gradient (flattened, `dimensions` values per point), if
+    // `return_gradient` was set. Only computed in `SurfaceMode::Direct`.
+    pub gradient: Option<Vec<T>>,
 
     // Retained fitted-model state for `Predict::call()`, if `retain_model` was set.
     pub predict_state: Option<Arc<PredictState<T>>>,
@@ -317,6 +338,11 @@ pub struct LoessConfig<T: FloatLinalg + SolverLinalg> {
     // Off by default (no extra memory/clone cost unless requested). Only supported for Batch mode.
     pub retain_model: bool,
 
+    // Include the per-point local fit gradient (flattened, `dimensions` values per point) in
+    // the output. Only computed in `SurfaceMode::Direct`; `None` in `SurfaceMode::Interpolation`.
+    // Only supported for Batch mode.
+    pub return_gradient: bool,
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -331,6 +357,10 @@ pub struct LoessConfig<T: FloatLinalg + SolverLinalg> {
     // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
+
+    // Custom gradient pass function (Direct mode only).
+    #[doc(hidden)]
+    pub custom_gradient_pass: Option<GradientPassFn<T>>,
 
     // Custom iteration batch pass function.
     #[doc(hidden)]
@@ -379,9 +409,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Defau
             boundary_degree_fallback: DEFAULT_BOUNDARY_DEGREE_FALLBACK,
             custom_weights: None,
             retain_model: false,
+            return_gradient: DEFAULT_RETURN_GRADIENT,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
+            custom_gradient_pass: None,
             custom_fit_pass: None,
             custom_vertex_pass: None,
             custom_kdtree_builder: None,
@@ -442,6 +474,9 @@ pub struct LoessExecutor<T: FloatLinalg + SolverLinalg> {
     // Retain the fitted model's training data/weights, enabling `Predict::call()`.
     pub retain_model: bool,
 
+    // Include the per-point local fit gradient in the output (Direct mode only).
+    pub return_gradient: bool,
+
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
@@ -456,6 +491,10 @@ pub struct LoessExecutor<T: FloatLinalg + SolverLinalg> {
     // Custom interval estimation pass function.
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
+
+    // Custom gradient pass function (Direct mode only).
+    #[doc(hidden)]
+    pub custom_gradient_pass: Option<GradientPassFn<T>>,
 
     // Custom iteration batch pass function.
     #[doc(hidden)]
@@ -508,9 +547,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             boundary_degree_fallback: DEFAULT_BOUNDARY_DEGREE_FALLBACK,
             custom_weights: None,
             retain_model: false,
+            return_gradient: DEFAULT_RETURN_GRADIENT,
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
+            custom_gradient_pass: None,
             custom_fit_pass: None,
             custom_vertex_pass: None,
             custom_kdtree_builder: None,
@@ -538,12 +579,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             .cell(config.cell)
             .boundary_degree_fallback(config.boundary_degree_fallback)
             .retain_model(config.retain_model)
+            .return_gradient(config.return_gradient)
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++
             .custom_smooth_pass(config.custom_smooth_pass)
             .custom_cv_pass(config.custom_cv_pass)
             .custom_interval_pass(config.custom_interval_pass)
+            .custom_gradient_pass(config.custom_gradient_pass)
             .custom_fit_pass(config.custom_fit_pass)
             .custom_vertex_pass(config.custom_vertex_pass)
             .custom_kdtree_builder(config.custom_kdtree_builder)
@@ -651,6 +694,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self
     }
 
+    // Set whether to include the per-point local fit gradient in the output.
+    pub fn return_gradient(mut self, return_gradient: bool) -> Self {
+        self.return_gradient = return_gradient;
+        self
+    }
+
     pub fn custom_smooth_pass(mut self, smooth_pass_fn: Option<SmoothPassFn<T>>) -> Self {
         self.custom_smooth_pass = smooth_pass_fn;
         self
@@ -674,6 +723,13 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     #[doc(hidden)]
     pub fn custom_vertex_pass(mut self, vertex_pass_fn: Option<VertexPassFn<T>>) -> Self {
         self.custom_vertex_pass = vertex_pass_fn;
+        self
+    }
+
+    // Set a custom gradient pass function (Direct mode only).
+    #[doc(hidden)]
+    pub fn custom_gradient_pass(mut self, gradient_pass_fn: Option<GradientPassFn<T>>) -> Self {
+        self.custom_gradient_pass = gradient_pass_fn;
         self
     }
 
@@ -783,9 +839,10 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     ref mut cv_buffer, ..
                 } = workspace;
 
-                // CV candidate fits only ever read `.smoothed`; never retain model state for
-                // them, avoiding wasted `PredictState` clones per candidate fraction/fold.
-                let cv_executor = executor.clone().retain_model(false);
+                // CV candidate fits only ever read `.smoothed`; never retain model state or
+                // compute the gradient for them, avoiding wasted work per candidate
+                // fraction/fold.
+                let cv_executor = executor.clone().retain_model(false).return_gradient(false);
 
                 cv_kind.run(
                     x,
@@ -1285,6 +1342,59 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 None
             };
 
+        // Collect gradient values when requested. Only supported in `SurfaceMode::Direct`:
+        // the interpolation surface only stores value+gradient at sparse vertices, not
+        // enough to reconstruct an exact per-point gradient without re-deriving the
+        // Hermite interpolant's own derivative, so `SurfaceMode::Interpolation` leaves
+        // this `None` (same limitation as `leverage`/exact `standard_errors` above).
+        let gradient_values = if self.return_gradient && self.surface_mode == SurfaceMode::Direct {
+            if let Some(callback) = self.custom_gradient_pass {
+                Some(callback(
+                    x,
+                    &ax,
+                    &ay,
+                    dims,
+                    window_size,
+                    &workspace.executor_buffer.robustness_weights,
+                    self.weight_function,
+                    self.zero_weight_fallback,
+                    self.polynomial_degree,
+                    &self.distance_metric,
+                    &scales_local,
+                    custom_weights_aug.as_deref(),
+                ))
+            } else {
+                let cache_ref = if workspace.executor_buffer.neighborhood_cache.is_valid {
+                    Some(
+                        workspace
+                            .executor_buffer
+                            .neighborhood_cache
+                            .entries
+                            .as_slice(),
+                    )
+                } else {
+                    None
+                };
+                Some(self.gradient_pass(
+                    &ax,
+                    &ay,
+                    x, // x_query
+                    window_size,
+                    &workspace.executor_buffer.robustness_weights,
+                    &scales_local,
+                    n,
+                    &kdtree,
+                    &mut workspace.search_buffer,
+                    &mut workspace.neighborhood,
+                    &mut workspace.fitting_buffer,
+                    cache_ref, // Use cached neighborhoods
+                    custom_weights_aug.as_deref(),
+                ))
+            }
+        } else {
+            None
+        };
+
         // Standard errors (now using actual leverage if available)
         let se = if let Some(interval_method) = confidence_method {
             // Check for custom interval pass callback
@@ -1445,6 +1555,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             cv_scores: None,
             robustness_weights: final_robustness_weights,
             leverage: leverage_values,
+            gradient: gradient_values,
             predict_state,
         }
     }
@@ -1645,5 +1756,90 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 }
             }
         }
+    }
+
+    // Collect the per-point local fit gradient over all nD points (Direct mode only).
+    //
+    // Mirrors `smooth_pass`'s own neighborhood-caching behavior (reusing cached
+    // neighborhoods when available), but calls `fit_with_coefficients()` instead of
+    // `fit()` since the gradient (unlike `y`/leverage) isn't produced by `fit()`.
+    // Runs as a separate final pass (like the leverage-collection pass above) rather
+    // than threading gradient output through every robustness iteration, since only
+    // the final converged `robustness_weights` are needed.
+    #[allow(clippy::too_many_arguments)]
+    fn gradient_pass(
+        &self,
+        x_context: &[T],
+        y_context: &[T],
+        x_query: &[T],
+        window_size: usize,
+        robustness_weights: &[T],
+        scales: &[T],
+        original_n: usize,
+        kdtree: &KDTree<T>,
+        search_buffer: &mut NeighborhoodSearchBuffer<NodeDistance<T>>,
+        neighborhood: &mut Neighborhood<T>,
+        fitting_buffer: &mut FittingBuffer<T>,
+        cached_neighborhoods: Option<&[CachedNeighborhood<T>]>,
+        custom_weights: Option<&[T]>,
+    ) -> Vec<T>
+    where
+        T: Float + Debug + Send + Sync + 'static,
+    {
+        let dims = self.dimensions;
+        let dist_calc = LoessDistanceCalculator {
+            metric: self.distance_metric.clone(),
+            scales,
+        };
+        let mut gradient = vec![T::zero(); original_n * dims];
+
+        for i in 0..original_n {
+            let query_offset = i * dims;
+            let query_point = &x_query[query_offset..query_offset + dims];
+
+            if let Some(cache) = cached_neighborhoods {
+                let cached = &cache[i];
+                neighborhood.indices.clear();
+                neighborhood.indices.extend_from_slice(&cached.indices);
+                neighborhood.distances.clear();
+                neighborhood.distances.extend_from_slice(&cached.distances);
+                neighborhood.max_distance = cached.max_distance;
+            } else {
+                kdtree.find_k_nearest(
+                    query_point,
+                    window_size,
+                    &dist_calc,
+                    None,
+                    search_buffer,
+                    neighborhood,
+                );
+            }
+
+            let neighborhood_ref = &*neighborhood;
+            let mut context = RegressionContext::new(
+                x_context,
+                dims,
+                y_context,
+                i,
+                Some(query_point),
+                neighborhood_ref,
+                true, // use_robustness (final pass always uses the converged weights)
+                robustness_weights,
+                self.weight_function,
+                self.zero_weight_fallback,
+                self.polynomial_degree,
+                false, // compute_leverage
+                Some(fitting_buffer),
+            );
+            if let Some(uw) = custom_weights {
+                context = context.with_custom_weights(uw);
+            }
+
+            if let Some(coeffs) = context.fit_with_coefficients() {
+                gradient[query_offset..query_offset + dims].copy_from_slice(&coeffs[1..=dims]);
+            }
+        }
+
+        gradient
     }
 }
