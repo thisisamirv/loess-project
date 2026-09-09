@@ -52,9 +52,10 @@ pub enum ExtrapolationPolicy {
     Error,
 }
 
-// Options controlling a `Predict::call()` invocation.
+// Fluent, deferred-validation configuration for a `Predict::call()` invocation. Call
+// `.build()` to validate and obtain the ready-to-call `Predict`.
 #[derive(Debug, Clone)]
-pub struct Predict<T> {
+pub struct PredictBuilder<T> {
     // Include standard errors in the output.
     pub return_se: bool,
 
@@ -92,12 +93,11 @@ pub struct Predict<T> {
     // `extrapolation`/whether the bounding-box check flagged the point as out-of-range.
     pub max_neighbor_distance: Option<T>,
 
-    // Set by `extrapolation(...)` when given an invalid string; surfaced by `predict()`
-    // as soon as it is called, mirroring `LoessBuilder`'s deferred parse-error pattern.
+    // Set by `extrapolation(...)` when given an invalid string; surfaced by `build()`.
     pub pending_error: Option<LoessError>,
 }
 
-impl<T: FloatLinalg> Default for Predict<T> {
+impl<T: FloatLinalg> Default for PredictBuilder<T> {
     fn default() -> Self {
         Self {
             return_se: false,
@@ -112,21 +112,11 @@ impl<T: FloatLinalg> Default for Predict<T> {
     }
 }
 
-impl<T: FloatLinalg> Predict<T> {
-    // Create a new `Predict` with default values, matching `Loess::new()`'s
+impl<T: FloatLinalg> PredictBuilder<T> {
+    // Create a new `PredictBuilder` with default values, matching `Loess::new()`'s
     // constructor-style entry point.
     pub fn new() -> Self {
         Self::default()
-    }
-
-    // Surface any pending parse error (from `extrapolation(...)`) immediately, mirroring
-    // `LoessBuilder::build()`'s fail-fast convention. Optional: `call()` checks this too,
-    // so skipping `build()` is safe but defers the error until the call itself.
-    pub fn build(self) -> Result<Self, LoessError> {
-        match &self.pending_error {
-            Some(e) => Err(e.clone()),
-            None => Ok(self),
-        }
     }
 
     // Include standard errors in the output.
@@ -178,9 +168,54 @@ impl<T: FloatLinalg> Predict<T> {
         self.max_neighbor_distance = Some(distance);
         self
     }
+
+    // Validates this configuration and produces a ready-to-call `PredictQuery`. Mandatory:
+    // `PredictQuery` has no public constructor of its own, so `.build()` is the only way to
+    // obtain one.
+    pub fn build(self) -> Result<PredictQuery<T>, LoessError> {
+        if let Some(e) = self.pending_error {
+            return Err(e);
+        }
+        Ok(PredictQuery {
+            return_se: self.return_se,
+            confidence_level: self.confidence_level,
+            prediction_level: self.prediction_level,
+            return_derivative: self.return_derivative,
+            extrapolation: self.extrapolation,
+            max_extrapolation_distance: self.max_extrapolation_distance,
+            max_neighbor_distance: self.max_neighbor_distance,
+        })
+    }
 }
 
-impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Predict<T> {
+// `Predict::new()` is the friendly, common-case entry point for `PredictBuilder`, matching
+// `Loess` being an alias for `LoessBuilder<T, BatchMode>`.
+pub type Predict<T = f64> = PredictBuilder<T>;
+
+// Validated, ready-to-call configuration for a `Predict::call()` invocation, produced by
+// `PredictBuilder::build()`. Fields are private; the only way to construct one is via the
+// builder, so a `.build()` call can never be skipped.
+#[derive(Debug, Clone)]
+pub struct PredictQuery<T> {
+    return_se: bool,
+    confidence_level: Option<T>,
+    prediction_level: Option<T>,
+    return_derivative: bool,
+    extrapolation: ExtrapolationPolicy,
+    max_extrapolation_distance: Option<T>,
+    max_neighbor_distance: Option<T>,
+}
+
+impl<T> PredictQuery<T> {
+    // Whether the local fit's gradient is included in the output (used by fastLoess's
+    // parallel predict pass, which needs this outside `loess-rs` itself). No trait
+    // bounds needed: this just reads a plain `bool` field.
+    pub fn return_derivative(&self) -> bool {
+        self.return_derivative
+    }
+}
+
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> PredictQuery<T> {
     // Evaluate `result` (a fitted Batch model) at arbitrary out-of-sample query points
     // (flattened, `dimensions` values per point), per these options. Returns a
     // `PredictOutput` with one entry per query point.
@@ -197,9 +232,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Predi
         result: &LoessResult<T>,
         new_x: &[T],
     ) -> Result<PredictOutput<T>, LoessError> {
-        if let Some(e) = &self.pending_error {
-            return Err(e.clone());
-        }
         let state = result
             .predict_state
             .as_ref()
@@ -241,7 +273,7 @@ pub type RawPredictValues<T> = Result<(Vec<T>, Option<Vec<T>>, Option<Vec<T>>), 
 pub type PredictPassFn<T> = fn(
     &PredictState<T>,
     &[T], // new_x (flattened, `dimensions` values per query point)
-    &Predict<T>,
+    &PredictQuery<T>,
     bool, // need_se
 ) -> RawPredictValues<T>;
 
@@ -367,7 +399,7 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     dist_calc: &LoessDistanceCalculator<T>,
     search_buffer: &mut NeighborhoodSearchBuffer<NodeDistance<T>>,
     neighborhood: &mut Neighborhood<T>,
-    options: &Predict<T>,
+    options: &PredictQuery<T>,
     need_se: bool,
 ) -> Result<(T, Option<Vec<T>>, Option<T>), LoessError> {
     let dims = state.dimensions;
@@ -567,7 +599,7 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
 fn predict_batch_serial<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &Predict<T>,
+    options: &PredictQuery<T>,
     need_se: bool,
 ) -> RawPredictValues<T> {
     let dims = state.dimensions;
@@ -620,7 +652,7 @@ fn predict_batch_serial<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
 pub fn predict_batch<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &Predict<T>,
+    options: &PredictQuery<T>,
 ) -> Result<PredictOutput<T>, LoessError> {
     if state.dimensions == 0 || !new_x.len().is_multiple_of(state.dimensions) {
         return Err(LoessError::InvalidInput(format!(

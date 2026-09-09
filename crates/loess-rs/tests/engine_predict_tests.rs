@@ -14,7 +14,7 @@
 
 use approx::assert_relative_eq;
 
-use loess_rs::internals::engine::predict::{ExtrapolationPolicy, Predict};
+use loess_rs::internals::engine::predict::{ExtrapolationPolicy, PredictBuilder};
 use loess_rs::internals::primitives::errors::LoessError;
 use loess_rs::prelude::*;
 
@@ -39,7 +39,11 @@ fn test_predict_without_retain_model_errors() {
         .fit(&x, &y)
         .unwrap();
 
-    let err = Predict::default().call(&result, &[5.5]).unwrap_err();
+    let err = PredictBuilder::new()
+        .build()
+        .unwrap()
+        .call(&result, &[5.5])
+        .unwrap_err();
     assert!(matches!(err, LoessError::PredictionUnavailable));
 }
 
@@ -61,7 +65,9 @@ fn test_predict_after_cross_validation() {
         .unwrap();
 
     assert!(result.has_cv_scores());
-    let output = Predict::default()
+    let output = PredictBuilder::new()
+        .build()
+        .unwrap()
         .call(&result, &[10.5])
         .expect("predict should succeed after CV selected the best fraction");
     assert_relative_eq!(output.y[0], 2.0 * 10.5 + 1.0, epsilon = 1e-1);
@@ -85,7 +91,9 @@ fn test_predict_reproduces_linear_data() {
 
     // Out-of-sample query points strictly inside the training range.
     let new_x = vec![10.5, 20.25, 30.75];
-    let output = Predict::default()
+    let output = PredictBuilder::new()
+        .build()
+        .unwrap()
         .call(&result, &new_x)
         .expect("predict should succeed");
 
@@ -118,7 +126,9 @@ fn test_predict_at_training_points_matches_fit() {
     // Uses Direct surface mode so `fit()` itself computes a per-point local fit
     // rather than an interpolated surface (the default), matching `predict()`'s
     // own always-direct evaluation.
-    let output = Predict::default()
+    let output = PredictBuilder::new()
+        .build()
+        .unwrap()
         .call(&result, &x)
         .expect("predict should succeed");
     for (&fitted, &pred) in result.y.iter().zip(output.y.iter()) {
@@ -142,7 +152,9 @@ fn test_predict_at_training_points_matches_fit_interpolation_mode() {
         .fit(&x, &y)
         .unwrap();
 
-    let output = Predict::default()
+    let output = PredictBuilder::new()
+        .build()
+        .unwrap()
         .call(&result, &x)
         .expect("predict should succeed");
     for (&fitted, &pred) in result.y.iter().zip(output.y.iter()) {
@@ -170,7 +182,9 @@ fn test_predict_rejects_mismatched_new_x_length() {
         .unwrap();
 
     // 3 values isn't a multiple of dimensions=2.
-    let err = Predict::default()
+    let err = PredictBuilder::new()
+        .build()
+        .unwrap()
         .call(&result, &[1.0, 2.0, 3.0])
         .unwrap_err();
     assert!(matches!(err, LoessError::InvalidInput(_)));
@@ -189,7 +203,9 @@ fn test_predict_rejects_non_finite_new_x() {
         .unwrap();
 
     for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-        let err = Predict::default()
+        let err = PredictBuilder::new()
+            .build()
+            .unwrap()
             .call(&result, &[5.0, bad, 10.0])
             .unwrap_err();
         assert!(matches!(err, LoessError::InvalidNumericValue(_)));
@@ -224,7 +240,9 @@ fn test_predict_multivariate() {
         .fit(&x, &y)
         .unwrap();
 
-    let output = Predict::default()
+    let output = PredictBuilder::new()
+        .build()
+        .unwrap()
         .call(&result, &[4.5, 4.5])
         .expect("predict should succeed");
     assert_eq!(output.y.len(), 1);
@@ -262,7 +280,9 @@ fn test_predict_at_training_points_matches_fit_multivariate_interpolation() {
         .fit(&x, &y)
         .unwrap();
 
-    let output = Predict::default()
+    let output = PredictBuilder::new()
+        .build()
+        .unwrap()
         .call(&result, &x)
         .expect("predict should succeed");
     for (&fitted, &pred) in result.y.iter().zip(output.y.iter()) {
@@ -289,7 +309,9 @@ fn test_predict_with_quadratic_degree() {
         .fit(&x, &y)
         .unwrap();
 
-    let output = Predict::default()
+    let output = PredictBuilder::new()
+        .build()
+        .unwrap()
         .call(&result, &[15.5])
         .expect("predict should succeed");
     assert_relative_eq!(output.y[0], 15.5 * 15.5, epsilon = 2.0);
@@ -311,10 +333,7 @@ fn test_predict_standard_errors() {
         .fit(&x, &y)
         .unwrap();
 
-    let options = Predict {
-        return_se: true,
-        ..Predict::default()
-    };
+    let options = PredictBuilder::new().return_se().build().unwrap();
     let output = options
         .call(&result, &[10.0, 20.0])
         .expect("predict should succeed");
@@ -345,10 +364,7 @@ fn test_predict_se_matches_fit_interpolation_mode() {
 
     let fit_se = result.standard_errors.as_ref().expect("fit() SE requested")[10];
 
-    let options = Predict {
-        return_se: true,
-        ..Predict::default()
-    };
+    let options = PredictBuilder::new().return_se().build().unwrap();
     let output = options
         .call(&result, &[x[10]])
         .expect("predict should succeed");
@@ -372,10 +388,7 @@ fn test_predict_se_uses_exact_leverage_direct_mode() {
         .fit(&x, &y)
         .unwrap();
 
-    let options = Predict {
-        return_se: true,
-        ..Predict::default()
-    };
+    let options = PredictBuilder::new().return_se().build().unwrap();
     let output = options
         .call(&result, &[x[5], x[40]])
         .expect("predict should succeed");
@@ -400,11 +413,11 @@ fn test_predict_confidence_and_prediction_intervals() {
         .fit(&x, &y)
         .unwrap();
 
-    let options = Predict {
-        confidence_level: Some(0.95),
-        prediction_level: Some(0.95),
-        ..Predict::default()
-    };
+    let options = PredictBuilder::new()
+        .confidence_level(0.95)
+        .prediction_level(0.95)
+        .build()
+        .unwrap();
     let output = options
         .call(&result, &[10.0, 20.0])
         .expect("predict should succeed");
@@ -439,10 +452,7 @@ fn test_predict_derivative_matches_slope() {
         .fit(&x, &y)
         .unwrap();
 
-    let options = Predict {
-        return_derivative: true,
-        ..Predict::default()
-    };
+    let options = PredictBuilder::new().return_derivative().build().unwrap();
     let output = options
         .call(&result, &[25.0])
         .expect("predict should succeed");
@@ -470,7 +480,9 @@ fn test_predict_extrapolation_clamp_default() {
         .unwrap();
 
     // Default (Clamp) should not error on an out-of-range query.
-    let output = Predict::default()
+    let output = PredictBuilder::new()
+        .build()
+        .unwrap()
         .call(&result, &[1000.0])
         .expect("clamp should not error");
     assert!(output.y[0].is_finite());
@@ -488,10 +500,10 @@ fn test_predict_extrapolation_error_policy() {
         .fit(&x, &y)
         .unwrap();
 
-    let options = Predict {
-        extrapolation: ExtrapolationPolicy::Error,
-        ..Predict::default()
-    };
+    let options = PredictBuilder::new()
+        .extrapolation(ExtrapolationPolicy::Error)
+        .build()
+        .unwrap();
     let err = options.call(&result, &[1000.0]).unwrap_err();
     assert!(matches!(err, LoessError::PredictOutOfRange { .. }));
 }
@@ -511,10 +523,10 @@ fn test_predict_extrapolation_linear_policy() {
         .fit(&x, &y)
         .unwrap();
 
-    let options = Predict {
-        extrapolation: ExtrapolationPolicy::Linear,
-        ..Predict::default()
-    };
+    let options = PredictBuilder::new()
+        .extrapolation(ExtrapolationPolicy::Linear)
+        .build()
+        .unwrap();
     let output = options
         .call(&result, &[35.0])
         .expect("linear extrapolation should not error");
@@ -537,11 +549,11 @@ fn test_predict_extrapolation_linear_respects_max_distance() {
         .unwrap();
 
     // Within the cap: still succeeds.
-    let options = Predict {
-        extrapolation: ExtrapolationPolicy::Linear,
-        max_extrapolation_distance: Some(10.0),
-        ..Predict::default()
-    };
+    let options = PredictBuilder::new()
+        .extrapolation(ExtrapolationPolicy::Linear)
+        .max_extrapolation_distance(10.0)
+        .build()
+        .unwrap();
     options
         .call(&result, &[35.0])
         .expect("within max_extrapolation_distance should succeed");
@@ -551,11 +563,11 @@ fn test_predict_extrapolation_linear_respects_max_distance() {
     assert!(matches!(err, LoessError::ExtrapolationTooFar { .. }));
 
     // The cap is ignored under Clamp/Error.
-    let clamp_options = Predict {
-        extrapolation: ExtrapolationPolicy::Clamp,
-        max_extrapolation_distance: Some(10.0),
-        ..Predict::default()
-    };
+    let clamp_options = PredictBuilder::new()
+        .extrapolation(ExtrapolationPolicy::Clamp)
+        .max_extrapolation_distance(10.0)
+        .build()
+        .unwrap();
     clamp_options
         .call(&result, &[100.0])
         .expect("max_extrapolation_distance should not apply under Clamp");
@@ -590,16 +602,18 @@ fn test_predict_max_neighbor_distance_catches_bbox_corner() {
         .unwrap();
 
     // No cap: the empty corner is silently treated as in-range (original behavior).
-    Predict::default()
+    PredictBuilder::new()
+        .build()
+        .unwrap()
         .call(&result, &[19.0, 0.0])
         .expect("uncapped predict should not error, even in the empty corner");
 
     // With a cap: the corner's neighbor window is much farther than a point actually on
     // the diagonal, so it should be rejected.
-    let options = Predict {
-        max_neighbor_distance: Some(5.0),
-        ..Predict::default()
-    };
+    let options = PredictBuilder::new()
+        .max_neighbor_distance(5.0)
+        .build()
+        .unwrap();
     let err = options.call(&result, &[19.0, 0.0]).unwrap_err();
     assert!(matches!(err, LoessError::SparseNeighborhood { .. }));
 
@@ -629,9 +643,10 @@ fn test_predict_repeated_calls_are_consistent() {
         .fit(&x, &y)
         .unwrap();
 
-    let first = Predict::default().call(&result, &[10.5]).unwrap();
+    let predictor = PredictBuilder::new().build().unwrap();
+    let first = predictor.call(&result, &[10.5]).unwrap();
     for _ in 0..5 {
-        let again = Predict::default().call(&result, &[10.5]).unwrap();
+        let again = predictor.call(&result, &[10.5]).unwrap();
         assert_relative_eq!(again.y[0], first.y[0], epsilon = 1e-12);
     }
 }

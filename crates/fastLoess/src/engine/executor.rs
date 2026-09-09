@@ -26,7 +26,7 @@ use loess_rs::internals::algorithms::regression::{
 
 use loess_rs::internals::engine::executor::LoessDistanceCalculator as ExecutorLoessDistanceCalculator;
 use loess_rs::internals::engine::predict::{
-    Predict, PredictState, RawPredictValues, predict_one_full,
+    PredictQuery, PredictState, RawPredictValues, predict_one_full,
 };
 use loess_rs::internals::math::distance::{DistanceLinalg, DistanceMetric};
 use loess_rs::internals::math::kernel::WeightFunction;
@@ -373,7 +373,7 @@ pub fn vertex_pass_parallel<T>(
 pub fn predict_pass_parallel<T>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &Predict<T>,
+    options: &PredictQuery<T>,
     need_se: bool,
 ) -> RawPredictValues<T>
 where
@@ -414,7 +414,7 @@ where
 
     let mut y = Vec::with_capacity(n_query);
     let mut derivative = options
-        .return_derivative
+        .return_derivative()
         .then(|| Vec::with_capacity(n_query * dims));
     let mut se = need_se.then(|| Vec::with_capacity(n_query));
 
