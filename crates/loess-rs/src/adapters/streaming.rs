@@ -26,8 +26,8 @@ use crate::algorithms::regression::{PolynomialDegree, SolverLinalg, ZeroWeightFa
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::defaults::*;
 use crate::engine::executor::{
-    CVPassFn, FitPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig, LoessExecutor, SmoothPassFn,
-    SurfaceMode, VertexPassFn,
+    CVPassFn, FitPassFn, GradientPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig,
+    LoessExecutor, SmoothPassFn, SurfaceMode, VertexPassFn,
 };
 use crate::engine::output::LoessResult;
 use crate::engine::validator::{MissingPolicy, Validator};
@@ -106,6 +106,10 @@ pub struct StreamingLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg>
     // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
+    // Include the per-point local fit gradient in the output. Only computed in
+    // `SurfaceMode::Direct`.
+    pub return_gradient: bool,
+
     // Deferred error from adapter conversion
     pub deferred_error: Option<LoessError>,
 
@@ -162,6 +166,10 @@ pub struct StreamingLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg>
     #[doc(hidden)]
     pub custom_kdtree_builder: Option<KDTreeBuilderFn<T>>,
 
+    // Custom gradient pass function.
+    #[doc(hidden)]
+    pub custom_gradient_pass: Option<GradientPassFn<T>>,
+
     // Parallel execution hint.
     #[doc(hidden)]
     pub parallel: Option<bool>,
@@ -195,6 +203,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
             compute_residuals: DEFAULT_RETURN_RESIDUALS,
             return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            return_gradient: DEFAULT_RETURN_GRADIENT,
             auto_converge: default_auto_converge(),
             deferred_error: None,
             polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
@@ -214,6 +223,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
             custom_fit_pass: None,
             custom_vertex_pass: None,
             custom_kdtree_builder: None,
+            custom_gradient_pass: None,
             parallel: None,
         }
     }
@@ -246,6 +256,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
             overlap_buffer_y: Vec::new(),
             overlap_buffer_smoothed: Vec::new(),
             overlap_buffer_robustness_weights: Vec::new(),
+            overlap_buffer_gradient: Vec::new(),
             diagnostics_state: if has_diag {
                 Some(DiagnosticsState::new())
             } else {
@@ -262,6 +273,7 @@ pub struct StreamingLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug
     overlap_buffer_y: Vec<T>,
     overlap_buffer_smoothed: Vec<T>,
     overlap_buffer_robustness_weights: Vec<T>,
+    overlap_buffer_gradient: Vec<T>,
     diagnostics_state: Option<DiagnosticsState<T>>,
 }
 
@@ -343,14 +355,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             boundary_degree_fallback: self.config.boundary_degree_fallback,
             custom_weights: None,
             retain_model: false,
-            return_gradient: false,
+            return_gradient: self.config.return_gradient,
             // ++++++++++++++++++++++++++++++++++++++
             // +               DEV                  +
             // ++++++++++++++++++++++++++++++++++++++
             custom_smooth_pass: self.config.custom_smooth_pass,
             custom_cv_pass: self.config.custom_cv_pass,
             custom_interval_pass: self.config.custom_interval_pass,
-            custom_gradient_pass: None,
+            custom_gradient_pass: self.config.custom_gradient_pass,
             custom_fit_pass: self.config.custom_fit_pass,
             custom_vertex_pass: self.config.custom_vertex_pass,
             custom_kdtree_builder: self.config.custom_kdtree_builder,
@@ -421,11 +433,53 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             }
         }
 
+        // Merge gradient if requested (flattened, `dimensions` values per point)
+        let mut grad_out: Option<Vec<T>> = if self.config.return_gradient {
+            Some(Vec::new())
+        } else {
+            None
+        };
+
+        if let Some(ref mut g_out) = grad_out
+            && prev_overlap_len > 0
+        {
+            let grad = result
+                .gradient
+                .as_ref()
+                .expect("gradient present when return_gradient is set");
+            let prev_grad = mem::take(&mut self.overlap_buffer_gradient);
+            for i in 0..prev_overlap_len {
+                for d in 0..dimensions {
+                    let prev_val = prev_grad[i * dimensions + d];
+                    let curr_val = grad[i * dimensions + d];
+                    let merged = match self.config.merge_strategy {
+                        MergeStrategy::Average => (prev_val + curr_val) / T::from(2.0).unwrap(),
+                        MergeStrategy::WeightedAverage => {
+                            let weight = T::from(i as f64 / prev_overlap_len as f64).unwrap();
+                            prev_val * (T::one() - weight) + curr_val * weight
+                        }
+                        MergeStrategy::TakeFirst => prev_val,
+                        MergeStrategy::TakeLast => curr_val,
+                    };
+                    g_out.push(merged);
+                }
+            }
+        }
+
         // Add non-overlap portion
         if return_start < overlap_start {
             y_smooth_out.extend_from_slice(&smoothed[return_start..overlap_start]);
             if let Some(ref mut rw_out) = rob_weights_out {
                 rw_out.extend_from_slice(&result.robustness_weights[return_start..overlap_start]);
+            }
+            if let Some(ref mut g_out) = grad_out {
+                let grad = result
+                    .gradient
+                    .as_ref()
+                    .expect("gradient present when return_gradient is set");
+                g_out.extend_from_slice(
+                    &grad[return_start * dimensions..overlap_start * dimensions],
+                );
             }
         }
 
@@ -453,11 +507,15 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 self.overlap_buffer_robustness_weights =
                     result.robustness_weights[overlap_start..].to_vec();
             }
+            if let Some(ref grad) = result.gradient {
+                self.overlap_buffer_gradient = grad[overlap_start_x..].to_vec();
+            }
         } else {
             self.overlap_buffer_x.clear();
             self.overlap_buffer_y.clear();
             self.overlap_buffer_smoothed.clear();
             self.overlap_buffer_robustness_weights.clear();
+            self.overlap_buffer_gradient.clear();
         }
 
         // Note: We return results in the order they were processed (combined chunk/overlap).
@@ -498,7 +556,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             delta2: None,
             residual_scale: None,
             leverage: None,
-            gradient: None,
+            gradient: grad_out,
             predict_state: None,
         })
     }
@@ -551,6 +609,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             None
         };
 
+        let gradient = if self.config.return_gradient {
+            Some(mem::take(&mut self.overlap_buffer_gradient))
+        } else {
+            None
+        };
+
         // Update diagnostics for the final overlap
         let diagnostics = if let Some(ref mut state) = self.diagnostics_state {
             state.update(&self.overlap_buffer_y, &self.overlap_buffer_smoothed);
@@ -582,7 +646,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             delta2: None,
             residual_scale: None,
             leverage: None,
-            gradient: None,
+            gradient,
             predict_state: None,
         };
 
@@ -591,6 +655,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self.overlap_buffer_y.clear();
         self.overlap_buffer_smoothed.clear();
         self.overlap_buffer_robustness_weights.clear();
+        self.overlap_buffer_gradient.clear();
 
         Ok(result)
     }
@@ -601,5 +666,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self.overlap_buffer_y.clear();
         self.overlap_buffer_smoothed.clear();
         self.overlap_buffer_robustness_weights.clear();
+        self.overlap_buffer_gradient.clear();
     }
 }

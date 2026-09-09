@@ -105,6 +105,7 @@ Fraction used: 0.5
 | `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
 | `boundary_degree_fallback(bool)` | `bool` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
@@ -271,6 +272,10 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there. `true` by default. Only applies when `surface_mode` is `"interpolation"`.
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult::gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `None` in the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`. Computed via the parallel `gradient_pass_parallel` when `parallel` is enabled.
+
 ### chunk_size
 
 Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying.
@@ -316,6 +321,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `robustness_weights` | `Option<Vec<T>>` | Robustness weights (if `return_robustness_weights()`) |
 | `cv_scores` | `Option<Vec<T>>` | Always `None` (Batch only) |
 | `diagnostics` | `Option<Diagnostics<T>>` | Fit metrics (if `return_diagnostics()`) |
+| `gradient` | `Option<Vec<T>>` | Per-point local fit gradient, flattened (if `return_gradient()`, `surface_mode = "direct"` only) |
 | `dimensions` | `usize` | Number of predictor dimensions |
 
 ### `Diagnostics<T>`

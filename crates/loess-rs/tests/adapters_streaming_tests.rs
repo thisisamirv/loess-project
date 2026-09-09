@@ -850,3 +850,96 @@ fn test_streaming_missing_drop_removes_nan_rows() {
 
     assert_eq!(result.x.len() + final_result.x.len(), x.len() - 1);
 }
+
+// ============================================================================
+// Gradient Tests
+// ============================================================================
+
+/// Test that `gradient` is `None` by default (not requested).
+#[test]
+fn test_streaming_gradient_none_by_default() {
+    let mut processor = Loess::new()
+        .surface_mode("direct")
+        .chunk_size(10)
+        .overlap(2)
+        .adapter(Streaming)
+        .build()
+        .expect("Builder should succeed");
+
+    let x = vec![0.0f64, 1.0, 2.0, 3.0, 4.0];
+    let y: Vec<f64> = x.iter().map(|xi| 2.0 * xi + 1.0).collect();
+
+    let result = processor.process_chunk(&x, &y).expect("process_chunk ok");
+    assert!(result.gradient.is_none());
+
+    let remaining = processor.finalize().expect("finalize ok");
+    assert!(remaining.gradient.is_none());
+}
+
+/// Test `.return_gradient()` on a single chunk (no overlap merging involved).
+#[test]
+fn test_streaming_return_gradient_single_chunk() {
+    let mut processor = Loess::new()
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .return_gradient()
+        .chunk_size(20)
+        .overlap(2)
+        .adapter(Streaming)
+        .build()
+        .expect("Builder should succeed");
+
+    let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|xi| 2.0 * xi + 1.0).collect();
+
+    let result = processor.process_chunk(&x, &y).expect("process_chunk ok");
+    let gradient = result.gradient.expect("gradient should be present");
+    assert_eq!(gradient.len(), result.y.len());
+    for &g in &gradient {
+        assert!((g - 2.0).abs() < 1e-6, "gradient {g} should be ~2.0");
+    }
+
+    let remaining = processor.finalize().expect("finalize ok");
+    let remaining_gradient = remaining
+        .gradient
+        .expect("gradient should be present in finalize");
+    assert_eq!(remaining_gradient.len(), remaining.y.len());
+    for &g in &remaining_gradient {
+        assert!((g - 2.0).abs() < 1e-6, "gradient {g} should be ~2.0");
+    }
+}
+
+/// Test `.return_gradient()` across multiple chunks, exercising overlap merging.
+#[test]
+fn test_streaming_return_gradient_multi_chunk_overlap() {
+    let x_all: Vec<f64> = (0..30).map(|i| i as f64).collect();
+    let y_all: Vec<f64> = x_all.iter().map(|xi| 3.0 * xi - 5.0).collect();
+
+    let mut processor = Loess::new()
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .return_gradient()
+        .chunk_size(20)
+        .overlap(2)
+        .adapter(Streaming)
+        .build()
+        .expect("Builder should succeed");
+
+    let out_a = processor
+        .process_chunk(&x_all[0..20], &y_all[0..20])
+        .expect("process_chunk ok");
+    let grad_a = out_a.gradient.expect("gradient should be present");
+    assert_eq!(grad_a.len(), out_a.y.len());
+    for &g in &grad_a {
+        assert!((g - 3.0).abs() < 1e-6, "gradient {g} should be ~3.0");
+    }
+
+    let out_b = processor
+        .process_chunk(&x_all[20..30], &y_all[20..30])
+        .expect("process_chunk ok");
+    let grad_b = out_b.gradient.expect("gradient should be present");
+    assert_eq!(grad_b.len(), out_b.y.len());
+    for &g in &grad_b {
+        assert!((g - 3.0).abs() < 1e-6, "gradient {g} should be ~3.0");
+    }
+}

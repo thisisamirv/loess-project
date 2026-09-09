@@ -89,6 +89,10 @@ pub struct OnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     // Whether to return robustness weights
     pub return_robustness_weights: bool,
 
+    // Include the per-point local fit gradient in the output. Only computed in
+    // `SurfaceMode::Direct`.
+    pub return_gradient: bool,
+
     // Deferred error from adapter conversion
     pub deferred_error: Option<LoessError>,
 
@@ -169,6 +173,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
             missing: DEFAULT_MISSING_POLICY_ENUM,
             boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
+            return_gradient: DEFAULT_RETURN_GRADIENT,
             auto_converge: default_auto_converge(),
             deferred_error: None,
             polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
@@ -238,6 +243,9 @@ pub struct OnlineOutput<T> {
 
     // Number of robustness iterations actually performed
     pub iterations_used: Option<usize>,
+
+    // Local fit gradient (`dimensions` values) for the latest point, if requested.
+    pub gradient: Option<Vec<T>>,
 }
 
 // Online LOESS processor for streaming data.
@@ -314,13 +322,13 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             let y0 = y_vec[0];
             let y1 = y_vec[1];
 
-            let smoothed = if x1 != x0 {
+            let (smoothed, slope) = if x1 != x0 {
                 let last_x = x[0];
                 let slope = (y1 - y0) / (x1 - x0);
-                y0 + slope * (last_x - x0)
+                (y0 + slope * (last_x - x0), slope)
             } else {
                 // Identical x: use mean for stability
-                (y0 + y1) / T::from(2.0).unwrap()
+                ((y0 + y1) / T::from(2.0).unwrap(), T::zero())
             };
 
             let residual = y - smoothed;
@@ -331,13 +339,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 residual: Some(residual),
                 robustness_weight: Some(T::one()),
                 iterations_used: None,
+                gradient: self.config.return_gradient.then(|| vec![slope]),
             }));
         }
 
         // Smooth using LOESS for windows of size >= 3
 
         // Choose update strategy based on configuration
-        let (smoothed, std_err, rob_weight, iterations) = match self.config.update_mode {
+        let (smoothed, std_err, rob_weight, iterations, gradient) = match self.config.update_mode {
             UpdateMode::Incremental => {
                 // Incremental mode: single-pass fit (no robustness) for maximum performance.
                 let n = x_vec.len() / self.config.dimensions;
@@ -379,7 +388,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     boundary_degree_fallback: self.config.boundary_degree_fallback,
                     custom_weights: None,
                     retain_model: false,
-                    return_gradient: false,
+                    return_gradient: self.config.return_gradient,
                     // ++++++++++++++++++++++++++++++++++++++
                     // +               DEV                  +
                     // ++++++++++++++++++++++++++++++++++++++
@@ -398,8 +407,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 let smoothed_val = result.smoothed.last().copied().ok_or_else(|| {
                     LoessError::InvalidNumericValue("No smoothed output produced".into())
                 })?;
+                let grad = result
+                    .gradient
+                    .as_ref()
+                    .map(|g| g[g.len() - dimensions..].to_vec());
 
-                (smoothed_val, None, Some(T::one()), result.iterations)
+                (smoothed_val, None, Some(T::one()), result.iterations, grad)
             }
             UpdateMode::Full => {
                 // Validate grid resolution
@@ -443,7 +456,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     boundary_degree_fallback: self.config.boundary_degree_fallback,
                     custom_weights: None,
                     retain_model: false,
-                    return_gradient: false,
+                    return_gradient: self.config.return_gradient,
                     // ++++++++++++++++++++++++++++++++++++++
                     // +               DEV                  +
                     // ++++++++++++++++++++++++++++++++++++++
@@ -471,8 +484,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 } else {
                     None
                 };
+                let grad = result
+                    .gradient
+                    .as_ref()
+                    .map(|g| g[g.len() - dimensions..].to_vec());
 
-                (smoothed_val, std_err, rob_weight, result.iterations)
+                (smoothed_val, std_err, rob_weight, result.iterations, grad)
             }
         };
 
@@ -484,6 +501,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             residual: Some(residual),
             robustness_weight: rob_weight,
             iterations_used: iterations,
+            gradient,
         }))
     }
 

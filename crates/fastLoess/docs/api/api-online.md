@@ -100,6 +100,7 @@ fn main() -> Result<(), LoessError> {
 | `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
 | `boundary_degree_fallback(bool)` | `bool` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `return_gradient()` | `bool` | `false` | Include the latest point's local fit gradient in the result (`surface_mode = "direct"` only) |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
@@ -252,6 +253,10 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there. `true` by default. Only applies when `surface_mode` is `"interpolation"`.
 
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput::gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `None` in the default `"interpolation"` mode. `false` by default.
+
 ### window_capacity
 
 Maximum number of most recent points kept in the sliding window; older points are discarded as new ones arrive. Each `add_point()` call costs O(`window_capacity`) rather than growing with total history.
@@ -282,5 +287,6 @@ Returned inside `Ok(Some(...))` by `add_point()`. `None` while the window is sti
 | `residual` | `Option<T>` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
 | `robustness_weight` | `Option<T>` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used` | `Option<usize>` | Robustness iterations performed |
+| `gradient` | `Option<Vec<T>>` | Local fit gradient (`dimensions` values) for the latest point, if `return_gradient` was set |
 
 There is no `Diagnostics` type or `return_diagnostics` option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

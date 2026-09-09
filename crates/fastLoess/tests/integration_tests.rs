@@ -170,6 +170,27 @@ fn test_online_adapter() {
 }
 
 #[test]
+fn test_online_adapter_return_gradient() {
+    let mut processor = OnlineLoess::new()
+        .fraction(1.0)
+        .return_gradient()
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .min_points(2)
+        .window_capacity(10)
+        .build()
+        .unwrap();
+
+    let mut last = None;
+    for i in 0..6 {
+        last = processor
+            .add_point(&[i as f64], 2.0 * i as f64 + 1.0)
+            .unwrap();
+    }
+    assert_abs_diff_eq!(last.unwrap().gradient.unwrap()[0], 2.0, epsilon = 1e-9);
+}
+
+#[test]
 fn test_consistency() {
     // Verify that parallel and sequential computation yield identical results
     // NOTE: This test might fail if Parallel is broken. We verify it here.
@@ -267,6 +288,96 @@ fn test_streaming_reset_with_processor() {
     let _ = processor.process_chunk(&x[..15], &y[..15]).unwrap();
     processor.reset();
     let _ = processor.process_chunk(&x[..15], &y[..15]).unwrap();
+}
+
+/// `.return_gradient()` on the Streaming adapter, sequential backend.
+#[test]
+fn test_streaming_adapter_return_gradient() {
+    let n = 40;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+
+    let mut processor = StreamingLoess::new()
+        .fraction(1.0)
+        .iterations(0)
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .return_gradient()
+        .chunk_size(20)
+        .overlap(5)
+        .parallel(false)
+        .build()
+        .unwrap();
+
+    let res1 = processor.process_chunk(&x[0..20], &y[0..20]).unwrap();
+    let grad1 = res1.gradient.expect("gradient should be present");
+    for &g in &grad1 {
+        assert_abs_diff_eq!(g, 2.0, epsilon = 1e-6);
+    }
+
+    let res2 = processor.process_chunk(&x[20..n], &y[20..n]).unwrap();
+    let grad2 = res2.gradient.expect("gradient should be present");
+    for &g in &grad2 {
+        assert_abs_diff_eq!(g, 2.0, epsilon = 1e-6);
+    }
+
+    let res3 = processor.finalize().unwrap();
+    let grad3 = res3.gradient.expect("gradient should be present");
+    for &g in &grad3 {
+        assert_abs_diff_eq!(g, 2.0, epsilon = 1e-6);
+    }
+}
+
+/// Rayon-parallel gradient pass on the Streaming adapter should agree with
+/// the serial gradient pass to within numerical precision.
+#[test]
+fn test_streaming_return_gradient_parallel_matches_sequential() {
+    let n = 40;
+    let x: Vec<f64> = (0..n).map(|i| i as f64 + (i as f64 * 0.37).sin()).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + xi / 5.0).collect();
+
+    let mut seq = StreamingLoess::new()
+        .fraction(0.4)
+        .surface_mode("direct")
+        .return_gradient()
+        .parallel(false)
+        .chunk_size(20)
+        .overlap(5)
+        .build()
+        .unwrap();
+    let mut par = StreamingLoess::new()
+        .fraction(0.4)
+        .surface_mode("direct")
+        .return_gradient()
+        .parallel(true)
+        .chunk_size(20)
+        .overlap(5)
+        .build()
+        .unwrap();
+
+    let seq1 = seq.process_chunk(&x[0..20], &y[0..20]).unwrap();
+    let par1 = par.process_chunk(&x[0..20], &y[0..20]).unwrap();
+    for (&s, &p) in seq1
+        .gradient
+        .as_ref()
+        .unwrap()
+        .iter()
+        .zip(par1.gradient.as_ref().unwrap().iter())
+    {
+        assert_abs_diff_eq!(s, p, epsilon = 1e-9);
+    }
+
+    let seq2 = seq.process_chunk(&x[20..n], &y[20..n]).unwrap();
+    let par2 = par.process_chunk(&x[20..n], &y[20..n]).unwrap();
+    for (&s, &p) in seq2
+        .gradient
+        .as_ref()
+        .unwrap()
+        .iter()
+        .zip(par2.gradient.as_ref().unwrap().iter())
+    {
+        assert_abs_diff_eq!(s, p, epsilon = 1e-9);
+    }
 }
 
 // ============================================================================

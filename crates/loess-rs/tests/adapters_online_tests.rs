@@ -1041,3 +1041,92 @@ fn test_online_missing_drop_ignores_nan_point() {
         "the point must not enter the window"
     );
 }
+
+// ============================================================================
+// Gradient Tests
+// ============================================================================
+
+/// Test that `gradient` is `None` by default (not requested).
+#[test]
+fn test_online_gradient_none_by_default() {
+    let mut processor = Loess::new()
+        .fraction(1.0)
+        .surface_mode("direct")
+        .window_capacity(5)
+        .min_points(2)
+        .adapter(Online)
+        .build()
+        .unwrap();
+
+    let mut last = None;
+    for i in 0..5 {
+        last = processor
+            .add_point(&[i as f64], 2.0 * i as f64 + 1.0)
+            .unwrap();
+    }
+    assert!(last.unwrap().gradient.is_none());
+}
+
+/// Test the exact two-point linear special case (1D) exposes the exact slope.
+#[test]
+fn test_online_gradient_two_point_exact() {
+    let mut processor = Loess::new()
+        .return_gradient()
+        .surface_mode("direct")
+        .window_capacity(5)
+        .min_points(2)
+        .adapter(Online)
+        .build()
+        .unwrap();
+
+    processor.add_point(&[0.0], 1.0).unwrap();
+    let output = processor.add_point(&[1.0], 4.0).unwrap().unwrap();
+    assert_relative_eq!(output.gradient.unwrap()[0], 3.0, epsilon = 1e-12);
+}
+
+/// Test `UpdateMode::Incremental` (the default) exposes the local fit gradient.
+#[test]
+fn test_online_gradient_incremental_mode() {
+    let mut processor = Loess::new()
+        .fraction(1.0)
+        .return_gradient()
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .window_capacity(20)
+        .min_points(2)
+        .adapter(Online)
+        .build()
+        .unwrap();
+
+    let mut last = None;
+    for i in 0..10 {
+        last = processor
+            .add_point(&[i as f64], 2.0 * i as f64 + 1.0)
+            .unwrap();
+    }
+    assert_relative_eq!(last.unwrap().gradient.unwrap()[0], 2.0, epsilon = 1e-9);
+}
+
+/// Test `UpdateMode::Full` exposes the local fit gradient via `LoessExecutor::run_with_config`.
+#[test]
+fn test_online_gradient_full_mode() {
+    let mut processor = Loess::new()
+        .fraction(1.0)
+        .update_mode("full")
+        .return_gradient()
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .window_capacity(20)
+        .min_points(2)
+        .adapter(Online)
+        .build()
+        .unwrap();
+
+    let mut last = None;
+    for i in 0..10 {
+        last = processor
+            .add_point(&[i as f64], 3.0 * i as f64 - 2.0)
+            .unwrap();
+    }
+    assert_relative_eq!(last.unwrap().gradient.unwrap()[0], 3.0, epsilon = 1e-9);
+}

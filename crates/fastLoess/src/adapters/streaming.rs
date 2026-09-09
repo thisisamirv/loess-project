@@ -24,7 +24,7 @@ use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::primitives::errors::LoessError;
 
 // Internal dependencies
-use crate::engine::executor::{smooth_pass_parallel, vertex_pass_parallel};
+use crate::engine::executor::{gradient_pass_parallel, smooth_pass_parallel, vertex_pass_parallel};
 use crate::evaluation::cv::cv_pass_parallel;
 use crate::evaluation::intervals::interval_pass_parallel;
 use crate::input::LoessInput;
@@ -128,6 +128,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
                 builder.custom_interval_pass = Some(interval_pass_parallel);
                 builder.custom_vertex_pass = Some(vertex_pass_parallel);
                 builder.custom_kdtree_builder = Some(build_kdtree_parallel);
+                builder.custom_gradient_pass = Some(gradient_pass_parallel);
             }
 
             self.processor = Some(builder.build()?);

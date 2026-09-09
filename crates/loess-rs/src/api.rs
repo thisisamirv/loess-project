@@ -613,8 +613,8 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // Include the per-point local fit gradient (rate of change of the smoothed surface) in
     // the output as `LoessResult::gradient`. Each local polynomial fit (degree >= linear)
     // already computes per-dimension coefficients internally, so this adds minimal extra
-    // computation. Only supported in `SurfaceMode::Direct` (Batch mode); `None` in
-    // `SurfaceMode::Interpolation`.
+    // computation. Only supported in `SurfaceMode::Direct`; `None` in
+    // `SurfaceMode::Interpolation`. Supported by Batch, Streaming, and Online.
     pub fn return_gradient(mut self) -> Self {
         self.return_gradient = Some(true);
         self
@@ -1036,6 +1036,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(rw) = builder.return_robustness_weights {
             result.return_robustness_weights = rw;
         }
+        if let Some(rg) = builder.return_gradient {
+            result.return_gradient = rg;
+        }
         if let Some(rd) = builder.return_diagnostics {
             result.return_diagnostics = rd;
         }
@@ -1147,6 +1150,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
 
         if let Some(rw) = builder.return_robustness_weights {
             result.return_robustness_weights = rw;
+        }
+        if let Some(rg) = builder.return_gradient {
+            result.return_gradient = rg;
         }
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
