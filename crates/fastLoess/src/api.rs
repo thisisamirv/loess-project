@@ -26,6 +26,7 @@ use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::api::LoessAdapter;
 pub use loess_rs::internals::api::LoessBuilder;
 pub use loess_rs::internals::engine::output::LoessResult;
+pub use loess_rs::internals::engine::predict::Predict;
 use loess_rs::internals::primitives::backend::Backend;
 pub use loess_rs::internals::primitives::errors::LoessError;
 

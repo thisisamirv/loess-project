@@ -408,7 +408,7 @@ mod binding_support;
 
 // Standard fastLoess prelude.
 pub mod prelude {
-    pub use crate::api::{Loess, LoessError, LoessResult, OnlineLoess, StreamingLoess};
+    pub use crate::api::{Loess, LoessError, LoessResult, OnlineLoess, Predict, StreamingLoess};
 }
 
 // Internal modules for development and testing.
