@@ -238,6 +238,16 @@ impl PyLoessResult {
             .map(|v| PyArray1::from_vec(py, v.clone()))
     }
 
+    /// Local fit's gradient at each point (if requested), `dimensions` values per point,
+    /// flattened
+    #[getter]
+    fn gradient<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
+        self.inner
+            .gradient
+            .as_ref()
+            .map(|v| PyArray1::from_vec(py, v.clone()))
+    }
+
     /// Diagnostic metrics
     #[getter]
     fn diagnostics(&self) -> Option<PyDiagnostics> {
@@ -419,6 +429,7 @@ impl PyStreamingLoess {
         return_diagnostics=false,
         return_residuals=false,
         return_robustness_weights=false,
+        return_gradient=false,
         zero_weight_fallback="use_local_mean",
         merge_strategy="weighted_average",
         parallel=true,
@@ -446,6 +457,7 @@ impl PyStreamingLoess {
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
+        return_gradient: bool,
         zero_weight_fallback: &str,
         merge_strategy: &str,
         parallel: bool,
@@ -459,7 +471,7 @@ impl PyStreamingLoess {
         boundary_degree_fallback: Option<bool>,
         missing: &str,
     ) -> PyResult<Self> {
-        let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+        let (mut builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -489,6 +501,9 @@ impl PyStreamingLoess {
                 ..Default::default()
             },
         ))?;
+        if return_gradient {
+            builder = builder.return_gradient();
+        }
 
         let processor =
             shared_parse::build_streaming(builder, Some(chunk_size), overlap, Some(merge_strategy))
@@ -560,10 +575,20 @@ pub struct PyOnlineOutput {
     /// Number of robustness iterations performed (if tracked)
     #[pyo3(get)]
     pub iterations_used: Option<usize>,
+    /// Local fit gradient for the latest point (if requested), `dimensions` values
+    gradient: Option<Vec<f64>>,
 }
 
 #[pymethods]
 impl PyOnlineOutput {
+    /// Local fit gradient for the latest point (if requested)
+    #[getter]
+    fn gradient<'py>(&self, py: Python<'py>) -> Option<Bound<'py, PyArray1<f64>>> {
+        self.gradient
+            .as_ref()
+            .map(|v| PyArray1::from_vec(py, v.clone()))
+    }
+
     fn __repr__(&self) -> String {
         format!("OnlineOutput(y={:.4})", self.y)
     }
@@ -591,6 +616,7 @@ impl PyOnlineLoess {
         update_mode="incremental",
         auto_converge=None,
         return_robustness_weights=false,
+        return_gradient=false,
         zero_weight_fallback="use_local_mean",
         degree="linear",
         dimensions=1usize,
@@ -615,6 +641,7 @@ impl PyOnlineLoess {
         update_mode: &str,
         auto_converge: Option<f64>,
         return_robustness_weights: bool,
+        return_gradient: bool,
         zero_weight_fallback: &str,
         degree: &str,
         dimensions: usize,
@@ -626,7 +653,7 @@ impl PyOnlineLoess {
         boundary_degree_fallback: Option<bool>,
         missing: &str,
     ) -> PyResult<Self> {
-        let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+        let (mut builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -656,6 +683,9 @@ impl PyOnlineLoess {
                 ..Default::default()
             },
         ))?;
+        if return_gradient {
+            builder = builder.return_gradient();
+        }
 
         let processor = shared_parse::build_online(
             builder,
@@ -686,6 +716,7 @@ impl PyOnlineLoess {
             residual: o.residual,
             robustness_weight: o.robustness_weight,
             iterations_used: o.iterations_used,
+            gradient: o.gradient,
         }))
     }
 }
@@ -738,7 +769,8 @@ impl PyLoess {
         boundary_degree_fallback=None,
         cv_seed=None,
         missing="error",
-        retain_model=false
+        retain_model=false,
+        return_gradient=false
     ))]
     #[allow(clippy::too_many_arguments)]
     fn new(
@@ -772,8 +804,9 @@ impl PyLoess {
         cv_seed: Option<u64>,
         missing: &str,
         retain_model: bool,
+        return_gradient: bool,
     ) -> PyResult<Self> {
-        let (builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
+        let (mut builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -808,6 +841,9 @@ impl PyLoess {
                 retain_model: Some(retain_model),
             },
         ))?;
+        if return_gradient {
+            builder = builder.return_gradient();
+        }
 
         Ok(PyLoess {
             builder,

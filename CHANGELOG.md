@@ -23,34 +23,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Python:**
 
 - Added a `retain_model` constructor option to `Loess` and a `LoessResult.predict(new_x, ...)` method (returning a new `PredictOutput` class), exposing loess-rs's out-of-sample prediction feature.
+- Added a `return_gradient` constructor option to `Loess`, `StreamingLoess`, and `OnlineLoess`, exposing the per-point local fit gradient via `LoessResult.gradient` (a flattened NumPy array, `dimensions` values per point) or `OnlineOutput.gradient` (a NumPy array, `dimensions` values for the latest point). Only takes effect when `surface_mode="direct"`.
 
 **R:**
 
 - Added a `retain_model` option to `Loess()` and a `predict.Loess(object, new_x, ...)` S3 method for out-of-sample prediction.
+- Added a `return_gradient` option to `Loess()`, `StreamingLoess()`, and `OnlineLoess()`, exposing the per-point local fit gradient as `gradient` in the result list/object (only takes effect under `surface_mode = "direct"`).
 
 **Julia:**
 
 - Added a `retain_model` keyword argument to `Loess` and a `predict(model, new_x; kwargs...)` function, via a new `LoessResult.predict_model`/`PredictModel`/`PredictResult` type, for out-of-sample prediction.
+- Added a `return_gradient` keyword argument to `Loess`, `StreamingLoess`, and `OnlineLoess`, exposing the per-point local fit gradient as `LoessResult.gradient` (flattened, `dimensions` values per point) or `OnlineOutput.gradient` (the latest point's gradient, `dimensions` values). Only takes effect when `surface_mode="direct"`.
 
 **Go:**
 
 - Added a `RetainModel` option to `Options` and a `Result.PredictModel.Predict(newX, options)` method, via new `PredictModel`/`PredictOptions`/`PredictResult` types, for out-of-sample prediction.
+- Added a `ReturnGradient` option to `Options`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit gradient via `Result.Gradient` (flattened `[]float64`, `Dimensions` values per point) or `PointResult.Gradient` (`[]float64`, `Dimensions` values for the latest point). Only takes effect when `surface_mode="direct"`.
 
 **Java:**
 
 - Added a `retainModel` option to `Options` and a `Result.predictModel()` accessor returning a new `PredictModel` class with a `predict(newX, options)` method (plus new `PredictOptions`/`PredictResult` types), for out-of-sample prediction.
+- Added a `returnGradient(boolean)` builder option to `Options` and `OnlineOptions`, exposing the per-point local fit gradient via `Result.gradient()` (`Optional<double[]>`, flattened, `dimensions` values per point) or `PointResult.gradient()` (`Optional<double[]>`, `dimensions` values for the latest point). Only takes effect when `surface_mode="direct"`.
 
 **Node.js:**
 
 - Added a `retain_model` option to `SmoothOptions` and a `LoessResult.predict(newX, options)` method (returning new `PredictOptions`/`PredictOutput` types), for out-of-sample prediction.
+- Added a `return_gradient` option to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit gradient via `LoessResult.gradient` (a flattened `Float64Array`, `dimensions` values per point) or `OnlineOutput.gradient` (an array, `dimensions` values for the latest point). Only takes effect when `surface_mode="direct"`.
 
 **WASM:**
 
 - Added a `retain_model` option to `SmoothOptions` and a `LoessResult.predict(newX, options)` method (returning new `PredictOptions`/`PredictOutput` TypeScript types), for out-of-sample prediction.
+- Added a `return_gradient` option to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit gradient via `LoessResult.gradient` (a flattened `Float64Array`, `dimensions` values per point) or `OnlineOutput.gradient` (an array, `dimensions` values for the latest point). Only takes effect when `surface_mode="direct"`.
 
 **C++:**
 
 - Added a `retain_model` option to `LoessOptions`, a `LoessResult::predict_model()` accessor, and new `PredictModel`/`PredictOptions`/`PredictResult` RAII classes for out-of-sample prediction.
+- Added a `return_gradient` option to `LoessOptions` (Batch/Streaming) and `OnlineOptions` (Online), exposing the per-point local fit gradient via `LoessResult::gradient()` (Batch/Streaming, a flattened `std::vector<double>`, `dimensions()` values per point) or `OnlineOutput::gradient()` (Online, a `std::vector<double>` of length `dimensions`). Only takes effect when `surface_mode == "direct"`.
 
 **Monorepo:**
 

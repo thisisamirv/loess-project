@@ -123,6 +123,9 @@ struct LoessOptions {
   bool return_diagnostics = false;
   bool return_residuals = false;
   bool return_robustness_weights = false;
+  /// Include the per-point local fit gradient in the output (only takes
+  /// effect when `surface_mode == "direct"`).
+  bool return_gradient = false;
   bool return_se = false; ///< Compute standard errors and hat-matrix statistics
   /// Return results sorted ascending by x instead of in original input order.
   bool return_sorted = false;
@@ -191,6 +194,9 @@ struct OnlineOptions {
   std::string zero_weight_fallback = "use_local_mean";
   double auto_converge = NAN;
   bool return_robustness_weights = false;
+  /// Include the local fit gradient for the latest point in the output (only
+  /// takes effect when `surface_mode == "direct"`).
+  bool return_gradient = false;
   std::string degree = "linear";
   int dimensions = 1;
   std::string distance_metric = "normalized";
@@ -560,6 +566,17 @@ public:
     return {};
   }
 
+  /// Get the per-point local fit gradient (flattened, `dimensions` values per
+  /// point) (empty if not computed)
+  std::vector<double> gradient() const {
+    if (result_.gradient != nullptr) {
+      const size_t count = static_cast<size_t>(result_.n) *
+                           static_cast<size_t>(std::max(result_.dimensions, 1));
+      return std::vector<double>(result_.gradient, result_.gradient + count);
+    }
+    return {};
+  }
+
   /// Fraction used for smoothing
   double fraction_used() const { return result_.fraction_used; }
 
@@ -632,7 +649,8 @@ public:
         options.prediction_intervals, options.return_diagnostics ? 1 : 0,
         options.return_residuals ? 1 : 0,
         options.return_robustness_weights ? 1 : 0,
-        options.zero_weight_fallback.c_str(), options.auto_converge,
+        options.return_gradient ? 1 : 0, options.zero_weight_fallback.c_str(),
+        options.auto_converge,
         options.cv_fractions.empty() ? nullptr : options.cv_fractions.data(),
         static_cast<unsigned long>(options.cv_fractions.size()),
         options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0,
@@ -723,9 +741,9 @@ public:
         options.boundary_policy.c_str(), options.return_diagnostics ? 1 : 0,
         options.return_residuals ? 1 : 0,
         options.return_robustness_weights ? 1 : 0,
-        options.zero_weight_fallback.c_str(), options.auto_converge,
-        options.parallel ? 1 : 0, options.chunk_size, options.overlap,
-        options.merge_strategy.c_str(), options.degree.c_str(),
+        options.return_gradient ? 1 : 0, options.zero_weight_fallback.c_str(),
+        options.auto_converge, options.parallel ? 1 : 0, options.chunk_size,
+        options.overlap, options.merge_strategy.c_str(), options.degree.c_str(),
         options.dimensions,
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
@@ -830,6 +848,10 @@ public:
   /// Number of robustness iterations performed (−1 if not applicable).
   int iterations_used() const { return iterations_used_; }
 
+  /// Local fit gradient (`dimensions` values) for the latest point (empty if
+  /// not computed).
+  const std::vector<double> &gradient() const { return gradient_; }
+
 private:
   friend class OnlineLoess;
   template <typename U> friend class Expected;
@@ -839,7 +861,11 @@ private:
       : has_value_(raw.has_value != 0), y_(raw.y),
         standard_error_(raw.standard_error), residual_(raw.residual),
         robustness_weight_(raw.robustness_weight),
-        iterations_used_(raw.iterations_used) {}
+        iterations_used_(raw.iterations_used),
+        gradient_(raw.gradient != nullptr
+                      ? std::vector<double>(raw.gradient,
+                                            raw.gradient + raw.gradient_len)
+                      : std::vector<double>()) {}
 
   bool has_value_ = false;
   double y_ = 0.0;
@@ -847,6 +873,7 @@ private:
   double residual_ = std::numeric_limits<double>::quiet_NaN();
   double robustness_weight_ = std::numeric_limits<double>::quiet_NaN();
   int iterations_used_ = -1;
+  std::vector<double> gradient_;
 };
 
 /**
@@ -860,8 +887,8 @@ public:
         options.robustness_method.c_str(), options.scaling_method.c_str(),
         options.boundary_policy.c_str(),
         options.return_robustness_weights ? 1 : 0,
-        options.zero_weight_fallback.c_str(), options.auto_converge,
-        options.window_capacity, options.min_points,
+        options.return_gradient ? 1 : 0, options.zero_weight_fallback.c_str(),
+        options.auto_converge, options.window_capacity, options.min_points,
         options.update_mode.c_str(), options.degree.c_str(), options.dimensions,
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
@@ -905,7 +932,9 @@ public:
       cpp_online_free_output(&raw);
       return Expected<OnlineOutput>::make_error(error_msg);
     }
-    return Expected<OnlineOutput>(OnlineOutput(raw));
+    OnlineOutput out(raw);
+    cpp_online_free_output(&raw);
+    return Expected<OnlineOutput>(std::move(out));
   }
 
 private:

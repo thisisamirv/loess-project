@@ -63,6 +63,9 @@ pub struct OnlineOutput {
     /// Number of robustness iterations performed (if applicable).
     #[napi(js_name = "iterations_used")]
     pub iterations_used: Option<u32>,
+    /// Local fit gradient (`dimensions` values) for the latest point (if requested).
+    #[napi(js_name = "gradient")]
+    pub gradient: Option<Vec<f64>>,
 }
 
 /// Result of a LOESS fit.
@@ -144,6 +147,15 @@ impl LoessResult {
     pub fn get_robustness_weights(&self) -> Option<Float64Array> {
         self.inner
             .robustness_weights
+            .as_ref()
+            .map(|v| Float64Array::from(v.as_slice()))
+    }
+
+    /// Get the per-point local fit gradient (flattened, `dimensions` values per point) (if requested).
+    #[napi(getter, js_name = "gradient")]
+    pub fn get_gradient(&self) -> Option<Float64Array> {
+        self.inner
+            .gradient
             .as_ref()
             .map(|v| Float64Array::from(v.as_slice()))
     }
@@ -383,6 +395,10 @@ pub struct SmoothOptions {
     /// Return robustness weights in result. Default: false.
     #[napi(js_name = "return_robustness_weights")]
     pub return_robustness_weights: Option<bool>,
+    /// Return the per-point local fit gradient in result (only takes effect when
+    /// `surface_mode` is "direct"). Default: false.
+    #[napi(js_name = "return_gradient")]
+    pub return_gradient: Option<bool>,
     /// Return diagnostics (RMSE, etc.). Default: false.
     #[napi(js_name = "return_diagnostics")]
     pub return_diagnostics: Option<bool>,
@@ -477,6 +493,10 @@ pub struct StreamingSmoothOptions {
     /// Return robustness weights in result. Default: false.
     #[napi(js_name = "return_robustness_weights")]
     pub return_robustness_weights: Option<bool>,
+    /// Return the per-point local fit gradient in result (only takes effect when
+    /// `surface_mode` is "direct"). Default: false.
+    #[napi(js_name = "return_gradient")]
+    pub return_gradient: Option<bool>,
     /// Return diagnostics (RMSE, etc.). Default: false.
     #[napi(js_name = "return_diagnostics")]
     pub return_diagnostics: Option<bool>,
@@ -542,6 +562,10 @@ pub struct OnlineSmoothOptions {
     /// Return robustness weights in result. Default: false.
     #[napi(js_name = "return_robustness_weights")]
     pub return_robustness_weights: Option<bool>,
+    /// Return the per-point local fit gradient in result (only takes effect when
+    /// `surface_mode` is "direct"). Default: false.
+    #[napi(js_name = "return_gradient")]
+    pub return_gradient: Option<bool>,
     /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
     pub degree: Option<String>,
     /// Number of predictor dimensions. Default: 1.
@@ -608,6 +632,9 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
             },
         ))?;
         builder = configured_builder;
+        if opts.return_gradient.unwrap_or(false) {
+            builder = builder.return_gradient();
+        }
     }
     Ok(builder)
 }
@@ -646,6 +673,9 @@ fn streaming_options_to_builder(
             },
         ))?;
         builder = configured_builder;
+        if opts.return_gradient.unwrap_or(false) {
+            builder = builder.return_gradient();
+        }
     }
     Ok(builder)
 }
@@ -679,6 +709,9 @@ fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<Loess
             },
         ))?;
         builder = configured_builder;
+        if opts.return_gradient.unwrap_or(false) {
+            builder = builder.return_gradient();
+        }
     }
     Ok(builder)
 }
@@ -887,6 +920,7 @@ impl OnlineLoess {
             residual: o.residual,
             robustness_weight: o.robustness_weight,
             iterations_used: o.iterations_used.map(|i| i as u32),
+            gradient: o.gradient,
         }))
     }
 }

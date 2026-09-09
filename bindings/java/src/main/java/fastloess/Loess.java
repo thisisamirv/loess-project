@@ -26,6 +26,7 @@ public final class Loess implements AutoCloseable {
                 options.returnDiagnostics,
                 options.returnResiduals,
                 options.returnRobustnessWeights,
+                options.returnGradient,
                 options.zeroWeightFallback,
                 options.autoConverge,
                 options.cvFractions,

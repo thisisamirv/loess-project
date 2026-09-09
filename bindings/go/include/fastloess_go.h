@@ -48,6 +48,11 @@ typedef struct fastloess_GoLoessResult {
    */
   double *robustness_weights;
   /**
+   * Local fit's gradient at each point, `dimensions` values per point, flattened
+   * (NULL if not requested; only takes effect when surface_mode = "direct")
+   */
+  double *gradient;
+  /**
    * Fraction used for smoothing
    */
   double fraction_used;
@@ -149,6 +154,14 @@ typedef struct fastloess_GoOnlineOutput {
   double residual;
   double robustness_weight;
   int iterations_used;
+  /**
+   * Latest point's local fit gradient, `dimensions` values, NULL if not requested
+   */
+  double *gradient;
+  /**
+   * Number of predictor dimensions (needed to know `gradient`'s true length)
+   */
+  int dimensions;
   char *error;
 } fastloess_GoOnlineOutput;
 
@@ -190,7 +203,8 @@ struct fastloess_GoLoess *go_loess_new(double fraction,
                                        const double *weighted_metric_weights,
                                        unsigned long weighted_metric_weights_len,
                                        const char *missing,
-                                       int retain_model);
+                                       int retain_model,
+                                       int return_gradient);
 
 /**
  * Set CV seed for reproducible K-fold splits.
@@ -289,7 +303,8 @@ struct fastloess_GoStreamingLoess *go_streaming_new(double fraction,
                                                     int boundary_degree_fallback,
                                                     const double *weighted_metric_weights,
                                                     unsigned long weighted_metric_weights_len,
-                                                    const char *missing);
+                                                    const char *missing,
+                                                    int return_gradient);
 
 /**
  * Process a chunk of data.
@@ -347,7 +362,8 @@ struct fastloess_GoOnlineLoess *go_online_new(double fraction,
                                               int boundary_degree_fallback,
                                               const double *weighted_metric_weights,
                                               unsigned long weighted_metric_weights_len,
-                                              const char *missing);
+                                              const char *missing,
+                                              int return_gradient);
 
 /**
  * Add a single point to the model and return its smoothed value.
@@ -361,7 +377,7 @@ struct fastloess_GoOnlineOutput go_online_add_point(struct fastloess_GoOnlineLoe
                                                     double y);
 
 /**
- * Free the error string in a GoOnlineOutput (call only when error != NULL).
+ * Free the error field in a GoOnlineOutput (call only when error != NULL).
  *
  * # Safety
  * `output` must be a valid pointer and `output->error` must have been allocated by Rust.

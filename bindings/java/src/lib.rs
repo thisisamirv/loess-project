@@ -34,9 +34,9 @@ const ONLINE_OUTPUT_CLASS: &JNIStr = jni_str!("fastloess/NativeOnlineOutput");
 const PREDICT_RESULT_CLASS: &JNIStr = jni_str!("fastloess/NativePredictResult");
 // Keep in sync with NativeResult's constructor parameter list.
 const RESULT_CTOR_SIG: MethodSignature<'static, 'static> =
-    jni_sig!("([D[D[D[D[D[D[D[D[D[DDIDDDDDDDZDDDDD[DIZJ)V");
+    jni_sig!("([D[D[D[D[D[D[D[D[D[D[DDIDDDDDDDZDDDDD[DIZJ)V");
 // Keep in sync with NativeOnlineOutput's constructor parameter list.
-const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDDDDI)V");
+const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDDDDI[D)V");
 // Keep in sync with NativePredictResult's constructor parameter list.
 const PREDICT_RESULT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("([D[D[D[D[D[D[D)V");
 
@@ -174,6 +174,7 @@ fn result_to_jobject<'local>(
     let robustness_weights = vec_to_jdoublearray(env, &result.robustness_weights)?;
     let cv_scores = vec_to_jdoublearray(env, &result.cv_scores)?;
     let leverage = vec_to_jdoublearray(env, &result.leverage)?;
+    let gradient = vec_to_jdoublearray(env, &result.gradient)?;
 
     let class = env.find_class(RESULT_CLASS)?;
     let obj = env.new_object(
@@ -190,6 +191,7 @@ fn result_to_jobject<'local>(
             JValue::Object(&residuals),
             JValue::Object(&robustness_weights),
             JValue::Object(&cv_scores),
+            JValue::Object(&gradient),
             JValue::Double(fraction_used),
             JValue::Int(iterations_used),
             JValue::Double(rmse),
@@ -253,6 +255,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
     return_diagnostics: jboolean,
     return_residuals: jboolean,
     return_robustness_weights: jboolean,
+    return_gradient: jboolean,
     zero_weight_fallback: JString<'local>,
     auto_converge: jdouble,
     cv_fractions: JDoubleArray<'local>,
@@ -296,7 +299,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
 
         let iterations = shared_parse::require_non_negative_usize("iterations", iterations)?;
 
-        let (builder, _) = shared_parse::apply_builder_options(
+        let (mut builder, _) = shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -325,6 +328,9 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
                 ..Default::default()
             },
         )?;
+        if return_gradient {
+            builder = builder.return_gradient();
+        }
 
         Ok(Box::into_raw(Box::new(JavaLoess {
             builder: Some(builder),
@@ -523,6 +529,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
     return_diagnostics: jboolean,
     return_residuals: jboolean,
     return_robustness_weights: jboolean,
+    return_gradient: jboolean,
     zero_weight_fallback: JString<'local>,
     auto_converge: jdouble,
     parallel: jboolean,
@@ -562,7 +569,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
 
         let chunk_size = shared_parse::require_positive_usize("chunkSize", chunk_size)?;
 
-        let (builder, _) = shared_parse::apply_builder_options(
+        let (mut builder, _) = shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -594,6 +601,9 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
                 ..Default::default()
             },
         )?;
+        if return_gradient {
+            builder = builder.return_gradient();
+        }
 
         let model = shared_parse::build_streaming(
             builder,
@@ -683,6 +693,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
     scaling_method: JString<'local>,
     boundary_policy: JString<'local>,
     return_robustness_weights: jboolean,
+    return_gradient: jboolean,
     zero_weight_fallback: JString<'local>,
     auto_converge: jdouble,
     window_capacity: jint,
@@ -724,7 +735,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
         let min_points = shared_parse::require_positive_usize("minPoints", min_points)?;
         let configured_dimensions = dimensions.max(1) as usize;
 
-        let (builder, _) = shared_parse::apply_builder_options(
+        let (mut builder, _) = shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
@@ -756,6 +767,9 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
                 ..Default::default()
             },
         )?;
+        if return_gradient {
+            builder = builder.return_gradient();
+        }
 
         let model =
             shared_parse::build_online(builder, Some(window_capacity), Some(min_points), Some(&um))
@@ -781,14 +795,22 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
         let online = unsafe { &mut *(handle as *mut JavaOnlineLoess) };
         let point = online.model.add_point(&[x], y).map_err(|e| e.to_string())?;
 
-        let (has_value, y_val, standard_error, residual, robustness_weight, iterations_used) =
-            match point {
-                None => (false, f64::NAN, f64::NAN, f64::NAN, f64::NAN, -1),
-                Some(o) => {
-                    let (se, res, rw, iters) = shared_parse::extract_online_output(&o);
-                    (true, o.y, se, res, rw, iters)
-                }
-            };
+        let (
+            has_value,
+            y_val,
+            standard_error,
+            residual,
+            robustness_weight,
+            iterations_used,
+            gradient,
+        ) = match point {
+            None => (false, f64::NAN, f64::NAN, f64::NAN, f64::NAN, -1, None),
+            Some(o) => {
+                let (se, res, rw, iters) = shared_parse::extract_online_output(&o);
+                (true, o.y, se, res, rw, iters, o.gradient.clone())
+            }
+        };
+        let gradient_arr = vec_to_jdoublearray(env, &gradient)?;
 
         let class = env.find_class(ONLINE_OUTPUT_CLASS)?;
         let obj = env.new_object(
@@ -801,6 +823,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
                 JValue::Double(residual),
                 JValue::Double(robustness_weight),
                 JValue::Int(iterations_used),
+                JValue::Object(&gradient_arr),
             ],
         )?;
         Ok(obj)

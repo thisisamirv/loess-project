@@ -24,6 +24,7 @@ public final class OnlineLoess implements AutoCloseable {
                 c.scalingMethod,
                 c.boundaryPolicy,
                 c.returnRobustnessWeights,
+                c.returnGradient,
                 c.zeroWeightFallback,
                 c.autoConverge,
                 options.windowCapacity,

@@ -164,6 +164,25 @@ func TestLoess(t *testing.T) {
 		}
 	})
 
+	t.Run("WithGradient", func(t *testing.T) {
+		x, y := linearData(20, 3.0, 1.0)
+
+		opts := fastloess.DefaultOptions()
+		opts.SurfaceMode = "direct"
+		opts.BoundaryPolicy = "noboundary"
+		opts.ReturnGradient = true
+		res := fitOrFatal(t, opts, x, y)
+
+		if len(res.Gradient) != len(x) {
+			t.Fatalf("expected %d gradient values, got %d", len(x), len(res.Gradient))
+		}
+		for _, g := range res.Gradient {
+			if !approxEqual(g, 3.0, 1e-6) {
+				t.Fatalf("expected gradient close to slope 3.0, got %v", g)
+			}
+		}
+	})
+
 	t.Run("WithConfidenceIntervals", func(t *testing.T) {
 		x, y := linearData(20, 2.0, 0.0)
 

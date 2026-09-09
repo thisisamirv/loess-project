@@ -97,7 +97,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights |
 | `retain_model(bool)` | `bool` | `false` | Retain training data, enabling `predict()` on the result |
-| `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only, Batch, Streaming, and Online) |
+| `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 
 ## Options
 
@@ -298,7 +298,7 @@ Retains the fitted model's training data, enabling `Predict::call(&result, new_x
 
 ### return_gradient
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `LoessResult::gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `None` there. `false` by default. Supported by Batch (`LoessResult::gradient`), Streaming (`LoessResult::gradient`, merged across chunk overlaps like `y`), and Online (`OnlineOutput::gradient`, the latest point's gradient).
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `LoessResult::gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `None` there. `false` by default.
 
 ## Result Structure
 

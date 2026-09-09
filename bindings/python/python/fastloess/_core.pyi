@@ -61,6 +61,10 @@ class OnlineOutput:
     def iterations_used(self) -> int | None:
         """Number of robustness iterations performed."""
 
+    @property
+    def gradient(self) -> NDArray[np.float64] | None:
+        """Local fit gradient for the latest point (None if not requested), `dimensions` values."""
+
 class LoessResult:
     """Result from LOESS smoothing."""
 
@@ -99,6 +103,12 @@ class LoessResult:
     @property
     def robustness_weights(self) -> NDArray[np.float64] | None:
         """Robustness weights from final iteration."""
+
+    @property
+    def gradient(self) -> NDArray[np.float64] | None:
+        """Local fit's gradient at each point (if requested), `dimensions` values per point,
+        flattened.
+        """
 
     @property
     def diagnostics(self) -> Diagnostics | None:
@@ -235,6 +245,7 @@ class Loess:
         cv_seed: int | None = None,
         missing: str = "error",
         retain_model: bool = False,
+        return_gradient: bool = False,
     ) -> None:
         """Initialize the batch LOESS processor."""
 
@@ -288,6 +299,7 @@ class StreamingLoess:
         interpolation_vertices: int | None = None,
         boundary_degree_fallback: bool | None = None,
         missing: str = "error",
+        return_gradient: bool = False,
     ) -> None:
         """Initialize the streaming processor."""
 
@@ -324,6 +336,7 @@ class OnlineLoess:
         interpolation_vertices: int | None = None,
         boundary_degree_fallback: bool | None = None,
         missing: str = "error",
+        return_gradient: bool = False,
     ) -> None:
         """Initialize the online processor."""
 

@@ -49,6 +49,26 @@ class LoessTest {
     }
 
     @Test
+    void returnsGradientWhenRequestedInDirectMode() {
+        double[] x = linspace(20);
+        double[] y = new double[20];
+        for (int i = 0; i < 20; i++) {
+            y[i] = x[i] * 2.0;
+        }
+
+        try (Loess model = new Loess(
+                Options.builder().surfaceMode("direct").returnGradient(true).build())) {
+            Result result = model.fit(x, y);
+            assertEquals(x.length, result.gradient().orElseThrow().length);
+        }
+
+        try (Loess model = new Loess(Options.builder().surfaceMode("direct").build())) {
+            Result result = model.fit(x, y);
+            assertTrue(result.gradient().isEmpty());
+        }
+    }
+
+    @Test
     void throwsOnEmptyInput() {
         try (Loess model = new Loess(Options.builder().build())) {
             RuntimeException ex = org.junit.jupiter.api.Assertions.assertThrows(

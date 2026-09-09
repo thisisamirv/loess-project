@@ -81,6 +81,9 @@ type OnlineOptions struct {
 
 	// ReturnRobustnessWeights requests per-point robustness weights in the result.
 	ReturnRobustnessWeights bool
+	// ReturnGradient requests the local fit's gradient for the latest point.
+	// Only takes effect when SurfaceMode is "direct".
+	ReturnGradient bool
 
 	// WindowCapacity is the maximum number of recent points retained.
 	// Default: 1000.
@@ -185,6 +188,7 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
 			missing,
+			boolToCInt(opts.ReturnGradient),
 		)
 		if ptr == nil {
 			errMsg = lastError()
@@ -227,7 +231,9 @@ func (o *OnlineLoess) AddPoint(x, y float64) (res PointResult, ok bool, err erro
 		Residual:         float64(cout.residual),
 		RobustnessWeight: float64(cout.robustness_weight),
 		IterationsUsed:   int(cout.iterations_used),
+		Gradient:         cDoubleSliceToGo(cout.gradient, int(cout.dimensions)),
 	}
+	C.go_online_free_output(&cout)
 	return res, true, nil
 }
 

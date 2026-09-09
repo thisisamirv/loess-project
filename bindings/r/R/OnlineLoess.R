@@ -54,6 +54,7 @@ OnlineLoess <- function(
     update_mode = "incremental",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
+    return_gradient = FALSE,
     degree = "linear",
     dimensions = 1L,
     distance_metric = "normalized",

@@ -1,5 +1,6 @@
 package fastloess;
 
+import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 
@@ -14,13 +15,17 @@ import java.util.OptionalInt;
  * computed
  * @param iterationsUsed the number of robustness iterations performed, if
  * applicable
+ * @param gradient the local fit's gradient at this point, length
+ * {@code dimensions}, if computed (only populated when {@code surfaceMode} is
+ * {@code "direct"})
  */
 public record PointResult(
         double y,
         OptionalDouble standardError,
         OptionalDouble residual,
         OptionalDouble robustnessWeight,
-        OptionalInt iterationsUsed) {
+        OptionalInt iterationsUsed,
+        Optional<double[]> gradient) {
 
     static PointResult fromNative(NativeOnlineOutput o) {
         return new PointResult(
@@ -28,7 +33,8 @@ public record PointResult(
                 optionalDouble(o.standardError),
                 optionalDouble(o.residual),
                 optionalDouble(o.robustnessWeight),
-                o.iterationsUsed < 0 ? OptionalInt.empty() : OptionalInt.of(o.iterationsUsed));
+                o.iterationsUsed < 0 ? OptionalInt.empty() : OptionalInt.of(o.iterationsUsed),
+                Optional.ofNullable(o.gradient));
     }
 
     private static OptionalDouble optionalDouble(double value) {

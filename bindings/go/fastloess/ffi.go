@@ -141,6 +141,9 @@ type Result struct {
 	Residuals []float64
 	// RobustnessWeights is nil unless ReturnRobustnessWeights was requested.
 	RobustnessWeights []float64
+	// Gradient is nil unless ReturnGradient was requested (flattened, Dimensions
+	// values per point; only populated when SurfaceMode is "direct").
+	Gradient []float64
 	// CVScores is nil unless cross-validation was configured.
 	CVScores []float64
 
@@ -212,6 +215,8 @@ func resultFromC(cres C.fastloess_GoLoessResult) (Result, error) {
 			Leverage:      cDoubleSliceToGo(cres.leverage, n),
 		}
 	}
+
+	r.Gradient = cDoubleSliceToGo(cres.gradient, n*r.Dimensions)
 
 	C.go_loess_free_result(&cres)
 	return r, nil
@@ -350,4 +355,7 @@ type PointResult struct {
 	Residual         float64 // NaN if not computed
 	RobustnessWeight float64 // NaN if not computed
 	IterationsUsed   int     // -1 if not applicable
+	// Gradient is nil unless ReturnGradient was requested (Dimensions values
+	// for the latest point; only populated when SurfaceMode is "direct").
+	Gradient []float64
 }

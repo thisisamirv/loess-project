@@ -5,28 +5,29 @@
 \title{LOESS Online Smoothing}
 \usage{
 OnlineLoess(
-  fraction = 0.67,
-  window_capacity = 1000L,
-  min_points = 2L,
-  ...,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  zero_weight_fallback = "use_local_mean",
-  update_mode = "incremental",
-  auto_converge = NULL,
-  return_robustness_weights = FALSE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  weighted_metric_weights = NULL,
-  cell = NULL,
-  interpolation_vertices = NULL,
-  boundary_degree_fallback = NULL,
-  missing = "error"
+    fraction = 0.67,
+    window_capacity = 1000L,
+    min_points = 2L,
+    ...,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
+    update_mode = "incremental",
+    auto_converge = NULL,
+    return_robustness_weights = FALSE,
+    return_gradient = FALSE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL,
+    missing = "error"
 )
 }
 \arguments{
@@ -79,6 +80,10 @@ iterations. \code{NULL} (default) disables early stopping.}
 
 \item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
 robustness weights. Default: \code{FALSE}.}
+
+\item{return_gradient}{Logical; if \code{TRUE}, return the per-point local
+fit gradient in the result. Only takes effect when
+\code{surface_mode = "direct"}. Default: \code{FALSE}.}
 
 \item{degree}{Local polynomial degree: \code{"constant"}, \code{"linear"}
 (default), \code{"quadratic"}, \code{"cubic"}, or \code{"quartic"}.}

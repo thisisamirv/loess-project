@@ -37,6 +37,8 @@ export interface SmoothOptions {
     return_residuals?: boolean;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
+    /** Include the per-point local fit gradient in result (`dimensions` values per point, flattened). Only takes effect when `surface_mode` is "direct". Default: false. */
+    return_gradient?: boolean;
     /** Compute diagnostics (RMSE, MAE, R2, etc.). Default: false. */
     return_diagnostics?: boolean;
     /** Confidence interval level (e.g. 0.95). Disabled when absent. */
@@ -137,6 +139,8 @@ export interface StreamingSmoothOptions {
     return_residuals?: boolean;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
+    /** Include the per-point local fit gradient in result (`dimensions` values per point, flattened). Only takes effect when `surface_mode` is "direct". Default: false. */
+    return_gradient?: boolean;
     /** Compute diagnostics (RMSE, MAE, R2, etc.). Default: false. */
     return_diagnostics?: boolean;
     /** Enable parallel execution. Default: true. */
@@ -181,6 +185,8 @@ export interface OnlineSmoothOptions {
     auto_converge?: number;
     /** Include robustness weights in result. Default: false. */
     return_robustness_weights?: boolean;
+    /** Include the latest point's local fit gradient in result (`dimensions` values). Only takes effect when `surface_mode` is "direct". Default: false. */
+    return_gradient?: boolean;
     /** Polynomial degree ("constant", "linear", "quadratic", "cubic", "quartic"). Default: "linear". */
     degree?: string;
     /** Number of predictor dimensions. Default: 1. */
@@ -255,6 +261,7 @@ export class OnlineOutput {
     get residual(): number | undefined;
     get robustness_weight(): number | undefined;
     get iterations_used(): number | undefined;
+    get gradient(): Float64Array | undefined;
 }
 "#;
 
@@ -288,6 +295,7 @@ pub struct SmoothOptions {
     pub auto_converge: Option<f64>,
     pub return_residuals: Option<bool>,
     pub return_robustness_weights: Option<bool>,
+    pub return_gradient: Option<bool>,
     pub return_diagnostics: Option<bool>,
     pub confidence_intervals: Option<f64>,
     pub prediction_intervals: Option<f64>,
@@ -348,6 +356,7 @@ pub struct StreamingSmoothOptions {
     pub auto_converge: Option<f64>,
     pub return_residuals: Option<bool>,
     pub return_robustness_weights: Option<bool>,
+    pub return_gradient: Option<bool>,
     pub return_diagnostics: Option<bool>,
     pub parallel: Option<bool>,
     pub degree: Option<String>,
@@ -372,6 +381,7 @@ pub struct OnlineSmoothOptions {
     pub scaling_method: Option<String>,
     pub auto_converge: Option<f64>,
     pub return_robustness_weights: Option<bool>,
+    pub return_gradient: Option<bool>,
     pub degree: Option<String>,
     pub dimensions: Option<usize>,
     pub distance_metric: Option<String>,
@@ -405,6 +415,7 @@ pub struct OnlineOutput {
     residual: Option<f64>,
     robustness_weight: Option<f64>,
     iterations_used: Option<usize>,
+    gradient: Option<Vec<f64>>,
 }
 
 #[wasm_bindgen]
@@ -432,6 +443,13 @@ impl OnlineOutput {
     #[wasm_bindgen(getter, js_name = "iterations_used")]
     pub fn iterations_used(&self) -> Option<u32> {
         self.iterations_used.map(|i| i as u32)
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn gradient(&self) -> Option<Float64Array> {
+        self.gradient
+            .as_ref()
+            .map(|v| unsafe { Float64Array::view(v) })
     }
 }
 
@@ -568,6 +586,14 @@ impl LoessResult {
     pub fn leverage(&self) -> Option<Float64Array> {
         self.inner
             .leverage
+            .as_ref()
+            .map(|v| unsafe { Float64Array::view(v) })
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn gradient(&self) -> Option<Float64Array> {
+        self.inner
+            .gradient
             .as_ref()
             .map(|v| unsafe { Float64Array::view(v) })
     }
@@ -751,6 +777,9 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<
             },
         ))?
         .0;
+        if opts.return_gradient.unwrap_or(false) {
+            builder = builder.return_gradient();
+        }
     }
     Ok(builder)
 }
@@ -789,6 +818,9 @@ fn streaming_options_to_builder(
             },
         ))?
         .0;
+        if opts.return_gradient.unwrap_or(false) {
+            builder = builder.return_gradient();
+        }
     }
     Ok(builder)
 }
@@ -824,6 +856,9 @@ fn online_options_to_builder(
             },
         ))?
         .0;
+        if opts.return_gradient.unwrap_or(false) {
+            builder = builder.return_gradient();
+        }
     }
     Ok(builder)
 }
@@ -957,6 +992,7 @@ impl OnlineLoess {
                 residual: o.residual,
                 robustness_weight: o.robustness_weight,
                 iterations_used: o.iterations_used,
+                gradient: o.gradient,
             }),
             None => JsValue::null(),
         })

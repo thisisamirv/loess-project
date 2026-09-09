@@ -16,6 +16,9 @@ import java.util.OptionalInt;
  * @param residuals residuals, if computed
  * @param robustnessWeights robustness weights, if computed
  * @param cvScores cross-validation scores per tested fraction, if CV was run
+ * @param gradient per-point local fit gradient, flattened with {@code dimensions}
+ * values per point, if computed (only populated when {@code surfaceMode} is
+ * {@code "direct"})
  * @param fractionUsed the fraction used (as set, or selected by
  * cross-validation)
  * @param iterationsUsed the number of robustness iterations actually performed,
@@ -38,6 +41,7 @@ public record Result(
         Optional<double[]> residuals,
         Optional<double[]> robustnessWeights,
         Optional<double[]> cvScores,
+        Optional<double[]> gradient,
         double fractionUsed,
         OptionalInt iterationsUsed,
         int dimensions,
@@ -57,6 +61,7 @@ public record Result(
                 Optional.ofNullable(r.residuals),
                 Optional.ofNullable(r.robustnessWeights),
                 Optional.ofNullable(r.cvScores),
+                Optional.ofNullable(r.gradient),
                 r.fractionUsed,
                 r.iterationsUsed < 0 ? OptionalInt.empty() : OptionalInt.of(r.iterationsUsed),
                 r.dimensions,

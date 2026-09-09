@@ -147,6 +147,17 @@ public final class OnlineOptions {
         }
 
         /**
+         * @param returnGradient whether to include the local fit's gradient in
+         * the result
+         * @return this builder, for chaining
+         * @see Options.Builder#returnGradient(boolean)
+         */
+        public Builder returnGradient(boolean returnGradient) {
+            common.returnGradient(returnGradient);
+            return this;
+        }
+
+        /**
          * @param degree the local polynomial degree name
          * @return this builder, for chaining
          * @see Options.Builder#degree(String)

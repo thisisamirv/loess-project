@@ -101,6 +101,29 @@ class TestLoess:
         assert np.all(result.robustness_weights >= 0)
         assert np.all(result.robustness_weights <= 1)
 
+    def test_loess_with_gradient(self):
+        """Test loess with gradient enabled (requires surface_mode='direct')."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
+
+        loess = fastloess.Loess(
+            fraction=0.7, surface_mode="direct", return_gradient=True
+        )
+        result = loess.fit(x, y)
+
+        assert result.gradient is not None
+        assert len(result.gradient) == len(x) * result.dimensions
+
+    def test_loess_without_gradient_is_none(self):
+        """Test loess without return_gradient leaves gradient unset."""
+        x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
+        y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
+
+        loess = fastloess.Loess(fraction=0.7)
+        result = loess.fit(x, y)
+
+        assert result.gradient is None
+
     def test_loess_with_confidence_intervals(self):
         """Test loess with confidence intervals."""
         np.random.seed(42)

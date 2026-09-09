@@ -186,6 +186,7 @@ param_types <- list(
     return_diagnostics = "logical",
     return_residuals = "logical",
     return_robustness_weights = "logical",
+    return_gradient = "logical",
     return_se = "logical",
     return_sorted = "logical",
     parallel = "logical",
@@ -216,7 +217,8 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(type,
+        switch(
+            type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),
@@ -242,6 +244,7 @@ loess_params <- c(
     "return_diagnostics",
     "return_residuals",
     "return_robustness_weights",
+    "return_gradient",
     "zero_weight_fallback",
     "auto_converge",
     "cv_fractions",
@@ -276,6 +279,7 @@ online_params <- c(
     "update_mode",
     "auto_converge",
     "return_robustness_weights",
+    "return_gradient",
     "degree",
     "dimensions",
     "distance_metric",
@@ -301,6 +305,7 @@ streaming_params <- c(
     "return_diagnostics",
     "return_residuals",
     "return_robustness_weights",
+    "return_gradient",
     "merge_strategy",
     "parallel",
     "degree",

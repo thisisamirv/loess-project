@@ -99,6 +99,10 @@ type Options struct {
 	ReturnResiduals bool
 	// ReturnRobustnessWeights requests per-point robustness weights in the result.
 	ReturnRobustnessWeights bool
+	// ReturnGradient requests the per-point local fit gradient in the result,
+	// flattened (Dimensions values per point). Only takes effect when
+	// SurfaceMode is "direct".
+	ReturnGradient bool
 
 	// CVFractions is a set of candidate fractions for cross-validation.
 	// Empty disables CV. Batch model only.
@@ -230,6 +234,7 @@ func NewLoess(opts Options) (*Loess, error) {
 			wmwPtr, wmwLen,
 			missing,
 			boolToCInt(opts.RetainModel),
+			boolToCInt(opts.ReturnGradient),
 		)
 		if ptr == nil {
 			errMsg = lastError()

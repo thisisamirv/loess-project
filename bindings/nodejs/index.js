@@ -703,4 +703,5 @@ module.exports = nativeBinding
 module.exports.Loess = nativeBinding.Loess
 module.exports.LoessResult = nativeBinding.LoessResult
 module.exports.OnlineLoess = nativeBinding.OnlineLoess
+module.exports.PredictOutput = nativeBinding.PredictOutput
 module.exports.StreamingLoess = nativeBinding.StreamingLoess

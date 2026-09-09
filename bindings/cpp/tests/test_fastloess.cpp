@@ -191,6 +191,24 @@ void testLoessWithRobustnessWeights() {
   }
 }
 
+void testLoessWithGradient() {
+  std::cout << "Running testLoessWithGradient...\n";
+  const std::vector<double> x_vals(k_simple_x.begin(), k_simple_x.end());
+  const std::vector<double> y_vals(k_simple_y_noisy.begin(),
+                                   k_simple_y_noisy.end());
+
+  LoessOptions opts;
+  opts.fraction = k_fraction_seventh;
+  opts.surface_mode = "direct";
+  opts.return_gradient = true;
+  Loess loess(opts);
+  auto result = loess.fit(x_vals, y_vals).value();
+
+  auto gradient = result.gradient();
+  assertTrue(gradient.size() == k_small_count * result.dimensions(),
+             "Gradient count mismatch");
+}
+
 void testLoessReturnSorted() {
   std::cout << "Running testLoessReturnSorted...\n";
 
@@ -796,6 +814,7 @@ int main() {
     testLoessWithDiagnostics();
     testLoessWithResiduals();
     testLoessWithRobustnessWeights();
+    testLoessWithGradient();
     testLoessReturnSorted();
     testLoessWithConfidenceIntervals();
     testLoessWithPredictionIntervals();

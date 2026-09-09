@@ -60,6 +60,7 @@ StreamingLoess <- function(
     return_diagnostics = FALSE,
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
+    return_gradient = FALSE,
     merge_strategy = "weighted_average",
     parallel = TRUE,
     degree = "linear",

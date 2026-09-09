@@ -190,10 +190,18 @@ fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
 #' fit(model, x, y)
 #' predict(model, c(2.5, 7.5))
 #' @export
-predict.Loess <- function(object, new_x, return_se = FALSE, confidence_level = NULL,
-                            prediction_level = NULL, return_derivative = FALSE,
-                            extrapolation = "clamp", max_extrapolation_distance = NULL,
-                            max_neighbor_distance = NULL, ...) {
+predict.Loess <- function(
+    object,
+    new_x,
+    return_se = FALSE,
+    confidence_level = NULL,
+    prediction_level = NULL,
+    return_derivative = FALSE,
+    extrapolation = "clamp",
+    max_extrapolation_distance = NULL,
+    max_neighbor_distance = NULL,
+    ...
+) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
     }

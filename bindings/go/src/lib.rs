@@ -112,6 +112,10 @@ pub struct GoOnlineOutput {
     pub residual: c_double,
     pub robustness_weight: c_double,
     pub iterations_used: c_int,
+    /// Latest point's local fit gradient, `dimensions` values, NULL if not requested
+    pub gradient: *mut c_double,
+    /// Number of predictor dimensions (needed to know `gradient`'s true length)
+    pub dimensions: c_int,
     pub error: *mut c_char, // NULL if no error
 }
 
@@ -140,6 +144,9 @@ pub struct GoLoessResult {
     pub residuals: *mut c_double,
     /// Robustness weights (NULL if not computed)
     pub robustness_weights: *mut c_double,
+    /// Local fit's gradient at each point, `dimensions` values per point, flattened
+    /// (NULL if not requested; only takes effect when surface_mode = "direct")
+    pub gradient: *mut c_double,
 
     /// Fraction used for smoothing
     pub fraction_used: c_double,
@@ -190,6 +197,7 @@ impl Default for GoLoessResult {
             prediction_upper: ptr::null_mut(),
             residuals: ptr::null_mut(),
             robustness_weights: ptr::null_mut(),
+            gradient: ptr::null_mut(),
             fraction_used: 0.0,
             iterations_used: -1,
             rmse: f64::NAN,
@@ -231,13 +239,16 @@ impl Default for GoOnlineOutput {
             residual: f64::NAN,
             robustness_weight: f64::NAN,
             iterations_used: -1,
+            gradient: ptr::null_mut(),
+            dimensions: 1,
             error: ptr::null_mut(),
         }
     }
 }
 
 impl From<LoessResult<f64>> for GoLoessResult {
-    fn from(result: LoessResult<f64>) -> Self {
+    fn from(mut result: LoessResult<f64>) -> Self {
+        let gradient = result.gradient.take();
         let p = shared_parse::extract_ffi_loess_result(result);
         GoLoessResult {
             x: p.x,
@@ -250,6 +261,7 @@ impl From<LoessResult<f64>> for GoLoessResult {
             prediction_upper: p.prediction_upper,
             residuals: p.residuals,
             robustness_weights: p.robustness_weights,
+            gradient: shared_parse::opt_vec_to_raw_ptr(gradient),
             fraction_used: p.fraction_used,
             iterations_used: p.iterations_used,
             rmse: p.rmse,
@@ -299,6 +311,7 @@ pub struct GoStreamingLoess {
 // Opaque handle to an online Loess model.
 pub struct GoOnlineLoess {
     model: Option<ParallelOnlineLoess<f64>>,
+    dimensions: usize,
 }
 
 // Opaque handle retained by `go_loess_fit` (in `GoLoessResult::predict_handle`, if
@@ -347,6 +360,7 @@ pub unsafe extern "C" fn go_loess_new(
     weighted_metric_weights_len: c_ulong,
     missing: *const c_char,
     retain_model: c_int,
+    return_gradient: c_int,
 ) -> *mut GoLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -439,6 +453,12 @@ pub unsafe extern "C" fn go_loess_new(
         ) {
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
+        };
+
+        let builder = if return_gradient != 0 {
+            builder.return_gradient()
+        } else {
+            builder
         };
 
         Box::into_raw(Box::new(GoLoess {
@@ -739,6 +759,7 @@ pub unsafe extern "C" fn go_streaming_new(
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
     missing: *const c_char,
+    return_gradient: c_int,
 ) -> *mut GoStreamingLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -824,6 +845,12 @@ pub unsafe extern "C" fn go_streaming_new(
         ) {
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
+        };
+
+        let builder = if return_gradient != 0 {
+            builder.return_gradient()
+        } else {
+            builder
         };
 
         let model = match shared_parse::build_streaming(
@@ -941,6 +968,7 @@ pub unsafe extern "C" fn go_online_new(
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
     missing: *const c_char,
+    return_gradient: c_int,
 ) -> *mut GoOnlineLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -1033,6 +1061,12 @@ pub unsafe extern "C" fn go_online_new(
             Err(e) => return null_with_error(&e),
         };
 
+        let builder = if return_gradient != 0 {
+            builder.return_gradient()
+        } else {
+            builder
+        };
+
         let model = match shared_parse::build_online(
             builder,
             Some(window_capacity),
@@ -1043,7 +1077,10 @@ pub unsafe extern "C" fn go_online_new(
             Err(e) => return null_with_error(&e.message),
         };
 
-        Box::into_raw(Box::new(GoOnlineLoess { model: Some(model) }))
+        Box::into_raw(Box::new(GoOnlineLoess {
+            model: Some(model),
+            dimensions: configured_dimensions,
+        }))
     })
 }
 
@@ -1085,6 +1122,8 @@ pub unsafe extern "C" fn go_online_add_point(
                         residual,
                         robustness_weight,
                         iterations_used,
+                        gradient: shared_parse::opt_vec_to_raw_ptr(o.gradient),
+                        dimensions: loess.dimensions as c_int,
                         error: ptr::null_mut(),
                     }
                 }
@@ -1098,7 +1137,7 @@ pub unsafe extern "C" fn go_online_add_point(
     }
 }
 
-/// Free the error string in a GoOnlineOutput (call only when error != NULL).
+/// Free the error field in a GoOnlineOutput (call only when error != NULL).
 ///
 /// # Safety
 /// `output` must be a valid pointer and `output->error` must have been allocated by Rust.
@@ -1109,6 +1148,8 @@ pub unsafe extern "C" fn go_online_free_output(output: *mut GoOnlineOutput) {
             let out = unsafe { &mut *output };
             shared_parse::free_raw_c_string(out.error);
             out.error = ptr::null_mut();
+            shared_parse::free_raw_f64_buffer(out.gradient, out.dimensions.max(1) as usize);
+            out.gradient = ptr::null_mut();
         }
     });
 }
@@ -1150,6 +1191,7 @@ pub unsafe extern "C" fn go_loess_free_result(result: *mut GoLoessResult) {
         shared_parse::free_raw_f64_buffer(r.prediction_upper, n);
         shared_parse::free_raw_f64_buffer(r.residuals, n);
         shared_parse::free_raw_f64_buffer(r.robustness_weights, n);
+        shared_parse::free_raw_f64_buffer(r.gradient, n * r.dimensions.max(1) as usize);
         shared_parse::free_raw_f64_buffer(r.leverage, n);
         shared_parse::free_raw_f64_buffer(r.cv_scores, cv_n);
         shared_parse::free_raw_c_string(r.error);

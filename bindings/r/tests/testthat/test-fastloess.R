@@ -155,6 +155,36 @@ test_that("Loess robustness weights work", {
     expect_lt(result$robustness_weights[25], median(result$robustness_weights))
 })
 
+test_that("Loess return_gradient works under surface_mode = direct", {
+    set.seed(42)
+    x <- seq(0, 10, length.out = 50)
+    y <- sin(x) + rnorm(50, sd = 0.1)
+
+    result <- fit(
+        Loess(fraction = 0.5, surface_mode = "direct", return_gradient = TRUE),
+        as.double(x),
+        as.double(y)
+    )
+
+    expect_true("gradient" %in% names(result))
+    expect_length(result$gradient, length(y))
+    expect_type(result$gradient, "double")
+})
+
+test_that("Loess return_gradient stays absent under default surface_mode", {
+    set.seed(42)
+    x <- seq(0, 10, length.out = 50)
+    y <- sin(x) + rnorm(50, sd = 0.1)
+
+    result <- fit(
+        Loess(fraction = 0.5, return_gradient = TRUE),
+        as.double(x),
+        as.double(y)
+    )
+
+    expect_false("gradient" %in% names(result))
+})
+
 test_that("Loess return_sorted defaults to original input order", {
     x <- c(3.0, 1.0, 5.0, 2.0, 4.0)
     y <- c(6.0, 2.0, 10.0, 4.0, 8.0)

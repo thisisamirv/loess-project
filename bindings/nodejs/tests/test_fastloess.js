@@ -118,6 +118,34 @@ test('return_sorted = true returns results sorted ascending by x', () => {
     assert.strictEqual(result.robustness_weights.length, x.length);
 });
 
+test('SmoothOptions: return_gradient returns flattened per-point gradient (direct surface mode)', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+
+    const model = new fastloess.Loess({
+        fraction: 0.7,
+        surface_mode: 'direct',
+        return_gradient: true,
+    });
+    const result = model.fit(x, y);
+
+    assert.ok(result.gradient !== null);
+    assert.strictEqual(result.gradient.length, x.length * result.dimensions);
+});
+
+test('SmoothOptions: gradient is null under default interpolation surface mode', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+
+    const model = new fastloess.Loess({
+        fraction: 0.7,
+        return_gradient: true,
+    });
+    const result = model.fit(x, y);
+
+    assert.strictEqual(result.gradient, null);
+});
+
 test('async batch smoothing', async () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);

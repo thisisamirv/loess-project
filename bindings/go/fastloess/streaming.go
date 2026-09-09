@@ -86,6 +86,10 @@ type StreamingOptions struct {
 	ReturnResiduals bool
 	// ReturnRobustnessWeights requests per-point robustness weights in the result.
 	ReturnRobustnessWeights bool
+	// ReturnGradient requests the per-point local fit gradient in the result,
+	// flattened (Dimensions values per point). Only takes effect when
+	// SurfaceMode is "direct".
+	ReturnGradient bool
 	// Parallel enables parallel processing. Default: true.
 	Parallel bool
 
@@ -193,6 +197,7 @@ func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
 			missing,
+			boolToCInt(opts.ReturnGradient),
 		)
 		if ptr == nil {
 			errMsg = lastError()

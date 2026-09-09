@@ -61,6 +61,9 @@
 #'   result. Default: \code{FALSE}.
 #' @param return_robustness_weights Logical; if \code{TRUE}, return per-point
 #'   robustness weights. Default: \code{FALSE}.
+#' @param return_gradient Logical; if \code{TRUE}, return the per-point local
+#'   fit gradient in the result. Only takes effect when
+#'   \code{surface_mode = "direct"}. Default: \code{FALSE}.
 #' @param zero_weight_fallback Fallback policy when all robustness weights drop
 #'   to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 #'   \code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
@@ -141,6 +144,7 @@ Loess <- function(
     return_diagnostics = FALSE,
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
+    return_gradient = FALSE,
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
     cv_fractions = NULL,

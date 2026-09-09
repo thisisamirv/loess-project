@@ -163,6 +163,17 @@ public final class StreamingOptions {
         }
 
         /**
+         * @param returnGradient whether to include the per-point local fit
+         * gradient in the result
+         * @return this builder, for chaining
+         * @see Options.Builder#returnGradient(boolean)
+         */
+        public Builder returnGradient(boolean returnGradient) {
+            common.returnGradient(returnGradient);
+            return this;
+        }
+
+        /**
          * @param parallel whether to enable parallel execution
          * @return this builder, for chaining
          * @see Options.Builder#parallel(boolean)

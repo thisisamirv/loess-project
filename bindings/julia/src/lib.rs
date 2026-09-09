@@ -68,7 +68,11 @@ pub struct JlOnlineOutput {
     pub residual: c_double,          // f64::NAN when not computed
     pub robustness_weight: c_double, // f64::NAN when not computed
     pub iterations_used: c_int,      // -1 when not computed
-    pub error: *mut c_char,          // NULL if no error
+    /// Latest point's gradient, `dimensions` values (NULL if not requested)
+    pub gradient: *mut c_double,
+    /// Number of predictor dimensions (needed to know `gradient`'s true length)
+    pub dimensions: c_int,
+    pub error: *mut c_char, // NULL if no error
 }
 
 impl Default for JlOnlineOutput {
@@ -80,6 +84,8 @@ impl Default for JlOnlineOutput {
             residual: f64::NAN,
             robustness_weight: f64::NAN,
             iterations_used: -1,
+            gradient: ptr::null_mut(),
+            dimensions: 1,
             error: ptr::null_mut(),
         }
     }
@@ -110,6 +116,9 @@ pub struct JlLoessResult {
     pub residuals: *mut c_double,
     /// Robustness weights (NULL if not computed)
     pub robustness_weights: *mut c_double,
+    /// Local fit's gradient at each point, `dimensions` values per point, flattened
+    /// (NULL if not requested; only takes effect when surface_mode = "direct")
+    pub gradient: *mut c_double,
 
     /// Fraction used for smoothing
     pub fraction_used: c_double,
@@ -160,6 +169,7 @@ impl Default for JlLoessResult {
             prediction_upper: null_mut(),
             residuals: null_mut(),
             robustness_weights: null_mut(),
+            gradient: null_mut(),
             fraction_used: 0.0,
             iterations_used: -1,
             rmse: f64::NAN,
@@ -201,7 +211,9 @@ fn map_runtime_result<T, E: ToString>(result: Result<T, E>) -> Result<T, Box<JlL
 }
 
 // Convert LoessResult to JlLoessResult.
-fn loess_result_to_jl(result: LoessResult<f64>) -> JlLoessResult {
+fn loess_result_to_jl(mut result: LoessResult<f64>) -> JlLoessResult {
+    // Not part of FfiLoessResult (shared across bindings), so extracted separately.
+    let gradient = result.gradient.take();
     let p = shared_parse::extract_ffi_loess_result(result);
     JlLoessResult {
         x: p.x,
@@ -214,6 +226,7 @@ fn loess_result_to_jl(result: LoessResult<f64>) -> JlLoessResult {
         prediction_upper: p.prediction_upper,
         residuals: p.residuals,
         robustness_weights: p.robustness_weights,
+        gradient: shared_parse::opt_vec_to_raw_ptr(gradient),
         fraction_used: p.fraction_used,
         iterations_used: p.iterations_used,
         rmse: p.rmse,
@@ -260,6 +273,7 @@ pub struct JlStreamingLoess {
 
 pub struct JlOnlineLoess {
     inner: ParallelOnlineLoess<f64>,
+    dimensions: usize,
 }
 
 // Opaque handle retained by `jl_loess_fit` (in `JlLoessResult::predict_handle`, if
@@ -308,6 +322,7 @@ pub unsafe extern "C" fn jl_loess_new(
     weighted_metric_weights_len: c_ulong,
     missing: *const c_char,
     retain_model: c_int,
+    return_gradient: c_int,
 ) -> *mut JlLoessConfig {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -411,6 +426,12 @@ pub unsafe extern "C" fn jl_loess_new(
                 Err(e) => return null_with_last_error(&e.message),
             };
 
+        let base_builder = if return_gradient != 0 {
+            base_builder.return_gradient()
+        } else {
+            base_builder
+        };
+
         Box::into_raw(Box::new(JlLoessConfig {
             base_builder,
             dimensions: configured_dimensions,
@@ -502,6 +523,7 @@ pub unsafe extern "C" fn jl_loess_free_result(result: *mut JlLoessResult) {
     shared_parse::free_raw_f64_buffer(res.prediction_upper, n);
     shared_parse::free_raw_f64_buffer(res.residuals, n);
     shared_parse::free_raw_f64_buffer(res.robustness_weights, n);
+    shared_parse::free_raw_f64_buffer(res.gradient, n * res.dimensions.max(1) as usize);
     shared_parse::free_raw_f64_buffer(res.leverage, n);
     shared_parse::free_raw_f64_buffer(res.cv_scores, cv_n);
     shared_parse::free_raw_c_string(res.error);
@@ -778,6 +800,7 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
     missing: *const c_char,
+    return_gradient: c_int,
 ) -> *mut JlStreamingLoess {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -881,6 +904,12 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
         )) {
             Ok(v) => v,
             Err(e) => return null_with_last_error(&e.message),
+        };
+
+        let builder = if return_gradient != 0 {
+            builder.return_gradient()
+        } else {
+            builder
         };
 
         let processor = match shared_parse::build_streaming(
@@ -1018,6 +1047,7 @@ pub unsafe extern "C" fn jl_online_loess_new(
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
     missing: *const c_char,
+    return_gradient: c_int,
 ) -> *mut JlOnlineLoess {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -1125,6 +1155,12 @@ pub unsafe extern "C" fn jl_online_loess_new(
             Err(e) => return null_with_last_error(&e.message),
         };
 
+        let builder = if return_gradient != 0 {
+            builder.return_gradient()
+        } else {
+            builder
+        };
+
         let processor = match shared_parse::build_online(
             builder,
             Some(window_capacity_usize),
@@ -1135,7 +1171,10 @@ pub unsafe extern "C" fn jl_online_loess_new(
             Err(e) => return null_with_last_error(&e.message),
         };
 
-        Box::into_raw(Box::new(JlOnlineLoess { inner: processor }))
+        Box::into_raw(Box::new(JlOnlineLoess {
+            inner: processor,
+            dimensions: configured_dimensions,
+        }))
     });
 
     match result {
@@ -1185,6 +1224,8 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
                     residual,
                     robustness_weight,
                     iterations_used,
+                    gradient: shared_parse::opt_vec_to_raw_ptr(o.gradient),
+                    dimensions: processor.dimensions as c_int,
                     error: ptr::null_mut(),
                 }
             }
@@ -1207,6 +1248,8 @@ pub unsafe extern "C" fn jl_online_free_output(output: *mut JlOnlineOutput) {
     if !output.is_null() {
         shared_parse::free_raw_c_string((*output).error);
         (*output).error = ptr::null_mut();
+        shared_parse::free_raw_f64_buffer((*output).gradient, (*output).dimensions.max(1) as usize);
+        (*output).gradient = ptr::null_mut();
     }
 }
 

@@ -83,7 +83,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `return_robustness_weights()` | `bool` | `false` | Include weights in result |
 | `return_se()` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
 | `return_sorted()` | `bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
-| `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only, Batch, Streaming, and Online) |
+| `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 | `degree(...)` | `degree` | `"linear"` | Polynomial degree |
 | `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
 | `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
@@ -302,7 +302,7 @@ Retains the fitted model's training data, enabling `Predict::call(&result, new_x
 
 ### return_gradient
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `LoessResult::gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. In Batch and Streaming, this is computed in parallel (like the smoothing pass itself) when `parallel` is enabled; Online always runs sequentially. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `None` there. `false` by default. Supported by Batch (`LoessResult::gradient`), Streaming (`LoessResult::gradient`, merged across chunk overlaps like `y`), and Online (`OnlineOutput::gradient`, the latest point's gradient).
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `LoessResult::gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Computed in parallel (like the smoothing pass itself) when `parallel` is enabled. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `None` there. `false` by default.
 
 ## Result Structure
 

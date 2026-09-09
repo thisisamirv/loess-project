@@ -81,6 +81,7 @@ impl RLoess {
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
+        return_gradient: bool,
         zero_weight_fallback: &str,
         auto_converge: Nullable<f64>,
         cv_fractions: Nullable<Vec<f64>>,
@@ -168,6 +169,11 @@ impl RLoess {
                 retain_model: Some(retain_model),
             },
         ))?;
+        let builder = if return_gradient {
+            builder.return_gradient()
+        } else {
+            builder
+        };
 
         Ok(Self {
             builder,
@@ -287,6 +293,7 @@ impl RStreamingLoess {
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
+        return_gradient: bool,
         merge_strategy: &str,
         parallel: bool,
         degree: &str,
@@ -352,6 +359,11 @@ impl RStreamingLoess {
                 ..Default::default()
             },
         ))?;
+        let builder = if return_gradient {
+            builder.return_gradient()
+        } else {
+            builder
+        };
 
         let model = map_runtime(shared_parse::build_streaming(
             builder,
@@ -398,6 +410,7 @@ impl ROnlineLoess {
         update_mode: &str,
         auto_converge: Nullable<f64>,
         return_robustness_weights: bool,
+        return_gradient: bool,
         degree: &str,
         dimensions: i32,
         distance_metric: &str,
@@ -457,6 +470,11 @@ impl ROnlineLoess {
                 ..Default::default()
             },
         ))?;
+        let builder = if return_gradient {
+            builder.return_gradient()
+        } else {
+            builder
+        };
 
         let model = map_runtime(shared_parse::build_online(
             builder,
@@ -485,6 +503,9 @@ impl ROnlineLoess {
                 }
                 if let Some(rw) = o.robustness_weight {
                     items.push(("robustness_weight", rw.into_robj()));
+                }
+                if let Some(g) = o.gradient {
+                    items.push(("gradient", g.into_robj()));
                 }
                 if let Some(iters) = o.iterations_used {
                     items.push(("iterations_used", (iters as i32).into_robj()));
@@ -529,6 +550,9 @@ fn loess_result_to_list(result: LoessResult<f64>) -> Result<List> {
     }
     if let Some(rw) = result.robustness_weights {
         list_items.push(("robustness_weights", rw.into_robj()));
+    }
+    if let Some(g) = result.gradient {
+        list_items.push(("gradient", g.into_robj()));
     }
     if let Some(iters) = result.iterations_used {
         list_items.push(("iterations_used", (iters as i32).into_robj()));

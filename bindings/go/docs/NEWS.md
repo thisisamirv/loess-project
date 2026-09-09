@@ -4,6 +4,27 @@ weight: 100
 ---
 
 <!-- markdownlint-disable MD024 MD025 -->
+# fastloess (Go) Unreleased
+
+## Added
+
+* Added a `RetainModel` option to `Options` and a `Result.PredictModel.Predict(newX, options)` method, via new `PredictModel`/`PredictOptions`/`PredictResult` types, for out-of-sample prediction.
+* Added Linux musl (Alpine) release binaries alongside the existing glibc ones: Python (`release-pypi.yml` now publishes `musllinux_1_2` wheels for x86_64/aarch64), C++ (`release-cpp.yml` builds natively inside `alpine:latest` containers on `ubuntu-latest`/`ubuntu-24.04-arm`, publishing `libfastloess-linux-{x64,arm64}-musl.so`), Go (`release-go.yml`, same container approach, publishing `libfastloess_go-linux-{x64,arm64}-musl.a`), and Julia (removed the `libc(p) != "musl"` filter from `dev/build_tarballs_julia.jl`, letting Yggdrasil build musl JLLs again). GPU wheels/libraries (`release-gpu.yml`) are not covered by this change. Java is intentionally left as-is (no prebuilt natives for any platform yet).
+* Added prebuilt native libraries for the Java binding: `release-java.yml` now builds `fastloess_java` for `linux-x86_64`, `linux-x86_64-musl` (Alpine), `linux-aarch64`, `linux-aarch64-musl` (Alpine), `macos-x86_64`, `macos-aarch64`, `windows-x86_64`, and `windows-aarch64`, and bundles all eight into the published jar under `src/main/resources/native/<os>-<arch>[-musl]/`. `NativeBridge` now also detects musl at runtime (checking Alpine's `/etc/alpine-release` and musl's `ld-musl-*` dynamic linker, since the JVM has no direct API for this) in addition to its existing (previously unused) `loadFromBundledResource()` auto-extraction, so `mvn`/Gradle users on any of those eight platforms no longer need to build the native library themselves.
+
+## Changed
+
+* Hoisted inline fully-qualified paths (e.g. `crate::math::distance::DistanceLinalg`, `std::slice::from_raw_parts`) to top-level `use` imports across all crates and bindings, using the bare name in the body instead. Genuine name collisions (e.g. a module-local `Result<T>`/`StreamingLoess` type alias shadowing the standard one) are kept fully-qualified with an explanatory comment. No behavior changes.
+* Removed unnecessary `pub use` re-exports across `loess-rs`/`fastLoess` (`api.rs`, `binding_support.rs`) that had no consumer via their re-exported path — every actual caller already imported the type directly from its origin module (e.g. `math::boundary::BoundaryPolicy`, `engine::executor::SurfaceMode`). Changed to plain `use`. No behavior changes.
+
+## Fixed
+
+* `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
+* `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
+* Fixed inconsistent naming of the Node.js binding as "JavaScript" in the shared project intro sentence (root `README.md`, every binding/crate `README.md`, their generated doc-site home pages, and `CITATION.cff`) — now says "Node.js" everywhere, matching the CI badge, installation table, and directory name (`bindings/nodejs`).
+* `make loess-rs-dev`/`make fastLoess-dev` now also run `cargo test --doc` for each tested feature set; doctests in `.rs` source files were previously never checked by any `make` target (only markdown-doc code snippets are covered by `dev/verify_snippets.py`).
+* Fixed the Go module's import path missing the required `/v2` major version suffix (Go's "major version suffix" rule: any module tagged `v2.0.0` or higher must end its module path with `/vN`, or the Go toolchain silently ignores all such tags and resolves only pseudo-versions). Changed `github.com/thisisamirv/loess-project/bindings/go/fastloess` to `.../fastloess/v2` in `go.mod`, all doc snippets, the doc-snippet runner, and the test module. This is a **breaking change** for any code importing the old unsuffixed path; existing tags were affected and require a new release for pkg.go.dev to resolve real (non-pseudo) versions correctly.
+
 # fastloess (Go) 2.0.0
 
 ## Added
