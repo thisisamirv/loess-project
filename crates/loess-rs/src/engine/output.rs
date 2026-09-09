@@ -20,12 +20,10 @@ use core::fmt::{Debug, Display, Formatter};
 use num_traits::Float;
 
 // Internal dependencies
-use crate::algorithms::regression::{PolynomialDegree, SolverLinalg};
-use crate::engine::predict::{PredictOptions, PredictOutput, PredictState, predict_batch};
+use crate::algorithms::regression::PolynomialDegree;
+use crate::engine::predict::PredictState;
 use crate::evaluation::diagnostics::Diagnostics;
-use crate::math::distance::{DistanceLinalg, DistanceMetric};
-use crate::math::linalg::FloatLinalg;
-use crate::primitives::errors::LoessError;
+use crate::math::distance::DistanceMetric;
 
 // Comprehensive LOESS output containing smoothed values and diagnostics.
 #[derive(Debug, Clone, PartialEq)]
@@ -131,34 +129,6 @@ impl<T: Float> LoessResult<T> {
                 .copied()
                 .min_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
         })
-    }
-}
-
-impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> LoessResult<T> {
-    // Evaluate the fitted Batch model at arbitrary out-of-sample query points (flattened,
-    // `dimensions` values per point), per `options`. Returns a `PredictOutput` with one
-    // entry per query point.
-    //
-    // Requires `.retain_model(true)` on the builder (Batch adapter only); returns
-    // `LoessError::PredictionUnavailable` otherwise.
-    //
-    // Always fits an exact local regression at each query point, unlike `fit()` under the
-    // default `SurfaceMode::Interpolation` (which only fits exactly at a coarser vertex grid
-    // and interpolates the rest). So predicting at an x already in the training set may not
-    // exactly reproduce that point's `fit()` output unless `surface_mode("direct")` was used.
-    pub fn predict(
-        &self,
-        new_x: &[T],
-        options: &PredictOptions<T>,
-    ) -> Result<PredictOutput<T>, LoessError> {
-        if let Some(e) = &options.pending_error {
-            return Err(e.clone());
-        }
-        let state = self
-            .predict_state
-            .as_ref()
-            .ok_or(LoessError::PredictionUnavailable)?;
-        predict_batch(state, new_x, options)
     }
 }
 

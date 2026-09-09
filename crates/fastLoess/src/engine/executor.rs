@@ -26,7 +26,7 @@ use loess_rs::internals::algorithms::regression::{
 
 use loess_rs::internals::engine::executor::LoessDistanceCalculator as ExecutorLoessDistanceCalculator;
 use loess_rs::internals::engine::predict::{
-    PredictOptions, PredictState, RawPredictValues, predict_one_full,
+    Predict, PredictState, RawPredictValues, predict_one_full,
 };
 use loess_rs::internals::math::distance::{DistanceLinalg, DistanceMetric};
 use loess_rs::internals::math::kernel::WeightFunction;
@@ -373,7 +373,7 @@ pub fn vertex_pass_parallel<T>(
 pub fn predict_pass_parallel<T>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &PredictOptions<T>,
+    options: &Predict<T>,
     need_se: bool,
 ) -> RawPredictValues<T>
 where

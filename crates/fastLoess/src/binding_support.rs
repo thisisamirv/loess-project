@@ -93,7 +93,7 @@ use loess_rs::internals::algorithms::robustness::RobustnessMethod;
 use loess_rs::internals::alias;
 use loess_rs::internals::engine::executor::SurfaceMode;
 pub use loess_rs::internals::engine::predict::{
-    ExtrapolationPolicy, PredictOptions, PredictOutput, PredictState, predict_batch,
+    ExtrapolationPolicy, Predict, PredictOutput, PredictState, predict_batch,
 };
 use loess_rs::internals::engine::validator::MissingPolicy;
 use loess_rs::internals::evaluation::intervals::IntervalMethod;
@@ -189,14 +189,12 @@ pub fn extrapolation_policy_str(value: ExtrapolationPolicy) -> &'static str {
     alias::extrapolation_policy_str(value)
 }
 
-pub fn build_predict_options(
-    options: PredictOptionSet<'_>,
-) -> Result<PredictOptions<f64>, BindingError> {
+pub fn build_predict_options(options: PredictOptionSet<'_>) -> Result<Predict<f64>, BindingError> {
     let extrapolation = match options.extrapolation {
         Some(s) => map_invalid_arg(parse_extrapolation_policy(s))?,
         None => ExtrapolationPolicy::default(),
     };
-    Ok(PredictOptions {
+    Ok(Predict {
         return_se: options.return_se,
         confidence_level: options.confidence_level,
         prediction_level: options.prediction_level,
@@ -216,7 +214,7 @@ pub fn run_predict(
     options: PredictOptionSet<'_>,
 ) -> Result<PredictOutput<f64>, BindingError> {
     let opts = build_predict_options(options)?;
-    map_loess_result(result.predict(new_x, &opts))
+    map_loess_result(opts.call(result, new_x))
 }
 
 // Same as `run_predict`, for bindings (C++, Go, Julia, Java) that retain only the

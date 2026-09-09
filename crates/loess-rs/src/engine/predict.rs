@@ -1,6 +1,6 @@
 //! Out-of-sample prediction for fitted Batch LOESS models.
 //!
-//! This module holds the fitted-model state retained by `LoessResult::predict()`
+//! This module holds the fitted-model state retained by `Predict::call()`
 //! (Batch adapter only, opt-in via `.retain_model(true)`) and the logic that
 //! evaluates the local polynomial fit at arbitrary query points not in the
 //! training set. Supports the full nD / polynomial-degree / distance-metric
@@ -26,6 +26,7 @@ use crate::algorithms::regression::{
 };
 use crate::api::IntoEnum;
 use crate::engine::executor::LoessDistanceCalculator;
+use crate::engine::output::LoessResult;
 use crate::evaluation::intervals::IntervalMethod;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
 use crate::math::kernel::WeightFunction;
@@ -53,7 +54,7 @@ pub enum ExtrapolationPolicy {
 
 // Options controlling a `LoessResult::predict()` call.
 #[derive(Debug, Clone)]
-pub struct PredictOptions<T> {
+pub struct Predict<T> {
     // Include standard errors in the output.
     pub return_se: bool,
 
@@ -96,7 +97,7 @@ pub struct PredictOptions<T> {
     pub pending_error: Option<LoessError>,
 }
 
-impl<T: FloatLinalg> Default for PredictOptions<T> {
+impl<T: FloatLinalg> Default for Predict<T> {
     fn default() -> Self {
         Self {
             return_se: false,
@@ -111,7 +112,23 @@ impl<T: FloatLinalg> Default for PredictOptions<T> {
     }
 }
 
-impl<T: FloatLinalg> PredictOptions<T> {
+impl<T: FloatLinalg> Predict<T> {
+    // Create a new `Predict` with default values, matching `Loess::new()`'s
+    // constructor-style entry point.
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    // Surface any pending parse error (from `extrapolation(...)`) immediately, mirroring
+    // `LoessBuilder::build()`'s fail-fast convention. Optional: `call()` checks this too,
+    // so skipping `build()` is safe but defers the error until the call itself.
+    pub fn build(self) -> Result<Self, LoessError> {
+        match &self.pending_error {
+            Some(e) => Err(e.clone()),
+            None => Ok(self),
+        }
+    }
+
     // Include standard errors in the output.
     pub fn return_se(mut self) -> Self {
         self.return_se = true;
@@ -149,17 +166,45 @@ impl<T: FloatLinalg> PredictOptions<T> {
     }
 
     // Under `"linear"` extrapolation, the maximum allowed per-dimension distance beyond
-    // the training boundary before `predict()` errors instead of returning an unbounded value.
+    // the training boundary before `call()` errors instead of returning an unbounded value.
     pub fn max_extrapolation_distance(mut self, distance: T) -> Self {
         self.max_extrapolation_distance = Some(distance);
         self
     }
 
     // Maximum allowed distance to the farthest point in a query's k-nearest-neighbor window
-    // before `predict()` errors, catching in-range-but-sparse query points.
+    // before `call()` errors, catching in-range-but-sparse query points.
     pub fn max_neighbor_distance(mut self, distance: T) -> Self {
         self.max_neighbor_distance = Some(distance);
         self
+    }
+}
+
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Predict<T> {
+    // Evaluate `result` (a fitted Batch model) at arbitrary out-of-sample query points
+    // (flattened, `dimensions` values per point), per these options. Returns a
+    // `PredictOutput` with one entry per query point.
+    //
+    // Requires `.retain_model(true)` on the builder that produced `result` (Batch adapter
+    // only); returns `LoessError::PredictionUnavailable` otherwise.
+    //
+    // Always fits an exact local regression at each query point, unlike `fit()` under the
+    // default `SurfaceMode::Interpolation` (which only fits exactly at a coarser vertex grid
+    // and interpolates the rest). So predicting at an x already in the training set may not
+    // exactly reproduce that point's `fit()` output unless `surface_mode("direct")` was used.
+    pub fn call(
+        &self,
+        result: &LoessResult<T>,
+        new_x: &[T],
+    ) -> Result<PredictOutput<T>, LoessError> {
+        if let Some(e) = &self.pending_error {
+            return Err(e.clone());
+        }
+        let state = result
+            .predict_state
+            .as_ref()
+            .ok_or(LoessError::PredictionUnavailable)?;
+        predict_batch(state, new_x, self)
     }
 }
 
@@ -196,7 +241,7 @@ pub type RawPredictValues<T> = Result<(Vec<T>, Option<Vec<T>>, Option<Vec<T>>), 
 pub type PredictPassFn<T> = fn(
     &PredictState<T>,
     &[T], // new_x (flattened, `dimensions` values per query point)
-    &PredictOptions<T>,
+    &Predict<T>,
     bool, // need_se
 ) -> RawPredictValues<T>;
 
@@ -322,7 +367,7 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     dist_calc: &LoessDistanceCalculator<T>,
     search_buffer: &mut NeighborhoodSearchBuffer<NodeDistance<T>>,
     neighborhood: &mut Neighborhood<T>,
-    options: &PredictOptions<T>,
+    options: &Predict<T>,
     need_se: bool,
 ) -> Result<(T, Option<Vec<T>>, Option<T>), LoessError> {
     let dims = state.dimensions;
@@ -522,7 +567,7 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
 fn predict_batch_serial<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &PredictOptions<T>,
+    options: &Predict<T>,
     need_se: bool,
 ) -> RawPredictValues<T> {
     let dims = state.dimensions;
@@ -575,7 +620,7 @@ fn predict_batch_serial<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
 pub fn predict_batch<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>(
     state: &PredictState<T>,
     new_x: &[T],
-    options: &PredictOptions<T>,
+    options: &Predict<T>,
 ) -> Result<PredictOutput<T>, LoessError> {
     if state.dimensions == 0 || !new_x.len().is_multiple_of(state.dimensions) {
         return Err(LoessError::InvalidInput(format!(

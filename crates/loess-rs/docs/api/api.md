@@ -293,7 +293,7 @@ Per-observation case weights. Must have the same length as `y`; all values must 
 
 *See: [Predict](crate::doc::guide::predict)*
 
-Retains the fitted model's training data, enabling `LoessResult::predict(new_x, options)` to evaluate the fit at out-of-sample query points not in the training set. Off by default (no extra memory/clone cost unless requested).
+Retains the fitted model's training data, enabling `Predict::call(&result, new_x)` to evaluate the fit at out-of-sample query points not in the training set. Off by default (no extra memory/clone cost unless requested).
 
 ## Result Structure
 
@@ -336,7 +336,7 @@ Retains the fitted model's training data, enabling `LoessResult::predict(new_x, 
 | `aic` | `Option<T>` | AIC |
 | `aicc` | `Option<T>` | AICc |
 
-### `predict(new_x, &options) -> PredictOutput<T>`
+### `Predict::call(&result, new_x) -> PredictOutput<T>`
 
 *See: [Predict](crate::doc::guide::predict)*
 

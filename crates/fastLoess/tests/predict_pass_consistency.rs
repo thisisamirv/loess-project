@@ -1,7 +1,7 @@
 #![cfg(feature = "dev")]
 use approx::assert_abs_diff_eq;
 use fastLoess::prelude::*;
-use loess_rs::internals::engine::predict::PredictOptions;
+use loess_rs::internals::engine::predict::Predict;
 
 #[test]
 fn test_predict_pass_consistency() {
@@ -30,16 +30,16 @@ fn test_predict_pass_consistency() {
         .fit(&x, &y)
         .unwrap();
 
-    let options = PredictOptions {
+    let options = Predict {
         return_se: true,
         return_derivative: true,
         confidence_level: Some(0.95),
         prediction_level: Some(0.95),
-        ..PredictOptions::default()
+        ..Predict::default()
     };
 
-    let seq_out = seq_res.predict(&new_x, &options).expect("serial predict");
-    let par_out = par_res.predict(&new_x, &options).expect("parallel predict");
+    let seq_out = options.call(&seq_res, &new_x).expect("serial predict");
+    let par_out = options.call(&par_res, &new_x).expect("parallel predict");
 
     for i in 0..new_x.len() {
         assert_abs_diff_eq!(seq_out.y[i], par_out.y[i], epsilon = 1e-12);

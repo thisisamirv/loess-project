@@ -159,7 +159,7 @@ pub enum LoessError {
     },
 
     // A `predict()` query point under `ExtrapolationPolicy::Linear` fell farther beyond
-    // the training range than `PredictOptions::max_extrapolation_distance` allows. The
+    // the training range than `Predict::max_extrapolation_distance` allows. The
     // first-order Taylor extension has no inherent cap, so an unbounded distance can
     // produce arbitrarily extreme values; this guard is opt-in (the option defaults to
     // `None`, preserving the original unbounded behavior).
@@ -174,7 +174,7 @@ pub enum LoessError {
 
     // A `predict()` query point passed the per-dimension bounding-box range check (so it
     // wasn't caught by `ExtrapolationPolicy`) but its actual nearest-neighbor window is
-    // farther away than `PredictOptions::max_neighbor_distance` allows. An axis-aligned
+    // farther away than `Predict::max_neighbor_distance` allows. An axis-aligned
     // bounding box isn't a convex hull: a point can sit inside every dimension's range
     // yet fall in an empty "corner" far from any real training data (e.g. diagonally or
     // non-rectangularly distributed data). This guard is opt-in (the option defaults to
