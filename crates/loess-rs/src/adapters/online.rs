@@ -28,6 +28,7 @@ use crate::engine::executor::{
     LoessExecutor, SmoothPassFn, SurfaceMode, VertexPassFn,
 };
 use crate::engine::validator::{MissingPolicy, Validator};
+use crate::evaluation::intervals::IntervalMethod;
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
@@ -92,6 +93,9 @@ pub struct OnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     // Include the per-point local fit gradient in the output. Only computed in
     // `SurfaceMode::Direct`.
     pub return_gradient: bool,
+
+    // Interval estimation method (`Full` update mode only; validated at `.build()`).
+    pub interval_type: Option<IntervalMethod<T>>,
 
     // Deferred error from adapter conversion
     pub deferred_error: Option<LoessError>,
@@ -178,6 +182,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
             boundary_policy: DEFAULT_BOUNDARY_POLICY_ENUM,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             return_gradient: DEFAULT_RETURN_GRADIENT,
+            interval_type: None,
             auto_converge: default_auto_converge(),
             deferred_error: None,
             polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
@@ -223,6 +228,10 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         Validator::validate_window_capacity(self.window_capacity, 3)?;
         Validator::validate_min_points(self.min_points, self.window_capacity)?;
 
+        // Validate that return_se()/confidence_intervals()/prediction_intervals() is
+        // only combined with update_mode("full")
+        Validator::validate_online_se_update_mode(self.interval_type, self.update_mode)?;
+
         let capacity = self.window_capacity;
         Ok(OnlineLoess {
             config: self,
@@ -245,6 +254,16 @@ pub struct OnlineOutput<T> {
 
     // Residual (raw input y minus this output's y)
     pub residual: Option<T>,
+
+    // Confidence interval bounds around the mean response for the latest point (`Full`
+    // update mode only, via `.confidence_intervals(level)`).
+    pub confidence_lower: Option<T>,
+    pub confidence_upper: Option<T>,
+
+    // Prediction interval bounds for a new observation at the latest point (`Full`
+    // update mode only, via `.prediction_intervals(level)`).
+    pub prediction_lower: Option<T>,
+    pub prediction_upper: Option<T>,
 
     // Robustness weight for the latest point (if computed)
     pub robustness_weight: Option<T>,
@@ -345,6 +364,10 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 y: smoothed,
                 standard_error: None,
                 residual: Some(residual),
+                confidence_lower: None,
+                confidence_upper: None,
+                prediction_lower: None,
+                prediction_upper: None,
                 robustness_weight: Some(T::one()),
                 iterations_used: None,
                 gradient: self.config.return_gradient.then(|| vec![slope]),
@@ -354,159 +377,204 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         // Smooth using LOESS for windows of size >= 3
 
         // Choose update strategy based on configuration
-        let (smoothed, std_err, rob_weight, iterations, gradient) = match self.config.update_mode {
-            UpdateMode::Incremental => {
-                // Incremental mode: single-pass fit (no robustness) for maximum performance.
-                let n = x_vec.len() / self.config.dimensions;
-                let cell_to_use = self.config.cell.unwrap_or(0.2);
-                let limit = self.config.interpolation_vertices.unwrap_or(n);
-                let cell_provided = self.config.cell.is_some();
-                let limit_provided = self.config.interpolation_vertices.is_some();
+        let (smoothed, std_err, ci_bounds, rob_weight, iterations, gradient) =
+            match self.config.update_mode {
+                UpdateMode::Incremental => {
+                    // Incremental mode: single-pass fit (no robustness) for maximum performance.
+                    let n = x_vec.len() / self.config.dimensions;
+                    let cell_to_use = self.config.cell.unwrap_or(0.2);
+                    let limit = self.config.interpolation_vertices.unwrap_or(n);
+                    let cell_provided = self.config.cell.is_some();
+                    let limit_provided = self.config.interpolation_vertices.is_some();
 
-                if self.config.surface_mode == SurfaceMode::Interpolation {
-                    Validator::validate_interpolation_grid(
-                        T::from(cell_to_use).unwrap_or_else(|| T::from(0.2).unwrap()),
-                        self.config.fraction,
-                        self.config.dimensions,
-                        limit,
-                        cell_provided,
-                        limit_provided,
-                    )?;
+                    if self.config.surface_mode == SurfaceMode::Interpolation {
+                        Validator::validate_interpolation_grid(
+                            T::from(cell_to_use).unwrap_or_else(|| T::from(0.2).unwrap()),
+                            self.config.fraction,
+                            self.config.dimensions,
+                            limit,
+                            cell_provided,
+                            limit_provided,
+                        )?;
+                    }
+
+                    let config = LoessConfig {
+                        fraction: Some(self.config.fraction),
+                        iterations: 0, // No robustness for incremental mode (speed)
+                        weight_function: self.config.weight_function,
+                        robustness_method: self.config.robustness_method,
+                        scaling_method: self.config.scaling_method,
+                        zero_weight_fallback: self.config.zero_weight_fallback,
+                        boundary_policy: self.config.boundary_policy,
+                        polynomial_degree: self.config.polynomial_degree,
+                        dimensions: self.config.dimensions,
+                        distance_metric: self.config.distance_metric.clone(),
+                        auto_converge: None,
+                        cv_fractions: None,
+                        cv_kind: None,
+                        return_variance: None,
+                        cv_seed: None,
+                        surface_mode: self.config.surface_mode,
+                        interpolation_vertices: self.config.interpolation_vertices,
+                        cell: self.config.cell,
+                        boundary_degree_fallback: self.config.boundary_degree_fallback,
+                        custom_weights: None,
+                        retain_model: false,
+                        return_gradient: self.config.return_gradient,
+                        // ++++++++++++++++++++++++++++++++++++++
+                        // +               DEV                  +
+                        // ++++++++++++++++++++++++++++++++++++++
+                        custom_smooth_pass: self.config.custom_smooth_pass,
+                        custom_cv_pass: self.config.custom_cv_pass,
+                        custom_interval_pass: self.config.custom_interval_pass,
+                        custom_gradient_pass: self.config.custom_gradient_pass,
+                        custom_fit_pass: self.config.custom_fit_pass,
+                        custom_vertex_pass: self.config.custom_vertex_pass,
+                        custom_kdtree_builder: self.config.custom_kdtree_builder,
+                        parallel: false,
+                        backend: None,
+                    };
+
+                    let result = LoessExecutor::run_with_config(x_vec, y_vec, config);
+                    let smoothed_val = result.smoothed.last().copied().ok_or_else(|| {
+                        LoessError::InvalidNumericValue("No smoothed output produced".into())
+                    })?;
+                    let grad = result
+                        .gradient
+                        .as_ref()
+                        .map(|g| g[g.len() - dimensions..].to_vec());
+
+                    (
+                        smoothed_val,
+                        None,
+                        (None, None, None, None),
+                        Some(T::one()),
+                        result.iterations,
+                        grad,
+                    )
                 }
+                UpdateMode::Full => {
+                    // Validate grid resolution
+                    let n = x_vec.len() / self.config.dimensions;
+                    let cell_to_use = self.config.cell.unwrap_or(0.2);
+                    let limit = self.config.interpolation_vertices.unwrap_or(n);
+                    let cell_provided = self.config.cell.is_some();
+                    let limit_provided = self.config.interpolation_vertices.is_some();
 
-                let config = LoessConfig {
-                    fraction: Some(self.config.fraction),
-                    iterations: 0, // No robustness for incremental mode (speed)
-                    weight_function: self.config.weight_function,
-                    robustness_method: self.config.robustness_method,
-                    scaling_method: self.config.scaling_method,
-                    zero_weight_fallback: self.config.zero_weight_fallback,
-                    boundary_policy: self.config.boundary_policy,
-                    polynomial_degree: self.config.polynomial_degree,
-                    dimensions: self.config.dimensions,
-                    distance_metric: self.config.distance_metric.clone(),
-                    auto_converge: None,
-                    cv_fractions: None,
-                    cv_kind: None,
-                    return_variance: None,
-                    cv_seed: None,
-                    surface_mode: self.config.surface_mode,
-                    interpolation_vertices: self.config.interpolation_vertices,
-                    cell: self.config.cell,
-                    boundary_degree_fallback: self.config.boundary_degree_fallback,
-                    custom_weights: None,
-                    retain_model: false,
-                    return_gradient: self.config.return_gradient,
-                    // ++++++++++++++++++++++++++++++++++++++
-                    // +               DEV                  +
-                    // ++++++++++++++++++++++++++++++++++++++
-                    custom_smooth_pass: self.config.custom_smooth_pass,
-                    custom_cv_pass: self.config.custom_cv_pass,
-                    custom_interval_pass: self.config.custom_interval_pass,
-                    custom_gradient_pass: self.config.custom_gradient_pass,
-                    custom_fit_pass: self.config.custom_fit_pass,
-                    custom_vertex_pass: self.config.custom_vertex_pass,
-                    custom_kdtree_builder: self.config.custom_kdtree_builder,
-                    parallel: false,
-                    backend: None,
-                };
+                    if self.config.surface_mode == SurfaceMode::Interpolation {
+                        Validator::validate_interpolation_grid(
+                            T::from(cell_to_use).unwrap_or_else(|| T::from(0.2).unwrap()),
+                            self.config.fraction,
+                            self.config.dimensions,
+                            limit,
+                            cell_provided,
+                            limit_provided,
+                        )?;
+                    }
 
-                let result = LoessExecutor::run_with_config(x_vec, y_vec, config);
-                let smoothed_val = result.smoothed.last().copied().ok_or_else(|| {
-                    LoessError::InvalidNumericValue("No smoothed output produced".into())
-                })?;
-                let grad = result
-                    .gradient
-                    .as_ref()
-                    .map(|g| g[g.len() - dimensions..].to_vec());
+                    // Full mode: re-smooth entire window
+                    let config = LoessConfig {
+                        fraction: Some(self.config.fraction),
+                        iterations: self.config.iterations,
+                        weight_function: self.config.weight_function,
+                        robustness_method: self.config.robustness_method,
+                        scaling_method: self.config.scaling_method,
+                        zero_weight_fallback: self.config.zero_weight_fallback,
+                        boundary_policy: self.config.boundary_policy,
+                        polynomial_degree: self.config.polynomial_degree,
+                        dimensions: self.config.dimensions,
+                        distance_metric: self.config.distance_metric.clone(),
+                        auto_converge: self.config.auto_converge,
+                        cv_fractions: None,
+                        cv_kind: None,
+                        return_variance: self.config.interval_type,
+                        cv_seed: None,
+                        surface_mode: self.config.surface_mode,
+                        interpolation_vertices: self.config.interpolation_vertices,
+                        cell: self.config.cell,
+                        boundary_degree_fallback: self.config.boundary_degree_fallback,
+                        custom_weights: None,
+                        retain_model: false,
+                        return_gradient: self.config.return_gradient,
+                        // ++++++++++++++++++++++++++++++++++++++
+                        // +               DEV                  +
+                        // ++++++++++++++++++++++++++++++++++++++
+                        custom_smooth_pass: self.config.custom_smooth_pass,
+                        custom_cv_pass: self.config.custom_cv_pass,
+                        custom_interval_pass: self.config.custom_interval_pass,
+                        custom_gradient_pass: self.config.custom_gradient_pass,
+                        custom_fit_pass: self.config.custom_fit_pass,
+                        custom_vertex_pass: self.config.custom_vertex_pass,
+                        custom_kdtree_builder: self.config.custom_kdtree_builder,
+                        parallel: false,
+                        backend: None,
+                    };
 
-                (smoothed_val, None, Some(T::one()), result.iterations, grad)
-            }
-            UpdateMode::Full => {
-                // Validate grid resolution
-                let n = x_vec.len() / self.config.dimensions;
-                let cell_to_use = self.config.cell.unwrap_or(0.2);
-                let limit = self.config.interpolation_vertices.unwrap_or(n);
-                let cell_provided = self.config.cell.is_some();
-                let limit_provided = self.config.interpolation_vertices.is_some();
+                    let result = LoessExecutor::run_with_config(x_vec, y_vec, config.clone());
+                    let smoothed_vec = result.smoothed;
+                    let se_vec = result.std_errors;
 
-                if self.config.surface_mode == SurfaceMode::Interpolation {
-                    Validator::validate_interpolation_grid(
-                        T::from(cell_to_use).unwrap_or_else(|| T::from(0.2).unwrap()),
-                        self.config.fraction,
-                        self.config.dimensions,
-                        limit,
-                        cell_provided,
-                        limit_provided,
-                    )?;
+                    let smoothed_val = smoothed_vec.last().copied().ok_or_else(|| {
+                        LoessError::InvalidNumericValue("No smoothed output produced".into())
+                    })?;
+                    let std_err = se_vec.as_ref().and_then(|v| v.last().copied());
+                    let rob_weight = if self.config.return_robustness_weights {
+                        result.robustness_weights.last().copied()
+                    } else {
+                        None
+                    };
+                    let grad = result
+                        .gradient
+                        .as_ref()
+                        .map(|g| g[g.len() - dimensions..].to_vec());
+
+                    // Confidence/prediction interval bounds for the latest point, computed
+                    // from the whole window's smoothed values/SE/residuals the same way
+                    // Batch does (`IntervalMethod::compute_intervals`), then taking the
+                    // last element - the executor itself only produces plain std_errors.
+                    let ci_bounds = if let (Some(method), Some(se)) =
+                        (&self.config.interval_type, se_vec.as_ref())
+                    {
+                        let residuals: Vec<T> = y_vec
+                            .iter()
+                            .zip(smoothed_vec.iter())
+                            .map(|(&yi, &si)| yi - si)
+                            .collect();
+                        let (cl, cu, pl, pu) =
+                            method.compute_intervals(&smoothed_vec, se, &residuals, None, None)?;
+                        (
+                            cl.as_ref().and_then(|v| v.last().copied()),
+                            cu.as_ref().and_then(|v| v.last().copied()),
+                            pl.as_ref().and_then(|v| v.last().copied()),
+                            pu.as_ref().and_then(|v| v.last().copied()),
+                        )
+                    } else {
+                        (None, None, None, None)
+                    };
+
+                    (
+                        smoothed_val,
+                        std_err,
+                        ci_bounds,
+                        rob_weight,
+                        result.iterations,
+                        grad,
+                    )
                 }
-
-                // Full mode: re-smooth entire window
-                let config = LoessConfig {
-                    fraction: Some(self.config.fraction),
-                    iterations: self.config.iterations,
-                    weight_function: self.config.weight_function,
-                    robustness_method: self.config.robustness_method,
-                    scaling_method: self.config.scaling_method,
-                    zero_weight_fallback: self.config.zero_weight_fallback,
-                    boundary_policy: self.config.boundary_policy,
-                    polynomial_degree: self.config.polynomial_degree,
-                    dimensions: self.config.dimensions,
-                    distance_metric: self.config.distance_metric.clone(),
-                    auto_converge: self.config.auto_converge,
-                    cv_fractions: None,
-                    cv_kind: None,
-                    return_variance: None,
-                    cv_seed: None,
-                    surface_mode: self.config.surface_mode,
-                    interpolation_vertices: self.config.interpolation_vertices,
-                    cell: self.config.cell,
-                    boundary_degree_fallback: self.config.boundary_degree_fallback,
-                    custom_weights: None,
-                    retain_model: false,
-                    return_gradient: self.config.return_gradient,
-                    // ++++++++++++++++++++++++++++++++++++++
-                    // +               DEV                  +
-                    // ++++++++++++++++++++++++++++++++++++++
-                    custom_smooth_pass: self.config.custom_smooth_pass,
-                    custom_cv_pass: self.config.custom_cv_pass,
-                    custom_interval_pass: self.config.custom_interval_pass,
-                    custom_gradient_pass: self.config.custom_gradient_pass,
-                    custom_fit_pass: self.config.custom_fit_pass,
-                    custom_vertex_pass: self.config.custom_vertex_pass,
-                    custom_kdtree_builder: self.config.custom_kdtree_builder,
-                    parallel: false,
-                    backend: None,
-                };
-
-                let result = LoessExecutor::run_with_config(x_vec, y_vec, config.clone());
-                let smoothed_vec = result.smoothed;
-                let se_vec = result.std_errors;
-
-                let smoothed_val = smoothed_vec.last().copied().ok_or_else(|| {
-                    LoessError::InvalidNumericValue("No smoothed output produced".into())
-                })?;
-                let std_err = se_vec.as_ref().and_then(|v| v.last().copied());
-                let rob_weight = if self.config.return_robustness_weights {
-                    result.robustness_weights.last().copied()
-                } else {
-                    None
-                };
-                let grad = result
-                    .gradient
-                    .as_ref()
-                    .map(|g| g[g.len() - dimensions..].to_vec());
-
-                (smoothed_val, std_err, rob_weight, result.iterations, grad)
-            }
-        };
+            };
 
         let residual = y - smoothed;
+
+        let (confidence_lower, confidence_upper, prediction_lower, prediction_upper) = ci_bounds;
 
         Ok(Some(OnlineOutput {
             y: smoothed,
             standard_error: std_err,
             residual: Some(residual),
+            confidence_lower,
+            confidence_upper,
+            prediction_lower,
+            prediction_upper,
             robustness_weight: rob_weight,
             iterations_used: iterations,
             gradient,

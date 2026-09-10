@@ -209,3 +209,30 @@ test_that("StreamingLoess: scaling_method, boundary_policy, auto_converge", {
     )
     expect_length(result$y, length(y))
 })
+
+test_that("StreamingLoess: return_se", {
+    x <- as.double(seq(0, 100, length.out = 200))
+    y <- sin(x / 10)
+    sl <- StreamingLoess(fraction = 0.3, chunk_size = 100, return_se = TRUE)
+    chunk_result <- process_chunk(sl, x, y)
+    expect_true(!is.null(chunk_result$standard_errors))
+    expect_null(chunk_result$confidence_lower)
+})
+
+test_that("StreamingLoess: confidence_intervals and prediction_intervals", {
+    x <- as.double(seq(0, 100, length.out = 200))
+    y <- sin(x / 10)
+    sl <- StreamingLoess(
+        fraction = 0.3,
+        chunk_size = 100,
+        confidence_intervals = 0.95,
+        prediction_intervals = 0.95
+    )
+    chunk_result <- process_chunk(sl, x, y)
+    expect_true(!is.null(chunk_result$confidence_lower))
+    expect_true(!is.null(chunk_result$prediction_lower))
+    expect_true(all(chunk_result$confidence_lower <= chunk_result$confidence_upper))
+    ci_width <- chunk_result$confidence_upper - chunk_result$confidence_lower
+    pi_width <- chunk_result$prediction_upper - chunk_result$prediction_lower
+    expect_true(all(pi_width >= ci_width - 1e-9))
+})

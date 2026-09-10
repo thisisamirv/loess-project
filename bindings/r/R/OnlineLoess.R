@@ -27,6 +27,17 @@
 #'   passed to \code{\link{add_point}}: \code{"error"} (default) raises an
 #'   error, \code{"drop"} silently ignores the point (returns \code{NULL})
 #'   instead of adding it to the window.
+#' @param confidence_intervals Confidence level for confidence intervals (e.g.
+#'   \code{0.95}). Only computed under \code{update_mode = "full"} — raises an
+#'   error at construction if set (or \code{return_se}/\code{prediction_intervals}
+#'   is set) while \code{update_mode} is left at its default \code{"incremental"}.
+#'   \code{NULL} (default) disables confidence intervals.
+#' @param prediction_intervals Confidence level for prediction intervals; same
+#'   \code{update_mode = "full"} requirement as \code{confidence_intervals}.
+#'   \code{NULL} (default) disables prediction intervals.
+#' @param return_se Include the standard error for the latest point in the
+#'   result. Same \code{update_mode = "full"} requirement as
+#'   \code{confidence_intervals}. Default: \code{FALSE}.
 #'
 #' @return An OnlineLoess object.
 #' @examples
@@ -55,6 +66,9 @@ OnlineLoess <- function(
     auto_converge = NULL,
     return_robustness_weights = FALSE,
     return_gradient = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    return_se = FALSE,
     degree = "linear",
     dimensions = 1L,
     distance_metric = "normalized",

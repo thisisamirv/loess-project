@@ -15,6 +15,14 @@ import java.util.OptionalInt;
  * computed
  * @param iterationsUsed the number of robustness iterations performed, if
  * applicable
+ * @param confidenceLower the confidence interval lower bound, if requested
+ * ({@code updateMode = "full"} only)
+ * @param confidenceUpper the confidence interval upper bound, if requested
+ * ({@code updateMode = "full"} only)
+ * @param predictionLower the prediction interval lower bound, if requested
+ * ({@code updateMode = "full"} only)
+ * @param predictionUpper the prediction interval upper bound, if requested
+ * ({@code updateMode = "full"} only)
  * @param gradient the local fit's gradient at this point, length
  * {@code dimensions}, if computed (only populated when {@code surfaceMode} is
  * {@code "direct"})
@@ -25,6 +33,10 @@ public record PointResult(
         OptionalDouble residual,
         OptionalDouble robustnessWeight,
         OptionalInt iterationsUsed,
+        OptionalDouble confidenceLower,
+        OptionalDouble confidenceUpper,
+        OptionalDouble predictionLower,
+        OptionalDouble predictionUpper,
         Optional<double[]> gradient) {
 
     static PointResult fromNative(NativeOnlineOutput o) {
@@ -34,6 +46,10 @@ public record PointResult(
                 optionalDouble(o.residual),
                 optionalDouble(o.robustnessWeight),
                 o.iterationsUsed < 0 ? OptionalInt.empty() : OptionalInt.of(o.iterationsUsed),
+                optionalDouble(o.confidenceLower),
+                optionalDouble(o.confidenceUpper),
+                optionalDouble(o.predictionLower),
+                optionalDouble(o.predictionUpper),
                 Optional.ofNullable(o.gradient));
     }
 

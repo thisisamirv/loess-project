@@ -155,6 +155,22 @@ typedef struct fastloess_GoOnlineOutput {
   double robustness_weight;
   int iterations_used;
   /**
+   * Confidence interval lower bound (`update_mode="full"` only, if requested)
+   */
+  double confidence_lower;
+  /**
+   * Confidence interval upper bound (`update_mode="full"` only, if requested)
+   */
+  double confidence_upper;
+  /**
+   * Prediction interval lower bound (`update_mode="full"` only, if requested)
+   */
+  double prediction_lower;
+  /**
+   * Prediction interval upper bound (`update_mode="full"` only, if requested)
+   */
+  double prediction_upper;
+  /**
    * Latest point's local fit gradient, `dimensions` values, NULL if not requested
    */
   double *gradient;
@@ -304,7 +320,10 @@ struct fastloess_GoStreamingLoess *go_streaming_new(double fraction,
                                                     const double *weighted_metric_weights,
                                                     unsigned long weighted_metric_weights_len,
                                                     const char *missing,
-                                                    int return_gradient);
+                                                    int return_gradient,
+                                                    double confidence_intervals,
+                                                    double prediction_intervals,
+                                                    int return_se);
 
 /**
  * Process a chunk of data.
@@ -363,7 +382,10 @@ struct fastloess_GoOnlineLoess *go_online_new(double fraction,
                                               const double *weighted_metric_weights,
                                               unsigned long weighted_metric_weights_len,
                                               const char *missing,
-                                              int return_gradient);
+                                              int return_gradient,
+                                              double confidence_intervals,
+                                              double prediction_intervals,
+                                              int return_se);
 
 /**
  * Add a single point to the model and return its smoothed value.

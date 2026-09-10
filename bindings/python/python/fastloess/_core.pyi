@@ -62,6 +62,22 @@ class OnlineOutput:
         """Number of robustness iterations performed."""
 
     @property
+    def confidence_lower(self) -> float | None:
+        """Confidence interval lower bound (`update_mode="full"` only, if requested)."""
+
+    @property
+    def confidence_upper(self) -> float | None:
+        """Confidence interval upper bound (`update_mode="full"` only, if requested)."""
+
+    @property
+    def prediction_lower(self) -> float | None:
+        """Prediction interval lower bound (`update_mode="full"` only, if requested)."""
+
+    @property
+    def prediction_upper(self) -> float | None:
+        """Prediction interval upper bound (`update_mode="full"` only, if requested)."""
+
+    @property
     def gradient(self) -> NDArray[np.float64] | None:
         """Local fit gradient for the latest point (None if not requested), `dimensions` values."""
 
@@ -288,6 +304,9 @@ class StreamingLoess:
         return_residuals: bool = False,
         return_robustness_weights: bool = False,
         zero_weight_fallback: str = "use_local_mean",
+        confidence_intervals: float | None = None,
+        prediction_intervals: float | None = None,
+        return_se: bool = False,
         parallel: bool = True,
         degree: str = "linear",
         dimensions: int = 1,
@@ -327,6 +346,9 @@ class OnlineLoess:
         auto_converge: float | None = None,
         return_robustness_weights: bool = False,
         zero_weight_fallback: str = "use_local_mean",
+        confidence_intervals: float | None = None,
+        prediction_intervals: float | None = None,
+        return_se: bool = False,
         degree: str = "linear",
         dimensions: int = 1,
         distance_metric: str = "normalized",
@@ -338,7 +360,11 @@ class OnlineLoess:
         missing: str = "error",
         return_gradient: bool = False,
     ) -> None:
-        """Initialize the online processor."""
+        """Initialize the online processor.
+
+        `confidence_intervals`/`prediction_intervals`/`return_se` require
+        `update_mode="full"`; raises if requested under the default `"incremental"` mode.
+        """
 
     def add_point(self, x: float, y: float) -> OnlineOutput | None:
         """Add a single point and return its smoothed value, or None if the window is still filling."""

@@ -16,7 +16,7 @@ OnlineOptions options = OnlineOptions.builder()
         .build();
 ----
 
-`OnlineOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSe`, `returnSorted`, `returnDiagnostics`, `returnResiduals`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, and `parallel`, which are Batch-only or Batch/Streaming-only). Online always runs sequentially. Settings:
+`OnlineOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSorted`, `returnDiagnostics`, `returnResiduals`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, and `parallel`, which are Batch-only or Batch/Streaming-only). Online always runs sequentially. `confidenceIntervals`/`predictionIntervals`/`returnSe` require `updateMode("full")`. Settings:
 
 [cols="1,1,1,1",options="header"]
 |===
@@ -41,6 +41,9 @@ OnlineOptions options = OnlineOptions.builder()
 |`interpolationVertices` |`int` |`-1` (auto) |Number of interpolation vertices
 |`boundaryDegreeFallback` |`Boolean` |`null` (auto) |Fall back to lower polynomial degree at boundaries when higher degrees fail
 |`returnGradient` |`boolean` |`false` |Include the latest point's local fit gradient in the result (`surfaceMode = "direct"` only)
+|`confidenceIntervals` |`double` |`NaN` (disabled) |Confidence level for confidence intervals; requires `updateMode("full")`
+|`predictionIntervals` |`double` |`NaN` (disabled) |Confidence level for prediction intervals; requires `updateMode("full")`
+|`returnSe` |`boolean` |`false` |Include standard error in result; requires `updateMode("full")`
 |`windowCapacity` |`int` |`1000` |Maximum number of recent points retained
 |`minPoints` |`int` |`2` |Minimum points required before output starts
 |`updateMode` |`String` |`"incremental"` |How the window is updated as new points arrive
@@ -230,7 +233,26 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 === returnGradient
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) via `PointResult.gradient()` at effectively no extra computation cost. Only supported when `surfaceMode = "direct"` — stays empty in the default `"interpolation"` mode. `false` by default.
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) via `PointResult.gradient()` at effectively no extra computation cost. Only supported when `surfaceMode = "direct"` — throws a `RuntimeException` instead of silently leaving `gradient()` empty if requested under the default `"interpolation"` mode. `false` by default.
+
+=== confidenceIntervals
+
+_See: xref:../guide/intervals.adoc[Intervals]_
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `updateMode("full")` — throws at construction if set (or `returnSe`/`predictionIntervals` is set) while `updateMode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `NaN` (default) disables confidence intervals.
+
+=== predictionIntervals
+
+_See: xref:../guide/intervals.adoc[Intervals]_
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `updateMode("full")` requirement as `confidenceIntervals`. `NaN` (default) disables prediction intervals.
+
+=== returnSe
+
+Include the standard error for the latest point in the result (`PointResult.standardError()`). Same `updateMode("full")` requirement as `confidenceIntervals`.
+
+* `false` (default) — leaves `standardError()` empty
+* `true` — populates `standardError()`
 
 === windowCapacity
 
@@ -262,10 +284,12 @@ See xref:./api.adoc[API] for the descriptions of all inherited settings not cove
 |Accessor |Type |Notes
 
 |`y()` |`double` |Smoothed value.
-|`standardError()` |`OptionalDouble` |Always empty — standard errors require confidence intervals, which are Batch-only.
+|`standardError()` |`OptionalDouble` |Standard error, if `returnSe`/`confidenceIntervals`/`predictionIntervals` was set and `updateMode("full")`.
 |`residual()` |`OptionalDouble` |Residual y − smoothed; always present (there is no `returnResiduals` option for Online).
 |`robustnessWeight()` |`OptionalDouble` |Robustness weight, if `returnRobustnessWeights` was set.
 |`iterationsUsed()` |`OptionalInt` |Robustness iterations performed; empty if not applicable.
+|`confidenceLower()` / `confidenceUpper()` |`OptionalDouble` |Confidence interval bounds, if `confidenceIntervals` was set and `updateMode("full")`.
+|`predictionLower()` / `predictionUpper()` |`OptionalDouble` |Prediction interval bounds, if `predictionIntervals` was set and `updateMode("full")`.
 |`gradient()` |`Optional<double[]>` |Latest point's local fit gradient (`dimensions` values), if `returnGradient` was set (`surfaceMode = "direct"` only).
 |===
 

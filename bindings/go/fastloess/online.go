@@ -10,9 +10,10 @@ import (
 	"runtime"
 )
 
-// OnlineOptions configures an OnlineLoess model. Confidence/prediction
-// intervals, standard errors, cross-validation, diagnostics/residuals, and
-// Parallel are Batch-only (or Batch/Streaming-only) and have no effect here.
+// OnlineOptions configures an OnlineLoess model. Cross-validation,
+// diagnostics/residuals, and Parallel are Batch-only (or Batch/Streaming-only)
+// and have no effect here. ConfidenceIntervals/PredictionIntervals/ReturnSe
+// require UpdateMode = "full".
 type OnlineOptions struct {
 	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
 	Fraction float64
@@ -84,6 +85,19 @@ type OnlineOptions struct {
 	// ReturnGradient requests the local fit's gradient for the latest point.
 	// Only takes effect when SurfaceMode is "direct".
 	ReturnGradient bool
+	// ConfidenceIntervals is the confidence level for confidence intervals
+	// (e.g. 0.95). Only computed under UpdateMode = "full" — returns an error
+	// at construction if set (or ReturnSe/PredictionIntervals is set) while
+	// UpdateMode is left at its default "incremental". Nil disables confidence
+	// intervals.
+	ConfidenceIntervals *float64
+	// PredictionIntervals is the confidence level for prediction intervals;
+	// same UpdateMode = "full" requirement as ConfidenceIntervals. Nil
+	// disables prediction intervals.
+	PredictionIntervals *float64
+	// ReturnSe requests the standard error for the latest point in the result.
+	// Same UpdateMode = "full" requirement as ConfidenceIntervals.
+	ReturnSe bool
 
 	// WindowCapacity is the maximum number of recent points retained.
 	// Default: 1000.
@@ -151,6 +165,8 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 	defer freeCString(surfaceMode)
 
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
+	confidenceIntervals, confidenceIntervalsSet := optPtr(opts.ConfidenceIntervals)
+	predictionIntervals, predictionIntervalsSet := optPtr(opts.PredictionIntervals)
 	wmwPtr, wmwLen := cDoubles(opts.WeightedMetricWeights)
 
 	cell, cellSet := 0.0, false
@@ -189,6 +205,9 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 			wmwPtr, wmwLen,
 			missing,
 			boolToCInt(opts.ReturnGradient),
+			optFloat(confidenceIntervals, confidenceIntervalsSet),
+			optFloat(predictionIntervals, predictionIntervalsSet),
+			boolToCInt(opts.ReturnSe),
 		)
 		if ptr == nil {
 			errMsg = lastError()
@@ -231,6 +250,10 @@ func (o *OnlineLoess) AddPoint(x, y float64) (res PointResult, ok bool, err erro
 		Residual:         float64(cout.residual),
 		RobustnessWeight: float64(cout.robustness_weight),
 		IterationsUsed:   int(cout.iterations_used),
+		ConfidenceLower:  float64(cout.confidence_lower),
+		ConfidenceUpper:  float64(cout.confidence_upper),
+		PredictionLower:  float64(cout.prediction_lower),
+		PredictionUpper:  float64(cout.prediction_upper),
 		Gradient:         cDoubleSliceToGo(cout.gradient, int(cout.dimensions)),
 	}
 	C.go_online_free_output(&cout)

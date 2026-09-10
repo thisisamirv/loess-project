@@ -294,6 +294,9 @@ impl RStreamingLoess {
         return_residuals: bool,
         return_robustness_weights: bool,
         return_gradient: bool,
+        confidence_intervals: Nullable<f64>,
+        prediction_intervals: Nullable<f64>,
+        return_se: bool,
         merge_strategy: &str,
         parallel: bool,
         degree: &str,
@@ -337,15 +340,21 @@ impl RStreamingLoess {
                 return_residuals,
                 return_robustness_weights,
                 return_diagnostics,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals: match confidence_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                prediction_intervals: match prediction_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
                 parallel: Some(parallel),
                 degree: Some(degree),
                 dimensions: Some(dimensions),
                 distance_metric: Some(distance_metric),
                 weighted_metric_weights: weighted_weights.as_deref(),
                 surface_mode: Some(surface_mode),
-                return_se: false,
+                return_se,
                 cell: match cell {
                     NotNull(v) => Some(v),
                     Null => None,
@@ -411,6 +420,9 @@ impl ROnlineLoess {
         auto_converge: Nullable<f64>,
         return_robustness_weights: bool,
         return_gradient: bool,
+        confidence_intervals: Nullable<f64>,
+        prediction_intervals: Nullable<f64>,
+        return_se: bool,
         degree: &str,
         dimensions: i32,
         distance_metric: &str,
@@ -448,15 +460,21 @@ impl ROnlineLoess {
                 return_residuals: false,
                 return_robustness_weights,
                 return_diagnostics: false,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals: match confidence_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
+                prediction_intervals: match prediction_intervals {
+                    NotNull(v) => Some(v),
+                    Null => None,
+                },
                 parallel: None,
                 degree: Some(degree),
                 dimensions: Some(configured_dimensions),
                 distance_metric: Some(distance_metric),
                 weighted_metric_weights: weighted_weights.as_deref(),
                 surface_mode: Some(surface_mode),
-                return_se: false,
+                return_se,
                 cell: match cell {
                     NotNull(v) => Some(v),
                     Null => None,
@@ -503,6 +521,18 @@ impl ROnlineLoess {
                 }
                 if let Some(rw) = o.robustness_weight {
                     items.push(("robustness_weight", rw.into_robj()));
+                }
+                if let Some(cl) = o.confidence_lower {
+                    items.push(("confidence_lower", cl.into_robj()));
+                }
+                if let Some(cu) = o.confidence_upper {
+                    items.push(("confidence_upper", cu.into_robj()));
+                }
+                if let Some(pl) = o.prediction_lower {
+                    items.push(("prediction_lower", pl.into_robj()));
+                }
+                if let Some(pu) = o.prediction_upper {
+                    items.push(("prediction_upper", pu.into_robj()));
                 }
                 if let Some(g) = o.gradient {
                     items.push(("gradient", g.into_robj()));

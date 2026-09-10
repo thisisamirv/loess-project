@@ -5,29 +5,32 @@
 \title{LOESS Online Smoothing}
 \usage{
 OnlineLoess(
-    fraction = 0.67,
-    window_capacity = 1000L,
-    min_points = 2L,
-    ...,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    update_mode = "incremental",
-    auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_gradient = FALSE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL,
-    missing = "error"
+  fraction = 0.67,
+  window_capacity = 1000L,
+  min_points = 2L,
+  ...,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  update_mode = "incremental",
+  auto_converge = NULL,
+  return_robustness_weights = FALSE,
+  return_gradient = FALSE,
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  return_se = FALSE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL,
+  missing = "error"
 )
 }
 \arguments{
@@ -82,8 +85,24 @@ iterations. \code{NULL} (default) disables early stopping.}
 robustness weights. Default: \code{FALSE}.}
 
 \item{return_gradient}{Logical; if \code{TRUE}, return the per-point local
-fit gradient in the result. Only takes effect when
-\code{surface_mode = "direct"}. Default: \code{FALSE}.}
+fit gradient in the result. Requires \code{surface_mode = "direct"};
+raises an error instead of silently leaving \code{gradient} absent if
+requested under the default \code{"interpolation"} mode. Default:
+\code{FALSE}.}
+
+\item{confidence_intervals}{Confidence level for confidence intervals (e.g.
+\code{0.95}). Only computed under \code{update_mode = "full"} — raises an
+error at construction if set (or \code{return_se}/\code{prediction_intervals}
+is set) while \code{update_mode} is left at its default \code{"incremental"}.
+\code{NULL} (default) disables confidence intervals.}
+
+\item{prediction_intervals}{Confidence level for prediction intervals; same
+\code{update_mode = "full"} requirement as \code{confidence_intervals}.
+\code{NULL} (default) disables prediction intervals.}
+
+\item{return_se}{Include the standard error for the latest point in the
+result. Same \code{update_mode = "full"} requirement as
+\code{confidence_intervals}. Default: \code{FALSE}.}
 
 \item{degree}{Local polynomial degree: \code{"constant"}, \code{"linear"}
 (default), \code{"quadratic"}, \code{"cubic"}, or \code{"quartic"}.}

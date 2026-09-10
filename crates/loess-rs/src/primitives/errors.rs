@@ -194,6 +194,14 @@ pub enum LoessError {
     // set `.return_gradient()`, forget `.surface_mode("direct")`, and not notice the
     // silently-empty result.
     GradientRequiresDirectSurfaceMode,
+
+    // `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()` was requested on
+    // `OnlineLoess` but `update_mode` isn't `"full"` (the default `"incremental"` mode
+    // bypasses the full executor pipeline for speed, so standard errors are never
+    // computed there). Previously this combination silently left `standard_error` as
+    // `None`; surfaced as an error instead, since it's easy to set `.return_se()`, forget
+    // `.update_mode("full")`, and not notice the silently-empty result.
+    StandardErrorRequiresFullUpdateMode,
 }
 
 impl Display for LoessError {
@@ -352,6 +360,12 @@ impl Display for LoessError {
                 f,
                 "return_gradient() requires surface_mode(\"direct\"); the default \
                  \"interpolation\" mode cannot reconstruct an exact per-point gradient"
+            ),
+            Self::StandardErrorRequiresFullUpdateMode => write!(
+                f,
+                "return_se()/confidence_intervals()/prediction_intervals() requires \
+                 update_mode(\"full\") on OnlineLoess; the default \"incremental\" mode \
+                 never computes standard errors"
             ),
         }
     }

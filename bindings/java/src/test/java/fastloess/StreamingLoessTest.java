@@ -33,6 +33,51 @@ class StreamingLoessTest {
     }
 
     @Test
+    void returnSePopulatesStandardErrors() {
+        try (StreamingLoess model = new StreamingLoess(
+                StreamingOptions.builder().fraction(0.3).chunkSize(10).returnSe(true).build())) {
+            double[] x = new double[20];
+            double[] y = new double[20];
+            for (int i = 0; i < 20; i++) {
+                x[i] = i;
+                y[i] = Math.sin(i);
+            }
+            Result chunk = model.processChunk(x, y);
+            assertTrue(chunk.standardErrors().isPresent());
+            assertTrue(chunk.confidenceLower().isEmpty());
+        }
+    }
+
+    @Test
+    void confidenceAndPredictionIntervals() {
+        try (StreamingLoess model = new StreamingLoess(
+                StreamingOptions.builder()
+                        .fraction(0.3)
+                        .chunkSize(10)
+                        .confidenceIntervals(0.95)
+                        .predictionIntervals(0.95)
+                        .build())) {
+            double[] x = new double[20];
+            double[] y = new double[20];
+            for (int i = 0; i < 20; i++) {
+                x[i] = i;
+                y[i] = Math.sin(i);
+            }
+            Result chunk = model.processChunk(x, y);
+            assertTrue(chunk.confidenceLower().isPresent());
+            assertTrue(chunk.predictionLower().isPresent());
+            double[] cl = chunk.confidenceLower().get();
+            double[] cu = chunk.confidenceUpper().get();
+            double[] pl = chunk.predictionLower().get();
+            double[] pu = chunk.predictionUpper().get();
+            for (int i = 0; i < cl.length; i++) {
+                assertTrue(cl[i] <= cu[i]);
+                assertTrue((pu[i] - pl[i]) >= (cu[i] - cl[i]) - 1e-9);
+            }
+        }
+    }
+
+    @Test
     void missingDropRemovesNaNRows() {
         double[] x = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         double[] y = {2, 4, Double.NaN, 8, 10, 12, 14, 16, 18, 20};

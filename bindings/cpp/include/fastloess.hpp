@@ -180,9 +180,10 @@ struct StreamingOptions : public LoessOptions {
  *
  * Identical fields to LoessOptions but has no `parallel` option: online
  * LOESS processes one point at a time and always runs sequentially.
- * Confidence/prediction intervals, standard errors, cross-validation, and
- * diagnostics/residuals are Batch-only (or Batch/Streaming-only) and have
- * no equivalent here.
+ * Cross-validation and diagnostics/residuals are Batch-only (or
+ * Batch/Streaming-only) and have no equivalent here.
+ * `confidence_intervals`/`prediction_intervals`/`return_se` require
+ * `update_mode == "full"`.
  */
 struct OnlineOptions {
   double fraction = detail::k_default_fraction;
@@ -197,6 +198,15 @@ struct OnlineOptions {
   /// Include the local fit gradient for the latest point in the output (only
   /// takes effect when `surface_mode == "direct"`).
   bool return_gradient = false;
+  /// Confidence level for confidence intervals; requires `update_mode ==
+  /// "full"` (NaN = disabled).
+  double confidence_intervals = NAN;
+  /// Confidence level for prediction intervals; requires `update_mode ==
+  /// "full"` (NaN = disabled).
+  double prediction_intervals = NAN;
+  /// Include the standard error for the latest point; requires
+  /// `update_mode == "full"`.
+  bool return_se = false;
   std::string degree = "linear";
   int dimensions = 1;
   std::string distance_metric = "normalized";
@@ -754,7 +764,8 @@ public:
             ? nullptr
             : options.weighted_metric_weights.data(),
         static_cast<unsigned long>(options.weighted_metric_weights.size()),
-        options.missing.c_str());
+        options.missing.c_str(), options.confidence_intervals,
+        options.prediction_intervals, options.return_se ? 1 : 0);
   }
 
   ~StreamingLoess() {
@@ -848,6 +859,22 @@ public:
   /// Number of robustness iterations performed (−1 if not applicable).
   int iterations_used() const { return iterations_used_; }
 
+  /// Confidence interval lower bound (`update_mode == "full"` only, NaN if
+  /// not computed).
+  double confidence_lower() const { return confidence_lower_; }
+
+  /// Confidence interval upper bound (`update_mode == "full"` only, NaN if
+  /// not computed).
+  double confidence_upper() const { return confidence_upper_; }
+
+  /// Prediction interval lower bound (`update_mode == "full"` only, NaN if
+  /// not computed).
+  double prediction_lower() const { return prediction_lower_; }
+
+  /// Prediction interval upper bound (`update_mode == "full"` only, NaN if
+  /// not computed).
+  double prediction_upper() const { return prediction_upper_; }
+
   /// Local fit gradient (`dimensions` values) for the latest point (empty if
   /// not computed).
   const std::vector<double> &gradient() const { return gradient_; }
@@ -862,6 +889,10 @@ private:
         standard_error_(raw.standard_error), residual_(raw.residual),
         robustness_weight_(raw.robustness_weight),
         iterations_used_(raw.iterations_used),
+        confidence_lower_(raw.confidence_lower),
+        confidence_upper_(raw.confidence_upper),
+        prediction_lower_(raw.prediction_lower),
+        prediction_upper_(raw.prediction_upper),
         gradient_(raw.gradient != nullptr
                       ? std::vector<double>(raw.gradient,
                                             raw.gradient + raw.gradient_len)
@@ -873,6 +904,10 @@ private:
   double residual_ = std::numeric_limits<double>::quiet_NaN();
   double robustness_weight_ = std::numeric_limits<double>::quiet_NaN();
   int iterations_used_ = -1;
+  double confidence_lower_ = std::numeric_limits<double>::quiet_NaN();
+  double confidence_upper_ = std::numeric_limits<double>::quiet_NaN();
+  double prediction_lower_ = std::numeric_limits<double>::quiet_NaN();
+  double prediction_upper_ = std::numeric_limits<double>::quiet_NaN();
   std::vector<double> gradient_;
 };
 
@@ -899,7 +934,8 @@ public:
             ? nullptr
             : options.weighted_metric_weights.data(),
         static_cast<unsigned long>(options.weighted_metric_weights.size()),
-        options.missing.c_str());
+        options.missing.c_str(), options.confidence_intervals,
+        options.prediction_intervals, options.return_se ? 1 : 0);
   }
 
   ~OnlineLoess() {

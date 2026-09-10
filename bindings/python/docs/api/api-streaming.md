@@ -87,8 +87,11 @@ print(final_result)
 | `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `str` | `"weighted_average"` | Strategy for blending overlap regions |
 | `return_gradient` | `bool` | `False` | Include the per-point local fit gradient in the result (`surface_mode="direct"` only) |
+| `confidence_intervals` | `float` | `None` | Confidence level for confidence intervals, computed per chunk |
+| `prediction_intervals` | `float` | `None` | Confidence level for prediction intervals, computed per chunk |
+| `return_se` | `bool` | `False` | Include standard errors in the result |
 
-Confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` are Batch-only and not available here; see [fastLoess](api.md) for those.
+`return_sorted` is Batch-only and not available here; see [fastLoess](api.md).
 
 ## Options
 
@@ -303,7 +306,26 @@ Number of points retained from the previous chunk as context, so the neighbourho
 
 ### return_gradient
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `None` in the default `"interpolation"` mode. `False` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — raises an error instead of silently leaving `gradient` as `None` if requested under the default `"interpolation"` mode. `False` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `y` is, via `merge_strategy`. `None` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `confidence_intervals`. `None` (default) disables prediction intervals.
+
+### return_se
+
+Include standard errors in the result (`LoessResult.standard_errors`), computed per chunk and merged across overlap boundaries via `merge_strategy`.
+
+- `False` (default) — leaves `standard_errors` as `None`
+- `True` — populates `standard_errors`
 
 ## Result Structure
 

@@ -381,6 +381,124 @@ fn test_streaming_return_gradient_parallel_matches_sequential() {
 }
 
 // ============================================================================
+// Standard Error / Confidence / Prediction Interval Tests
+// ============================================================================
+
+/// `.return_se()` on the Streaming adapter, sequential backend.
+#[test]
+fn test_streaming_adapter_return_se() {
+    let n = 40;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+
+    let mut processor = StreamingLoess::new()
+        .fraction(0.5)
+        .return_se()
+        .chunk_size(20)
+        .overlap(5)
+        .parallel(false)
+        .build()
+        .unwrap();
+
+    let res1 = processor.process_chunk(&x[0..20], &y[0..20]).unwrap();
+    assert!(res1.standard_errors.is_some());
+    assert!(res1.confidence_lower.is_none());
+    assert!(res1.prediction_lower.is_none());
+
+    let res2 = processor.process_chunk(&x[20..n], &y[20..n]).unwrap();
+    assert!(res2.standard_errors.is_some());
+
+    let res3 = processor.finalize().unwrap();
+    assert!(res3.standard_errors.is_some());
+}
+
+/// `.confidence_intervals()`/`.prediction_intervals()` on the Streaming adapter should
+/// produce bounds that bracket the observed `y` values and confidence bounds narrower
+/// than prediction bounds.
+#[test]
+fn test_streaming_adapter_confidence_and_prediction_intervals() {
+    let n = 40;
+    let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .enumerate()
+        .map(|(i, &xi)| 2.0 * xi + 1.0 + if i % 2 == 0 { 0.3 } else { -0.3 })
+        .collect();
+
+    let mut processor = StreamingLoess::new()
+        .fraction(0.5)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .chunk_size(20)
+        .overlap(5)
+        .parallel(false)
+        .build()
+        .unwrap();
+
+    let res1 = processor.process_chunk(&x[0..20], &y[0..20]).unwrap();
+    let cl = res1.confidence_lower.expect("confidence_lower present");
+    let cu = res1.confidence_upper.expect("confidence_upper present");
+    let pl = res1.prediction_lower.expect("prediction_lower present");
+    let pu = res1.prediction_upper.expect("prediction_upper present");
+
+    for i in 0..cl.len() {
+        assert!(cl[i] <= cu[i]);
+        assert!(pl[i] <= pu[i]);
+        // Prediction intervals should be at least as wide as confidence intervals.
+        assert!(pu[i] - pl[i] >= cu[i] - cl[i] - 1e-9);
+    }
+
+    let res2 = processor.finalize().unwrap();
+    assert!(res2.confidence_lower.is_some() || res2.x.is_empty());
+}
+
+/// `.return_se()` on the Online adapter with the default `"incremental"` update mode
+/// should error at `.build()`.
+#[test]
+fn test_online_adapter_return_se_requires_full_update_mode() {
+    let err = OnlineLoess::new()
+        .return_se()
+        .min_points(2)
+        .window_capacity(10)
+        .build();
+
+    assert!(matches!(
+        err,
+        Err(LoessError::StandardErrorRequiresFullUpdateMode)
+    ));
+}
+
+/// `.confidence_intervals()`/`.prediction_intervals()` on the Online adapter with
+/// `update_mode("full")` should produce bounds once enough points are buffered.
+#[test]
+fn test_online_adapter_confidence_and_prediction_intervals_full_mode() {
+    let mut processor = OnlineLoess::new()
+        .fraction(1.0)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .update_mode("full")
+        .min_points(3)
+        .window_capacity(10)
+        .build()
+        .unwrap();
+
+    let mut last = None;
+    for i in 0..6 {
+        last = processor
+            .add_point(&[i as f64], 2.0 * i as f64 + 1.0)
+            .unwrap();
+    }
+
+    let out = last.unwrap();
+    assert!(out.confidence_lower.is_some());
+    assert!(out.confidence_upper.is_some());
+    assert!(out.prediction_lower.is_some());
+    assert!(out.prediction_upper.is_some());
+    assert!(out.confidence_lower.unwrap() <= out.confidence_upper.unwrap());
+    assert!(out.prediction_lower.unwrap() <= out.prediction_upper.unwrap());
+}
+
+// ============================================================================
 // Custom Weights Tests
 // ============================================================================
 

@@ -217,8 +217,7 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(
-            type,
+        switch(type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),
@@ -280,6 +279,9 @@ online_params <- c(
     "auto_converge",
     "return_robustness_weights",
     "return_gradient",
+    "confidence_intervals",
+    "prediction_intervals",
+    "return_se",
     "degree",
     "dimensions",
     "distance_metric",
@@ -306,6 +308,9 @@ streaming_params <- c(
     "return_residuals",
     "return_robustness_weights",
     "return_gradient",
+    "confidence_intervals",
+    "prediction_intervals",
+    "return_se",
     "merge_strategy",
     "parallel",
     "degree",

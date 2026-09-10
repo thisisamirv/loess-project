@@ -101,6 +101,97 @@ test('WASM online smoothing', () => {
     assert.ok(Math.abs(lastSmoothed - 18) < 1.0);
 });
 
+test('WASM streaming: return_se', () => {
+    const streamer = new fastloess.StreamingLoess({
+        fraction: 0.3,
+        return_se: true
+    }, {
+        chunk_size: 10,
+        overlap: 2
+    });
+
+    const x = new Float64Array(Array.from({ length: 20 }, (_, i) => i));
+    const y = new Float64Array(Array.from({ length: 20 }, (_, i) => Math.sin(i)));
+
+    const result = streamer.process_chunk(x, y);
+    assert.ok(result.standard_errors !== undefined);
+    assert.ok(result.confidence_lower === undefined);
+});
+
+test('WASM streaming: confidence_intervals and prediction_intervals', () => {
+    const streamer = new fastloess.StreamingLoess({
+        fraction: 0.3,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95
+    }, {
+        chunk_size: 10,
+        overlap: 2
+    });
+
+    const x = new Float64Array(Array.from({ length: 20 }, (_, i) => i));
+    const y = new Float64Array(Array.from({ length: 20 }, (_, i) => Math.sin(i)));
+
+    const result = streamer.process_chunk(x, y);
+    assert.ok(result.confidence_lower !== undefined);
+    assert.ok(result.prediction_lower !== undefined);
+    for (let i = 0; i < result.confidence_lower.length; i++) {
+        assert.ok(result.confidence_lower[i] <= result.confidence_upper[i]);
+        const ciWidth = result.confidence_upper[i] - result.confidence_lower[i];
+        const piWidth = result.prediction_upper[i] - result.prediction_lower[i];
+        assert.ok(piWidth >= ciWidth - 1e-9);
+    }
+});
+
+test('WASM online: return_se requires update_mode "full"', () => {
+    assert.throws(() => {
+        new fastloess.OnlineLoess({
+            fraction: 0.5,
+            return_se: true
+        }, {
+            window_capacity: 10,
+            min_points: 2
+        });
+    });
+});
+
+test('WASM online: confidence_intervals requires update_mode "full"', () => {
+    assert.throws(() => {
+        new fastloess.OnlineLoess({
+            fraction: 0.5,
+            confidence_intervals: 0.95
+        }, {
+            window_capacity: 10,
+            min_points: 2
+        });
+    });
+});
+
+test('WASM online: confidence/prediction intervals under update_mode "full"', () => {
+    const online = new fastloess.OnlineLoess({
+        fraction: 1.0,
+        confidence_intervals: 0.95,
+        prediction_intervals: 0.95
+    }, {
+        window_capacity: 10,
+        min_points: 3,
+        update_mode: 'full'
+    });
+
+    let last;
+    for (let i = 0; i < 6; i++) {
+        const res = online.add_point(i, 2 * i + 1);
+        if (res !== undefined && res !== null) {
+            last = res;
+        }
+    }
+
+    assert.ok(last !== undefined);
+    assert.ok(last.confidence_lower !== undefined);
+    assert.ok(last.prediction_lower !== undefined);
+    assert.ok(last.confidence_lower <= last.confidence_upper);
+    assert.ok(last.prediction_lower <= last.prediction_upper);
+});
+
 test('WASM options parsing', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);

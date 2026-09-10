@@ -329,6 +329,42 @@ class TestStreamingLoess:
         total_points = len(chunk_result.y) + len(final_result.y)
         assert total_points == len(x) - 1
 
+    def test_streaming_return_se(self):
+        """Test streaming with return_se=True."""
+        x = np.linspace(0, 100, 200)
+        y = np.sin(x / 10)
+
+        streaming = fastloess.StreamingLoess(
+            fraction=0.3, chunk_size=100, return_se=True
+        )
+        chunk_result = streaming.process_chunk(x, y)
+        final_result = streaming.finalize()
+
+        assert chunk_result.standard_errors is not None
+        assert chunk_result.confidence_lower is None
+
+    def test_streaming_confidence_and_prediction_intervals(self):
+        """Test streaming with confidence_intervals/prediction_intervals set."""
+        x = np.linspace(0, 100, 200)
+        y = np.sin(x / 10)
+
+        streaming = fastloess.StreamingLoess(
+            fraction=0.3,
+            chunk_size=100,
+            confidence_intervals=0.95,
+            prediction_intervals=0.95,
+        )
+        chunk_result = streaming.process_chunk(x, y)
+
+        assert chunk_result.confidence_lower is not None
+        assert chunk_result.confidence_upper is not None
+        assert chunk_result.prediction_lower is not None
+        assert chunk_result.prediction_upper is not None
+        assert np.all(chunk_result.confidence_lower <= chunk_result.confidence_upper)
+        widths_ci = chunk_result.confidence_upper - chunk_result.confidence_lower
+        widths_pi = chunk_result.prediction_upper - chunk_result.prediction_lower
+        assert np.all(widths_pi >= widths_ci - 1e-9)
+
 
 class TestOnlineLoess:
     """Tests for the OnlineLoess class."""
@@ -382,6 +418,41 @@ class TestOnlineLoess:
                 results.append(result.y)
 
         assert len(results) > 0
+
+    def test_online_return_se_requires_full_update_mode(self):
+        """Test online with return_se=True and default update_mode raises ValueError."""
+        with pytest.raises(ValueError):
+            fastloess.OnlineLoess(fraction=0.5, window_capacity=10, return_se=True)
+
+    def test_online_confidence_intervals_requires_full_update_mode(self):
+        """Test online with confidence_intervals set and default update_mode raises."""
+        with pytest.raises(ValueError):
+            fastloess.OnlineLoess(
+                fraction=0.5, window_capacity=10, confidence_intervals=0.95
+            )
+
+    def test_online_confidence_and_prediction_intervals_full_mode(self):
+        """Test online with intervals and update_mode='full' produces bounds."""
+        online = fastloess.OnlineLoess(
+            fraction=1.0,
+            window_capacity=10,
+            min_points=3,
+            update_mode="full",
+            confidence_intervals=0.95,
+            prediction_intervals=0.95,
+        )
+
+        last = None
+        for i in range(6):
+            last = online.add_point(float(i), 2.0 * i + 1.0)
+
+        assert last is not None
+        assert last.confidence_lower is not None
+        assert last.confidence_upper is not None
+        assert last.prediction_lower is not None
+        assert last.prediction_upper is not None
+        assert last.confidence_lower <= last.confidence_upper
+        assert last.prediction_lower <= last.prediction_upper
 
 
 class TestLoessResult:

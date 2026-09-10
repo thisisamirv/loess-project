@@ -138,6 +138,14 @@ export interface OnlineOutput {
   robustness_weight?: number
   /** Number of robustness iterations performed (if applicable). */
   iterations_used?: number
+  /** Confidence interval lower bound (`update_mode="full"` only, if requested). */
+  confidence_lower?: number
+  /** Confidence interval upper bound (`update_mode="full"` only, if requested). */
+  confidence_upper?: number
+  /** Prediction interval lower bound (`update_mode="full"` only, if requested). */
+  prediction_lower?: number
+  /** Prediction interval upper bound (`update_mode="full"` only, if requested). */
+  prediction_upper?: number
   /** Local fit gradient (`dimensions` values) for the latest point (if requested). */
   gradient?: Array<number>
 }
@@ -146,10 +154,10 @@ export interface OnlineOutput {
  * Configuration options for online LOESS smoothing.
  *
  * A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
- * confidence/prediction intervals, standard errors, and cross-validation are
- * all no-ops for online processing (it handles one point at a time, always
- * runs sequentially, and always returns a residual/SE inline), so they
- * aren't fields on this type.
+ * and cross-validation are all no-ops for online processing (it handles one
+ * point at a time, always runs sequentially, and always returns a residual
+ * inline), so they aren't fields on this type. `confidence_intervals`/
+ * `prediction_intervals`/`return_se` require `update_mode: "full"`.
  */
 export interface OnlineSmoothOptions {
   /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -175,6 +183,21 @@ export interface OnlineSmoothOptions {
    * `surface_mode` is "direct"). Default: false.
    */
   return_gradient?: boolean
+  /**
+   * Confidence level for confidence intervals. Only computed under
+   * `update_mode: "full"`. Default: None.
+   */
+  confidence_intervals?: number
+  /**
+   * Confidence level for prediction intervals. Same `update_mode: "full"`
+   * requirement as `confidence_intervals`. Default: None.
+   */
+  prediction_intervals?: number
+  /**
+   * Return the standard error for the latest point in result. Same
+   * `update_mode: "full"` requirement as `confidence_intervals`. Default: false.
+   */
+  return_se?: boolean
   /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
   degree?: string
   /** Number of predictor dimensions. Default: 1. */
@@ -304,9 +327,8 @@ export interface StreamingOptions {
 /**
  * Configuration options for streaming LOESS smoothing.
  *
- * A subset of [`SmoothOptions`]: confidence/prediction intervals, standard
- * errors, and cross-validation are Batch-only and have no equivalent here,
- * so they aren't fields on this type.
+ * A subset of [`SmoothOptions`]: cross-validation is Batch-only and has no
+ * equivalent here, so it isn't a field on this type.
  */
 export interface StreamingSmoothOptions {
   /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -336,6 +358,21 @@ export interface StreamingSmoothOptions {
   return_gradient?: boolean
   /** Return diagnostics (RMSE, etc.). Default: false. */
   return_diagnostics?: boolean
+  /**
+   * Confidence level for confidence intervals, computed per chunk and merged
+   * across overlap boundaries via `merge_strategy`. Default: None.
+   */
+  confidence_intervals?: number
+  /**
+   * Confidence level for prediction intervals; same per-chunk computation and
+   * overlap-merging as `confidence_intervals`. Default: None.
+   */
+  prediction_intervals?: number
+  /**
+   * Return standard errors in result, computed per chunk and merged across
+   * overlap boundaries via `merge_strategy`. Default: false.
+   */
+  return_se?: boolean
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
   /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */

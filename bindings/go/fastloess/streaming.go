@@ -10,9 +10,8 @@ import (
 	"runtime"
 )
 
-// StreamingOptions configures a StreamingLoess model. Confidence/prediction
-// intervals, standard errors, and cross-validation are Batch-only and have
-// no effect here.
+// StreamingOptions configures a StreamingLoess model. Cross-validation is
+// Batch-only and has no effect here.
 type StreamingOptions struct {
 	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
 	Fraction float64
@@ -90,6 +89,17 @@ type StreamingOptions struct {
 	// flattened (Dimensions values per point). Only takes effect when
 	// SurfaceMode is "direct".
 	ReturnGradient bool
+	// ConfidenceIntervals is the confidence level for confidence intervals
+	// (e.g. 0.95), computed per chunk and merged across overlap boundaries via
+	// MergeStrategy. Nil disables confidence intervals.
+	ConfidenceIntervals *float64
+	// PredictionIntervals is the confidence level for prediction intervals;
+	// same per-chunk computation and overlap-merging as ConfidenceIntervals.
+	// Nil disables prediction intervals.
+	PredictionIntervals *float64
+	// ReturnSe requests standard errors in the result, computed per chunk and
+	// merged across overlap boundaries via MergeStrategy.
+	ReturnSe bool
 	// Parallel enables parallel processing. Default: true.
 	Parallel bool
 
@@ -157,6 +167,8 @@ func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
 	defer freeCString(surfaceMode)
 
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
+	confidenceIntervals, confidenceIntervalsSet := optPtr(opts.ConfidenceIntervals)
+	predictionIntervals, predictionIntervalsSet := optPtr(opts.PredictionIntervals)
 	wmwPtr, wmwLen := cDoubles(opts.WeightedMetricWeights)
 
 	cell, cellSet := 0.0, false
@@ -198,6 +210,9 @@ func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
 			wmwPtr, wmwLen,
 			missing,
 			boolToCInt(opts.ReturnGradient),
+			optFloat(confidenceIntervals, confidenceIntervalsSet),
+			optFloat(predictionIntervals, predictionIntervalsSet),
+			boolToCInt(opts.ReturnSe),
 		)
 		if ptr == nil {
 			errMsg = lastError()

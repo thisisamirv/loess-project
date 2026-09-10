@@ -312,6 +312,18 @@ impl StreamingLoess {
         self.0 = self.0.return_gradient();
         self
     }
+    pub fn return_se(mut self) -> Self {
+        self.0 = self.0.return_se();
+        self
+    }
+    pub fn confidence_intervals(mut self, level: f64) -> Self {
+        self.0 = self.0.confidence_intervals(level);
+        self
+    }
+    pub fn prediction_intervals(mut self, level: f64) -> Self {
+        self.0 = self.0.prediction_intervals(level);
+        self
+    }
 
     pub fn build(self) -> Result<ParallelStreamingLoess<f64>, LoessError> {
         Streaming::convert(self.0).build()
@@ -336,6 +348,18 @@ impl OnlineLoess {
     }
     pub fn return_gradient(mut self) -> Self {
         self.0 = self.0.return_gradient();
+        self
+    }
+    pub fn return_se(mut self) -> Self {
+        self.0 = self.0.return_se();
+        self
+    }
+    pub fn confidence_intervals(mut self, level: f64) -> Self {
+        self.0 = self.0.confidence_intervals(level);
+        self
+    }
+    pub fn prediction_intervals(mut self, level: f64) -> Self {
+        self.0 = self.0.prediction_intervals(level);
         self
     }
 

@@ -63,6 +63,18 @@ pub struct OnlineOutput {
     /// Number of robustness iterations performed (if applicable).
     #[napi(js_name = "iterations_used")]
     pub iterations_used: Option<u32>,
+    /// Confidence interval lower bound (`update_mode="full"` only, if requested).
+    #[napi(js_name = "confidence_lower")]
+    pub confidence_lower: Option<f64>,
+    /// Confidence interval upper bound (`update_mode="full"` only, if requested).
+    #[napi(js_name = "confidence_upper")]
+    pub confidence_upper: Option<f64>,
+    /// Prediction interval lower bound (`update_mode="full"` only, if requested).
+    #[napi(js_name = "prediction_lower")]
+    pub prediction_lower: Option<f64>,
+    /// Prediction interval upper bound (`update_mode="full"` only, if requested).
+    #[napi(js_name = "prediction_upper")]
+    pub prediction_upper: Option<f64>,
     /// Local fit gradient (`dimensions` values) for the latest point (if requested).
     #[napi(js_name = "gradient")]
     pub gradient: Option<Vec<f64>>,
@@ -460,9 +472,8 @@ pub struct SmoothOptions {
 
 /// Configuration options for streaming LOESS smoothing.
 ///
-/// A subset of [`SmoothOptions`]: confidence/prediction intervals, standard
-/// errors, and cross-validation are Batch-only and have no equivalent here,
-/// so they aren't fields on this type.
+/// A subset of [`SmoothOptions`]: cross-validation is Batch-only and has no
+/// equivalent here, so it isn't a field on this type.
 #[napi(object)]
 pub struct StreamingSmoothOptions {
     /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
@@ -500,6 +511,18 @@ pub struct StreamingSmoothOptions {
     /// Return diagnostics (RMSE, etc.). Default: false.
     #[napi(js_name = "return_diagnostics")]
     pub return_diagnostics: Option<bool>,
+    /// Confidence level for confidence intervals, computed per chunk and merged
+    /// across overlap boundaries via `merge_strategy`. Default: None.
+    #[napi(js_name = "confidence_intervals")]
+    pub confidence_intervals: Option<f64>,
+    /// Confidence level for prediction intervals; same per-chunk computation and
+    /// overlap-merging as `confidence_intervals`. Default: None.
+    #[napi(js_name = "prediction_intervals")]
+    pub prediction_intervals: Option<f64>,
+    /// Return standard errors in result, computed per chunk and merged across
+    /// overlap boundaries via `merge_strategy`. Default: false.
+    #[napi(js_name = "return_se")]
+    pub return_se: Option<bool>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
     /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
@@ -531,10 +554,10 @@ pub struct StreamingSmoothOptions {
 /// Configuration options for online LOESS smoothing.
 ///
 /// A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
-/// confidence/prediction intervals, standard errors, and cross-validation are
-/// all no-ops for online processing (it handles one point at a time, always
-/// runs sequentially, and always returns a residual/SE inline), so they
-/// aren't fields on this type.
+/// and cross-validation are all no-ops for online processing (it handles one
+/// point at a time, always runs sequentially, and always returns a residual
+/// inline), so they aren't fields on this type. `confidence_intervals`/
+/// `prediction_intervals`/`return_se` require `update_mode: "full"`.
 #[napi(object)]
 pub struct OnlineSmoothOptions {
     /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
@@ -566,6 +589,18 @@ pub struct OnlineSmoothOptions {
     /// `surface_mode` is "direct"). Default: false.
     #[napi(js_name = "return_gradient")]
     pub return_gradient: Option<bool>,
+    /// Confidence level for confidence intervals. Only computed under
+    /// `update_mode: "full"`. Default: None.
+    #[napi(js_name = "confidence_intervals")]
+    pub confidence_intervals: Option<f64>,
+    /// Confidence level for prediction intervals. Same `update_mode: "full"`
+    /// requirement as `confidence_intervals`. Default: None.
+    #[napi(js_name = "prediction_intervals")]
+    pub prediction_intervals: Option<f64>,
+    /// Return the standard error for the latest point in result. Same
+    /// `update_mode: "full"` requirement as `confidence_intervals`. Default: false.
+    #[napi(js_name = "return_se")]
+    pub return_se: Option<bool>,
     /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
     pub degree: Option<String>,
     /// Number of predictor dimensions. Default: 1.
@@ -659,6 +694,9 @@ fn streaming_options_to_builder(
                 return_residuals: opts.return_residuals.unwrap_or(false),
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
                 return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
+                return_se: opts.return_se.unwrap_or(false),
                 parallel: opts.parallel,
                 degree: opts.degree.as_deref(),
                 dimensions: opts.dimensions.map(|v| v as usize),
@@ -705,6 +743,9 @@ fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<Loess
                 interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
                 boundary_degree_fallback: opts.boundary_degree_fallback,
                 missing: opts.missing.as_deref(),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
+                return_se: opts.return_se.unwrap_or(false),
                 ..Default::default()
             },
         ))?;
@@ -920,6 +961,10 @@ impl OnlineLoess {
             residual: o.residual,
             robustness_weight: o.robustness_weight,
             iterations_used: o.iterations_used.map(|i| i as u32),
+            confidence_lower: o.confidence_lower,
+            confidence_upper: o.confidence_upper,
+            prediction_lower: o.prediction_lower,
+            prediction_upper: o.prediction_upper,
             gradient: o.gradient,
         }))
     }

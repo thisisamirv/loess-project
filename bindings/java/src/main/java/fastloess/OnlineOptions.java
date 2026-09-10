@@ -158,6 +158,39 @@ public final class OnlineOptions {
         }
 
         /**
+         * @param confidenceIntervals the confidence level for confidence
+         * intervals; only computed under {@code updateMode("full")}
+         * @return this builder, for chaining
+         * @see Options.Builder#confidenceIntervals(double)
+         */
+        public Builder confidenceIntervals(double confidenceIntervals) {
+            common.confidenceIntervals(confidenceIntervals);
+            return this;
+        }
+
+        /**
+         * @param predictionIntervals the confidence level for prediction
+         * intervals; only computed under {@code updateMode("full")}
+         * @return this builder, for chaining
+         * @see Options.Builder#predictionIntervals(double)
+         */
+        public Builder predictionIntervals(double predictionIntervals) {
+            common.predictionIntervals(predictionIntervals);
+            return this;
+        }
+
+        /**
+         * @param returnSe whether to return the standard error for the latest
+         * point; only computed under {@code updateMode("full")}
+         * @return this builder, for chaining
+         * @see Options.Builder#returnSe(boolean)
+         */
+        public Builder returnSe(boolean returnSe) {
+            common.returnSe(returnSe);
+            return this;
+        }
+
+        /**
          * @param degree the local polynomial degree name
          * @return this builder, for chaining
          * @see Options.Builder#degree(String)

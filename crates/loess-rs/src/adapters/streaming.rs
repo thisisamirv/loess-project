@@ -32,6 +32,7 @@ use crate::engine::executor::{
 use crate::engine::output::LoessResult;
 use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::diagnostics::DiagnosticsState;
+use crate::evaluation::intervals::IntervalMethod;
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
@@ -109,6 +110,10 @@ pub struct StreamingLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg>
     // Include the per-point local fit gradient in the output. Only computed in
     // `SurfaceMode::Direct`.
     pub return_gradient: bool,
+
+    // Interval estimation method (standard error / confidence / prediction intervals).
+    // Computed per chunk and merged across overlap boundaries via `merge_strategy`.
+    pub interval_type: Option<IntervalMethod<T>>,
 
     // Deferred error from adapter conversion
     pub deferred_error: Option<LoessError>,
@@ -204,6 +209,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
             return_diagnostics: DEFAULT_RETURN_DIAGNOSTICS,
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             return_gradient: DEFAULT_RETURN_GRADIENT,
+            interval_type: None,
             auto_converge: default_auto_converge(),
             deferred_error: None,
             polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
@@ -260,6 +266,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
             overlap_buffer_smoothed: Vec::new(),
             overlap_buffer_robustness_weights: Vec::new(),
             overlap_buffer_gradient: Vec::new(),
+            overlap_buffer_std_errors: Vec::new(),
+            overlap_buffer_confidence_lower: Vec::new(),
+            overlap_buffer_confidence_upper: Vec::new(),
+            overlap_buffer_prediction_lower: Vec::new(),
+            overlap_buffer_prediction_upper: Vec::new(),
             diagnostics_state: if has_diag {
                 Some(DiagnosticsState::new())
             } else {
@@ -277,6 +288,11 @@ pub struct StreamingLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug
     overlap_buffer_smoothed: Vec<T>,
     overlap_buffer_robustness_weights: Vec<T>,
     overlap_buffer_gradient: Vec<T>,
+    overlap_buffer_std_errors: Vec<T>,
+    overlap_buffer_confidence_lower: Vec<T>,
+    overlap_buffer_confidence_upper: Vec<T>,
+    overlap_buffer_prediction_lower: Vec<T>,
+    overlap_buffer_prediction_upper: Vec<T>,
     diagnostics_state: Option<DiagnosticsState<T>>,
 }
 
@@ -350,7 +366,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             cv_fractions: None,
             cv_kind: None,
             auto_converge: self.config.auto_converge,
-            return_variance: None,
+            return_variance: self.config.interval_type,
             cv_seed: None,
             surface_mode: self.config.surface_mode,
             interpolation_vertices: self.config.interpolation_vertices,
@@ -375,6 +391,26 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         // Execute LOESS on combined data
         let result = LoessExecutor::run_with_config(&combined_x, &combined_y, config);
         let smoothed = result.smoothed;
+        let std_errors_full = result.std_errors;
+
+        // Confidence/prediction interval bounds over the whole combined (overlap+new
+        // data) array, computed the same way Batch does (`IntervalMethod::compute_intervals`)
+        // - the executor itself only produces plain std_errors.
+        let (conf_lower_full, conf_upper_full, pred_lower_full, pred_upper_full) = if let (
+            Some(method),
+            Some(se),
+        ) =
+            (&self.config.interval_type, std_errors_full.as_ref())
+        {
+            let interval_residuals: Vec<T> = combined_y
+                .iter()
+                .zip(smoothed.iter())
+                .map(|(&yi, &si)| yi - si)
+                .collect();
+            method.compute_intervals(&smoothed, se, &interval_residuals, None, None)?
+        } else {
+            (None, None, None, None)
+        };
 
         // Determine how much to return vs buffer
         let combined_points = combined_y.len();
@@ -469,6 +505,84 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             }
         }
 
+        // Merge standard errors / confidence / prediction bounds if requested, the same
+        // way `y`/robustness weights are merged across the overlap region.
+        let merge_scalar = |prev_val: T, curr_val: T, i: usize, len: usize| -> T {
+            match self.config.merge_strategy {
+                MergeStrategy::Average => (prev_val + curr_val) / T::from(2.0).unwrap(),
+                MergeStrategy::WeightedAverage => {
+                    let weight = T::from(i as f64 / len as f64).unwrap();
+                    prev_val * (T::one() - weight) + curr_val * weight
+                }
+                MergeStrategy::TakeFirst => prev_val,
+                MergeStrategy::TakeLast => curr_val,
+            }
+        };
+
+        let mut se_out = std_errors_full.as_ref().map(|_| Vec::new());
+        let mut cl_out = conf_lower_full.as_ref().map(|_| Vec::new());
+        let mut cu_out = conf_upper_full.as_ref().map(|_| Vec::new());
+        let mut pl_out = pred_lower_full.as_ref().map(|_| Vec::new());
+        let mut pu_out = pred_upper_full.as_ref().map(|_| Vec::new());
+
+        if prev_overlap_len > 0 {
+            if let (Some(out), Some(curr)) = (&mut se_out, std_errors_full.as_ref()) {
+                let prev = mem::take(&mut self.overlap_buffer_std_errors);
+                for (i, (&pv, &cv)) in prev
+                    .iter()
+                    .zip(curr.iter())
+                    .take(prev_overlap_len)
+                    .enumerate()
+                {
+                    out.push(merge_scalar(pv, cv, i, prev_overlap_len));
+                }
+            }
+            if let (Some(out), Some(curr)) = (&mut cl_out, conf_lower_full.as_ref()) {
+                let prev = mem::take(&mut self.overlap_buffer_confidence_lower);
+                for (i, (&pv, &cv)) in prev
+                    .iter()
+                    .zip(curr.iter())
+                    .take(prev_overlap_len)
+                    .enumerate()
+                {
+                    out.push(merge_scalar(pv, cv, i, prev_overlap_len));
+                }
+            }
+            if let (Some(out), Some(curr)) = (&mut cu_out, conf_upper_full.as_ref()) {
+                let prev = mem::take(&mut self.overlap_buffer_confidence_upper);
+                for (i, (&pv, &cv)) in prev
+                    .iter()
+                    .zip(curr.iter())
+                    .take(prev_overlap_len)
+                    .enumerate()
+                {
+                    out.push(merge_scalar(pv, cv, i, prev_overlap_len));
+                }
+            }
+            if let (Some(out), Some(curr)) = (&mut pl_out, pred_lower_full.as_ref()) {
+                let prev = mem::take(&mut self.overlap_buffer_prediction_lower);
+                for (i, (&pv, &cv)) in prev
+                    .iter()
+                    .zip(curr.iter())
+                    .take(prev_overlap_len)
+                    .enumerate()
+                {
+                    out.push(merge_scalar(pv, cv, i, prev_overlap_len));
+                }
+            }
+            if let (Some(out), Some(curr)) = (&mut pu_out, pred_upper_full.as_ref()) {
+                let prev = mem::take(&mut self.overlap_buffer_prediction_upper);
+                for (i, (&pv, &cv)) in prev
+                    .iter()
+                    .zip(curr.iter())
+                    .take(prev_overlap_len)
+                    .enumerate()
+                {
+                    out.push(merge_scalar(pv, cv, i, prev_overlap_len));
+                }
+            }
+        }
+
         // Add non-overlap portion
         if return_start < overlap_start {
             y_smooth_out.extend_from_slice(&smoothed[return_start..overlap_start]);
@@ -482,6 +596,31 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     .expect("gradient present when return_gradient is set");
                 g_out.extend_from_slice(
                     &grad[return_start * dimensions..overlap_start * dimensions],
+                );
+            }
+            if let Some(out) = &mut se_out {
+                out.extend_from_slice(
+                    &std_errors_full.as_ref().unwrap()[return_start..overlap_start],
+                );
+            }
+            if let Some(out) = &mut cl_out {
+                out.extend_from_slice(
+                    &conf_lower_full.as_ref().unwrap()[return_start..overlap_start],
+                );
+            }
+            if let Some(out) = &mut cu_out {
+                out.extend_from_slice(
+                    &conf_upper_full.as_ref().unwrap()[return_start..overlap_start],
+                );
+            }
+            if let Some(out) = &mut pl_out {
+                out.extend_from_slice(
+                    &pred_lower_full.as_ref().unwrap()[return_start..overlap_start],
+                );
+            }
+            if let Some(out) = &mut pu_out {
+                out.extend_from_slice(
+                    &pred_upper_full.as_ref().unwrap()[return_start..overlap_start],
                 );
             }
         }
@@ -513,12 +652,32 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             if let Some(ref grad) = result.gradient {
                 self.overlap_buffer_gradient = grad[overlap_start_x..].to_vec();
             }
+            if let Some(ref se) = std_errors_full {
+                self.overlap_buffer_std_errors = se[overlap_start..].to_vec();
+            }
+            if let Some(ref cl) = conf_lower_full {
+                self.overlap_buffer_confidence_lower = cl[overlap_start..].to_vec();
+            }
+            if let Some(ref cu) = conf_upper_full {
+                self.overlap_buffer_confidence_upper = cu[overlap_start..].to_vec();
+            }
+            if let Some(ref pl) = pred_lower_full {
+                self.overlap_buffer_prediction_lower = pl[overlap_start..].to_vec();
+            }
+            if let Some(ref pu) = pred_upper_full {
+                self.overlap_buffer_prediction_upper = pu[overlap_start..].to_vec();
+            }
         } else {
             self.overlap_buffer_x.clear();
             self.overlap_buffer_y.clear();
             self.overlap_buffer_smoothed.clear();
             self.overlap_buffer_robustness_weights.clear();
             self.overlap_buffer_gradient.clear();
+            self.overlap_buffer_std_errors.clear();
+            self.overlap_buffer_confidence_lower.clear();
+            self.overlap_buffer_confidence_upper.clear();
+            self.overlap_buffer_prediction_lower.clear();
+            self.overlap_buffer_prediction_upper.clear();
         }
 
         // Note: We return results in the order they were processed (combined chunk/overlap).
@@ -542,11 +701,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             distance_metric: self.config.distance_metric.clone(),
             polynomial_degree: self.config.polynomial_degree,
             y: y_smooth_out,
-            standard_errors: None,
-            confidence_lower: None,
-            confidence_upper: None,
-            prediction_lower: None,
-            prediction_upper: None,
+            standard_errors: se_out,
+            confidence_lower: cl_out,
+            confidence_upper: cu_out,
+            prediction_lower: pl_out,
+            prediction_upper: pu_out,
             residuals: residuals_out,
             robustness_weights: rob_weights_out,
             diagnostics,
@@ -618,6 +777,27 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             None
         };
 
+        let has_se = self.config.interval_type.is_some();
+        let has_confidence = self
+            .config
+            .interval_type
+            .as_ref()
+            .is_some_and(|m| m.confidence);
+        let has_prediction = self
+            .config
+            .interval_type
+            .as_ref()
+            .is_some_and(|m| m.prediction);
+        let standard_errors = has_se.then(|| mem::take(&mut self.overlap_buffer_std_errors));
+        let confidence_lower =
+            has_confidence.then(|| mem::take(&mut self.overlap_buffer_confidence_lower));
+        let confidence_upper =
+            has_confidence.then(|| mem::take(&mut self.overlap_buffer_confidence_upper));
+        let prediction_lower =
+            has_prediction.then(|| mem::take(&mut self.overlap_buffer_prediction_lower));
+        let prediction_upper =
+            has_prediction.then(|| mem::take(&mut self.overlap_buffer_prediction_upper));
+
         // Update diagnostics for the final overlap
         let diagnostics = if let Some(ref mut state) = self.diagnostics_state {
             state.update(&self.overlap_buffer_y, &self.overlap_buffer_smoothed);
@@ -632,11 +812,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             distance_metric: self.config.distance_metric.clone(),
             polynomial_degree: self.config.polynomial_degree,
             y: self.overlap_buffer_smoothed.clone(),
-            standard_errors: None,
-            confidence_lower: None,
-            confidence_upper: None,
-            prediction_lower: None,
-            prediction_upper: None,
+            standard_errors,
+            confidence_lower,
+            confidence_upper,
+            prediction_lower,
+            prediction_upper,
             residuals,
             robustness_weights,
             diagnostics,
@@ -659,6 +839,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self.overlap_buffer_smoothed.clear();
         self.overlap_buffer_robustness_weights.clear();
         self.overlap_buffer_gradient.clear();
+        self.overlap_buffer_std_errors.clear();
+        self.overlap_buffer_confidence_lower.clear();
+        self.overlap_buffer_confidence_upper.clear();
+        self.overlap_buffer_prediction_lower.clear();
+        self.overlap_buffer_prediction_upper.clear();
 
         Ok(result)
     }
@@ -670,5 +855,10 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self.overlap_buffer_smoothed.clear();
         self.overlap_buffer_robustness_weights.clear();
         self.overlap_buffer_gradient.clear();
+        self.overlap_buffer_std_errors.clear();
+        self.overlap_buffer_confidence_lower.clear();
+        self.overlap_buffer_confidence_upper.clear();
+        self.overlap_buffer_prediction_lower.clear();
+        self.overlap_buffer_prediction_upper.clear();
     }
 }

@@ -174,6 +174,42 @@ public final class StreamingOptions {
         }
 
         /**
+         * @param confidenceIntervals the confidence level for confidence
+         * intervals, computed per chunk and merged across overlap boundaries
+         * via {@code mergeStrategy}
+         * @return this builder, for chaining
+         * @see Options.Builder#confidenceIntervals(double)
+         */
+        public Builder confidenceIntervals(double confidenceIntervals) {
+            common.confidenceIntervals(confidenceIntervals);
+            return this;
+        }
+
+        /**
+         * @param predictionIntervals the confidence level for prediction
+         * intervals; same per-chunk computation and overlap-merging as
+         * {@code confidenceIntervals}
+         * @return this builder, for chaining
+         * @see Options.Builder#predictionIntervals(double)
+         */
+        public Builder predictionIntervals(double predictionIntervals) {
+            common.predictionIntervals(predictionIntervals);
+            return this;
+        }
+
+        /**
+         * @param returnSe whether to return standard errors in the result,
+         * computed per chunk and merged across overlap boundaries via
+         * {@code mergeStrategy}
+         * @return this builder, for chaining
+         * @see Options.Builder#returnSe(boolean)
+         */
+        public Builder returnSe(boolean returnSe) {
+            common.returnSe(returnSe);
+            return this;
+        }
+
+        /**
          * @param parallel whether to enable parallel execution
          * @return this builder, for chaining
          * @see Options.Builder#parallel(boolean)

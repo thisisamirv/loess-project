@@ -60,6 +60,7 @@ RStreamingLoess$new <- function(
     scaling_method, boundary_policy, zero_weight_fallback, auto_converge,
     return_diagnostics, return_residuals, return_robustness_weights,
     return_gradient,
+    confidence_intervals, prediction_intervals, return_se,
     merge_strategy, parallel, degree, dimensions,
     distance_metric, weighted_metric_weights, surface_mode,
     cell, interpolation_vertices, boundary_degree_fallback, missing
@@ -70,6 +71,7 @@ RStreamingLoess$new <- function(
         boundary_policy, zero_weight_fallback,
         auto_converge, return_diagnostics,
         return_residuals, return_robustness_weights, return_gradient,
+        confidence_intervals, prediction_intervals, return_se,
         merge_strategy, parallel,
         degree, dimensions, distance_metric,
         weighted_metric_weights, surface_mode,
@@ -102,6 +104,7 @@ ROnlineLoess$new <- function(
     weight_function, robustness_method,
     scaling_method, boundary_policy, zero_weight_fallback, update_mode,
     auto_converge, return_robustness_weights, return_gradient,
+    confidence_intervals, prediction_intervals, return_se,
     degree, dimensions, distance_metric,
     weighted_metric_weights, surface_mode,
     cell, interpolation_vertices, boundary_degree_fallback, missing
@@ -111,6 +114,7 @@ ROnlineLoess$new <- function(
         iterations, weight_function, robustness_method, scaling_method,
         boundary_policy, zero_weight_fallback, update_mode, auto_converge,
         return_robustness_weights, return_gradient,
+        confidence_intervals, prediction_intervals, return_se,
         degree, dimensions, distance_metric,
         weighted_metric_weights, surface_mode,
         cell, interpolation_vertices, boundary_degree_fallback, missing

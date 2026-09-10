@@ -771,6 +771,73 @@ func TestStreamingLoess(t *testing.T) {
 			t.Fatalf("expected %d total points after dropping, got %d", len(x)-1, total)
 		}
 	})
+
+	t.Run("ReturnSe", func(t *testing.T) {
+		x, y := sineData(200)
+		for i := range x {
+			x[i] *= 10
+			y[i] = math.Sin(x[i])
+		}
+
+		opts := fastloess.DefaultStreamingOptions()
+		opts.Fraction = 0.3
+		opts.ChunkSize = 100
+		opts.ReturnSe = true
+		model, err := fastloess.NewStreamingLoess(opts)
+		if err != nil {
+			t.Fatalf("NewStreamingLoess failed: %v", err)
+		}
+		defer model.Close()
+
+		chunkRes, err := model.ProcessChunk(x, y)
+		if err != nil {
+			t.Fatalf("ProcessChunk failed: %v", err)
+		}
+		if chunkRes.StandardErrors == nil {
+			t.Fatal("expected standard errors to be populated")
+		}
+		if chunkRes.ConfidenceLower != nil {
+			t.Fatal("expected confidence bounds to stay nil without ConfidenceIntervals")
+		}
+	})
+
+	t.Run("ConfidenceAndPredictionIntervals", func(t *testing.T) {
+		x, y := sineData(200)
+		for i := range x {
+			x[i] *= 10
+			y[i] = math.Sin(x[i])
+		}
+
+		ci, pi := 0.95, 0.95
+		opts := fastloess.DefaultStreamingOptions()
+		opts.Fraction = 0.3
+		opts.ChunkSize = 100
+		opts.ConfidenceIntervals = &ci
+		opts.PredictionIntervals = &pi
+		model, err := fastloess.NewStreamingLoess(opts)
+		if err != nil {
+			t.Fatalf("NewStreamingLoess failed: %v", err)
+		}
+		defer model.Close()
+
+		chunkRes, err := model.ProcessChunk(x, y)
+		if err != nil {
+			t.Fatalf("ProcessChunk failed: %v", err)
+		}
+		if chunkRes.ConfidenceLower == nil || chunkRes.PredictionLower == nil {
+			t.Fatal("expected confidence and prediction bounds to be populated")
+		}
+		for i := range chunkRes.ConfidenceLower {
+			if chunkRes.ConfidenceLower[i] > chunkRes.ConfidenceUpper[i] {
+				t.Fatalf("confidence lower > upper at index %d", i)
+			}
+			ciWidth := chunkRes.ConfidenceUpper[i] - chunkRes.ConfidenceLower[i]
+			piWidth := chunkRes.PredictionUpper[i] - chunkRes.PredictionLower[i]
+			if piWidth < ciWidth-1e-9 {
+				t.Fatalf("expected prediction interval to be at least as wide as confidence interval at index %d", i)
+			}
+		}
+	})
 }
 
 // ---------------------------------------------------------------------------
@@ -934,6 +1001,63 @@ func TestOnlineLoess(t *testing.T) {
 		}
 		if ok {
 			t.Fatal("expected the NaN point to be silently ignored (ok == false)")
+		}
+	})
+
+	t.Run("ReturnSeRequiresFullUpdateMode", func(t *testing.T) {
+		opts := fastloess.DefaultOnlineOptions()
+		opts.Fraction = 0.5
+		opts.WindowCapacity = 10
+		opts.ReturnSe = true
+		if _, err := fastloess.NewOnlineLoess(opts); err == nil {
+			t.Fatal("expected an error when ReturnSe is set without UpdateMode = \"full\"")
+		}
+	})
+
+	t.Run("ConfidenceIntervalsRequiresFullUpdateMode", func(t *testing.T) {
+		ci := 0.95
+		opts := fastloess.DefaultOnlineOptions()
+		opts.Fraction = 0.5
+		opts.WindowCapacity = 10
+		opts.ConfidenceIntervals = &ci
+		if _, err := fastloess.NewOnlineLoess(opts); err == nil {
+			t.Fatal("expected an error when ConfidenceIntervals is set without UpdateMode = \"full\"")
+		}
+	})
+
+	t.Run("ConfidenceAndPredictionIntervalsUnderFullUpdateMode", func(t *testing.T) {
+		ci, pi := 0.95, 0.95
+		opts := fastloess.DefaultOnlineOptions()
+		opts.Fraction = 1.0
+		opts.WindowCapacity = 10
+		opts.MinPoints = 3
+		opts.UpdateMode = "full"
+		opts.ConfidenceIntervals = &ci
+		opts.PredictionIntervals = &pi
+		model, err := fastloess.NewOnlineLoess(opts)
+		if err != nil {
+			t.Fatalf("NewOnlineLoess failed: %v", err)
+		}
+		defer model.Close()
+
+		var last fastloess.PointResult
+		for i := 0; i < 6; i++ {
+			res, ok, err := model.AddPoint(float64(i), 2.0*float64(i)+1.0)
+			if err != nil {
+				t.Fatalf("AddPoint failed at i=%d: %v", i, err)
+			}
+			if ok {
+				last = res
+			}
+		}
+		if math.IsNaN(last.ConfidenceLower) || math.IsNaN(last.PredictionLower) {
+			t.Fatal("expected confidence and prediction bounds to be populated")
+		}
+		if last.ConfidenceLower > last.ConfidenceUpper {
+			t.Fatal("confidence lower > upper")
+		}
+		if last.PredictionLower > last.PredictionUpper {
+			t.Fatal("prediction lower > upper")
 		}
 	})
 }

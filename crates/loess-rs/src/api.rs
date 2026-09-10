@@ -1045,6 +1045,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(cr) = builder.compute_residuals {
             result.compute_residuals = cr;
         }
+        if let Some(it) = builder.interval_type {
+            result.interval_type = Some(it);
+        }
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
         }
@@ -1153,6 +1156,9 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         }
         if let Some(rg) = builder.return_gradient {
             result.return_gradient = rg;
+        }
+        if let Some(it) = builder.interval_type {
+            result.interval_type = Some(it);
         }
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);

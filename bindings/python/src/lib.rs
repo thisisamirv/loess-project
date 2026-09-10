@@ -430,6 +430,9 @@ impl PyStreamingLoess {
         return_residuals=false,
         return_robustness_weights=false,
         return_gradient=false,
+        confidence_intervals=None,
+        prediction_intervals=None,
+        return_se=false,
         zero_weight_fallback="use_local_mean",
         merge_strategy="weighted_average",
         parallel=true,
@@ -458,6 +461,9 @@ impl PyStreamingLoess {
         return_residuals: bool,
         return_robustness_weights: bool,
         return_gradient: bool,
+        confidence_intervals: Option<f64>,
+        prediction_intervals: Option<f64>,
+        return_se: bool,
         zero_weight_fallback: &str,
         merge_strategy: &str,
         parallel: bool,
@@ -485,15 +491,15 @@ impl PyStreamingLoess {
                 return_residuals,
                 return_robustness_weights,
                 return_diagnostics,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals,
+                prediction_intervals,
                 parallel: Some(parallel),
                 degree: Some(degree),
                 dimensions: Some(dimensions),
                 distance_metric: Some(distance_metric),
                 weighted_metric_weights: weighted_metric_weights.as_deref(),
                 surface_mode: Some(surface_mode),
-                return_se: false,
+                return_se,
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,
@@ -575,6 +581,18 @@ pub struct PyOnlineOutput {
     /// Number of robustness iterations performed (if tracked)
     #[pyo3(get)]
     pub iterations_used: Option<usize>,
+    /// Confidence interval lower bound (`update_mode="full"` only, if requested)
+    #[pyo3(get)]
+    pub confidence_lower: Option<f64>,
+    /// Confidence interval upper bound (`update_mode="full"` only, if requested)
+    #[pyo3(get)]
+    pub confidence_upper: Option<f64>,
+    /// Prediction interval lower bound (`update_mode="full"` only, if requested)
+    #[pyo3(get)]
+    pub prediction_lower: Option<f64>,
+    /// Prediction interval upper bound (`update_mode="full"` only, if requested)
+    #[pyo3(get)]
+    pub prediction_upper: Option<f64>,
     /// Local fit gradient for the latest point (if requested), `dimensions` values
     gradient: Option<Vec<f64>>,
 }
@@ -617,6 +635,9 @@ impl PyOnlineLoess {
         auto_converge=None,
         return_robustness_weights=false,
         return_gradient=false,
+        confidence_intervals=None,
+        prediction_intervals=None,
+        return_se=false,
         zero_weight_fallback="use_local_mean",
         degree="linear",
         dimensions=1usize,
@@ -642,6 +663,9 @@ impl PyOnlineLoess {
         auto_converge: Option<f64>,
         return_robustness_weights: bool,
         return_gradient: bool,
+        confidence_intervals: Option<f64>,
+        prediction_intervals: Option<f64>,
+        return_se: bool,
         zero_weight_fallback: &str,
         degree: &str,
         dimensions: usize,
@@ -667,15 +691,15 @@ impl PyOnlineLoess {
                 return_residuals: false,
                 return_robustness_weights,
                 return_diagnostics: false,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals,
+                prediction_intervals,
                 parallel: None,
                 degree: Some(degree),
                 dimensions: Some(dimensions),
                 distance_metric: Some(distance_metric),
                 weighted_metric_weights: weighted_metric_weights.as_deref(),
                 surface_mode: Some(surface_mode),
-                return_se: false,
+                return_se,
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,
@@ -716,6 +740,10 @@ impl PyOnlineLoess {
             residual: o.residual,
             robustness_weight: o.robustness_weight,
             iterations_used: o.iterations_used,
+            confidence_lower: o.confidence_lower,
+            confidence_upper: o.confidence_upper,
+            prediction_lower: o.prediction_lower,
+            prediction_upper: o.prediction_upper,
             gradient: o.gradient,
         }))
     }

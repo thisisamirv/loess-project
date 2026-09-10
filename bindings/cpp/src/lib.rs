@@ -110,6 +110,14 @@ pub struct CppOnlineOutput {
     pub residual: c_double,
     pub robustness_weight: c_double,
     pub iterations_used: c_int,
+    /// Confidence interval lower bound (`update_mode="full"` only, if requested)
+    pub confidence_lower: c_double,
+    /// Confidence interval upper bound (`update_mode="full"` only, if requested)
+    pub confidence_upper: c_double,
+    /// Prediction interval lower bound (`update_mode="full"` only, if requested)
+    pub prediction_lower: c_double,
+    /// Prediction interval upper bound (`update_mode="full"` only, if requested)
+    pub prediction_upper: c_double,
     /// Local fit gradient (`dimensions` values) for the latest point (NULL if
     /// not computed)
     pub gradient: *mut c_double,
@@ -280,6 +288,10 @@ impl Default for CppOnlineOutput {
             residual: f64::NAN,
             robustness_weight: f64::NAN,
             iterations_used: -1,
+            confidence_lower: f64::NAN,
+            confidence_upper: f64::NAN,
+            prediction_lower: f64::NAN,
+            prediction_upper: f64::NAN,
             gradient: ptr::null_mut(),
             gradient_len: 0,
             error: ptr::null_mut(),
@@ -951,6 +963,9 @@ pub unsafe extern "C" fn cpp_streaming_new(
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
     missing: *const c_char,
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
+    return_se: c_int,
 ) -> *mut CppStreamingLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -1016,15 +1031,17 @@ pub unsafe extern "C" fn cpp_streaming_new(
                 return_residuals: return_residuals != 0,
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: return_diagnostics != 0,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
                 parallel: Some(parallel != 0),
                 degree: degree_str,
                 dimensions: (dimensions > 0).then_some(dimensions as usize),
                 distance_metric: distance_metric_str,
                 weighted_metric_weights: weighted_metric_weights_slice,
                 surface_mode: surface_mode_str,
-                return_se: false,
+                return_se: return_se != 0,
                 cell: (!cell.is_nan()).then_some(cell),
                 interpolation_vertices: (interpolation_vertices > 0)
                     .then_some(interpolation_vertices as usize),
@@ -1159,6 +1176,9 @@ pub unsafe extern "C" fn cpp_online_new(
     weighted_metric_weights: *const c_double,
     weighted_metric_weights_len: c_ulong,
     missing: *const c_char,
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
+    return_se: c_int,
 ) -> *mut CppOnlineLoess {
     with_panic_ptr(|| {
         clear_last_error();
@@ -1232,15 +1252,17 @@ pub unsafe extern "C" fn cpp_online_new(
                 return_residuals: false,
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: false,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
                 parallel: None,
                 degree: degree_str,
                 dimensions: (dimensions > 0).then_some(configured_dimensions),
                 distance_metric: distance_metric_str,
                 weighted_metric_weights: weighted_metric_weights_slice,
                 surface_mode: surface_mode_str,
-                return_se: false,
+                return_se: return_se != 0,
                 cell: (!cell.is_nan()).then_some(cell),
                 interpolation_vertices: (interpolation_vertices > 0)
                     .then_some(interpolation_vertices as usize),
@@ -1302,8 +1324,16 @@ pub unsafe extern "C" fn cpp_online_add_point(
                 Err(e) => make_error(&e.to_string()),
                 Ok(None) => CppOnlineOutput::default(),
                 Ok(Some(o)) => {
-                    let (standard_error, residual, robustness_weight, iterations_used) =
-                        shared_parse::extract_online_output(&o);
+                    let (
+                        standard_error,
+                        residual,
+                        robustness_weight,
+                        iterations_used,
+                        confidence_lower,
+                        confidence_upper,
+                        prediction_lower,
+                        prediction_upper,
+                    ) = shared_parse::extract_online_output(&o);
                     let gradient_len = o.gradient.as_ref().map(|v| v.len()).unwrap_or(0);
                     let gradient = shared_parse::opt_vec_to_raw_ptr(o.gradient);
                     CppOnlineOutput {
@@ -1313,6 +1343,10 @@ pub unsafe extern "C" fn cpp_online_add_point(
                         residual,
                         robustness_weight,
                         iterations_used,
+                        confidence_lower,
+                        confidence_upper,
+                        prediction_lower,
+                        prediction_upper,
                         gradient,
                         gradient_len: gradient_len as c_ulong,
                         error: ptr::null_mut(),

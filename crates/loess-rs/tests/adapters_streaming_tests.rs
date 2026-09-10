@@ -943,3 +943,106 @@ fn test_streaming_return_gradient_multi_chunk_overlap() {
         assert!((g - 3.0).abs() < 1e-6, "gradient {g} should be ~3.0");
     }
 }
+
+// ============================================================================
+// Standard Error / Confidence / Prediction Interval Tests
+// ============================================================================
+
+/// Test that SE/CI/PI fields are `None` by default (not requested).
+#[test]
+fn test_streaming_no_intervals_by_default() {
+    let mut processor = Loess::new()
+        .chunk_size(10)
+        .overlap(2)
+        .adapter(Streaming)
+        .build()
+        .expect("Builder should succeed");
+
+    let x = vec![0.0f64, 1.0, 2.0, 3.0, 4.0];
+    let y: Vec<f64> = x.iter().map(|xi| 2.0 * xi + 1.0).collect();
+
+    let result = processor.process_chunk(&x, &y).expect("process_chunk ok");
+    assert!(result.standard_errors.is_none());
+    assert!(result.confidence_lower.is_none());
+    assert!(result.confidence_upper.is_none());
+    assert!(result.prediction_lower.is_none());
+    assert!(result.prediction_upper.is_none());
+
+    let remaining = processor.finalize().expect("finalize ok");
+    assert!(remaining.standard_errors.is_none());
+}
+
+/// Test `.return_se()` on a single chunk (no overlap merging involved).
+#[test]
+fn test_streaming_return_se_single_chunk() {
+    let mut processor = Loess::new()
+        .fraction(0.5)
+        .return_se()
+        .chunk_size(50)
+        .overlap(5)
+        .adapter(Streaming)
+        .build()
+        .expect("Builder should succeed");
+
+    let x: Vec<f64> = (0..50).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|xi| (xi / 5.0).sin()).collect();
+
+    let result = processor.process_chunk(&x, &y).expect("process_chunk ok");
+    let se = result
+        .standard_errors
+        .expect("standard_errors should be present");
+    assert_eq!(se.len(), result.y.len());
+    for &s in &se {
+        assert!(s.is_finite() && s >= 0.0);
+    }
+}
+
+/// Test `.confidence_intervals()`/`.prediction_intervals()` across multiple chunks,
+/// exercising overlap merging.
+#[test]
+fn test_streaming_confidence_and_prediction_intervals_multi_chunk() {
+    let x_all: Vec<f64> = (0..60).map(|i| i as f64).collect();
+    let y_all: Vec<f64> = x_all.iter().map(|xi| (xi / 5.0).sin()).collect();
+
+    let mut processor = Loess::new()
+        .fraction(0.3)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .chunk_size(30)
+        .overlap(5)
+        .adapter(Streaming)
+        .build()
+        .expect("Builder should succeed");
+
+    let out_a = processor
+        .process_chunk(&x_all[0..30], &y_all[0..30])
+        .expect("process_chunk ok");
+    let cl_a = out_a
+        .confidence_lower
+        .expect("confidence_lower should be present");
+    let cu_a = out_a
+        .confidence_upper
+        .expect("confidence_upper should be present");
+    let pl_a = out_a
+        .prediction_lower
+        .expect("prediction_lower should be present");
+    let pu_a = out_a
+        .prediction_upper
+        .expect("prediction_upper should be present");
+    for i in 0..out_a.y.len() {
+        assert!(cl_a[i] <= out_a.y[i] && out_a.y[i] <= cu_a[i]);
+        assert!(pl_a[i] <= out_a.y[i] && out_a.y[i] <= pu_a[i]);
+        assert!(cu_a[i] - cl_a[i] <= pu_a[i] - pl_a[i]);
+    }
+
+    let out_b = processor
+        .process_chunk(&x_all[30..60], &y_all[30..60])
+        .expect("process_chunk ok");
+    assert!(out_b.confidence_lower.is_some());
+    assert!(out_b.prediction_lower.is_some());
+
+    let remaining = processor.finalize().expect("finalize ok");
+    assert!(remaining.confidence_lower.is_some());
+    assert!(remaining.prediction_lower.is_some());
+}
+

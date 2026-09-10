@@ -185,6 +185,7 @@ test_that("OnlineLoess: degree, distance_metric, surface_mode, return_se", {
         degree = "quadratic",
         distance_metric = "minkowski:3",
         surface_mode = "direct",
+        update_mode = "full",
         return_se = TRUE
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
@@ -208,4 +209,37 @@ test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge", {
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
     expect_gt(length(non_null), 0)
+})
+
+test_that("OnlineLoess: return_se requires update_mode = \"full\"", {
+    expect_error(
+        OnlineLoess(fraction = 0.5, window_capacity = 10, return_se = TRUE)
+    )
+})
+
+test_that("OnlineLoess: confidence_intervals requires update_mode = \"full\"", {
+    expect_error(
+        OnlineLoess(fraction = 0.5, window_capacity = 10, confidence_intervals = 0.95)
+    )
+})
+
+test_that("OnlineLoess: confidence/prediction intervals under update_mode = \"full\"", {
+    ol <- OnlineLoess(
+        fraction = 1.0,
+        window_capacity = 10,
+        min_points = 3,
+        update_mode = "full",
+        confidence_intervals = 0.95,
+        prediction_intervals = 0.95
+    )
+
+    x <- as.double(0:5)
+    y <- as.double(2 * x + 1)
+    results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
+    last <- results[[length(results)]]
+
+    expect_true(!is.null(last$confidence_lower))
+    expect_true(!is.null(last$prediction_lower))
+    expect_true(last$confidence_lower <= last$confidence_upper)
+    expect_true(last$prediction_lower <= last$prediction_upper)
 })

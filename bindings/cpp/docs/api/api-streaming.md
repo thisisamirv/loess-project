@@ -149,11 +149,14 @@ int main() {
 | `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
 | `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = unset/library default, 0 = false, 1 = true) |
 | `return_gradient` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
+| `confidence_intervals` | `double` | `NaN` | Confidence level for confidence intervals, computed per chunk and merged across overlap boundaries via `merge_strategy` |
+| `prediction_intervals` | `double` | `NaN` | Confidence level for prediction intervals; same per-chunk computation and overlap-merging as `confidence_intervals` |
+| `return_se` | `bool` | `false` | Include standard errors in the result, computed per chunk and merged across overlap boundaries via `merge_strategy` |
 | `chunk_size` | `int` | `5000` | Data chunk size |
 | `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `std::string` | `"weighted_average"` | Strategy for blending overlap regions |
 
-Confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` are Batch-only; setting these inherited fields has no effect on `StreamingLoess` — see [fastLoess](api.md) for those.
+Cross-validation and `return_sorted` are Batch-only; setting these inherited fields has no effect on `StreamingLoess` — see [fastLoess](api.md) for those.
 
 ## Options
 
@@ -337,7 +340,26 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 ### return_gradient
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `gradient()` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays empty in the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `gradient()` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — `process_chunk()`/`finalize()` return an `Expected` with `has_value() == false` instead of silently leaving `gradient()` empty if requested under the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `y` is, via `merge_strategy`. `NaN` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `confidence_intervals`. `NaN` (default) disables prediction intervals.
+
+### return_se
+
+Include standard errors in the result (`standard_errors()`), computed per chunk and merged across overlap boundaries via `merge_strategy`.
+
+- `false` (default) — leaves `standard_errors()` empty
+- `true` — populates `standard_errors()`
 
 ### chunk_size
 
@@ -375,9 +397,9 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `y_vector()` | `std::vector<double>` | Smoothed y values |
 | `fraction_used()` | `double` | Fraction used |
 | `iterations_used()` | `int` | Robustness iterations actually performed (-1 = N/A) |
-| `standard_errors()` | `std::vector<double>` | Always empty (Batch only) |
-| `confidence_lower()`, `confidence_upper()` | `std::vector<double>` | Always empty (Batch only) |
-| `prediction_lower()`, `prediction_upper()` | `std::vector<double>` | Always empty (Batch only) |
+| `standard_errors()` | `std::vector<double>` | Standard errors, if `return_se`/`confidence_intervals`/`prediction_intervals` was set (empty otherwise) |
+| `confidence_lower()`, `confidence_upper()` | `std::vector<double>` | Confidence interval bounds, if `confidence_intervals` was set (empty otherwise) |
+| `prediction_lower()`, `prediction_upper()` | `std::vector<double>` | Prediction interval bounds, if `prediction_intervals` was set (empty otherwise) |
 | `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`; empty if not) |
 | `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not) |
 | `cv_scores()` | `std::vector<double>` | Always empty (Batch only) |

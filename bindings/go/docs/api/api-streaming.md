@@ -40,6 +40,9 @@ opts.Overlap = 200
 | `InterpolationVertices` | `*int` | `nil` (auto) | Number of interpolation vertices |
 | `BoundaryDegreeFallback` | `*bool` | `nil` (auto) | Fall back to lower polynomial degree at boundaries when higher degrees fail |
 | `ReturnGradient` | `bool` | `false` | Include the per-point local fit gradient in the result (`SurfaceMode = "direct"` only) |
+| `ConfidenceIntervals` | `*float64` | `nil` | Confidence level for confidence intervals, computed per chunk and merged across overlap boundaries via `MergeStrategy` |
+| `PredictionIntervals` | `*float64` | `nil` | Confidence level for prediction intervals; same per-chunk computation and overlap-merging as `ConfidenceIntervals` |
+| `ReturnSe` | `bool` | `false` | Include standard errors in result, computed per chunk and merged across overlap boundaries via `MergeStrategy` |
 | `ChunkSize` | `int` | `5000` | Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying. |
 | `Overlap` | `int` | `ChunkSize / 10` | Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `MergeStrategy`. A good starting point is 10–20% of `ChunkSize`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice. Negative (the `DefaultStreamingOptions()` value, `-1`) means "use the library default", clamped to `[1, ChunkSize - 10]`. |
 | `MergeStrategy` | `string` | `"weighted_average"` | How overlapping chunk results are combined. |
@@ -55,7 +58,7 @@ opts.Overlap = 200
 
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
 
-Confidence/prediction intervals, standard errors, cross-validation, and `ReturnSorted` are Batch-only and not available here; see [API](api.md) for those.
+Confidence/prediction intervals and standard errors are computed per chunk and merged across overlap boundaries via `MergeStrategy`, same as `Y`. Cross-validation and `ReturnSorted` are Batch-only and not available here; see [API](api.md) for those.
 
 ## `fastloess.NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error)`
 
@@ -251,7 +254,26 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 ### ReturnGradient
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`Dimensions` values per point, flattened) in `Result.Gradient` at effectively no extra computation cost. Only supported when `SurfaceMode` is `"direct"` — stays `nil` in the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `Y` is, via `MergeStrategy`.
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`Dimensions` values per point, flattened) in `Result.Gradient` at effectively no extra computation cost. Only supported when `SurfaceMode` is `"direct"` — returns an error instead of silently leaving `Gradient` as `nil` if requested under the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `Y` is, via `MergeStrategy`.
+
+### ConfidenceIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `Y` is, via `MergeStrategy`. `nil` (default) disables confidence intervals.
+
+### PredictionIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `ConfidenceIntervals`. `nil` (default) disables prediction intervals.
+
+### ReturnSe
+
+Include standard errors in the result (`Result.StandardErrors`), computed per chunk and merged across overlap boundaries via `MergeStrategy`.
+
+- `false` (default) — leaves `StandardErrors` as `nil`
+- `true` — populates `StandardErrors`
 
 ### ChunkSize
 
@@ -279,7 +301,7 @@ Number of points retained from the previous chunk as context, so the neighbourho
 
 ## Result
 
-`ProcessChunk` and `Finalize` return the same [`Result`](api.md#result-fields) type as `Loess.Fit`. Fields tied to Batch-only options (`StandardErrors`, `ConfidenceLower`/`ConfidenceUpper`, `PredictionLower`/`PredictionUpper`, `CVScores`) are always left at their zero value here.
+`ProcessChunk` and `Finalize` return the same [`Result`](api.md#result-fields) type as `Loess.Fit`. Fields tied to Batch-only options (`CVScores`) are always left at their zero value here.
 
 ## Example
 

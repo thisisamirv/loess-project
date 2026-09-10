@@ -35,6 +35,15 @@
 #'   \code{"average"} (alias: \code{"mean"}),
 #'   \code{"take_first"} (alias: \code{"first"}), or
 #'   \code{"take_last"} (alias: \code{"last"}).
+#' @param confidence_intervals Confidence level for confidence intervals (e.g.
+#'   \code{0.95}), computed per chunk and merged across overlap boundaries via
+#'   \code{merge_strategy}. \code{NULL} (default) disables confidence intervals.
+#' @param prediction_intervals Confidence level for prediction intervals; same
+#'   per-chunk computation and overlap-merging as \code{confidence_intervals}.
+#'   \code{NULL} (default) disables prediction intervals.
+#' @param return_se Include standard errors in the result, computed per chunk
+#'   and merged across overlap boundaries via \code{merge_strategy}. Default:
+#'   \code{FALSE}.
 #'
 #' @return A StreamingLoess object.
 #' @examples
@@ -61,6 +70,9 @@ StreamingLoess <- function(
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
     return_gradient = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    return_se = FALSE,
     merge_strategy = "weighted_average",
     parallel = TRUE,
     degree = "linear",

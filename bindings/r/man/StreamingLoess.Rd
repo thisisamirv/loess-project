@@ -5,32 +5,35 @@
 \title{LOESS Streaming Smoothing}
 \usage{
 StreamingLoess(
-    fraction = 0.67,
-    chunk_size = 5000L,
-    ...,
-    overlap = NULL,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_gradient = FALSE,
-    merge_strategy = "weighted_average",
-    parallel = TRUE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL,
-    missing = "error"
+  fraction = 0.67,
+  chunk_size = 5000L,
+  ...,
+  overlap = NULL,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  return_diagnostics = FALSE,
+  return_residuals = FALSE,
+  return_robustness_weights = FALSE,
+  return_gradient = FALSE,
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  return_se = FALSE,
+  merge_strategy = "weighted_average",
+  parallel = TRUE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL,
+  missing = "error"
 )
 }
 \arguments{
@@ -87,8 +90,22 @@ result. Default: \code{FALSE}.}
 robustness weights. Default: \code{FALSE}.}
 
 \item{return_gradient}{Logical; if \code{TRUE}, return the per-point local
-fit gradient in the result. Only takes effect when
-\code{surface_mode = "direct"}. Default: \code{FALSE}.}
+fit gradient in the result. Requires \code{surface_mode = "direct"};
+raises an error instead of silently leaving \code{gradient} absent if
+requested under the default \code{"interpolation"} mode. Default:
+\code{FALSE}.}
+
+\item{confidence_intervals}{Confidence level for confidence intervals (e.g.
+\code{0.95}), computed per chunk and merged across overlap boundaries via
+\code{merge_strategy}. \code{NULL} (default) disables confidence intervals.}
+
+\item{prediction_intervals}{Confidence level for prediction intervals; same
+per-chunk computation and overlap-merging as \code{confidence_intervals}.
+\code{NULL} (default) disables prediction intervals.}
+
+\item{return_se}{Include standard errors in the result, computed per chunk
+and merged across overlap boundaries via \code{merge_strategy}. Default:
+\code{FALSE}.}
 
 \item{merge_strategy}{Strategy for reconciling overlapping chunk regions:
 \code{"weighted_average"} (default; alias: \code{"weighted"}),
@@ -151,11 +168,11 @@ in memory, see \code{\link{Loess}}; for point-by-point real-time data,
 see \code{\link{OnlineLoess}}.
 
 Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{ll}{
-    Strategy \tab Behavior \cr
-    \code{"average"} \tab Arithmetic mean of both estimates \cr
-    \code{"weighted_average"} \tab Distance-weighted blend (default) \cr
-    \code{"take_first"} \tab Keep left-chunk estimate \cr
-    \code{"take_last"} \tab Keep right-chunk estimate \cr
+   Strategy \tab Behavior \cr
+   \code{"average"} \tab Arithmetic mean of both estimates \cr
+   \code{"weighted_average"} \tab Distance-weighted blend (default) \cr
+   \code{"take_first"} \tab Keep left-chunk estimate \cr
+   \code{"take_last"} \tab Keep right-chunk estimate \cr
 }
 }
 \examples{

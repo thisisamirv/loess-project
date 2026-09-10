@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -46,7 +47,6 @@ constexpr int k_cv_k = 3;
 constexpr int k_overlap_size = 3;
 constexpr double k_fraction_six_tenths = 0.6;
 constexpr double k_epsilon_1e6 = 1e-6;
-constexpr size_t k_seven_count = 7;
 
 // ── Test fixture data ──────────────────────────────────────────────────────
 // Constexpr arrays: literals in constexpr initializers are not magic numbers.
@@ -392,6 +392,62 @@ void testStreamingAccuracy() {
   }
 }
 
+void testStreamingReturnSe() {
+  std::cout << "Running testStreamingReturnSe...\n";
+  std::vector<double> x_vals(k_two_hundred_count);
+  std::vector<double> y_vals(k_two_hundred_count);
+  const double x_step =
+      k_domain_end_hundred / static_cast<double>(k_two_hundred_count - 1);
+  for (size_t idx = 0; idx < k_two_hundred_count; ++idx) {
+    x_vals[idx] = static_cast<double>(idx) * x_step;
+    y_vals[idx] = std::sin(x_vals[idx] / k_domain_end_ten);
+  }
+
+  StreamingOptions opts;
+  opts.fraction = k_fraction_third;
+  opts.chunk_size = k_chunk_half;
+  opts.return_se = true;
+  StreamingLoess stream(opts);
+  auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
+
+  assertTrue(!chunk_res.standard_errors().empty(),
+             "standard errors should be populated");
+  assertTrue(
+      chunk_res.confidence_lower().empty(),
+      "confidence bounds should stay empty without confidence_intervals");
+}
+
+void testStreamingConfidenceAndPredictionIntervals() {
+  std::cout << "Running testStreamingConfidenceAndPredictionIntervals...\n";
+  std::vector<double> x_vals(k_two_hundred_count);
+  std::vector<double> y_vals(k_two_hundred_count);
+  const double x_step =
+      k_domain_end_hundred / static_cast<double>(k_two_hundred_count - 1);
+  for (size_t idx = 0; idx < k_two_hundred_count; ++idx) {
+    x_vals[idx] = static_cast<double>(idx) * x_step;
+    y_vals[idx] = std::sin(x_vals[idx] / k_domain_end_ten);
+  }
+
+  StreamingOptions opts;
+  opts.fraction = k_fraction_third;
+  opts.chunk_size = k_chunk_half;
+  opts.confidence_intervals = k_confidence_level;
+  opts.prediction_intervals = k_confidence_level;
+  StreamingLoess stream(opts);
+  auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
+
+  auto conf_lower = chunk_res.confidence_lower();
+  auto conf_upper = chunk_res.confidence_upper();
+  auto pred_lower = chunk_res.prediction_lower();
+  auto pred_upper = chunk_res.prediction_upper();
+  assertTrue(!conf_lower.empty() && !pred_lower.empty());
+  for (size_t idx = 0; idx < conf_lower.size(); ++idx) {
+    assertTrue(conf_lower[idx] <= conf_upper[idx]);
+    assertTrue((pred_upper[idx] - pred_lower[idx]) >=
+               (conf_upper[idx] - conf_lower[idx]) - k_default_epsilon);
+  }
+}
+
 // ── Online LOESS tests ─────────────────────────────────────────────────────
 void testOnlineBasic() {
   std::cout << "Running testOnlineBasic...\n";
@@ -416,6 +472,50 @@ void testOnlineBasic() {
     }
   }
   assertTrue(points_out > 0);
+}
+
+void testOnlineReturnSeRequiresFullUpdateMode() {
+  std::cout << "Running testOnlineReturnSeRequiresFullUpdateMode...\n";
+  OnlineOptions opts;
+  opts.fraction = k_fraction_half;
+  opts.window_capacity = k_window_capacity;
+  opts.return_se = true;
+  OnlineLoess online(opts);
+  auto out = online.add_point(1.0, k_linear_slope);
+  assertTrue(!out.has_value(),
+             "return_se without update_mode=\"full\" should error");
+  assertTrue(!out.error().empty());
+}
+
+void testOnlineConfidenceAndPredictionIntervalsFullMode() {
+  std::cout
+      << "Running testOnlineConfidenceAndPredictionIntervalsFullMode...\n";
+  OnlineOptions opts;
+  opts.fraction = 1.0;
+  opts.window_capacity = k_window_capacity;
+  opts.min_points = k_min_points_online;
+  opts.update_mode = "full";
+  opts.confidence_intervals = k_confidence_level;
+  opts.prediction_intervals = k_confidence_level;
+  OnlineLoess online(opts);
+
+  std::optional<OnlineOutput> last;
+  for (size_t idx = 0; idx < k_window_capacity; ++idx) {
+    auto out = online
+                   .add_point(static_cast<double>(idx),
+                              (k_linear_slope * static_cast<double>(idx)) +
+                                  k_linear_intercept)
+                   .value();
+    if (out.has_value()) {
+      last = std::move(out);
+    }
+  }
+
+  assertTrue(last.has_value());
+  assertTrue(!std::isnan(last->confidence_lower()));
+  assertTrue(!std::isnan(last->prediction_lower()));
+  assertTrue(last->confidence_lower() <= last->confidence_upper());
+  assertTrue(last->prediction_lower() <= last->prediction_upper());
 }
 
 // ── Error handling tests ───────────────────────────────────────────────────
@@ -823,8 +923,12 @@ int main() {
     testStreamingReturnsAllPoints();
     testStreamingBasic();
     testStreamingAccuracy();
+    testStreamingReturnSe();
+    testStreamingConfidenceAndPredictionIntervals();
 
     testOnlineBasic();
+    testOnlineReturnSeRequiresFullUpdateMode();
+    testOnlineConfidenceAndPredictionIntervalsFullMode();
 
     testMismatchedLengths();
     testLoessMissingPolicy();

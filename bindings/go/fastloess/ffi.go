@@ -355,6 +355,14 @@ type PointResult struct {
 	Residual         float64 // NaN if not computed
 	RobustnessWeight float64 // NaN if not computed
 	IterationsUsed   int     // -1 if not applicable
+	// ConfidenceLower/ConfidenceUpper are NaN unless ConfidenceIntervals was
+	// set and UpdateMode = "full".
+	ConfidenceLower float64
+	ConfidenceUpper float64
+	// PredictionLower/PredictionUpper are NaN unless PredictionIntervals was
+	// set and UpdateMode = "full".
+	PredictionLower float64
+	PredictionUpper float64
 	// Gradient is nil unless ReturnGradient was requested (Dimensions values
 	// for the latest point; only populated when SurfaceMode is "direct").
 	Gradient []float64

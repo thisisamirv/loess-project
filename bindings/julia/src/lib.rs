@@ -68,6 +68,14 @@ pub struct JlOnlineOutput {
     pub residual: c_double,          // f64::NAN when not computed
     pub robustness_weight: c_double, // f64::NAN when not computed
     pub iterations_used: c_int,      // -1 when not computed
+    /// Confidence interval lower bound (`update_mode="full"` only, if requested)
+    pub confidence_lower: c_double,
+    /// Confidence interval upper bound (`update_mode="full"` only, if requested)
+    pub confidence_upper: c_double,
+    /// Prediction interval lower bound (`update_mode="full"` only, if requested)
+    pub prediction_lower: c_double,
+    /// Prediction interval upper bound (`update_mode="full"` only, if requested)
+    pub prediction_upper: c_double,
     /// Latest point's gradient, `dimensions` values (NULL if not requested)
     pub gradient: *mut c_double,
     /// Number of predictor dimensions (needed to know `gradient`'s true length)
@@ -84,6 +92,10 @@ impl Default for JlOnlineOutput {
             residual: f64::NAN,
             robustness_weight: f64::NAN,
             iterations_used: -1,
+            confidence_lower: f64::NAN,
+            confidence_upper: f64::NAN,
+            prediction_lower: f64::NAN,
+            prediction_upper: f64::NAN,
             gradient: ptr::null_mut(),
             dimensions: 1,
             error: ptr::null_mut(),
@@ -801,6 +813,9 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
     weighted_metric_weights_len: c_ulong,
     missing: *const c_char,
     return_gradient: c_int,
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
+    return_se: c_int,
 ) -> *mut JlStreamingLoess {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -884,15 +899,17 @@ pub unsafe extern "C" fn jl_streaming_loess_new(
                 return_residuals: return_residuals != 0,
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: return_diagnostics != 0,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
                 parallel: Some(parallel != 0),
                 degree: Some(deg_str),
                 dimensions: Some(configured_dimensions),
                 distance_metric: Some(dm_str),
                 weighted_metric_weights: weighted_metric,
                 surface_mode: Some(surf_str),
-                return_se: false,
+                return_se: return_se != 0,
                 cell: (!cell.is_nan()).then_some(cell),
                 interpolation_vertices: (interpolation_vertices > 0)
                     .then_some(interpolation_vertices as usize),
@@ -1048,6 +1065,9 @@ pub unsafe extern "C" fn jl_online_loess_new(
     weighted_metric_weights_len: c_ulong,
     missing: *const c_char,
     return_gradient: c_int,
+    confidence_intervals: c_double,
+    prediction_intervals: c_double,
+    return_se: c_int,
 ) -> *mut JlOnlineLoess {
     clear_last_error_message();
     let result = catch_unwind(|| {
@@ -1133,15 +1153,17 @@ pub unsafe extern "C" fn jl_online_loess_new(
                 return_residuals: false,
                 return_robustness_weights: return_robustness_weights != 0,
                 return_diagnostics: false,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals: (!confidence_intervals.is_nan())
+                    .then_some(confidence_intervals),
+                prediction_intervals: (!prediction_intervals.is_nan())
+                    .then_some(prediction_intervals),
                 parallel: None,
                 degree: Some(deg_str),
                 dimensions: Some(configured_dimensions),
                 distance_metric: Some(dm_str),
                 weighted_metric_weights: weighted_metric,
                 surface_mode: Some(surf_str),
-                return_se: false,
+                return_se: return_se != 0,
                 cell: (!cell.is_nan()).then_some(cell),
                 interpolation_vertices: (interpolation_vertices > 0)
                     .then_some(interpolation_vertices as usize),
@@ -1215,8 +1237,16 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
             },
             Ok(None) => JlOnlineOutput::default(),
             Ok(Some(o)) => {
-                let (standard_error, residual, robustness_weight, iterations_used) =
-                    shared_parse::extract_online_output(&o);
+                let (
+                    standard_error,
+                    residual,
+                    robustness_weight,
+                    iterations_used,
+                    confidence_lower,
+                    confidence_upper,
+                    prediction_lower,
+                    prediction_upper,
+                ) = shared_parse::extract_online_output(&o);
                 JlOnlineOutput {
                     has_value: 1,
                     y: o.y,
@@ -1224,6 +1254,10 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
                     residual,
                     robustness_weight,
                     iterations_used,
+                    confidence_lower,
+                    confidence_upper,
+                    prediction_lower,
+                    prediction_upper,
                     gradient: shared_parse::opt_vec_to_raw_ptr(o.gradient),
                     dimensions: processor.dimensions as c_int,
                     error: ptr::null_mut(),

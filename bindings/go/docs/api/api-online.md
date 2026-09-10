@@ -17,7 +17,7 @@ opts.WindowCapacity = 200
 opts.MinPoints = 10
 ```
 
-`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CVFractions`/`CVMethod`/`CVK`/`CVSeed`, and `Parallel`, which are batch-only). `AddPoint` only accepts a single x coordinate: online mode does not support multivariate predictors even if `Dimensions` was set on construction. Fields:
+`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CVFractions`/`CVMethod`/`CVK`/`CVSeed`, and `Parallel`, which are batch-only). `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSe` require `UpdateMode = "full"`. `AddPoint` only accepts a single x coordinate: online mode does not support multivariate predictors even if `Dimensions` was set on construction. Fields:
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -40,11 +40,14 @@ opts.MinPoints = 10
 | `InterpolationVertices` | `*int` | `nil` (auto) | Number of interpolation vertices |
 | `BoundaryDegreeFallback` | `*bool` | `nil` (auto) | Fall back to lower polynomial degree at boundaries when higher degrees fail |
 | `ReturnGradient` | `bool` | `false` | Include the latest point's local fit gradient in the result (`SurfaceMode = "direct"` only) |
+| `ConfidenceIntervals` | `*float64` | `nil` | Confidence level for confidence intervals; requires `UpdateMode = "full"` |
+| `PredictionIntervals` | `*float64` | `nil` | Confidence level for prediction intervals; requires `UpdateMode = "full"` |
+| `ReturnSe` | `bool` | `false` | Include standard error in result; requires `UpdateMode = "full"` |
 | `WindowCapacity` | `int` | `1000` | Maximum number of recent points retained |
 | `MinPoints` | `int` | `2` | Minimum points required before output starts |
 | `UpdateMode` | `string` | `"incremental"` | How the window is updated as new points arrive |
 
-Confidence/prediction intervals, standard errors, cross-validation, `ReturnSorted`, `ReturnDiagnostics`, and `ReturnResiduals` are Batch-only (or Batch/Streaming-only) and not available here; see [API](api.md) for those.
+Cross-validation, `ReturnSorted`, `ReturnDiagnostics`, and `ReturnResiduals` are Batch-only (or Batch/Streaming-only) and not available here; see [API](api.md) for those.
 
 ## `fastloess.NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error)`
 
@@ -220,7 +223,26 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 ### ReturnGradient
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`Dimensions` values) in `PointResult.Gradient` at effectively no extra computation cost. Only supported when `SurfaceMode` is `"direct"` — stays `nil` in the default `"interpolation"` mode. `false` by default.
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`Dimensions` values) in `PointResult.Gradient` at effectively no extra computation cost. Only supported when `SurfaceMode` is `"direct"` — returns an error instead of silently leaving `Gradient` as `nil` if requested under the default `"interpolation"` mode. `false` by default.
+
+### ConfidenceIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `UpdateMode = "full"` — returns an error at construction if set (or `ReturnSe`/`PredictionIntervals` is set) while `UpdateMode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `nil` (default) disables confidence intervals.
+
+### PredictionIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `UpdateMode = "full"` requirement as `ConfidenceIntervals`. `nil` (default) disables prediction intervals.
+
+### ReturnSe
+
+Include the standard error for the latest point in the result (`PointResult.StandardError`). Same `UpdateMode = "full"` requirement as `ConfidenceIntervals`.
+
+- `false` (default) — leaves `StandardError` as `NaN`
+- `true` — populates `StandardError`
 
 ### WindowCapacity
 
@@ -246,10 +268,12 @@ See [API](api.md) for the descriptions of all inherited fields not covered above
 | Field | Type | Notes |
 | --- | --- | --- |
 | `Y` | `float64` | Smoothed value. |
-| `StandardError` | `float64` | Always `NaN` — standard errors require confidence intervals, which are Batch-only. |
+| `StandardError` | `float64` | Standard error, if `ReturnSe`/`ConfidenceIntervals`/`PredictionIntervals` was set and `UpdateMode = "full"` (`NaN` otherwise). |
 | `Residual` | `float64` | Residual y − smoothed; always present (there is no `ReturnResiduals` option for Online). |
 | `RobustnessWeight` | `float64` | Robustness weight, if `ReturnRobustnessWeights` was set (`NaN` otherwise). |
 | `IterationsUsed` | `int` | Robustness iterations performed (`-1` if not applicable). |
+| `ConfidenceLower` / `ConfidenceUpper` | `float64` | Confidence interval bounds, if `ConfidenceIntervals` was set and `UpdateMode = "full"` (`NaN` otherwise). |
+| `PredictionLower` / `PredictionUpper` | `float64` | Prediction interval bounds, if `PredictionIntervals` was set and `UpdateMode = "full"` (`NaN` otherwise). |
 | `Gradient` | `[]float64` | Latest point's local fit gradient (`Dimensions` values), if `ReturnGradient` was set (`SurfaceMode = "direct"` only). |
 
 There is no `Diagnostics` type or `ReturnDiagnostics` option for `OnlineLoess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

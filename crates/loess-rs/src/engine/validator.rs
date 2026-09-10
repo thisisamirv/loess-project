@@ -354,6 +354,21 @@ impl Validator {
         Ok(())
     }
 
+    // Validate that `OnlineLoess`'s interval type (return_se()/confidence_intervals()/
+    // prediction_intervals()) is only combined with `update_mode("full")`. The default
+    // `"incremental"` mode bypasses the full executor pipeline for speed, so standard
+    // errors are never computed there, and would otherwise silently leave
+    // `standard_error` as `None`.
+    pub fn validate_online_se_update_mode<T>(
+        interval_type: Option<T>,
+        update_mode: crate::adapters::online::UpdateMode,
+    ) -> Result<(), LoessError> {
+        if interval_type.is_some() && update_mode != crate::adapters::online::UpdateMode::Full {
+            return Err(LoessError::StandardErrorRequiresFullUpdateMode);
+        }
+        Ok(())
+    }
+
     // Validate User-defined case weights.
     //
     // Checks that:

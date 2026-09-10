@@ -36,7 +36,7 @@ const PREDICT_RESULT_CLASS: &JNIStr = jni_str!("fastloess/NativePredictResult");
 const RESULT_CTOR_SIG: MethodSignature<'static, 'static> =
     jni_sig!("([D[D[D[D[D[D[D[D[D[D[DDIDDDDDDDZDDDDD[DIZJ)V");
 // Keep in sync with NativeOnlineOutput's constructor parameter list.
-const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDDDDI[D)V");
+const ONLINE_OUTPUT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("(ZDDDDIDDDD[D)V");
 // Keep in sync with NativePredictResult's constructor parameter list.
 const PREDICT_RESULT_CTOR_SIG: MethodSignature<'static, 'static> = jni_sig!("([D[D[D[D[D[D[D)V");
 
@@ -530,6 +530,9 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
     return_residuals: jboolean,
     return_robustness_weights: jboolean,
     return_gradient: jboolean,
+    confidence_intervals: jdouble,
+    prediction_intervals: jdouble,
+    return_se: jboolean,
     zero_weight_fallback: JString<'local>,
     auto_converge: jdouble,
     parallel: jboolean,
@@ -583,15 +586,15 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
                 return_residuals,
                 return_robustness_weights,
                 return_diagnostics,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals: opt_f64(confidence_intervals),
+                prediction_intervals: opt_f64(prediction_intervals),
                 parallel: Some(parallel),
                 degree: degree_str.as_deref(),
                 dimensions: (dimensions > 0).then_some(dimensions as usize),
                 distance_metric: distance_metric_str.as_deref(),
                 weighted_metric_weights: weighted_metric_weights_vec.as_deref(),
                 surface_mode: surface_mode_str.as_deref(),
-                return_se: false,
+                return_se,
                 cell: opt_f64(cell),
                 interpolation_vertices: (interpolation_vertices > 0)
                     .then_some(interpolation_vertices as usize),
@@ -694,6 +697,9 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
     boundary_policy: JString<'local>,
     return_robustness_weights: jboolean,
     return_gradient: jboolean,
+    confidence_intervals: jdouble,
+    prediction_intervals: jdouble,
+    return_se: jboolean,
     zero_weight_fallback: JString<'local>,
     auto_converge: jdouble,
     window_capacity: jint,
@@ -749,15 +755,15 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
                 return_residuals: false,
                 return_robustness_weights,
                 return_diagnostics: false,
-                confidence_intervals: None,
-                prediction_intervals: None,
+                confidence_intervals: opt_f64(confidence_intervals),
+                prediction_intervals: opt_f64(prediction_intervals),
                 parallel: None,
                 degree: degree_str.as_deref(),
                 dimensions: (dimensions > 0).then_some(configured_dimensions),
                 distance_metric: distance_metric_str.as_deref(),
                 weighted_metric_weights: weighted_metric_weights_vec.as_deref(),
                 surface_mode: surface_mode_str.as_deref(),
-                return_se: false,
+                return_se,
                 cell: opt_f64(cell),
                 interpolation_vertices: (interpolation_vertices > 0)
                     .then_some(interpolation_vertices as usize),
@@ -802,12 +808,40 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
             residual,
             robustness_weight,
             iterations_used,
+            confidence_lower,
+            confidence_upper,
+            prediction_lower,
+            prediction_upper,
             gradient,
         ) = match point {
-            None => (false, f64::NAN, f64::NAN, f64::NAN, f64::NAN, -1, None),
+            None => (
+                false,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                -1,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                f64::NAN,
+                None,
+            ),
             Some(o) => {
-                let (se, res, rw, iters) = shared_parse::extract_online_output(&o);
-                (true, o.y, se, res, rw, iters, o.gradient.clone())
+                let (se, res, rw, iters, cl, cu, pl, pu) = shared_parse::extract_online_output(&o);
+                (
+                    true,
+                    o.y,
+                    se,
+                    res,
+                    rw,
+                    iters,
+                    cl,
+                    cu,
+                    pl,
+                    pu,
+                    o.gradient.clone(),
+                )
             }
         };
         let gradient_arr = vec_to_jdoublearray(env, &gradient)?;
@@ -823,6 +857,10 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
                 JValue::Double(residual),
                 JValue::Double(robustness_weight),
                 JValue::Int(iterations_used),
+                JValue::Double(confidence_lower),
+                JValue::Double(confidence_upper),
+                JValue::Double(prediction_lower),
+                JValue::Double(prediction_upper),
                 JValue::Object(&gradient_arr),
             ],
         )?;

@@ -1130,3 +1130,96 @@ fn test_online_gradient_full_mode() {
     }
     assert_relative_eq!(last.unwrap().gradient.unwrap()[0], 3.0, epsilon = 1e-9);
 }
+
+/// `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()` combined with the
+/// default `update_mode("incremental")` should fail at `.build()`.
+#[test]
+fn test_online_return_se_requires_full_update_mode() {
+    let result = Loess::new()
+        .fraction(0.5)
+        .return_se()
+        .window_capacity(10)
+        .min_points(3)
+        .adapter(Online)
+        .build();
+
+    assert!(matches!(
+        result,
+        Err(LoessError::StandardErrorRequiresFullUpdateMode)
+    ));
+}
+
+/// Same combination check for `.confidence_intervals()`.
+#[test]
+fn test_online_confidence_intervals_requires_full_update_mode() {
+    let result = Loess::new()
+        .fraction(0.5)
+        .confidence_intervals(0.95)
+        .window_capacity(10)
+        .min_points(3)
+        .adapter(Online)
+        .build();
+
+    assert!(matches!(
+        result,
+        Err(LoessError::StandardErrorRequiresFullUpdateMode)
+    ));
+}
+
+/// `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()` work when combined
+/// with `update_mode("full")`.
+#[test]
+fn test_online_return_se_and_intervals_full_mode() {
+    let mut processor = Loess::new()
+        .fraction(0.5)
+        .update_mode("full")
+        .return_se()
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .window_capacity(10)
+        .min_points(3)
+        .adapter(Online)
+        .build()
+        .expect("Builder should succeed with update_mode(\"full\")");
+
+    let mut last = None;
+    for i in 0..10 {
+        last = processor
+            .add_point(&[i as f64], 2.0 * i as f64)
+            .expect("add_point ok");
+    }
+
+    let output = last.expect("expected a result once min_points reached");
+    assert!(output.standard_error.is_some());
+    assert!(output.confidence_lower.is_some());
+    assert!(output.confidence_upper.is_some());
+    assert!(output.prediction_lower.is_some());
+    assert!(output.prediction_upper.is_some());
+    assert!(output.confidence_lower.unwrap() <= output.confidence_upper.unwrap());
+    assert!(output.prediction_lower.unwrap() <= output.prediction_upper.unwrap());
+}
+
+/// `.return_se()`/CI/PI without `update_mode("full")` leave the online output's
+/// intervals as `None` when not requested at all (sanity default check).
+#[test]
+fn test_online_no_intervals_by_default() {
+    let mut processor = Loess::new()
+        .fraction(0.5)
+        .window_capacity(10)
+        .min_points(3)
+        .adapter(Online)
+        .build()
+        .unwrap();
+
+    let mut last = None;
+    for i in 0..10 {
+        last = processor.add_point(&[i as f64], 2.0 * i as f64).unwrap();
+    }
+    let output = last.unwrap();
+    assert!(output.standard_error.is_none());
+    assert!(output.confidence_lower.is_none());
+    assert!(output.confidence_upper.is_none());
+    assert!(output.prediction_lower.is_none());
+    assert!(output.prediction_upper.is_none());
+}
+

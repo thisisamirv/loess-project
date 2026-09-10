@@ -117,7 +117,7 @@ export interface PredictOutput {
     readonly derivative: Float64Array | undefined;
 }
 
-/** Configuration options for streaming LOESS smoothing. A subset of `SmoothOptions`: confidence/prediction intervals, standard errors, and cross-validation have no equivalent here. */
+/** Configuration options for streaming LOESS smoothing. A subset of `SmoothOptions`: cross-validation has no equivalent here. */
 export interface StreamingSmoothOptions {
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
@@ -163,9 +163,15 @@ export interface StreamingSmoothOptions {
     boundary_degree_fallback?: boolean;
     /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */
     missing?: string;
+    /** Confidence interval level (e.g. 0.95), computed per chunk. Disabled when absent. */
+    confidence_intervals?: number;
+    /** Prediction interval level (e.g. 0.95), computed per chunk. Disabled when absent. */
+    prediction_intervals?: number;
+    /** Include standard errors in result. Default: false. */
+    return_se?: boolean;
 }
 
-/** Configuration options for online LOESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, confidence/prediction intervals, standard errors, and cross-validation have no equivalent here. */
+/** Configuration options for online LOESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, and cross-validation have no equivalent here. `confidence_intervals`/`prediction_intervals`/`return_se` require `update_mode: "full"`. */
 export interface OnlineSmoothOptions {
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
@@ -205,6 +211,12 @@ export interface OnlineSmoothOptions {
     boundary_degree_fallback?: boolean;
     /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `add_point` ("error", "drop"). Default: "error". */
     missing?: string;
+    /** Confidence interval level (e.g. 0.95). Only computed under `update_mode: "full"`. Disabled when absent. */
+    confidence_intervals?: number;
+    /** Prediction interval level (e.g. 0.95). Only computed under `update_mode: "full"`. Disabled when absent. */
+    prediction_intervals?: number;
+    /** Include the standard error for the latest point in result. Only computed under `update_mode: "full"`. Default: false. */
+    return_se?: boolean;
 }
 
 /** Configuration options for streaming LOESS. */
@@ -261,6 +273,10 @@ export class OnlineOutput {
     get residual(): number | undefined;
     get robustness_weight(): number | undefined;
     get iterations_used(): number | undefined;
+    get confidence_lower(): number | undefined;
+    get confidence_upper(): number | undefined;
+    get prediction_lower(): number | undefined;
+    get prediction_upper(): number | undefined;
     get gradient(): Float64Array | undefined;
 }
 "#;
@@ -368,6 +384,9 @@ pub struct StreamingSmoothOptions {
     pub interpolation_vertices: Option<usize>,
     pub boundary_degree_fallback: Option<bool>,
     pub missing: Option<String>,
+    pub confidence_intervals: Option<f64>,
+    pub prediction_intervals: Option<f64>,
+    pub return_se: Option<bool>,
 }
 
 #[derive(Deserialize)]
@@ -391,6 +410,9 @@ pub struct OnlineSmoothOptions {
     pub interpolation_vertices: Option<usize>,
     pub boundary_degree_fallback: Option<bool>,
     pub missing: Option<String>,
+    pub confidence_intervals: Option<f64>,
+    pub prediction_intervals: Option<f64>,
+    pub return_se: Option<bool>,
 }
 
 #[wasm_bindgen]
@@ -415,6 +437,10 @@ pub struct OnlineOutput {
     residual: Option<f64>,
     robustness_weight: Option<f64>,
     iterations_used: Option<usize>,
+    confidence_lower: Option<f64>,
+    confidence_upper: Option<f64>,
+    prediction_lower: Option<f64>,
+    prediction_upper: Option<f64>,
     gradient: Option<Vec<f64>>,
 }
 
@@ -443,6 +469,26 @@ impl OnlineOutput {
     #[wasm_bindgen(getter, js_name = "iterations_used")]
     pub fn iterations_used(&self) -> Option<u32> {
         self.iterations_used.map(|i| i as u32)
+    }
+
+    #[wasm_bindgen(getter, js_name = "confidence_lower")]
+    pub fn confidence_lower(&self) -> Option<f64> {
+        self.confidence_lower
+    }
+
+    #[wasm_bindgen(getter, js_name = "confidence_upper")]
+    pub fn confidence_upper(&self) -> Option<f64> {
+        self.confidence_upper
+    }
+
+    #[wasm_bindgen(getter, js_name = "prediction_lower")]
+    pub fn prediction_lower(&self) -> Option<f64> {
+        self.prediction_lower
+    }
+
+    #[wasm_bindgen(getter, js_name = "prediction_upper")]
+    pub fn prediction_upper(&self) -> Option<f64> {
+        self.prediction_upper
     }
 
     #[wasm_bindgen(getter)]
@@ -804,6 +850,8 @@ fn streaming_options_to_builder(
                 return_residuals: opts.return_residuals.unwrap_or(false),
                 return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
                 return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
                 degree: opts.degree.as_deref(),
                 dimensions: opts.dimensions,
@@ -814,6 +862,7 @@ fn streaming_options_to_builder(
                 interpolation_vertices: opts.interpolation_vertices,
                 boundary_degree_fallback: opts.boundary_degree_fallback,
                 missing: opts.missing.as_deref(),
+                return_se: opts.return_se.unwrap_or(false),
                 ..Default::default()
             },
         ))?
@@ -852,6 +901,9 @@ fn online_options_to_builder(
                 interpolation_vertices: opts.interpolation_vertices,
                 boundary_degree_fallback: opts.boundary_degree_fallback,
                 missing: opts.missing.as_deref(),
+                confidence_intervals: opts.confidence_intervals,
+                prediction_intervals: opts.prediction_intervals,
+                return_se: opts.return_se.unwrap_or(false),
                 ..Default::default()
             },
         ))?
@@ -992,6 +1044,10 @@ impl OnlineLoess {
                 residual: o.residual,
                 robustness_weight: o.robustness_weight,
                 iterations_used: o.iterations_used,
+                confidence_lower: o.confidence_lower,
+                confidence_upper: o.confidence_upper,
+                prediction_lower: o.prediction_lower,
+                prediction_upper: o.prediction_upper,
                 gradient: o.gradient,
             }),
             None => JsValue::null(),

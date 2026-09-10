@@ -171,18 +171,18 @@ test_that("Loess return_gradient works under surface_mode = direct", {
     expect_type(result$gradient, "double")
 })
 
-test_that("Loess return_gradient stays absent under default surface_mode", {
+test_that("Loess return_gradient errors under default surface_mode", {
     set.seed(42)
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, sd = 0.1)
 
-    result <- fit(
-        Loess(fraction = 0.5, return_gradient = TRUE),
-        as.double(x),
-        as.double(y)
+    expect_error(
+        fit(
+            Loess(fraction = 0.5, return_gradient = TRUE),
+            as.double(x),
+            as.double(y)
+        )
     )
-
-    expect_false("gradient" %in% names(result))
 })
 
 test_that("Loess return_sorted defaults to original input order", {

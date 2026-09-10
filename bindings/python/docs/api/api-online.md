@@ -72,8 +72,11 @@ print(result)
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `str` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 | `return_gradient` | `bool` | `False` | Include the latest point's local fit gradient in the result (`surface_mode="direct"` only) |
+| `confidence_intervals` | `float` | `None` | Confidence level for confidence intervals; requires `update_mode="full"` |
+| `prediction_intervals` | `float` | `None` | Confidence level for prediction intervals; requires `update_mode="full"` |
+| `return_se` | `bool` | `False` | Include standard error in the result; requires `update_mode="full"` |
 
-Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLoess](api.md) for those.
+Cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLoess](api.md) for those.
 
 ## Options
 
@@ -258,7 +261,26 @@ Minimum number of points required before smoothing starts. `add_point()` returns
 
 ### return_gradient
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `None` in the default `"interpolation"` mode. `False` by default.
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — raises an error instead of silently leaving `gradient` as `None` if requested under the default `"interpolation"` mode. `False` by default.
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `update_mode="full"` — raises a `ValueError` at construction time if set (or `return_se`/`prediction_intervals` is set) while `update_mode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `None` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `update_mode="full"` requirement as `confidence_intervals`. `None` (default) disables prediction intervals.
+
+### return_se
+
+Include the standard error for the latest point in the result (`OnlineOutput.standard_error`). Same `update_mode="full"` requirement as `confidence_intervals`.
+
+- `False` (default) — leaves `standard_error` as `None`
+- `True` — populates `standard_error`
 
 ## Result Structure
 
@@ -269,10 +291,12 @@ Returned by `add_point()` once the window has enough points (`None` until then).
 | Field | Type | Description |
 | --- | --- | --- |
 | `y` | `float` | Smoothed value for the latest point |
-| `standard_error` | `float \| None` | Always `None` — standard errors require `return_se`/confidence intervals, which are Batch-only |
+| `standard_error` | `float \| None` | Standard error, if `return_se`/`confidence_intervals`/`prediction_intervals` was set and `update_mode="full"` |
 | `residual` | `float \| None` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
 | `robustness_weight` | `float \| None` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used` | `int \| None` | Robustness iterations performed |
+| `confidence_lower` / `confidence_upper` | `float \| None` | Confidence interval bounds, if `confidence_intervals` was set and `update_mode="full"` |
+| `prediction_lower` / `prediction_upper` | `float \| None` | Prediction interval bounds, if `prediction_intervals` was set and `update_mode="full"` |
 | `gradient` | `ndarray \| None` | Local fit gradient (`dimensions` values) for the latest point, if `return_gradient` was set |
 
 There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

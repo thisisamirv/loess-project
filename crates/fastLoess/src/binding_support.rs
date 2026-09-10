@@ -429,14 +429,19 @@ pub fn extract_loess_result_stats(result: &LoessResult<f64>) -> (f64, f64, f64, 
 }
 
 // Extracts the optional scalar fields from an online add_point output.
-// Returns (standard_error, residual, robustness_weight, iterations_used).
+// Returns (standard_error, residual, robustness_weight, iterations_used,
+// confidence_lower, confidence_upper, prediction_lower, prediction_upper).
 // Optional f64 fields default to f64::NAN; iterations_used defaults to -1.
-pub fn extract_online_output(o: &OnlineOutput<f64>) -> (f64, f64, f64, i32) {
+pub fn extract_online_output(o: &OnlineOutput<f64>) -> (f64, f64, f64, i32, f64, f64, f64, f64) {
     (
         o.standard_error.unwrap_or(f64::NAN),
         o.residual.unwrap_or(f64::NAN),
         o.robustness_weight.unwrap_or(f64::NAN),
         o.iterations_used.map(|i| i as i32).unwrap_or(-1),
+        o.confidence_lower.unwrap_or(f64::NAN),
+        o.confidence_upper.unwrap_or(f64::NAN),
+        o.prediction_lower.unwrap_or(f64::NAN),
+        o.prediction_upper.unwrap_or(f64::NAN),
     )
 }
 
@@ -1542,6 +1547,29 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self.weighted_metric_weights = Some(weights);
         self
     }
+
+    // Enable confidence intervals at the specified level. Requires `update_mode("full")`,
+    // enforced at `.build()`.
+    pub fn confidence_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(IntervalMethod::confidence(level));
+        self
+    }
+
+    // Enable prediction intervals at the specified level. Same `update_mode("full")`
+    // caveat as `confidence_intervals`.
+    pub fn prediction_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(IntervalMethod::prediction(level));
+        self
+    }
+
+    // Enable returning standard errors in the result. Requires `update_mode("full")`, same
+    // as `confidence_intervals`.
+    pub fn return_se(mut self, enabled: bool) -> Self {
+        if enabled && self.base.interval_type.is_none() {
+            self.base.interval_type = Some(IntervalMethod::se());
+        }
+        self
+    }
 }
 
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
@@ -1728,6 +1756,28 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     // Set per-dimension weights for the `"weighted"` distance metric.
     pub fn weighted_metric_weights(mut self, weights: Vec<T>) -> Self {
         self.weighted_metric_weights = Some(weights);
+        self
+    }
+
+    // Enable confidence intervals at the specified level, computed per chunk and merged
+    // across overlap boundaries via `merge_strategy` (same as `y`/`gradient`).
+    pub fn confidence_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(IntervalMethod::confidence(level));
+        self
+    }
+
+    // Enable prediction intervals at the specified level. Same per-chunk computation and
+    // overlap-merging as `confidence_intervals`.
+    pub fn prediction_intervals(mut self, level: T) -> Self {
+        self.base.interval_type = Some(IntervalMethod::prediction(level));
+        self
+    }
+
+    // Enable returning standard errors in the result.
+    pub fn return_se(mut self, enabled: bool) -> Self {
+        if enabled && self.base.interval_type.is_none() {
+            self.base.interval_type = Some(IntervalMethod::se());
+        }
         self
     }
 }
