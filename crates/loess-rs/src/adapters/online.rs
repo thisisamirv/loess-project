@@ -24,8 +24,8 @@ use crate::algorithms::regression::{PolynomialDegree, SolverLinalg, ZeroWeightFa
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::defaults::*;
 use crate::engine::executor::{
-    CVPassFn, FitPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig, LoessExecutor, SmoothPassFn,
-    SurfaceMode, VertexPassFn,
+    CVPassFn, FitPassFn, GradientPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig,
+    LoessExecutor, SmoothPassFn, SurfaceMode, VertexPassFn,
 };
 use crate::engine::validator::{MissingPolicy, Validator};
 use crate::math::boundary::BoundaryPolicy;
@@ -136,6 +136,10 @@ pub struct OnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
+    // Custom gradient estimation pass function.
+    #[doc(hidden)]
+    pub custom_gradient_pass: Option<GradientPassFn<T>>,
+
     // Custom fit pass function.
     #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
@@ -190,6 +194,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
             custom_smooth_pass: None,
             custom_cv_pass: None,
             custom_interval_pass: None,
+            custom_gradient_pass: None,
             custom_fit_pass: None,
             custom_vertex_pass: None,
             custom_kdtree_builder: None,
@@ -395,7 +400,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     custom_smooth_pass: self.config.custom_smooth_pass,
                     custom_cv_pass: self.config.custom_cv_pass,
                     custom_interval_pass: self.config.custom_interval_pass,
-                    custom_gradient_pass: None,
+                    custom_gradient_pass: self.config.custom_gradient_pass,
                     custom_fit_pass: self.config.custom_fit_pass,
                     custom_vertex_pass: self.config.custom_vertex_pass,
                     custom_kdtree_builder: self.config.custom_kdtree_builder,
@@ -463,7 +468,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     custom_smooth_pass: self.config.custom_smooth_pass,
                     custom_cv_pass: self.config.custom_cv_pass,
                     custom_interval_pass: self.config.custom_interval_pass,
-                    custom_gradient_pass: None,
+                    custom_gradient_pass: self.config.custom_gradient_pass,
                     custom_fit_pass: self.config.custom_fit_pass,
                     custom_vertex_pass: self.config.custom_vertex_pass,
                     custom_kdtree_builder: self.config.custom_kdtree_builder,
