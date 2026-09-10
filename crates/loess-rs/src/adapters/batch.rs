@@ -252,6 +252,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
         // Validate iterations
         Validator::validate_iterations(self.iterations)?;
 
+        // Validate that return_gradient is only combined with surface_mode("direct")
+        Validator::validate_gradient_surface_mode(self.return_gradient, self.surface_mode)?;
+
         // Validate interval type
         if let Some(ref method) = self.interval_type {
             Validator::validate_interval_level(method.level)?;

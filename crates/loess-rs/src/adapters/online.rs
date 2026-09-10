@@ -216,6 +216,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         // Validate iterations
         Validator::validate_iterations(self.iterations)?;
 
+        // Validate that return_gradient is only combined with surface_mode("direct")
+        Validator::validate_gradient_surface_mode(self.return_gradient, self.surface_mode)?;
+
         // Validate configuration early
         Validator::validate_window_capacity(self.window_capacity, 3)?;
         Validator::validate_min_points(self.min_points, self.window_capacity)?;

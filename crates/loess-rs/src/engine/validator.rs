@@ -21,6 +21,7 @@ use std::vec::Vec;
 use num_traits::Float;
 
 // Internal dependencies
+use crate::engine::executor::SurfaceMode;
 use crate::primitives::errors::LoessError;
 
 // Policy for handling non-finite (NaN/Inf) values in input data.
@@ -335,6 +336,20 @@ impl Validator {
     pub fn validate_no_duplicates(duplicate_param: Option<&'static str>) -> Result<(), LoessError> {
         if let Some(param) = duplicate_param {
             return Err(LoessError::DuplicateParameter { parameter: param });
+        }
+        Ok(())
+    }
+
+    // Validate that `return_gradient` is only combined with `surface_mode == Direct`.
+    // The default `Interpolation` mode only stores value+gradient at a sparse grid of
+    // vertices, not enough to reconstruct an exact per-point gradient, so it would
+    // otherwise silently leave `gradient` as `None`.
+    pub fn validate_gradient_surface_mode(
+        return_gradient: bool,
+        surface_mode: SurfaceMode,
+    ) -> Result<(), LoessError> {
+        if return_gradient && surface_mode != SurfaceMode::Direct {
+            return Err(LoessError::GradientRequiresDirectSurfaceMode);
         }
         Ok(())
     }

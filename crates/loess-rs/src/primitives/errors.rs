@@ -186,6 +186,14 @@ pub enum LoessError {
         // The configured maximum allowed distance, in the same raw-coordinate units.
         max_distance: f64,
     },
+
+    // `.return_gradient()` was requested but `surface_mode` isn't `"direct"` (the default
+    // `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not
+    // enough to reconstruct an exact per-point gradient). Previously this combination
+    // silently left `gradient` as `None`; surfaced as an error instead, since it's easy to
+    // set `.return_gradient()`, forget `.surface_mode("direct")`, and not notice the
+    // silently-empty result.
+    GradientRequiresDirectSurfaceMode,
 }
 
 impl Display for LoessError {
@@ -339,6 +347,11 @@ impl Display for LoessError {
                  nearest-neighbor window extends {distance}, exceeding \
                  max_neighbor_distance ({max_distance}); the point likely falls in a \
                  sparse region far from real training data"
+            ),
+            Self::GradientRequiresDirectSurfaceMode => write!(
+                f,
+                "return_gradient() requires surface_mode(\"direct\"); the default \
+                 \"interpolation\" mode cannot reconstruct an exact per-point gradient"
             ),
         }
     }

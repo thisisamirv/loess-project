@@ -1208,25 +1208,23 @@ fn test_batch_return_gradient_direct_mode_linear() {
     }
 }
 
-/// `return_gradient()` is only supported in `SurfaceMode::Direct` — the default
-/// `SurfaceMode::Interpolation` only stores value+gradient at sparse vertices,
-/// not enough to reconstruct an exact per-point gradient, so it stays `None`.
+/// `return_gradient()` requires `SurfaceMode::Direct` — the default `SurfaceMode::
+/// Interpolation` only stores value+gradient at sparse vertices, not enough to
+/// reconstruct an exact per-point gradient, so `.build()` rejects the combination
+/// instead of silently leaving `gradient` as `None`.
 #[test]
-fn test_batch_return_gradient_interpolation_mode_is_none() {
-    let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
-    let y: Vec<f64> = x.iter().map(|&v| 3.0 * v + 1.0).collect();
+fn test_batch_return_gradient_interpolation_mode_errors() {
+    use loess_rs::internals::primitives::errors::LoessError;
 
-    let result = Loess::new()
+    let err = Loess::<f64>::new()
         .return_gradient()
         .adapter(Batch)
         .build()
-        .unwrap()
-        .fit(&x, &y)
-        .unwrap();
+        .err();
 
     assert!(
-        result.gradient.is_none(),
-        "gradient should be None in the default SurfaceMode::Interpolation"
+        matches!(err, Some(LoessError::GradientRequiresDirectSurfaceMode)),
+        "expected GradientRequiresDirectSurfaceMode, got {err:?}"
     );
 }
 
