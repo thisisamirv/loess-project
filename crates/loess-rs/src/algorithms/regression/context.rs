@@ -51,6 +51,11 @@ pub struct RegressionContext<'a, T: FloatLinalg + SolverLinalg> {
     pub compute_leverage: bool,
     // Persistent buffer for reuse
     pub buffer: Option<&'a mut FittingBuffer<T>>,
+    // Optional output slot (length `dimensions`): when `Some`, `fit()` copies the local
+    // fit's gradient (first-derivative coefficients) into it for free, extracted from the
+    // same normal-equations solve already used to produce `y` - avoiding a separate
+    // `fit_with_coefficients()` re-solve just to obtain the gradient.
+    pub gradient_out: Option<&'a mut [T]>,
     // User-defined case weights (indexed by data position in the augmented array).
     // When Some, these are multiplied into the kernel weight: w = user_w * kernel_w * robustness_w.
     pub custom_weights: Option<&'a [T]>,
@@ -89,9 +94,17 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
             polynomial_degree,
             compute_leverage,
             buffer,
+            gradient_out: None,
             custom_weights: None,
             _phantom: PhantomData,
         }
+    }
+
+    // Set an output slot (length `dimensions`) to receive the local fit's gradient for
+    // free during the next `fit()` call.
+    pub fn with_gradient_out(mut self, out: &'a mut [T]) -> Self {
+        self.gradient_out = Some(out);
+        self
     }
 
     // Set User-defined case weights (indexed by data position).
@@ -100,8 +113,16 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
         self
     }
 
-    // Returns the (predicted value, leverage) at the query point.
+    // Returns the (predicted value, leverage) at the query point. If `gradient_out` is
+    // `Some`, it's populated with the local fit's gradient as a side effect, extracted for
+    // free from the same solve on a successful fit; degenerate/fallback paths (insufficient
+    // neighbors, zero weights, singular system) leave it zeroed (pre-zeroed up front so
+    // every early-return path below is covered without repeating this at each one).
     pub fn fit(&mut self) -> Option<(T, T)> {
+        if let Some(out) = self.gradient_out.as_deref_mut() {
+            out.fill(T::zero());
+        }
+
         let n_neighbors = self.neighborhood.len();
         if n_neighbors == 0 {
             return None;
@@ -529,7 +550,7 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
 
     // Internal WLS solver.
     fn fit_polynomial_wls_internal(
-        &self,
+        &mut self,
         weights: &[T],
         query_point: &[T],
         n_coeffs: usize,
@@ -728,11 +749,19 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
             } else {
                 T::zero()
             };
-            (coeffs[0], leverage)
+            (coeffs[0], leverage, coeffs)
         });
 
-        if let Some(res) = result {
-            return Some(res);
+        if let Some((val, leverage, coeffs)) = result {
+            // `coeffs[1..=dims]` are the local fit's first-derivative terms (the basis
+            // is expanded around `query_point`, so this holds for any polynomial degree,
+            // not just linear) - the same slice `fit_with_coefficients()` returns as its
+            // gradient, now extracted from `fit()`'s own solve instead of a second one.
+            let d = self.dimensions;
+            if let Some(out) = self.gradient_out.as_deref_mut() {
+                out.copy_from_slice(&coeffs[1..=d]);
+            }
+            return Some((val, leverage));
         }
 
         // Fallback or Singularity Handling

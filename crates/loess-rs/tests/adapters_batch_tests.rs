@@ -1230,6 +1230,46 @@ fn test_batch_return_gradient_interpolation_mode_is_none() {
     );
 }
 
+/// Requesting `return_gradient()` together with `confidence_intervals()` exercises the
+/// combined leverage+gradient collection pass (both are extracted from the same
+/// per-point WLS solve); each should still be correct as if collected independently.
+#[test]
+fn test_batch_return_gradient_with_confidence_intervals() {
+    let x: Vec<f64> = (0..40).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&v| 3.0 * v + 1.0).collect();
+
+    let with_both = Loess::new()
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .return_gradient()
+        .confidence_intervals(0.95)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let gradient_only = Loess::new()
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .return_gradient()
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let gradient = with_both.gradient.expect("gradient should be Some");
+    assert_eq!(gradient, gradient_only.gradient.unwrap());
+    for g in &gradient {
+        assert_relative_eq!(*g, 3.0, epsilon = 1e-6);
+    }
+    assert!(
+        with_both.confidence_lower.is_some() && with_both.confidence_upper.is_some(),
+        "confidence intervals should still be computed alongside gradient"
+    );
+}
+
 /// `return_gradient()` in 2D should recover each partial derivative of a
 /// perfectly linear plane.
 #[test]

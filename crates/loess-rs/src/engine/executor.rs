@@ -1117,6 +1117,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     Some(&mut workspace.executor_buffer.neighborhood_cache.entries), // Populate cache
                     None, // Not using cache yet
                     custom_weights_aug.as_deref(),
+                    None, // No gradient collection during initial fit
                 );
                 workspace.executor_buffer.neighborhood_cache.is_valid = true;
             }
@@ -1294,29 +1295,84 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                             None,      // Not populating cache
                             cache_ref, // Use cached neighborhoods
                             custom_weights_aug.as_deref(),
+                            None, // No gradient collection during robustness iterations
                         );
                     }
                 }
             }
         }
 
-        // Collect leverage values when intervals are requested
-        let leverage_values =
-            if confidence_method.is_some() && self.surface_mode == SurfaceMode::Direct {
-                let mut leverages = Vec::with_capacity(n);
-                // Final pass with leverage collection
-                // Use cached neighborhoods for leverage pass
-                let cache_ref = if workspace.executor_buffer.neighborhood_cache.is_valid {
-                    Some(
-                        workspace
-                            .executor_buffer
-                            .neighborhood_cache
-                            .entries
-                            .as_slice(),
-                    )
-                } else {
-                    None
-                };
+        // Collect leverage and/or gradient values when requested. Both come from the same
+        // per-point WLS solve `fit()` already performs (leverage via a second `solve_normal`
+        // against the fit's own normal equations, gradient via `RegressionContext`'s
+        // `gradient_out` side-channel) - requesting them together runs a SINGLE combined
+        // pass instead of two separate re-fits. Only supported in `SurfaceMode::Direct`:
+        // the interpolation surface only stores value(+gradient) at sparse vertices, not
+        // enough to reconstruct an exact per-point leverage/gradient without re-deriving
+        // the Hermite interpolant's own derivative, so both stay `None` under
+        // `SurfaceMode::Interpolation`.
+        let need_leverage = confidence_method.is_some() && self.surface_mode == SurfaceMode::Direct;
+        let need_gradient = self.return_gradient && self.surface_mode == SurfaceMode::Direct;
+
+        let (leverage_values, gradient_values) = if need_leverage || need_gradient {
+            let cache_ref = if workspace.executor_buffer.neighborhood_cache.is_valid {
+                Some(
+                    workspace
+                        .executor_buffer
+                        .neighborhood_cache
+                        .entries
+                        .as_slice(),
+                )
+            } else {
+                None
+            };
+
+            if need_gradient && let Some(callback) = self.custom_gradient_pass {
+                // Custom gradient callback runs its own pass; leverage (if also
+                // requested) still goes through the built-in combined pass below.
+                let leverages = need_leverage.then(|| {
+                    let mut leverages = Vec::with_capacity(n);
+                    self.smooth_pass(
+                        &ax,
+                        &ay,
+                        x, // x_query
+                        y, // y_query
+                        window_size,
+                        &workspace.executor_buffer.robustness_weights,
+                        true,
+                        &scales_local,
+                        &mut y_smooth,
+                        n,
+                        &kdtree,
+                        &mut workspace.search_buffer,
+                        &mut workspace.neighborhood,
+                        &mut workspace.fitting_buffer,
+                        Some(&mut leverages),
+                        None, // Not populating cache
+                        cache_ref,
+                        custom_weights_aug.as_deref(),
+                        None, // Not collecting gradient here (custom callback handles it)
+                    );
+                    leverages
+                });
+                let gradient = callback(
+                    x,
+                    &ax,
+                    &ay,
+                    dims,
+                    window_size,
+                    &workspace.executor_buffer.robustness_weights,
+                    self.weight_function,
+                    self.zero_weight_fallback,
+                    self.polynomial_degree,
+                    &self.distance_metric,
+                    &scales_local,
+                    custom_weights_aug.as_deref(),
+                );
+                (leverages, Some(gradient))
+            } else {
+                let mut leverages = need_leverage.then(|| Vec::with_capacity(n));
+                let mut gradients = need_gradient.then(Vec::new);
                 self.smooth_pass(
                     &ax,
                     &ay,
@@ -1332,67 +1388,16 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     &mut workspace.search_buffer,
                     &mut workspace.neighborhood,
                     &mut workspace.fitting_buffer,
-                    Some(&mut leverages),
-                    None,      // Not populating cache
-                    cache_ref, // Use cached neighborhoods
+                    leverages.as_mut(),
+                    None, // Not populating cache
+                    cache_ref,
                     custom_weights_aug.as_deref(),
+                    gradients.as_mut(),
                 );
-                Some(leverages)
-            } else {
-                None
-            };
-
-        // Collect gradient values when requested. Only supported in `SurfaceMode::Direct`:
-        // the interpolation surface only stores value+gradient at sparse vertices, not
-        // enough to reconstruct an exact per-point gradient without re-deriving the
-        // Hermite interpolant's own derivative, so `SurfaceMode::Interpolation` leaves
-        // this `None` (same limitation as `leverage`/exact `standard_errors` above).
-        let gradient_values = if self.return_gradient && self.surface_mode == SurfaceMode::Direct {
-            if let Some(callback) = self.custom_gradient_pass {
-                Some(callback(
-                    x,
-                    &ax,
-                    &ay,
-                    dims,
-                    window_size,
-                    &workspace.executor_buffer.robustness_weights,
-                    self.weight_function,
-                    self.zero_weight_fallback,
-                    self.polynomial_degree,
-                    &self.distance_metric,
-                    &scales_local,
-                    custom_weights_aug.as_deref(),
-                ))
-            } else {
-                let cache_ref = if workspace.executor_buffer.neighborhood_cache.is_valid {
-                    Some(
-                        workspace
-                            .executor_buffer
-                            .neighborhood_cache
-                            .entries
-                            .as_slice(),
-                    )
-                } else {
-                    None
-                };
-                Some(self.gradient_pass(
-                    &ax,
-                    &ay,
-                    x, // x_query
-                    window_size,
-                    &workspace.executor_buffer.robustness_weights,
-                    &scales_local,
-                    n,
-                    &kdtree,
-                    &mut workspace.search_buffer,
-                    &mut workspace.neighborhood,
-                    &mut workspace.fitting_buffer,
-                    cache_ref, // Use cached neighborhoods
-                    custom_weights_aug.as_deref(),
-                ))
+                (leverages, gradients)
             }
         } else {
-            None
+            (None, None)
         };
 
         // Standard errors (now using actual leverage if available)
@@ -1667,6 +1672,10 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         mut populate_cache: Option<&mut Vec<CachedNeighborhood<T>>>,
         cached_neighborhoods: Option<&[CachedNeighborhood<T>]>,
         custom_weights: Option<&[T]>,
+        // Flattened (`dimensions` values per point), like `LoessResult::gradient`. When
+        // `Some`, populated for free from the same solve `fit()` already performs via
+        // `RegressionContext::with_gradient_out`, instead of a separate `gradient_pass`.
+        mut gradient_out: Option<&mut Vec<T>>,
     ) where
         T: Float + Debug + Send + Sync + 'static,
     {
@@ -1676,6 +1685,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             scales,
         };
         let compute_leverage = leverage_out.is_some();
+        if let Some(ref mut grad_vec) = gradient_out {
+            grad_vec.resize(original_n * dims, T::zero());
+        }
 
         // Prepare cache for population if requested
         if let Some(ref mut cache) = populate_cache.as_ref() {
@@ -1737,6 +1749,10 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             if let Some(uw) = custom_weights {
                 context = context.with_custom_weights(uw);
             }
+            if let Some(ref mut grad_vec) = gradient_out {
+                context =
+                    context.with_gradient_out(&mut grad_vec[query_offset..query_offset + dims]);
+            }
 
             if let Some((val, lev)) = context.fit() {
                 y_smooth[i] = val;
@@ -1756,90 +1772,5 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 }
             }
         }
-    }
-
-    // Collect the per-point local fit gradient over all nD points (Direct mode only).
-    //
-    // Mirrors `smooth_pass`'s own neighborhood-caching behavior (reusing cached
-    // neighborhoods when available), but calls `fit_with_coefficients()` instead of
-    // `fit()` since the gradient (unlike `y`/leverage) isn't produced by `fit()`.
-    // Runs as a separate final pass (like the leverage-collection pass above) rather
-    // than threading gradient output through every robustness iteration, since only
-    // the final converged `robustness_weights` are needed.
-    #[allow(clippy::too_many_arguments)]
-    fn gradient_pass(
-        &self,
-        x_context: &[T],
-        y_context: &[T],
-        x_query: &[T],
-        window_size: usize,
-        robustness_weights: &[T],
-        scales: &[T],
-        original_n: usize,
-        kdtree: &KDTree<T>,
-        search_buffer: &mut NeighborhoodSearchBuffer<NodeDistance<T>>,
-        neighborhood: &mut Neighborhood<T>,
-        fitting_buffer: &mut FittingBuffer<T>,
-        cached_neighborhoods: Option<&[CachedNeighborhood<T>]>,
-        custom_weights: Option<&[T]>,
-    ) -> Vec<T>
-    where
-        T: Float + Debug + Send + Sync + 'static,
-    {
-        let dims = self.dimensions;
-        let dist_calc = LoessDistanceCalculator {
-            metric: self.distance_metric.clone(),
-            scales,
-        };
-        let mut gradient = vec![T::zero(); original_n * dims];
-
-        for i in 0..original_n {
-            let query_offset = i * dims;
-            let query_point = &x_query[query_offset..query_offset + dims];
-
-            if let Some(cache) = cached_neighborhoods {
-                let cached = &cache[i];
-                neighborhood.indices.clear();
-                neighborhood.indices.extend_from_slice(&cached.indices);
-                neighborhood.distances.clear();
-                neighborhood.distances.extend_from_slice(&cached.distances);
-                neighborhood.max_distance = cached.max_distance;
-            } else {
-                kdtree.find_k_nearest(
-                    query_point,
-                    window_size,
-                    &dist_calc,
-                    None,
-                    search_buffer,
-                    neighborhood,
-                );
-            }
-
-            let neighborhood_ref = &*neighborhood;
-            let mut context = RegressionContext::new(
-                x_context,
-                dims,
-                y_context,
-                i,
-                Some(query_point),
-                neighborhood_ref,
-                true, // use_robustness (final pass always uses the converged weights)
-                robustness_weights,
-                self.weight_function,
-                self.zero_weight_fallback,
-                self.polynomial_degree,
-                false, // compute_leverage
-                Some(fitting_buffer),
-            );
-            if let Some(uw) = custom_weights {
-                context = context.with_custom_weights(uw);
-            }
-
-            if let Some(coeffs) = context.fit_with_coefficients() {
-                gradient[query_offset..query_offset + dims].copy_from_slice(&coeffs[1..=dims]);
-            }
-        }
-
-        gradient
     }
 }
