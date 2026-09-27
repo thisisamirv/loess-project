@@ -28,6 +28,7 @@
 //! - **Analysis**
 //!   - [Intervals](doc::guide::intervals)
 //!   - [Cross-Validation](doc::guide::cross_validation)
+//!   - [Prediction](doc::guide::predict)
 //! - **Customization**
 //!   - [Kernels](doc::weighting::kernels)
 //!   - [Robustness](doc::weighting::robustness)
@@ -106,6 +107,8 @@
 //!     .cell(0.2)                                       // Interpolation cell size
 //!     .interpolation_vertices(1000)                    // Maximum vertices for interpolation
 //!     .zero_weight_fallback("use_local_mean")         // Fallback policy
+//!     .missing("error")                                // Reject non-finite (NaN/Inf) input
+//!     .custom_weights(vec![1.0; 8])                    // Per-observation case weights
 //!     .auto_converge(1e-6)                             // Auto-convergence threshold
 //!     .confidence_intervals(0.95)                      // 95% confidence intervals
 //!     .prediction_intervals(0.95)                      // 95% prediction intervals
@@ -113,6 +116,9 @@
 //!     .return_residuals()                              // Include residuals
 //!     .return_robustness_weights()                     // Include robustness weights
 //!     .return_se()                                     // Enable standard error computation
+//!     .return_gradient()                               // Include per-point local fit gradient
+//!     .return_sorted()                                 // Sort output ascending by x
+//!     .retain_model(true)                              // Retain state for out-of-sample predict()
 //!     .cv_method("kfold")                              // Case-insensitive: "kfold" or "loocv"
 //!     .cv_k(5)                                          // Number of folds for k-fold CV
 //!     .cv_fractions(vec![0.3, 0.7])                     // Candidate fractions to evaluate

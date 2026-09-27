@@ -6,121 +6,115 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 2.1.0
 
 ### Added
 
 **loess-rs:**
 
-- Added a `return_gradient` option to the Batch, Streaming, and Online adapters' builders: each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally via `RegressionContext::fit_with_coefficients()`, but only the fitted value was normally kept; `.return_gradient()` exposes that per-point gradient (`dimensions` values per point, flattened in Batch/Streaming) in `LoessResult::gradient` (Batch/Streaming) or `OnlineOutput::gradient` (Online, the latest point's gradient), enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. In Streaming, gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `None` there (same limitation as the existing exact `leverage`/`standard_errors`). `false` by default.
-- Added out-of-sample prediction to the Batch adapter: `.retain_model(true)` on the builder retains the fitted model's (boundary-padded) training data, final robustness weights, residual SD, and normalization scales, enabling `Predict::new()...build()?` and `.call(&result, new_x)` to evaluate the local polynomial fit at arbitrary out-of-sample query points not in the training set (like R's `predict.loess(model, newdata)`). Supports the full nD / polynomial-degree / distance-metric generality of the Batch adapter, reusing the same `RegressionContext` and `KDTree` neighbor search used during fitting; `new_x` is flattened (`dimensions` values per query point). `Predict` is a fluent, string-based builder (an alias for `PredictBuilder`, mirroring `Loess`/`LoessBuilder`'s convention, e.g. `.extrapolation("linear")`) controlling `return_se`/`confidence_intervals`/`prediction_intervals` (same z-score convention as `fit()`'s existing intervals, and same naming as `Loess`'s own `confidence_intervals`/`prediction_intervals` builder methods; prediction intervals widen using the same `sqrt(RSS / delta1)` residual scale as `LoessResult::residual_scale` when available — i.e. `.return_se()` plus an interval method were set under `.surface_mode("direct")` — otherwise a MAD-based fallback), `return_derivative` (the local fit's gradient — `dimensions` values per query point — via `RegressionContext::fit_with_coefficients()`), and `extrapolation` (`"clamp"` default: clamps each out-of-range dimension to its training boundary; `"linear"`: first-order Taylor expansion from that boundary point's own gradient; `"error"`: fails with the new `LoessError::PredictOutOfRange` if any dimension falls outside the training range). `.build()` is mandatory: it validates (failing fast on an invalid string) and produces the ready-to-call configuration, which has no public constructor of its own. `.call()` returns a `PredictOutput` struct and `LoessError::PredictionUnavailable` if called without `.retain_model(true)`. Off by default (no extra memory/clone cost unless requested). `Predict` is exported from `loess_rs::prelude`.
-- Added `return_se`/`confidence_intervals`/`prediction_intervals` support to the Streaming and Online adapters, mirroring the existing Batch adapter's interval estimation. In Streaming, standard errors and confidence/prediction bounds are computed per chunk via `IntervalMethod::compute_intervals()` and merged across overlap boundaries using the same `merge_strategy` as `y`/`gradient`. In Online, intervals are only computed under `update_mode("full")` (`OnlineOutput::confidence_lower/upper` and `prediction_lower/upper`, alongside the existing `std_err`); requesting `return_se()`/`confidence_intervals()`/`prediction_intervals()` while `update_mode` is left at its default `"incremental"` now fails fast at `.build()` with a new `LoessError::StandardErrorRequiresFullUpdateMode`, since incremental updates never compute standard errors.
+- Added `return_gradient` to the Batch, Streaming, and Online adapter builders, exposing each point's local-fit gradient (`LoessResult::gradient` / `OnlineOutput::gradient`) at no extra computation cost. Only populated when `surface_mode` is `"direct"`. `false` by default.
+- Added `retain_model` and `Predict::call()` for out-of-sample prediction, with optional SE, interval, derivative, and extrapolation settings.
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to the Streaming and Online adapters, mirroring Batch. Online requires `update_mode("full")`; using them under the default `"incremental"` mode now fails fast at `.build()` with a new `LoessError::StandardErrorRequiresFullUpdateMode`.
 
 **fastLoess:**
 
-- Added a Rayon-parallel `custom_gradient_pass` implementing the Batch and Streaming adapters' new `return_gradient` option, mirroring the existing parallel smooth pass's per-point structure and wired in alongside the other parallel passes when `.parallel(true)` is set.
-- Added a Rayon-parallel predict pass for `Predict::call()`, wired into the Batch adapter's `fit()` alongside the existing parallel smooth/CV/interval/vertex passes; computes the same SE/derivative/extrapolation options in parallel by reusing loess-rs's own `predict_one_full()` per query point.
-- Propagated loess-rs's new Streaming/Online `return_se`/`confidence_intervals`/`prediction_intervals` support: `StreamingLoess`/`OnlineLoess` gained `.return_se()`/`.confidence_intervals(level)`/`.prediction_intervals(level)` builder methods, and `ParallelStreamingLoessBuilder`/`ParallelOnlineLoessBuilder` gained matching setters for direct Rust-API consumers, mirroring `ParallelBatchLoessBuilder`'s existing pattern. Streaming's existing `custom_interval_pass` parallel hook now also drives the per-chunk standard-error computation feeding these bounds.
+- Added parallel `custom_gradient_pass` and a parallel predict pass, implementing loess-rs's new `return_gradient` option and `Predict::call()`.
+- Propagated loess-rs's new Streaming/Online `return_se`/`confidence_intervals`/`prediction_intervals` support to the builders and their parallel setter equivalents.
 
 **Python:**
 
-- Added a `retain_model` constructor option to `Loess` and a `LoessResult.predict(new_x, ...)` method (returning a new `PredictOutput` class), exposing loess-rs's out-of-sample prediction feature.
-- Added a `return_gradient` constructor option to `Loess`, `StreamingLoess`, and `OnlineLoess`, exposing the per-point local fit gradient via `LoessResult.gradient` (a flattened NumPy array, `dimensions` values per point) or `OnlineOutput.gradient` (a NumPy array, `dimensions` values for the latest point). Only takes effect when `surface_mode="direct"`.
-- Added `return_se`/`confidence_intervals`/`prediction_intervals` constructor options to `StreamingLoess` and `OnlineLoess`, mirroring the existing `Loess` options. `StreamingLoess`'s bounds are computed per chunk and merged across overlap boundaries via `merge_strategy`. `OnlineLoess`'s options require `update_mode="full"`; requesting them under the default `"incremental"` mode raises a `ValueError` at construction. New `OnlineOutput.confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` fields.
+- Added `retain_model` and `LoessResult.predict(new_x, ...)` (a new `PredictOutput` class) for out-of-sample prediction.
+- Added `return_gradient` to `Loess`, `StreamingLoess`, and `OnlineLoess`, exposing the per-point gradient via `LoessResult.gradient`/`OnlineOutput.gradient`. Only takes effect with `surface_mode="direct"`.
+- Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLoess` and `OnlineLoess`. `OnlineLoess` requires `update_mode="full"` or raises `ValueError`. New `OnlineOutput` bound fields.
 
 **R:**
 
-- Added a `retain_model` option to `Loess()` and a `predict.Loess(object, new_x, ...)` S3 method for out-of-sample prediction.
-- Added a `return_gradient` option to `Loess()`, `StreamingLoess()`, and `OnlineLoess()`, exposing the per-point local fit gradient as `gradient` in the result list/object (only takes effect under `surface_mode = "direct"`).
-- Added `confidence_intervals`/`prediction_intervals`/`return_se` options to `StreamingLoess()` and `OnlineLoess()`, mirroring the existing `Loess()` options. `StreamingLoess()`'s bounds are computed per chunk and merged across overlap boundaries via `merge_strategy`. `OnlineLoess()`'s options require `update_mode = "full"`; requesting them under the default `"incremental"` mode raises an error at construction. New `confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` fields on `add_point()`'s result.
+- Added `retain_model` and a `predict.Loess()` S3 method for out-of-sample prediction.
+- Added `return_gradient` to `Loess()`, `StreamingLoess()`, and `OnlineLoess()`.
+- Added `confidence_intervals`/`prediction_intervals`/`return_se` to `StreamingLoess()` and `OnlineLoess()`. `OnlineLoess()` requires `update_mode = "full"` or errors. New bound fields on `add_point()`'s result.
 
 **Julia:**
 
-- Added a `retain_model` keyword argument to `Loess` and a `predict(model, new_x; kwargs...)` function, via a new `LoessResult.predict_model`/`PredictModel`/`PredictResult` type, for out-of-sample prediction.
-- Added a `return_gradient` keyword argument to `Loess`, `StreamingLoess`, and `OnlineLoess`, exposing the per-point local fit gradient as `LoessResult.gradient` (flattened, `dimensions` values per point) or `OnlineOutput.gradient` (the latest point's gradient, `dimensions` values). Only takes effect when `surface_mode="direct"`.
-- Added `confidence_intervals`/`prediction_intervals`/`return_se` keyword arguments to `StreamingLoess` and `OnlineLoess`, mirroring the existing `Loess` arguments. `StreamingLoess`'s bounds are computed per chunk and merged across overlap boundaries via `merge_strategy`. `OnlineLoess`'s options require `update_mode="full"`; requesting them under the default `"incremental"` mode raises an error at construction. New `confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` fields on `OnlineOutput`.
+- Added `retain_model` and `predict(model, new_x; kwargs...)` for out-of-sample prediction.
+- Added `return_gradient` to `Loess`, `StreamingLoess`, and `OnlineLoess`.
+- Added `confidence_intervals`/`prediction_intervals`/`return_se` to `StreamingLoess` and `OnlineLoess`. `OnlineLoess` requires `update_mode="full"` or errors. New bound fields on `OnlineOutput`.
 
 **Go:**
 
-- Added a `RetainModel` option to `Options` and a `Result.PredictModel.Predict(newX, options)` method, via new `PredictModel`/`PredictOptions`/`PredictResult` types, for out-of-sample prediction.
-- Added a `ReturnGradient` option to `Options`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit gradient via `Result.Gradient` (flattened `[]float64`, `Dimensions` values per point) or `PointResult.Gradient` (`[]float64`, `Dimensions` values for the latest point). Only takes effect when `surface_mode="direct"`.
-- Added `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSe` options to `StreamingOptions` and `OnlineOptions`, mirroring the existing `Options` fields. `StreamingOptions`'s bounds are computed per chunk and merged across overlap boundaries via `MergeStrategy`. `OnlineOptions`'s options require `UpdateMode = "full"`; requesting them under the default `"incremental"` mode returns an error at construction. New `ConfidenceLower`/`ConfidenceUpper`/`PredictionLower`/`PredictionUpper` fields on `PointResult`.
+- Added `RetainModel` and `Result.PredictModel.Predict(newX, options)` for out-of-sample prediction.
+- Added `ReturnGradient` to `Options`, `StreamingOptions`, and `OnlineOptions`.
+- Added `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSe` to `StreamingOptions` and `OnlineOptions`. `OnlineOptions` requires `UpdateMode = "full"` or errors. New bound fields on `PointResult`.
 
 **Java:**
 
-- Added a `retainModel` option to `Options` and a `Result.predictModel()` accessor returning a new `PredictModel` class with a `predict(newX, options)` method (plus new `PredictOptions`/`PredictResult` types), for out-of-sample prediction.
-- Added a `returnGradient(boolean)` builder option to `Options` and `OnlineOptions`, exposing the per-point local fit gradient via `Result.gradient()` (`Optional<double[]>`, flattened, `dimensions` values per point) or `PointResult.gradient()` (`Optional<double[]>`, `dimensions` values for the latest point). Only takes effect when `surface_mode="direct"`.
-- Added `confidenceIntervals(double)`/`predictionIntervals(double)`/`returnSe(boolean)` builder options to `StreamingOptions` and `OnlineOptions`, mirroring the existing `Options` methods. `StreamingOptions`'s bounds are computed per chunk and merged across overlap boundaries via `mergeStrategy`. `OnlineOptions`'s options require `updateMode("full")`; requesting them under the default `"incremental"` mode throws a `RuntimeException` at construction. New `confidenceLower()`/`confidenceUpper()`/`predictionLower()`/`predictionUpper()` accessors on `PointResult`.
+- Added `retainModel` and `Result.predictModel()` (a `PredictModel` class) for out-of-sample prediction.
+- Added `returnGradient(boolean)` to `Options` and `OnlineOptions`.
+- Added `confidenceIntervals(double)`/`predictionIntervals(double)`/`returnSe(boolean)` to `StreamingOptions` and `OnlineOptions`. `OnlineOptions` requires `updateMode("full")` or throws. New accessors on `PointResult`.
 
 **Node.js:**
 
-- Added a `retain_model` option to `SmoothOptions` and a `LoessResult.predict(newX, options)` method (returning new `PredictOptions`/`PredictOutput` types), for out-of-sample prediction.
-- Added a `return_gradient` option to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit gradient via `LoessResult.gradient` (a flattened `Float64Array`, `dimensions` values per point) or `OnlineOutput.gradient` (an array, `dimensions` values for the latest point). Only takes effect when `surface_mode="direct"`.
-- Added `confidence_intervals`/`prediction_intervals`/`return_se` options to `StreamingSmoothOptions` and `OnlineSmoothOptions`, mirroring the existing `SmoothOptions` fields. Streaming's bounds are computed per chunk and merged across overlap boundaries via `merge_strategy`. Online's options require `update_mode: "full"`; requesting them under the default `"incremental"` mode throws at construction. New `confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` fields on `OnlineOutput`.
+- Added `retain_model` and `LoessResult.predict(newX, options)` for out-of-sample prediction.
+- Added `return_gradient` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
+- Added `confidence_intervals`/`prediction_intervals`/`return_se` to `StreamingSmoothOptions` and `OnlineSmoothOptions`. Online requires `update_mode: "full"` or throws. New `OnlineOutput` bound fields.
 
 **WASM:**
 
-- Added a `retain_model` option to `SmoothOptions` and a `LoessResult.predict(newX, options)` method (returning new `PredictOptions`/`PredictOutput` TypeScript types), for out-of-sample prediction.
-- Added a `return_gradient` option to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`, exposing the per-point local fit gradient via `LoessResult.gradient` (a flattened `Float64Array`, `dimensions` values per point) or `OnlineOutput.gradient` (an array, `dimensions` values for the latest point). Only takes effect when `surface_mode="direct"`.
-- Added `confidence_intervals`/`prediction_intervals`/`return_se` options to `StreamingSmoothOptions` and `OnlineSmoothOptions`, mirroring the existing `SmoothOptions` fields. Streaming's bounds are computed per chunk and merged across overlap boundaries via `merge_strategy`. Online's options require `update_mode: "full"`; requesting them under the default `"incremental"` mode throws at construction. New `confidence_lower`/`confidence_upper`/`prediction_lower`/`prediction_upper` getters on `OnlineOutput`.
+- Same additions as Node.js (`retain_model`, `return_gradient`, `confidence_intervals`/`prediction_intervals`/`return_se`), with TypeScript types.
 
 **C++:**
 
-- Added a `retain_model` option to `LoessOptions`, a `LoessResult::predict_model()` accessor, and new `PredictModel`/`PredictOptions`/`PredictResult` RAII classes for out-of-sample prediction.
-- Added a `return_gradient` option to `LoessOptions` (Batch/Streaming) and `OnlineOptions` (Online), exposing the per-point local fit gradient via `LoessResult::gradient()` (Batch/Streaming, a flattened `std::vector<double>`, `dimensions()` values per point) or `OnlineOutput::gradient()` (Online, a `std::vector<double>` of length `dimensions`). Only takes effect when `surface_mode == "direct"`.
-- Added `confidence_intervals`/`prediction_intervals`/`return_se` fields to `OnlineOptions` (already present on `StreamingOptions` via inheritance from `LoessOptions`, but not previously forwarded). Streaming's bounds are computed per chunk and merged across overlap boundaries via `merge_strategy`. Online's options require `update_mode == "full"`; requesting them under the default `"incremental"` mode makes the first `add_point()` call return an `Expected` with `has_value() == false`. New `OnlineOutput::confidence_lower()`/`confidence_upper()`/`prediction_lower()`/`prediction_upper()` accessors.
+- Added `retain_model`, `LoessResult::predict_model()`, and new `PredictModel`/`PredictOptions`/`PredictResult` RAII classes for out-of-sample prediction.
+- Added `return_gradient` to `LoessOptions` and `OnlineOptions`.
+- Added `confidence_intervals`/`prediction_intervals`/`return_se` to `OnlineOptions` (already present on `StreamingOptions` via inheritance, now forwarded). Online requires `update_mode == "full"`. New `OnlineOutput` accessors.
 
 **Monorepo:**
 
-- Added Linux musl (Alpine) release binaries alongside the existing glibc ones: Python (`release-pypi.yml` now publishes `musllinux_1_2` wheels for x86_64/aarch64), C++ (`release-cpp.yml` builds natively inside `alpine:latest` containers on `ubuntu-latest`/`ubuntu-24.04-arm`, publishing `libfastloess-linux-{x64,arm64}-musl.so`), Go (`release-go.yml`, same container approach, publishing `libfastloess_go-linux-{x64,arm64}-musl.a`), and Julia (removed the `libc(p) != "musl"` filter from `dev/build_tarballs_julia.jl`, letting Yggdrasil build musl JLLs again). GPU wheels/libraries (`release-gpu.yml`) are not covered by this change. Java is intentionally left as-is (no prebuilt natives for any platform yet).
-- Added prebuilt native libraries for the Java binding: `release-java.yml` now builds `fastloess_java` for `linux-x86_64`, `linux-x86_64-musl` (Alpine), `linux-aarch64`, `linux-aarch64-musl` (Alpine), `macos-x86_64`, `macos-aarch64`, `windows-x86_64`, and `windows-aarch64`, and bundles all eight into the published jar under `src/main/resources/native/<os>-<arch>[-musl]/`. `NativeBridge` now also detects musl at runtime (checking Alpine's `/etc/alpine-release` and musl's `ld-musl-*` dynamic linker, since the JVM has no direct API for this) in addition to its existing (previously unused) `loadFromBundledResource()` auto-extraction, so `mvn`/Gradle users on any of those eight platforms no longer need to build the native library themselves.
+- Added Linux musl (Alpine) release binaries for Python, C++, Go, and Julia. GPU builds unaffected; Java left as-is (see below).
+- Added prebuilt native libraries for the Java binding across 8 platforms (linux/macos/windows x64/arm64, plus musl variants for linux), bundled into the jar; `NativeBridge` now detects musl at runtime and auto-extracts the matching library.
 
 ### Changed
 
 **loess-rs:**
 
-- Flattened the `tests/loess-rs/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+- Flattened `tests/loess-rs/` into `tests/` directly: each test file is now its own integration test binary. No behavior changes.
+- Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 
 **fastLoess:**
 
-- Flattened the `tests/fastLoess/` directories into `tests/` directly: each test file is now its own independent integration test binary instead of a submodule of a shared `main.rs`. No test behavior changes.
+- Flattened `tests/fastLoess/` into `tests/` directly: each test file is now its own integration test binary. No behavior changes.
+- Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 
 **Monorepo:**
 
-- Hoisted inline fully-qualified paths (e.g. `crate::math::distance::DistanceLinalg`, `std::slice::from_raw_parts`) to top-level `use` imports across all crates and bindings, using the bare name in the body instead. Genuine name collisions (e.g. a module-local `Result<T>`/`StreamingLoess` type alias shadowing the standard one) are kept fully-qualified with an explanatory comment. No behavior changes.
-- Removed unnecessary `pub use` re-exports across `loess-rs`/`fastLoess` (`api.rs`, `binding_support.rs`) that had no consumer via their re-exported path — every actual caller already imported the type directly from its origin module (e.g. `math::boundary::BoundaryPolicy`, `engine::executor::SurfaceMode`). Changed to plain `use`. No behavior changes.
+- Hoisted inline fully-qualified paths to top-level `use` imports across all crates/bindings; genuine name collisions stay qualified with a comment. No behavior changes.
+- Removed unused `pub use` re-exports in `loess-rs`/`fastLoess` with no consumer via that path. No behavior changes.
 
 ### Fixed
 
 **C++:**
 
-- Fixed `bindings/cpp/spack/package.py`'s `build()`/`install()` phases assuming Cargo's `target/release` output lives under `bindings/cpp`; since `bindings/cpp` is a member of the repo's Cargo workspace, the build output actually lands in `target/release` at the workspace root, causing `spack install fastloess-cpp` to fail on every platform (reported via `spack/spack-packages` PR review). Now builds by package name (`cargo build -p fastloess-cpp`) instead of `cd`'ing into `bindings/cpp`. Also dropped the recipe's repo-internal header comment (mirroring note + pyright suppression), which the same review flagged as not belonging in the builtin recipe; the pyright suppression now lives in a new root `pyrightconfig.json` instead, scoped to `bindings/cpp/spack`, so editing the recipe without a full Spack install stays warning-free without polluting the recipe itself.
+- Fixed `bindings/cpp/spack/package.py` building/installing from the wrong directory (`bindings/cpp` instead of the workspace-root `target/release`), which broke `spack install fastloess-cpp` on every platform. Now builds by package name. Also moved the pyright suppression out of the recipe into a new root `pyrightconfig.json`.
 
-**Java:**
+**Java / R:**
 
-- Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed (e.g. `-1` became `18446744073709551615`) instead of raising an error, since the `long` value was cast to `u64` via Rust's unchecked `as` operator. Now validated and rejected with a clear error before the cast.
-
-**R:**
-
-- Fixed the same `cv_seed` negative-value cast bug in `Loess()`.
+- Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed instead of raising an error. Now validated before the cast.
 
 **Monorepo:**
 
-- `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path across `go.mod` files, doc snippets, the doc-snippet runner, and README/docs badges whenever a version bump crosses a major version boundary, so this doesn't regress on the next major release.
-- `dev/bump_version.py` now also updates the Maven dependency example version in `bindings/java/docs/modules/ROOT/pages/introduction/installation.adoc`, which was previously left stale after a version bump.
-- Fixed inconsistent naming of the Node.js binding as "JavaScript" in the shared project intro sentence (root `README.md`, every binding/crate `README.md`, their generated doc-site home pages, and `CITATION.cff`) — now says "Node.js" everywhere, matching the CI badge, installation table, and directory name (`bindings/nodejs`).
+- `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path and the Maven dependency example version, both previously left stale after a version bump.
+- Fixed inconsistent naming of the Node.js binding as "JavaScript" across READMEs, doc-site home pages, and `CITATION.cff`.
 
 **loess-rs:**
 
-- Cleaned up `loess_rs::prelude` of accidentally-leaked internals: removed `LoessBuilder` and `Batch`/`Online`/`Streaming` adapter markers (use the `Loess`/`StreamingLoess`/`OnlineLoess` type aliases directly - each already builds without needing `.adapter(...)`).
+- Cleaned up `loess_rs::prelude` of accidentally-leaked internals (`LoessBuilder`, adapter markers) — use the `Loess`/`StreamingLoess`/`OnlineLoess` type aliases directly.
 
 **Monorepo:**
 
-- `make loess-rs-dev`/`make fastLoess-dev` now also run `cargo test --doc` for each tested feature set; doctests in `.rs` source files were previously never checked by any `make` target (only markdown-doc code snippets are covered by `dev/verify_snippets.py`).
+- `make loess-rs-dev`/`make fastLoess-dev` now also run `cargo test --doc`, previously never checked by any `make` target.
 
 **Go:**
 
-- Fixed the Go module's import path missing the required `/v2` major version suffix (Go's "major version suffix" rule: any module tagged `v2.0.0` or higher must end its module path with `/vN`, or the Go toolchain silently ignores all such tags and resolves only pseudo-versions). Changed `github.com/thisisamirv/loess-project/bindings/go/fastloess` to `.../fastloess/v2` in `go.mod`, all doc snippets, the doc-snippet runner, and the test module. This is a **breaking change** for any code importing the old unsuffixed path; existing tags were affected and require a new release for pkg.go.dev to resolve real (non-pseudo) versions correctly.
+- Fixed the Go module's import path missing the required `/v2` major version suffix, causing the toolchain to silently resolve only pseudo-versions. **Breaking change**; requires a new release for pkg.go.dev to resolve versions correctly.
 
 ## 2.0.0
 

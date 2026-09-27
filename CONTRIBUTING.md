@@ -28,7 +28,6 @@ The Batch adapter already covers a comprehensive set of options (polynomial degr
 
 **Online:**
 
-- **Populate `standard_error`**: `OnlineOutput.standard_error` exists in the struct but is always `None` — every code path builds its internal config with `return_variance: None`, so it's never actually populated. Wiring up real standard errors would give real-time uncertainty for dashboards.
 - **Distance/x-range-based window eviction**: `window_capacity` is a point-count cap; for irregularly-sampled real-time data (e.g. sensor gaps, or sparse regions in nD), a "keep points within distance/range N of the newest point" policy would be a useful alternative.
 - **Configurable warm-up behavior**: `add_point()` returns `None` until `min_points` is reached; an option to return an early, lower-confidence estimate immediately (e.g. a running mean) instead of a gap could help dashboards that don't want to show blanks.
 
@@ -226,7 +225,7 @@ Each crate defines its own version and all metadata independently:
 # Individual crate Cargo.toml
 [package]
 name = "loess-rs"
-version = "2.0.0"
+version = "2.1.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 rust-version = "1.89"
