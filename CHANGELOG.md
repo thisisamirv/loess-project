@@ -144,6 +144,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `make loess-rs-dev` now also runs `cargo test --doc`, previously never checked by any `make` target.
 - Added the classical simple-linear-regression standard-error path for one-dimensional global fits (`fraction >= 1.0`), matching `stats::lm`'s `se.fit` formula.
 - Corrected serial LOESS standard errors to use the local-linear equivalent-kernel leverage and kernel-corrected residual degrees of freedom, preserving positive SEs for downweighted observations. Added Monte Carlo calibration and interval edge-case regressions.
+- Fixed seeded k-fold CV with unordered test queries: batch interpolation now locates each query bracket independently with binary search instead of relying on a monotone scan pointer.
 
 **fastLoess:**
 

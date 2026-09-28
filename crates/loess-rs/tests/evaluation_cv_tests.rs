@@ -35,6 +35,20 @@ fn test_interpolate_prediction_basic() {
     assert_relative_eq!(pred, 7.0, epsilon = 1e-12);
 }
 
+/// The batch interpolator must handle unordered query points from seeded k-fold CV.
+#[test]
+fn test_interpolate_prediction_batch_unordered() {
+    let x_train = vec![0.0f64, 1.0, 2.0, 3.0];
+    let y_train = vec![0.0f64, 1.0, 4.0, 9.0];
+    let x_new = vec![2.5f64, 0.5];
+    let mut predictions = vec![0.0f64; x_new.len()];
+
+    CVKind::interpolate_prediction_batch(&x_train, &y_train, &x_new, &mut predictions);
+
+    assert_relative_eq!(predictions[0], 6.5, epsilon = 1e-12);
+    assert_relative_eq!(predictions[1], 0.5, epsilon = 1e-12);
+}
+
 /// Test extrapolation beyond data range.
 ///
 /// Verifies that extrapolation uses nearest value.

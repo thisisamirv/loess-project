@@ -185,10 +185,8 @@ impl CVKind {
     }
 
     // Predict values at multiple new x points using linear interpolation.
-    //
-    // # Implementation notes
-    //
-    // * Leverages sorted order of `x_new` for O(n_train + n_new) linear scan.
+    // `x_new` may be unordered when seeded k-fold CV shuffles test points, so
+    // each query locates its bracket independently.
     pub fn interpolate_prediction_batch<T: Float>(
         x_train: &[T],
         y_train: &[T],
@@ -212,7 +210,6 @@ impl CVKind {
             return;
         }
 
-        let mut left = 0;
         for i in 0..n_new {
             let xi = x_new[i];
 
@@ -226,12 +223,10 @@ impl CVKind {
                 continue;
             }
 
-            // Linear scan forward to find bracket
-            while left + 1 < n_train && x_train[left + 1] <= xi {
-                left += 1;
-            }
-
-            let right = left + 1;
+            // Binary-search the first training value greater than the query.
+            let right = x_train.partition_point(|&value| value <= xi);
+            let right = right.min(n_train - 1);
+            let left = right - 1;
             let x0 = x_train[left];
             let x1 = x_train[right];
             let y0 = y_train[left];
