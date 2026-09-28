@@ -37,9 +37,10 @@ jobs:
             dir: linux-aarch64
             lib_name: libfastloess_java.so
           - os: ubuntu-24.04-arm
-            container: "alpine:latest"
             dir: linux-aarch64-musl
             lib_name: libfastloess_java.so
+            cargo_target: aarch64-unknown-linux-musl
+            target_dir: target/aarch64-unknown-linux-musl/release
           - os: macos-15-intel
             dir: macos-x86_64
             lib_name: libfastloess_java.dylib
@@ -55,7 +56,11 @@ jobs:
     steps:
       - name: Install Alpine build dependencies
         if: matrix.container
-        run: apk add --no-cache build-base curl bash git
+        run: |
+          apk add --no-cache build-base curl bash git
+          # A fully static musl target cannot emit the JNI cdylib. Link
+          # dynamically against Alpine's musl so Cargo produces the .so asset.
+          echo "RUSTFLAGS=-C target-feature=-crt-static" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v7
         with:
@@ -63,14 +68,34 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Install musl toolchain and target (Linux ARM64)
+        if: matrix.cargo_target != ''
+        run: |
+          rustup target add aarch64-unknown-linux-musl
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc" >> "$GITHUB_ENV"
+          echo "CC_aarch64_unknown_linux_musl=musl-gcc" >> "$GITHUB_ENV"
+          # Disable crt-static for the JNI cdylib and expose libgcc_s to musl-gcc.
+          LIBGCC_DIR="$(dirname "$(ldconfig -p | grep libgcc_s.so.1 | awk '{print $NF}' | head -n1)")"
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS=-C target-feature=-crt-static -L $LIBGCC_DIR" >> "$GITHUB_ENV"
+
       - name: Build native library
-        run: cargo build -p fastloess-java --release
+        shell: bash
+        env:
+          CARGO_TARGET: ${{ matrix.cargo_target }}
+        run: |
+          if [ -n "$CARGO_TARGET" ]; then
+            cargo build -p fastloess-java --release --target "$CARGO_TARGET"
+          else
+            cargo build -p fastloess-java --release
+          fi
 
       - name: Upload native library
         uses: actions/upload-artifact@v7
         with:
           name: native-${{ matrix.dir }}
-          path: target/release/${{ matrix.lib_name }}
+          path: ${{ matrix.target_dir || 'target/release' }}/${{ matrix.lib_name }}
 
   publish-maven-central:
     name: Publish to Maven Central

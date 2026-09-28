@@ -105,6 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
+- Java's musl JNI release jobs now build dynamic x86_64 and ARM64 shared libraries, so the bundled resources selected by `NativeBridge` are published reliably.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 
 **Julia:**
