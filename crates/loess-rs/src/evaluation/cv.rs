@@ -298,7 +298,8 @@ impl CVKind {
         cv_buffer.ensure_capacity(n, dims);
 
         for (frac_idx, &frac) in fractions.iter().enumerate() {
-            let mut fold_rmses = Vec::with_capacity(k);
+            let mut total_error = T::zero();
+            let mut total_test_points = 0usize;
 
             for fold in 0..k {
                 let test_start = fold * fold_size;
@@ -364,14 +365,12 @@ impl CVKind {
                     fold_error = fold_error + error * error;
                 }
 
-                if !tey.is_empty() {
-                    fold_rmses.push((fold_error / T::from(tey.len()).unwrap()).sqrt());
-                }
+                total_error = total_error + fold_error;
+                total_test_points += tey.len();
             }
 
-            if !fold_rmses.is_empty() {
-                let sum: T = fold_rmses.iter().copied().fold(T::zero(), |a, b| a + b);
-                cv_scores[frac_idx] = sum / T::from(fold_rmses.len()).unwrap();
+            if total_test_points > 0 {
+                cv_scores[frac_idx] = (total_error / T::from(total_test_points).unwrap()).sqrt();
             } else {
                 cv_scores[frac_idx] = T::infinity();
             }

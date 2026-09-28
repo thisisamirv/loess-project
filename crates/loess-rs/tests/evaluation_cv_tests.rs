@@ -344,3 +344,27 @@ fn test_loocv_minimal_data() {
     // RMSE = sqrt((100 + 100) / 2) = sqrt(100) = 10.
     assert_relative_eq!(scores[0], 10.0, epsilon = 1e-12);
 }
+
+#[test]
+fn test_kfold_pools_squared_errors_across_folds() {
+    let x = [0.0_f64, 1.0, 2.0, 3.0];
+    let y = [0.0_f64, 1.0, 10.0, 3.0];
+    let fractions = [0.5_f64];
+    let mut buffer = CVBuffer::new(x.len(), 1);
+    let smoother: fn(&[f64], &[f64], f64) -> Vec<f64> = |_, _, _| vec![0.0, 0.0];
+
+    let (best, scores) = CVKind::KFold(2).run(
+        &x,
+        &y,
+        1,
+        &fractions,
+        None,
+        smoother,
+        None::<fn(&[f64], &[f64], &[f64], f64) -> Vec<f64>>,
+        &mut buffer,
+    );
+
+    assert_eq!(best, fractions[0]);
+    assert_eq!(scores.len(), 1);
+    assert!((scores[0] - (110.0_f64 / 4.0).sqrt()).abs() < 1e-12);
+}

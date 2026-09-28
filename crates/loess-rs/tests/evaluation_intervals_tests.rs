@@ -166,6 +166,18 @@ fn test_global_ols_standard_errors_match_classical_formula() {
     }
 }
 
+#[test]
+fn test_global_ols_standard_errors_small_magnitude_x() {
+    let x: Vec<f64> = (0..5).map(|i| i as f64 * 1e-8).collect();
+    let y: Vec<f64> = x.iter().map(|&value| 2.0 + 3.0 * value).collect();
+    let y_smooth = vec![2.0, 2.000000035, 2.00000007, 2.000000105, 2.00000012];
+
+    let standard_errors = IntervalMethod::compute_global_ols_se(&x, &y, &y_smooth);
+
+    assert!(standard_errors.iter().all(|value| value.is_finite()));
+    assert!(standard_errors.iter().all(|value| *value > 0.0));
+}
+
 /// Test SE with insufficient degrees of freedom.
 ///
 /// Verifies that df <= 0 produces zero SE.
