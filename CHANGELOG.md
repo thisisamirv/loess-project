@@ -126,6 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **R:**
 
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
+- Replaced the local `Result` alias with `extendr_api::error::Result`, mapped unavailable diagnostics to R `NA`, added retry cleanup for transient Windows `pak` move failures, and added the root/binding `r-tests` workflow.
 
 **WASM:**
 

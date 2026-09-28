@@ -164,6 +164,9 @@ r:
 r-dev:
 	@"$(MAKE)" -f bindings/r/Makefile dev
 
+r-tests:
+	@"$(MAKE)" -f bindings/r/Makefile r-tests
+
 r-coverage:
 	@"$(MAKE)" -f bindings/r/Makefile coverage
 

@@ -7,12 +7,9 @@
 
 #![allow(non_snake_case)]
 
-use extendr_api::prelude::*;
+use extendr_api::{error::Result, prelude::*};
 use std::cell::RefCell;
 use std::sync::Arc;
-
-// Provide the Result alias that was removed from extendr_api::prelude in 0.9.0
-type Result<T> = std::result::Result<T, Error>;
 
 use fastLoess::internals::api::{LoessBuilder, LoessResult};
 use fastLoess::internals::binding_support as shared_parse;
@@ -51,6 +48,14 @@ fn optional_positive_usize(name: &str, value: Nullable<i32>) -> Result<Option<us
     match value {
         NotNull(v) => Ok(Some(require_positive_usize(name, v)?)),
         Null => Ok(None),
+    }
+}
+
+fn r_float_or_na(value: f64) -> Rfloat {
+    if value.is_finite() {
+        Rfloat::from(value)
+    } else {
+        Rfloat::na()
     }
 }
 
@@ -611,13 +616,13 @@ fn loess_result_to_list(result: LoessResult<f64>) -> Result<List> {
     list_items.push(("dimensions", (result.dimensions as i32).into_robj()));
     if has_diagnostics {
         let diag_list = list!(
-            rmse = rmse,
-            mae = mae,
-            r_squared = r_squared,
-            aic = aic,
-            aicc = aicc,
-            effective_df = effective_df,
-            residual_sd = residual_sd
+            rmse = r_float_or_na(rmse),
+            mae = r_float_or_na(mae),
+            r_squared = r_float_or_na(r_squared),
+            aic = r_float_or_na(aic),
+            aicc = r_float_or_na(aicc),
+            effective_df = r_float_or_na(effective_df),
+            residual_sd = r_float_or_na(residual_sd)
         );
         list_items.push(("diagnostics", diag_list.into_robj()));
     }

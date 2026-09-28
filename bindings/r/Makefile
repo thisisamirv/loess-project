@@ -73,7 +73,7 @@ ifeq ($(OS),Windows_NT)
 	R_CROSS_ENV    := PATH="/c/rtools45/x86_64-w64-mingw32.static.posix/bin:$$PATH"
 endif
 
-.PHONY: default dev clean coverage
+.PHONY: default dev r-tests tests clean coverage
 
 default:
 	@R CMD INSTALL $(R_DIR)
@@ -89,14 +89,15 @@ dev:
 	@echo "=============================================================================="
 	@echo "1. Installing R development packages..."
 	@echo "=============================================================================="
-	@echo "Installing R required packages (styler, testthat, rmarkdown, knitr, lintr, roxygen2, pkgdown, remotes)..."
+	@echo "Installing R required packages (styler, testthat, rmarkdown, knitr, lintr, roxygen2, pkgdown, remotes, quickcheck)..."
 	@echo "This may take a while depending on your internet connection and system performance."
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
 	  -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths()))" \
 	  -e "# Bootstrap pak; it handles RSPM binary vs source selection automatically" \
 	  -e "if (!requireNamespace('pak', quietly = TRUE, lib.loc = lib)) { options(install.lock = FALSE); install.packages('pak', lib = lib, repos = 'https://r-lib.github.io/p/pak/stable/') }" \
 	  -e "# Required packages (CRAN)" \
-	  -e "pak::pkg_install(c('styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes'), lib = lib, ask = FALSE)" \
+	  -e "required <- c('styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes', 'quickcheck')" \
+	  -e "tryCatch(pak::pkg_install(required, lib = lib, ask = FALSE), error = function(err) { message('pak install failed; clearing partial local cache and retrying once: ', conditionMessage(err)); unlink(c(Sys.glob(file.path(lib, '00LOCK*')), file.path(lib, '_cache'), file.path(lib, 'data.table')), recursive = TRUE, force = TRUE); Sys.setenv(PKG_NUM_WORKERS = '1'); pak::pkg_install(required, lib = lib, ask = FALSE) })" \
 	  -e "# srr lives on its own R-universe; optional so a dead mirror doesn't break the build" \
 	  -e "options(repos = c(ropenscireviewtools = 'https://ropensci-review-tools.r-universe.dev', CRAN = 'https://cloud.r-project.org')); try(pak::pkg_install('srr', lib = lib, ask = FALSE), silent = TRUE)" \
 	  -e "# Optional: rOpenSci tooling and local dev helpers" \
@@ -161,15 +162,7 @@ dev:
 	@echo "=============================================================================="
 	@echo "8. Testing..."
 	@echo "=============================================================================="
-	@if [ ! -d $(R_DIR)/src/vendor ]; then (cd $(R_DIR)/src && tar -xf vendor.tar.xz); fi
-	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
-	@if [ -n "$(R_CARGO_TARGET)" ]; then \
-		GCC_LIBDIR="c:/rtools45/x86_64-w64-mingw32.static.posix/lib/gcc/x86_64-w64-mingw32.static.posix/14.3.0"; \
-		test -f "$$GCC_LIBDIR/libgcc_eh.a" || x86_64-w64-mingw32.static.posix-ar rcs "$$GCC_LIBDIR/libgcc_eh.a"; \
-	fi
-	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo test -q --no-run $(R_CARGO_TARGET)
-	@rm -rf $(R_DIR)/src/.cargo
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastloess')"
+	@"$(MAKE)" -f "$(THIS_MK)" r-tests
 	@echo "=============================================================================="
 	@echo "9. Submission checks..."
 	@echo "=============================================================================="
@@ -185,6 +178,22 @@ dev:
 	@$(PYTHON) dev/check_links.py --lang r
 	@$(PYTHON) dev/verify_snippets.py --lang r --timeout 120
 	@echo "All $(R_PKG_NAME) checks completed successfully!"
+
+r-tests:
+	@echo "Running $(R_PKG_NAME) tests..."
+	@if [ ! -d $(R_DIR)/src/vendor ]; then (cd $(R_DIR)/src && tar -xf vendor.tar.xz); fi
+	@mkdir -p $(R_DIR)/src/.cargo && cp $(R_DIR)/src/cargo-config.toml $(R_DIR)/src/.cargo/config.toml
+	@if [ -n "$(R_CARGO_TARGET)" ]; then \
+		GCC_LIBDIR="c:/rtools45/x86_64-w64-mingw32.static.posix/lib/gcc/x86_64-w64-mingw32.static.posix/14.3.0"; \
+		test -f "$$GCC_LIBDIR/libgcc_eh.a" || x86_64-w64-mingw32.static.posix-ar rcs "$$GCC_LIBDIR/libgcc_eh.a"; \
+	fi
+	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo test -q --no-run $(R_CARGO_TARGET)
+	@rm -rf $(R_DIR)/src/.cargo
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastloess')"
+	@echo "Running the LOWESS property suite 30 times in parallel..."
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "scripts <- rep('$(R_DIR)/tests/testthat/test-validation.R', 30L); workers <- min(30L, parallel::detectCores()); cluster <- parallel::makeCluster(workers); on.exit(parallel::stopCluster(cluster), add = TRUE); jobs <- parallel::parLapply(cluster, scripts, function(path) testthat::test_file(path, reporter = 'silent')); failures <- vapply(jobs, inherits, logical(1), what = 'error'); if (any(failures)) quit(status = 1)"
+
+tests: r-tests
 
 coverage:
 	@echo "Calculating $(R_PKG_NAME) coverage..."
