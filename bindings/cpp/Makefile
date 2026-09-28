@@ -98,7 +98,9 @@ TEMP ?= /tmp
 .PHONY: default dev clean install-tools
 
 default:
-	@if ! command -v clang-tidy >/dev/null 2>&1 || ! command -v cppcheck >/dev/null 2>&1; then \
+	@if ! command -v clang-tidy >/dev/null 2>&1 || ! command -v cppcheck >/dev/null 2>&1 || { \
+		[ "$(HOST_PLATFORM)" = "linux" ] && ! command -v valgrind >/dev/null 2>&1; \
+	}; then \
 		$(MAKE) -f $(THIS_MK) install-tools; \
 	fi
 	@if [ -n "$(CPP_CARGO_TARGET)" ]; then \
@@ -216,7 +218,7 @@ clean:
 	@echo "$(CPP_PKG) clean complete!"
 
 install-tools:
-	@echo "Installing clang-tidy and cppcheck..."
+	@echo "Installing clang-tidy, cppcheck, and valgrind where supported..."
 	@if [ "$(HOST_PLATFORM)" = "windows" ]; then \
 		winget install --id LLVM.LLVM --exact --accept-source-agreements --accept-package-agreements; \
 		winget install --id Cppcheck.Cppcheck --exact --accept-source-agreements --accept-package-agreements; \
@@ -227,6 +229,6 @@ install-tools:
 		grep -qxF "$$EXPORT_LINE" ~/.zshrc 2>/dev/null || echo "$$EXPORT_LINE" >> ~/.zshrc; \
 		echo "Added clang-tidy to ~/.zshrc — re-open your shell or run: export PATH=\"$$LLVM_BIN:\$$PATH\""; \
 	else \
-		sudo apt-get install -y clang-tidy cppcheck; \
+		sudo apt-get install -y clang-tidy cppcheck valgrind; \
 	fi
 	@echo "Done."

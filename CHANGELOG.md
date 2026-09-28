@@ -156,6 +156,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Fixed `bindings/cpp/spack/package.py` building/installing from the wrong directory (`bindings/cpp` instead of the workspace-root `target/release`), which broke `spack install fastloess-cpp` on every platform. Now builds by package name. Also moved the pyright suppression out of the recipe into a new root `pyrightconfig.json`.
+- Fixed the C++ valgrind memory check being silently skipped in Linux CI because valgrind was not installed. The Linux matrix, Clang, and Intel oneAPI jobs now install it, as does the Linux `bindings/cpp/Makefile` `install-tools` target.
 
 **Go:**
 
