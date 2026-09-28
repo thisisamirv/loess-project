@@ -120,6 +120,7 @@ const UNIFORM_PROPERTIES: KernelProperties = KernelProperties {
 // distances to weights. Bounded kernels have support on [-1, 1], while
 // the Gaussian kernel has unbounded support.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[non_exhaustive]
 pub enum WeightFunction {
     // Cosine kernel: K(u) = cos(pi * u / 2) for |u| < 1.
     Cosine,

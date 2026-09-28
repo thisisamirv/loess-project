@@ -88,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Flattened `tests/loess-rs/` into `tests/` directly: each test file is now its own integration test binary. No behavior changes.
 - Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 - Removed unused `pub use` re-exports with no consumer via that path. No behavior changes.
+- Marked `WeightFunction` as non-exhaustive so downstream kernel must reject unsupported future variants explicitly.
 
 **fastLoess:**
 
