@@ -1402,8 +1402,10 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 
         // Standard errors (now using actual leverage if available)
         let se = if let Some(interval_method) = confidence_method {
+            if eff_fraction >= T::one() && dims == 1 {
+                Some(IntervalMethod::compute_global_ols_se(x, y, &y_smooth))
             // Check for custom interval pass callback
-            if let Some(callback) = self.custom_interval_pass {
+            } else if let Some(callback) = self.custom_interval_pass {
                 // Use custom parallel/accelerated implementation
                 Some(callback(
                     x,

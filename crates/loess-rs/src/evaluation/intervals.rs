@@ -163,6 +163,44 @@ impl<T: Float> IntervalMethod<T> {
         (variance * leverage).sqrt()
     }
 
+    // Classical simple-linear-regression standard errors for a global 1D fit.
+    // This is the same se.fit formula used by stats::lm:
+    // sigma_hat * sqrt(1/n + (x0 - x_mean)^2 / Sxx).
+    pub fn compute_global_ols_se(x: &[T], y: &[T], y_smooth: &[T]) -> Vec<T> {
+        let n = x.len();
+        if n == 0 {
+            return Vec::new();
+        }
+
+        let n_t = T::from(n).unwrap_or(T::one());
+        let x_mean = x.iter().fold(T::zero(), |sum, &value| sum + value) / n_t;
+        let mut sse = T::zero();
+        let mut sxx = T::zero();
+        for ((&xi, &yi), &fit) in x.iter().zip(y.iter()).zip(y_smooth.iter()) {
+            let dx = xi - x_mean;
+            sxx = sxx + dx * dx;
+            let residual = yi - fit;
+            sse = sse + residual * residual;
+        }
+
+        let two = T::from(Self::LINEAR_PARAMS).unwrap();
+        let df = n_t - two;
+        if df <= T::zero() {
+            return vec![T::zero(); n];
+        }
+
+        let sigma = (sse / df).sqrt();
+        let tol = T::epsilon() * x.iter().fold(T::zero(), |sum, &value| sum + value * value);
+        if sxx <= tol {
+            let se = sigma * (T::one() / n_t).sqrt();
+            return vec![se; n];
+        }
+
+        x.iter()
+            .map(|&xi| sigma * (T::one() / n_t + (xi - x_mean) * (xi - x_mean) / sxx).sqrt())
+            .collect()
+    }
+
     // Compute standard errors for all points in a smoothed series.
     #[allow(clippy::too_many_arguments)]
     pub fn compute_window_se<F>(

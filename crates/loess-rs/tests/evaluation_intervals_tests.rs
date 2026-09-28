@@ -141,6 +141,31 @@ fn test_compute_se_downweighted_point_keeps_positive_leverage() {
     assert!(std_errors[2] > 0.0);
 }
 
+#[test]
+fn test_global_ols_standard_errors_match_classical_formula() {
+    let x = vec![1.0f64, 2.0, 3.0, 4.0, 5.0];
+    let y = vec![2.0f64, 5.0, 5.0, 9.0, 11.0];
+    let y_smooth = vec![2.2f64, 4.4, 6.6, 8.8, 11.0];
+    let se = IntervalMethod::compute_global_ols_se(&x, &y, &y_smooth);
+
+    let x_mean = 3.0;
+    let sse = y
+        .iter()
+        .zip(y_smooth.iter())
+        .map(|(yi, fit)| (yi - fit).powi(2))
+        .sum::<f64>();
+    let sigma = (sse / 3.0).sqrt();
+    let sxx = 10.0;
+    let expected: Vec<f64> = x
+        .iter()
+        .map(|xi| sigma * (0.2 + (xi - x_mean).powi(2) / sxx).sqrt())
+        .collect();
+
+    for (actual, expected) in se.iter().zip(expected.iter()) {
+        assert_relative_eq!(*actual, *expected, epsilon = 1e-12);
+    }
+}
+
 /// Test SE with insufficient degrees of freedom.
 ///
 /// Verifies that df <= 0 produces zero SE.
