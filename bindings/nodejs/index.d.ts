@@ -2,152 +2,152 @@
 /* eslint-disable */
 /** Batch LOESS smoothing. */
 export declare class Loess {
-  /** Create a new batch LOESS smoother. */
-  constructor(options?: SmoothOptions | undefined | null)
-  /** Fit the model. */
-  fit(x: Float64Array, y: Float64Array, customWeights?: Float64Array | undefined | null): LoessResult
-  /** Fit the model asynchronously. */
-  fit_async(x: Float64Array, y: Float64Array, customWeights?: Float64Array | undefined | null): Promise<unknown>
+    /** Create a new batch LOESS smoother. */
+    constructor(options?: SmoothOptions | undefined | null)
+    /** Fit the model. */
+    fit(x: Float64Array, y: Float64Array, customWeights?: Float64Array | undefined | null): LoessResult
+    /** Fit the model asynchronously. */
+    fit_async(x: Float64Array, y: Float64Array, customWeights?: Float64Array | undefined | null): Promise<unknown>
 }
 
 /** Result of a LOESS fit. */
 export declare class LoessResult {
-  /** Get the x values (same order as input). */
-  get x(): Float64Array
-  /** Get the smoothed y values. */
-  get y(): Float64Array
-  /** Get residuals (if requested). */
-  get residuals(): Float64Array | null
-  /** Get standard errors (if requested/computed). */
-  get standard_errors(): Float64Array | null
-  /** Get lower confidence bounds (if requested). */
-  get confidence_lower(): Float64Array | null
-  /** Get upper confidence bounds (if requested). */
-  get confidence_upper(): Float64Array | null
-  /** Get lower prediction bounds (if requested). */
-  get prediction_lower(): Float64Array | null
-  /** Get upper prediction bounds (if requested). */
-  get prediction_upper(): Float64Array | null
-  /** Get robustness weights (if requested). */
-  get robustness_weights(): Float64Array | null
-  /** Get the per-point local fit gradient (flattened, `dimensions` values per point) (if requested). */
-  get gradient(): Float64Array | null
-  /** Get diagnostics (if requested). */
-  get diagnostics(): Diagnostics | null
-  /** Get cross-validation scores (if CV was performed). */
-  get cv_scores(): Float64Array | null
-  /** Get the fraction used for smoothing. */
-  get fraction_used(): number
-  /** Get the number of iterations performed. */
-  get iterations_used(): number | null
-  /** Get equivalent number of parameters (hat-matrix stat, if return_se was set). */
-  get enp(): number | null
-  /** Get trace of hat matrix (if return_se was set). */
-  get trace_hat(): number | null
-  /** Get first delta statistic (if return_se was set). */
-  get delta1(): number | null
-  /** Get second delta statistic (if return_se was set). */
-  get delta2(): number | null
-  /** Get residual scale estimate (if return_se was set). */
-  get residual_scale(): number | null
-  /** Get per-point leverage / hat-matrix diagonal (if return_se was set). */
-  get leverage(): Float64Array | null
-  /** Get number of predictor dimensions. */
-  get dimensions(): number
-  /**
-   * Evaluate the fitted model at out-of-sample query points not in the training set.
-   *
-   * Requires `retain_model: true` to have been set on the builder before `fit()`.
-   */
-  predict(newX: Float64Array, options?: PredictOptions | undefined | null): PredictOutput
+    /** Get the x values (same order as input). */
+    get x(): Float64Array
+    /** Get the smoothed y values. */
+    get y(): Float64Array
+    /** Get residuals (if requested). */
+    get residuals(): Float64Array | null
+    /** Get standard errors (if requested/computed). */
+    get standard_errors(): Float64Array | null
+    /** Get lower confidence bounds (if requested). */
+    get confidence_lower(): Float64Array | null
+    /** Get upper confidence bounds (if requested). */
+    get confidence_upper(): Float64Array | null
+    /** Get lower prediction bounds (if requested). */
+    get prediction_lower(): Float64Array | null
+    /** Get upper prediction bounds (if requested). */
+    get prediction_upper(): Float64Array | null
+    /** Get robustness weights (if requested). */
+    get robustness_weights(): Float64Array | null
+    /** Get the per-point local fit gradient (flattened, `dimensions` values per point) (if requested). */
+    get gradient(): Float64Array | null
+    /** Get diagnostics (if requested). */
+    get diagnostics(): Diagnostics | null
+    /** Get cross-validation scores (if CV was performed). */
+    get cv_scores(): Float64Array | null
+    /** Get the fraction used for smoothing. */
+    get fraction_used(): number
+    /** Get the number of iterations performed. */
+    get iterations_used(): number | null
+    /** Get equivalent number of parameters (hat-matrix stat, if return_se was set). */
+    get enp(): number | null
+    /** Get trace of hat matrix (if return_se was set). */
+    get trace_hat(): number | null
+    /** Get first delta statistic (if return_se was set). */
+    get delta1(): number | null
+    /** Get second delta statistic (if return_se was set). */
+    get delta2(): number | null
+    /** Get residual scale estimate (if return_se was set). */
+    get residual_scale(): number | null
+    /** Get per-point leverage / hat-matrix diagonal (if return_se was set). */
+    get leverage(): Float64Array | null
+    /** Get number of predictor dimensions. */
+    get dimensions(): number
+    /**
+     * Evaluate the fitted model at out-of-sample query points not in the training set.
+     *
+     * Requires `retain_model: true` to have been set on the builder before `fit()`.
+     */
+    predict(newX: Float64Array, options?: PredictOptions | undefined | null): PredictOutput
 }
 
 /** Online LOESS smoother for real-time data. */
 export declare class OnlineLoess {
-  /** Create a new online LOESS smoother. */
-  constructor(options?: OnlineSmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
-  /** Add a single point and get the smoothed value if enough points are available. */
-  add_point(x: number, y: number): OnlineOutput | null
+    /** Create a new online LOESS smoother. */
+    constructor(options?: OnlineSmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
+    /** Add a single point and get the smoothed value if enough points are available. */
+    add_point(x: number, y: number): OnlineOutput | null
 }
 
 /** Result of `LoessResult.predict()`. */
 export declare class PredictOutput {
-  /** Predicted y values, one per query point. */
-  get y(): Float64Array
-  /** Standard errors (if requested). */
-  get standard_errors(): Float64Array | null
-  /** Lower confidence interval bounds (if requested). */
-  get confidence_lower(): Float64Array | null
-  /** Upper confidence interval bounds (if requested). */
-  get confidence_upper(): Float64Array | null
-  /** Lower prediction interval bounds (if requested). */
-  get prediction_lower(): Float64Array | null
-  /** Upper prediction interval bounds (if requested). */
-  get prediction_upper(): Float64Array | null
-  /** Local fit's gradient at each query point (if requested). */
-  get derivative(): Float64Array | null
+    /** Predicted y values, one per query point. */
+    get y(): Float64Array
+    /** Standard errors (if requested). */
+    get standard_errors(): Float64Array | null
+    /** Lower confidence interval bounds (if requested). */
+    get confidence_lower(): Float64Array | null
+    /** Upper confidence interval bounds (if requested). */
+    get confidence_upper(): Float64Array | null
+    /** Lower prediction interval bounds (if requested). */
+    get prediction_lower(): Float64Array | null
+    /** Upper prediction interval bounds (if requested). */
+    get prediction_upper(): Float64Array | null
+    /** Local fit's gradient at each query point (if requested). */
+    get derivative(): Float64Array | null
 }
 
 /** Streaming LOESS smoother for large datasets. */
 export declare class StreamingLoess {
-  /** Create a new streaming LOESS smoother. */
-  constructor(options?: StreamingSmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
-  /** Process a chunk of data. */
-  process_chunk(x: Float64Array, y: Float64Array): LoessResult
-  /** Finalize the stream and return remaining data. */
-  finalize(): LoessResult
+    /** Create a new streaming LOESS smoother. */
+    constructor(options?: StreamingSmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
+    /** Process a chunk of data. */
+    process_chunk(x: Float64Array, y: Float64Array): LoessResult
+    /** Finalize the stream and return remaining data. */
+    finalize(): LoessResult
 }
 
 /** Diagnostic statistics for the LOESS fit. */
 export interface Diagnostics {
-  /** Root Mean Squared Error. */
-  rmse: number
-  /** Mean Absolute Error. */
-  mae: number
-  /** R-squared (coefficient of determination). */
-  r_squared: number
-  /** Akaike Information Criterion (if computed). */
-  aic?: number
-  /** Corrected AIC (if computed). */
-  aicc?: number
-  /** Effective degrees of freedom (if computed). */
-  effective_df?: number
-  /** Residual standard deviation. */
-  residual_sd: number
+    /** Root Mean Squared Error. */
+    rmse: number
+    /** Mean Absolute Error. */
+    mae: number
+    /** R-squared (coefficient of determination). */
+    r_squared: number
+    /** Akaike Information Criterion (if computed). */
+    aic?: number
+    /** Corrected AIC (if computed). */
+    aicc?: number
+    /** Effective degrees of freedom (if computed). */
+    effective_df?: number
+    /** Residual standard deviation. */
+    residual_sd: number
 }
 
 /** Configuration options for online processing. */
 export interface OnlineOptions {
-  /** Maximum number of points to keep in the window. Default: 1000. */
-  window_capacity?: number
-  /** Minimum points required before smoothing starts. Default: 2. */
-  min_points?: number
-  /** Update mode ("full", "incremental"). Default: "incremental". */
-  update_mode?: string
+    /** Maximum number of points to keep in the window. Default: 1000. */
+    window_capacity?: number
+    /** Minimum points required before smoothing starts. Default: 2. */
+    min_points?: number
+    /** Update mode ("full", "incremental"). Default: "incremental". */
+    update_mode?: string
 }
 
 /** Result of a single online update step. */
 export interface OnlineOutput {
-  /** Smoothed value for the latest point. */
-  y: number
-  /** Standard error (if computed). */
-  standard_error?: number
-  /** Residual (raw input y minus this output's y) (if computed). */
-  residual?: number
-  /** Robustness weight for the latest point (if computed). */
-  robustness_weight?: number
-  /** Number of robustness iterations performed (if applicable). */
-  iterations_used?: number
-  /** Confidence interval lower bound (`update_mode="full"` only, if requested). */
-  confidence_lower?: number
-  /** Confidence interval upper bound (`update_mode="full"` only, if requested). */
-  confidence_upper?: number
-  /** Prediction interval lower bound (`update_mode="full"` only, if requested). */
-  prediction_lower?: number
-  /** Prediction interval upper bound (`update_mode="full"` only, if requested). */
-  prediction_upper?: number
-  /** Local fit gradient (`dimensions` values) for the latest point (if requested). */
-  gradient?: Array<number>
+    /** Smoothed value for the latest point. */
+    y: number
+    /** Standard error (if computed). */
+    standard_error?: number
+    /** Residual (raw input y minus this output's y) (if computed). */
+    residual?: number
+    /** Robustness weight for the latest point (if computed). */
+    robustness_weight?: number
+    /** Number of robustness iterations performed (if applicable). */
+    iterations_used?: number
+    /** Confidence interval lower bound (`update_mode="full"` only, if requested). */
+    confidence_lower?: number
+    /** Confidence interval upper bound (`update_mode="full"` only, if requested). */
+    confidence_upper?: number
+    /** Prediction interval lower bound (`update_mode="full"` only, if requested). */
+    prediction_lower?: number
+    /** Prediction interval upper bound (`update_mode="full"` only, if requested). */
+    prediction_upper?: number
+    /** Local fit gradient (`dimensions` values) for the latest point (if requested). */
+    gradient?: Array<number>
 }
 
 /**
@@ -160,168 +160,168 @@ export interface OnlineOutput {
  * `prediction_intervals`/`return_se` require `update_mode: "full"`.
  */
 export interface OnlineSmoothOptions {
-  /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
-  fraction?: number
-  /** Number of robustness iterations. Default: 0; positive values require `update_mode: "full"`. */
-  iterations?: number
-  /** Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
-  weight_function?: string
-  /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
-  robustness_method?: string
-  /** Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
-  zero_weight_fallback?: string
-  /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
-  boundary_policy?: string
-  /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
-  scaling_method?: string
-  /** Auto-convergence tolerance. Default: None. */
-  auto_converge?: number
-  /** Return robustness weights in result. Default: false. */
-  return_robustness_weights?: boolean
-  /**
-   * Return the per-point local fit gradient in result (only takes effect when
-   * `surface_mode` is "direct"). Default: false.
-   */
-  return_gradient?: boolean
-  /**
-   * Confidence level for confidence intervals. Only computed under
-   * `update_mode: "full"`. Default: None.
-   */
-  confidence_intervals?: number
-  /**
-   * Confidence level for prediction intervals. Same `update_mode: "full"`
-   * requirement as `confidence_intervals`. Default: None.
-   */
-  prediction_intervals?: number
-  /**
-   * Return the standard error for the latest point in result. Same
-   * `update_mode: "full"` requirement as `confidence_intervals`. Default: false.
-   */
-  return_se?: boolean
-  /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
-  degree?: string
-  /** Number of predictor dimensions. Default: 1. */
-  dimensions?: number
-  /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
-  distance_metric?: string
-  /** Per-dimension weights for the "weighted" distance metric. */
-  weighted_metric_weights?: Array<number>
-  /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
-  surface_mode?: string
-  /** Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy. */
-  cell?: number
-  /** Maximum number of interpolation vertices. */
-  interpolation_vertices?: number
-  /** Reduce polynomial degree to linear at boundary vertices (default true). */
-  boundary_degree_fallback?: boolean
-  /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error". */
-  missing?: string
+    /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+    fraction?: number
+    /** Number of robustness iterations. Default: 0; positive values require `update_mode: "full"`. */
+    iterations?: number
+    /** Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
+    weight_function?: string
+    /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
+    robustness_method?: string
+    /** Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
+    zero_weight_fallback?: string
+    /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
+    boundary_policy?: string
+    /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+    scaling_method?: string
+    /** Auto-convergence tolerance. Default: None. */
+    auto_converge?: number
+    /** Return robustness weights in result. Default: false. */
+    return_robustness_weights?: boolean
+    /**
+     * Return the per-point local fit gradient in result (only takes effect when
+     * `surface_mode` is "direct"). Default: false.
+     */
+    return_gradient?: boolean
+    /**
+     * Confidence level for confidence intervals. Only computed under
+     * `update_mode: "full"`. Default: None.
+     */
+    confidence_intervals?: number
+    /**
+     * Confidence level for prediction intervals. Same `update_mode: "full"`
+     * requirement as `confidence_intervals`. Default: None.
+     */
+    prediction_intervals?: number
+    /**
+     * Return the standard error for the latest point in result. Same
+     * `update_mode: "full"` requirement as `confidence_intervals`. Default: false.
+     */
+    return_se?: boolean
+    /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
+    degree?: string
+    /** Number of predictor dimensions. Default: 1. */
+    dimensions?: number
+    /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
+    distance_metric?: string
+    /** Per-dimension weights for the "weighted" distance metric. */
+    weighted_metric_weights?: Array<number>
+    /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
+    surface_mode?: string
+    /** Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy. */
+    cell?: number
+    /** Maximum number of interpolation vertices. */
+    interpolation_vertices?: number
+    /** Reduce polynomial degree to linear at boundary vertices (default true). */
+    boundary_degree_fallback?: boolean
+    /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `addPoint` ("error", "drop"). Default: "error". */
+    missing?: string
 }
 
 /** Options for `LoessResult.predict()`. */
 export interface PredictOptions {
-  /** Include standard errors in the output. Default: false. */
-  return_se?: boolean
-  /** Confidence interval coverage level (e.g. 0.95). Default: None. */
-  confidence_level?: number
-  /** Prediction interval coverage level (e.g. 0.95). Default: None. */
-  prediction_level?: number
-  /** Include the local fit's gradient in the output. Default: false. */
-  return_derivative?: boolean
-  /** Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp". */
-  extrapolation?: string
-  /**
-   * Under "linear" extrapolation, the maximum allowed distance beyond the training
-   * boundary before `predict()` errors instead of returning an unbounded value.
-   */
-  max_extrapolation_distance?: number
-  /**
-   * Maximum allowed distance to the farthest point in a query's neighbor window
-   * before `predict()` errors, catching in-range-but-sparse query points.
-   */
-  max_neighbor_distance?: number
+    /** Include standard errors in the output. Default: false. */
+    return_se?: boolean
+    /** Confidence interval coverage level (e.g. 0.95). Default: None. */
+    confidence_level?: number
+    /** Prediction interval coverage level (e.g. 0.95). Default: None. */
+    prediction_level?: number
+    /** Include the local fit's gradient in the output. Default: false. */
+    return_derivative?: boolean
+    /** Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp". */
+    extrapolation?: string
+    /**
+     * Under "linear" extrapolation, the maximum allowed distance beyond the training
+     * boundary before `predict()` errors instead of returning an unbounded value.
+     */
+    max_extrapolation_distance?: number
+    /**
+     * Maximum allowed distance to the farthest point in a query's neighbor window
+     * before `predict()` errors, catching in-range-but-sparse query points.
+     */
+    max_neighbor_distance?: number
 }
 
 /** Configuration options for LOESS smoothing. */
 export interface SmoothOptions {
-  /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
-  fraction?: number
-  /** Number of robustness iterations. Default: 3. */
-  iterations?: number
-  /** Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
-  weight_function?: string
-  /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
-  robustness_method?: string
-  /** Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
-  zero_weight_fallback?: string
-  /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
-  boundary_policy?: string
-  /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
-  scaling_method?: string
-  /** Auto-convergence tolerance. Default: None. */
-  auto_converge?: number
-  /** Return residuals in result. Default: false. */
-  return_residuals?: boolean
-  /** Return robustness weights in result. Default: false. */
-  return_robustness_weights?: boolean
-  /**
-   * Return the per-point local fit gradient in result (only takes effect when
-   * `surface_mode` is "direct"). Default: false.
-   */
-  return_gradient?: boolean
-  /** Return diagnostics (RMSE, etc.). Default: false. */
-  return_diagnostics?: boolean
-  /** Calculate confidence intervals (e.g., 0.95). Default: None. */
-  confidence_intervals?: number
-  /** Calculate prediction intervals. Default: None. */
-  prediction_intervals?: number
-  /** Fractions to use for cross-validation. */
-  cv_fractions?: Array<number>
-  /** CV method ("loocv", "kfold"). Default: "kfold". */
-  cv_method?: string
-  /** Number of folds for K-Fold CV. Default: 5. */
-  cv_k?: number
-  /** Enable parallel execution. Default: true. */
-  parallel?: boolean
-  /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
-  degree?: string
-  /** Number of predictor dimensions. Default: 1. */
-  dimensions?: number
-  /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
-  distance_metric?: string
-  /** Per-dimension weights for the "weighted" distance metric. */
-  weighted_metric_weights?: Array<number>
-  /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
-  surface_mode?: string
-  /** Compute hat-matrix statistics (enp, trace_hat, etc.). Default: false. */
-  return_se?: boolean
-  /**
-   * Return results sorted ascending by x instead of in original input order
-   * (Batch only). Default: false.
-   */
-  return_sorted?: boolean
-  /** Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy. */
-  cell?: number
-  /** Maximum number of interpolation vertices. */
-  interpolation_vertices?: number
-  /** Reduce polynomial degree to linear at boundary vertices (default true). */
-  boundary_degree_fallback?: boolean
-  /** Random seed for reproducible K-fold cross-validation splits. */
-  cv_seed?: number
-  /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
-  missing?: string
-  /** Retain the fitted model's training data, enabling `LoessResult.predict()`. Default: false. */
-  retain_model?: boolean
+    /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+    fraction?: number
+    /** Number of robustness iterations. Default: 3. */
+    iterations?: number
+    /** Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
+    weight_function?: string
+    /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
+    robustness_method?: string
+    /** Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
+    zero_weight_fallback?: string
+    /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
+    boundary_policy?: string
+    /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+    scaling_method?: string
+    /** Auto-convergence tolerance. Default: None. */
+    auto_converge?: number
+    /** Return residuals in result. Default: false. */
+    return_residuals?: boolean
+    /** Return robustness weights in result. Default: false. */
+    return_robustness_weights?: boolean
+    /**
+     * Return the per-point local fit gradient in result (only takes effect when
+     * `surface_mode` is "direct"). Default: false.
+     */
+    return_gradient?: boolean
+    /** Return diagnostics (RMSE, etc.). Default: false. */
+    return_diagnostics?: boolean
+    /** Calculate confidence intervals (e.g., 0.95). Default: None. */
+    confidence_intervals?: number
+    /** Calculate prediction intervals. Default: None. */
+    prediction_intervals?: number
+    /** Fractions to use for cross-validation. */
+    cv_fractions?: Array<number>
+    /** CV method ("loocv", "kfold"). Default: "kfold". */
+    cv_method?: string
+    /** Number of folds for K-Fold CV. Default: 5. */
+    cv_k?: number
+    /** Enable parallel execution. Default: true. */
+    parallel?: boolean
+    /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
+    degree?: string
+    /** Number of predictor dimensions. Default: 1. */
+    dimensions?: number
+    /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
+    distance_metric?: string
+    /** Per-dimension weights for the "weighted" distance metric. */
+    weighted_metric_weights?: Array<number>
+    /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
+    surface_mode?: string
+    /** Compute hat-matrix statistics (enp, trace_hat, etc.). Default: false. */
+    return_se?: boolean
+    /**
+     * Return results sorted ascending by x instead of in original input order
+     * (Batch only). Default: false.
+     */
+    return_sorted?: boolean
+    /** Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy. */
+    cell?: number
+    /** Maximum number of interpolation vertices. */
+    interpolation_vertices?: number
+    /** Reduce polynomial degree to linear at boundary vertices (default true). */
+    boundary_degree_fallback?: boolean
+    /** Random seed for reproducible K-fold cross-validation splits. */
+    cv_seed?: number
+    /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
+    missing?: string
+    /** Retain the fitted model's training data, enabling `LoessResult.predict()`. Default: false. */
+    retain_model?: boolean
 }
 
 /** Configuration options for streaming processing. */
 export interface StreamingOptions {
-  /** Size of each data chunk. Default: 5000. */
-  chunk_size?: number
-  /** Header/footer overlap size. Default: chunk_size / 10, min. 1. */
-  overlap?: number
-  /** Strategy for merging chunk overlaps ("average", "weighted_average", "take_first", "take_last"). */
-  merge_strategy?: string
+    /** Size of each data chunk. Default: 5000. */
+    chunk_size?: number
+    /** Header/footer overlap size. Default: chunk_size / 10, min. 1. */
+    overlap?: number
+    /** Strategy for merging chunk overlaps ("average", "weighted_average", "take_first", "take_last"). */
+    merge_strategy?: string
 }
 
 /**
@@ -331,66 +331,66 @@ export interface StreamingOptions {
  * equivalent here, so it isn't a field on this type.
  */
 export interface StreamingSmoothOptions {
-  /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
-  fraction?: number
-  /** Number of robustness iterations. Default: 3. */
-  iterations?: number
-  /** Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
-  weight_function?: string
-  /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
-  robustness_method?: string
-  /** Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
-  zero_weight_fallback?: string
-  /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
-  boundary_policy?: string
-  /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
-  scaling_method?: string
-  /** Auto-convergence tolerance. Default: None. */
-  auto_converge?: number
-  /** Return residuals in result. Default: false. */
-  return_residuals?: boolean
-  /** Return robustness weights in result. Default: false. */
-  return_robustness_weights?: boolean
-  /**
-   * Return the per-point local fit gradient in result (only takes effect when
-   * `surface_mode` is "direct"). Default: false.
-   */
-  return_gradient?: boolean
-  /** Return diagnostics (RMSE, etc.). Default: false. */
-  return_diagnostics?: boolean
-  /**
-   * Confidence level for confidence intervals, computed per chunk and merged
-   * across overlap boundaries via `merge_strategy`. Default: None.
-   */
-  confidence_intervals?: number
-  /**
-   * Confidence level for prediction intervals; same per-chunk computation and
-   * overlap-merging as `confidence_intervals`. Default: None.
-   */
-  prediction_intervals?: number
-  /**
-   * Return standard errors in result, computed per chunk and merged across
-   * overlap boundaries via `merge_strategy`. Default: false.
-   */
-  return_se?: boolean
-  /** Enable parallel execution. Default: true. */
-  parallel?: boolean
-  /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
-  degree?: string
-  /** Number of predictor dimensions. Default: 1. */
-  dimensions?: number
-  /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
-  distance_metric?: string
-  /** Per-dimension weights for the "weighted" distance metric. */
-  weighted_metric_weights?: Array<number>
-  /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
-  surface_mode?: string
-  /** Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy. */
-  cell?: number
-  /** Maximum number of interpolation vertices. */
-  interpolation_vertices?: number
-  /** Reduce polynomial degree to linear at boundary vertices (default true). */
-  boundary_degree_fallback?: boolean
-  /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */
-  missing?: string
+    /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
+    fraction?: number
+    /** Number of robustness iterations. Default: 3. */
+    iterations?: number
+    /** Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
+    weight_function?: string
+    /** Robustness method ("bisquare", "huber", "talwar"). Default: "bisquare". */
+    robustness_method?: string
+    /** Fallback strategy when weights are zero ("use_local_mean", "return_original", "return_none"). Default: "use_local_mean". */
+    zero_weight_fallback?: string
+    /** Boundary handling ("extend", "reflect", "zero", "noboundary"). Default: "extend". */
+    boundary_policy?: string
+    /** Scaling method ("mad", "mar", "mean"). Default: "mad". */
+    scaling_method?: string
+    /** Auto-convergence tolerance. Default: None. */
+    auto_converge?: number
+    /** Return residuals in result. Default: false. */
+    return_residuals?: boolean
+    /** Return robustness weights in result. Default: false. */
+    return_robustness_weights?: boolean
+    /**
+     * Return the per-point local fit gradient in result (only takes effect when
+     * `surface_mode` is "direct"). Default: false.
+     */
+    return_gradient?: boolean
+    /** Return diagnostics (RMSE, etc.). Default: false. */
+    return_diagnostics?: boolean
+    /**
+     * Confidence level for confidence intervals, computed per chunk and merged
+     * across overlap boundaries via `merge_strategy`. Default: None.
+     */
+    confidence_intervals?: number
+    /**
+     * Confidence level for prediction intervals; same per-chunk computation and
+     * overlap-merging as `confidence_intervals`. Default: None.
+     */
+    prediction_intervals?: number
+    /**
+     * Return standard errors in result, computed per chunk and merged across
+     * overlap boundaries via `merge_strategy`. Default: false.
+     */
+    return_se?: boolean
+    /** Enable parallel execution. Default: true. */
+    parallel?: boolean
+    /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
+    degree?: string
+    /** Number of predictor dimensions. Default: 1. */
+    dimensions?: number
+    /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
+    distance_metric?: string
+    /** Per-dimension weights for the "weighted" distance metric. */
+    weighted_metric_weights?: Array<number>
+    /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
+    surface_mode?: string
+    /** Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy. */
+    cell?: number
+    /** Maximum number of interpolation vertices. */
+    interpolation_vertices?: number
+    /** Reduce polynomial degree to linear at boundary vertices (default true). */
+    boundary_degree_fallback?: boolean
+    /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */
+    missing?: string
 }

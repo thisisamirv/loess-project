@@ -461,7 +461,7 @@ pub struct SmoothOptions {
     pub boundary_degree_fallback: Option<bool>,
     /// Random seed for reproducible K-fold cross-validation splits.
     #[napi(js_name = "cv_seed")]
-    pub cv_seed: Option<u32>,
+    pub cv_seed: Option<i64>,
     /// Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error".
     #[napi(js_name = "missing")]
     pub missing: Option<String>,
@@ -632,6 +632,19 @@ pub struct OnlineSmoothOptions {
 fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder<f64>> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        let cv_seed = opts
+            .cv_seed
+            .map(|seed| {
+                if seed < 0 {
+                    Err(shared_parse::BindingError::invalid_arg(format!(
+                        "cv_seed must be non-negative, got {seed}"
+                    )))
+                } else {
+                    Ok(seed as u64)
+                }
+            })
+            .transpose()
+            .map_err(to_napi_error)?;
         let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
@@ -662,7 +675,7 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
                 cv_fractions: opts.cv_fractions.as_deref(),
                 cv_method: opts.cv_method.as_deref(),
                 cv_k: opts.cv_k.map(|v| v as usize),
-                cv_seed: opts.cv_seed.map(|s| s as u64),
+                cv_seed,
                 missing: opts.missing.as_deref(),
                 retain_model: opts.retain_model,
             },

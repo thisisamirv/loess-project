@@ -171,6 +171,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Node.js:**
 
 - Fixed inconsistent naming of the Node.js binding as "JavaScript" across READMEs, doc-site home pages, and `CITATION.cff`.
+- Fixed `cv_seed` silently accepting negative values by validating the signed input before converting it to `u64`.
 
 **R:**
 

@@ -19,6 +19,16 @@ test('batch smoothing', () => {
     assert.ok(result.diagnostics.rmse < 0.1);
 });
 
+test('cv_seed rejects negative values', () => {
+    assert.throws(
+        () => new fastloess.Loess({ cv_seed: -1 }).fit(
+            new Float64Array([1, 2, 3]),
+            new Float64Array([2, 4, 6])
+        ),
+        /cv_seed must be non-negative, got -1/
+    );
+});
+
 test('streaming smoothing', () => {
     const streamer = new fastloess.StreamingLoess({
         fraction: 0.3
