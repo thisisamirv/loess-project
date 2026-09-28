@@ -144,7 +144,7 @@ fn test_gradient_pass_consistency() {
 }
 
 #[test]
-fn test_parallel_gradient_suppresses_small_local_spread() {
+fn test_parallel_gradient_retains_small_local_spread() {
     let x: Vec<f64> = (0..40)
         .map(|index| {
             if index < 20 {
@@ -168,6 +168,6 @@ fn test_parallel_gradient_suppresses_small_local_spread() {
         .unwrap();
 
     let gradient = result.gradient.expect("gradient should be Some");
-    assert_eq!(gradient[10], 0.0);
+    assert_abs_diff_eq!(gradient[10], 3.0, epsilon = 1e-6);
     assert_abs_diff_eq!(gradient[30], 3.0, epsilon = 1e-6);
 }

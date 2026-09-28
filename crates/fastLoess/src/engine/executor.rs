@@ -20,7 +20,6 @@ use std::fmt::Debug;
 
 // Export dependencies from loess-rs crate
 use loess_rs::internals::algorithms::regression::RegressionContext;
-use loess_rs::internals::algorithms::regression::one_dimensional_x_range;
 use loess_rs::internals::algorithms::regression::{
     PolynomialDegree, SolverLinalg, ZeroWeightFallback,
 };
@@ -135,8 +134,6 @@ pub fn smooth_pass_parallel<T>(
     if n == 0 {
         return;
     }
-    let global_x_range = one_dimensional_x_range(x, dims);
-
     // Build KD-Tree for efficient neighbor finding on AUGMENTED data
     let kdtree = KDTree::new(x_search, dims);
 
@@ -186,10 +183,6 @@ pub fn smooth_pass_parallel<T>(
                     false, // compute_leverage
                     Some(fitting_buffer),
                 );
-                if let Some(range) = global_x_range {
-                    context = context.with_global_x_range(range);
-                }
-
                 if let Some(uw) = custom_weights {
                     context = context.with_custom_weights(uw);
                 }
@@ -234,8 +227,6 @@ where
     if n == 0 {
         return Vec::new();
     }
-    let global_x_range = one_dimensional_x_range(x, dims);
-
     // Build KD-Tree for efficient neighbor finding on AUGMENTED data
     let kdtree = KDTree::new(x_search, dims);
 
@@ -281,10 +272,6 @@ where
                     false, // compute_leverage
                     Some(fitting_buffer),
                 );
-                if let Some(range) = global_x_range {
-                    context = context.with_global_x_range(range);
-                }
-
                 if let Some(uw) = custom_weights {
                     context = context.with_custom_weights(uw);
                 }
@@ -343,8 +330,6 @@ pub fn vertex_pass_parallel<T>(
             }
         }
     }
-    let global_x_range = one_dimensional_x_range(x, dims);
-
     // KD-Tree is only needed if we don't have existing neighborhoods
     let kdtree_opt = if existing_neighborhoods.is_none() {
         Some(KDTree::new(x, dims))
@@ -432,10 +417,6 @@ pub fn vertex_pass_parallel<T>(
                     false, // compute_leverage
                     Some(fitting_buffer),
                 );
-                if let Some(range) = global_x_range {
-                    context = context.with_global_x_range(range);
-                }
-
                 if let Some(uw) = custom_weights {
                     context = context.with_custom_weights(uw);
                 }

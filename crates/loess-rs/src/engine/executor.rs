@@ -53,6 +53,47 @@ use crate::primitives::buffer::{
 };
 use crate::primitives::window::Window;
 
+fn loess_normalization_scales<T: Float>(x: &[T], n: usize, dims: usize) -> Vec<T> {
+    let mut scales = vec![T::one(); dims];
+    if dims <= 1 || n == 0 {
+        return scales;
+    }
+
+    let trim = n / 10 + if n % 10 == 0 { 0 } else { 1 };
+    let mut values = Vec::with_capacity(n);
+    for dim in 0..dims {
+        values.clear();
+        values.extend((0..n).map(|row| x[row * dims + dim]));
+        values.sort_by(|left, right| left.partial_cmp(right).unwrap_or(Equal));
+
+        let start = trim.min(n);
+        let end = n.saturating_sub(trim);
+        let (start, end) = if end.saturating_sub(start) < 2 {
+            (0, n)
+        } else {
+            (start, end)
+        };
+        let retained = &values[start..end];
+        let count = T::from(retained.len()).unwrap_or(T::one());
+        let mean = retained
+            .iter()
+            .copied()
+            .fold(T::zero(), |sum, value| sum + value)
+            / count;
+        let squared_deviations = retained.iter().fold(T::zero(), |sum, &value| {
+            let deviation = value - mean;
+            sum + deviation * deviation
+        });
+        let variance = squared_deviations / T::from(retained.len() - 1).unwrap_or(T::one());
+        let standard_deviation = variance.sqrt();
+        if standard_deviation > T::zero() && standard_deviation.is_finite() {
+            scales[dim] = T::one() / standard_deviation;
+        }
+    }
+
+    scales
+}
+
 // Standard LOESS distance calculator.
 //
 // Implements `PointDistance` using either Euclidean or Normalized Euclidean metrics.
@@ -757,31 +798,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                         let n_train = train_y.len();
                         let window_size = Window::calculate_span(n_train, f);
 
-                        // Use Min-Max scaling consistent with main run()
-                        let mut scales = vec![T::one(); dims];
-                        if n_train > 0 {
-                            let mut mins = train_x[..dims].to_vec();
-                            let mut maxs = train_x[..dims].to_vec();
-
-                            for i in 1..n_train {
-                                for d in 0..dims {
-                                    let val = train_x[i * dims + d];
-                                    if val < mins[d] {
-                                        mins[d] = val;
-                                    }
-                                    if val > maxs[d] {
-                                        maxs[d] = val;
-                                    }
-                                }
-                            }
-
-                            for d in 0..dims {
-                                let range = maxs[d] - mins[d];
-                                if range > T::zero() {
-                                    scales[d] = T::one() / range;
-                                }
-                            }
-                        }
+                        let scales = loess_normalization_scales(train_x, n_train, dims);
                         let kdtree = if let Some(builder) = executor.custom_kdtree_builder {
                             builder(train_x, dims)
                         } else {
@@ -912,41 +929,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             &mut new_workspace
         };
 
-        // Compute normalization scales using the full (augmented) range
+        // R LOESS normalizes multivariate predictors by their trimmed sample SD.
         workspace.executor_buffer.ensure_capacity(n_total, dims);
-        let mins = &mut workspace.executor_buffer.mins;
-        let maxs = &mut workspace.executor_buffer.maxs;
-        mins.resize(dims, T::zero());
-        maxs.resize(dims, T::zero());
-
-        // Initialize mins/maxs with first point
-        mins[..dims].copy_from_slice(&ax[..dims]);
-        maxs[..dims].copy_from_slice(&ax[..dims]);
-        for i in 1..n_total {
-            for d in 0..dims {
-                let val = ax[i * dims + d];
-                if val < mins[d] {
-                    mins[d] = val;
-                }
-                if val > maxs[d] {
-                    maxs[d] = val;
-                }
-            }
-        }
-
+        let scales_local = loess_normalization_scales(x, n, dims);
         workspace.executor_buffer.scales.resize(dims, T::one());
-        let scales_ref = &mut workspace.executor_buffer.scales;
-        for d in 0..dims {
-            let range = maxs[d] - mins[d];
-            if range > T::zero() {
-                scales_ref[d] = T::one() / range;
-            } else {
-                scales_ref[d] = T::one();
-            }
-        }
-
-        // Copy scales locally for distance calculator to avoid borrowing workspace
-        let scales_local = workspace.executor_buffer.scales.clone();
+        workspace
+            .executor_buffer
+            .scales
+            .copy_from_slice(&scales_local);
 
         // Build KD-Tree for efficient kNN
         let kdtree = if let Some(builder) = self.custom_kdtree_builder {
@@ -1743,5 +1733,34 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod normalization_tests {
+    use super::loess_normalization_scales;
+    use approx::assert_relative_eq;
+
+    #[test]
+    fn uses_r_loess_trimmed_sample_standard_deviation() {
+        let mut x = Vec::new();
+        for index in 0..10 {
+            x.push(if index == 9 {
+                100.0
+            } else {
+                index as f64 / 10.0
+            });
+            x.push(if index == 9 {
+                1000.0
+            } else {
+                index as f64 * 10.0
+            });
+        }
+
+        let scales = loess_normalization_scales(&x, 10, 2);
+
+        assert_relative_eq!(scales[0], 1.0 / 0.06_f64.sqrt(), epsilon = 1e-12);
+        assert_relative_eq!(scales[1], 1.0 / 600.0_f64.sqrt(), epsilon = 1e-12);
+        assert_relative_eq!(scales[0] / scales[1], 100.0, epsilon = 1e-10);
     }
 }

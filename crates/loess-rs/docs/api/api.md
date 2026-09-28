@@ -239,7 +239,7 @@ Number of predictor dimensions. `1` (default) is univariate; set to match the nu
 
 *See: [Multivariate LOESS](crate::doc::advanced::dimensions)*
 
-- `"normalized"` (default — scales each dimension by its range; alias: `"norm"`)
+- `"normalized"` (default — scales each dimension by its 10%-trimmed sample standard deviation; alias: `"norm"`)
 - `"euclidean"` (alias: `"euclid"`)
 - `"manhattan"` (alias: `"l1"`)
 - `"chebyshev"` (alias: `"linf"`)

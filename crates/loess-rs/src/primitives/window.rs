@@ -5,7 +5,7 @@
 // ## srrstats Compliance
 //
 // @srrstats {RE2.1} Nearest-neighbor windowing for local regression bandwidth.
-// @srrstats {G2.1} Window span calculation from fraction with epsilon handling.
+// @srrstats {G2.1} Window span calculation by truncating fraction times sample size.
 
 // External dependencies
 use num_traits::Float;
@@ -95,9 +95,8 @@ impl Window {
     // Calculate window size q from fraction alpha and data length n.
     #[inline]
     pub fn calculate_span<T: Float>(n: usize, frac: T) -> usize {
-        let epsilon = T::from(1e-5).unwrap_or_else(T::epsilon);
         let n_t = T::from(n).unwrap_or_else(|| T::from(n as u16).unwrap_or(T::one()));
-        let frac_n = frac * n_t + epsilon;
+        let frac_n = frac * n_t;
         let frac_n_int = frac_n.to_usize().unwrap_or(0);
         usize::max(2, usize::min(n, frac_n_int))
     }

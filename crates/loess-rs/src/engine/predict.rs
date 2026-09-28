@@ -314,7 +314,7 @@ pub struct PredictState<T: Float> {
     pub distance_metric: DistanceMetric<T>,
 
     // Per-dimension normalization scales (used when `distance_metric` is `Normalized`),
-    // computed from the padded training data's min-max range.
+    // computed from the unpadded training data's 10%-trimmed sample standard deviation.
     pub scales: Vec<T>,
 
     // Per-observation case weights, aligned with `x`/`y`, if provided.

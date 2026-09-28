@@ -120,7 +120,7 @@ When `dimensions > 1` you can also control how inter-point distances are compute
 
 | Metric | Description | When to Use |
 | --- | --- | --- |
-| `"normalized"` | Each dimension scaled to unit range (default) | Predictors on different scales |
+| `"normalized"` | Each dimension scaled by its 10%-trimmed sample standard deviation (default) | Predictors on different scales; matches R LOESS normalization |
 | `"euclidean"` | Raw Euclidean distance | Predictors already on same scale |
 | `"minkowski:p"` | Generalised Minkowski ($L_p$) norm | Custom distance geometry |
 | `"weighted"` | Per-dimension weighted Euclidean | Domain-specific importance |

@@ -8,12 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-**loess-rs:**
-
-- Matched R `stats::loess` span rounding and bisquare robustness cutoffs; MAR now uses R's uncentered median absolute residual and machine-minimum scale stop, while MAD remains the default. Near-singular local linear fits are handled by the regression solver rather than a global-range slope cutoff.
-
 ### Added
 
 **Monorepo:**
@@ -95,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 - Removed unused `pub use` re-exports with no consumer via that path. No behavior changes.
 - Marked `WeightFunction` as non-exhaustive so downstream kernel must reject unsupported future variants explicitly.
+- Matched R `stats::loess` span truncation, multivariate predictor normalization, and bisquare robustness cutoffs; MAR now uses R's uncentered median absolute residual and machine-minimum scale stop, while MAD remains the default. Near-singular local linear fits are handled by the regression solver rather than a global-range slope cutoff.
 
 **fastLoess:**
 
