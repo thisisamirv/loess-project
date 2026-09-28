@@ -149,6 +149,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed seeded k-fold CV with unordered test queries: batch interpolation now locates each query bracket independently with binary search instead of relying on a monotone scan pointer.
 - Fixed local-linear and global OLS regression on small-magnitude predictors by using scale-relative degeneracy checks instead of absolute x-variance thresholds. Added gradient and standard-error regressions for small x scales.
 - Matched Cleveland/R's local-linear degeneracy rule in one-dimensional linear fits by suppressing slopes when weighted local spread is below `0.001` of the global x-range.
+- Matched R's `1e-7` span-truncation adjustment instead of rounding near-integer neighborhoods with `1e-5`.
+- Matched R's normalized adjusted-weight fitted-value accumulation without parity-, sparsity-, or response-scale-specific branches.
+- Separated local-weight adjustment and fitted-response accumulation into R's original loop order, avoiding platform-dependent cancellation in sparse robust fits.
+- Separated robustness scale scratch storage from local kernel weights so median selection cannot contaminate the next R-equivalent smoothing pass.
+- Matched R's `w * ((x - mean_x) * (x - mean_x))` spread parenthesization, preserving cancellation-scale endpoint fits during robust passes.
+- Matched R's even-length `cmad = 3 * (lower + upper)` operation order instead of scaling an averaged median.
+- Extended local kernel scans beyond the nominal right window edge until R's `0.999 * h` cutoff, matching `lowest()` on asymmetric neighborhoods.
 - Fixed k-fold cross-validation to pool every test point's squared error before taking one RMSE, matching LOOCV instead of averaging per-fold RMSEs.
 
 **fastLoess:**

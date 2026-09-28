@@ -307,6 +307,11 @@ fn test_calculate_span_edge_fractions() {
     let span = Window::calculate_span(n, 0.01);
     assert_eq!(span, 2, "Minimum span should be 2");
 
+    // R truncates `(f * n + 1e-7)`, so a value 5e-6 below the next integer
+    // should still round down to the lower neighbor.
+    let span = Window::calculate_span(n, 0.02999995);
+    assert_eq!(span, 2, "Span epsilon should match R's 1e-7 adjustment");
+
     // Fraction of 0
     let span = Window::calculate_span(n, 0.0);
     assert_eq!(span, 2, "Zero fraction should give minimum span");
