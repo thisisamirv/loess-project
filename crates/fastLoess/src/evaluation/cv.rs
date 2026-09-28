@@ -112,7 +112,8 @@ where
                 return T::infinity();
             }
 
-            let mut fold_rmses = Vec::with_capacity(k);
+            let mut total_error = T::zero();
+            let mut total_test_points = 0usize;
             let executor = LoessExecutor::from_config(&cv_config);
             let window_size = Window::calculate_span(n - fold_size, fraction); // Approx n_train
 
@@ -148,8 +149,7 @@ where
                     continue;
                 }
 
-                let mut fold_sse = T::zero();
-                let mut fold_count = 0usize;
+                let mut fold_error = T::zero();
 
                 // 1D Case: Use Interpolation to match Sequential behavior
                 if dims == 1 {
@@ -179,8 +179,7 @@ where
                     for (i, &pred) in preds.iter().enumerate() {
                         let actual_y = y[test_start + i];
                         let residual = actual_y - pred;
-                        fold_sse = fold_sse + residual * residual;
-                        fold_count += 1;
+                        fold_error = fold_error + residual * residual;
                     }
                 } else {
                     // nD Case: Use Direct Prediction (standard LOESS)
@@ -229,21 +228,18 @@ where
                     for (i, &pred) in predictions.iter().enumerate() {
                         let actual_y = y[test_start + i];
                         let residual = actual_y - pred;
-                        fold_sse = fold_sse + residual * residual;
-                        fold_count += 1;
+                        fold_error = fold_error + residual * residual;
                     }
                 }
 
-                if fold_count > 0 {
-                    fold_rmses.push((fold_sse / T::from(fold_count).unwrap()).sqrt());
-                }
+                total_error = total_error + fold_error;
+                total_test_points += test_size;
             }
 
-            if fold_rmses.is_empty() {
+            if total_test_points == 0 {
                 T::infinity()
             } else {
-                let sum: T = fold_rmses.iter().copied().fold(T::zero(), |a, b| a + b);
-                sum / T::from(fold_rmses.len()).unwrap()
+                (total_error / T::from(total_test_points).unwrap()).sqrt()
             }
         }
     }

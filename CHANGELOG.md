@@ -95,6 +95,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Flattened `tests/fastLoess/` into `tests/` directly: each test file is now its own integration test binary. No behavior changes.
 - Bumped the vendored KaTeX CDN version from `0.18.5` to `0.18.7`, updating SRI hashes to match.
 - Removed unused `pub use` re-exports with no consumer via that path. No behavior changes.
+- Replaced `std::mem::forget` with `Box::into_raw` in `vec_to_raw_ptr`, making the FFI ownership transfer explicit; bindings still release it through `free_raw_f64_buffer`.
+- Implemented `std::error::Error` for `BindingError`.
 
 **C++:**
 
