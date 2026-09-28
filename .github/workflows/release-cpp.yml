@@ -42,10 +42,10 @@ jobs:
             asset_name: libfastloess-linux-arm64.so
             target_dir: target/release
           - os: ubuntu-24.04-arm
-            container: "alpine:latest"
             artifact_name: libfastloess.so
             asset_name: libfastloess-linux-arm64-musl.so
-            target_dir: target/release
+            target_dir: target/aarch64-unknown-linux-musl/release
+            cargo_target: "--target aarch64-unknown-linux-musl"
           - os: windows-latest
             artifact_name: fastloess.dll
             asset_name: fastloess-win32-x64.dll
@@ -66,7 +66,11 @@ jobs:
     steps:
       - name: Install Alpine build dependencies
         if: matrix.container
-        run: apk add --no-cache build-base curl bash git
+        run: |
+          apk add --no-cache build-base curl bash git
+          # A fully static musl target cannot emit a cdylib. Link dynamically
+          # against Alpine's musl so Cargo produces the release .so asset.
+          echo "RUSTFLAGS=-C target-feature=-crt-static" >> "$GITHUB_ENV"
 
       - uses: actions/checkout@v7
         with:
@@ -77,22 +81,34 @@ jobs:
         with:
           toolchain: stable
 
+      - name: Install musl toolchain and target (Linux ARM64)
+        if: matrix.cargo_target != ''
+        run: |
+          rustup target add aarch64-unknown-linux-musl
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc" >> "$GITHUB_ENV"
+          echo "CC_aarch64_unknown_linux_musl=musl-gcc" >> "$GITHUB_ENV"
+          # Disable crt-static for the cdylib and expose libgcc_s to musl-gcc.
+          LIBGCC_DIR="$(dirname "$(ldconfig -p | grep libgcc_s.so.1 | awk '{print $NF}' | head -n1)")"
+          echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_MUSL_RUSTFLAGS=-C target-feature=-crt-static -L $LIBGCC_DIR" >> "$GITHUB_ENV"
+
       - name: Build C++ Library
         working-directory: bindings/cpp
-        run: cargo build --release --lib
+        run: cargo build --release --lib ${{ matrix.cargo_target }}
 
       - name: Prepare Assets (Unix)
         if: runner.os != 'Windows'
         run: |
           # Rust/Cargo naming: libfastloess_cpp.so or .dylib
-          mv target/release/libfastloess_cpp.so ${{ matrix.asset_name }} 2>/dev/null || mv target/release/libfastloess_cpp.dylib ${{ matrix.asset_name }}
+          mv ${{ matrix.target_dir }}/libfastloess_cpp.so ${{ matrix.asset_name }} 2>/dev/null || mv ${{ matrix.target_dir }}/libfastloess_cpp.dylib ${{ matrix.asset_name }}
 
       - name: Prepare Assets (Windows)
         if: runner.os == 'Windows'
         shell: bash
         run: |
           # Windows: fastloess_cpp.dll
-          mv target/release/fastloess_cpp.dll ${{ matrix.asset_name }}
+          mv ${{ matrix.target_dir }}/fastloess_cpp.dll ${{ matrix.asset_name }}
 
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v3
