@@ -271,7 +271,6 @@ pub type RawPredictValues<T> = Result<(Vec<T>, Option<Vec<T>>, Option<Vec<T>>), 
 // Signature for a custom (e.g. parallel) predict pass function. Computes only the
 // per-point values (y, optional gradient, optional standard error); the shared
 // confidence/prediction interval math is applied afterward by `predict_batch`.
-#[doc(hidden)]
 pub type PredictPassFn<T> = fn(
     &PredictState<T>,
     &[T], // new_x (flattened, `dimensions` values per query point)
@@ -352,7 +351,6 @@ pub struct PredictState<T: Float> {
     pub surface: Option<InterpolationSurface<T>>,
 
     // Custom (e.g. parallel) predict pass, injected by extension crates like fastLoess.
-    #[doc(hidden)]
     pub custom_predict_pass: Option<PredictPassFn<T>>,
 }
 
@@ -393,7 +391,6 @@ fn zero_vec<T: FloatLinalg>(n: usize) -> Vec<T> {
 //
 // `pub` (hidden) so extension crates like fastLoess can reuse it for a parallel
 // `PredictPassFn` implementation.
-#[doc(hidden)]
 #[allow(clippy::too_many_arguments)]
 #[allow(clippy::type_complexity)]
 pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>(

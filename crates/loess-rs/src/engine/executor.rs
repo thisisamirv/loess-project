@@ -128,7 +128,6 @@ pub enum SurfaceMode {
 }
 
 // Signature for custom smooth pass function
-#[doc(hidden)]
 pub type SmoothPassFn<T> = fn(
     &[T],               // x (query points)
     &[T],               // y (associated values)
@@ -148,7 +147,6 @@ pub type SmoothPassFn<T> = fn(
 );
 
 // Signature for custom cross-validation pass function
-#[doc(hidden)]
 pub type CVPassFn<T> = fn(
     &[T],            // x
     &[T],            // y
@@ -158,7 +156,6 @@ pub type CVPassFn<T> = fn(
 ) -> (T, Vec<T>); // (best_fraction, scores)
 
 // Signature for custom interval estimation pass function
-#[doc(hidden)]
 pub type IntervalPassFn<T> = fn(
     &[T],               // x (query points)
     &[T],               // y (associated values)
@@ -176,7 +173,6 @@ pub type IntervalPassFn<T> = fn(
 ) -> Vec<T>; // standard errors
 
 // Signature for custom iteration batch pass function.
-#[doc(hidden)]
 pub type FitPassFn<T> = fn(
     &[T],            // x
     &[T],            // y
@@ -189,7 +185,6 @@ pub type FitPassFn<T> = fn(
 );
 
 // Signature for custom vertex pass function (Interpolation mode).
-#[doc(hidden)]
 pub type VertexPassFn<T> = fn(
     &[T],                             // x (augmented)
     &[T],                             // y (augmented)
@@ -211,11 +206,9 @@ pub type VertexPassFn<T> = fn(
 );
 
 // Signature for custom KD-tree builder function.
-#[doc(hidden)]
 pub type KDTreeBuilderFn<T> = fn(points: &[T], dims: usize) -> KDTree<T>;
 
 // Signature for custom gradient pass function (Direct mode only).
-#[doc(hidden)]
 pub type GradientPassFn<T> = fn(
     &[T],               // x (query points)
     &[T],               // x_search (augmented data for neighbor search)
@@ -347,39 +340,30 @@ pub struct LoessConfig<T: FloatLinalg + SolverLinalg> {
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
     // Custom smooth pass function (enables parallel execution).
-    #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
     // Custom cross-validation pass function.
-    #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
     // Custom interval estimation pass function.
-    #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
     // Custom gradient pass function (Direct mode only).
-    #[doc(hidden)]
     pub custom_gradient_pass: Option<GradientPassFn<T>>,
 
     // Custom iteration batch pass function.
-    #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
     // Custom vertex pass function (Interpolation mode).
-    #[doc(hidden)]
     pub custom_vertex_pass: Option<VertexPassFn<T>>,
 
     // Custom KD-tree builder function.
-    #[doc(hidden)]
     pub custom_kdtree_builder: Option<KDTreeBuilderFn<T>>,
 
     // Execution backend hint for extension crates.
-    #[doc(hidden)]
     pub backend: Option<Backend>,
 
     // Whether to use parallel execution
-    #[doc(hidden)]
     pub parallel: bool,
 }
 
@@ -481,39 +465,30 @@ pub struct LoessExecutor<T: FloatLinalg + SolverLinalg> {
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
     // Custom smooth pass function (e.g., for parallel execution).
-    #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
     // Custom cross-validation pass function.
-    #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
     // Custom interval estimation pass function.
-    #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
     // Custom gradient pass function (Direct mode only).
-    #[doc(hidden)]
     pub custom_gradient_pass: Option<GradientPassFn<T>>,
 
     // Custom iteration batch pass function.
-    #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
     // Custom vertex pass function (Interpolation mode).
-    #[doc(hidden)]
     pub custom_vertex_pass: Option<VertexPassFn<T>>,
 
     // Custom KD-tree builder function.
-    #[doc(hidden)]
     pub custom_kdtree_builder: Option<KDTreeBuilderFn<T>>,
 
     // Execution backend hint for extension crates.
-    #[doc(hidden)]
     pub backend: Option<Backend>,
 
     // Whether to use parallel execution
-    #[doc(hidden)]
     pub parallel: bool,
 }
 
@@ -706,56 +681,48 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Set a custom cross-validation pass function.
-    #[doc(hidden)]
     pub fn custom_cv_pass(mut self, cv_pass_fn: Option<CVPassFn<T>>) -> Self {
         self.custom_cv_pass = cv_pass_fn;
         self
     }
 
     // Set a custom interval estimation pass function.
-    #[doc(hidden)]
     pub fn custom_interval_pass(mut self, interval_pass_fn: Option<IntervalPassFn<T>>) -> Self {
         self.custom_interval_pass = interval_pass_fn;
         self
     }
 
     // Set a custom vertex pass function (Interpolation mode).
-    #[doc(hidden)]
     pub fn custom_vertex_pass(mut self, vertex_pass_fn: Option<VertexPassFn<T>>) -> Self {
         self.custom_vertex_pass = vertex_pass_fn;
         self
     }
 
     // Set a custom gradient pass function (Direct mode only).
-    #[doc(hidden)]
     pub fn custom_gradient_pass(mut self, gradient_pass_fn: Option<GradientPassFn<T>>) -> Self {
         self.custom_gradient_pass = gradient_pass_fn;
         self
     }
 
     // Set a custom iteration batch pass function.
-    #[doc(hidden)]
     pub fn custom_fit_pass(mut self, fit_pass_fn: Option<FitPassFn<T>>) -> Self {
         self.custom_fit_pass = fit_pass_fn;
         self
     }
 
     // Set a custom KD-tree builder function.
-    #[doc(hidden)]
     pub fn custom_kdtree_builder(mut self, kdtree_builder_fn: Option<KDTreeBuilderFn<T>>) -> Self {
         self.custom_kdtree_builder = kdtree_builder_fn;
         self
     }
 
     // Set whether to use parallel execution.
-    #[doc(hidden)]
     pub fn parallel(mut self, parallel: bool) -> Self {
         self.parallel = parallel;
         self
     }
 
     // Set the execution backend hint.
-    #[doc(hidden)]
     pub fn backend(mut self, backend: Option<Backend>) -> Self {
         self.backend = backend;
         self

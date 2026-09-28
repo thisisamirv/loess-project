@@ -132,46 +132,36 @@ pub struct BatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     pub return_gradient: bool,
 
     // Tracks if any parameter was set multiple times (for validation)
-    #[doc(hidden)]
     pub(crate) duplicate_param: Option<&'static str>,
 
     // ++++++++++++++++++++++++++++++++++++++
     // +               DEV                  +
     // ++++++++++++++++++++++++++++++++++++++
     // Custom smooth pass function.
-    #[doc(hidden)]
     pub custom_smooth_pass: Option<SmoothPassFn<T>>,
 
     // Custom cross-validation pass function.
-    #[doc(hidden)]
     pub custom_cv_pass: Option<CVPassFn<T>>,
 
     // Custom interval estimation pass function.
-    #[doc(hidden)]
     pub custom_interval_pass: Option<IntervalPassFn<T>>,
 
     // Custom gradient pass function.
-    #[doc(hidden)]
     pub custom_gradient_pass: Option<GradientPassFn<T>>,
 
     // Custom fit pass function.
-    #[doc(hidden)]
     pub custom_fit_pass: Option<FitPassFn<T>>,
 
     // Custom vertex pass function.
-    #[doc(hidden)]
     pub custom_vertex_pass: Option<VertexPassFn<T>>,
 
     // Custom KD-tree builder function.
-    #[doc(hidden)]
     pub custom_kdtree_builder: Option<KDTreeBuilderFn<T>>,
 
     // Execution backend hint.
-    #[doc(hidden)]
     pub backend: Option<Backend>,
 
     // Parallel execution hint.
-    #[doc(hidden)]
     pub parallel: Option<bool>,
 
     // User-defined case weights (one per observation).
