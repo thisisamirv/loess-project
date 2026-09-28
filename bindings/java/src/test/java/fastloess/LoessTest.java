@@ -49,6 +49,14 @@ class LoessTest {
     }
 
     @Test
+    void rejectsNegativeCvSeed() {
+        RuntimeException ex = org.junit.jupiter.api.Assertions.assertThrows(
+                RuntimeException.class,
+                () -> new Loess(Options.builder().cvSeed(-1L).build()));
+        assertTrue(ex.getMessage().contains("cv_seed must be non-negative"));
+    }
+
+    @Test
     void returnsGradientWhenRequestedInDirectMode() {
         double[] x = linspace(20);
         double[] y = new double[20];

@@ -166,6 +166,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Java:**
 
 - Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed instead of raising an error. Now validated before the cast.
+- Fixed intermittent macOS `mvn clean test` resolution failures involving `commons-io:2.6` by pinning `maven-clean-plugin` to 3.5.0, which removes the old `maven-shared-utils`/`commons-io` dependency path.
 
 **Node.js:**
 
