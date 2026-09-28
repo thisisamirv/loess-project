@@ -151,6 +151,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **fastLoess:**
 
 - `make fastLoess-dev` now also runs `cargo test --doc`, previously never checked by any `make` target.
+- Fixed parallel direct 1D standard errors collapsing to zero for observations with zero robustness weight. The interval pass now uses the exact local-linear equivalent-kernel variance multiplier and kernel-corrected residual degrees of freedom, matching the serial calculation.
 
 **C++:**
 

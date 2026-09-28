@@ -106,6 +106,48 @@ where
                     neighborhood,
                 );
 
+                // Match the serial local-linear SE calculation for direct 1D fits.
+                // Using the point's own hat-matrix leverage collapses its SE when
+                // robustness iterations assign that observation zero weight.
+                if dims == 1 && x_search.len() == n && y_search.len() == n {
+                    let query_x = query_point[0];
+                    let max_distance = neighborhood.max_distance;
+                    if max_distance <= T::epsilon() {
+                        return T::zero();
+                    }
+
+                    let mut sum_w_r2 = T::zero();
+                    let mut sum_w = T::zero();
+                    let mut s1 = T::zero();
+                    let mut s2 = T::zero();
+                    let mut t0 = T::zero();
+                    let mut t1 = T::zero();
+                    let mut t2 = T::zero();
+
+                    for neighbor in 0..neighborhood.len() {
+                        let index = neighborhood.indices[neighbor];
+                        let distance = neighborhood.distances[neighbor];
+                        let weight = weight_function.compute_weight(distance / max_distance)
+                            * if robustness_weights.is_empty() {
+                                T::one()
+                            } else {
+                                robustness_weights[index]
+                            };
+                        let residual = y[index] - y_smooth[index];
+                        let dx = x[index] - query_x;
+                        sum_w_r2 = sum_w_r2 + weight * residual * residual;
+                        sum_w = sum_w + weight;
+                        s1 = s1 + weight * dx;
+                        s2 = s2 + weight * dx * dx;
+                        let squared_weight = weight * weight;
+                        t0 = t0 + squared_weight;
+                        t1 = t1 + squared_weight * dx;
+                        t2 = t2 + squared_weight * dx * dx;
+                    }
+
+                    return IntervalMethod::compute_se(sum_w, sum_w_r2, s1, s2, t0, t1, t2);
+                }
+
                 // Create regression context with leverage computation enabled using AUGMENTED data
                 let mut context = RegressionContext::new(
                     x_search,

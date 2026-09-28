@@ -66,3 +66,36 @@ fn test_parallel_interval_estimation() {
 
     println!("Parallel and Sequential Intervals match exactly!");
 }
+
+#[test]
+fn test_parallel_interval_keeps_se_for_downweighted_observation() {
+    let x = Array1::from_iter((0..21).map(|index| index as f64));
+    let y = Array1::from_iter(x.iter().enumerate().map(|(index, &value)| {
+        if index == 10 {
+            2.0 * value + 100.0
+        } else {
+            2.0 * value
+        }
+    }));
+
+    let result = Loess::new()
+        .fraction(0.5)
+        .iterations(3)
+        .confidence_intervals(0.95)
+        .return_robustness_weights()
+        .surface_mode("direct")
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let robustness = result.robustness_weights.as_ref().unwrap();
+    let standard_errors = result.standard_errors.as_ref().unwrap();
+    assert!(robustness[10] < 1e-6, "outlier should be downweighted");
+    assert!(standard_errors[10].is_finite());
+    assert!(
+        standard_errors[10] > 0.0,
+        "downweighted point should retain SE"
+    );
+}
