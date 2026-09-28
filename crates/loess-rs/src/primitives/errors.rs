@@ -202,6 +202,11 @@ pub enum LoessError {
     // `None`; surfaced as an error instead, since it's easy to set `.return_se()`, forget
     // `.update_mode("full")`, and not notice the silently-empty result.
     StandardErrorRequiresFullUpdateMode,
+
+    // `.iterations(n)` with `n > 0` was requested on `OnlineLoess` but
+    // `update_mode` isn't `"full"`. The default `"incremental"` mode fits
+    // only the latest point and never runs robustness iterations.
+    RobustnessIterationsRequireFullUpdateMode,
 }
 
 impl Display for LoessError {
@@ -366,6 +371,10 @@ impl Display for LoessError {
                 "return_se()/confidence_intervals()/prediction_intervals() requires \
                  update_mode(\"full\") on OnlineLoess; the default \"incremental\" mode \
                  never computes standard errors"
+            ),
+            Self::RobustnessIterationsRequireFullUpdateMode => write!(
+                f,
+                "iterations > 0 requires update_mode(\"full\") on OnlineLoess"
             ),
         }
     }

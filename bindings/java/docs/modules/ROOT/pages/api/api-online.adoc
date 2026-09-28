@@ -23,7 +23,7 @@ OnlineOptions options = OnlineOptions.builder()
 |Setting |Type |Default |Description
 
 |`fraction` |`double` |`0.67` |Smoothing fraction (bandwidth)
-|`iterations` |`int` |`3` |Number of robustifying iterations
+|`iterations` |`int` |`0` |Number of robustifying iterations; positive values require `updateMode("full")`
 |`weightFunction` |`String` |`"tricube"` |Kernel weight function
 |`robustnessMethod` |`String` |`"bisquare"` |Robustness method
 |`scalingMethod` |`String` |`"mad"` |Residual scaling method

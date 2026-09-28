@@ -56,7 +56,7 @@ OnlineLoess <- function(
     window_capacity = 1000L,
     min_points = 2L,
     ...,
-    iterations = 3L,
+    iterations = 0L,
     weight_function = "tricube",
     robustness_method = "bisquare",
     scaling_method = "mad",

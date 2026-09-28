@@ -22,7 +22,7 @@ opts.MinPoints = 10
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `Fraction` | `float64` | `0.67` | Smoothing fraction (bandwidth) |
-| `Iterations` | `int` | `3` | Number of robustifying iterations |
+| `Iterations` | `int` | `0` | Number of robustifying iterations; positive values require `UpdateMode = "full"` |
 | `WeightFunction` | `string` | `"tricube"` | Kernel weight function |
 | `RobustnessMethod` | `string` | `"bisquare"` | Robustness method |
 | `ScalingMethod` | `string` | `"mad"` | Residual scaling method |

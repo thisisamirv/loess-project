@@ -175,7 +175,7 @@ fn test_online_window_eviction() {
 fn test_online_sliding_window() {
     let mut processor = Loess::new()
         .fraction(0.5)
-        .iterations(1)
+        .iterations(0)
         .surface_mode("direct")
         .window_capacity(10)
         .min_points(3)
@@ -341,6 +341,7 @@ fn test_online_valid_builder() {
     let result = Loess::new()
         .fraction(0.5)
         .iterations(2)
+        .update_mode("full")
         .surface_mode("direct")
         .window_capacity(10)
         .min_points(3)
@@ -379,6 +380,20 @@ fn test_online_valid_builder() {
 fn test_online_builder_defaults() {
     let b = OnlineLoessBuilder::<f64>::default();
     assert_eq!(b.window_capacity, 1000);
+    assert_eq!(b.iterations, 0);
+}
+
+#[test]
+fn test_online_robustness_iterations_require_full_update_mode() {
+    let result = Loess::<f64>::new()
+        .iterations(1)
+        .adapter(Online)
+        .build();
+
+    assert!(matches!(
+        result,
+        Err(LoessError::RobustnessIterationsRequireFullUpdateMode)
+    ));
 }
 
 /// Test OnlineLoessBuilder setters.
@@ -490,6 +505,7 @@ fn test_online_robustness_methods() {
         let mut processor = Loess::new()
             .fraction(0.5)
             .iterations(3)
+            .update_mode("full")
             .robustness_method(method)
             .surface_mode("direct")
             .window_capacity(10)
@@ -523,6 +539,7 @@ fn test_online_with_residuals() {
     let mut processor = Loess::new()
         .fraction(0.5)
         .iterations(2)
+        .update_mode("full")
         .return_residuals()
         .surface_mode("direct")
         .window_capacity(10)
@@ -926,6 +943,7 @@ fn test_online_builder_all_setters() {
     let result = Loess::<f64>::new()
         .fraction(0.8)
         .iterations(1)
+        .update_mode("full")
         .surface_mode("direct")
         .window_capacity(10)
         .min_points(3)

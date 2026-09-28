@@ -231,6 +231,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         // Validate that return_se()/confidence_intervals()/prediction_intervals() is
         // only combined with update_mode("full")
         Validator::validate_online_se_update_mode(self.interval_type, self.update_mode)?;
+        Validator::validate_online_iterations_update_mode(self.iterations, self.update_mode)?;
 
         let capacity = self.window_capacity;
         Ok(OnlineLoess {

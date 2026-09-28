@@ -66,7 +66,7 @@ Smoothed y: 0.22659245357374927
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `fraction` | `number` | `0.67` | Smoothing fraction (bandwidth) |
-| `iterations` | `number` | `3` | Number of robustifying iterations |
+| `iterations` | `number` | `0` | Number of robustifying iterations; positive values require `update_mode = "full"` |
 | `weight_function` | `string` | `"tricube"` | Weight function name |
 | `robustness_method` | `string` | `"bisquare"` | Robustness method name |
 | `scaling_method` | `string` | `"mad"` | Residual scaling method |

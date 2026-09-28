@@ -187,7 +187,7 @@ struct StreamingOptions : public LoessOptions {
  */
 struct OnlineOptions {
   double fraction = detail::k_default_fraction;
-  int iterations = 3;
+  int iterations = 0;
   std::string weight_function = "tricube";
   std::string robustness_method = "bisquare";
   std::string scaling_method = "mad";

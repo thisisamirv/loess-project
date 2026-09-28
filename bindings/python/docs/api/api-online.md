@@ -51,7 +51,7 @@ print(result)
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `fraction` | `float` | `0.67` | Smoothing fraction (bandwidth) |
-| `iterations` | `int` | `3` | Number of robustifying iterations |
+| `iterations` | `int` | `0` | Number of robustifying iterations; positive values require `update_mode="full"` |
 | `weight_function` | `str` | `"tricube"` | Weight function name |
 | `robustness_method` | `str` | `"bisquare"` | Robustness method name |
 | `scaling_method` | `str` | `"mad"` | Residual scaling method |

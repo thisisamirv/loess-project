@@ -175,7 +175,8 @@ export interface StreamingSmoothOptions {
 export interface OnlineSmoothOptions {
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
-    /** Number of robustness iterations. Default: 3. */
+    /** Number of robustness iterations. Default: 0; positive values require
+     * `update_mode: "full"`. */
     iterations?: number;
     /** Kernel function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube". */
     weight_function?: string;

@@ -1106,7 +1106,7 @@ mutable struct OnlineLoess
 		fraction::Float64 = 0.67,
 		window_capacity::Int = 1000,
 		min_points::Int = 2,
-		iterations::Int = 3,
+		iterations::Int = 0,
 		weight_function::String = "tricube",
 		robustness_method::String = "bisquare",
 		scaling_method::String = "mad",

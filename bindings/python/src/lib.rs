@@ -626,7 +626,7 @@ impl PyOnlineLoess {
         window_capacity=1000,
         min_points=2,
         *,
-        iterations=3,
+        iterations=0,
         weight_function="tricube",
         robustness_method="bisquare",
         scaling_method="mad",

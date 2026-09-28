@@ -337,7 +337,7 @@ class OnlineLoess:
         window_capacity: int = 1000,
         min_points: int = 2,
         *,
-        iterations: int = 3,
+        iterations: int = 0,
         weight_function: str = "tricube",
         robustness_method: str = "bisquare",
         scaling_method: str = "mad",

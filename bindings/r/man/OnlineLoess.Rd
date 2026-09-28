@@ -9,7 +9,7 @@ OnlineLoess(
   window_capacity = 1000L,
   min_points = 2L,
   ...,
-  iterations = 3L,
+  iterations = 0L,
   weight_function = "tricube",
   robustness_method = "bisquare",
   scaling_method = "mad",
@@ -46,7 +46,7 @@ begins, between 2 and \code{window_capacity}. Default: 2.}
 \item{...}{Not used; forces all subsequent arguments to be named.}
 
 \item{iterations}{Number of robustness iterations, between 0 and 1000
-(inclusive). Default: 3.}
+(inclusive). Default: 0; positive values require update_mode = "full".}
 
 \item{weight_function}{Kernel weight function. One of \code{"tricube"}
 (default), \code{"gaussian"},

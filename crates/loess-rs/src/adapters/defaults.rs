@@ -28,7 +28,9 @@ pub const DEFAULT_ONLINE_WINDOW_CAPACITY: usize = 1_000;
 pub const DEFAULT_ONLINE_MIN_POINTS: usize = 2;
 
 // Default number of robustness iterations for the **Online** adapter.
-pub const DEFAULT_ONLINE_ITERATIONS: usize = 3;
+// Incremental updates do not run robustness passes; callers opting into
+// `update_mode("full")` can request them explicitly.
+pub const DEFAULT_ONLINE_ITERATIONS: usize = 0;
 
 // Default update mode for the **Online** adapter.
 pub const DEFAULT_ONLINE_UPDATE_MODE_ENUM: UpdateMode = UpdateMode::Incremental;

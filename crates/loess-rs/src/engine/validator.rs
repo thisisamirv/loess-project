@@ -369,6 +369,17 @@ impl Validator {
         Ok(())
     }
 
+    // Validate that OnlineLoess robustness iterations require full updates.
+    pub fn validate_online_iterations_update_mode(
+        iterations: usize,
+        update_mode: crate::adapters::online::UpdateMode,
+    ) -> Result<(), LoessError> {
+        if iterations > 0 && update_mode != crate::adapters::online::UpdateMode::Full {
+            return Err(LoessError::RobustnessIterationsRequireFullUpdateMode);
+        }
+        Ok(())
+    }
+
     // Validate User-defined case weights.
     //
     // Checks that:

@@ -562,7 +562,8 @@ pub struct StreamingSmoothOptions {
 pub struct OnlineSmoothOptions {
     /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
     pub fraction: Option<f64>,
-    /// Number of robustness iterations. Default: 3.
+    /// Number of robustness iterations. Default: 0; positive values require
+    /// `update_mode: "full"`.
     pub iterations: Option<u32>,
     /// Weight function ("tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle", "cosine"). Default: "tricube".
     #[napi(js_name = "weight_function")]

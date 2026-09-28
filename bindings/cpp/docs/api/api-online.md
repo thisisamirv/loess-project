@@ -106,7 +106,7 @@ int main() {
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `fraction` | `double` | `0.67` | Smoothing fraction (bandwidth) |
-| `iterations` | `int` | `3` | Number of robustifying iterations |
+| `iterations` | `int` | `0` | Number of robustifying iterations; positive values require `update_mode == "full"` |
 | `weight_function` | `std::string` | `"tricube"` | Weight function name |
 | `robustness_method` | `std::string` | `"bisquare"` | Robustness method name |
 | `scaling_method` | `std::string` | `"mad"` | Residual scaling method |

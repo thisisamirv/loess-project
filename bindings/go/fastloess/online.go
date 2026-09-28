@@ -17,7 +17,7 @@ import (
 type OnlineOptions struct {
 	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
 	Fraction float64
-	// Iterations is the number of robustness iterations, in [0, 1000]. Default: 3.
+	// Iterations is the number of robustness iterations, in [0, 1000]. Default: 0.
 	Iterations int
 
 	// WeightFunction is the kernel weight function: "tricube" (default),
@@ -114,7 +114,7 @@ type OnlineOptions struct {
 func DefaultOnlineOptions() OnlineOptions {
 	return OnlineOptions{
 		Fraction:           0.67,
-		Iterations:         3,
+		Iterations:         0,
 		WeightFunction:     "tricube",
 		RobustnessMethod:   "bisquare",
 		ScalingMethod:      "mad",

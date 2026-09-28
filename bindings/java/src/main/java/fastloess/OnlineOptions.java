@@ -38,6 +38,7 @@ public final class OnlineOptions {
         String updateMode = null;
 
         Builder() {
+            common.iterations(0);
         }
 
         /**
