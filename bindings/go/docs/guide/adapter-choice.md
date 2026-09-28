@@ -183,8 +183,8 @@ for i := range x {
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
-| Confidence intervals | ✓ | ✗ | ✗ |
-| Prediction intervals | ✓ | ✗ | ✗ |
+| Confidence intervals | ✓ | ✓ | ✓ (`UpdateMode = "full"` only) |
+| Prediction intervals | ✓ | ✓ | ✓ (`UpdateMode = "full"` only) |
 | Cross-validation | ✓ | ✗ | ✗ |
 | Diagnostics | ✓ | ✓ | ✗ |
 | Residuals | ✓ | ✓ | ✓ |

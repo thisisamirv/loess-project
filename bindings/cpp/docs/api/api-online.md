@@ -322,7 +322,7 @@ Each local polynomial fit (degree >= linear) already computes per-dimension coef
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `update_mode == "full"` — the first `add_point()` call returns an `Expected` with `has_value() == false` if set (or `return_se`/`prediction_intervals` is set) while `update_mode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `NaN` (default) disables confidence intervals.
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `update_mode == "full"`. Construction fails if set (or `return_se`/`prediction_intervals` is set) while `update_mode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `NaN` (default) disables confidence intervals.
 
 ### prediction_intervals
 

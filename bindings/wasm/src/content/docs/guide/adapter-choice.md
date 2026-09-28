@@ -184,8 +184,8 @@ for (let i = 0; i < x.length; i++) {
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
-| Confidence intervals | ✓ | ✗ | ✗ |
-| Prediction intervals | ✓ | ✗ | ✗ |
+| Confidence intervals | ✓ | ✓ | ✓ (`update_mode: "full"` only) |
+| Prediction intervals | ✓ | ✓ | ✓ (`update_mode: "full"` only) |
 | Cross-validation | ✓ | ✗ | ✗ |
 | Diagnostics | ✓ | ✓ | ✗ |
 | Residuals | ✓ | ✓ | ✓ |

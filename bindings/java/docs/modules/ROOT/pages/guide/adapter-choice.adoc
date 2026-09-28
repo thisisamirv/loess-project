@@ -186,8 +186,8 @@ try (OnlineLoess model = new OnlineLoess(options)) {
 |===
 |Feature |Batch |Streaming |Online
 
-|Confidence intervals |✓ |✗ |✗
-|Prediction intervals |✓ |✗ |✗
+|Confidence intervals |✓ |✓ |✓ (`updateMode("full")` only)
+|Prediction intervals |✓ |✓ |✓ (`updateMode("full")` only)
 |Cross-validation |✓ |✗ |✗
 |Diagnostics |✓ |✓ |✗
 |Residuals |✓ |✓ |✓

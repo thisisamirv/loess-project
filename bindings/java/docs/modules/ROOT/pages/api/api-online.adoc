@@ -49,7 +49,7 @@ OnlineOptions options = OnlineOptions.builder()
 |`updateMode` |`String` |`"incremental"` |How the window is updated as new points arrive
 |===
 
-Confidence/prediction intervals, standard errors, cross-validation, `returnSorted`, `returnDiagnostics`, and `returnResiduals` are Batch-only (or Batch/Streaming-only) and not available here; see xref:./api.adoc[API] for those.
+Cross-validation, `returnSorted`, `returnDiagnostics`, and `returnResiduals` are Batch-only (or Batch/Streaming-only) and not available here; see xref:./api.adoc[API] for those. Confidence and prediction intervals and standard errors are available here when `updateMode("full")` is set.
 
 == `new OnlineLoess(OnlineOptions options)`
 

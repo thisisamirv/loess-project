@@ -8,7 +8,7 @@ image::intervals_comparison.svg[Confidence and Prediction Intervals]
 
 [NOTE]
 ====
-*Adapter support:* Confidence and prediction intervals are available in *Batch* (`Loess`) mode only. `StreamingLoess` and `OnlineLoess` do not support intervals.
+*Adapter support:* Confidence and prediction intervals are available in *Batch* (`Loess`) mode, *Streaming* mode (computed per chunk and merged across overlap boundaries via `mergeStrategy`), and *Online* mode when `updateMode("full")` is set (construction fails if combined with the default `"incremental"` mode).
 ====
 
 [cols="1,1,1,1",options="header"]
@@ -245,16 +245,16 @@ Point 2: SE = 0.0588
 
 [NOTE]
 ====
-*Batch Mode Only:* Confidence and prediction intervals are only available in *Batch* mode. `StreamingLoess` and `OnlineLoess` do not support intervals.
+*Supported In All Three Adapters:* Confidence and prediction intervals are available in *Batch*, *Streaming*, and *Online* mode (`updateMode("full")` only).
 ====
 
 [cols="1,1,1,1",options="header"]
 |===
 |Feature |Batch |Streaming |Online
 
-|Confidence intervals |✓ |✗ |✗
-|Prediction intervals |✓ |✗ |✗
-|Standard errors |✓ |✗ |✗
+|Confidence intervals |✓ |✓ |✓ (`updateMode("full")` only)
+|Prediction intervals |✓ |✓ |✓ (`updateMode("full")` only)
+|Standard errors |✓ |✓ |✓ (`updateMode("full")` only)
 |===
 
 All examples above use the same 100-point noisy sine wave (see xref:../weighting/kernels.adoc#choosing-a-kernel[Weight Functions] for the generation code).

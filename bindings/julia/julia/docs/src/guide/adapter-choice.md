@@ -174,8 +174,8 @@ end
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
-| Confidence intervals | ✓ | ✗ | ✗ |
-| Prediction intervals | ✓ | ✗ | ✗ |
+| Confidence intervals | ✓ | ✓ | ✓ (`update_mode="full"` only) |
+| Prediction intervals | ✓ | ✓ | ✓ (`update_mode="full"` only) |
 | Cross-validation | ✓ | ✗ | ✗ |
 | Diagnostics | ✓ | ✓ | ✗ |
 | Residuals | ✓ | ✓ | ✓ |

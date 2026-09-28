@@ -9,7 +9,7 @@ Confidence and prediction intervals for uncertainty quantification.
 
 ![Confidence and Prediction Intervals](../assets/diagrams/intervals_comparison.svg)
 
-> **Adapter support:** Confidence and prediction intervals are available in **Batch** (`Loess`) mode only. `StreamingLoess` and `OnlineLoess` do not support intervals.
+> **Adapter support:** Confidence and prediction intervals are available in **Batch** (`Loess`) mode, **Streaming** mode (computed per chunk and merged across overlap boundaries via `MergeStrategy`), and **Online** mode when `UpdateMode` is `"full"` (construction fails if combined with the default `"incremental"` mode).
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
@@ -280,10 +280,10 @@ Point 2: SE = 0.0588
 
 ## Availability
 
-> **Batch Mode Only:** Confidence and prediction intervals are only available in **Batch** mode. `StreamingLoess` and `OnlineLoess` do not support intervals.
+> **Supported In All Three Adapters:** Confidence and prediction intervals are available in **Batch**, **Streaming**, and **Online** mode (`UpdateMode` set to `"full"` only).
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
-| Confidence intervals | ✓ | ✗ | ✗ |
-| Prediction intervals | ✓ | ✗ | ✗ |
-| Standard errors | ✓ | ✗ | ✗ |
+| Confidence intervals | ✓ | ✓ | ✓ (`UpdateMode = "full"` only) |
+| Prediction intervals | ✓ | ✓ | ✓ (`UpdateMode = "full"` only) |
+| Standard errors | ✓ | ✓ | ✓ (`UpdateMode = "full"` only) |
