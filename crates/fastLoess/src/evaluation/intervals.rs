@@ -17,6 +17,7 @@ use std::vec::Vec;
 
 // Export dependencies from loess-rs crate
 use loess_rs::internals::algorithms::regression::PolynomialDegree;
+use loess_rs::internals::algorithms::regression::one_dimensional_x_range;
 use loess_rs::internals::algorithms::regression::{
     RegressionContext, SolverLinalg, ZeroWeightFallback,
 };
@@ -75,6 +76,7 @@ where
     }
     let median_residual = residuals.get(median_idx).copied().unwrap_or(T::zero());
     let sigma = median_residual * T::from(1.4826).unwrap_or(T::one());
+    let global_x_range = one_dimensional_x_range(x, dims);
 
     // Compute leverage values in parallel
     let leverages: Vec<T> = (0..n)
@@ -92,7 +94,6 @@ where
                     metric: distance_metric,
                     scales,
                 };
-
                 let query_offset = i * dims;
                 let query_point = &x[query_offset..query_offset + dims];
 
@@ -164,6 +165,9 @@ where
                     true, // compute_leverage
                     Some(fitting_buffer),
                 );
+                if let Some(range) = global_x_range {
+                    context = context.with_global_x_range(range);
+                }
 
                 if let Some((_, leverage)) = context.fit() {
                     leverage

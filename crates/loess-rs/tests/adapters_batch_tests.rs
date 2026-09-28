@@ -1229,6 +1229,35 @@ fn test_batch_return_gradient_small_magnitude_x() {
     }
 }
 
+#[test]
+fn test_batch_suppresses_slope_for_small_local_spread() {
+    let x: Vec<f64> = (0..40)
+        .map(|index| {
+            if index < 20 {
+                index as f64 * 1e-5
+            } else {
+                (index - 19) as f64
+            }
+        })
+        .collect();
+    let y: Vec<f64> = x.iter().map(|&value| 3.0 * value + 1.0).collect();
+
+    let result = Loess::new()
+        .fraction(0.1)
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .return_gradient()
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let gradient = result.gradient.expect("gradient should be Some");
+    assert_eq!(gradient[10], 0.0);
+    assert_relative_eq!(gradient[30], 3.0, epsilon = 1e-6);
+}
+
 /// `return_gradient()` requires `SurfaceMode::Direct` — the default `SurfaceMode::
 /// Interpolation` only stores value+gradient at sparse vertices, not enough to
 /// reconstruct an exact per-point gradient, so `.build()` rejects the combination

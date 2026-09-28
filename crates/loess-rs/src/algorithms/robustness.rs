@@ -47,24 +47,23 @@ impl RobustnessMethod {
     // Value of 2.5 provides aggressive outlier rejection.
     const DEFAULT_TALWAR_C: f64 = 2.5;
 
-    // Minimum scale threshold relative to mean absolute residual.
-    //
-    // If MAD < SCALE_THRESHOLD × MAR, use MAR instead of MAD.
+    // Stop robustness iterations when the tuned MAR scale is effectively zero.
     const SCALE_THRESHOLD: f64 = 1e-7;
 
     // Minimum tuned-scale absolute epsilon to avoid division by zero.
     const MIN_TUNED_SCALE: f64 = 1e-12;
 
-    // Apply robustness weights using the configured method.
+    // Apply robustness weights using the configured method. Returns true when
+    // the MAR scale is effectively zero and the caller should stop iterating.
     pub fn apply_robustness_weights<T: Float>(
         &self,
         residuals: &[T],
         weights: &mut [T],
         scaling_method: ScalingMethod,
         scratch: &mut [T],
-    ) {
-        if residuals.is_empty() {
-            return;
+    ) -> bool {
+        if residuals.is_empty() || residuals.iter().any(|residual| !residual.is_finite()) {
+            return false;
         }
 
         let base_scale = self.compute_scale(residuals, scaling_method, scratch);
@@ -75,15 +74,27 @@ impl RobustnessMethod {
             Self::Talwar => (2, Self::DEFAULT_TALWAR_C),
         };
 
-        let c_t = T::from(tuning_constant).unwrap();
+        let c_t = T::from(tuning_constant).unwrap_or(T::one());
+        let mean_abs = residuals
+            .iter()
+            .fold(T::zero(), |sum, residual| sum + residual.abs())
+            / T::from(residuals.len()).unwrap_or(T::one());
+        let tuned_scale = base_scale * c_t;
+
+        if matches!(scaling_method, ScalingMethod::MAR)
+            && tuned_scale < T::from(Self::SCALE_THRESHOLD).unwrap_or_else(T::epsilon) * mean_abs
+        {
+            return true;
+        }
 
         for (i, &r) in residuals.iter().enumerate() {
             weights[i] = match method_type {
-                0 => Self::bisquare_weight(r, base_scale, c_t),
+                0 => Self::bisquare_weight(r, tuned_scale),
                 1 => Self::huber_weight(r, base_scale, c_t),
                 _ => Self::talwar_weight(r, base_scale, c_t),
             };
         }
+        false
     }
 
     // Compute robust scale estimate with zero-scale safety fallback.
@@ -114,24 +125,18 @@ impl RobustnessMethod {
             return T::zero();
         }
 
-        // Step 2: Establish the safety threshold.
-        // We use either a relative threshold (portion of MAE) or an absolute floor.
-        let relative_threshold = T::from(Self::SCALE_THRESHOLD).unwrap() * mae;
-        let absolute_threshold = T::from(Self::MIN_TUNED_SCALE).unwrap();
-        let scale_threshold = relative_threshold.max(absolute_threshold);
-
-        // Step 3: Compute robust scale using selected method (Median-based).
+        // Compute robust scale using the selected method (median-based).
         // This is usually the more expensive operation (O(N) or O(N log N)).
         scratch.copy_from_slice(residuals);
         let scale_val = scaling_method.compute(scratch);
 
-        // Step 4: Final decision.
-        // If the robust Median-based scale is too small, fallback to MAE.
-        if scale_val <= scale_threshold {
-            // Use MAE as fallback (it's less robust but more stable near zero)
+        // Centered MAD can collapse to zero on tied residuals. Keep its fallback
+        // separate from MAR, whose near-zero scale is an iteration stop signal.
+        if matches!(scaling_method, ScalingMethod::MAD)
+            && scale_val <= T::from(Self::MIN_TUNED_SCALE).unwrap_or_else(T::epsilon)
+        {
             mae.max(scale_val)
         } else {
-            // Robust scale is healthy
             scale_val
         }
     }
@@ -140,7 +145,7 @@ impl RobustnessMethod {
     //
     // # Formula
     //
-    // u = |r| / (c * s)
+    // u = |r| / tuned_scale, where tuned_scale = c * s
     //
     // w(u) = (1 - u^2)^2  if 0.001 < u < 0.999
     //
@@ -148,15 +153,10 @@ impl RobustnessMethod {
     //
     // w(u) = 0            if u >= 0.999
     #[inline]
-    pub(crate) fn bisquare_weight<T: Float>(residual: T, scale: T, c: T) -> T {
-        if scale <= T::zero() {
+    pub(crate) fn bisquare_weight<T: Float>(residual: T, tuned_scale: T) -> T {
+        if tuned_scale <= T::zero() {
             return T::one();
         }
-
-        let min_eps = T::from(Self::MIN_TUNED_SCALE).unwrap();
-        let c_clamped = c.max(min_eps);
-        let tuned_scale = (scale * c_clamped).max(min_eps);
-
         let u = (residual / tuned_scale).abs();
 
         // Thresholds (0.001 and 0.999)

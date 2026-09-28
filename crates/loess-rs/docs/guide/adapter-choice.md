@@ -173,7 +173,7 @@ fn main() -> Result<(), LoessError> {
         .iterations(1usize)
         .window_capacity(100usize)
         .min_points(5usize)
-        .update_mode("incremental")
+        .update_mode("full")
         .build()?;
 
     let mut shown = 0;

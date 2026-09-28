@@ -169,6 +169,7 @@ fn test_online_robust_outliers() {
     let mut model = Loess::new()
         .robustness_method("bisquare")
         .iterations(1)
+        .update_mode("full")
         .window_capacity(10)
         .adapter(Online)
         .build()

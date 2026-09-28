@@ -91,6 +91,41 @@ fn test_bisquare_smooth_downweighting() {
     }
 }
 
+#[test]
+fn test_mar_effective_zero_stops_without_replacing_weights() {
+    let residuals = [0.0_f64, 0.0, 1e-8];
+    let mut weights = [0.2_f64, 0.3, 0.4];
+    let original_weights = weights;
+    let mut scratch = [0.0_f64; 3];
+
+    let should_stop = RobustnessMethod::Bisquare.apply_robustness_weights(
+        &residuals,
+        &mut weights,
+        ScalingMethod::MAR,
+        &mut scratch,
+    );
+
+    assert!(should_stop);
+    assert_eq!(weights, original_weights);
+}
+
+#[test]
+fn test_bisquare_preserves_tiny_mar_scale() {
+    let residuals = [1e-13_f64, 2e-13, 3e-13];
+    let mut weights = [1.0_f64; 3];
+    let mut scratch = [0.0_f64; 3];
+
+    let should_stop = RobustnessMethod::Bisquare.apply_robustness_weights(
+        &residuals,
+        &mut weights,
+        ScalingMethod::MAR,
+        &mut scratch,
+    );
+
+    assert!(!should_stop);
+    assert_relative_eq!(weights[2], 0.87890625, epsilon = 1e-12);
+}
+
 // ============================================================================
 // Huber Method Tests
 // ============================================================================

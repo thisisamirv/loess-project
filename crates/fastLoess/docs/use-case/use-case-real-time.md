@@ -26,7 +26,7 @@ fn main() -> Result<(), LoessError> {
         .iterations(1)
         .window_capacity(25)
         .min_points(5)
-        .update_mode("incremental")
+        .update_mode("full")
         .build()?;
 
     let mut count = 0;

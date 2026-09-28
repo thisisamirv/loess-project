@@ -142,3 +142,32 @@ fn test_gradient_pass_consistency() {
         assert_abs_diff_eq!(s, p, epsilon = 1e-9);
     }
 }
+
+#[test]
+fn test_parallel_gradient_suppresses_small_local_spread() {
+    let x: Vec<f64> = (0..40)
+        .map(|index| {
+            if index < 20 {
+                index as f64 * 1e-5
+            } else {
+                (index - 19) as f64
+            }
+        })
+        .collect();
+    let y: Vec<f64> = x.iter().map(|&value| 3.0 * value + 1.0).collect();
+
+    let result = Loess::new()
+        .fraction(0.1)
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .return_gradient()
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    let gradient = result.gradient.expect("gradient should be Some");
+    assert_eq!(gradient[10], 0.0);
+    assert_abs_diff_eq!(gradient[30], 3.0, epsilon = 1e-6);
+}

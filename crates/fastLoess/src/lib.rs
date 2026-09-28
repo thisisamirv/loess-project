@@ -103,7 +103,7 @@
 //!     .distance_metric("euclidean")                   // Distance metric
 //!     .weight_function("tricube")                     // Kernel function
 //!     .robustness_method("bisquare")                  // Outlier handling
-//!     .surface_mode("interpolation")                  // Surface evaluation mode
+//!     .surface_mode("direct")                         // Required for return_gradient()
 //!     .boundary_policy("extend")                       // Boundary handling
 //!     .boundary_degree_fallback(true)                  // Boundary degree fallback
 //!     .scaling_method("mad")                          // Scaling method
