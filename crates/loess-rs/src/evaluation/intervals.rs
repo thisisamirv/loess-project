@@ -132,26 +132,34 @@ impl<T: Float> IntervalMethod<T> {
         }
     }
 
-    // Core mathematical function for computing standard error at a point.
-    // SE = sqrt(sigma_local^2 * l_ii), where
-    // sigma_local^2 = (sum w_k r_k^2) / ((sum w_k) - 2) and
-    // l_ii = w_i / sum w_k.
-    pub fn compute_se(sum_w: T, sum_w_r2: T, w_idx: T) -> T {
-        // Effective degrees of freedom for weighted regression
+    // Core mathematical function for computing standard error of a local
+    // linear fit from centered design moments. The leverage is the squared
+    // norm of the equivalent-kernel row, and the residual degrees of freedom
+    // corrects for the weighted design.
+    pub fn compute_se(sum_w: T, sum_w_r2: T, s1: T, s2: T, t0: T, t1: T, t2: T) -> T {
         if sum_w <= T::zero() {
             return T::zero();
         }
 
-        let effective_n = sum_w;
-        let df = effective_n - T::from(Self::LINEAR_PARAMS).unwrap();
+        let two = T::from(Self::LINEAR_PARAMS).unwrap();
+        let det = sum_w * s2 - s1 * s1;
+        if det <= T::zero() {
+            return T::zero();
+        }
 
+        // Squared norm of the local-linear equivalent-kernel row.
+        let leverage = (s2 * s2 * t0 - two * s1 * s2 * t1 + s1 * s1 * t2) / (det * det);
+        if leverage <= T::zero() {
+            return T::zero();
+        }
+
+        // Kernel-corrected residual degrees of freedom.
+        let df = sum_w - two + t0 / sum_w;
         if df <= T::zero() {
             return T::zero();
         }
 
         let variance = sum_w_r2 / df;
-        let leverage = w_idx / sum_w; // Normalized leverage
-
         (variance * leverage).sqrt()
     }
 
@@ -204,6 +212,11 @@ impl<T: Float> IntervalMethod<T> {
             // Accumulate weighted residual variance
             let mut sum_w_r2 = T::zero();
             let mut sum_w = T::zero();
+            let mut s1 = T::zero();
+            let mut s2 = T::zero();
+            let mut t0 = T::zero();
+            let mut t1 = T::zero();
+            let mut t2 = T::zero();
 
             for j in left..=right {
                 let dist = (x[j] - x_current).abs();
@@ -217,9 +230,14 @@ impl<T: Float> IntervalMethod<T> {
                 let r = y[j] - y_smooth[j];
                 sum_w_r2 = sum_w_r2 + w * r * r;
                 sum_w = sum_w + w;
+                s1 = s1 + w * (x[j] - x_current);
+                s2 = s2 + w * (x[j] - x_current) * (x[j] - x_current);
+                t0 = t0 + w * w;
+                t1 = t1 + w * w * (x[j] - x_current);
+                t2 = t2 + w * w * (x[j] - x_current) * (x[j] - x_current);
             }
 
-            *se = Self::compute_se(sum_w, sum_w_r2, w_idx);
+            *se = Self::compute_se(sum_w, sum_w_r2, s1, s2, t0, t1, t2);
         }
     }
 

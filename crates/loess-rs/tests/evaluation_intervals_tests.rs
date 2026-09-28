@@ -60,7 +60,7 @@ fn test_compute_point_se_center() {
     );
 
     let se = std_errors[1];
-    let expected = (1.0f64 / 3.0f64).sqrt();
+    let expected = (1.0f64 / 6.0f64).sqrt();
 
     assert_relative_eq!(se, expected, epsilon = 1e-12);
 }
@@ -117,6 +117,30 @@ fn test_compute_se_zero_weights() {
     assert_eq!(std_errors[0], 0.0, "SE should be zero for zero weights");
 }
 
+/// A point with zero robustness weight still has positive local-linear leverage
+/// when the surrounding design is non-degenerate.
+#[test]
+fn test_compute_se_downweighted_point_keeps_positive_leverage() {
+    let x = vec![0.0f64, 1.0, 2.0, 3.0];
+    let y = vec![0.0f64, 1.2, 20.0, 3.1];
+    let y_smooth = vec![0.0f64, 1.0, 2.0, 3.0];
+    let robustness = vec![1.0f64, 1.0, 0.0, 1.0];
+
+    let estimator = IntervalMethod::se();
+    let mut std_errors = vec![0.0; x.len()];
+    estimator.compute_window_se(
+        &x,
+        &y,
+        &y_smooth,
+        x.len(),
+        &robustness,
+        &mut std_errors,
+        &uniform_weight_fn,
+    );
+
+    assert!(std_errors[2] > 0.0);
+}
+
 /// Test SE with insufficient degrees of freedom.
 ///
 /// Verifies that df <= 0 produces zero SE.
@@ -167,7 +191,7 @@ fn test_compute_window_se_vector() {
     );
 
     // Middle element should match expected value
-    let expected_mid = (1.0f64 / 3.0f64).sqrt();
+    let expected_mid = (1.0f64 / 6.0f64).sqrt();
     assert_relative_eq!(std_err[1], expected_mid, epsilon = 1e-12);
     assert_eq!(std_err.len(), 3, "SE vector should have correct length");
 }
@@ -320,7 +344,7 @@ fn test_interval_method_workflow() {
         &uniform_weight_fn,
     );
 
-    let expected_se_mid = (1.0f64 / 3.0f64).sqrt();
+    let expected_se_mid = (1.0f64 / 6.0f64).sqrt();
     assert_relative_eq!(std_errors[1], expected_se_mid, epsilon = 1e-12);
 
     // Compute intervals
