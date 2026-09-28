@@ -27,7 +27,6 @@ NULL
 #' @srrstatsNA {RE4.14, RE4.15} No forecasting - smoothing only.
 #' @srrstatsNA {RE4.16} No categorical groups.
 #' @srrstatsNA {RE6.1, RE6.3} Default plot method is standard S3.
-#' @srrstatsNA {RE7.0, RE7.0a, RE7.1, RE7.1a} Exact input not special-cased.
 #' @srrstatsNA {RE7.2, RE7.3, RE7.4} No row names or accessor tests needed.
 #' @noRd
 NULL
@@ -46,7 +45,10 @@ NULL
 #' @srrstats {G5.1} Test datasets exported in examples.
 #' @srrstats {G5.2, G5.2a, G5.2b} Error/warning tests in tests/.
 #' @srrstats {G5.3} No NA/NaN in outputs tested.
-#' @srrstats {G5.4, G5.4a, G5.4b, G5.4c} Correctness tests vs stats::loess.
+#' @srrstats {G5.4, G5.4a, G5.4b} Correctness tests vs stats::loess.
+#' @srrstats {G5.4c} Stored reference fixtures in
+#'   tests/testthat/fixtures/, verified against a fresh fit in
+#'   tests/testthat/test-golden.R.
 #' @srrstats {G5.5} Fixed random seeds in tests.
 #' @srrstats {G5.6, G5.6a, G5.6b} Parameter recovery within tolerance.
 #' @srrstats {G5.7} Algorithm performance scales with data size.
@@ -54,5 +56,10 @@ NULL
 #' @srrstats {G5.9, G5.9a, G5.9b} Noise susceptibility tests.
 #' @srrstats {G5.10} Extended tests via environment variable.
 #' @srrstats {RE3.2, RE3.3} Threshold defaults documented, settable.
+#' @srrstats {RE7.0, RE7.0a} Tests with noiseless exact predictor relationships
+#'   (repeated and constant predictor values) confirm graceful handling.
+#' @srrstats {RE7.1, RE7.1a} Tests with noiseless exact predictor-response
+#'   relationships confirm exact reproduction and no material performance
+#'   regression versus noisy data.
 #' @noRd
 NULL

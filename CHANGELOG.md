@@ -71,6 +71,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `retain_model` and a `predict.Loess()` S3 method for out-of-sample prediction.
 - Added `return_gradient` to `Loess()`, `StreamingLoess()`, and `OnlineLoess()`.
 - Added `confidence_intervals`/`prediction_intervals`/`return_se` to `StreamingLoess()` and `OnlineLoess()`. `OnlineLoess()` requires `update_mode = "full"` or errors. New bound fields on `add_point()`'s result.
+- Added stored golden reference fixtures under `tests/testthat/fixtures/` (with a `make_reference.R` regeneration script and a `PROVENANCE.txt` provenance stamp) pinning the output of LOESS engine paths with no external reference - the default `boundary_policy = "extend"`, intervals and gradients, robustness weights, Streaming, and Online - verified by `test-golden.R` within a `1e-10` tolerance (srrstats G5.4c).
+- Added an explicit G5.9a test showing that `.Machine$double.eps`-scale noise in `y` does not meaningfully change the smoothed output.
+- Added explicit RE7.0/RE7.0a tests for repeated and constant predictors and RE7.1/RE7.1a tests for noiseless exact predictor-response relationships, including exact-fit diagnostics and timing against noisy data. Removed the obsolete RE7 `@srrstatsNA` declaration and added the corresponding `@srrstats` claims in `R/srr-stats-standards.R` and test headers.
 
 **WASM:**
 
