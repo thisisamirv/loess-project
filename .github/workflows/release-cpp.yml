@@ -168,7 +168,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add bindings/cpp/spack/package.py
+          # Force-stage the tracked recipe so ignore rules cannot block release updates.
+          git add -f bindings/cpp/spack/package.py
           git commit -m "cpp: update Spack recipe for ${{ github.event.release.tag_name || github.event.inputs.tag }}" || echo "No changes to commit"
           git push origin HEAD:${{ github.event.repository.default_branch }}
 
