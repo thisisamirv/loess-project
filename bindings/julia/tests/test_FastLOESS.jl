@@ -88,6 +88,9 @@ using FastLOESS
 			@test result.diagnostics.rmse >= 0
 			@test result.diagnostics.mae >= 0
 			@test 0 <= result.diagnostics.r_squared <= 1
+			@test result.diagnostics.aic === nothing
+			@test result.diagnostics.aicc === nothing
+			@test result.diagnostics.effective_df === nothing
 			@test result.diagnostics.residual_sd >= 0
 		end
 

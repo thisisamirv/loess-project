@@ -117,18 +117,18 @@ Diagnostic statistics for LOESS fit quality.
 - `rmse::Float64`: Root Mean Squared Error
 - `mae::Float64`: Mean Absolute Error
 - `r_squared::Float64`: R-squared (coefficient of determination)
-- `aic::Float64`: Akaike Information Criterion (NaN if not computed)
-- `aicc::Float64`: Corrected AIC (NaN if not computed)
-- `effective_df::Float64`: Effective degrees of freedom (NaN if not computed)
+- `aic::Union{Float64, Nothing}`: Akaike Information Criterion
+- `aicc::Union{Float64, Nothing}`: Corrected AIC
+- `effective_df::Union{Float64, Nothing}`: Effective degrees of freedom
 - `residual_sd::Float64`: Residual standard deviation
 """
 struct Diagnostics
 	rmse::Float64
 	mae::Float64
 	r_squared::Float64
-	aic::Float64
-	aicc::Float64
-	effective_df::Float64
+	aic::Union{Float64, Nothing}
+	aicc::Union{Float64, Nothing}
+	effective_df::Union{Float64, Nothing}
 	residual_sd::Float64
 end
 
@@ -468,9 +468,9 @@ function convert_result(c_result::CJlLoessResult)
 			c_result.rmse,
 			c_result.mae,
 			c_result.r_squared,
-			c_result.aic,
-			c_result.aicc,
-			c_result.effective_df,
+			isnan(c_result.aic) ? nothing : c_result.aic,
+			isnan(c_result.aicc) ? nothing : c_result.aicc,
+			isnan(c_result.effective_df) ? nothing : c_result.effective_df,
 			c_result.residual_sd,
 		)
 	else

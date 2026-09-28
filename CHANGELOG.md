@@ -37,7 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `RetainModel` and `Result.PredictModel.Predict(newX, options)` for out-of-sample prediction.
 - Added `ReturnGradient` to `Options`, `StreamingOptions`, and `OnlineOptions`.
 - Added `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSe` to `StreamingOptions` and `OnlineOptions`. `OnlineOptions` requires `UpdateMode = "full"` or errors. New bound fields on `PointResult`.
-- Added a Linux musl (Alpine) release binary.
 
 **Java:**
 
@@ -114,6 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Julia:**
 
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
+- Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels in the Julia binding.
 
 **Node.js:**
 
