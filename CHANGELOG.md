@@ -100,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - C++ musl release jobs now build dynamic x86_64 and ARM64 shared libraries, allowing the musl assets to be published reliably.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
+- Declared the public wrapper's C++17 requirement and represented unavailable diagnostics as empty `std::optional<double>` values instead of NaN sentinels.
 
 **Go:**
 

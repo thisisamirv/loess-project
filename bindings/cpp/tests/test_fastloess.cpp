@@ -151,9 +151,15 @@ void testLoessWithDiagnostics() {
   auto result = loess.fit(x_vals, y_vals).value();
 
   auto diag = result.diagnostics();
-  assertTrue(diag.rmse() >= 0, "RMSE negative");
-  assertTrue(diag.mae() >= 0, "MAE negative");
-  assertTrue(diag.r_squared() >= 0 && diag.r_squared() <= 1, "R2 out of range");
+  assertTrue(diag.has_value(), "Diagnostics missing");
+  assertTrue(diag.rmse().has_value() && *diag.rmse() >= 0, "RMSE negative");
+  assertTrue(diag.mae().has_value() && *diag.mae() >= 0, "MAE negative");
+  assertTrue(diag.r_squared().has_value() && *diag.r_squared() >= 0 &&
+                 *diag.r_squared() <= 1,
+             "R2 out of range");
+  assertTrue(!diag.aic().has_value() && !diag.aicc().has_value() &&
+                 !diag.effective_df().has_value(),
+             "Unavailable diagnostics should be empty");
 }
 
 void testLoessWithResiduals() {

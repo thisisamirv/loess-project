@@ -9,10 +9,19 @@
 #ifndef FASTLOESS_HPP
 #define FASTLOESS_HPP
 
+#if defined(_MSVC_LANG)
+#if _MSVC_LANG < 201703L
+#error "fastloess.hpp requires C++17 or later"
+#endif
+#elif __cplusplus < 201703L
+#error "fastloess.hpp requires C++17 or later"
+#endif
+
 #include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -232,28 +241,34 @@ public:
   Diagnostics() = default;
 
   explicit Diagnostics(const fastloess_CppLoessResult &result)
-      : rmse_(result.rmse), mae_(result.mae), r_squared_(result.r_squared),
-        aic_(result.aic), aicc_(result.aicc),
-        effective_df_(result.effective_df), residual_sd_(result.residual_sd) {}
+      : rmse_(optional_metric(result.rmse)), mae_(optional_metric(result.mae)),
+        r_squared_(optional_metric(result.r_squared)),
+        aic_(optional_metric(result.aic)), aicc_(optional_metric(result.aicc)),
+        effective_df_(optional_metric(result.effective_df)),
+        residual_sd_(optional_metric(result.residual_sd)) {}
 
-  bool has_value() const { return !std::isnan(rmse_); }
+  bool has_value() const { return rmse_.has_value(); }
 
-  double rmse() const { return rmse_; }
-  double mae() const { return mae_; }
-  double r_squared() const { return r_squared_; }
-  double aic() const { return aic_; }
-  double aicc() const { return aicc_; }
-  double effective_df() const { return effective_df_; }
-  double residual_sd() const { return residual_sd_; }
+  std::optional<double> rmse() const { return rmse_; }
+  std::optional<double> mae() const { return mae_; }
+  std::optional<double> r_squared() const { return r_squared_; }
+  std::optional<double> aic() const { return aic_; }
+  std::optional<double> aicc() const { return aicc_; }
+  std::optional<double> effective_df() const { return effective_df_; }
+  std::optional<double> residual_sd() const { return residual_sd_; }
 
 private:
-  double rmse_ = NAN;
-  double mae_ = NAN;
-  double r_squared_ = NAN;
-  double aic_ = NAN;
-  double aicc_ = NAN;
-  double effective_df_ = NAN;
-  double residual_sd_ = NAN;
+  static std::optional<double> optional_metric(double value) {
+    return std::isnan(value) ? std::nullopt : std::optional<double>(value);
+  }
+
+  std::optional<double> rmse_ = optional_metric(NAN);
+  std::optional<double> mae_ = optional_metric(NAN);
+  std::optional<double> r_squared_ = optional_metric(NAN);
+  std::optional<double> aic_ = optional_metric(NAN);
+  std::optional<double> aicc_ = optional_metric(NAN);
+  std::optional<double> effective_df_ = optional_metric(NAN);
+  std::optional<double> residual_sd_ = optional_metric(NAN);
 };
 
 /**
