@@ -19,19 +19,6 @@ mod specialized;
 // Regression Types
 mod types;
 
-use num_traits::Float;
-
-pub fn one_dimensional_x_range<T: Float>(x: &[T], dimensions: usize) -> Option<T> {
-    if dimensions != 1 || x.is_empty() {
-        return None;
-    }
-
-    let (minimum, maximum) = x.iter().copied().fold((x[0], x[0]), |(min, max), value| {
-        (min.min(value), max.max(value))
-    });
-    Some(maximum - minimum)
-}
-
 // Re-exports
 pub use context::RegressionContext;
 pub use specialized::SolverLinalg;

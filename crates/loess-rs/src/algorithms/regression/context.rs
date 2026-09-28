@@ -59,8 +59,6 @@ pub struct RegressionContext<'a, T: FloatLinalg + SolverLinalg> {
     // User-defined case weights (indexed by data position in the augmented array).
     // When Some, these are multiplied into the kernel weight: w = user_w * kernel_w * robustness_w.
     pub custom_weights: Option<&'a [T]>,
-    // Global predictor range for applying the 1D local-linear spread cutoff.
-    global_x_range: Option<T>,
     _phantom: PhantomData<T>,
 }
 
@@ -98,14 +96,8 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
             buffer,
             gradient_out: None,
             custom_weights: None,
-            global_x_range: None,
             _phantom: PhantomData,
         }
-    }
-
-    pub fn with_global_x_range(mut self, global_x_range: T) -> Self {
-        self.global_x_range = Some(global_x_range);
-        self
     }
 
     // Set an output slot (length `dimensions`) to receive the local fit's gradient for
@@ -196,17 +188,6 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
                 return self.handle_zero_weights_fit();
             }
 
-            if self.suppresses_local_linear_slope(weights, weight_sum) {
-                let value = self.weighted_mean_from_weights(weights, weight_sum);
-                let leverage = if self.compute_leverage {
-                    T::one() / weight_sum
-                } else {
-                    T::zero()
-                };
-                self.buffer = buffer;
-                return Some((value, leverage));
-            }
-
             buf.xtw_x.clear();
             buf.xtw_x.resize(n_coeffs * n_coeffs, T::zero());
             buf.xtw_y.clear();
@@ -239,16 +220,6 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
                 .iter()
                 .copied()
                 .fold(T::zero(), |sum, weight| sum + weight);
-            if self.suppresses_local_linear_slope(&weights, weight_sum) {
-                let value = self.weighted_mean_from_weights(&weights, weight_sum);
-                let leverage = if self.compute_leverage {
-                    T::one() / weight_sum
-                } else {
-                    T::zero()
-                };
-                return Some((value, leverage));
-            }
-
             // Check numerical stability of weights
             if weight_sum <= T::epsilon() {
                 self.buffer = buffer;
@@ -314,17 +285,6 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
                     kernel_w * user_w
                 };
                 weights.push(w);
-            }
-
-            let weight_sum: T = weights
-                .iter()
-                .copied()
-                .fold(T::zero(), |sum, weight| sum + weight);
-            if self.suppresses_local_linear_slope(weights, weight_sum) {
-                let mut coeffs = vec![T::zero(); d + 1];
-                coeffs[0] = self.weighted_mean_from_weights(weights, weight_sum);
-                self.buffer = buffer;
-                return Some(coeffs);
             }
 
             buf.xtw_x.clear();
@@ -531,52 +491,6 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
         let mut coeffs = vec![T::zero(); d + 1];
         coeffs[0] = val;
         Some(coeffs)
-    }
-
-    fn suppresses_local_linear_slope(&self, weights: &[T], weight_sum: T) -> bool {
-        if self.dimensions != 1
-            || self.polynomial_degree != PolynomialDegree::Linear
-            || weight_sum <= T::epsilon()
-        {
-            return false;
-        }
-
-        let Some(global_x_range) = self.global_x_range else {
-            return false;
-        };
-        if global_x_range <= T::zero() {
-            return false;
-        }
-
-        let weighted_x_sum = self
-            .neighborhood
-            .indices
-            .iter()
-            .zip(weights)
-            .fold(T::zero(), |sum, (&index, &weight)| {
-                sum + weight * self.x[index]
-            });
-        let weighted_mean_x = weighted_x_sum / weight_sum;
-        let weighted_variance = self.neighborhood.indices.iter().zip(weights).fold(
-            T::zero(),
-            |sum, (&index, &weight)| {
-                let dx = self.x[index] - weighted_mean_x;
-                sum + weight * dx * dx
-            },
-        ) / weight_sum;
-
-        weighted_variance.sqrt() <= T::from(0.001).unwrap_or_else(T::epsilon) * global_x_range
-    }
-
-    fn weighted_mean_from_weights(&self, weights: &[T], weight_sum: T) -> T {
-        self.neighborhood
-            .indices
-            .iter()
-            .zip(weights)
-            .fold(T::zero(), |sum, (&index, &weight)| {
-                sum + weight * self.y[index]
-            })
-            / weight_sum
     }
 
     // Handle zero weight cases using fallback policy.

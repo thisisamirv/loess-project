@@ -92,8 +92,8 @@ fn test_bisquare_smooth_downweighting() {
 }
 
 #[test]
-fn test_mar_effective_zero_stops_without_replacing_weights() {
-    let residuals = [0.0_f64, 0.0, 1e-8];
+fn test_mar_zero_scale_stops_without_replacing_weights() {
+    let residuals = [0.0_f64, 0.0, 0.0];
     let mut weights = [0.2_f64, 0.3, 0.4];
     let original_weights = weights;
     let mut scratch = [0.0_f64; 3];
@@ -110,7 +110,7 @@ fn test_mar_effective_zero_stops_without_replacing_weights() {
 }
 
 #[test]
-fn test_bisquare_preserves_tiny_mar_scale() {
+fn test_bisquare_preserves_nonzero_mar_scale() {
     let residuals = [1e-13_f64, 2e-13, 3e-13];
     let mut weights = [1.0_f64; 3];
     let mut scratch = [0.0_f64; 3];
@@ -124,6 +124,24 @@ fn test_bisquare_preserves_tiny_mar_scale() {
 
     assert!(!should_stop);
     assert_relative_eq!(weights[2], 0.87890625, epsilon = 1e-12);
+}
+
+#[test]
+fn test_bisquare_uses_strict_r_loess_cutoffs() {
+    let residuals = [6.0_f64 * 0.001, 1.0, 6.0 * 0.999];
+    let mut weights = [1.0_f64; 3];
+    let mut scratch = [0.0_f64; 3];
+
+    RobustnessMethod::Bisquare.apply_robustness_weights(
+        &residuals,
+        &mut weights,
+        ScalingMethod::MAR,
+        &mut scratch,
+    );
+
+    assert_eq!(weights[0], 1.0);
+    let u = residuals[2] / 6.0;
+    assert_relative_eq!(weights[2], (1.0 - u * u).powi(2), epsilon = 1e-15);
 }
 
 // ============================================================================

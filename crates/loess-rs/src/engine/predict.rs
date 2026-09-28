@@ -515,7 +515,7 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
         // real buffer must be supplied here even though it's not reused across calls.
         let n_coeffs = state.polynomial_degree.num_coefficients_nd(dims);
         let mut buffer = FittingBuffer::new(state.window_size, n_coeffs);
-        let mut context = RegressionContext::new(
+        let context = RegressionContext::new(
             &state.x,
             dims,
             &state.y,
@@ -530,9 +530,6 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
             false, // compute_leverage (fit_with_coefficients doesn't support it)
             Some(&mut buffer),
         );
-        if dims == 1 {
-            context = context.with_global_x_range(state.train_max[0] - state.train_min[0]);
-        }
         let mut context = if let Some(cw) = state.custom_weights.as_deref() {
             context.with_custom_weights(cw)
         } else {
@@ -561,9 +558,6 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
         need_se,
         None,
     );
-    if dims == 1 {
-        context = context.with_global_x_range(state.train_max[0] - state.train_min[0]);
-    }
     if let Some(cw) = state.custom_weights.as_deref() {
         context = context.with_custom_weights(cw);
     }

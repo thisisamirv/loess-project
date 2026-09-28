@@ -33,7 +33,7 @@ use crate::adapters::defaults::*;
 use crate::algorithms::defaults::*;
 use crate::algorithms::interpolation::InterpolationSurface;
 use crate::algorithms::regression::{
-    PolynomialDegree, RegressionContext, SolverLinalg, ZeroWeightFallback, one_dimensional_x_range,
+    PolynomialDegree, RegressionContext, SolverLinalg, ZeroWeightFallback,
 };
 use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::defaults::*;
@@ -878,7 +878,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         T: Float + Debug + Send + Sync + 'static,
     {
         let dims = self.dimensions;
-        let global_x_range = one_dimensional_x_range(x, dims);
         let n = x.len() / dims;
         let eff_fraction = fraction.unwrap_or(self.fraction);
 
@@ -997,9 +996,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     false, // compute_leverage
                     Some(fb),
                 );
-                if let Some(range) = global_x_range {
-                    context = context.with_global_x_range(range);
-                }
                 if let Some(ref uw) = custom_weights_aug {
                     context = context.with_custom_weights(uw);
                 }
@@ -1185,9 +1181,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                                     false, // compute_leverage
                                     Some(fb),
                                 );
-                                if let Some(range) = global_x_range {
-                                    context = context.with_global_x_range(range);
-                                }
                                 if let Some(ref uw) = custom_weights_aug {
                                     context = context.with_custom_weights(uw);
                                 }
@@ -1562,7 +1555,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         T: Float + Debug + Send + Sync + 'static,
     {
         let dims = self.dimensions;
-        let global_x_range = one_dimensional_x_range(x_train, dims);
         let n_query = x_query.len() / dims;
         let mut y_pred = vec![T::zero(); n_query];
 
@@ -1611,10 +1603,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 false, // compute_leverage
                 Some(&mut workspace.fitting_buffer),
             );
-            if let Some(range) = global_x_range {
-                context = context.with_global_x_range(range);
-            }
-
             if let Some((val, _)) = context.fit() {
                 *pred = val;
             } else {
@@ -1663,7 +1651,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         T: Float + Debug + Send + Sync + 'static,
     {
         let dims = self.dimensions;
-        let global_x_range = one_dimensional_x_range(x_query, dims);
         let dist_calc = LoessDistanceCalculator {
             metric: self.distance_metric.clone(),
             scales,
@@ -1730,9 +1717,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 compute_leverage,
                 Some(fitting_buffer),
             );
-            if let Some(range) = global_x_range {
-                context = context.with_global_x_range(range);
-            }
             if let Some(uw) = custom_weights {
                 context = context.with_custom_weights(uw);
             }

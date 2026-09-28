@@ -1230,7 +1230,7 @@ fn test_batch_return_gradient_small_magnitude_x() {
 }
 
 #[test]
-fn test_batch_suppresses_slope_for_small_local_spread() {
+fn test_batch_retains_slope_for_small_local_spread() {
     let x: Vec<f64> = (0..40)
         .map(|index| {
             if index < 20 {
@@ -1254,7 +1254,7 @@ fn test_batch_suppresses_slope_for_small_local_spread() {
         .unwrap();
 
     let gradient = result.gradient.expect("gradient should be Some");
-    assert_eq!(gradient[10], 0.0);
+    assert_relative_eq!(gradient[10], 3.0, epsilon = 1e-6);
     assert_relative_eq!(gradient[30], 3.0, epsilon = 1e-6);
 }
 

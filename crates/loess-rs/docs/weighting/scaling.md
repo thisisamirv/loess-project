@@ -63,7 +63,7 @@ $$\hat{\sigma} = \text{median}(|r_i|)$$
 
 Uses the uncentered median — unlike MAD it does not subtract the residual median first. Still robust (median-based) but slightly less resistant than MAD when residuals are systematically shifted. Faster than MAD in practice because it requires only one partial sort.
 
-**Use when**: Speed matters and data have minimal systematic bias in residuals.
+**Use when**: Matching R `stats::loess` robustness scaling or using an uncentered residual scale.
 
 ```rust
 use loess_rs::prelude::*;

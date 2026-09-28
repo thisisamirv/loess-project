@@ -47,9 +47,6 @@ impl RobustnessMethod {
     // Value of 2.5 provides aggressive outlier rejection.
     const DEFAULT_TALWAR_C: f64 = 2.5;
 
-    // Stop robustness iterations when the tuned MAR scale is effectively zero.
-    const SCALE_THRESHOLD: f64 = 1e-7;
-
     // Minimum tuned-scale absolute epsilon to avoid division by zero.
     const MIN_TUNED_SCALE: f64 = 1e-12;
 
@@ -75,15 +72,9 @@ impl RobustnessMethod {
         };
 
         let c_t = T::from(tuning_constant).unwrap_or(T::one());
-        let mean_abs = residuals
-            .iter()
-            .fold(T::zero(), |sum, residual| sum + residual.abs())
-            / T::from(residuals.len()).unwrap_or(T::one());
         let tuned_scale = base_scale * c_t;
 
-        if matches!(scaling_method, ScalingMethod::MAR)
-            && tuned_scale < T::from(Self::SCALE_THRESHOLD).unwrap_or_else(T::epsilon) * mean_abs
-        {
+        if matches!(scaling_method, ScalingMethod::MAR) && tuned_scale < T::min_positive_value() {
             return true;
         }
 
@@ -147,7 +138,7 @@ impl RobustnessMethod {
     //
     // u = |r| / tuned_scale, where tuned_scale = c * s
     //
-    // w(u) = (1 - u^2)^2  if 0.001 < u < 0.999
+    // w(u) = (1 - u^2)^2  if 0.001 < u <= 0.999
     //
     // w(u) = 1            if u <= 0.001
     //
@@ -157,17 +148,18 @@ impl RobustnessMethod {
         if tuned_scale <= T::zero() {
             return T::one();
         }
-        let u = (residual / tuned_scale).abs();
+        let abs_residual = residual.abs();
 
         // Thresholds (0.001 and 0.999)
         let low_threshold = T::from(0.001).unwrap();
         let high_threshold = T::from(0.999).unwrap();
 
-        if u >= high_threshold {
+        if abs_residual > tuned_scale * high_threshold {
             T::zero()
-        } else if u <= low_threshold {
+        } else if abs_residual <= tuned_scale * low_threshold {
             T::one()
         } else {
+            let u = abs_residual / tuned_scale;
             let tmp = T::one() - u * u;
             tmp * tmp
         }

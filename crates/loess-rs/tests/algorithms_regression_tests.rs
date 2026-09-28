@@ -27,7 +27,7 @@ use loess_rs::internals::math::distance::DistanceMetric;
 use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood};
-use loess_rs::internals::primitives::buffer::NeighborhoodSearchBuffer;
+use loess_rs::internals::primitives::buffer::{FittingBuffer, NeighborhoodSearchBuffer};
 use loess_rs::internals::primitives::window::Window;
 use loess_rs::prelude::*;
 
@@ -229,17 +229,18 @@ fn test_local_wls_linear_fit() {
 }
 
 #[test]
-fn test_local_linear_fit_suppresses_slope_below_global_spread_threshold() {
-    let x = [0.0_f64, 1e-4, 1.0];
-    let y = [0.0_f64, 10.0, 1000.0];
-    let query = [5e-5_f64];
+fn test_local_linear_fit_retains_slope_below_global_spread_threshold() {
+    let x = [0.0_f64, 5e-5, 1e-4, 2e-4, 1.0];
+    let y = [0.0_f64, 5.0, 10.0, 20.0, 100_000.0];
+    let query = [1e-4_f64];
     let neighborhood = Neighborhood {
-        indices: vec![0, 1],
-        distances: vec![5e-5, 5e-5],
-        max_distance: 5e-5,
+        indices: vec![0, 1, 2, 3],
+        distances: vec![1e-4, 5e-5, 0.0, 1e-4],
+        max_distance: 1e-4,
     };
     let robustness = [1.0_f64; 3];
     let mut gradient = [f64::NAN];
+    let mut fitting_buffer = FittingBuffer::new(4, 2);
     let mut context = RegressionContext::new(
         &x,
         1,
@@ -253,14 +254,13 @@ fn test_local_linear_fit_suppresses_slope_below_global_spread_threshold() {
         ZeroWeightFallback::UseLocalMean,
         PolynomialDegree::Linear,
         false,
-        None,
+        Some(&mut fitting_buffer),
     )
-    .with_global_x_range(1.0)
     .with_gradient_out(&mut gradient);
 
-    let (fitted, _) = context.fit().expect("fit should return the local mean");
-    assert_relative_eq!(fitted, 5.0, epsilon = 1e-12);
-    assert_eq!(gradient[0], 0.0);
+    let (fitted, _) = context.fit().expect("fit should return the local fit");
+    assert_relative_eq!(fitted, 10.0, epsilon = 1e-10);
+    assert_relative_eq!(gradient[0], 100_000.0, epsilon = 1e-8);
 }
 
 // ============================================================================
