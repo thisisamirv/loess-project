@@ -122,11 +122,14 @@ func TestLoess(t *testing.T) {
 			t.Fatal("expected Diagnostics to be populated")
 		}
 		diag := res.Diagnostics
-		if diag.RMSE < 0 || diag.MAE < 0 || diag.ResidualSD < 0 {
+		if diag.RMSE == nil || diag.MAE == nil || diag.ResidualSD == nil || *diag.RMSE < 0 || *diag.MAE < 0 || *diag.ResidualSD < 0 {
 			t.Fatalf("expected non-negative error metrics, got %+v", diag)
 		}
-		if diag.RSquared < 0 || diag.RSquared > 1 {
+		if diag.RSquared == nil || *diag.RSquared < 0 || *diag.RSquared > 1 {
 			t.Fatalf("expected RSquared in [0, 1], got %v", diag.RSquared)
+		}
+		if diag.AIC != nil || diag.AICc != nil || diag.EffectiveDF != nil {
+			t.Fatalf("expected unavailable diagnostics to be nil, got %+v", diag)
 		}
 	})
 
@@ -1106,13 +1109,13 @@ func TestDiagnosticsValues(t *testing.T) {
 	if diag == nil {
 		t.Fatal("expected Diagnostics to be populated")
 	}
-	if diag.RMSE >= 0.1 {
+	if diag.RMSE == nil || *diag.RMSE >= 0.1 {
 		t.Fatalf("expected low RMSE for perfect linear data, got %v", diag.RMSE)
 	}
-	if diag.MAE >= 0.1 {
+	if diag.MAE == nil || *diag.MAE >= 0.1 {
 		t.Fatalf("expected low MAE for perfect linear data, got %v", diag.MAE)
 	}
-	if diag.RSquared <= 0.99 {
+	if diag.RSquared == nil || *diag.RSquared <= 0.99 {
 		t.Fatalf("expected high RSquared for perfect linear data, got %v", diag.RSquared)
 	}
 }

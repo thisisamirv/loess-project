@@ -96,16 +96,24 @@ func cDoubleSliceToGo(ptr *C.double, n int) []float64 {
 	return out
 }
 
+func cDoubleOptional(value C.double) *float64 {
+	f := float64(value)
+	if math.IsNaN(f) {
+		return nil
+	}
+	return &f
+}
+
 // Diagnostics holds goodness-of-fit metrics, populated when ReturnDiagnostics
 // is enabled.
 type Diagnostics struct {
-	RMSE        float64
-	MAE         float64
-	RSquared    float64
-	AIC         float64
-	AICc        float64
-	EffectiveDF float64
-	ResidualSD  float64
+	RMSE        *float64
+	MAE         *float64
+	RSquared    *float64
+	AIC         *float64
+	AICc        *float64
+	EffectiveDF *float64
+	ResidualSD  *float64
 }
 
 // HatMatrixStats holds hat-matrix statistics, populated when ReturnSE is
@@ -195,13 +203,13 @@ func resultFromC(cres C.fastloess_GoLoessResult) (Result, error) {
 
 	if !math.IsNaN(float64(cres.rmse)) {
 		r.Diagnostics = &Diagnostics{
-			RMSE:        float64(cres.rmse),
-			MAE:         float64(cres.mae),
-			RSquared:    float64(cres.r_squared),
-			AIC:         float64(cres.aic),
-			AICc:        float64(cres.aicc),
-			EffectiveDF: float64(cres.effective_df),
-			ResidualSD:  float64(cres.residual_sd),
+			RMSE:        cDoubleOptional(cres.rmse),
+			MAE:         cDoubleOptional(cres.mae),
+			RSquared:    cDoubleOptional(cres.r_squared),
+			AIC:         cDoubleOptional(cres.aic),
+			AICc:        cDoubleOptional(cres.aicc),
+			EffectiveDF: cDoubleOptional(cres.effective_df),
+			ResidualSD:  cDoubleOptional(cres.residual_sd),
 		}
 	}
 

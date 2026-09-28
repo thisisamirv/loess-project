@@ -104,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Go:**
 
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
+- Represent unavailable diagnostic metrics as nil optional values instead of NaN sentinels in the Go binding.
 
 **Java:**
 
