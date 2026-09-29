@@ -190,6 +190,8 @@ r-tests:
 	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo test -q --no-run $(R_CARGO_TARGET)
 	@rm -rf $(R_DIR)/src/.cargo
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastloess')"
+	@echo "Running the LOESS property suite 30 times in parallel..."
+	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "scripts <- rep('$(R_DIR)/tests/testthat/test-property-loess.R', 30L); workers <- min(30L, parallel::detectCores()); cluster <- parallel::makeCluster(workers); on.exit(parallel::stopCluster(cluster), add = TRUE); jobs <- parallel::parLapply(cluster, scripts, function(path) testthat::test_file(path, reporter = 'silent')); failures <- vapply(jobs, inherits, logical(1), what = 'error'); if (any(failures)) quit(status = 1)"
 	@echo "Running the LOWESS property suite 30 times in parallel..."
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "scripts <- rep('$(R_DIR)/tests/testthat/test-validation.R', 30L); workers <- min(30L, parallel::detectCores()); cluster <- parallel::makeCluster(workers); on.exit(parallel::stopCluster(cluster), add = TRUE); jobs <- parallel::parLapply(cluster, scripts, function(path) testthat::test_file(path, reporter = 'silent')); failures <- vapply(jobs, inherits, logical(1), what = 'error'); if (any(failures)) quit(status = 1)"
 
