@@ -86,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
-- Added `quickcheck` properties for randomized `stats::loess()` parity, sorted output, and sparse one-spike initial fits.
+- Added `quickcheck` properties for randomized `stats::loess()` parity, sorted output, robust iterations through 12 passes, and sparse one-spike initial fits; fixed regressions cover 12- and 24-iteration robust fits.
 - Added an Alternative Software vignette with runnable Gaussian and robust comparisons to `stats::loess()` and a guide to LOESS-specific defaults.
 - Added `cv_opts()` and the `cv` argument on `Loess()` for grouped Batch cross-validation.
 - Added `outputs` to `Loess()`, `StreamingLoess()`, `OnlineLoess()`, and `predict.Loess()` for grouped optional results with mode-specific name validation; existing `return_*` arguments remain supported.

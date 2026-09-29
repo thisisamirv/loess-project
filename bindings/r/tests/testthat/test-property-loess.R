@@ -2,8 +2,16 @@
 #' @srrstats {G5.10} Property-based tests run in the standard suite. `quickcheck` is a Suggests test dependency, not a runtime dependency.
 #' @noRd
 
-usable_loess_x <- function(x, min_length = 8L) {
-    length(x) >= min_length && anyDuplicated(x) == 0L
+loess_property_x <- function(order_values) {
+    sorted_values <- sort(as.double(order_values))
+    value_range <- diff(range(sorted_values))
+    gaps <- 1 + diff(sorted_values) / max(1, value_range)
+    sorted_x <- c(0, cumsum(gaps))
+    sorted_x <- 10 * sorted_x / max(sorted_x) - 5
+
+    ranks <- integer(length(order_values))
+    ranks[order(order_values)] <- seq_along(order_values)
+    as.double(sorted_x[ranks])
 }
 
 #' Check whether `Loess()` matches a direct `stats::loess()` fit.
@@ -28,30 +36,6 @@ check_stats_loess <- function(
     ord <- order(x)
     degree_name <- if (degree == 1L) "linear" else "quadratic"
     family <- if (iterations == 0L) "gaussian" else "symmetric"
-
-    if (iterations > 0L) {
-        response_scale <- max(1, abs(y))
-        response_mad <- median(abs(y - median(y)))
-        if (response_mad <= 100 * .Machine$double.eps * response_scale) {
-            return(TRUE)
-        }
-
-        gaussian_reference <- stats::loess(
-            y ~ x,
-            data = data.frame(x = x, y = y),
-            span = fraction,
-            degree = degree,
-            family = "gaussian",
-            control = stats::loess.control(surface = "direct", iterations = 1L)
-        )
-        reference_scale <- median(abs(y - gaussian_reference$fitted))
-        if (
-            !is.finite(reference_scale) ||
-                reference_scale <= 100 * .Machine$double.eps * response_scale
-        ) {
-            return(TRUE)
-        }
-    }
 
     reference <- stats::loess(
         y ~ x,
@@ -89,70 +73,80 @@ check_stats_loess <- function(
 
 test_that("matches stats::loess for randomized inputs (property-based)", {
     property <- function(xy, fraction, degree) {
-        x <- xy[[1]]
+        x <- loess_property_x(xy[[1]])
         y <- xy[[2]]
 
-        if (!usable_loess_x(x)) {
-            return(expect_true(TRUE))
-        }
         expect_true(check_stats_loess(
             x,
             y,
             fraction,
             degree = degree,
-            tolerance = 1e-8
+            tolerance = 1e-10
         ))
     }
 
     quickcheck::for_all(
         xy = quickcheck::equal_length(
-            quickcheck::double_bounded(-100, 100, len = c(8L, 40L)),
-            quickcheck::double_bounded(-100, 100, len = c(8L, 40L))
+            quickcheck::double_bounded(-100, 100, len = c(12L, 40L)),
+            quickcheck::double_bounded(-100, 100, len = c(12L, 40L)),
+            len = c(12L, 40L)
         ),
         fraction = quickcheck::double_bounded(0.4, 1.0, len = 1L),
         degree = quickcheck::integer_bounded(1L, 2L, len = 1L),
         property = property,
         tests = 200L,
+        shrinks = 0L,
         discards = 1000L
     )
 })
 
 test_that("matches stats::loess for randomized sorted output", {
     property <- function(xy, fraction, degree) {
-        x <- xy[[1]]
+        x <- loess_property_x(xy[[1]])
         y <- xy[[2]]
 
-        if (!usable_loess_x(x)) {
-            return(expect_true(TRUE))
-        }
         expect_true(check_stats_loess(
             x,
             y,
             fraction,
             degree = degree,
             sorted = TRUE,
-            tolerance = 1e-8
+            tolerance = 1e-10
         ))
     }
 
     quickcheck::for_all(
         xy = quickcheck::equal_length(
-            quickcheck::double_bounded(-100, 100, len = c(8L, 40L)),
-            quickcheck::double_bounded(-100, 100, len = c(8L, 40L))
+            quickcheck::double_bounded(-100, 100, len = c(12L, 40L)),
+            quickcheck::double_bounded(-100, 100, len = c(12L, 40L)),
+            len = c(12L, 40L)
         ),
         fraction = quickcheck::double_bounded(0.4, 1.0, len = 1L),
         degree = quickcheck::integer_bounded(1L, 2L, len = 1L),
         property = property,
         tests = 200L,
+        shrinks = 0L,
         discards = 1000L
     )
 })
 
-test_that("matches stats::loess for randomized robust fits", {
-    property <- function(n, seed, fraction, degree, iterations) {
+test_that("matches stats::loess for randomized robust fits with outliers", {
+    property <- function(
+        n,
+        seed,
+        fraction,
+        degree,
+        iterations,
+        spike_position,
+        spike_magnitude,
+        spike_negative
+    ) {
         set.seed(seed)
-        x <- as.double(seq(-5, 5, length.out = n))
+        x <- as.double(seq(-5, 5, length.out = n)[sample.int(n)])
         y <- as.double(sin(x) + rnorm(n, sd = 0.2))
+        spike_index <- min(n, floor(spike_position * n) + 1L)
+        spike_value <- if (spike_negative) -spike_magnitude else spike_magnitude
+        y[spike_index] <- y[spike_index] + spike_value
 
         expect_true(check_stats_loess(
             x,
@@ -160,7 +154,7 @@ test_that("matches stats::loess for randomized robust fits", {
             fraction,
             degree = degree,
             iterations = iterations,
-            tolerance = 1e-8
+            tolerance = 1e-10
         ))
     }
 
@@ -169,11 +163,50 @@ test_that("matches stats::loess for randomized robust fits", {
         seed = quickcheck::integer_bounded(1L, 100000L, len = 1L),
         fraction = quickcheck::double_bounded(0.4, 1.0, len = 1L),
         degree = quickcheck::integer_bounded(1L, 2L, len = 1L),
-        iterations = quickcheck::integer_bounded(1L, 6L, len = 1L),
+        iterations = quickcheck::integer_bounded(1L, 12L, len = 1L),
+        spike_position = quickcheck::double_bounded(0, 1, len = 1L),
+        spike_magnitude = quickcheck::double_bounded(2, 10, len = 1L),
+        spike_negative = quickcheck::logical_(len = 1L),
         property = property,
         tests = 50L,
         discards = 1000L
     )
+})
+
+test_that("matches stats::loess for fixed long-run robust fits", {
+    set.seed(912)
+    x <- as.double(seq(-5, 5, length.out = 48L))
+    y <- as.double(sin(x) + rnorm(length(x), sd = 0.2))
+    y[c(11L, 32L)] <- y[c(11L, 32L)] + c(5, -4)
+
+    for (iterations in c(12L, 24L)) {
+        reference <- stats::loess(
+            y ~ x,
+            data = data.frame(x = x, y = y),
+            span = 0.6,
+            degree = 2L,
+            family = "symmetric",
+            control = stats::loess.control(
+                surface = "direct",
+                iterations = iterations
+            )
+        )
+        result <- fit(
+            Loess(
+                fraction = 0.6,
+                degree = "quadratic",
+                iterations = iterations,
+                scaling_method = "mar",
+                boundary_policy = "noboundary",
+                surface_mode = "direct",
+                parallel = FALSE
+            ),
+            x,
+            y
+        )
+
+        expect_equal(result$y, reference$fitted, tolerance = 1e-10)
+    }
 })
 
 test_that("matches initial stats::loess fits for sparse one-spike responses", {
@@ -184,9 +217,7 @@ test_that("matches initial stats::loess fits for sparse one-spike responses", {
         spike_negative,
         fraction
     ) {
-        if (!usable_loess_x(x)) {
-            return(expect_true(TRUE))
-        }
+        x <- loess_property_x(x)
 
         spike_index <- min(length(x), floor(spike_position * length(x)) + 1L)
         spike_value <- if (spike_negative) -spike_magnitude else spike_magnitude
@@ -198,18 +229,19 @@ test_that("matches initial stats::loess fits for sparse one-spike responses", {
             y,
             fraction,
             sorted = TRUE,
-            tolerance = 1e-8
+            tolerance = 1e-10
         ))
     }
 
     quickcheck::for_all(
-        x = quickcheck::double_bounded(-100, 100, len = c(8L, 40L)),
+        x = quickcheck::double_bounded(-100, 100, len = c(12L, 40L)),
         spike_position = quickcheck::double_bounded(0, 1, len = 1L),
         spike_magnitude = quickcheck::double_bounded(1e-4, 100, len = 1L),
         spike_negative = quickcheck::logical_(len = 1L),
         fraction = quickcheck::double_bounded(0.4, 1.0, len = 1L),
         property = property,
         tests = 200L,
+        shrinks = 0L,
         discards = 1000L
     )
 })
