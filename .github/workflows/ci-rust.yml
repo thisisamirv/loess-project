@@ -56,9 +56,9 @@ jobs:
       - name: Test (loess-rs)
         shell: bash
         run: |
-          cargo test -q -p loess-rs --test loess-rs --features dev
+          cargo test -q -p loess-rs --tests --features dev
           if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
-            cargo test -q -p loess-rs --test loess-rs --features dev --no-default-features
+            cargo test -q -p loess-rs --tests --features dev --no-default-features
           fi
 
       - name: Build (fastLoess)
