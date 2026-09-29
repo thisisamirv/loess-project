@@ -1,6 +1,47 @@
 = Benchmarks
 
-The Java binding calls the same `fastLoess` Rust core as every other binding (C++, Python, R, Julia, Node.js, WASM, Go) through a thin JNI layer, so its raw fit performance is governed by the same underlying engine — see the https://thisisamirv.github.io/loess-project/cpp/benchmarks.html[C++ binding's benchmarks] for representative numbers (R baseline vs. serial vs. parallel, across scale/fraction/iteration/pathological-data scenarios).
+The Java binding calls the shared `fastLoess` Rust core through JNI. The figures below are reference measurements of that core from the repository's R comparison harness; they do not measure Java/JNI overhead or Java-specific workloads.
 
-A dedicated JMH benchmark harness (wired into `benchmarks/compare.py` alongside the R/Rust comparisons) has not been added yet — this is a good follow-up once the binding has seen some real-world use. In the meantime, JUnit tests combined with manual timing (or https://openjdk.org/projects/code-tools/jmh/[JMH]) can be used for local relative comparisons between option configurations (e.g. serial vs. `parallel(true)`, different `fraction`/`iterations` values).
+== CPU Benchmarks
+
+Speedup relative to R's `stats::loess` (higher is better):
+
+[cols="2,1,1,1", options="header"]
+|===
+|Category |R (stats) |Serial |Parallel
+
+|*Clustered* |1x |19.7x |*27.1x*
+|*Constant Y* |1x |15.5x |*19.1x*
+|*Extreme Outliers* |1x |*6.9x* |5.4x
+|*Financial* (500-5K) |1x |*3.7x* |3.4x
+|*Fraction* (0.05-0.67) |1x |17.3x |*25.4x*
+|*Genomic* (1K-5K) |1x |*4.9x* |2.9x
+|*Genomic* (100K) |1x |129.6x |*131.9x*
+|*High Noise* |1x |17.8x |*20.7x*
+|*Iterations* (1-10) |1x |9.9x |*15.0x*
+|*Large* (Direct) |1x |0.8x |*2.4x*
+|*Large* (High Fraction) |1x |*612.5x* |550.6x
+|*Large* (High Iterations) |1x |5.3x |*7.3x*
+|*Large* (Interpolate) |1x |57.6x |*90.7x*
+|*Scale* (1K-10K) |1x |7.5x |*9.2x*
+|*Scientific* (500-5K) |1x |3.6x |*4.0x*
+|===
+
+_Mean per-scenario speedup within each category, rounded to one decimal._
+
+== Large-Scale Timings
+
+Mean elapsed times from the latest comparison run:
+
+[cols="2,1,1,1,1,1", options="header"]
+|===
+|Variant |`stats::loess` |Serial core |Parallel core |Speedup (serial) |Speedup (parallel)
+
+|`large_direct` |7.86 s |9.55 s |3.27 s |0.8x |2.4x
+|`large_interp` |1.21 s |20.96 ms |13.30 ms |57.6x |90.7x
+|`large_high_iter` |6.75 s |1.27 s |0.92 s |5.3x |7.3x
+|`large_high_fraction` |8.71 s |14.22 ms |15.82 ms |612.5x |550.6x
+|===
+
+Parallel execution is not faster for every workload: the serial core is faster in the `large_high_fraction` run. A dedicated JMH benchmark can measure end-to-end Java/JNI overhead and compare Java-specific option configurations.
 

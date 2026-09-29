@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Benchmarks :: fastloess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/benchmarks.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="./_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/loess-project/java">fastloess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="index.html">fastloess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="index.html">fastloess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/cross-validation.html">Cross-Validation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/predict.html">Predict</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="guide/alternative-software.html">Alternative Software</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api-streaming.html">StreamingLoess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="api/api-online.html">OnlineLoess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/degree.html">Polynomial Degree</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/dimensions.html">Multivariate LOESS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="advanced/merge.html">Merge Strategies</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastloess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="index.html">fastloess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">fastloess (Java)</a></li>
+    <li><a href="benchmarks.html">Benchmarks</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="file:///C:/Users/av746/GitHub/loess-project/bindings/java/docs/modules/ROOT/pages/benchmarks.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Benchmarks</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Java binding calls the shared <code>fastLoess</code> Rust core through JNI. The figures below are reference measurements of that core from the repository&#8217;s R comparison harness; they do not measure Java/JNI overhead or Java-specific workloads.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="cpu-benchmarks"><a class="anchor" href="#cpu-benchmarks"></a>CPU Benchmarks</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Speedup relative to R&#8217;s <code>stats::loess</code> (higher is better):</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 40%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+<col style="width: 20%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Category</th>
+<th class="tableblock halign-left valign-top">R (stats)</th>
+<th class="tableblock halign-left valign-top">Serial</th>
+<th class="tableblock halign-left valign-top">Parallel</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Clustered</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">19.7x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>27.1x</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Constant Y</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">15.5x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>19.1x</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Extreme Outliers</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>6.9x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5.4x</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Financial</strong> (500-5K)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>3.7x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.4x</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Fraction</strong> (0.05-0.67)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">17.3x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>25.4x</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Genomic</strong> (1K-5K)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>4.9x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.9x</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Genomic</strong> (100K)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">129.6x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>131.9x</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>High Noise</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">17.8x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>20.7x</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Iterations</strong> (1-10)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">9.9x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>15.0x</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Large</strong> (Direct)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.8x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>2.4x</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Large</strong> (High Fraction)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>612.5x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">550.6x</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Large</strong> (High Iterations)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5.3x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>7.3x</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Large</strong> (Interpolate)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">57.6x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>90.7x</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Scale</strong> (1K-10K)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7.5x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>9.2x</strong></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Scientific</strong> (500-5K)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.6x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>4.0x</strong></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><em>Mean per-scenario speedup within each category, rounded to one decimal.</em></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="large-scale-timings"><a class="anchor" href="#large-scale-timings"></a>Large-Scale Timings</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Mean elapsed times from the latest comparison run:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 28.5714%;">
+<col style="width: 14.2857%;">
+<col style="width: 14.2857%;">
+<col style="width: 14.2857%;">
+<col style="width: 14.2857%;">
+<col style="width: 14.2858%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Variant</th>
+<th class="tableblock halign-left valign-top"><code>stats::loess</code></th>
+<th class="tableblock halign-left valign-top">Serial core</th>
+<th class="tableblock halign-left valign-top">Parallel core</th>
+<th class="tableblock halign-left valign-top">Speedup (serial)</th>
+<th class="tableblock halign-left valign-top">Speedup (parallel)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>large_direct</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7.86 s</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">9.55 s</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.27 s</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.8x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.4x</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>large_interp</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.21 s</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20.96 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13.30 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">57.6x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">90.7x</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>large_high_iter</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6.75 s</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.27 s</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.92 s</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5.3x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7.3x</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>large_high_fraction</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8.71 s</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">14.22 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">15.82 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">612.5x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">550.6x</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Parallel execution is not faster for every workload: the serial core is faster in the <code>large_high_fraction</code> run. A dedicated JMH benchmark can measure end-to-end Java/JNI overhead and compare Java-specific option configurations.</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="./_/js/site.js" data-ui-root-path="./_"></script>
+<script async src="./_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>  </body>
+</html>

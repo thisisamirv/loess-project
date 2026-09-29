@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Alternative Software :: fastloess (Java)</title>
+    <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/guide/alternative-software.html">
+    <meta name="generator" content="Antora 3.2.0">
+    <link rel="stylesheet" href="../_/css/site.css">
+  </head>
+  <body class="article">
+<header class="header">
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <a class="navbar-item" href="https://thisisamirv.github.io/loess-project/java">fastloess (Java)</a>
+            <button class="navbar-burger" aria-controls="topbar-nav" aria-expanded="false"
+                aria-label="Toggle main menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+        <div id="topbar-nav" class="navbar-menu">
+            <div class="navbar-end">
+                <a class="navbar-item" href="#">Home</a>
+                <div class="navbar-item">
+                    <span class="control">
+                        <a class="button is-primary" href="#">Download</a>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header><div class="body">
+<div class="nav-container" data-component="ROOT" data-version="">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <button class="nav-menu-toggle" aria-label="Toggle expand/collapse all" style="display: none"></button>
+    <h3 class="title"><a href="../index.html">fastloess (Java)</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">fastloess (Java)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Introduction</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/getting-started.html">Getting Started</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/installation.html">Installation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../introduction/concepts.html">Concepts</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">User Guide</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="adapter-choice.html">Execution Modes</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="intervals.html">Intervals</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="cross-validation.html">Cross-Validation</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="predict.html">Predict</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="alternative-software.html">Alternative Software</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">API Reference</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api.html">API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-streaming.html">StreamingLoess API</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../api/api-online.html">OnlineLoess API</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Weight &amp; Robustness</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/kernels.html">Weight Functions</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/robustness.html">Robustness</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/scaling.html">Scaling Methods</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../weighting/custom-weights.html">Custom Weights</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Advanced</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/boundary.html">Boundary Handling</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/degree.html">Polynomial Degree</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/dimensions.html">Multivariate LOESS</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../advanced/merge.html">Merge Strategies</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Use Cases</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-genomics.html">Genomic Data Smoothing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-real-time.html">Real-Time Processing</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../use-case/use-case-time-series.html">Time Series Analysis</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../benchmarks.html">Benchmarks</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../NEWS.html">News</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">fastloess (Java)</span>
+    <span class="version"></span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <div class="title"><a href="../index.html">fastloess (Java)</a></div>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">fastloess (Java)</a></li>
+    <li>User Guide</li>
+    <li><a href="alternative-software.html">Alternative Software</a></li>
+  </ul>
+</nav>
+<div class="edit-this-page"><a href="file:///C:/Users/av746/GitHub/loess-project/bindings/java/docs/modules/ROOT/pages/guide/alternative-software.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Alternative Software</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p><code>fastloess</code> implements multivariate, polynomial LOESS. For a reference
+implementation, compare against R&#8217;s
+<a href="https://www.rdocumentation.org/packages/stats/topics/loess"><code>stats::loess()</code></a>.
+Apache Commons Math&#8217;s <code>LoessInterpolator</code> implements the narrower, univariate
+local-linear LOWESS method; it cannot serve as a reference for quadratic or
+multivariate LOESS fits.</p>
+</div>
+<div class="paragraph">
+<p>In short:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>With the same local-linear, direct-surface settings, Gaussian fits agree
+with <code>stats::loess()</code> to floating-point precision.</p>
+</li>
+<li>
+<p>Robust fits also agree when both use bisquare robustness and MAR residual
+scaling. The Java default is MAD instead; set <code>scalingMethod("mar")</code> to match R.</p>
+</li>
+<li>
+<p><code>fastloess</code> offers additional polynomial degrees, kernels, boundary policies,
+and execution modes; see <a href="#_what_this_package_adds">What this package adds</a>.</p>
+</li>
+</ul>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="comparing-the-two-implementations"><a class="anchor" href="#comparing-the-two-implementations"></a>Comparing the two implementations</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The following data and settings use a direct, unpadded local-linear fit with
+tricube weights and no robustifying iterations. The <code>rFit</code> array is computed
+with the R code below.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class AltSoftwareGaussian {
+    public static void main(String[] args) {
+        double[] x = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        double[] y = { 1, 1.5, 2.7, 2.6, 2.0, 1.0, 0.6, 1.2, 2.4, 3.1, 2.8, 2.0 };
+        double[] rFit = {
+            1.2983384943031071, 1.6652135934830223, 1.9581637427324217,
+            2.2016614881916183, 1.8274079908975536, 1.3339284932825697,
+            1.1765582833719894, 1.5239230959987167, 2.1317316528817125,
+            2.3597063919800907, 2.513451576122792, 2.6017152571791788
+        };
+
+        Options options = Options.builder()
+                .fraction(0.6)
+                .degree("linear")
+                .iterations(0)
+                .surfaceMode("direct")
+                .boundaryPolicy("noboundary")
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            double maxDiff = 0.0;
+            for (int i = 0; i &lt; x.length; i++) {
+                maxDiff = Math.max(maxDiff, Math.abs(result.y()[i] - rFit[i]));
+            }
+            System.out.println("Max abs difference: " + maxDiff);
+            if (maxDiff &gt; 1e-12) {
+                throw new AssertionError("Gaussian fit differs from stats::loess()");
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">Max abs difference: 2.220446049250313E-15</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For both Java examples, generate the R reference fits with:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-r hljs" data-lang="r">x &lt;- 0:11
+y &lt;- c(1, 1.5, 2.7, 2.6, 2.0, 1.0, 0.6, 1.2, 2.4, 3.1, 2.8, 2.0)
+for (family in c("gaussian", "symmetric")) {
+  fit &lt;- stats::loess(
+    y ~ x, data = data.frame(x, y), span = 0.6, degree = 1,
+    family = family, normalize = FALSE,
+    control = stats::loess.control(surface = "direct", iterations = 3)
+  )
+  print(fit$fitted)
+}</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="matching-robust-fits"><a class="anchor" href="#matching-robust-fits"></a>Matching robust fits</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>R&#8217;s <code>family = "symmetric"</code> applies bisquare reweighting. Use three iterations
+and <code>scalingMethod("mar")</code> in Java to match its residual scale; leaving Java&#8217;s
+default MAD in place would change the fit.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class AltSoftwareRobust {
+    public static void main(String[] args) {
+        double[] x = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        double[] y = { 1, 1.5, 2.7, 2.6, 2.0, 1.0, 0.6, 1.2, 2.4, 3.1, 2.8, 2.0 };
+        double[] rFit = {
+            1.2673770675189258, 1.6197239199110709, 1.9053407627139782,
+            2.1714787611965733, 1.8384458190478647, 1.3437632519162162,
+            1.2040300608698813, 1.5273071343274589, 2.117183741382374,
+            2.3495292076112979, 2.5168097285512738, 2.6259487731457565
+        };
+
+        Options options = Options.builder()
+                .fraction(0.6)
+                .degree("linear")
+                .iterations(3)
+                .scalingMethod("mar")
+                .surfaceMode("direct")
+                .boundaryPolicy("noboundary")
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            double maxDiff = 0.0;
+            for (int i = 0; i &lt; x.length; i++) {
+                maxDiff = Math.max(maxDiff, Math.abs(result.y()[i] - rFit[i]));
+            }
+            System.out.println("Max abs difference: " + maxDiff);
+            if (maxDiff &gt; 1e-12) {
+                throw new AssertionError("Robust fit differs from stats::loess()");
+            }
+        }
+    }
+}</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-console hljs" data-lang="console">Max abs difference: 2.6645352591003757E-15</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="what-this-package-adds"><a class="anchor" href="#what-this-package-adds"></a>What this package adds</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Both implementations support multivariate predictors, observation weights,
+prediction, and prediction standard errors. <code>fastloess</code> additionally provides:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature</th>
+<th class="tableblock halign-left valign-top"><code>fastloess</code></th>
+<th class="tableblock halign-left valign-top"><code>stats::loess()</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Polynomial degree</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0-4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0-2</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kernel functions</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">7 options</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">tricube only</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robustness weighting</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3 methods</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bisquare only</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Scale estimation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MAD, MAR, mean</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MAR for robust fits</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Distance metrics</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">6 options</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Euclidean, optionally normalized</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary padding</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4 policies</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">none</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zero-weight fallback</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3 options</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">not configurable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Automatic convergence</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Built-in confidence / prediction interval bounds</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">standard errors available; bounds require calculation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Cross-validation for <code>fraction</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">K-fold, LOOCV</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no automatic span selection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Streaming / online modes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Parallel execution</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">yes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">no built-in parallel fitting</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>See <a href="../introduction/concepts.html" class="xref page">Concepts</a> for an overview of these
+options, or <a href="../benchmarks.html" class="xref page">Benchmarks</a> for performance comparisons.</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <p>This page was built using the Antora default UI.</p>
+  <p>The source code for this UI is licensed under the terms of the MPL-2.0 license.</p>
+</footer>
+<script id="site-script" src="../_/js/site.js" data-ui-root-path="../_"></script>
+<script async src="../_/js/vendor/highlight.js"></script>
+<script>
+    window.MathJax = {
+        tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+        options: { ignoreHtmlClass: 'nostem|nolatexmath' }
+    };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js"></script>  </body>
+</html>

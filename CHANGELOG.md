@@ -108,6 +108,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+**Monorepo:**
+
+- Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.167.0.
+
 **loess-rs:**
 
 - Hoisted inline fully-qualified paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
@@ -135,11 +139,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Bumped the pinned `golangci-lint` install-script version from `v2.13.2` to `v2.14.0`.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Represent unavailable diagnostic metrics as nil optional values instead of NaN sentinels in the Go binding.
 
 **Java:**
 
+- Bumped the pinned Checkstyle standalone jar version from `14.1.0` to `14.3.0`.
 - Java's musl JNI release jobs now build dynamic x86_64 and ARM64 shared libraries, so the bundled resources selected by `NativeBridge` are published reliably.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 

@@ -26,16 +26,16 @@ Every other scenario above completes in well under 100ms, which doesn't stress-t
 | `large_high_iter` | 15 000 | 10 robustness iterations instead of 3, `family = "symmetric"` (still `surface = "direct"`) |
 | `large_high_fraction` | 50 000 | Fraction 0.67 (wider local window), `surface = "interpolate"` |
 
-Median times, and fastLoess's speedup over `stats::loess`:
+Mean times from the latest comparison run, and fastLoess's speedup over `stats::loess`:
 
 | Variant | `stats::loess` | fastLoess (serial) | fastLoess (parallel) | Speedup (serial) | Speedup (parallel) |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| `large_direct` | 9.27 s | 10.1 s | 3.33 s | 0.9× | 2.8× |
-| `large_interp` | 1.40 s | 23.3 ms | 16.7 ms | 60× | 84× |
-| `large_high_iter` | 8.46 s | 1.35 s | 0.90 s | 6.3× | 9.4× |
-| `large_high_fraction` | 9.99 s | 17.1 ms | 14.8 ms | 585× | 676× |
+| `large_direct` | 7.86 s | 9.55 s | 3.27 s | 0.8× | 2.4× |
+| `large_interp` | 1.21 s | 20.96 ms | 13.30 ms | 57.6× | 90.7× |
+| `large_high_iter` | 6.75 s | 1.27 s | 0.92 s | 5.3× | 7.3× |
+| `large_high_fraction` | 8.71 s | 14.22 ms | 15.82 ms | 612.5× | 550.6× |
 
-`large_direct` is the one case where `stats::loess`'s `surface = "direct"` Fortran routine is fast enough to edge out fastLoess's serial build (0.9×); parallel execution is needed to regain a lead (2.8×). `large_interp` and `large_high_fraction` show the largest gains once both implementations' k-d tree interpolation shortcuts are active, reaching 84× and 676× respectively.
+`large_direct` remains the case where `stats::loess`'s `surface = "direct"` Fortran routine edges out fastLoess's serial build (0.8×); parallel execution is 2.4× faster than R. `large_interp` and `large_high_fraction` show the largest gains with interpolation enabled, reaching 90.7× and 612.5× respectively. For `large_high_fraction`, serial is faster than parallel in this run.
 
 ## Running
 
