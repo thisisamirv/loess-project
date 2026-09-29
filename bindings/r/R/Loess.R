@@ -124,6 +124,8 @@
 #'   fails. \code{NULL} (default) uses the library default.
 #' @param cv_seed Integer seed for the cross-validation random number
 #'   generator. \code{NULL} (default) uses a random seed.
+#' @param cv Grouped cross-validation settings from \code{\link{cv_opts}}.
+#'   \code{NULL} uses the individual \code{cv_*} arguments.
 #' @param retain_model Logical; if \code{TRUE}, retain the fitted model's
 #'   training data, enabling \code{\link{predict.Loess}} for out-of-sample
 #'   prediction. Default: \code{FALSE}.
@@ -170,10 +172,17 @@ Loess <- function(
     cv_seed = NULL,
     missing = "error",
     retain_model = FALSE,
-    outputs = NULL
+    outputs = NULL,
+    cv = NULL
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
     validate_params(fraction = fraction, iterations = iterations)
+    if (!is.null(cv)) {
+        cv_fractions <- cv$fractions
+        cv_method <- if (is.null(cv$method)) "kfold" else cv$method
+        cv_k <- if (is.null(cv$k)) 5L else cv$k
+        cv_seed <- cv$seed
+    }
     flags <- parse_outputs_flags(
         outputs,
         c(
@@ -213,5 +222,36 @@ Loess <- function(
             )
         ),
         class = "Loess"
+    )
+}
+
+#' Cross-validation options for \code{\link{Loess}}
+#'
+#' @param fractions Numeric vector of candidate smoothing fractions.
+#' @param method Cross-validation method: \code{"kfold"} or \code{"loocv"}.
+#' @param k Number of folds for k-fold cross-validation. Default: 5.
+#' @param seed Seed for reproducible fold assignment, or \code{NULL}.
+#' @return A \code{cv_opts} list for \code{Loess(cv = ...)}.
+#' @examples
+#' model <- Loess(cv = cv_opts(fractions = c(0.2, 0.3, 0.5)))
+#' @export
+cv_opts <- function(fractions, method = "kfold", k = 5L, seed = NULL) {
+    if (missing(fractions) || is.null(fractions)) {
+        stop(
+            "`fractions` must be a numeric vector of candidate fractions",
+            call. = FALSE
+        )
+    }
+    if (!is.numeric(fractions) || length(fractions) == 0L) {
+        stop("`fractions` must be a non-empty numeric vector", call. = FALSE)
+    }
+    structure(
+        list(
+            fractions = as.double(fractions),
+            method = as.character(method),
+            k = as.integer(k),
+            seed = seed
+        ),
+        class = "cv_opts"
     )
 }

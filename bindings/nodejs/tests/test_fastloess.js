@@ -433,6 +433,23 @@ test('SmoothOptions: cv_fractions, cv_method, cv_k', () => {
     assert.strictEqual(r.cv_scores.length, 3);
 });
 
+test('SmoothOptions: grouped cv overrides individual CV fields', () => {
+    const x = new Float64Array(Array.from({ length: 30 }, (_, i) => i));
+    const y = new Float64Array(Array.from(x, value => value * value));
+    const r = new fastloess.Loess({
+        cv_fractions: [0.2],
+        cv_method: 'invalid',
+        cv: { fractions: [0.3, 0.5], method: 'kfold', k: 3, seed: 42 }
+    }).fit(x, y);
+    assert.strictEqual(r.cv_scores.length, 2);
+    assert.ok([0.3, 0.5].includes(r.fraction_used));
+
+    assert.throws(
+        () => new fastloess.Loess({ cv: { fractions: [0.3], seed: -1 } }).fit(x, y),
+        /cv_seed must be non-negative/
+    );
+});
+
 test('StreamingOptions: merge_strategy', () => {
     const x = new Float64Array(Array.from({ length: 40 }, (_, i) => i));
     const y = new Float64Array(Array.from({ length: 40 }, (_, i) => i * 2));

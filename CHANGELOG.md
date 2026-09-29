@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Added grouped cross-validation configuration via `CVBuilder::method(...).fractions(...)` and `.cv(...)`; `CVBuilder` is in the prelude and the `CVOptions<T>` result type is at the crate root.
 - Added `LoessBuilder::outputs(names)` as a grouped replacement for individual output toggles; unknown names are accumulated and reported together by `.build()`.
 - Added `return_gradient` to the Batch, Streaming, and Online adapter builders, exposing each point's local-fit gradient (`LoessResult::gradient` / `OnlineOutput::gradient`) at no extra computation cost. Only populated when `surface_mode` is `"direct"`. `false` by default.
 - Added `retain_model` and `Predict::call()` for out-of-sample prediction, with optional SE, interval, derivative, and extrapolation settings.
@@ -23,12 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLoess:**
 
+- Added `.cv(...)` to the parallel Batch builder, re-exporting `CVBuilder` through the prelude and `CVOptions<T>` at the crate root.
 - Added `outputs(names)` to the `Loess`, `StreamingLoess`, and `OnlineLoess` wrappers, forwarding grouped output selection and deferred unknown-name errors to the core builder.
 - Added parallel `custom_gradient_pass` and predict passes for the `return_gradient` option and `Predict::call()`.
 - Added parallel builder setters for `return_se`, `confidence_intervals`, and `prediction_intervals` to the Streaming and Online adapters.
 
 **C++:**
 
+- Added `CVOptions cv` to Batch options for grouped cross-validation while preserving legacy CV fields.
 - Added `retain_model`, `LoessResult::predict_model()`, and new `PredictModel`/`PredictOptions`/`PredictResult` RAII classes for out-of-sample prediction.
 - Added `return_gradient` to `LoessOptions` and `OnlineOptions`.
 - Added `confidence_intervals`/`prediction_intervals`/`return_se` to `OnlineOptions` (already present on `StreamingOptions` via inheritance, now forwarded). Online requires `update_mode == "full"`. New `OnlineOutput` accessors.
@@ -36,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Added `CV *CVOptions` to Batch options for grouped cross-validation, taking precedence over individual CV fields.
 - Added `Outputs []string` to `Options`, `StreamingOptions`, `OnlineOptions`, and `PredictOptions` for grouped optional result selection; existing boolean output fields remain supported.
 - Added `RetainModel` and `Result.PredictModel.Predict(newX, options)` for out-of-sample prediction.
 - Added `ReturnGradient` to `Options`, `StreamingOptions`, and `OnlineOptions`.
@@ -43,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
+- Added `CVOptions.builder()` and `Options.Builder.cv(...)` for grouped Batch cross-validation.
 - Added `outputs(String...)` to `Options.Builder`, `StreamingOptions.Builder`, `OnlineOptions.Builder`, and `PredictOptions.Builder` for grouped optional result selection.
 - Added `retainModel` and `Result.predictModel()` (a `PredictModel` class) for out-of-sample prediction.
 - Added `returnGradient(boolean)` to `Options` and `OnlineOptions`.
@@ -51,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
+- Added the `cv` keyword to `Loess` for grouped cross-validation configuration.
 - Added `outputs=[...]` to `Loess`, `StreamingLoess`, `OnlineLoess`, and `predict` for grouped optional result selection; existing individual output keywords remain supported.
 - Added `retain_model` and `predict(model, new_x; kwargs...)` for out-of-sample prediction.
 - Added `return_gradient` to `Loess`, `StreamingLoess`, and `OnlineLoess`.
@@ -59,6 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Added `cv` to Batch options for grouped cross-validation configuration alongside legacy CV fields.
 - Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection alongside existing booleans.
 - Added `retain_model` and `LoessResult.predict(newX, options)` for out-of-sample prediction.
 - Added `return_gradient` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
@@ -66,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Python:**
 
+- Added a grouped `cv` dictionary to the Batch constructor, with validation and fallback to individual CV arguments.
 - Added `outputs` sequences to `Loess`, `StreamingLoess`, `OnlineLoess`, and prediction for grouped optional result selection alongside existing booleans.
 - Added `retain_model` and `LoessResult.predict(new_x, ...)` (a new `PredictOutput` class) for out-of-sample prediction.
 - Added `return_gradient` to `Loess`, `StreamingLoess`, and `OnlineLoess`, exposing the per-point gradient via `LoessResult.gradient`/`OnlineOutput.gradient`. Only takes effect with `surface_mode="direct"`.
@@ -74,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Added `cv_opts()` and the `cv` argument on `Loess()` for grouped Batch cross-validation.
 - Added `outputs` to `Loess()`, `StreamingLoess()`, `OnlineLoess()`, and `predict.Loess()` for grouped optional results with mode-specific name validation; existing `return_*` arguments remain supported.
 - Added `retain_model` and a `predict.Loess()` S3 method for out-of-sample prediction.
 - Added `return_gradient` to `Loess()`, `StreamingLoess()`, and `OnlineLoess()`.
@@ -84,6 +93,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Added `cv` to the Batch options interface for grouped cross-validation configuration alongside legacy fields.
 - Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection alongside existing booleans.
 - Added `retain_model` and `LoessResult.predict(newX, options)` for out-of-sample prediction.
 - Added `return_gradient` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
@@ -194,6 +204,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
+- Completed Streaming/Online builder Javadocs so the strict `failOnWarnings` documentation build passes; the Makefile now surfaces warning details if the gate regresses.
 - Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed instead of raising an error. Now validated before the cast.
 - Fixed intermittent macOS `mvn clean test` resolution failures involving `commons-io:2.6` by pinning `maven-clean-plugin` to 3.5.0, which removes the old `maven-shared-utils`/`commons-io` dependency path.
 

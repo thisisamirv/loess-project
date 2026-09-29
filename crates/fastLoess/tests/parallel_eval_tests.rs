@@ -2,6 +2,35 @@
 use approx::assert_abs_diff_eq;
 use fastLoess::prelude::*;
 
+#[test]
+fn test_grouped_cross_validation_parallel() {
+    let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| (xi / 5.0).sin()).collect();
+    let fractions = vec![0.3, 0.5];
+    let options: fastLoess::CVOptions<f64> = CVBuilder::method("kfold")
+        .k(3)
+        .seed(42)
+        .fractions(fractions.clone());
+    let result = Loess::new()
+        .iterations(0)
+        .cv(options)
+        .parallel(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    assert_eq!(result.cv_scores.unwrap().len(), fractions.len());
+
+    let duplicate = Loess::new()
+        .cv_method("kfold")
+        .cv(CVBuilder::method("kfold").fractions(fractions))
+        .build();
+    assert!(matches!(
+        duplicate,
+        Err(LoessError::DuplicateParameter { parameter: "cv" })
+    ));
+}
+
 #[test] // Parallel CV produces inconsistent results compared to Sequential
 fn test_parallel_cross_validation() {
     let n = 50;

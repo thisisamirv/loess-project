@@ -23,9 +23,7 @@ x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(
-    cv_method="kfold",
-    cv_k=5,
-    cv_fractions=[0.2, 0.3, 0.5, 0.7]
+    cv={"method": "kfold", "k": 5, "fractions": [0.2, 0.3, 0.5, 0.7]}
 )
 result = model.fit(x, y)
 

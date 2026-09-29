@@ -42,6 +42,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the smoothing fraction.
+         *
          * @param fraction the fraction of points used to compute each local
          * regression
          * @return this builder, for chaining
@@ -53,6 +55,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the number of robustness iterations.
+         *
          * @param iterations the number of robustifying iterations
          * @return this builder, for chaining
          * @see Options.Builder#iterations(int)
@@ -63,6 +67,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the kernel weight function.
+         *
          * @param weightFunction the weight function name
          * @return this builder, for chaining
          * @see Options.Builder#weightFunction(String)
@@ -73,6 +79,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the outlier robustness method.
+         *
          * @param robustnessMethod the robustness method name
          * @return this builder, for chaining
          * @see Options.Builder#robustnessMethod(String)
@@ -83,6 +91,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the residual scaling method.
+         *
          * @param scalingMethod the residual scaling method name
          * @return this builder, for chaining
          * @see Options.Builder#scalingMethod(String)
@@ -93,6 +103,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the boundary handling policy.
+         *
          * @param boundaryPolicy the boundary handling policy name
          * @return this builder, for chaining
          * @see Options.Builder#boundaryPolicy(String)
@@ -103,6 +115,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the fallback for zero-weight neighborhoods.
+         *
          * @param zeroWeightFallback the zero-weight handling strategy name
          * @return this builder, for chaining
          * @see Options.Builder#zeroWeightFallback(String)
@@ -127,6 +141,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the tolerance for stopping robustness iterations early.
+         *
          * @param autoConverge the auto-convergence tolerance
          * @return this builder, for chaining
          * @see Options.Builder#autoConverge(double)
@@ -137,6 +153,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Requests robustness weights in the result.
+         *
          * @param returnRobustnessWeights whether to include robustness weights
          * in the result
          * @return this builder, for chaining
@@ -148,6 +166,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Requests the latest point's local-fit gradient.
+         *
          * @param returnGradient whether to include the local fit's gradient in
          * the result
          * @return this builder, for chaining
@@ -159,6 +179,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the confidence interval level for full updates.
+         *
          * @param confidenceIntervals the confidence level for confidence
          * intervals; only computed under {@code updateMode("full")}
          * @return this builder, for chaining
@@ -170,6 +192,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the prediction interval level for full updates.
+         *
          * @param predictionIntervals the confidence level for prediction
          * intervals; only computed under {@code updateMode("full")}
          * @return this builder, for chaining
@@ -181,6 +205,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Requests the latest point's standard error in full update mode.
+         *
          * @param returnSe whether to return the standard error for the latest
          * point; only computed under {@code updateMode("full")}
          * @return this builder, for chaining
@@ -212,6 +238,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the local polynomial degree.
+         *
          * @param degree the local polynomial degree name
          * @return this builder, for chaining
          * @see Options.Builder#degree(String)
@@ -222,6 +250,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the number of predictor dimensions.
+         *
          * @param dimensions the number of predictor dimensions
          * @return this builder, for chaining
          * @see Options.Builder#dimensions(int)
@@ -232,6 +262,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the neighborhood distance metric.
+         *
          * @param distanceMetric the distance metric name
          * @return this builder, for chaining
          * @see Options.Builder#distanceMetric(String)
@@ -242,6 +274,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets per-dimension weights for the weighted distance metric.
+         *
          * @param weightedMetricWeights the per-dimension weights
          * @return this builder, for chaining
          * @see Options.Builder#weightedMetricWeights(double[])
@@ -252,6 +286,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets how the fitted surface is evaluated.
+         *
          * @param surfaceMode the surface mode name
          * @return this builder, for chaining
          * @see Options.Builder#surfaceMode(String)
@@ -262,6 +298,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Sets the interpolation cell size.
+         *
          * @param cell the interpolation cell size
          * @return this builder, for chaining
          * @see Options.Builder#cell(double)
@@ -272,6 +310,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Limits the number of interpolation vertices.
+         *
          * @param interpolationVertices the maximum number of interpolation
          * vertices
          * @return this builder, for chaining
@@ -283,6 +323,8 @@ public final class OnlineOptions {
         }
 
         /**
+         * Configures lower-degree fallback near boundaries.
+         *
          * @param boundaryDegreeFallback whether to fall back to a lower degree
          * near boundary vertices
          * @return this builder, for chaining

@@ -114,6 +114,7 @@ Async fit y[0]: 0.3274
 | `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
 | `cv_k` | `number` | `5` | Number of folds for k-fold CV |
 | `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation |
+| `cv` | `{ fractions: number[]; method?: string; k?: number; seed?: number }` | disabled | Group CV settings; supplied keys override legacy CV fields |
 | `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`/`fitAsync()`, not the options object |
 | `retain_model` | `boolean` | `false` | Retain training data, enabling `result.predict()` |

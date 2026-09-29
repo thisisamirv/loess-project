@@ -38,9 +38,9 @@ func main() {
  }
 
  opts := fastloess.DefaultOptions()
- opts.CVMethod = "kfold"
- opts.CVK = 5
- opts.CVFractions = []float64{0.2, 0.3, 0.5, 0.7}
+ opts.CV = &fastloess.CVOptions{
+  Method: "kfold", K: 5, Fractions: []float64{0.2, 0.3, 0.5, 0.7},
+ }
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {

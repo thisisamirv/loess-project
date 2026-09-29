@@ -385,6 +385,14 @@ fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
     outputs.is_some_and(|values| values.iter().any(|value| value == name))
 }
 
+#[napi(object)]
+pub struct CVOptions {
+    pub fractions: Vec<f64>,
+    pub method: Option<String>,
+    pub k: Option<u32>,
+    pub seed: Option<i64>,
+}
+
 /// Configuration options for LOESS smoothing.
 #[napi(object)]
 pub struct SmoothOptions {
@@ -412,6 +420,8 @@ pub struct SmoothOptions {
     pub auto_converge: Option<f64>,
     /// Optional output components: diagnostics, residuals, weights, gradient (or derivative), se, sorted.
     pub outputs: Option<Vec<String>>,
+    /// Grouped cross-validation configuration for Batch smoothing.
+    pub cv: Option<CVOptions>,
     /// Return residuals in result. Default: false.
     #[napi(js_name = "return_residuals")]
     pub return_residuals: Option<bool>,
@@ -647,8 +657,10 @@ pub struct OnlineSmoothOptions {
 fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder<f64>> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
-        let cv_seed = opts
-            .cv_seed
+        let grouped_cv = opts.cv.as_ref();
+        let cv_seed = grouped_cv
+            .and_then(|cv| cv.seed)
+            .or(opts.cv_seed)
             .map(|seed| {
                 if seed < 0 {
                     Err(shared_parse::BindingError::invalid_arg(format!(
@@ -692,9 +704,16 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
                 cell: opts.cell,
                 interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
                 boundary_degree_fallback: opts.boundary_degree_fallback,
-                cv_fractions: opts.cv_fractions.as_deref(),
-                cv_method: opts.cv_method.as_deref(),
-                cv_k: opts.cv_k.map(|v| v as usize),
+                cv_fractions: grouped_cv
+                    .map(|cv| cv.fractions.as_slice())
+                    .or(opts.cv_fractions.as_deref()),
+                cv_method: grouped_cv
+                    .and_then(|cv| cv.method.as_deref())
+                    .or(opts.cv_method.as_deref()),
+                cv_k: grouped_cv
+                    .and_then(|cv| cv.k)
+                    .map(|v| v as usize)
+                    .or(opts.cv_k.map(|v| v as usize)),
                 cv_seed,
                 missing: opts.missing.as_deref(),
                 retain_model: opts.retain_model,

@@ -47,6 +47,7 @@ opts.Outputs = []string{"diagnostics"}
 | `ReturnResiduals` | `bool` | `false` | Populate `Result.Residuals`. |
 | `ReturnRobustnessWeights` | `bool` | `false` | Populate `Result.RobustnessWeights`. |
 | `CVFractions` | `[]float64` | `nil` (disabled) | Candidate fractions for cross-validation. |
+| `CV` | `*CVOptions` | `nil` | Group `Fractions`, `Method`, `K`, and `Seed`; takes precedence over legacy CV fields. |
 | `CVMethod` | `string` | `"kfold"` | `kfold` or `loocv`. |
 | `CVK` | `int` | `5` | Number of folds for k-fold CV. |
 | `CVSeed` | `*uint64` | `nil` (random) | RNG seed for reproducible k-fold splits. |

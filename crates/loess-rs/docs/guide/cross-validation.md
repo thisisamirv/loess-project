@@ -25,9 +25,7 @@ fn main() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Loess::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
+        .cv(CVBuilder::method("kfold").k(5).fractions(vec![0.2, 0.3, 0.5, 0.7]))
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -64,8 +62,7 @@ fn main() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Loess::new()
-        .cv_method("loocv")
-        .cv_fractions(vec![0.2, 0.3, 0.5, 0.7])
+        .cv(CVBuilder::method("loocv").fractions(vec![0.2, 0.3, 0.5, 0.7]))
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -94,10 +91,8 @@ fn main() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Loess::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(vec![0.3, 0.5, 0.7])
-        .cv_seed(42)
+        .cv(CVBuilder::method("kfold")
+            .k(5).fractions(vec![0.3, 0.5, 0.7]).seed(42))
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -150,9 +145,7 @@ fn main() -> Result<(), LoessError> {
 
     // Example output
     let model = Loess::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(vec![0.1, 0.3, 0.5, 0.7])
+        .cv(CVBuilder::method("kfold").k(5).fractions(vec![0.1, 0.3, 0.5, 0.7]))
         .build()?;
 
     let result = model.fit(&x, &y)?;

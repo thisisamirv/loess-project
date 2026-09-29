@@ -1347,6 +1347,24 @@ func TestEdgeCases(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestCrossValidation(t *testing.T) {
+	t.Run("Grouped", func(t *testing.T) {
+		x, y := sineData(30)
+		seed := uint64(42)
+		opts := fastloess.DefaultOptions()
+		opts.CVFractions = []float64{0.2}
+		opts.CVMethod = "invalid"
+		opts.CV = &fastloess.CVOptions{
+			Fractions: []float64{0.3, 0.5},
+			Method:    "kfold",
+			K:         3,
+			Seed:      &seed,
+		}
+		res := fitOrFatal(t, opts, x, y)
+		if !inSet(res.FractionUsed, opts.CV.Fractions) || len(res.CVScores) != len(opts.CV.Fractions) {
+			t.Fatalf("grouped CV was not applied: fraction=%v scores=%v", res.FractionUsed, res.CVScores)
+		}
+	})
+
 	t.Run("Basic", func(t *testing.T) {
 		x, y := sineData(50)
 		for i := range x {

@@ -32,6 +32,7 @@ use loess_rs::internals::engine::validator::Validator;
 use loess_rs::internals::evaluation::diagnostics::Diagnostics;
 use loess_rs::internals::math::distance::DistanceMetric;
 use loess_rs::internals::primitives::errors::LoessError;
+use loess_rs::prelude::CVBuilder;
 
 // ============================================================================
 // Helper Functions
@@ -734,6 +735,60 @@ fn test_cross_validate_loocv() {
 
     assert!(res.cv_scores.is_some());
     assert_eq!(res.cv_scores.unwrap().len(), fractions.len());
+}
+
+#[test]
+fn test_grouped_cv_matches_individual_setters() {
+    let x: Vec<f64> = (0..12).map(|i| i as f64).collect();
+    let y: Vec<f64> = x.iter().map(|xi| 2.0 * xi + 1.0).collect();
+    let fractions = vec![0.2, 0.4];
+    let options: loess_rs::CVOptions<f64> = CVBuilder::method("kfold")
+        .fractions(fractions.clone())
+        .k(3)
+        .seed(42);
+    let grouped = Loess::<f64>::new()
+        .cv(options)
+        .iterations(0)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let individual = Loess::<f64>::new()
+        .cv_method("kfold")
+        .cv_k(3)
+        .cv_seed(42)
+        .cv_fractions(fractions.clone())
+        .iterations(0)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    assert_eq!(grouped.cv_scores, individual.cv_scores);
+
+    let loocv = Loess::<f64>::new()
+        .cv(CVBuilder::method("loocv").fractions(fractions))
+        .iterations(0)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    assert_eq!(loocv.cv_scores.unwrap().len(), 2);
+}
+
+#[test]
+fn test_grouped_cv_preserves_validation() {
+    let duplicate = Loess::<f64>::new()
+        .cv_fractions(vec![0.3])
+        .cv(CVBuilder::method("kfold").fractions(vec![0.4]))
+        .build();
+    assert!(matches!(
+        duplicate,
+        Err(LoessError::DuplicateParameter { parameter: "cv" })
+    ));
+    let empty = Loess::<f64>::new()
+        .cv(CVBuilder::method("kfold").fractions(Vec::<f64>::new()))
+        .build();
+    assert!(matches!(empty, Err(LoessError::InvalidFraction(_))));
 }
 
 // ============================================================================

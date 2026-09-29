@@ -93,12 +93,15 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
 | `boundary_degree_fallback(bool)` | `bool` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `cv(CVOptions<f64>)` | `CVOptions<f64>` | disabled | Group method, folds, candidate fractions, and optional seed via `CVBuilder` |
 | `cv_method(...)` | `&str` | disabled | Cross-validation method |
 | `cv_k(...)` | `usize` | disabled | Number of folds for K-fold cross-validation |
 | `cv_fractions(...)` | `Vec<f64>` | disabled | Candidate fractions to evaluate during cross-validation |
 | `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution across CPU cores |
+
+`CVBuilder` is exported by `fastLoess::prelude`; calling `CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.5]).seed(42)` produces the `CVOptions<f64>` value passed to `.cv(...)`. `CVOptions<T>` is accessible at the crate root when an explicit type is needed. The individual `cv_*` setters remain supported.
 
 ## Options
 
@@ -217,10 +220,7 @@ fn main() -> Result<(), LoessError> {
 }
 ```
 
-`"derivative"` is an alias for `"gradient"`, which requires the direct surface.
-`"se"` includes hat-matrix statistics; diagnostics need it (or interval levels)
-for AIC/AICc and effective degrees of freedom. Unknown names are collected and
-reported together when `.build()` is called.
+`"derivative"` is an alias for `"gradient"`, which requires the direct surface. `"se"` includes hat-matrix statistics; diagnostics need it (or interval levels) for AIC/AICc and effective degrees of freedom. Unknown names are collected and reported together when `.build()` is called.
 
 ### return_diagnostics
 

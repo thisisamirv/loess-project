@@ -41,6 +41,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the smoothing fraction.
+         *
          * @param fraction the fraction of points used to compute each local
          * regression
          * @return this builder, for chaining
@@ -52,6 +54,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the number of robustness iterations.
+         *
          * @param iterations the number of robustifying iterations
          * @return this builder, for chaining
          * @see Options.Builder#iterations(int)
@@ -62,6 +66,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the kernel weight function.
+         *
          * @param weightFunction the weight function name
          * @return this builder, for chaining
          * @see Options.Builder#weightFunction(String)
@@ -72,6 +78,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the outlier robustness method.
+         *
          * @param robustnessMethod the robustness method name
          * @return this builder, for chaining
          * @see Options.Builder#robustnessMethod(String)
@@ -82,6 +90,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the residual scaling method.
+         *
          * @param scalingMethod the residual scaling method name
          * @return this builder, for chaining
          * @see Options.Builder#scalingMethod(String)
@@ -92,6 +102,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the boundary handling policy.
+         *
          * @param boundaryPolicy the boundary handling policy name
          * @return this builder, for chaining
          * @see Options.Builder#boundaryPolicy(String)
@@ -102,6 +114,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the fallback for zero-weight neighborhoods.
+         *
          * @param zeroWeightFallback the zero-weight handling strategy name
          * @return this builder, for chaining
          * @see Options.Builder#zeroWeightFallback(String)
@@ -112,6 +126,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the missing-value policy for each chunk.
+         *
          * @param missing the missing-value policy name
          * @return this builder, for chaining
          * @see Options.Builder#missing(String)
@@ -122,6 +138,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the tolerance for stopping robustness iterations early.
+         *
          * @param autoConverge the auto-convergence tolerance
          * @return this builder, for chaining
          * @see Options.Builder#autoConverge(double)
@@ -132,6 +150,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Requests fit diagnostics in the result.
+         *
          * @param returnDiagnostics whether to compute diagnostics
          * @return this builder, for chaining
          * @see Options.Builder#returnDiagnostics(boolean)
@@ -142,6 +162,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Requests per-point residuals in the result.
+         *
          * @param returnResiduals whether to include residuals in the result
          * @return this builder, for chaining
          * @see Options.Builder#returnResiduals(boolean)
@@ -152,6 +174,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Requests robustness weights in the result.
+         *
          * @param returnRobustnessWeights whether to include robustness weights
          * in the result
          * @return this builder, for chaining
@@ -163,6 +187,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Requests per-point local-fit gradients.
+         *
          * @param returnGradient whether to include the per-point local fit
          * gradient in the result
          * @return this builder, for chaining
@@ -174,6 +200,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the confidence interval level for each chunk.
+         *
          * @param confidenceIntervals the confidence level for confidence
          * intervals, computed per chunk and merged across overlap boundaries
          * via {@code mergeStrategy}
@@ -186,6 +214,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the prediction interval level for each chunk.
+         *
          * @param predictionIntervals the confidence level for prediction
          * intervals; same per-chunk computation and overlap-merging as
          * {@code confidenceIntervals}
@@ -198,6 +228,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Requests standard errors for each chunk.
+         *
          * @param returnSe whether to return standard errors in the result,
          * computed per chunk and merged across overlap boundaries via
          * {@code mergeStrategy}
@@ -231,6 +263,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Controls parallel chunk processing.
+         *
          * @param parallel whether to enable parallel execution
          * @return this builder, for chaining
          * @see Options.Builder#parallel(boolean)
@@ -241,6 +275,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the local polynomial degree.
+         *
          * @param degree the local polynomial degree name
          * @return this builder, for chaining
          * @see Options.Builder#degree(String)
@@ -251,6 +287,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the number of predictor dimensions.
+         *
          * @param dimensions the number of predictor dimensions
          * @return this builder, for chaining
          * @see Options.Builder#dimensions(int)
@@ -261,6 +299,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the neighborhood distance metric.
+         *
          * @param distanceMetric the distance metric name
          * @return this builder, for chaining
          * @see Options.Builder#distanceMetric(String)
@@ -271,6 +311,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets per-dimension weights for the weighted distance metric.
+         *
          * @param weightedMetricWeights the per-dimension weights
          * @return this builder, for chaining
          * @see Options.Builder#weightedMetricWeights(double[])
@@ -281,6 +323,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets how the fitted surface is evaluated.
+         *
          * @param surfaceMode the surface mode name
          * @return this builder, for chaining
          * @see Options.Builder#surfaceMode(String)
@@ -291,6 +335,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Sets the interpolation cell size.
+         *
          * @param cell the interpolation cell size
          * @return this builder, for chaining
          * @see Options.Builder#cell(double)
@@ -301,6 +347,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Limits the number of interpolation vertices.
+         *
          * @param interpolationVertices the maximum number of interpolation
          * vertices
          * @return this builder, for chaining
@@ -312,6 +360,8 @@ public final class StreamingOptions {
         }
 
         /**
+         * Configures lower-degree fallback near boundaries.
+         *
          * @param boundaryDegreeFallback whether to fall back to a lower degree
          * near boundary vertices
          * @return this builder, for chaining

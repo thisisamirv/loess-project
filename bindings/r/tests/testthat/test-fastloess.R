@@ -312,6 +312,23 @@ test_that("Loess cross-validation works", {
     expect_true(result$fraction_used %in% c(0.2, 0.3, 0.5, 0.7))
 })
 
+test_that("grouped cross-validation overrides legacy options", {
+    x <- as.double(1:30)
+    result <- fit(
+        Loess(
+            cv_fractions = c(0.2),
+            cv_method = "invalid",
+            cv = cv_opts(fractions = c(0.3, 0.5), k = 3L, seed = 42)
+        ),
+        x,
+        x * x
+    )
+    expect_length(result$cv_scores, 2L)
+    expect_true(result$fraction_used %in% c(0.3, 0.5))
+    expect_error(cv_opts(), "fractions")
+    expect_error(cv_opts("invalid"), "fractions")
+})
+
 test_that("Loess handles edge cases", {
     # Minimum data points
     x <- c(1, 2, 3)

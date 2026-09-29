@@ -47,6 +47,17 @@ function _output_flags(
 	)
 end
 
+function _cv_options(cv)
+	cv === nothing &&
+		return (fractions = Float64[], method = "kfold", k = 5, seed = nothing)
+	return (
+		fractions = Float64.(get(cv, :fractions, Float64[])),
+		method = String(get(cv, :method, "kfold")),
+		k = Int(get(cv, :k, 5)),
+		seed = get(cv, :seed, nothing),
+	)
+end
+
 # Try to import JLL package first
 try
 	using fastloess_jll
@@ -607,6 +618,7 @@ Stateful batch LOESS smoother.
 - `return_robustness_weights::Bool = false`: Whether to include robustness weights
 - `zero_weight_fallback::String = "use_local_mean"`: Fallback when all weights are zero. See Notes for a description of each option.
 - `auto_converge::Float64 = NaN`: Tolerance for auto-convergence, NaN to disable
+- `cv = nothing`: Grouped cross-validation settings (`fractions`, `method`, `k`, `seed`)
 - `cv_fractions::Vector{Float64} = Float64[]`: Fractions for cross-validation
 - `cv_method::String = "kfold"`: CV method (`"kfold"`, fast, or `"loocv"`, slow and exhaustive)
 - `cv_k::Int = 5`: Number of folds for k-fold CV
@@ -698,6 +710,7 @@ mutable struct Loess
 		confidence_intervals::Float64 = NaN,
 		prediction_intervals::Float64 = NaN,
 		outputs::Vector{String} = String[],
+		cv = nothing,
 		return_diagnostics::Bool = false,
 		return_residuals::Bool = false,
 		return_robustness_weights::Bool = false,
@@ -723,6 +736,11 @@ mutable struct Loess
 		return_gradient::Bool = false,
 	)
 		flags = _output_flags(outputs)
+		cv_options = _cv_options(cv)
+		cv_fractions = isempty(cv_options.fractions) ? cv_fractions : cv_options.fractions
+		cv_method = cv === nothing ? cv_method : cv_options.method
+		cv_k = cv === nothing ? cv_k : cv_options.k
+		cv_seed = cv === nothing ? cv_seed : cv_options.seed
 		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
 

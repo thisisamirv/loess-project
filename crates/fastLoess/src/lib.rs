@@ -124,10 +124,12 @@
 //!         "sorted"                                     // Sort output ascending by x
 //!     ])
 //!     .retain_model(true)                              // Retain state for out-of-sample predict()
-//!     .cv_method("kfold")                              // K-fold cross-validation
-//!     .cv_k(5)                                         // 5 folds
-//!     .cv_fractions(vec![0.3, 0.7])                    // Candidate fractions
-//!     .cv_seed(123)                                    // Reproducible fold splits
+//!     .cv(
+//!         CVBuilder::method("kfold")                   // Use k-fold CV (or "loocv")
+//!             .k(5)                                    // Split observations into five folds
+//!             .fractions(vec![0.3, 0.7])              // Candidate smoothing fractions
+//!             .seed(123),                              // Reproducible fold assignment
+//!     )
 //!     .parallel(true)                                  // Enable parallel execution
 //!     .build()?;
 //!
@@ -323,6 +325,11 @@
 //!
 //! ### Cross-Validation
 //!
+//! - **`cv(CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.7]).seed(123))`** —
+//!   Configure CV as a group. `CVBuilder` is in the prelude; the resulting
+//!   [`CVOptions`](crate::CVOptions) type is available at the crate root, but
+//!   callers normally pass it directly to `.cv(...)`.
+//!
 //! - **`cv_method(method: &str)`** — Select the cross-validation strategy:
 //!   - `"kfold"` — k-fold CV (use `cv_k` to set k, default 5)
 //!   - `"loocv"` — leave-one-out CV
@@ -413,6 +420,8 @@ mod adapters;
 // High-level fluent API for LOESS smoothing.
 mod api;
 
+pub use loess_rs::CVOptions;
+
 // Input data handling.
 mod input;
 
@@ -422,7 +431,9 @@ mod binding_support;
 
 // Standard fastLoess prelude.
 pub mod prelude {
-    pub use crate::api::{Loess, LoessError, LoessResult, OnlineLoess, Predict, StreamingLoess};
+    pub use crate::api::{
+        CVBuilder, Loess, LoessError, LoessResult, OnlineLoess, Predict, StreamingLoess,
+    };
 }
 
 // Internal modules for development and testing.

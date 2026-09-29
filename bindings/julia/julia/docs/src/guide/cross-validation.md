@@ -24,9 +24,7 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(;
-    cv_method="kfold",
-    cv_k=5,
-    cv_fractions=[0.2, 0.3, 0.5, 0.7]
+    cv=(method="kfold", k=5, fractions=[0.2, 0.3, 0.5, 0.7])
 )
 result = fit(model, x, y)
 

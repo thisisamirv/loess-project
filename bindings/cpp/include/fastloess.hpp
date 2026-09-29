@@ -44,6 +44,14 @@ constexpr int k_default_window_capacity = 1000;
 constexpr int k_default_min_points = 2;
 } // namespace detail
 
+struct CVOptions {
+  std::vector<double> fractions;
+  std::string method = "kfold";
+  int k = detail::k_default_cv_k;
+  /// Zero means no seed (random fold assignment).
+  uint64_t seed = 0;
+};
+
 inline bool hasOutput(const std::vector<std::string> &outputs,
                       const char *name) {
   return std::find(outputs.begin(), outputs.end(), name) != outputs.end();
@@ -138,6 +146,9 @@ struct LoessOptions {
   /// Optional result components: "diagnostics", "residuals", "weights",
   /// "gradient" (or "derivative"), "se", and "sorted".
   std::vector<std::string> outputs;
+  /// Grouped cross-validation configuration; nonempty fractions take
+  /// precedence.
+  CVOptions cv;
   bool parallel = true;
 
   // LOESS-specific options
@@ -667,6 +678,12 @@ private:
 class Loess {
 public:
   explicit Loess(const LoessOptions &options = {}) {
+    const bool grouped_cv = !options.cv.fractions.empty();
+    const auto &cv_fractions =
+        grouped_cv ? options.cv.fractions : options.cv_fractions;
+    const auto &cv_method = grouped_cv ? options.cv.method : options.cv_method;
+    const int cv_k = grouped_cv ? options.cv.k : options.cv_k;
+    const uint64_t cv_seed = grouped_cv ? options.cv.seed : options.cv_seed;
     ptr_ = cpp_loess_new(
         options.fraction, options.iterations, options.weight_function.c_str(),
         options.robustness_method.c_str(), options.scaling_method.c_str(),
@@ -680,10 +697,10 @@ public:
             ? 1
             : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
-        options.cv_fractions.empty() ? nullptr : options.cv_fractions.data(),
-        static_cast<unsigned long>(options.cv_fractions.size()),
-        options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0,
-        options.degree.c_str(), options.dimensions,
+        cv_fractions.empty() ? nullptr : cv_fractions.data(),
+        static_cast<unsigned long>(cv_fractions.size()), cv_method.c_str(),
+        cv_k, options.parallel ? 1 : 0, options.degree.c_str(),
+        options.dimensions,
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
             : nullptr,
@@ -695,8 +712,8 @@ public:
             : options.weighted_metric_weights.data(),
         static_cast<unsigned long>(options.weighted_metric_weights.size()),
         options.missing.c_str(), options.retain_model ? 1 : 0);
-    if (options.cv_seed > 0) {
-      cpp_loess_set_cv_seed(ptr_, static_cast<unsigned long>(options.cv_seed));
+    if (cv_seed > 0) {
+      cpp_loess_set_cv_seed(ptr_, static_cast<unsigned long>(cv_seed));
     }
   }
 

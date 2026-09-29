@@ -10,6 +10,14 @@ import (
 	"runtime"
 )
 
+// CVOptions configures batch cross-validation. Nil disables grouped CV.
+type CVOptions struct {
+	Fractions []float64
+	Method    string
+	K         int
+	Seed      *uint64
+}
+
 // Options configures a Loess, StreamingLoess, or OnlineLoess model.
 // Use DefaultOptions and override only the fields you need.
 type Options struct {
@@ -64,6 +72,9 @@ type Options struct {
 	// Outputs selects optional result components: "diagnostics", "residuals",
 	// "weights", "derivative" (or "gradient"), "se", and "sorted".
 	Outputs []string
+	// CV groups batch cross-validation settings. When set, it takes precedence
+	// over CVFractions, CVMethod, CVK, and CVSeed.
+	CV *CVOptions
 	// ReturnSE requests hat-matrix statistics (effective degrees of
 	// freedom, leverage, standard errors). Batch model only.
 	ReturnSE bool
@@ -188,7 +199,11 @@ func NewLoess(opts Options) (*Loess, error) {
 	defer freeCString(zwf)
 	missing := cStringOrNil(opts.Missing)
 	defer freeCString(missing)
-	cvMethod := cStringOrNil(opts.CVMethod)
+	cvMethodName, cvK, cvFractions, cvSeed := opts.CVMethod, opts.CVK, opts.CVFractions, opts.CVSeed
+	if opts.CV != nil {
+		cvMethodName, cvK, cvFractions, cvSeed = opts.CV.Method, opts.CV.K, opts.CV.Fractions, opts.CV.Seed
+	}
+	cvMethod := cStringOrNil(cvMethodName)
 	defer freeCString(cvMethod)
 	degree := cStringOrNil(opts.Degree)
 	defer freeCString(degree)
@@ -200,7 +215,7 @@ func NewLoess(opts Options) (*Loess, error) {
 	ci, ciSet := optPtr(opts.ConfidenceIntervals)
 	pi, piSet := optPtr(opts.PredictionIntervals)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
-	cvFracPtr, cvFracLen := cDoubles(opts.CVFractions)
+	cvFracPtr, cvFracLen := cDoubles(cvFractions)
 	wmwPtr, wmwLen := cDoubles(opts.WeightedMetricWeights)
 
 	cell, cellSet := 0.0, false
@@ -232,7 +247,7 @@ func NewLoess(opts Options) (*Loess, error) {
 			optFloat(autoConverge, autoConvergeSet),
 			cvFracPtr, cvFracLen,
 			cvMethod,
-			C.int(opts.CVK),
+			C.int(cvK),
 			boolToCInt(opts.Parallel),
 			degree,
 			C.int(opts.Dimensions),
@@ -256,8 +271,8 @@ func NewLoess(opts Options) (*Loess, error) {
 		return nil, errors.New(errMsg)
 	}
 
-	if opts.CVSeed != nil {
-		C.go_loess_set_cv_seed(ptr, C.ulong(*opts.CVSeed))
+	if cvSeed != nil {
+		C.go_loess_set_cv_seed(ptr, C.ulong(*cvSeed))
 	}
 
 	l := &Loess{ptr: ptr}

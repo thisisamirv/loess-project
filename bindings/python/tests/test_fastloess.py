@@ -725,6 +725,22 @@ class TestEdgeCases:
 class TestCrossValidation:
     """Tests for cross-validation via Loess class."""
 
+    def test_grouped_cv(self):
+        x = np.linspace(0, 10, 30)
+        y = x**2
+        result = fastloess.Loess(
+            cv_fractions=[0.2],
+            cv={"fractions": [0.3, 0.5], "method": "kfold", "k": 3, "seed": 42},
+        ).fit(x, y)
+        assert result.fraction_used in (0.3, 0.5)
+        assert result.cv_scores is not None
+        assert len(result.cv_scores) == 2
+
+        with pytest.raises(ValueError, match="fractions"):
+            fastloess.Loess(cv={"method": "kfold"})
+        with pytest.raises(ValueError):
+            fastloess.Loess(cv={"fractions": "invalid"})
+
     def test_cv_basic(self):
         """Test basic cross-validation selects a fraction."""
         x = np.linspace(0, 10, 50)

@@ -5,6 +5,7 @@ use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
+use pyo3::types::PyDict;
 use std::fmt::Display;
 use std::sync::Mutex;
 
@@ -32,6 +33,52 @@ fn map_invalid_arg<T, E: Display>(result: Result<T, E>) -> PyResult<T> {
 
 fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
     to_py_error(shared_parse::BindingError::invalid_arg(e.to_string()))
+}
+
+type ParsedCvOptions = (Option<Vec<f64>>, String, usize, Option<u64>);
+
+fn parse_cv_options(
+    cv: Option<&Bound<'_, PyDict>>,
+    legacy_fractions: Option<Vec<f64>>,
+    legacy_method: &str,
+    legacy_k: usize,
+    legacy_seed: Option<u64>,
+) -> PyResult<ParsedCvOptions> {
+    let Some(cv) = cv else {
+        return Ok((
+            legacy_fractions,
+            legacy_method.to_owned(),
+            legacy_k,
+            legacy_seed,
+        ));
+    };
+
+    let fractions = match cv.get_item("fractions")? {
+        Some(value) => Some(
+            value
+                .extract::<Vec<f64>>()
+                .map_err(to_py_invalid_arg_error)?,
+        ),
+        None => legacy_fractions,
+    };
+    if fractions.is_none() {
+        return Err(PyValueError::new_err("cv requires a 'fractions' sequence"));
+    }
+    let method = match cv.get_item("method")? {
+        Some(value) => value.extract::<String>().map_err(to_py_invalid_arg_error)?,
+        None => legacy_method.to_owned(),
+    };
+    let k = match cv.get_item("k")? {
+        Some(value) => value.extract::<usize>().map_err(to_py_invalid_arg_error)?,
+        None => legacy_k,
+    };
+    let seed = match cv.get_item("seed")? {
+        Some(value) if !value.is_none() => {
+            Some(value.extract::<u64>().map_err(to_py_invalid_arg_error)?)
+        }
+        _ => legacy_seed,
+    };
+    Ok((fractions, method, k, seed))
 }
 
 // ============================================================================
@@ -800,6 +847,7 @@ impl PyLoess {
         confidence_intervals=None,
         prediction_intervals=None,
         outputs=None,
+        cv=None,
         return_diagnostics=false,
         return_residuals=false,
         return_robustness_weights=false,
@@ -835,6 +883,7 @@ impl PyLoess {
         confidence_intervals: Option<f64>,
         prediction_intervals: Option<f64>,
         outputs: Option<Vec<String>>,
+        cv: Option<Bound<'_, PyDict>>,
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
@@ -859,6 +908,8 @@ impl PyLoess {
         retain_model: bool,
         return_gradient: bool,
     ) -> PyResult<Self> {
+        let (cv_fractions, cv_method, cv_k, cv_seed) =
+            parse_cv_options(cv.as_ref(), cv_fractions, cv_method, cv_k, cv_seed)?;
         let (mut builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
@@ -889,7 +940,7 @@ impl PyLoess {
                 interpolation_vertices,
                 boundary_degree_fallback,
                 cv_fractions: cv_fractions.as_deref(),
-                cv_method: Some(cv_method),
+                cv_method: Some(&cv_method),
                 cv_k: Some(cv_k),
                 cv_seed,
                 missing: Some(missing),

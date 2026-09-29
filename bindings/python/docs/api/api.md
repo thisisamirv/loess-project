@@ -76,6 +76,7 @@ print(result)
 | `cv_method` | `str` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
 | `cv_k` | `int` | `5` | Number of folds for k-fold CV |
 | `cv_fractions` | `list[float]` | `None` | Fractions to test for cross-validation |
+| `cv` | `dict \| None` | `None` | Group `fractions`, `method`, `k`, and `seed`; supplied keys override individual CV arguments |
 | `cv_seed` | `int` | `None` | Random seed for cross-validation shuffling |
 | `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor |
 | `retain_model` | `bool` | `False` | Retain training data, enabling `predict()` on the result |

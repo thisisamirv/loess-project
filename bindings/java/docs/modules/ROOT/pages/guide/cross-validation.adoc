@@ -16,6 +16,7 @@ Split data into K folds, train on K-1, validate on 1.
 
 [source,java]
 ----
+import fastloess.CVOptions;
 import fastloess.Loess;
 import fastloess.Options;
 import fastloess.Result;
@@ -31,9 +32,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("kfold")
-                .cvK(5)
-                .cvFractions(new double[] { 0.2, 0.3, 0.5, 0.7 })
+            .cv(CVOptions.builder().method("kfold").k(5)
+                .fractions(0.2, 0.3, 0.5, 0.7).build())
                 .build();
 
         try (Loess model = new Loess(options)) {

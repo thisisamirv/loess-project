@@ -24,9 +24,7 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const model = new Loess({
-    cv_method: "kfold",
-    cv_k: 5,
-    cv_fractions: [0.2, 0.3, 0.5, 0.7]
+    cv: { method: "kfold", k: 5, fractions: [0.2, 0.3, 0.5, 0.7] }
 });
 const result = model.fit(x, y);
 

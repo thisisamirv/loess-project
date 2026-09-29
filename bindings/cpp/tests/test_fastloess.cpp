@@ -3,6 +3,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -44,6 +45,7 @@ constexpr size_t k_mismatch_y_count = 2;
 constexpr int k_iterations3 = 3;
 constexpr int k_iterations2 = 2;
 constexpr int k_cv_k = 3;
+constexpr uint64_t k_cv_seed = 42;
 constexpr int k_overlap_size = 3;
 constexpr double k_fraction_six_tenths = 0.6;
 constexpr double k_epsilon_1e6 = 1e-6;
@@ -861,6 +863,15 @@ void testLoessCrossValidation() {
   Loess loess(opts);
   auto res = loess.fit(x_vals, y_vals).value();
   assertTrue(res.valid());
+
+  LoessOptions grouped;
+  grouped.cv_method = "invalid";
+  grouped.cv.fractions = {k_fraction_third, k_fraction_half};
+  grouped.cv.method = "kfold";
+  grouped.cv.k = k_cv_k;
+  grouped.cv.seed = k_cv_seed;
+  Loess grouped_loess(grouped);
+  assertTrue(grouped_loess.fit(x_vals, y_vals).value().valid());
 }
 
 void testStreamingMergeStrategies() {

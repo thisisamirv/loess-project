@@ -29,6 +29,7 @@ pub use loess_rs::internals::engine::output::LoessResult;
 pub use loess_rs::internals::engine::predict::Predict;
 use loess_rs::internals::primitives::backend::Backend;
 pub use loess_rs::internals::primitives::errors::LoessError;
+pub use loess_rs::prelude::CVBuilder;
 
 // Adapter selection namespace — exposed via internals::api::Adapter in dev builds.
 #[derive(Debug, Clone, Copy)]
@@ -277,6 +278,10 @@ impl Loess {
     }
     pub fn cv_seed(mut self, s: u64) -> Self {
         self.0 = self.0.cv_seed(s);
+        self
+    }
+    pub fn cv(mut self, options: loess_rs::CVOptions<f64>) -> Self {
+        self.0 = self.0.cv(options);
         self
     }
     pub fn return_sorted(mut self) -> Self {

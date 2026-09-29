@@ -31,9 +31,9 @@ int main() {
     }
 
     fastloess::LoessOptions opts;
-    opts.cv_fractions = {0.2, 0.3, 0.5, 0.7};
-    opts.cv_method = "kfold";
-    opts.cv_k = 5;
+    opts.cv.fractions = {0.2, 0.3, 0.5, 0.7};
+    opts.cv.method = "kfold";
+    opts.cv.k = 5;
 
     fastloess::Loess model(opts);
     auto result = model.fit(x, y).value();

@@ -51,6 +51,7 @@ Options options = Options.builder()
 |`returnSe` |`boolean` |`false` |Populate `Result.standardErrors()` and `Result.hatMatrix()`.
 |`returnSorted` |`boolean` |`false` |Return results sorted ascending by `x` instead of in original input order.
 |`cvFractions` |`double[]` |`null` (disabled) |Candidate fractions for cross-validation.
+|`cv(CVOptions)` |`CVOptions` |disabled |Group candidate fractions, method, folds, and optional seed with `CVOptions.builder()`.
 |`cvMethod` |`String` |`"kfold"` |`kfold` or `loocv`.
 |`cvK` |`int` |`5` |Number of folds for k-fold CV.
 |`cvSeed` |`long` (boxed) |`null` (random) |RNG seed for reproducible k-fold splits.

@@ -140,6 +140,64 @@ pub type Loess<T = f64> = LoessBuilder<T, BatchMode>;
 pub type StreamingLoess<T = f64> = LoessBuilder<T, StreamingMode>;
 pub type OnlineLoess<T = f64> = LoessBuilder<T, OnlineMode>;
 
+/// Configures cross-validation before supplying candidate fractions.
+#[derive(Debug, Clone)]
+pub struct CVBuilder {
+    method: String,
+    k: usize,
+    seed: Option<u64>,
+}
+
+impl CVBuilder {
+    pub fn method(name: &str) -> Self {
+        Self {
+            method: name.to_string(),
+            k: DEFAULT_CV_K_FOLDS,
+            seed: None,
+        }
+    }
+
+    pub fn k(mut self, k: usize) -> Self {
+        self.k = k;
+        self
+    }
+
+    pub fn seed(mut self, seed: u64) -> Self {
+        self.seed = Some(seed);
+        self
+    }
+
+    pub fn fractions<T>(self, fractions: Vec<T>) -> CVOptions<T> {
+        CVOptions {
+            method: self.method,
+            k: self.k,
+            seed: self.seed,
+            fractions,
+        }
+    }
+}
+
+/// Fully specified cross-validation configuration passed to `Loess::cv`.
+#[derive(Debug, Clone)]
+pub struct CVOptions<T> {
+    method: String,
+    k: usize,
+    seed: Option<u64>,
+    fractions: Vec<T>,
+}
+
+impl<T> CVOptions<T> {
+    pub fn k(mut self, k: usize) -> Self {
+        self.k = k;
+        self
+    }
+
+    pub fn seed(mut self, seed: u64) -> Self {
+        self.seed = Some(seed);
+        self
+    }
+}
+
 // Fluent builder for configuring LOESS parameters and execution modes.
 #[derive(Debug, Clone)]
 pub struct LoessBuilder<
@@ -574,6 +632,18 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // Set the random seed for reproducible K-fold fold splitting.
     pub fn cv_seed(mut self, seed: u64) -> Self {
         self.cv_seed = Some(seed);
+        self
+    }
+
+    /// Configure cross-validation using `CVBuilder::method(...).fractions(...)`.
+    pub fn cv(mut self, options: CVOptions<T>) -> Self {
+        if self.cv_fractions.is_some() || self.cv_method_str.is_some() {
+            self.duplicate_param = Some("cv");
+        }
+        self.cv_method_str = Some(options.method);
+        self.cv_k_val = options.k;
+        self.cv_fractions = Some(options.fractions);
+        self.cv_seed = options.seed;
         self
     }
 

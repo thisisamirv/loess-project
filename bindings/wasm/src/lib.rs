@@ -19,6 +19,8 @@ const TS_TYPES: &'static str = r#"
 export interface SmoothOptions {
     /** Optional output components: diagnostics, residuals, weights, gradient (or derivative), se, sorted. */
     outputs?: string[];
+    /** Grouped batch cross-validation configuration. */
+    cv?: { fractions: number[]; method?: string; k?: number; seed?: number };
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
     /** Number of robustness iterations. Default: 3. */
@@ -311,6 +313,7 @@ fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
 #[derive(Deserialize)]
 pub struct SmoothOptions {
     pub outputs: Option<Vec<String>>,
+    pub cv: Option<CVOptionsJs>,
     pub fraction: Option<f64>,
     pub iterations: Option<usize>,
     pub weight_function: Option<String>,
@@ -343,6 +346,14 @@ pub struct SmoothOptions {
     pub cv_seed: Option<u64>,
     pub missing: Option<String>,
     pub retain_model: Option<bool>,
+}
+
+#[derive(Deserialize)]
+pub struct CVOptionsJs {
+    pub fractions: Vec<f64>,
+    pub method: Option<String>,
+    pub k: Option<u32>,
+    pub seed: Option<u64>,
 }
 
 #[derive(Deserialize)]
@@ -808,6 +819,18 @@ fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
 fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<f64>, JsValue> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        let cv = opts.cv.as_ref();
+        let cv_fractions = cv
+            .map(|value| value.fractions.as_slice())
+            .or(opts.cv_fractions.as_deref());
+        let cv_method = cv
+            .and_then(|value| value.method.as_deref())
+            .or(opts.cv_method.as_deref());
+        let cv_k = cv
+            .and_then(|value| value.k)
+            .map(|value| value as usize)
+            .or(opts.cv_k.map(|value| value as usize));
+        let cv_seed = cv.and_then(|value| value.seed).or(opts.cv_seed);
         builder = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
@@ -840,10 +863,10 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<
                 cell: opts.cell,
                 interpolation_vertices: opts.interpolation_vertices,
                 boundary_degree_fallback: opts.boundary_degree_fallback,
-                cv_fractions: opts.cv_fractions.as_deref(),
-                cv_method: opts.cv_method.as_deref(),
-                cv_k: opts.cv_k.map(|v| v as usize),
-                cv_seed: opts.cv_seed,
+                cv_fractions,
+                cv_method,
+                cv_k,
+                cv_seed,
                 missing: opts.missing.as_deref(),
                 retain_model: opts.retain_model,
             },

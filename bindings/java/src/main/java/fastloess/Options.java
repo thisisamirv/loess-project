@@ -482,6 +482,20 @@ public final class Options {
         }
 
         /**
+         * Configures grouped cross-validation settings.
+         *
+         * @param cv cross-validation configuration
+         * @return this builder, for chaining
+         */
+        public Builder cv(CVOptions cv) {
+            this.cvFractions = cv.fractions.clone();
+            this.cvMethod = cv.method;
+            this.cvK = cv.k;
+            this.cvSeed = cv.seed;
+            return this;
+        }
+
+        /**
          * Candidate fractions to cross-validate; enables
          * {@link Result#cvScores()}.
          *

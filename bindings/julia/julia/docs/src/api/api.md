@@ -76,6 +76,7 @@ println("First smoothed value: ", result.y[1])
 | `cv_method` | `String` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
 | `cv_k` | `Int` | `5` | Number of folds for k-fold CV |
 | `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation |
+| `cv` | `NamedTuple \| Dict \| Nothing` | `nothing` | Group `fractions`, `method`, `k`, and `seed`; takes precedence over individual CV settings |
 | `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling |
 | `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation case weights — passed to `fit`, not the constructor |
 | `retain_model` | `Bool` | `false` | Retain training data, enabling `predict(model, new_x; ...)` on the result |

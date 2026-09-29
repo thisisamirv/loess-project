@@ -246,6 +246,14 @@ export interface PredictOptions {
     max_neighbor_distance?: number
 }
 
+/** Grouped batch cross-validation configuration. */
+export interface CvOptions {
+    fractions: Array<number>
+    method?: string
+    k?: number
+    seed?: number
+}
+
 /** Configuration options for LOESS smoothing. */
 export interface SmoothOptions {
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -266,6 +274,8 @@ export interface SmoothOptions {
     auto_converge?: number
     /** Optional output components: diagnostics, residuals, weights, gradient (or derivative), se, sorted. */
     outputs?: Array<string>
+    /** Grouped cross-validation configuration for Batch smoothing. */
+    cv?: CvOptions
     /** Return residuals in result. Default: false. */
     return_residuals?: boolean
     /** Return robustness weights in result. Default: false. */

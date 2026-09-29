@@ -175,7 +175,7 @@ using FastLOESS
 				outputs = ["weights", "gradient", "se"],
 			)
 			online_result = nothing
-			for i in 1:5
+			for i ∈ 1:5
 				value = add_point(online, Float64(i), 2.0 * i)
 				value !== nothing && (online_result = value)
 			end
@@ -583,6 +583,18 @@ using FastLOESS
 	end
 
 	@testset "Cross-Validation" begin
+		@testset "grouped CV" begin
+			x = collect(range(0, 10, length = 30))
+			y = x .^ 2
+			model = Loess(
+				cv_fractions = [0.2],
+				cv = (fractions = [0.3, 0.5], method = "kfold", k = 3, seed = 42),
+			)
+			result = fit(model, x, y)
+			@test result.fraction_used in [0.3, 0.5]
+			@test length(result.cv_scores) == 2
+		end
+
 		@testset "basic CV" begin
 			x = collect(range(0, 10, length = 50))
 			y = 2 .* x .+ sin.(x)

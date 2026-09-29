@@ -256,6 +256,18 @@ test('WASM options parsing', () => {
     assert.strictEqual(result.y.length, 5);
 });
 
+test('WASM grouped cv overrides individual CV fields', () => {
+    const x = new Float64Array(Array.from({ length: 30 }, (_, index) => index));
+    const y = new Float64Array(Array.from(x, value => value * value));
+    const result = new fastloess.Loess({
+        cv_fractions: [0.2],
+        cv_method: 'invalid',
+        cv: { fractions: [0.3, 0.5], method: 'kfold', k: 3, seed: 42 }
+    }).fit(x, y);
+    assert.strictEqual(result.cv_scores.length, 2);
+    assert.ok([0.3, 0.5].includes(result.fraction_used));
+});
+
 // ---- Parameter coverage tests ----
 
 test('WASM smooth: iterations, zero_weight_fallback, return_residuals, return_robustness_weights', () => {

@@ -37,7 +37,8 @@ Loess(
   cv_seed = NULL,
   missing = "error",
   retain_model = FALSE,
-  outputs = NULL
+  outputs = NULL,
+  cv = NULL
 )
 }
 \arguments{
@@ -107,6 +108,9 @@ cross-validation. \code{NULL} (default) disables CV.}
 \code{"loocv"}.}
 
 \item{cv_k}{Number of folds for k-fold CV, at least 2. Default: 5.}
+
+\item{cv}{Grouped cross-validation settings from \code{\link{cv_opts}}.
+\code{NULL} uses the individual \code{cv_*} arguments.}
 
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
 

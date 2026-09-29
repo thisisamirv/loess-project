@@ -2,7 +2,7 @@
 
 # pylint: disable=unnecessary-ellipsis,unused-argument
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -241,6 +241,7 @@ class Loess:
         confidence_intervals: float | None = None,
         prediction_intervals: float | None = None,
         outputs: Sequence[str] | None = None,
+        cv: Mapping[str, object] | None = None,
         return_diagnostics: bool = False,
         return_residuals: bool = False,
         return_robustness_weights: bool = False,

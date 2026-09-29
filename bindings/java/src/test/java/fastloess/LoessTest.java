@@ -35,6 +35,35 @@ class LoessTest {
     }
 
     @Test
+    void groupedCvConfiguresBatchFit() {
+        double[] fractions = {0.3, 0.5};
+        CVOptions cv = CVOptions.builder().fractions(fractions).method("kfold").k(3).seed(42).build();
+        fractions[0] = 0.9;
+        Options options = Options.builder()
+                .cvFractions(new double[]{0.2})
+                .cvMethod("invalid")
+                .cv(cv)
+                .build();
+        assertEquals(0.3, options.cvFractions[0]);
+        assertEquals("kfold", options.cvMethod);
+        assertEquals(3, options.cvK);
+        assertEquals(42L, options.cvSeed.longValue());
+
+        double[] x = linspace(30);
+        double[] y = new double[x.length];
+        for (int i = 0; i < x.length; i++) {
+            y[i] = x[i] * x[i];
+        }
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            assertEquals(2, result.cvScores().orElseThrow().length);
+        }
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class, () -> CVOptions.builder().build());
+        assertTrue(ex.getMessage().contains("CV fractions must be provided"));
+    }
+
+    @Test
     void returnsDiagnosticsWhenRequested() {
         double[] x = linspace(30);
         double[] y = new double[30];

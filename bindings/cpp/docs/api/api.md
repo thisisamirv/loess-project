@@ -114,6 +114,7 @@ int main() {
 | `cv_method` | `std::string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
 | `cv_k` | `int` | `5` | Number of folds for k-fold CV |
 | `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation |
+| `cv` | `CVOptions` | `{}` | Group `fractions`, `method`, `k`, and `seed`; nonempty fractions override legacy CV fields |
 | `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (0 = random) |
 | `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
