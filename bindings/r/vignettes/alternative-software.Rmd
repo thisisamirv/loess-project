@@ -1,0 +1,117 @@
+---
+title: "Alternative Software"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Alternative Software}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+## Overview
+
+`rfastloess` and base R's `stats::loess()` both fit locally weighted
+polynomials. Their defaults and result objects differ, so a useful numerical
+comparison needs to match the fit settings first. This page shows how to do
+that and where the two APIs offer different capabilities.
+
+## Comparing fitted values
+
+For a non-robust, one-dimensional local linear fit, use the same span and
+polynomial degree, disable boundary padding, and request the direct surface.
+`stats::loess()` uses the Gaussian family by default; `iterations = 0L`
+disables robust reweighting in `Loess()`.
+
+```{r alternative_software_gaussian}
+library(rfastloess)
+set.seed(42)
+x <- seq(0, 2 * pi, length.out = 60)
+y <- sin(x) + rnorm(length(x), sd = 0.2)
+
+reference <- stats::loess(
+    y ~ x, span = 0.5, degree = 1, family = "gaussian",
+    control = stats::loess.control(surface = "direct")
+)
+result <- fit(
+    Loess(
+        fraction = 0.5, iterations = 0L, surface_mode = "direct",
+        boundary_policy = "noboundary", parallel = FALSE
+    ),
+    x, y
+)
+max_difference <- max(abs(result$y - reference$fitted))
+cat("Within 1e-10:", max_difference < 1e-10, "\n")
+stopifnot(max_difference < 1e-10)
+```
+
+For robust fitting, R uses `family = "symmetric"`. Match its iteration
+count and uncentered median absolute residual (`"mar"`) scale. The
+zero-weight fallback is set explicitly for degenerate neighborhoods; this
+example does not exercise that fallback:
+
+```{r alternative_software_robust}
+reference_robust <- stats::loess(
+    y ~ x, span = 0.5, degree = 1, family = "symmetric",
+    control = stats::loess.control(surface = "direct", iterations = 3)
+)
+result_robust <- fit(
+    Loess(
+        fraction = 0.5, iterations = 3L, surface_mode = "direct",
+        boundary_policy = "noboundary", scaling_method = "mar",
+        zero_weight_fallback = "return_original", parallel = FALSE
+    ),
+    x, y
+)
+robust_difference <- max(abs(result_robust$y - reference_robust$fitted))
+cat("Within 1e-10:", robust_difference < 1e-10, "\n")
+stopifnot(robust_difference < 1e-10)
+```
+
+These checks demonstrate agreement for the stated data and settings, not a
+universal tolerance guarantee across all inputs. `stats::loess()$fitted` and
+`fit(Loess(), x, y)$y` both follow the input observation order by default;
+`outputs = "sorted"` is available when sorted LOESS output is preferred.
+
+## Why defaults differ
+
+| Setting | `stats::loess()` | `Loess()` |
+| --- | --- | --- |
+| Local neighborhood | `span = 0.75` | `fraction = 0.67` |
+| Polynomial | `degree = 2` | `degree = "linear"` |
+| Robust fitting | `family = "gaussian"` (off) | `iterations = 3L` |
+| Boundary handling | No added padding | `boundary_policy = "extend"` |
+| Residual scale for robust fits | Uncentered absolute residual (`"mar"`) | `scaling_method = "mad"` |
+| Zero-weight fallback | No configurable option | `"use_local_mean"` |
+
+`surface_mode = "direct"` and R's `surface = "direct"` remove interpolation
+from the comparison. R's default is interpolation, as is the LOESS binding's.
+The alternative settings above are for reference matching; the package
+retains its own defaults for ordinary use. See `vignette("boundary")` and
+`vignette("scaling")` for their effects.
+
+## What this package adds
+
+Compared with `stats::loess()`, `rfastloess` provides:
+
+| Feature | `rfastloess` | `stats::loess()` |
+| --- | :---: | :---: |
+| Polynomial degree | 0-4 | 0-2 |
+| Kernel functions | 7 options | Tricube only |
+| Robustness weighting | 3 methods | Bisquare only |
+| Scale estimation | MAD, MAR, mean | MAR for robust fits |
+| Distance metrics | 6 options | Euclidean, optionally normalized |
+| Boundary padding | 4 policies | None |
+| Zero-weight fallback | 3 options | Not configurable |
+| Automatic convergence | Yes | No |
+| Built-in confidence / prediction interval bounds | Yes | SE available; bounds require calculation |
+| Cross-validation for `fraction` | K-fold, LOOCV | No automatic span selection |
+| Streaming / online modes | Yes | No |
+| Parallel execution | Yes | No built-in parallel fitting |
+
+Both support multivariate predictors, per-observation weights, prediction,
+and prediction standard errors. See `vignette("concepts")` for an overview of
+the additional options, or the [Benchmarks](benchmarks.html) article for
+performance comparisons.

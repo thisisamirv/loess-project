@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - Added R and original Cleveland LOESS references under `validation/reference/`.
+- Updated Julia documentation snippet verification to use the docs environment for examples under the Julia docs source tree.
 
 **loess-rs:**
 
@@ -47,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
+- Added an Alternative Software guide with runnable Gaussian and robust comparisons to R's `stats::loess()` and a LOESS feature matrix.
 - Added `CVOptions.builder()` and `Options.Builder.cv(...)` for grouped Batch cross-validation.
 - Added `outputs(String...)` to `Options.Builder`, `StreamingOptions.Builder`, `OnlineOptions.Builder`, and `PredictOptions.Builder` for grouped optional result selection.
 - Added `retainModel` and `Result.predictModel()` (a `PredictModel` class) for out-of-sample prediction.
@@ -56,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
+- Added an Alternative Software guide comparing `FastLOESS.jl` with `Loess.jl`, including a runnable numerical comparison and feature matrix.
 - Added the `cv` keyword to `Loess` for grouped cross-validation configuration.
 - Added `outputs=[...]` to `Loess`, `StreamingLoess`, `OnlineLoess`, and `predict` for grouped optional result selection; existing individual output keywords remain supported.
 - Added `retain_model` and `predict(model, new_x; kwargs...)` for out-of-sample prediction.
@@ -73,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Python:**
 
+- Added an Alternative Software guide comparing Python LOESS results with `skmisc.loess`, including executable Gaussian and robust examples.
 - Added a grouped `cv` dictionary to the Batch constructor, with validation and fallback to individual CV arguments.
 - Added `outputs` sequences to `Loess`, `StreamingLoess`, `OnlineLoess`, and prediction for grouped optional result selection alongside existing booleans.
 - Added `retain_model` and `LoessResult.predict(new_x, ...)` (a new `PredictOutput` class) for out-of-sample prediction.
@@ -82,6 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Added an Alternative Software vignette with runnable Gaussian and robust comparisons to `stats::loess()` and a guide to LOESS-specific defaults.
 - Added `cv_opts()` and the `cv` argument on `Loess()` for grouped Batch cross-validation.
 - Added `outputs` to `Loess()`, `StreamingLoess()`, `OnlineLoess()`, and `predict.Loess()` for grouped optional results with mode-specific name validation; existing `return_*` arguments remain supported.
 - Added `retain_model` and a `predict.Loess()` S3 method for out-of-sample prediction.

@@ -42,6 +42,14 @@ def run_julia(snippet: Snippet, timeout: int) -> RunResult:
         tmp = f.name
 
     julia_project = REPO_ROOT / "bindings" / "julia" / "julia"
+    docs_project = julia_project / "docs"
+    docs_src = docs_project / "src"
+    try:
+        snippet.file.resolve().relative_to(docs_src.resolve())
+        julia_project = docs_project
+    except ValueError:
+        pass
+
     env = {**os.environ}
     if julia_project.exists():
         env["JULIA_PROJECT"] = str(julia_project)

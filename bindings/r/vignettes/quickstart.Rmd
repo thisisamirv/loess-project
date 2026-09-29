@@ -172,6 +172,7 @@ legend("topright", c("Data", "Smoothed", "95% CI"),
 | Topic | Link |
 | --- | --- |
 | How LOESS works | `vignette("concepts", package = "rfastloess")` |
+| Comparing with `stats::loess()` | `vignette("alternative-software", package = "rfastloess")` |
 | All parameters explained | `?Loess` |
 | Batch vs Streaming vs Online | `vignette("adapter-choice")` |
 | Polynomial degree choices | `vignette("degree", package = "rfastloess")` |

@@ -58,6 +58,9 @@ articles:
   - title: Performance
     contents:
       - benchmarks
+  - title: Alternative Software
+    contents:
+      - alternative-software
 
 navbar:
   structure:

@@ -1,0 +1,193 @@
+= Alternative Software
+
+`fastloess` implements multivariate, polynomial LOESS. For a reference
+implementation, compare against R's
+https://www.rdocumentation.org/packages/stats/topics/loess[`stats::loess()`].
+Apache Commons Math's `LoessInterpolator` implements the narrower, univariate
+local-linear LOWESS method; it cannot serve as a reference for quadratic or
+multivariate LOESS fits.
+
+In short:
+
+* With the same local-linear, direct-surface settings, Gaussian fits agree
+    with `stats::loess()` to floating-point precision.
+* Robust fits also agree when both use bisquare robustness and MAR residual
+    scaling. The Java default is MAD instead; set `scalingMethod("mar")` to match R.
+* `fastloess` offers additional polynomial degrees, kernels, boundary policies,
+    and execution modes; see <<_what_this_package_adds,What this package adds>>.
+
+'''
+
+== Comparing the two implementations
+
+The following data and settings use a direct, unpadded local-linear fit with
+tricube weights and no robustifying iterations. The `rFit` array is computed
+with the R code below.
+
+[source,java]
+----
+import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class AltSoftwareGaussian {
+    public static void main(String[] args) {
+        double[] x = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        double[] y = { 1, 1.5, 2.7, 2.6, 2.0, 1.0, 0.6, 1.2, 2.4, 3.1, 2.8, 2.0 };
+        double[] rFit = {
+            1.2983384943031071, 1.6652135934830223, 1.9581637427324217,
+            2.2016614881916183, 1.8274079908975536, 1.3339284932825697,
+            1.1765582833719894, 1.5239230959987167, 2.1317316528817125,
+            2.3597063919800907, 2.513451576122792, 2.6017152571791788
+        };
+
+        Options options = Options.builder()
+                .fraction(0.6)
+                .degree("linear")
+                .iterations(0)
+                .surfaceMode("direct")
+                .boundaryPolicy("noboundary")
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            double maxDiff = 0.0;
+            for (int i = 0; i < x.length; i++) {
+                maxDiff = Math.max(maxDiff, Math.abs(result.y()[i] - rFit[i]));
+            }
+            System.out.println("Max abs difference: " + maxDiff);
+            if (maxDiff > 1e-12) {
+                throw new AssertionError("Gaussian fit differs from stats::loess()");
+            }
+        }
+    }
+}
+----
+
+For both Java examples, generate the R reference fits with:
+
+[source,r]
+----
+x <- 0:11
+y <- c(1, 1.5, 2.7, 2.6, 2.0, 1.0, 0.6, 1.2, 2.4, 3.1, 2.8, 2.0)
+for (family in c("gaussian", "symmetric")) {
+  fit <- stats::loess(
+    y ~ x, data = data.frame(x, y), span = 0.6, degree = 1,
+    family = family, normalize = FALSE,
+    control = stats::loess.control(surface = "direct", iterations = 3)
+  )
+  print(fit$fitted)
+}
+----
+
+'''
+
+== Matching robust fits
+
+R's `family = "symmetric"` applies bisquare reweighting. Use three iterations
+and `scalingMethod("mar")` in Java to match its residual scale; leaving Java's
+default MAD in place would change the fit.
+
+[source,java]
+----
+import fastloess.Loess;
+import fastloess.Options;
+import fastloess.Result;
+
+public class AltSoftwareRobust {
+    public static void main(String[] args) {
+        double[] x = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+        double[] y = { 1, 1.5, 2.7, 2.6, 2.0, 1.0, 0.6, 1.2, 2.4, 3.1, 2.8, 2.0 };
+        double[] rFit = {
+            1.2673770675189258, 1.6197239199110709, 1.9053407627139782,
+            2.1714787611965733, 1.8384458190478647, 1.3437632519162162,
+            1.2040300608698813, 1.5273071343274589, 2.117183741382374,
+            2.3495292076112979, 2.5168097285512738, 2.6259487731457565
+        };
+
+        Options options = Options.builder()
+                .fraction(0.6)
+                .degree("linear")
+                .iterations(3)
+                .scalingMethod("mar")
+                .surfaceMode("direct")
+                .boundaryPolicy("noboundary")
+                .build();
+
+        try (Loess model = new Loess(options)) {
+            Result result = model.fit(x, y);
+            double maxDiff = 0.0;
+            for (int i = 0; i < x.length; i++) {
+                maxDiff = Math.max(maxDiff, Math.abs(result.y()[i] - rFit[i]));
+            }
+            System.out.println("Max abs difference: " + maxDiff);
+            if (maxDiff > 1e-12) {
+                throw new AssertionError("Robust fit differs from stats::loess()");
+            }
+        }
+    }
+}
+----
+
+'''
+
+== What this package adds
+
+Both implementations support multivariate predictors, observation weights,
+prediction, and prediction standard errors. `fastloess` additionally provides:
+
+[cols="1,1,1", options="header"]
+|===
+| Feature | `fastloess` | `stats::loess()`
+
+| Polynomial degree
+| 0-4
+| 0-2
+
+| Kernel functions
+| 7 options
+| tricube only
+
+| Robustness weighting
+| 3 methods
+| bisquare only
+
+| Scale estimation
+| MAD, MAR, mean
+| MAR for robust fits
+
+| Distance metrics
+| 6 options
+| Euclidean, optionally normalized
+
+| Boundary padding
+| 4 policies
+| none
+
+| Zero-weight fallback
+| 3 options
+| not configurable
+
+| Automatic convergence
+| yes
+| no
+
+| Built-in confidence / prediction interval bounds
+| yes
+| standard errors available; bounds require calculation
+
+| Cross-validation for `fraction`
+| K-fold, LOOCV
+| no automatic span selection
+
+| Streaming / online modes
+| yes
+| no
+
+| Parallel execution
+| yes
+| no built-in parallel fitting
+|===
+
+See xref:../introduction/concepts.adoc[Concepts] for an overview of these
+options, or xref:../benchmarks.adoc[Benchmarks] for performance comparisons.

@@ -64,7 +64,7 @@ dev:
 	@. $(PY_ACTIVATE) && python -m pip cache purge >/dev/null 2>&1 || true
 	@echo "Installing Python packages (pip, pytest, numpy, maturin, ruff)..."
 	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir --upgrade pip >/dev/null
-	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir pytest numpy maturin ruff matplotlib >/dev/null
+	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir pytest numpy maturin ruff matplotlib scikit-misc >/dev/null
 	@echo "=============================================================================="
 	@echo "1. Formatting..."
 	@echo "=============================================================================="
@@ -105,7 +105,7 @@ clean:
 	@echo "$(PY_PKG) clean complete!"
 docs:
 	@echo "Building $(PY_PKG) docs (Sphinx)..."
-	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir sphinx furo myst-parser jupyter-sphinx sphinx-copybutton sphinxcontrib-mermaid ipykernel >/dev/null
+	@. $(PY_ACTIVATE) && python -m pip install -q --no-cache-dir sphinx furo myst-parser jupyter-sphinx sphinx-copybutton sphinxcontrib-mermaid ipykernel scikit-misc >/dev/null
 	@. $(PY_ACTIVATE) && sphinx-build -b html $(PY_DOCS_DIR) $(PY_DOCS_BUILD)/html
 	@echo "Docs built at $(PY_DOCS_BUILD)/html/index.html"
 
