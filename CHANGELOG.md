@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added R and original Cleveland LOESS references under `validation/reference/`.
 - Updated Julia documentation snippet verification to use the docs environment for examples under the Julia docs source tree.
+- Curated package NEWS files to include end-user changes only, using a maintenance note for releases with no public API or runtime changes.
 
 **loess-rs:**
 
@@ -293,7 +294,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Merged the standalone `dev/add-{cpp,rust,nodejs,wasm}-outputs` scripts into `dev/verify_snippets.py --update-outputs`.
 - Harmonized the docs-site directory structure across every binding/crate, and fixed doc-tooling scripts that missed snippets in the newly-nested pages.
-- Added `dev/update_changelogs.py` to regenerate each binding/crate's `NEWS.md`/`news.md` from the root changelog.
+- Removed automatic changelog generation; maintain each binding/crate's `NEWS.md`/`news.md` by hand.
 - Added `dev/add-readme-to-docs.py` to auto-embed `README.md` as the docs homepage (Starlight/Sphinx-aware); not yet wired into Python's `Makefile`.
 
 **loess-rs:**
