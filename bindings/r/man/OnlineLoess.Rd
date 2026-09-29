@@ -5,33 +5,33 @@
 \title{LOESS Online Smoothing}
 \usage{
 OnlineLoess(
-  fraction = 0.67,
-  window_capacity = 1000L,
-  min_points = 2L,
-  ...,
-  iterations = 0L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  zero_weight_fallback = "use_local_mean",
-  update_mode = "incremental",
-  auto_converge = NULL,
-  return_robustness_weights = FALSE,
-  return_gradient = FALSE,
-  confidence_intervals = NULL,
-  prediction_intervals = NULL,
-  return_se = FALSE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  weighted_metric_weights = NULL,
-  cell = NULL,
-  interpolation_vertices = NULL,
-  boundary_degree_fallback = NULL,
-  missing = "error",
-  outputs = NULL
+    fraction = 0.67,
+    window_capacity = 1000L,
+    min_points = 2L,
+    ...,
+    iterations = 0L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
+    update_mode = "incremental",
+    auto_converge = NULL,
+    return_robustness_weights = FALSE,
+    return_gradient = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    return_se = FALSE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL,
+    missing = "error",
+    outputs = NULL
 )
 }
 \arguments{
@@ -47,7 +47,7 @@ begins, between 2 and \code{window_capacity}. Default: 2.}
 \item{...}{Not used; forces all subsequent arguments to be named.}
 
 \item{iterations}{Number of robustness iterations, between 0 and 1000
-(inclusive). Default: 0; positive values require update_mode = "full".}
+(inclusive). Default: 3.}
 
 \item{weight_function}{Kernel weight function. One of \code{"tricube"}
 (default), \code{"gaussian"},
@@ -93,8 +93,9 @@ requested under the default \code{"interpolation"} mode. Default:
 
 \item{confidence_intervals}{Confidence level for confidence intervals (e.g.
 \code{0.95}). Only computed under \code{update_mode = "full"} — raises an
-error at construction if set (or \code{return_se}/\code{prediction_intervals}
-is set) while \code{update_mode} is left at its default \code{"incremental"}.
+error at construction if set (or \code{return_se}/
+\code{prediction_intervals} is set) while \code{update_mode} is left at
+its default \code{"incremental"}.
 \code{NULL} (default) disables confidence intervals.}
 
 \item{prediction_intervals}{Confidence level for prediction intervals; same
@@ -104,10 +105,6 @@ is set) while \code{update_mode} is left at its default \code{"incremental"}.
 \item{return_se}{Include the standard error for the latest point in the
 result. Same \code{update_mode = "full"} requirement as
 \code{confidence_intervals}. Default: \code{FALSE}.}
-
-\item{outputs}{Optional character vector selecting \code{"weights"},
-\code{"gradient"} (or \code{"derivative"}), and \code{"se"}.
-Combined with individual flags; \code{"se"} requires full update mode.}
 
 \item{degree}{Local polynomial degree: \code{"constant"}, \code{"linear"}
 (default), \code{"quadratic"}, \code{"cubic"}, or \code{"quartic"}.}
@@ -143,6 +140,10 @@ fails. \code{NULL} (default) uses the library default.}
 passed to \code{\link{add_point}}: \code{"error"} (default) raises an
 error, \code{"drop"} silently ignores the point (returns \code{NULL})
 instead of adding it to the window.}
+
+\item{outputs}{Optional character vector selecting \code{"weights"},
+\code{"gradient"} (or \code{"derivative"}), and \code{"se"}.
+Combined with individual flags; \code{"se"} requires full update mode.}
 }
 \value{
 An OnlineLoess object.

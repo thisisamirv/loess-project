@@ -37,10 +37,6 @@
 \item{return_derivative}{Logical; include the local fit's gradient in the
 output. Default: \code{FALSE}.}
 
-\item{outputs}{Optional character vector selecting \code{"se"},
-\code{"gradient"}, or \code{"derivative"}; combined with the
-corresponding individual flags.}
-
 \item{extrapolation}{Behavior for query points outside the training range:
 \code{"clamp"} (default), \code{"linear"}, or \code{"error"}.}
 
@@ -52,6 +48,10 @@ maximum allowed distance beyond the training boundary before
 \item{max_neighbor_distance}{Maximum allowed distance to the farthest point
 in a query's neighbor window before \code{predict} errors, catching
 in-range-but-sparse query points. \code{NULL} (default) disables the cap.}
+
+\item{outputs}{Optional character vector selecting \code{"se"},
+\code{"gradient"}, or \code{"derivative"}; combined with the
+corresponding individual flags.}
 
 \item{...}{Must be empty.}
 }

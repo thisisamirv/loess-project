@@ -67,7 +67,7 @@ public class Example {
 
 [source,console]
 ----
-Merged value in overlap region (average): 0.32485200482802645
+Merged value in overlap region (average): 0.3248520048280265
 ----
 
 '''
@@ -147,7 +147,7 @@ public class Example {
 
 [source,console]
 ----
-Merged value in overlap region (take_last): 0.29594060937527905
+Merged value in overlap region (take_last): 0.2959406093752791
 ----
 
 '''
@@ -194,7 +194,7 @@ public class Example {
 
 [source,console]
 ----
-Merged value in overlap region (weighted_average): 0.3393077025544002
+Merged value in overlap region (weighted_average): 0.33930770255440024
 ----
 
 '''

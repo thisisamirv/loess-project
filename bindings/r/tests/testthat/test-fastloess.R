@@ -182,7 +182,7 @@ test_that("grouped outputs work across all R adapters and prediction", {
         outputs = c("diagnostics", "weights", "gradient", "se", "sorted")
     )
     result <- fit(model, x, y)
-    expect_true(is.list(result$diagnostics))
+    expect_type(result$diagnostics, "list")
     expect_length(result$residuals, length(x))
     expect_length(result$robustness_weights, length(x))
     expect_length(result$gradient, length(x))
@@ -202,7 +202,7 @@ test_that("grouped outputs work across all R adapters and prediction", {
         outputs = c("diagnostics", "residuals", "weights", "derivative", "se")
     )
     chunk <- process_chunk(streaming, sorted_x, sorted_y)
-    expect_true(is.list(chunk$diagnostics))
+    expect_type(chunk$diagnostics, "list")
     expect_gt(length(chunk$residuals), 0L)
     expect_gt(length(chunk$robustness_weights), 0L)
     expect_gt(length(chunk$gradient), 0L)
@@ -316,7 +316,7 @@ test_that("grouped cross-validation overrides legacy options", {
     x <- as.double(1:30)
     result <- fit(
         Loess(
-            cv_fractions = c(0.2),
+            cv_fractions = 0.2,
             cv_method = "invalid",
             cv = cv_opts(fractions = c(0.3, 0.5), k = 3L, seed = 42)
         ),

@@ -5,36 +5,36 @@
 \title{LOESS Streaming Smoothing}
 \usage{
 StreamingLoess(
-  fraction = 0.67,
-  chunk_size = 5000L,
-  ...,
-  overlap = NULL,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  zero_weight_fallback = "use_local_mean",
-  auto_converge = NULL,
-  return_diagnostics = FALSE,
-  return_residuals = FALSE,
-  return_robustness_weights = FALSE,
-  return_gradient = FALSE,
-  confidence_intervals = NULL,
-  prediction_intervals = NULL,
-  return_se = FALSE,
-  merge_strategy = "weighted_average",
-  parallel = TRUE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  weighted_metric_weights = NULL,
-  cell = NULL,
-  interpolation_vertices = NULL,
-  boundary_degree_fallback = NULL,
-  missing = "error",
-  outputs = NULL
+    fraction = 0.67,
+    chunk_size = 5000L,
+    ...,
+    overlap = NULL,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    zero_weight_fallback = "use_local_mean",
+    auto_converge = NULL,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    return_robustness_weights = FALSE,
+    return_gradient = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    return_se = FALSE,
+    merge_strategy = "weighted_average",
+    parallel = TRUE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL,
+    missing = "error",
+    outputs = NULL
 )
 }
 \arguments{
@@ -108,10 +108,6 @@ per-chunk computation and overlap-merging as \code{confidence_intervals}.
 and merged across overlap boundaries via \code{merge_strategy}. Default:
 \code{FALSE}.}
 
-\item{outputs}{Optional character vector selecting \code{"diagnostics"},
-\code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
-\code{"derivative"}), and \code{"se"}. Combined with individual flags.}
-
 \item{merge_strategy}{Strategy for reconciling overlapping chunk regions:
 \code{"weighted_average"} (default; alias: \code{"weighted"}),
 \code{"average"} (alias: \code{"mean"}),
@@ -156,6 +152,10 @@ observations (rows) where any x dimension or y is non-finite (and the
 matching \code{custom_weights} entry) before fitting. A length mismatch
 between \code{x} and \code{y} always raises an error, even under
 \code{"drop"}.}
+
+\item{outputs}{Optional character vector selecting \code{"diagnostics"},
+\code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
+\code{"derivative"}), and \code{"se"}. Combined with individual flags.}
 }
 \value{
 A StreamingLoess object.
@@ -173,11 +173,11 @@ in memory, see \code{\link{Loess}}; for point-by-point real-time data,
 see \code{\link{OnlineLoess}}.
 
 Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{ll}{
-   Strategy \tab Behavior \cr
-   \code{"average"} \tab Arithmetic mean of both estimates \cr
-   \code{"weighted_average"} \tab Distance-weighted blend (default) \cr
-   \code{"take_first"} \tab Keep left-chunk estimate \cr
-   \code{"take_last"} \tab Keep right-chunk estimate \cr
+    Strategy \tab Behavior \cr
+    \code{"average"} \tab Arithmetic mean of both estimates \cr
+    \code{"weighted_average"} \tab Distance-weighted blend (default) \cr
+    \code{"take_first"} \tab Keep left-chunk estimate \cr
+    \code{"take_last"} \tab Keep right-chunk estimate \cr
 }
 }
 \examples{

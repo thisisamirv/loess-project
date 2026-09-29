@@ -72,7 +72,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (tricube kernel): 0.38515217214084335
+First smoothed value (tricube kernel): 0.3851521721408433
 ```
 
 ---
@@ -122,7 +122,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (epanechnikov kernel): 0.3985034976621206
+First smoothed value (epanechnikov kernel): 0.3985034976621207
 ```
 
 ---
@@ -172,7 +172,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (gaussian kernel): 0.4020228629737168
+First smoothed value (gaussian kernel): 0.40202286297371687
 ```
 
 ---
@@ -222,7 +222,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (biweight kernel): 0.38497927398395515
+First smoothed value (biweight kernel): 0.3849792739839554
 ```
 
 ---
@@ -272,7 +272,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (cosine kernel): 0.3966042541358943
+First smoothed value (cosine kernel): 0.39660425413589423
 ```
 
 ---
@@ -322,7 +322,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (triangle kernel): 0.3921003596819943
+First smoothed value (triangle kernel): 0.3921003596819944
 ```
 
 ---

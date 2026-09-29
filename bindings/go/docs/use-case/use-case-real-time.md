@@ -33,7 +33,6 @@ import (
 func main() {
  opts := fastloess.DefaultOnlineOptions()
  opts.Fraction = 0.3
- opts.Iterations = 1
  opts.WindowCapacity = 25
  opts.MinPoints = 5
  opts.UpdateMode = "incremental"
@@ -197,7 +196,7 @@ func main() {
 ```
 
 ```output
-Smoothed (dashboard, latest tick): -0.004114623979934616
+Smoothed (dashboard, latest tick): -0.004114623979933065
 ```
 
 ---

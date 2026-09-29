@@ -64,6 +64,11 @@ public class AltSoftwareGaussian {
 }
 ----
 
+[source,console]
+----
+Max abs difference: 2.220446049250313E-15
+----
+
 For both Java examples, generate the R reference fits with:
 
 [source,r]
@@ -127,6 +132,11 @@ public class AltSoftwareRobust {
         }
     }
 }
+----
+
+[source,console]
+----
+Max abs difference: 2.6645352591003757E-15
 ----
 
 '''

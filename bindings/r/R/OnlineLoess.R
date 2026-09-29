@@ -91,11 +91,13 @@ OnlineLoess <- function(
         min_points = min_points
     )
     flags <- parse_outputs_flags(
-        outputs, c("weights", "gradient", "derivative", "se")
+        outputs,
+        c("weights", "gradient", "derivative", "se")
     )
     return_robustness_weights <- return_robustness_weights || flags[["weights"]]
     return_gradient <- return_gradient ||
-        flags[["gradient"]] || flags[["derivative"]]
+        flags[["gradient"]] ||
+        flags[["derivative"]]
     return_se <- return_se || flags[["se"]]
     handle <- do.call(ROnlineLoess$new, env_args(online_params))
 

@@ -43,7 +43,7 @@ fn main() -> Result<(), LoessError> {
 
 ```output
 Selected fraction: 0.2
-CV scores: [0.2654884285387097, 0.26777391643175497, 0.3496748306435043, 0.42794903516949534]
+CV scores: [0.3438766827202528, 0.34464106203988115, 0.38615882024376913, 0.4401384938030448]
 ```
 
 ---
@@ -162,7 +162,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-Selected fraction (CV): 0.3
+Selected fraction (CV): 0.1
 ```
 
 The fraction with **lowest CV score** is automatically selected.

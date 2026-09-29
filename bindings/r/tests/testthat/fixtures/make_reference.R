@@ -36,7 +36,10 @@ provenance <- c(
     sprintf("generated_by: %s", "tests/testthat/fixtures/make_reference.R"),
     sprintf("generated_at: %s", format(Sys.time(), tz = "UTC", usetz = TRUE)),
     sprintf("r_version: %s", as.character(getRversion())),
-    sprintf("rfastloess_version: %s", as.character(utils::packageVersion("rfastloess"))),
+    sprintf(
+        "rfastloess_version: %s",
+        as.character(utils::packageVersion("rfastloess"))
+    ),
     sprintf("platform: %s", R.version$platform),
     sprintf("seed: %d", golden_seed()),
     sprintf("rng_kind: %s", paste(RNGkind(), collapse = " / ")),

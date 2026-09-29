@@ -8,12 +8,19 @@ cv_opts(fractions, method = "kfold", k = 5L, seed = NULL)
 }
 \arguments{
 \item{fractions}{Numeric vector of candidate smoothing fractions.}
+
 \item{method}{Cross-validation method: \code{"kfold"} or \code{"loocv"}.}
+
 \item{k}{Number of folds for k-fold cross-validation. Default: 5.}
+
 \item{seed}{Seed for reproducible fold assignment, or \code{NULL}.}
 }
-\value{A \code{cv_opts} list for \code{Loess(cv = ...)}.}
-\description{Cross-validation options for \code{\link{Loess}}}
+\value{
+A \code{cv_opts} list for \code{Loess(cv = ...)}.
+}
+\description{
+Cross-validation options for \code{\link{Loess}}
+}
 \examples{
 model <- Loess(cv = cv_opts(fractions = c(0.2, 0.3, 0.5)))
 }

@@ -82,7 +82,11 @@ test_that("RE7.1 and RE7.1a reproduce noiseless relationships", {
         x_linear,
         y_linear
     )
-    expect_equal(diagnostic_result$diagnostics$r_squared, 1.0, tolerance = 1e-10)
+    expect_equal(
+        diagnostic_result$diagnostics$r_squared,
+        1.0,
+        tolerance = 1e-10
+    )
     expect_equal(diagnostic_result$diagnostics$rmse, 0.0, tolerance = 1e-12)
 
     set.seed(99)

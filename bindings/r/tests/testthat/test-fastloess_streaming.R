@@ -215,7 +215,7 @@ test_that("StreamingLoess: return_se", {
     y <- sin(x / 10)
     sl <- StreamingLoess(fraction = 0.3, chunk_size = 100, return_se = TRUE)
     chunk_result <- process_chunk(sl, x, y)
-    expect_true(!is.null(chunk_result$standard_errors))
+    expect_false(is.null(chunk_result$standard_errors))
     expect_null(chunk_result$confidence_lower)
 })
 
@@ -229,9 +229,11 @@ test_that("StreamingLoess: confidence_intervals and prediction_intervals", {
         prediction_intervals = 0.95
     )
     chunk_result <- process_chunk(sl, x, y)
-    expect_true(!is.null(chunk_result$confidence_lower))
-    expect_true(!is.null(chunk_result$prediction_lower))
-    expect_true(all(chunk_result$confidence_lower <= chunk_result$confidence_upper))
+    expect_false(is.null(chunk_result$confidence_lower))
+    expect_false(is.null(chunk_result$prediction_lower))
+    expect_true(all(
+        chunk_result$confidence_lower <= chunk_result$confidence_upper
+    ))
     ci_width <- chunk_result$confidence_upper - chunk_result$confidence_lower
     pi_width <- chunk_result$prediction_upper - chunk_result$prediction_lower
     expect_true(all(pi_width >= ci_width - 1e-9))

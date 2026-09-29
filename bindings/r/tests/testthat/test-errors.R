@@ -35,6 +35,14 @@ test_that("Loess rejects invalid inputs", {
         "unused arguments"
     )
 
+    # Extra ... args rejected by predict.Loess
+    retained <- Loess(fraction = 0.5, retain_model = TRUE)
+    fit(retained, as.double(1:10), as.double(1:10))
+    expect_error(
+        predict(retained, 5, bogus = 1),
+        "unused arguments"
+    )
+
     # Matrix x with wrong column count rejected by fit.Loess
     expect_error(
         fit(

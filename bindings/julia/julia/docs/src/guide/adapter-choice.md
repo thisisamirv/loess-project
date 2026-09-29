@@ -152,7 +152,6 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = OnlineLoess(;
     fraction=0.2,
-    iterations=1,
     window_capacity=100,
     min_points=5,
     update_mode="incremental"

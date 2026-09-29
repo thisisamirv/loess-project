@@ -184,7 +184,6 @@ int main() {
 
     fastloess::OnlineOptions opts;
     opts.fraction = 0.2;
-    opts.iterations = 1;
     opts.window_capacity = 100;
     opts.min_points = 5;
     opts.update_mode = "incremental";

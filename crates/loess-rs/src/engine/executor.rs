@@ -1739,6 +1739,8 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 #[cfg(test)]
 mod normalization_tests {
     use super::loess_normalization_scales;
+    #[cfg(not(feature = "std"))]
+    use alloc::vec::Vec;
     use approx::assert_relative_eq;
 
     #[test]

@@ -183,7 +183,7 @@ int main() {
 ```
 
 ```output
-Fraction used: 0.3
+Fraction used: 0.1
 ```
 
 The fraction with **lowest CV score** is automatically selected.

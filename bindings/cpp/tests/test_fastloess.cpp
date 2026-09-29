@@ -511,11 +511,12 @@ void testOnlineReturnSeRequiresFullUpdateMode() {
   opts.fraction = k_fraction_half;
   opts.window_capacity = k_window_capacity;
   opts.outputs = {"se"};
-  OnlineLoess online(opts);
-  auto out = online.add_point(1.0, k_linear_slope);
-  assertTrue(!out.has_value(),
-             "outputs containing se without update_mode=\"full\" should error");
-  assertTrue(!out.error().empty());
+  try {
+    OnlineLoess online(opts);
+    assertTrue(false, "Should have thrown");
+  } catch (const std::exception &err) {
+    (void)err; // expected: outputs=se without update_mode="full" throws
+  }
 }
 
 void testOnlineConfidenceAndPredictionIntervalsFullMode() {
@@ -543,10 +544,12 @@ void testOnlineConfidenceAndPredictionIntervalsFullMode() {
   }
 
   assertTrue(last.has_value());
-  assertTrue(!std::isnan(last->confidence_lower()));
-  assertTrue(!std::isnan(last->prediction_lower()));
-  assertTrue(last->confidence_lower() <= last->confidence_upper());
-  assertTrue(last->prediction_lower() <= last->prediction_upper());
+  if (last) {
+    assertTrue(!std::isnan(last->confidence_lower()));
+    assertTrue(!std::isnan(last->prediction_lower()));
+    assertTrue(last->confidence_lower() <= last->confidence_upper());
+    assertTrue(last->prediction_lower() <= last->prediction_upper());
+  }
 }
 
 // ── Error handling tests ───────────────────────────────────────────────────
@@ -598,9 +601,12 @@ void testLoessMissingPolicy() {
     LoessOptions opts;
     opts.fraction = k_fraction_half;
     opts.missing = "invalid";
-    Loess loess(opts);
-    auto res = loess.fit(x_vals, y_vals);
-    assertTrue(!res.has_value(), "invalid missing policy should error");
+    try {
+      Loess loess(opts);
+      assertTrue(false, "Should have thrown");
+    } catch (const std::exception &err) {
+      (void)err; // expected: invalid missing policy throws
+    }
   }
 }
 

@@ -5,40 +5,40 @@
 \title{LOESS Batch Smoothing}
 \usage{
 Loess(
-  fraction = 0.67,
-  ...,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  confidence_intervals = NULL,
-  prediction_intervals = NULL,
-  return_diagnostics = FALSE,
-  return_residuals = FALSE,
-  return_robustness_weights = FALSE,
-  return_gradient = FALSE,
-  zero_weight_fallback = "use_local_mean",
-  auto_converge = NULL,
-  cv_fractions = NULL,
-  cv_method = "kfold",
-  cv_k = 5L,
-  parallel = TRUE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  return_se = FALSE,
-  return_sorted = FALSE,
-  weighted_metric_weights = NULL,
-  cell = NULL,
-  interpolation_vertices = NULL,
-  boundary_degree_fallback = NULL,
-  cv_seed = NULL,
-  missing = "error",
-  retain_model = FALSE,
-  outputs = NULL,
-  cv = NULL
+    fraction = 0.67,
+    ...,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    return_diagnostics = FALSE,
+    return_residuals = FALSE,
+    return_robustness_weights = FALSE,
+    return_gradient = FALSE,
+    zero_weight_fallback = "use_local_mean",
+    auto_converge = NULL,
+    cv_fractions = NULL,
+    cv_method = "kfold",
+    cv_k = 5L,
+    parallel = TRUE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    return_se = FALSE,
+    return_sorted = FALSE,
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL,
+    cv_seed = NULL,
+    missing = "error",
+    retain_model = FALSE,
+    outputs = NULL,
+    cv = NULL
 )
 }
 \arguments{
@@ -109,9 +109,6 @@ cross-validation. \code{NULL} (default) disables CV.}
 
 \item{cv_k}{Number of folds for k-fold CV, at least 2. Default: 5.}
 
-\item{cv}{Grouped cross-validation settings from \code{\link{cv_opts}}.
-\code{NULL} uses the individual \code{cv_*} arguments.}
-
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
 
 \item{degree}{Local polynomial degree: \code{"constant"}, \code{"linear"}
@@ -136,11 +133,6 @@ ascending by \code{x} instead of in the original input order. Default:
 \code{FALSE}. To get both orderings without re-fitting, sort the default
 (unsorted) result client-side (e.g. \code{order(result$x)}) rather than
 calling \code{fit()} twice.}
-
-\item{outputs}{Optional character vector selecting \code{"diagnostics"},
-\code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
-\code{"derivative"}), \code{"se"}, and \code{"sorted"}. Combined with
-the corresponding \code{return_*} arguments; \code{NULL} selects none.}
 
 \item{weighted_metric_weights}{Numeric vector of per-dimension weights.
 Length must equal \code{dimensions}. Only used when
@@ -172,6 +164,14 @@ between \code{x} and \code{y} always raises an error, even under
 \item{retain_model}{Logical; if \code{TRUE}, retain the fitted model's
 training data, enabling \code{\link{predict.Loess}} for out-of-sample
 prediction. Default: \code{FALSE}.}
+
+\item{outputs}{Optional character vector selecting \code{"diagnostics"},
+\code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
+\code{"derivative"}), \code{"se"}, and \code{"sorted"}. Combined with
+the corresponding \code{return_*} arguments; \code{NULL} selects none.}
+
+\item{cv}{Grouped cross-validation settings from \code{\link{cv_opts}}.
+\code{NULL} uses the individual \code{cv_*} arguments.}
 }
 \value{
 A Loess object.
@@ -189,11 +189,11 @@ real-time data, see \code{\link{OnlineLoess}}.
 
 \code{fraction} is the most important parameter: it controls the size of the
 local neighbourhood used at each point.\tabular{lll}{
-   Range \tab Effect \tab Use case \cr
-   0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
-   0.3-0.5 \tab Balanced \tab General purpose \cr
-   0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
-   0.7-1.0 \tab Very smooth \tab Trend extraction \cr
+    Range \tab Effect \tab Use case \cr
+    0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
+    0.3-0.5 \tab Balanced \tab General purpose \cr
+    0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
+    0.7-1.0 \tab Very smooth \tab Trend extraction \cr
 }
 }
 \examples{

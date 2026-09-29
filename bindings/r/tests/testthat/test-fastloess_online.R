@@ -140,7 +140,8 @@ test_that("OnlineLoess robustness works", {
     ol_robust <- OnlineLoess(
         fraction = 0.3,
         window_capacity = 25,
-        iterations = 3
+        iterations = 3,
+        update_mode = "full"
     )
     results_robust <- lapply(
         seq_along(x),
@@ -219,11 +220,15 @@ test_that("OnlineLoess: return_se requires update_mode = \"full\"", {
 
 test_that("OnlineLoess: confidence_intervals requires update_mode = \"full\"", {
     expect_error(
-        OnlineLoess(fraction = 0.5, window_capacity = 10, confidence_intervals = 0.95)
+        OnlineLoess(
+            fraction = 0.5,
+            window_capacity = 10,
+            confidence_intervals = 0.95
+        )
     )
 })
 
-test_that("OnlineLoess: confidence/prediction intervals under update_mode = \"full\"", {
+test_that("OnlineLoess: CI/PI under update_mode = \"full\"", {
     ol <- OnlineLoess(
         fraction = 1.0,
         window_capacity = 10,
@@ -238,8 +243,8 @@ test_that("OnlineLoess: confidence/prediction intervals under update_mode = \"fu
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
     last <- results[[length(results)]]
 
-    expect_true(!is.null(last$confidence_lower))
-    expect_true(!is.null(last$prediction_lower))
-    expect_true(last$confidence_lower <= last$confidence_upper)
-    expect_true(last$prediction_lower <= last$prediction_upper)
+    expect_false(is.null(last$confidence_lower))
+    expect_false(is.null(last$prediction_lower))
+    expect_lte(last$confidence_lower, last$confidence_upper)
+    expect_lte(last$prediction_lower, last$prediction_upper)
 })

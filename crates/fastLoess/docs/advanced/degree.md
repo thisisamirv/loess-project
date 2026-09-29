@@ -82,7 +82,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (linear degree): 0.32737554007097225
+First smoothed value (linear degree): 0.3273755400709721
 ```
 
 ---
@@ -116,7 +116,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (quadratic degree): 0.06774573827604671
+First smoothed value (quadratic degree): 0.06774573827604063
 ```
 
 ---
@@ -150,7 +150,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (cubic degree): 0.2422340721569136
+First smoothed value (cubic degree): 0.2422340721566545
 ```
 
 ---
@@ -184,7 +184,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (quartic degree): 0.23853339300189033
+First smoothed value (quartic degree): 0.238533392953346
 ```
 
 ---

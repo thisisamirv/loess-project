@@ -9,7 +9,7 @@
 #ifndef FASTLOESS_HPP
 #define FASTLOESS_HPP
 
-#if defined(_MSVC_LANG)
+#ifdef _MSVC_LANG
 #if _MSVC_LANG < 201703L
 #error "fastloess.hpp requires C++17 or later"
 #endif
@@ -712,6 +712,9 @@ public:
             : options.weighted_metric_weights.data(),
         static_cast<unsigned long>(options.weighted_metric_weights.size()),
         options.missing.c_str(), options.retain_model ? 1 : 0);
+    if (ptr_ == nullptr) {
+      throw LoessError(cpp_last_error_message());
+    }
     if (cv_seed > 0) {
       cpp_loess_set_cv_seed(ptr_, static_cast<unsigned long>(cv_seed));
     }
@@ -807,6 +810,9 @@ public:
         static_cast<unsigned long>(options.weighted_metric_weights.size()),
         options.missing.c_str(), options.confidence_intervals,
         options.prediction_intervals, hasOutput(options.outputs, "se") ? 1 : 0);
+    if (ptr_ == nullptr) {
+      throw LoessError(cpp_last_error_message());
+    }
   }
 
   ~StreamingLoess() {
@@ -981,6 +987,9 @@ public:
         static_cast<unsigned long>(options.weighted_metric_weights.size()),
         options.missing.c_str(), options.confidence_intervals,
         options.prediction_intervals, hasOutput(options.outputs, "se") ? 1 : 0);
+    if (ptr_ == nullptr) {
+      throw LoessError(cpp_last_error_message());
+    }
   }
 
   ~OnlineLoess() {

@@ -98,7 +98,7 @@ test_that("ROnlineLoess generated accessors dispatch add_point", {
         fraction = 0.3,
         window_capacity = 20L,
         min_points = 3L,
-        iterations = 1L,
+        iterations = 0L,
         weight_function = "tricube",
         robustness_method = "bisquare",
         scaling_method = "mad",

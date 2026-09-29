@@ -58,7 +58,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-Merged value in overlap region (average): 0.32485200482802645
+Merged value in overlap region (average): 0.32485200482802634
 ```
 
 ---
@@ -92,7 +92,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-Merged value in overlap region (take_first): 0.3537634002807739
+Merged value in overlap region (take_first): 0.35376340028077385
 ```
 
 ---
@@ -126,7 +126,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-Merged value in overlap region (take_last): 0.29594060937527905
+Merged value in overlap region (take_last): 0.2959406093752789
 ```
 
 ---
@@ -164,7 +164,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-Merged value in overlap region (weighted_average): 0.3393077025544002
+Merged value in overlap region (weighted_average): 0.3393077025544001
 ```
 
 ---

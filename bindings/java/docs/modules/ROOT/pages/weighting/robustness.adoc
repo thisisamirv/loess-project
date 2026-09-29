@@ -62,7 +62,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (bisquare robustness): 0.3851521721408434
+First smoothed value (bisquare robustness): 0.38515217214084335
 ----
 
 '''
@@ -109,7 +109,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (huber robustness): 0.3855847272972413
+First smoothed value (huber robustness): 0.38558472729724125
 ----
 
 '''
@@ -156,7 +156,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (talwar robustness): 0.38439982448576715
+First smoothed value (talwar robustness): 0.38439982448576704
 ----
 
 '''
@@ -258,7 +258,7 @@ public class Example {
 
 [source,console]
 ----
-y[0]: 0.3851521721408434
+y[0]: 0.38515217214084335
 ----
 
 '''
@@ -300,7 +300,7 @@ public class Example {
 
 [source,console]
 ----
-y[0]: 0.385251011791276
+y[0]: 0.3852510117912759
 ----
 
 '''

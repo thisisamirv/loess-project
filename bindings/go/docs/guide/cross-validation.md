@@ -61,7 +61,7 @@ func main() {
 
 ```output
 Selected fraction: 0.2
-CV scores: [0.26548842853871 0.26777391643175463 0.3496748306435046 0.42794903516949523]
+CV scores: [0.3438766827202529 0.3446410620398813 0.38615882024376924 0.4401384938030448]
 ```
 
 ---
@@ -237,7 +237,7 @@ func main() {
 ```
 
 ```output
-Selected fraction (CV): 0.3
+Selected fraction (CV): 0.1
 ```
 
 The fraction with **lowest CV score** is automatically selected.

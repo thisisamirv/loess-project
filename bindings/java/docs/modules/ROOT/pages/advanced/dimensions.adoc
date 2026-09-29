@@ -101,7 +101,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (2D LOESS, lat/lon): 1.1519559634974357
+First smoothed value (2D LOESS, lat/lon): 1.1471857691184293
 ----
 
 '''
@@ -146,7 +146,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (3D LOESS): -0.786686517390919
+First smoothed value (3D LOESS): -0.7667673586990187
 ----
 
 '''

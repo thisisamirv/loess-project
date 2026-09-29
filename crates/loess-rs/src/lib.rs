@@ -317,7 +317,7 @@
 //!
 //! - **`cv(CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.7]).seed(123))`** —
 //!   Configure CV as a group. `CVBuilder` is in the prelude; the resulting
-//!   [`CVOptions`](crate::CVOptions) type is available at the crate root, but
+//!   [`CVOptions`] type is available at the crate root, but
 //!   callers normally pass it directly to `.cv(...)`.
 //!
 //! - **`cv_method(m: &str)`** — Cross-validation method, string-based and case-insensitive:

@@ -35,7 +35,6 @@ int main() {
     // Online mode processes points incrementally
     fastloess::OnlineOptions opts;
     opts.fraction = 0.3;
-    opts.iterations = 1;
     opts.window_capacity = 25;
     opts.min_points = 5;
     opts.update_mode = "incremental";

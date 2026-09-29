@@ -1,5 +1,7 @@
-#' @srrstats {G5.4, G5.4b} Reference comparisons against `stats::loess`, generalized to randomized inputs.
-#' @srrstats {G5.10} Property-based tests run in the standard suite. `quickcheck` is a Suggests test dependency, not a runtime dependency.
+#' @srrstats {G5.4, G5.4b} Reference comparisons against `stats::loess`,
+#'   generalized to randomized inputs.
+#' @srrstats {G5.10} Property-based tests run in the standard suite.
+#'   `quickcheck` is a Suggests test dependency, not a runtime dependency.
 #' @noRd
 
 loess_property_x <- function(order_values) {
