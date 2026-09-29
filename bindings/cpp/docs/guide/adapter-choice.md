@@ -55,12 +55,12 @@ int main() {
     opts.iterations = 3;
     opts.confidence_intervals = 0.95;
     opts.prediction_intervals = 0.95;
-    opts.return_diagnostics = true;
+    opts.outputs = {"diagnostics"};
     opts.parallel = true;
     fastloess::Loess model(opts);
     auto result = model.fit(x, y).value();
     std::cout << "95% CI at midpoint: [" << result.confidence_lower()[50] << ", " << result.confidence_upper()[50] << "]\n";
-    std::cout << "R2: " << result.diagnostics().r_squared() << "\n";
+    std::cout << "R2: " << result.diagnostics().r_squared().value() << "\n";
     return 0;
 }
 ```

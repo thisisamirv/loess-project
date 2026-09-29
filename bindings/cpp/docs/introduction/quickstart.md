@@ -59,7 +59,7 @@ int main() {
     options.iterations = 3;
     options.confidence_intervals = 0.95;
     options.prediction_intervals = 0.95;
-    options.return_diagnostics = true;
+    options.outputs = {"diagnostics"};
 
     fastloess::Loess model(options);
     auto result = model.fit(x, y).value();
@@ -67,7 +67,7 @@ int main() {
     // Access standard C++ vectors
     auto lower = result.confidence_lower();
     auto upper = result.confidence_upper();
-    double r2 = result.diagnostics().r_squared();
+    double r2 = result.diagnostics().r_squared().value();
 
     std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
     return 0;
@@ -99,7 +99,7 @@ int main() {
     options.fraction = 0.7;
     options.iterations = 5;
     options.robustness_method = "bisquare";
-    options.return_robustness_weights = true;
+    options.outputs = {"weights"};
 
     fastloess::Loess model(options);
     auto result = model.fit(x_out, y_outlier).value();

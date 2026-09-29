@@ -124,6 +124,58 @@ class TestLoess:
 
         assert result.gradient is None
 
+    def test_grouped_outputs(self):
+        """Grouped names combine with individual flags for every adapter."""
+        x = np.array([3.0, 1.0, 2.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0])
+        y = 2 * x + np.sin(x) * 0.1
+        result = fastloess.Loess(
+            fraction=0.7,
+            surface_mode="direct",
+            retain_model=True,
+            return_residuals=True,
+            outputs=["diagnostics", "weights", "gradient", "se", "sorted"],
+        ).fit(x, y)
+
+        assert result.diagnostics is not None
+        assert result.residuals is not None
+        assert result.robustness_weights is not None
+        assert result.gradient is not None
+        assert result.standard_errors is not None
+        np.testing.assert_array_equal(result.x, np.sort(x))
+
+        prediction = result.predict(np.array([2.5]), outputs=["se", "derivative"])
+        assert prediction.standard_errors is not None
+        assert prediction.derivative is not None
+
+        streaming = fastloess.StreamingLoess(
+            fraction=0.7,
+            chunk_size=10,
+            surface_mode="direct",
+            outputs=["diagnostics", "residuals", "weights", "derivative", "se"],
+        )
+        streamed = streaming.process_chunk(x, y)
+        assert streamed.diagnostics is not None
+        assert streamed.residuals is not None
+        assert streamed.robustness_weights is not None
+        assert streamed.gradient is not None
+        assert streamed.standard_errors is not None
+
+        online = fastloess.OnlineLoess(
+            fraction=1.0,
+            window_capacity=10,
+            min_points=3,
+            update_mode="full",
+            surface_mode="direct",
+            outputs=["weights", "gradient", "se"],
+        )
+        latest = None
+        for x_value, y_value in zip(x, y):
+            latest = online.add_point(float(x_value), float(y_value))
+        assert latest is not None
+        assert latest.robustness_weight is not None
+        assert latest.gradient is not None
+        assert latest.standard_error is not None
+
     def test_loess_with_confidence_intervals(self):
         """Test loess with confidence intervals."""
         np.random.seed(42)
@@ -338,7 +390,7 @@ class TestStreamingLoess:
             fraction=0.3, chunk_size=100, return_se=True
         )
         chunk_result = streaming.process_chunk(x, y)
-        final_result = streaming.finalize()
+        streaming.finalize()
 
         assert chunk_result.standard_errors is not None
         assert chunk_result.confidence_lower is None

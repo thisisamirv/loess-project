@@ -336,6 +336,8 @@ impl PyLoessResult {
     /// ----------
     /// new_x : array_like
     ///     Query points (flattened, `dimensions` values per point).
+    /// outputs : sequence[str], optional
+    ///     Select "se", "gradient", and/or "derivative".
     /// return_se : bool, optional
     /// confidence_level : float, optional
     /// prediction_level : float, optional
@@ -351,6 +353,7 @@ impl PyLoessResult {
     #[pyo3(signature = (
         new_x,
         *,
+        outputs=None,
         return_se=false,
         confidence_level=None,
         prediction_level=None,
@@ -364,6 +367,7 @@ impl PyLoessResult {
         &self,
         py: Python<'py>,
         new_x: PyReadonlyArray1<'py, f64>,
+        outputs: Option<Vec<String>>,
         return_se: bool,
         confidence_level: Option<f64>,
         prediction_level: Option<f64>,
@@ -379,10 +383,12 @@ impl PyLoessResult {
                     &self.inner,
                     &new_x_vec,
                     shared_parse::PredictOptionSet {
-                        return_se,
+                        return_se: return_se || has_output(outputs.as_ref(), "se"),
                         confidence_level,
                         prediction_level,
-                        return_derivative,
+                        return_derivative: return_derivative
+                            || has_output(outputs.as_ref(), "gradient")
+                            || has_output(outputs.as_ref(), "derivative"),
                         extrapolation: Some(extrapolation),
                         max_extrapolation_distance,
                         max_neighbor_distance,
@@ -406,6 +412,10 @@ impl PyLoessResult {
 // Python Classes - Stateful Adapters
 // ============================================================================
 
+fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
+    outputs.is_some_and(|values| values.iter().any(|value| value == name))
+}
+
 /// Streaming LOESS processor for incremental chunk-based smoothing.
 #[pyclass(name = "StreamingLoess")]
 pub struct PyStreamingLoess {
@@ -426,6 +436,7 @@ impl PyStreamingLoess {
         scaling_method="mad",
         boundary_policy="extend",
         auto_converge=None,
+        outputs=None,
         return_diagnostics=false,
         return_residuals=false,
         return_robustness_weights=false,
@@ -457,6 +468,7 @@ impl PyStreamingLoess {
         scaling_method: &str,
         boundary_policy: &str,
         auto_converge: Option<f64>,
+        outputs: Option<Vec<String>>,
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
@@ -488,9 +500,11 @@ impl PyStreamingLoess {
                 boundary_policy: Some(boundary_policy),
                 scaling_method: Some(scaling_method),
                 auto_converge,
-                return_residuals,
-                return_robustness_weights,
-                return_diagnostics,
+                return_residuals: return_residuals || has_output(outputs.as_ref(), "residuals"),
+                return_robustness_weights: return_robustness_weights
+                    || has_output(outputs.as_ref(), "weights"),
+                return_diagnostics: return_diagnostics
+                    || has_output(outputs.as_ref(), "diagnostics"),
                 confidence_intervals,
                 prediction_intervals,
                 parallel: Some(parallel),
@@ -499,7 +513,7 @@ impl PyStreamingLoess {
                 distance_metric: Some(distance_metric),
                 weighted_metric_weights: weighted_metric_weights.as_deref(),
                 surface_mode: Some(surface_mode),
-                return_se,
+                return_se: return_se || has_output(outputs.as_ref(), "se"),
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,
@@ -507,7 +521,10 @@ impl PyStreamingLoess {
                 ..Default::default()
             },
         ))?;
-        if return_gradient {
+        if return_gradient
+            || has_output(outputs.as_ref(), "gradient")
+            || has_output(outputs.as_ref(), "derivative")
+        {
             builder = builder.return_gradient();
         }
 
@@ -633,6 +650,7 @@ impl PyOnlineLoess {
         boundary_policy="extend",
         update_mode="incremental",
         auto_converge=None,
+        outputs=None,
         return_robustness_weights=false,
         return_gradient=false,
         confidence_intervals=None,
@@ -661,6 +679,7 @@ impl PyOnlineLoess {
         boundary_policy: &str,
         update_mode: &str,
         auto_converge: Option<f64>,
+        outputs: Option<Vec<String>>,
         return_robustness_weights: bool,
         return_gradient: bool,
         confidence_intervals: Option<f64>,
@@ -689,7 +708,8 @@ impl PyOnlineLoess {
                 scaling_method: Some(scaling_method),
                 auto_converge,
                 return_residuals: false,
-                return_robustness_weights,
+                return_robustness_weights: return_robustness_weights
+                    || has_output(outputs.as_ref(), "weights"),
                 return_diagnostics: false,
                 confidence_intervals,
                 prediction_intervals,
@@ -699,7 +719,7 @@ impl PyOnlineLoess {
                 distance_metric: Some(distance_metric),
                 weighted_metric_weights: weighted_metric_weights.as_deref(),
                 surface_mode: Some(surface_mode),
-                return_se,
+                return_se: return_se || has_output(outputs.as_ref(), "se"),
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,
@@ -707,7 +727,10 @@ impl PyOnlineLoess {
                 ..Default::default()
             },
         ))?;
-        if return_gradient {
+        if return_gradient
+            || has_output(outputs.as_ref(), "gradient")
+            || has_output(outputs.as_ref(), "derivative")
+        {
             builder = builder.return_gradient();
         }
 
@@ -776,6 +799,7 @@ impl PyLoess {
         boundary_policy="extend",
         confidence_intervals=None,
         prediction_intervals=None,
+        outputs=None,
         return_diagnostics=false,
         return_residuals=false,
         return_robustness_weights=false,
@@ -810,6 +834,7 @@ impl PyLoess {
         boundary_policy: &str,
         confidence_intervals: Option<f64>,
         prediction_intervals: Option<f64>,
+        outputs: Option<Vec<String>>,
         return_diagnostics: bool,
         return_residuals: bool,
         return_robustness_weights: bool,
@@ -845,9 +870,11 @@ impl PyLoess {
                 boundary_policy: Some(boundary_policy),
                 scaling_method: Some(scaling_method),
                 auto_converge,
-                return_residuals,
-                return_robustness_weights,
-                return_diagnostics,
+                return_residuals: return_residuals || has_output(outputs.as_ref(), "residuals"),
+                return_robustness_weights: return_robustness_weights
+                    || has_output(outputs.as_ref(), "weights"),
+                return_diagnostics: return_diagnostics
+                    || has_output(outputs.as_ref(), "diagnostics"),
                 confidence_intervals,
                 prediction_intervals,
                 parallel: Some(parallel),
@@ -856,8 +883,8 @@ impl PyLoess {
                 distance_metric: Some(distance_metric),
                 weighted_metric_weights: weighted_metric_weights.as_deref(),
                 surface_mode: Some(surface_mode),
-                return_se,
-                return_sorted,
+                return_se: return_se || has_output(outputs.as_ref(), "se"),
+                return_sorted: return_sorted || has_output(outputs.as_ref(), "sorted"),
                 cell,
                 interpolation_vertices,
                 boundary_degree_fallback,
@@ -869,7 +896,10 @@ impl PyLoess {
                 retain_model: Some(retain_model),
             },
         ))?;
-        if return_gradient {
+        if return_gradient
+            || has_output(outputs.as_ref(), "gradient")
+            || has_output(outputs.as_ref(), "derivative")
+        {
             builder = builder.return_gradient();
         }
 

@@ -170,6 +170,9 @@ fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
 #'   \code{NULL} (default) disables it.
 #' @param return_derivative Logical; include the local fit's gradient in the
 #'   output. Default: \code{FALSE}.
+#' @param outputs Optional character vector selecting \code{"se"},
+#'   \code{"gradient"}, or \code{"derivative"}; combined with the
+#'   corresponding individual flags.
 #' @param extrapolation Behavior for query points outside the training range:
 #'   \code{"clamp"} (default), \code{"linear"}, or \code{"error"}.
 #' @param max_extrapolation_distance Under \code{"linear"} extrapolation, the
@@ -200,17 +203,21 @@ predict.Loess <- function(
     extrapolation = "clamp",
     max_extrapolation_distance = NULL,
     max_neighbor_distance = NULL,
+    outputs = NULL,
     ...
 ) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
     }
+    flags <- parse_outputs_flags(outputs, c("se", "gradient", "derivative"))
     object$handle$predict(
         as.double(new_x),
-        as.logical(return_se),
+        as.logical(return_se || flags[["se"]]),
         coerce_nullable(confidence_level)[[1]],
         coerce_nullable(prediction_level)[[1]],
-        as.logical(return_derivative),
+        as.logical(
+            return_derivative || flags[["gradient"]] || flags[["derivative"]]
+        ),
         as.character(extrapolation),
         coerce_nullable(max_extrapolation_distance)[[1]],
         coerce_nullable(max_neighbor_distance)[[1]]

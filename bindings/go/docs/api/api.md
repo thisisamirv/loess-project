@@ -14,7 +14,7 @@ Returns recommended defaults. Start from this and override only the fields you n
 ```go
 opts := fastloess.DefaultOptions()
 opts.Fraction = 0.3
-opts.ReturnDiagnostics = true
+opts.Outputs = []string{"diagnostics"}
 ```
 
 ## `Options` fields
@@ -34,6 +34,7 @@ opts.ReturnDiagnostics = true
 | `DistanceMetric` | `string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p. |
 | `WeightedMetricWeights` | `[]float64` | `nil` | Per-dimension weights (used when `DistanceMetric = "weighted"`). |
 | `SurfaceMode` | `string` | `"interpolation"` | Surface computation mode. |
+| `Outputs` | `[]string` | `nil` | Optional fields: `diagnostics`, `residuals`, `weights`, `derivative`/`gradient`, `se`, `sorted`. |
 | `ReturnSE` | `bool` | `false` | Populate `Result.StandardErrors`/`Result.HatMatrix` (hat-matrix statistics). |
 | `ReturnSorted` | `bool` | `false` | Return results sorted ascending by `X` instead of in original input order. |
 | `Cell` | `*float64` | `nil` (auto) | Interpolation cell size tuning parameter, in (0, 1]. Only applies when `SurfaceMode` is `"interpolation"`. |
@@ -88,18 +89,20 @@ Releases native resources. Safe to call multiple times. A finalizer is registere
 | Field | Type | Populated when |
 | --- | --- | --- |
 | `X`, `Y` | `[]float64` | Always. |
-| `StandardErrors` | `[]float64` | `ReturnSE` |
+| `StandardErrors` | `[]float64` | `ReturnSE` or `Outputs` contains `"se"` |
 | `ConfidenceLower`, `ConfidenceUpper` | `[]float64` | `ConfidenceIntervals` set |
 | `PredictionLower`, `PredictionUpper` | `[]float64` | `PredictionIntervals` set |
-| `Residuals` | `[]float64` | `ReturnResiduals` |
-| `RobustnessWeights` | `[]float64` | `ReturnRobustnessWeights` |
+| `Residuals` | `[]float64` | `ReturnResiduals` or `Outputs` contains `"residuals"` |
+| `RobustnessWeights` | `[]float64` | `ReturnRobustnessWeights` or `Outputs` contains `"weights"` |
 | `CVScores` | `[]float64` | `CVFractions` set |
 | `FractionUsed` | `float64` | Always. |
 | `IterationsUsed` | `int` | Always (`-1` if not available). |
 | `Dimensions` | `int` | Always. |
-| `Diagnostics` | `*Diagnostics` | `ReturnDiagnostics` |
-| `HatMatrix` | `*HatMatrixStats` | `ReturnSE` |
-| `Gradient` | `[]float64` | `ReturnGradient` (`SurfaceMode = "direct"` only) |
+| `Diagnostics` | `*Diagnostics` | `ReturnDiagnostics` or `Outputs` contains `"diagnostics"` |
+| `HatMatrix` | `*HatMatrixStats` | `ReturnSE` or `Outputs` contains `"se"` |
+| `Gradient` | `[]float64` | `ReturnGradient` or `Outputs` contains `"derivative"`/`"gradient"` (`SurfaceMode = "direct"` only) |
+
+`Outputs` groups optional result selection. Supported names are `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"` (or `"gradient"`), `"se"`, and `"sorted"`. For example, `[]string{"diagnostics", "residuals", "se"}` enables those components. Existing individual boolean fields remain supported; either form enables the same output.
 
 `Diagnostics` holds `RMSE`, `MAE`, `RSquared`, `AIC`, `AICc`, `EffectiveDF`, `ResidualSD`.
 
@@ -258,7 +261,7 @@ Confidence level for the prediction interval for new observations (e.g. `0.95`).
 
 ### ReturnDiagnostics
 
-Populate `Result.Diagnostics` (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/`EffectiveDF` additionally require `ReturnSE: true` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
+Populate `Result.Diagnostics` (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/`EffectiveDF` additionally require standard errors; request them with `Outputs: []string{"se"}` (or the legacy `ReturnSE: true` field, or confidence/prediction intervals), since they depend on hat-matrix statistics.
 
 - `false` (default) — leaves `Result.Diagnostics` as `nil`
 - `true` — populates `Result.Diagnostics`

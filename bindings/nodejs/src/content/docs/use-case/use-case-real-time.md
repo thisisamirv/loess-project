@@ -22,7 +22,7 @@ For true real-time applications where each point must be processed immediately.
 const { OnlineLoess } = require('fastloess');
 
 const processor = new OnlineLoess(
-    { fraction: 0.3, iterations: 1 },
+    { fraction: 0.3 },
     { window_capacity: 25, min_points: 5, update_mode: "incremental" }
 );
 

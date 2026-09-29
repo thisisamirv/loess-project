@@ -15,7 +15,7 @@ Returns a fluent builder pre-populated with recommended defaults. Start from thi
 ----
 Options options = Options.builder()
         .fraction(0.3)
-        .returnDiagnostics(true)
+    .outputs("diagnostics")
         .build();
 ----
 
@@ -44,6 +44,7 @@ Options options = Options.builder()
 |`confidenceIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
 |`predictionIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
 |`autoConverge` |`double` |`NaN` (disabled) |Convergence tolerance for early stopping.
+|`outputs(String...)` |`String...` |empty |Select `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, `se`, and/or `sorted`.
 |`returnDiagnostics` |`boolean` |`false` |Populate `Result.diagnostics()`.
 |`returnResiduals` |`boolean` |`false` |Populate `Result.residuals()`.
 |`returnRobustnessWeights` |`boolean` |`false` |Populate `Result.robustnessWeights()`.
@@ -103,18 +104,18 @@ Releases native resources. Safe to call multiple times. Implements `AutoCloseabl
 |Accessor |Type |Populated when
 
 |`x()`, `y()` |`double[]` |Always.
-|`standardErrors()` |`Optional<double[]>` |`returnSe`
+|`standardErrors()` |`Optional<double[]>` |`returnSe` or `outputs("se")`
 |`confidenceLower()`, `confidenceUpper()` |`Optional<double[]>` |`confidenceIntervals` set
 |`predictionLower()`, `predictionUpper()` |`Optional<double[]>` |`predictionIntervals` set
-|`residuals()` |`Optional<double[]>` |`returnResiduals`
-|`robustnessWeights()` |`Optional<double[]>` |`returnRobustnessWeights`
+|`residuals()` |`Optional<double[]>` |`returnResiduals` or `outputs("residuals")`
+|`robustnessWeights()` |`Optional<double[]>` |`returnRobustnessWeights` or `outputs("weights")`
 |`cvScores()` |`Optional<double[]>` |`cvFractions` set
 |`fractionUsed()` |`double` |Always.
 |`iterationsUsed()` |`OptionalInt` |Always (empty if not available).
 |`dimensions()` |`int` |Always.
-|`diagnostics()` |`Optional<Diagnostics>` |`returnDiagnostics`
-|`hatMatrix()` |`Optional<HatMatrixStats>` |`returnSe`
-|`gradient()` |`Optional<double[]>` |`returnGradient` (`surfaceMode = "direct"` only)
+|`diagnostics()` |`Optional<Diagnostics>` |`returnDiagnostics` or `outputs("diagnostics")`
+|`hatMatrix()` |`Optional<HatMatrixStats>` |`returnSe` or `outputs("se")`
+|`gradient()` |`Optional<double[]>` |`returnGradient` or `outputs("gradient")`/`outputs("derivative")` (`surfaceMode = "direct"` only)
 |===
 
 `Diagnostics` holds `rmse()`, `mae()`, `rSquared()`, `aic()`, `aicc()`, `effectiveDf()`, `residualSd()` (the last three are `Optional<Double>`).
@@ -277,6 +278,10 @@ Confidence level for the confidence interval around the mean response (e.g. `0.9
 _See: xref:../guide/intervals.adoc[Intervals]_
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
+
+=== outputs
+
+Select optional result components with `outputs(String...)`. Supported names are `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"` (or `"derivative"`), `"se"`, and `"sorted"`. Unknown names throw `IllegalArgumentException`. Existing individual `return...` builder methods remain supported.
 
 === returnDiagnostics
 

@@ -158,7 +158,7 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastloess::Loess model({ .iterations = 5, .return_robustness_weights = true });
+    fastloess::Loess model({ .iterations = 5, .outputs = {"weights"} });
     auto result = model.fit(x, y).value();
 
     auto weights = result.robustness_weights();

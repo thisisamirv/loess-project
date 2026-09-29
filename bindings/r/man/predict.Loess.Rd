@@ -14,6 +14,7 @@
     extrapolation = "clamp",
     max_extrapolation_distance = NULL,
     max_neighbor_distance = NULL,
+    outputs = NULL,
     ...
 )
 }
@@ -35,6 +36,10 @@
 
 \item{return_derivative}{Logical; include the local fit's gradient in the
 output. Default: \code{FALSE}.}
+
+\item{outputs}{Optional character vector selecting \code{"se"},
+\code{"gradient"}, or \code{"derivative"}; combined with the
+corresponding individual flags.}
 
 \item{extrapolation}{Behavior for query points outside the training range:
 \code{"clamp"} (default), \code{"linear"}, or \code{"error"}.}

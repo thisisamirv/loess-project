@@ -17,6 +17,8 @@ pub fn init_panic_hook() {
 const TS_TYPES: &'static str = r#"
 /** Configuration options for LOESS smoothing. */
 export interface SmoothOptions {
+    /** Optional output components: diagnostics, residuals, weights, gradient (or derivative), se, sorted. */
+    outputs?: string[];
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
     /** Number of robustness iterations. Default: 3. */
@@ -83,6 +85,8 @@ export interface SmoothOptions {
 
 /** Options for `LoessResult.predict()`. */
 export interface PredictOptions {
+    /** Optional prediction components: se, gradient (or derivative). */
+    outputs?: string[];
     /** Include standard errors in the output. Default: false. */
     return_se?: boolean;
     /** Confidence interval coverage level (e.g. 0.95). Disabled when absent. */
@@ -119,6 +123,8 @@ export interface PredictOutput {
 
 /** Configuration options for streaming LOESS smoothing. A subset of `SmoothOptions`: cross-validation has no equivalent here. */
 export interface StreamingSmoothOptions {
+    /** Optional output components: diagnostics, residuals, weights, gradient (or derivative), se. */
+    outputs?: string[];
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
     /** Number of robustness iterations. Default: 3. */
@@ -173,6 +179,8 @@ export interface StreamingSmoothOptions {
 
 /** Configuration options for online LOESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, and cross-validation have no equivalent here. `confidence_intervals`/`prediction_intervals`/`return_se` require `update_mode: "full"`. */
 export interface OnlineSmoothOptions {
+    /** Optional output components: weights, gradient (or derivative), se. */
+    outputs?: string[];
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
     /** Number of robustness iterations. Default: 0; positive values require
@@ -302,6 +310,7 @@ fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
 
 #[derive(Deserialize)]
 pub struct SmoothOptions {
+    pub outputs: Option<Vec<String>>,
     pub fraction: Option<f64>,
     pub iterations: Option<usize>,
     pub weight_function: Option<String>,
@@ -338,6 +347,7 @@ pub struct SmoothOptions {
 
 #[derive(Deserialize)]
 pub struct PredictOptionsJs {
+    pub outputs: Option<Vec<String>>,
     pub return_se: Option<bool>,
     pub confidence_level: Option<f64>,
     pub prediction_level: Option<f64>,
@@ -363,6 +373,7 @@ pub struct OnlineOptions {
 
 #[derive(Deserialize)]
 pub struct StreamingSmoothOptions {
+    pub outputs: Option<Vec<String>>,
     pub fraction: Option<f64>,
     pub iterations: Option<usize>,
     pub weight_function: Option<String>,
@@ -392,6 +403,7 @@ pub struct StreamingSmoothOptions {
 
 #[derive(Deserialize)]
 pub struct OnlineSmoothOptions {
+    pub outputs: Option<Vec<String>>,
     pub fraction: Option<f64>,
     pub iterations: Option<usize>,
     pub weight_function: Option<String>,
@@ -661,6 +673,7 @@ impl LoessResult {
     ) -> Result<PredictOutput, JsValue> {
         let opts: PredictOptionsJs = if options.is_undefined() || options.is_null() {
             PredictOptionsJs {
+                outputs: None,
                 return_se: None,
                 confidence_level: None,
                 prediction_level: None,
@@ -677,10 +690,13 @@ impl LoessResult {
             &self.inner,
             &new_x_vec,
             shared_parse::PredictOptionSet {
-                return_se: opts.return_se.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "se"),
                 confidence_level: opts.confidence_level,
                 prediction_level: opts.prediction_level,
-                return_derivative: opts.return_derivative.unwrap_or(false),
+                return_derivative: opts.return_derivative.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "gradient")
+                    || has_output(opts.outputs.as_ref(), "derivative"),
                 extrapolation: opts.extrapolation.as_deref(),
                 max_extrapolation_distance: opts.max_extrapolation_distance,
                 max_neighbor_distance: opts.max_neighbor_distance,
@@ -785,6 +801,10 @@ impl Loess {
 }
 
 // Build a LoessBuilder from Batch options, applying every field.
+fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
+    outputs.is_some_and(|values| values.iter().any(|value| value == name))
+}
+
 fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<f64>, JsValue> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
@@ -799,9 +819,12 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_residuals: opts.return_residuals.unwrap_or(false),
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                return_residuals: opts.return_residuals.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "residuals"),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "weights"),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "diagnostics"),
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
@@ -810,8 +833,10 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<
                 distance_metric: opts.distance_metric.as_deref(),
                 weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
                 surface_mode: opts.surface_mode.as_deref(),
-                return_se: opts.return_se.unwrap_or(false),
-                return_sorted: opts.return_sorted.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "se"),
+                return_sorted: opts.return_sorted.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "sorted"),
                 cell: opts.cell,
                 interpolation_vertices: opts.interpolation_vertices,
                 boundary_degree_fallback: opts.boundary_degree_fallback,
@@ -824,7 +849,10 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<
             },
         ))?
         .0;
-        if opts.return_gradient.unwrap_or(false) {
+        if opts.return_gradient.unwrap_or(false)
+            || has_output(opts.outputs.as_ref(), "gradient")
+            || has_output(opts.outputs.as_ref(), "derivative")
+        {
             builder = builder.return_gradient();
         }
     }
@@ -848,9 +876,12 @@ fn streaming_options_to_builder(
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_residuals: opts.return_residuals.unwrap_or(false),
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
-                return_diagnostics: opts.return_diagnostics.unwrap_or(false),
+                return_residuals: opts.return_residuals.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "residuals"),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "weights"),
+                return_diagnostics: opts.return_diagnostics.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "diagnostics"),
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
@@ -863,12 +894,16 @@ fn streaming_options_to_builder(
                 interpolation_vertices: opts.interpolation_vertices,
                 boundary_degree_fallback: opts.boundary_degree_fallback,
                 missing: opts.missing.as_deref(),
-                return_se: opts.return_se.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "se"),
                 ..Default::default()
             },
         ))?
         .0;
-        if opts.return_gradient.unwrap_or(false) {
+        if opts.return_gradient.unwrap_or(false)
+            || has_output(opts.outputs.as_ref(), "gradient")
+            || has_output(opts.outputs.as_ref(), "derivative")
+        {
             builder = builder.return_gradient();
         }
     }
@@ -892,7 +927,8 @@ fn online_options_to_builder(
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false),
+                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "weights"),
                 degree: opts.degree.as_deref(),
                 dimensions: opts.dimensions,
                 distance_metric: opts.distance_metric.as_deref(),
@@ -904,12 +940,16 @@ fn online_options_to_builder(
                 missing: opts.missing.as_deref(),
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
-                return_se: opts.return_se.unwrap_or(false),
+                return_se: opts.return_se.unwrap_or(false)
+                    || has_output(opts.outputs.as_ref(), "se"),
                 ..Default::default()
             },
         ))?
         .0;
-        if opts.return_gradient.unwrap_or(false) {
+        if opts.return_gradient.unwrap_or(false)
+            || has_output(opts.outputs.as_ref(), "gradient")
+            || has_output(opts.outputs.as_ref(), "derivative")
+        {
             builder = builder.return_gradient();
         }
     }

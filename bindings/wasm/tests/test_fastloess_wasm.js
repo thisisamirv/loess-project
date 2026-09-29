@@ -58,6 +58,56 @@ test('WASM return_sorted = true returns results sorted ascending by x', () => {
     assert.strictEqual(result.robustness_weights.length, x.length);
 });
 
+test('WASM grouped outputs select Batch, Streaming, Online, and prediction fields', () => {
+    const x = new Float64Array([3, 1, 2, 4, 5, 6, 7, 8, 9, 10]);
+    const y = new Float64Array(Array.from(x, value => 2 * value + Math.sin(value) * 0.1));
+    const result = new fastloess.Loess({
+        fraction: 0.7,
+        surface_mode: 'direct',
+        retain_model: true,
+        return_residuals: true,
+        outputs: ['diagnostics', 'weights', 'gradient', 'se', 'sorted']
+    }).fit(x, y);
+
+    assert.ok(result.diagnostics !== undefined);
+    assert.ok(result.residuals !== undefined);
+    assert.ok(result.robustness_weights !== undefined);
+    assert.ok(result.gradient !== undefined);
+    assert.ok(result.standard_errors !== undefined);
+    assert.deepStrictEqual(Array.from(result.x), Array.from(x).sort((left, right) => left - right));
+
+    const prediction = result.predict(new Float64Array([2.5]), {
+        outputs: ['se', 'derivative']
+    });
+    assert.ok(prediction.standard_errors !== undefined);
+    assert.ok(prediction.derivative !== undefined);
+
+    const streaming = new fastloess.StreamingLoess({
+        fraction: 0.7,
+        surface_mode: 'direct',
+        outputs: ['diagnostics', 'residuals', 'weights', 'derivative', 'se']
+    }, { chunk_size: 10, overlap: 2 });
+    const streamed = streaming.process_chunk(x, y);
+    assert.ok(streamed.diagnostics !== undefined);
+    assert.ok(streamed.residuals !== undefined);
+    assert.ok(streamed.robustness_weights !== undefined);
+    assert.ok(streamed.gradient !== undefined);
+    assert.ok(streamed.standard_errors !== undefined);
+
+    const online = new fastloess.OnlineLoess({
+        fraction: 1,
+        surface_mode: 'direct',
+        outputs: ['weights', 'gradient', 'se']
+    }, { window_capacity: 10, min_points: 3, update_mode: 'full' });
+    let latest;
+    for (let index = 0; index < x.length; index++) {
+        latest = online.add_point(x[index], y[index]);
+    }
+    assert.ok(latest.robustness_weight !== undefined);
+    assert.ok(latest.gradient !== undefined);
+    assert.ok(latest.standard_error !== undefined);
+});
+
 test('WASM streaming smoothing', () => {
     const streamer = new fastloess.StreamingLoess({
         fraction: 0.3

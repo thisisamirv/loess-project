@@ -187,6 +187,62 @@ fn test_string_update_mode() {
     }
 }
 
+#[test]
+fn test_grouped_outputs_forward_to_core_builder() {
+    let mut x: Vec<f64> = (0..20).map(|index| index as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|value| 2.0 * value + 1.0).collect();
+    x.reverse();
+    y.reverse();
+
+    let result = Loess::new()
+        .iterations(0)
+        .surface_mode("direct")
+        .outputs([
+            "diagnostics",
+            "residuals",
+            "weights",
+            "gradient",
+            "se",
+            "sorted",
+        ])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(result.diagnostics.is_some());
+    assert!(result.residuals.is_some());
+    assert!(result.robustness_weights.is_some());
+    assert!(result.gradient.is_some());
+    assert!(result.standard_errors.is_some());
+    assert!(result.x.windows(2).all(|pair| pair[0] <= pair[1]));
+}
+
+#[test]
+fn test_grouped_output_parse_errors_reach_each_builder() {
+    let results = [
+        Loess::new()
+            .outputs(["bogus", "unknown"])
+            .build()
+            .map(|_| ()),
+        StreamingLoess::new()
+            .outputs(["bogus", "unknown"])
+            .build()
+            .map(|_| ()),
+        OnlineLoess::new()
+            .outputs(["bogus", "unknown"])
+            .build()
+            .map(|_| ()),
+    ];
+
+    for result in results {
+        match result {
+            Err(LoessError::ParseErrors(errors)) => assert_eq!(errors.len(), 2),
+            other => panic!("expected two output parse errors, got {other:?}"),
+        }
+    }
+}
+
 // ─── Enum variants still work unchanged ──────────────────────────────────────
 
 #[test]

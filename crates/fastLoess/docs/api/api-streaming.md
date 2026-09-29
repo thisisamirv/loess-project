@@ -93,9 +93,13 @@ Fraction used: 0.5
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
+| `outputs([&str])` | iterable of names | `[]` | Select `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"`/`"derivative"`, `"se"` |
 | `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R2 |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include weights in result |
+| `return_se()` | `bool` | `false` | Include standard errors in the result |
+| `confidence_intervals(T)` | `T: Float` | disabled | Confidence interval level per chunk |
+| `prediction_intervals(T)` | `T: Float` | disabled | Prediction interval level per chunk |
 | `parallel(bool)` | `bool` | `true` | Enable parallel execution across CPU cores |
 | `degree(...)` | `degree` | `"linear"` | Polynomial degree |
 | `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
@@ -110,7 +114,7 @@ Fraction used: 0.5
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
 
-Confidence/prediction intervals, standard errors, cross-validation, and `return_sorted` are Batch-only and not available here; see [API](crate::doc::api) for those.
+Cross-validation and `return_sorted` are Batch-only; Streaming supports standard errors and interval levels.
 
 ## Options
 
@@ -200,9 +204,28 @@ Policy for handling non-finite (NaN/Inf) values within each chunk:
 
 Convergence tolerance for early stopping of robustness iterations. Disabled by default.
 
+### outputs
+
+Select optional results together, or combine names with the existing individual
+setters. `"derivative"` aliases `"gradient"`, which requires the direct surface.
+
+```rust
+use fastLoess::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let _processor = StreamingLoess::new()
+        .surface_mode("direct")
+        .outputs(["diagnostics", "residuals", "weights", "derivative", "se"])
+        .build()?;
+    Ok(())
+}
+```
+
+Unknown names are collected and reported together at `.build()`.
+
 ### return_diagnostics
 
-Populates `LoessResult::diagnostics` with RMSE, MAE, R², and residual_sd. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always `None` here. `false` by default.
+Populates `LoessResult::diagnostics` with RMSE, MAE, R², and residual_sd. Hat-matrix-dependent metrics such as `effective_df`/`aic`/`aicc` may be unavailable for streaming results. `false` by default.
 
 ### return_residuals
 

@@ -30,6 +30,23 @@ export LoessResult, OnlineOutput, Diagnostics, PredictModel, PredictResult
 
 import Base: finalize
 
+function _output_flags(
+	outputs;
+	allowed = ("diagnostics", "residuals", "weights", "gradient", "derivative", "se", "sorted"),
+)
+	selected = String.(outputs)
+	unknown = setdiff(selected, String.(allowed))
+	isempty(unknown) || throw(ArgumentError("Unknown outputs: $(join(unknown, ", "))"))
+	return (
+		diagnostics = "diagnostics" in selected,
+		residuals = "residuals" in selected,
+		weights = "weights" in selected,
+		gradient = "gradient" in selected || "derivative" in selected,
+		se = "se" in selected,
+		sorted = "sorted" in selected,
+	)
+end
+
 # Try to import JLL package first
 try
 	using fastloess_jll
@@ -202,6 +219,8 @@ Evaluate the fitted model at out-of-sample query points not in the training set
 (flattened, `dimensions` values per point).
 
 # Keyword Arguments
+- `outputs::Vector{String} = String[]`: optional output components, including
+	`"se"`, `"gradient"`, and/or `"derivative"`.
 - `return_se::Bool = false`
 - `confidence_level::Union{Float64, Nothing} = nothing`
 - `prediction_level::Union{Float64, Nothing} = nothing`
@@ -213,6 +232,7 @@ Evaluate the fitted model at out-of-sample query points not in the training set
 function predict(
 	model::PredictModel,
 	new_x::Vector{Float64};
+	outputs::Vector{String} = String[],
 	return_se::Bool = false,
 	confidence_level::Union{Float64, Nothing} = nothing,
 	prediction_level::Union{Float64, Nothing} = nothing,
@@ -221,6 +241,10 @@ function predict(
 	max_extrapolation_distance::Union{Float64, Nothing} = nothing,
 	max_neighbor_distance::Union{Float64, Nothing} = nothing,
 )
+	flags = _output_flags(outputs; allowed = ("se", "gradient", "derivative"))
+	return_se = return_se || flags.se
+	return_derivative = return_derivative || flags.gradient
+
 	if model.handle == C_NULL
 		error(
 			"fastloess error: predict() called on an invalid PredictModel (was retain_model set?)",
@@ -576,6 +600,8 @@ Stateful batch LOESS smoother.
 - `boundary_policy::String = "extend"`: Handling of edge effects
 - `confidence_intervals::Float64 = NaN`: Confidence level (e.g., 0.95), NaN to disable
 - `prediction_intervals::Float64 = NaN`: Prediction interval level, NaN to disable
+- `outputs::Vector{String} = String[]`: Grouped optional outputs: `"diagnostics"`,
+  `"residuals"`, `"weights"`, `"gradient"`/`"derivative"`, `"se"`, and `"sorted"`.
 - `return_diagnostics::Bool = false`: Whether to compute RMSE, MAE, R2, etc.
 - `return_residuals::Bool = false`: Whether to include residuals
 - `return_robustness_weights::Bool = false`: Whether to include robustness weights
@@ -671,6 +697,7 @@ mutable struct Loess
 		boundary_policy::String = "extend",
 		confidence_intervals::Float64 = NaN,
 		prediction_intervals::Float64 = NaN,
+		outputs::Vector{String} = String[],
 		return_diagnostics::Bool = false,
 		return_residuals::Bool = false,
 		return_robustness_weights::Bool = false,
@@ -695,6 +722,7 @@ mutable struct Loess
 		retain_model::Bool = false,
 		return_gradient::Bool = false,
 	)
+		flags = _output_flags(outputs)
 		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
 
@@ -707,9 +735,9 @@ mutable struct Loess
 			boundary_policy::Cstring,
 			confidence_intervals::Cdouble,
 			prediction_intervals::Cdouble,
-			Cint(return_diagnostics)::Cint,
-			Cint(return_residuals)::Cint,
-			Cint(return_robustness_weights)::Cint,
+			Cint(return_diagnostics || flags.diagnostics)::Cint,
+			Cint(return_residuals || flags.residuals)::Cint,
+			Cint(return_robustness_weights || flags.weights)::Cint,
 			zero_weight_fallback::Cstring,
 			auto_converge::Cdouble,
 			cv_ptr::Ptr{Cdouble},
@@ -721,8 +749,8 @@ mutable struct Loess
 			Cint(dimensions)::Cint,
 			distance_metric::Cstring,
 			surface_mode::Cstring,
-			Cint(return_se)::Cint,
-			Cint(return_sorted)::Cint,
+			Cint(return_se || flags.se)::Cint,
+			Cint(return_sorted || flags.sorted)::Cint,
 			(
 				weighted_metric_weights !== nothing ? pointer(weighted_metric_weights) :
 				Ptr{Cdouble}(C_NULL)
@@ -732,7 +760,7 @@ mutable struct Loess
 			)::Culong,
 			missing::Cstring,
 			Cint(retain_model)::Cint,
-			Cint(return_gradient)::Cint,
+			Cint(return_gradient || flags.gradient)::Cint,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -896,6 +924,8 @@ Stateful streaming LOESS smoother.
 - `scaling_method::String = "mad"`: Scaling method
 - `boundary_policy::String = "extend"`: Boundary handling
 - `auto_converge::Float64 = NaN`: Auto-convergence tolerance
+- `outputs::Vector{String} = String[]`: Grouped optional outputs: `"diagnostics"`,
+  `"residuals"`, `"weights"`, `"gradient"`/`"derivative"`, and `"se"`.
 - `return_diagnostics::Bool = false`: Compute diagnostics
 - `return_residuals::Bool = false`: Include residuals
 - `return_robustness_weights::Bool = false`: Include weights
@@ -941,6 +971,7 @@ mutable struct StreamingLoess
 		scaling_method::String = "mad",
 		boundary_policy::String = "extend",
 		auto_converge::Float64 = NaN,
+		outputs::Vector{String} = String[],
 		return_diagnostics::Bool = false,
 		return_residuals::Bool = false,
 		return_robustness_weights::Bool = false,
@@ -961,6 +992,10 @@ mutable struct StreamingLoess
 		prediction_intervals::Union{Float64, Nothing} = nothing,
 		return_se::Bool = false,
 	)
+		flags = _output_flags(
+			outputs;
+			allowed = ("diagnostics", "residuals", "weights", "gradient", "derivative", "se"),
+		)
 		# Resolve weighted metric arguments
 		wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
 			weighted_metric_weights, Culong(length(weighted_metric_weights))
@@ -983,9 +1018,9 @@ mutable struct StreamingLoess
 			scaling_method::Cstring,
 			boundary_policy::Cstring,
 			auto_converge::Cdouble,
-			Cint(return_diagnostics)::Cint,
-			Cint(return_residuals)::Cint,
-			Cint(return_robustness_weights)::Cint,
+			Cint(return_diagnostics || flags.diagnostics)::Cint,
+			Cint(return_residuals || flags.residuals)::Cint,
+			Cint(return_robustness_weights || flags.weights)::Cint,
 			zero_weight_fallback::Cstring,
 			merge_strategy::Cstring,
 			Cint(parallel)::Cint,
@@ -999,10 +1034,10 @@ mutable struct StreamingLoess
 			wm_ptr::Ptr{Cdouble},
 			wm_len::Culong,
 			missing::Cstring,
-			Cint(return_gradient)::Cint,
+			Cint(return_gradient || flags.gradient)::Cint,
 			(isnothing(confidence_intervals) ? NaN : Float64(confidence_intervals))::Cdouble,
 			(isnothing(prediction_intervals) ? NaN : Float64(prediction_intervals))::Cdouble,
-			Cint(return_se)::Cint,
+			Cint(return_se || flags.se)::Cint,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL
@@ -1070,6 +1105,8 @@ Stateful online LOESS smoother.
 - `boundary_policy::String = "extend"`: Boundary handling
 - `update_mode::String = "incremental"`: Update strategy ("full" or "incremental")
 - `auto_converge::Float64 = NaN`: Auto-convergence tolerance
+- `outputs::Vector{String} = String[]`: Grouped optional outputs: `"weights"`,
+  `"gradient"`/`"derivative"`, and `"se"`.
 - `return_robustness_weights::Bool = false`: Include weights
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling
 - `degree::String = "linear"`: Polynomial degree
@@ -1113,6 +1150,7 @@ mutable struct OnlineLoess
 		boundary_policy::String = "extend",
 		update_mode::String = "incremental",
 		auto_converge::Float64 = NaN,
+		outputs::Vector{String} = String[],
 		return_robustness_weights::Bool = false,
 		zero_weight_fallback::String = "use_local_mean",
 		degree::String = "linear",
@@ -1129,6 +1167,7 @@ mutable struct OnlineLoess
 		prediction_intervals::Union{Float64, Nothing} = nothing,
 		return_se::Bool = false,
 	)
+		flags = _output_flags(outputs; allowed = ("weights", "gradient", "derivative", "se"))
 		# Resolve weighted metric arguments
 		wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
 			weighted_metric_weights, Culong(length(weighted_metric_weights))
@@ -1152,7 +1191,7 @@ mutable struct OnlineLoess
 			boundary_policy::Cstring,
 			update_mode::Cstring,
 			auto_converge::Cdouble,
-			Cint(return_robustness_weights)::Cint,
+			Cint(return_robustness_weights || flags.weights)::Cint,
 			zero_weight_fallback::Cstring,
 			degree::Cstring,
 			Cint(dimensions)::Cint,
@@ -1164,10 +1203,10 @@ mutable struct OnlineLoess
 			wm_ptr::Ptr{Cdouble},
 			wm_len::Culong,
 			missing::Cstring,
-			Cint(return_gradient)::Cint,
+			Cint(return_gradient || flags.gradient)::Cint,
 			(isnothing(confidence_intervals) ? NaN : Float64(confidence_intervals))::Cdouble,
 			(isnothing(prediction_intervals) ? NaN : Float64(prediction_intervals))::Cdouble,
-			Cint(return_se)::Cint,
+			Cint(return_se || flags.se)::Cint,
 		)::Ptr{Cvoid}
 
 		if handle == C_NULL

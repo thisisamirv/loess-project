@@ -16,12 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Added `LoessBuilder::outputs(names)` as a grouped replacement for individual output toggles; unknown names are accumulated and reported together by `.build()`.
 - Added `return_gradient` to the Batch, Streaming, and Online adapter builders, exposing each point's local-fit gradient (`LoessResult::gradient` / `OnlineOutput::gradient`) at no extra computation cost. Only populated when `surface_mode` is `"direct"`. `false` by default.
 - Added `retain_model` and `Predict::call()` for out-of-sample prediction, with optional SE, interval, derivative, and extrapolation settings.
 - Added `return_se`/`confidence_intervals`/`prediction_intervals` to the Streaming and Online adapters, mirroring Batch. Online requires `update_mode("full")`; using them under the default `"incremental"` mode now fails fast at `.build()` with a new `LoessError::StandardErrorRequiresFullUpdateMode`.
 
 **fastLoess:**
 
+- Added `outputs(names)` to the `Loess`, `StreamingLoess`, and `OnlineLoess` wrappers, forwarding grouped output selection and deferred unknown-name errors to the core builder.
 - Added parallel `custom_gradient_pass` and predict passes for the `return_gradient` option and `Predict::call()`.
 - Added parallel builder setters for `return_se`, `confidence_intervals`, and `prediction_intervals` to the Streaming and Online adapters.
 
@@ -34,12 +36,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Added `Outputs []string` to `Options`, `StreamingOptions`, `OnlineOptions`, and `PredictOptions` for grouped optional result selection; existing boolean output fields remain supported.
 - Added `RetainModel` and `Result.PredictModel.Predict(newX, options)` for out-of-sample prediction.
 - Added `ReturnGradient` to `Options`, `StreamingOptions`, and `OnlineOptions`.
 - Added `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSe` to `StreamingOptions` and `OnlineOptions`. `OnlineOptions` requires `UpdateMode = "full"` or errors. New bound fields on `PointResult`.
 
 **Java:**
 
+- Added `outputs(String...)` to `Options.Builder`, `StreamingOptions.Builder`, `OnlineOptions.Builder`, and `PredictOptions.Builder` for grouped optional result selection.
 - Added `retainModel` and `Result.predictModel()` (a `PredictModel` class) for out-of-sample prediction.
 - Added `returnGradient(boolean)` to `Options` and `OnlineOptions`.
 - Added `confidenceIntervals(double)`/`predictionIntervals(double)`/`returnSe(boolean)` to `StreamingOptions` and `OnlineOptions`. `OnlineOptions` requires `updateMode("full")` or throws. New accessors on `PointResult`.
@@ -47,6 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
+- Added `outputs=[...]` to `Loess`, `StreamingLoess`, `OnlineLoess`, and `predict` for grouped optional result selection; existing individual output keywords remain supported.
 - Added `retain_model` and `predict(model, new_x; kwargs...)` for out-of-sample prediction.
 - Added `return_gradient` to `Loess`, `StreamingLoess`, and `OnlineLoess`.
 - Added `confidence_intervals`/`prediction_intervals`/`return_se` to `StreamingLoess` and `OnlineLoess`. `OnlineLoess` requires `update_mode="full"` or errors. New bound fields on `OnlineOutput`.
@@ -54,12 +59,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection alongside existing booleans.
 - Added `retain_model` and `LoessResult.predict(newX, options)` for out-of-sample prediction.
 - Added `return_gradient` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
 - Added `confidence_intervals`/`prediction_intervals`/`return_se` to `StreamingSmoothOptions` and `OnlineSmoothOptions`. Online requires `update_mode: "full"` or throws. New `OnlineOutput` bound fields.
 
 **Python:**
 
+- Added `outputs` sequences to `Loess`, `StreamingLoess`, `OnlineLoess`, and prediction for grouped optional result selection alongside existing booleans.
 - Added `retain_model` and `LoessResult.predict(new_x, ...)` (a new `PredictOutput` class) for out-of-sample prediction.
 - Added `return_gradient` to `Loess`, `StreamingLoess`, and `OnlineLoess`, exposing the per-point gradient via `LoessResult.gradient`/`OnlineOutput.gradient`. Only takes effect with `surface_mode="direct"`.
 - Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLoess` and `OnlineLoess`. `OnlineLoess` requires `update_mode="full"` or raises `ValueError`. New `OnlineOutput` bound fields.
@@ -67,6 +74,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Added `outputs` to `Loess()`, `StreamingLoess()`, `OnlineLoess()`, and `predict.Loess()` for grouped optional results with mode-specific name validation; existing `return_*` arguments remain supported.
 - Added `retain_model` and a `predict.Loess()` S3 method for out-of-sample prediction.
 - Added `return_gradient` to `Loess()`, `StreamingLoess()`, and `OnlineLoess()`.
 - Added `confidence_intervals`/`prediction_intervals`/`return_se` to `StreamingLoess()` and `OnlineLoess()`. `OnlineLoess()` requires `update_mode = "full"` or errors. New bound fields on `add_point()`'s result.
@@ -76,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection alongside existing booleans.
 - Added `retain_model` and `LoessResult.predict(newX, options)` for out-of-sample prediction.
 - Added `return_gradient` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
 - Added `confidence_intervals`/`prediction_intervals`/`return_se` to Streaming and Online options; Online requires `update_mode: "full"`. Added the corresponding `OnlineOutput` bound fields and TypeScript types.
@@ -102,6 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **C++:**
 
+- Breaking change: replaced the individual output booleans in `LoessOptions`, `OnlineOptions`, and `PredictOptions` with grouped `outputs` vectors; interval levels remain separate fields.
 - C++ musl release jobs now build dynamic x86_64 and ARM64 shared libraries, allowing the musl assets to be published reliably.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Declared the public wrapper's C++17 requirement and represented unavailable diagnostics as empty `std::optional<double>` values instead of NaN sentinels.
@@ -148,6 +158,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Used standard ceiling division for multivariate normalization trimming so strict Clippy passes without changing the trim count.
 - Cleaned up `loess_rs::prelude` of accidentally-leaked internals (`LoessBuilder`, adapter markers) — use the `Loess`/`StreamingLoess`/`OnlineLoess` type aliases directly.
 - Matched LOWESS's effective-zero MAR stop and removed the absolute bisquare scale floor, while retaining the centered-MAD fallback.
 - `make loess-rs-dev` now also runs `cargo test --doc`, previously never checked by any `make` target.

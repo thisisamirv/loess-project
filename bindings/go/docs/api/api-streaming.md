@@ -28,6 +28,7 @@ opts.Overlap = 200
 | `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
 | `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `AutoConverge` | `*float64` | `nil` (disabled) | Auto-convergence tolerance |
+| `Outputs` | `[]string` | `nil` | Optional fields: `diagnostics`, `residuals`, `weights`, `derivative`/`gradient`, and `se`. |
 | `ReturnDiagnostics` | `bool` | `false` | Compute RMSE, MAE, R2 |
 | `ReturnResiduals` | `bool` | `false` | Include residuals in result |
 | `ReturnRobustnessWeights` | `bool` | `false` | Include weights in result |
@@ -58,7 +59,7 @@ opts.Overlap = 200
 
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
 
-Confidence/prediction intervals and standard errors are computed per chunk and merged across overlap boundaries via `MergeStrategy`, same as `Y`. Cross-validation and `ReturnSorted` are Batch-only and not available here; see [API](api.md) for those.
+Confidence/prediction intervals and standard errors are computed per chunk and merged across overlap boundaries via `MergeStrategy`, same as `Y`. Cross-validation and the `"sorted"` output are Batch-only and not available here; see [API](api.md) for those. Existing individual output booleans remain supported alongside `Outputs`.
 
 ## `fastloess.NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error)`
 

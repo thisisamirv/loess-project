@@ -30,7 +30,8 @@ OnlineLoess(
   cell = NULL,
   interpolation_vertices = NULL,
   boundary_degree_fallback = NULL,
-  missing = "error"
+  missing = "error",
+  outputs = NULL
 )
 }
 \arguments{
@@ -103,6 +104,10 @@ is set) while \code{update_mode} is left at its default \code{"incremental"}.
 \item{return_se}{Include the standard error for the latest point in the
 result. Same \code{update_mode = "full"} requirement as
 \code{confidence_intervals}. Default: \code{FALSE}.}
+
+\item{outputs}{Optional character vector selecting \code{"weights"},
+\code{"gradient"} (or \code{"derivative"}), and \code{"se"}.
+Combined with individual flags; \code{"se"} requires full update mode.}
 
 \item{degree}{Local polynomial degree: \code{"constant"}, \code{"linear"}
 (default), \code{"quadratic"}, \code{"cubic"}, or \code{"quartic"}.}

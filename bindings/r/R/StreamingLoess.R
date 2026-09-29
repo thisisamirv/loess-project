@@ -25,6 +25,9 @@
 #' @srrstats {RE2.0} Kernel, robustness, boundary, and scaling configurable.
 #'
 #' @inheritParams Loess
+#' @param outputs Optional character vector selecting \code{"diagnostics"},
+#'   \code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
+#'   \code{"derivative"}), and \code{"se"}. Combined with individual flags.
 #' @param chunk_size Number of data points per processing chunk, at least 10.
 #'   Default: 5000.
 #' @param overlap Number of overlapping points between consecutive chunks,
@@ -83,10 +86,22 @@ StreamingLoess <- function(
     cell = NULL,
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL,
-    missing = "error"
+    missing = "error",
+    outputs = NULL
 ) {
     reject_extra_positional_args(sys.call(), "chunk_size")
     validate_params(fraction = fraction, chunk_size = chunk_size)
+    flags <- parse_outputs_flags(
+        outputs,
+        c("diagnostics", "residuals", "weights", "gradient", "derivative", "se")
+    )
+    return_diagnostics <- return_diagnostics || flags[["diagnostics"]]
+    return_residuals <- return_residuals || flags[["residuals"]]
+    return_robustness_weights <- return_robustness_weights || flags[["weights"]]
+    return_gradient <- return_gradient ||
+        flags[["gradient"]] ||
+        flags[["derivative"]]
+    return_se <- return_se || flags[["se"]]
     handle <- do.call(RStreamingLoess$new, env_args(streaming_params))
 
     structure(

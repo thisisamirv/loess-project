@@ -36,7 +36,8 @@ Loess(
   boundary_degree_fallback = NULL,
   cv_seed = NULL,
   missing = "error",
-  retain_model = FALSE
+  retain_model = FALSE,
+  outputs = NULL
 )
 }
 \arguments{
@@ -131,6 +132,11 @@ ascending by \code{x} instead of in the original input order. Default:
 \code{FALSE}. To get both orderings without re-fitting, sort the default
 (unsorted) result client-side (e.g. \code{order(result$x)}) rather than
 calling \code{fit()} twice.}
+
+\item{outputs}{Optional character vector selecting \code{"diagnostics"},
+\code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
+\code{"derivative"}), \code{"se"}, and \code{"sorted"}. Combined with
+the corresponding \code{return_*} arguments; \code{NULL} selects none.}
 
 \item{weighted_metric_weights}{Numeric vector of per-dimension weights.
 Length must equal \code{dimensions}. Only used when

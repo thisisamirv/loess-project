@@ -100,7 +100,7 @@
 //!     .distance_metric("euclidean")                   // Distance metric
 //!     .weight_function("tricube")                     // Kernel function
 //!     .robustness_method("bisquare")                  // Outlier handling
-//!     .surface_mode("direct")                         // Required for return_gradient()
+//!     .surface_mode("direct")                         // Required for per-point gradients
 //!     .boundary_policy("extend")                       // Boundary handling
 //!     .boundary_degree_fallback(true)                  // Boundary degree fallback
 //!     .scaling_method("mad")                          // Scaling method
@@ -112,12 +112,14 @@
 //!     .auto_converge(1e-6)                             // Auto-convergence threshold
 //!     .confidence_intervals(0.95)                      // 95% confidence intervals
 //!     .prediction_intervals(0.95)                      // 95% prediction intervals
-//!     .return_diagnostics()                            // Fit quality metrics
-//!     .return_residuals()                              // Include residuals
-//!     .return_robustness_weights()                     // Include robustness weights
-//!     .return_se()                                     // Enable standard error computation
-//!     .return_gradient()                               // Include per-point local fit gradient
-//!     .return_sorted()                                 // Sort output ascending by x
+//!     .outputs([
+//!         "se",                                        // Standard errors
+//!         "diagnostics",                               // Fit quality metrics
+//!         "residuals",                                 // Include residuals
+//!         "weights",                                   // Include robustness weights
+//!         "gradient",                                  // Include per-point local fit gradient
+//!         "sorted"                                     // Sort output ascending by x
+//!     ])
 //!     .retain_model(true)                              // Retain state for out-of-sample predict()
 //!     .cv_method("kfold")                              // Case-insensitive: "kfold" or "loocv"
 //!     .cv_k(5)                                          // Number of folds for k-fold CV
@@ -286,6 +288,12 @@
 //!   in fitted values falls below `tol`. Disabled by default.
 //!
 //! ### Output Options
+//!
+//! - **`outputs(names)`** — Select optional results together: `"diagnostics"`, `"residuals"`,
+//!   `"weights"`, `"gradient"` (alias `"derivative"`), `"se"`, and `"sorted"`. Per-point
+//!   gradients require `surface_mode("direct")`. Unknown names are reported together by
+//!   `build()`. The individual `return_*()` methods remain available and combine with these
+//!   selections.
 //!
 //! - **`return_diagnostics()`** — Include fit-quality diagnostics in the result (RMSE, MAE,
 //!   R2, AIC, effective degrees of freedom, residual SD, etc.).

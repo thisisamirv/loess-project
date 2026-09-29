@@ -33,7 +33,8 @@ StreamingLoess(
   cell = NULL,
   interpolation_vertices = NULL,
   boundary_degree_fallback = NULL,
-  missing = "error"
+  missing = "error",
+  outputs = NULL
 )
 }
 \arguments{
@@ -106,6 +107,10 @@ per-chunk computation and overlap-merging as \code{confidence_intervals}.
 \item{return_se}{Include standard errors in the result, computed per chunk
 and merged across overlap boundaries via \code{merge_strategy}. Default:
 \code{FALSE}.}
+
+\item{outputs}{Optional character vector selecting \code{"diagnostics"},
+\code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
+\code{"derivative"}), and \code{"se"}. Combined with individual flags.}
 
 \item{merge_strategy}{Strategy for reconciling overlapping chunk regions:
 \code{"weighted_average"} (default; alias: \code{"weighted"}),

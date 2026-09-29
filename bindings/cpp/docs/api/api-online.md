@@ -114,7 +114,7 @@ int main() {
 | `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
 | `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
-| `return_robustness_weights` | `bool` | `false` | Include robustness weight in result |
+| `outputs` | `std::vector<std::string>` | `{}` | Optional fields: `weights`, `gradient`/`derivative`, `se` |
 | `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
@@ -126,12 +126,10 @@ int main() {
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `std::string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
-| `return_gradient` | `bool` | `false` | Include the latest point's local fit gradient in the result (`surface_mode = "direct"` only) |
 | `confidence_intervals` | `double` | `NaN` | Confidence level for confidence intervals; requires `update_mode == "full"` |
 | `prediction_intervals` | `double` | `NaN` | Confidence level for prediction intervals; requires `update_mode == "full"` |
-| `return_se` | `bool` | `false` | Include standard error in result; requires `update_mode == "full"` |
 
-Cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [fastLoess](api.md) for those. Online always runs sequentially.
+Cross-validation, the `"sorted"` and `"diagnostics"` outputs, and `parallel` are Batch-only and not available here. Online residuals are always present; the `"residuals"` output name is not supported. Online always runs sequentially.
 
 ## Options
 
@@ -219,12 +217,17 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point
 
 Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
-### return_robustness_weights
+### outputs
 
-Include the robustness weight for the latest point (from the last robustness iteration) in the result.
+Select optional fields in `OnlineOutput` by name. An empty vector (default) requests only the smoothed value.
 
-- `false` (default) — leaves `robustness_weight()` as NaN
-- `true` — populates `robustness_weight()`
+| Name | Result |
+| --- | --- |
+| `"weights"` | Robustness weight for the latest point |
+| `"gradient"` or `"derivative"` | Latest point's local fit gradient; requires `surface_mode = "direct"` |
+| `"se"` | Standard error; requires `update_mode = "full"` |
+
+Confidence and prediction intervals remain controlled by their numeric level fields and also require `update_mode = "full"`.
 
 ### degree
 
@@ -314,28 +317,17 @@ Minimum number of points required before `add_point()` starts returning smoothed
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
 
-### return_gradient
-
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput::gradient()` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — the first `add_point()` call returns an `Expected` with `has_value() == false` instead of silently leaving `gradient()` empty if requested under the default `"interpolation"` mode. `false` by default.
-
 ### confidence_intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `update_mode == "full"`. Construction fails if set (or `return_se`/`prediction_intervals` is set) while `update_mode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `NaN` (default) disables confidence intervals.
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `update_mode == "full"`. Construction fails if set (or `outputs` contains `"se"` or `prediction_intervals` is set) while `update_mode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `NaN` (default) disables confidence intervals.
 
 ### prediction_intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `update_mode == "full"` requirement as `confidence_intervals`. `NaN` (default) disables prediction intervals.
-
-### return_se
-
-Include the standard error for the latest point in the result (`OnlineOutput::standard_error()`). Same `update_mode == "full"` requirement as `confidence_intervals`.
-
-- `false` (default) — leaves `standard_error()` as `NaN`
-- `true` — populates `standard_error()`
 
 ## Result Structure
 
@@ -347,12 +339,12 @@ Returned (inside `Expected`) by `add_point()`. Check `has_value()` before readin
 | --- | --- | --- |
 | `has_value()` | `bool` | `false` while window fills; `true` when output is ready |
 | `y()` | `double` | Smoothed value for the latest point |
-| `standard_error()` | `double` | Standard error, if `return_se`/`confidence_intervals`/`prediction_intervals` was set and `update_mode == "full"` (`NaN` otherwise) |
-| `residual()` | `double` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
-| `robustness_weight()` | `double` | Robustness weight, if `return_robustness_weights` was set (`NaN` otherwise) |
+| `standard_error()` | `double` | Standard error, if `outputs` contains `"se"` or an interval level was set and `update_mode == "full"` (`NaN` otherwise) |
+| `residual()` | `double` | Residual y − smoothed; always present |
+| `robustness_weight()` | `double` | Robustness weight, if `outputs` contains `"weights"` (`NaN` otherwise) |
 | `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |
 | `confidence_lower()` / `confidence_upper()` | `double` | Confidence interval bounds, if `confidence_intervals` was set and `update_mode == "full"` (`NaN` otherwise) |
 | `prediction_lower()` / `prediction_upper()` | `double` | Prediction interval bounds, if `prediction_intervals` was set and `update_mode == "full"` (`NaN` otherwise) |
-| `gradient()` | `std::vector<double>` | Latest point's local fit gradient (`dimensions` values), if `return_gradient` was set (empty otherwise) |
+| `gradient()` | `std::vector<double>` | Latest point's local fit gradient (`dimensions` values), if `outputs` contains `"gradient"` or `"derivative"` (empty otherwise) |
 
-There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
+There is no `Diagnostics` object for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

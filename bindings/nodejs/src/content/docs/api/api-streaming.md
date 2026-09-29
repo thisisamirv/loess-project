@@ -92,6 +92,7 @@ Fraction used: 0.5
 | `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling strategy |
 | `missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
+| `outputs` | `string[]` | `[]` | Optional fields: `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"` (or `"derivative"`), `"se"`; combines with individual flags |
 | `return_diagnostics` | `boolean` | `false` | Include diagnostics in result |
 | `return_residuals` | `boolean` | `false` | Include residuals in result |
 | `return_robustness_weights` | `boolean` | `false` | Include weights in result |

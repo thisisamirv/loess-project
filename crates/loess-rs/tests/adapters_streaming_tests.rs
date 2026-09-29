@@ -1045,4 +1045,3 @@ fn test_streaming_confidence_and_prediction_intervals_multi_chunk() {
     assert!(remaining.confidence_lower.is_some());
     assert!(remaining.prediction_lower.is_some());
 }
-

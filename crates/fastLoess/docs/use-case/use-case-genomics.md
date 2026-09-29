@@ -77,7 +77,7 @@ fn main() -> Result<(), LoessError> {
     let model = Loess::new()
         .fraction(0.05)
         .iterations(5)
-        .return_residuals()
+        .outputs(["residuals"])
         .build()?;
 
     let result = model.fit(&positions, &observed)?;

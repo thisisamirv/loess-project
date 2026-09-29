@@ -58,6 +58,7 @@ print(result)
 | `auto_converge` | `float` | `None` | Auto-convergence tolerance |
 | `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95) |
+| `outputs` | `Sequence[str] \| None` | `None` | Optional fields: `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"` (or `"derivative"`), `"se"`, `"sorted"`; combines with individual flags |
 | `return_diagnostics` | `bool` | `False` | Include diagnostics in result |
 | `return_residuals` | `bool` | `False` | Include residuals in result |
 | `return_robustness_weights` | `bool` | `False` | Include weights in result |

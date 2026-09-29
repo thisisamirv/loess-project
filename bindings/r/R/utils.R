@@ -123,6 +123,36 @@ reject_extra_positional_args <- function(call, boundary_name) {
     }
 }
 
+#' Expand selected output names into logical flags
+#' @param outputs A character vector or NULL.
+#' @param valid Allowed output names.
+#' @return A named logical vector for the allowed outputs.
+#' @noRd
+parse_outputs_flags <- function(outputs, valid) {
+    if (is.null(outputs)) {
+        result <- rep(FALSE, length(valid))
+        names(result) <- valid
+        return(result)
+    }
+    if (!is.character(outputs)) {
+        stop("`outputs` must be a character vector or NULL", call. = FALSE)
+    }
+    unknown <- setdiff(outputs, valid)
+    if (length(unknown) > 0L) {
+        stop(
+            sprintf(
+                "Invalid `outputs` value(s): %s. Allowed: %s",
+                toString(sprintf("'%s'", unknown)),
+                toString(sprintf("'%s'", valid))
+            ),
+            call. = FALSE
+        )
+    }
+    result <- valid %in% outputs
+    names(result) <- valid
+    result
+}
+
 #' Validate constructor parameters
 #'
 #' @param fraction Smoothing fraction

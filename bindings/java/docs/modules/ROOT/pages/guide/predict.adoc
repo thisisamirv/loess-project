@@ -20,6 +20,7 @@ It always fits exactly, unlike `fit`'s default `surfaceMode = "interpolation"` â
 |===
 |Setting |Type |Default |Description
 
+|`outputs(String...)` |`String...` |empty |Select `se` and/or `gradient`/`derivative`.
 |`returnSe` |`boolean` |`false` |Include standard errors in the output.
 |`confidenceLevel` |`double` |`NaN` |Confidence interval coverage level (e.g. `0.95`; NaN to disable).
 |`predictionLevel` |`double` |`NaN` |Prediction interval coverage level (e.g. `0.95`; NaN to disable).
@@ -28,6 +29,10 @@ It always fits exactly, unlike `fit`'s default `surfaceMode = "interpolation"` â
 |`maxExtrapolationDistance` |`double` |`NaN` |Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring (NaN to disable).
 |`maxNeighborDistance` |`double` |`NaN` |Max allowed distance to the farthest point in a query's k-nearest-neighbor window before erroring (NaN to disable).
 |===
+
+=== outputs
+
+Select prediction components using `"se"`, `"gradient"`, and/or `"derivative"`. The individual `returnSe` and `returnDerivative` methods remain supported.
 
 === returnSe
 
@@ -96,8 +101,7 @@ try (Loess model = new Loess(options)) {
 [source,java]
 ----
 PredictOptions options = PredictOptions.builder()
-        .returnSe(true)
-        .returnDerivative(true)
+    .outputs("se", "derivative")
         .build();
 PredictResult prediction = predictModel.predict(new double[] { 2.5 }, options);
 ----

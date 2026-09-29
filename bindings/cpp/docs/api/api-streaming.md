@@ -137,9 +137,7 @@ int main() {
 | `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
 | `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
-| `return_diagnostics` | `bool` | `false` | Compute RMSE, MAE, R2 |
-| `return_residuals` | `bool` | `false` | Include residuals in result |
-| `return_robustness_weights` | `bool` | `false` | Include weights in result |
+| `outputs` | `std::vector<std::string>` | `{}` | Optional fields: `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, `se` |
 | `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
@@ -148,15 +146,13 @@ int main() {
 | `cell` | `double` | `NaN` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
 | `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = unset/library default, 0 = false, 1 = true) |
-| `return_gradient` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 | `confidence_intervals` | `double` | `NaN` | Confidence level for confidence intervals, computed per chunk and merged across overlap boundaries via `merge_strategy` |
 | `prediction_intervals` | `double` | `NaN` | Confidence level for prediction intervals; same per-chunk computation and overlap-merging as `confidence_intervals` |
-| `return_se` | `bool` | `false` | Include standard errors in the result, computed per chunk and merged across overlap boundaries via `merge_strategy` |
 | `chunk_size` | `int` | `5000` | Data chunk size |
 | `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `std::string` | `"weighted_average"` | Strategy for blending overlap regions |
 
-Cross-validation and `return_sorted` are Batch-only; setting these inherited fields has no effect on `StreamingLoess` — see [fastLoess](api.md) for those.
+Cross-validation and the `"sorted"` output are Batch-only; `StreamingLoess` ignores `"sorted"` — see [fastLoess](api.md) for those.
 
 ## Options
 
@@ -246,26 +242,19 @@ Policy for handling non-finite (NaN/Inf) values within each chunk:
 
 Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
 
-### return_diagnostics
+### outputs
 
-Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always empty here.
+Select optional result fields by name. An empty vector (default) requests only fitted values.
 
-- `false` (default) — leaves `diagnostics()` empty
-- `true` — populates `diagnostics()`
+| Name | Result |
+| --- | --- |
+| `"diagnostics"` | Fit metrics (RMSE, MAE, R², residual SD); AIC/AICc/effective degrees of freedom are unavailable in Streaming |
+| `"residuals"` | Per-point residuals (`y - fitted`) |
+| `"weights"` | Final per-point robustness weights |
+| `"gradient"` or `"derivative"` | Per-point local fit gradient; requires `surface_mode = "direct"` |
+| `"se"` | Standard errors, computed per chunk and merged across overlap boundaries via `merge_strategy` |
 
-### return_residuals
-
-Include per-point residuals (`y - fitted`) in the result.
-
-- `false` (default) — leaves `residuals()` empty
-- `true` — populates `residuals()`
-
-### return_robustness_weights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `robustness_weights()` empty
-- `true` — populates `robustness_weights()`
+Confidence and prediction intervals remain controlled by their numeric level fields and include standard errors automatically.
 
 ### degree
 
@@ -338,10 +327,6 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `1` — falls back to a lower degree at boundaries
 - `0` — raises an error instead of silently falling back
 
-### return_gradient
-
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `gradient()` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — `process_chunk()`/`finalize()` return an `Expected` with `has_value() == false` instead of silently leaving `gradient()` empty if requested under the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
-
 ### confidence_intervals
 
 *See: [Intervals](../guide/intervals.md)*
@@ -353,13 +338,6 @@ Confidence level for the confidence interval around the mean response (e.g. `0.9
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `confidence_intervals`. `NaN` (default) disables prediction intervals.
-
-### return_se
-
-Include standard errors in the result (`standard_errors()`), computed per chunk and merged across overlap boundaries via `merge_strategy`.
-
-- `false` (default) — leaves `standard_errors()` empty
-- `true` — populates `standard_errors()`
 
 ### chunk_size
 
@@ -397,14 +375,14 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `y_vector()` | `std::vector<double>` | Smoothed y values |
 | `fraction_used()` | `double` | Fraction used |
 | `iterations_used()` | `int` | Robustness iterations actually performed (-1 = N/A) |
-| `standard_errors()` | `std::vector<double>` | Standard errors, if `return_se`/`confidence_intervals`/`prediction_intervals` was set (empty otherwise) |
+| `standard_errors()` | `std::vector<double>` | Standard errors, if `outputs` contains `"se"` or an interval level was set (empty otherwise) |
 | `confidence_lower()`, `confidence_upper()` | `std::vector<double>` | Confidence interval bounds, if `confidence_intervals` was set (empty otherwise) |
 | `prediction_lower()`, `prediction_upper()` | `std::vector<double>` | Prediction interval bounds, if `prediction_intervals` was set (empty otherwise) |
-| `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`; empty if not) |
-| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not) |
+| `residuals()` | `std::vector<double>` | Residuals (if `outputs` contains `"residuals"`; empty if not) |
+| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `outputs` contains `"weights"`; empty if not) |
 | `cv_scores()` | `std::vector<double>` | Always empty (Batch only) |
-| `diagnostics()` | `Diagnostics` | Fit metrics — check `has_value()` (if `return_diagnostics`) |
-| `gradient()` | `std::vector<double>` | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode = "direct"` only; empty if not computed) |
+| `diagnostics()` | `Diagnostics` | Fit metrics — check `has_value()` (if `outputs` contains `"diagnostics"`) |
+| `gradient()` | `std::vector<double>` | Per-point local fit gradient, flattened (if `outputs` contains `"gradient"` or `"derivative"`, `surface_mode = "direct"` only; empty if not computed) |
 | `dimensions()` | `int` | Number of predictor dimensions |
 
 ### fastloess::Diagnostics

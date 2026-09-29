@@ -20,6 +20,7 @@ Requires `retain_model=True` on the constructor before `fit()`, otherwise `predi
 
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
+| `outputs` | `Sequence[str] \| None` | `None` | Optional fields: `"se"`, `"gradient"` (or `"derivative"`); combines with individual flags |
 | `return_se` | `bool` | `False` | Include standard errors in the output |
 | `confidence_level` | `float \| None` | `None` | Confidence interval coverage level (e.g. `0.95`) |
 | `prediction_level` | `float \| None` | `None` | Prediction interval coverage level (e.g. `0.95`) |

@@ -78,6 +78,9 @@ type StreamingOptions struct {
 	// AutoConverge is the convergence tolerance for early stopping of
 	// robustness iterations. Nil disables early stopping.
 	AutoConverge *float64
+	// Outputs selects optional result components: "diagnostics", "residuals",
+	// "weights", "derivative" (or "gradient"), and "se".
+	Outputs []string
 
 	// ReturnDiagnostics requests fit-quality metrics (RMSE, MAE, R-squared, AIC, etc.).
 	ReturnDiagnostics bool
@@ -191,9 +194,9 @@ func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
 			C.double(opts.Fraction),
 			C.int(opts.Iterations),
 			wf, rm, sm, bp,
-			boolToCInt(opts.ReturnDiagnostics),
-			boolToCInt(opts.ReturnResiduals),
-			boolToCInt(opts.ReturnRobustnessWeights),
+			boolToCInt(opts.ReturnDiagnostics || hasOutput(opts.Outputs, "diagnostics")),
+			boolToCInt(opts.ReturnResiduals || hasOutput(opts.Outputs, "residuals")),
+			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			boolToCInt(opts.Parallel),
@@ -209,10 +212,10 @@ func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
 			missing,
-			boolToCInt(opts.ReturnGradient),
+			boolToCInt(opts.ReturnGradient || hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
 			optFloat(confidenceIntervals, confidenceIntervalsSet),
 			optFloat(predictionIntervals, predictionIntervalsSet),
-			boolToCInt(opts.ReturnSe),
+			boolToCInt(opts.ReturnSe || hasOutput(opts.Outputs, "se")),
 		)
 		if ptr == nil {
 			errMsg = lastError()

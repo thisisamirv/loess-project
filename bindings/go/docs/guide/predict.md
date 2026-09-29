@@ -21,6 +21,7 @@ It always fits exactly, unlike `Fit`'s default `SurfaceMode = "interpolation"` â
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
+| `Outputs` | `[]string` | `nil` | Select `se` and/or `derivative`/`gradient`. |
 | `ReturnSE` | `bool` | `false` | Include standard errors in the output |
 | `ConfidenceLevel` | `*float64` | `nil` | Confidence interval coverage level (e.g. `0.95`) |
 | `PredictionLevel` | `*float64` | `nil` | Prediction interval coverage level (e.g. `0.95`) |
@@ -28,6 +29,8 @@ It always fits exactly, unlike `Fit`'s default `SurfaceMode = "interpolation"` â
 | `Extrapolation` | `string` | `"clamp"` | Behavior for query points outside the training range, on any dimension |
 | `MaxExtrapolationDistance` | `*float64` | `nil` | Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring |
 | `MaxNeighborDistance` | `*float64` | `nil` | Max allowed distance to the farthest point in a query's k-nearest-neighbor window before erroring |
+
+`Outputs` groups prediction fields; the individual `ReturnSE` and `ReturnDerivative` compatibility fields remain supported.
 
 ### ReturnSE
 
@@ -92,8 +95,7 @@ fmt.Println(prediction.Y)
 
 ```go
 prediction, _ := result.PredictModel.Predict([]float64{2.5}, fastloess.PredictOptions{
- ReturnSE:         true,
- ReturnDerivative: true,
+ Outputs: []string{"se", "derivative"},
 })
 fmt.Println(prediction.Y, prediction.StandardErrors, prediction.Derivative)
 ```

@@ -74,6 +74,7 @@ Smoothed y: 0.22659245357374927
 | `zero_weight_fallback` | `string` | `"use_local_mean"` | Zero-weight handling strategy |
 | `missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
+| `outputs` | `string[]` | `[]` | Optional fields: `"weights"`, `"gradient"` (or `"derivative"`), `"se"`; combines with individual flags |
 | `return_robustness_weights` | `boolean` | `false` | Include robustness weight in result |
 | `degree` | `string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `number` | `1` | Number of predictor dimensions |

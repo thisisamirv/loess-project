@@ -20,17 +20,16 @@ Requires `retain_model = true` on `LoessOptions` before `fit()`; obtain the `Pre
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
-| `return_se` | `bool` | `false` | Include standard errors in the output |
+| `outputs` | `std::vector<std::string>` | `{}` | Optional prediction fields: `se`, `gradient`/`derivative` |
 | `confidence_level` | `double` | `NaN` | Confidence interval coverage level (e.g. `0.95`; NaN to disable) |
 | `prediction_level` | `double` | `NaN` | Prediction interval coverage level (e.g. `0.95`; NaN to disable) |
-| `return_derivative` | `bool` | `false` | Include the local fit's gradient (`dimensions` values per point, flattened) |
 | `extrapolation` | `std::string` | `"clamp"` | Behavior for query points outside the training range, on any dimension |
 | `max_extrapolation_distance` | `double` | `NaN` | Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `double` | `NaN` | Max allowed distance to the farthest point in a query's k-nearest-neighbor window before erroring |
 
-### return_se
+### outputs
 
-Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `confidence_level`/`prediction_level` to be populated. `false` by default.
+Select optional prediction fields by name. Use `"se"` to compute standard errors for each query point, using the retained model's residual scale and per-point leverage; standard errors are also computed when `confidence_level` or `prediction_level` is set. Use `"gradient"` or `"derivative"` to include the local fit gradient (`dimensions` values per query point, flattened). An empty vector (default) requests neither field.
 
 ### confidence_level
 
@@ -39,10 +38,6 @@ Confidence level for the confidence interval around the mean response at each qu
 ### prediction_level
 
 Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same residual scale `fit()` used for its own intervals when available, otherwise falling back to a MAD-based estimate. `NaN` (default) disables it.
-
-### return_derivative
-
-Includes the local fit's gradient (`dimensions` values per query point, flattened) in the output. `false` by default.
 
 ### extrapolation
 
@@ -114,8 +109,7 @@ int main() {
 
     auto predict_model = result.predict_model();
     fastloess::PredictOptions popts;
-    popts.return_se = true;
-    popts.return_derivative = true;
+    popts.outputs = {"se", "derivative"};
     auto prediction = predict_model.predict({2.5}, popts);
     return 0;
 }

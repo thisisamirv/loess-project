@@ -61,6 +61,9 @@ type Options struct {
 	// fast, uses a k-d tree of vertices) or "direct" (exact, fits every
 	// point directly).
 	SurfaceMode string
+	// Outputs selects optional result components: "diagnostics", "residuals",
+	// "weights", "derivative" (or "gradient"), "se", and "sorted".
+	Outputs []string
 	// ReturnSE requests hat-matrix statistics (effective degrees of
 	// freedom, leverage, standard errors). Batch model only.
 	ReturnSE bool
@@ -121,6 +124,15 @@ type Options struct {
 	// RetainModel retains the fitted model's training data, enabling
 	// Result.PredictModel for out-of-sample prediction. Batch model only.
 	RetainModel bool
+}
+
+func hasOutput(outputs []string, name string) bool {
+	for _, output := range outputs {
+		if output == name {
+			return true
+		}
+	}
+	return false
 }
 
 // DefaultOptions returns the library's recommended defaults. Start from this
@@ -213,9 +225,9 @@ func NewLoess(opts Options) (*Loess, error) {
 			wf, rm, sm, bp,
 			optFloat(ci, ciSet),
 			optFloat(pi, piSet),
-			boolToCInt(opts.ReturnDiagnostics),
-			boolToCInt(opts.ReturnResiduals),
-			boolToCInt(opts.ReturnRobustnessWeights),
+			boolToCInt(opts.ReturnDiagnostics || hasOutput(opts.Outputs, "diagnostics")),
+			boolToCInt(opts.ReturnResiduals || hasOutput(opts.Outputs, "residuals")),
+			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			cvFracPtr, cvFracLen,
@@ -226,15 +238,15 @@ func NewLoess(opts Options) (*Loess, error) {
 			C.int(opts.Dimensions),
 			distanceMetric,
 			surfaceMode,
-			boolToCInt(opts.ReturnSE),
-			boolToCInt(opts.ReturnSorted),
+			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
+			boolToCInt(opts.ReturnSorted || hasOutput(opts.Outputs, "sorted")),
 			optFloat(cell, cellSet),
 			interpolationVertices,
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
 			missing,
 			boolToCInt(opts.RetainModel),
-			boolToCInt(opts.ReturnGradient),
+			boolToCInt(opts.ReturnGradient || hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
 		)
 		if ptr == nil {
 			errMsg = lastError()

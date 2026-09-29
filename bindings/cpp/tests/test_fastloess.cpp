@@ -47,6 +47,7 @@ constexpr int k_cv_k = 3;
 constexpr int k_overlap_size = 3;
 constexpr double k_fraction_six_tenths = 0.6;
 constexpr double k_epsilon_1e6 = 1e-6;
+constexpr double k_prediction_query_x = 2.5;
 
 // ── Test fixture data ──────────────────────────────────────────────────────
 // Constexpr arrays: literals in constexpr initializers are not magic numbers.
@@ -146,7 +147,7 @@ void testLoessWithDiagnostics() {
 
   LoessOptions opts;
   opts.fraction = k_fraction_half;
-  opts.return_diagnostics = true;
+  opts.outputs = {"diagnostics"};
   Loess loess(opts);
   auto result = loess.fit(x_vals, y_vals).value();
 
@@ -170,7 +171,7 @@ void testLoessWithResiduals() {
 
   LoessOptions opts;
   opts.fraction = k_fraction_half;
-  opts.return_residuals = true;
+  opts.outputs = {"residuals"};
   Loess loess(opts);
   auto result = loess.fit(x_vals, y_vals).value();
 
@@ -186,7 +187,7 @@ void testLoessWithRobustnessWeights() {
   LoessOptions opts;
   opts.fraction = k_fraction_seventh;
   opts.iterations = k_iterations3;
-  opts.return_robustness_weights = true;
+  opts.outputs = {"weights"};
   Loess loess(opts);
   auto result = loess.fit(x_vals, y_vals).value();
 
@@ -206,13 +207,37 @@ void testLoessWithGradient() {
   LoessOptions opts;
   opts.fraction = k_fraction_seventh;
   opts.surface_mode = "direct";
-  opts.return_gradient = true;
+  opts.outputs = {"gradient"};
   Loess loess(opts);
   auto result = loess.fit(x_vals, y_vals).value();
 
   auto gradient = result.gradient();
   assertTrue(gradient.size() == k_small_count * result.dimensions(),
              "Gradient count mismatch");
+}
+
+void testPredictGroupedOutputs() {
+  std::cout << "Running testPredictGroupedOutputs...\n";
+  const std::vector<double> x_vals = {1.0, 2.0, 3.0, 4.0, 5.0};
+  const std::vector<double> y_vals = {2.0, 4.0, 6.0, 8.0, 10.0};
+
+  LoessOptions fit_options;
+  fit_options.surface_mode = "direct";
+  fit_options.retain_model = true;
+  Loess loess(fit_options);
+  auto fit_result = loess.fit(x_vals, y_vals).value();
+  auto predict_model = fit_result.predict_model();
+
+  PredictOptions predict_options;
+  predict_options.outputs = {"se", "derivative"};
+  auto prediction =
+      predict_model.predict({k_prediction_query_x}, predict_options);
+
+  assertTrue(prediction.valid(), "Prediction should be valid");
+  assertTrue(prediction.standard_errors().size() == 1,
+             "Prediction standard errors should be populated");
+  assertTrue(prediction.derivative().size() == 1,
+             "Prediction derivative should be populated");
 }
 
 void testLoessReturnSorted() {
@@ -230,21 +255,19 @@ void testLoessReturnSorted() {
 
   LoessOptions sorted_options;
   sorted_options.fraction = k_fraction_seventh;
-  sorted_options.return_residuals = true;
-  sorted_options.return_robustness_weights = true;
-  sorted_options.return_sorted = true;
+  sorted_options.outputs = {"residuals", "weights", "sorted"};
   Loess sorted_loess(sorted_options);
   auto sorted_result = sorted_loess.fit(unsorted_x, unsorted_y).value();
 
   const auto sorted_x = sorted_result.x_vector();
   assertTrue(std::is_sorted(sorted_x.begin(), sorted_x.end()),
-             "return_sorted x should be ascending");
+             "sorted output x should be ascending");
   assertTrue(sorted_x != unsorted_x,
              "sorted x should differ from unsorted input order");
   assertTrue(sorted_result.residuals().size() == unsorted_x.size(),
-             "Residuals missing under return_sorted");
+             "Residuals missing when requested in outputs");
   assertTrue(sorted_result.robustness_weights().size() == unsorted_x.size(),
-             "Robustness weights missing under return_sorted");
+             "Robustness weights missing when requested in outputs");
 }
 
 void testLoessWithConfidenceIntervals() {
@@ -304,7 +327,7 @@ void testLoessReuse() {
 
   LoessOptions opts;
   opts.fraction = k_fraction_half;
-  opts.return_diagnostics = true;
+  opts.outputs = {"diagnostics"};
   Loess loess(opts);
 
   auto result1 = loess.fit(x_vals1, y_vals1).value();
@@ -412,7 +435,7 @@ void testStreamingReturnSe() {
   StreamingOptions opts;
   opts.fraction = k_fraction_third;
   opts.chunk_size = k_chunk_half;
-  opts.return_se = true;
+  opts.outputs = {"se"};
   StreamingLoess stream(opts);
   auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
 
@@ -485,11 +508,11 @@ void testOnlineReturnSeRequiresFullUpdateMode() {
   OnlineOptions opts;
   opts.fraction = k_fraction_half;
   opts.window_capacity = k_window_capacity;
-  opts.return_se = true;
+  opts.outputs = {"se"};
   OnlineLoess online(opts);
   auto out = online.add_point(1.0, k_linear_slope);
   assertTrue(!out.has_value(),
-             "return_se without update_mode=\"full\" should error");
+             "outputs containing se without update_mode=\"full\" should error");
   assertTrue(!out.error().empty());
 }
 
@@ -723,11 +746,12 @@ void testLoessSurfaceModeAndReturnSe() {
   LoessOptions opts;
   opts.fraction = k_fraction_half;
   opts.surface_mode = "direct";
-  opts.return_se = true;
+  opts.outputs = {"se"};
   Loess loess(opts);
   auto res = loess.fit(x_vals, y_vals).value();
   assertTrue(res.y_vector().size() == k_thirty_count);
-  assertTrue(!std::isnan(res.enp()), "enp should be set with return_se+direct");
+  assertTrue(!std::isnan(res.enp()),
+             "enp should be set with outputs se+direct");
   auto std_errors = res.standard_errors();
   assertTrue(std_errors.size() == k_thirty_count,
              "Standard errors should be populated");
@@ -873,7 +897,7 @@ void testStreamingOverlapAndParams() {
   opts.degree = "quadratic";
   opts.distance_metric = "manhattan";
   opts.surface_mode = "direct";
-  opts.return_se = true;
+  opts.outputs = {"se"};
   StreamingLoess stream(opts);
   const auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
   const auto final_res = stream.finalize().value();
@@ -921,6 +945,7 @@ int main() {
     testLoessWithResiduals();
     testLoessWithRobustnessWeights();
     testLoessWithGradient();
+    testPredictGroupedOutputs();
     testLoessReturnSorted();
     testLoessWithConfidenceIntervals();
     testLoessWithPredictionIntervals();

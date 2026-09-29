@@ -176,6 +176,8 @@ export interface OnlineSmoothOptions {
     scaling_method?: string
     /** Auto-convergence tolerance. Default: None. */
     auto_converge?: number
+    /** Optional output components: weights, gradient (or derivative), se. */
+    outputs?: Array<string>
     /** Return robustness weights in result. Default: false. */
     return_robustness_weights?: boolean
     /**
@@ -220,6 +222,8 @@ export interface OnlineSmoothOptions {
 
 /** Options for `LoessResult.predict()`. */
 export interface PredictOptions {
+    /** Optional output components: se, gradient (or derivative). */
+    outputs?: Array<string>
     /** Include standard errors in the output. Default: false. */
     return_se?: boolean
     /** Confidence interval coverage level (e.g. 0.95). Default: None. */
@@ -260,6 +264,8 @@ export interface SmoothOptions {
     scaling_method?: string
     /** Auto-convergence tolerance. Default: None. */
     auto_converge?: number
+    /** Optional output components: diagnostics, residuals, weights, gradient (or derivative), se, sorted. */
+    outputs?: Array<string>
     /** Return residuals in result. Default: false. */
     return_residuals?: boolean
     /** Return robustness weights in result. Default: false. */
@@ -347,6 +353,8 @@ export interface StreamingSmoothOptions {
     scaling_method?: string
     /** Auto-convergence tolerance. Default: None. */
     auto_converge?: number
+    /** Optional output components: diagnostics, residuals, weights, gradient (or derivative), se. */
+    outputs?: Array<string>
     /** Return residuals in result. Default: false. */
     return_residuals?: boolean
     /** Return robustness weights in result. Default: false. */

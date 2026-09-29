@@ -628,6 +628,36 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self
     }
 
+    // Enable optional output components by name: "diagnostics", "residuals",
+    // "weights", "gradient" (or "derivative"), "se", and "sorted". Unknown
+    // names are collected and reported together by `build()`.
+    pub fn outputs<I, S>(mut self, names: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
+        for name in names {
+            match name.as_ref() {
+                "diagnostics" => self.return_diagnostics = Some(true),
+                "residuals" => self.compute_residuals = Some(true),
+                "weights" => self.return_robustness_weights = Some(true),
+                "gradient" | "derivative" => self.return_gradient = Some(true),
+                "se" => {
+                    if self.interval_type.is_none() {
+                        self.interval_type = Some(IntervalMethod::se());
+                    }
+                }
+                "sorted" => self.return_sorted = Some(true),
+                other => self.parse_errors.push(LoessError::InvalidOption {
+                    option: "outputs",
+                    value: other.to_string(),
+                    valid: "diagnostics, residuals, weights, gradient (derivative), se, sorted",
+                }),
+            }
+        }
+        self
+    }
+
     // Set the polynomial degree for local regression.
     //
     // Accepts case-insensitive strings:

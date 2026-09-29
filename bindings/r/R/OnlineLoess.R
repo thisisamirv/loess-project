@@ -15,6 +15,9 @@
 #' @srrstats {G1.6} Sliding window for incremental updates.
 #'
 #' @inheritParams Loess
+#' @param outputs Optional character vector selecting \code{"weights"},
+#'   \code{"gradient"} (or \code{"derivative"}), and \code{"se"}.
+#'   Combined with individual flags; \code{"se"} requires full update mode.
 #' @param window_capacity Maximum number of points kept in the sliding
 #'   window, at least 3. Default: 1000.
 #' @param min_points Minimum number of points required before smoothing
@@ -29,8 +32,9 @@
 #'   instead of adding it to the window.
 #' @param confidence_intervals Confidence level for confidence intervals (e.g.
 #'   \code{0.95}). Only computed under \code{update_mode = "full"} — raises an
-#'   error at construction if set (or \code{return_se}/\code{prediction_intervals}
-#'   is set) while \code{update_mode} is left at its default \code{"incremental"}.
+#'   error at construction if set (or \code{return_se}/
+#'   \code{prediction_intervals} is set) while \code{update_mode} is left at
+#'   its default \code{"incremental"}.
 #'   \code{NULL} (default) disables confidence intervals.
 #' @param prediction_intervals Confidence level for prediction intervals; same
 #'   \code{update_mode = "full"} requirement as \code{confidence_intervals}.
@@ -77,7 +81,8 @@ OnlineLoess <- function(
     cell = NULL,
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL,
-    missing = "error"
+    missing = "error",
+    outputs = NULL
 ) {
     reject_extra_positional_args(sys.call(), "min_points")
     validate_params(
@@ -85,6 +90,13 @@ OnlineLoess <- function(
         window_capacity = window_capacity,
         min_points = min_points
     )
+    flags <- parse_outputs_flags(
+        outputs, c("weights", "gradient", "derivative", "se")
+    )
+    return_robustness_weights <- return_robustness_weights || flags[["weights"]]
+    return_gradient <- return_gradient ||
+        flags[["gradient"]] || flags[["derivative"]]
+    return_se <- return_se || flags[["se"]]
     handle <- do.call(ROnlineLoess$new, env_args(online_params))
 
     structure(

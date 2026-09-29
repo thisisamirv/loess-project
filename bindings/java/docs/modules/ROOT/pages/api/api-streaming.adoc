@@ -29,6 +29,7 @@ StreamingOptions options = StreamingOptions.builder()
 |`zeroWeightFallback` |`String` |`"use_local_mean"` |Zero-weight handling
 |`missing` |`String` |`"error"` |Policy for non-finite (NaN/Inf) values in each chunk
 |`autoConverge` |`double` |`NaN` (disabled) |Auto-convergence tolerance
+|`outputs(String...)` |`String...` |empty |Select `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, and/or `se`.
 |`returnDiagnostics` |`boolean` |`false` |Compute RMSE, MAE, R2
 |`returnResiduals` |`boolean` |`false` |Include residuals in result
 |`returnRobustnessWeights` |`boolean` |`false` |Include weights in result
@@ -63,7 +64,7 @@ _See also: xref:../advanced/merge.adoc[Merge Strategies]_
 
 image::merge_comparison.svg[Merge Strategies]
 
-Confidence/prediction intervals and standard errors are computed per chunk and merged across overlap boundaries via `mergeStrategy`, same as `y`. Cross-validation and `returnSorted` are Batch-only and not available here; see xref:./api.adoc[API] for those.
+Confidence/prediction intervals and standard errors are computed per chunk and merged across overlap boundaries via `mergeStrategy`, same as `y`. Cross-validation and the `"sorted"` output are Batch-only and not available here; existing individual output setters remain supported.
 
 == `new StreamingLoess(StreamingOptions options)`
 

@@ -47,7 +47,7 @@ Options options = Options.builder()
         .iterations(3)
         .confidenceIntervals(0.95)
         .predictionIntervals(0.95)
-        .returnDiagnostics(true)
+                .outputs("diagnostics")
         .parallel(true)
         .build();
 

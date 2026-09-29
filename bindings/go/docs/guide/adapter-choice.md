@@ -43,7 +43,7 @@ opts.Fraction = 0.5
 opts.Iterations = 3
 opts.ConfidenceIntervals = ptr(0.95)
 opts.PredictionIntervals = ptr(0.95)
-opts.ReturnDiagnostics = true
+ opts.Outputs = []string{"diagnostics"}
 opts.Parallel = true
 
 model, err := fastloess.NewLoess(opts)

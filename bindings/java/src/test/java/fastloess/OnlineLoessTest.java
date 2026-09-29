@@ -40,6 +40,38 @@ class OnlineLoessTest {
     }
 
     @Test
+    void groupedOnlineOutputsPopulatePointResult() {
+        try (OnlineLoess model = new OnlineLoess(
+                OnlineOptions.builder()
+                        .fraction(1.0)
+                        .windowCapacity(10)
+                        .minPoints(3)
+                        .updateMode("full")
+                        .surfaceMode("direct")
+                        .outputs("weights", "gradient", "se")
+                        .build())) {
+            Optional<PointResult> last = Optional.empty();
+            for (int i = 0; i < 6; i++) {
+                Optional<PointResult> current = model.addPoint(i, 2.0 * i + 1.0);
+                if (current.isPresent()) {
+                    last = current;
+                }
+            }
+            PointResult result = last.orElseThrow();
+            assertTrue(result.robustnessWeight().isPresent());
+            assertTrue(result.standardError().isPresent());
+            assertTrue(result.gradient().isPresent());
+        }
+    }
+
+    @Test
+    void groupedOnlineOutputsRejectDiagnosticsName() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> OnlineOptions.builder().outputs("diagnostics"));
+        assertTrue(error.getMessage().contains("Unknown output: diagnostics"));
+    }
+
+    @Test
     void confidenceIntervalsRequiresFullUpdateMode() {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> new OnlineLoess(
                 OnlineOptions.builder().fraction(0.5).windowCapacity(10).confidenceIntervals(0.95).build()));

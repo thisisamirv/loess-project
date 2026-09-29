@@ -1692,3 +1692,105 @@ func TestLoessInvalidIterations(t *testing.T) {
 		t.Fatal("expected an error for negative iterations, got nil")
 	}
 }
+
+func TestGroupedOutputOptions(t *testing.T) {
+	t.Run("Batch", func(t *testing.T) {
+		x, y := linearData(20, 2.0, 1.0)
+		for left, right := 0, len(x)-1; left < right; left, right = left+1, right-1 {
+			x[left], x[right] = x[right], x[left]
+			y[left], y[right] = y[right], y[left]
+		}
+
+		opts := fastloess.DefaultOptions()
+		opts.Iterations = 0
+		opts.SurfaceMode = "direct"
+		opts.Outputs = []string{"diagnostics", "residuals", "weights", "gradient", "se", "sorted"}
+		res := fitOrFatal(t, opts, x, y)
+
+		if res.Diagnostics == nil || len(res.Residuals) != len(x) || len(res.RobustnessWeights) != len(x) {
+			t.Fatalf("grouped batch outputs were not populated: %+v", res)
+		}
+		if res.HatMatrix == nil || len(res.StandardErrors) != len(x) || len(res.Gradient) != len(x) {
+			t.Fatalf("grouped batch statistics were not populated: %+v", res)
+		}
+		if !sort.Float64sAreSorted(res.X) {
+			t.Fatalf("sorted output did not order X: %v", res.X)
+		}
+	})
+
+	t.Run("Streaming", func(t *testing.T) {
+		x, y := sineData(100)
+		opts := fastloess.DefaultStreamingOptions()
+		opts.Fraction = 0.4
+		opts.ChunkSize = len(x)
+		opts.Overlap = 10
+		opts.SurfaceMode = "direct"
+		opts.Outputs = []string{"diagnostics", "residuals", "weights", "derivative", "se"}
+		model, err := fastloess.NewStreamingLoess(opts)
+		if err != nil {
+			t.Fatalf("NewStreamingLoess failed: %v", err)
+		}
+		defer model.Close()
+
+		res, err := model.ProcessChunk(x, y)
+		if err != nil {
+			t.Fatalf("ProcessChunk failed: %v", err)
+		}
+		if res.Diagnostics == nil || len(res.Residuals) == 0 || len(res.RobustnessWeights) == 0 {
+			t.Fatalf("grouped streaming outputs were not populated: %+v", res)
+		}
+		if len(res.Gradient) != len(res.Y) || len(res.StandardErrors) != len(res.Y) {
+			t.Fatalf("grouped streaming derivative/SE lengths do not match Y: %+v", res)
+		}
+	})
+
+	t.Run("Online", func(t *testing.T) {
+		x, y := linearData(12, 2.0, 1.0)
+		opts := fastloess.DefaultOnlineOptions()
+		opts.UpdateMode = "full"
+		opts.SurfaceMode = "direct"
+		opts.Outputs = []string{"weights", "derivative", "se"}
+		model, err := fastloess.NewOnlineLoess(opts)
+		if err != nil {
+			t.Fatalf("NewOnlineLoess failed: %v", err)
+		}
+		defer model.Close()
+
+		var last fastloess.PointResult
+		gotResult := false
+		for i := range x {
+			res, ok, err := model.AddPoint(x[i], y[i])
+			if err != nil {
+				t.Fatalf("AddPoint failed at i=%d: %v", i, err)
+			}
+			if ok {
+				last, gotResult = res, true
+			}
+		}
+		if !gotResult || math.IsNaN(last.StandardError) || math.IsNaN(last.RobustnessWeight) || len(last.Gradient) == 0 {
+			t.Fatalf("grouped online outputs were not populated: %+v", last)
+		}
+	})
+
+	t.Run("Predict", func(t *testing.T) {
+		x, y := linearData(20, 2.0, 1.0)
+		opts := fastloess.DefaultOptions()
+		opts.RetainModel = true
+		opts.SurfaceMode = "direct"
+		res := fitOrFatal(t, opts, x, y)
+		if res.PredictModel == nil {
+			t.Fatal("expected retained PredictModel")
+		}
+		defer res.PredictModel.Close()
+
+		prediction, err := res.PredictModel.Predict([]float64{4.5}, fastloess.PredictOptions{
+			Outputs: []string{"se", "gradient"},
+		})
+		if err != nil {
+			t.Fatalf("Predict failed: %v", err)
+		}
+		if len(prediction.StandardErrors) != 1 || len(prediction.Derivative) != 1 {
+			t.Fatalf("grouped prediction outputs were not populated: %+v", prediction)
+		}
+	})
+}

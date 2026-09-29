@@ -16,7 +16,7 @@ OnlineOptions options = OnlineOptions.builder()
         .build();
 ----
 
-`OnlineOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSorted`, `returnDiagnostics`, `returnResiduals`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, and `parallel`, which are Batch-only or Batch/Streaming-only). Online always runs sequentially. `confidenceIntervals`/`predictionIntervals`/`returnSe` require `updateMode("full")`. Settings:
+`OnlineOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `returnSorted`, `returnDiagnostics`, `returnResiduals`, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, and `parallel`, which are Batch-only or Batch/Streaming-only). Online always runs sequentially. `confidenceIntervals`/`predictionIntervals`/`returnSe` require `updateMode("full")`. `outputs(String...)` accepts `"weights"`, `"gradient"`/`"derivative"`, and `"se"` (`"se"` requires `updateMode("full")`). Settings:
 
 [cols="1,1,1,1",options="header"]
 |===
@@ -31,6 +31,7 @@ OnlineOptions options = OnlineOptions.builder()
 |`zeroWeightFallback` |`String` |`"use_local_mean"` |Zero-weight handling
 |`missing` |`String` |`"error"` |Policy for non-finite (NaN/Inf) values in each point
 |`autoConverge` |`double` |`NaN` (disabled) |Auto-convergence tolerance
+|`outputs(String...)` |`String...` |empty |Select `weights`, `gradient`/`derivative`, and/or `se`.
 |`returnRobustnessWeights` |`boolean` |`false` |Include `robustnessWeight()` in result
 |`degree` |`String` |`"linear"` |Polynomial degree
 |`dimensions` |`int` |`1` |Number of predictor dimensions
@@ -49,7 +50,7 @@ OnlineOptions options = OnlineOptions.builder()
 |`updateMode` |`String` |`"incremental"` |How the window is updated as new points arrive
 |===
 
-Cross-validation, `returnSorted`, `returnDiagnostics`, and `returnResiduals` are Batch-only (or Batch/Streaming-only) and not available here; see xref:./api.adoc[API] for those. Confidence and prediction intervals and standard errors are available here when `updateMode("full")` is set.
+Cross-validation, the `"sorted"` and `"diagnostics"` outputs, and `parallel` are Batch-only. Online residuals are always present; there is no `"residuals"` output name.
 
 == `new OnlineLoess(OnlineOptions options)`
 

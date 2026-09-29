@@ -49,7 +49,7 @@ fn main() -> Result<(), LoessError> {
         .iterations(3usize)
         .confidence_intervals(0.95f64)
         .prediction_intervals(0.95f64)
-        .return_diagnostics()
+        .outputs(["diagnostics"])
         .build()?;
     let result = model.fit(&x, &y)?;
     println!("95% CI at midpoint: [{}, {}]", result.confidence_lower.as_ref().unwrap()[50], result.confidence_upper.as_ref().unwrap()[50]);

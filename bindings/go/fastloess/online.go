@@ -79,6 +79,9 @@ type OnlineOptions struct {
 	// AutoConverge is the convergence tolerance for early stopping of
 	// robustness iterations. Nil disables early stopping.
 	AutoConverge *float64
+	// Outputs selects optional result components: "weights",
+	// "derivative" (or "gradient"), and "se".
+	Outputs []string
 
 	// ReturnRobustnessWeights requests per-point robustness weights in the result.
 	ReturnRobustnessWeights bool
@@ -189,7 +192,7 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 			C.double(opts.Fraction),
 			C.int(opts.Iterations),
 			wf, rm, sm, bp,
-			boolToCInt(opts.ReturnRobustnessWeights),
+			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			C.int(opts.WindowCapacity),
@@ -204,10 +207,10 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
 			missing,
-			boolToCInt(opts.ReturnGradient),
+			boolToCInt(opts.ReturnGradient || hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
 			optFloat(confidenceIntervals, confidenceIntervalsSet),
 			optFloat(predictionIntervals, predictionIntervalsSet),
-			boolToCInt(opts.ReturnSe),
+			boolToCInt(opts.ReturnSe || hasOutput(opts.Outputs, "se")),
 		)
 		if ptr == nil {
 			errMsg = lastError()

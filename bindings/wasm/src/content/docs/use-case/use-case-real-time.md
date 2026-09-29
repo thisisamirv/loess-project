@@ -26,7 +26,7 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 const processor = new OnlineLoess(
-    { fraction: 0.3, iterations: 1 },
+    { fraction: 0.3 },
     { window_capacity: 25, min_points: 5, update_mode: "incremental" }
 );
 

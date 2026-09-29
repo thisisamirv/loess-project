@@ -1,6 +1,7 @@
 package fastloess;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
@@ -46,6 +47,39 @@ class StreamingLoessTest {
             assertTrue(chunk.standardErrors().isPresent());
             assertTrue(chunk.confidenceLower().isEmpty());
         }
+    }
+
+    @Test
+    void groupedOutputsPopulateStreamingResult() {
+        double[] x = new double[20];
+        double[] y = new double[20];
+        for (int i = 0; i < x.length; i++) {
+            x[i] = i;
+            y[i] = Math.sin(i);
+        }
+
+        try (StreamingLoess model = new StreamingLoess(
+                StreamingOptions.builder()
+                        .fraction(0.5)
+                        .chunkSize(20)
+                        .overlap(0)
+                        .surfaceMode("direct")
+                        .outputs("diagnostics", "residuals", "weights", "gradient", "se")
+                        .build())) {
+            Result result = model.processChunk(x, y);
+            assertTrue(result.diagnostics().isPresent());
+            assertTrue(result.residuals().isPresent());
+            assertTrue(result.robustnessWeights().isPresent());
+            assertEquals(result.y().length, result.gradient().orElseThrow().length);
+            assertEquals(result.y().length, result.standardErrors().orElseThrow().length);
+        }
+    }
+
+    @Test
+    void groupedStreamingOutputsRejectSortedName() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> StreamingOptions.builder().outputs("sorted"));
+        assertTrue(error.getMessage().contains("Unknown output: sorted"));
     }
 
     @Test

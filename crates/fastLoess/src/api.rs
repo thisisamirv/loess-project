@@ -167,6 +167,15 @@ macro_rules! impl_common_builder {
                 self.0 = self.0.surface_mode(s);
                 self
             }
+            // Enable optional result fields using the core LOESS output names.
+            pub fn outputs<I, S>(mut self, names: I) -> Self
+            where
+                I: IntoIterator<Item = S>,
+                S: AsRef<str>,
+            {
+                self.0 = self.0.outputs(names);
+                self
+            }
             // numeric / bool options
             pub fn fraction(mut self, f: f64) -> Self {
                 self.0 = self.0.fraction(f);

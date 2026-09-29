@@ -94,6 +94,10 @@
 #'   \code{FALSE}. To get both orderings without re-fitting, sort the default
 #'   (unsorted) result client-side (e.g. \code{order(result$x)}) rather than
 #'   calling \code{fit()} twice.
+#' @param outputs Optional character vector selecting \code{"diagnostics"},
+#'   \code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
+#'   \code{"derivative"}), \code{"se"}, and \code{"sorted"}. Combined with
+#'   the corresponding \code{return_*} arguments; \code{NULL} selects none.
 #' @param confidence_intervals Confidence level for confidence intervals,
 #'   greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
 #'   disables confidence intervals.
@@ -165,10 +169,31 @@ Loess <- function(
     boundary_degree_fallback = NULL,
     cv_seed = NULL,
     missing = "error",
-    retain_model = FALSE
+    retain_model = FALSE,
+    outputs = NULL
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
     validate_params(fraction = fraction, iterations = iterations)
+    flags <- parse_outputs_flags(
+        outputs,
+        c(
+            "diagnostics",
+            "residuals",
+            "weights",
+            "gradient",
+            "derivative",
+            "se",
+            "sorted"
+        )
+    )
+    return_diagnostics <- return_diagnostics || flags[["diagnostics"]]
+    return_residuals <- return_residuals || flags[["residuals"]]
+    return_robustness_weights <- return_robustness_weights || flags[["weights"]]
+    return_gradient <- return_gradient ||
+        flags[["gradient"]] ||
+        flags[["derivative"]]
+    return_se <- return_se || flags[["se"]]
+    return_sorted <- return_sorted || flags[["sorted"]]
     handle <- do.call(RLoess$new, env_args(loess_params))
 
     structure(

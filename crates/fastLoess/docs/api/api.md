@@ -78,6 +78,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
 | `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) |
 | `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) |
+| `outputs([&str])` | iterable of names | `[]` | Select `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"`/`"derivative"`, `"se"`, `"sorted"` |
 | `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
 | `return_robustness_weights()` | `bool` | `false` | Include weights in result |
@@ -199,9 +200,31 @@ Confidence level for the confidence interval around the mean response (e.g. `0.9
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`). Disabled by default.
 
+### outputs
+
+Select optional result components together using `.outputs([...])`. The existing
+`return_*()` methods remain available and combine with grouped selections.
+
+```rust
+use fastLoess::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let _model = Loess::new()
+        .surface_mode("direct")
+        .outputs(["diagnostics", "residuals", "weights", "gradient", "se", "sorted"])
+        .build()?;
+    Ok(())
+}
+```
+
+`"derivative"` is an alias for `"gradient"`, which requires the direct surface.
+`"se"` includes hat-matrix statistics; diagnostics need it (or interval levels)
+for AIC/AICc and effective degrees of freedom. Unknown names are collected and
+reported together when `.build()` is called.
+
 ### return_diagnostics
 
-Populates `LoessResult::diagnostics` with RMSE, MAE, R2, AIC/AICc, and effective degrees of freedom. `aic`/`aicc`/`effective_df` additionally require `.return_se()` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics. `false` by default.
+Populates `LoessResult::diagnostics` with RMSE, MAE, R2, AIC/AICc, and effective degrees of freedom. `aic`/`aicc`/`effective_df` additionally require `.outputs(["se"])`, `.return_se()`, or confidence/prediction intervals to be populated, since they depend on hat-matrix statistics. `false` by default.
 
 ### return_residuals
 

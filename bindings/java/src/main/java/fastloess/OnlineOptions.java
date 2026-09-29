@@ -192,6 +192,26 @@ public final class OnlineOptions {
         }
 
         /**
+         * Selects optional result components: {@code "weights"},
+         * {@code "gradient"} (or {@code "derivative"}), and {@code "se"}.
+         *
+         * @param outputs optional output component names
+         * @return this builder, for chaining
+         * @throws IllegalArgumentException if an output is not supported here
+         */
+        public Builder outputs(String... outputs) {
+            for (String output : outputs) {
+                switch (output) {
+                    case "weights", "gradient", "derivative", "se" ->
+                        common.outputs(output);
+                    default ->
+                        throw new IllegalArgumentException("Unknown output: " + output);
+                }
+            }
+            return this;
+        }
+
+        /**
          * @param degree the local polynomial degree name
          * @return this builder, for chaining
          * @see Options.Builder#degree(String)

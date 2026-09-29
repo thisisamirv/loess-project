@@ -101,11 +101,7 @@ int main() {
 | `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
 | `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
 | `prediction_intervals` | `double` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) |
-| `return_diagnostics` | `bool` | `false` | Include diagnostics in result |
-| `return_residuals` | `bool` | `false` | Include residuals in result |
-| `return_robustness_weights` | `bool` | `false` | Include weights in result |
-| `return_se` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
-| `return_sorted` | `bool` | false | Return results sorted ascending by `x` instead of in original input order |
+| `outputs` | `std::vector<std::string>` | `{}` | Optional result fields: `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, `se`, `sorted` |
 | `parallel` | `bool` | `true` | Enable parallel execution |
 | `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `int` | `1` | Number of predictor dimensions |
@@ -122,7 +118,6 @@ int main() {
 | `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
 | `retain_model` | `bool` | `false` | Retain training data, enabling `LoessResult::predict_model()` |
-| `return_gradient` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 
 ## Options
 
@@ -224,42 +219,20 @@ Confidence level for the confidence interval around the mean response (e.g. `0.9
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
 
-### return_diagnostics
+### outputs
 
-*See: [`Diagnostics`](#fastloessdiagnostics)*
+Select optional result fields by name. An empty vector (default) requests only the fitted values.
 
-Include a `Diagnostics` object (RMSE, MAE, R², AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/effective degrees of freedom additionally require `return_se = true` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
+| Name | Result |
+| --- | --- |
+| `"diagnostics"` | Fit metrics such as RMSE, MAE, R², and (when `se` is also enabled) AIC/AICc and effective degrees of freedom |
+| `"residuals"` | Per-point residuals (`y - fitted`) |
+| `"weights"` | Final per-point robustness weights |
+| `"gradient"` or `"derivative"` | Per-point local fit gradient; requires `surface_mode = "direct"` |
+| `"se"` | Standard errors and hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) |
+| `"sorted"` | Reorder all result fields by ascending `x` instead of input order (Batch only) |
 
-- `false` (default) — leaves `diagnostics()` empty
-- `true` — populates `diagnostics()`
-
-### return_residuals
-
-Include per-point residuals (`y - fitted`) in the result.
-
-- `false` (default) — leaves `residuals()` empty
-- `true` — populates `residuals()`
-
-### return_robustness_weights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `robustness_weights()` empty
-- `true` — populates `robustness_weights()`
-
-### return_se
-
-*See: [Intervals](../guide/intervals.md#standard-errors)*
-
-Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
-
-- `false` (default) — leaves `standard_errors()` and the hat-matrix accessors empty/NaN
-- `true` — computes standard errors and hat-matrix statistics
-
-### return_sorted
-
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
-To get both orderings, sort the default result client-side (e.g. via `std::sort` over an index vector) instead of calling `fit()` twice.
+Confidence and prediction intervals remain controlled by their numeric level fields. They include standard errors automatically.
 
 ### parallel
 
@@ -360,13 +333,6 @@ Per-observation weights, passed to `fit()` rather than the constructor.
 
 Retains the fitted model's training data, enabling `LoessResult::predict_model()` to obtain a `PredictModel` for out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
 
-### return_gradient
-
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) via `LoessResult::gradient()`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when `surface_mode = "direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `fit()` returns an error (`Expected::has_value() == false`) instead of silently leaving `gradient()` empty.
-
-- `false` (default) — leaves `gradient()` empty
-- `true` — populates `gradient()`
-
 ## Result Structure
 
 ### fastloess::LoessResult
@@ -379,22 +345,22 @@ A RAII wrapper around the C result struct `fastloess_CppLoessResult`.
 | `y_vector()` | `std::vector<double>` | Smoothed y values |
 | `fraction_used()` | `double` | Fraction used (set or selected by CV) |
 | `iterations_used()` | `int` | Robustness iterations actually performed (-1 = N/A) |
-| `standard_errors()` | `std::vector<double>` | Per-point SE (if `return_se`; empty if not computed) |
+| `standard_errors()` | `std::vector<double>` | Per-point SE (if `outputs` contains `"se"` or an interval level was set) |
 | `confidence_lower()` | `std::vector<double>` | Lower confidence bounds (empty if not computed) |
 | `confidence_upper()` | `std::vector<double>` | Upper confidence bounds (empty if not computed) |
 | `prediction_lower()` | `std::vector<double>` | Lower prediction bounds (empty if not computed) |
 | `prediction_upper()` | `std::vector<double>` | Upper prediction bounds (empty if not computed) |
-| `residuals()` | `std::vector<double>` | Residuals (if `return_residuals`; empty if not computed) |
-| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `return_robustness_weights`; empty if not computed) |
+| `residuals()` | `std::vector<double>` | Residuals (if `outputs` contains `"residuals"`; empty if not computed) |
+| `robustness_weights()` | `std::vector<double>` | Robustness weights (if `outputs` contains `"weights"`; empty if not computed) |
 | `cv_scores()` | `std::vector<double>` | CV score per tested fraction (empty if CV not run) |
-| `diagnostics()` | `Diagnostics` | Fit metrics — check `diagnostics().has_value()` before use (if `return_diagnostics`) |
+| `diagnostics()` | `Diagnostics` | Fit metrics — check `diagnostics().has_value()` before use (if `outputs` contains `"diagnostics"`) |
 | `enp()` | `double` | Equivalent number of parameters (NaN if not computed) |
 | `trace_hat()` | `double` | Trace of hat matrix (NaN if not computed) |
 | `delta1()` | `double` | First delta statistic (NaN if not computed) |
 | `delta2()` | `double` | Second delta statistic (NaN if not computed) |
 | `residual_scale()` | `double` | Residual scale estimate (NaN if not computed) |
-| `leverage()` | `std::vector<double>` | Per-point hat-matrix diagonal (if `return_se`; empty if not computed) |
-| `gradient()` | `std::vector<double>` | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode = "direct"` only; empty if not computed) |
+| `leverage()` | `std::vector<double>` | Per-point hat-matrix diagonal (if `outputs` contains `"se"`; empty if not computed) |
+| `gradient()` | `std::vector<double>` | Per-point local fit gradient, flattened (if `outputs` contains `"gradient"` or `"derivative"`, `surface_mode = "direct"` only; empty if not computed) |
 | `dimensions()` | `int` | Number of predictor dimensions |
 
 ### fastloess::Diagnostics

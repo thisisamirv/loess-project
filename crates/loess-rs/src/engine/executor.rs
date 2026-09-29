@@ -59,7 +59,7 @@ fn loess_normalization_scales<T: Float>(x: &[T], n: usize, dims: usize) -> Vec<T
         return scales;
     }
 
-    let trim = n / 10 + if n % 10 == 0 { 0 } else { 1 };
+    let trim = n.div_ceil(10);
     let mut values = Vec::with_capacity(n);
     for dim in 0..dims {
         values.clear();

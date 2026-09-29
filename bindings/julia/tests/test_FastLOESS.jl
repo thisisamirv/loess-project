@@ -129,6 +129,66 @@ using FastLOESS
 			@test length(result.gradient) == length(x) * result.dimensions
 		end
 
+		@testset "grouped outputs" begin
+			x = [3.0, 1.0, 2.0, 4.0, 5.0]
+			y = [6.2, 2.1, 4.0, 8.1, 10.2]
+			result = fit(
+				Loess(
+					fraction = 1.0,
+					surface_mode = "direct",
+					retain_model = true,
+					outputs = ["diagnostics", "residuals", "weights", "gradient", "se", "sorted"],
+				),
+				x,
+				y,
+			)
+
+			@test result.diagnostics !== nothing
+			@test result.residuals !== nothing
+			@test result.robustness_weights !== nothing
+			@test result.gradient !== nothing
+			@test result.standard_errors !== nothing
+			@test issorted(result.x)
+
+			prediction = predict(result.predict_model, [2.5]; outputs = ["se", "derivative"])
+			@test prediction.standard_errors !== nothing
+			@test prediction.derivative !== nothing
+
+			stream = StreamingLoess(
+				fraction = 0.5,
+				chunk_size = 10,
+				surface_mode = "direct",
+				outputs = ["residuals", "weights", "gradient", "se"],
+			)
+			stream_result = process_chunk(stream, collect(1.0:10.0), collect(2.0:2.0:20.0))
+			@test stream_result.residuals !== nothing
+			@test stream_result.robustness_weights !== nothing
+			@test stream_result.gradient !== nothing
+			@test stream_result.standard_errors !== nothing
+
+			online = OnlineLoess(
+				fraction = 1.0,
+				window_capacity = 10,
+				min_points = 3,
+				update_mode = "full",
+				surface_mode = "direct",
+				outputs = ["weights", "gradient", "se"],
+			)
+			online_result = nothing
+			for i in 1:5
+				value = add_point(online, Float64(i), 2.0 * i)
+				value !== nothing && (online_result = value)
+			end
+			@test online_result.robustness_weight !== nothing
+			@test online_result.gradient !== nothing
+			@test online_result.standard_error !== nothing
+
+			@test_throws ArgumentError Loess(outputs = ["unknown"])
+			@test_throws ArgumentError StreamingLoess(outputs = ["sorted"])
+			@test_throws ArgumentError OnlineLoess(outputs = ["residuals"])
+			@test_throws ArgumentError predict(result.predict_model, [2.5]; outputs = ["residuals"])
+		end
+
 		@testset "with confidence intervals" begin
 			Random.seed!(42)
 			x = collect(range(0, 10, length = 20))

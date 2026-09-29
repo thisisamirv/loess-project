@@ -347,6 +347,37 @@ public final class Options {
         }
 
         /**
+         * Selects optional result components: {@code "diagnostics"},
+         * {@code "residuals"}, {@code "weights"}, {@code "gradient"} (or
+         * {@code "derivative"}), {@code "se"}, and {@code "sorted"}.
+         *
+         * @param outputs optional output component names
+         * @return this builder, for chaining
+         * @throws IllegalArgumentException if an output name is unknown
+         */
+        public Builder outputs(String... outputs) {
+            for (String output : outputs) {
+                switch (output) {
+                    case "diagnostics" ->
+                        this.returnDiagnostics = true;
+                    case "residuals" ->
+                        this.returnResiduals = true;
+                    case "weights" ->
+                        this.returnRobustnessWeights = true;
+                    case "gradient", "derivative" ->
+                        this.returnGradient = true;
+                    case "se" ->
+                        this.returnSe = true;
+                    case "sorted" ->
+                        this.returnSorted = true;
+                    default ->
+                        throw new IllegalArgumentException("Unknown output: " + output);
+                }
+            }
+            return this;
+        }
+
+        /**
          * The local polynomial degree: one of
          * {@code "constant"}, {@code "linear"}, {@code "quadratic"}, {@code "cubic"}, {@code "quartic"}
          * (default {@code "linear"}).

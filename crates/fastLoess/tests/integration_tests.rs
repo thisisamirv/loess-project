@@ -412,6 +412,26 @@ fn test_streaming_adapter_return_se() {
     assert!(res3.standard_errors.is_some());
 }
 
+#[test]
+fn test_streaming_parallel_return_se() {
+    let n = 200;
+    let x: Vec<f64> = (0..n).map(|index| index as f64 * 100.0 / 199.0).collect();
+    let y: Vec<f64> = x.iter().map(|&value| (value / 10.0).sin()).collect();
+
+    let mut processor = StreamingLoess::new()
+        .fraction(0.3)
+        .return_se()
+        .chunk_size(15)
+        .build()
+        .unwrap();
+    let result = processor.process_chunk(&x, &y).unwrap();
+
+    let standard_errors = result
+        .standard_errors
+        .expect("parallel streaming SE should be present");
+    assert!(!standard_errors.is_empty());
+}
+
 /// `.confidence_intervals()`/`.prediction_intervals()` on the Streaming adapter should
 /// produce bounds that bracket the observed `y` values and confidence bounds narrower
 /// than prediction bounds.

@@ -102,7 +102,7 @@ func main() {
  opts.Fraction = 0.7
  opts.Iterations = 3                // more iterations for outliers
  opts.RobustnessMethod = "bisquare" // default, smooth downweighting
- opts.ReturnRobustnessWeights = true // see which points were downweighted
+ opts.Outputs = []string{"weights"} // see which points were downweighted
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {

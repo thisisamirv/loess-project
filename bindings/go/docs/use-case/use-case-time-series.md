@@ -63,7 +63,7 @@ y[0]: 10.093542139519055
 
 Remove trend to analyze residual patterns.
 
-Setting `ReturnResiduals = true` stores `observed − smoothed` alongside the smooth. A slightly wider `Fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
+Setting `Outputs = []string{"residuals"}` stores `observed − smoothed` alongside the smooth. A slightly wider `Fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
 ```go
 package main
@@ -88,7 +88,7 @@ func main() {
  opts := fastloess.DefaultOptions()
  opts.Fraction = 0.3
  opts.Iterations = 3
- opts.ReturnResiduals = true
+ opts.Outputs = []string{"residuals"}
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {
@@ -285,7 +285,7 @@ func main() {
  opts := fastloess.DefaultOptions()
  opts.Fraction = 0.3
  opts.Iterations = 3
- opts.ReturnDiagnostics = true
+ opts.Outputs = []string{"diagnostics"}
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {

@@ -234,6 +234,56 @@ test('SmoothOptions: return_gradient returns flattened per-point gradient (direc
     assert.strictEqual(result.gradient.length, x.length * result.dimensions);
 });
 
+test('grouped outputs select Batch, Streaming, Online, and prediction fields', () => {
+    const x = new Float64Array([3, 1, 2, 4, 5, 6, 7, 8, 9, 10]);
+    const y = new Float64Array(Array.from(x, value => 2 * value + Math.sin(value) * 0.1));
+    const result = new fastloess.Loess({
+        fraction: 0.7,
+        surface_mode: 'direct',
+        retain_model: true,
+        return_residuals: true,
+        outputs: ['diagnostics', 'weights', 'gradient', 'se', 'sorted']
+    }).fit(x, y);
+
+    assert.ok(result.diagnostics !== null);
+    assert.ok(result.residuals !== null);
+    assert.ok(result.robustness_weights !== null);
+    assert.ok(result.gradient !== null);
+    assert.ok(result.standard_errors !== null);
+    assert.deepStrictEqual(Array.from(result.x), Array.from(x).sort((left, right) => left - right));
+
+    const prediction = result.predict(new Float64Array([2.5]), {
+        outputs: ['se', 'derivative']
+    });
+    assert.ok(prediction.standard_errors !== null);
+    assert.ok(prediction.derivative !== null);
+
+    const streaming = new fastloess.StreamingLoess({
+        fraction: 0.7,
+        surface_mode: 'direct',
+        outputs: ['diagnostics', 'residuals', 'weights', 'derivative', 'se']
+    }, { chunk_size: 10, overlap: 2 });
+    const streamed = streaming.process_chunk(x, y);
+    assert.ok(streamed.diagnostics !== null);
+    assert.ok(streamed.residuals !== null);
+    assert.ok(streamed.robustness_weights !== null);
+    assert.ok(streamed.gradient !== null);
+    assert.ok(streamed.standard_errors !== null);
+
+    const online = new fastloess.OnlineLoess({
+        fraction: 1,
+        surface_mode: 'direct',
+        outputs: ['weights', 'gradient', 'se']
+    }, { window_capacity: 10, min_points: 3, update_mode: 'full' });
+    let latest = null;
+    for (let index = 0; index < x.length; index++) {
+        latest = online.add_point(x[index], y[index]);
+    }
+    assert.ok(latest.robustness_weight !== null);
+    assert.ok(latest.gradient !== null);
+    assert.ok(latest.standard_error !== null);
+});
+
 test('SmoothOptions: return_gradient throws under default interpolation surface mode', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);

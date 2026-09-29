@@ -171,6 +171,66 @@ test_that("Loess return_gradient works under surface_mode = direct", {
     expect_type(result$gradient, "double")
 })
 
+test_that("grouped outputs work across all R adapters and prediction", {
+    x <- as.double(c(3, 1, 2, 4:20))
+    y <- 2 * x + sin(x) * 0.1
+    model <- Loess(
+        fraction = 0.7,
+        surface_mode = "direct",
+        retain_model = TRUE,
+        return_residuals = TRUE,
+        outputs = c("diagnostics", "weights", "gradient", "se", "sorted")
+    )
+    result <- fit(model, x, y)
+    expect_true(is.list(result$diagnostics))
+    expect_length(result$residuals, length(x))
+    expect_length(result$robustness_weights, length(x))
+    expect_length(result$gradient, length(x))
+    expect_length(result$standard_errors, length(x))
+    expect_identical(result$x, sort(x))
+
+    predicted <- predict(model, 2.5, outputs = c("se", "derivative"))
+    expect_length(predicted$standard_errors, 1L)
+    expect_length(predicted$derivative, 1L)
+
+    sorted_x <- as.double(1:20)
+    sorted_y <- 2 * sorted_x + sin(sorted_x) * 0.1
+    streaming <- StreamingLoess(
+        fraction = 0.7,
+        chunk_size = 10L,
+        surface_mode = "direct",
+        outputs = c("diagnostics", "residuals", "weights", "derivative", "se")
+    )
+    chunk <- process_chunk(streaming, sorted_x, sorted_y)
+    expect_true(is.list(chunk$diagnostics))
+    expect_gt(length(chunk$residuals), 0L)
+    expect_gt(length(chunk$robustness_weights), 0L)
+    expect_gt(length(chunk$gradient), 0L)
+    expect_gt(length(chunk$standard_errors), 0L)
+
+    online <- OnlineLoess(
+        fraction = 1,
+        window_capacity = 10L,
+        min_points = 3L,
+        update_mode = "full",
+        surface_mode = "direct",
+        outputs = c("weights", "gradient", "se")
+    )
+    latest <- NULL
+    for (index in seq_along(sorted_x)) {
+        latest <- add_point(online, sorted_x[index], sorted_y[index])
+    }
+    expect_false(is.null(latest$robustness_weight))
+    expect_length(latest$gradient, 1L)
+    expect_false(is.null(latest$standard_error))
+
+    expect_error(Loess(outputs = c("bad", "worse")), "bad.*worse")
+    expect_error(StreamingLoess(outputs = "sorted"), "Invalid")
+    expect_error(OnlineLoess(outputs = "residuals"), "Invalid")
+    expect_error(predict(model, 2.5, outputs = "weights"), "Invalid")
+    expect_error(Loess(outputs = 1), "character vector")
+})
+
 test_that("Loess return_gradient errors under default surface_mode", {
     set.seed(42)
     x <- seq(0, 10, length.out = 50)

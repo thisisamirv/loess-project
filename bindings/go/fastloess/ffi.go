@@ -266,6 +266,8 @@ func (pm *PredictModel) Close() error {
 
 // PredictOptions configures a PredictModel.Predict call.
 type PredictOptions struct {
+	// Outputs selects optional prediction components: "se", "derivative", or "gradient".
+	Outputs []string
 	// ReturnSE requests standard errors in the output.
 	ReturnSE bool
 	// ConfidenceLevel is the confidence interval coverage level (e.g. 0.95). Nil disables it.
@@ -326,10 +328,10 @@ func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictRes
 	cres := C.go_predict(
 		pm.ptr,
 		newXPtr, newXLen,
-		boolToCInt(opts.ReturnSE),
+		boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
 		optFloat(cl, clSet),
 		optFloat(pl, plSet),
-		boolToCInt(opts.ReturnDerivative),
+		boolToCInt(opts.ReturnDerivative || hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
 		extrap,
 		optFloat(maxExtrap, maxExtrapSet),
 		optFloat(maxNeighbor, maxNeighborSet),

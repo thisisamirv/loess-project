@@ -157,7 +157,7 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 
 const online = new OnlineLoess(
-    { fraction: 0.2, iterations: 1 },
+    { fraction: 0.2 },
     { window_capacity: 100, min_points: 5, update_mode: "incremental" }
 );
 let shown = 0;

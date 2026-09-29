@@ -385,10 +385,7 @@ fn test_online_builder_defaults() {
 
 #[test]
 fn test_online_robustness_iterations_require_full_update_mode() {
-    let result = Loess::<f64>::new()
-        .iterations(1)
-        .adapter(Online)
-        .build();
+    let result = Loess::<f64>::new().iterations(1).adapter(Online).build();
 
     assert!(matches!(
         result,
@@ -1240,4 +1237,3 @@ fn test_online_no_intervals_by_default() {
     assert!(output.prediction_lower.is_none());
     assert!(output.prediction_upper.is_none());
 }
-

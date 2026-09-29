@@ -215,7 +215,7 @@ func main() {
 
  opts := fastloess.DefaultOptions()
  opts.Iterations = 5
- opts.ReturnRobustnessWeights = true
+ opts.Outputs = []string{"weights"}
  model, err := fastloess.NewLoess(opts)
  if err != nil {
   log.Fatal(err)

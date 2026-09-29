@@ -19,6 +19,7 @@ Requires `retain_model: true` on the constructor before `fit()`, otherwise `pred
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
+| `outputs` | `string[]` | `[]` | Optional fields: `"se"`, `"gradient"` (or `"derivative"`); combines with individual flags |
 | `return_se` | `boolean` | `false` | Include standard errors in the output |
 | `confidence_level` | `number` | disabled | Confidence interval coverage level (e.g. `0.95`) |
 | `prediction_level` | `number` | disabled | Prediction interval coverage level (e.g. `0.95`) |

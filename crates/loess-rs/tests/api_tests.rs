@@ -531,6 +531,54 @@ fn test_fit_with_residuals() {
     }
 }
 
+#[test]
+fn test_outputs_enables_multiple_batch_result_fields() {
+    let (mut x, mut y) = linear_series(20, 2.0, 1.0);
+    x.reverse();
+    y.reverse();
+    let result = Loess::<f64>::new()
+        .fraction(0.5)
+        .iterations(0)
+        .surface_mode("direct")
+        .return_residuals()
+        .outputs([
+            "diagnostics",
+            "weights",
+            "gradient",
+            "derivative",
+            "se",
+            "sorted",
+        ])
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+
+    assert!(result.diagnostics.is_some());
+    assert!(result.residuals.is_some());
+    assert!(result.robustness_weights.is_some());
+    assert!(result.gradient.is_some());
+    assert!(result.standard_errors.is_some());
+    assert!(result.x.windows(2).all(|pair| pair[0] <= pair[1]));
+}
+
+#[test]
+fn test_outputs_collects_unknown_names_until_build() {
+    let result = Loess::<f64>::new().outputs(["bogus", "unknown"]).build();
+    let Err(LoessError::ParseErrors(errors)) = result else {
+        panic!("unknown output names should produce accumulated parse errors");
+    };
+
+    assert_eq!(errors.len(), 2);
+    assert!(errors.iter().all(|error| matches!(
+        error,
+        LoessError::InvalidOption {
+            option: "outputs",
+            ..
+        }
+    )));
+}
+
 /// Test Diagnostics Display formatting.
 ///
 /// Verifies that Diagnostics can be formatted.

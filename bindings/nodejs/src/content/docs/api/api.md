@@ -96,6 +96,7 @@ Async fit y[0]: 0.3274
 | `auto_converge` | `number` | `null` | Auto-convergence tolerance |
 | `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
 | `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
+| `outputs` | `string[]` | `[]` | Optional fields: `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"` (or `"derivative"`), `"se"`, `"sorted"`; combines with individual flags |
 | `return_diagnostics` | `boolean` | `false` | Include diagnostics in result |
 | `return_residuals` | `boolean` | `false` | Include residuals in result |
 | `return_robustness_weights` | `boolean` | `false` | Include weights in result |

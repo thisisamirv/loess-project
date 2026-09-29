@@ -210,6 +210,27 @@ public final class StreamingOptions {
         }
 
         /**
+         * Selects optional result components: {@code "diagnostics"},
+         * {@code "residuals"}, {@code "weights"}, {@code "gradient"} (or
+         * {@code "derivative"}), and {@code "se"}.
+         *
+         * @param outputs optional output component names
+         * @return this builder, for chaining
+         * @throws IllegalArgumentException if an output is not supported here
+         */
+        public Builder outputs(String... outputs) {
+            for (String output : outputs) {
+                switch (output) {
+                    case "diagnostics", "residuals", "weights", "gradient", "derivative", "se" ->
+                        common.outputs(output);
+                    default ->
+                        throw new IllegalArgumentException("Unknown output: " + output);
+                }
+            }
+            return this;
+        }
+
+        /**
          * @param parallel whether to enable parallel execution
          * @return this builder, for chaining
          * @see Options.Builder#parallel(boolean)

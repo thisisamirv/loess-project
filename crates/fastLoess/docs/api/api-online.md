@@ -91,7 +91,11 @@ fn main() -> Result<(), LoessError> {
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
+| `outputs([&str])` | iterable of names | `[]` | Select `"weights"`, `"gradient"`/`"derivative"`, `"se"` |
 | `return_robustness_weights()` | `bool` | `false` | Include `robustness_weight` in result |
+| `return_se()` | `bool` | `false` | Include standard error (`update_mode("full")` only) |
+| `confidence_intervals(T)` | `T: Float` | disabled | Confidence interval level (full mode only) |
+| `prediction_intervals(T)` | `T: Float` | disabled | Prediction interval level (full mode only) |
 | `degree(...)` | `degree` | `"linear"` | Polynomial degree |
 | `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
 | `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
@@ -105,7 +109,7 @@ fn main() -> Result<(), LoessError> {
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 
-Confidence/prediction intervals, standard errors, cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [API](crate::doc::api) for those. Online always runs sequentially.
+Cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are unavailable here. Standard errors and interval levels require `update_mode("full")`; Online always runs sequentially.
 
 ## Options
 
@@ -192,6 +196,27 @@ Policy for handling a non-finite (NaN/Inf) value in the `x` coordinates or `y` v
 *See: [Robustness](crate::doc::weighting::robustness#auto-convergence)*
 
 Convergence tolerance for early stopping of robustness iterations. Disabled by default.
+
+### outputs
+
+Select optional latest-point results together. `"derivative"` aliases
+`"gradient"`, which requires the direct surface; `"se"` requires full updates.
+Individual `return_*()` setters remain available alongside `.outputs([...])`.
+
+```rust
+use fastLoess::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let _processor = OnlineLoess::new()
+        .update_mode("full")
+        .surface_mode("direct")
+        .outputs(["weights", "gradient", "se"])
+        .build()?;
+    Ok(())
+}
+```
+
+Unknown names are collected and reported together at `.build()`.
 
 ### return_robustness_weights
 
@@ -283,7 +308,7 @@ Returned inside `Ok(Some(...))` by `add_point()`. `None` while the window is sti
 | Field | Type | Description |
 | --- | --- | --- |
 | `y` | `T` | Smoothed value for the latest point |
-| `standard_error` | `Option<T>` | Always `None` — standard errors require confidence intervals, which are Batch-only |
+| `standard_error` | `Option<T>` | Latest-point SE when requested in full update mode |
 | `residual` | `Option<T>` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
 | `robustness_weight` | `Option<T>` | Robustness weight, if `return_robustness_weights` was set |
 | `iterations_used` | `Option<usize>` | Robustness iterations performed |

@@ -59,6 +59,7 @@ print(result)
 | `zero_weight_fallback` | `str` | `"use_local_mean"` | Zero-weight handling strategy |
 | `missing` | `str` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `auto_converge` | `float` | `None` | Auto-convergence tolerance |
+| `outputs` | `Sequence[str] \| None` | `None` | Optional fields: `"weights"`, `"gradient"` (or `"derivative"`), `"se"`; combines with individual flags |
 | `return_robustness_weights` | `bool` | `False` | Include `robustness_weight` in result |
 | `degree` | `str` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `int` | `1` | Number of predictor dimensions |

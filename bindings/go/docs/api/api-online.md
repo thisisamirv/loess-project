@@ -17,7 +17,7 @@ opts.WindowCapacity = 200
 opts.MinPoints = 10
 ```
 
-`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CVFractions`/`CVMethod`/`CVK`/`CVSeed`, and `Parallel`, which are batch-only). `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSe` require `UpdateMode = "full"`. `AddPoint` only accepts a single x coordinate: online mode does not support multivariate predictors even if `Dimensions` was set on construction. Fields:
+`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CVFractions`/`CVMethod`/`CVK`/`CVSeed`, and `Parallel`, which are batch-only). `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSe` require `UpdateMode = "full"`. `AddPoint` only accepts a single x coordinate: online mode does not support multivariate predictors even if `Dimensions` was set on construction. `Outputs` accepts `weights`, `derivative`/`gradient`, and `se`; `se` requires `UpdateMode = "full"`.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -30,6 +30,7 @@ opts.MinPoints = 10
 | `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
 | `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `AutoConverge` | `*float64` | `nil` (disabled) | Auto-convergence tolerance |
+| `Outputs` | `[]string` | `nil` | Optional fields: `weights`, `derivative`/`gradient`, and `se`. |
 | `ReturnRobustnessWeights` | `bool` | `false` | Include `RobustnessWeight` in result |
 | `Degree` | `string` | `"linear"` | Polynomial degree |
 | `Dimensions` | `int` | `1` | Number of predictor dimensions |
@@ -47,7 +48,7 @@ opts.MinPoints = 10
 | `MinPoints` | `int` | `2` | Minimum points required before output starts |
 | `UpdateMode` | `string` | `"incremental"` | How the window is updated as new points arrive |
 
-Cross-validation, `ReturnSorted`, `ReturnDiagnostics`, and `ReturnResiduals` are Batch-only (or Batch/Streaming-only) and not available here; see [API](api.md) for those.
+Cross-validation, the `sorted` and `diagnostics` outputs, and `Parallel` are Batch-only and not available here. Online residuals are always present; the `residuals` output name is not supported.
 
 ## `fastloess.NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error)`
 

@@ -17,6 +17,7 @@
 #error "fastloess.hpp requires C++17 or later"
 #endif
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -42,6 +43,11 @@ constexpr int k_default_overlap = -1;
 constexpr int k_default_window_capacity = 1000;
 constexpr int k_default_min_points = 2;
 } // namespace detail
+
+inline bool hasOutput(const std::vector<std::string> &outputs,
+                      const char *name) {
+  return std::find(outputs.begin(), outputs.end(), name) != outputs.end();
+}
 
 /**
  * @brief Exception thrown when LOESS operation fails.
@@ -129,15 +135,9 @@ struct LoessOptions {
   double prediction_intervals = NAN; ///< Prediction level (NaN = disabled)
   double auto_converge = NAN;        ///< Auto-convergence threshold
 
-  bool return_diagnostics = false;
-  bool return_residuals = false;
-  bool return_robustness_weights = false;
-  /// Include the per-point local fit gradient in the output (only takes
-  /// effect when `surface_mode == "direct"`).
-  bool return_gradient = false;
-  bool return_se = false; ///< Compute standard errors and hat-matrix statistics
-  /// Return results sorted ascending by x instead of in original input order.
-  bool return_sorted = false;
+  /// Optional result components: "diagnostics", "residuals", "weights",
+  /// "gradient" (or "derivative"), "se", and "sorted".
+  std::vector<std::string> outputs;
   bool parallel = true;
 
   // LOESS-specific options
@@ -191,7 +191,7 @@ struct StreamingOptions : public LoessOptions {
  * LOESS processes one point at a time and always runs sequentially.
  * Cross-validation and diagnostics/residuals are Batch-only (or
  * Batch/Streaming-only) and have no equivalent here.
- * `confidence_intervals`/`prediction_intervals`/`return_se` require
+ * `confidence_intervals`/`prediction_intervals`/`outputs = {"se"}` require
  * `update_mode == "full"`.
  */
 struct OnlineOptions {
@@ -203,19 +203,15 @@ struct OnlineOptions {
   std::string boundary_policy = "extend";
   std::string zero_weight_fallback = "use_local_mean";
   double auto_converge = NAN;
-  bool return_robustness_weights = false;
-  /// Include the local fit gradient for the latest point in the output (only
-  /// takes effect when `surface_mode == "direct"`).
-  bool return_gradient = false;
+  /// Optional output components: "weights", "gradient" (or "derivative"),
+  /// and/or "se". "se" requires `update_mode == "full"`.
+  std::vector<std::string> outputs;
   /// Confidence level for confidence intervals; requires `update_mode ==
   /// "full"` (NaN = disabled).
   double confidence_intervals = NAN;
   /// Confidence level for prediction intervals; requires `update_mode ==
   /// "full"` (NaN = disabled).
   double prediction_intervals = NAN;
-  /// Include the standard error for the latest point; requires
-  /// `update_mode == "full"`.
-  bool return_se = false;
   std::string degree = "linear";
   int dimensions = 1;
   std::string distance_metric = "normalized";
@@ -275,10 +271,10 @@ private:
  * @brief Options for `PredictModel::predict()`.
  */
 struct PredictOptions {
-  bool return_se = false;
+  /// Optional prediction components: "se" and/or "gradient" ("derivative").
+  std::vector<std::string> outputs;
   double confidence_level = NAN; ///< Confidence level (NaN = disabled)
   double prediction_level = NAN; ///< Prediction level (NaN = disabled)
-  bool return_derivative = false;
   /// Behavior for query points outside the training range ("clamp", "linear",
   /// "error").
   std::string extrapolation = "clamp";
@@ -453,8 +449,12 @@ public:
                         const PredictOptions &options = {}) const {
     auto result = cpp_predict(
         ptr_, new_x.data(), static_cast<unsigned long>(new_x.size()),
-        options.return_se ? 1 : 0, options.confidence_level,
-        options.prediction_level, options.return_derivative ? 1 : 0,
+        hasOutput(options.outputs, "se") ? 1 : 0, options.confidence_level,
+        options.prediction_level,
+        (hasOutput(options.outputs, "gradient") ||
+         hasOutput(options.outputs, "derivative"))
+            ? 1
+            : 0,
         options.extrapolation.c_str(), options.max_extrapolation_distance,
         options.max_neighbor_distance);
     return PredictResult(result);
@@ -671,11 +671,15 @@ public:
         options.fraction, options.iterations, options.weight_function.c_str(),
         options.robustness_method.c_str(), options.scaling_method.c_str(),
         options.boundary_policy.c_str(), options.confidence_intervals,
-        options.prediction_intervals, options.return_diagnostics ? 1 : 0,
-        options.return_residuals ? 1 : 0,
-        options.return_robustness_weights ? 1 : 0,
-        options.return_gradient ? 1 : 0, options.zero_weight_fallback.c_str(),
-        options.auto_converge,
+        options.prediction_intervals,
+        hasOutput(options.outputs, "diagnostics") ? 1 : 0,
+        hasOutput(options.outputs, "residuals") ? 1 : 0,
+        hasOutput(options.outputs, "weights") ? 1 : 0,
+        (hasOutput(options.outputs, "gradient") ||
+         hasOutput(options.outputs, "derivative"))
+            ? 1
+            : 0,
+        options.zero_weight_fallback.c_str(), options.auto_converge,
         options.cv_fractions.empty() ? nullptr : options.cv_fractions.data(),
         static_cast<unsigned long>(options.cv_fractions.size()),
         options.cv_method.c_str(), options.cv_k, options.parallel ? 1 : 0,
@@ -683,8 +687,8 @@ public:
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
             : nullptr,
-        options.surface_mode.c_str(), options.return_se ? 1 : 0,
-        options.return_sorted ? 1 : 0, options.cell,
+        options.surface_mode.c_str(), hasOutput(options.outputs, "se") ? 1 : 0,
+        hasOutput(options.outputs, "sorted") ? 1 : 0, options.cell,
         options.interpolation_vertices, options.boundary_degree_fallback,
         options.weighted_metric_weights.empty()
             ? nullptr
@@ -763,12 +767,17 @@ public:
     ptr_ = cpp_streaming_new(
         options.fraction, options.iterations, options.weight_function.c_str(),
         options.robustness_method.c_str(), options.scaling_method.c_str(),
-        options.boundary_policy.c_str(), options.return_diagnostics ? 1 : 0,
-        options.return_residuals ? 1 : 0,
-        options.return_robustness_weights ? 1 : 0,
-        options.return_gradient ? 1 : 0, options.zero_weight_fallback.c_str(),
-        options.auto_converge, options.parallel ? 1 : 0, options.chunk_size,
-        options.overlap, options.merge_strategy.c_str(), options.degree.c_str(),
+        options.boundary_policy.c_str(),
+        hasOutput(options.outputs, "diagnostics") ? 1 : 0,
+        hasOutput(options.outputs, "residuals") ? 1 : 0,
+        hasOutput(options.outputs, "weights") ? 1 : 0,
+        (hasOutput(options.outputs, "gradient") ||
+         hasOutput(options.outputs, "derivative"))
+            ? 1
+            : 0,
+        options.zero_weight_fallback.c_str(), options.auto_converge,
+        options.parallel ? 1 : 0, options.chunk_size, options.overlap,
+        options.merge_strategy.c_str(), options.degree.c_str(),
         options.dimensions,
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
@@ -780,7 +789,7 @@ public:
             : options.weighted_metric_weights.data(),
         static_cast<unsigned long>(options.weighted_metric_weights.size()),
         options.missing.c_str(), options.confidence_intervals,
-        options.prediction_intervals, options.return_se ? 1 : 0);
+        options.prediction_intervals, hasOutput(options.outputs, "se") ? 1 : 0);
   }
 
   ~StreamingLoess() {
@@ -936,9 +945,13 @@ public:
         options.fraction, options.iterations, options.weight_function.c_str(),
         options.robustness_method.c_str(), options.scaling_method.c_str(),
         options.boundary_policy.c_str(),
-        options.return_robustness_weights ? 1 : 0,
-        options.return_gradient ? 1 : 0, options.zero_weight_fallback.c_str(),
-        options.auto_converge, options.window_capacity, options.min_points,
+        hasOutput(options.outputs, "weights") ? 1 : 0,
+        (hasOutput(options.outputs, "gradient") ||
+         hasOutput(options.outputs, "derivative"))
+            ? 1
+            : 0,
+        options.zero_weight_fallback.c_str(), options.auto_converge,
+        options.window_capacity, options.min_points,
         options.update_mode.c_str(), options.degree.c_str(), options.dimensions,
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
@@ -950,7 +963,7 @@ public:
             : options.weighted_metric_weights.data(),
         static_cast<unsigned long>(options.weighted_metric_weights.size()),
         options.missing.c_str(), options.confidence_intervals,
-        options.prediction_intervals, options.return_se ? 1 : 0);
+        options.prediction_intervals, hasOutput(options.outputs, "se") ? 1 : 0);
   }
 
   ~OnlineLoess() {
