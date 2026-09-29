@@ -41,12 +41,13 @@ var NAVTREE =
       [ "Intervals", "intervals.html", null ],
       [ "Cross-Validation", "cross_validation.html", null ]
     ] ],
+    [ "Out-of-Sample Prediction", "guide_predict.html", null ],
     [ "Getting Started", "getting_started.html", [
       [ "Installation", "installation.html", null ],
       [ "Quick Start", "quickstart.html", null ],
       [ "Concepts", "concepts.html", null ]
     ] ],
-    [ "News", "news.html", null ],
+    [ "Changelog", "news.html", null ],
     [ "Use Cases", "use_case.html", [
       [ "Genomic Data Smoothing", "use_case_genomics.html", null ],
       [ "Time Series Analysis", "use_case_time_series.html", null ],
@@ -62,6 +63,7 @@ var NAVTREE =
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
       [ "Namespace Members", "namespacemembers.html", [
         [ "All", "namespacemembers.html", null ],
+        [ "Functions", "namespacemembers_func.html", null ],
         [ "Variables", "namespacemembers_vars.html", null ]
       ] ]
     ] ],
@@ -85,7 +87,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "adapter_choice.html",
-"structfastloess_1_1LoessOptions.html#a43b259baa804c25879bfbc3c371b854b"
+"classfastloess_1_1StreamingLoess.html#a2f87e5bcc659dc93bb65ab1087af0bfa"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

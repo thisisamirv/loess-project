@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['time_20processing_0',['Real-Time Processing',['../use_case_real_time.html',1,'use_case']]],
-  ['time_20series_20analysis_1',['Time Series Analysis',['../use_case_time_series.html',1,'use_case']]]
+  ['use_20cases_0',['Use Cases',['../use_case.html',1,'']]],
+  ['user_20guide_1',['User Guide',['../user_guide.html',1,'']]]
 ];

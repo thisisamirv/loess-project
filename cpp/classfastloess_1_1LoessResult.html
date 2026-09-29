@@ -169,6 +169,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac004d6e81b5837657f20e45382c95544" id="r_ac004d6e81b5837657f20e45382c95544"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1LoessResult.html#ac004d6e81b5837657f20e45382c95544">robustness_weights</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
 <tr class="memdesc:ac004d6e81b5837657f20e45382c95544"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get robustness weights (empty if not computed)  <br /></td></tr>
 <tr class="separator:ac004d6e81b5837657f20e45382c95544"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79e7e40ef1759d9e82d2538c8aab9df9" id="r_a79e7e40ef1759d9e82d2538c8aab9df9"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1LoessResult.html#a79e7e40ef1759d9e82d2538c8aab9df9">gradient</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:a79e7e40ef1759d9e82d2538c8aab9df9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get the per-point local fit gradient (flattened, <code>dimensions</code> values per point) (empty if not computed)  <br /></td></tr>
+<tr class="separator:a79e7e40ef1759d9e82d2538c8aab9df9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a01861ed7fd59cdff22a37ad4b70dd15e" id="r_a01861ed7fd59cdff22a37ad4b70dd15e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1LoessResult.html#a01861ed7fd59cdff22a37ad4b70dd15e">fraction_used</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
 <tr class="memdesc:a01861ed7fd59cdff22a37ad4b70dd15e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fraction used for smoothing.  <br /></td></tr>
 <tr class="separator:a01861ed7fd59cdff22a37ad4b70dd15e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -202,6 +205,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ac8a3fcf5f9d70733c405dfa88cdabea3" id="r_ac8a3fcf5f9d70733c405dfa88cdabea3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Diagnostics.html">Diagnostics</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1LoessResult.html#ac8a3fcf5f9d70733c405dfa88cdabea3">diagnostics</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
 <tr class="memdesc:ac8a3fcf5f9d70733c405dfa88cdabea3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get diagnostics.  <br /></td></tr>
 <tr class="separator:ac8a3fcf5f9d70733c405dfa88cdabea3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a409c44a4b96085ad9c92b84f395ffa02" id="r_a409c44a4b96085ad9c92b84f395ffa02"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1PredictModel.html">PredictModel</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1LoessResult.html#a409c44a4b96085ad9c92b84f395ffa02">predict_model</a> ()</td></tr>
+<tr class="memdesc:a409c44a4b96085ad9c92b84f395ffa02"><td class="mdescLeft">&#160;</td><td class="mdescRight">Extract the retained predict model (only available when <code><a class="el" href="structfastloess_1_1LoessOptions.html#a3ea4655ab3ed717d357ce0f0fbc53f7a" title="Retain the fitted model&#39;s training data, enabling LoessResult::predict_model().">LoessOptions::retain_model</a></code> was set to <code>true</code> before <code>fit()</code>).  <br /></td></tr>
+<tr class="separator:a409c44a4b96085ad9c92b84f395ffa02"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Result of LOESS smoothing operation. </p>
@@ -606,6 +612,33 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="a79e7e40ef1759d9e82d2538c8aab9df9" name="a79e7e40ef1759d9e82d2538c8aab9df9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a79e7e40ef1759d9e82d2538c8aab9df9">&#9670;&#160;</a></span>gradient()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; fastloess::LoessResult::gradient </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get the per-point local fit gradient (flattened, <code>dimensions</code> values per point) (empty if not computed) </p>
+
+</div>
+</div>
 <a id="af66d4669ffb3b4ab581d243ba1c0ee01" name="af66d4669ffb3b4ab581d243ba1c0ee01"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af66d4669ffb3b4ab581d243ba1c0ee01">&#9670;&#160;</a></span>iterations_used()</h2>
 
@@ -709,6 +742,34 @@ Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a409c44a4b96085ad9c92b84f395ffa02" name="a409c44a4b96085ad9c92b84f395ffa02"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a409c44a4b96085ad9c92b84f395ffa02">&#9670;&#160;</a></span>predict_model()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastloess_1_1PredictModel.html">PredictModel</a> fastloess::LoessResult::predict_model </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Extract the retained predict model (only available when <code><a class="el" href="structfastloess_1_1LoessOptions.html#a3ea4655ab3ed717d357ce0f0fbc53f7a" title="Retain the fitted model&#39;s training data, enabling LoessResult::predict_model().">LoessOptions::retain_model</a></code> was set to <code>true</code> before <code>fit()</code>). </p>
+<p>Transfers ownership: subsequent calls return an invalid (empty) <code><a class="el" href="classfastloess_1_1PredictModel.html" title="Retained fitted-model state enabling out-of-sample predict().">PredictModel</a></code>. Check <code><a class="el" href="classfastloess_1_1PredictModel.html#afc0af9ae2d84bfc499191f64e2ee374f" title="True if this model was actually retained (retain_model was set).">PredictModel::valid()</a></code> before use. </p>
 
 </div>
 </div>

@@ -1,10 +1,5 @@
 var searchData=
 [
-  ['scaling_20methods_0',['Scaling Methods',['../scaling.html',1,'weighting']]],
-  ['series_20analysis_1',['Time Series Analysis',['../use_case_time_series.html',1,'use_case']]],
-  ['smoothing_2',['Genomic Data Smoothing',['../use_case_genomics.html',1,'use_case']]],
-  ['start_3',['Quick Start',['../quickstart.html',1,'getting_started']]],
-  ['started_4',['Getting Started',['../getting_started.html',1,'']]],
-  ['strategies_5',['Merge Strategies',['../merge.html',1,'advanced']]],
-  ['streamingloess_20api_6',['StreamingLoess API',['../api_streaming.html',1,'api']]]
+  ['time_20processing_0',['Real-Time Processing',['../use_case_real_time.html',1,'use_case']]],
+  ['time_20series_20analysis_1',['Time Series Analysis',['../use_case_time_series.html',1,'use_case']]]
 ];

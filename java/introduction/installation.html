@@ -73,6 +73,12 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/predict.html">Predict</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/alternative-software.html">Alternative Software</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="1">
@@ -193,10 +199,47 @@
 <li>
 <p>Java 17+ (this binding targets Java 25 LTS by default; see the <a href="https://github.com/thisisamirv/loess-project/blob/main/bindings/java/pom.xml">pom.xml</a> <code>maven.compiler.release</code> property)</p>
 </li>
-<li>
-<p>A prebuilt copy of the native <code>fastloess_java</code> library (JNI shared library) on the JVM&#8217;s native library search path</p>
-</li>
 </ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="as-a-standalone-dependency"><a class="anchor" href="#as-a-standalone-dependency"></a>As a standalone dependency</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Add the Maven coordinate to your <code>pom.xml</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependency&gt;
+    &lt;groupId&gt;io.github.thisisamirv&lt;/groupId&gt;
+    &lt;artifactId&gt;fastloess&lt;/artifactId&gt;
+    &lt;version&gt;2.1.0&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The published jar bundles prebuilt native libraries for <code>linux-x86_64</code>, <code>linux-x86_64-musl</code> (Alpine), <code>linux-aarch64</code>, <code>linux-aarch64-musl</code> (Alpine), <code>macos-x86_64</code>, <code>macos-aarch64</code>, <code>windows-x86_64</code>, and <code>windows-aarch64</code> (see <code>NativeBridge&#8217;s `osArchDir()</code>); <code>NativeBridge</code> auto-detects your platform and libc (checking for Alpine&#8217;s <code>/etc/alpine-release</code> and musl&#8217;s <code>ld-musl-*</code> dynamic linker), extracts the matching one to a temp file, and loads it — no separate native library installation needed on any of those platforms.</p>
+</div>
+<div class="paragraph">
+<p>To override the bundled library (e.g. a custom build), either system property takes precedence:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">java -Dfastloess.native.path=/path/to/libfastloess_java.so -cp your-app.jar com.example.Main
+# or point at a directory instead of an exact file:
+java -Dfastloess.native.dir=/path/to/native/lib -cp your-app.jar com.example.Main</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Build the native library yourself from the <a href="https://github.com/thisisamirv/loess-project"><code>loess-project</code></a> source:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">git clone https://github.com/thisisamirv/loess-project
+cd loess-project
+cargo build -p fastloess-java --release</code></pre>
+</div>
 </div>
 </div>
 </div>
@@ -214,41 +257,6 @@ make java-dev     # full dev checks: fmt, clippy, export verification, mvn test<
 </div>
 <div class="paragraph">
 <p><code>NativeBridge</code> loads the native library from the path given by the <code>fastloess.native.dir</code> system property (or <code>-Dfastloess.native.dir=&#8230;&#8203;</code>), which defaults to <code>../../target/debug</code> relative to <code>bindings/java</code> — where <code>cargo build -p fastloess-java</code> places the shared library within this repo&#8217;s layout.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="as-a-standalone-dependency"><a class="anchor" href="#as-a-standalone-dependency"></a>As a standalone dependency</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Outside the monorepo, add the Maven coordinate to your <code>pom.xml</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;dependency&gt;
-    &lt;groupId&gt;io.github.thisisamirv&lt;/groupId&gt;
-    &lt;artifactId&gt;fastloess&lt;/artifactId&gt;
-    &lt;version&gt;1.1.0&lt;/version&gt;
-&lt;/dependency&gt;</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Then point the JVM at a prebuilt native library, either via the <code>fastloess.native.dir</code> system property or by placing it on <code>java.library.path</code>:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">java -Dfastloess.native.dir=/path/to/native/lib -cp your-app.jar com.example.Main</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Build the native library yourself from the <a href="https://github.com/thisisamirv/loess-project"><code>loess-project</code></a> source:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">git clone https://github.com/thisisamirv/loess-project
-cd loess-project
-cargo build -p fastloess-java --release</code></pre>
-</div>
 </div>
 </div>
 </div>

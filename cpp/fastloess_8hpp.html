@@ -102,6 +102,7 @@ $(document).ready(function(){initNavTree('fastloess_8hpp.html',''); initResizabl
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
 <a href="#namespaces">Namespaces</a> &#124;
+<a href="#func-members">Functions</a> &#124;
 <a href="#var-members">Variables</a>  </div>
   <div class="headertitle"><div class="title">fastloess.hpp File Reference</div></div>
 </div><!--header-->
@@ -109,10 +110,12 @@ $(document).ready(function(){initNavTree('fastloess_8hpp.html',''); initResizabl
 
 <p>C++ wrapper for fastLoess library.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &lt;cmath&gt;</code><br />
+<div class="textblock"><code>#include &lt;algorithm&gt;</code><br />
+<code>#include &lt;cmath&gt;</code><br />
 <code>#include &lt;cstdint&gt;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
 <code>#include &lt;limits&gt;</code><br />
+<code>#include &lt;optional&gt;</code><br />
 <code>#include &lt;stdexcept&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;utility&gt;</code><br />
@@ -123,6 +126,8 @@ $(document).ready(function(){initNavTree('fastloess_8hpp.html',''); initResizabl
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1CVOptions.html">fastloess::CVOptions</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1LoessError.html">fastloess::LoessError</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Exception thrown when LOESS operation fails.  <a href="classfastloess_1_1LoessError.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -142,6 +147,15 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1Diagnostics.html">fastloess::Diagnostics</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classfastloess_1_1Diagnostics.html" title="Diagnostics from LOESS fitting.">Diagnostics</a> from LOESS fitting.  <a href="classfastloess_1_1Diagnostics.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1PredictOptions.html">fastloess::PredictOptions</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Options for <code><a class="el" href="classfastloess_1_1PredictModel.html#a0110cc4f5f6feba0be6bcbd144af8823" title="Evaluate the fitted model at out-of-sample query points not in the training set (flattened,...">PredictModel::predict()</a></code>.  <a href="structfastloess_1_1PredictOptions.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1PredictResult.html">fastloess::PredictResult</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Result of <code><a class="el" href="classfastloess_1_1PredictModel.html#a0110cc4f5f6feba0be6bcbd144af8823" title="Evaluate the fitted model at out-of-sample query points not in the training set (flattened,...">PredictModel::predict()</a></code>.  <a href="classfastloess_1_1PredictResult.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1PredictModel.html">fastloess::PredictModel</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retained fitted-model state enabling out-of-sample <code><a class="el" href="classfastloess_1_1PredictModel.html#a0110cc4f5f6feba0be6bcbd144af8823" title="Evaluate the fitted model at out-of-sample query points not in the training set (flattened,...">predict()</a></code>.  <a href="classfastloess_1_1PredictModel.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1LoessResult.html">fastloess::LoessResult</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Result of LOESS smoothing operation.  <a href="classfastloess_1_1LoessResult.html#details">More...</a><br /></td></tr>
@@ -165,6 +179,11 @@ Namespaces</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:namespacefastloess_1_1detail" id="r_namespacefastloess_1_1detail"><td class="memItemLeft" align="right" valign="top">namespace &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastloess_1_1detail.html">fastloess::detail</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a3a5aa6cb156511f5afdd9437f14a1220" id="r_a3a5aa6cb156511f5afdd9437f14a1220"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastloess.html#a3a5aa6cb156511f5afdd9437f14a1220">fastloess::hasOutput</a> (<a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; std::string &gt; &amp;outputs, <a class="el" href="classfastloess_1_1Expected.html">const</a> <a class="el" href="classfastloess_1_1Expected.html">char</a> *<a class="el" href="classfastloess_1_1Expected.html">name</a>)</td></tr>
+<tr class="separator:a3a5aa6cb156511f5afdd9437f14a1220"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>

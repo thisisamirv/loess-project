@@ -73,6 +73,12 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/predict.html">Predict</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/alternative-software.html">Alternative Software</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="1">
@@ -331,7 +337,7 @@ public class Example {
                 .fraction(0.7)
                 .iterations(3)                   // more iterations for outliers
                 .robustnessMethod("bisquare")    // default, smooth downweighting
-                .returnRobustnessWeights(true)   // see which points were downweighted
+                .outputs("weights")   // see which points were downweighted
                 .build();
 
         try (Loess model = new Loess(options)) {

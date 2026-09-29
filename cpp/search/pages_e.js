@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['quick_20start_0',['Quick Start',['../quickstart.html',1,'getting_started']]]
+  ['real_20time_20processing_0',['Real-Time Processing',['../use_case_real_time.html',1,'use_case']]],
+  ['robustness_1',['robustness',['../robustness.html',1,'Robustness'],['../weighting.html',1,'Weight &amp; Robustness']]]
 ];

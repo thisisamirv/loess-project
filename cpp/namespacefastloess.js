@@ -8,6 +8,7 @@ var namespacefastloess =
       [ "k_default_overlap", "namespacefastloess_1_1detail.html#a495ea685bf82cda48f8b65bb4ca68453", null ],
       [ "k_default_window_capacity", "namespacefastloess_1_1detail.html#afcf25f829cc920c546e570edbdf1c6be", null ]
     ] ],
+    [ "CVOptions", "structfastloess_1_1CVOptions.html", "structfastloess_1_1CVOptions" ],
     [ "Diagnostics", "classfastloess_1_1Diagnostics.html", "classfastloess_1_1Diagnostics" ],
     [ "Expected", "classfastloess_1_1Expected.html", "classfastloess_1_1Expected" ],
     [ "Loess", "classfastloess_1_1Loess.html", "classfastloess_1_1Loess" ],
@@ -17,6 +18,10 @@ var namespacefastloess =
     [ "OnlineLoess", "classfastloess_1_1OnlineLoess.html", "classfastloess_1_1OnlineLoess" ],
     [ "OnlineOptions", "structfastloess_1_1OnlineOptions.html", "structfastloess_1_1OnlineOptions" ],
     [ "OnlineOutput", "classfastloess_1_1OnlineOutput.html", "classfastloess_1_1OnlineOutput" ],
+    [ "PredictModel", "classfastloess_1_1PredictModel.html", "classfastloess_1_1PredictModel" ],
+    [ "PredictOptions", "structfastloess_1_1PredictOptions.html", "structfastloess_1_1PredictOptions" ],
+    [ "PredictResult", "classfastloess_1_1PredictResult.html", "classfastloess_1_1PredictResult" ],
     [ "StreamingLoess", "classfastloess_1_1StreamingLoess.html", "classfastloess_1_1StreamingLoess" ],
-    [ "StreamingOptions", "structfastloess_1_1StreamingOptions.html", "structfastloess_1_1StreamingOptions" ]
+    [ "StreamingOptions", "structfastloess_1_1StreamingOptions.html", "structfastloess_1_1StreamingOptions" ],
+    [ "hasOutput", "namespacefastloess.html#a3a5aa6cb156511f5afdd9437f14a1220", null ]
 ];

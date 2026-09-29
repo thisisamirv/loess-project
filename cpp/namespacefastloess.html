@@ -101,7 +101,8 @@ $(document).ready(function(){initNavTree('namespacefastloess.html',''); initResi
 <div class="header">
   <div class="summary">
 <a href="#namespaces">Namespaces</a> &#124;
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle"><div class="title">fastloess Namespace Reference</div></div>
 </div><!--header-->
 <div class="contents">
@@ -113,6 +114,8 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1CVOptions.html">CVOptions</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1Diagnostics.html">Diagnostics</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classfastloess_1_1Diagnostics.html" title="Diagnostics from LOESS fitting.">Diagnostics</a> from LOESS fitting.  <a href="classfastloess_1_1Diagnostics.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -140,13 +143,64 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineOutput.html">OnlineOutput</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Result of a single online update step.  <a href="classfastloess_1_1OnlineOutput.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1PredictModel.html">PredictModel</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retained fitted-model state enabling out-of-sample <code><a class="el" href="classfastloess_1_1PredictModel.html#a0110cc4f5f6feba0be6bcbd144af8823" title="Evaluate the fitted model at out-of-sample query points not in the training set (flattened,...">predict()</a></code>.  <a href="classfastloess_1_1PredictModel.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1PredictOptions.html">PredictOptions</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Options for <code><a class="el" href="classfastloess_1_1PredictModel.html#a0110cc4f5f6feba0be6bcbd144af8823" title="Evaluate the fitted model at out-of-sample query points not in the training set (flattened,...">PredictModel::predict()</a></code>.  <a href="structfastloess_1_1PredictOptions.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1PredictResult.html">PredictResult</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Result of <code><a class="el" href="classfastloess_1_1PredictModel.html#a0110cc4f5f6feba0be6bcbd144af8823" title="Evaluate the fitted model at out-of-sample query points not in the training set (flattened,...">PredictModel::predict()</a></code>.  <a href="classfastloess_1_1PredictResult.html#details">More...</a><br /></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1StreamingLoess.html">StreamingLoess</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Streaming LOESS model.  <a href="classfastloess_1_1StreamingLoess.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1StreamingOptions.html">StreamingOptions</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Options for streaming LOESS.  <a href="structfastloess_1_1StreamingOptions.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a3a5aa6cb156511f5afdd9437f14a1220" id="r_a3a5aa6cb156511f5afdd9437f14a1220"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastloess.html#a3a5aa6cb156511f5afdd9437f14a1220">hasOutput</a> (<a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; std::string &gt; &amp;outputs, <a class="el" href="classfastloess_1_1Expected.html">const</a> <a class="el" href="classfastloess_1_1Expected.html">char</a> *<a class="el" href="classfastloess_1_1Expected.html">name</a>)</td></tr>
+<tr class="separator:a3a5aa6cb156511f5afdd9437f14a1220"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="a3a5aa6cb156511f5afdd9437f14a1220" name="a3a5aa6cb156511f5afdd9437f14a1220"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a5aa6cb156511f5afdd9437f14a1220">&#9670;&#160;</a></span>hasOutput()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">bool</a> fastloess::hasOutput </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; std::string &gt; &amp;&#160;</td>
+          <td class="paramname"><em>outputs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classfastloess_1_1Expected.html">const</a> <a class="el" href="classfastloess_1_1Expected.html">char</a> *&#160;</td>
+          <td class="paramname"><em>name</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 <!-- start footer part -->

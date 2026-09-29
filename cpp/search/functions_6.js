@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['iterations_5fused_0',['iterations_used',['../classfastloess_1_1LoessResult.html#af66d4669ffb3b4ab581d243ba1c0ee01',1,'fastloess::LoessResult::iterations_used()'],['../classfastloess_1_1OnlineOutput.html#a489fb043f8dd1be5ae5f928f7939ddc7',1,'fastloess::OnlineOutput::iterations_used()']]]
+  ['has_5fvalue_0',['has_value',['../classfastloess_1_1Expected.html#a39ed4f05838a583dd68837af006e5f1b',1,'fastloess::Expected::has_value()'],['../classfastloess_1_1Diagnostics.html#ac5e85580bde440a5af09f3189749ddf1',1,'fastloess::Diagnostics::has_value()'],['../classfastloess_1_1OnlineOutput.html#a4a63408745a62b2d92623d854cc8351e',1,'fastloess::OnlineOutput::has_value()']]],
+  ['hasoutput_1',['hasOutput',['../namespacefastloess.html#a3a5aa6cb156511f5afdd9437f14a1220',1,'fastloess']]]
 ];

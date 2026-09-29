@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['x_5fvalue_0',['x_value',['../classfastloess_1_1LoessResult.html#afb1db64a3a6d39ecb4cc311400cff68d',1,'fastloess::LoessResult']]],
-  ['x_5fvector_1',['x_vector',['../classfastloess_1_1LoessResult.html#a7a55daab11696edd85a470dd03f5116a',1,'fastloess::LoessResult']]]
+  ['valid_0',['valid',['../classfastloess_1_1PredictResult.html#aaa0687d8d0eb3f40f580bcb225cb0b28',1,'fastloess::PredictResult::valid()'],['../classfastloess_1_1PredictModel.html#afc0af9ae2d84bfc499191f64e2ee374f',1,'fastloess::PredictModel::valid()'],['../classfastloess_1_1LoessResult.html#a8174edf3e71ffda61d3e1213387e4f05',1,'fastloess::LoessResult::valid()']]],
+  ['value_1',['value',['../classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418',1,'fastloess::Expected::value() &amp;'],['../classfastloess_1_1Expected.html#a4bf36dc02f3e9050c043b5ef94a6b215',1,'fastloess::Expected::value() const &amp;'],['../classfastloess_1_1Expected.html#ad8958a19728964670c33133afee0faa2',1,'fastloess::Expected::value() &amp;&amp;']]]
 ];

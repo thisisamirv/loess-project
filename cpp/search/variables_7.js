@@ -1,6 +1,10 @@
 var searchData=
 [
-  ['merge_5fstrategy_0',['merge_strategy',['../structfastloess_1_1StreamingOptions.html#a2c93745a497965c3da496f8be086b072',1,'fastloess::StreamingOptions']]],
-  ['min_5fpoints_1',['min_points',['../structfastloess_1_1OnlineOptions.html#ae27d7713b713d920996edab73a7e7b98',1,'fastloess::OnlineOptions']]],
-  ['missing_2',['missing',['../structfastloess_1_1LoessOptions.html#a3d5c160a6432be84328ff5cfe2b62f09',1,'fastloess::LoessOptions::missing'],['../structfastloess_1_1OnlineOptions.html#a3c6cb266ca026ce061c72f8964e5d3e1',1,'fastloess::OnlineOptions::missing']]]
+  ['k_0',['k',['../structfastloess_1_1CVOptions.html#ac8d78c5610a44253852a3391d847a250',1,'fastloess::CVOptions']]],
+  ['k_5fdefault_5fchunk_5fsize_1',['k_default_chunk_size',['../namespacefastloess_1_1detail.html#a6916fb8ce782a3bf44496a44cc706da6',1,'fastloess::detail']]],
+  ['k_5fdefault_5fcv_5fk_2',['k_default_cv_k',['../namespacefastloess_1_1detail.html#a42b17d52ff37e457d7fcfe8fdac29acf',1,'fastloess::detail']]],
+  ['k_5fdefault_5ffraction_3',['k_default_fraction',['../namespacefastloess_1_1detail.html#a53a2c6c2254cd2e6af4fe7f794f11a8b',1,'fastloess::detail']]],
+  ['k_5fdefault_5fmin_5fpoints_4',['k_default_min_points',['../namespacefastloess_1_1detail.html#a4d08bbc70b0687ab42a23f30c268ddab',1,'fastloess::detail']]],
+  ['k_5fdefault_5foverlap_5',['k_default_overlap',['../namespacefastloess_1_1detail.html#a495ea685bf82cda48f8b65bb4ca68453',1,'fastloess::detail']]],
+  ['k_5fdefault_5fwindow_5fcapacity_6',['k_default_window_capacity',['../namespacefastloess_1_1detail.html#afcf25f829cc920c546e570edbdf1c6be',1,'fastloess::detail']]]
 ];

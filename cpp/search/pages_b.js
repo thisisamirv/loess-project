@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['news_0',['News',['../news.html',1,'']]]
+  ['of_20sample_20prediction_0',['Out-of-Sample Prediction',['../guide_predict.html',1,'']]],
+  ['onlineloess_20api_1',['OnlineLoess API',['../api_online.html',1,'api']]],
+  ['out_20of_20sample_20prediction_2',['Out-of-Sample Prediction',['../guide_predict.html',1,'']]]
 ];

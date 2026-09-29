@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['streamingloess_0',['StreamingLoess',['../classfastloess_1_1StreamingLoess.html',1,'fastloess']]],
-  ['streamingoptions_1',['StreamingOptions',['../structfastloess_1_1StreamingOptions.html',1,'fastloess']]]
+  ['onlineloess_0',['OnlineLoess',['../classfastloess_1_1OnlineLoess.html',1,'fastloess']]],
+  ['onlineoptions_1',['OnlineOptions',['../structfastloess_1_1OnlineOptions.html',1,'fastloess']]],
+  ['onlineoutput_2',['OnlineOutput',['../classfastloess_1_1OnlineOutput.html',1,'fastloess']]]
 ];

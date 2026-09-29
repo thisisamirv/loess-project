@@ -115,7 +115,7 @@ $(document).ready(function(){initNavTree('structfastloess_1_1OnlineOptions.html'
 Public Attributes</h2></td></tr>
 <tr class="memitem:a2895219e8670848f4bb5f170e1e862e4" id="r_a2895219e8670848f4bb5f170e1e862e4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1OnlineOptions.html#a2895219e8670848f4bb5f170e1e862e4">fraction</a> = <a class="el" href="namespacefastloess_1_1detail.html#a53a2c6c2254cd2e6af4fe7f794f11a8b">detail::k_default_fraction</a></td></tr>
 <tr class="separator:a2895219e8670848f4bb5f170e1e862e4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abb487bb853bb34ccb9ad4a78432c84f9" id="r_abb487bb853bb34ccb9ad4a78432c84f9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1OnlineOptions.html#abb487bb853bb34ccb9ad4a78432c84f9">iterations</a> = 3</td></tr>
+<tr class="memitem:abb487bb853bb34ccb9ad4a78432c84f9" id="r_abb487bb853bb34ccb9ad4a78432c84f9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1OnlineOptions.html#abb487bb853bb34ccb9ad4a78432c84f9">iterations</a> = 0</td></tr>
 <tr class="separator:abb487bb853bb34ccb9ad4a78432c84f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2bfcf51695223edb346d21ccb3b5399" id="r_af2bfcf51695223edb346d21ccb3b5399"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1OnlineOptions.html#af2bfcf51695223edb346d21ccb3b5399">weight_function</a> = &quot;tricube&quot;</td></tr>
 <tr class="separator:af2bfcf51695223edb346d21ccb3b5399"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -129,8 +129,15 @@ Public Attributes</h2></td></tr>
 <tr class="separator:afa4ea728f66b036e5bf056ff0fd3895f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a80fe3fa9e57af18963e067ab306cedbd" id="r_a80fe3fa9e57af18963e067ab306cedbd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1OnlineOptions.html#a80fe3fa9e57af18963e067ab306cedbd">auto_converge</a> = <a class="el" href="classfastloess_1_1Expected.html">NAN</a></td></tr>
 <tr class="separator:a80fe3fa9e57af18963e067ab306cedbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afba616fbfa150494ea07fe5f0deada8e" id="r_afba616fbfa150494ea07fe5f0deada8e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1OnlineOptions.html#afba616fbfa150494ea07fe5f0deada8e">return_robustness_weights</a> = <a class="el" href="classfastloess_1_1Expected.html">false</a></td></tr>
-<tr class="separator:afba616fbfa150494ea07fe5f0deada8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3438e823a465bb7ec283d1627ed5b5c" id="r_aa3438e823a465bb7ec283d1627ed5b5c"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1OnlineOptions.html#aa3438e823a465bb7ec283d1627ed5b5c">outputs</a></td></tr>
+<tr class="memdesc:aa3438e823a465bb7ec283d1627ed5b5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional output components: "weights", "gradient" (or "derivative"), and/or "se".  <br /></td></tr>
+<tr class="separator:aa3438e823a465bb7ec283d1627ed5b5c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26d5bd0b06adfd5af2f1e3b0dd193a7f" id="r_a26d5bd0b06adfd5af2f1e3b0dd193a7f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1OnlineOptions.html#a26d5bd0b06adfd5af2f1e3b0dd193a7f">confidence_intervals</a> = <a class="el" href="classfastloess_1_1Expected.html">NAN</a></td></tr>
+<tr class="memdesc:a26d5bd0b06adfd5af2f1e3b0dd193a7f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confidence level for confidence intervals; requires <code>update_mode == "full"</code> (NaN = disabled).  <br /></td></tr>
+<tr class="separator:a26d5bd0b06adfd5af2f1e3b0dd193a7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae475cd129b866732ba741fa3d8a09f0b" id="r_ae475cd129b866732ba741fa3d8a09f0b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1OnlineOptions.html#ae475cd129b866732ba741fa3d8a09f0b">prediction_intervals</a> = <a class="el" href="classfastloess_1_1Expected.html">NAN</a></td></tr>
+<tr class="memdesc:ae475cd129b866732ba741fa3d8a09f0b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confidence level for prediction intervals; requires <code>update_mode == "full"</code> (NaN = disabled).  <br /></td></tr>
+<tr class="separator:ae475cd129b866732ba741fa3d8a09f0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ef0d2a76392b4704a051e1a1669adfd" id="r_a0ef0d2a76392b4704a051e1a1669adfd"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1OnlineOptions.html#a0ef0d2a76392b4704a051e1a1669adfd">degree</a> = &quot;linear&quot;</td></tr>
 <tr class="separator:a0ef0d2a76392b4704a051e1a1669adfd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a555ef64b30df5ebc704abfecc78a25b1" id="r_a555ef64b30df5ebc704abfecc78a25b1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1OnlineOptions.html#a555ef64b30df5ebc704abfecc78a25b1">dimensions</a> = 1</td></tr>
@@ -159,7 +166,7 @@ Public Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Options for online LOESS. </p>
-<p>Identical fields to <a class="el" href="structfastloess_1_1LoessOptions.html" title="Options for configuring LOESS smoothing.">LoessOptions</a> but has no <code>parallel</code> option: online LOESS processes one point at a time and always runs sequentially. Confidence/prediction intervals, standard errors, cross-validation, and diagnostics/residuals are Batch-only (or Batch/Streaming-only) and have no equivalent here. </p>
+<p>Identical fields to <a class="el" href="structfastloess_1_1LoessOptions.html" title="Options for configuring LOESS smoothing.">LoessOptions</a> but has no <code>parallel</code> option: online LOESS processes one point at a time and always runs sequentially. Cross-validation and diagnostics/residuals are Batch-only (or Batch/Streaming-only) and have no equivalent here. <code>confidence_intervals</code>/<code>prediction_intervals</code>/<code>outputs = {"se"}</code> require <code>update_mode == "full"</code>. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="a80fe3fa9e57af18963e067ab306cedbd" name="a80fe3fa9e57af18963e067ab306cedbd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a80fe3fa9e57af18963e067ab306cedbd">&#9670;&#160;</a></span>auto_converge</h2>
@@ -214,6 +221,22 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a26d5bd0b06adfd5af2f1e3b0dd193a7f" name="a26d5bd0b06adfd5af2f1e3b0dd193a7f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26d5bd0b06adfd5af2f1e3b0dd193a7f">&#9670;&#160;</a></span>confidence_intervals</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">double</a> fastloess::OnlineOptions::confidence_intervals = <a class="el" href="classfastloess_1_1Expected.html">NAN</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Confidence level for confidence intervals; requires <code>update_mode == "full"</code> (NaN = disabled). </p>
 
 </div>
 </div>
@@ -294,7 +317,7 @@ Public Attributes</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">int</a> fastloess::OnlineOptions::iterations = 3</td>
+          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">int</a> fastloess::OnlineOptions::iterations = 0</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -331,17 +354,36 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="afba616fbfa150494ea07fe5f0deada8e" name="afba616fbfa150494ea07fe5f0deada8e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afba616fbfa150494ea07fe5f0deada8e">&#9670;&#160;</a></span>return_robustness_weights</h2>
+<a id="aa3438e823a465bb7ec283d1627ed5b5c" name="aa3438e823a465bb7ec283d1627ed5b5c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3438e823a465bb7ec283d1627ed5b5c">&#9670;&#160;</a></span>outputs</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">bool</a> fastloess::OnlineOptions::return_robustness_weights = <a class="el" href="classfastloess_1_1Expected.html">false</a></td>
+          <td class="memname">std::vector&lt;std::string&gt; fastloess::OnlineOptions::outputs</td>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Optional output components: "weights", "gradient" (or "derivative"), and/or "se". </p>
+<p>"se" requires <code>update_mode == "full"</code>. </p>
+
+</div>
+</div>
+<a id="ae475cd129b866732ba741fa3d8a09f0b" name="ae475cd129b866732ba741fa3d8a09f0b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae475cd129b866732ba741fa3d8a09f0b">&#9670;&#160;</a></span>prediction_intervals</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">double</a> fastloess::OnlineOptions::prediction_intervals = <a class="el" href="classfastloess_1_1Expected.html">NAN</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Confidence level for prediction intervals; requires <code>update_mode == "full"</code> (NaN = disabled). </p>
 
 </div>
 </div>

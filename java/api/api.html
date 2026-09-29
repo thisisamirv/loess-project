@@ -73,6 +73,12 @@
   <li class="nav-item" data-depth="2">
     <a class="nav-link" href="../guide/cross-validation.html">Cross-Validation</a>
   </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/predict.html">Predict</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../guide/alternative-software.html">Alternative Software</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="1">
@@ -216,7 +222,7 @@
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-java hljs" data-lang="java">Options options = Options.builder()
         .fraction(0.3)
-        .returnDiagnostics(true)
+    .outputs("diagnostics")
         .build();</code></pre>
 </div>
 </div>
@@ -356,6 +362,12 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Convergence tolerance for early stopping.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs(String&#8230;&#8203;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String&#8230;&#8203;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">empty</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Select <code>diagnostics</code>, <code>residuals</code>, <code>weights</code>, <code>gradient</code>/<code>derivative</code>, <code>se</code>, and/or <code>sorted</code>.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
@@ -392,6 +404,12 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Candidate fractions for cross-validation.</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cv(CVOptions)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>CVOptions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">disabled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Group candidate fractions, method, folds, and optional seed with <code>CVOptions.builder()</code>.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvMethod</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"kfold"</code></p></td>
@@ -414,6 +432,18 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>true</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Enable parallel processing.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>retainModel</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Retain training data, enabling <code>Result.predictModel()</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnGradient</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Populate <code>Result.gradient()</code> with the per-point local fit gradient, flattened (<code>surfaceMode = "direct"</code> only).</p></td>
 </tr>
 </tbody>
 </table>
@@ -552,7 +582,7 @@
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>standardErrors()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSe</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSe</code> or <code>outputs("se")</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceLower()</code>, <code>confidenceUpper()</code></p></td>
@@ -567,12 +597,12 @@
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>residuals()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnResiduals</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnResiduals</code> or <code>outputs("residuals")</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>robustnessWeights()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code> or <code>outputs("weights")</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>cvScores()</code></p></td>
@@ -597,12 +627,17 @@
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>diagnostics()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;Diagnostics&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code> or <code>outputs("diagnostics")</code></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>hatMatrix()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;HatMatrixStats&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSe</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSe</code> or <code>outputs("se")</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gradient()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnGradient</code> or <code>outputs("gradient")</code>/<code>outputs("derivative")</code> (<code>surfaceMode = "direct"</code> only)</p></td>
 </tr>
 </tbody>
 </table>
@@ -611,6 +646,20 @@
 </div>
 <div class="paragraph">
 <p><code>HatMatrixStats</code> holds <code>enp()</code>, <code>traceHat()</code>, <code>delta1()</code>, <code>delta2()</code>, <code>residualScale()</code>, <code>leverage()</code> (per-point hat-matrix diagonal).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="predict"><a class="anchor" href="#predict"></a>Predict</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>See: <a href="../guide/predict.html" class="xref page">Predict</a></em></p>
+</div>
+<div class="sect2">
+<h3 id="predictmodel-predictdouble-newx-predictoptions-options-predictresult"><a class="anchor" href="#predictmodel-predictdouble-newx-predictoptions-options-predictresult"></a><code>PredictModel.predict(double[] newX, PredictOptions options) PredictResult</code></h3>
+<div class="paragraph">
+<p>Obtained via <code>Result.predictModel()</code>, only populated when <code>retainModel</code> was <code>true</code>. Evaluates the fitted model at out-of-sample query points (flattened, <code>dimensions</code> values per point).</p>
+</div>
 </div>
 </div>
 </div>
@@ -956,6 +1005,12 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 </div>
 </div>
 <div class="sect2">
+<h3 id="outputs"><a class="anchor" href="#outputs"></a>outputs</h3>
+<div class="paragraph">
+<p>Select optional result components with <code>outputs(String&#8230;&#8203;)</code>. Supported names are <code>"diagnostics"</code>, <code>"residuals"</code>, <code>"weights"</code>, <code>"gradient"</code> (or <code>"derivative"</code>), <code>"se"</code>, and <code>"sorted"</code>. Unknown names throw <code>IllegalArgumentException</code>. Existing individual <code>return&#8230;&#8203;</code> builder methods remain supported.</p>
+</div>
+</div>
+<div class="sect2">
 <h3 id="returndiagnostics"><a class="anchor" href="#returndiagnostics"></a>returnDiagnostics</h3>
 <div class="paragraph">
 <p>Populate <code>Result.diagnostics()</code> (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/effective degrees of freedom additionally require <code>returnSe(true)</code> (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.</p>
@@ -1063,6 +1118,31 @@ To get both orderings, sort the default result client-side (e.g. via a <code>Com
 </li>
 <li>
 <p><code>false</code> — forces single-threaded execution (useful for benchmarking or deterministic profiling)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="retainmodel"><a class="anchor" href="#retainmodel"></a>retainModel</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/predict.html" class="xref page">Predict</a></em></p>
+</div>
+<div class="paragraph">
+<p>Retains the fitted model&#8217;s training data, populating <code>Result.predictModel()</code> with an <code>Optional&lt;PredictModel&gt;</code> usable to evaluate the fit at out-of-sample query points not in the training set. <code>false</code> (default) — no extra memory/copy cost unless requested.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="returngradient"><a class="anchor" href="#returngradient"></a>returnGradient</h3>
+<div class="paragraph">
+<p>Each local polynomial fit (degree &gt;= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, <code>dimensions</code> values per point, flattened) via <code>Result.gradient()</code>, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when <code>surfaceMode = "direct"</code> — the default <code>"interpolation"</code> mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so <code>fit()</code> throws a <code>RuntimeException</code> instead of silently leaving <code>gradient()</code> empty.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>false</code> (default) — leaves <code>Result.gradient()</code> empty</p>
+</li>
+<li>
+<p><code>true</code> — populates <code>Result.gradient()</code></p>
 </li>
 </ul>
 </div>

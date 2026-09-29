@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['_7eloess_0',['~Loess',['../classfastloess_1_1Loess.html#aba57fc6dd2703a9ce8f4558e6196b3bf',1,'fastloess::Loess']]],
-  ['_7eloessresult_1',['~LoessResult',['../classfastloess_1_1LoessResult.html#afda0f9272a5c488bc8965b8d4bbc11e5',1,'fastloess::LoessResult']]],
-  ['_7eonlineloess_2',['~OnlineLoess',['../classfastloess_1_1OnlineLoess.html#a09eb4581a98a7f7ef4eed2cf1eb3c56a',1,'fastloess::OnlineLoess']]],
-  ['_7estreamingloess_3',['~StreamingLoess',['../classfastloess_1_1StreamingLoess.html#a080c3f06f5227a803f9bc73098f51c12',1,'fastloess::StreamingLoess']]]
+  ['y_0',['y',['../classfastloess_1_1PredictResult.html#a874a095b45adb8b6572e0f72315238ff',1,'fastloess::PredictResult::y()'],['../classfastloess_1_1OnlineOutput.html#a36e9c3a9db54c93bd62859c746cfbefa',1,'fastloess::OnlineOutput::y()']]],
+  ['y_5fvalue_1',['y_value',['../classfastloess_1_1LoessResult.html#ae1102440c17fe901d4778afdb4efb786',1,'fastloess::LoessResult']]],
+  ['y_5fvector_2',['y_vector',['../classfastloess_1_1LoessResult.html#a69f239c01bca8dd309880702ced9ac1f',1,'fastloess::LoessResult']]]
 ];

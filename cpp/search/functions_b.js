@@ -1,11 +1,10 @@
 var searchData=
 [
-  ['r_5fsquared_0',['r_squared',['../classfastloess_1_1Diagnostics.html#a894a806a8edb615ade1ded3399592d3f',1,'fastloess::Diagnostics']]],
-  ['residual_1',['residual',['../classfastloess_1_1OnlineOutput.html#a14c856c99b4e20083c45389658a4eef0',1,'fastloess::OnlineOutput']]],
-  ['residual_5fscale_2',['residual_scale',['../classfastloess_1_1LoessResult.html#aff88b38a8b7739a2070beef38d44fafb',1,'fastloess::LoessResult']]],
-  ['residual_5fsd_3',['residual_sd',['../classfastloess_1_1Diagnostics.html#a55ee35065ab54566916827f6d8689979',1,'fastloess::Diagnostics']]],
-  ['residuals_4',['residuals',['../classfastloess_1_1LoessResult.html#a58487505a731609b39152b0db373f1bd',1,'fastloess::LoessResult']]],
-  ['rmse_5',['rmse',['../classfastloess_1_1Diagnostics.html#aa230ca77ba7b6e08c8508bc8066d2f34',1,'fastloess::Diagnostics']]],
-  ['robustness_5fweight_6',['robustness_weight',['../classfastloess_1_1OnlineOutput.html#a430dc4c2dbdea19ca6585ad22b35519d',1,'fastloess::OnlineOutput']]],
-  ['robustness_5fweights_7',['robustness_weights',['../classfastloess_1_1LoessResult.html#ac004d6e81b5837657f20e45382c95544',1,'fastloess::LoessResult']]]
+  ['predict_0',['predict',['../classfastloess_1_1PredictModel.html#a0110cc4f5f6feba0be6bcbd144af8823',1,'fastloess::PredictModel']]],
+  ['predict_5fmodel_1',['predict_model',['../classfastloess_1_1LoessResult.html#a409c44a4b96085ad9c92b84f395ffa02',1,'fastloess::LoessResult']]],
+  ['prediction_5flower_2',['prediction_lower',['../classfastloess_1_1PredictResult.html#afa6f64ba3eed4a464741e1e991ba6cef',1,'fastloess::PredictResult::prediction_lower()'],['../classfastloess_1_1LoessResult.html#ae158ff272f835628ca12166ce4cdf4ff',1,'fastloess::LoessResult::prediction_lower()'],['../classfastloess_1_1OnlineOutput.html#a85c853dcfe9e3743cfc634fce57fe43d',1,'fastloess::OnlineOutput::prediction_lower()']]],
+  ['prediction_5fupper_3',['prediction_upper',['../classfastloess_1_1PredictResult.html#a1c42a1145a3d47bc288b703000e19b5c',1,'fastloess::PredictResult::prediction_upper()'],['../classfastloess_1_1LoessResult.html#ab42584927081188be41a10fba8a89555',1,'fastloess::LoessResult::prediction_upper()'],['../classfastloess_1_1OnlineOutput.html#afcefb1e19b0a083f32147e43f5b38b40',1,'fastloess::OnlineOutput::prediction_upper()']]],
+  ['predictmodel_4',['predictmodel',['../classfastloess_1_1PredictModel.html#afecce7da0fc63bff9742385370c5e59c',1,'fastloess::PredictModel::PredictModel()=default'],['../classfastloess_1_1PredictModel.html#aeac6c90e15d61dc55b3a121345b3d4b3',1,'fastloess::PredictModel::PredictModel(PredictModel &amp;&amp;other) noexcept'],['../classfastloess_1_1PredictModel.html#a2ab3b47d151bb6a702ac535e0243f627',1,'fastloess::PredictModel::PredictModel(const PredictModel &amp;)=delete'],['../classfastloess_1_1PredictModel.html#a304d6abc87bc452f9c041c6c8b4bacca',1,'fastloess::PredictModel::PredictModel(fastloess_CppPredictHandle *handle)']]],
+  ['predictresult_5',['predictresult',['../classfastloess_1_1PredictResult.html#a4cbfb7ab4319bf61bd2a4cb82660a415',1,'fastloess::PredictResult::PredictResult()=default'],['../classfastloess_1_1PredictResult.html#aa34435e7fbbda9efcd49e91880026d63',1,'fastloess::PredictResult::PredictResult(const fastloess_CppPredictResult &amp;c_result)'],['../classfastloess_1_1PredictResult.html#af443036b334b55d1b4e91c2b5ad64938',1,'fastloess::PredictResult::PredictResult(const PredictResult &amp;)=delete'],['../classfastloess_1_1PredictResult.html#a32da1c4273065e19c0e79c368594efe9',1,'fastloess::PredictResult::PredictResult(PredictResult &amp;&amp;other) noexcept']]],
+  ['process_5fchunk_6',['process_chunk',['../classfastloess_1_1StreamingLoess.html#ae5faeacb6f5a64e0f5bcd4ebbdf2cf9e',1,'fastloess::StreamingLoess']]]
 ];

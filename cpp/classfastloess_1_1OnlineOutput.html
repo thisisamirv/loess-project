@@ -132,6 +132,21 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a489fb043f8dd1be5ae5f928f7939ddc7" id="r_a489fb043f8dd1be5ae5f928f7939ddc7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">int</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineOutput.html#a489fb043f8dd1be5ae5f928f7939ddc7">iterations_used</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
 <tr class="memdesc:a489fb043f8dd1be5ae5f928f7939ddc7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of robustness iterations performed (−1 if not applicable).  <br /></td></tr>
 <tr class="separator:a489fb043f8dd1be5ae5f928f7939ddc7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad3002e2c972ba34ebe8c7d303c76aca5" id="r_ad3002e2c972ba34ebe8c7d303c76aca5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineOutput.html#ad3002e2c972ba34ebe8c7d303c76aca5">confidence_lower</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:ad3002e2c972ba34ebe8c7d303c76aca5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confidence interval lower bound (<code>update_mode == "full"</code> only, NaN if not computed).  <br /></td></tr>
+<tr class="separator:ad3002e2c972ba34ebe8c7d303c76aca5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1e8f62dfc7555d45c573ae895f706078" id="r_a1e8f62dfc7555d45c573ae895f706078"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineOutput.html#a1e8f62dfc7555d45c573ae895f706078">confidence_upper</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:a1e8f62dfc7555d45c573ae895f706078"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confidence interval upper bound (<code>update_mode == "full"</code> only, NaN if not computed).  <br /></td></tr>
+<tr class="separator:a1e8f62dfc7555d45c573ae895f706078"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a85c853dcfe9e3743cfc634fce57fe43d" id="r_a85c853dcfe9e3743cfc634fce57fe43d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineOutput.html#a85c853dcfe9e3743cfc634fce57fe43d">prediction_lower</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:a85c853dcfe9e3743cfc634fce57fe43d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prediction interval lower bound (<code>update_mode == "full"</code> only, NaN if not computed).  <br /></td></tr>
+<tr class="separator:a85c853dcfe9e3743cfc634fce57fe43d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcefb1e19b0a083f32147e43f5b38b40" id="r_afcefb1e19b0a083f32147e43f5b38b40"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineOutput.html#afcefb1e19b0a083f32147e43f5b38b40">prediction_upper</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:afcefb1e19b0a083f32147e43f5b38b40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prediction interval upper bound (<code>update_mode == "full"</code> only, NaN if not computed).  <br /></td></tr>
+<tr class="separator:afcefb1e19b0a083f32147e43f5b38b40"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a09700fd2cd2d53948098cd8394af91f4" id="r_a09700fd2cd2d53948098cd8394af91f4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1OnlineOutput.html#a09700fd2cd2d53948098cd8394af91f4">gradient</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:a09700fd2cd2d53948098cd8394af91f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Local fit gradient (<code>dimensions</code> values) for the latest point (empty if not computed).  <br /></td></tr>
+<tr class="separator:a09700fd2cd2d53948098cd8394af91f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
@@ -145,6 +160,87 @@ Friends</h2></td></tr>
 <div class="textblock"><p>Result of a single online update step. </p>
 <p>Call <a class="el" href="classfastloess_1_1OnlineOutput.html#a4a63408745a62b2d92623d854cc8351e" title="True when the window has enough points to produce a smoothed estimate.">has_value()</a> to check if the window is ready. When false, the window is still filling and no smoothed estimate is available yet. All optional fields are NaN when not computed. </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
+<a id="ad3002e2c972ba34ebe8c7d303c76aca5" name="ad3002e2c972ba34ebe8c7d303c76aca5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad3002e2c972ba34ebe8c7d303c76aca5">&#9670;&#160;</a></span>confidence_lower()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">double</a> fastloess::OnlineOutput::confidence_lower </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Confidence interval lower bound (<code>update_mode == "full"</code> only, NaN if not computed). </p>
+
+</div>
+</div>
+<a id="a1e8f62dfc7555d45c573ae895f706078" name="a1e8f62dfc7555d45c573ae895f706078"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e8f62dfc7555d45c573ae895f706078">&#9670;&#160;</a></span>confidence_upper()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">double</a> fastloess::OnlineOutput::confidence_upper </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Confidence interval upper bound (<code>update_mode == "full"</code> only, NaN if not computed). </p>
+
+</div>
+</div>
+<a id="a09700fd2cd2d53948098cd8394af91f4" name="a09700fd2cd2d53948098cd8394af91f4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a09700fd2cd2d53948098cd8394af91f4">&#9670;&#160;</a></span>gradient()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; &amp; fastloess::OnlineOutput::gradient </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Local fit gradient (<code>dimensions</code> values) for the latest point (empty if not computed). </p>
+
+</div>
+</div>
 <a id="a4a63408745a62b2d92623d854cc8351e" name="a4a63408745a62b2d92623d854cc8351e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4a63408745a62b2d92623d854cc8351e">&#9670;&#160;</a></span>has_value()</h2>
 
@@ -196,6 +292,60 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Number of robustness iterations performed (−1 if not applicable). </p>
+
+</div>
+</div>
+<a id="a85c853dcfe9e3743cfc634fce57fe43d" name="a85c853dcfe9e3743cfc634fce57fe43d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a85c853dcfe9e3743cfc634fce57fe43d">&#9670;&#160;</a></span>prediction_lower()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">double</a> fastloess::OnlineOutput::prediction_lower </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Prediction interval lower bound (<code>update_mode == "full"</code> only, NaN if not computed). </p>
+
+</div>
+</div>
+<a id="afcefb1e19b0a083f32147e43f5b38b40" name="afcefb1e19b0a083f32147e43f5b38b40"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afcefb1e19b0a083f32147e43f5b38b40">&#9670;&#160;</a></span>prediction_upper()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">double</a> fastloess::OnlineOutput::prediction_upper </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Prediction interval upper bound (<code>update_mode == "full"</code> only, NaN if not computed). </p>
 
 </div>
 </div>

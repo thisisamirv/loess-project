@@ -146,12 +146,12 @@ Online Adapter</div></div>
 <div class="line">    }</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastloess_1_1OnlineLoess_html"><div class="ttname"><a href="classfastloess_1_1OnlineLoess.html">fastloess::OnlineLoess</a></div><div class="ttdoc">Online LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:649</div></div>
+<div class="ttc" id="aclassfastloess_1_1OnlineLoess_html"><div class="ttname"><a href="classfastloess_1_1OnlineLoess.html">fastloess::OnlineLoess</a></div><div class="ttdoc">Online LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:964</div></div>
 <div class="ttc" id="afastloess_8hpp_html"><div class="ttname"><a href="fastloess_8hpp.html">fastloess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLoess library.</div></div>
-<div class="ttc" id="astructfastloess_1_1OnlineOptions_html"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html">fastloess::OnlineOptions</a></div><div class="ttdoc">Options for online LOESS.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:181</div></div>
-<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_a277ba38ed5f101d0a678ceaee011a179"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#a277ba38ed5f101d0a678ceaee011a179">fastloess::OnlineOptions::window_capacity</a></div><div class="ttdeci">int window_capacity</div><div class="ttdef"><b>Definition</b> fastloess.hpp:203</div></div>
-<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_a2895219e8670848f4bb5f170e1e862e4"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#a2895219e8670848f4bb5f170e1e862e4">fastloess::OnlineOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdef"><b>Definition</b> fastloess.hpp:182</div></div>
-<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_ae27d7713b713d920996edab73a7e7b98"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#ae27d7713b713d920996edab73a7e7b98">fastloess::OnlineOptions::min_points</a></div><div class="ttdeci">int min_points</div><div class="ttdef"><b>Definition</b> fastloess.hpp:204</div></div>
+<div class="ttc" id="astructfastloess_1_1OnlineOptions_html"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html">fastloess::OnlineOptions</a></div><div class="ttdoc">Options for online LOESS.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:208</div></div>
+<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_a277ba38ed5f101d0a678ceaee011a179"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#a277ba38ed5f101d0a678ceaee011a179">fastloess::OnlineOptions::window_capacity</a></div><div class="ttdeci">int window_capacity</div><div class="ttdef"><b>Definition</b> fastloess.hpp:238</div></div>
+<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_a2895219e8670848f4bb5f170e1e862e4"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#a2895219e8670848f4bb5f170e1e862e4">fastloess::OnlineOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdef"><b>Definition</b> fastloess.hpp:209</div></div>
+<div class="ttc" id="astructfastloess_1_1OnlineOptions_html_ae27d7713b713d920996edab73a7e7b98"><div class="ttname"><a href="structfastloess_1_1OnlineOptions.html#ae27d7713b713d920996edab73a7e7b98">fastloess::OnlineOptions::min_points</a></div><div class="ttdeci">int min_points</div><div class="ttdef"><b>Definition</b> fastloess.hpp:239</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.226592</div>
 </div><!-- fragment --><ul>
 <li><code>options</code>: An <code>OnlineOptions</code> struct with <code>window_capacity</code>, <code>min_points</code>, and <code>update_mode</code>.</li>
@@ -198,7 +198,7 @@ Online Adapter</div></div>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>fraction</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone"><code>0.67</code>   </td><td class="markdownTableBodyNone">Smoothing fraction (bandwidth)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>iterations</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone"><code>3</code>   </td><td class="markdownTableBodyNone">Number of robustifying iterations    </td></tr>
+<td class="markdownTableBodyNone"><code>iterations</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone"><code>0</code>   </td><td class="markdownTableBodyNone">Number of robustifying iterations; positive values require <code>update_mode == "full"</code>    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>weight_function</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone"><code>"tricube"</code>   </td><td class="markdownTableBodyNone">Weight function name    </td></tr>
 <tr class="markdownTableRowEven">
@@ -214,7 +214,7 @@ Online Adapter</div></div>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>auto_converge</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone"><code>NaN</code>   </td><td class="markdownTableBodyNone">Auto-convergence tolerance (NaN to disable)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>return_robustness_weights</code>   </td><td class="markdownTableBodyNone"><code>bool</code>   </td><td class="markdownTableBodyNone"><code>false</code>   </td><td class="markdownTableBodyNone">Include robustness weight in result    </td></tr>
+<td class="markdownTableBodyNone"><code>outputs</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;std::string&gt;</code>   </td><td class="markdownTableBodyNone"><code>{}</code>   </td><td class="markdownTableBodyNone">Optional fields: <code>weights</code>, <code>gradient</code>/<code>derivative</code>, <code>se</code>    </td></tr>
 <tr class="markdownTableRowOdd">
 <td class="markdownTableBodyNone"><code>degree</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone"><code>"linear"</code>   </td><td class="markdownTableBodyNone">Polynomial degree of local fit    </td></tr>
 <tr class="markdownTableRowEven">
@@ -236,9 +236,13 @@ Online Adapter</div></div>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>min_points</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone"><code>2</code>   </td><td class="markdownTableBodyNone">Min points before smoothing starts    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone"><code>"incremental"</code>   </td><td class="markdownTableBodyNone">Update mode (<code>"full"</code> or <code>"incremental"</code>)   </td></tr>
+<td class="markdownTableBodyNone"><code>update_mode</code>   </td><td class="markdownTableBodyNone"><code>std::string</code>   </td><td class="markdownTableBodyNone"><code>"incremental"</code>   </td><td class="markdownTableBodyNone">Update mode (<code>"full"</code> or <code>"incremental"</code>)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>confidence_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone"><code>NaN</code>   </td><td class="markdownTableBodyNone">Confidence level for confidence intervals; requires <code>update_mode == "full"</code>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>prediction_intervals</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone"><code>NaN</code>   </td><td class="markdownTableBodyNone">Confidence level for prediction intervals; requires <code>update_mode == "full"</code>   </td></tr>
 </table>
-<p>Confidence/prediction intervals, standard errors, cross-validation, <code>return_sorted</code>, <code>return_diagnostics</code>, <code>return_residuals</code>, and <code>parallel</code> are Batch-only (or Batch/Streaming-only) and not available here; see <a class="el" href="api_8md.html">fastLoess</a> for those. Online always runs sequentially.</p>
+<p>Cross-validation, the <code>"sorted"</code> and <code>"diagnostics"</code> outputs, and <code>parallel</code> are Batch-only and not available here. Online residuals are always present; the <code>"residuals"</code> output name is not supported. Online always runs sequentially.</p>
 <h2>Options</h2>
 <h3>fraction</h3>
 <p><code>fraction</code> is the most important parameter: it controls the size of the local neighbourhood used at each point.</p>
@@ -326,12 +330,19 @@ Online Adapter</div></div>
 <h3>auto_converge</h3>
 <p><em>See: <a href="../weighting/robustness.md#auto-convergence">Robustness</a></em></p>
 <p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
-<h3>return_robustness_weights</h3>
-<p>Include the robustness weight for the latest point (from the last robustness iteration) in the result.</p>
-<ul>
-<li><code>false</code> (default) — leaves <code>robustness_weight()</code> as NaN</li>
-<li><code>true</code> — populates <code>robustness_weight()</code></li>
-</ul>
+<h3>outputs</h3>
+<p>Select optional fields in <code>OnlineOutput</code> by name. An empty vector (default) requests only the smoothed value.</p>
+<table class="markdownTable">
+<tr class="markdownTableHead">
+<th class="markdownTableHeadNone">Name   </th><th class="markdownTableHeadNone">Result    </th></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"weights"</code>   </td><td class="markdownTableBodyNone">Robustness weight for the latest point    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>"gradient"</code> or <code>"derivative"</code>   </td><td class="markdownTableBodyNone">Latest point's local fit gradient; requires <code>surface_mode = "direct"</code>    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>"se"</code>   </td><td class="markdownTableBodyNone">Standard error; requires <code>update_mode = "full"</code>   </td></tr>
+</table>
+<p>Confidence and prediction intervals remain controlled by their numeric level fields and also require <code>update_mode = "full"</code>.</p>
 <h3>degree</h3>
 <p><em>See: <a class="el" href="degree_8md.html">Polynomial Degree</a></em></p>
 <ul>
@@ -408,6 +419,12 @@ Online Adapter</div></div>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>"full"</code>   </td><td class="markdownTableBodyNone"><code>"resmooth"</code>   </td><td class="markdownTableBodyNone">Recompute entire window   </td><td class="markdownTableBodyNone">More accurate   </td></tr>
 </table>
+<h3>confidence_intervals</h3>
+<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
+<p>Confidence level for the confidence interval around the mean response (e.g. <code>0.95</code>). Only computed under <code>update_mode == "full"</code>. Construction fails if set (or <code>outputs</code> contains <code>"se"</code> or <code>prediction_intervals</code> is set) while <code>update_mode</code> is left at its default <code>"incremental"</code>, since incremental updates never compute standard errors. <code>NaN</code> (default) disables confidence intervals.</p>
+<h3>prediction_intervals</h3>
+<p><em>See: <a class="el" href="intervals_8md.html">Intervals</a></em></p>
+<p>Confidence level for the prediction interval for new observations (e.g. <code>0.95</code>). Same <code>update_mode == "full"</code> requirement as <code>confidence_intervals</code>. <code>NaN</code> (default) disables prediction intervals.</p>
 <h2>Result Structure</h2>
 <h3><a class="el" href="classfastloess_1_1OnlineOutput.html" title="Result of a single online update step.">fastloess::OnlineOutput</a></h3>
 <p>Returned (inside <code>Expected</code>) by <code>add_point()</code>. Check <code>has_value()</code> before reading fields.</p>
@@ -419,15 +436,21 @@ Online Adapter</div></div>
 <tr class="markdownTableRowEven">
 <td class="markdownTableBodyNone"><code>y()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Smoothed value for the latest point    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>standard_error()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Always <code>NaN</code> — standard errors require confidence intervals, which are Batch-only    </td></tr>
+<td class="markdownTableBodyNone"><code>standard_error()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Standard error, if <code>outputs</code> contains <code>"se"</code> or an interval level was set and <code>update_mode == "full"</code> (<code>NaN</code> otherwise)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>residual()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Residual y − smoothed; always present (there is no <code>return_residuals</code> option for Online)    </td></tr>
+<td class="markdownTableBodyNone"><code>residual()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Residual y − smoothed; always present    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><code>robustness_weight()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Robustness weight, if <code>return_robustness_weights</code> was set (<code>NaN</code> otherwise)    </td></tr>
+<td class="markdownTableBodyNone"><code>robustness_weight()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Robustness weight, if <code>outputs</code> contains <code>"weights"</code> (<code>NaN</code> otherwise)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><code>iterations_used()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Robustness iterations performed (−1 if N/A)   </td></tr>
+<td class="markdownTableBodyNone"><code>iterations_used()</code>   </td><td class="markdownTableBodyNone"><code>int</code>   </td><td class="markdownTableBodyNone">Robustness iterations performed (−1 if N/A)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>confidence_lower()</code> / <code>confidence_upper()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Confidence interval bounds, if <code>confidence_intervals</code> was set and <code>update_mode == "full"</code> (<code>NaN</code> otherwise)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone"><code>prediction_lower()</code> / <code>prediction_upper()</code>   </td><td class="markdownTableBodyNone"><code>double</code>   </td><td class="markdownTableBodyNone">Prediction interval bounds, if <code>prediction_intervals</code> was set and <code>update_mode == "full"</code> (<code>NaN</code> otherwise)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone"><code>gradient()</code>   </td><td class="markdownTableBodyNone"><code>std::vector&lt;double&gt;</code>   </td><td class="markdownTableBodyNone">Latest point's local fit gradient (<code>dimensions</code> values), if <code>outputs</code> contains <code>"gradient"</code> or <code>"derivative"</code> (empty otherwise)   </td></tr>
 </table>
-<p>There is no <code>Diagnostics</code> object or <code>return_diagnostics</code> option for <code>OnlineLoess</code>: <code>OnlineOutput</code> carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful. </p>
+<p>There is no <code>Diagnostics</code> object for <code>OnlineLoess</code>: <code>OnlineOutput</code> carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful. </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->

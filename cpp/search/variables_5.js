@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['interpolation_5fvertices_0',['interpolation_vertices',['../structfastloess_1_1LoessOptions.html#aa9e7a32074aaf7e2861191523099ac68',1,'fastloess::LoessOptions::interpolation_vertices'],['../structfastloess_1_1OnlineOptions.html#ad68f7dec50ac1884c870347c43728023',1,'fastloess::OnlineOptions::interpolation_vertices']]],
-  ['iterations_1',['iterations',['../structfastloess_1_1LoessOptions.html#adad32b7937a62e6ef5502cce329063b9',1,'fastloess::LoessOptions::iterations'],['../structfastloess_1_1OnlineOptions.html#abb487bb853bb34ccb9ad4a78432c84f9',1,'fastloess::OnlineOptions::iterations']]]
+  ['fraction_0',['fraction',['../structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce',1,'fastloess::LoessOptions::fraction'],['../structfastloess_1_1OnlineOptions.html#a2895219e8670848f4bb5f170e1e862e4',1,'fastloess::OnlineOptions::fraction']]],
+  ['fractions_1',['fractions',['../structfastloess_1_1CVOptions.html#ae14c19ff9f3d71028cd2a5214b023044',1,'fastloess::CVOptions']]]
 ];
