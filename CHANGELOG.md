@@ -210,6 +210,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Force-stage the tracked Spack recipe in the C++ release workflow so ignore rules cannot block automated version updates.
 - Fixed the C++ valgrind memory check being silently skipped in Linux CI because valgrind was not installed. The Linux matrix, Clang, and Intel oneAPI jobs now install it, as does the Linux `bindings/cpp/Makefile` `install-tools` target.
 - Updated the C++ Valgrind check to retain origin tracking and debug symbols, avoid unsupported Rust variable-DWARF parsing, and fail only on definite or indirect leaks; Rayon worker TLS can otherwise appear as possibly lost at process exit.
+- Added `bindings/cpp/valgrind.supp` to suppress a Valgrind false positive in the interval degrees-of-freedom check. `Option<f64>` has no niche, so a `None` leaves its payload bytes unwritten, and LLVM speculates the payload comparison ahead of the discriminant test. The suppression is scoped to `Memcheck:Cond` in that one function, so invalid reads/writes and leaks still fail the check.
 - Fixed C++ doc-snippet verification skipping on Windows ARM by locating MSVC for the built library's target architecture, searching the ARM64 MSVC output directory, and caching `vcvarsall.bat` environments by script path and target architecture.
 
 **Go:**

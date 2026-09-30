@@ -1,0 +1,19 @@
+# Valgrind suppressions for the C++ binding's memory check.
+#
+# Rust's `Option<f64>` has no niche: every bit pattern is a valid `f64`, so a
+# `None` writes only the discriminant and leaves the payload bytes unwritten.
+# `compute_intervals` receives `delta1`/`delta2` as `Option<f64>`, and they are
+# `None` whenever the fit ran without hat-matrix leverage (the default
+# `surface_mode = "interpolation"`). At opt-level 3 LLVM speculates the payload
+# comparison in the degrees-of-freedom check ahead of the discriminant test, so
+# Memcheck sees a conditional jump on those never-written bytes. The comparison
+# result is discarded when the discriminant is `None`, so this is a false
+# positive rather than a defect.
+#
+# Scoped to `Memcheck:Cond` in this one function: invalid reads/writes, bad
+# frees, and leaks anywhere still fail the check.
+{
+   rust-option-none-payload-compute-intervals
+   Memcheck:Cond
+   fun:*compute_intervals*
+}
