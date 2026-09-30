@@ -155,10 +155,12 @@ void testLoessWithDiagnostics() {
 
   auto diag = result.diagnostics();
   assertTrue(diag.has_value(), "Diagnostics missing");
-  assertTrue(diag.rmse().has_value() && *diag.rmse() >= 0, "RMSE negative");
-  assertTrue(diag.mae().has_value() && *diag.mae() >= 0, "MAE negative");
-  assertTrue(diag.r_squared().has_value() && *diag.r_squared() >= 0 &&
-                 *diag.r_squared() <= 1,
+  const auto rmse = diag.rmse();
+  const auto mae = diag.mae();
+  const auto r_squared = diag.r_squared();
+  assertTrue(rmse.has_value() && *rmse >= 0, "RMSE negative");
+  assertTrue(mae.has_value() && *mae >= 0, "MAE negative");
+  assertTrue(r_squared.has_value() && *r_squared >= 0 && *r_squared <= 1,
              "R2 out of range");
   assertTrue(!diag.aic().has_value() && !diag.aicc().has_value() &&
                  !diag.effective_df().has_value(),
@@ -512,7 +514,7 @@ void testOnlineReturnSeRequiresFullUpdateMode() {
   opts.window_capacity = k_window_capacity;
   opts.outputs = {"se"};
   try {
-    OnlineLoess online(opts);
+    const OnlineLoess online(opts);
     assertTrue(false, "Should have thrown");
   } catch (const std::exception &err) {
     (void)err; // expected: outputs=se without update_mode="full" throws
@@ -602,7 +604,7 @@ void testLoessMissingPolicy() {
     opts.fraction = k_fraction_half;
     opts.missing = "invalid";
     try {
-      Loess loess(opts);
+      const Loess loess(opts);
       assertTrue(false, "Should have thrown");
     } catch (const std::exception &err) {
       (void)err; // expected: invalid missing policy throws
