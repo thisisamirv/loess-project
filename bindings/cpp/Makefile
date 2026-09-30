@@ -200,10 +200,10 @@ dev:
 		echo "Valgrind not found. Skipping memory check."; \
 	else \
 		CARGO_PROFILE_RELEASE_C_DEBUG=2 cargo build -q -p $(CPP_PKG) $(CPP_CARGO_PROFILE) $(CPP_CARGO_TARGET) || exit $$?; \
-		valgrind --leak-check=full --track-origins=yes --read-var-info=yes --error-exitcode=1 --quiet \
+		valgrind --leak-check=full --show-leak-kinds=definite,indirect --errors-for-leak-kinds=definite,indirect --track-origins=yes --error-exitcode=1 --quiet \
 		$(CPP_DIR)/tests/build/test_fastloess_suite 2>&1 || \
 		(echo "Error: Valgrind detected memory errors"; exit 1); \
-		echo "Valgrind: no leaks."; \
+		echo "Valgrind: no definite or indirect leaks."; \
 	fi
 	@echo "=============================================================================="
 	@echo "Doc snippet tests (cpp)..."
