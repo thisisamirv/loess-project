@@ -232,6 +232,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Removed the `fnd` role from the individual maintainer in `Authors@R`; pkgcheck treats individual funder names as institutions and requires an institutional ROR.
 - Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed instead of raising an error. Now validated before the cast.
 
 ## 2.0.0
