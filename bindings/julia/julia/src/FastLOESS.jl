@@ -131,17 +131,17 @@ function find_library()
     return LIBNAME
 end
 
-const libfastloess = Ref("")
+libfastloess = ""
 
 function current_library()
-    if isempty(libfastloess[])
-        libfastloess[] = find_library()
+    if isempty(libfastloess)
+        global libfastloess = find_library()
     end
-    return libfastloess[]
+    return libfastloess
 end
 
 function __init__()
-    libfastloess[] = find_library()
+    global libfastloess = find_library()
 end
 
 """
@@ -220,9 +220,12 @@ mutable struct PredictModel
         finalizer(
             x -> begin
                 if x.handle != C_NULL
-                    @ccall current_library().jl_predict_handle_free(
-                        x.handle::Ptr{Cvoid},
-                    )::Cvoid
+                    ccall(
+                        (:jl_predict_handle_free, libfastloess),
+                        Cvoid,
+                        (Ptr{Cvoid},),
+                        x.handle,
+                    )
                 end
             end,
             obj,
@@ -270,26 +273,41 @@ function predict(
         )
     end
 
-    c_result = @ccall current_library().jl_predict(
-        model.handle::Ptr{Cvoid},
-        pointer(new_x)::Ptr{Cdouble},
-        Culong(length(new_x))::Culong,
-        Cint(return_se)::Cint,
-        (confidence_level === nothing ? NaN : confidence_level)::Cdouble,
-        (prediction_level === nothing ? NaN : prediction_level)::Cdouble,
-        Cint(return_derivative)::Cint,
-        extrapolation::Cstring,
+    c_result = ccall(
+        (:jl_predict, libfastloess),
+        CJlPredictResult,
         (
-            max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance
-        )::Cdouble,
-        (max_neighbor_distance === nothing ? NaN : max_neighbor_distance)::Cdouble,
-    )::CJlPredictResult
+            Ptr{Cvoid},
+            Ptr{Cdouble},
+            Culong,
+            Cint,
+            Cdouble,
+            Cdouble,
+            Cint,
+            Cstring,
+            Cdouble,
+            Cdouble,
+        ),
+        model.handle,
+        pointer(new_x),
+        Culong(length(new_x)),
+        Cint(return_se),
+        (confidence_level === nothing ? NaN : confidence_level),
+        (prediction_level === nothing ? NaN : prediction_level),
+        Cint(return_derivative),
+        extrapolation,
+        (max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance),
+        (max_neighbor_distance === nothing ? NaN : max_neighbor_distance),
+    )
 
     if c_result.error != C_NULL
         error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
-        @ccall current_library().jl_predict_free_result(
-            Ref(c_result)::Ptr{CJlPredictResult},
-        )::Cvoid
+        ccall(
+            (:jl_predict_free_result, libfastloess),
+            Cvoid,
+            (Ptr{CJlPredictResult},),
+            Ref(c_result),
+        )
         error("fastloess error: $error_msg")
     end
 
@@ -306,9 +324,12 @@ function predict(
         ptr_to_vector(c_result.derivative, n * dims),
     )
 
-    @ccall current_library().jl_predict_free_result(
-        Ref(c_result)::Ptr{CJlPredictResult},
-    )::Cvoid
+    ccall(
+        (:jl_predict_free_result, libfastloess),
+        Cvoid,
+        (Ptr{CJlPredictResult},),
+        Ref(c_result),
+    )
 
     return result
 end
@@ -466,9 +487,12 @@ function convert_result(c_result::CJlLoessResult)
     if c_result.error != C_NULL
         error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
         # Free the result before throwing
-        @ccall current_library().jl_loess_free_result(
-            Ref(c_result)::Ptr{CJlLoessResult},
-        )::Cvoid
+        ccall(
+            (:jl_loess_free_result, libfastloess),
+            Cvoid,
+            (Ptr{CJlLoessResult},),
+            Ref(c_result),
+        )
         error("fastloess error: $error_msg")
     end
 
@@ -479,9 +503,12 @@ function convert_result(c_result::CJlLoessResult)
     y = ptr_to_vector(c_result.y, n)
 
     if x === nothing || y === nothing
-        @ccall current_library().jl_loess_free_result(
-            Ref(c_result)::Ptr{CJlLoessResult},
-        )::Cvoid
+        ccall(
+            (:jl_loess_free_result, libfastloess),
+            Cvoid,
+            (Ptr{CJlLoessResult},),
+            Ref(c_result),
+        )
         error("fastloess error: result arrays are null")
     end
 
@@ -558,7 +585,12 @@ function convert_result(c_result::CJlLoessResult)
     )
 
     # Free the C result
-    @ccall current_library().jl_loess_free_result(Ref(c_result)::Ptr{CJlLoessResult})::Cvoid
+    ccall(
+        (:jl_loess_free_result, libfastloess),
+        Cvoid,
+        (Ptr{CJlLoessResult},),
+        Ref(c_result),
+    )
 
     return result
 end
@@ -752,42 +784,75 @@ mutable struct Loess
         cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
         cv_len = length(cv_fractions)
 
-        handle = @ccall current_library().jl_loess_new(
-            fraction::Cdouble,
-            Cint(iterations)::Cint,
-            weight_function::Cstring,
-            robustness_method::Cstring,
-            scaling_method::Cstring,
-            boundary_policy::Cstring,
-            confidence_intervals::Cdouble,
-            prediction_intervals::Cdouble,
-            Cint(return_diagnostics || flags.diagnostics)::Cint,
-            Cint(return_residuals || flags.residuals)::Cint,
-            Cint(return_robustness_weights || flags.weights)::Cint,
-            zero_weight_fallback::Cstring,
-            auto_converge::Cdouble,
-            cv_ptr::Ptr{Cdouble},
-            Culong(cv_len)::Culong,
-            cv_method::Cstring,
-            Cint(cv_k)::Cint,
-            Cint(parallel)::Cint,
-            degree::Cstring,
-            Cint(dimensions)::Cint,
-            distance_metric::Cstring,
-            surface_mode::Cstring,
-            Cint(return_se || flags.se)::Cint,
-            Cint(return_sorted || flags.sorted)::Cint,
+        handle = ccall(
+            (:jl_loess_new, libfastloess),
+            Ptr{Cvoid},
+            (
+                Cdouble,
+                Cint,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cdouble,
+                Cdouble,
+                Cint,
+                Cint,
+                Cint,
+                Cstring,
+                Cdouble,
+                Ptr{Cdouble},
+                Culong,
+                Cstring,
+                Cint,
+                Cint,
+                Cstring,
+                Cint,
+                Cstring,
+                Cstring,
+                Cint,
+                Cint,
+                Ptr{Cdouble},
+                Culong,
+                Cstring,
+                Cint,
+                Cint,
+            ),
+            fraction,
+            Cint(iterations),
+            weight_function,
+            robustness_method,
+            scaling_method,
+            boundary_policy,
+            confidence_intervals,
+            prediction_intervals,
+            Cint(return_diagnostics || flags.diagnostics),
+            Cint(return_residuals || flags.residuals),
+            Cint(return_robustness_weights || flags.weights),
+            zero_weight_fallback,
+            auto_converge,
+            cv_ptr,
+            Culong(cv_len),
+            cv_method,
+            Cint(cv_k),
+            Cint(parallel),
+            degree,
+            Cint(dimensions),
+            distance_metric,
+            surface_mode,
+            Cint(return_se || flags.se),
+            Cint(return_sorted || flags.sorted),
             (
                 weighted_metric_weights !== nothing ? pointer(weighted_metric_weights) :
                 Ptr{Cdouble}(C_NULL)
-            )::Ptr{Cdouble},
+            ),
             Culong(
                 weighted_metric_weights !== nothing ? length(weighted_metric_weights) : 0,
-            )::Culong,
-            missing::Cstring,
-            Cint(retain_model)::Cint,
-            Cint(return_gradient || flags.gradient)::Cint,
-        )::Ptr{Cvoid}
+            ),
+            missing,
+            Cint(retain_model),
+            Cint(return_gradient || flags.gradient),
+        )
 
         if handle == C_NULL
             error("Failed to create Loess configuration")
@@ -795,33 +860,45 @@ mutable struct Loess
 
         # Apply optional overrides via setters
         if cell !== nothing
-            @ccall current_library().jl_loess_set_cell(
-                handle::Ptr{Cvoid},
-                cell::Cdouble,
-            )::Cvoid
+            ccall(
+                (:jl_loess_set_cell, libfastloess),
+                Cvoid,
+                (Ptr{Cvoid}, Cdouble),
+                handle,
+                cell,
+            )
         end
         if interpolation_vertices !== nothing
-            @ccall current_library().jl_loess_set_interpolation_vertices(
-                handle::Ptr{Cvoid},
-                Culong(interpolation_vertices)::Culong,
-            )::Cvoid
+            ccall(
+                (:jl_loess_set_interpolation_vertices, libfastloess),
+                Cvoid,
+                (Ptr{Cvoid}, Culong),
+                handle,
+                Culong(interpolation_vertices),
+            )
         end
         if boundary_degree_fallback !== nothing
-            @ccall current_library().jl_loess_set_boundary_degree_fallback(
-                handle::Ptr{Cvoid},
-                Cint(boundary_degree_fallback)::Cint,
-            )::Cvoid
+            ccall(
+                (:jl_loess_set_boundary_degree_fallback, libfastloess),
+                Cvoid,
+                (Ptr{Cvoid}, Cint),
+                handle,
+                Cint(boundary_degree_fallback),
+            )
         end
         if cv_seed !== nothing
-            @ccall current_library().jl_loess_set_cv_seed(
-                handle::Ptr{Cvoid},
-                Culong(cv_seed)::Culong,
-            )::Cvoid
+            ccall(
+                (:jl_loess_set_cv_seed, libfastloess),
+                Cvoid,
+                (Ptr{Cvoid}, Culong),
+                handle,
+                Culong(cv_seed),
+            )
         end
 
         obj = new(handle, dimensions)
         finalizer(
-            x -> @ccall(current_library().jl_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
+            x -> ccall((:jl_loess_free, libfastloess), Cvoid, (Ptr{Cvoid},), x.handle),
             obj,
         )
         return obj
@@ -861,16 +938,17 @@ function fit(
         end
     end
 
-    c_result = @ccall current_library().jl_loess_fit(
-        l.handle::Ptr{Cvoid},
-        x::Ptr{Cdouble},
-        y::Ptr{Cdouble},
-        Culong(n)::Culong,
-        (
-            custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL)
-        )::Ptr{Cdouble},
-        Culong(custom_weights !== nothing ? length(custom_weights) : 0)::Culong,
-    )::CJlLoessResult
+    c_result = ccall(
+        (:jl_loess_fit, libfastloess),
+        CJlLoessResult,
+        (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong, Ptr{Cdouble}, Culong),
+        l.handle,
+        x,
+        y,
+        Culong(n),
+        custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL),
+        Culong(custom_weights !== nothing ? length(custom_weights) : 0),
+    )
 
     return convert_result(c_result)
 end
@@ -921,16 +999,17 @@ function fit(
         end
     end
 
-    c_result = @ccall current_library().jl_loess_fit(
-        l.handle::Ptr{Cvoid},
-        x_flat::Ptr{Cdouble},
-        y::Ptr{Cdouble},
-        Culong(n)::Culong,
-        (
-            custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL)
-        )::Ptr{Cdouble},
-        Culong(custom_weights !== nothing ? length(custom_weights) : 0)::Culong,
-    )::CJlLoessResult
+    c_result = ccall(
+        (:jl_loess_fit, libfastloess),
+        CJlLoessResult,
+        (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong, Ptr{Cdouble}, Culong),
+        l.handle,
+        x_flat,
+        y,
+        Culong(n),
+        custom_weights !== nothing ? pointer(custom_weights) : Ptr{Cdouble}(C_NULL),
+        Culong(custom_weights !== nothing ? length(custom_weights) : 0),
+    )
 
     return convert_result(c_result)
 end
@@ -1041,41 +1120,70 @@ mutable struct StreamingLoess
             isnothing(boundary_degree_fallback) ? Cint(-1) :
             (boundary_degree_fallback ? Cint(1) : Cint(0))
 
-        handle = @ccall current_library().jl_streaming_loess_new(
-            fraction::Cdouble,
-            Cint(chunk_size)::Cint,
-            Cint(overlap)::Cint,
-            Cint(iterations)::Cint,
-            weight_function::Cstring,
-            robustness_method::Cstring,
-            scaling_method::Cstring,
-            boundary_policy::Cstring,
-            auto_converge::Cdouble,
-            Cint(return_diagnostics || flags.diagnostics)::Cint,
-            Cint(return_residuals || flags.residuals)::Cint,
-            Cint(return_robustness_weights || flags.weights)::Cint,
-            zero_weight_fallback::Cstring,
-            merge_strategy::Cstring,
-            Cint(parallel)::Cint,
-            degree::Cstring,
-            Cint(dimensions)::Cint,
-            distance_metric::Cstring,
-            surface_mode::Cstring,
-            cell_val::Cdouble,
-            iv_val::Cint,
-            bdf_val::Cint,
-            wm_ptr::Ptr{Cdouble},
-            wm_len::Culong,
-            missing::Cstring,
-            Cint(return_gradient || flags.gradient)::Cint,
+        handle = ccall(
+            (:jl_streaming_loess_new, libfastloess),
+            Ptr{Cvoid},
             (
-                isnothing(confidence_intervals) ? NaN : Float64(confidence_intervals)
-            )::Cdouble,
-            (
-                isnothing(prediction_intervals) ? NaN : Float64(prediction_intervals)
-            )::Cdouble,
-            Cint(return_se || flags.se)::Cint,
-        )::Ptr{Cvoid}
+                Cdouble,
+                Cint,
+                Cint,
+                Cint,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cdouble,
+                Cint,
+                Cint,
+                Cint,
+                Cstring,
+                Cstring,
+                Cint,
+                Cstring,
+                Cint,
+                Cstring,
+                Cstring,
+                Cdouble,
+                Cint,
+                Cint,
+                Ptr{Cdouble},
+                Culong,
+                Cstring,
+                Cint,
+                Cdouble,
+                Cdouble,
+                Cint,
+            ),
+            fraction,
+            Cint(chunk_size),
+            Cint(overlap),
+            Cint(iterations),
+            weight_function,
+            robustness_method,
+            scaling_method,
+            boundary_policy,
+            auto_converge,
+            Cint(return_diagnostics || flags.diagnostics),
+            Cint(return_residuals || flags.residuals),
+            Cint(return_robustness_weights || flags.weights),
+            zero_weight_fallback,
+            merge_strategy,
+            Cint(parallel),
+            degree,
+            Cint(dimensions),
+            distance_metric,
+            surface_mode,
+            cell_val,
+            iv_val,
+            bdf_val,
+            wm_ptr,
+            wm_len,
+            missing,
+            Cint(return_gradient || flags.gradient),
+            isnothing(confidence_intervals) ? NaN : Float64(confidence_intervals),
+            isnothing(prediction_intervals) ? NaN : Float64(prediction_intervals),
+            Cint(return_se || flags.se),
+        )
 
         if handle == C_NULL
             error("Failed to create StreamingLoess")
@@ -1083,8 +1191,11 @@ mutable struct StreamingLoess
 
         obj = new(handle)
         finalizer(
-            x -> @ccall(
-                current_library().jl_streaming_loess_free(x.handle::Ptr{Cvoid})::Cvoid
+            x -> ccall(
+                (:jl_streaming_loess_free, libfastloess),
+                Cvoid,
+                (Ptr{Cvoid},),
+                x.handle,
             ),
             obj,
         )
@@ -1103,12 +1214,15 @@ function process_chunk(s::StreamingLoess, x::Vector{Float64}, y::Vector{Float64}
         throw(ArgumentError("x and y must have the same length"))
     end
 
-    c_result = @ccall current_library().jl_streaming_loess_process_chunk(
-        s.handle::Ptr{Cvoid},
-        x::Ptr{Cdouble},
-        y::Ptr{Cdouble},
-        Culong(n)::Culong,
-    )::CJlLoessResult
+    c_result = ccall(
+        (:jl_streaming_loess_process_chunk, libfastloess),
+        CJlLoessResult,
+        (Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+        s.handle,
+        x,
+        y,
+        Culong(n),
+    )
 
     return convert_result(c_result)
 end
@@ -1119,9 +1233,12 @@ end
 Finalize streaming and return remaining buffered data.
 """
 function finalize(s::StreamingLoess)
-    c_result = @ccall current_library().jl_streaming_loess_finalize(
-        s.handle::Ptr{Cvoid},
-    )::CJlLoessResult
+    c_result = ccall(
+        (:jl_streaming_loess_finalize, libfastloess),
+        CJlLoessResult,
+        (Ptr{Cvoid},),
+        s.handle,
+    )
 
     return convert_result(c_result)
 end
@@ -1218,38 +1335,64 @@ mutable struct OnlineLoess
             isnothing(boundary_degree_fallback) ? Cint(-1) :
             (boundary_degree_fallback ? Cint(1) : Cint(0))
 
-        handle = @ccall current_library().jl_online_loess_new(
-            fraction::Cdouble,
-            Cint(window_capacity)::Cint,
-            Cint(min_points)::Cint,
-            Cint(iterations)::Cint,
-            weight_function::Cstring,
-            robustness_method::Cstring,
-            scaling_method::Cstring,
-            boundary_policy::Cstring,
-            update_mode::Cstring,
-            auto_converge::Cdouble,
-            Cint(return_robustness_weights || flags.weights)::Cint,
-            zero_weight_fallback::Cstring,
-            degree::Cstring,
-            Cint(dimensions)::Cint,
-            distance_metric::Cstring,
-            surface_mode::Cstring,
-            cell_val::Cdouble,
-            iv_val::Cint,
-            bdf_val::Cint,
-            wm_ptr::Ptr{Cdouble},
-            wm_len::Culong,
-            missing::Cstring,
-            Cint(return_gradient || flags.gradient)::Cint,
+        handle = ccall(
+            (:jl_online_loess_new, libfastloess),
+            Ptr{Cvoid},
             (
-                isnothing(confidence_intervals) ? NaN : Float64(confidence_intervals)
-            )::Cdouble,
-            (
-                isnothing(prediction_intervals) ? NaN : Float64(prediction_intervals)
-            )::Cdouble,
-            Cint(return_se || flags.se)::Cint,
-        )::Ptr{Cvoid}
+                Cdouble,
+                Cint,
+                Cint,
+                Cint,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cstring,
+                Cdouble,
+                Cint,
+                Cstring,
+                Cstring,
+                Cint,
+                Cstring,
+                Cstring,
+                Cdouble,
+                Cint,
+                Cint,
+                Ptr{Cdouble},
+                Culong,
+                Cstring,
+                Cint,
+                Cdouble,
+                Cdouble,
+                Cint,
+            ),
+            fraction,
+            Cint(window_capacity),
+            Cint(min_points),
+            Cint(iterations),
+            weight_function,
+            robustness_method,
+            scaling_method,
+            boundary_policy,
+            update_mode,
+            auto_converge,
+            Cint(return_robustness_weights || flags.weights),
+            zero_weight_fallback,
+            degree,
+            Cint(dimensions),
+            distance_metric,
+            surface_mode,
+            cell_val,
+            iv_val,
+            bdf_val,
+            wm_ptr,
+            wm_len,
+            missing,
+            Cint(return_gradient || flags.gradient),
+            isnothing(confidence_intervals) ? NaN : Float64(confidence_intervals),
+            isnothing(prediction_intervals) ? NaN : Float64(prediction_intervals),
+            Cint(return_se || flags.se),
+        )
 
         if handle == C_NULL
             error("Failed to create OnlineLoess")
@@ -1257,8 +1400,12 @@ mutable struct OnlineLoess
 
         obj = new(handle, dimensions)
         finalizer(
-            x ->
-                @ccall(current_library().jl_online_loess_free(x.handle::Ptr{Cvoid})::Cvoid),
+            x -> ccall(
+                (:jl_online_loess_free, libfastloess),
+                Cvoid,
+                (Ptr{Cvoid},),
+                x.handle,
+            ),
             obj,
         )
         return obj
@@ -1273,17 +1420,23 @@ Returns `nothing` while the window is still filling (fewer than `min_points`
 have been seen), and an `OnlineOutput` once smoothing begins.
 """
 function add_point(o::OnlineLoess, x::Float64, y::Float64)
-    c_result = @ccall current_library().jl_online_loess_add_point(
-        o.handle::Ptr{Cvoid},
-        x::Cdouble,
-        y::Cdouble,
-    )::CJlOnlineOutput
+    c_result = ccall(
+        (:jl_online_loess_add_point, libfastloess),
+        CJlOnlineOutput,
+        (Ptr{Cvoid}, Cdouble, Cdouble),
+        o.handle,
+        x,
+        y,
+    )
 
     if c_result.error != C_NULL
         error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
-        @ccall current_library().jl_online_free_output(
-            Ref(c_result)::Ptr{CJlOnlineOutput},
-        )::Cvoid
+        ccall(
+            (:jl_online_free_output, libfastloess),
+            Cvoid,
+            (Ptr{CJlOnlineOutput},),
+            Ref(c_result),
+        )
         error("fastloess error: $error_msg")
     end
 
@@ -1307,9 +1460,12 @@ function add_point(o::OnlineLoess, x::Float64, y::Float64)
     )
 
     # Free the C-allocated gradient buffer now that it has been copied above.
-    @ccall current_library().jl_online_free_output(
-        Ref(c_result)::Ptr{CJlOnlineOutput},
-    )::Cvoid
+    ccall(
+        (:jl_online_free_output, libfastloess),
+        Cvoid,
+        (Ptr{CJlOnlineOutput},),
+        Ref(c_result),
+    )
 
     return output
 end

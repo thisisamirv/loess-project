@@ -221,6 +221,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed instead of raising an error. Now validated before the cast.
 - Fixed intermittent macOS `mvn clean test` resolution failures involving `commons-io:2.6` by pinning `maven-clean-plugin` to 3.5.0, which removes the old `maven-shared-utils`/`commons-io` dependency path.
 
+**Julia:**
+
+- Fixed Julia 1.13 FFI loading by switching native calls to tuple-based `ccall` with a plain-string library path.
+
 **Node.js:**
 
 - Fixed inconsistent naming of the Node.js binding as "JavaScript" across READMEs, doc-site home pages, and `CITATION.cff`.
