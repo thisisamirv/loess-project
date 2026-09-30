@@ -65,7 +65,7 @@ jobs:
         run: cargo build -p fastLoess --features dev
 
       - name: Test (fastLoess)
-        run: cargo test -q -p fastLoess --test fastLoess --features dev
+        run: cargo test -q -p fastLoess --tests --features dev
 
       - name: Docs
         run: |
