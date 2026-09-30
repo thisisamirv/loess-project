@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Amir Valizadeh**. Author, maintainer, funder.
+- **Amir Valizadeh**. Author, maintainer.
   [](https://orcid.org/0000-0001-5983-8527)
 
 ## Citation
