@@ -232,6 +232,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Install `commonmark` from CRAN before resolving the rOpenSci tooling dependencies, avoiding the invalid-checksum macOS ARM64 binary from r-universe.
 - Removed the `fnd` role from the individual maintainer in `Authors@R`; pkgcheck treats individual funder names as institutions and requires an institutional ROR.
 - Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed instead of raising an error. Now validated before the cast.
 
