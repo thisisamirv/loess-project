@@ -22,6 +22,8 @@ reference:
       - finalize
       - add_point
       - plot.LoessResult
+      - predict.Loess
+      - cv_opts
       - print.Loess
       - print.LoessResult
       - print.OnlineLoess
