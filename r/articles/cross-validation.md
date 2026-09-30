@@ -23,16 +23,14 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(
-    cv_method = "kfold",
-    cv_k = 5,
-    cv_fractions = c(0.2, 0.3, 0.5, 0.7)
+    cv = cv_opts(fractions = c(0.2, 0.3, 0.5, 0.7), method = "kfold", k = 5)
 )
 result <- fit(model, x, y)
 
 cat("Selected fraction:", result$fraction_used, "\n")
 #> Selected fraction: 0.3
 cat("CV scores:", result$cv_scores, "\n")
-#> CV scores: 0.4417285 0.4394402 0.4658372 0.5203409
+#> CV scores: 0.4716178 0.4675785 0.4818711 0.5309913
 ```
 
 ------------------------------------------------------------------------
@@ -167,7 +165,7 @@ cat("Selected fraction (CV):", result$fraction_used, "\n")
 sessionInfo()
 #> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.4 LTS
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -186,11 +184,11 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_2.0.0
+#> [1] rfastloess_2.1.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+#>  [5] xfun_0.61         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
 #>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     

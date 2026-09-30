@@ -65,7 +65,7 @@ result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, lat/lon):\n")
 #> First 6 smoothed values (2D LOESS, lat/lon):
 print(head(result$y))
-#> [1]  0.17983519  0.02191686 -0.01849028  0.22186652  0.09969107 -0.22507546
+#> [1]  0.18141178  0.02484439 -0.03151726  0.21964023  0.09924185 -0.22071524
 ```
 
 ------------------------------------------------------------------------
@@ -91,7 +91,7 @@ result <- fit(model, x3d, y)
 cat("First 6 smoothed values (3D LOESS):\n")
 #> First 6 smoothed values (3D LOESS):
 print(head(result$y))
-#> [1] 0.8070023 0.9764349 0.8780069 1.0434288 0.9838051 0.8222218
+#> [1] 0.8041757 0.9710899 0.8812859 1.0388899 0.9834350 0.8277124
 ```
 
 ------------------------------------------------------------------------
@@ -141,7 +141,7 @@ result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, direct surface):\n")
 #> First 6 smoothed values (2D LOESS, direct surface):
 print(head(result$y))
-#> [1]  0.19156485  0.02608782  0.01152671  0.22715513  0.13701873 -0.24090868
+#> [1]  0.19275941  0.02956952  0.01604781  0.22483189  0.13748470 -0.23519835
 ```
 
 For large 2D or 3D datasets use `"interpolation"` (default) and tune
@@ -159,7 +159,7 @@ result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, interpolation surface):\n")
 #> First 6 smoothed values (2D LOESS, interpolation surface):
 print(head(result$y))
-#> [1]  0.17983519  0.02191686 -0.01849028  0.22186652  0.09969107 -0.22507546
+#> [1]  0.18141178  0.02484439 -0.03151726  0.21964023  0.09924185 -0.22071524
 ```
 
 ``` r
@@ -167,7 +167,7 @@ print(head(result$y))
 sessionInfo()
 #> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.4 LTS
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -186,11 +186,11 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_2.0.0
+#> [1] rfastloess_2.1.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+#>  [5] xfun_0.61         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
 #>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     

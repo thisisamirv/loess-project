@@ -11,7 +11,7 @@ mode: it processes the entire dataset at once and supports every feature
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,6 +60,7 @@ mode: it processes the entire dataset at once and supports every feature
 <span>    return_diagnostics <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    return_residuals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    return_robustness_weights <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    return_gradient <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    zero_weight_fallback <span class="op">=</span> <span class="st">"use_local_mean"</span>,</span>
 <span>    auto_converge <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    cv_fractions <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -77,7 +78,10 @@ mode: it processes the entire dataset at once and supports every feature
 <span>    interpolation_vertices <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    boundary_degree_fallback <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>    cv_seed <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>    missing <span class="op">=</span> <span class="st">"error"</span></span>
+<span>    missing <span class="op">=</span> <span class="st">"error"</span>,</span>
+<span>    retain_model <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    outputs <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>    cv <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -152,6 +156,14 @@ result. Default: <code>FALSE</code>.</p></dd>
 <dt id="arg-return-robustness-weights">return_robustness_weights<a class="anchor" aria-label="anchor" href="#arg-return-robustness-weights"></a></dt>
 <dd><p>Logical; if <code>TRUE</code>, return per-point
 robustness weights. Default: <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-return-gradient">return_gradient<a class="anchor" aria-label="anchor" href="#arg-return-gradient"></a></dt>
+<dd><p>Logical; if <code>TRUE</code>, return the per-point local
+fit gradient in the result. Requires <code>surface_mode = "direct"</code>;
+raises an error instead of silently leaving <code>gradient</code> absent if
+requested under the default <code>"interpolation"</code> mode. Default:
+<code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-zero-weight-fallback">zero_weight_fallback<a class="anchor" aria-label="anchor" href="#arg-zero-weight-fallback"></a></dt>
@@ -256,6 +268,24 @@ observations (rows) where any x dimension or y is non-finite (and the
 matching <code>custom_weights</code> entry) before fitting. A length mismatch
 between <code>x</code> and <code>y</code> always raises an error, even under
 <code>"drop"</code>.</p></dd>
+
+
+<dt id="arg-retain-model">retain_model<a class="anchor" aria-label="anchor" href="#arg-retain-model"></a></dt>
+<dd><p>Logical; if <code>TRUE</code>, retain the fitted model's
+training data, enabling <code><a href="predict.Loess.html">predict.Loess</a></code> for out-of-sample
+prediction. Default: <code>FALSE</code>.</p></dd>
+
+
+<dt id="arg-outputs">outputs<a class="anchor" aria-label="anchor" href="#arg-outputs"></a></dt>
+<dd><p>Optional character vector selecting <code>"diagnostics"</code>,
+<code>"residuals"</code>, <code>"weights"</code>, <code>"gradient"</code> (or
+<code>"derivative"</code>), <code>"se"</code>, and <code>"sorted"</code>. Combined with
+the corresponding <code>return_*</code> arguments; <code>NULL</code> selects none.</p></dd>
+
+
+<dt id="arg-cv">cv<a class="anchor" aria-label="anchor" href="#arg-cv"></a></dt>
+<dd><p>Grouped cross-validation settings from <code><a href="cv_opts.html">cv_opts</a></code>.
+<code>NULL</code> uses the individual <code>cv_*</code> arguments.</p></dd>
 
 </dl></div>
     <div class="section level2">

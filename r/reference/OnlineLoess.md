@@ -12,7 +12,7 @@ OnlineLoess(
     window_capacity = 1000L,
     min_points = 2L,
     ...,
-    iterations = 3L,
+    iterations = 0L,
     weight_function = "tricube",
     robustness_method = "bisquare",
     scaling_method = "mad",
@@ -21,6 +21,10 @@ OnlineLoess(
     update_mode = "incremental",
     auto_converge = NULL,
     return_robustness_weights = FALSE,
+    return_gradient = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    return_se = FALSE,
     degree = "linear",
     dimensions = 1L,
     distance_metric = "normalized",
@@ -29,7 +33,8 @@ OnlineLoess(
     cell = NULL,
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL,
-    missing = "error"
+    missing = "error",
+    outputs = NULL
 )
 ```
 
@@ -107,6 +112,33 @@ OnlineLoess(
   Logical; if `TRUE`, return per-point robustness weights. Default:
   `FALSE`.
 
+- return_gradient:
+
+  Logical; if `TRUE`, return the per-point local fit gradient in the
+  result. Requires `surface_mode = "direct"`; raises an error instead of
+  silently leaving `gradient` absent if requested under the default
+  `"interpolation"` mode. Default: `FALSE`.
+
+- confidence_intervals:
+
+  Confidence level for confidence intervals (e.g. `0.95`). Only computed
+  under `update_mode = "full"` — raises an error at construction if set
+  (or `return_se`/ `prediction_intervals` is set) while `update_mode` is
+  left at its default `"incremental"`. `NULL` (default) disables
+  confidence intervals.
+
+- prediction_intervals:
+
+  Confidence level for prediction intervals; same `update_mode = "full"`
+  requirement as `confidence_intervals`. `NULL` (default) disables
+  prediction intervals.
+
+- return_se:
+
+  Include the standard error for the latest point in the result. Same
+  `update_mode = "full"` requirement as `confidence_intervals`. Default:
+  `FALSE`.
+
 - degree:
 
   Local polynomial degree: `"constant"`, `"linear"` (default),
@@ -156,6 +188,12 @@ OnlineLoess(
   [`add_point`](https://thisisamirv.github.io/loess-project/r/reference/add_point.md):
   `"error"` (default) raises an error, `"drop"` silently ignores the
   point (returns `NULL`) instead of adding it to the window.
+
+- outputs:
+
+  Optional character vector selecting `"weights"`, `"gradient"` (or
+  `"derivative"`), and `"se"`. Combined with individual flags; `"se"`
+  requires full update mode.
 
 ## Value
 

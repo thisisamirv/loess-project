@@ -3,6 +3,7 @@
 <url><loc>https://thisisamirv.github.io/loess-project/r/CONTRIBUTING.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/LICENSE-text.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/adapter-choice.html</loc></url>
+<url><loc>https://thisisamirv.github.io/loess-project/r/articles/alternative-software.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/benchmarks.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/boundary.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/articles/concepts.html</loc></url>
@@ -28,10 +29,12 @@
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/OnlineLoess.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/StreamingLoess.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/add_point.html</loc></url>
+<url><loc>https://thisisamirv.github.io/loess-project/r/reference/cv_opts.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/finalize.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/fit.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/index.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/plot.LoessResult.html</loc></url>
+<url><loc>https://thisisamirv.github.io/loess-project/r/reference/predict.Loess.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/print.Loess.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/print.LoessResult.html</loc></url>
 <url><loc>https://thisisamirv.github.io/loess-project/r/reference/print.OnlineLoess.html</loc></url>

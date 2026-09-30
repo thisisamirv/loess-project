@@ -181,6 +181,7 @@ legend("topright", c("Data", "Smoothed", "95% CI"),
 | Topic | Link |
 |----|----|
 | How LOESS works | [`vignette("concepts", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/concepts.md) |
+| Comparing with [`stats::loess()`](https://rdrr.io/r/stats/loess.html) | [`vignette("alternative-software", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/alternative-software.md) |
 | All parameters explained | [`?Loess`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md) |
 | Batch vs Streaming vs Online | [`vignette("adapter-choice")`](https://thisisamirv.github.io/loess-project/r/articles/adapter-choice.md) |
 | Polynomial degree choices | [`vignette("degree", package = "rfastloess")`](https://thisisamirv.github.io/loess-project/r/articles/degree.md) |
@@ -193,7 +194,7 @@ legend("topright", c("Data", "Smoothed", "95% CI"),
 sessionInfo()
 #> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.4 LTS
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -212,11 +213,11 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] rfastloess_2.0.0
+#> [1] rfastloess_2.1.0
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] digest_0.6.39     desc_1.4.3        R6_2.6.1          fastmap_1.2.0    
-#>  [5] xfun_0.60         cachem_1.1.0      knitr_1.51        htmltools_0.5.9  
+#>  [5] xfun_0.61         cachem_1.1.0      knitr_1.52        htmltools_0.5.9  
 #>  [9] rmarkdown_2.32    lifecycle_1.0.5   cli_3.6.6         sass_0.4.10      
 #> [13] pkgdown_2.2.1     textshaping_1.0.5 jquerylib_0.1.4   systemfonts_1.3.2
 #> [17] compiler_4.6.1    tools_4.6.1       ragg_1.5.2        bslib_0.12.0     

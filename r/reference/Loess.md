@@ -20,6 +20,7 @@ Loess(
     return_diagnostics = FALSE,
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
+    return_gradient = FALSE,
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
     cv_fractions = NULL,
@@ -37,7 +38,10 @@ Loess(
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL,
     cv_seed = NULL,
-    missing = "error"
+    missing = "error",
+    retain_model = FALSE,
+    outputs = NULL,
+    cv = NULL
 )
 ```
 
@@ -105,6 +109,13 @@ Loess(
 
   Logical; if `TRUE`, return per-point robustness weights. Default:
   `FALSE`.
+
+- return_gradient:
+
+  Logical; if `TRUE`, return the per-point local fit gradient in the
+  result. Requires `surface_mode = "direct"`; raises an error instead of
+  silently leaving `gradient` absent if requested under the default
+  `"interpolation"` mode. Default: `FALSE`.
 
 - zero_weight_fallback:
 
@@ -204,6 +215,25 @@ Loess(
   (rows) where any x dimension or y is non-finite (and the matching
   `custom_weights` entry) before fitting. A length mismatch between `x`
   and `y` always raises an error, even under `"drop"`.
+
+- retain_model:
+
+  Logical; if `TRUE`, retain the fitted model's training data, enabling
+  [`predict.Loess`](https://thisisamirv.github.io/loess-project/r/reference/predict.Loess.md)
+  for out-of-sample prediction. Default: `FALSE`.
+
+- outputs:
+
+  Optional character vector selecting `"diagnostics"`, `"residuals"`,
+  `"weights"`, `"gradient"` (or `"derivative"`), `"se"`, and `"sorted"`.
+  Combined with the corresponding `return_*` arguments; `NULL` selects
+  none.
+
+- cv:
+
+  Grouped cross-validation settings from
+  [`cv_opts`](https://thisisamirv.github.io/loess-project/r/reference/cv_opts.md).
+  `NULL` uses the individual `cv_*` arguments.
 
 ## Value
 

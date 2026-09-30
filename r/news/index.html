@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.1.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,135 +34,7 @@
       <small>Source: <a href="https://github.com/thisisamirv/loess-project/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="2.0.0" id="rfastloess-200">rfastloess 2.0.0<a class="anchor" aria-label="anchor" href="#rfastloess-200"></a></h2>
-<div class="section level3">
-<h3 id="added-2-0-0">Added<a class="anchor" aria-label="anchor" href="#added-2-0-0"></a></h3>
-<ul><li>Added an “Ideas for Contribution” section to <code>CONTRIBUTING.md</code>, listing concrete Batch/Streaming/Online feature gaps (out-of-sample prediction, per-point local gradients, adaptive fraction selection, <code>cell</code>/<code>interpolation_vertices</code> tuning, bootstrap intervals, GPU backend, concurrent chunk processing, checkpointable streaming state, <code>OnlineOutput.standard_error</code>, distance-based window eviction, configurable warm-up).</li>
-<li>Added <code>dev/bump_version.py --version X.Y.Z</code> to bump every crate/binding version file, <code>CITATION.cff</code>, the Spack recipe, and <code>CONTRIBUTING.md</code>’s example version in one pass (supports <code>--dry-run</code>).</li>
-<li>Added <code>dev/check_pinned_versions.py</code> and a weekly <code>check-versions.yml</code> to catch hardcoded version pins Dependabot can’t see.</li>
-<li>Added <code>.github/dependabot.yml</code>, covering every dependency ecosystem in one weekly PR per directory.</li>
-<li>Added an optional <code>commit</code> input to release workflows’ <code>workflow_dispatch</code> trigger, to pin the built commit for manual runs.</li>
-<li>Added <code>dev/check_links.py</code> to validate Markdown cross-reference links across all docs.</li>
-<li>Added <code>return_sorted</code> and <code>missing</code> options to <code><a href="../reference/Loess.html">Loess()</a></code>, <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, and <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="changed-2-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-2-0-0"></a></h3>
-<ul><li>Added a <code>large</code> benchmark category (exact-fit, high-iteration, high-fraction) to the R/Rust benchmarks.</li>
-<li>Merged the standalone <code>dev/add-{cpp,rust,nodejs,wasm}-outputs</code> scripts into <code>dev/verify_snippets.py --update-outputs</code>.</li>
-<li>Replaced Unicode super/subscript stand-ins (<code>R²</code>, <code>xᵢ</code>, etc.) with plain ASCII throughout docs and comments, catching some leftover mojibake.</li>
-<li>Added <code>dev/add-readme-to-docs.py</code> to auto-embed <code>README.md</code> as the docs homepage (Starlight/Sphinx-aware); not yet wired into Python’s <code>Makefile</code>.</li>
-<li>Harmonized the docs-site directory structure across every binding/crate, and fixed doc-tooling scripts that missed snippets in the newly-nested pages.</li>
-<li>Consolidated every README (merged Installation/Documentation sections, dropped GitHub-only alert syntax, removed sections now covered by docs-site pages) and renamed “When to Use” to “When to Use Batch Adapter” everywhere.</li>
-<li>Vendored doxygen-awesome-css v2.4.2 for a modern C++ Doxygen theme.</li>
-<li>Added <code>dev/update_changelogs.py</code> to regenerate each binding/crate’s <code>NEWS.md</code>/<code>news.md</code> from the root changelog.</li>
-<li>Replaced the <code>kernels.md</code>/<code>adapter-choice.md</code> mermaid flowcharts with tables (Doxygen/rustdoc don’t render mermaid).</li>
-<li>Consolidated <code>parameters.md</code>/<code>@autodocs</code> into each <code>api.md</code>’s option tables, removing <code>parameters.md</code>.</li>
-<li>Removed the redundant <code>rfastloess-package</code> pkgdown topic and the internal <code>Nullable()</code> helper.</li>
-<li>Fixed <code>_pkgdown.yml</code> mislabeling the S3-based interface as “R6 classes”.</li>
-<li>Merged <code>parameters.Rmd</code>/<code>batch.Rmd</code>/<code>streaming.Rmd</code>/<code>online.Rmd</code> into the constructors’ roxygen docs, removing the now-redundant vignettes.</li>
-<li>Removed <code>confidence_intervals</code>/<code>prediction_intervals</code>/<code>return_se</code> from <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, and those plus <code>return_diagnostics</code>/<code>return_residuals</code>/<code>parallel</code> from <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> — none were ever computed by either adapter, and Online now always runs sequentially. Breaking change; <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>’s <code>parallel</code> is unaffected.</li>
-<li>Mirrored the Python API docs’ structure (field tables, <code>## Options</code> per field, <code>## Result Structure</code> at the end) to every remaining crate/binding. Along the way, unified <code>weighted_metric_weights</code> to require explicit <code>distance_metric = "weighted"</code> on C++/Go/Java/Julia (previously auto-selected); fixed C++‘s <code>StreamingOptions.overlap</code> hardcoded <code>500</code> default; corrected several bindings’ docs showing a flat <code>500</code> for <code>overlap</code> when they actually use the dynamic default (Node.js, WASM, Go, Java, R); fixed Java’s <code>api-online.adoc</code> disclaimer and Julia’s constructor docstrings missing several accepted keyword arguments.</li>
-<li>Fixed <code>bindings/r/R/StreamingLoess.R</code>, which was corrupted (a duplicate of <code>OnlineLoess.R</code> with a mangled fragment appended), making <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code> uncallable. Reconstructed from <code>man/StreamingLoess.Rd</code>/<code>utils.R</code>, verified via <code><a href="https://roxygen2.r-lib.org/reference/roxygenize.html" class="external-link">roxygen2::roxygenise()</a></code> and the full <code>testthat</code> suite (187 passed). Also fixed a stale <code>test-extendr-wrappers.R</code> fixture with 3 extra positional args.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="fixed-2-0-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-2-0-0"></a></h3>
-<ul><li>Fixed <code>CONTRIBUTING.md</code>’s stale Go prerequisite (<code>1.21+</code> → <code>1.23+</code>), <code>air</code> auto-install target (<code>make r</code> → <code>make r-dev</code>), and example crate version (<code>0.9.0</code> → <code>1.2.0</code>).</li>
-<li>Fixed the R benchmark script calling <code>fit</code> as a field instead of the S3 generic <code>fit(model, x, y)</code>.</li>
-<li>Fixed <code>release-conda.yml</code>’s version-line <code>sed</code> pattern to match any indentation.</li>
-<li>Fixed benchmark vendoring nulling every crate’s checksum instead of just the two local path crates.</li>
-<li>Fixed the benchmark README’s inaccurate “Iterations” scenario count.</li>
-<li>Fixed <code>docs.yml</code>’s Pages deployment: merged per-language jobs into one artifact upload/deploy job using <code>upload/deploy-pages</code> actions instead of legacy branch-based deployment.</li>
-<li>Fixed 51 broken doc cross-reference links left over from the docs-site restructure (found via <code>dev/check_links.py</code>).</li>
-<li>Fixed <code>OnlineLoess</code>/<code>StreamingLoess</code> defaults silently diverging from docs: <code>min_points</code> (3→2), <code>update_mode</code> (<code>"full"</code>→<code>"incremental"</code>), and internal robustness-iteration defaults (streaming 2→3, online 1→3).</li>
-<li>Fixed every binding’s docs describing <code>LoessResult.x</code> as “sorted”; it’s actually returned in input order (sorted internally, then mapped back). Strengthened Python’s <code>test_unsorted_input</code> to assert this.</li>
-<li>Fixed the “Handling Outliers” quickstart example printing nothing at <code>fraction = 0.5</code> with only 6 points; bumped to <code>0.7</code>.</li>
-<li>Fixed two R roxygen examples printing too much/nothing (<code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>, <code><a href="../reference/add_point.html">add_point()</a></code>).</li>
-<li>Fixed Julia’s <code>intervals.md</code> examples looping over all 100 points instead of a short sample.</li>
-<li>Reformatted <code>configure</code> to tabs and fixed <code>.Rbuildignore</code> missing exclusions.</li>
-<li>Removed the empty <code>R/params.R</code> stub and simplified <code><a href="../reference/plot.LoessResult.html">plot.LoessResult()</a></code> to return <code>NULL</code> invisibly.</li>
-<li>Inlined the <code>.make_*</code> constructor helpers, and consolidated <code>utils.R</code>’s parameter validators into two generic helpers.</li>
-<li>Fixed <code>utils.R</code>’s internal <code>validate_min_points()</code> guard hardcoding a stricter minimum of 3 points, diverging from the Rust core’s actual minimum of 2; lowered to 2.</li>
-</ul></div>
-</div>
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.1.0" id="rfastloess-110">rfastloess 1.1.0<a class="anchor" aria-label="anchor" href="#rfastloess-110"></a></h2>
-<div class="section level3">
-<h3 id="added-1-1-0">Added<a class="anchor" aria-label="anchor" href="#added-1-1-0"></a></h3>
-<ul><li>Added a GitHub Pages landing page at the repository root, built from <code>README.md</code> via pandoc and deployed by <code>docs.yml</code>.</li>
-<li>Added a GitHub workflow for running validation scripts.</li>
-<li>Added <code>lenght</code> gaurds for extra arguments.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="changed-1-1-0">Changed<a class="anchor" aria-label="anchor" href="#changed-1-1-0"></a></h3>
-<ul><li>Split the monolithic <code>.github/workflows/ci.yml</code> into seven per-language workflow files: <code>ci-rust.yml</code>, <code>ci-python.yml</code>, <code>ci-julia.yml</code>, <code>ci-nodejs.yml</code>, <code>ci-wasm.yml</code>, <code>ci-cpp.yml</code>, and <code>ci-r.yml</code>. Each file carries the relevant <code>ci</code> (multi-OS matrix), <code>asan</code>, and <code>gpu</code> jobs for its language.</li>
-<li>Each crate/binding sub-Makefile now runs <code>dev/verify_snippets.py --lang &lt;lang&gt;</code> for its own language as the final step of <code>make default</code>. The root <code>docs-test</code> target remains as a convenience to run all languages at once.</li>
-<li>Split every sub-Makefile <code>default:</code> into <code>default:</code> (build and system install) and <code>dev:</code> (full quality-check workflow). Both root Makefiles gain <code>&lt;name&gt;-dev</code> targets for each binding and crate, and an <code>all-dev</code> aggregate target.</li>
-<li>Split <code>dev/verify_snippets.py</code> into a lean orchestrator and a <code>dev/runners/</code> package. Each language has its own module (<code>python.py</code>, <code>julia.py</code>, <code>nodejs.py</code>, <code>r.py</code>, <code>wasm.py</code>, <code>rust.py</code>, <code>cpp.py</code>) containing its <code>run_&lt;lang&gt;()</code> function and a <code>skip_reason()</code> predicate. Shared types (<code>Snippet</code>, <code>RunResult</code>) and utilities live in <code>runners/base.py</code>; the registry (<code>RUNNERS</code>, <code>SKIP_CHECKS</code>) is exported from <code>runners/__init__.py</code>.</li>
-<li>Moved CHANGELOG and CONTRIBUTING guides to project root.</li>
-<li>Updated README files to be binding/crate specific instead of one generic README for all bindings/crates.</li>
-<li>Moved R documentation from ReadTheDocs to GitHub Pages, served by pkgdown at <a href="https://thisisamirv.github.io/loess-project/r/" class="uri">https://thisisamirv.github.io/loess-project/r/</a>. The ReadTheDocs site no longer includes R-specific content.</li>
-<li>Simplified <code>bindings/r/Makefile</code>: replaced <code>Cargo.toml.orig</code> save/restore vendoring with <code>src/vendor-update.sh</code>; made <code>[workspace]</code> permanent in <code>src/Cargo.toml</code>; removed Bioconductor dependencies, redundant <code>cargo fmt --check</code>, <code>NAMESPACE</code> indentation post-processing, and <code><a href="https://pkgdown.r-lib.org/reference/build_site.html" class="external-link">pkgdown::build_site</a></code> from the dev workflow.</li>
-<li>Changed R version dependency to 4.4.0 due to issues with installing Bioconducter packages on R &lt; 4.4.0.</li>
-<li>Replaced the multi-step <code>install.packages</code> / <code><a href="https://bioconductor.github.io/BiocManager/reference/install.html" class="external-link">BiocManager::install</a></code> package installation logic in <code>bindings/r/Makefile</code> with a single <a href="https://pak.r-lib.org/" class="external-link"><code>pak</code></a>-based block. <code>pak</code> handles RSPM binary vs source selection automatically (including Linux), skips already-installed packages, and installs CRAN, Bioconductor (<code>bioc::</code> prefix), and R-universe packages in one call.</li>
-<li>
-<code>make r</code> (<code>default:</code>) now runs <code>R CMD INSTALL $(R_DIR)</code> directly; R’s <code>configure</code> script handles Rust compilation from the committed <code>vendor.tar.xz</code>. The full dev workflow moves to <code>make r-dev</code>.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="fixed-1-1-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-1-1-0"></a></h3>
-<ul><li>Fixed <code>.cargo/config.toml</code> hardcoding absolute <code>c:/rtools45/...</code> paths for the <code>x86_64-pc-windows-gnu</code> linker and ar tool. Replaced with bare tool names resolved via <code>PATH</code>, matching the existing fix in <code>bindings/r/src/cargo-config.toml</code>.</li>
-<li>Fixed Windows arm64 (R-Universe) build: <code>ar x</code> without a member name correctly resolves long-name archive entries (&gt;16 chars stored as <code>/&lt;offset&gt;</code>); named extraction silently fails for such entries. Used <code>objcopy --remove-section=.idata$4</code> on each extracted <code>.dll</code> stub to strip the invalid relocations that lld 19 rejects, then <code>ar r</code> to re-insert.</li>
-<li>Fixed <code>ld.lld</code> crashing or dropping symbols (<code>WakeByAddressSingle</code>, <code>WaitOnAddress</code>) on Windows arm64: <code>--whole-archive</code> pulls every crate’s raw-dylib stub for a given DLL into the link, but different crates’ stubs cover different, non-overlapping symbols of that DLL — <code>--allow-multiple-definition</code> works on x86_64 but crashes lld’s arm64pe backend. Fixed by dropping <code>--whole-archive</code> on <code>gnullvm</code>; normal archive resolution applies and nothing is lost since <code>entrypoint.c</code> already references the extendr init symbol directly.</li>
-<li>Fixed CRAN Windows build (<code>error: linker not found</code>): <code>cargo-config.toml</code> hardcoded linker/ar as <code>c:/rtools45/...</code> absolute paths, which break when Rtools is installed on a different drive. Fixed by using bare tool names resolved via <code>PATH</code>.</li>
-<li>Fixed CRAN Windows build (<code>cannot find -lgcc_eh</code>): the Rtools gcc lib directory is not writable on CRAN’s server, and config-file <code>rustflags</code> does not reach build-script linker invocations. <code>Makevars.win</code> creates an empty stub via <code>touch</code> in <code>$(TARGET_DIR)/libgcc_mock/</code> and passes <code>LIBRARY_PATH</code> inline on <code>cargo build</code>. The path is resolved to an absolute path via <code>$(pwd)</code> at shell execution time — a relative path silently fails because Cargo invokes GCC to link build scripts from its own temp directory, not from <code>src/</code>.</li>
-<li>Fixed <code>Loess(fraction = 0.3, 4)</code> incorrectly succeeding: <code>reject_extra_positional_args()</code> counted unnamed arguments but did not check their position, so a single unnamed arg in any non-first slot passed validation. The check now rejects any unnamed argument that is not in position 1.</li>
-<li>Fixed <code><a href="../reference/fit.html">fit()</a></code> and <code><a href="../reference/process_chunk.html">process_chunk()</a></code> silently flattening a matrix <code>x</code> and producing a confusing Rust-level length-mismatch error when <code>dimensions</code> was not set to match <code>ncol(x)</code>. Both methods now raise an informative error at the R level, naming the <code>dimensions</code> parameter to fix.</li>
-</ul></div>
-</div>
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.0.0" id="rfastloess-100">rfastloess 1.0.0<a class="anchor" aria-label="anchor" href="#rfastloess-100"></a></h2>
-<div class="section level3">
-<h3 id="added-1-0-0">Added<a class="anchor" aria-label="anchor" href="#added-1-0-0"></a></h3>
-<ul><li>Introduced S3 generics <code><a href="../reference/fit.html">fit()</a></code>, <code><a href="../reference/process_chunk.html">process_chunk()</a></code>, <code><a href="../reference/finalize.html">finalize()</a></code>, and <code><a href="../reference/add_point.html">add_point()</a></code>, replacing the previous list-closure API.</li>
-<li>
-<code>bindings/r/Makefile</code> now auto-installs <a href="https://posit-dev.github.io/air/" class="external-link">Air</a> if missing, before running <code>air format</code>.</li>
-<li>Added a <code>reject_extra_positional_args()</code> helper to reject extra unnamed arguments.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="fixed-1-0-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-1-0-0"></a></h3>
-<ul><li>Fixed incorrect URLs in R binding docs.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="changed-1-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-1-0-0"></a></h3>
-<ul><li>Removed <code>dev/isolate_cargo.py</code>, <code>dev/check_root_cargo.py</code>, <code>dev/fix_doc_snippets.py</code>, and <code>check_js_licenses.js</code> — workspace isolation, doc-snippet transformation, and license checks are no longer needed.</li>
-<li>Split the monolithic root <code>Makefile</code> into per-crate/binding sub-Makefiles (e.g. <code>crates/loess-rs/Makefile</code>, <code>bindings/r/Makefile</code>), each invokable directly via <code>make -f path/Makefile</code>. The root <code>Makefile</code> now only aggregates (<code>docs</code>, <code>check-msrv</code>, <code>all*</code>).</li>
-<li>Moved Rust and binding tests into their respective crate/binding directories (e.g. <code>tests/loess-rs/</code> → <code>crates/loess-rs/tests/loess-rs/</code>, <code>tests/cpp/</code> → <code>bindings/cpp/tests/</code>). Removed the standalone <code>tests/</code> workspace packages.</li>
-<li>Renamed the <code>smoothed</code> and <code>std_error</code> fields returned by <code>OnlineLoess</code>’s <code><a href="../reference/add_point.html">add_point()</a></code> to <code>y</code> and <code>standard_error</code>. This is a <strong>breaking change</strong>.</li>
-<li>Replaced <code>dev/style_pkg.R</code> with <a href="https://posit-dev.github.io/air/" class="external-link">Air</a> for formatting.</li>
-<li>Removed <code>dev/fix_rd_style.R</code>, <code>dev/prepare_cargo.py</code>, <code>dev/patch_vendor_crates.py</code>, <code>dev/clean_checksums.py</code>, and <code>dev/prepare_cran.sh</code> — their logic is now inlined directly in <code>bindings/r/Makefile</code>, so the R build no longer requires any Python scripts.</li>
-<li>Added <code>...</code> to <code><a href="../reference/Loess.html">Loess()</a></code>, <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, and <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> to force named arguments for optional parameters.</li>
-<li>Added <code>Depends: R (&gt;= 4.6)</code> to <code>DESCRIPTION</code> and a matching CI matrix entry.</li>
-<li>Expanded roxygen2 <code>@param</code> docs and added a <code>See Also</code> section linking to <a href="https://loess.readthedocs.io/" class="external-link uri">https://loess.readthedocs.io/</a>.</li>
-<li>Expanded <code>rfastloess-intro.Rmd</code> vignettes.</li>
-</ul></div>
-</div>
-    <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.9.0" id="rfastloess-090">rfastloess 0.9.0<a class="anchor" aria-label="anchor" href="#rfastloess-090"></a></h2>
-<div class="section level3">
-<h3 id="added-0-9-0">Added<a class="anchor" aria-label="anchor" href="#added-0-9-0"></a></h3>
-<ul><li>Added Python, R, WASM, Node.js, C++, and Julia bindings.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="changed-0-9-0">Changed<a class="anchor" aria-label="anchor" href="#changed-0-9-0"></a></h3>
-<ul><li>Implement monorepo structure.</li>
-<li>Converted all documentation tables to compact single-space format.</li>
-<li>Updated <code>.clang-tidy</code> to configure <code>lower_case</code> as the required naming convention for functions and member functions, matching the new snake_case public API.</li>
-<li>Moved <code>BENCHMARKS.md</code>, <code>CHANGELOG.md</code>, and <code>CONTRIBUTING.md</code> from the repository root into <code>docs/</code> and added them to the documentation site navigation.</li>
-</ul><p>For the full changelog, see: <a href="https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md" class="external-link uri">https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md</a></p>
-</div>
-</div>
-  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
-    </nav></aside></div>
+  </main></div>
 
 
     <footer><div class="pkgdown-footer-left">

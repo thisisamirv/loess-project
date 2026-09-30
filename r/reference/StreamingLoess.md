@@ -26,6 +26,10 @@ StreamingLoess(
     return_diagnostics = FALSE,
     return_residuals = FALSE,
     return_robustness_weights = FALSE,
+    return_gradient = FALSE,
+    confidence_intervals = NULL,
+    prediction_intervals = NULL,
+    return_se = FALSE,
     merge_strategy = "weighted_average",
     parallel = TRUE,
     degree = "linear",
@@ -36,7 +40,8 @@ StreamingLoess(
     cell = NULL,
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL,
-    missing = "error"
+    missing = "error",
+    outputs = NULL
 )
 ```
 
@@ -118,6 +123,30 @@ StreamingLoess(
   Logical; if `TRUE`, return per-point robustness weights. Default:
   `FALSE`.
 
+- return_gradient:
+
+  Logical; if `TRUE`, return the per-point local fit gradient in the
+  result. Requires `surface_mode = "direct"`; raises an error instead of
+  silently leaving `gradient` absent if requested under the default
+  `"interpolation"` mode. Default: `FALSE`.
+
+- confidence_intervals:
+
+  Confidence level for confidence intervals (e.g. `0.95`), computed per
+  chunk and merged across overlap boundaries via `merge_strategy`.
+  `NULL` (default) disables confidence intervals.
+
+- prediction_intervals:
+
+  Confidence level for prediction intervals; same per-chunk computation
+  and overlap-merging as `confidence_intervals`. `NULL` (default)
+  disables prediction intervals.
+
+- return_se:
+
+  Include standard errors in the result, computed per chunk and merged
+  across overlap boundaries via `merge_strategy`. Default: `FALSE`.
+
 - merge_strategy:
 
   Strategy for reconciling overlapping chunk regions:
@@ -179,6 +208,12 @@ StreamingLoess(
   (rows) where any x dimension or y is non-finite (and the matching
   `custom_weights` entry) before fitting. A length mismatch between `x`
   and `y` always raises an error, even under `"drop"`.
+
+- outputs:
+
+  Optional character vector selecting `"diagnostics"`, `"residuals"`,
+  `"weights"`, `"gradient"` (or `"derivative"`), and `"se"`. Combined
+  with individual flags.
 
 ## Value
 
