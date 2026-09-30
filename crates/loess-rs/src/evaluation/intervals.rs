@@ -298,14 +298,12 @@ impl<T: Float> IntervalMethod<T> {
         LoessError,
     > {
         // Effective degrees of freedom: df = delta1^2 / delta2
-        let df = if let (Some(d1), Some(d2)) = (delta1, delta2) {
-            if d2 > T::zero() {
-                Some(d1 * d1 / d2)
-            } else {
-                None
-            }
-        } else {
-            None
+        let df = match delta1 {
+            Some(d1) => match delta2 {
+                Some(d2) if d2 > T::zero() => Some(d1 * d1 / d2),
+                _ => None,
+            },
+            None => None,
         };
 
         // Compute confidence intervals if requested
