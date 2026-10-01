@@ -45,7 +45,8 @@ check_stats_loess <- function(
     degree_name <- if (degree == 1L) "linear" else "quadratic"
     family <- if (iterations == 0L) "gaussian" else "symmetric"
 
-    warnings_seen <- character(0)
+    warning_log <- new.env(parent = emptyenv())
+    warning_log$messages <- character(0)
     reference <- withCallingHandlers(
         stats::loess(
             y ~ x,
@@ -59,7 +60,10 @@ check_stats_loess <- function(
             )
         ),
         warning = function(w) {
-            warnings_seen <<- c(warnings_seen, conditionMessage(w))
+            warning_log$messages <- c(
+                warning_log$messages,
+                conditionMessage(w)
+            )
             invokeRestart("muffleWarning")
         }
     )
@@ -74,7 +78,7 @@ check_stats_loess <- function(
         "singular",
         sep = "|"
     )
-    if (any(grepl(degenerate, warnings_seen))) {
+    if (any(grepl(degenerate, warning_log$messages))) {
         return(TRUE)
     }
 
