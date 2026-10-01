@@ -119,9 +119,11 @@
 #'   \code{NULL} (default) uses the library default.
 #' @param interpolation_vertices Number of vertices in the interpolation grid.
 #'   \code{NULL} (default) uses the library default.
-#' @param boundary_degree_fallback Logical; if \code{TRUE}, fall back to lower
-#'   polynomial degree at boundaries when fitting at the requested degree
-#'   fails. \code{NULL} (default) uses the library default.
+#' @param boundary_degree_fallback Logical; if \code{TRUE}, interpolation
+#'   vertices lying outside the range of the data are fitted with a linear
+#'   model rather than the requested degree, avoiding unstable extrapolation.
+#'   It has no effect below quadratic degree, and \code{FALSE} reproduces
+#'   \code{stats::loess()}. \code{NULL} (default) uses the library default.
 #' @param cv_seed Integer seed for the cross-validation random number
 #'   generator. \code{NULL} (default) uses a random seed.
 #' @param cv Grouped cross-validation settings from \code{\link{cv_opts}}.

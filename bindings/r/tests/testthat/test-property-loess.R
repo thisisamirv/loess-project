@@ -16,13 +16,17 @@ loess_property_x <- function(order_values) {
     as.double(sorted_x[ranks])
 }
 
-#' Check whether `Loess()` matches a direct `stats::loess()` fit.
+#' Check whether `Loess()` matches a `stats::loess()` fit.
 #'
-#' The comparisons use direct surfaces and no boundary padding on both
-#' implementations. Gaussian fits are used at zero iterations; positive
-#' iteration counts use symmetric robust fitting and MAR residual scaling.
+#' The comparisons use no boundary padding on both implementations. Gaussian
+#' fits are used at zero iterations; positive iteration counts use symmetric
+#' robust fitting and MAR residual scaling.
 #' `stats::loess.control()` requires a positive `iterations` value even when
 #' `family = "gaussian"`, where robust reweighting is disabled.
+#'
+#' @param surface `"direct"` or `"interpolate"`, passed to both sides.
+#' @param boundary_degree_fallback Passed through to `Loess()`. `FALSE` selects
+#'   R's behaviour at interpolation vertices outside the data range.
 #' @noRd
 check_stats_loess <- function(
     x,
@@ -31,7 +35,9 @@ check_stats_loess <- function(
     degree = 2L,
     iterations = 0L,
     sorted = FALSE,
-    tolerance = 1e-10
+    tolerance = 1e-10,
+    surface = "direct",
+    boundary_degree_fallback = NULL
 ) {
     x <- as.double(x)
     y <- as.double(y)
@@ -39,17 +45,39 @@ check_stats_loess <- function(
     degree_name <- if (degree == 1L) "linear" else "quadratic"
     family <- if (iterations == 0L) "gaussian" else "symmetric"
 
-    reference <- stats::loess(
-        y ~ x,
-        data = data.frame(x = x, y = y),
-        span = fraction,
-        degree = degree,
-        family = family,
-        control = stats::loess.control(
-            surface = "direct",
-            iterations = max(1L, as.integer(iterations))
-        )
+    warnings_seen <- character(0)
+    reference <- withCallingHandlers(
+        stats::loess(
+            y ~ x,
+            data = data.frame(x = x, y = y),
+            span = fraction,
+            degree = degree,
+            family = family,
+            control = stats::loess.control(
+                surface = surface,
+                iterations = max(1L, as.integer(iterations))
+            )
+        ),
+        warning = function(w) {
+            warnings_seen <<- c(warnings_seen, conditionMessage(w))
+            invokeRestart("muffleWarning")
+        }
     )
+
+    # Tied x can collapse a local neighbourhood to zero width. `stats::loess()`
+    # then warns, falls back to a pseudoinverse and returns 0, so it provides no
+    # well-defined value to compare against and the case is skipped.
+    degenerate <- paste(
+        "zero-width neighborhood",
+        "pseudoinverse",
+        "condition number",
+        "singular",
+        sep = "|"
+    )
+    if (any(grepl(degenerate, warnings_seen))) {
+        return(TRUE)
+    }
+
     result <- fit(
         Loess(
             fraction = fraction,
@@ -57,7 +85,8 @@ check_stats_loess <- function(
             iterations = as.integer(iterations),
             boundary_policy = "noboundary",
             scaling_method = "mar",
-            surface_mode = "direct",
+            surface_mode = surface,
+            boundary_degree_fallback = boundary_degree_fallback,
             outputs = if (sorted) "sorted" else NULL,
             parallel = FALSE
         ),
@@ -132,17 +161,84 @@ test_that("matches stats::loess for randomized sorted output", {
     )
 })
 
+# `loess_property_x()` builds strictly increasing x, so the comparisons above
+# never see ties. Collapsing the draw onto a few levels exercises the tied-x
+# neighbourhoods instead.
+test_that("matches stats::loess for tied x-values (property-based)", {
+    property <- function(xy, levels, fraction, degree, iterations) {
+        x <- round(xy[[1]] / (200 / levels))
+
+        expect_true(check_stats_loess(
+            x,
+            xy[[2]],
+            fraction,
+            degree = degree,
+            iterations = iterations,
+            tolerance = 1e-10
+        ))
+    }
+
+    quickcheck::for_all(
+        xy = quickcheck::equal_length(
+            quickcheck::double_bounded(-100, 100, len = c(12L, 40L)),
+            quickcheck::double_bounded(-100, 100, len = c(12L, 40L)),
+            len = c(12L, 40L)
+        ),
+        levels = quickcheck::integer_bounded(3L, 12L, len = 1L),
+        fraction = quickcheck::double_bounded(0.4, 1.0, len = 1L),
+        degree = quickcheck::integer_bounded(1L, 2L, len = 1L),
+        iterations = quickcheck::integer_bounded(0L, 8L, len = 1L),
+        property = property,
+        tests = 200L,
+        shrinks = 0L,
+        discards = 1000L
+    )
+})
+
+# The comparisons above pin the direct surface, leaving R's interpolated surface
+# (local fits at kd-tree vertices blended with cubic Hermite bases) untested.
+# `boundary_degree_fallback = FALSE` selects R's behaviour at vertices outside
+# the data range; the package default reduces those to linear fits instead.
+test_that("matches stats::loess on the interpolated surface", {
+    property <- function(xy, fraction, degree) {
+        x <- loess_property_x(xy[[1]])
+        y <- xy[[2]]
+
+        expect_true(check_stats_loess(
+            x,
+            y,
+            fraction,
+            degree = degree,
+            surface = "interpolate",
+            boundary_degree_fallback = FALSE,
+            tolerance = 1e-10
+        ))
+    }
+
+    quickcheck::for_all(
+        xy = quickcheck::equal_length(
+            quickcheck::double_bounded(-100, 100, len = c(12L, 40L)),
+            quickcheck::double_bounded(-100, 100, len = c(12L, 40L)),
+            len = c(12L, 40L)
+        ),
+        fraction = quickcheck::double_bounded(0.4, 1.0, len = 1L),
+        degree = quickcheck::integer_bounded(1L, 2L, len = 1L),
+        property = property,
+        tests = 200L,
+        shrinks = 0L,
+        discards = 1000L
+    )
+})
+
 test_that("matches stats::loess for randomized robust fits with outliers", {
-    property <- function(
-        n,
-        seed,
-        fraction,
-        degree,
-        iterations,
-        spike_position,
-        spike_magnitude,
-        spike_negative
-    ) {
+    property <- function(n,
+                         seed,
+                         fraction,
+                         degree,
+                         iterations,
+                         spike_position,
+                         spike_magnitude,
+                         spike_negative) {
         set.seed(seed)
         x <- as.double(seq(-5, 5, length.out = n)[sample.int(n)])
         y <- as.double(sin(x) + rnorm(n, sd = 0.2))
@@ -212,13 +308,11 @@ test_that("matches stats::loess for fixed long-run robust fits", {
 })
 
 test_that("matches initial stats::loess fits for sparse one-spike responses", {
-    property <- function(
-        x,
-        spike_position,
-        spike_magnitude,
-        spike_negative,
-        fraction
-    ) {
+    property <- function(x,
+                         spike_position,
+                         spike_magnitude,
+                         spike_negative,
+                         fraction) {
         x <- loess_property_x(x)
 
         spike_index <- min(length(x), floor(spike_position * length(x)) + 1L)

@@ -88,6 +88,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **R:**
 
 - Added `quickcheck` properties for randomized `stats::loess()` parity, sorted output, robust iterations through 12 passes, and sparse one-spike initial fits; fixed regressions cover 12- and 24-iteration robust fits.
+- Added a `quickcheck` property comparing tied x-values against `stats::loess()`. The existing properties build strictly increasing x, so ties never reached any comparison. Cases where `stats::loess()` reports a zero-width neighbourhood and falls back to a pseudoinverse are skipped, since it returns no well-defined value there.
+- Added a `quickcheck` property comparing the interpolated surface against `stats::loess()`. The other properties pin `surface = "direct"`, leaving the kd-tree vertex fits and cubic Hermite blending uncompared. It runs with `boundary_degree_fallback = FALSE`, which selects R's treatment of vertices outside the data range.
+- Added the interpolation boundary-degree difference to the Alternative Software vignette, with a runnable comparison showing that `degree = "quadratic"` on the interpolated surface reproduces `stats::loess()` once `boundary_degree_fallback = FALSE` is set.
 - Added an Alternative Software vignette with runnable Gaussian and robust comparisons to `stats::loess()` and a guide to LOESS-specific defaults.
 - Added `cv_opts()` and the `cv` argument on `Loess()` for grouped Batch cross-validation.
 - Added `outputs` to `Loess()`, `StreamingLoess()`, `OnlineLoess()`, and `predict.Loess()` for grouped optional results with mode-specific name validation; existing `return_*` arguments remain supported.
@@ -238,6 +241,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Install `commonmark` from CRAN before resolving the rOpenSci tooling dependencies, avoiding the invalid-checksum macOS ARM64 binary from r-universe.
 - Removed the `fnd` role from the individual maintainer in `Authors@R`; pkgcheck treats individual funder names as institutions and requires an institutional ROR.
 - Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed instead of raising an error. Now validated before the cast.
+- Corrected the `boundary_degree_fallback` documentation on `Loess()`, `StreamingLoess()`, and `OnlineLoess()`. It described a fallback used "when fitting at the requested degree fails"; the option actually fits interpolation vertices lying outside the range of the data with a linear model, regardless of whether the requested degree would succeed.
 
 ## 2.0.0
 
