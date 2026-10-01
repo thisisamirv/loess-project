@@ -1,9 +1,7 @@
-<!-- markdownlint-disable MD024 MD025 -->
-# Changelog
-
+<!-- markdownlint-disable MD024 MD025 MD041 -->
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md).
 
-## \[Unreleased\]
+## rfastloess (development version)
 
 ### Added
 
@@ -23,7 +21,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Aligned `OnlineLoess` defaults across the Rust core and bindings: `iterations` is now `0` with the default `update_mode = "incremental"`; positive robustness iterations require `update_mode = "full"`.
 * Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed instead of raising an error. Now validated before the cast.
 
-## 2.0.0
+## rfastloess 2.0.0
 
 ### Added
 
@@ -40,7 +38,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Fixed `Loess(fraction = 0.3, 4)` incorrectly succeeding: `reject_extra_positional_args()` counted unnamed arguments but did not check their position, so a single unnamed arg in any non-first slot passed validation. The check now rejects any unnamed argument that is not in position 1.
 * Fixed `fit()` and `process_chunk()` silently flattening a matrix `x` and producing a confusing Rust-level length-mismatch error when `dimensions` was not set to match `ncol(x)`. Both methods now raise an informative error at the R level, naming the `dimensions` parameter to fix.
 
-## 1.0.0
+## rfastloess 1.0.0
 
 ### Added
 
@@ -61,7 +59,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Expanded roxygen2 `@param` docs and added a `See Also` section linking to <https://loess.readthedocs.io/>.
 * Expanded `rfastloess-intro.Rmd` vignettes.
 
-## 0.9.0
+## rfastloess 0.9.0
 
 ### Added
 
