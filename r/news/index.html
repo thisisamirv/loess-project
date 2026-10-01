@@ -34,7 +34,77 @@
       <small>Source: <a href="https://github.com/thisisamirv/loess-project/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
-  </main></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="rfastloess-development-version">rfastloess (development version)<a class="anchor" aria-label="anchor" href="#rfastloess-development-version"></a></h2>
+<div class="section level3">
+<h3 id="added-development-version">Added<a class="anchor" aria-label="anchor" href="#added-development-version"></a></h3>
+<ul><li>Added an Alternative Software vignette with runnable Gaussian and robust comparisons to <code><a href="https://rdrr.io/r/stats/loess.html" class="external-link">stats::loess()</a></code> and a guide to LOESS-specific defaults.</li>
+<li>Added <code><a href="../reference/cv_opts.html">cv_opts()</a></code> and the <code>cv</code> argument on <code><a href="../reference/Loess.html">Loess()</a></code> for grouped Batch cross-validation.</li>
+<li>Added <code>outputs</code> to <code><a href="../reference/Loess.html">Loess()</a></code>, <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>, and <code><a href="../reference/predict.Loess.html">predict.Loess()</a></code> for grouped optional results with mode-specific name validation; existing <code>return_*</code> arguments remain supported.</li>
+<li>Added <code>retain_model</code> and a <code><a href="../reference/predict.Loess.html">predict.Loess()</a></code> S3 method for out-of-sample prediction.</li>
+<li>Added <code>return_gradient</code> to <code><a href="../reference/Loess.html">Loess()</a></code>, <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, and <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>.</li>
+<li>Added <code>confidence_intervals</code>/<code>prediction_intervals</code>/<code>return_se</code> to <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code> and <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>. <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> requires <code>update_mode = "full"</code> or errors. New bound fields on <code><a href="../reference/add_point.html">add_point()</a></code>’s result.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
+<ul><li>Unavailable diagnostics are now represented as R <code>NA</code> rather than generic <code>NaN</code> values.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
+<ul><li>Aligned <code>OnlineLoess</code> defaults across the Rust core and bindings: <code>iterations</code> is now <code>0</code> with the default <code>update_mode = "incremental"</code>; positive robustness iterations require <code>update_mode = "full"</code>.</li>
+<li>Fixed <code>cv_seed</code> silently accepting negative values and reinterpreting them as a huge unsigned seed instead of raising an error. Now validated before the cast.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="2.0.0" id="rfastloess-200">rfastloess 2.0.0<a class="anchor" aria-label="anchor" href="#rfastloess-200"></a></h2>
+<div class="section level3">
+<h3 id="added-2-0-0">Added<a class="anchor" aria-label="anchor" href="#added-2-0-0"></a></h3>
+</div>
+<div class="section level3">
+<h3 id="changed-2-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-2-0-0"></a></h3>
+<ul><li>Updated the R README to be binding-specific instead of using a generic README shared across bindings.</li>
+<li>Moved R documentation from ReadTheDocs to GitHub Pages, served by pkgdown at <a href="https://thisisamirv.github.io/loess-project/r/" class="uri">https://thisisamirv.github.io/loess-project/r/</a>. The ReadTheDocs site no longer includes R-specific content.</li>
+<li>Changed R version dependency to 4.4.0 due to issues with installing Bioconducter packages on R &lt; 4.4.0.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-2-0-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-2-0-0"></a></h3>
+<ul><li>Fixed <code>.cargo/config.toml</code> hardcoding absolute <code>c:/rtools45/...</code> paths for the <code>x86_64-pc-windows-gnu</code> linker and ar tool; it now uses bare tool names resolved via <code>PATH</code>.</li>
+<li>Fixed Windows ARM64 and CRAN source builds that failed while linking the native R library.</li>
+<li>Fixed <code>Loess(fraction = 0.3, 4)</code> incorrectly succeeding: <code>reject_extra_positional_args()</code> counted unnamed arguments but did not check their position, so a single unnamed arg in any non-first slot passed validation. The check now rejects any unnamed argument that is not in position 1.</li>
+<li>Fixed <code><a href="../reference/fit.html">fit()</a></code> and <code><a href="../reference/process_chunk.html">process_chunk()</a></code> silently flattening a matrix <code>x</code> and producing a confusing Rust-level length-mismatch error when <code>dimensions</code> was not set to match <code>ncol(x)</code>. Both methods now raise an informative error at the R level, naming the <code>dimensions</code> parameter to fix.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="1.0.0" id="rfastloess-100">rfastloess 1.0.0<a class="anchor" aria-label="anchor" href="#rfastloess-100"></a></h2>
+<div class="section level3">
+<h3 id="added-1-0-0">Added<a class="anchor" aria-label="anchor" href="#added-1-0-0"></a></h3>
+<ul><li>Introduced S3 generics <code><a href="../reference/fit.html">fit()</a></code>, <code><a href="../reference/process_chunk.html">process_chunk()</a></code>, <code><a href="../reference/finalize.html">finalize()</a></code>, and <code><a href="../reference/add_point.html">add_point()</a></code>, replacing the previous list-closure API.</li>
+<li>Added a <code>reject_extra_positional_args()</code> helper to reject extra unnamed arguments.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="fixed-1-0-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-1-0-0"></a></h3>
+<ul><li>Fixed incorrect URLs in R binding docs.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-1-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-1-0-0"></a></h3>
+<ul><li>Moved the <code>tutorials/</code> pages into a new <code>user-guide/use-cases/</code> section.</li>
+<li>Split Streaming and Online API reference material into dedicated user-guide pages and added runnable vignette examples.</li>
+<li>Breaking: Renamed the <code>smoothed</code> and <code>std_error</code> fields returned by <code>OnlineLoess</code>’s <code><a href="../reference/add_point.html">add_point()</a></code> to <code>y</code> and <code>standard_error</code>.</li>
+<li>Added <code>...</code> to <code><a href="../reference/Loess.html">Loess()</a></code>, <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, and <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> to force named arguments for optional parameters.</li>
+<li>Requires R 4.6 or later.</li>
+<li>Expanded roxygen2 <code>@param</code> docs and added a <code>See Also</code> section linking to <a href="https://loess.readthedocs.io/" class="external-link uri">https://loess.readthedocs.io/</a>.</li>
+<li>Expanded <code>rfastloess-intro.Rmd</code> vignettes.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.0" id="rfastloess-090">rfastloess 0.9.0<a class="anchor" aria-label="anchor" href="#rfastloess-090"></a></h2>
+<div class="section level3">
+<h3 id="added-0-9-0">Added<a class="anchor" aria-label="anchor" href="#added-0-9-0"></a></h3>
+<ul><li>Added the R LOESS package with S3 fitting and result methods.</li>
+</ul></div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

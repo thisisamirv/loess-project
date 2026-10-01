@@ -247,9 +247,11 @@ error. <code>NULL</code> (default) has no effect unless
 
 
 <dt id="arg-boundary-degree-fallback">boundary_degree_fallback<a class="anchor" aria-label="anchor" href="#arg-boundary-degree-fallback"></a></dt>
-<dd><p>Logical; if <code>TRUE</code>, fall back to lower
-polynomial degree at boundaries when fitting at the requested degree
-fails. <code>NULL</code> (default) uses the library default.</p></dd>
+<dd><p>Logical; if <code>TRUE</code>, interpolation
+vertices lying outside the range of the data are fitted with a linear
+model rather than the requested degree, avoiding unstable extrapolation.
+It has no effect below quadratic degree, and <code>FALSE</code> reproduces
+<code><a href="https://rdrr.io/r/stats/loess.html" class="external-link">stats::loess()</a></code>. <code>NULL</code> (default) uses the library default.</p></dd>
 
 
 <dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>

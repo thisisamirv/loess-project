@@ -178,9 +178,12 @@ OnlineLoess(
 
 - boundary_degree_fallback:
 
-  Logical; if `TRUE`, fall back to lower polynomial degree at boundaries
-  when fitting at the requested degree fails. `NULL` (default) uses the
-  library default.
+  Logical; if `TRUE`, interpolation vertices lying outside the range of
+  the data are fitted with a linear model rather than the requested
+  degree, avoiding unstable extrapolation. It has no effect below
+  quadratic degree, and `FALSE` reproduces
+  [`stats::loess()`](https://rdrr.io/r/stats/loess.html). `NULL`
+  (default) uses the library default.
 
 - missing:
 

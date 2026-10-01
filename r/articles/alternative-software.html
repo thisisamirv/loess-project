@@ -121,6 +121,31 @@ fallback:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Within 1e-10:"</span>, <span class="va">robust_difference</span> <span class="op">&lt;</span> <span class="fl">1e-10</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Within 1e-10: TRUE</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="va">robust_difference</span> <span class="op">&lt;</span> <span class="fl">1e-10</span><span class="op">)</span></span></code></pre></div>
+<p>The interpolated surface needs one more setting. Both implementations
+expand the interpolation bounding box slightly beyond the data, so the
+outermost vertices sit outside the observed range.
+<code><a href="https://rdrr.io/r/stats/loess.html" class="external-link">stats::loess()</a></code> fits those vertices at the requested degree,
+while <code><a href="../reference/Loess.html">Loess()</a></code> reduces them to a linear fit by default. Set
+<code>boundary_degree_fallback = FALSE</code> to match R:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">reference_interpolated</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/loess.html" class="external-link">loess</a></span><span class="op">(</span></span>
+<span>    <span class="va">y</span> <span class="op">~</span> <span class="va">x</span>, span <span class="op">=</span> <span class="fl">0.5</span>, degree <span class="op">=</span> <span class="fl">2</span>, family <span class="op">=</span> <span class="st">"gaussian"</span>,</span>
+<span>    control <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/loess.control.html" class="external-link">loess.control</a></span><span class="op">(</span>surface <span class="op">=</span> <span class="st">"interpolate"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">result_interpolated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span></span>
+<span>        fraction <span class="op">=</span> <span class="fl">0.5</span>, degree <span class="op">=</span> <span class="st">"quadratic"</span>, iterations <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>        surface_mode <span class="op">=</span> <span class="st">"interpolate"</span>, boundary_policy <span class="op">=</span> <span class="st">"noboundary"</span>,</span>
+<span>        boundary_degree_fallback <span class="op">=</span> <span class="cn">FALSE</span>, parallel <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    <span class="va">x</span>, <span class="va">y</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">interpolated_difference</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">result_interpolated</span><span class="op">$</span><span class="va">y</span> <span class="op">-</span> <span class="va">reference_interpolated</span><span class="op">$</span><span class="va">fitted</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Within 1e-10:"</span>, <span class="va">interpolated_difference</span> <span class="op">&lt;</span> <span class="fl">1e-10</span>, <span class="st">"\n"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Within 1e-10: TRUE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="va">interpolated_difference</span> <span class="op">&lt;</span> <span class="fl">1e-10</span><span class="op">)</span></span></code></pre></div>
 <p>These checks demonstrate agreement for the stated data and settings,
 not a universal tolerance guarantee across all inputs.
 <code>stats::loess()$fitted</code> and <code>fit(Loess(), x, y)$y</code>
@@ -174,13 +199,31 @@ preferred.</p>
 <td>No configurable option</td>
 <td><code>"use_local_mean"</code></td>
 </tr>
+<tr class="odd">
+<td>Degree at interpolation vertices outside the data range</td>
+<td>Requested degree</td>
+<td>
+<code>boundary_degree_fallback = TRUE</code> (linear above degree
+1)</td>
+</tr>
 </tbody>
 </table>
 <p><code>surface_mode = "direct"</code> and R’s
 <code>surface = "direct"</code> remove interpolation from the
-comparison. R’s default is interpolation, as is the LOESS binding’s. The
-alternative settings above are for reference matching; the package
-retains its own defaults for ordinary use. See
+comparison. R’s default is interpolation, as is the LOESS binding’s.
+Both expand the interpolation bounding box by 0.5% beyond the data
+range, so the outermost vertices lie outside the data.
+<code><a href="https://rdrr.io/r/stats/loess.html" class="external-link">stats::loess()</a></code> fits them at the requested degree;
+<code><a href="../reference/Loess.html">Loess()</a></code> reduces them to a linear fit to avoid unstable
+extrapolation. Because this package defaults to
+<code>degree = "linear"</code>, that reduction changes nothing by
+default. It applies only when a higher degree is requested: with
+<code>degree = "quadratic"</code> on the interpolated surface, fitted
+values near the data boundary differ from <code><a href="https://rdrr.io/r/stats/loess.html" class="external-link">stats::loess()</a></code>
+unless <code>boundary_degree_fallback = FALSE</code> is set, as shown
+above.</p>
+<p>The alternative settings above are for reference matching; the
+package retains its own defaults for ordinary use. See
 <code><a href="../articles/boundary.html">vignette("boundary")</a></code> and <code><a href="../articles/scaling.html">vignette("scaling")</a></code>
 for their effects.</p>
 </div>

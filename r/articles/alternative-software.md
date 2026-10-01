@@ -67,6 +67,37 @@ cat("Within 1e-10:", robust_difference < 1e-10, "\n")
 stopifnot(robust_difference < 1e-10)
 ```
 
+The interpolated surface needs one more setting. Both implementations
+expand the interpolation bounding box slightly beyond the data, so the
+outermost vertices sit outside the observed range.
+[`stats::loess()`](https://rdrr.io/r/stats/loess.html) fits those
+vertices at the requested degree, while
+[`Loess()`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md)
+reduces them to a linear fit by default. Set
+`boundary_degree_fallback = FALSE` to match R:
+
+``` r
+
+reference_interpolated <- stats::loess(
+    y ~ x, span = 0.5, degree = 2, family = "gaussian",
+    control = stats::loess.control(surface = "interpolate")
+)
+result_interpolated <- fit(
+    Loess(
+        fraction = 0.5, degree = "quadratic", iterations = 0L,
+        surface_mode = "interpolate", boundary_policy = "noboundary",
+        boundary_degree_fallback = FALSE, parallel = FALSE
+    ),
+    x, y
+)
+interpolated_difference <- max(
+    abs(result_interpolated$y - reference_interpolated$fitted)
+)
+cat("Within 1e-10:", interpolated_difference < 1e-10, "\n")
+#> Within 1e-10: TRUE
+stopifnot(interpolated_difference < 1e-10)
+```
+
 These checks demonstrate agreement for the stated data and settings, not
 a universal tolerance guarantee across all inputs.
 `stats::loess()$fitted` and `fit(Loess(), x, y)$y` both follow the input
@@ -83,11 +114,25 @@ sorted LOESS output is preferred.
 | Boundary handling | No added padding | `boundary_policy = "extend"` |
 | Residual scale for robust fits | Uncentered absolute residual (`"mar"`) | `scaling_method = "mad"` |
 | Zero-weight fallback | No configurable option | `"use_local_mean"` |
+| Degree at interpolation vertices outside the data range | Requested degree | `boundary_degree_fallback = TRUE` (linear above degree 1) |
 
 `surface_mode = "direct"` and R’s `surface = "direct"` remove
 interpolation from the comparison. R’s default is interpolation, as is
-the LOESS binding’s. The alternative settings above are for reference
-matching; the package retains its own defaults for ordinary use. See
+the LOESS binding’s. Both expand the interpolation bounding box by 0.5%
+beyond the data range, so the outermost vertices lie outside the data.
+[`stats::loess()`](https://rdrr.io/r/stats/loess.html) fits them at the
+requested degree;
+[`Loess()`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md)
+reduces them to a linear fit to avoid unstable extrapolation. Because
+this package defaults to `degree = "linear"`, that reduction changes
+nothing by default. It applies only when a higher degree is requested:
+with `degree = "quadratic"` on the interpolated surface, fitted values
+near the data boundary differ from
+[`stats::loess()`](https://rdrr.io/r/stats/loess.html) unless
+`boundary_degree_fallback = FALSE` is set, as shown above.
+
+The alternative settings above are for reference matching; the package
+retains its own defaults for ordinary use. See
 [`vignette("boundary")`](https://thisisamirv.github.io/loess-project/r/articles/boundary.md)
 and
 [`vignette("scaling")`](https://thisisamirv.github.io/loess-project/r/articles/scaling.md)
