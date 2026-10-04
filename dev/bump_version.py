@@ -5,10 +5,10 @@ Covers: Cargo.toml package versions (Rust crates + all bindings), the internal
 fastLoess/loess-rs path-dependency version requirements (major.minor), each
 binding's own version file (package.json, pyproject-adjacent __version__.py,
 DESCRIPTION, Project.toml (incl. the fastloess_jll compat floor), version.go,
-CMakeLists.txt, pom.xml, FastLoess.java), CITATION.cff, and the Spack recipe's
-example `url`. Also updates the Go module's `/vN` major-version suffix
-(go.mod files, doc snippets, README/docs badges, the doc-snippet runner)
-whenever a major version bump changes it -- see
+CMakeLists.txt, the generated C++ version header, pom.xml, FastLoess.java),
+CITATION.cff, and the Spack recipe's example `url`. Also updates the Go module's
+`/vN` major-version suffix (go.mod files, doc snippets, README/docs badges, the
+doc-snippet runner) whenever a major version bump changes it -- see
 https://go.dev/ref/mod#major-version-suffixes.
 
 Does NOT touch: CHANGELOG.md or per-binding NEWS.md/docs-site content (write
@@ -385,6 +385,35 @@ def build_targets(
             "bindings/cpp/CMakeLists.txt",
             re.compile(r"project\(fastloess-cpp VERSION \d+\.\d+\.\d+ LANGUAGES CXX\)"),
             f"project(fastloess-cpp VERSION {new_version} LANGUAGES CXX)",
+            1,
+        )
+    )
+
+    cpp_version_header = "bindings/cpp/include/fastloess_version.h"
+    version_major, version_minor, version_patch = new_version.split(".")
+    for component, value in (
+        ("MAJOR", version_major),
+        ("MINOR", version_minor),
+        ("PATCH", version_patch),
+    ):
+        targets.append(
+            (
+                cpp_version_header,
+                re.compile(
+                    rf"^#define FASTLOESS_CPP_VERSION_{component} \d+$", re.MULTILINE
+                ),
+                f"#define FASTLOESS_CPP_VERSION_{component} {value}",
+                1,
+            )
+        )
+    targets.append(
+        (
+            cpp_version_header,
+            re.compile(
+                r'^#define FASTLOESS_CPP_VERSION_STRING "\d+\.\d+\.\d+"$',
+                re.MULTILINE,
+            ),
+            f'#define FASTLOESS_CPP_VERSION_STRING "{new_version}"',
             1,
         )
     )
