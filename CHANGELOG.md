@@ -214,6 +214,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Respect zero-weight fallback policies in constant-degree, zero-bandwidth, insufficient-neighbor, and coefficient-fit paths.
 - Cleaned up `loess_rs::prelude` of accidentally-leaked internals (`LoessBuilder`, adapter markers) — use the `Loess`/`StreamingLoess`/`OnlineLoess` type aliases directly.
 - Preserve R LOESS's machine-minimum MAR stop and match its even-sample `3 * (lower + upper)` bisquare scale arithmetic, including subnormal residuals; retain the centered-MAD fallback.
+
+**WASM:**
+
+- Reject unknown option keys and mode-inappropriate output names; return owned typed-array copies that remain valid after freeing result owners.
 - `make loess-rs-dev` now also runs `cargo test --doc`, previously never checked by any `make` target.
 - Removed the unconditional span-one OLS standard-error shortcut: LOESS still uses local kernel geometry at span one.
 - Corrected serial LOESS standard errors to use the local-linear equivalent-kernel leverage and kernel-corrected residual degrees of freedom, preserving positive SEs for downweighted observations. Added Monte Carlo calibration and interval edge-case regressions.

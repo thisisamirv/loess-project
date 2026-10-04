@@ -1,6 +1,6 @@
 //! WebAssembly bindings for fastLoess.
 
-use js_sys::Float64Array;
+use js_sys::{Float64Array, Object, Reflect};
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 
@@ -261,6 +261,56 @@ fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
     shared_parse::map_runtime(result).map_err(to_js_error)
 }
 
+fn validate_option_keys(value: &JsValue, name: &str, allowed: &[&str]) -> Result<(), JsValue> {
+    if value.is_undefined() || value.is_null() || !value.is_object() {
+        return Ok(());
+    }
+
+    let object: &Object = value.unchecked_ref();
+    for key in Object::keys(object).iter() {
+        if let Some(key) = key.as_string()
+            && !allowed.contains(&key.as_str())
+        {
+            return Err(JsValue::from_str(&format!(
+                "unknown {name} option '{key}'. Valid options: {}",
+                allowed.join(", ")
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn validate_nested_option_keys(
+    value: &JsValue,
+    parent: &str,
+    key: &str,
+    allowed: &[&str],
+) -> Result<(), JsValue> {
+    if value.is_undefined() || value.is_null() || !value.is_object() {
+        return Ok(());
+    }
+    let nested = Reflect::get(value, &JsValue::from_str(key))?;
+    validate_option_keys(&nested, parent, allowed)
+}
+
+fn validate_outputs(outputs: Option<&Vec<String>>, allowed: &[&str]) -> Result<(), JsValue> {
+    if let Some(output) = outputs
+        .into_iter()
+        .flatten()
+        .find(|value| !allowed.contains(&value.as_str()))
+    {
+        return Err(JsValue::from_str(&format!(
+            "unknown output '{output}'. Valid outputs: {}",
+            allowed.join(", ")
+        )));
+    }
+    Ok(())
+}
+
+fn to_float64_array(values: &[f64]) -> Float64Array {
+    Float64Array::from(values)
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SmoothOptions {
@@ -316,6 +366,7 @@ pub struct PredictOptionsJs {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct StreamingOptions {
     pub chunk_size: Option<usize>,
     pub overlap: Option<usize>,
@@ -323,6 +374,7 @@ pub struct StreamingOptions {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct OnlineOptions {
     pub window_capacity: Option<usize>,
     pub min_points: Option<usize>,
@@ -456,9 +508,7 @@ impl OnlineOutput {
 
     #[wasm_bindgen(getter)]
     pub fn gradient(&self) -> Option<Float64Array> {
-        self.gradient
-            .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+        self.gradient.as_deref().map(to_float64_array)
     }
 }
 
@@ -471,20 +521,17 @@ pub struct LoessResult {
 impl LoessResult {
     #[wasm_bindgen(getter)]
     pub fn x(&self) -> Float64Array {
-        unsafe { Float64Array::view(&self.inner.x) }
+        to_float64_array(&self.inner.x)
     }
 
     #[wasm_bindgen(getter)]
     pub fn y(&self) -> Float64Array {
-        unsafe { Float64Array::view(&self.inner.y) }
+        to_float64_array(&self.inner.y)
     }
 
     #[wasm_bindgen(getter)]
     pub fn residuals(&self) -> Option<Float64Array> {
-        self.inner
-            .residuals
-            .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+        self.inner.residuals.as_ref().map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = standard_errors)]
@@ -492,7 +539,7 @@ impl LoessResult {
         self.inner
             .standard_errors
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = confidence_lower)]
@@ -500,7 +547,7 @@ impl LoessResult {
         self.inner
             .confidence_lower
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = confidence_upper)]
@@ -508,7 +555,7 @@ impl LoessResult {
         self.inner
             .confidence_upper
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = prediction_lower)]
@@ -516,7 +563,7 @@ impl LoessResult {
         self.inner
             .prediction_lower
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = prediction_upper)]
@@ -524,7 +571,7 @@ impl LoessResult {
         self.inner
             .prediction_upper
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = robustness_weights)]
@@ -532,7 +579,7 @@ impl LoessResult {
         self.inner
             .robustness_weights
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter)]
@@ -550,10 +597,7 @@ impl LoessResult {
 
     #[wasm_bindgen(getter, js_name = cv_scores)]
     pub fn cv_scores(&self) -> Option<Float64Array> {
-        self.inner
-            .cv_scores
-            .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+        self.inner.cv_scores.as_ref().map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = fraction_used)]
@@ -593,18 +637,12 @@ impl LoessResult {
 
     #[wasm_bindgen(getter)]
     pub fn leverage(&self) -> Option<Float64Array> {
-        self.inner
-            .leverage
-            .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+        self.inner.leverage.as_ref().map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter)]
     pub fn gradient(&self) -> Option<Float64Array> {
-        self.inner
-            .gradient
-            .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+        self.inner.gradient.as_ref().map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter)]
@@ -621,6 +659,23 @@ impl LoessResult {
         new_x: &Float64Array,
         options: JsValue,
     ) -> Result<PredictOutput, JsValue> {
+        validate_option_keys(
+            &options,
+            "prediction",
+            &[
+                "outputs",
+                "intervals",
+                "extrapolation",
+                "max_extrapolation_distance",
+                "max_neighbor_distance",
+            ],
+        )?;
+        validate_nested_option_keys(
+            &options,
+            "intervals",
+            "intervals",
+            &["confidence", "prediction"],
+        )?;
         let opts: PredictOptionsJs = if options.is_undefined() || options.is_null() {
             PredictOptionsJs {
                 outputs: None,
@@ -632,6 +687,7 @@ impl LoessResult {
         } else {
             serde_wasm_bindgen::from_value(options)?
         };
+        validate_outputs(opts.outputs.as_ref(), &["se", "gradient", "derivative"])?;
         let new_x_vec = new_x.to_vec();
         let output = map_invalid_arg(shared_parse::run_predict(
             &self.inner,
@@ -661,7 +717,7 @@ pub struct PredictOutput {
 impl PredictOutput {
     #[wasm_bindgen(getter)]
     pub fn y(&self) -> Float64Array {
-        unsafe { Float64Array::view(&self.inner.y) }
+        to_float64_array(&self.inner.y)
     }
 
     #[wasm_bindgen(getter, js_name = standard_errors)]
@@ -669,7 +725,7 @@ impl PredictOutput {
         self.inner
             .standard_errors
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = confidence_lower)]
@@ -677,7 +733,7 @@ impl PredictOutput {
         self.inner
             .confidence_lower
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = confidence_upper)]
@@ -685,7 +741,7 @@ impl PredictOutput {
         self.inner
             .confidence_upper
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = prediction_lower)]
@@ -693,7 +749,7 @@ impl PredictOutput {
         self.inner
             .prediction_lower
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter, js_name = prediction_upper)]
@@ -701,15 +757,12 @@ impl PredictOutput {
         self.inner
             .prediction_upper
             .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+            .map(|v| to_float64_array(v))
     }
 
     #[wasm_bindgen(getter)]
     pub fn derivative(&self) -> Option<Float64Array> {
-        self.inner
-            .derivative
-            .as_ref()
-            .map(|v| unsafe { Float64Array::view(v) })
+        self.inner.derivative.as_ref().map(|v| to_float64_array(v))
     }
 }
 
@@ -753,6 +806,18 @@ fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
 fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<f64>, JsValue> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(
+            opts.outputs.as_ref(),
+            &[
+                "diagnostics",
+                "residuals",
+                "weights",
+                "gradient",
+                "derivative",
+                "se",
+                "sorted",
+            ],
+        )?;
         let cv = opts.cv.as_ref();
         let cv_fractions = cv.map(|value| value.fractions.as_slice());
         let cv_method = cv.and_then(|value| value.method.as_deref());
@@ -809,6 +874,17 @@ fn streaming_options_to_builder(
 ) -> Result<LoessBuilder<f64>, JsValue> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(
+            opts.outputs.as_ref(),
+            &[
+                "diagnostics",
+                "residuals",
+                "weights",
+                "gradient",
+                "derivative",
+                "se",
+            ],
+        )?;
         builder = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
@@ -855,6 +931,10 @@ fn online_options_to_builder(
 ) -> Result<LoessBuilder<f64>, JsValue> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(
+            opts.outputs.as_ref(),
+            &["weights", "gradient", "derivative", "se"],
+        )?;
         builder = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
@@ -898,6 +978,42 @@ fn smooth(
     options: JsValue,
     custom_weights: Option<Vec<f64>>,
 ) -> Result<LoessResult, JsValue> {
+    validate_option_keys(
+        &options,
+        "batch",
+        &[
+            "outputs",
+            "cv",
+            "fraction",
+            "iterations",
+            "weight_function",
+            "robustness_method",
+            "zero_weight_fallback",
+            "boundary_policy",
+            "scaling_method",
+            "auto_converge",
+            "intervals",
+            "parallel",
+            "degree",
+            "dimensions",
+            "distance_metric",
+            "surface_mode",
+            "weighted_metric_weights",
+            "cell",
+            "interpolation_vertices",
+            "boundary_degree_fallback",
+            "seed",
+            "missing",
+            "retain_model",
+        ],
+    )?;
+    validate_nested_option_keys(
+        &options,
+        "intervals",
+        "intervals",
+        &["confidence", "prediction"],
+    )?;
+    validate_nested_option_keys(&options, "cv", "cv", &["fractions", "method", "k"])?;
     let opts = if !options.is_undefined() && !options.is_null() {
         Some(serde_wasm_bindgen::from_value::<SmoothOptions>(options)?)
     } else {
@@ -926,6 +1042,43 @@ impl StreamingLoess {
     #[wasm_bindgen(constructor, skip_typescript)]
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, streamingOpts: JsValue) -> Result<StreamingLoess, JsValue> {
+        validate_option_keys(
+            &options,
+            "streaming",
+            &[
+                "outputs",
+                "fraction",
+                "iterations",
+                "weight_function",
+                "robustness_method",
+                "zero_weight_fallback",
+                "boundary_policy",
+                "scaling_method",
+                "auto_converge",
+                "intervals",
+                "parallel",
+                "degree",
+                "dimensions",
+                "distance_metric",
+                "surface_mode",
+                "weighted_metric_weights",
+                "cell",
+                "interpolation_vertices",
+                "boundary_degree_fallback",
+                "missing",
+            ],
+        )?;
+        validate_nested_option_keys(
+            &options,
+            "intervals",
+            "intervals",
+            &["confidence", "prediction"],
+        )?;
+        validate_option_keys(
+            &streamingOpts,
+            "streamingOpts",
+            &["chunk_size", "overlap", "merge_strategy"],
+        )?;
         let opts = if !options.is_undefined() && !options.is_null() {
             Some(serde_wasm_bindgen::from_value::<StreamingSmoothOptions>(
                 options,
@@ -984,6 +1137,42 @@ impl OnlineLoess {
     #[wasm_bindgen(constructor, skip_typescript)]
     #[allow(non_snake_case)]
     pub fn new(options: JsValue, onlineOpts: JsValue) -> Result<OnlineLoess, JsValue> {
+        validate_option_keys(
+            &options,
+            "online",
+            &[
+                "outputs",
+                "fraction",
+                "iterations",
+                "weight_function",
+                "robustness_method",
+                "zero_weight_fallback",
+                "boundary_policy",
+                "scaling_method",
+                "auto_converge",
+                "intervals",
+                "degree",
+                "dimensions",
+                "distance_metric",
+                "surface_mode",
+                "weighted_metric_weights",
+                "cell",
+                "interpolation_vertices",
+                "boundary_degree_fallback",
+                "missing",
+            ],
+        )?;
+        validate_nested_option_keys(
+            &options,
+            "intervals",
+            "intervals",
+            &["confidence", "prediction"],
+        )?;
+        validate_option_keys(
+            &onlineOpts,
+            "onlineOpts",
+            &["window_capacity", "min_points", "update_mode"],
+        )?;
         let opts = if !options.is_undefined() && !options.is_null() {
             Some(serde_wasm_bindgen::from_value::<OnlineSmoothOptions>(
                 options,

@@ -31,6 +31,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Honor configured zero-weight fallback policies in constant-degree, zero-bandwidth, insufficient-neighbor, and coefficient-fit paths.
 * Match R LOESS's even-sample bisquare MAR scale arithmetic, including extremely small residuals, while preserving the centered-MAD fallback.
 * Aligned `OnlineLoess` defaults across the Rust core and bindings: `iterations` is now `0` with the default `update_mode = "incremental"`; positive robustness iterations require `update_mode = "full"`.
+* Reject unknown option keys and mode-inappropriate output names; return owned typed-array copies that remain valid after freeing result owners.
 
 ## 2.0.0
 

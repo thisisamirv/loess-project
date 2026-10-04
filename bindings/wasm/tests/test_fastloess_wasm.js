@@ -4,6 +4,55 @@ const assert = require('node:assert');
 // Import WASM bindings using require (works in Node with generated pkg)
 const fastloess = require('../pkg/fastloess_wasm.js');
 
+test('WASM unknown outputs are rejected for each API mode', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+    const invalidOutput = /unknown output/i;
+
+    assert.throws(() => new fastloess.Loess({ outputs: ['typo'] }).fit(x, y), invalidOutput);
+    assert.throws(() => new fastloess.StreamingLoess({ outputs: ['sorted'] }), invalidOutput);
+    assert.throws(() => new fastloess.OnlineLoess({ outputs: ['diagnostics'] }), invalidOutput);
+
+    const result = new fastloess.Loess({ retain_model: true }).fit(x, y);
+    assert.throws(() => result.predict(x, { outputs: ['weights'] }), invalidOutput);
+    result.free();
+});
+
+test('WASM unknown option keys are rejected', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+
+    assert.throws(() => new fastloess.Loess({ fraciton: 0.3 }).fit(x, y));
+    assert.throws(() => new fastloess.Loess({ cv: { fractions: [0.3], seed: 7 } }).fit(x, y));
+    assert.throws(() => new fastloess.Loess({ intervals: { confidence: 0.95, confidnce: 0.9 } }).fit(x, y));
+    assert.throws(() => new fastloess.StreamingLoess({}, { chunk_szie: 10 }));
+    assert.throws(() => new fastloess.OnlineLoess({}, { window_capcity: 10 }));
+
+    const result = new fastloess.Loess({ retain_model: true }).fit(x, y);
+    assert.throws(() => result.predict(x, { extrapolation: 'clamp', max_neigbor_distance: 2 }));
+    result.free();
+});
+
+test('WASM result arrays are copies that outlive their owners', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+    const result = new fastloess.Loess({ retain_model: true }).fit(x, y);
+    const resultY = result.y;
+    const expectedY = Array.from(resultY);
+    const prediction = result.predict(new Float64Array([1.5, 3.5]));
+    const predictionY = prediction.y;
+    const expectedPredictionY = Array.from(predictionY);
+
+    resultY[0] = NaN;
+    assert.deepStrictEqual(Array.from(result.y), expectedY);
+    predictionY[0] = NaN;
+    assert.deepStrictEqual(Array.from(prediction.y), expectedPredictionY);
+    result.free();
+    prediction.free();
+    assert.ok(Number.isNaN(resultY[0]));
+    assert.ok(Number.isNaN(predictionY[0]));
+});
+
 test('WASM batch smoothing', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);
