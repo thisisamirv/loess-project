@@ -5,36 +5,31 @@
 \title{LOESS Streaming Smoothing}
 \usage{
 StreamingLoess(
-    fraction = 0.67,
-    chunk_size = 5000L,
-    ...,
-    overlap = NULL,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_gradient = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_se = FALSE,
-    merge_strategy = "weighted_average",
-    parallel = TRUE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL,
-    missing = "error",
-    outputs = NULL
+  fraction = 0.67,
+  chunk_size = 5000L,
+  ...,
+  overlap = NULL,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  merge_strategy = "weighted_average",
+  parallel = TRUE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL,
+  missing = "error",
+  outputs = NULL
 )
 }
 \arguments{
@@ -81,21 +76,6 @@ to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
 
-\item{return_diagnostics}{Logical; if \code{TRUE}, return fit-quality
-metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.}
-
-\item{return_residuals}{Logical; if \code{TRUE}, return residuals in the
-result. Default: \code{FALSE}.}
-
-\item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
-robustness weights. Default: \code{FALSE}.}
-
-\item{return_gradient}{Logical; if \code{TRUE}, return the per-point local
-fit gradient in the result. Requires \code{surface_mode = "direct"};
-raises an error instead of silently leaving \code{gradient} absent if
-requested under the default \code{"interpolation"} mode. Default:
-\code{FALSE}.}
-
 \item{confidence_intervals}{Confidence level for confidence intervals (e.g.
 \code{0.95}), computed per chunk and merged across overlap boundaries via
 \code{merge_strategy}. \code{NULL} (default) disables confidence intervals.}
@@ -103,10 +83,6 @@ requested under the default \code{"interpolation"} mode. Default:
 \item{prediction_intervals}{Confidence level for prediction intervals; same
 per-chunk computation and overlap-merging as \code{confidence_intervals}.
 \code{NULL} (default) disables prediction intervals.}
-
-\item{return_se}{Include standard errors in the result, computed per chunk
-and merged across overlap boundaries via \code{merge_strategy}. Default:
-\code{FALSE}.}
 
 \item{merge_strategy}{Strategy for reconciling overlapping chunk regions:
 \code{"weighted_average"} (default; alias: \code{"weighted"}),
@@ -157,7 +133,8 @@ between \code{x} and \code{y} always raises an error, even under
 
 \item{outputs}{Optional character vector selecting \code{"diagnostics"},
 \code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
-\code{"derivative"}), and \code{"se"}. Combined with individual flags.}
+\code{"derivative"}), and \code{"se"}. \code{NULL} (default) selects
+no optional components.}
 }
 \value{
 A StreamingLoess object.
@@ -175,11 +152,11 @@ in memory, see \code{\link{Loess}}; for point-by-point real-time data,
 see \code{\link{OnlineLoess}}.
 
 Overlapping regions between chunks are reconciled via \code{merge_strategy}:\tabular{ll}{
-    Strategy \tab Behavior \cr
-    \code{"average"} \tab Arithmetic mean of both estimates \cr
-    \code{"weighted_average"} \tab Distance-weighted blend (default) \cr
-    \code{"take_first"} \tab Keep left-chunk estimate \cr
-    \code{"take_last"} \tab Keep right-chunk estimate \cr
+   Strategy \tab Behavior \cr
+   \code{"average"} \tab Arithmetic mean of both estimates \cr
+   \code{"weighted_average"} \tab Distance-weighted blend (default) \cr
+   \code{"take_first"} \tab Keep left-chunk estimate \cr
+   \code{"take_last"} \tab Keep right-chunk estimate \cr
 }
 }
 \examples{

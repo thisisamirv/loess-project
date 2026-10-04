@@ -43,8 +43,8 @@ public class AltSoftwareGaussian {
 
         Options options = Options.builder()
                 .fraction(0.6)
-                .degree("linear")
                 .iterations(0)
+                .degree("linear")
                 .surfaceMode("direct")
                 .boundaryPolicy("noboundary")
                 .build();
@@ -112,11 +112,11 @@ public class AltSoftwareRobust {
 
         Options options = Options.builder()
                 .fraction(0.6)
-                .degree("linear")
                 .iterations(3)
-                .scalingMethod("mar")
+                .degree("linear")
                 .surfaceMode("direct")
                 .boundaryPolicy("noboundary")
+                .scalingMethod("mar")
                 .build();
 
         try (Loess model = new Loess(options)) {

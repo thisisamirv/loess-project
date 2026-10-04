@@ -142,7 +142,7 @@ cat("First lower CI bound (99%):", result$confidence_lower[1], "\n")
 Access standard errors directly (available when intervals are computed):
 
 ```{r intervals_5}
-model <- Loess(fraction = 0.5, return_se = TRUE)
+model <- Loess(fraction = 0.5, outputs = "se")
 result <- fit(model, x, y)
 cat("Standard errors (first 5):", head(result$standard_errors, 5), "\n")
 ```

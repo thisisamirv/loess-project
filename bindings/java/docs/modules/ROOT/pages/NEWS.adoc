@@ -16,6 +16,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 === Changed
 
+* Breaking change: replaced individual `return...` output setters and prediction flags with `outputs(...)` for Batch, Streaming, Online, and prediction options.
 
 === Fixed
 

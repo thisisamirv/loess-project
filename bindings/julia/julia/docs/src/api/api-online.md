@@ -61,12 +61,6 @@ end
 | `iterations` | `Int` | `0` | Number of robustifying iterations; positive values require `update_mode="full"` |
 | `weight_function` | `String` | `"tricube"` | Weight function name |
 | `robustness_method` | `String` | `"bisquare"` | Robustness method name |
-| `scaling_method` | `String` | `"mad"` | Residual scaling method |
-| `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling |
-| `missing` | `String` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
-| `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
-| `return_robustness_weights` | `Bool` | `false` | Include `robustness_weight` in result |
 | `degree` | `String` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `Int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `String` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
@@ -74,16 +68,19 @@ end
 | `surface_mode` | `String` | `"interpolation"` | Surface computation mode |
 | `cell` | `Union{Float64, Nothing}` | `nothing` | Cell size for interpolation grid |
 | `interpolation_vertices` | `Union{Int, Nothing}` | `nothing` | Number of interpolation vertices |
+| `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling |
+| `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
 | `boundary_degree_fallback` | `Union{Bool, Nothing}` | `nothing` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `scaling_method` | `String` | `"mad"` | Residual scaling method |
+| `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
+| `missing` | `String` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `window_capacity` | `Int` | `1000` | Max points in sliding window |
 | `min_points` | `Int` | `2` | Min points before smoothing starts |
 | `update_mode` | `String` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
-| `return_gradient` | `Bool` | `false` | Include the latest point's local fit gradient in the result (`surface_mode="direct"` only) |
 | `confidence_intervals` | `Union{Float64, Nothing}` | `nothing` | Confidence level for confidence intervals; requires `update_mode="full"` |
 | `prediction_intervals` | `Union{Float64, Nothing}` | `nothing` | Confidence level for prediction intervals; requires `update_mode="full"` |
-| `return_se` | `Bool` | `false` | Include standard error in result; requires `update_mode="full"` |
 
-Cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [Batch Adapter](api.md) for those. Online always runs sequentially.
+Cross-validation, `"sorted"` output, `"diagnostics"` output, `"residuals"` output, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [Batch Adapter](api.md) for those. Online always runs sequentially.
 
 ## Options
 
@@ -128,55 +125,6 @@ Cross-validation, `return_sorted`, `return_diagnostics`, `return_residuals`, and
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
 - `"talwar"`
-
-### scaling_method
-
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### missing
-
-Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point`:
-
-| Option | Behavior |
-| --- | --- |
-| `"error"` (default) | Raise an error |
-| `"drop"` | Silently ignore the point — `add_point` returns `nothing` instead of adding it to the window |
-
-### auto_converge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
-
-### return_robustness_weights
-
-Include the robustness weight from the latest point's fit in the result.
-
-- `false` (default) — leaves `result.robustness_weight` as `nothing`
-- `true` — populates `result.robustness_weight`
 
 ### degree
 
@@ -241,6 +189,25 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 - `nothing` (default) — uses the library default (no explicit cap)
 - Any integer `>= 1`
 
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
 ### boundary_degree_fallback
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there. Only applies when `surface_mode="interpolation"`.
@@ -248,6 +215,29 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `nothing` (default) — uses the library default (enabled)
 - `true` — falls back to a lower degree at boundaries
 - `false` — raises an error instead of silently falling back
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+### missing
+
+Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point`:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Raise an error |
+| `"drop"` | Silently ignore the point — `add_point` returns `nothing` instead of adding it to the window |
 
 ### window_capacity
 
@@ -266,28 +256,29 @@ Minimum number of points required before smoothing starts. `add_point` returns `
 | `"incremental"` (default) | Update only affected fits | Faster |
 | `"full"` | Recompute entire window | More accurate |
 
-### return_gradient
+### outputs: se
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — raises an error instead of silently leaving `gradient` as `nothing` if requested under the default `"interpolation"` mode. `false` by default.
+Include the standard error for the latest point in the result. Same `update_mode="full"` requirement as `confidence_intervals`.
+
+### outputs: weights
+
+Include the robustness weight from the latest point's fit in the result.
+
+### outputs: gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — raises an error instead of silently leaving `gradient` as `nothing` if requested under the default `"interpolation"` mode. Omitted by default.
 
 ### confidence_intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `update_mode="full"` — raises an error at construction if set (or `return_se`/`prediction_intervals` is set) while `update_mode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `nothing` (default) disables confidence intervals.
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `update_mode="full"` — raises an error at construction if set (or `"se"` output/`prediction_intervals` is set) while `update_mode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `nothing` (default) disables confidence intervals.
 
 ### prediction_intervals
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `update_mode="full"` requirement as `confidence_intervals`. `nothing` (default) disables prediction intervals.
-
-### return_se
-
-Include the standard error for the latest point in the result. Same `update_mode="full"` requirement as `confidence_intervals`.
-
-- `false` (default) — leaves `standard_error` as `nothing`
-- `true` — populates `standard_error`
 
 ## Result Structure
 
@@ -298,15 +289,15 @@ Returned by `add_point` once the window has enough points (`nothing` until then)
 | Field | Type | Description |
 | --- | --- | --- |
 | `y` | `Float64` | Smoothed value for the latest point |
-| `standard_error` | `Union{Float64, Nothing}` | Standard error, if `return_se`/`confidence_intervals`/`prediction_intervals` was set and `update_mode="full"` |
-| `residual` | `Union{Float64, Nothing}` | Residual y − smoothed; always present (there is no `return_residuals` option for Online) |
-| `robustness_weight` | `Union{Float64, Nothing}` | Robustness weight, if `return_robustness_weights` was set |
+| `standard_error` | `Union{Float64, Nothing}` | Standard error, if `"se"` output/`confidence_intervals`/`prediction_intervals` was set and `update_mode="full"` |
+| `residual` | `Union{Float64, Nothing}` | Residual y − smoothed; always present (there is no `"residuals"` output option for Online) |
+| `robustness_weight` | `Union{Float64, Nothing}` | Robustness weight, if `"weights"` output was set |
 | `iterations_used` | `Union{Int, Nothing}` | Robustness iterations performed |
 | `confidence_lower` / `confidence_upper` | `Union{Float64, Nothing}` | Confidence interval bounds, if `confidence_intervals` was set and `update_mode="full"` |
 | `prediction_lower` / `prediction_upper` | `Union{Float64, Nothing}` | Prediction interval bounds, if `prediction_intervals` was set and `update_mode="full"` |
-| `gradient` | `Union{Vector{Float64}, Nothing}` | Latest point's local fit gradient (`dimensions` values), if `return_gradient` was set |
+| `gradient` | `Union{Vector{Float64}, Nothing}` | Latest point's local fit gradient (`dimensions` values), if `"gradient"` output was set |
 
-There is no `Diagnostics` object or `return_diagnostics` option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R2 need more than one point's worth of history to be meaningful.
+There is no `Diagnostics` object or `"diagnostics"` output option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R2 need more than one point's worth of history to be meaningful.
 
 ## Example
 

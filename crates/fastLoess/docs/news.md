@@ -16,6 +16,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Use `.outputs([...])` in place of individual `return_*` selectors for Batch, Streaming, Online, and retained-model prediction; legacy Rust selectors remain available.
 * Breaking: Removed unsupported interval and diagnostics options from Streaming/Online and `parallel` from `OnlineLoess`; Online fitting always runs sequentially.
 * Consolidated the fastLoess README (merging Installation/Documentation, dropping GitHub-only alert syntax, and removing sections covered by docs pages), and moved parameter docs into API option tables, removing `parameters.md`. Replaced `kernels.md`/`adapter-choice.md` mermaid flowcharts with tables because rustdoc does not render mermaid.
 * Reorganized API documentation with field tables, per-field Options sections, and a Result Structure section at the end.

@@ -43,10 +43,10 @@ fn main() -> Result<(), LoessError> {
     let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let mut model = StreamingLoess::new()
-        .merge_strategy("average")
+        .iterations(3)
         .chunk_size(60usize)
         .overlap(20usize)
-        .iterations(3)
+        .merge_strategy("average")
         .build()?;
     let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
     // The second chunk's overlap region (its first 20 points) is where
@@ -79,10 +79,10 @@ fn main() -> Result<(), LoessError> {
     let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let mut model = StreamingLoess::new()
-        .merge_strategy("take_first")
+        .iterations(3)
         .chunk_size(60usize)
         .overlap(20usize)
-        .iterations(3)
+        .merge_strategy("take_first")
         .build()?;
     let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
     let result = model.process_chunk(&x_chunk[60..], &y_chunk[60..])?;
@@ -113,10 +113,10 @@ fn main() -> Result<(), LoessError> {
     let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let mut model = StreamingLoess::new()
-        .merge_strategy("take_last")
+        .iterations(3)
         .chunk_size(60usize)
         .overlap(20usize)
-        .iterations(3)
+        .merge_strategy("take_last")
         .build()?;
     let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
     let result = model.process_chunk(&x_chunk[60..], &y_chunk[60..])?;
@@ -151,10 +151,10 @@ fn main() -> Result<(), LoessError> {
     let y_chunk: Vec<f64> = x_chunk.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let mut model = StreamingLoess::new()
-        .merge_strategy("weighted_average")
+        .iterations(3)
         .chunk_size(60usize)
         .overlap(20usize)
-        .iterations(3)
+        .merge_strategy("weighted_average")
         .build()?;
     let _ = model.process_chunk(&x_chunk[..60], &y_chunk[..60])?;
     let result = model.process_chunk(&x_chunk[60..], &y_chunk[60..])?;

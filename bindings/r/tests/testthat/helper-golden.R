@@ -44,8 +44,7 @@ golden_batch_intervals <- function(d) {
         iterations = 2L,
         boundary_policy = "extend",
         surface_mode = "direct",
-        return_se = TRUE,
-        return_gradient = TRUE,
+        outputs = c("se", "gradient"),
         confidence_intervals = 0.9,
         prediction_intervals = 0.9,
         parallel = FALSE
@@ -71,7 +70,7 @@ golden_batch_robust <- function(d) {
         fraction = 0.4,
         iterations = 5L,
         boundary_policy = "extend",
-        return_robustness_weights = TRUE,
+        outputs = "weights",
         parallel = FALSE
     )
     res <- fit(model, d$x, y)

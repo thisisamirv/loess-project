@@ -162,17 +162,13 @@ fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
 #'   \code{retain_model = TRUE} passed to \code{\link{Loess}}.
 #' @param new_x Numeric vector of out-of-sample query points (flattened,
 #'   \code{dimensions} values per point).
-#' @param return_se Logical; include standard errors in the output. Default:
-#'   \code{FALSE}.
 #' @param confidence_level Confidence interval coverage level (e.g. 0.95).
 #'   \code{NULL} (default) disables it.
 #' @param prediction_level Prediction interval coverage level (e.g. 0.95).
 #'   \code{NULL} (default) disables it.
-#' @param return_derivative Logical; include the local fit's gradient in the
-#'   output. Default: \code{FALSE}.
 #' @param outputs Optional character vector selecting \code{"se"},
-#'   \code{"gradient"}, or \code{"derivative"}; combined with the
-#'   corresponding individual flags.
+#'   \code{"gradient"}, or \code{"derivative"}. \code{NULL} (default)
+#'   selects no optional components.
 #' @param extrapolation Behavior for query points outside the training range:
 #'   \code{"clamp"} (default), \code{"linear"}, or \code{"error"}.
 #' @param max_extrapolation_distance Under \code{"linear"} extrapolation, the
@@ -196,10 +192,8 @@ fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
 predict.Loess <- function(
     object,
     new_x,
-    return_se = FALSE,
     confidence_level = NULL,
     prediction_level = NULL,
-    return_derivative = FALSE,
     extrapolation = "clamp",
     max_extrapolation_distance = NULL,
     max_neighbor_distance = NULL,
@@ -210,13 +204,15 @@ predict.Loess <- function(
         stop("unused arguments (...)")
     }
     flags <- parse_outputs_flags(outputs, c("se", "gradient", "derivative"))
+    return_se <- flags[["se"]]
+    return_derivative <- flags[["gradient"]] || flags[["derivative"]]
     object$handle$predict(
         as.double(new_x),
-        as.logical(return_se || flags[["se"]]),
+        as.logical(return_se),
         coerce_nullable(confidence_level)[[1]],
         coerce_nullable(prediction_level)[[1]],
         as.logical(
-            return_derivative || flags[["gradient"]] || flags[["derivative"]]
+            return_derivative
         ),
         as.character(extrapolation),
         coerce_nullable(max_extrapolation_distance)[[1]],

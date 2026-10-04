@@ -61,15 +61,6 @@ println("First smoothed value: ", result.y[1])
 | `iterations` | `Int` | `3` | Number of robustifying iterations |
 | `weight_function` | `String` | `"tricube"` | Weight function name |
 | `robustness_method` | `String` | `"bisquare"` | Robustness method name |
-| `scaling_method` | `String` | `"mad"` | Residual scaling method |
-| `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling |
-| `missing` | `String` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
-| `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
-| `return_diagnostics` | `Bool` | `false` | Include diagnostics in result |
-| `return_residuals` | `Bool` | `false` | Include residuals in result |
-| `return_robustness_weights` | `Bool` | `false` | Include weights in result |
-| `parallel` | `Bool` | `true` | Enable parallel execution |
 | `degree` | `String` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `Int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `String` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
@@ -77,16 +68,20 @@ println("First smoothed value: ", result.y[1])
 | `surface_mode` | `String` | `"interpolation"` | Surface computation mode |
 | `cell` | `Union{Float64, Nothing}` | `nothing` | Cell size for interpolation grid |
 | `interpolation_vertices` | `Union{Int, Nothing}` | `nothing` | Number of interpolation vertices |
+| `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling |
+| `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
 | `boundary_degree_fallback` | `Union{Bool, Nothing}` | `nothing` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `scaling_method` | `String` | `"mad"` | Residual scaling method |
+| `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
+| `missing` | `String` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `chunk_size` | `Int` | `5000` | Points per chunk |
 | `overlap` | `Int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `String` | `"weighted_average"` | Strategy for blending overlap regions |
-| `return_gradient` | `Bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode="direct"` only) |
+| `parallel` | `Bool` | `true` | Enable parallel execution |
 | `confidence_intervals` | `Union{Float64, Nothing}` | `nothing` | Confidence level for confidence intervals, computed per chunk |
 | `prediction_intervals` | `Union{Float64, Nothing}` | `nothing` | Confidence level for prediction intervals, computed per chunk |
-| `return_se` | `Bool` | `false` | Include standard errors in the result |
 
-`return_sorted` and cross-validation are Batch-only and not available here; see [Batch Adapter](api.md).
+`"sorted"` output and cross-validation are Batch-only and not available here; see [Batch Adapter](api.md).
 
 ## Options
 
@@ -131,80 +126,6 @@ println("First smoothed value: ", result.y[1])
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
 - `"talwar"`
-
-### scaling_method
-
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### missing
-
-Policy for handling non-finite (NaN/Inf) values within each chunk:
-
-| Option | Behavior |
-| --- | --- |
-| `"error"` (default) | Raise an error if any value in the chunk is non-finite |
-| `"drop"` | Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer |
-
-**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
-
-### auto_converge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
-
-### return_diagnostics
-
-*See: [`Diagnostics`](#diagnostics)*
-
-Include a `Diagnostics` object (RMSE, MAE, R2, residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always `nothing` here.
-
-- `false` (default) — leaves `result.diagnostics` as `nothing`
-- `true` — populates `result.diagnostics`
-
-### return_residuals
-
-Include per-point residuals (`y - fitted`) in the result.
-
-- `false` (default) — leaves `result.residuals` as `nothing`
-- `true` — populates `result.residuals`
-
-### return_robustness_weights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `result.robustness_weights` as `nothing`
-- `true` — populates `result.robustness_weights`
-
-### parallel
-
-Enable multi-threaded execution via Rayon.
-
-- `true` (default) — parallelizes the local regression fits across CPU cores
-- `false` — forces single-threaded execution
 
 ### degree
 
@@ -269,6 +190,25 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 - `nothing` (default) — uses the library default (no explicit cap)
 - Any integer `>= 1`
 
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
 ### boundary_degree_fallback
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there. Only applies when `surface_mode="interpolation"`.
@@ -276,6 +216,31 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `nothing` (default) — uses the library default (enabled)
 - `true` — falls back to a lower degree at boundaries
 - `false` — raises an error instead of silently falling back
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+### missing
+
+Policy for handling non-finite (NaN/Inf) values within each chunk:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Raise an error if any value in the chunk is non-finite |
+| `"drop"` | Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer |
+
+**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
 ### chunk_size
 
@@ -301,9 +266,39 @@ Number of points retained from the previous chunk as context, so the neighbourho
 
 ![Merge Strategies](../assets/merge_comparison.svg)
 
-### return_gradient
+### parallel
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — raises an error instead of silently leaving `gradient` as `nothing` if requested under the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
+Enable multi-threaded execution via Rayon.
+
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution
+
+### outputs: se
+
+Include standard errors in the result (`LoessResult.standard_errors`), computed per chunk and merged across overlap boundaries via `merge_strategy`.
+
+---
+
+!!! warning "Always call finalize()"
+    The streaming adapter buffers overlap data. Call `finalize(model)` after the last chunk to retrieve the buffered tail.
+
+### outputs: diagnostics
+
+*See: [`Diagnostics`](#diagnostics)*
+
+Include a `Diagnostics` object (RMSE, MAE, R2, residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always `nothing` here.
+
+### outputs: residuals
+
+Include per-point residuals (`y - fitted`) in the result.
+
+### outputs: weights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+### outputs: gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — raises an error instead of silently leaving `gradient` as `nothing` if requested under the default `"interpolation"` mode. Omitted by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
 
 ### confidence_intervals
 
@@ -316,18 +311,6 @@ Confidence level for the confidence interval around the mean response (e.g. `0.9
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `confidence_intervals`. `nothing` (default) disables prediction intervals.
-
-### return_se
-
-Include standard errors in the result (`LoessResult.standard_errors`), computed per chunk and merged across overlap boundaries via `merge_strategy`.
-
-- `false` (default) — leaves `standard_errors` as `nothing`
-- `true` — populates `standard_errors`
-
----
-
-!!! warning "Always call finalize()"
-    The streaming adapter buffers overlap data. Call `finalize(model)` after the last chunk to retrieve the buffered tail.
 
 ## Result Structure
 
@@ -346,11 +329,11 @@ Returned by `process_chunk` and `finalize`.
 | `confidence_upper` | `Union{Vector{Float64}, Nothing}` | Always `nothing` (Batch only) |
 | `prediction_lower` | `Union{Vector{Float64}, Nothing}` | Always `nothing` (Batch only) |
 | `prediction_upper` | `Union{Vector{Float64}, Nothing}` | Always `nothing` (Batch only) |
-| `residuals` | `Union{Vector{Float64}, Nothing}` | Residuals (if `return_residuals`) |
-| `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `return_robustness_weights`) |
+| `residuals` | `Union{Vector{Float64}, Nothing}` | Residuals (if `"residuals"` output) |
+| `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `"weights"` output) |
 | `cv_scores` | `Union{Vector{Float64}, Nothing}` | Always `nothing` (Batch only) |
-| `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `return_diagnostics`) |
-| `gradient` | `Union{Vector{Float64}, Nothing}` | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode="direct"` only) |
+| `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `"diagnostics"` output) |
+| `gradient` | `Union{Vector{Float64}, Nothing}` | Per-point local fit gradient, flattened (if `"gradient"` output, `surface_mode="direct"` only) |
 | `dimensions` | `Int` | Number of predictor dimensions |
 
 ### `Diagnostics`

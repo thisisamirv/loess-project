@@ -17,7 +17,7 @@ opts.WindowCapacity = 200
 opts.MinPoints = 10
 ```
 
-`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CVFractions`/`CVMethod`/`CVK`/`CVSeed`, and `Parallel`, which are batch-only). `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSe` require `UpdateMode = "full"`. `AddPoint` only accepts a single x coordinate: online mode does not support multivariate predictors even if `Dimensions` was set on construction. `Outputs` accepts `weights`, `derivative`/`gradient`, and `se`; `se` requires `UpdateMode = "full"`.
+`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CVFractions`/`CVMethod`/`CVK`/`CVSeed`, and `Parallel`, which are batch-only). `ConfidenceIntervals`/`PredictionIntervals`/`"se"` output require `UpdateMode = "full"`. `AddPoint` only accepts a single x coordinate: online mode does not support multivariate predictors even if `Dimensions` was set on construction. `Outputs` accepts `weights`, `derivative`/`gradient`, and `se`; `se` requires `UpdateMode = "full"`.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -25,13 +25,6 @@ opts.MinPoints = 10
 | `Iterations` | `int` | `0` | Number of robustifying iterations; positive values require `UpdateMode = "full"` |
 | `WeightFunction` | `string` | `"tricube"` | Kernel weight function |
 | `RobustnessMethod` | `string` | `"bisquare"` | Robustness method |
-| `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
-| `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
-| `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
-| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
-| `AutoConverge` | `*float64` | `nil` (disabled) | Auto-convergence tolerance |
-| `Outputs` | `[]string` | `nil` | Optional fields: `weights`, `derivative`/`gradient`, and `se`. |
-| `ReturnRobustnessWeights` | `bool` | `false` | Include `RobustnessWeight` in result |
 | `Degree` | `string` | `"linear"` | Polynomial degree |
 | `Dimensions` | `int` | `1` | Number of predictor dimensions |
 | `DistanceMetric` | `string` | `"normalized"` | Distance metric |
@@ -39,14 +32,18 @@ opts.MinPoints = 10
 | `SurfaceMode` | `string` | `"interpolation"` | Surface computation mode |
 | `Cell` | `*float64` | `nil` (auto) | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `InterpolationVertices` | `*int` | `nil` (auto) | Number of interpolation vertices |
+| `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
+| `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
 | `BoundaryDegreeFallback` | `*bool` | `nil` (auto) | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `ReturnGradient` | `bool` | `false` | Include the latest point's local fit gradient in the result (`SurfaceMode = "direct"` only) |
-| `ConfidenceIntervals` | `*float64` | `nil` | Confidence level for confidence intervals; requires `UpdateMode = "full"` |
-| `PredictionIntervals` | `*float64` | `nil` | Confidence level for prediction intervals; requires `UpdateMode = "full"` |
-| `ReturnSe` | `bool` | `false` | Include standard error in result; requires `UpdateMode = "full"` |
+| `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
+| `AutoConverge` | `*float64` | `nil` (disabled) | Auto-convergence tolerance |
+| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `WindowCapacity` | `int` | `1000` | Maximum number of recent points retained |
 | `MinPoints` | `int` | `2` | Minimum points required before output starts |
 | `UpdateMode` | `string` | `"incremental"` | How the window is updated as new points arrive |
+| `Outputs` | `[]string` | `nil` | Optional fields: `weights`, `derivative`/`gradient`, and `se`. |
+| `ConfidenceIntervals` | `*float64` | `nil` | Confidence level for confidence intervals; requires `UpdateMode = "full"` |
+| `PredictionIntervals` | `*float64` | `nil` | Confidence level for prediction intervals; requires `UpdateMode = "full"` |
 
 Cross-validation, the `sorted` and `diagnostics` outputs, and `Parallel` are Batch-only and not available here. Online residuals are always present; the `residuals` output name is not supported.
 
@@ -103,55 +100,6 @@ Releases native resources. Safe to call multiple times.
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
 - `"talwar"`
-
-### ScalingMethod
-
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### BoundaryPolicy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### ZeroWeightFallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### Missing
-
-Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `AddPoint` (overrides the row-dropping behavior described in [API](api.md) since Online processes one point at a time):
-
-| Option | Behavior |
-| --- | --- |
-| `"error"` (default) | Return an error |
-| `"drop"` | Silently ignore the point — `AddPoint` returns `ok == false` instead of adding it to the window |
-
-### AutoConverge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
-
-### ReturnRobustnessWeights
-
-Populate `PointResult.RobustnessWeight` with the robustness weight for the latest point (from the last robustness iteration).
-
-- `false` (default) — leaves `RobustnessWeight` as `NaN`
-- `true` — populates `RobustnessWeight`
 
 ### Degree
 
@@ -214,6 +162,25 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 - `nil` (default) — uses the library default (no explicit cap)
 - Any integer `>= 1`
 
+### ZeroWeightFallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### BoundaryPolicy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
 ### BoundaryDegreeFallback
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `Degree` can't be fit there (e.g., not enough neighbours). Only applies when `SurfaceMode` is `"interpolation"`.
@@ -222,28 +189,28 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `true` — falls back to a lower degree at boundaries
 - `false` — raises an error instead of silently falling back
 
-### ReturnGradient
+### ScalingMethod
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`Dimensions` values) in `PointResult.Gradient` at effectively no extra computation cost. Only supported when `SurfaceMode` is `"direct"` — returns an error instead of silently leaving `Gradient` as `nil` if requested under the default `"interpolation"` mode. `false` by default.
+*See: [Scaling Methods](../weighting/scaling.md)*
 
-### ConfidenceIntervals
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
 
-*See: [Intervals](../guide/intervals.md)*
+### AutoConverge
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `UpdateMode = "full"` — returns an error at construction if set (or `ReturnSe`/`PredictionIntervals` is set) while `UpdateMode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `nil` (default) disables confidence intervals.
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
 
-### PredictionIntervals
+Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
 
-*See: [Intervals](../guide/intervals.md)*
+### Missing
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `UpdateMode = "full"` requirement as `ConfidenceIntervals`. `nil` (default) disables prediction intervals.
+Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `AddPoint` (overrides the row-dropping behavior described in [API](api.md) since Online processes one point at a time):
 
-### ReturnSe
-
-Include the standard error for the latest point in the result (`PointResult.StandardError`). Same `UpdateMode = "full"` requirement as `ConfidenceIntervals`.
-
-- `false` (default) — leaves `StandardError` as `NaN`
-- `true` — populates `StandardError`
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error |
+| `"drop"` | Silently ignore the point — `AddPoint` returns `ok == false` instead of adding it to the window |
 
 ### WindowCapacity
 
@@ -264,20 +231,44 @@ Minimum number of points required before `AddPoint` starts returning `ok == true
 
 See [API](api.md) for the descriptions of all inherited fields not covered above.
 
+### outputs: se
+
+Include the standard error for the latest point in the result (`PointResult.StandardError`). Same `UpdateMode = "full"` requirement as `ConfidenceIntervals`.
+
+### outputs: weights
+
+Populate `PointResult.RobustnessWeight` with the robustness weight for the latest point (from the last robustness iteration).
+
+### outputs: gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`Dimensions` values) in `PointResult.Gradient` at effectively no extra computation cost. Only supported when `SurfaceMode` is `"direct"` — returns an error instead of silently leaving `Gradient` as `nil` if requested under the default `"interpolation"` mode. Omitted by default.
+
+### ConfidenceIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `UpdateMode = "full"` — returns an error at construction if set (or `"se"` output/`PredictionIntervals` is set) while `UpdateMode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `nil` (default) disables confidence intervals.
+
+### PredictionIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `UpdateMode = "full"` requirement as `ConfidenceIntervals`. `nil` (default) disables prediction intervals.
+
 ## `PointResult` fields
 
 | Field | Type | Notes |
 | --- | --- | --- |
 | `Y` | `float64` | Smoothed value. |
-| `StandardError` | `float64` | Standard error, if `ReturnSe`/`ConfidenceIntervals`/`PredictionIntervals` was set and `UpdateMode = "full"` (`NaN` otherwise). |
-| `Residual` | `float64` | Residual y − smoothed; always present (there is no `ReturnResiduals` option for Online). |
-| `RobustnessWeight` | `float64` | Robustness weight, if `ReturnRobustnessWeights` was set (`NaN` otherwise). |
+| `StandardError` | `float64` | Standard error, if `"se"` output/`ConfidenceIntervals`/`PredictionIntervals` was set and `UpdateMode = "full"` (`NaN` otherwise). |
+| `Residual` | `float64` | Residual y − smoothed; always present (there is no `"residuals"` output option for Online). |
+| `RobustnessWeight` | `float64` | Robustness weight, if `"weights"` output was set (`NaN` otherwise). |
 | `IterationsUsed` | `int` | Robustness iterations performed (`-1` if not applicable). |
 | `ConfidenceLower` / `ConfidenceUpper` | `float64` | Confidence interval bounds, if `ConfidenceIntervals` was set and `UpdateMode = "full"` (`NaN` otherwise). |
 | `PredictionLower` / `PredictionUpper` | `float64` | Prediction interval bounds, if `PredictionIntervals` was set and `UpdateMode = "full"` (`NaN` otherwise). |
-| `Gradient` | `[]float64` | Latest point's local fit gradient (`Dimensions` values), if `ReturnGradient` was set (`SurfaceMode = "direct"` only). |
+| `Gradient` | `[]float64` | Latest point's local fit gradient (`Dimensions` values), if `"gradient"` output was set (`SurfaceMode = "direct"` only). |
 
-There is no `Diagnostics` type or `ReturnDiagnostics` option for `OnlineLoess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
+There is no `Diagnostics` type or `"diagnostics"` output option for `OnlineLoess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
 
 ## Example
 

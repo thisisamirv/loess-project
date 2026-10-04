@@ -25,35 +25,29 @@ opts.Outputs = []string{"diagnostics"}
 | `Iterations` | `int` | `3` | Robustness iterations, in [0, 1000]. |
 | `WeightFunction` | `string` | `"tricube"` | Kernel: `tricube`, `gaussian`, `uniform`, `cosine`, `epanechnikov`, `biweight`, `triangle`. |
 | `RobustnessMethod` | `string` | `"bisquare"` | Outlier downweighting: `bisquare`, `huber`, `talwar`. |
-| `ScalingMethod` | `string` | `"mad"` | Residual scale estimator: `mad`, `mar`, `mean`. |
-| `BoundaryPolicy` | `string` | `"extend"` | Boundary handling: `extend`, `reflect`, `zero`, `noboundary`. |
-| `ZeroWeightFallback` | `string` | `"use_local_mean"` | Fallback when all robustness weights hit zero: `use_local_mean`, `return_original`, `return_none`. |
-| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data: `error`, `drop`. |
 | `Degree` | `string` | `"linear"` | Polynomial degree of the local fit. |
 | `Dimensions` | `int` | `1` | Number of predictor dimensions. |
 | `DistanceMetric` | `string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p. |
 | `WeightedMetricWeights` | `[]float64` | `nil` | Per-dimension weights (used when `DistanceMetric = "weighted"`). |
 | `SurfaceMode` | `string` | `"interpolation"` | Surface computation mode. |
-| `Outputs` | `[]string` | `nil` | Optional fields: `diagnostics`, `residuals`, `weights`, `derivative`/`gradient`, `se`, `sorted`. |
-| `ReturnSE` | `bool` | `false` | Populate `Result.StandardErrors`/`Result.HatMatrix` (hat-matrix statistics). |
-| `ReturnSorted` | `bool` | `false` | Return results sorted ascending by `X` instead of in original input order. |
 | `Cell` | `*float64` | `nil` (auto) | Interpolation cell size tuning parameter, in (0, 1]. Only applies when `SurfaceMode` is `"interpolation"`. |
 | `InterpolationVertices` | `*int` | `nil` (auto) | Caps the number of interpolation vertices. Only applies when `SurfaceMode` is `"interpolation"`. |
+| `ZeroWeightFallback` | `string` | `"use_local_mean"` | Fallback when all robustness weights hit zero: `use_local_mean`, `return_original`, `return_none`. |
+| `BoundaryPolicy` | `string` | `"extend"` | Boundary handling: `extend`, `reflect`, `zero`, `noboundary`. |
 | `BoundaryDegreeFallback` | `*bool` | `nil` (auto) | Reduce polynomial degree near boundary vertices to avoid extrapolation artifacts. |
+| `ScalingMethod` | `string` | `"mad"` | Residual scale estimator: `mad`, `mar`, `mean`. |
+| `AutoConverge` | `*float64` | `nil` (disabled) | Convergence tolerance for early stopping. |
+| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data: `error`, `drop`. |
+| `Parallel` | `bool` | `true` | Enable parallel processing. |
+| `Outputs` | `[]string` | `nil` | Optional fields: `diagnostics`, `residuals`, `weights`, `derivative`/`gradient`, `se`, `sorted`. |
 | `ConfidenceIntervals` | `*float64` | `nil` (disabled) | Confidence level in (0, 1), e.g. `0.95`. |
 | `PredictionIntervals` | `*float64` | `nil` (disabled) | Confidence level in (0, 1), e.g. `0.95`. |
-| `AutoConverge` | `*float64` | `nil` (disabled) | Convergence tolerance for early stopping. |
-| `ReturnDiagnostics` | `bool` | `false` | Populate `Result.Diagnostics`. |
-| `ReturnResiduals` | `bool` | `false` | Populate `Result.Residuals`. |
-| `ReturnRobustnessWeights` | `bool` | `false` | Populate `Result.RobustnessWeights`. |
-| `CVFractions` | `[]float64` | `nil` (disabled) | Candidate fractions for cross-validation. |
 | `CV` | `*CVOptions` | `nil` | Group `Fractions`, `Method`, `K`, and `Seed`; takes precedence over legacy CV fields. |
 | `CVMethod` | `string` | `"kfold"` | `kfold` or `loocv`. |
 | `CVK` | `int` | `5` | Number of folds for k-fold CV. |
+| `CVFractions` | `[]float64` | `nil` (disabled) | Candidate fractions for cross-validation. |
 | `CVSeed` | `*uint64` | `nil` (random) | RNG seed for reproducible k-fold splits. |
-| `Parallel` | `bool` | `true` | Enable parallel processing. |
 | `RetainModel` | `bool` | `false` | Retain training data, enabling `Result.PredictModel` for out-of-sample prediction. |
-| `ReturnGradient` | `bool` | `false` | Populate `Result.Gradient` with the per-point local fit gradient, flattened (`surface_mode = "direct"` only). |
 
 `Fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
 
@@ -90,20 +84,20 @@ Releases native resources. Safe to call multiple times. A finalizer is registere
 | Field | Type | Populated when |
 | --- | --- | --- |
 | `X`, `Y` | `[]float64` | Always. |
-| `StandardErrors` | `[]float64` | `ReturnSE` or `Outputs` contains `"se"` |
+| `StandardErrors` | `[]float64` | `Outputs` contains `"se"` |
 | `ConfidenceLower`, `ConfidenceUpper` | `[]float64` | `ConfidenceIntervals` set |
 | `PredictionLower`, `PredictionUpper` | `[]float64` | `PredictionIntervals` set |
-| `Residuals` | `[]float64` | `ReturnResiduals` or `Outputs` contains `"residuals"` |
-| `RobustnessWeights` | `[]float64` | `ReturnRobustnessWeights` or `Outputs` contains `"weights"` |
+| `Residuals` | `[]float64` | `Outputs` contains `"residuals"` |
+| `RobustnessWeights` | `[]float64` | `Outputs` contains `"weights"` |
 | `CVScores` | `[]float64` | `CVFractions` set |
 | `FractionUsed` | `float64` | Always. |
 | `IterationsUsed` | `int` | Always (`-1` if not available). |
 | `Dimensions` | `int` | Always. |
-| `Diagnostics` | `*Diagnostics` | `ReturnDiagnostics` or `Outputs` contains `"diagnostics"` |
-| `HatMatrix` | `*HatMatrixStats` | `ReturnSE` or `Outputs` contains `"se"` |
-| `Gradient` | `[]float64` | `ReturnGradient` or `Outputs` contains `"derivative"`/`"gradient"` (`SurfaceMode = "direct"` only) |
+| `Diagnostics` | `*Diagnostics` | `Outputs` contains `"diagnostics"` |
+| `HatMatrix` | `*HatMatrixStats` | `Outputs` contains `"se"` |
+| `Gradient` | `[]float64` | `Outputs` contains `"derivative"`/`"gradient"` (`SurfaceMode = "direct"` only) |
 
-`Outputs` groups optional result selection. Supported names are `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"` (or `"gradient"`), `"se"`, and `"sorted"`. For example, `[]string{"diagnostics", "residuals", "se"}` enables those components. Existing individual boolean fields remain supported; either form enables the same output.
+`Outputs` groups optional result selection. Supported names are `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"` (or `"gradient"`), `"se"`, and `"sorted"`. For example, `[]string{"diagnostics", "residuals", "se"}` enables those components. Use only `Outputs` to select optional components.
 
 `Diagnostics` holds `RMSE`, `MAE`, `RSquared`, `AIC`, `AICc`, `EffectiveDF`, `ResidualSD`.
 
@@ -140,44 +134,6 @@ Evaluates the fitted model at out-of-sample query points (flattened, `Dimensions
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
 - `"talwar"`
-
-### BoundaryPolicy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### ScalingMethod
-
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### ZeroWeightFallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### Missing
-
-Policy for handling non-finite (NaN/Inf) values in `X`/`Y` (and `CustomWeights`):
-
-| Option | Behavior |
-| --- | --- |
-| `"error"` (default) | Return an error if any value is non-finite |
-| `"drop"` | Silently remove observations (rows) where any X dimension or Y is non-finite before fitting |
-
-**Note:** A length mismatch between `X` and `Y` always errors, even under `"drop"`.
 
 ### Degree
 
@@ -234,6 +190,25 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 - `nil` (default) — uses the library default (no explicit cap)
 - Any integer `>= 1`
 
+### ZeroWeightFallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### BoundaryPolicy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
 ### BoundaryDegreeFallback
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `Degree` can't be fit there (e.g., not enough neighbours). Only applies when `SurfaceMode` is `"interpolation"`.
@@ -242,11 +217,60 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `true` — falls back to a lower degree at boundaries
 - `false` — raises an error instead of silently falling back
 
+### ScalingMethod
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
 ### AutoConverge
 
 *See: [Robustness](../weighting/robustness.md#auto-convergence)*
 
 Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
+
+### Missing
+
+Policy for handling non-finite (NaN/Inf) values in `X`/`Y` (and `CustomWeights`):
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error if any value is non-finite |
+| `"drop"` | Silently remove observations (rows) where any X dimension or Y is non-finite before fitting |
+
+**Note:** A length mismatch between `X` and `Y` always errors, even under `"drop"`.
+
+### Parallel
+
+Enable multi-threaded execution via Rayon.
+
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
+
+### outputs: se
+
+*See: [Intervals](../guide/intervals.md#standard-errors)*
+
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
+
+### outputs: diagnostics
+
+Populate `Result.Diagnostics` (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/`EffectiveDF` additionally require standard errors; request them with `Outputs: []string{"se"}` (or the legacy `Outputs: []string{"se"}` field, or confidence/prediction intervals), since they depend on hat-matrix statistics.
+
+### outputs: residuals
+
+Populate `Result.Residuals` (`y - fitted`).
+
+### outputs: weights
+
+Populate `Result.RobustnessWeights` (from the last robustness iteration).
+
+### outputs: sorted
+
+When selected in outputs, it reorders every result field (residuals, intervals, etc.) by `X` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. via `sort.Slice`) instead of calling `Fit` twice.
 
 ### ConfidenceIntervals
 
@@ -259,48 +283,6 @@ Confidence level for the confidence interval around the mean response (e.g. `0.9
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`). `nil` (default) disables prediction intervals.
-
-### ReturnDiagnostics
-
-Populate `Result.Diagnostics` (RMSE, MAE, R², AIC/AICc, effective degrees of freedom). AIC/AICc/`EffectiveDF` additionally require standard errors; request them with `Outputs: []string{"se"}` (or the legacy `ReturnSE: true` field, or confidence/prediction intervals), since they depend on hat-matrix statistics.
-
-- `false` (default) — leaves `Result.Diagnostics` as `nil`
-- `true` — populates `Result.Diagnostics`
-
-### ReturnResiduals
-
-Populate `Result.Residuals` (`y - fitted`).
-
-- `false` (default) — leaves `Result.Residuals` as `nil`
-- `true` — populates `Result.Residuals`
-
-### ReturnRobustnessWeights
-
-Populate `Result.RobustnessWeights` (from the last robustness iteration).
-
-- `false` (default) — leaves `Result.RobustnessWeights` as `nil`
-- `true` — populates `Result.RobustnessWeights`
-
-### ReturnSE
-
-*See: [Intervals](../guide/intervals.md#standard-errors)*
-
-Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
-
-- `false` (default) — leaves `Result.StandardErrors` and `Result.HatMatrix` as `nil`
-- `true` — computes standard errors and hat-matrix statistics
-
-### ReturnSorted
-
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `X` in an ascending manner, instead of in original input order.
-To get both orderings, sort the default result client-side (e.g. via `sort.Slice`) instead of calling `Fit` twice.
-
-### Parallel
-
-Enable multi-threaded execution via Rayon.
-
-- `true` (default) — parallelizes the local regression fits across CPU cores
-- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
 
 ## Custom weights
 
@@ -318,9 +300,9 @@ result, err := model.Fit(x, y, weights)
 
 ```go
 opts := fastloess.DefaultOptions()
-opts.CVFractions = []float64{0.1, 0.2, 0.3, 0.5}
 opts.CVMethod = "kfold"
 opts.CVK = 5
+opts.CVFractions = []float64{0.1, 0.2, 0.3, 0.5}
 seed := uint64(42)
 opts.CVSeed = &seed
 

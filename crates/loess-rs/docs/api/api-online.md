@@ -86,16 +86,6 @@ fn main() -> Result<(), LoessError> {
 | `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
 | `weight_function(...)` | `weight_function` | `"tricube"` | Kernel weight function |
 | `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method |
-| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
-| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
-| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
-| `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
-| `outputs([&str])` | iterable of names | `[]` | Select `"weights"`, `"gradient"`/`"derivative"`, `"se"` |
-| `return_robustness_weights()` | `bool` | `false` | Include `robustness_weight` in result |
-| `return_se()` | `bool` | `false` | Include standard error (`update_mode("full")` only) |
-| `confidence_intervals(T)` | `T: Float` | disabled | Confidence interval level (full mode only) |
-| `prediction_intervals(T)` | `T: Float` | disabled | Prediction interval level (full mode only) |
 | `degree(...)` | `degree` | `"linear"` | Polynomial degree |
 | `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
 | `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
@@ -103,11 +93,21 @@ fn main() -> Result<(), LoessError> {
 | `surface_mode(...)` | `surface_mode` | `"interpolation"` | Surface computation mode |
 | `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
+| `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
+| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `boundary_degree_fallback(bool)` | `bool` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `return_gradient()` | `bool` | `false` | Include the latest point's local fit gradient in the result (`surface_mode = "direct"` only) |
+| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
+| `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
+| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `window_capacity(usize)` | `usize` | `1000` | Max points in sliding window |
 | `min_points(usize)` | `usize` | `2` | Min points before smoothing starts |
 | `update_mode(...)` | `update_mode` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
+| `outputs([&str])` | iterable of names | `[]` | Select `"weights"`, `"gradient"`/`"derivative"`, `"se"` |
+| `return_se()` | `bool` | `false` | Include standard error (`update_mode("full")` only) |
+| `return_robustness_weights()` | `bool` | `false` | Include `robustness_weight` in result |
+| `return_gradient()` | `bool` | `false` | Include the latest point's local fit gradient in the result (`surface_mode = "direct"` only) |
+| `confidence_intervals(T)` | `T: Float` | disabled | Confidence interval level (full mode only) |
+| `prediction_intervals(T)` | `T: Float` | disabled | Prediction interval level (full mode only) |
 
 Cross-validation, `return_sorted`, `return_diagnostics`, and `return_residuals` are unavailable here; standard errors and interval levels require `update_mode("full")`.
 
@@ -154,73 +154,6 @@ Cross-validation, `return_sorted`, `return_diagnostics`, and `return_residuals` 
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
 - `"talwar"`
-
-### scaling_method
-
-*See: [Scaling Methods](crate::doc::weighting::scaling)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](crate::doc::advanced::boundary)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### missing
-
-Policy for handling a non-finite (NaN/Inf) value in the `x` coordinates or `y` value passed to `add_point`:
-
-| Option | Behavior |
-| --- | --- |
-| `"error"` (default) | Return an error |
-| `"drop"` | Silently ignore the point — `add_point` returns `Ok(None)` instead of adding it to the window |
-
-### auto_converge
-
-*See: [Robustness](crate::doc::weighting::robustness#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. Disabled by default.
-
-### outputs
-
-Select optional latest-point results together. `"derivative"` aliases
-`"gradient"`, which requires the direct surface; `"se"` requires full updates.
-Individual `return_*()` setters remain available alongside `.outputs([...])`.
-
-```rust
-use loess_rs::prelude::*;
-
-fn main() -> Result<(), LoessError> {
-    let _processor = OnlineLoess::<f64>::new()
-        .update_mode("full")
-        .surface_mode("direct")
-        .outputs(["weights", "gradient", "se"])
-        .build()?;
-    Ok(())
-}
-```
-
-Unknown names are collected and reported together at `.build()`.
-
-### return_robustness_weights
-
-Populates `OnlineOutput::robustness_weight` with the robustness weight for the latest point (from the last robustness iteration). `false` by default.
 
 ### degree
 
@@ -274,13 +207,51 @@ Cell size for the interpolation grid, as a fraction of the data range in `(0, 1]
 
 Caps the maximum number of interpolation vertices, overriding the count implied by `cell`. Disabled by default (no explicit cap). Only applies when `surface_mode` is `"interpolation"`.
 
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](crate::doc::advanced::boundary)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
 ### boundary_degree_fallback
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there. `true` by default. Only applies when `surface_mode` is `"interpolation"`.
 
-### return_gradient
+### scaling_method
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput::gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `None` in the default `"interpolation"` mode. `false` by default.
+*See: [Scaling Methods](crate::doc::weighting::scaling)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](crate::doc::weighting::robustness#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. Disabled by default.
+
+### missing
+
+Policy for handling a non-finite (NaN/Inf) value in the `x` coordinates or `y` value passed to `add_point`:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error |
+| `"drop"` | Silently ignore the point — `add_point` returns `Ok(None)` instead of adding it to the window |
 
 ### window_capacity
 
@@ -298,6 +269,35 @@ Minimum number of points required before smoothing starts. `add_point()` returns
 | --- | --- | --- | --- |
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
+
+### outputs
+
+Select optional latest-point results together. `"derivative"` aliases
+`"gradient"`, which requires the direct surface; `"se"` requires full updates.
+Individual `return_*()` setters remain available alongside `.outputs([...])`.
+
+```rust
+use loess_rs::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let _processor = OnlineLoess::<f64>::new()
+        .surface_mode("direct")
+        .update_mode("full")
+        .outputs(["weights", "gradient", "se"])
+        .build()?;
+    Ok(())
+}
+```
+
+Unknown names are collected and reported together at `.build()`.
+
+### return_robustness_weights
+
+Populates `OnlineOutput::robustness_weight` with the robustness weight for the latest point (from the last robustness iteration). `false` by default.
+
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput::gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `None` in the default `"interpolation"` mode. `false` by default.
 
 ## Result Structure
 

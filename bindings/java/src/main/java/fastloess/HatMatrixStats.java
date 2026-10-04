@@ -1,7 +1,7 @@
 package fastloess;
 
 /**
- * Hat-matrix statistics computed for a batch fit when {@code returnSe} is
+ * Hat-matrix statistics computed for a batch fit when {@code outputs("se")} is
  * requested.
  *
  * @param enp equivalent number of parameters

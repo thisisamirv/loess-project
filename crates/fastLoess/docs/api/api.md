@@ -71,19 +71,6 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
 | `weight_function(...)` | `weight_function` | `"tricube"` | Kernel weight function |
 | `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method |
-| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
-| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
-| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
-| `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
-| `intervals(IntervalsBuilder<f64>)` | `IntervalsBuilder<f64>` | disabled | Group confidence, prediction, and bootstrap settings |
-| `outputs([&str])` | iterable of names | `[]` | Select `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"`/`"derivative"`, `"se"`, `"sorted"` |
-| `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
-| `return_residuals()` | `bool` | `false` | Include residuals in result |
-| `return_robustness_weights()` | `bool` | `false` | Include weights in result |
-| `return_se()` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
-| `return_sorted()` | `bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
-| `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 | `degree(...)` | `degree` | `"linear"` | Polynomial degree |
 | `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
 | `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
@@ -91,11 +78,24 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `surface_mode(...)` | `surface_mode` | `"interpolation"` | Surface computation mode |
 | `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
+| `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
+| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `boundary_degree_fallback(bool)` | `bool` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
+| `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
+| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
+| `parallel(bool)` | `bool` | `true` | Enable parallel execution across CPU cores |
+| `outputs([&str])` | iterable of names | `[]` | Select `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"`/`"derivative"`, `"se"`, `"sorted"` |
+| `return_se()` | `bool` | `false` | Compute hat-matrix statistics (enp, leverage …) |
+| `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
+| `return_residuals()` | `bool` | `false` | Include residuals in result |
+| `return_robustness_weights()` | `bool` | `false` | Include weights in result |
+| `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
+| `return_sorted()` | `bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
+| `intervals(IntervalsBuilder<f64>)` | `IntervalsBuilder<f64>` | disabled | Group confidence, prediction, and bootstrap settings |
 | `cv(CVOptions<f64>)` | `CVOptions<f64>` | disabled | Group method, folds, and candidate fractions via `CVBuilder` |
 | `seed(...)` | `u64` | default algorithm seeds | Shared seed for CV and residual bootstrap |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights |
-| `parallel(bool)` | `bool` | `true` | Enable parallel execution across CPU cores |
 
 `CVBuilder` and `IntervalsBuilder` are exported by `fastLoess::prelude`. Use `.cv(CVBuilder::new().method("kfold").k(5).fraction(vec![0.3, 0.5])).seed(42)` and `.intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.95).bootstrap(200))`. CV options do not contain a seed; the outer `.seed(...)` controls both algorithms and does not enable either by itself. The old individual interval and `cv_*` setters were removed.
 
@@ -143,13 +143,15 @@ These chained methods configure the builder. They correspond to the "Options Str
 - `"huber"`
 - `"talwar"`
 
-### scaling_method
+### zero_weight_fallback
 
-*See: [Scaling Methods](crate::doc::weighting::scaling)*
+Behavior when all neighborhood weights are zero:
 
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
 
 ### boundary_policy
 
@@ -160,15 +162,19 @@ These chained methods configure the builder. They correspond to the "Options Str
 - `"zero"`
 - `"noboundary"` (alias: `"none"`)
 
-### zero_weight_fallback
+### scaling_method
 
-Behavior when all neighborhood weights are zero:
+*See: [Scaling Methods](crate::doc::weighting::scaling)*
 
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](crate::doc::weighting::robustness#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. Disabled by default.
 
 ### missing
 
@@ -181,12 +187,6 @@ Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `custom_weights`
 
 **Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
-### auto_converge
-
-*See: [Robustness](crate::doc::weighting::robustness#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. Disabled by default.
-
 ### intervals: confidence
 
 *See: [Intervals](crate::doc::guide::intervals)*
@@ -198,49 +198,6 @@ Confidence level for the confidence interval around the mean response (e.g. `0.9
 *See: [Intervals](crate::doc::guide::intervals)*
 
 Confidence level for the prediction interval for new observations (e.g. `0.95`). Disabled by default.
-
-### outputs
-
-Select optional result components together using `.outputs([...])`. The existing
-`return_*()` methods remain available and combine with grouped selections.
-
-```rust
-use fastLoess::prelude::*;
-
-fn main() -> Result<(), LoessError> {
-    let _model = Loess::new()
-        .surface_mode("direct")
-        .outputs(["diagnostics", "residuals", "weights", "gradient", "se", "sorted"])
-        .build()?;
-    Ok(())
-}
-```
-
-`"derivative"` is an alias for `"gradient"`, which requires the direct surface. `"se"` includes hat-matrix statistics; diagnostics need it (or interval levels) for AIC/AICc and effective degrees of freedom. Unknown names are collected and reported together when `.build()` is called.
-
-### return_diagnostics
-
-Populates `LoessResult::diagnostics` with RMSE, MAE, R2, AIC/AICc, and effective degrees of freedom. `aic`/`aicc`/`effective_df` additionally require `.outputs(["se"])`, `.return_se()`, or confidence/prediction intervals to be populated, since they depend on hat-matrix statistics. `false` by default.
-
-### return_residuals
-
-Populates `LoessResult::residuals` (`y - fitted`). `false` by default.
-
-### return_robustness_weights
-
-Populates `LoessResult::robustness_weights` with the final per-point robustness weights. `false` by default.
-
-### return_se
-
-Computes hat-matrix statistics (`enp`, `trace_hat`, `delta1`, `delta2`, `residual_scale`, `leverage`) in addition to standard errors. `false` by default.
-
-### return_sorted
-
-Reorders every result field (residuals, intervals, etc.) ascending by `x`, instead of leaving them in original input order. To get both orderings, sort the default result client-side instead of calling `.fit()` twice. `false` by default.
-
-### parallel
-
-Enables multi-threaded execution via Rayon, parallelizing the local regression fits across CPU cores. `true` by default; set to `false` to force single-threaded execution.
 
 ### degree
 
@@ -298,6 +255,53 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there. `true` by default. Only applies when `surface_mode` is `"interpolation"`.
 
+### parallel
+
+Enables multi-threaded execution via Rayon, parallelizing the local regression fits across CPU cores. `true` by default; set to `false` to force single-threaded execution.
+
+### outputs
+
+Select optional result components together using `.outputs([...])`. The existing
+`return_*()` methods remain available and combine with grouped selections.
+
+```rust
+use fastLoess::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let _model = Loess::new()
+        .surface_mode("direct")
+        .outputs(["diagnostics", "residuals", "weights", "gradient", "se", "sorted"])
+        .build()?;
+    Ok(())
+}
+```
+
+`"derivative"` is an alias for `"gradient"`, which requires the direct surface. `"se"` includes hat-matrix statistics; diagnostics need it (or interval levels) for AIC/AICc and effective degrees of freedom. Unknown names are collected and reported together when `.build()` is called.
+
+### return_se
+
+Computes hat-matrix statistics (`enp`, `trace_hat`, `delta1`, `delta2`, `residual_scale`, `leverage`) in addition to standard errors. `false` by default.
+
+### return_diagnostics
+
+Populates `LoessResult::diagnostics` with RMSE, MAE, R2, AIC/AICc, and effective degrees of freedom. `aic`/`aicc`/`effective_df` additionally require `.outputs(["se"])`, `.return_se()`, or confidence/prediction intervals to be populated, since they depend on hat-matrix statistics. `false` by default.
+
+### return_residuals
+
+Populates `LoessResult::residuals` (`y - fitted`). `false` by default.
+
+### return_robustness_weights
+
+Populates `LoessResult::robustness_weights` with the final per-point robustness weights. `false` by default.
+
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `LoessResult::gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Computed in parallel (like the smoothing pass itself) when `parallel` is enabled. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `None` there. `false` by default.
+
+### return_sorted
+
+Reorders every result field (residuals, intervals, etc.) ascending by `x`, instead of leaving them in original input order. To get both orderings, sort the default result client-side instead of calling `.fit()` twice. `false` by default.
+
 ### CV Options
 
 *See: [Cross-Validation](crate::doc::guide::cross_validation)*
@@ -307,21 +311,17 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `.fraction(vec![...])` supplies candidate fractions and produces the options passed to `.cv(...)`.
 - The outer `.seed(...)` makes fold assignment and bootstrap sampling reproducible. Keep the execution mode fixed when comparing repeated CV runs.
 
-### custom_weights
-
-*See: [Custom Weights](crate::doc::weighting::custom_weights)*
-
-Per-observation case weights. Must have the same length as `y`; all values must be non-negative.
-
 ### retain_model
 
 *See: [Predict](crate::doc::guide::predict)*
 
 Retains the fitted model's training data, enabling `Predict::call(&result, new_x)` to evaluate the fit at out-of-sample query points not in the training set. Off by default (no extra memory/clone cost unless requested).
 
-### return_gradient
+### custom_weights
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `LoessResult::gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Computed in parallel (like the smoothing pass itself) when `parallel` is enabled. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `gradient` stays `None` there. `false` by default.
+*See: [Custom Weights](crate::doc::weighting::custom_weights)*
+
+Per-observation case weights. Must have the same length as `y`; all values must be non-negative.
 
 ## Result Structure
 
@@ -349,8 +349,8 @@ Each local polynomial fit (degree >= linear) already computes per-dimension coef
 | `residual_scale` | `Option<T>` | Residual scale estimate (if `return_se()`) |
 | `leverage` | `Option<Vec<T>>` | Per-point hat-matrix diagonal (if `return_se()`) |
 | `gradient` | `Option<Vec<T>>` | Per-point local fit gradient, flattened (if `return_gradient()`, `surface_mode = "direct"` only) |
-| `dimensions` | `usize` | Number of predictor dimensions |
 | `polynomial_degree` | `PolynomialDegree` (internal) | Polynomial degree used; implements `Display` (e.g. `"linear"`) |
+| `dimensions` | `usize` | Number of predictor dimensions |
 | `distance_metric` | `DistanceMetric<T>` (internal) | Distance metric used; implements `Display` (e.g. `"normalized"`) |
 
 ### `Diagnostics<T>`

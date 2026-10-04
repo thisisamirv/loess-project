@@ -197,8 +197,8 @@ fn main() -> Result<(), LoessError> {
     let model = Loess::new()
         .fraction(0.3)
         .iterations(3)
-        .intervals(IntervalsBuilder::new().confidence(0.95))
         .outputs(["diagnostics"])
+        .intervals(IntervalsBuilder::new().confidence(0.95))
         .build()?;
 
     let result = model.fit(&hours, &expression)?;

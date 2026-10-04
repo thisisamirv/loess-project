@@ -35,7 +35,7 @@ class OnlineLoessTest {
     @Test
     void returnSeRequiresFullUpdateMode() {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> new OnlineLoess(
-                OnlineOptions.builder().fraction(0.5).windowCapacity(10).returnSe(true).build()));
+                OnlineOptions.builder().fraction(0.5).windowCapacity(10).outputs("se").build()));
         assertTrue(ex.getMessage() != null && !ex.getMessage().isEmpty());
     }
 

@@ -46,10 +46,10 @@ const y = Float64Array.from(x, xi => Math.sin(xi) + 0.1);
 const model = new Loess({
     fraction: 0.5,
     iterations: 3,
+    parallel: true,
+    outputs: ["diagnostics"],
     confidence_intervals: 0.95,
-    prediction_intervals: 0.95,
-    return_diagnostics: true,
-    parallel: true
+    prediction_intervals: 0.95
 });
 const result = model.fit(x, y);
 console.log("95% CI at midpoint: [" + result.confidence_lower[50] + ", " + result.confidence_upper[50] + "]");

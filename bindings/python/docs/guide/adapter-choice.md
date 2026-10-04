@@ -46,10 +46,10 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Loess(
     fraction=0.5,
     iterations=3,
+    parallel=True,
+    outputs=["diagnostics"],
     confidence_intervals=0.95,
-    prediction_intervals=0.95,
-    return_diagnostics=True,
-    parallel=True
+    prediction_intervals=0.95
 )
 result = model.fit(x, y)
 print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")

@@ -153,32 +153,6 @@ public final class OnlineOptions {
         }
 
         /**
-         * Requests robustness weights in the result.
-         *
-         * @param returnRobustnessWeights whether to include robustness weights
-         * in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnRobustnessWeights(boolean)
-         */
-        public Builder returnRobustnessWeights(boolean returnRobustnessWeights) {
-            common.returnRobustnessWeights(returnRobustnessWeights);
-            return this;
-        }
-
-        /**
-         * Requests the latest point's local-fit gradient.
-         *
-         * @param returnGradient whether to include the local fit's gradient in
-         * the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnGradient(boolean)
-         */
-        public Builder returnGradient(boolean returnGradient) {
-            common.returnGradient(returnGradient);
-            return this;
-        }
-
-        /**
          * Sets the confidence interval level for full updates.
          *
          * @param confidenceIntervals the confidence level for confidence
@@ -201,19 +175,6 @@ public final class OnlineOptions {
          */
         public Builder predictionIntervals(double predictionIntervals) {
             common.predictionIntervals(predictionIntervals);
-            return this;
-        }
-
-        /**
-         * Requests the latest point's standard error in full update mode.
-         *
-         * @param returnSe whether to return the standard error for the latest
-         * point; only computed under {@code updateMode("full")}
-         * @return this builder, for chaining
-         * @see Options.Builder#returnSe(boolean)
-         */
-        public Builder returnSe(boolean returnSe) {
-            common.returnSe(returnSe);
             return this;
         }
 

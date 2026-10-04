@@ -35,7 +35,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const model = new Loess({ degree: "constant", fraction: 0.5 });
+const model = new Loess({ fraction: 0.5, degree: "constant" });
 const result = model.fit(x, y);
 console.log("y[0]:", result.y[0].toFixed(4));
 ```
@@ -61,7 +61,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const model = new Loess({ degree: "linear", fraction: 0.5 });
+const model = new Loess({ fraction: 0.5, degree: "linear" });
 const result = model.fit(x, y);
 console.log("y[0]:", result.y[0].toFixed(4));
 ```
@@ -87,7 +87,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const model = new Loess({ degree: "quadratic", fraction: 0.5 });
+const model = new Loess({ fraction: 0.5, degree: "quadratic" });
 const result = model.fit(x, y);
 console.log("y[0]:", result.y[0].toFixed(4));
 ```
@@ -113,7 +113,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const model = new Loess({ degree: "cubic", fraction: 0.6 });
+const model = new Loess({ fraction: 0.6, degree: "cubic" });
 const result = model.fit(x, y);
 console.log("y[0]:", result.y[0].toFixed(4));
 ```
@@ -139,7 +139,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const model = new Loess({ degree: "quartic", fraction: 0.7 });
+const model = new Loess({ fraction: 0.7, degree: "quartic" });
 const result = model.fit(x, y);
 console.log("y[0]:", result.y[0].toFixed(4));
 ```

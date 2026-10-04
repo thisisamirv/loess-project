@@ -49,9 +49,9 @@ int main() {
     }
 
     fastloess::StreamingOptions opts;
-    opts.merge_strategy = "average";
     opts.chunk_size = 60;
     opts.overlap = 20;
+    opts.merge_strategy = "average";
     fastloess::StreamingLoess stream(opts);
     std::vector<double> x1(x.begin(), x.begin() + 60), y1(y.begin(), y.begin() + 60);
     std::vector<double> x2(x.begin() + 60, x.end()), y2(y.begin() + 60, y.end());
@@ -92,9 +92,9 @@ int main() {
     }
 
     fastloess::StreamingOptions s_opts;
-    s_opts.merge_strategy = "take_first";
     s_opts.chunk_size = 60;
     s_opts.overlap = 20;
+    s_opts.merge_strategy = "take_first";
     fastloess::StreamingLoess stream(s_opts);
     std::vector<double> x1(x.begin(), x.begin() + 60), y1(y.begin(), y.begin() + 60);
     std::vector<double> x2(x.begin() + 60, x.end()), y2(y.begin() + 60, y.end());
@@ -133,9 +133,9 @@ int main() {
     }
 
     fastloess::StreamingOptions s_opts;
-    s_opts.merge_strategy = "take_last";
     s_opts.chunk_size = 60;
     s_opts.overlap = 20;
+    s_opts.merge_strategy = "take_last";
     fastloess::StreamingLoess stream(s_opts);
     std::vector<double> x1(x.begin(), x.begin() + 60), y1(y.begin(), y.begin() + 60);
     std::vector<double> x2(x.begin() + 60, x.end()), y2(y.begin() + 60, y.end());
@@ -178,9 +178,9 @@ int main() {
     }
 
     fastloess::StreamingOptions s_opts;
-    s_opts.merge_strategy = "weighted_average";
     s_opts.chunk_size = 60;
     s_opts.overlap = 20;
+    s_opts.merge_strategy = "weighted_average";
     fastloess::StreamingLoess stream(s_opts);
     std::vector<double> x1(x.begin(), x.begin() + 60), y1(y.begin(), y.begin() + 60);
     std::vector<double> x2(x.begin() + 60, x.end()), y2(y.begin() + 60, y.end());

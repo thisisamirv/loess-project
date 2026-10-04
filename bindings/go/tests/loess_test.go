@@ -115,7 +115,7 @@ func TestLoess(t *testing.T) {
 
 		opts := fastloess.DefaultOptions()
 		opts.Fraction = 0.5
-		opts.ReturnDiagnostics = true
+		opts.Outputs = []string{"diagnostics"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if res.Diagnostics == nil {
@@ -139,7 +139,7 @@ func TestLoess(t *testing.T) {
 
 		opts := fastloess.DefaultOptions()
 		opts.Fraction = 0.5
-		opts.ReturnResiduals = true
+		opts.Outputs = []string{"residuals"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if len(res.Residuals) != len(x) {
@@ -154,7 +154,7 @@ func TestLoess(t *testing.T) {
 		opts := fastloess.DefaultOptions()
 		opts.Fraction = 0.7
 		opts.Iterations = 3
-		opts.ReturnRobustnessWeights = true
+		opts.Outputs = []string{"weights"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if len(res.RobustnessWeights) != len(x) {
@@ -173,7 +173,7 @@ func TestLoess(t *testing.T) {
 		opts := fastloess.DefaultOptions()
 		opts.SurfaceMode = "direct"
 		opts.BoundaryPolicy = "noboundary"
-		opts.ReturnGradient = true
+		opts.Outputs = []string{"gradient"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if len(res.Gradient) != len(x) {
@@ -225,7 +225,7 @@ func TestLoess(t *testing.T) {
 		opts := fastloess.DefaultOptions()
 		opts.Fraction = 0.5
 		opts.SurfaceMode = "direct"
-		opts.ReturnSE = true
+		opts.Outputs = []string{"se"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if res.HatMatrix == nil {
@@ -488,7 +488,7 @@ func TestLoess(t *testing.T) {
 
 		opts := fastloess.DefaultOptions()
 		opts.Fraction = 0.5
-		opts.ReturnDiagnostics = true
+		opts.Outputs = []string{"diagnostics"}
 
 		model, err := fastloess.NewLoess(opts)
 		if err != nil {
@@ -696,7 +696,7 @@ func TestStreamingLoess(t *testing.T) {
 		opts := fastloess.DefaultStreamingOptions()
 		opts.Fraction = 0.1
 		opts.ChunkSize = 50
-		opts.ReturnResiduals = true
+		opts.Outputs = []string{"residuals"}
 		model, err := fastloess.NewStreamingLoess(opts)
 		if err != nil {
 			t.Fatalf("NewStreamingLoess failed: %v", err)
@@ -785,7 +785,7 @@ func TestStreamingLoess(t *testing.T) {
 		opts := fastloess.DefaultStreamingOptions()
 		opts.Fraction = 0.3
 		opts.ChunkSize = 100
-		opts.ReturnSe = true
+		opts.Outputs = []string{"se"}
 		model, err := fastloess.NewStreamingLoess(opts)
 		if err != nil {
 			t.Fatalf("NewStreamingLoess failed: %v", err)
@@ -1011,7 +1011,7 @@ func TestOnlineLoess(t *testing.T) {
 		opts := fastloess.DefaultOnlineOptions()
 		opts.Fraction = 0.5
 		opts.WindowCapacity = 10
-		opts.ReturnSe = true
+		opts.Outputs = []string{"se"}
 		if _, err := fastloess.NewOnlineLoess(opts); err == nil {
 			t.Fatal("expected an error when ReturnSe is set without UpdateMode = \"full\"")
 		}
@@ -1102,7 +1102,7 @@ func TestDiagnosticsValues(t *testing.T) {
 
 	opts := fastloess.DefaultOptions()
 	opts.Fraction = 0.5
-	opts.ReturnDiagnostics = true
+	opts.Outputs = []string{"diagnostics"}
 	res := fitOrFatal(t, opts, x, y)
 
 	diag := res.Diagnostics
@@ -1263,9 +1263,7 @@ func TestEdgeCases(t *testing.T) {
 
 		opts := fastloess.DefaultOptions()
 		opts.Fraction = 0.7
-		opts.ReturnResiduals = true
-		opts.ReturnRobustnessWeights = true
-		opts.ReturnSorted = true
+		opts.Outputs = []string{"residuals", "weights", "sorted"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if !sort.Float64sAreSorted(res.X) {
@@ -1284,8 +1282,7 @@ func TestEdgeCases(t *testing.T) {
 
 		unsortedOpts := fastloess.DefaultOptions()
 		unsortedOpts.Fraction = 0.7
-		unsortedOpts.ReturnResiduals = true
-		unsortedOpts.ReturnRobustnessWeights = true
+		unsortedOpts.Outputs = []string{"residuals", "weights"}
 		unsortedRes := fitOrFatal(t, unsortedOpts, x, y)
 
 		type pair struct{ x, y float64 }
@@ -1431,8 +1428,7 @@ func TestCrossValidation(t *testing.T) {
 		opts := fastloess.DefaultOptions()
 		opts.CVFractions = []float64{0.3, 0.5, 0.7}
 		opts.Iterations = 2
-		opts.ReturnDiagnostics = true
-		opts.ReturnResiduals = true
+		opts.Outputs = []string{"diagnostics", "residuals"}
 		res := fitOrFatal(t, opts, x, y)
 
 		if !inSet(res.FractionUsed, opts.CVFractions) {

@@ -87,8 +87,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .dimensions(2)
                 .fraction(0.3)
+                .dimensions(2)
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -132,8 +132,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .dimensions(3)
                 .fraction(0.5)
+                .dimensions(3)
                 .build();
 
         try (Loess model = new Loess(options)) {

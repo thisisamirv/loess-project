@@ -57,9 +57,9 @@ int main() {
     fastloess::LoessOptions options;
     options.fraction = 0.5;
     options.iterations = 3;
+    options.outputs = {"diagnostics"};
     options.confidence_intervals = 0.95;
     options.prediction_intervals = 0.95;
-    options.outputs = {"diagnostics"};
 
     fastloess::Loess model(options);
     auto result = model.fit(x, y).value();

@@ -55,17 +55,6 @@
 #'   \code{"noboundary"} (alias: \code{"none"}).
 #' @param auto_converge Convergence tolerance for early stopping of robustness
 #'   iterations. \code{NULL} (default) disables early stopping.
-#' @param return_diagnostics Logical; if \code{TRUE}, return fit-quality
-#'   metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.
-#' @param return_residuals Logical; if \code{TRUE}, return residuals in the
-#'   result. Default: \code{FALSE}.
-#' @param return_robustness_weights Logical; if \code{TRUE}, return per-point
-#'   robustness weights. Default: \code{FALSE}.
-#' @param return_gradient Logical; if \code{TRUE}, return the per-point local
-#'   fit gradient in the result. Requires \code{surface_mode = "direct"};
-#'   raises an error instead of silently leaving \code{gradient} absent if
-#'   requested under the default \code{"interpolation"} mode. Default:
-#'   \code{FALSE}.
 #' @param zero_weight_fallback Fallback policy when all robustness weights drop
 #'   to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 #'   \code{"mean"}), \code{"return_original"} (alias: \code{"original"}), or
@@ -86,18 +75,10 @@
 #'   Use \code{"minkowski:p"} to set a custom \emph{p} value.
 #' @param surface_mode Surface evaluation mode: \code{"interpolation"}
 #'   (default) or \code{"direct"}.
-#' @param return_se Logical; if \code{TRUE}, compute hat-matrix statistics
-#'   (effective degrees of freedom, leverage, standard errors).
-#'   Default: \code{FALSE}.
-#' @param return_sorted Logical; if \code{TRUE}, return results sorted
-#'   ascending by \code{x} instead of in the original input order. Default:
-#'   \code{FALSE}. To get both orderings without re-fitting, sort the default
-#'   (unsorted) result client-side (e.g. \code{order(result$x)}) rather than
-#'   calling \code{fit()} twice.
 #' @param outputs Optional character vector selecting \code{"diagnostics"},
 #'   \code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
-#'   \code{"derivative"}), \code{"se"}, and \code{"sorted"}. Combined with
-#'   the corresponding \code{return_*} arguments; \code{NULL} selects none.
+#'   \code{"derivative"}), \code{"se"}, and \code{"sorted"}. \code{NULL}
+#'   (default) selects no optional components.
 #' @param confidence_intervals Confidence level for confidence intervals,
 #'   greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
 #'   disables confidence intervals.
@@ -151,10 +132,7 @@ Loess <- function(
     boundary_policy = "extend",
     confidence_intervals = NULL,
     prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_gradient = FALSE,
+    outputs = NULL,
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
     cv_fractions = NULL,
@@ -165,8 +143,6 @@ Loess <- function(
     dimensions = 1L,
     distance_metric = "normalized",
     surface_mode = "interpolation",
-    return_se = FALSE,
-    return_sorted = FALSE,
     weighted_metric_weights = NULL,
     cell = NULL,
     interpolation_vertices = NULL,
@@ -174,7 +150,6 @@ Loess <- function(
     cv_seed = NULL,
     missing = "error",
     retain_model = FALSE,
-    outputs = NULL,
     cv = NULL
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
@@ -197,14 +172,12 @@ Loess <- function(
             "sorted"
         )
     )
-    return_diagnostics <- return_diagnostics || flags[["diagnostics"]]
-    return_residuals <- return_residuals || flags[["residuals"]]
-    return_robustness_weights <- return_robustness_weights || flags[["weights"]]
-    return_gradient <- return_gradient ||
-        flags[["gradient"]] ||
-        flags[["derivative"]]
-    return_se <- return_se || flags[["se"]]
-    return_sorted <- return_sorted || flags[["sorted"]]
+    return_diagnostics <- flags[["diagnostics"]]
+    return_residuals <- flags[["residuals"]]
+    return_robustness_weights <- flags[["weights"]]
+    return_gradient <- flags[["gradient"]] || flags[["derivative"]]
+    return_se <- flags[["se"]]
+    return_sorted <- flags[["sorted"]]
     handle <- do.call(RLoess$new, env_args(loess_params))
 
     structure(

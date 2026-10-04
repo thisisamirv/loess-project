@@ -23,15 +23,6 @@ opts.Overlap = 200
 | `Iterations` | `int` | `3` | Number of robustifying iterations |
 | `WeightFunction` | `string` | `"tricube"` | Kernel weight function |
 | `RobustnessMethod` | `string` | `"bisquare"` | Robustness method |
-| `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
-| `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
-| `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
-| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
-| `AutoConverge` | `*float64` | `nil` (disabled) | Auto-convergence tolerance |
-| `Outputs` | `[]string` | `nil` | Optional fields: `diagnostics`, `residuals`, `weights`, `derivative`/`gradient`, and `se`. |
-| `ReturnDiagnostics` | `bool` | `false` | Compute RMSE, MAE, R2 |
-| `ReturnResiduals` | `bool` | `false` | Include residuals in result |
-| `ReturnRobustnessWeights` | `bool` | `false` | Include weights in result |
 | `Degree` | `string` | `"linear"` | Polynomial degree |
 | `Dimensions` | `int` | `1` | Number of predictor dimensions |
 | `DistanceMetric` | `string` | `"normalized"` | Distance metric |
@@ -39,14 +30,18 @@ opts.Overlap = 200
 | `SurfaceMode` | `string` | `"interpolation"` | Surface computation mode |
 | `Cell` | `*float64` | `nil` (auto) | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `InterpolationVertices` | `*int` | `nil` (auto) | Number of interpolation vertices |
+| `ZeroWeightFallback` | `string` | `"use_local_mean"` | Zero-weight handling |
+| `BoundaryPolicy` | `string` | `"extend"` | Boundary handling policy |
 | `BoundaryDegreeFallback` | `*bool` | `nil` (auto) | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `ReturnGradient` | `bool` | `false` | Include the per-point local fit gradient in the result (`SurfaceMode = "direct"` only) |
-| `ConfidenceIntervals` | `*float64` | `nil` | Confidence level for confidence intervals, computed per chunk and merged across overlap boundaries via `MergeStrategy` |
-| `PredictionIntervals` | `*float64` | `nil` | Confidence level for prediction intervals; same per-chunk computation and overlap-merging as `ConfidenceIntervals` |
-| `ReturnSe` | `bool` | `false` | Include standard errors in result, computed per chunk and merged across overlap boundaries via `MergeStrategy` |
+| `ScalingMethod` | `string` | `"mad"` | Residual scaling method |
+| `AutoConverge` | `*float64` | `nil` (disabled) | Auto-convergence tolerance |
+| `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `ChunkSize` | `int` | `5000` | Number of points processed per chunk. Larger chunks reduce per-chunk overhead and give each local fit more surrounding context, at the cost of higher peak memory; smaller chunks bound memory tightly but increase the fraction of points that fall in overlap regions. A good starting point is balancing available memory against how much processing overhead per chunk is acceptable — match it to your file-read buffer or message-batch size to avoid unnecessary copying. |
 | `Overlap` | `int` | `ChunkSize / 10` | Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `MergeStrategy`. A good starting point is 10–20% of `ChunkSize`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice. Negative (the `DefaultStreamingOptions()` value, `-1`) means "use the library default", clamped to `[1, ChunkSize - 10]`. |
 | `MergeStrategy` | `string` | `"weighted_average"` | How overlapping chunk results are combined. |
+| `Outputs` | `[]string` | `nil` | Optional fields: `diagnostics`, `residuals`, `weights`, `derivative`/`gradient`, and `se`. |
+| `ConfidenceIntervals` | `*float64` | `nil` | Confidence level for confidence intervals, computed per chunk and merged across overlap boundaries via `MergeStrategy` |
+| `PredictionIntervals` | `*float64` | `nil` | Confidence level for prediction intervals; same per-chunk computation and overlap-merging as `ConfidenceIntervals` |
 
 | Strategy | Alias | Behavior |
 | --- | --- | --- |
@@ -59,7 +54,7 @@ opts.Overlap = 200
 
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
 
-Confidence/prediction intervals and standard errors are computed per chunk and merged across overlap boundaries via `MergeStrategy`, same as `Y`. Cross-validation and the `"sorted"` output are Batch-only and not available here; see [API](api.md) for those. Existing individual output booleans remain supported alongside `Outputs`.
+Confidence/prediction intervals and standard errors are computed per chunk and merged across overlap boundaries via `MergeStrategy`, same as `Y`. Cross-validation and the `"sorted"` output are Batch-only and not available here; see [API](api.md) for those. Select optional components only through `Outputs`.
 
 ## `fastloess.NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error)`
 
@@ -118,71 +113,6 @@ Releases native resources. Safe to call multiple times.
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
 - `"talwar"`
-
-### ScalingMethod
-
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### BoundaryPolicy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### ZeroWeightFallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### Missing
-
-Policy for handling non-finite (NaN/Inf) values within each chunk:
-
-| Option | Behavior |
-| --- | --- |
-| `"error"` (default) | Return an error if any value in the chunk is non-finite |
-| `"drop"` | Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer |
-
-**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
-
-### AutoConverge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
-
-### ReturnDiagnostics
-
-Populate `Result.Diagnostics` with RMSE, MAE, R², and residual_sd. `EffectiveDF`/`AIC`/`AICc` require standard errors, which are Batch-only, so they're always unset here.
-
-- `false` (default) — leaves `Result.Diagnostics` as `nil`
-- `true` — populates `Result.Diagnostics`
-
-### ReturnResiduals
-
-Populate `Result.Residuals` (`y - fitted`).
-
-- `false` (default) — leaves `Result.Residuals` as `nil`
-- `true` — populates `Result.Residuals`
-
-### ReturnRobustnessWeights
-
-Populate `Result.RobustnessWeights` with the final per-point robustness weights (from the last robustness iteration).
-
-- `false` (default) — leaves `Result.RobustnessWeights` as `nil`
-- `true` — populates `Result.RobustnessWeights`
 
 ### Degree
 
@@ -245,6 +175,25 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 - `nil` (default) — uses the library default (no explicit cap)
 - Any integer `>= 1`
 
+### ZeroWeightFallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### BoundaryPolicy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
 ### BoundaryDegreeFallback
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `Degree` can't be fit there (e.g., not enough neighbours). Only applies when `SurfaceMode` is `"interpolation"`.
@@ -253,28 +202,30 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `true` — falls back to a lower degree at boundaries
 - `false` — raises an error instead of silently falling back
 
-### ReturnGradient
+### ScalingMethod
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`Dimensions` values per point, flattened) in `Result.Gradient` at effectively no extra computation cost. Only supported when `SurfaceMode` is `"direct"` — returns an error instead of silently leaving `Gradient` as `nil` if requested under the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `Y` is, via `MergeStrategy`.
+*See: [Scaling Methods](../weighting/scaling.md)*
 
-### ConfidenceIntervals
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
 
-*See: [Intervals](../guide/intervals.md)*
+### AutoConverge
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `Y` is, via `MergeStrategy`. `nil` (default) disables confidence intervals.
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
 
-### PredictionIntervals
+Convergence tolerance for early stopping of robustness iterations. `nil` (default) disables early stopping.
 
-*See: [Intervals](../guide/intervals.md)*
+### Missing
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `ConfidenceIntervals`. `nil` (default) disables prediction intervals.
+Policy for handling non-finite (NaN/Inf) values within each chunk:
 
-### ReturnSe
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error if any value in the chunk is non-finite |
+| `"drop"` | Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer |
 
-Include standard errors in the result (`Result.StandardErrors`), computed per chunk and merged across overlap boundaries via `MergeStrategy`.
-
-- `false` (default) — leaves `StandardErrors` as `nil`
-- `true` — populates `StandardErrors`
+**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
 ### ChunkSize
 
@@ -299,6 +250,38 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_last"` | `"last"` | Keep right chunk values |
 
 ![Merge Strategies](../assets/diagrams/merge_comparison.svg)
+
+### outputs: se
+
+Include standard errors in the result (`Result.StandardErrors`), computed per chunk and merged across overlap boundaries via `MergeStrategy`.
+
+### outputs: diagnostics
+
+Populate `Result.Diagnostics` with RMSE, MAE, R², and residual_sd. `EffectiveDF`/`AIC`/`AICc` require standard errors, which are Batch-only, so they're always unset here.
+
+### outputs: residuals
+
+Populate `Result.Residuals` (`y - fitted`).
+
+### outputs: weights
+
+Populate `Result.RobustnessWeights` with the final per-point robustness weights (from the last robustness iteration).
+
+### outputs: gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`Dimensions` values per point, flattened) in `Result.Gradient` at effectively no extra computation cost. Only supported when `SurfaceMode` is `"direct"` — returns an error instead of silently leaving `Gradient` as `nil` if requested under the default `"interpolation"` mode. Omitted by default. Gradient values in the overlap region are merged across chunk boundaries the same way `Y` is, via `MergeStrategy`.
+
+### ConfidenceIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `Y` is, via `MergeStrategy`. `nil` (default) disables confidence intervals.
+
+### PredictionIntervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `ConfidenceIntervals`. `nil` (default) disables prediction intervals.
 
 ## Result
 

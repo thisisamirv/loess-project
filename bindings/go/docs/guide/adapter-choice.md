@@ -41,10 +41,10 @@ Standard mode for complete datasets. **Supports all features.**
 opts := fastloess.DefaultOptions()
 opts.Fraction = 0.5
 opts.Iterations = 3
+opts.Parallel = true
+ opts.Outputs = []string{"diagnostics"}
 opts.ConfidenceIntervals = ptr(0.95)
 opts.PredictionIntervals = ptr(0.95)
- opts.Outputs = []string{"diagnostics"}
-opts.Parallel = true
 
 model, err := fastloess.NewLoess(opts)
 if err != nil {

@@ -15,6 +15,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Use `.outputs([...])` in place of individual `return_*` selectors for Batch, Streaming, Online, and retained-model prediction; legacy Rust selectors remain available.
 * Marked `WeightFunction` as non-exhaustive so downstream kernel must reject unsupported future variants explicitly.
 * Matched R `stats::loess` span truncation, multivariate predictor normalization, and bisquare robustness cutoffs; MAR now uses R's uncentered median absolute residual and machine-minimum scale stop, while MAD remains the default. Near-singular local linear fits are handled by the regression solver rather than a global-range slope cutoff.
 

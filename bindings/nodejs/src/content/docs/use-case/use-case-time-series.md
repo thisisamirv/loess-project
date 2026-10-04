@@ -41,7 +41,7 @@ Extracted trend (first 5): [ '9.4350', '9.5812', '9.7368', '9.8902', '10.0435' ]
 
 Remove trend to analyze residual patterns.
 
-Setting `return_residuals = True` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
+Setting `outputs: ["residuals"]` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
 ```javascript
 const fl = require('fastloess');
@@ -53,7 +53,7 @@ const y = Float64Array.from(t, (ti, i) => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) 
 const model = new fl.Loess({
     fraction: 0.3,
     iterations: 3,
-    return_residuals: true
+    outputs: ["residuals"]
 });
 const result = model.fit(t, y);
 
@@ -158,7 +158,7 @@ const expression = Float64Array.from(hours, (h, i) => 100*(1+0.5*Math.sin(h*Math
 const model = new fl.Loess({
     fraction: 0.3,
     iterations: 3,
-    return_diagnostics: true
+    outputs: ["diagnostics"]
 });
 const result = model.fit(hours, expression);
 

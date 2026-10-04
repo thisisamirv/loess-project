@@ -98,8 +98,8 @@ func main() {
  }
 
  opts := fastloess.DefaultOptions()
- opts.Dimensions = 2
  opts.Fraction = 0.3
+ opts.Dimensions = 2
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {
@@ -151,8 +151,8 @@ func main() {
  }
 
  opts := fastloess.DefaultOptions()
- opts.Dimensions = 3
  opts.Fraction = 0.5
+ opts.Dimensions = 3
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {

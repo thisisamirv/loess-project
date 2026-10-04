@@ -1,15 +1,18 @@
 package fastloess;
 
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Options for {@link PredictModel#predict}. Construct via {@link #builder()}.
  *
- * @param returnSe whether to include standard errors in the output
+ * @param outputs optional prediction components such as {@code "se"} and
+ * {@code "gradient"}
  * @param confidenceLevel confidence interval coverage level (e.g.
  * {@code 0.95}), or {@code Double.NaN} to skip
  * @param predictionLevel prediction interval coverage level (e.g.
  * {@code 0.95}), or {@code Double.NaN} to skip
- * @param returnDerivative whether to include the local fit's gradient in the
- * output
  * @param extrapolation behavior for query points outside the training range:
  * one of {@code "clamp"} (default), {@code "linear"}, {@code "error"}
  * @param maxExtrapolationDistance under {@code "linear"} extrapolation, the
@@ -21,10 +24,9 @@ package fastloess;
  * in-range-but-sparse query points, or {@code Double.NaN} to disable
  */
 public record PredictOptions(
-        boolean returnSe,
+        List<String> outputs,
         double confidenceLevel,
         double predictionLevel,
-        boolean returnDerivative,
         String extrapolation,
         double maxExtrapolationDistance,
         double maxNeighborDistance) {
@@ -43,27 +45,14 @@ public record PredictOptions(
      */
     public static final class Builder {
 
-        boolean returnSe = false;
+        final Set<String> outputs = new LinkedHashSet<>();
         double confidenceLevel = Double.NaN;
         double predictionLevel = Double.NaN;
-        boolean returnDerivative = false;
         String extrapolation = "clamp";
         double maxExtrapolationDistance = Double.NaN;
         double maxNeighborDistance = Double.NaN;
 
         Builder() {
-        }
-
-        /**
-         * Whether to include standard errors in the output (default
-         * {@code false}).
-         *
-         * @param returnSe whether to include standard errors
-         * @return this builder, for chaining
-         */
-        public Builder returnSe(boolean returnSe) {
-            this.returnSe = returnSe;
-            return this;
         }
 
         /**
@@ -89,18 +78,6 @@ public record PredictOptions(
         }
 
         /**
-         * Whether to include the local fit's gradient in the output (default
-         * {@code false}).
-         *
-         * @param returnDerivative whether to include the gradient
-         * @return this builder, for chaining
-         */
-        public Builder returnDerivative(boolean returnDerivative) {
-            this.returnDerivative = returnDerivative;
-            return this;
-        }
-
-        /**
          * Selects optional prediction components: {@code "se"},
          * {@code "gradient"}, or {@code "derivative"}.
          *
@@ -111,10 +88,8 @@ public record PredictOptions(
         public Builder outputs(String... outputs) {
             for (String output : outputs) {
                 switch (output) {
-                    case "se" ->
-                        this.returnSe = true;
-                    case "gradient", "derivative" ->
-                        this.returnDerivative = true;
+                    case "se", "gradient", "derivative" ->
+                        this.outputs.add(output);
                     default ->
                         throw new IllegalArgumentException("Unknown output: " + output);
                 }
@@ -167,10 +142,9 @@ public record PredictOptions(
          */
         public PredictOptions build() {
             return new PredictOptions(
-                    returnSe,
+                    List.copyOf(outputs),
                     confidenceLevel,
                     predictionLevel,
-                    returnDerivative,
                     extrapolation,
                     maxExtrapolationDistance,
                     maxNeighborDistance);

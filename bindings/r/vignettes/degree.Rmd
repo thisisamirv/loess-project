@@ -48,7 +48,7 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-model <- Loess(degree = "constant", fraction = 0.5)
+model <- Loess(fraction = 0.5, degree = "constant")
 result <- fit(model, x, y)
 cat("First 6 smoothed values (constant/Nadaraya-Watson):\n")
 print(head(result$y))
@@ -66,7 +66,7 @@ applications.
 matters.
 
 ```{r degree_2}
-model <- Loess(degree = "linear", fraction = 0.5)
+model <- Loess(fraction = 0.5, degree = "linear")
 result <- fit(model, x, y)
 cat("First 6 smoothed values (linear local regression):\n")
 print(head(result$y))
@@ -83,7 +83,7 @@ regions with strong local curvature, at the cost of higher variance.
 `fraction` to stabilise the fit.
 
 ```{r degree_3}
-model <- Loess(degree = "quadratic", fraction = 0.5)
+model <- Loess(fraction = 0.5, degree = "quadratic")
 result <- fit(model, x, y)
 cat("First 6 smoothed values (quadratic local regression):\n")
 print(head(result$y))
@@ -100,7 +100,7 @@ requires a sufficiently large neighbourhood to remain stable.
 use `fraction` >= 0.5.
 
 ```{r degree_4}
-model <- Loess(degree = "cubic", fraction = 0.6)
+model <- Loess(fraction = 0.6, degree = "cubic")
 result <- fit(model, x, y)
 cat("First 6 smoothed values (cubic local regression):\n")
 print(head(result$y))
@@ -117,7 +117,7 @@ capturing highly oscillatory local structure. Very prone to overfitting.
 dataset is large; always cross-validate.
 
 ```{r degree_5}
-model <- Loess(degree = "quartic", fraction = 0.7)
+model <- Loess(fraction = 0.7, degree = "quartic")
 result <- fit(model, x, y)
 cat("First 6 smoothed values (quartic local regression):\n")
 print(head(result$y))

@@ -58,7 +58,7 @@ const z = Float64Array.from({ length: n }, (_, i) => Math.sin(lat[i]) + Math.cos
 // x is a flat Float64Array of length n*2, row-major
 const x2d = Float64Array.from({ length: n * 2 }, (_, k) => k % 2 === 0 ? lat[k >> 1] : lon[k >> 1]);
 
-const model = new Loess({ dimensions: 2, fraction: 0.3 });
+const model = new Loess({ fraction: 0.3, dimensions: 2 });
 const result = model.fit(x2d, z);
 console.log("y[0]:", result.y[0].toFixed(4));
 ```
@@ -86,7 +86,7 @@ const x3d = Float64Array.from({ length: n * 3 }, (_, k) => {
     return d === 0 ? x1[i] : d === 1 ? x2[i] : x3[i];
 });
 
-const model = new Loess({ dimensions: 3, fraction: 0.5 });
+const model = new Loess({ fraction: 0.5, dimensions: 3 });
 const result = model.fit(x3d, y);
 console.log("y[0]:", result.y[0].toFixed(4));
 ```

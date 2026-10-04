@@ -88,19 +88,6 @@ Fraction used: 0.5
 | `iterations(usize)` | `usize` | `3` | Number of robustifying iterations |
 | `weight_function(...)` | `weight_function` | `"tricube"` | Kernel weight function |
 | `robustness_method(...)` | `robustness_method` | `"bisquare"` | Robustness method |
-| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
-| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
-| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
-| `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
-| `outputs([&str])` | iterable of names | `[]` | Select `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"`/`"derivative"`, `"se"` |
-| `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R2 |
-| `return_residuals()` | `bool` | `false` | Include residuals in result |
-| `return_robustness_weights()` | `bool` | `false` | Include weights in result |
-| `return_se()` | `bool` | `false` | Include standard errors in the result |
-| `confidence_intervals(T)` | `T: Float` | disabled | Confidence interval level per chunk |
-| `prediction_intervals(T)` | `T: Float` | disabled | Prediction interval level per chunk |
-| `parallel(bool)` | `bool` | `true` | Enable parallel execution across CPU cores |
 | `degree(...)` | `degree` | `"linear"` | Polynomial degree |
 | `dimensions(usize)` | `usize` | `1` | Number of predictor dimensions |
 | `distance_metric(...)` | `distance_metric` | `"normalized"` | Distance metric |
@@ -108,11 +95,24 @@ Fraction used: 0.5
 | `surface_mode(...)` | `surface_mode` | `"interpolation"` | Surface computation mode |
 | `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
+| `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
+| `boundary_policy(...)` | `boundary_policy` | `"extend"` | Boundary handling policy |
 | `boundary_degree_fallback(bool)` | `bool` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
+| `scaling_method(...)` | `scaling_method` | `"mad"` | Residual scaling method |
+| `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
+| `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `chunk_size(usize)` | `usize` | `5000` | Data chunk size |
 | `overlap(usize)` | `usize` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy(...)` | `merge_strategy` | `"weighted_average"` | Strategy for blending overlap regions |
+| `parallel(bool)` | `bool` | `true` | Enable parallel execution across CPU cores |
+| `outputs([&str])` | iterable of names | `[]` | Select `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"`/`"derivative"`, `"se"` |
+| `return_se()` | `bool` | `false` | Include standard errors in the result |
+| `return_diagnostics()` | `bool` | `false` | Compute RMSE, MAE, R2 |
+| `return_residuals()` | `bool` | `false` | Include residuals in result |
+| `return_robustness_weights()` | `bool` | `false` | Include weights in result |
+| `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
+| `confidence_intervals(T)` | `T: Float` | disabled | Confidence interval level per chunk |
+| `prediction_intervals(T)` | `T: Float` | disabled | Prediction interval level per chunk |
 
 Cross-validation and `return_sorted` are Batch-only; Streaming supports standard errors and interval levels.
 
@@ -159,85 +159,6 @@ Cross-validation and `return_sorted` are Batch-only; Streaming supports standard
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
 - `"talwar"`
-
-### scaling_method
-
-*See: [Scaling Methods](crate::doc::weighting::scaling)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](crate::doc::advanced::boundary)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### missing
-
-Policy for handling non-finite (NaN/Inf) values within each chunk:
-
-| Option | Behavior |
-| --- | --- |
-| `"error"` (default) | Return an error if any value in the chunk is non-finite |
-| `"drop"` | Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer |
-
-**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
-
-### auto_converge
-
-*See: [Robustness](crate::doc::weighting::robustness#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. Disabled by default.
-
-### outputs
-
-Select optional results together, or combine names with the existing individual
-setters. `"derivative"` aliases `"gradient"`, which requires the direct surface.
-
-```rust
-use fastLoess::prelude::*;
-
-fn main() -> Result<(), LoessError> {
-    let _processor = StreamingLoess::new()
-        .surface_mode("direct")
-        .outputs(["diagnostics", "residuals", "weights", "derivative", "se"])
-        .build()?;
-    Ok(())
-}
-```
-
-Unknown names are collected and reported together at `.build()`.
-
-### return_diagnostics
-
-Populates `LoessResult::diagnostics` with RMSE, MAE, R², and residual_sd. Hat-matrix-dependent metrics such as `effective_df`/`aic`/`aicc` may be unavailable for streaming results. `false` by default.
-
-### return_residuals
-
-Populates `LoessResult::residuals` (`y - fitted`). `false` by default.
-
-### return_robustness_weights
-
-Populates `LoessResult::robustness_weights` with the final per-point robustness weights (from the last robustness iteration). `false` by default.
-
-### parallel
-
-Enables multi-threaded execution via Rayon, parallelizing chunk processing across CPU cores. `true` by default; set to `false` to force single-threaded execution.
 
 ### degree
 
@@ -291,13 +212,53 @@ Cell size for the interpolation grid, as a fraction of the data range in `(0, 1]
 
 Caps the maximum number of interpolation vertices, overriding the count implied by `cell`. Disabled by default (no explicit cap). Only applies when `surface_mode` is `"interpolation"`.
 
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](crate::doc::advanced::boundary)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
 ### boundary_degree_fallback
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there. `true` by default. Only applies when `surface_mode` is `"interpolation"`.
 
-### return_gradient
+### scaling_method
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult::gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `None` in the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`. Computed via the parallel `gradient_pass_parallel` when `parallel` is enabled.
+*See: [Scaling Methods](crate::doc::weighting::scaling)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](crate::doc::weighting::robustness#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. Disabled by default.
+
+### missing
+
+Policy for handling non-finite (NaN/Inf) values within each chunk:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error if any value in the chunk is non-finite |
+| `"drop"` | Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer |
+
+**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
 ### chunk_size
 
@@ -322,6 +283,45 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_last"` | `"last"` | Keep right chunk values |
 
 ![Merge Strategies](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/fastLoess/assets/diagrams/merge_comparison.svg)
+
+### parallel
+
+Enables multi-threaded execution via Rayon, parallelizing chunk processing across CPU cores. `true` by default; set to `false` to force single-threaded execution.
+
+### outputs
+
+Select optional results together, or combine names with the existing individual
+setters. `"derivative"` aliases `"gradient"`, which requires the direct surface.
+
+```rust
+use fastLoess::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let _processor = StreamingLoess::new()
+        .surface_mode("direct")
+        .outputs(["diagnostics", "residuals", "weights", "derivative", "se"])
+        .build()?;
+    Ok(())
+}
+```
+
+Unknown names are collected and reported together at `.build()`.
+
+### return_diagnostics
+
+Populates `LoessResult::diagnostics` with RMSE, MAE, R², and residual_sd. Hat-matrix-dependent metrics such as `effective_df`/`aic`/`aicc` may be unavailable for streaming results. `false` by default.
+
+### return_residuals
+
+Populates `LoessResult::residuals` (`y - fitted`). `false` by default.
+
+### return_robustness_weights
+
+Populates `LoessResult::robustness_weights` with the final per-point robustness weights (from the last robustness iteration). `false` by default.
+
+### return_gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult::gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — stays `None` in the default `"interpolation"` mode. `false` by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`. Computed via the parallel `gradient_pass_parallel` when `parallel` is enabled.
 
 ## Result Structure
 

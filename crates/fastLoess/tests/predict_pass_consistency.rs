@@ -31,8 +31,7 @@ fn test_predict_pass_consistency() {
         .unwrap();
 
     let options = PredictBuilder::new()
-        .return_se()
-        .return_derivative()
+        .outputs(["se", "derivative"])
         .intervals(
             fastLoess::IntervalsBuilder::new()
                 .confidence(0.95)

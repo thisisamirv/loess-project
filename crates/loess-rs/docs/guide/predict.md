@@ -20,31 +20,32 @@ Requires `.retain_model(true)` on the builder before `fit()`, otherwise `.call(.
 
 | Method | Argument Type | Default | Description |
 | --- | --- | --- | --- |
-| `return_se()` | `bool` | `false` | Include standard errors in the output |
-| `confidence_intervals(T)` | `T: Float` | disabled | Confidence interval coverage level (e.g. `0.95`) |
-| `prediction_intervals(T)` | `T: Float` | disabled | Prediction interval coverage level (e.g. `0.95`) |
-| `return_derivative()` | `bool` | `false` | Include the local fit's gradient (`dimensions` values per point, flattened) |
+| `outputs(names)` | iterable of strings | `[]` | Select `"se"` and `"derivative"` (`"gradient"` alias) |
+| `intervals(IntervalsBuilder<T>)` | interval group | disabled | Independent confidence/prediction levels and optional bootstrap refits |
+| `seed(u64)` | `u64` | default seed | Reproducible prediction bootstrap sampling |
 | `extrapolation(...)` | `&str` | `"clamp"` | Behavior for query points outside the training range, on any dimension |
 | `max_extrapolation_distance(T)` | `T: Float` | disabled | Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring |
 | `max_neighbor_distance(T)` | `T: Float` | disabled | Max allowed distance to the farthest point in a query's k-nearest-neighbor window before erroring |
 
 ## Options
 
-### return_se
+### outputs
 
-Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `confidence_intervals`/`prediction_intervals` to be populated. `false` by default.
+Use `.outputs(["se", "derivative"])` to request standard errors and flattened per-point gradients. `"gradient"` is an alias for `"derivative"`. Selections accumulate across calls; unknown names return `LoessError::InvalidOption` from `.build()`. The existing `.return_se()` and `.return_derivative()` selectors remain available for compatibility.
 
-### confidence_intervals
+Without optional selections, predictions contain only fitted values. Interval or bootstrap requests enable standard errors implicitly, even with an empty output selection. Derivative output remains opt-in.
+
+### intervals: confidence
 
 Confidence level for the confidence interval around the mean response at each query point (e.g. `0.95`). Uses the same z-score convention as `fit()`'s own confidence intervals. Disabled by default.
 
-### prediction_intervals
+### intervals: prediction
 
 Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same residual scale `fit()` used for its own intervals (`sqrt(RSS / delta1)`, populated when `.return_se()` plus an interval method was set under `.surface_mode("direct")`), otherwise falling back to a MAD-based estimate. Disabled by default.
 
-### return_derivative
+### derivative output
 
-Includes the local fit's gradient (`dimensions` values per query point, flattened) in the output. `false` by default.
+Selected with `.outputs(["derivative"])` or `.outputs(["gradient"])`. Includes the local fit's gradient (`dimensions` values per query point, flattened) in `PredictOutput::derivative`.
 
 ### extrapolation
 
@@ -102,7 +103,7 @@ fn main() -> Result<(), LoessError> {
     let model = Loess::new().fraction(0.7).retain_model(true).build()?;
     let result = model.fit(&x, &y)?;
 
-    let options = Predict::new().return_se().return_derivative().build()?;
+    let options = Predict::new().outputs(["se", "derivative"]).build()?;
     let prediction = options.call(&result, &[2.5_f64])?;
 
     println!("y: {:?}", prediction.y);

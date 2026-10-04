@@ -18,17 +18,16 @@ It always fits exactly, unlike `fit`'s default `surface_mode="interpolation"` â€
 
 | Keyword Argument | Type | Default | Description |
 | --- | --- | --- | --- |
-| `return_se` | `Bool` | `false` | Include standard errors in the output |
+| `outputs` | `Vector{String}` | `String[]` | Select `"se"` and/or `"gradient"` (alias `"derivative"`). |
 | `confidence_level` | `Union{Float64, Nothing}` | `nothing` | Confidence interval coverage level (e.g. `0.95`) |
 | `prediction_level` | `Union{Float64, Nothing}` | `nothing` | Prediction interval coverage level (e.g. `0.95`) |
-| `return_derivative` | `Bool` | `false` | Include the local fit's gradient (`dimensions` values per point, flattened) |
 | `extrapolation` | `String` | `"clamp"` | Behavior for query points outside the training range, on any dimension |
 | `max_extrapolation_distance` | `Union{Float64, Nothing}` | `nothing` | Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `Union{Float64, Nothing}` | `nothing` | Max allowed distance to the farthest point in a query's k-nearest-neighbor window before erroring |
 
-### return_se
+### outputs: se
 
-Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `confidence_level`/`prediction_level` to be populated. `false` by default.
+Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `confidence_level`/`prediction_level` to be populated. Omitted by default.
 
 ### confidence_level
 
@@ -38,9 +37,9 @@ Confidence level for the confidence interval around the mean response at each qu
 
 Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same residual scale `fit` used for its own intervals when available, otherwise falling back to a MAD-based estimate. `nothing` (default) disables it.
 
-### return_derivative
+### outputs: derivative
 
-Includes the local fit's gradient (`dimensions` values per query point, flattened) in the output. `false` by default.
+Includes the local fit's gradient (`dimensions` values per query point, flattened) in the output. Omitted by default.
 
 ### extrapolation
 
@@ -80,7 +79,7 @@ println("Predicted y: ", prediction.y)
 ### Standard Errors and Derivative
 
 ```@example predict
-prediction = predict(result.predict_model, [2.5]; return_se=true, return_derivative=true)
+prediction = predict(result.predict_model, [2.5]; outputs = ["se", "derivative"])
 println("y: ", prediction.y)
 println("SE: ", prediction.standard_errors)
 println("Derivative: ", prediction.derivative)

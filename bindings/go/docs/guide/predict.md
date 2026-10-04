@@ -22,19 +22,17 @@ It always fits exactly, unlike `Fit`'s default `SurfaceMode = "interpolation"` â
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `Outputs` | `[]string` | `nil` | Select `se` and/or `derivative`/`gradient`. |
-| `ReturnSE` | `bool` | `false` | Include standard errors in the output |
 | `ConfidenceLevel` | `*float64` | `nil` | Confidence interval coverage level (e.g. `0.95`) |
 | `PredictionLevel` | `*float64` | `nil` | Prediction interval coverage level (e.g. `0.95`) |
-| `ReturnDerivative` | `bool` | `false` | Include the local fit's gradient (`Dimensions` values per point, flattened) |
 | `Extrapolation` | `string` | `"clamp"` | Behavior for query points outside the training range, on any dimension |
 | `MaxExtrapolationDistance` | `*float64` | `nil` | Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring |
 | `MaxNeighborDistance` | `*float64` | `nil` | Max allowed distance to the farthest point in a query's k-nearest-neighbor window before erroring |
 
-`Outputs` groups prediction fields; the individual `ReturnSE` and `ReturnDerivative` compatibility fields remain supported.
+`Outputs` is the only prediction output selector.
 
-### ReturnSE
+### outputs: se
 
-Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `ConfidenceLevel`/`PredictionLevel` to be populated. `false` by default.
+Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `ConfidenceLevel`/`PredictionLevel` to be populated. Omitted by default.
 
 ### ConfidenceLevel
 
@@ -44,9 +42,9 @@ Confidence level for the confidence interval around the mean response at each qu
 
 Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same residual scale `Fit` used for its own intervals when available, otherwise falling back to a MAD-based estimate. `nil` (default) disables it.
 
-### ReturnDerivative
+### outputs: derivative
 
-Includes the local fit's gradient (`Dimensions` values per query point, flattened) in the output. `false` by default.
+Includes the local fit's gradient (`Dimensions` values per query point, flattened) in the output. Omitted by default.
 
 ### Extrapolation
 

@@ -10,7 +10,7 @@ test('WASM batch smoothing', () => {
 
     const result = new fastloess.Loess({
         fraction: 0.3,
-        return_diagnostics: true
+        outputs: ['diagnostics']
     }).fit(x, y);
 
     assert.strictEqual(result.x.length, 5);
@@ -34,9 +34,7 @@ test('WASM return_sorted = true returns results sorted ascending by x', () => {
 
     const result = new fastloess.Loess({
         fraction: 0.7,
-        return_residuals: true,
-        return_robustness_weights: true,
-        return_sorted: true
+        outputs: ['residuals', 'weights', 'sorted']
     }).fit(x, y);
 
     for (let i = 1; i < result.x.length; i++) {
@@ -46,8 +44,7 @@ test('WASM return_sorted = true returns results sorted ascending by x', () => {
 
     const unsortedResult = new fastloess.Loess({
         fraction: 0.7,
-        return_residuals: true,
-        return_robustness_weights: true
+        outputs: ['residuals', 'weights']
     }).fit(x, y);
 
     const sortedPairs = Array.from(result.x).map((xv, i) => [xv, result.y[i]]).sort();
@@ -65,8 +62,7 @@ test('WASM grouped outputs select Batch, Streaming, Online, and prediction field
         fraction: 0.7,
         surface_mode: 'direct',
         retain_model: true,
-        return_residuals: true,
-        outputs: ['diagnostics', 'weights', 'gradient', 'se', 'sorted']
+        outputs: ['diagnostics', 'residuals', 'weights', 'gradient', 'se', 'sorted']
     }).fit(x, y);
 
     assert.ok(result.diagnostics !== undefined);
@@ -154,7 +150,7 @@ test('WASM online smoothing', () => {
 test('WASM streaming: return_se', () => {
     const streamer = new fastloess.StreamingLoess({
         fraction: 0.3,
-        return_se: true
+        outputs: ['se']
     }, {
         chunk_size: 10,
         overlap: 2
@@ -196,7 +192,7 @@ test('WASM online: return_se requires update_mode "full"', () => {
     assert.throws(() => {
         new fastloess.OnlineLoess({
             fraction: 0.5,
-            return_se: true
+            outputs: ['se']
         }, {
             window_capacity: 10,
             min_points: 2
@@ -278,8 +274,7 @@ test('WASM smooth: iterations, zero_weight_fallback, return_residuals, return_ro
         fraction: 0.7,
         iterations: 5,
         zero_weight_fallback: 'return_original',
-        return_residuals: true,
-        return_robustness_weights: true,
+        outputs: ['residuals', 'weights'],
     }).fit(x, y);
     assert.strictEqual(result.y.length, 5);
 });
@@ -317,7 +312,7 @@ test('WASM smooth: return_se', () => {
     const x = new Float64Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
     const y = new Float64Array([2, 4, 6, 8, 10, 12, 14, 16, 18, 20]);
 
-    const result = new fastloess.Loess({ fraction: 0.5, return_se: true, surface_mode: 'direct' }).fit(x, y);
+    const result = new fastloess.Loess({ fraction: 0.5, outputs: ['se'], surface_mode: 'direct' }).fit(x, y);
     assert.ok(result.enp !== null);
     assert.ok(result.trace_hat !== null);
 });

@@ -38,7 +38,7 @@ model = Loess(;
     iterations=3,
     confidence_intervals=0.95,
     prediction_intervals=0.95,
-    return_diagnostics=true
+    outputs = ["diagnostics"]
 )
 result = fit(model, x, y)
 
@@ -69,7 +69,7 @@ model = Loess(;
     fraction=0.7,
     iterations=5,
     robustness_method="bisquare",
-    return_robustness_weights=true
+    outputs = ["weights"]
 )
 result = fit(model, x, y_with_outlier)
 

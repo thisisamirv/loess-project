@@ -9,7 +9,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Added an Alternative Software guide comparing `FastLOESS.jl` with `Loess.jl`, including a runnable numerical comparison and feature matrix.
 * Added the `cv` keyword to `Loess` for grouped cross-validation configuration.
-* Added `outputs=[...]` to `Loess`, `StreamingLoess`, `OnlineLoess`, and `predict` for grouped optional result selection; existing individual output keywords remain supported.
+* Added `outputs=[...]` to `Loess`, `StreamingLoess`, `OnlineLoess`, and `predict` for grouped optional result selection.
 * Added `retain_model` and `predict(model, new_x; kwargs...)` for out-of-sample prediction.
 * Added `return_gradient` to `Loess`, `StreamingLoess`, and `OnlineLoess`.
 * Added `confidence_intervals`/`prediction_intervals`/`return_se` to `StreamingLoess` and `OnlineLoess`. `OnlineLoess` requires `update_mode="full"` or errors. New bound fields on `OnlineOutput`.
@@ -17,6 +17,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Breaking change: replaced individual `return_*` output keywords with `outputs=[...]` for Batch, Streaming, Online, and prediction.
 * Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels in the Julia binding.
 
 ### Fixed

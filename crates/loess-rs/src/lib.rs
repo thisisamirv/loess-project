@@ -45,7 +45,7 @@
 //! - **News**
 //!   - [Release Notes](doc::news)
 //!
-//! ## Quick Start
+//! ## Quick Start (Batch)
 //!
 //! ### Typical Use
 //!
@@ -95,26 +95,20 @@
 //! let model = Loess::new()
 //!     .fraction(0.5)                                  // Use 50% of data for each local fit
 //!     .iterations(3)                                  // 3 robustness iterations
+//!     .weight_function("tricube")                     // Kernel function
+//!     .robustness_method("bisquare")                  // Outlier handling
 //!     .degree("linear")                               // Polynomial degree (case-insensitive)
 //!     .dimensions(1)                                  // Number of dimensions
 //!     .distance_metric("euclidean")                   // Distance metric
-//!     .weight_function("tricube")                     // Kernel function
-//!     .robustness_method("bisquare")                  // Outlier handling
 //!     .surface_mode("direct")                         // Required for per-point gradients
-//!     .boundary_policy("extend")                      // Boundary handling
-//!     .boundary_degree_fallback(true)                 // Boundary degree fallback
-//!     .scaling_method("mad")                          // Scaling method
 //!     .cell(0.2)                                      // Interpolation cell size
 //!     .interpolation_vertices(1000)                   // Maximum vertices for interpolation
 //!     .zero_weight_fallback("use_local_mean")         // Fallback policy
-//!     .missing("error")                               // Reject non-finite (NaN/Inf) input
-//!     .custom_weights(vec![1.0; 8])                   // Per-observation case weights
+//!     .boundary_policy("extend")                      // Boundary handling
+//!     .boundary_degree_fallback(true)                 // Boundary degree fallback
+//!     .scaling_method("mad")                          // Scaling method
 //!     .auto_converge(1e-6)                            // Auto-convergence threshold
-//!     .intervals(
-//!         IntervalsBuilder::new()
-//!         .confidence(0.95)                           // 95% confidence intervals
-//!         .prediction(0.95)                           // 95% prediction intervals
-//!     )
+//!     .missing("error")                               // Reject non-finite (NaN/Inf) input
 //!     .outputs([
 //!         "se",                                       // Standard errors
 //!         "diagnostics",                              // Fit quality metrics
@@ -123,7 +117,11 @@
 //!         "gradient",                                 // Include per-point local fit gradient
 //!         "sorted"                                    // Sort output ascending by x
 //!     ])
-//!     .retain_model(true)                             // Retain state for out-of-sample predict()
+//!     .intervals(
+//!         IntervalsBuilder::new()
+//!         .confidence(0.95)                           // 95% confidence intervals
+//!         .prediction(0.95)                           // 95% prediction intervals
+//!     )
 //!     .cv(
 //!         CVBuilder::new()
 //!         .method("kfold")                            // Use k-fold CV (or "loocv")
@@ -131,6 +129,8 @@
 //!         .fraction(vec![0.3, 0.7])                   // Candidate smoothing fractions
 //!     )
 //!     .seed(123)
+//!     .retain_model(true)                             // Retain state for out-of-sample predict()
+//!     .custom_weights(vec![1.0; 8])                   // Per-observation case weights
 //!     .build()?;
 //!
 //! let result = model.fit(&x, &y)?;
@@ -210,146 +210,356 @@
 //! # Result::<(), LoessError>::Ok(())
 //! ```
 //!
-//! ## Builder Arguments
+//! ### Predict
 //!
-//! All builder methods return `Self` and can be chained. Finalize the builder with
-//! `build()`.
+//! Retain the fitted Batch model to evaluate new coordinates with optional uncertainty
+//! estimates, gradients, and bounded extrapolation:
 //!
-//! ### Core Smoothing
+//! ```rust
+//! use loess_rs::prelude::*;
 //!
-//! - **`fraction(f: T)`** — Smoothing bandwidth: fraction of the data used for each local
-//!   fit (range `(0, 1]`). Smaller → more local and jagged; larger → smoother.
-//!   Default: `0.67`.
+//! let x = vec![1.0_f64, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0];
+//! let y = vec![2.1, 3.8, 6.2, 7.9, 10.3, 11.8, 14.1, 15.7];
+//! let fitted = Loess::new()
+//!     .fraction(0.5)
+//!     .surface_mode("direct")
+//!     .retain_model(true)
+//!     .build()?
+//!     .fit(&x, &y)?;
+//! let prediction = Predict::new()
+//!     .outputs(["se", "derivative"])
+//!     .intervals(IntervalsBuilder::new()
+//!         .confidence(0.95)
+//!         .prediction(0.95)
+//!         .bootstrap(20)
+//!     )
+//!     .seed(42)
+//!     .extrapolation("linear")
+//!     .max_extrapolation_distance(2.0)
+//!     .max_neighbor_distance(10.0)
+//!     .build()?
+//!     .call(&fitted, &[2.5, 8.5])?;
+//! println!("{prediction:#?}");
+//! # assert_eq!(prediction.y.len(), 2);
+//! # assert!(prediction.standard_errors.is_some());
+//! # assert!(prediction.confidence_lower.is_some());
+//! # assert!(prediction.prediction_upper.is_some());
+//! # assert!(prediction.derivative.is_some());
+//! # Result::<(), LoessError>::Ok(())
+//! ```
 //!
-//! - **`iterations(n: usize)`** — Number of robustness (IRLS) iterations for outlier
-//!   resistance. `0` disables robustness weighting. Default: `3`.
+//! ## Quick Start (Streaming)
 //!
-//! - **`degree(d: PolynomialDegree)`** — Degree of the local polynomial fitted at each point.
-//!   - `Constant` / `"constant"` (0): weighted mean — fastest, least flexible
-//!   - `Linear` / `"linear"` (1, **default**): standard LOESS — good balance of speed and accuracy
-//!   - `Quadratic` / `"quadratic"` (2): better for curved regions
-//!   - `Cubic` / `"cubic"` (3) / `Quartic` / `"quartic"` (4): higher flexibility, more expensive
+//! ### Typical Use
 //!
-//! - **`weight_function(wf: WeightFunction)`** — Kernel function for distance-based local
-//!   weighting. Options: `Tricube` / `"tricube"` (**default**), `Epanechnikov` / `"epanechnikov"`,
-//!   `Biweight` / `"biweight"`, `Gaussian` / `"gaussian"`, `Triangle` / `"triangle"`,
-//!   `Cosine` / `"cosine"`, `Uniform` / `"uniform"`.
+//! Process a dataset in chunks, then flush the points retained for overlap:
 //!
-//! - **`robustness_method(rm: RobustnessMethod)`** — Downweighting method applied to
-//!   outliers during robustness iterations. Options: `Bisquare` / `"bisquare"` (**default**),
-//!   `Huber` / `"huber"`, `Talwar` / `"talwar"`.
+//! ```rust
+//! use loess_rs::prelude::*;
 //!
-//! - **`scaling_method(sm: ScalingMethod)`** — Residual scale estimator used in robustness
-//!   weighting. Options: `MAD` / `"mad"` (**default**), `MAR` / `"mar"`, `Mean` / `"mean"`.
+//! let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
+//! let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + 1.0).collect();
+//! let mut model = StreamingLoess::new()
+//!     .fraction(0.5)
+//!     .chunk_size(10)
+//!     .overlap(2)
+//!     .build()?;
 //!
-//! - **`custom_weights(w: Vec<T>)`** — Per-observation case weights applied as
-//!   `w_ij = custom_weights[j] × K(d_ij / h)`. Higher values increase the influence of an
-//!   observation on nearby local fits (analogous to `weights` in R's `stats::loess`).
-//!   Must have the same length as `y`. Only applied in Batch mode.
+//! let mut emitted = 0;
+//! for (xs, ys) in x.chunks(10).zip(y.chunks(10)) {
+//!     emitted += model.process_chunk(xs, ys)?.y.len();
+//! }
+//! emitted += model.finalize()?.y.len();
+//! println!("Smoothed {emitted} points across two chunks");
+//! # assert_eq!(emitted, x.len());
+//! # Result::<(), LoessError>::Ok(())
+//! ```
 //!
-//! ### Surface Evaluation
+//! ```text
+//! Smoothed 20 points across two chunks
+//! ```
 //!
-//! - **`surface_mode(m: SurfaceMode)`** — How the fitted surface is evaluated.
-//!   - `Interpolation` / `"interpolation"` (**default**): fits at a sparse grid of vertices then interpolates —
-//!     fast for large datasets.
-//!   - `Direct` / `"direct"`: fits exactly at every data point — exact but O(n^2).
+//! ### Full Features
 //!
-//! - **`cell(c: T)`** — Cell size for the interpolation vertex grid (default: `0.2`).
-//!   Smaller → more vertices, higher accuracy, slower.
+//! Configure uncertainty estimates and optional outputs per chunk:
+//! The example lists common LOESS settings explicitly. Cell size, vertex limits, and
+//! boundary-degree fallback apply only with `surface_mode("interpolation")`; gradients
+//! require the direct mode shown here. CV, case weights, retained prediction, and sorted
+//! output are Batch-only options and are not part of this Streaming example.
 //!
-//! - **`interpolation_vertices(n: usize)`** — Hard cap on the number of interpolation
-//!   vertices regardless of `cell`.
+//! ```rust
+//! use loess_rs::prelude::*;
 //!
-//! - **`boundary_degree_fallback(enabled: bool)`** — When `true` (**default**), vertices
-//!   outside the tight data range use a `Linear` fit to avoid unstable extrapolation.
-//!   Set to `false` to match R's `stats::loess` behavior exactly.
+//! let x: Vec<f64> = (0..20).map(|i| i as f64 * 0.2).collect();
+//! let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1 * (xi * 5.0).sin()).collect();
+//! let mut model = StreamingLoess::new()
+//!     .fraction(0.6)                          // Local smoothing span
+//!     .iterations(1)                          // Robustness iterations
+//!     .weight_function("tricube")             // Kernel function
+//!     .robustness_method("bisquare")          // Outlier downweighting
+//!     .degree("linear")                       // Local polynomial degree
+//!     .dimensions(1)                          // One predictor per observation
+//!     .distance_metric("euclidean")           // Neighbor distance metric
+//!     .surface_mode("direct")                 // Required for per-point gradients
+//!     .cell(0.2)                              // Applies only in interpolation mode
+//!     .interpolation_vertices(1000)           // Applies only in interpolation mode
+//!     .zero_weight_fallback("use_local_mean") // Zero-weight neighborhood fallback
+//!     .boundary_policy("extend")              // Boundary padding
+//!     .boundary_degree_fallback(true)         // Applies only in interpolation mode
+//!     .scaling_method("mad")                  // Robust residual scale
+//!     .auto_converge(1e-6)                    // Robustness convergence tolerance
+//!     .missing("error")                       // Reject non-finite observations
+//!     .chunk_size(10)                         // Points per input chunk
+//!     .overlap(2)                             // Points retained between chunks
+//!     .merge_strategy("weighted_average")     // Blend estimates in the overlap
+//!     .outputs([
+//!         "se",                               // Standard errors
+//!         "diagnostics",                      // Cumulative fit diagnostics
+//!         "residuals",                        // Observed minus fitted values
+//!         "weights",                          // Final robustness weights
+//!         "gradient"                          // Local slope at each point
+//!     ])
+//!     .intervals(IntervalsBuilder::new()
+//!         .confidence(0.95)                   // 95% confidence intervals
+//!         .prediction(0.95)                   // 95% prediction intervals
+//!         .bootstrap(20)                      // Residual-bootstrap refits per chunk
+//!     )
+//!     .seed(7)                                // Reproducible bootstrap draws
+//!     .build()?;
 //!
-//! ### Neighborhood & Distance
+//! let first = model.process_chunk(&x[..10], &y[..10])?;
+//! # assert!(first.standard_errors.is_some());
+//! # assert!(first.confidence_lower.is_some());
+//! # assert!(first.prediction_upper.is_some());
+//! # assert!(first.gradient.is_some());
+//! # assert!(first.diagnostics.is_some());
+//! # assert!(first.residuals.is_some());
+//! # assert!(first.robustness_weights.is_some());
+//! let second = model.process_chunk(&x[10..], &y[10..])?;
+//! let final_chunk = model.finalize()?;
+//! let emitted = first.y.len() + second.y.len() + final_chunk.y.len();
+//! println!("Streaming intervals: {emitted} points");
+//! # assert_eq!(emitted, x.len());
+//! # Result::<(), LoessError>::Ok(())
+//! ```
 //!
-//! - **`dimensions(n: usize)`** — Number of predictor dimensions (default: `1`).
+//! ```text
+//! Streaming intervals: 20 points
+//! ```
 //!
-//! - **`distance_metric(m: DistanceMetric<T>)`** — Distance metric for neighbor selection.
-//!   - `Normalized` / `"normalized"` (**default**): each dimension scaled to `[0, 1]`
-//!   - `Euclidean` / `"euclidean"`: standard L2 distance
-//!   - `Manhattan` / `"manhattan"`: L1 distance
-//!   - `Chebyshev` / `"chebyshev"`: L∞ (max) distance
-//!   - `Minkowski(p)` / `"minkowski:p"`: Lp distance for arbitrary `p`
-//!   - `Weighted(w)`: dimension-weighted Euclidean (no string form — requires a weights vector)
+//! ### Result and Error Handling
 //!
-//! ### Boundary Handling
+//! `process_chunk()` and `finalize()` return `Result<LoessResult<T>, LoessError>`.
+//! A mismatched chunk is rejected without silently dropping points:
 //!
-//! - **`boundary_policy(p: BoundaryPolicy)`** — How query points outside the observed data
-//!   range are handled. Options: `Extend` / `"extend"` (**default**), `Reflect` / `"reflect"`,
-//!   `Zero` / `"zero"`, `NoBoundary` / `"noboundary"`.
+//! ```rust
+//! use loess_rs::prelude::*;
 //!
-//! - **`zero_weight_fallback(p: ZeroWeightFallback)`** — Fallback when all neighbors of a
-//!   point have zero weight (degenerate neighborhood).
-//!   - `UseLocalMean` / `"use_local_mean"` (**default**): return the weighted mean of nearby values
-//!   - `ReturnOriginal` / `"return_original"`: return the raw `y` value
-//!   - `ReturnNone` / `"return_none"`: return `NaN`
+//! let mut model = StreamingLoess::new().chunk_size(10).overlap(2).build()?;
+//! let invalid = model.process_chunk(&[1.0, 2.0], &[3.0]);
+//! assert!(invalid.is_err());
+//! let x: Vec<f64> = (0..10).map(|i| i as f64).collect();
+//! let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi).collect();
+//! let chunk = model.process_chunk(&x, &y)?;
+//! let tail = model.finalize()?;
+//! println!("Recovered {} points", chunk.y.len() + tail.y.len());
+//! # Result::<(), LoessError>::Ok(())
+//! ```
 //!
-//! ### Convergence
+//! ```text
+//! Recovered 10 points
+//! ```
 //!
-//! - **`auto_converge(tol: T)`** — Stop robustness iterations early when the relative change
-//!   in fitted values falls below `tol`. Disabled by default.
+//! ### ndarray Integration
 //!
-//! ### Output Options
+//! Contiguous ndarray arrays expose slices for chunked processing. Add
+//! `ndarray` to your dependencies when using it with `loess-rs`:
 //!
-//! - **`outputs(names)`** — Select optional results together: `"diagnostics"`, `"residuals"`,
-//!   `"weights"`, `"gradient"` (alias `"derivative"`), `"se"`, and `"sorted"`. Per-point
-//!   gradients require `surface_mode("direct")`. Unknown names are reported together by
-//!   `build()`. The individual `return_*()` methods remain available and combine with these
-//!   selections.
+//! ```rust
+//! use loess_rs::prelude::*;
+//! use ndarray::Array1;
 //!
-//! - **`return_diagnostics()`** — Include fit-quality diagnostics in the result (RMSE, MAE,
-//!   R2, AIC, effective degrees of freedom, residual SD, etc.).
+//! let x = Array1::from_vec((0..20).map(|i| i as f64).collect());
+//! let y = x.mapv(|xi| 2.0 * xi + 1.0);
+//! let mut model = StreamingLoess::new().chunk_size(10).overlap(2).build()?;
+//! let mut emitted = 0;
+//! for (xs, ys) in x.as_slice().unwrap().chunks(10).zip(y.as_slice().unwrap().chunks(10)) {
+//!     emitted += model.process_chunk(xs, ys)?.y.len();
+//! }
+//! emitted += model.finalize()?.y.len();
+//! println!("Streaming ndarray points: {emitted}");
+//! # assert_eq!(emitted, x.len());
+//! # Result::<(), LoessError>::Ok(())
+//! ```
 //!
-//! - **`return_residuals()`** — Include raw residuals `r_i = y_i − ŷ_i` in the result.
+//! ```text
+//! Streaming ndarray points: 20
+//! ```
 //!
-//! - **`return_robustness_weights()`** — Include the final robustness weights `w_i`.
+//! ## Quick Start (Online)
 //!
-//! - **`return_se()`** — Compute standard errors, hat-matrix trace, and effective number of
-//!   parameters. Grouped intervals enable standard errors automatically.
+//! ### Typical Use
 //!
-//! - **`intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.95))`**:
-//!   Configure independent confidence and prediction coverage levels. Add `.bootstrap(200)`
-//!   inside the interval builder for residual-bootstrap SEs and percentile bounds.
+//! Add points to a sliding window; updates begin once `min_points` is reached:
 //!
-//! ### Cross-Validation
+//! ```rust
+//! use loess_rs::prelude::*;
 //!
-//! - **`cv(CVBuilder::new().method("kfold").k(5).fraction(vec![0.3, 0.7]))`** —
-//!   Configure CV as a group. `CVBuilder` is in the prelude; the resulting
-//!   [`CVOptions`] type is available at the crate root, but
-//!   callers normally pass it directly to `.cv(...)`.
+//! let x = [1.0_f64, 2.0, 3.0, 4.0, 5.0];
+//! let y = [2.0, 4.0, 6.0, 8.0, 10.0];
+//! let mut model = OnlineLoess::new()
+//!     .fraction(0.5)
+//!     .window_capacity(5)
+//!     .min_points(3)
+//!     .build()?;
 //!
-//! - **`seed(seed: u64)`**: One outer seed controls CV fold assignment and residual-bootstrap
-//!   sampling, regardless of configuration order. Supplying a seed alone enables neither.
-//!   `CVBuilder::new()` defaults to k-fold with five folds; `.method("loocv")` selects LOOCV.
+//! let mut updates = 0;
+//! let mut latest = None;
+//! for (&xi, &yi) in x.iter().zip(&y) {
+//!     if let Some(output) = model.add_point(&[xi], yi)? {
+//!         updates += 1;
+//!         latest = Some(output.y);
+//!     }
+//! }
+//! let latest = latest.expect("the window has enough points");
+//! println!("Online updates: {updates}; latest estimate: {latest:.1}");
+//! # assert_eq!(updates, 3);
+//! # assert!((latest - 10.0).abs() < 1e-8);
+//! # Result::<(), LoessError>::Ok(())
+//! ```
 //!
-//! ### Adapter-Specific Options
+//! ```text
+//! Online updates: 3; latest estimate: 10.0
+//! ```
 //!
-//! **StreamingLoess** (`StreamingLoess::new()`):
+//! ### Full Features
 //!
-//! - **`chunk_size(n: usize)`** — Number of points processed per streaming chunk.
-//! - **`overlap(n: usize)`** — Point overlap between consecutive chunks for smooth boundaries.
-//! - **`merge_strategy(s: MergeStrategy)`** — How overlapping region fits are combined.
-//!   Options: `Average` / `"average"`, `WeightedAverage` / `"weighted_average"`,
-//!   `TakeFirst` / `"take_first"`, `TakeLast` / `"take_last"`.
+//! Full updates support robust fitting and uncertainty estimates for each latest point:
+//! Kernel, robustness, scaling, boundary, and convergence controls are shared with Batch.
+//! Interpolation controls are listed but inactive in direct mode. Full updates are required
+//! for robustness iterations and intervals; CV, case weights, and retained prediction remain
+//! Batch-only. Online output describes the latest point rather than cumulative diagnostics.
 //!
-//! **OnlineLoess** (`OnlineLoess::new()`):
+//! ```rust
+//! use loess_rs::prelude::*;
 //!
-//! - **`window_capacity(n: usize)`** — Maximum points kept in the sliding window.
-//! - **`min_points(n: usize)`** — Minimum points required before returning a fit.
-//! - **`update_mode(m: UpdateMode)`** — Window update strategy.
-//!   - `Full` / `"full"` (**default**): full refit on every update
-//!   - `Incremental` / `"incremental"`: lightweight incremental update
+//! let mut model = OnlineLoess::new()
+//!     .fraction(0.7)                          // Local smoothing span
+//!     .iterations(1)                          // Robustness iterations
+//!     .weight_function("tricube")             // Kernel function
+//!     .robustness_method("bisquare")          // Outlier downweighting
+//!     .degree("linear")                       // Local polynomial degree
+//!     .dimensions(1)                          // One predictor per observation
+//!     .distance_metric("euclidean")           // Neighbor distance metric
+//!     .surface_mode("direct")                 // Required for per-point gradients
+//!     .cell(0.2)                              // Applies only in interpolation mode
+//!     .interpolation_vertices(1000)           // Applies only in interpolation mode
+//!     .zero_weight_fallback("use_local_mean") // Zero-weight neighborhood fallback
+//!     .boundary_policy("extend")              // Boundary padding
+//!     .boundary_degree_fallback(true)         // Applies only in interpolation mode
+//!     .scaling_method("mad")                  // Robust residual scale
+//!     .auto_converge(1e-6)                    // Robustness convergence tolerance
+//!     .missing("error")                       // Reject non-finite observations
+//!     .window_capacity(20)                    // Maximum sliding-window size
+//!     .min_points(5)                          // Wait for five points before smoothing
+//!     .update_mode("full")                    // Refit the whole window for intervals
+//!     .outputs([
+//!         "se",                               // Latest-point standard error
+//!         "weights",                          // Latest-point robustness weight
+//!         "gradient"                          // Latest-point local slope
+//!     ])
+//!     .intervals(IntervalsBuilder::new()
+//!         .confidence(0.95)                   // 95% confidence interval
+//!         .prediction(0.95)                   // 95% prediction interval
+//!         .bootstrap(20)                      // Refit the current window 20 times
+//!     )
+//!     .seed(7)                                // Reproducible bootstrap draws
+//!     .build()?;
+//!
+//! let mut updates = 0;
+//! for i in 0..12 {
+//!     let x = i as f64 * 0.2;
+//!     if let Some(output) = model.add_point(&[x], x.sin() + 0.1 * (5.0 * x).sin())? {
+//!         updates += 1;
+//!         assert!(output.standard_error.is_some());
+//!         assert!(output.confidence_lower.is_some());
+//!         assert!(output.prediction_upper.is_some());
+//!         assert!(output.gradient.is_some());
+//!         assert!(output.robustness_weight.is_some());
+//!     }
+//! }
+//! println!("Online full updates: {updates}");
+//! # assert_eq!(updates, 8);
+//! # Result::<(), LoessError>::Ok(())
+//! ```
+//!
+//! ```text
+//! Online full updates: 8
+//! ```
+//!
+//! ### Result and Error Handling
+//!
+//! `build()` and `add_point(&[coordinate], response)` return `Result`; `add_point(&[coordinate], response)` returns `None` until
+//! `min_points` is reached. Invalid configurations and non-finite points return errors:
+//!
+//! ```rust
+//! use loess_rs::prelude::*;
+//!
+//! let invalid = OnlineLoess::<f64>::new()
+//!     .intervals(IntervalsBuilder::new().confidence(0.95))
+//!     .build();
+//! assert!(matches!(invalid, Err(LoessError::StandardErrorRequiresFullUpdateMode)));
+//!
+//! let mut model = OnlineLoess::new().window_capacity(5).min_points(3).build()?;
+//! assert!(model.add_point(&[f64::NAN], 2.0).is_err());
+//! let mut ready = 0;
+//! for i in 1..=3 {
+//!     if model.add_point(&[i as f64], 2.0 * i as f64)?.is_some() {
+//!         ready += 1;
+//!     }
+//! }
+//! println!("Ready online outputs: {ready}");
+//! # Result::<(), LoessError>::Ok(())
+//! ```
+//!
+//! ```text
+//! Ready online outputs: 1
+//! ```
+//!
+//! ### ndarray Integration
+//!
+//! With `ndarray` in your dependencies, iterate array values into `add_point(&[coordinate], response)`:
+//!
+//! ```rust
+//! use loess_rs::prelude::*;
+//! use ndarray::Array1;
+//!
+//! let x = Array1::from_vec(vec![1.0_f64, 2.0, 3.0, 4.0, 5.0]);
+//! let y = x.mapv(|xi| 2.0 * xi);
+//! let mut model = OnlineLoess::new().window_capacity(5).min_points(3).build()?;
+//! let mut ready = 0;
+//! for (&xi, &yi) in x.iter().zip(y.iter()) {
+//!     if model.add_point(&[xi], yi)?.is_some() {
+//!         ready += 1;
+//!     }
+//! }
+//! println!("Online ndarray updates: {ready}");
+//! # assert_eq!(ready, 3);
+//! # Result::<(), LoessError>::Ok(())
+//! ```
+//!
+//! ```text
+//! Online ndarray updates: 3
+//! ```
+//!
+//! ## Minimal Usage (no_std / Embedded)
 //!
 //! The crate supports `no_std` environments for embedded devices and resource-constrained systems.
 //! Disable default features to remove the standard library dependency:
 //!
 //! ```toml
 //! [dependencies]
-//! loess_rs = { version = "0.1", default-features = false }
+//! loess-rs = { version = "2.1", default-features = false }
 //! ```
 //!
 //! **Minimal example for embedded systems:**

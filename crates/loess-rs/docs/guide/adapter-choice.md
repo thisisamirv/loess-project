@@ -47,8 +47,8 @@ fn main() -> Result<(), LoessError> {
     let model = Loess::new()
         .fraction(0.5f64)
         .iterations(3usize)
-        .intervals(IntervalsBuilder::new().confidence(0.95f64).prediction(0.95f64))
         .outputs(["diagnostics"])
+        .intervals(IntervalsBuilder::new().confidence(0.95f64).prediction(0.95f64))
         .build()?;
     let result = model.fit(&x, &y)?;
     println!("95% CI at midpoint: [{}, {}]", result.confidence_lower.as_ref().unwrap()[50], result.confidence_upper.as_ref().unwrap()[50]);

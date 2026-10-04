@@ -16,17 +16,17 @@ import java.util.OptionalInt;
  * @param residuals residuals, if computed
  * @param robustnessWeights robustness weights, if computed
  * @param cvScores cross-validation scores per tested fraction, if CV was run
- * @param gradient per-point local fit gradient, flattened with {@code dimensions}
- * values per point, if computed (only populated when {@code surfaceMode} is
- * {@code "direct"})
+ * @param gradient per-point local fit gradient, flattened with
+ * {@code dimensions} values per point, if computed (only populated when
+ * {@code surfaceMode} is {@code "direct"})
  * @param fractionUsed the fraction used (as set, or selected by
  * cross-validation)
  * @param iterationsUsed the number of robustness iterations actually performed,
  * if applicable
  * @param dimensions the number of predictor dimensions used
  * @param diagnostics fit diagnostics, if requested
- * @param hatMatrix hat-matrix statistics, if {@code returnSe} was requested
- * (batch model only)
+ * @param hatMatrix hat-matrix statistics, if {@code outputs("se")} was
+ * requested (batch model only)
  * @param predictModel retained fitted-model state enabling out-of-sample
  * {@code predict()}, if {@code retainModel} was requested (batch model only)
  */

@@ -9,13 +9,15 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Added an Alternative Software guide comparing Python LOESS results with `skmisc.loess`, including executable Gaussian and robust examples.
 * Added a grouped `cv` dictionary to the Batch constructor, with validation and fallback to individual CV arguments.
-* Added `outputs` sequences to `Loess`, `StreamingLoess`, `OnlineLoess`, and prediction for grouped optional result selection alongside existing booleans.
+* Added `outputs` sequences to `Loess`, `StreamingLoess`, `OnlineLoess`, and prediction for grouped optional result selection.
 * Added `retain_model` and `LoessResult.predict(new_x, ...)` (a new `PredictOutput` class) for out-of-sample prediction.
 * Added `return_gradient` to `Loess`, `StreamingLoess`, and `OnlineLoess`, exposing the per-point gradient via `LoessResult.gradient`/`OnlineOutput.gradient`. Only takes effect with `surface_mode="direct"`.
 * Added `return_se`/`confidence_intervals`/`prediction_intervals` to `StreamingLoess` and `OnlineLoess`. `OnlineLoess` requires `update_mode="full"` or raises `ValueError`. New `OnlineOutput` bound fields.
 * Added a Linux musl (Alpine) release binary.
 
 ### Changed
+
+* Breaking change: replaced individual `return_*` output keywords, including `return_gradient` and prediction's `return_derivative`, with `outputs=[...]` for Batch, Streaming, Online, and prediction.
 
 ### Fixed
 

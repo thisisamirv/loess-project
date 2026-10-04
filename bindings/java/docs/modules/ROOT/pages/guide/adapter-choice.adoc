@@ -45,10 +45,10 @@ Standard mode for complete datasets. **Supports all features.**
 Options options = Options.builder()
         .fraction(0.5)
         .iterations(3)
+        .parallel(true)
+                .outputs("diagnostics")
         .confidenceIntervals(0.95)
         .predictionIntervals(0.95)
-                .outputs("diagnostics")
-        .parallel(true)
         .build();
 
 try (Loess model = new Loess(options)) {

@@ -60,8 +60,8 @@ reference_robust <- stats::loess(
 result_robust <- fit(
     Loess(
         fraction = 0.5, iterations = 3L, surface_mode = "direct",
-        boundary_policy = "noboundary", scaling_method = "mar",
-        zero_weight_fallback = "return_original", parallel = FALSE
+        zero_weight_fallback = "return_original", boundary_policy = "noboundary",
+        scaling_method = "mar", parallel = FALSE
     ),
     x, y
 )
@@ -83,7 +83,7 @@ reference_interpolated <- stats::loess(
 )
 result_interpolated <- fit(
     Loess(
-        fraction = 0.5, degree = "quadratic", iterations = 0L,
+        fraction = 0.5, iterations = 0L, degree = "quadratic",
         surface_mode = "interpolate", boundary_policy = "noboundary",
         boundary_degree_fallback = FALSE, parallel = FALSE
     ),

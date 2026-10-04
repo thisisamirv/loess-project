@@ -75,15 +75,6 @@ type Options struct {
 	// CV groups batch cross-validation settings. When set, it takes precedence
 	// over CVFractions, CVMethod, CVK, and CVSeed.
 	CV *CVOptions
-	// ReturnSE requests hat-matrix statistics (effective degrees of
-	// freedom, leverage, standard errors). Batch model only.
-	ReturnSE bool
-	// ReturnSorted requests results sorted ascending by X instead of in the
-	// original input order. Batch model only. To get both orderings without
-	// re-fitting, sort the default (unsorted) result client-side rather than
-	// calling Fit twice.
-	ReturnSorted bool
-
 	// Cell is the interpolation cell size tuning parameter, in (0, 1].
 	// Nil uses the library default. Only applies when SurfaceMode is
 	// "interpolation".
@@ -106,17 +97,6 @@ type Options struct {
 	// AutoConverge is the convergence tolerance for early stopping of
 	// robustness iterations. Nil disables early stopping.
 	AutoConverge *float64
-
-	// ReturnDiagnostics requests fit-quality metrics (RMSE, MAE, R-squared, AIC, etc.).
-	ReturnDiagnostics bool
-	// ReturnResiduals requests residuals in the result.
-	ReturnResiduals bool
-	// ReturnRobustnessWeights requests per-point robustness weights in the result.
-	ReturnRobustnessWeights bool
-	// ReturnGradient requests the per-point local fit gradient in the result,
-	// flattened (Dimensions values per point). Only takes effect when
-	// SurfaceMode is "direct".
-	ReturnGradient bool
 
 	// CVFractions is a set of candidate fractions for cross-validation.
 	// Empty disables CV. Batch model only.
@@ -240,9 +220,9 @@ func NewLoess(opts Options) (*Loess, error) {
 			wf, rm, sm, bp,
 			optFloat(ci, ciSet),
 			optFloat(pi, piSet),
-			boolToCInt(opts.ReturnDiagnostics || hasOutput(opts.Outputs, "diagnostics")),
-			boolToCInt(opts.ReturnResiduals || hasOutput(opts.Outputs, "residuals")),
-			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
+			boolToCInt(hasOutput(opts.Outputs, "diagnostics")),
+			boolToCInt(hasOutput(opts.Outputs, "residuals")),
+			boolToCInt(hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			cvFracPtr, cvFracLen,
@@ -253,15 +233,15 @@ func NewLoess(opts Options) (*Loess, error) {
 			C.int(opts.Dimensions),
 			distanceMetric,
 			surfaceMode,
-			boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
-			boolToCInt(opts.ReturnSorted || hasOutput(opts.Outputs, "sorted")),
+			boolToCInt(hasOutput(opts.Outputs, "se")),
+			boolToCInt(hasOutput(opts.Outputs, "sorted")),
 			optFloat(cell, cellSet),
 			interpolationVertices,
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
 			missing,
 			boolToCInt(opts.RetainModel),
-			boolToCInt(opts.ReturnGradient || hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
+			boolToCInt(hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
 		)
 		if ptr == nil {
 			errMsg = lastError()

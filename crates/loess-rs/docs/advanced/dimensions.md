@@ -65,8 +65,8 @@ fn main() -> Result<(), LoessError> {
     let x2d: Vec<f64> = (0..n).flat_map(|i| [lat[i], lon[i]]).collect();
 
     let model = Loess::new()
-        .dimensions(2)
         .fraction(0.3)
+        .dimensions(2)
         .build()?;
     let result = model.fit(&x2d, &z)?;
 
@@ -98,8 +98,8 @@ fn main() -> Result<(), LoessError> {
     let x3d: Vec<f64> = (0..n).flat_map(|i| [x1[i], x2[i], x3[i]]).collect();
 
     let model = Loess::new()
-        .dimensions(3)
         .fraction(0.5)
+        .dimensions(3)
         .build()?;
     let result = model.fit(&x3d, &y)?;
 

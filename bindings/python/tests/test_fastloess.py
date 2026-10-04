@@ -63,7 +63,7 @@ class TestLoess:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-        loess = fastloess.Loess(fraction=0.5, return_diagnostics=True)
+        loess = fastloess.Loess(fraction=0.5, outputs=["diagnostics"])
         result = loess.fit(x, y)
 
         assert result.diagnostics is not None
@@ -79,7 +79,7 @@ class TestLoess:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
-        loess = fastloess.Loess(fraction=0.5, return_residuals=True)
+        loess = fastloess.Loess(fraction=0.5, outputs=["residuals"])
         result = loess.fit(x, y)
 
         assert result.residuals is not None
@@ -90,9 +90,7 @@ class TestLoess:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.1, 100.0, 8.2, 9.8])  # Outlier
 
-        loess = fastloess.Loess(
-            fraction=0.7, iterations=3, return_robustness_weights=True
-        )
+        loess = fastloess.Loess(fraction=0.7, iterations=3, outputs=["weights"])
         result = loess.fit(x, y)
 
         assert result.robustness_weights is not None
@@ -107,7 +105,7 @@ class TestLoess:
         y = np.array([2.0, 4.1, 5.9, 8.2, 9.8])
 
         loess = fastloess.Loess(
-            fraction=0.7, surface_mode="direct", return_gradient=True
+            fraction=0.7, surface_mode="direct", outputs=["gradient"]
         )
         result = loess.fit(x, y)
 
@@ -132,8 +130,7 @@ class TestLoess:
             fraction=0.7,
             surface_mode="direct",
             retain_model=True,
-            return_residuals=True,
-            outputs=["diagnostics", "weights", "gradient", "se", "sorted"],
+            outputs=["diagnostics", "residuals", "weights", "gradient", "se", "sorted"],
         ).fit(x, y)
 
         assert result.diagnostics is not None
@@ -266,7 +263,7 @@ class TestLoess:
         x2 = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
         y2 = np.array([20.0, 40.0, 60.0, 80.0, 100.0])
 
-        loess = fastloess.Loess(fraction=0.5, return_diagnostics=True)
+        loess = fastloess.Loess(fraction=0.5, outputs=["diagnostics"])
 
         result1 = loess.fit(x1, y1)
         result2 = loess.fit(x2, y2)
@@ -344,7 +341,7 @@ class TestStreamingLoess:
         y = np.sin(x / 10)
 
         streaming = fastloess.StreamingLoess(
-            fraction=0.1, chunk_size=50, return_residuals=True
+            fraction=0.1, chunk_size=50, outputs=["residuals"]
         )
         chunk_result = streaming.process_chunk(x, y)
         final_result = streaming.finalize()
@@ -387,7 +384,7 @@ class TestStreamingLoess:
         y = np.sin(x / 10)
 
         streaming = fastloess.StreamingLoess(
-            fraction=0.3, chunk_size=100, return_se=True
+            fraction=0.3, chunk_size=100, outputs=["se"]
         )
         chunk_result = streaming.process_chunk(x, y)
         streaming.finalize()
@@ -474,7 +471,7 @@ class TestOnlineLoess:
     def test_online_return_se_requires_full_update_mode(self):
         """Test online with return_se=True and default update_mode raises ValueError."""
         with pytest.raises(ValueError):
-            fastloess.OnlineLoess(fraction=0.5, window_capacity=10, return_se=True)
+            fastloess.OnlineLoess(fraction=0.5, window_capacity=10, outputs=["se"])
 
     def test_online_confidence_intervals_requires_full_update_mode(self):
         """Test online with confidence_intervals set and default update_mode raises."""
@@ -548,7 +545,7 @@ class TestDiagnostics:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0])
 
-        loess = fastloess.Loess(fraction=0.5, return_diagnostics=True)
+        loess = fastloess.Loess(fraction=0.5, outputs=["diagnostics"])
         result = loess.fit(x, y)
 
         repr_str = repr(result.diagnostics)
@@ -562,7 +559,7 @@ class TestDiagnostics:
         x = np.array([1.0, 2.0, 3.0, 4.0, 5.0])
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0])  # Perfect linear
 
-        loess = fastloess.Loess(fraction=0.5, return_diagnostics=True)
+        loess = fastloess.Loess(fraction=0.5, outputs=["diagnostics"])
         result = loess.fit(x, y)
 
         diag = result.diagnostics
@@ -679,9 +676,7 @@ class TestEdgeCases:
 
         loess = fastloess.Loess(
             fraction=0.7,
-            return_residuals=True,
-            return_robustness_weights=True,
-            return_sorted=True,
+            outputs=["residuals", "weights", "sorted"],
         )
         result = loess.fit(x, y)
 
@@ -691,9 +686,7 @@ class TestEdgeCases:
 
         # Same (x, y) pairs as the unsorted-order fit, just reordered.
         unsorted_result = fastloess.Loess(
-            fraction=0.7,
-            return_residuals=True,
-            return_robustness_weights=True,
+            fraction=0.7, outputs=["residuals", "weights"]
         ).fit(x, y)
 
         sorted_pairs = sorted(zip(result.x, result.y))
@@ -784,8 +777,7 @@ class TestCrossValidation:
         loess = fastloess.Loess(
             cv_fractions=[0.3, 0.5, 0.7],
             iterations=2,
-            return_diagnostics=True,
-            return_residuals=True,
+            outputs=["diagnostics", "residuals"],
         )
         result = loess.fit(x, y)
 
@@ -867,7 +859,7 @@ class TestParameterCoverage:
 
     def test_loess_return_se(self):
         x, y = self._xy20()
-        r = fastloess.Loess(fraction=0.5, return_se=True, surface_mode="direct").fit(
+        r = fastloess.Loess(fraction=0.5, outputs=["se"], surface_mode="direct").fit(
             x, y
         )
         assert r.enp is not None
@@ -925,8 +917,7 @@ class TestParameterCoverage:
             scaling_method="mar",
             boundary_policy="reflect",
             auto_converge=1e-3,
-            return_diagnostics=True,
-            return_robustness_weights=True,
+            outputs=["diagnostics", "weights"],
             degree="quadratic",
             surface_mode="direct",
         )
@@ -979,7 +970,7 @@ class TestParameterCoverage:
             auto_converge=1e-3,
             scaling_method="mean",
             boundary_policy="zero",
-            return_robustness_weights=True,
+            outputs=["weights"],
             surface_mode="direct",
         )
         results = [o.add_point(xi, yi) for xi, yi in zip(x, y)]

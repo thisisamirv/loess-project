@@ -39,7 +39,7 @@ y[0]: -0.0964
 
 Remove trend to analyze residual patterns.
 
-Setting `return_residuals = True` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
+Setting `outputs: ["residuals"]` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
 ```javascript
 const { Loess } = require('fastloess-wasm');
@@ -51,7 +51,7 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 const model = new Loess({ 
     fraction: 0.3, 
     iterations: 3, 
-    return_residuals: true 
+    outputs: ["residuals"]
 });
 const result = model.fit(x, y);
 console.log("y[0]:", result.y[0].toFixed(4), "residual[0]:", result.residuals[0].toFixed(4));
@@ -145,7 +145,7 @@ const { Loess } = require('fastloess-wasm');
 const n = 24;
 const hours = Float64Array.from({ length: n }, (_, i) => i);
 const expression = Float64Array.from(hours, h => 5 + 3 * Math.sin(h * Math.PI / 12) + (h % 3) * 0.2);
-const model = new Loess({ fraction: 0.3, iterations: 3, return_diagnostics: true });
+const model = new Loess({ fraction: 0.3, iterations: 3, outputs: ["diagnostics"] });
 const result = model.fit(hours, expression);
 
 console.log("R2:", result.diagnostics?.r_squared);

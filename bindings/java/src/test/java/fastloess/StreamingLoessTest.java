@@ -36,7 +36,7 @@ class StreamingLoessTest {
     @Test
     void returnSePopulatesStandardErrors() {
         try (StreamingLoess model = new StreamingLoess(
-                StreamingOptions.builder().fraction(0.3).chunkSize(10).returnSe(true).build())) {
+                StreamingOptions.builder().fraction(0.3).chunkSize(10).outputs("se").build())) {
             double[] x = new double[20];
             double[] y = new double[20];
             for (int i = 0; i < 20; i++) {

@@ -37,8 +37,8 @@ fn main() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Loess::new()
-        .degree("constant")
         .fraction(0.5)
+        .degree("constant")
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -71,8 +71,8 @@ fn main() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Loess::new()
-        .degree("linear")
         .fraction(0.5)
+        .degree("linear")
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -105,8 +105,8 @@ fn main() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Loess::new()
-        .degree("quadratic")
         .fraction(0.5)
+        .degree("quadratic")
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -139,8 +139,8 @@ fn main() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Loess::new()
-        .degree("cubic")
         .fraction(0.6)
+        .degree("cubic")
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -173,8 +173,8 @@ fn main() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Loess::new()
-        .degree("quartic")
         .fraction(0.7)
+        .degree("quartic")
         .build()?;
     let result = model.fit(&x, &y)?;
 

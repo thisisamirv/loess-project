@@ -43,7 +43,7 @@ const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3)
 
 const processor = new StreamingLoess(
     {},
-    { merge_strategy: "average", chunk_size: 60, overlap: 20 }
+    { chunk_size: 60, overlap: 20, merge_strategy: "average" }
 );
 processor.process_chunk(xChunk.slice(0, 60), yChunk.slice(0, 60));
 // The second chunk's overlap region (its first 20 points) is where
@@ -71,7 +71,7 @@ const n = 100;
 const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const processor = new StreamingLoess({}, { merge_strategy: "take_first", chunk_size: 60, overlap: 20 });
+const processor = new StreamingLoess({}, { chunk_size: 60, overlap: 20, merge_strategy: "take_first" });
 processor.process_chunk(xChunk.slice(0, 60), yChunk.slice(0, 60));
 const result = processor.process_chunk(xChunk.slice(60), yChunk.slice(60));
 console.log("Merged value in overlap region (take_first):", result.y[5].toFixed(4));
@@ -96,7 +96,7 @@ const n = 100;
 const xChunk = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const processor = new StreamingLoess({}, { merge_strategy: "take_last", chunk_size: 60, overlap: 20 });
+const processor = new StreamingLoess({}, { chunk_size: 60, overlap: 20, merge_strategy: "take_last" });
 processor.process_chunk(xChunk.slice(0, 60), yChunk.slice(0, 60));
 const result = processor.process_chunk(xChunk.slice(60), yChunk.slice(60));
 console.log("Merged value in overlap region (take_last):", result.y[5].toFixed(4));
@@ -127,7 +127,7 @@ const yChunk = Float64Array.from(xChunk, (xi, i) => Math.sin(xi) + (((i * 7 + 3)
 
 const processor = new StreamingLoess(
     {},
-    { merge_strategy: "weighted_average", chunk_size: 60, overlap: 20 }
+    { chunk_size: 60, overlap: 20, merge_strategy: "weighted_average" }
 );
 processor.process_chunk(xChunk.slice(0, 60), yChunk.slice(0, 60));
 const result = processor.process_chunk(xChunk.slice(60), yChunk.slice(60));

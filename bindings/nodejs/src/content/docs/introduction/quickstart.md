@@ -40,9 +40,9 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i*7+3)%17)/17-0.5)*0
 const model = new Loess({
     fraction: 0.5,
     iterations: 3,
+    outputs: ["diagnostics"],
     confidence_intervals: 0.95,
-    prediction_intervals: 0.95,
-    return_diagnostics: true
+    prediction_intervals: 0.95
 });
 const result = model.fit(x, y);
 
@@ -75,7 +75,7 @@ const model = new Loess({
     fraction: 0.7,
     iterations: 5,
     robustness_method: "bisquare",
-    return_robustness_weights: true
+    outputs: ["weights"]
 });
 const result = model.fit(xOut, yWithOutlier);
 

@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Add `Predict::outputs(names)` for grouped `se` and `derivative` selection, with `gradient` as an alias and unknown names rejected by `build()`; preserve legacy selectors and implicit interval/bootstrap standard errors.
 - Added residual-bootstrap standard errors and percentile confidence/prediction intervals across Batch, Streaming, full-update Online, and retained-model prediction. Refits preserve LOESS settings and case weights, use centered residuals and batches of at most 256, and support n-dimensional data, interpolation, and `no_std`.
 - Added grouped cross-validation configuration via `CVBuilder::new().method(...).fraction(...)` and `.cv(...)`; `CVBuilder` is in the prelude and the `CVOptions<T>` result type is at the crate root.
 - Added `LoessBuilder::outputs(names)` as a grouped replacement for individual output toggles; unknown names are accumulated and reported together by `.build()`.
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLoess:**
 
+- Expose the shared grouped prediction-output selector through `fastLoess::Predict` and update parallel prediction examples and consistency coverage.
 - Added `.cv(...)` to the parallel Batch builder, re-exporting `CVBuilder` through the prelude and `CVOptions<T>` at the crate root.
 - Added `outputs(names)` to the `Loess`, `StreamingLoess`, and `OnlineLoess` wrappers, forwarding grouped output selection and deferred unknown-name errors to the core builder.
 - Added parallel `custom_gradient_pass` and predict passes for the `return_gradient` option and `Predict::call()`.
@@ -145,36 +147,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Breaking change: removed standalone output booleans from fit and prediction options; use `Outputs` for optional components.
 - Bumped the pinned `golangci-lint` install-script version from `v2.13.2` to `v2.14.0`.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Represent unavailable diagnostic metrics as nil optional values instead of NaN sentinels in the Go binding.
 
 **Java:**
 
+- Breaking change: removed standalone output builder methods and prediction flags; use `outputs(...)` for optional components.
 - Bumped the pinned Checkstyle standalone jar version from `14.1.0` to `14.3.0`.
 - Java's musl JNI release jobs now build dynamic x86_64 and ARM64 shared libraries, so the bundled resources selected by `NativeBridge` are published reliably.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 
 **Julia:**
 
+- Breaking change: removed standalone output keywords from fit and prediction; use `outputs` for optional components.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels in the Julia binding.
 
 **Node.js:**
 
+- Breaking change: removed standalone output booleans from fit and prediction options; use `outputs` for optional components.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 
 **Python:**
 
+- Breaking change: removed standalone output keywords from fit and prediction, including `return_gradient` and `return_derivative`; use `outputs` for optional components.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 
 **R:**
 
+- Breaking change: removed standalone output arguments from fit and prediction; use `outputs` for optional components. Regenerated package documentation and migrated tests and vignettes.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Replaced the local `Result` alias with `extendr_api::error::Result`, mapped unavailable diagnostics to R `NA`, added retry cleanup for transient Windows `pak` move failures, and added the root/binding `r-tests` workflow.
 
 **WASM:**
 
+- Breaking change: removed standalone output booleans from fit and prediction options and TypeScript declarations; use `outputs` for optional components.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 
 ### Fixed

@@ -5,40 +5,34 @@
 \title{LOESS Batch Smoothing}
 \usage{
 Loess(
-    fraction = 0.67,
-    ...,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_gradient = FALSE,
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
-    parallel = TRUE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    return_se = FALSE,
-    return_sorted = FALSE,
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL,
-    cv_seed = NULL,
-    missing = "error",
-    retain_model = FALSE,
-    outputs = NULL,
-    cv = NULL
+  fraction = 0.67,
+  ...,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  confidence_intervals = NULL,
+  prediction_intervals = NULL,
+  outputs = NULL,
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  cv_fractions = NULL,
+  cv_method = "kfold",
+  cv_k = 5L,
+  parallel = TRUE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL,
+  cv_seed = NULL,
+  missing = "error",
+  retain_model = FALSE,
+  cv = NULL
 )
 }
 \arguments{
@@ -78,20 +72,10 @@ disables confidence intervals.}
 greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
 disables prediction intervals.}
 
-\item{return_diagnostics}{Logical; if \code{TRUE}, return fit-quality
-metrics (RMSE, MAE, R-squared, AIC, etc.). Default: \code{FALSE}.}
-
-\item{return_residuals}{Logical; if \code{TRUE}, return residuals in the
-result. Default: \code{FALSE}.}
-
-\item{return_robustness_weights}{Logical; if \code{TRUE}, return per-point
-robustness weights. Default: \code{FALSE}.}
-
-\item{return_gradient}{Logical; if \code{TRUE}, return the per-point local
-fit gradient in the result. Requires \code{surface_mode = "direct"};
-raises an error instead of silently leaving \code{gradient} absent if
-requested under the default \code{"interpolation"} mode. Default:
-\code{FALSE}.}
+\item{outputs}{Optional character vector selecting \code{"diagnostics"},
+\code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
+\code{"derivative"}), \code{"se"}, and \code{"sorted"}. \code{NULL}
+(default) selects no optional components.}
 
 \item{zero_weight_fallback}{Fallback policy when all robustness weights drop
 to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
@@ -123,16 +107,6 @@ Use \code{"minkowski:p"} to set a custom \emph{p} value.}
 
 \item{surface_mode}{Surface evaluation mode: \code{"interpolation"}
 (default) or \code{"direct"}.}
-
-\item{return_se}{Logical; if \code{TRUE}, compute hat-matrix statistics
-(effective degrees of freedom, leverage, standard errors).
-Default: \code{FALSE}.}
-
-\item{return_sorted}{Logical; if \code{TRUE}, return results sorted
-ascending by \code{x} instead of in the original input order. Default:
-\code{FALSE}. To get both orderings without re-fitting, sort the default
-(unsorted) result client-side (e.g. \code{order(result$x)}) rather than
-calling \code{fit()} twice.}
 
 \item{weighted_metric_weights}{Numeric vector of per-dimension weights.
 Length must equal \code{dimensions}. Only used when
@@ -167,11 +141,6 @@ between \code{x} and \code{y} always raises an error, even under
 training data, enabling \code{\link{predict.Loess}} for out-of-sample
 prediction. Default: \code{FALSE}.}
 
-\item{outputs}{Optional character vector selecting \code{"diagnostics"},
-\code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
-\code{"derivative"}), \code{"se"}, and \code{"sorted"}. Combined with
-the corresponding \code{return_*} arguments; \code{NULL} selects none.}
-
 \item{cv}{Grouped cross-validation settings from \code{\link{cv_opts}}.
 \code{NULL} uses the individual \code{cv_*} arguments.}
 }
@@ -191,11 +160,11 @@ real-time data, see \code{\link{OnlineLoess}}.
 
 \code{fraction} is the most important parameter: it controls the size of the
 local neighbourhood used at each point.\tabular{lll}{
-    Range \tab Effect \tab Use case \cr
-    0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
-    0.3-0.5 \tab Balanced \tab General purpose \cr
-    0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
-    0.7-1.0 \tab Very smooth \tab Trend extraction \cr
+   Range \tab Effect \tab Use case \cr
+   0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
+   0.3-0.5 \tab Balanced \tab General purpose \cr
+   0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
+   0.7-1.0 \tab Very smooth \tab Trend extraction \cr
 }
 }
 \examples{

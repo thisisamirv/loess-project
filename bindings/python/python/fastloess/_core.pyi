@@ -175,10 +175,8 @@ class LoessResult:
         new_x: ArrayLike,
         *,
         outputs: Sequence[str] | None = None,
-        return_se: bool = False,
         confidence_level: float | None = None,
         prediction_level: float | None = None,
-        return_derivative: bool = False,
         extrapolation: str = "clamp",
         max_extrapolation_distance: float | None = None,
         max_neighbor_distance: float | None = None,
@@ -242,9 +240,6 @@ class Loess:
         prediction_intervals: float | None = None,
         outputs: Sequence[str] | None = None,
         cv: Mapping[str, object] | None = None,
-        return_diagnostics: bool = False,
-        return_residuals: bool = False,
-        return_robustness_weights: bool = False,
         zero_weight_fallback: str = "use_local_mean",
         auto_converge: float | None = None,
         cv_fractions: Sequence[float] | None = None,
@@ -255,8 +250,6 @@ class Loess:
         dimensions: int = 1,
         distance_metric: str = "normalized",
         surface_mode: str = "interpolation",
-        return_se: bool = False,
-        return_sorted: bool = False,
         weighted_metric_weights: Sequence[float] | None = None,
         cell: float | None = None,
         interpolation_vertices: int | None = None,
@@ -264,7 +257,6 @@ class Loess:
         cv_seed: int | None = None,
         missing: str = "error",
         retain_model: bool = False,
-        return_gradient: bool = False,
     ) -> None:
         """Initialize the batch LOESS processor."""
 
@@ -304,13 +296,9 @@ class StreamingLoess:
         boundary_policy: str = "extend",
         auto_converge: float | None = None,
         outputs: Sequence[str] | None = None,
-        return_diagnostics: bool = False,
-        return_residuals: bool = False,
-        return_robustness_weights: bool = False,
         zero_weight_fallback: str = "use_local_mean",
         confidence_intervals: float | None = None,
         prediction_intervals: float | None = None,
-        return_se: bool = False,
         parallel: bool = True,
         degree: str = "linear",
         dimensions: int = 1,
@@ -322,7 +310,6 @@ class StreamingLoess:
         interpolation_vertices: int | None = None,
         boundary_degree_fallback: bool | None = None,
         missing: str = "error",
-        return_gradient: bool = False,
     ) -> None:
         """Initialize the streaming processor."""
 
@@ -349,11 +336,9 @@ class OnlineLoess:
         update_mode: str = "incremental",
         auto_converge: float | None = None,
         outputs: Sequence[str] | None = None,
-        return_robustness_weights: bool = False,
         zero_weight_fallback: str = "use_local_mean",
         confidence_intervals: float | None = None,
         prediction_intervals: float | None = None,
-        return_se: bool = False,
         degree: str = "linear",
         dimensions: int = 1,
         distance_metric: str = "normalized",
@@ -363,7 +348,6 @@ class OnlineLoess:
         interpolation_vertices: int | None = None,
         boundary_degree_fallback: bool | None = None,
         missing: str = "error",
-        return_gradient: bool = False,
     ) -> None:
         """Initialize the online processor.
 

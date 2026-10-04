@@ -71,7 +71,7 @@ class LoessTest {
             y[i] = Math.sin(x[i] / 5.0);
         }
 
-        try (Loess model = new Loess(Options.builder().returnDiagnostics(true).build())) {
+        try (Loess model = new Loess(Options.builder().outputs("diagnostics").build())) {
             Result result = model.fit(x, y);
             assertTrue(result.diagnostics().isPresent());
             assertTrue(result.diagnostics().get().rmse() >= 0.0);
@@ -152,7 +152,7 @@ class LoessTest {
         }
 
         try (Loess model = new Loess(
-                Options.builder().surfaceMode("direct").returnGradient(true).build())) {
+                Options.builder().surfaceMode("direct").outputs("gradient").build())) {
             Result result = model.fit(x, y);
             assertEquals(x.length, result.gradient().orElseThrow().length);
         }
@@ -199,9 +199,7 @@ class LoessTest {
 
         Options sortedOptions = Options.builder()
                 .fraction(0.7)
-                .returnResiduals(true)
-                .returnRobustnessWeights(true)
-                .returnSorted(true)
+                .outputs("residuals", "weights", "sorted")
                 .build();
 
         try (Loess sortedModel = new Loess(sortedOptions)) {
@@ -215,8 +213,7 @@ class LoessTest {
 
             Options unsortedOptions = Options.builder()
                     .fraction(0.7)
-                    .returnResiduals(true)
-                    .returnRobustnessWeights(true)
+                    .outputs("residuals", "weights")
                     .build();
             try (Loess unsortedModel = new Loess(unsortedOptions)) {
                 Result unsortedResult = unsortedModel.fit(x, y);

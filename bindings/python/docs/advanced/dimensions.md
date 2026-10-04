@@ -55,7 +55,7 @@ z = np.sin(lat) + np.cos(lon) + rng.normal(0, 0.1, n)
 ## x is an (n, 2) array flattened to 1D (Python binding requires flat input)
 
 x2d = np.column_stack([lat, lon]).ravel()
-model = fl.Loess(dimensions=2, fraction=0.3)
+model = fl.Loess(fraction=0.3, dimensions=2)
 result = model.fit(x2d, z)
 print(f"Smoothed y[0]: {result.y[0]:.4f}")
 :::
@@ -78,7 +78,7 @@ x3 = np.linspace(1, 0, n)
 y = np.sin(x1) + x2 - x3 + rng.normal(0, 0.1, n)
 
 x3d = np.column_stack([x1, x2, x3]).ravel()   # (n*3,) flat
-model = fl.Loess(dimensions=3, fraction=0.5)
+model = fl.Loess(fraction=0.5, dimensions=3)
 result = model.fit(x3d, y)
 print(f"Smoothed y[0]: {result.y[0]:.4f}")
 :::

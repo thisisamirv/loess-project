@@ -52,8 +52,8 @@ func main() {
  }
 
  opts := fastloess.DefaultOptions()
- opts.Degree = "constant"
  opts.Fraction = 0.5
+ opts.Degree = "constant"
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {
@@ -104,8 +104,8 @@ func main() {
  }
 
  opts := fastloess.DefaultOptions()
- opts.Degree = "linear"
  opts.Fraction = 0.5
+ opts.Degree = "linear"
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {
@@ -156,8 +156,8 @@ func main() {
  }
 
  opts := fastloess.DefaultOptions()
- opts.Degree = "quadratic"
  opts.Fraction = 0.5
+ opts.Degree = "quadratic"
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {
@@ -208,8 +208,8 @@ func main() {
  }
 
  opts := fastloess.DefaultOptions()
- opts.Degree = "cubic"
  opts.Fraction = 0.6
+ opts.Degree = "cubic"
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {
@@ -260,8 +260,8 @@ func main() {
  }
 
  opts := fastloess.DefaultOptions()
- opts.Degree = "quartic"
  opts.Fraction = 0.7
+ opts.Degree = "quartic"
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {

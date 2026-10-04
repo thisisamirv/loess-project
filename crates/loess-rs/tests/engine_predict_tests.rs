@@ -19,6 +19,81 @@ use loess_rs::internals::primitives::errors::LoessError;
 use loess_rs::internals::primitives::policies::ExtrapolationPolicy;
 use loess_rs::prelude::*;
 
+#[test]
+fn test_predict_grouped_outputs_select_only_requested_components() {
+    let (x, y) = linear_series(20, 2.0, 1.0);
+    let fitted = Loess::new()
+        .surface_mode("direct")
+        .iterations(0)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    for (names, want_se, want_gradient) in [
+        (&[][..], false, false),
+        (&["se"][..], true, false),
+        (&["derivative"][..], false, true),
+        (&["gradient"][..], false, true),
+        (&["se", "derivative"][..], true, true),
+    ] {
+        let prediction = Predict::new()
+            .outputs(names)
+            .build()
+            .unwrap()
+            .call(&fitted, &[4.5, 8.5])
+            .unwrap();
+        assert_eq!(prediction.y.len(), 2);
+        assert_eq!(prediction.standard_errors.is_some(), want_se);
+        assert_eq!(prediction.derivative.is_some(), want_gradient);
+        assert!(prediction.confidence_lower.is_none());
+        assert!(prediction.prediction_lower.is_none());
+    }
+}
+
+#[test]
+fn test_predict_grouped_outputs_preserve_legacy_and_accumulate_selections() {
+    let mut grouped = Predict::<f64>::new().outputs(["se".to_owned()]);
+    grouped = grouped.outputs(["gradient", "gradient"]);
+    let legacy = Predict::<f64>::new().return_se().return_derivative();
+    assert_eq!(grouped.return_se, legacy.return_se);
+    assert_eq!(grouped.return_derivative, legacy.return_derivative);
+    assert!(grouped.build().is_ok());
+}
+
+#[test]
+fn test_predict_grouped_outputs_reject_unknown_names_at_build() {
+    for name in ["standard_errors", "gradinet", "SE"] {
+        let result = Predict::<f64>::new().outputs([name, "se"]).build();
+        assert!(
+            matches!(result, Err(LoessError::InvalidOption { option: "predict_outputs", value, valid: "se, derivative, gradient" }) if value == name)
+        );
+    }
+}
+
+#[test]
+fn test_predict_grouped_outputs_keep_interval_standard_errors_implicit() {
+    let (x, y) = linear_series(20, 2.0, 1.0);
+    let fitted = Loess::new()
+        .surface_mode("direct")
+        .iterations(0)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let prediction = Predict::new()
+        .outputs(Vec::<String>::new())
+        .intervals(IntervalsBuilder::new().confidence(0.95))
+        .build()
+        .unwrap()
+        .call(&fitted, &[4.5])
+        .unwrap();
+    assert!(prediction.standard_errors.is_some());
+    assert!(prediction.confidence_lower.is_some());
+    assert!(prediction.derivative.is_none());
+}
+
 fn linear_series(n: usize, slope: f64, intercept: f64) -> (Vec<f64>, Vec<f64>) {
     let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| slope * xi + intercept).collect();

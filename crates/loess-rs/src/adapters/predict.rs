@@ -11,6 +11,8 @@
 #[cfg(not(feature = "std"))]
 use alloc::format;
 #[cfg(not(feature = "std"))]
+use alloc::string::ToString;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
 #[cfg(feature = "std")]
 use std::vec::Vec;
@@ -78,7 +80,7 @@ pub struct PredictBuilder<T> {
     // `extrapolation`/whether the bounding-box check flagged the point as out-of-range.
     pub max_neighbor_distance: Option<T>,
 
-    // Set by `extrapolation(...)` when given an invalid string; surfaced by `build()`.
+    // Invalid extrapolation/output options are surfaced by `build()`.
     pub pending_error: Option<LoessError>,
 }
 
@@ -109,6 +111,29 @@ impl<T: FloatLinalg> PredictBuilder<T> {
     // Include standard errors in the output.
     pub fn return_se(mut self) -> Self {
         self.return_se = true;
+        self
+    }
+
+    /// Select standard errors (`"se"`) and/or flattened gradients (`"derivative"` or `"gradient"`).
+    /// Selections accumulate; unsupported names are rejected by `build()`.
+    pub fn outputs<I, S>(mut self, names: I) -> Self
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
+        for name in names {
+            match name.as_ref() {
+                "se" => self.return_se = true,
+                "derivative" | "gradient" => self.return_derivative = true,
+                other => {
+                    self.pending_error = Some(LoessError::InvalidOption {
+                        option: "predict_outputs",
+                        value: other.to_string(),
+                        valid: "se, derivative, gradient",
+                    });
+                }
+            }
+        }
         self
     }
 

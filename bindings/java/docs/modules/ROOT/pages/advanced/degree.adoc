@@ -49,8 +49,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .degree("constant")
                 .fraction(0.5)
+                .degree("constant")
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -96,8 +96,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .degree("linear")
                 .fraction(0.5)
+                .degree("linear")
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -143,8 +143,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .degree("quadratic")
                 .fraction(0.5)
+                .degree("quadratic")
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -190,8 +190,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .degree("cubic")
                 .fraction(0.6)
+                .degree("cubic")
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -237,8 +237,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .degree("quartic")
                 .fraction(0.7)
+                .degree("quartic")
                 .build();
 
         try (Loess model = new Loess(options)) {

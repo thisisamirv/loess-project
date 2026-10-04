@@ -28,8 +28,8 @@ for degree, fast_degree in ((1, "linear"), (2, "quadratic")):
         fraction=2 / 3,
         iterations=0,
         degree=fast_degree,
-        boundary_policy="noboundary",
         surface_mode="direct",
+        boundary_policy="noboundary",
         parallel=False,
     )
     fast_result = fast_model.fit(x, y)
@@ -71,9 +71,9 @@ fast_model = fl.Loess(
     fraction=2 / 3,
     iterations=3,
     degree="linear",
+    surface_mode="direct",
     boundary_policy="noboundary",
     scaling_method="mar",
-    surface_mode="direct",
     parallel=False,
 )
 fast_result = fast_model.fit(x, y)

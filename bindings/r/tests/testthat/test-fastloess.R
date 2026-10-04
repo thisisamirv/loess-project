@@ -105,7 +105,7 @@ test_that("Loess diagnostics work", {
     x <- seq(0, 10, length.out = 50)
     y <- 2 * x + rnorm(50, sd = 0.5)
 
-    model <- Loess(fraction = 0.5, return_diagnostics = TRUE)
+    model <- Loess(fraction = 0.5, outputs = "diagnostics")
     result <- fit(model, as.double(x), as.double(y))
 
     expect_true("diagnostics" %in% names(result))
@@ -124,7 +124,7 @@ test_that("Loess residuals work", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, sd = 0.1)
 
-    model <- Loess(fraction = 0.5, return_residuals = TRUE)
+    model <- Loess(fraction = 0.5, outputs = "residuals")
     result <- fit(model, as.double(x), as.double(y))
 
     expect_true("residuals" %in% names(result))
@@ -142,7 +142,7 @@ test_that("Loess robustness weights work", {
         Loess(
             fraction = 0.5,
             iterations = 3,
-            return_robustness_weights = TRUE
+            outputs = "weights"
         ),
         as.double(x),
         as.double(y)
@@ -161,7 +161,7 @@ test_that("Loess return_gradient works under surface_mode = direct", {
     y <- sin(x) + rnorm(50, sd = 0.1)
 
     result <- fit(
-        Loess(fraction = 0.5, surface_mode = "direct", return_gradient = TRUE),
+        Loess(fraction = 0.5, surface_mode = "direct", outputs = "gradient"),
         as.double(x),
         as.double(y)
     )
@@ -178,8 +178,7 @@ test_that("grouped outputs work across all R adapters and prediction", {
         fraction = 0.7,
         surface_mode = "direct",
         retain_model = TRUE,
-        return_residuals = TRUE,
-        outputs = c("diagnostics", "weights", "gradient", "se", "sorted")
+        outputs = c("diagnostics", "residuals", "weights", "gradient", "se", "sorted")
     )
     result <- fit(model, x, y)
     expect_type(result$diagnostics, "list")
@@ -238,7 +237,7 @@ test_that("Loess return_gradient errors under default surface_mode", {
 
     expect_error(
         fit(
-            Loess(fraction = 0.5, return_gradient = TRUE),
+            Loess(fraction = 0.5, outputs = "gradient"),
             as.double(x),
             as.double(y)
         )
@@ -261,9 +260,7 @@ test_that("Loess return_sorted = TRUE returns results sorted ascending by x", {
     result <- fit(
         Loess(
             fraction = 0.7,
-            return_residuals = TRUE,
-            return_robustness_weights = TRUE,
-            return_sorted = TRUE
+            outputs = c("residuals", "weights", "sorted")
         ),
         x,
         y
@@ -277,8 +274,7 @@ test_that("Loess return_sorted = TRUE returns results sorted ascending by x", {
     unsorted_result <- fit(
         Loess(
             fraction = 0.7,
-            return_residuals = TRUE,
-            return_robustness_weights = TRUE
+            outputs = c("residuals", "weights")
         ),
         x,
         y
@@ -427,7 +423,7 @@ test_that("Loess: return_se", {
     r <- fit(
         Loess(
             fraction = 0.5,
-            return_se = TRUE,
+            outputs = "se",
             surface_mode = "direct"
         ),
         x,

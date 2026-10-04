@@ -49,17 +49,17 @@ export declare class LoessResult {
   get fraction_used(): number
   /** Get the number of iterations performed. */
   get iterations_used(): number | null
-  /** Get equivalent number of parameters (hat-matrix stat, if return_se was set). */
+  /** Get equivalent number of parameters (hat-matrix stat, if "se" was requested in outputs). */
   get enp(): number | null
-  /** Get trace of hat matrix (if return_se was set). */
+  /** Get trace of hat matrix (if "se" was requested in outputs). */
   get trace_hat(): number | null
-  /** Get first delta statistic (if return_se was set). */
+  /** Get first delta statistic (if "se" was requested in outputs). */
   get delta1(): number | null
-  /** Get second delta statistic (if return_se was set). */
+  /** Get second delta statistic (if "se" was requested in outputs). */
   get delta2(): number | null
-  /** Get residual scale estimate (if return_se was set). */
+  /** Get residual scale estimate (if "se" was requested in outputs). */
   get residual_scale(): number | null
-  /** Get per-point leverage / hat-matrix diagonal (if return_se was set). */
+  /** Get per-point leverage / hat-matrix diagonal (if "se" was requested in outputs). */
   get leverage(): Float64Array | null
   /** Get number of predictor dimensions. */
   get dimensions(): number
@@ -173,7 +173,7 @@ export interface OnlineOutput {
  * and cross-validation are all no-ops for online processing (it handles one
  * point at a time, always runs sequentially, and always returns a residual
  * inline), so they aren't fields on this type. `confidence_intervals`/
- * `prediction_intervals`/`return_se` require `update_mode: "full"`.
+ * `prediction_intervals` and the "se" output require `update_mode: "full"`.
  */
 export interface OnlineSmoothOptions {
   /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -197,13 +197,6 @@ export interface OnlineSmoothOptions {
   auto_converge?: number
   /** Optional output components: weights, gradient (or derivative), se. */
   outputs?: Array<string>
-  /** Return robustness weights in result. Default: false. */
-  return_robustness_weights?: boolean
-  /**
-   * Return the per-point local fit gradient in result (only takes effect when
-   * `surface_mode` is "direct"). Default: false.
-   */
-  return_gradient?: boolean
   /**
    * Confidence level for confidence intervals. Only computed under
    * `update_mode: "full"`. Default: None.
@@ -214,11 +207,6 @@ export interface OnlineSmoothOptions {
    * requirement as `confidence_intervals`. Default: None.
    */
   prediction_intervals?: number
-  /**
-   * Return the standard error for the latest point in result. Same
-   * `update_mode: "full"` requirement as `confidence_intervals`. Default: false.
-   */
-  return_se?: boolean
   /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
   degree?: string
   /** Number of predictor dimensions. Default: 1. */
@@ -243,14 +231,10 @@ export interface OnlineSmoothOptions {
 export interface PredictOptions {
   /** Optional output components: se, gradient (or derivative). */
   outputs?: Array<string>
-  /** Include standard errors in the output. Default: false. */
-  return_se?: boolean
   /** Confidence interval coverage level (e.g. 0.95). Default: None. */
   confidence_level?: number
   /** Prediction interval coverage level (e.g. 0.95). Default: None. */
   prediction_level?: number
-  /** Include the local fit's gradient in the output. Default: false. */
-  return_derivative?: boolean
   /** Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp". */
   extrapolation?: string
   /**
@@ -287,17 +271,6 @@ export interface SmoothOptions {
   outputs?: Array<string>
   /** Grouped cross-validation configuration for Batch smoothing. */
   cv?: CvOptions
-  /** Return residuals in result. Default: false. */
-  return_residuals?: boolean
-  /** Return robustness weights in result. Default: false. */
-  return_robustness_weights?: boolean
-  /**
-   * Return the per-point local fit gradient in result (only takes effect when
-   * `surface_mode` is "direct"). Default: false.
-   */
-  return_gradient?: boolean
-  /** Return diagnostics (RMSE, etc.). Default: false. */
-  return_diagnostics?: boolean
   /** Calculate confidence intervals (e.g., 0.95). Default: None. */
   confidence_intervals?: number
   /** Calculate prediction intervals. Default: None. */
@@ -320,13 +293,6 @@ export interface SmoothOptions {
   weighted_metric_weights?: Array<number>
   /** Surface mode ("interpolation" or "direct"). Default: "interpolation". */
   surface_mode?: string
-  /** Compute hat-matrix statistics (enp, trace_hat, etc.). Default: false. */
-  return_se?: boolean
-  /**
-   * Return results sorted ascending by x instead of in original input order
-   * (Batch only). Default: false.
-   */
-  return_sorted?: boolean
   /** Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy. */
   cell?: number
   /** Maximum number of interpolation vertices. */
@@ -376,17 +342,6 @@ export interface StreamingSmoothOptions {
   auto_converge?: number
   /** Optional output components: diagnostics, residuals, weights, gradient (or derivative), se. */
   outputs?: Array<string>
-  /** Return residuals in result. Default: false. */
-  return_residuals?: boolean
-  /** Return robustness weights in result. Default: false. */
-  return_robustness_weights?: boolean
-  /**
-   * Return the per-point local fit gradient in result (only takes effect when
-   * `surface_mode` is "direct"). Default: false.
-   */
-  return_gradient?: boolean
-  /** Return diagnostics (RMSE, etc.). Default: false. */
-  return_diagnostics?: boolean
   /**
    * Confidence level for confidence intervals, computed per chunk and merged
    * across overlap boundaries via `merge_strategy`. Default: None.
@@ -397,11 +352,6 @@ export interface StreamingSmoothOptions {
    * overlap-merging as `confidence_intervals`. Default: None.
    */
   prediction_intervals?: number
-  /**
-   * Return standard errors in result, computed per chunk and merged across
-   * overlap boundaries via `merge_strategy`. Default: false.
-   */
-  return_se?: boolean
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
   /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */

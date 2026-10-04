@@ -43,8 +43,8 @@ int main() {
     }
 
     fastloess::LoessOptions deg0_opts;
-    deg0_opts.degree = "constant";
     deg0_opts.fraction = 0.5;
+    deg0_opts.degree = "constant";
     fastloess::Loess model(deg0_opts);
     auto result = model.fit(x, y).value();
 
@@ -82,8 +82,8 @@ int main() {
     }
 
     fastloess::LoessOptions deg1_opts;
-    deg1_opts.degree = "linear";
     deg1_opts.fraction = 0.5;
+    deg1_opts.degree = "linear";
     fastloess::Loess model(deg1_opts);
     auto result = model.fit(x, y).value();
 
@@ -121,8 +121,8 @@ int main() {
     }
 
     fastloess::LoessOptions deg2_opts;
-    deg2_opts.degree = "quadratic";
     deg2_opts.fraction = 0.5;
+    deg2_opts.degree = "quadratic";
     fastloess::Loess model(deg2_opts);
     auto result = model.fit(x, y).value();
 
@@ -160,8 +160,8 @@ int main() {
     }
 
     fastloess::LoessOptions deg3_opts;
-    deg3_opts.degree = "cubic";
     deg3_opts.fraction = 0.6;
+    deg3_opts.degree = "cubic";
     fastloess::Loess model(deg3_opts);
     auto result = model.fit(x, y).value();
 
@@ -199,8 +199,8 @@ int main() {
     }
 
     fastloess::LoessOptions deg4_opts;
-    deg4_opts.degree = "quartic";
     deg4_opts.fraction = 0.7;
+    deg4_opts.degree = "quartic";
     fastloess::Loess model(deg4_opts);
     auto result = model.fit(x, y).value();
 

@@ -5,17 +5,15 @@
 \title{Predict from a fitted LOESS model at out-of-sample points}
 \usage{
 \method{predict}{Loess}(
-    object,
-    new_x,
-    return_se = FALSE,
-    confidence_level = NULL,
-    prediction_level = NULL,
-    return_derivative = FALSE,
-    extrapolation = "clamp",
-    max_extrapolation_distance = NULL,
-    max_neighbor_distance = NULL,
-    outputs = NULL,
-    ...
+  object,
+  new_x,
+  confidence_level = NULL,
+  prediction_level = NULL,
+  extrapolation = "clamp",
+  max_extrapolation_distance = NULL,
+  max_neighbor_distance = NULL,
+  outputs = NULL,
+  ...
 )
 }
 \arguments{
@@ -25,17 +23,11 @@
 \item{new_x}{Numeric vector of out-of-sample query points (flattened,
 \code{dimensions} values per point).}
 
-\item{return_se}{Logical; include standard errors in the output. Default:
-\code{FALSE}.}
-
 \item{confidence_level}{Confidence interval coverage level (e.g. 0.95).
 \code{NULL} (default) disables it.}
 
 \item{prediction_level}{Prediction interval coverage level (e.g. 0.95).
 \code{NULL} (default) disables it.}
-
-\item{return_derivative}{Logical; include the local fit's gradient in the
-output. Default: \code{FALSE}.}
 
 \item{extrapolation}{Behavior for query points outside the training range:
 \code{"clamp"} (default), \code{"linear"}, or \code{"error"}.}
@@ -50,8 +42,8 @@ in a query's neighbor window before \code{predict} errors, catching
 in-range-but-sparse query points. \code{NULL} (default) disables the cap.}
 
 \item{outputs}{Optional character vector selecting \code{"se"},
-\code{"gradient"}, or \code{"derivative"}; combined with the
-corresponding individual flags.}
+\code{"gradient"}, or \code{"derivative"}. \code{NULL} (default)
+selects no optional components.}
 
 \item{...}{Must be empty.}
 }

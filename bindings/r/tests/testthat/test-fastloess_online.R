@@ -187,7 +187,7 @@ test_that("OnlineLoess: degree, distance_metric, surface_mode, return_se", {
         distance_metric = "minkowski:3",
         surface_mode = "direct",
         update_mode = "full",
-        return_se = TRUE
+        outputs = "se"
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
@@ -205,7 +205,7 @@ test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge", {
         scaling_method = "mar",
         boundary_policy = "reflect",
         auto_converge = 1e-3,
-        return_robustness_weights = TRUE
+        outputs = "weights"
     )
     results <- lapply(seq_along(x), function(i) add_point(ol, x[i], y[i]))
     non_null <- Filter(Negate(is.null), results)
@@ -214,7 +214,7 @@ test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge", {
 
 test_that("OnlineLoess: return_se requires update_mode = \"full\"", {
     expect_error(
-        OnlineLoess(fraction = 0.5, window_capacity = 10, return_se = TRUE)
+        OnlineLoess(fraction = 0.5, window_capacity = 10, outputs = "se")
     )
 })
 

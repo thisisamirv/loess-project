@@ -150,56 +150,6 @@ public final class StreamingOptions {
         }
 
         /**
-         * Requests fit diagnostics in the result.
-         *
-         * @param returnDiagnostics whether to compute diagnostics
-         * @return this builder, for chaining
-         * @see Options.Builder#returnDiagnostics(boolean)
-         */
-        public Builder returnDiagnostics(boolean returnDiagnostics) {
-            common.returnDiagnostics(returnDiagnostics);
-            return this;
-        }
-
-        /**
-         * Requests per-point residuals in the result.
-         *
-         * @param returnResiduals whether to include residuals in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnResiduals(boolean)
-         */
-        public Builder returnResiduals(boolean returnResiduals) {
-            common.returnResiduals(returnResiduals);
-            return this;
-        }
-
-        /**
-         * Requests robustness weights in the result.
-         *
-         * @param returnRobustnessWeights whether to include robustness weights
-         * in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnRobustnessWeights(boolean)
-         */
-        public Builder returnRobustnessWeights(boolean returnRobustnessWeights) {
-            common.returnRobustnessWeights(returnRobustnessWeights);
-            return this;
-        }
-
-        /**
-         * Requests per-point local-fit gradients.
-         *
-         * @param returnGradient whether to include the per-point local fit
-         * gradient in the result
-         * @return this builder, for chaining
-         * @see Options.Builder#returnGradient(boolean)
-         */
-        public Builder returnGradient(boolean returnGradient) {
-            common.returnGradient(returnGradient);
-            return this;
-        }
-
-        /**
          * Sets the confidence interval level for each chunk.
          *
          * @param confidenceIntervals the confidence level for confidence
@@ -224,20 +174,6 @@ public final class StreamingOptions {
          */
         public Builder predictionIntervals(double predictionIntervals) {
             common.predictionIntervals(predictionIntervals);
-            return this;
-        }
-
-        /**
-         * Requests standard errors for each chunk.
-         *
-         * @param returnSe whether to return standard errors in the result,
-         * computed per chunk and merged across overlap boundaries via
-         * {@code mergeStrategy}
-         * @return this builder, for chaining
-         * @see Options.Builder#returnSe(boolean)
-         */
-        public Builder returnSe(boolean returnSe) {
-            common.returnSe(returnSe);
             return this;
         }
 

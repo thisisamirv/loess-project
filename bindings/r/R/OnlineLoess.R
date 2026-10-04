@@ -17,7 +17,8 @@
 #' @inheritParams Loess
 #' @param outputs Optional character vector selecting \code{"weights"},
 #'   \code{"gradient"} (or \code{"derivative"}), and \code{"se"}.
-#'   Combined with individual flags; \code{"se"} requires full update mode.
+#'   \code{NULL} (default) selects no optional components; \code{"se"}
+#'   requires full update mode.
 #' @param window_capacity Maximum number of points kept in the sliding
 #'   window, at least 3. Default: 1000.
 #' @param min_points Minimum number of points required before smoothing
@@ -32,16 +33,13 @@
 #'   instead of adding it to the window.
 #' @param confidence_intervals Confidence level for confidence intervals (e.g.
 #'   \code{0.95}). Only computed under \code{update_mode = "full"} — raises an
-#'   error at construction if set (or \code{return_se}/
+#'   error at construction if set (or \code{outputs = "se"}/
 #'   \code{prediction_intervals} is set) while \code{update_mode} is left at
 #'   its default \code{"incremental"}.
 #'   \code{NULL} (default) disables confidence intervals.
 #' @param prediction_intervals Confidence level for prediction intervals; same
 #'   \code{update_mode = "full"} requirement as \code{confidence_intervals}.
 #'   \code{NULL} (default) disables prediction intervals.
-#' @param return_se Include the standard error for the latest point in the
-#'   result. Same \code{update_mode = "full"} requirement as
-#'   \code{confidence_intervals}. Default: \code{FALSE}.
 #'
 #' @return An OnlineLoess object.
 #' @examples
@@ -68,11 +66,8 @@ OnlineLoess <- function(
     zero_weight_fallback = "use_local_mean",
     update_mode = "incremental",
     auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_gradient = FALSE,
     confidence_intervals = NULL,
     prediction_intervals = NULL,
-    return_se = FALSE,
     degree = "linear",
     dimensions = 1L,
     distance_metric = "normalized",
@@ -94,11 +89,9 @@ OnlineLoess <- function(
         outputs,
         c("weights", "gradient", "derivative", "se")
     )
-    return_robustness_weights <- return_robustness_weights || flags[["weights"]]
-    return_gradient <- return_gradient ||
-        flags[["gradient"]] ||
-        flags[["derivative"]]
-    return_se <- return_se || flags[["se"]]
+    return_robustness_weights <- flags[["weights"]]
+    return_gradient <- flags[["gradient"]] || flags[["derivative"]]
+    return_se <- flags[["se"]]
     handle <- do.call(ROnlineLoess$new, env_args(online_params))
 
     structure(

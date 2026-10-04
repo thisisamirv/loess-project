@@ -104,8 +104,8 @@ func cDoubleOptional(value C.double) *float64 {
 	return &f
 }
 
-// Diagnostics holds goodness-of-fit metrics, populated when ReturnDiagnostics
-// is enabled.
+// Diagnostics holds goodness-of-fit metrics, populated when Outputs contains
+// "diagnostics".
 type Diagnostics struct {
 	RMSE        *float64
 	MAE         *float64
@@ -116,8 +116,8 @@ type Diagnostics struct {
 	ResidualSD  *float64
 }
 
-// HatMatrixStats holds hat-matrix statistics, populated when ReturnSE is
-// enabled. Batch model only.
+// HatMatrixStats holds hat-matrix statistics, populated when Outputs contains
+// "se" or intervals are enabled. Batch model only.
 type HatMatrixStats struct {
 	ENP           float64
 	TraceHat      float64
@@ -137,7 +137,7 @@ type Result struct {
 	// Y is the smoothed y values (length N).
 	Y []float64
 
-	// StandardErrors is nil unless ReturnSE was requested.
+	// StandardErrors is nil unless Outputs contains "se" or intervals are enabled.
 	StandardErrors []float64
 	// ConfidenceLower/ConfidenceUpper are nil unless ConfidenceIntervals was set.
 	ConfidenceLower []float64
@@ -145,11 +145,11 @@ type Result struct {
 	// PredictionLower/PredictionUpper are nil unless PredictionIntervals was set.
 	PredictionLower []float64
 	PredictionUpper []float64
-	// Residuals is nil unless ReturnResiduals was requested.
+	// Residuals is nil unless Outputs contains "residuals".
 	Residuals []float64
-	// RobustnessWeights is nil unless ReturnRobustnessWeights was requested.
+	// RobustnessWeights is nil unless Outputs contains "weights".
 	RobustnessWeights []float64
-	// Gradient is nil unless ReturnGradient was requested (flattened, Dimensions
+	// Gradient is nil unless Outputs contains "gradient" or "derivative" (flattened, Dimensions
 	// values per point; only populated when SurfaceMode is "direct").
 	Gradient []float64
 	// CVScores is nil unless cross-validation was configured.
@@ -163,9 +163,9 @@ type Result struct {
 	// Dimensions is the number of predictor dimensions used.
 	Dimensions int
 
-	// Diagnostics is nil unless ReturnDiagnostics was requested.
+	// Diagnostics is nil unless Outputs contains "diagnostics".
 	Diagnostics *Diagnostics
-	// HatMatrix is nil unless ReturnSE was requested. Batch model only.
+	// HatMatrix is nil unless Outputs contains "se" or intervals are enabled. Batch model only.
 	HatMatrix *HatMatrixStats
 
 	// PredictModel is non-nil only if Options.RetainModel was set to true. Enables
@@ -268,14 +268,10 @@ func (pm *PredictModel) Close() error {
 type PredictOptions struct {
 	// Outputs selects optional prediction components: "se", "derivative", or "gradient".
 	Outputs []string
-	// ReturnSE requests standard errors in the output.
-	ReturnSE bool
 	// ConfidenceLevel is the confidence interval coverage level (e.g. 0.95). Nil disables it.
 	ConfidenceLevel *float64
 	// PredictionLevel is the prediction interval coverage level (e.g. 0.95). Nil disables it.
 	PredictionLevel *float64
-	// ReturnDerivative requests the local fit's gradient at each query point.
-	ReturnDerivative bool
 	// Extrapolation is the behavior for query points outside the training range:
 	// "clamp" (default), "linear", or "error".
 	Extrapolation string
@@ -293,7 +289,7 @@ type PredictOptions struct {
 type PredictResult struct {
 	// Y is the predicted value for each query point.
 	Y []float64
-	// StandardErrors is nil unless ReturnSE/ConfidenceLevel/PredictionLevel was set.
+	// StandardErrors is nil unless "se"/ConfidenceLevel/PredictionLevel was set.
 	StandardErrors []float64
 	// ConfidenceLower/ConfidenceUpper are nil unless ConfidenceLevel was set.
 	ConfidenceLower []float64
@@ -301,7 +297,7 @@ type PredictResult struct {
 	// PredictionLower/PredictionUpper are nil unless PredictionLevel was set.
 	PredictionLower []float64
 	PredictionUpper []float64
-	// Derivative is nil unless ReturnDerivative was requested (length
+	// Derivative is nil unless the "derivative" or "gradient" output was requested (length
 	// len(newX)*Dimensions, flattened like newX).
 	Derivative []float64
 }
@@ -328,10 +324,10 @@ func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictRes
 	cres := C.go_predict(
 		pm.ptr,
 		newXPtr, newXLen,
-		boolToCInt(opts.ReturnSE || hasOutput(opts.Outputs, "se")),
+		boolToCInt(hasOutput(opts.Outputs, "se")),
 		optFloat(cl, clSet),
 		optFloat(pl, plSet),
-		boolToCInt(opts.ReturnDerivative || hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
+		boolToCInt(hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
 		extrap,
 		optFloat(maxExtrap, maxExtrapSet),
 		optFloat(maxNeighbor, maxNeighborSet),
@@ -373,7 +369,7 @@ type PointResult struct {
 	// set and UpdateMode = "full".
 	PredictionLower float64
 	PredictionUpper float64
-	// Gradient is nil unless ReturnGradient was requested (Dimensions values
+	// Gradient is nil unless Outputs contains "gradient" or "derivative" (Dimensions values
 	// for the latest point; only populated when SurfaceMode is "direct").
 	Gradient []float64
 }

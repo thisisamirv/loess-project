@@ -207,37 +207,37 @@ impl LoessResult {
         self.inner.iterations_used.map(|i| i as u32)
     }
 
-    /// Get equivalent number of parameters (hat-matrix stat, if return_se was set).
+    /// Get equivalent number of parameters (hat-matrix stat, if "se" was requested in outputs).
     #[napi(getter)]
     pub fn get_enp(&self) -> Option<f64> {
         self.inner.enp
     }
 
-    /// Get trace of hat matrix (if return_se was set).
+    /// Get trace of hat matrix (if "se" was requested in outputs).
     #[napi(getter, js_name = "trace_hat")]
     pub fn get_trace_hat(&self) -> Option<f64> {
         self.inner.trace_hat
     }
 
-    /// Get first delta statistic (if return_se was set).
+    /// Get first delta statistic (if "se" was requested in outputs).
     #[napi(getter)]
     pub fn get_delta1(&self) -> Option<f64> {
         self.inner.delta1
     }
 
-    /// Get second delta statistic (if return_se was set).
+    /// Get second delta statistic (if "se" was requested in outputs).
     #[napi(getter)]
     pub fn get_delta2(&self) -> Option<f64> {
         self.inner.delta2
     }
 
-    /// Get residual scale estimate (if return_se was set).
+    /// Get residual scale estimate (if "se" was requested in outputs).
     #[napi(getter, js_name = "residual_scale")]
     pub fn get_residual_scale(&self) -> Option<f64> {
         self.inner.residual_scale
     }
 
-    /// Get per-point leverage / hat-matrix diagonal (if return_se was set).
+    /// Get per-point leverage / hat-matrix diagonal (if "se" was requested in outputs).
     #[napi(getter)]
     pub fn get_leverage(&self) -> Option<Float64Array> {
         self.inner
@@ -266,12 +266,10 @@ impl LoessResult {
             &self.inner,
             new_x.as_ref(),
             shared_parse::PredictOptionSet {
-                return_se: opts.return_se.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "se"),
+                return_se: has_output(opts.outputs.as_ref(), "se"),
                 confidence_level: opts.confidence_level,
                 prediction_level: opts.prediction_level,
-                return_derivative: opts.return_derivative.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "gradient")
+                return_derivative: has_output(opts.outputs.as_ref(), "gradient")
                     || has_output(opts.outputs.as_ref(), "derivative"),
                 extrapolation: opts.extrapolation.as_deref(),
                 max_extrapolation_distance: opts.max_extrapolation_distance,
@@ -288,18 +286,12 @@ impl LoessResult {
 pub struct PredictOptions {
     /// Optional output components: se, gradient (or derivative).
     pub outputs: Option<Vec<String>>,
-    /// Include standard errors in the output. Default: false.
-    #[napi(js_name = "return_se")]
-    pub return_se: Option<bool>,
     /// Confidence interval coverage level (e.g. 0.95). Default: None.
     #[napi(js_name = "confidence_level")]
     pub confidence_level: Option<f64>,
     /// Prediction interval coverage level (e.g. 0.95). Default: None.
     #[napi(js_name = "prediction_level")]
     pub prediction_level: Option<f64>,
-    /// Include the local fit's gradient in the output. Default: false.
-    #[napi(js_name = "return_derivative")]
-    pub return_derivative: Option<bool>,
     /// Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp".
     pub extrapolation: Option<String>,
     /// Under "linear" extrapolation, the maximum allowed distance beyond the training
@@ -422,19 +414,6 @@ pub struct SmoothOptions {
     pub outputs: Option<Vec<String>>,
     /// Grouped cross-validation configuration for Batch smoothing.
     pub cv: Option<CVOptions>,
-    /// Return residuals in result. Default: false.
-    #[napi(js_name = "return_residuals")]
-    pub return_residuals: Option<bool>,
-    /// Return robustness weights in result. Default: false.
-    #[napi(js_name = "return_robustness_weights")]
-    pub return_robustness_weights: Option<bool>,
-    /// Return the per-point local fit gradient in result (only takes effect when
-    /// `surface_mode` is "direct"). Default: false.
-    #[napi(js_name = "return_gradient")]
-    pub return_gradient: Option<bool>,
-    /// Return diagnostics (RMSE, etc.). Default: false.
-    #[napi(js_name = "return_diagnostics")]
-    pub return_diagnostics: Option<bool>,
     /// Calculate confidence intervals (e.g., 0.95). Default: None.
     #[napi(js_name = "confidence_intervals")]
     pub confidence_intervals: Option<f64>,
@@ -465,13 +444,6 @@ pub struct SmoothOptions {
     /// Surface mode ("interpolation" or "direct"). Default: "interpolation".
     #[napi(js_name = "surface_mode")]
     pub surface_mode: Option<String>,
-    /// Compute hat-matrix statistics (enp, trace_hat, etc.). Default: false.
-    #[napi(js_name = "return_se")]
-    pub return_se: Option<bool>,
-    /// Return results sorted ascending by x instead of in original input order
-    /// (Batch only). Default: false.
-    #[napi(js_name = "return_sorted")]
-    pub return_sorted: Option<bool>,
     /// Interpolation cell size (default 0.2). Smaller = more vertices, higher accuracy.
     pub cell: Option<f64>,
     /// Maximum number of interpolation vertices.
@@ -521,19 +493,6 @@ pub struct StreamingSmoothOptions {
     pub auto_converge: Option<f64>,
     /// Optional output components: diagnostics, residuals, weights, gradient (or derivative), se.
     pub outputs: Option<Vec<String>>,
-    /// Return residuals in result. Default: false.
-    #[napi(js_name = "return_residuals")]
-    pub return_residuals: Option<bool>,
-    /// Return robustness weights in result. Default: false.
-    #[napi(js_name = "return_robustness_weights")]
-    pub return_robustness_weights: Option<bool>,
-    /// Return the per-point local fit gradient in result (only takes effect when
-    /// `surface_mode` is "direct"). Default: false.
-    #[napi(js_name = "return_gradient")]
-    pub return_gradient: Option<bool>,
-    /// Return diagnostics (RMSE, etc.). Default: false.
-    #[napi(js_name = "return_diagnostics")]
-    pub return_diagnostics: Option<bool>,
     /// Confidence level for confidence intervals, computed per chunk and merged
     /// across overlap boundaries via `merge_strategy`. Default: None.
     #[napi(js_name = "confidence_intervals")]
@@ -542,10 +501,6 @@ pub struct StreamingSmoothOptions {
     /// overlap-merging as `confidence_intervals`. Default: None.
     #[napi(js_name = "prediction_intervals")]
     pub prediction_intervals: Option<f64>,
-    /// Return standard errors in result, computed per chunk and merged across
-    /// overlap boundaries via `merge_strategy`. Default: false.
-    #[napi(js_name = "return_se")]
-    pub return_se: Option<bool>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
     /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
@@ -580,7 +535,7 @@ pub struct StreamingSmoothOptions {
 /// and cross-validation are all no-ops for online processing (it handles one
 /// point at a time, always runs sequentially, and always returns a residual
 /// inline), so they aren't fields on this type. `confidence_intervals`/
-/// `prediction_intervals`/`return_se` require `update_mode: "full"`.
+/// `prediction_intervals` and the "se" output require `update_mode: "full"`.
 #[napi(object)]
 pub struct OnlineSmoothOptions {
     /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
@@ -608,13 +563,6 @@ pub struct OnlineSmoothOptions {
     pub auto_converge: Option<f64>,
     /// Optional output components: weights, gradient (or derivative), se.
     pub outputs: Option<Vec<String>>,
-    /// Return robustness weights in result. Default: false.
-    #[napi(js_name = "return_robustness_weights")]
-    pub return_robustness_weights: Option<bool>,
-    /// Return the per-point local fit gradient in result (only takes effect when
-    /// `surface_mode` is "direct"). Default: false.
-    #[napi(js_name = "return_gradient")]
-    pub return_gradient: Option<bool>,
     /// Confidence level for confidence intervals. Only computed under
     /// `update_mode: "full"`. Default: None.
     #[napi(js_name = "confidence_intervals")]
@@ -623,10 +571,6 @@ pub struct OnlineSmoothOptions {
     /// requirement as `confidence_intervals`. Default: None.
     #[napi(js_name = "prediction_intervals")]
     pub prediction_intervals: Option<f64>,
-    /// Return the standard error for the latest point in result. Same
-    /// `update_mode: "full"` requirement as `confidence_intervals`. Default: false.
-    #[napi(js_name = "return_se")]
-    pub return_se: Option<bool>,
     /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
     pub degree: Option<String>,
     /// Number of predictor dimensions. Default: 1.
@@ -683,12 +627,9 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_residuals: opts.return_residuals.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "residuals"),
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "weights"),
-                return_diagnostics: opts.return_diagnostics.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "diagnostics"),
+                return_residuals: has_output(opts.outputs.as_ref(), "residuals"),
+                return_robustness_weights: has_output(opts.outputs.as_ref(), "weights"),
+                return_diagnostics: has_output(opts.outputs.as_ref(), "diagnostics"),
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
                 parallel: opts.parallel,
@@ -697,10 +638,8 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
                 distance_metric: opts.distance_metric.as_deref(),
                 weighted_metric_weights: opts.weighted_metric_weights.as_deref(),
                 surface_mode: opts.surface_mode.as_deref(),
-                return_se: opts.return_se.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "se"),
-                return_sorted: opts.return_sorted.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "sorted"),
+                return_se: has_output(opts.outputs.as_ref(), "se"),
+                return_sorted: has_output(opts.outputs.as_ref(), "sorted"),
                 cell: opts.cell,
                 interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
                 boundary_degree_fallback: opts.boundary_degree_fallback,
@@ -720,8 +659,7 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
             },
         ))?;
         builder = configured_builder;
-        if opts.return_gradient.unwrap_or(false)
-            || has_output(opts.outputs.as_ref(), "gradient")
+        if has_output(opts.outputs.as_ref(), "gradient")
             || has_output(opts.outputs.as_ref(), "derivative")
         {
             builder = builder.return_gradient();
@@ -747,16 +685,12 @@ fn streaming_options_to_builder(
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_residuals: opts.return_residuals.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "residuals"),
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "weights"),
-                return_diagnostics: opts.return_diagnostics.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "diagnostics"),
+                return_residuals: has_output(opts.outputs.as_ref(), "residuals"),
+                return_robustness_weights: has_output(opts.outputs.as_ref(), "weights"),
+                return_diagnostics: has_output(opts.outputs.as_ref(), "diagnostics"),
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
-                return_se: opts.return_se.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "se"),
+                return_se: has_output(opts.outputs.as_ref(), "se"),
                 parallel: opts.parallel,
                 degree: opts.degree.as_deref(),
                 dimensions: opts.dimensions.map(|v| v as usize),
@@ -771,8 +705,7 @@ fn streaming_options_to_builder(
             },
         ))?;
         builder = configured_builder;
-        if opts.return_gradient.unwrap_or(false)
-            || has_output(opts.outputs.as_ref(), "gradient")
+        if has_output(opts.outputs.as_ref(), "gradient")
             || has_output(opts.outputs.as_ref(), "derivative")
         {
             builder = builder.return_gradient();
@@ -796,8 +729,7 @@ fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<Loess
                 boundary_policy: opts.boundary_policy.as_deref(),
                 scaling_method: opts.scaling_method.as_deref(),
                 auto_converge: opts.auto_converge,
-                return_robustness_weights: opts.return_robustness_weights.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "weights"),
+                return_robustness_weights: has_output(opts.outputs.as_ref(), "weights"),
                 degree: opts.degree.as_deref(),
                 dimensions: opts.dimensions.map(|v| v as usize),
                 distance_metric: opts.distance_metric.as_deref(),
@@ -809,14 +741,12 @@ fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<Loess
                 missing: opts.missing.as_deref(),
                 confidence_intervals: opts.confidence_intervals,
                 prediction_intervals: opts.prediction_intervals,
-                return_se: opts.return_se.unwrap_or(false)
-                    || has_output(opts.outputs.as_ref(), "se"),
+                return_se: has_output(opts.outputs.as_ref(), "se"),
                 ..Default::default()
             },
         ))?;
         builder = configured_builder;
-        if opts.return_gradient.unwrap_or(false)
-            || has_output(opts.outputs.as_ref(), "gradient")
+        if has_output(opts.outputs.as_ref(), "gradient")
             || has_output(opts.outputs.as_ref(), "derivative")
         {
             builder = builder.return_gradient();

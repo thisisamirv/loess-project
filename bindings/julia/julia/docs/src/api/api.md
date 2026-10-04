@@ -52,19 +52,6 @@ println("First smoothed value: ", result.y[1])
 | `iterations` | `Int` | `3` | Number of robustifying iterations |
 | `weight_function` | `String` | `"tricube"` | Weight function name |
 | `robustness_method` | `String` | `"bisquare"` | Robustness method name |
-| `scaling_method` | `String` | `"mad"` | Residual scaling method |
-| `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling strategy |
-| `missing` | `String` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
-| `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
-| `confidence_intervals` | `Float64` | `NaN` | Confidence level (e.g., 0.95) |
-| `prediction_intervals` | `Float64` | `NaN` | Prediction level (e.g., 0.95) |
-| `return_diagnostics` | `Bool` | `false` | Include diagnostics in result |
-| `return_residuals` | `Bool` | `false` | Include residuals in result |
-| `return_robustness_weights` | `Bool` | `false` | Include weights in result |
-| `return_se` | `Bool` | `false` | Return standard errors |
-| `return_sorted` | `Bool` | `false` | Return results sorted ascending by `x` instead of in original input order |
-| `parallel` | `Bool` | `true` | Enable parallel execution |
 | `degree` | `String` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `Int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `String` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
@@ -72,15 +59,22 @@ println("First smoothed value: ", result.y[1])
 | `surface_mode` | `String` | `"interpolation"` | Surface computation mode |
 | `cell` | `Union{Float64, Nothing}` | `nothing` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `Union{Int, Nothing}` | `nothing` | Number of interpolation vertices |
+| `zero_weight_fallback` | `String` | `"use_local_mean"` | Zero-weight handling strategy |
+| `boundary_policy` | `String` | `"extend"` | Boundary handling policy |
 | `boundary_degree_fallback` | `Union{Bool, Nothing}` | `nothing` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
+| `scaling_method` | `String` | `"mad"` | Residual scaling method |
+| `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
+| `missing` | `String` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
+| `parallel` | `Bool` | `true` | Enable parallel execution |
+| `confidence_intervals` | `Float64` | `NaN` | Confidence level (e.g., 0.95) |
+| `prediction_intervals` | `Float64` | `NaN` | Prediction level (e.g., 0.95) |
+| `cv` | `NamedTuple \| Dict \| Nothing` | `nothing` | Group `fractions`, `method`, `k`, and `seed`; takes precedence over individual CV settings |
 | `cv_method` | `String` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
 | `cv_k` | `Int` | `5` | Number of folds for k-fold CV |
 | `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation |
-| `cv` | `NamedTuple \| Dict \| Nothing` | `nothing` | Group `fractions`, `method`, `k`, and `seed`; takes precedence over individual CV settings |
 | `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling |
-| `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation case weights — passed to `fit`, not the constructor |
 | `retain_model` | `Bool` | `false` | Retain training data, enabling `predict(model, new_x; ...)` on the result |
-| `return_gradient` | `Bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode="direct"` only) |
+| `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation case weights — passed to `fit`, not the constructor |
 
 ## Options
 
@@ -125,103 +119,6 @@ println("First smoothed value: ", result.y[1])
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
 - `"talwar"`
-
-### scaling_method
-
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### missing
-
-Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `custom_weights`):
-
-| Option | Behavior |
-| --- | --- |
-| `"error"` (default) | Raise an error if any value is non-finite |
-| `"drop"` | Silently remove observations (rows) where any x dimension or y is non-finite before fitting |
-
-**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
-
-### auto_converge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
-
-### confidence_intervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
-
-### prediction_intervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
-
-### return_diagnostics
-
-*See: [`Diagnostics`](#diagnostics)*
-
-Include a `Diagnostics` object (RMSE, MAE, R2, AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/`effective_df` additionally require `return_se=true` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
-
-- `false` (default) — leaves `result.diagnostics` as `nothing`
-- `true` — populates `result.diagnostics`
-
-### return_residuals
-
-Include per-point residuals (`y - fitted`) in the result.
-
-- `false` (default) — leaves `result.residuals` as `nothing`
-- `true` — populates `result.residuals`
-
-### return_robustness_weights
-
-Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
-- `false` (default) — leaves `result.robustness_weights` as `nothing`
-- `true` — populates `result.robustness_weights`
-
-### return_se
-
-*See: [Intervals](../guide/intervals.md#standard-errors)*
-
-Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
-
-### return_sorted
-
-When set to `true`, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
-To get both orderings, sort the default result client-side (e.g. `sortperm(result.x)`) instead of calling `fit` twice.
-
-### parallel
-
-Enable multi-threaded execution via Rayon.
-
-- `true` (default) — parallelizes the local regression fits across CPU cores
-- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
 
 ### degree
 
@@ -286,6 +183,25 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 - `nothing` (default) — uses the library default (no explicit cap)
 - Any integer `>= 1`
 
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
 ### boundary_degree_fallback
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surface_mode="interpolation"`.
@@ -293,6 +209,79 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `nothing` (default) — uses the library default (enabled)
 - `true` — falls back to a lower degree at boundaries
 - `false` — raises an error instead of silently falling back
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+### missing
+
+Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `custom_weights`):
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Raise an error if any value is non-finite |
+| `"drop"` | Silently remove observations (rows) where any x dimension or y is non-finite before fitting |
+
+**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
+
+### parallel
+
+Enable multi-threaded execution via Rayon.
+
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
+
+### outputs: se
+
+*See: [Intervals](../guide/intervals.md#standard-errors)*
+
+Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
+
+### outputs: diagnostics
+
+*See: [`Diagnostics`](#diagnostics)*
+
+Include a `Diagnostics` object (RMSE, MAE, R2, AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/`effective_df` additionally require `outputs = ["se"]` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
+
+### outputs: residuals
+
+Include per-point residuals (`y - fitted`) in the result.
+
+### outputs: weights
+
+Include the final per-point robustness weights (from the last robustness iteration) in the result.
+
+### outputs: gradient
+
+Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `result.gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `fit` raises an error instead of silently leaving `gradient` as `nothing`. Omitted by default.
+
+### outputs: sorted
+
+When selected in outputs, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
+To get both orderings, sort the default result client-side (e.g. `sortperm(result.x)`) instead of calling `fit` twice.
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
 
 ### CV Options
 
@@ -303,21 +292,17 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
 - `cv_seed`: Seed for reproducible k-fold shuffling. `nothing` (default) uses a random seed.
 
-### custom_weights
-
-*See: [Custom Weights](../weighting/custom-weights.md)*
-
-Per-observation weights, passed to `fit` rather than the constructor.
-
 ### retain_model
 
 *See: [Predict](../guide/predict.md)*
 
 Retains the fitted model's training data, populating `result.predict_model` with a `PredictModel` usable to evaluate the fit at out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
 
-### return_gradient
+### custom_weights
 
-Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally, but only the fitted value is normally kept; this exposes that per-point gradient (rate of change of the smoothed surface, `dimensions` values per point, flattened) in `result.gradient`, enabling sensitivity/rate-of-change analysis at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — the default `"interpolation"` mode only stores value+gradient at a sparse grid of vertices, not enough to reconstruct an exact per-point gradient, so `fit` raises an error instead of silently leaving `gradient` as `nothing`. `false` by default.
+*See: [Custom Weights](../weighting/custom-weights.md)*
+
+Per-observation weights, passed to `fit` rather than the constructor.
 
 ## Result Structure
 
@@ -334,17 +319,17 @@ Each local polynomial fit (degree >= linear) already computes per-dimension coef
 | `confidence_upper` | `Union{Vector{Float64}, Nothing}` | Upper confidence bounds |
 | `prediction_lower` | `Union{Vector{Float64}, Nothing}` | Lower prediction bounds |
 | `prediction_upper` | `Union{Vector{Float64}, Nothing}` | Upper prediction bounds |
-| `residuals` | `Union{Vector{Float64}, Nothing}` | Residuals (if `return_residuals`) |
-| `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `return_robustness_weights`) |
+| `residuals` | `Union{Vector{Float64}, Nothing}` | Residuals (if `"residuals"` output) |
+| `robustness_weights` | `Union{Vector{Float64}, Nothing}` | Robustness weights (if `"weights"` output) |
 | `cv_scores` | `Union{Vector{Float64}, Nothing}` | CV score per tested fraction |
-| `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `return_diagnostics`) |
-| `enp` | `Union{Float64, Nothing}` | Equivalent number of parameters (if `return_se`) |
-| `trace_hat` | `Union{Float64, Nothing}` | Trace of hat matrix (if `return_se`) |
-| `delta1` | `Union{Float64, Nothing}` | First delta statistic (if `return_se`) |
-| `delta2` | `Union{Float64, Nothing}` | Second delta statistic (if `return_se`) |
-| `residual_scale` | `Union{Float64, Nothing}` | Residual scale estimate (if `return_se`) |
-| `leverage` | `Union{Vector{Float64}, Nothing}` | Per-point hat-matrix diagonal (if `return_se`) |
-| `gradient` | `Union{Vector{Float64}, Nothing}` | Per-point local fit gradient, flattened (if `return_gradient`, `surface_mode="direct"` only) |
+| `diagnostics` | `Union{Diagnostics, Nothing}` | Fit metrics (if `"diagnostics"` output) |
+| `enp` | `Union{Float64, Nothing}` | Equivalent number of parameters (if `"se"` output) |
+| `trace_hat` | `Union{Float64, Nothing}` | Trace of hat matrix (if `"se"` output) |
+| `delta1` | `Union{Float64, Nothing}` | First delta statistic (if `"se"` output) |
+| `delta2` | `Union{Float64, Nothing}` | Second delta statistic (if `"se"` output) |
+| `residual_scale` | `Union{Float64, Nothing}` | Residual scale estimate (if `"se"` output) |
+| `leverage` | `Union{Vector{Float64}, Nothing}` | Per-point hat-matrix diagonal (if `"se"` output) |
+| `gradient` | `Union{Vector{Float64}, Nothing}` | Per-point local fit gradient, flattened (if `"gradient"` output, `surface_mode="direct"` only) |
 | `dimensions` | `Int` | Number of predictor dimensions |
 
 ### `Diagnostics`
@@ -380,7 +365,7 @@ model = Loess(;
     iterations=3,
     confidence_intervals=0.95,
     prediction_intervals=0.95,
-    return_diagnostics=true,
+    outputs = ["diagnostics"],
     parallel=true
 )
 result = fit(model, x, y)

@@ -75,8 +75,8 @@ int main() {
 
     // x is an (n × 2) row-major matrix
     fastloess::LoessOptions d2_opts;
-    d2_opts.dimensions = 2;
     d2_opts.fraction = 0.3;
+    d2_opts.dimensions = 2;
     fastloess::Loess model(d2_opts);
     auto result = model.fit(x2d, z).value();
 
@@ -115,8 +115,8 @@ int main() {
     }
 
     fastloess::LoessOptions d3_opts;
-    d3_opts.dimensions = 3;
     d3_opts.fraction = 0.5;
+    d3_opts.dimensions = 3;
     fastloess::Loess model(d3_opts);
     auto result = model.fit(x3d, y).value();
 

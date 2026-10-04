@@ -37,9 +37,9 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 model = fl.Loess(
     fraction=0.5,
     iterations=3,
+    outputs=["diagnostics"],
     confidence_intervals=0.95,
-    prediction_intervals=0.95,
-    return_diagnostics=True
+    prediction_intervals=0.95
 )
 result = model.fit(x, y)
 
@@ -66,7 +66,7 @@ model = fl.Loess(
     fraction=0.7,
     iterations=5,
     robustness_method="bisquare",
-    return_robustness_weights=True
+    outputs=["weights"]
 )
 result = model.fit(x_out, y_with_outlier)
 

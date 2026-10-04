@@ -105,9 +105,9 @@ int main() {
     }
 
     fastloess::LoessOptions opts;
-    opts.cv_fractions = {0.3, 0.5, 0.7};
     opts.cv_method = "kfold";
     opts.cv_k = 5;
+    opts.cv_fractions = {0.3, 0.5, 0.7};
     opts.cv_seed = 42;
 
     fastloess::Loess model(opts);
@@ -165,9 +165,9 @@ int main() {
     }
 
     fastloess::LoessOptions cv_opts;
-    cv_opts.cv_fractions = {0.1, 0.3, 0.5, 0.7};
     cv_opts.cv_method = "kfold";
     cv_opts.cv_k = 5;
+    cv_opts.cv_fractions = {0.1, 0.3, 0.5, 0.7};
     fastloess::Loess model(cv_opts);
     auto result = model.fit(x, y).value();
 

@@ -133,7 +133,7 @@ print(head(result$y))
 
 ```{r dimensions_5}
 # Exact fit at every point — slower but no interpolation artefacts
-model <- Loess(surface_mode = "direct", fraction = 0.3, dimensions = 2L)
+model <- Loess(fraction = 0.3, dimensions = 2L, surface_mode = "direct")
 result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, direct surface):\n")
 print(head(result$y))
@@ -144,10 +144,10 @@ For large 2D or 3D datasets use `"interpolation"` (default) and tune `cell` and
 
 ```{r dimensions_6}
 model <- Loess(
-    surface_mode = "interpolation",
-    cell = 0.2,
     fraction = 0.3,
-    dimensions = 2L
+    dimensions = 2L,
+    surface_mode = "interpolation",
+    cell = 0.2
 )
 result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, interpolation surface):\n")

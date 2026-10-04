@@ -37,6 +37,7 @@ wide = { version = "1.7", default-features = false }
 
 [dev-dependencies]
 approx = "0.5"
+ndarray = "0.17"
 syn = { version = "3.0", features = ["full", "visit"] }
 proc-macro2 = "1.0"
 

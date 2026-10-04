@@ -76,7 +76,7 @@ test_that("RE7.1 and RE7.1a reproduce noiseless relationships", {
             iterations = 0L,
             surface_mode = "direct",
             boundary_policy = "noboundary",
-            return_diagnostics = TRUE,
+            outputs = "diagnostics",
             parallel = FALSE
         ),
         x_linear,

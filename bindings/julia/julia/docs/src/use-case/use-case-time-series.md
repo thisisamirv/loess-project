@@ -33,7 +33,7 @@ println("Extracted trend points: ", length(result.y))
 
 Remove trend to analyze residual patterns.
 
-Setting `return_residuals = True` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
+Setting `outputs = ["residuals"]` stores `observed − smoothed` alongside the smooth. A slightly wider `fraction = 0.3` produces a smoother baseline trend, so short-duration oscillations end up in the residuals rather than being absorbed into the trend component. The residual series is then ready for spectral analysis, seasonality detection, or change-point methods.
 
 ```@example use-case-time-series
 using FastLOESS
@@ -44,7 +44,7 @@ t = collect(range(0, 100, length=500))
 y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
 
 # Smooth to get trend and residuals
-model = Loess(; fraction=0.3, iterations=3, return_residuals=true)
+model = Loess(; fraction=0.3, iterations=3, outputs = ["residuals"])
 result = fit(model, t, y)
 
 trend = result.y
@@ -142,7 +142,7 @@ model = Loess(;
     fraction=0.3,
     iterations=3,
     confidence_intervals=0.95,
-    return_diagnostics=true
+    outputs = ["diagnostics"]
 )
 result = fit(model, hours, expression)
 

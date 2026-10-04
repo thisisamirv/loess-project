@@ -53,10 +53,10 @@ int main() {
     fastloess::LoessOptions opts;
     opts.fraction = 0.5;
     opts.iterations = 3;
+    opts.parallel = true;
+    opts.outputs = {"diagnostics"};
     opts.confidence_intervals = 0.95;
     opts.prediction_intervals = 0.95;
-    opts.outputs = {"diagnostics"};
-    opts.parallel = true;
     fastloess::Loess model(opts);
     auto result = model.fit(x, y).value();
     std::cout << "95% CI at midpoint: [" << result.confidence_lower()[50] << ", " << result.confidence_upper()[50] << "]\n";

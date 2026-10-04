@@ -27,7 +27,8 @@
 #' @inheritParams Loess
 #' @param outputs Optional character vector selecting \code{"diagnostics"},
 #'   \code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
-#'   \code{"derivative"}), and \code{"se"}. Combined with individual flags.
+#'   \code{"derivative"}), and \code{"se"}. \code{NULL} (default) selects
+#'   no optional components.
 #' @param chunk_size Number of data points per processing chunk, at least 10.
 #'   Default: 5000.
 #' @param overlap Number of overlapping points between consecutive chunks,
@@ -44,9 +45,6 @@
 #' @param prediction_intervals Confidence level for prediction intervals; same
 #'   per-chunk computation and overlap-merging as \code{confidence_intervals}.
 #'   \code{NULL} (default) disables prediction intervals.
-#' @param return_se Include standard errors in the result, computed per chunk
-#'   and merged across overlap boundaries via \code{merge_strategy}. Default:
-#'   \code{FALSE}.
 #'
 #' @return A StreamingLoess object.
 #' @examples
@@ -69,13 +67,8 @@ StreamingLoess <- function(
     boundary_policy = "extend",
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_gradient = FALSE,
     confidence_intervals = NULL,
     prediction_intervals = NULL,
-    return_se = FALSE,
     merge_strategy = "weighted_average",
     parallel = TRUE,
     degree = "linear",
@@ -95,13 +88,11 @@ StreamingLoess <- function(
         outputs,
         c("diagnostics", "residuals", "weights", "gradient", "derivative", "se")
     )
-    return_diagnostics <- return_diagnostics || flags[["diagnostics"]]
-    return_residuals <- return_residuals || flags[["residuals"]]
-    return_robustness_weights <- return_robustness_weights || flags[["weights"]]
-    return_gradient <- return_gradient ||
-        flags[["gradient"]] ||
-        flags[["derivative"]]
-    return_se <- return_se || flags[["se"]]
+    return_diagnostics <- flags[["diagnostics"]]
+    return_residuals <- flags[["residuals"]]
+    return_robustness_weights <- flags[["weights"]]
+    return_gradient <- flags[["gradient"]] || flags[["derivative"]]
+    return_se <- flags[["se"]]
     handle <- do.call(RStreamingLoess$new, env_args(streaming_params))
 
     structure(

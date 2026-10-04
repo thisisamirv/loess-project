@@ -82,16 +82,6 @@ type StreamingOptions struct {
 	// "weights", "derivative" (or "gradient"), and "se".
 	Outputs []string
 
-	// ReturnDiagnostics requests fit-quality metrics (RMSE, MAE, R-squared, AIC, etc.).
-	ReturnDiagnostics bool
-	// ReturnResiduals requests residuals in the result.
-	ReturnResiduals bool
-	// ReturnRobustnessWeights requests per-point robustness weights in the result.
-	ReturnRobustnessWeights bool
-	// ReturnGradient requests the per-point local fit gradient in the result,
-	// flattened (Dimensions values per point). Only takes effect when
-	// SurfaceMode is "direct".
-	ReturnGradient bool
 	// ConfidenceIntervals is the confidence level for confidence intervals
 	// (e.g. 0.95), computed per chunk and merged across overlap boundaries via
 	// MergeStrategy. Nil disables confidence intervals.
@@ -100,9 +90,6 @@ type StreamingOptions struct {
 	// same per-chunk computation and overlap-merging as ConfidenceIntervals.
 	// Nil disables prediction intervals.
 	PredictionIntervals *float64
-	// ReturnSe requests standard errors in the result, computed per chunk and
-	// merged across overlap boundaries via MergeStrategy.
-	ReturnSe bool
 	// Parallel enables parallel processing. Default: true.
 	Parallel bool
 
@@ -194,9 +181,9 @@ func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
 			C.double(opts.Fraction),
 			C.int(opts.Iterations),
 			wf, rm, sm, bp,
-			boolToCInt(opts.ReturnDiagnostics || hasOutput(opts.Outputs, "diagnostics")),
-			boolToCInt(opts.ReturnResiduals || hasOutput(opts.Outputs, "residuals")),
-			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
+			boolToCInt(hasOutput(opts.Outputs, "diagnostics")),
+			boolToCInt(hasOutput(opts.Outputs, "residuals")),
+			boolToCInt(hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			boolToCInt(opts.Parallel),
@@ -212,10 +199,10 @@ func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
 			missing,
-			boolToCInt(opts.ReturnGradient || hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
+			boolToCInt(hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
 			optFloat(confidenceIntervals, confidenceIntervalsSet),
 			optFloat(predictionIntervals, predictionIntervalsSet),
-			boolToCInt(opts.ReturnSe || hasOutput(opts.Outputs, "se")),
+			boolToCInt(hasOutput(opts.Outputs, "se")),
 		)
 		if ptr == nil {
 			errMsg = lastError()

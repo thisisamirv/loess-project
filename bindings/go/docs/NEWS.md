@@ -13,13 +13,14 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Added `CV *CVOptions` to Batch options for grouped cross-validation, taking precedence over individual CV fields.
-* Added `Outputs []string` to `Options`, `StreamingOptions`, `OnlineOptions`, and `PredictOptions` for grouped optional result selection; existing boolean output fields remain supported.
+* Added `Outputs []string` to `Options`, `StreamingOptions`, `OnlineOptions`, and `PredictOptions` for grouped optional result selection.
 * Added `RetainModel` and `Result.PredictModel.Predict(newX, options)` for out-of-sample prediction.
 * Added `ReturnGradient` to `Options`, `StreamingOptions`, and `OnlineOptions`.
 * Added `ConfidenceIntervals`/`PredictionIntervals`/`ReturnSe` to `StreamingOptions` and `OnlineOptions`. `OnlineOptions` requires `UpdateMode = "full"` or errors. New bound fields on `PointResult`.
 
 ### Changed
 
+* Breaking change: replaced individual `Return*` output fields with `Outputs: []string{...}` for Batch, Streaming, Online, and prediction options.
 * Represent unavailable diagnostic metrics as nil optional values instead of NaN sentinels in the Go binding.
 
 ### Fixed

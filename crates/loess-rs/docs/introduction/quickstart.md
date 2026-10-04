@@ -50,8 +50,8 @@ fn main() -> Result<(), LoessError> {
     let model = Loess::new()
         .fraction(0.5)
         .iterations(3)
-        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))  // 95% PI
         .outputs(["diagnostics"])
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))  // 95% PI
         .build()?;
 
     let result = model.fit(&x, &y)?;

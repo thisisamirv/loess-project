@@ -100,7 +100,7 @@ observed = np.random.poisson(true_signal)  # Poisson noise
 model = fl.Loess(
     fraction=0.05,   # Very local smoothing
     iterations=5,    # Strong robustness
-    return_residuals=True
+    outputs=["residuals"]
 )
 result = model.fit(positions, observed.astype(float))
 

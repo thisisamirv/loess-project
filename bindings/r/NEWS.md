@@ -7,13 +7,14 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Added an Alternative Software vignette with runnable Gaussian and robust comparisons to `stats::loess()` and a guide to LOESS-specific defaults.
 * Added `cv_opts()` and the `cv` argument on `Loess()` for grouped Batch cross-validation.
-* Added `outputs` to `Loess()`, `StreamingLoess()`, `OnlineLoess()`, and `predict.Loess()` for grouped optional results with mode-specific name validation; existing `return_*` arguments remain supported.
+* Added `outputs` to `Loess()`, `StreamingLoess()`, `OnlineLoess()`, and `predict.Loess()` for grouped optional results with mode-specific name validation.
 * Added `retain_model` and a `predict.Loess()` S3 method for out-of-sample prediction.
 * Added `return_gradient` to `Loess()`, `StreamingLoess()`, and `OnlineLoess()`.
 * Added `confidence_intervals`/`prediction_intervals`/`return_se` to `StreamingLoess()` and `OnlineLoess()`. `OnlineLoess()` requires `update_mode = "full"` or errors. New bound fields on `add_point()`'s result.
 
 ### Changed
 
+* Breaking change: replaced individual `return_*` output arguments with `outputs = c(...)` for Batch, Streaming, Online, and prediction.
 * Unavailable diagnostics are now represented as R `NA` rather than generic `NaN` values.
 
 ### Fixed

@@ -77,7 +77,7 @@ test_that("StreamingLoess diagnostics work", {
         y,
         fraction = 0.3,
         chunk_size = 100,
-        return_diagnostics = TRUE
+        outputs = "diagnostics"
     )
 
     expect_true("diagnostics" %in% names(result))
@@ -171,7 +171,7 @@ test_that("StreamingLoess: return_residuals", {
     sl <- StreamingLoess(
         fraction = 0.3,
         chunk_size = 100,
-        return_residuals = TRUE
+        outputs = "residuals"
     )
     process_chunk(sl, x, y)
     fin <- finalize(sl)
@@ -189,7 +189,7 @@ test_that("StreamingLoess: degree, distance_metric, surface_mode, return_se", {
         degree = "quadratic",
         distance_metric = "minkowski:3",
         surface_mode = "direct",
-        return_se = TRUE
+        outputs = "se"
     )
     expect_length(result$y, length(y))
 })
@@ -205,7 +205,7 @@ test_that("StreamingLoess: scaling_method, boundary_policy, auto_converge", {
         scaling_method = "mean",
         boundary_policy = "reflect",
         auto_converge = 1e-3,
-        return_robustness_weights = TRUE
+        outputs = "weights"
     )
     expect_length(result$y, length(y))
 })
@@ -213,7 +213,7 @@ test_that("StreamingLoess: scaling_method, boundary_policy, auto_converge", {
 test_that("StreamingLoess: return_se", {
     x <- as.double(seq(0, 100, length.out = 200))
     y <- sin(x / 10)
-    sl <- StreamingLoess(fraction = 0.3, chunk_size = 100, return_se = TRUE)
+    sl <- StreamingLoess(fraction = 0.3, chunk_size = 100, outputs = "se")
     chunk_result <- process_chunk(sl, x, y)
     expect_false(is.null(chunk_result$standard_errors))
     expect_null(chunk_result$confidence_lower)

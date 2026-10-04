@@ -95,14 +95,6 @@ int main() {
 | `iterations` | `int` | `3` | Number of robustifying iterations |
 | `weight_function` | `std::string` | `"tricube"` | Kernel weight function |
 | `robustness_method` | `std::string` | `"bisquare"` | Robustness method |
-| `scaling_method` | `std::string` | `"mad"` | Residual scaling method |
-| `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling |
-| `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
-| `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
-| `prediction_intervals` | `double` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) |
-| `outputs` | `std::vector<std::string>` | `{}` | Optional result fields: `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, `se`, `sorted` |
-| `parallel` | `bool` | `true` | Enable parallel execution |
 | `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
@@ -110,15 +102,23 @@ int main() {
 | `surface_mode` | `std::string` | `"interpolation"` | Surface computation mode |
 | `cell` | `double` | `NaN` | Cell size for interpolation grid (NaN to use default; smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
+| `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling |
+| `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
 | `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = unset/library default, 0 = false, 1 = true) |
+| `scaling_method` | `std::string` | `"mad"` | Residual scaling method |
+| `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
+| `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
+| `parallel` | `bool` | `true` | Enable parallel execution |
+| `outputs` | `std::vector<std::string>` | `{}` | Optional result fields: `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, `se`, `sorted` |
+| `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
+| `prediction_intervals` | `double` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) |
+| `cv` | `CVOptions` | `{}` | Group `fractions`, `method`, `k`, and `seed`; nonempty fractions override legacy CV fields |
 | `cv_method` | `std::string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
 | `cv_k` | `int` | `5` | Number of folds for k-fold CV |
 | `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation |
-| `cv` | `CVOptions` | `{}` | Group `fractions`, `method`, `k`, and `seed`; nonempty fractions override legacy CV fields |
 | `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (0 = random) |
-| `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
-| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
 | `retain_model` | `bool` | `false` | Retain training data, enabling `LoessResult::predict_model()` |
+| `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
 
 ## Options
 
@@ -163,84 +163,6 @@ int main() {
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
 - `"talwar"`
-
-### scaling_method
-
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### missing
-
-Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `custom_weights`):
-
-| Option | Behavior |
-| --- | --- |
-| `"error"` (default) | Throw an error if any value is non-finite |
-| `"drop"` | Silently remove observations (rows) where any x dimension or y is non-finite before fitting |
-
-**Note:** A length mismatch between `x` and `y` always throws, even under `"drop"`.
-
-### auto_converge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
-
-### confidence_intervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
-
-### prediction_intervals
-
-*See: [Intervals](../guide/intervals.md)*
-
-Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
-
-### outputs
-
-Select optional result fields by name. An empty vector (default) requests only the fitted values.
-
-| Name | Result |
-| --- | --- |
-| `"diagnostics"` | Fit metrics such as RMSE, MAE, R², and (when `se` is also enabled) AIC/AICc and effective degrees of freedom |
-| `"residuals"` | Per-point residuals (`y - fitted`) |
-| `"weights"` | Final per-point robustness weights |
-| `"gradient"` or `"derivative"` | Per-point local fit gradient; requires `surface_mode = "direct"` |
-| `"se"` | Standard errors and hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) |
-| `"sorted"` | Reorder all result fields by ascending `x` instead of input order (Batch only) |
-
-Confidence and prediction intervals remain controlled by their numeric level fields. They include standard errors automatically.
-
-### parallel
-
-Enable multi-threaded execution via Rayon.
-
-- `true` (default) — parallelizes the local regression fits across CPU cores
-- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
 
 ### degree
 
@@ -305,6 +227,25 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 - `0` (default) — uses the library default (no explicit cap)
 - Any integer `>= 1`
 
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
 ### boundary_degree_fallback
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surface_mode = "interpolation"`.
@@ -312,6 +253,65 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `-1` (default) — uses the library default (enabled)
 - `1` — falls back to a lower degree at boundaries
 - `0` — raises an error instead of silently falling back
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+### missing
+
+Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and `custom_weights`):
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Throw an error if any value is non-finite |
+| `"drop"` | Silently remove observations (rows) where any x dimension or y is non-finite before fitting |
+
+**Note:** A length mismatch between `x` and `y` always throws, even under `"drop"`.
+
+### parallel
+
+Enable multi-threaded execution via Rayon.
+
+- `true` (default) — parallelizes the local regression fits across CPU cores
+- `false` — forces single-threaded execution (useful for benchmarking or deterministic profiling)
+
+### outputs
+
+Select optional result fields by name. An empty vector (default) requests only the fitted values.
+
+| Name | Result |
+| --- | --- |
+| `"diagnostics"` | Fit metrics such as RMSE, MAE, R², and (when `se` is also enabled) AIC/AICc and effective degrees of freedom |
+| `"residuals"` | Per-point residuals (`y - fitted`) |
+| `"weights"` | Final per-point robustness weights |
+| `"gradient"` or `"derivative"` | Per-point local fit gradient; requires `surface_mode = "direct"` |
+| `"se"` | Standard errors and hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) |
+| `"sorted"` | Reorder all result fields by ascending `x` instead of input order (Batch only) |
+
+Confidence and prediction intervals remain controlled by their numeric level fields. They include standard errors automatically.
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). `NaN` (default) disables prediction intervals.
 
 ### CV Options
 
@@ -322,17 +322,17 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
 - `cv_seed`: Seed for reproducible k-fold shuffling. `0` (default) uses a random seed.
 
-### custom_weights
-
-*See: [Custom Weights](../weighting/custom-weights.md)*
-
-Per-observation weights, passed to `fit()` rather than the constructor.
-
 ### retain_model
 
 *See: [Predict](../guide/predict.md)*
 
 Retains the fitted model's training data, enabling `LoessResult::predict_model()` to obtain a `PredictModel` for out-of-sample query points not in the training set. `false` (default) — no extra memory/copy cost unless requested.
+
+### custom_weights
+
+*See: [Custom Weights](../weighting/custom-weights.md)*
+
+Per-observation weights, passed to `fit()` rather than the constructor.
 
 ## Result Structure
 

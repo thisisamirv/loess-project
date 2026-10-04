@@ -11,12 +11,14 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Added `cv` to the Batch options interface for grouped cross-validation configuration alongside legacy fields.
-* Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection alongside existing booleans.
+* Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection.
 * Added `retain_model` and `LoessResult.predict(newX, options)` for out-of-sample prediction.
 * Added `return_gradient` to `SmoothOptions`, `StreamingOptions`, and `OnlineOptions`.
 * Added `confidence_intervals`/`prediction_intervals`/`return_se` to Streaming and Online options; Online requires `update_mode: "full"`. Added the corresponding `OnlineOutput` bound fields and TypeScript types.
 
 ### Changed
+
+* Breaking change: replaced individual `return_*` output booleans with `outputs: [...]` for Batch, Streaming, Online, and prediction options.
 
 ### Fixed
 

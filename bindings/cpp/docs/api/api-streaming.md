@@ -132,12 +132,6 @@ int main() {
 | `iterations` | `int` | `3` | Number of robustifying iterations |
 | `weight_function` | `std::string` | `"tricube"` | Weight function name |
 | `robustness_method` | `std::string` | `"bisquare"` | Robustness method name |
-| `scaling_method` | `std::string` | `"mad"` | Residual scaling method |
-| `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
-| `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
-| `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
-| `outputs` | `std::vector<std::string>` | `{}` | Optional fields: `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, `se` |
 | `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
@@ -145,12 +139,18 @@ int main() {
 | `surface_mode` | `std::string` | `"interpolation"` | Surface computation mode |
 | `cell` | `double` | `NaN` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
+| `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
+| `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
 | `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = unset/library default, 0 = false, 1 = true) |
-| `confidence_intervals` | `double` | `NaN` | Confidence level for confidence intervals, computed per chunk and merged across overlap boundaries via `merge_strategy` |
-| `prediction_intervals` | `double` | `NaN` | Confidence level for prediction intervals; same per-chunk computation and overlap-merging as `confidence_intervals` |
+| `scaling_method` | `std::string` | `"mad"` | Residual scaling method |
+| `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
+| `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `chunk_size` | `int` | `5000` | Data chunk size |
 | `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `std::string` | `"weighted_average"` | Strategy for blending overlap regions |
+| `outputs` | `std::vector<std::string>` | `{}` | Optional fields: `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, `se` |
+| `confidence_intervals` | `double` | `NaN` | Confidence level for confidence intervals, computed per chunk and merged across overlap boundaries via `merge_strategy` |
+| `prediction_intervals` | `double` | `NaN` | Confidence level for prediction intervals; same per-chunk computation and overlap-merging as `confidence_intervals` |
 
 Cross-validation and the `"sorted"` output are Batch-only; `StreamingLoess` ignores `"sorted"` — see [fastLoess](api.md) for those.
 
@@ -197,64 +197,6 @@ Cross-validation and the `"sorted"` output are Batch-only; `StreamingLoess` igno
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
 - `"talwar"`
-
-### scaling_method
-
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### missing
-
-Policy for handling non-finite (NaN/Inf) values within each chunk:
-
-| Option | Behavior |
-| --- | --- |
-| `"error"` (default) | Return an error if any value in the chunk is non-finite |
-| `"drop"` | Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer |
-
-**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
-
-### auto_converge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
-
-### outputs
-
-Select optional result fields by name. An empty vector (default) requests only fitted values.
-
-| Name | Result |
-| --- | --- |
-| `"diagnostics"` | Fit metrics (RMSE, MAE, R², residual SD); AIC/AICc/effective degrees of freedom are unavailable in Streaming |
-| `"residuals"` | Per-point residuals (`y - fitted`) |
-| `"weights"` | Final per-point robustness weights |
-| `"gradient"` or `"derivative"` | Per-point local fit gradient; requires `surface_mode = "direct"` |
-| `"se"` | Standard errors, computed per chunk and merged across overlap boundaries via `merge_strategy` |
-
-Confidence and prediction intervals remain controlled by their numeric level fields and include standard errors automatically.
 
 ### degree
 
@@ -319,6 +261,25 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 - `0` (default) — uses the library default (no explicit cap)
 - Any integer `>= 1`
 
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
 ### boundary_degree_fallback
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surface_mode = "interpolation"`.
@@ -327,17 +288,30 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `1` — falls back to a lower degree at boundaries
 - `0` — raises an error instead of silently falling back
 
-### confidence_intervals
+### scaling_method
 
-*See: [Intervals](../guide/intervals.md)*
+*See: [Scaling Methods](../weighting/scaling.md)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `y` is, via `merge_strategy`. `NaN` (default) disables confidence intervals.
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
 
-### prediction_intervals
+### auto_converge
 
-*See: [Intervals](../guide/intervals.md)*
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `confidence_intervals`. `NaN` (default) disables prediction intervals.
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+### missing
+
+Policy for handling non-finite (NaN/Inf) values within each chunk:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error if any value in the chunk is non-finite |
+| `"drop"` | Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer |
+
+**Note:** A length mismatch between `x` and `y` always errors, even under `"drop"`.
 
 ### chunk_size
 
@@ -362,6 +336,32 @@ Number of points retained from the previous chunk as context, so the neighbourho
 | `"take_last"` | `"last"` | Keep right chunk values |
 
 ![Merge Strategies](merge_comparison.svg)
+
+### outputs
+
+Select optional result fields by name. An empty vector (default) requests only fitted values.
+
+| Name | Result |
+| --- | --- |
+| `"diagnostics"` | Fit metrics (RMSE, MAE, R², residual SD); AIC/AICc/effective degrees of freedom are unavailable in Streaming |
+| `"residuals"` | Per-point residuals (`y - fitted`) |
+| `"weights"` | Final per-point robustness weights |
+| `"gradient"` or `"derivative"` | Per-point local fit gradient; requires `surface_mode = "direct"` |
+| `"se"` | Standard errors, computed per chunk and merged across overlap boundaries via `merge_strategy` |
+
+Confidence and prediction intervals remain controlled by their numeric level fields and include standard errors automatically.
+
+### confidence_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `y` is, via `merge_strategy`. `NaN` (default) disables confidence intervals.
+
+### prediction_intervals
+
+*See: [Intervals](../guide/intervals.md)*
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `confidence_intervals`. `NaN` (default) disables prediction intervals.
 
 ## Result Structure
 

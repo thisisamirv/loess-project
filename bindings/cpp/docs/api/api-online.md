@@ -109,12 +109,6 @@ int main() {
 | `iterations` | `int` | `0` | Number of robustifying iterations; positive values require `update_mode == "full"` |
 | `weight_function` | `std::string` | `"tricube"` | Weight function name |
 | `robustness_method` | `std::string` | `"bisquare"` | Robustness method name |
-| `scaling_method` | `std::string` | `"mad"` | Residual scaling method |
-| `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
-| `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
-| `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
-| `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
-| `outputs` | `std::vector<std::string>` | `{}` | Optional fields: `weights`, `gradient`/`derivative`, `se` |
 | `degree` | `std::string` | `"linear"` | Polynomial degree of local fit |
 | `dimensions` | `int` | `1` | Number of predictor dimensions |
 | `distance_metric` | `std::string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
@@ -122,10 +116,16 @@ int main() {
 | `surface_mode` | `std::string` | `"interpolation"` | Surface computation mode |
 | `cell` | `double` | `NaN` | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices` | `int` | `0` | Number of interpolation vertices (0 for default) |
+| `zero_weight_fallback` | `std::string` | `"use_local_mean"` | Zero-weight handling strategy |
+| `boundary_policy` | `std::string` | `"extend"` | Boundary handling policy |
 | `boundary_degree_fallback` | `int` | `-1` | Fall back to lower polynomial degree at boundaries (-1 = unset/library default, 0 = false, 1 = true) |
+| `scaling_method` | `std::string` | `"mad"` | Residual scaling method |
+| `auto_converge` | `double` | `NaN` | Auto-convergence tolerance (NaN to disable) |
+| `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in each point |
 | `window_capacity` | `int` | `1000` | Max points in sliding window |
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `std::string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
+| `outputs` | `std::vector<std::string>` | `{}` | Optional fields: `weights`, `gradient`/`derivative`, `se` |
 | `confidence_intervals` | `double` | `NaN` | Confidence level for confidence intervals; requires `update_mode == "full"` |
 | `prediction_intervals` | `double` | `NaN` | Confidence level for prediction intervals; requires `update_mode == "full"` |
 
@@ -174,60 +174,6 @@ Cross-validation, the `"sorted"` and `"diagnostics"` outputs, and `parallel` are
 - `"bisquare"` (default; alias: `"biweight"`)
 - `"huber"`
 - `"talwar"`
-
-### scaling_method
-
-*See: [Scaling Methods](../weighting/scaling.md)*
-
-- `"mad"` (default; alias: `"median_absolute_deviation"`)
-- `"mar"` (alias: `"median_absolute_residual"`)
-- `"mean"` (alias: `"mean_absolute_residual"`)
-
-### boundary_policy
-
-*See: [Boundary Handling](../advanced/boundary.md)*
-
-- `"extend"` (default; alias: `"pad"`)
-- `"reflect"` (alias: `"mirror"`)
-- `"zero"`
-- `"noboundary"` (alias: `"none"`)
-
-### zero_weight_fallback
-
-Behavior when all neighborhood weights are zero:
-
-| Option | Behavior |
-| --- | --- |
-| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
-| `"return_original"` (alias: `"original"`) | Return the original y value |
-| `"return_none"` (alias: `"none"`) | Return `NaN` |
-
-### missing
-
-Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point`:
-
-| Option | Behavior |
-| --- | --- |
-| `"error"` (default) | Return an error |
-| `"drop"` | Silently ignore the point — the returned `OnlineOutput` has `has_value() == false` instead of adding it to the window |
-
-### auto_converge
-
-*See: [Robustness](../weighting/robustness.md#auto-convergence)*
-
-Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
-
-### outputs
-
-Select optional fields in `OnlineOutput` by name. An empty vector (default) requests only the smoothed value.
-
-| Name | Result |
-| --- | --- |
-| `"weights"` | Robustness weight for the latest point |
-| `"gradient"` or `"derivative"` | Latest point's local fit gradient; requires `surface_mode = "direct"` |
-| `"se"` | Standard error; requires `update_mode = "full"` |
-
-Confidence and prediction intervals remain controlled by their numeric level fields and also require `update_mode = "full"`.
 
 ### degree
 
@@ -292,6 +238,25 @@ Caps the maximum number of interpolation vertices, overriding the count implied 
 - `0` (default) — uses the library default (no explicit cap)
 - Any integer `>= 1`
 
+### zero_weight_fallback
+
+Behavior when all neighborhood weights are zero:
+
+| Option | Behavior |
+| --- | --- |
+| `"use_local_mean"` (default; aliases: `"local_mean"`, `"mean"`) | Use the mean of the neighborhood |
+| `"return_original"` (alias: `"original"`) | Return the original y value |
+| `"return_none"` (alias: `"none"`) | Return `NaN` |
+
+### boundary_policy
+
+*See: [Boundary Handling](../advanced/boundary.md)*
+
+- `"extend"` (default; alias: `"pad"`)
+- `"reflect"` (alias: `"mirror"`)
+- `"zero"`
+- `"noboundary"` (alias: `"none"`)
+
 ### boundary_degree_fallback
 
 Whether to reduce the polynomial degree at boundary vertices when the requested `degree` can't be fit there (e.g., not enough neighbours). Only applies when `surface_mode = "interpolation"`.
@@ -299,6 +264,29 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 - `-1` (default) — uses the library default (enabled)
 - `1` — falls back to a lower degree at boundaries
 - `0` — raises an error instead of silently falling back
+
+### scaling_method
+
+*See: [Scaling Methods](../weighting/scaling.md)*
+
+- `"mad"` (default; alias: `"median_absolute_deviation"`)
+- `"mar"` (alias: `"median_absolute_residual"`)
+- `"mean"` (alias: `"mean_absolute_residual"`)
+
+### auto_converge
+
+*See: [Robustness](../weighting/robustness.md#auto-convergence)*
+
+Convergence tolerance for early stopping of robustness iterations. `NaN` (default) disables early stopping.
+
+### missing
+
+Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point`:
+
+| Option | Behavior |
+| --- | --- |
+| `"error"` (default) | Return an error |
+| `"drop"` | Silently ignore the point — the returned `OnlineOutput` has `has_value() == false` instead of adding it to the window |
 
 ### window_capacity
 
@@ -316,6 +304,18 @@ Minimum number of points required before `add_point()` starts returning smoothed
 | --- | --- | --- | --- |
 | `"incremental"` (default) | `"single"` | Update only affected fits | Faster |
 | `"full"` | `"resmooth"` | Recompute entire window | More accurate |
+
+### outputs
+
+Select optional fields in `OnlineOutput` by name. An empty vector (default) requests only the smoothed value.
+
+| Name | Result |
+| --- | --- |
+| `"weights"` | Robustness weight for the latest point |
+| `"gradient"` or `"derivative"` | Latest point's local fit gradient; requires `surface_mode = "direct"` |
+| `"se"` | Standard error; requires `update_mode = "full"` |
+
+Confidence and prediction intervals remain controlled by their numeric level fields and also require `update_mode = "full"`.
 
 ### confidence_intervals
 

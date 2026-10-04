@@ -12,7 +12,7 @@ import (
 
 // OnlineOptions configures an OnlineLoess model. Cross-validation,
 // diagnostics/residuals, and Parallel are Batch-only (or Batch/Streaming-only)
-// and have no effect here. ConfidenceIntervals/PredictionIntervals/ReturnSe
+// and have no effect here. ConfidenceIntervals/PredictionIntervals/the "se" output
 // require UpdateMode = "full".
 type OnlineOptions struct {
 	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
@@ -83,14 +83,9 @@ type OnlineOptions struct {
 	// "derivative" (or "gradient"), and "se".
 	Outputs []string
 
-	// ReturnRobustnessWeights requests per-point robustness weights in the result.
-	ReturnRobustnessWeights bool
-	// ReturnGradient requests the local fit's gradient for the latest point.
-	// Only takes effect when SurfaceMode is "direct".
-	ReturnGradient bool
 	// ConfidenceIntervals is the confidence level for confidence intervals
 	// (e.g. 0.95). Only computed under UpdateMode = "full" — returns an error
-	// at construction if set (or ReturnSe/PredictionIntervals is set) while
+	// at construction if set (or the "se" output/PredictionIntervals is set) while
 	// UpdateMode is left at its default "incremental". Nil disables confidence
 	// intervals.
 	ConfidenceIntervals *float64
@@ -98,9 +93,6 @@ type OnlineOptions struct {
 	// same UpdateMode = "full" requirement as ConfidenceIntervals. Nil
 	// disables prediction intervals.
 	PredictionIntervals *float64
-	// ReturnSe requests the standard error for the latest point in the result.
-	// Same UpdateMode = "full" requirement as ConfidenceIntervals.
-	ReturnSe bool
 
 	// WindowCapacity is the maximum number of recent points retained.
 	// Default: 1000.
@@ -192,7 +184,7 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 			C.double(opts.Fraction),
 			C.int(opts.Iterations),
 			wf, rm, sm, bp,
-			boolToCInt(opts.ReturnRobustnessWeights || hasOutput(opts.Outputs, "weights")),
+			boolToCInt(hasOutput(opts.Outputs, "weights")),
 			zwf,
 			optFloat(autoConverge, autoConvergeSet),
 			C.int(opts.WindowCapacity),
@@ -207,10 +199,10 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 			boundaryDegreeFallback,
 			wmwPtr, wmwLen,
 			missing,
-			boolToCInt(opts.ReturnGradient || hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
+			boolToCInt(hasOutput(opts.Outputs, "derivative") || hasOutput(opts.Outputs, "gradient")),
 			optFloat(confidenceIntervals, confidenceIntervalsSet),
 			optFloat(predictionIntervals, predictionIntervalsSet),
-			boolToCInt(opts.ReturnSe || hasOutput(opts.Outputs, "se")),
+			boolToCInt(hasOutput(opts.Outputs, "se")),
 		)
 		if ptr == nil {
 			errMsg = lastError()

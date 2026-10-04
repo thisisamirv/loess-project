@@ -34,7 +34,7 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Loess(degree="constant", fraction=0.5)
+model = fl.Loess(fraction=0.5, degree="constant")
 result = model.fit(x, y)
 print(f"Smoothed y[0]: {result.y[0]:.4f}")
 :::
@@ -57,7 +57,7 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Loess(degree="linear", fraction=0.5)
+model = fl.Loess(fraction=0.5, degree="linear")
 result = model.fit(x, y)
 print(f"Smoothed y[0]: {result.y[0]:.4f}")
 :::
@@ -80,7 +80,7 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Loess(degree="quadratic", fraction=0.5)
+model = fl.Loess(fraction=0.5, degree="quadratic")
 result = model.fit(x, y)
 print(f"Smoothed y[0]: {result.y[0]:.4f}")
 :::
@@ -103,7 +103,7 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Loess(degree="cubic", fraction=0.6)
+model = fl.Loess(fraction=0.6, degree="cubic")
 result = model.fit(x, y)
 print(f"Smoothed y[0]: {result.y[0]:.4f}")
 :::
@@ -126,7 +126,7 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Loess(degree="quartic", fraction=0.7)
+model = fl.Loess(fraction=0.7, degree="quartic")
 result = model.fit(x, y)
 print(f"Smoothed y[0]: {result.y[0]:.4f}")
 :::
