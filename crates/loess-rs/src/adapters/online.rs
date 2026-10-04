@@ -214,8 +214,8 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         if let Some(bootstrap) = self.bootstrap {
             Validator::validate_bootstrap_samples(bootstrap.n_boot)?;
         }
-        if let Some(method) = self.interval_type {
-            Validator::validate_interval_level(method.level)?;
+        if let Some(ref method) = self.interval_type {
+            Validator::validate_interval_method(method)?;
         }
         Validator::validate_fraction(self.fraction)?;
 
@@ -262,12 +262,12 @@ pub struct OnlineOutput<T> {
     pub residual: Option<T>,
 
     // Confidence interval bounds around the mean response for the latest point (`Full`
-    // update mode only, via `.confidence_intervals(level)`).
+    // update mode only, via `.intervals(crate::IntervalsBuilder::new().confidence(level))`).
     pub confidence_lower: Option<T>,
     pub confidence_upper: Option<T>,
 
     // Prediction interval bounds for a new observation at the latest point (`Full`
-    // update mode only, via `.prediction_intervals(level)`).
+    // update mode only, via `.intervals(crate::IntervalsBuilder::new().prediction(level))`).
     pub prediction_lower: Option<T>,
     pub prediction_upper: Option<T>,
 

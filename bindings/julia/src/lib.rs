@@ -772,7 +772,7 @@ pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, se
     }
     let config = unsafe { &mut *config_ptr };
     let builder = replace(&mut config.base_builder, LoessBuilder::<f64>::new());
-    config.base_builder = builder.cv_seed(u64::from(seed));
+    config.base_builder = builder.seed(u64::from(seed));
 }
 
 // ============================================================================

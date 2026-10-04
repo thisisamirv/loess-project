@@ -241,8 +241,8 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
         if let Some(bootstrap) = self.bootstrap {
             Validator::validate_bootstrap_samples(bootstrap.n_boot)?;
         }
-        if let Some(method) = self.interval_type {
-            Validator::validate_interval_level(method.level)?;
+        if let Some(ref method) = self.interval_type {
+            Validator::validate_interval_method(method)?;
         }
         Validator::validate_fraction(self.fraction)?;
 

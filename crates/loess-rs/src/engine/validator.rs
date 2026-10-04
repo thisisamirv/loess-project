@@ -179,6 +179,19 @@ impl Validator {
     }
 
     #[inline(never)]
+    pub fn validate_interval_method<T: Float>(
+        method: &crate::evaluation::intervals::IntervalMethod<T>,
+    ) -> Result<(), LoessError> {
+        if method.confidence {
+            Self::validate_interval_level(method.level)?;
+        }
+        if method.prediction {
+            Self::validate_interval_level(method.prediction_coverage())?;
+        }
+        Ok(())
+    }
+
+    #[inline(never)]
     pub fn validate_bootstrap_samples(n_boot: usize) -> Result<(), LoessError> {
         if n_boot < crate::evaluation::intervals::MIN_BOOTSTRAP_SAMPLES {
             return Err(LoessError::InvalidBootstrapSamples(n_boot));

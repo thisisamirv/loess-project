@@ -76,8 +76,7 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `zero_weight_fallback(...)` | `zero_weight_fallback` | `"use_local_mean"` | Zero-weight handling |
 | `missing(...)` | `missing` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `auto_converge(T)` | `T: Float` | disabled | Auto-convergence tolerance |
-| `confidence_intervals(T)` | `T: Float` | disabled | Confidence level (e.g., 0.95) |
-| `prediction_intervals(T)` | `T: Float` | disabled | Prediction level (e.g., 0.95) |
+| `intervals(IntervalsBuilder<T>)` | `IntervalsBuilder<T>` | disabled | Group confidence, prediction, and bootstrap settings |
 | `outputs([&str])` | iterable of names | `[]` | Select `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"`/`"derivative"`, `"se"`, `"sorted"` |
 | `return_diagnostics()` | `bool` | `false` | Include diagnostics in result |
 | `return_residuals()` | `bool` | `false` | Include residuals in result |
@@ -92,16 +91,13 @@ These chained methods configure the builder. They correspond to the "Options Str
 | `cell(T)` | `T: Float` | disabled | Cell size for interpolation grid (smaller → more vertices, higher accuracy) |
 | `interpolation_vertices(usize)` | `usize` | disabled | Number of interpolation vertices |
 | `boundary_degree_fallback(bool)` | `bool` | `true` | Fall back to lower polynomial degree at boundaries when higher degrees fail |
-| `cv(CVOptions<T>)` | `CVOptions<T>` | disabled | Group method, folds, candidate fractions, and optional seed via `CVBuilder` |
-| `cv_method(...)` | `&str` | disabled | Cross-validation method |
-| `cv_k(...)` | `usize` | disabled | Number of folds for K-fold cross-validation |
-| `cv_fractions(...)` | `Vec<f64>` | disabled | Candidate fractions to evaluate during cross-validation |
-| `cv_seed(...)` | `u64` | disabled | Random seed for reproducible fold assignments |
+| `cv(CVOptions<T>)` | `CVOptions<T>` | disabled | Group method, folds, and candidate fractions via `CVBuilder` |
+| `seed(...)` | `u64` | default algorithm seeds | Shared seed for CV and residual bootstrap |
 | `custom_weights(Vec<T>)` | `Vec<T: Float>` | disabled | Per-observation case weights |
 | `retain_model(bool)` | `bool` | `false` | Retain training data, enabling `predict()` on the result |
 | `return_gradient()` | `bool` | `false` | Include the per-point local fit gradient in the result (`surface_mode = "direct"` only) |
 
-`CVBuilder` is exported by `loess_rs::prelude`; calling `CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.5]).seed(42)` produces the `CVOptions<T>` value passed to `.cv(...)`. `CVOptions<T>` is accessible at the crate root when an explicit type is needed. The individual `cv_*` setters remain supported.
+`CVBuilder` and `IntervalsBuilder` are exported by `loess_rs::prelude`. Use `.cv(CVBuilder::new().method("kfold").k(5).fraction(vec![0.3, 0.5])).seed(42)` and `.intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.95).bootstrap(200))`. CV options do not contain a seed; the outer `.seed(...)` controls both algorithms and does not enable either by itself. The old individual interval and `cv_*` setters were removed.
 
 ## Options
 
@@ -191,13 +187,13 @@ Policy for handling non-finite (NaN/Inf) values in `x`/`y` (and, `custom_weights
 
 Convergence tolerance for early stopping of robustness iterations. Disabled by default.
 
-### confidence_intervals
+### intervals: confidence
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`). Disabled by default.
 
-### prediction_intervals
+### intervals: prediction
 
 *See: [Intervals](crate::doc::guide::intervals)*
 
@@ -305,10 +301,10 @@ Whether to reduce the polynomial degree at boundary vertices when the requested 
 
 *See: [Cross-Validation](crate::doc::guide::cross_validation)*
 
-- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method` is `"loocv"`.
-- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `cv_seed`: Seed for reproducible k-fold shuffling. Disabled by default (uses a random seed).
+- `CVBuilder::new()` defaults to k-fold CV with five folds; `.method("loocv")` selects leave-one-out CV.
+- `.k(...)` changes the fold count for k-fold CV and is ignored for LOOCV.
+- `.fraction(vec![...])` supplies candidate fractions and produces the options passed to `.cv(...)`.
+- The outer `.seed(...)` makes fold assignment and bootstrap sampling reproducible.
 
 ### custom_weights
 

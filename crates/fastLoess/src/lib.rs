@@ -96,41 +96,45 @@
 //!
 //! // Build model with all features enabled
 //! let model = Loess::new()
-//!     .fraction(0.5)                                   // Use 50% of data for each local fit
-//!     .iterations(3)                                   // 3 robustness iterations
+//!     .fraction(0.5)                                  // Use 50% of data for each local fit
+//!     .iterations(3)                                  // 3 robustness iterations
 //!     .degree("linear")                               // Polynomial degree (case-insensitive)
-//!     .dimensions(1)                                   // Number of dimensions
+//!     .dimensions(1)                                  // Number of dimensions
 //!     .distance_metric("euclidean")                   // Distance metric
 //!     .weight_function("tricube")                     // Kernel function
 //!     .robustness_method("bisquare")                  // Outlier handling
 //!     .surface_mode("direct")                         // Required for per-point gradients
-//!     .boundary_policy("extend")                       // Boundary handling
-//!     .boundary_degree_fallback(true)                  // Boundary degree fallback
+//!     .boundary_policy("extend")                      // Boundary handling
+//!     .boundary_degree_fallback(true)                 // Boundary degree fallback
 //!     .scaling_method("mad")                          // Scaling method
-//!     .cell(0.2)                                       // Interpolation cell size
-//!     .interpolation_vertices(1000)                    // Maximum vertices for interpolation
+//!     .cell(0.2)                                      // Interpolation cell size
+//!     .interpolation_vertices(1000)                   // Maximum vertices for interpolation
 //!     .zero_weight_fallback("use_local_mean")         // Fallback policy
-//!     .missing("error")                                // Reject non-finite (NaN/Inf) input
-//!     .custom_weights(vec![1.0; 8])                    // Per-observation case weights
-//!     .auto_converge(1e-6)                             // Auto-convergence threshold
-//!     .confidence_intervals(0.95)                      // 95% confidence intervals
-//!     .prediction_intervals(0.95)                      // 95% prediction intervals
-//!     .outputs([
-//!         "se",                                        // Standard errors
-//!         "diagnostics",                               // Fit quality metrics
-//!         "residuals",                                 // Include residuals
-//!         "weights",                                   // Include robustness weights
-//!         "gradient",                                  // Include per-point local fit gradient
-//!         "sorted"                                     // Sort output ascending by x
-//!     ])
-//!     .retain_model(true)                              // Retain state for out-of-sample predict()
-//!     .cv(
-//!         CVBuilder::method("kfold")                   // Use k-fold CV (or "loocv")
-//!             .k(5)                                    // Split observations into five folds
-//!             .fractions(vec![0.3, 0.7])              // Candidate smoothing fractions
-//!             .seed(123),                              // Reproducible fold assignment
+//!     .missing("error")                               // Reject non-finite (NaN/Inf) input
+//!     .custom_weights(vec![1.0; 8])                   // Per-observation case weights
+//!     .auto_converge(1e-6)                            // Auto-convergence threshold
+//!     .intervals(
+//!         IntervalsBuilder::new()
+//!         .confidence(0.95)                           // 95% confidence intervals
+//!         .prediction(0.95)                           // 95% prediction intervals
 //!     )
-//!     .parallel(true)                                  // Enable parallel execution
+//!     .outputs([
+//!         "se",                                       // Standard errors
+//!         "diagnostics",                              // Fit quality metrics
+//!         "residuals",                                // Include residuals
+//!         "weights",                                  // Include robustness weights
+//!         "gradient",                                 // Include per-point local fit gradient
+//!         "sorted"                                    // Sort output ascending by x
+//!     ])
+//!     .retain_model(true)                             // Retain state for out-of-sample predict()
+//!     .cv(
+//!         CVBuilder::new()
+//!         .method("kfold")                            // Use k-fold CV (or "loocv")
+//!         .k(5)                                       // Split observations into five folds
+//!         .fraction(vec![0.3, 0.7])                   // Candidate smoothing fractions
+//!     )
+//!     .seed(123)
+//!     .parallel(true)                                 // Enable parallel execution
 //!     .build()?;
 //!
 //! let result = model.fit(&x, &y)?;
@@ -315,30 +319,22 @@
 //! - **`return_robustness_weights()`** — Include the final robustness weights `w_i`.
 //!
 //! - **`return_se()`** — Compute standard errors, hat-matrix trace, and effective number of
-//!   parameters. Required for confidence/prediction intervals.
+//!   parameters. Grouped intervals enable standard errors automatically.
 //!
-//! - **`confidence_intervals(level: T)`** — Enable confidence intervals at the given coverage
-//!   level (e.g., `0.95`). Requires `return_se()` to also be set.
-//!
-//! - **`prediction_intervals(level: T)`** — Enable prediction intervals at the given coverage
-//!   level. Requires `return_se()` to also be set.
+//! - **`intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.95))`**:
+//!   Configure independent confidence and prediction coverage levels. Add `.bootstrap(200)`
+//!   inside the interval builder for residual-bootstrap SEs and percentile bounds.
 //!
 //! ### Cross-Validation
 //!
-//! - **`cv(CVBuilder::method("kfold").k(5).fractions(vec![0.3, 0.7]).seed(123))`** —
+//! - **`cv(CVBuilder::new().method("kfold").k(5).fraction(vec![0.3, 0.7]))`** —
 //!   Configure CV as a group. `CVBuilder` is in the prelude; the resulting
 //!   [`CVOptions`] type is available at the crate root, but
 //!   callers normally pass it directly to `.cv(...)`.
 //!
-//! - **`cv_method(method: &str)`** — Select the cross-validation strategy:
-//!   - `"kfold"` — k-fold CV (use `cv_k` to set k, default 5)
-//!   - `"loocv"` — leave-one-out CV
-//!
-//! - **`cv_k(k: usize)`** — Number of folds for K-fold CV (default: `5`).
-//!
-//! - **`cv_fractions(fractions: Vec<T>)`** — Candidate smoothing fractions to evaluate.
-//!
-//! - **`cv_seed(seed: u64)`** — Random seed for reproducible K-fold fold assignment.
+//! - **`seed(seed: u64)`**: One outer seed controls CV fold assignment and residual-bootstrap
+//!   sampling, regardless of configuration order. Supplying a seed alone enables neither.
+//!   `CVBuilder::new()` defaults to k-fold with five folds; `.method("loocv")` selects LOOCV.
 //!
 //! ### Adapter-Specific Options
 //!
@@ -420,7 +416,7 @@ mod adapters;
 // High-level fluent API for LOESS smoothing.
 mod api;
 
-pub use loess_rs::CVOptions;
+pub use loess_rs::{CVOptions, IntervalsBuilder};
 
 // Input data handling.
 mod input;
@@ -432,7 +428,8 @@ mod binding_support;
 // Standard fastLoess prelude.
 pub mod prelude {
     pub use crate::api::{
-        CVBuilder, Loess, LoessError, LoessResult, OnlineLoess, Predict, StreamingLoess,
+        CVBuilder, IntervalsBuilder, Loess, LoessError, LoessResult, OnlineLoess, Predict,
+        StreamingLoess,
     };
 }
 

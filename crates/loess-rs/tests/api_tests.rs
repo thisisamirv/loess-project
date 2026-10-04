@@ -32,7 +32,155 @@ use loess_rs::internals::engine::validator::Validator;
 use loess_rs::internals::evaluation::diagnostics::Diagnostics;
 use loess_rs::internals::math::distance::DistanceMetric;
 use loess_rs::internals::primitives::errors::LoessError;
-use loess_rs::prelude::CVBuilder;
+use loess_rs::prelude::{CVBuilder, IntervalsBuilder};
+
+#[test]
+fn test_grouped_interval_levels_and_bootstrap() {
+    let x: Vec<f64> = (0..20).map(|index| index as f64 / 19.0).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .enumerate()
+        .map(|(index, value)| value.sin() + (index % 3) as f64 * 0.1)
+        .collect();
+    let grouped = Loess::new()
+        .surface_mode("direct")
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.8)
+                .prediction(0.99)
+                .bootstrap(8),
+        )
+        .seed(7)
+        .adapter(Batch);
+    let method = grouped.interval_type.unwrap();
+    assert_eq!(method.level, 0.8);
+    assert_eq!(method.prediction_coverage(), 0.99);
+    assert_eq!(grouped.bootstrap.unwrap().seed, Some(7));
+    let result = grouped.build().unwrap().fit(&x, &y).unwrap();
+    assert_eq!(result.confidence_lower.unwrap().len(), y.len());
+    assert_eq!(result.prediction_lower.unwrap().len(), y.len());
+}
+
+#[test]
+fn test_shared_seed_does_not_depend_on_cv_order() {
+    let x: Vec<f64> = (0..30).map(|index| index as f64 / 29.0).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .enumerate()
+        .map(|(index, value)| value.sin() + (index % 3) as f64 * 0.1)
+        .collect();
+    let options = CVBuilder::new()
+        .method("kfold")
+        .k(3)
+        .fraction(vec![0.4, 0.7]);
+    let base = Loess::new()
+        .surface_mode("direct")
+        .intervals(loess_rs::IntervalsBuilder::new().bootstrap(8));
+    let before = base
+        .clone()
+        .seed(42)
+        .cv(options.clone())
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let after = base
+        .cv(options)
+        .seed(42)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    assert_eq!(before.cv_scores, after.cv_scores);
+    assert_eq!(before.standard_errors, after.standard_errors);
+}
+
+#[test]
+fn test_grouped_intervals_validate_each_level_and_seed_is_inert() {
+    for invalid in [-0.1, 0.0, 1.0, f64::INFINITY, f64::NAN] {
+        for options in [
+            IntervalsBuilder::new().confidence(invalid).prediction(0.95),
+            IntervalsBuilder::new().confidence(0.95).prediction(invalid),
+        ] {
+            assert!(matches!(
+                Loess::<f64>::new().intervals(options.clone()).build(),
+                Err(LoessError::InvalidIntervals(_))
+            ));
+            assert!(matches!(
+                loess_rs::prelude::Predict::<f64>::new()
+                    .intervals(options)
+                    .build(),
+                Err(LoessError::InvalidIntervals(_))
+            ));
+        }
+    }
+    let adapter = Loess::<f64>::new().seed(0).adapter(Batch);
+    assert!(adapter.bootstrap.is_none());
+    assert!(adapter.cv_fractions.is_none());
+    assert!(adapter.interval_type.is_none());
+}
+
+#[test]
+fn test_grouped_intervals_preserve_coverage_for_analytic_and_bootstrap() {
+    let x: Vec<f64> = (0..20).map(|index| index as f64 / 19.0).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .enumerate()
+        .map(|(index, value)| value.sin() + (index % 3) as f64 * 0.1)
+        .collect();
+    for samples in [None, Some(8)] {
+        let fit = |confidence: Option<f64>, prediction: Option<f64>| {
+            let mut options = IntervalsBuilder::new();
+            if let Some(level) = confidence {
+                options = options.confidence(level);
+            }
+            if let Some(level) = prediction {
+                options = options.prediction(level);
+            }
+            if let Some(count) = samples {
+                options = options.bootstrap(count);
+            }
+            Loess::new()
+                .surface_mode("direct")
+                .iterations(0)
+                .intervals(options)
+                .seed(7)
+                .build()
+                .unwrap()
+                .fit(&x, &y)
+                .unwrap()
+        };
+        let combined = fit(Some(0.8), Some(0.99));
+        let confidence = fit(Some(0.8), None);
+        let prediction = fit(None, Some(0.99));
+        assert_eq!(combined.confidence_lower, confidence.confidence_lower);
+        assert_eq!(combined.confidence_upper, confidence.confidence_upper);
+        assert_eq!(combined.prediction_lower, prediction.prediction_lower);
+        assert_eq!(combined.prediction_upper, prediction.prediction_upper);
+    }
+}
+
+#[test]
+fn test_retained_bootstrap_prediction_preserves_unwind_safety() {
+    let x = vec![0.0, 0.2, 0.4, 0.6, 0.8, 1.0];
+    let y = vec![0.0, 0.3, 0.35, 0.65, 0.7, 0.9];
+    let result = Loess::new()
+        .surface_mode("direct")
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let query = loess_rs::prelude::Predict::new()
+        .intervals(IntervalsBuilder::new().bootstrap(8))
+        .seed(7)
+        .build()
+        .unwrap();
+    let predicted = std::panic::catch_unwind(|| query.call(&result, &[0.5]))
+        .unwrap()
+        .unwrap();
+    assert_eq!(predicted.standard_errors.unwrap().len(), 1);
+}
 
 // ============================================================================
 // Helper Functions
@@ -166,9 +314,10 @@ fn test_validate_empty_cv_fractions() {
     // K-Fold with empty fractions
     let fracs: [f64; 0] = [];
     let res = Loess::<f64>::new()
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_fractions(fracs.to_vec())
+        .cv(loess_rs::prelude::CVBuilder::new()
+            .method("kfold")
+            .k(3)
+            .fraction(fracs.to_vec()))
         .adapter(Batch)
         .build();
 
@@ -185,18 +334,20 @@ fn test_validate_empty_cv_fractions() {
 fn test_validate_invalid_fractions() {
     // Fraction <= 0
     let bad1 = Loess::<f64>::new()
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_fractions(vec![0.0f64])
+        .cv(loess_rs::prelude::CVBuilder::new()
+            .method("kfold")
+            .k(3)
+            .fraction(vec![0.0f64]))
         .adapter(Batch)
         .build();
     assert!(matches!(bad1, Err(LoessError::InvalidFraction(_))));
 
     // Fraction > 1
     let bad2 = Loess::<f64>::new()
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_fractions(vec![1.5f64])
+        .cv(loess_rs::prelude::CVBuilder::new()
+            .method("kfold")
+            .k(3)
+            .fraction(vec![1.5f64]))
         .adapter(Batch)
         .build();
     assert!(matches!(bad2, Err(LoessError::InvalidFraction(_))));
@@ -210,7 +361,7 @@ fn test_validate_invalid_confidence_level() {
     // Level > 1.0 should be rejected
     let got = Loess::<f64>::new()
         .fraction(0.5)
-        .confidence_intervals(2.0)
+        .intervals(loess_rs::IntervalsBuilder::new().confidence(2.0))
         .iterations(0)
         .adapter(Batch)
         .build();
@@ -403,8 +554,11 @@ fn test_fit_with_intervals_and_diagnostics() {
 
     let res = Loess::<f64>::new()
         .fraction(1.0)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(
+            loess_rs::IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95),
+        )
         .return_diagnostics()
         .return_residuals()
         .iterations(0)
@@ -439,7 +593,7 @@ fn test_prediction_intervals_only() {
 
     let res = Loess::<f64>::new()
         .fraction(1.0)
-        .prediction_intervals(0.95)
+        .intervals(loess_rs::IntervalsBuilder::new().prediction(0.95))
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -471,7 +625,7 @@ fn test_confidence_intervals_only() {
 
     let res = Loess::<f64>::new()
         .fraction(1.0)
-        .confidence_intervals(0.95)
+        .intervals(loess_rs::IntervalsBuilder::new().confidence(0.95))
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -699,9 +853,10 @@ fn test_cross_validate_kfold() {
     let fracs = vec![0.2, 0.4];
 
     let res = Loess::<f64>::new()
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_fractions(fracs.clone())
+        .cv(loess_rs::prelude::CVBuilder::new()
+            .method("kfold")
+            .k(3)
+            .fraction(fracs.clone()))
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -724,8 +879,9 @@ fn test_cross_validate_loocv() {
     let fractions = vec![0.3, 0.6];
 
     let res = Loess::<f64>::new()
-        .cv_method("loocv")
-        .cv_fractions(fractions.clone())
+        .cv(loess_rs::prelude::CVBuilder::new()
+            .method("loocv")
+            .fraction(fractions.clone()))
         .iterations(0)
         .adapter(Batch)
         .build()
@@ -738,26 +894,28 @@ fn test_cross_validate_loocv() {
 }
 
 #[test]
-fn test_grouped_cv_matches_individual_setters() {
+fn test_grouped_cv_options_match_fluent_configuration() {
     let x: Vec<f64> = (0..12).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|xi| 2.0 * xi + 1.0).collect();
     let fractions = vec![0.2, 0.4];
-    let options: loess_rs::CVOptions<f64> = CVBuilder::method("kfold")
-        .fractions(fractions.clone())
-        .k(3)
-        .seed(42);
+    let options: loess_rs::CVOptions<f64> = CVBuilder::new()
+        .method("kfold")
+        .fraction(fractions.clone())
+        .k(3);
     let grouped = Loess::<f64>::new()
         .cv(options)
+        .seed(42)
         .iterations(0)
         .build()
         .unwrap()
         .fit(&x, &y)
         .unwrap();
     let individual = Loess::<f64>::new()
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_seed(42)
-        .cv_fractions(fractions.clone())
+        .cv(loess_rs::prelude::CVBuilder::new()
+            .method("kfold")
+            .k(3)
+            .fraction(fractions.clone()))
+        .seed(42)
         .iterations(0)
         .build()
         .unwrap()
@@ -766,7 +924,7 @@ fn test_grouped_cv_matches_individual_setters() {
     assert_eq!(grouped.cv_scores, individual.cv_scores);
 
     let loocv = Loess::<f64>::new()
-        .cv(CVBuilder::method("loocv").fractions(fractions))
+        .cv(CVBuilder::new().method("loocv").fraction(fractions))
         .iterations(0)
         .build()
         .unwrap()
@@ -778,15 +936,15 @@ fn test_grouped_cv_matches_individual_setters() {
 #[test]
 fn test_grouped_cv_preserves_validation() {
     let duplicate = Loess::<f64>::new()
-        .cv_fractions(vec![0.3])
-        .cv(CVBuilder::method("kfold").fractions(vec![0.4]))
+        .cv(loess_rs::prelude::CVBuilder::new().fraction(vec![0.3]))
+        .cv(CVBuilder::new().method("kfold").fraction(vec![0.4]))
         .build();
     assert!(matches!(
         duplicate,
         Err(LoessError::DuplicateParameter { parameter: "cv" })
     ));
     let empty = Loess::<f64>::new()
-        .cv(CVBuilder::method("kfold").fractions(Vec::<f64>::new()))
+        .cv(CVBuilder::new().method("kfold").fraction(Vec::<f64>::new()))
         .build();
     assert!(matches!(empty, Err(LoessError::InvalidFraction(_))));
 }
@@ -954,8 +1112,11 @@ fn test_builder_all_parameters_set() {
         .weight_function("tricube")
         .robustness_method("bisquare")
         .return_se()
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(
+            loess_rs::IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95),
+        )
         .return_residuals()
         .return_robustness_weights()
         .return_diagnostics()
@@ -1082,7 +1243,7 @@ fn test_interval_level_boundaries() {
     // Very low confidence level
     let result_low = Loess::new()
         .fraction(0.5)
-        .confidence_intervals(0.001)
+        .intervals(loess_rs::IntervalsBuilder::new().confidence(0.001))
         .adapter(Batch)
         .build()
         .unwrap()
@@ -1093,7 +1254,7 @@ fn test_interval_level_boundaries() {
     // Very high confidence level
     let result_high = Loess::new()
         .fraction(0.5)
-        .confidence_intervals(0.999)
+        .intervals(loess_rs::IntervalsBuilder::new().confidence(0.999))
         .adapter(Batch)
         .build()
         .unwrap()

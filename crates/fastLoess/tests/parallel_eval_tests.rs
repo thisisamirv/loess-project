@@ -7,13 +7,14 @@ fn test_grouped_cross_validation_parallel() {
     let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| (xi / 5.0).sin()).collect();
     let fractions = vec![0.3, 0.5];
-    let options: fastLoess::CVOptions<f64> = CVBuilder::method("kfold")
+    let options: fastLoess::CVOptions<f64> = CVBuilder::new()
+        .method("kfold")
         .k(3)
-        .seed(42)
-        .fractions(fractions.clone());
+        .fraction(fractions.clone());
     let result = Loess::new()
         .iterations(0)
         .cv(options)
+        .seed(42)
         .parallel(true)
         .build()
         .unwrap()
@@ -22,12 +23,148 @@ fn test_grouped_cross_validation_parallel() {
     assert_eq!(result.cv_scores.unwrap().len(), fractions.len());
 
     let duplicate = Loess::new()
-        .cv_method("kfold")
-        .cv(CVBuilder::method("kfold").fractions(fractions))
+        .cv(CVBuilder::new().fraction(vec![0.5]))
+        .cv(CVBuilder::new().method("kfold").fraction(fractions))
         .build();
     assert!(matches!(
         duplicate,
         Err(LoessError::DuplicateParameter { parameter: "cv" })
+    ));
+}
+
+#[test]
+fn test_grouped_intervals_shared_seed_parallel() {
+    let x: Vec<f64> = (0..20).map(|index| index as f64 / 19.0).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .enumerate()
+        .map(|(index, value)| value.sin() + (index % 3) as f64 * 0.1)
+        .collect();
+    let fit = |seed_first, parallel| {
+        let cv = CVBuilder::new().k(3).fraction(vec![0.4, 0.7]);
+        let builder = Loess::new()
+            .surface_mode("direct")
+            .iterations(0)
+            .parallel(parallel)
+            .retain_model(true)
+            .intervals(
+                IntervalsBuilder::new()
+                    .confidence(0.8)
+                    .prediction(0.99)
+                    .bootstrap(8),
+            );
+        let builder = if seed_first {
+            builder.seed(7).cv(cv)
+        } else {
+            builder.cv(cv).seed(7)
+        };
+        builder.build().unwrap().fit(&x, &y).unwrap()
+    };
+    let first = fit(true, true);
+    let second = fit(false, true);
+    assert_eq!(first.cv_scores, second.cv_scores);
+    assert_eq!(first.standard_errors, second.standard_errors);
+    assert_eq!(first.prediction_lower, second.prediction_lower);
+    let serial = Loess::new()
+        .surface_mode("direct")
+        .iterations(0)
+        .parallel(false)
+        .fraction(first.fraction_used)
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.8)
+                .prediction(0.99)
+                .bootstrap(8),
+        )
+        .seed(7)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    for (&parallel, &sequential) in first
+        .standard_errors
+        .as_ref()
+        .unwrap()
+        .iter()
+        .zip(serial.standard_errors.as_ref().unwrap())
+    {
+        assert_abs_diff_eq!(parallel, sequential, epsilon = 1e-8);
+    }
+    let prediction = Predict::new()
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.8)
+                .prediction(0.99)
+                .bootstrap(8),
+        )
+        .seed(7)
+        .build()
+        .unwrap()
+        .call(&first, &[0.25, 0.75])
+        .unwrap();
+    assert_eq!(prediction.standard_errors.unwrap().len(), 2);
+}
+
+#[test]
+fn test_grouped_intervals_streaming_online_and_validation() {
+    let x: Vec<f64> = (0..20).map(|index| index as f64 / 19.0).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .enumerate()
+        .map(|(index, value)| value.sin() + (index % 3) as f64 * 0.1)
+        .collect();
+    let mut stream = StreamingLoess::new()
+        .surface_mode("direct")
+        .iterations(0)
+        .chunk_size(20)
+        .overlap(3)
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.8)
+                .prediction(0.99)
+                .bootstrap(8),
+        )
+        .seed(7)
+        .build()
+        .unwrap();
+    let chunk = stream.process_chunk(&x, &y).unwrap();
+    let tail = stream.finalize().unwrap();
+    assert_eq!(
+        chunk.standard_errors.unwrap().len() + tail.standard_errors.unwrap().len(),
+        y.len()
+    );
+    let mut online = OnlineLoess::new()
+        .surface_mode("direct")
+        .iterations(0)
+        .update_mode("full")
+        .window_capacity(20)
+        .min_points(3)
+        .intervals(
+            IntervalsBuilder::new()
+                .confidence(0.8)
+                .prediction(0.99)
+                .bootstrap(8),
+        )
+        .seed(7)
+        .build()
+        .unwrap();
+    let mut latest = None;
+    for (&point, &response) in x.iter().zip(&y) {
+        latest = online.add_point(&[point], response).unwrap();
+    }
+    assert!(latest.unwrap().standard_error.is_some());
+    assert!(matches!(
+        StreamingLoess::new()
+            .intervals(IntervalsBuilder::new().bootstrap(1))
+            .build(),
+        Err(LoessError::InvalidBootstrapSamples(1))
+    ));
+    assert!(matches!(
+        OnlineLoess::new()
+            .update_mode("incremental")
+            .intervals(IntervalsBuilder::new().bootstrap(8))
+            .build(),
+        Err(LoessError::StandardErrorRequiresFullUpdateMode)
     ));
 }
 
@@ -43,9 +180,10 @@ fn test_parallel_cross_validation() {
     let seq_res = Loess::new()
         .iterations(0)
         .surface_mode("direct")
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(fractions.clone())
+        .cv(fastLoess::prelude::CVBuilder::new()
+            .method("kfold")
+            .k(5)
+            .fraction(fractions.clone()))
         .parallel(false)
         .build()
         .unwrap()
@@ -56,9 +194,10 @@ fn test_parallel_cross_validation() {
     let par_res = Loess::new()
         .iterations(0)
         .surface_mode("direct")
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(fractions.clone())
+        .cv(fastLoess::prelude::CVBuilder::new()
+            .method("kfold")
+            .k(5)
+            .fraction(fractions.clone()))
         .parallel(true)
         .build()
         .unwrap()
@@ -92,8 +231,9 @@ fn test_loocv_cross_validation_parallel() {
     let fractions = vec![0.3, 0.5, 0.7];
 
     let res = Loess::new()
-        .cv_method("loocv")
-        .cv_fractions(fractions)
+        .cv(fastLoess::prelude::CVBuilder::new()
+            .method("loocv")
+            .fraction(fractions))
         .parallel(true)
         .build()
         .unwrap()
@@ -115,9 +255,10 @@ fn test_kfold_fold_size_less_than_2() {
     let fractions = vec![0.3, 0.5];
 
     let res = Loess::new()
-        .cv_method("kfold")
-        .cv_k(10)
-        .cv_fractions(fractions)
+        .cv(fastLoess::prelude::CVBuilder::new()
+            .method("kfold")
+            .k(10)
+            .fraction(fractions))
         .parallel(true)
         .build()
         .unwrap()
@@ -144,9 +285,10 @@ fn test_multidim_kfold_cv_parallel() {
 
     let res = Loess::new()
         .dimensions(2)
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_fractions(fractions)
+        .cv(fastLoess::prelude::CVBuilder::new()
+            .method("kfold")
+            .k(3)
+            .fraction(fractions))
         .parallel(true)
         .build()
         .unwrap()

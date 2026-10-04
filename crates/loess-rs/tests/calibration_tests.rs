@@ -43,7 +43,7 @@ fn reported_se_is_calibrated_on_linear_truth() {
             let result = Loess::new()
                 .fraction(fraction)
                 .iterations(0)
-                .confidence_intervals(0.95)
+                .intervals(loess_rs::IntervalsBuilder::new().confidence(0.95))
                 .surface_mode("direct")
                 .parallel(false)
                 .build()

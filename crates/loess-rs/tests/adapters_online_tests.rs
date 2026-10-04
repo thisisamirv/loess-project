@@ -1146,7 +1146,7 @@ fn test_online_gradient_full_mode() {
     assert_relative_eq!(last.unwrap().gradient.unwrap()[0], 3.0, epsilon = 1e-9);
 }
 
-/// `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()` combined with the
+/// `.return_se()`/`.intervals(loess_rs::IntervalsBuilder::new().confidence())`/`.intervals(loess_rs::IntervalsBuilder::new().prediction())` combined with the
 /// default `update_mode("incremental")` should fail at `.build()`.
 #[test]
 fn test_online_return_se_requires_full_update_mode() {
@@ -1164,12 +1164,12 @@ fn test_online_return_se_requires_full_update_mode() {
     ));
 }
 
-/// Same combination check for `.confidence_intervals()`.
+/// Same combination check for `.intervals(loess_rs::IntervalsBuilder::new().confidence())`.
 #[test]
 fn test_online_confidence_intervals_requires_full_update_mode() {
     let result = Loess::new()
         .fraction(0.5)
-        .confidence_intervals(0.95)
+        .intervals(loess_rs::IntervalsBuilder::new().confidence(0.95))
         .window_capacity(10)
         .min_points(3)
         .adapter(Online)
@@ -1181,7 +1181,7 @@ fn test_online_confidence_intervals_requires_full_update_mode() {
     ));
 }
 
-/// `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()` work when combined
+/// `.return_se()`/`.intervals(loess_rs::IntervalsBuilder::new().confidence())`/`.intervals(loess_rs::IntervalsBuilder::new().prediction())` work when combined
 /// with `update_mode("full")`.
 #[test]
 fn test_online_return_se_and_intervals_full_mode() {
@@ -1189,8 +1189,11 @@ fn test_online_return_se_and_intervals_full_mode() {
         .fraction(0.5)
         .update_mode("full")
         .return_se()
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(
+            loess_rs::IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95),
+        )
         .window_capacity(10)
         .min_points(3)
         .adapter(Online)

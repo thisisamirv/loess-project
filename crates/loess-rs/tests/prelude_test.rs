@@ -57,13 +57,13 @@ fn test_prelude_weight_function() {
 /// Verifies string-based cross-validation builder API is available.
 #[test]
 fn test_prelude_cross_validation() {
-    let _ = Loess::<f64>::new()
-        .cv_method("kfold")
-        .cv_k(5)
-        .cv_fractions(vec![0.5]);
-    let _ = Loess::<f64>::new()
-        .cv_method("loocv")
-        .cv_fractions(vec![0.5]);
+    let _ = Loess::<f64>::new().cv(loess_rs::prelude::CVBuilder::new()
+        .method("kfold")
+        .k(5)
+        .fraction(vec![0.5]));
+    let _ = Loess::<f64>::new().cv(loess_rs::prelude::CVBuilder::new()
+        .method("loocv")
+        .fraction(vec![0.5]));
 }
 
 /// Test ZeroWeightFallback is available.
@@ -107,7 +107,7 @@ fn test_prelude_complete_workflow() {
         .iterations(3)
         .robustness_method("bisquare")
         .weight_function("tricube")
-        .confidence_intervals(0.95)
+        .intervals(loess_rs::IntervalsBuilder::new().confidence(0.95))
         .return_diagnostics()
         .return_residuals()
         .build()

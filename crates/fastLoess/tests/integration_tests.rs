@@ -432,7 +432,7 @@ fn test_streaming_parallel_return_se() {
     assert!(!standard_errors.is_empty());
 }
 
-/// `.confidence_intervals()`/`.prediction_intervals()` on the Streaming adapter should
+/// `.intervals(fastLoess::IntervalsBuilder::new().confidence())`/`.intervals(fastLoess::IntervalsBuilder::new().prediction())` on the Streaming adapter should
 /// produce bounds that bracket the observed `y` values and confidence bounds narrower
 /// than prediction bounds.
 #[test]
@@ -447,8 +447,11 @@ fn test_streaming_adapter_confidence_and_prediction_intervals() {
 
     let mut processor = StreamingLoess::new()
         .fraction(0.5)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(
+            fastLoess::IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95),
+        )
         .chunk_size(20)
         .overlap(5)
         .parallel(false)
@@ -488,14 +491,17 @@ fn test_online_adapter_return_se_requires_full_update_mode() {
     ));
 }
 
-/// `.confidence_intervals()`/`.prediction_intervals()` on the Online adapter with
+/// `.intervals(fastLoess::IntervalsBuilder::new().confidence())`/`.intervals(fastLoess::IntervalsBuilder::new().prediction())` on the Online adapter with
 /// `update_mode("full")` should produce bounds once enough points are buffered.
 #[test]
 fn test_online_adapter_confidence_and_prediction_intervals_full_mode() {
     let mut processor = OnlineLoess::new()
         .fraction(1.0)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(
+            fastLoess::IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95),
+        )
         .update_mode("full")
         .min_points(3)
         .window_capacity(10)

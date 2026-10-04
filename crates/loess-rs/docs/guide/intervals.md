@@ -32,7 +32,7 @@ fn main() -> Result<(), LoessError> {
 
     let model = Loess::new()
         .fraction(0.5)
-        .confidence_intervals(0.95)  // 95% CI
+        .intervals(IntervalsBuilder::new().confidence(0.95))  // 95% CI
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -72,7 +72,7 @@ fn main() -> Result<(), LoessError> {
 
     let model = Loess::new()
         .fraction(0.5)
-        .prediction_intervals(0.95)  // 95% PI
+        .intervals(IntervalsBuilder::new().prediction(0.95))  // 95% PI
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -106,8 +106,7 @@ fn main() -> Result<(), LoessError> {
 
     let model = Loess::new()
         .fraction(0.5)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -126,7 +125,7 @@ First point 95% CI: [0.301714242148439, 0.35303683799350516]
 
 ## Residual Bootstrap
 
-Add `.bootstrap(n_boot)` to replace analytic standard errors and bounds with residual-bootstrap estimates. At least two replicates are required. `.seed(seed)` makes sampling reproducible; omitting it uses a fixed default seed. The seed also configures Batch cross-validation. Without bootstrap, existing analytic interval behavior is unchanged.
+Add `.intervals(IntervalsBuilder::new().bootstrap(n_boot))` to replace analytic standard errors and bounds with residual-bootstrap estimates. At least two replicates are required. `.seed(seed)` makes sampling reproducible; omitting it uses a fixed default seed. The seed also configures Batch cross-validation. Without bootstrap, existing analytic interval behavior is unchanged.
 
 Each replicate samples centered training residuals with replacement, adds them to the fitted response, and refits using the same degree, dimensions, metric, case weights, robustness settings, and selected fraction. Refits are processed in batches of at most 256. Standard errors are sample standard deviations; bounds use linearly interpolated percentiles. Prediction bounds include a fresh residual draw, not a normal-error assumption.
 
@@ -140,17 +139,13 @@ fn main() -> Result<(), LoessError> {
         .collect();
     let result = Loess::new()
         .fraction(0.5)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
-        .bootstrap(64)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95).bootstrap(64))
         .seed(42)
         .retain_model(true)
         .build()?
         .fit(&x, &y)?;
     let prediction = Predict::new()
-        .confidence_intervals(0.90)
-        .prediction_intervals(0.95)
-        .bootstrap(64)
+        .intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.95).bootstrap(64))
         .seed(42)
         .build()?
         .call(&result, &[0.25, 0.75])?;
@@ -161,7 +156,7 @@ fn main() -> Result<(), LoessError> {
 
 Bootstrap alone returns standard errors without interval bounds. Streaming resamples each combined overlap-and-chunk window before applying its usual merge policy. Full-update Online resamples each sliding window and returns the latest point. Prediction refits the original observations before evaluating query points, preserving interpolation and extrapolation settings. Retaining a model also retains its bootstrap refit context; sampling is performed only when requested.
 
-The `bootstrap` and `seed` methods described here belong to `loess-rs`; this change does not add corresponding methods to `fastLoess` or language bindings.
+`IntervalsBuilder` and the outer `.seed(...)` are also available through `fastLoess`. Language-binding option structs remain unchanged.
 
 ## Confidence Levels
 
@@ -184,7 +179,7 @@ fn main() -> Result<(), LoessError> {
 
     // 99% confidence interval
     let model = Loess::new()
-        .confidence_intervals(0.99)
+        .intervals(IntervalsBuilder::new().confidence(0.99))
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -215,7 +210,7 @@ fn main() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Loess::new()
-        .confidence_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95))
         .build()?;
     let result = model.fit(&x, &y)?;
 

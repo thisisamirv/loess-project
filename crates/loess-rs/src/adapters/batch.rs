@@ -253,7 +253,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
             Validator::validate_bootstrap_samples(bootstrap.n_boot)?;
         }
         if let Some(ref method) = self.interval_type {
-            Validator::validate_interval_level(method.level)?;
+            Validator::validate_interval_method(method)?;
         }
 
         // Validate CV fractions and method

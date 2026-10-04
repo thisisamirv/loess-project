@@ -997,7 +997,7 @@ fn test_streaming_return_se_single_chunk() {
     }
 }
 
-/// Test `.confidence_intervals()`/`.prediction_intervals()` across multiple chunks,
+/// Test `.intervals(loess_rs::IntervalsBuilder::new().confidence())`/`.intervals(loess_rs::IntervalsBuilder::new().prediction())` across multiple chunks,
 /// exercising overlap merging.
 #[test]
 fn test_streaming_confidence_and_prediction_intervals_multi_chunk() {
@@ -1006,8 +1006,11 @@ fn test_streaming_confidence_and_prediction_intervals_multi_chunk() {
 
     let mut processor = Loess::new()
         .fraction(0.3)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(
+            loess_rs::IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95),
+        )
         .chunk_size(30)
         .overlap(5)
         .adapter(Streaming)

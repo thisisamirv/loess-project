@@ -55,9 +55,10 @@ fn test_predict_after_cross_validation() {
     let (x, y) = linear_series(40, 2.0, 1.0);
     let result = Loess::new()
         .iterations(0)
-        .cv_method("kfold")
-        .cv_k(3)
-        .cv_fractions(vec![0.3, 0.5, 0.7])
+        .cv(loess_rs::prelude::CVBuilder::new()
+            .method("kfold")
+            .k(3)
+            .fraction(vec![0.3, 0.5, 0.7]))
         .retain_model(true)
         .build()
         .unwrap()
@@ -414,8 +415,11 @@ fn test_predict_confidence_and_prediction_intervals() {
         .unwrap();
 
     let options = PredictBuilder::new()
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(
+            loess_rs::IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95),
+        )
         .build()
         .unwrap();
     let output = options
@@ -449,7 +453,7 @@ fn test_predict_intervals_use_fit_residual_scale_when_available() {
         .iterations(0)
         .surface_mode("direct")
         .return_se()
-        .prediction_intervals(0.95)
+        .intervals(loess_rs::IntervalsBuilder::new().prediction(0.95))
         .retain_model(true)
         .build()
         .unwrap()
@@ -462,7 +466,7 @@ fn test_predict_intervals_use_fit_residual_scale_when_available() {
 
     let options = PredictBuilder::new()
         .return_se()
-        .prediction_intervals(0.95)
+        .intervals(loess_rs::IntervalsBuilder::new().prediction(0.95))
         .build()
         .unwrap();
     let output = options

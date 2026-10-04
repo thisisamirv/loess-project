@@ -57,9 +57,12 @@ fn test_bootstrap_batch_fit() {
     let builder = Loess::new()
         .surface_mode("direct")
         .fraction(0.6)
-        .confidence_intervals(0.9)
-        .prediction_intervals(0.9)
-        .bootstrap(24)
+        .intervals(
+            loess_rs::IntervalsBuilder::new()
+                .confidence(0.9)
+                .prediction(0.9)
+                .bootstrap(24),
+        )
         .seed(0);
     let first = builder.clone().build().unwrap().fit(&x, &y).unwrap();
     let second = builder.build().unwrap().fit(&x, &y).unwrap();
@@ -75,7 +78,9 @@ fn test_bootstrap_batch_fit() {
             .any(|value| *value > 0.0)
     );
     assert!(matches!(
-        Loess::<f64>::new().bootstrap(1).build(),
+        Loess::<f64>::new()
+            .intervals(loess_rs::IntervalsBuilder::new().bootstrap(1))
+            .build(),
         Err(LoessError::InvalidBootstrapSamples(1))
     ));
 }
@@ -122,8 +127,11 @@ fn test_bootstrap_streaming_and_online_match_batch() {
         .surface_mode("direct")
         .iterations(0)
         .fraction(0.6)
-        .confidence_intervals(0.9)
-        .bootstrap(8)
+        .intervals(
+            loess_rs::IntervalsBuilder::new()
+                .confidence(0.9)
+                .bootstrap(8),
+        )
         .seed(0)
         .build()
         .unwrap()
@@ -135,8 +143,11 @@ fn test_bootstrap_streaming_and_online_match_batch() {
         .fraction(0.6)
         .chunk_size(20)
         .overlap(3)
-        .confidence_intervals(0.9)
-        .bootstrap(8)
+        .intervals(
+            loess_rs::IntervalsBuilder::new()
+                .confidence(0.9)
+                .bootstrap(8),
+        )
         .seed(0)
         .build()
         .unwrap();
@@ -155,8 +166,11 @@ fn test_bootstrap_streaming_and_online_match_batch() {
         .update_mode("full")
         .window_capacity(20)
         .min_points(3)
-        .confidence_intervals(0.9)
-        .bootstrap(8)
+        .intervals(
+            loess_rs::IntervalsBuilder::new()
+                .confidence(0.9)
+                .bootstrap(8),
+        )
         .seed(0)
         .build()
         .unwrap();
@@ -174,11 +188,15 @@ fn test_bootstrap_streaming_and_online_match_batch() {
         batch.confidence_lower.unwrap().last().copied()
     );
     assert!(matches!(
-        OnlineLoess::<f64>::new().bootstrap(8).build(),
+        OnlineLoess::<f64>::new()
+            .intervals(loess_rs::IntervalsBuilder::new().bootstrap(8))
+            .build(),
         Err(LoessError::StandardErrorRequiresFullUpdateMode)
     ));
     assert!(matches!(
-        StreamingLoess::<f64>::new().bootstrap(1).build(),
+        StreamingLoess::<f64>::new()
+            .intervals(loess_rs::IntervalsBuilder::new().bootstrap(1))
+            .build(),
         Err(LoessError::InvalidBootstrapSamples(1))
     ));
 }
@@ -200,9 +218,12 @@ fn test_bootstrap_prediction_is_seeded_and_uses_query_points() {
         .fit(&x, &y)
         .unwrap();
     let query = Predict::new()
-        .confidence_intervals(0.8)
-        .prediction_intervals(0.95)
-        .bootstrap(24)
+        .intervals(
+            loess_rs::IntervalsBuilder::new()
+                .confidence(0.8)
+                .prediction(0.95)
+                .bootstrap(24),
+        )
         .seed(0)
         .build()
         .unwrap();
@@ -220,7 +241,9 @@ fn test_bootstrap_prediction_is_seeded_and_uses_query_points() {
             .any(|value| *value > 0.0)
     );
     assert!(matches!(
-        Predict::<f64>::new().bootstrap(1).build(),
+        Predict::<f64>::new()
+            .intervals(loess_rs::IntervalsBuilder::new().bootstrap(1))
+            .build(),
         Err(LoessError::InvalidBootstrapSamples(1))
     ));
 }
@@ -295,11 +318,11 @@ fn test_bootstrap_weighted_nd_refits_and_sorting() {
         .fraction(0.65)
         .iterations(1)
         .custom_weights(weights)
-        .confidence_intervals(0.9);
+        .intervals(loess_rs::IntervalsBuilder::new().confidence(0.9));
     let plain = base.clone().build().unwrap().fit(&x, &y).unwrap();
     let fitted = base
         .clone()
-        .bootstrap(8)
+        .intervals(loess_rs::IntervalsBuilder::new().bootstrap(8))
         .seed(7)
         .build()
         .unwrap()
@@ -336,7 +359,7 @@ fn test_bootstrap_weighted_nd_refits_and_sorting() {
     assert_eq!(fitted.confidence_lower, expected.confidence_lower);
     let sorted = base
         .return_sorted()
-        .bootstrap(8)
+        .intervals(loess_rs::IntervalsBuilder::new().bootstrap(8))
         .seed(7)
         .build()
         .unwrap()
@@ -356,8 +379,11 @@ fn test_bootstrap_interpolation_cv_and_f32() {
         .map(|(index, value)| value.sin() + (index % 3) as f64 * 0.1)
         .collect();
     let fitted = Loess::new()
-        .cv(CVBuilder::method("kfold").k(3).fractions(vec![0.5, 0.8]))
-        .bootstrap(8)
+        .cv(CVBuilder::new()
+            .method("kfold")
+            .k(3)
+            .fraction(vec![0.5, 0.8]))
+        .intervals(loess_rs::IntervalsBuilder::new().bootstrap(8))
         .seed(3)
         .retain_model(true)
         .build()
@@ -367,7 +393,7 @@ fn test_bootstrap_interpolation_cv_and_f32() {
     assert!(fitted.cv_scores.is_some());
     assert_eq!(fitted.standard_errors.as_ref().unwrap().len(), y.len());
     let predicted = Predict::new()
-        .bootstrap(8)
+        .intervals(loess_rs::IntervalsBuilder::new().bootstrap(8))
         .seed(3)
         .build()
         .unwrap()
@@ -378,7 +404,7 @@ fn test_bootstrap_interpolation_cv_and_f32() {
     let y32: Vec<f32> = y.iter().map(|value| *value as f32).collect();
     let fitted32 = Loess::new()
         .surface_mode("direct")
-        .bootstrap(8)
+        .intervals(loess_rs::IntervalsBuilder::new().bootstrap(8))
         .build()
         .unwrap()
         .fit(&x32, &y32)
@@ -767,7 +793,7 @@ fn test_interval_method_workflow() {
 fn test_interval_edge_cases() {
     let loess_rs = Loess::<f64>::new()
         .fraction(1.0)
-        .confidence_intervals(0.95)
+        .intervals(loess_rs::IntervalsBuilder::new().confidence(0.95))
         .adapter(Batch)
         .build()
         .unwrap();

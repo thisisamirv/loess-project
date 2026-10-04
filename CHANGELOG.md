@@ -18,8 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
-- Added `.bootstrap(n_boot).seed(seed)` residual-bootstrap standard errors and percentile confidence/prediction intervals across Batch, Streaming, full-update Online, and retained-model prediction. Refits preserve LOESS settings and case weights, use centered residuals and batches of at most 256, and support n-dimensional data, interpolation, and `no_std`.
-- Added grouped cross-validation configuration via `CVBuilder::method(...).fractions(...)` and `.cv(...)`; `CVBuilder` is in the prelude and the `CVOptions<T>` result type is at the crate root.
+- Added residual-bootstrap standard errors and percentile confidence/prediction intervals across Batch, Streaming, full-update Online, and retained-model prediction. Refits preserve LOESS settings and case weights, use centered residuals and batches of at most 256, and support n-dimensional data, interpolation, and `no_std`.
+- Added grouped cross-validation configuration via `CVBuilder::new().method(...).fraction(...)` and `.cv(...)`; `CVBuilder` is in the prelude and the `CVOptions<T>` result type is at the crate root.
 - Added `LoessBuilder::outputs(names)` as a grouped replacement for individual output toggles; unknown names are accumulated and reported together by `.build()`.
 - Added `return_gradient` to the Batch, Streaming, and Online adapter builders, exposing each point's local-fit gradient (`LoessResult::gradient` / `OnlineOutput::gradient`) at no extra computation cost. Only populated when `surface_mode` is `"direct"`. `false` by default.
 - Added `retain_model` and `Predict::call()` for out-of-sample prediction, with optional SE, interval, derivative, and extrapolation settings.
@@ -118,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Breaking change: group confidence, prediction, and bootstrap configuration under `.intervals(IntervalsBuilder::new()...)`, and use `.cv(CVBuilder::new().method(...).fraction(...))`. One outer `.seed(...)` controls both CV and bootstrap; individual interval/CV setters and CV-local seeds were removed. Confidence and prediction coverage levels are independent.
 - Hoisted inline fully-qualified paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Flattened `tests/loess-rs/` into `tests/` directly: each test file is now its own integration test binary. No behavior changes.
 - Bumped the vendored KaTeX CDN version from `0.18.7` to `0.18.9`, updating SRI hashes to match.
@@ -127,6 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLoess:**
 
+- Adopt the grouped interval/CV APIs and shared seed across Batch, Streaming, Online, and retained-model prediction; validate parallel adapter options at construction and preserve language-binding option structs.
 - Hoisted inline fully-qualified paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Flattened `tests/fastLoess/` into `tests/` directly: each test file is now its own integration test binary. No behavior changes.
 - Bumped the vendored KaTeX CDN version from `0.18.7` to `0.18.9`, updating SRI hashes to match.

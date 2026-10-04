@@ -145,16 +145,19 @@ pub type OnlineLoess<T = f64> = LoessBuilder<T, OnlineMode>;
 pub struct CVBuilder {
     method: String,
     k: usize,
-    seed: Option<u64>,
 }
 
 impl CVBuilder {
-    pub fn method(name: &str) -> Self {
+    pub fn new() -> Self {
         Self {
-            method: name.to_string(),
+            method: "kfold".to_string(),
             k: DEFAULT_CV_K_FOLDS,
-            seed: None,
         }
+    }
+
+    pub fn method(mut self, name: &str) -> Self {
+        self.method = name.to_string();
+        self
     }
 
     pub fn k(mut self, k: usize) -> Self {
@@ -162,18 +165,18 @@ impl CVBuilder {
         self
     }
 
-    pub fn seed(mut self, seed: u64) -> Self {
-        self.seed = Some(seed);
-        self
-    }
-
-    pub fn fractions<T>(self, fractions: Vec<T>) -> CVOptions<T> {
+    pub fn fraction<T>(self, fractions: Vec<T>) -> CVOptions<T> {
         CVOptions {
             method: self.method,
             k: self.k,
-            seed: self.seed,
             fractions,
         }
+    }
+}
+
+impl Default for CVBuilder {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -182,18 +185,12 @@ impl CVBuilder {
 pub struct CVOptions<T> {
     method: String,
     k: usize,
-    seed: Option<u64>,
     fractions: Vec<T>,
 }
 
 impl<T> CVOptions<T> {
     pub fn k(mut self, k: usize) -> Self {
         self.k = k;
-        self
-    }
-
-    pub fn seed(mut self, seed: u64) -> Self {
-        self.seed = Some(seed);
         self
     }
 }
@@ -223,16 +220,13 @@ pub struct LoessBuilder<
     pub interval_type: Option<IntervalMethod<T>>,
 
     pub bootstrap_samples: Option<usize>,
-    pub bootstrap_seed: Option<u64>,
+    pub(crate) seed: Option<u64>,
 
     // Candidate bandwidths for cross-validation.
     pub cv_fractions: Option<Vec<T>>,
 
     // CV strategy (K-Fold/LOOCV).
     pub(crate) cv_kind: Option<CVKind>,
-
-    // CV seed for reproducibility.
-    pub(crate) cv_seed: Option<u64>,
 
     // Relative convergence tolerance.
     pub auto_converge: Option<T>,
@@ -378,10 +372,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             scaling_method: None,
             interval_type: None,
             bootstrap_samples: None,
-            bootstrap_seed: None,
+            seed: None,
             cv_fractions: None,
             cv_kind: None,
-            cv_seed: None,
             auto_converge: None,
             return_diagnostics: None,
             compute_residuals: None,
@@ -578,28 +571,41 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self
     }
 
-    pub fn bootstrap(mut self, n_boot: usize) -> Self {
+    pub fn intervals(mut self, options: crate::evaluation::intervals::IntervalsBuilder<T>) -> Self {
+        if let Some(level) = options.confidence {
+            self = self.confidence_intervals(level);
+        }
+        if let Some(level) = options.prediction {
+            self = self.prediction_intervals(level);
+        }
+        if let Some(samples) = options.bootstrap {
+            self = self.bootstrap(samples);
+        }
+        self
+    }
+
+    fn bootstrap(mut self, n_boot: usize) -> Self {
         if self.bootstrap_samples.is_some() {
-            self.duplicate_param = Some("bootstrap");
+            self.duplicate_param = Some("intervals");
         }
         self.bootstrap_samples = Some(n_boot);
         self
     }
 
     pub fn seed(mut self, seed: u64) -> Self {
-        self.bootstrap_seed = Some(seed);
-        self.cv_seed = Some(seed);
+        self.seed = Some(seed);
         self
     }
 
     // Enable confidence intervals at the specified level (e.g., 0.95).
-    pub fn confidence_intervals(mut self, level: T) -> Self {
+    fn confidence_intervals(mut self, level: T) -> Self {
         if self.interval_type.as_ref().is_some_and(|it| it.confidence) {
-            self.duplicate_param = Some("confidence_intervals");
+            self.duplicate_param = Some("intervals");
         }
         self.interval_type = Some(match self.interval_type {
             Some(existing) if existing.prediction => IntervalMethod {
                 level,
+                prediction_level: Some(existing.prediction_coverage()),
                 confidence: true,
                 prediction: true,
                 se: true,
@@ -610,13 +616,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     }
 
     // Enable prediction intervals at the specified level.
-    pub fn prediction_intervals(mut self, level: T) -> Self {
+    fn prediction_intervals(mut self, level: T) -> Self {
         if self.interval_type.as_ref().is_some_and(|it| it.prediction) {
-            self.duplicate_param = Some("prediction_intervals");
+            self.duplicate_param = Some("intervals");
         }
         self.interval_type = Some(match self.interval_type {
             Some(existing) if existing.confidence => IntervalMethod {
-                level,
+                level: existing.level,
+                prediction_level: Some(level),
                 confidence: true,
                 prediction: true,
                 se: true,
@@ -626,35 +633,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self
     }
 
-    // Enable automatic bandwidth selection via cross-validation.
-    // Set the cross-validation method: `"kfold"` or `"loocv"`.
-    pub fn cv_method(mut self, method: &str) -> Self {
-        self.cv_method_str = Some(method.to_string());
-        self
-    }
-
-    // Set the number of folds for K-fold cross-validation (default: 5).
-    pub fn cv_k(mut self, k: usize) -> Self {
-        self.cv_k_val = k;
-        self
-    }
-
-    // Set the candidate fractions to evaluate during cross-validation.
-    pub fn cv_fractions(mut self, fractions: Vec<T>) -> Self {
-        if self.cv_fractions.is_some() {
-            self.duplicate_param = Some("cv_fractions");
-        }
-        self.cv_fractions = Some(fractions);
-        self
-    }
-
-    // Set the random seed for reproducible K-fold fold splitting.
-    pub fn cv_seed(mut self, seed: u64) -> Self {
-        self.cv_seed = Some(seed);
-        self
-    }
-
-    /// Configure cross-validation using `CVBuilder::method(...).fractions(...)`.
+    /// Configure cross-validation using `CVBuilder::new().method(...).fraction(...)`.
     pub fn cv(mut self, options: CVOptions<T>) -> Self {
         if self.cv_fractions.is_some() || self.cv_method_str.is_some() {
             self.duplicate_param = Some("cv");
@@ -662,7 +641,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         self.cv_method_str = Some(options.method);
         self.cv_k_val = options.k;
         self.cv_fractions = Some(options.fractions);
-        self.cv_seed = options.seed;
         self
     }
 
@@ -995,7 +973,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
                 .bootstrap_samples
                 .map(|n_boot| crate::evaluation::intervals::BootstrapConfig {
                     n_boot,
-                    seed: builder.bootstrap_seed,
+                    seed: builder.seed,
                 });
         if let Some(cvf) = builder.cv_fractions {
             result.cv_fractions = Some(cvf);
@@ -1003,7 +981,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(cvk) = builder.cv_kind {
             result.cv_kind = Some(cvk);
         }
-        result.cv_seed = builder.cv_seed;
+        result.cv_seed = builder.seed;
         // Convert string-based CV method (from cv_method()/cv_k() builder methods)
         if result.cv_kind.is_none()
             && let Some(method_str) = builder.cv_method_str
@@ -1179,7 +1157,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
                 .bootstrap_samples
                 .map(|n_boot| crate::evaluation::intervals::BootstrapConfig {
                     n_boot,
-                    seed: builder.bootstrap_seed,
+                    seed: builder.seed,
                 });
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
@@ -1298,7 +1276,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
                 .bootstrap_samples
                 .map(|n_boot| crate::evaluation::intervals::BootstrapConfig {
                     n_boot,
-                    seed: builder.bootstrap_seed,
+                    seed: builder.seed,
                 });
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);

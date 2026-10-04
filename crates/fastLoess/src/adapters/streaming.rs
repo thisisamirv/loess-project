@@ -91,6 +91,8 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
             return Err(err.clone());
         }
 
+        let _ = self.base.clone().build()?;
+
         Ok(ParallelStreamingLoess {
             config: self,
             processor: None,

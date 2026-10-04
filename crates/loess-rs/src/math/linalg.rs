@@ -22,7 +22,7 @@ use wide::{f32x8, f64x4};
 //
 // This trait provides type-specific optimized implementations for linear algebra
 // operations. Implemented for f32 and f64.
-pub trait FloatLinalg: Float + 'static {
+pub trait FloatLinalg: Float + core::panic::RefUnwindSafe + 'static {
     // Solve normal equations X'WX * beta = X'Wy.
     fn solve_normal(a: &[Self], b: &[Self], n: usize) -> Option<Vec<Self>>;
     // Compute leverage (hat matrix diagonal element) for a query point.

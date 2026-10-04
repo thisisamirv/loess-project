@@ -24,10 +24,50 @@ use crate::primitives::errors::LoessError;
 use crate::primitives::window::Window;
 
 // Configuration for computing confidence/prediction intervals and standard errors.
+#[derive(Debug, Clone)]
+pub struct IntervalsBuilder<T> {
+    pub(crate) confidence: Option<T>,
+    pub(crate) prediction: Option<T>,
+    pub(crate) bootstrap: Option<usize>,
+}
+
+impl<T> Default for IntervalsBuilder<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T> IntervalsBuilder<T> {
+    pub fn new() -> Self {
+        Self {
+            confidence: None,
+            prediction: None,
+            bootstrap: None,
+        }
+    }
+
+    pub fn confidence(mut self, level: T) -> Self {
+        self.confidence = Some(level);
+        self
+    }
+
+    pub fn prediction(mut self, level: T) -> Self {
+        self.prediction = Some(level);
+        self
+    }
+
+    pub fn bootstrap(mut self, samples: usize) -> Self {
+        self.bootstrap = Some(samples);
+        self
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct IntervalMethod<T> {
     // Desired probability coverage (e.g., 0.95 for 95% intervals).
     pub level: T,
+
+    pub prediction_level: Option<T>,
 
     // Whether to compute confidence intervals for the mean function.
     pub confidence: bool,
@@ -50,6 +90,7 @@ impl<T: Float> IntervalMethod<T> {
     fn none() -> Self {
         Self {
             level: T::from(DEFAULT_INTERVAL_LEVEL).unwrap(),
+            prediction_level: None,
             confidence: false,
             prediction: false,
             se: false,
@@ -60,6 +101,7 @@ impl<T: Float> IntervalMethod<T> {
     pub fn confidence(level: T) -> Self {
         Self {
             level,
+            prediction_level: None,
             confidence: true,
             prediction: false,
             se: true,
@@ -70,6 +112,7 @@ impl<T: Float> IntervalMethod<T> {
     pub fn prediction(level: T) -> Self {
         Self {
             level,
+            prediction_level: Some(level),
             confidence: false,
             prediction: true,
             se: true,
@@ -80,6 +123,7 @@ impl<T: Float> IntervalMethod<T> {
     pub fn se() -> Self {
         Self {
             level: T::from(0.95).unwrap(),
+            prediction_level: None,
             confidence: false,
             prediction: false,
             se: true,
@@ -88,6 +132,10 @@ impl<T: Float> IntervalMethod<T> {
 }
 
 impl<T: Float> IntervalMethod<T> {
+    pub fn prediction_coverage(&self) -> T {
+        self.prediction_level.unwrap_or(self.level)
+    }
+
     // Constant to convert MAD to an unbiased estimate of sigma for normal data.
     //
     // For normally distributed data, MAD × 1.4826 ≈ standard deviation.
@@ -395,9 +443,9 @@ impl<T: Float> IntervalMethod<T> {
         df: Option<T>,
     ) -> Result<(Vec<T>, Vec<T>), &'static str> {
         let z = if let Some(df_val) = df {
-            Self::approximate_t_score(self.level, df_val)?
+            Self::approximate_t_score(self.prediction_coverage(), df_val)?
         } else {
-            Self::approximate_z_score(self.level)?
+            Self::approximate_z_score(self.prediction_coverage())?
         };
         let rsd_sq = residual_sd * residual_sd;
 
@@ -579,7 +627,14 @@ impl BootstrapConfig {
         T: Float,
         F: FnMut(&[Vec<T>]) -> Result<Vec<Vec<T>>, LoessError>,
     {
-        self.compute_at_levels(method, method.level, y_smooth, residuals, n_output, refit)
+        self.compute_at_levels(
+            method,
+            method.prediction_coverage(),
+            y_smooth,
+            residuals,
+            n_output,
+            refit,
+        )
     }
 
     pub(crate) fn compute_at_levels<T, F>(
@@ -615,11 +670,20 @@ impl BootstrapConfig {
                 "Bootstrap inputs must be finite".into(),
             ));
         }
-        if (method.confidence || method.prediction)
+        if method.confidence
             && (!method.level.is_finite() || method.level <= T::zero() || method.level >= T::one())
         {
             return Err(LoessError::InvalidIntervals(
                 method.level.to_f64().unwrap_or(f64::NAN),
+            ));
+        }
+        if method.prediction
+            && (!prediction_level.is_finite()
+                || prediction_level <= T::zero()
+                || prediction_level >= T::one())
+        {
+            return Err(LoessError::InvalidIntervals(
+                prediction_level.to_f64().unwrap_or(f64::NAN),
             ));
         }
         let capacity = n_output

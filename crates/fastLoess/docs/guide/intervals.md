@@ -32,7 +32,7 @@ fn main() -> Result<(), LoessError> {
 
     let model = Loess::new()
         .fraction(0.5)
-        .confidence_intervals(0.95)  // 95% CI
+        .intervals(IntervalsBuilder::new().confidence(0.95))  // 95% CI
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -72,7 +72,7 @@ fn main() -> Result<(), LoessError> {
 
     let model = Loess::new()
         .fraction(0.5)
-        .prediction_intervals(0.95)  // 95% PI
+        .intervals(IntervalsBuilder::new().prediction(0.95))  // 95% PI
         .build()?;
 
     let result = model.fit(&x, &y)?;
@@ -106,8 +106,7 @@ fn main() -> Result<(), LoessError> {
 
     let model = Loess::new()
         .fraction(0.5)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95).prediction(0.95))
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -123,6 +122,14 @@ First point 95% CI: [0.2569579331671805, 0.39779314697476365]
 ```
 
 ---
+
+## Residual Bootstrap
+
+Use `.intervals(IntervalsBuilder::new().confidence(0.90).prediction(0.95).bootstrap(200))` to request residual-bootstrap standard errors and percentile bounds. The interval group supports independent confidence and prediction levels. At least two bootstrap replicates are required; a bootstrap-only group returns standard errors without bounds.
+
+The outer `.seed(42)` controls both CV fold assignment and bootstrap sampling. CV options do not contain their own seed, and a seed alone enables neither algorithm. Sampling is generated before refits, making repeated runs reproducible within the same execution mode. Bootstrap refits retain the selected fraction and LOESS settings, using parallel fitting callbacks when enabled.
+
+Grouped intervals work with Batch, Streaming, full-update Online, and retained-model `Predict`. Online bootstrap requires `.update_mode("full")`. Prediction accepts its own `.intervals(...)` group and outer `.seed(...)`, refitting training observations before evaluating query points.
 
 ## Confidence Levels
 
@@ -145,7 +152,7 @@ fn main() -> Result<(), LoessError> {
 
     // 99% confidence interval
     let model = Loess::new()
-        .confidence_intervals(0.99)
+        .intervals(IntervalsBuilder::new().confidence(0.99))
         .build()?;
     let result = model.fit(&x, &y)?;
 
@@ -176,7 +183,7 @@ fn main() -> Result<(), LoessError> {
     let y: Vec<f64> = x.iter().map(|&xi| xi.sin() + 0.1).collect();
 
     let model = Loess::new()
-        .confidence_intervals(0.95)
+        .intervals(IntervalsBuilder::new().confidence(0.95))
         .build()?;
     let result = model.fit(&x, &y)?;
 

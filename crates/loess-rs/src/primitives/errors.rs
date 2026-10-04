@@ -197,7 +197,7 @@ pub enum LoessError {
     // silently-empty result.
     GradientRequiresDirectSurfaceMode,
 
-    // `.return_se()`/`.confidence_intervals()`/`.prediction_intervals()` was requested on
+    // `.return_se()`/`.intervals(crate::IntervalsBuilder::new().confidence())`/`.intervals(crate::IntervalsBuilder::new().prediction())` was requested on
     // `OnlineLoess` but `update_mode` isn't `"full"` (the default `"incremental"` mode
     // bypasses the full executor pipeline for speed, so standard errors are never
     // computed there). Previously this combination silently left `standard_error` as

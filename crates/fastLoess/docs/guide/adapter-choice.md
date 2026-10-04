@@ -47,8 +47,7 @@ fn main() -> Result<(), LoessError> {
     let model = Loess::new()
         .fraction(0.5f64)
         .iterations(3usize)
-        .confidence_intervals(0.95f64)
-        .prediction_intervals(0.95f64)
+        .intervals(IntervalsBuilder::new().confidence(0.95f64).prediction(0.95f64))
         .outputs(["diagnostics"])
         .parallel(true)
         .build()?;

@@ -31,7 +31,9 @@ use crate::algorithms::regression::{
 use crate::api::IntoEnum;
 use crate::engine::executor::{LoessConfig, LoessDistanceCalculator, LoessExecutor};
 use crate::engine::output::LoessResult;
-use crate::evaluation::intervals::{BootstrapConfig, BootstrapOutput, IntervalMethod};
+use crate::evaluation::intervals::{
+    BootstrapConfig, BootstrapOutput, IntervalMethod, IntervalsBuilder,
+};
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
 use crate::math::kernel::WeightFunction;
 use crate::math::linalg::FloatLinalg;
@@ -70,7 +72,7 @@ pub struct PredictBuilder<T> {
     pub prediction_intervals: Option<T>,
 
     pub bootstrap_samples: Option<usize>,
-    pub bootstrap_seed: Option<u64>,
+    pub seed: Option<u64>,
 
     // Include the local fit's gradient (`dimensions` values per query point, flattened)
     // in the output.
@@ -111,7 +113,7 @@ impl<T: FloatLinalg> Default for PredictBuilder<T> {
             confidence_intervals: None,
             prediction_intervals: None,
             bootstrap_samples: None,
-            bootstrap_seed: None,
+            seed: None,
             return_derivative: false,
             extrapolation: ExtrapolationPolicy::default(),
             max_extrapolation_distance: None,
@@ -134,25 +136,36 @@ impl<T: FloatLinalg> PredictBuilder<T> {
         self
     }
 
-    // Request a confidence interval at the given coverage level (e.g. `0.95`).
-    pub fn confidence_intervals(mut self, level: T) -> Self {
-        self.confidence_intervals = Some(level);
-        self
-    }
-
-    // Request a prediction interval at the given coverage level (e.g. `0.95`).
-    pub fn prediction_intervals(mut self, level: T) -> Self {
-        self.prediction_intervals = Some(level);
-        self
-    }
-
-    pub fn bootstrap(mut self, n_boot: usize) -> Self {
-        self.bootstrap_samples = Some(n_boot);
+    pub fn intervals(mut self, options: IntervalsBuilder<T>) -> Self {
+        if let Some(level) = options.confidence {
+            if self.confidence_intervals.is_some() {
+                self.pending_error = Some(LoessError::DuplicateParameter {
+                    parameter: "intervals",
+                });
+            }
+            self.confidence_intervals = Some(level);
+        }
+        if let Some(level) = options.prediction {
+            if self.prediction_intervals.is_some() {
+                self.pending_error = Some(LoessError::DuplicateParameter {
+                    parameter: "intervals",
+                });
+            }
+            self.prediction_intervals = Some(level);
+        }
+        if let Some(samples) = options.bootstrap {
+            if self.bootstrap_samples.is_some() {
+                self.pending_error = Some(LoessError::DuplicateParameter {
+                    parameter: "intervals",
+                });
+            }
+            self.bootstrap_samples = Some(samples);
+        }
         self
     }
 
     pub fn seed(mut self, seed: u64) -> Self {
-        self.bootstrap_seed = Some(seed);
+        self.seed = Some(seed);
         self
     }
 
@@ -197,12 +210,12 @@ impl<T: FloatLinalg> PredictBuilder<T> {
         }
         if let Some(samples) = self.bootstrap_samples {
             crate::engine::validator::Validator::validate_bootstrap_samples(samples)?;
-            for level in [self.confidence_intervals, self.prediction_intervals]
-                .into_iter()
-                .flatten()
-            {
-                crate::engine::validator::Validator::validate_interval_level(level)?;
-            }
+        }
+        for level in [self.confidence_intervals, self.prediction_intervals]
+            .into_iter()
+            .flatten()
+        {
+            crate::engine::validator::Validator::validate_interval_level(level)?;
         }
         Ok(PredictQuery {
             return_se: self.return_se,
@@ -210,7 +223,7 @@ impl<T: FloatLinalg> PredictBuilder<T> {
             prediction_intervals: self.prediction_intervals,
             bootstrap: self.bootstrap_samples.map(|n_boot| BootstrapConfig {
                 n_boot,
-                seed: self.bootstrap_seed,
+                seed: self.seed,
             }),
             return_derivative: self.return_derivative,
             extrapolation: self.extrapolation,
@@ -388,7 +401,7 @@ pub struct PredictState<T: Float> {
     pub bootstrap_predictor: Option<Arc<dyn BootstrapPredictor<T>>>,
 }
 
-pub trait BootstrapPredictor<T: Float>: Debug + Send + Sync {
+pub trait BootstrapPredictor<T: Float>: Debug + Send + Sync + core::panic::RefUnwindSafe {
     fn compute(
         &self,
         bootstrap: BootstrapConfig,
@@ -786,6 +799,7 @@ pub fn predict_batch<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Se
                 .or(options.prediction_intervals)
                 .unwrap_or_else(|| T::from(0.95).unwrap()),
             confidence: options.confidence_intervals.is_some(),
+            prediction_level: options.prediction_intervals,
             prediction: options.prediction_intervals.is_some(),
             se: true,
         };

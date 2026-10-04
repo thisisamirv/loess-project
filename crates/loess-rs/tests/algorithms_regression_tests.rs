@@ -998,8 +998,11 @@ fn test_nd_intervals() {
         .dimensions(2)
         .fraction(1.0)
         .degree("linear")
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(
+            loess_rs::IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95),
+        )
         .interpolation_vertices(100)
         .adapter(Batch)
         .build()

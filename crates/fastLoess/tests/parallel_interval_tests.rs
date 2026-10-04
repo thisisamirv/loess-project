@@ -20,8 +20,11 @@ fn test_parallel_interval_estimation() {
     let seq_model = Loess::new()
         .fraction(0.3)
         .iterations(2)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(
+            fastLoess::IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95),
+        )
         .surface_mode("direct")
         .parallel(false)
         .build()
@@ -33,8 +36,11 @@ fn test_parallel_interval_estimation() {
     let par_model = Loess::new()
         .fraction(0.3)
         .iterations(2)
-        .confidence_intervals(0.95)
-        .prediction_intervals(0.95)
+        .intervals(
+            fastLoess::IntervalsBuilder::new()
+                .confidence(0.95)
+                .prediction(0.95),
+        )
         .surface_mode("direct")
         .parallel(true)
         .build()
@@ -81,7 +87,7 @@ fn test_parallel_interval_keeps_se_for_downweighted_observation() {
     let result = Loess::new()
         .fraction(0.5)
         .iterations(3)
-        .confidence_intervals(0.95)
+        .intervals(fastLoess::IntervalsBuilder::new().confidence(0.95))
         .return_robustness_weights()
         .surface_mode("direct")
         .parallel(true)

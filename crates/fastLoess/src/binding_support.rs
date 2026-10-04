@@ -857,19 +857,21 @@ pub fn apply_cross_validation(
 
     match method.to_lowercase().as_str() {
         "simple" | "loo" | "loocv" | "leave_one_out" => {
-            builder = builder.cv_method("loocv");
-            builder = builder.cv_fractions(fractions.to_vec());
+            builder = builder.cv(crate::api::CVBuilder::new()
+                .method("loocv")
+                .fraction(fractions.to_vec()));
             if let Some(s) = seed {
-                builder = builder.cv_seed(s);
+                builder = builder.seed(s);
             }
             Ok(builder)
         }
         "kfold" | "k_fold" | "k-fold" => {
-            builder = builder.cv_method("kfold");
-            builder = builder.cv_k(k);
-            builder = builder.cv_fractions(fractions.to_vec());
+            builder = builder.cv(crate::api::CVBuilder::new()
+                .method("kfold")
+                .k(k)
+                .fraction(fractions.to_vec()));
             if let Some(s) = seed {
-                builder = builder.cv_seed(s);
+                builder = builder.seed(s);
             }
             Ok(builder)
         }
@@ -984,10 +986,10 @@ pub fn apply_typed_builder_options(
         builder = builder.return_sorted();
     }
     if let Some(ci) = options.confidence_intervals {
-        builder = builder.confidence_intervals(ci);
+        builder = builder.intervals(crate::IntervalsBuilder::new().confidence(ci));
     }
     if let Some(pi) = options.prediction_intervals {
-        builder = builder.prediction_intervals(pi);
+        builder = builder.intervals(crate::IntervalsBuilder::new().prediction(pi));
     }
     if let Some(par) = options.parallel {
         builder = builder.parallel(par);
@@ -1300,6 +1302,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
         self.base.interval_type = Some(match self.base.interval_type {
             Some(existing) if existing.prediction => IntervalMethod {
                 level,
+                prediction_level: Some(existing.prediction_coverage()),
                 confidence: true,
                 prediction: true,
                 se: true,
@@ -1313,7 +1316,8 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
     pub fn prediction_intervals(mut self, level: T) -> Self {
         self.base.interval_type = Some(match self.base.interval_type {
             Some(existing) if existing.confidence => IntervalMethod {
-                level,
+                level: existing.level,
+                prediction_level: Some(level),
                 confidence: true,
                 prediction: true,
                 se: true,

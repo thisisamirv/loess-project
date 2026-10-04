@@ -23,6 +23,7 @@ use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
 
 // Publicly re-exported types
+pub use loess_rs::IntervalsBuilder;
 use loess_rs::internals::api::LoessAdapter;
 pub use loess_rs::internals::api::LoessBuilder;
 pub use loess_rs::internals::engine::output::LoessResult;
@@ -131,6 +132,14 @@ macro_rules! impl_common_builder {
             pub fn new() -> Self {
                 Self(LoessBuilder::new())
             }
+            pub fn intervals(mut self, options: IntervalsBuilder<f64>) -> Self {
+                self.0 = self.0.intervals(options);
+                self
+            }
+            pub fn seed(mut self, seed: u64) -> Self {
+                self.0 = self.0.seed(seed);
+                self
+            }
             // string enum options
             pub fn weight_function(mut self, s: &str) -> Self {
                 self.0 = self.0.weight_function(s);
@@ -235,14 +244,6 @@ impl Loess {
         self.0 = self.0.parallel(p);
         self
     }
-    pub fn confidence_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.confidence_intervals(level);
-        self
-    }
-    pub fn prediction_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.prediction_intervals(level);
-        self
-    }
     pub fn return_se(mut self) -> Self {
         self.0 = self.0.return_se();
         self
@@ -262,22 +263,6 @@ impl Loess {
     #[doc(hidden)]
     pub fn backend(mut self, b: Backend) -> Self {
         self.0 = self.0.backend(b);
-        self
-    }
-    pub fn cv_method(mut self, m: &str) -> Self {
-        self.0 = self.0.cv_method(m);
-        self
-    }
-    pub fn cv_k(mut self, k: usize) -> Self {
-        self.0 = self.0.cv_k(k);
-        self
-    }
-    pub fn cv_fractions(mut self, f: Vec<f64>) -> Self {
-        self.0 = self.0.cv_fractions(f);
-        self
-    }
-    pub fn cv_seed(mut self, s: u64) -> Self {
-        self.0 = self.0.cv_seed(s);
         self
     }
     pub fn cv(mut self, options: loess_rs::CVOptions<f64>) -> Self {
@@ -330,14 +315,6 @@ impl StreamingLoess {
         self.0 = self.0.return_se();
         self
     }
-    pub fn confidence_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.confidence_intervals(level);
-        self
-    }
-    pub fn prediction_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.prediction_intervals(level);
-        self
-    }
 
     pub fn build(self) -> Result<ParallelStreamingLoess<f64>, LoessError> {
         Streaming::convert(self.0).build()
@@ -366,14 +343,6 @@ impl OnlineLoess {
     }
     pub fn return_se(mut self) -> Self {
         self.0 = self.0.return_se();
-        self
-    }
-    pub fn confidence_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.confidence_intervals(level);
-        self
-    }
-    pub fn prediction_intervals(mut self, level: f64) -> Self {
-        self.0 = self.0.prediction_intervals(level);
         self
     }
 
