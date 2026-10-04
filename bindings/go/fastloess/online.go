@@ -48,7 +48,7 @@ type OnlineOptions struct {
 	// Degree is the local polynomial degree: "constant", "linear" (default),
 	// "quadratic", "cubic", or "quartic".
 	Degree string
-	// Dimensions is the number of predictor dimensions. Default: 1.
+	// Dimensions is the number of predictor dimensions. Online supports only 1. Default: 1.
 	Dimensions int
 	// DistanceMetric is the distance metric used for neighborhood search:
 	// "normalized" (default), "euclidean", "manhattan", "chebyshev",
@@ -131,6 +131,9 @@ type OnlineLoess struct {
 func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 	if err := validateOutputs(opts.Outputs, "online", "weights", "gradient", "derivative", "se"); err != nil {
 		return nil, err
+	}
+	if opts.Dimensions > 1 {
+		return nil, errors.New("fastloess: OnlineLoess supports only one predictor dimension")
 	}
 	if err := validateCommonCounts(opts.Iterations, opts.Dimensions, opts.InterpolationVertices); err != nil {
 		return nil, err

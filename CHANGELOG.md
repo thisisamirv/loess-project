@@ -263,6 +263,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Reject explicitly empty custom weights instead of treating them as omitted, and reject multivariate Online dimensions during construction.
 - Breaking: The Go module's import path now includes the required `/v2` major-version suffix; a new release is required for pkg.go.dev to resolve versions correctly.
 - Keep Batch, Streaming, Online, and retained prediction models alive during cgo calls so finalizers cannot free in-use native handles.
 - Reject unknown or mode-inappropriate output names, extra custom-weight slices, and Go counts outside the C `int` range; stop silently coercing invalid K-fold counts.

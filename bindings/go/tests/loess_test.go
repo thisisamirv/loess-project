@@ -1019,6 +1019,18 @@ func TestStreamingLoess(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestOnlineLoess(t *testing.T) {
+	t.Run("RejectsMultivariateDimensions", func(t *testing.T) {
+		opts := fastloess.DefaultOnlineOptions()
+		opts.Dimensions = 2
+		model, err := fastloess.NewOnlineLoess(opts)
+		if model != nil {
+			defer model.Close()
+		}
+		if err == nil {
+			t.Fatal("expected NewOnlineLoess to reject Dimensions greater than one")
+		}
+	})
+
 	t.Run("ZeroWeightFallback", func(t *testing.T) {
 		opts := fastloess.DefaultOnlineOptions()
 		opts.Fraction = 0.5
@@ -1825,6 +1837,19 @@ func TestCustomWeights(t *testing.T) {
 		defer model.Close()
 		if _, err := model.Fit(x, y, weights); err == nil {
 			t.Fatal("expected an error for mismatched custom_weights length")
+		}
+	})
+
+	t.Run("EmptyWeightsRaiseError", func(t *testing.T) {
+		x := []float64{0.0, 1.0, 2.0}
+		y := []float64{0.0, 1.0, 2.0}
+		model, err := fastloess.NewLoess(fastloess.DefaultOptions())
+		if err != nil {
+			t.Fatalf("NewLoess failed: %v", err)
+		}
+		defer model.Close()
+		if _, err := model.Fit(x, y, []float64{}); err == nil {
+			t.Fatal("expected an error for an explicitly empty custom weight slice")
 		}
 	})
 
