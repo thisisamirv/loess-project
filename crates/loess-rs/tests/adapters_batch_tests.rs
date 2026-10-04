@@ -335,6 +335,90 @@ fn test_predict_custom_weight_zero_window_honors_fallback() {
 }
 
 #[test]
+fn test_one_dimensional_boundary_padding_is_permutation_invariant() {
+    let x: Vec<f64> = (0..8).map(f64::from).collect();
+    let y: Vec<f64> = x.iter().map(|value| value * value).collect();
+    let permutation = [3, 1, 7, 0, 5, 2, 6, 4];
+    let shuffled_x: Vec<_> = permutation.iter().map(|&index| x[index]).collect();
+    let shuffled_y: Vec<_> = permutation.iter().map(|&index| y[index]).collect();
+    let fit = |x: &[f64], y: &[f64]| {
+        Loess::new()
+            .fraction(0.5)
+            .iterations(0)
+            .surface_mode("direct")
+            .build()
+            .unwrap()
+            .fit(x, y)
+            .unwrap()
+    };
+
+    let sorted = fit(&x, &y);
+    let shuffled = fit(&shuffled_x, &shuffled_y);
+    let mut aligned = vec![0.0; y.len()];
+    for (position, &original_index) in permutation.iter().enumerate() {
+        aligned[original_index] = shuffled.y[position];
+    }
+
+    for (&actual, &expected) in aligned.iter().zip(&sorted.y) {
+        assert_relative_eq!(actual, expected, epsilon = 1e-10);
+    }
+}
+
+#[test]
+fn test_distance_metric_arguments_are_validated_at_build_for_all_adapters() {
+    assert!(
+        Loess::<f64>::new()
+            .dimensions(2)
+            .distance_metric("weighted")
+            .build()
+            .is_err()
+    );
+    assert!(
+        StreamingLoess::<f64>::new()
+            .dimensions(2)
+            .distance_metric("weighted")
+            .build()
+            .is_err()
+    );
+    assert!(
+        OnlineLoess::<f64>::new()
+            .dimensions(2)
+            .distance_metric("weighted")
+            .build()
+            .is_err()
+    );
+
+    assert!(
+        Loess::<f64>::new()
+            .dimensions(2)
+            .distance_metric("weighted")
+            .weighted_metric_weights(vec![1.0])
+            .build()
+            .is_err()
+    );
+    assert!(
+        Loess::<f64>::new()
+            .dimensions(2)
+            .distance_metric("weighted")
+            .weighted_metric_weights(vec![1.0, f64::NAN])
+            .build()
+            .is_err()
+    );
+    assert!(
+        Loess::<f64>::new()
+            .distance_metric("minkowski:NaN")
+            .build()
+            .is_err()
+    );
+    assert!(
+        Loess::<f64>::new()
+            .distance_metric("minkowski:0")
+            .build()
+            .is_err()
+    );
+}
+
+#[test]
 fn test_batch_weighted_local_standard_errors_use_fitted_case_weights() {
     use loess_rs::internals::evaluation::intervals::IntervalMethod;
 

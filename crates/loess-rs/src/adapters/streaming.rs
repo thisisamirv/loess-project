@@ -219,6 +219,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
 
         // Check for duplicate parameter configuration
         Validator::validate_no_duplicates(self.duplicate_param)?;
+        Validator::validate_distance_metric(&self.distance_metric, self.dimensions)?;
 
         // Validate fraction
         if let Some(bootstrap) = self.bootstrap {

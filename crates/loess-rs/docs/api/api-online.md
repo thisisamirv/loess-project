@@ -182,11 +182,13 @@ Number of predictor dimensions. Set to match the number of columns in a multivar
 - `"minkowski"` (use `"minkowski:p"` for custom exponent, e.g. `"minkowski:3"`)
 - `"weighted"` plus `.weighted_metric_weights(vec![...])` (alias: `"weighted_euclidean"`)
 
+The custom Minkowski exponent must be finite and positive.
+
 ### weighted_metric_weights
 
 *See: [Multivariate LOESS](crate::doc::advanced::dimensions)*
 
-Per-dimension weights, one per dimension declared in `dimensions`. Only used when `distance_metric` is `"weighted"`; calling `.distance_metric("weighted")` without also calling this returns a `LoessError`.
+Per-dimension weights, one finite non-negative weight per dimension declared in `dimensions`. Only used when `distance_metric` is `"weighted"`; missing or incorrectly sized weights return a `LoessError`.
 
 ### surface_mode
 

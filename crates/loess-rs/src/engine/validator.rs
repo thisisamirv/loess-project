@@ -22,7 +22,7 @@ use num_traits::Float;
 
 // Internal dependencies
 use crate::primitives::errors::LoessError;
-use crate::primitives::policies::{SurfaceMode, UpdateMode};
+use crate::primitives::policies::{DistanceMetric, SurfaceMode, UpdateMode};
 
 // Validation utility for LOESS configuration and input data.
 //
@@ -388,6 +388,38 @@ impl Validator {
     ) -> Result<(), LoessError> {
         if iterations > 0 && update_mode != UpdateMode::Full {
             return Err(LoessError::RobustnessIterationsRequireFullUpdateMode);
+        }
+        Ok(())
+    }
+
+    // Validate distance metric parameters that depend on the configured dimensions.
+    pub fn validate_distance_metric<T: Float>(
+        metric: &DistanceMetric<T>,
+        dimensions: usize,
+    ) -> Result<(), LoessError> {
+        match metric {
+            DistanceMetric::Weighted(weights) => {
+                if weights.len() != dimensions {
+                    return Err(LoessError::InvalidInput(format!(
+                        "weighted distance requires one weight per dimension ({dimensions}), got {}",
+                        weights.len()
+                    )));
+                }
+                if weights
+                    .iter()
+                    .any(|weight| !weight.is_finite() || *weight < T::zero())
+                {
+                    return Err(LoessError::InvalidInput(
+                        "weighted distance weights must be finite and non-negative".into(),
+                    ));
+                }
+            }
+            DistanceMetric::Minkowski(p) if !p.is_finite() || *p <= T::zero() => {
+                return Err(LoessError::InvalidInput(
+                    "Minkowski exponent must be finite and positive".into(),
+                ));
+            }
+            _ => {}
         }
         Ok(())
     }

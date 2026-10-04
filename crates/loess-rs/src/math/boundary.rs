@@ -51,6 +51,9 @@ impl BoundaryPolicy {
                 return (x.to_vec(), y.to_vec(), mapping);
             }
 
+            let mut order: Vec<usize> = (0..n).collect();
+            order.sort_by(|&a, &b| x[a].partial_cmp(&x[b]).unwrap_or(Equal));
+
             let total_len = n + 2 * pad_len;
             let mut px = Vec::with_capacity(total_len);
             let mut py = Vec::with_capacity(total_len);
@@ -58,24 +61,25 @@ impl BoundaryPolicy {
             // Prepend padding
             match self {
                 BoundaryPolicy::Extend => {
-                    let x0 = x[0];
-                    let y0 = y[0];
-                    let dx = x[1] - x[0];
+                    let x0 = x[order[0]];
+                    let y0 = y[order[0]];
+                    let dx = x[order[1]] - x0;
                     for i in (1..=pad_len).rev() {
                         px.push(x0 - T::from(i).unwrap() * dx);
                         py.push(y0);
                     }
                 }
                 BoundaryPolicy::Reflect => {
-                    let x0 = x[0];
+                    let x0 = x[order[0]];
                     for i in (1..=pad_len).rev() {
-                        px.push(x0 - (x[i] - x0));
-                        py.push(y[i]);
+                        let idx = order[i];
+                        px.push(x0 - (x[idx] - x0));
+                        py.push(y[idx]);
                     }
                 }
                 BoundaryPolicy::Zero => {
-                    let x0 = x[0];
-                    let dx = x[1] - x[0];
+                    let x0 = x[order[0]];
+                    let dx = x[order[1]] - x0;
                     for i in (1..=pad_len).rev() {
                         px.push(x0 - T::from(i).unwrap() * dx);
                         py.push(T::zero());
@@ -91,24 +95,25 @@ impl BoundaryPolicy {
             // Append padding
             match self {
                 BoundaryPolicy::Extend => {
-                    let xn = x[n - 1];
-                    let yn = y[n - 1];
-                    let dx = x[n - 1] - x[n - 2];
+                    let xn = x[order[n - 1]];
+                    let yn = y[order[n - 1]];
+                    let dx = xn - x[order[n - 2]];
                     for i in 1..=pad_len {
                         px.push(xn + T::from(i).unwrap() * dx);
                         py.push(yn);
                     }
                 }
                 BoundaryPolicy::Reflect => {
-                    let xn = x[n - 1];
+                    let xn = x[order[n - 1]];
                     for i in 1..=pad_len {
-                        px.push(xn + (xn - x[n - 1 - i]));
-                        py.push(y[n - 1 - i]);
+                        let idx = order[n - 1 - i];
+                        px.push(xn + (xn - x[idx]));
+                        py.push(y[idx]);
                     }
                 }
                 BoundaryPolicy::Zero => {
-                    let xn = x[n - 1];
-                    let dx = x[n - 1] - x[n - 2];
+                    let xn = x[order[n - 1]];
+                    let dx = xn - x[order[n - 2]];
                     for i in 1..=pad_len {
                         px.push(xn + T::from(i).unwrap() * dx);
                         py.push(T::zero());
@@ -119,9 +124,9 @@ impl BoundaryPolicy {
 
             let n_padded = px.len();
             let mut full_mapping = Vec::with_capacity(n_padded);
-            full_mapping.extend(repeat_n(0, pad_len));
+            full_mapping.extend(repeat_n(order[0], pad_len));
             full_mapping.extend(0..n);
-            full_mapping.extend(repeat_n(n - 1, n_padded - n - pad_len));
+            full_mapping.extend(repeat_n(order[n - 1], n_padded - n - pad_len));
 
             return (px, py, full_mapping);
         }

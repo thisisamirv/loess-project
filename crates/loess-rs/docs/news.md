@@ -21,6 +21,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Make one-dimensional boundary padding permutation-invariant, validate weighted-distance weights before fitting, and reject non-finite or non-positive Minkowski exponents at build time.
 * Preserve retained-prediction zero-weight fallback semantics: return the matching training response for `return_original`, and `NaN` for `return_none` or unmatched original-value queries.
 * Multidimensional CV now predicts held-out points using each fold's fitted model state, preserving robustness iterations, auto-convergence, boundary handling, and surface mode.
 * Reject overflowing `y.len() * dimensions` input shapes without panicking; reject negative or non-finite prediction distance caps.
