@@ -186,7 +186,7 @@ Number of predictor dimensions. Set to match the number of columns in a multivar
 
 *See: [Multivariate LOESS](crate::doc::advanced::dimensions)*
 
-Per-dimension weights, one per dimension declared in `dimensions`. Only used when `distance_metric` is `"weighted"`; calling `.distance_metric("weighted")` without also calling this returns a `LoessError`.
+Per-dimension weights, one per dimension declared in `dimensions`. Only accepted when `distance_metric` is `"weighted"`; it does not select that metric automatically. Missing or incorrectly sized weights return a `LoessError`.
 
 ### surface_mode
 

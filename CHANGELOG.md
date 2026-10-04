@@ -237,6 +237,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLoess:**
 
+- Require explicit `distance_metric("weighted")` selection before applying `weighted_metric_weights`; add fixed-size array support to `fit` inputs.
 - `make fastLoess-dev` now also runs `cargo test --doc`, previously never checked by any `make` target.
 - Reuse the serial CV fold engine while evaluating fractions concurrently, preserving case weights, seeded shuffling, multidimensional normalization, and exact held-out LOOCV rather than in-sample residual scores.
 - Forward case weights through parallel interval estimation and use the same local-SE moments as serial fits; Gaussian fitting, vertex refits, and prediction retain full kernel support at the original bandwidth.

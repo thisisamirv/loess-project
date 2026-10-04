@@ -30,9 +30,9 @@ use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::primitives::backend::Backend;
 use loess_rs::internals::primitives::errors::LoessError;
-use loess_rs::internals::primitives::policies::DistanceMetric;
 
 // Internal dependencies
+use crate::adapters::apply_weighted_metric_weights;
 use crate::input::LoessInput;
 use crate::math::neighborhood::build_kdtree_parallel;
 
@@ -91,19 +91,10 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
             return Err(LoessError::ParseErrors(self.parse_errors));
         }
 
-        // Apply weighted_metric_weights: override distance_metric with Weighted(weights).
-        // If distance_metric("weighted") was called without weighted_metric_weights(), error.
-        if let Some(weights) = self.weighted_metric_weights.take() {
-            self.base.distance_metric = DistanceMetric::Weighted(weights);
-        } else if let DistanceMetric::Weighted(ref w) = self.base.distance_metric
-            && w.is_empty()
-        {
-            return Err(LoessError::InvalidOption {
-                option: "distance_metric",
-                value: "weighted".to_string(),
-                valid: "use .weighted_metric_weights(vec![...]) to supply per-dimension weights",
-            });
-        }
+        apply_weighted_metric_weights(
+            &mut self.base.distance_metric,
+            self.weighted_metric_weights.take(),
+        )?;
 
         // Apply CV method string to base.cv_kind.
         if let Some(ref method_str) = self.cv_method_str {

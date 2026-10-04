@@ -59,6 +59,57 @@ fn test_ndarray_integration() {
 }
 
 #[test]
+fn test_fixed_array_inputs() {
+    let x = [1.0_f64, 2.0, 3.0, 4.0, 5.0];
+    let y = [2.0_f64, 4.0, 6.0, 8.0, 10.0];
+
+    let result = Loess::new().build().unwrap().fit(&x, &y).unwrap();
+    assert_eq!(result.y.len(), x.len());
+    assert_abs_diff_eq!(result.y[0], y[0], epsilon = 1e-6);
+}
+
+#[test]
+fn test_weighted_metric_weights_require_explicit_metric_selection() {
+    assert!(
+        Loess::new()
+            .dimensions(2)
+            .weighted_metric_weights(vec![1.0, 100.0])
+            .build()
+            .is_err()
+    );
+    assert!(
+        StreamingLoess::new()
+            .dimensions(2)
+            .weighted_metric_weights(vec![1.0, 100.0])
+            .build()
+            .is_err()
+    );
+    assert!(
+        OnlineLoess::new()
+            .dimensions(2)
+            .weighted_metric_weights(vec![1.0, 100.0])
+            .build()
+            .is_err()
+    );
+    assert!(
+        Loess::new()
+            .dimensions(2)
+            .distance_metric("euclidean")
+            .weighted_metric_weights(vec![1.0, 100.0])
+            .build()
+            .is_err()
+    );
+    assert!(
+        Loess::new()
+            .dimensions(2)
+            .distance_metric("weighted")
+            .weighted_metric_weights(vec![1.0, 100.0])
+            .build()
+            .is_ok()
+    );
+}
+
+#[test]
 fn test_robustness() {
     // Larger dataset to ensure robust statistics work (N=20)
     let n = 20;

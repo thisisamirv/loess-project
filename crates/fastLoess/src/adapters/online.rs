@@ -14,12 +14,12 @@ use std::fmt::Debug;
 use std::result::Result;
 
 // Export dependencies from loess-rs crate
+use crate::adapters::apply_weighted_metric_weights;
 use loess_rs::internals::adapters::online::{OnlineLoessBuilder, OnlineOutput};
 use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::primitives::errors::LoessError;
-use loess_rs::internals::primitives::policies::DistanceMetric;
 
 // Builder for online LOESS processor with parallel support.
 #[derive(Debug, Clone)]
@@ -63,18 +63,10 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync>
             return Err(LoessError::ParseErrors(self.parse_errors));
         }
 
-        // Apply weighted_metric_weights
-        if let Some(weights) = self.weighted_metric_weights.take() {
-            self.base.distance_metric = DistanceMetric::Weighted(weights);
-        } else if let DistanceMetric::Weighted(ref w) = self.base.distance_metric
-            && w.is_empty()
-        {
-            return Err(LoessError::InvalidOption {
-                option: "distance_metric",
-                value: "weighted".to_string(),
-                valid: "use .weighted_metric_weights(vec![...]) to supply per-dimension weights",
-            });
-        }
+        apply_weighted_metric_weights(
+            &mut self.base.distance_metric,
+            self.weighted_metric_weights.take(),
+        )?;
 
         // Check for deferred errors from adapter conversion
         if let Some(ref err) = self.base.deferred_error {

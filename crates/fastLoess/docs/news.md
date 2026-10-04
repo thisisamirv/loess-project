@@ -23,6 +23,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Require explicit `distance_metric("weighted")` selection before applying `weighted_metric_weights`; support fixed-size Rust arrays as fit inputs.
 * Reuse the serial CV fold engine for parallel candidates, preserving case weights, seeded shuffling, multidimensional normalization and held-out LOOCV predictions.
 * Forward case weights into parallel interval estimation and use the same local-SE moments as serial fits.
 * Include full Gaussian kernel support in parallel smoothing, gradients, vertex refits and prediction without changing the k-th-neighbor bandwidth.

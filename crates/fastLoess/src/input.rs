@@ -25,6 +25,12 @@ impl<T: Float> LoessInput<T> for [T] {
     }
 }
 
+impl<T: Float, const N: usize> LoessInput<T> for [T; N] {
+    fn as_loess_slice(&self) -> Result<&[T], LoessError> {
+        Ok(self.as_slice())
+    }
+}
+
 impl<T: Float> LoessInput<T> for Vec<T> {
     fn as_loess_slice(&self) -> Result<&[T], LoessError> {
         Ok(self.as_slice())
