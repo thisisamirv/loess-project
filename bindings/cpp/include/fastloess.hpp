@@ -32,6 +32,7 @@
 
 // Include the C header
 #include "fastloess.h"
+#include "fastloess_version.h" // IWYU pragma: export
 
 namespace fastloess {
 

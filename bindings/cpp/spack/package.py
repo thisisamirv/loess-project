@@ -52,6 +52,7 @@ class FastloessCpp(CargoPackage):
         include_dir = join_path("bindings", "cpp", "include")
         install(join_path(include_dir, "fastloess.hpp"), prefix.include)
         install(join_path(include_dir, "fastloess.h"), prefix.include)
+        install(join_path(include_dir, "fastloess_version.h"), prefix.include)
 
         release_dir = join_path("target", "release")
         if spec.satisfies("platform=windows"):

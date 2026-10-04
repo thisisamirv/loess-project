@@ -22,6 +22,12 @@ static_assert(sizeof(fastloess_CppOnlineOutput{}.gradient_len) ==
               sizeof(size_t));
 static_assert(std::is_same<decltype(&cpp_loess_set_cv_seed),
                            void (*)(fastloess_CppLoess *, uint64_t)>::value);
+#if FASTLOESS_CPP_VERSION_MAJOR < 0 || FASTLOESS_CPP_VERSION_MINOR < 0 ||      \
+    FASTLOESS_CPP_VERSION_PATCH < 0
+#error "Header version components must be non-negative"
+#endif
+static_assert(sizeof(FASTLOESS_CPP_VERSION_STRING) > 1,
+              "Header version string must not be empty");
 
 namespace {
 
@@ -1081,6 +1087,8 @@ void testOnlineUpdateModeAndParams() {
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main() {
   try {
+    assertTrue(std::string(cpp_version()) == FASTLOESS_CPP_VERSION_STRING,
+               "Runtime library version must match generated header version");
     {
       LoessResult empty;
       assertTrue(!empty.diagnostics().rmse().has_value(),

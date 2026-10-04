@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **C++:**
 
+- Added generated compile-time version macros and runtime `cpp_version()` reporting, with the version header included in CMake, Spack, and release packaging.
 - Added `CVOptions cv` to Batch options for grouped cross-validation while preserving legacy CV fields.
 - Added `retain_model`, `LoessResult::predict_model()`, and new `PredictModel`/`PredictOptions`/`PredictResult` RAII classes for out-of-sample prediction.
 - Added `return_gradient` to `LoessOptions` and `OnlineOptions`.

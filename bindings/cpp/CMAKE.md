@@ -11,6 +11,15 @@ The public wrapper requires C++17 for `std::optional`. Linking
 using the installed package. Diagnostic getters return `std::optional<double>`;
 unavailable metrics are empty rather than containing NaN.
 
+## Version Checks
+
+Cargo and CMake generate `fastloess_version.h` from package metadata. The installed
+headers include `FASTLOESS_CPP_VERSION_MAJOR`, `FASTLOESS_CPP_VERSION_MINOR`,
+`FASTLOESS_CPP_VERSION_PATCH`, and `FASTLOESS_CPP_VERSION_STRING` for compile-time
+checks. `cpp_version()` reports the version of the loaded native library at runtime.
+When using a prebuilt library, download `fastloess_version.h` alongside the C++ and C
+headers.
+
 ## Windows Quick Start
 
 Build and install the package:

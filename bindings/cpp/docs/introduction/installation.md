@@ -9,6 +9,7 @@ Install the LOESS library for your preferred language.
 ```bash
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-x64.so
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
 g++ -o myapp myapp.cpp -L. -lfastloess-linux-x64
 ```
 
@@ -17,6 +18,7 @@ g++ -o myapp myapp.cpp -L. -lfastloess-linux-x64
 ```bash
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-arm64.so
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
 g++ -o myapp myapp.cpp -L. -lfastloess-linux-arm64
 ```
 
@@ -25,6 +27,7 @@ g++ -o myapp myapp.cpp -L. -lfastloess-linux-arm64
 ```bash
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-x64-musl.so
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
 g++ -o myapp myapp.cpp -L. -lfastloess-linux-x64-musl
 ```
 
@@ -33,6 +36,7 @@ g++ -o myapp myapp.cpp -L. -lfastloess-linux-x64-musl
 ```bash
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-arm64-musl.so
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
 g++ -o myapp myapp.cpp -L. -lfastloess-linux-arm64-musl
 ```
 
@@ -41,6 +45,7 @@ g++ -o myapp myapp.cpp -L. -lfastloess-linux-arm64-musl
 ```bash
 curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-macos-x64.dylib
 curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
 clang++ -o myapp myapp.cpp -L. -lfastloess-macos-x64
 ```
 
@@ -49,6 +54,7 @@ clang++ -o myapp myapp.cpp -L. -lfastloess-macos-x64
 ```bash
 curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-macos-arm64.dylib
 curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
 clang++ -o myapp myapp.cpp -L. -lfastloess-macos-arm64
 ```
 
@@ -57,6 +63,7 @@ clang++ -o myapp myapp.cpp -L. -lfastloess-macos-arm64
 ```powershell
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess-win32-x64.dll
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
 cl myapp.cpp /link fastloess-win32-x64.lib
 ```
 
@@ -65,6 +72,7 @@ cl myapp.cpp /link fastloess-win32-x64.lib
 ```powershell
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess-win32-arm64.dll
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
 cl myapp.cpp /link fastloess-win32-arm64.lib
 ```
 

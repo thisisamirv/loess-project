@@ -92,6 +92,12 @@ pub extern "C" fn cpp_last_error_message() -> *const c_char {
     })
 }
 
+/// Returns the crate version as a static, null-terminated C string.
+#[unsafe(no_mangle)]
+pub extern "C" fn cpp_version() -> *const c_char {
+    concat!(env!("CARGO_PKG_VERSION"), "\0").as_ptr() as *const c_char
+}
+
 // Per-point result from an online update, passed across the FFI boundary.
 // has_value = 1 means the window is ready and smoothed is valid; 0 means the
 // window is still filling (caller should treat it as no output yet).

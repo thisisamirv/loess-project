@@ -121,7 +121,10 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.release.tag_name || github.event.inputs.tag }}
-          files: bindings/cpp/include/fastloess.hpp
+          files: |
+            bindings/cpp/include/fastloess.hpp
+            bindings/cpp/include/fastloess.h
+            bindings/cpp/include/fastloess_version.h
 
   spack-release:
     name: Update Spack recipe
