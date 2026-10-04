@@ -39,6 +39,9 @@ constexpr double k_domain_end_thousand = 1000.0;
 constexpr double k_linear_slope = 2.0;
 constexpr double k_linear_intercept = 1.0;
 constexpr double k_expected_prediction_y = 1.5;
+constexpr double k_expected_aic = 0.0;
+constexpr double k_expected_aicc = -2.0;
+constexpr double k_expected_effective_df = 3.0;
 constexpr size_t k_small_count = 5;
 constexpr size_t k_twenty_count = 20;
 constexpr size_t k_hundred_count = 100;
@@ -177,12 +180,13 @@ void testLoessWithDiagnostics() {
                  !unavailable.effective_df().has_value() &&
                  !unavailable.residual_sd().has_value(),
              "NaN diagnostics should be empty");
-  raw.aic = 0.0;
-  raw.aicc = -2.0;
-  raw.effective_df = 3.0;
+  raw.aic = k_expected_aic;
+  raw.aicc = k_expected_aicc;
+  raw.effective_df = k_expected_effective_df;
   const Diagnostics available(raw);
-  assertTrue(available.aic() == 0.0 && available.aicc() == -2.0 &&
-                 available.effective_df() == 3.0,
+  assertTrue(available.aic() == k_expected_aic &&
+                 available.aicc() == k_expected_aicc &&
+                 available.effective_df() == k_expected_effective_df,
              "Finite diagnostics should retain their values");
   const std::vector<double> x_vals(k_simple_x.begin(), k_simple_x.end());
   const std::vector<double> y_vals(k_simple_y_noisy.begin(),
