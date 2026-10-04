@@ -17,6 +17,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Package each prebuilt platform library and its headers in a separate release tar archive.
 * Breaking change: replaced the individual output booleans in `LoessOptions`, `OnlineOptions`, and `PredictOptions` with grouped `outputs` vectors.
 * Breaking change: replaced flat interval levels with `intervals`, removed flat CV fields in favor of `cv`, and moved CV seeding to optional outer `seed`; `seed = 0` is now reproducible.
 * Native C ABI lengths now use `size_t` and CV seeds use `uint64_t` instead of Windows-truncated `unsigned long`. Rebuild the wrapper/header and native library together; old Windows binaries are not layout-compatible.

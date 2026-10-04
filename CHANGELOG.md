@@ -146,6 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **C++:**
 
+- Changed prebuilt C++ releases to provide one tar archive per platform, containing its library, import library when applicable, and headers.
 - Breaking change: replaced the individual output booleans in `LoessOptions`, `OnlineOptions`, and `PredictOptions` with grouped `outputs` vectors.
 - Native C ABI lengths now use `size_t` and CV seeds use `uint64_t`, fixing Windows `unsigned long` truncation. Rebuild headers/wrappers and native artifacts together; old Windows binaries are not layout-compatible.
 - Breaking change: replaced flat fit/prediction interval levels with `intervals` and removed flat CV fields in favor of `cv` plus optional outer `seed`; zero is now a valid deterministic seed.
