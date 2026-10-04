@@ -8,7 +8,7 @@
 
 use std::cell::RefCell;
 use std::ffi::CString;
-use std::os::raw::{c_char, c_double, c_int, c_ulong};
+use std::os::raw::{c_char, c_double, c_int};
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::ptr;
 use std::slice::from_raw_parts;
@@ -45,11 +45,6 @@ fn null_with_error<T>(msg: &str) -> *mut T {
 
 fn error_result_from(err: shared_parse::BindingError) -> CppLoessResult {
     error_result(&err.message)
-}
-
-#[allow(clippy::result_large_err)]
-fn map_invalid_arg_result<T, E: ToString>(result: Result<T, E>) -> Result<T, CppLoessResult> {
-    shared_parse::map_invalid_arg(result).map_err(error_result_from)
 }
 
 #[allow(clippy::result_large_err)]
@@ -121,7 +116,7 @@ pub struct CppOnlineOutput {
     /// Local fit gradient (`dimensions` values) for the latest point (NULL if
     /// not computed)
     pub gradient: *mut c_double,
-    pub gradient_len: c_ulong,
+    pub gradient_len: usize,
     pub error: *mut c_char, // NULL if no error
 }
 
@@ -129,12 +124,12 @@ pub struct CppOnlineOutput {
 // All arrays are allocated by Rust and must be freed by Rust.
 #[repr(C)]
 pub struct CppLoessResult {
-    /// x values, in the same order as the input (length = n)
+    /// x values, in input order (flattened, length = n * dimensions)
     pub x: *mut c_double,
     /// Smoothed y values (length = n)
     pub y: *mut c_double,
     /// Number of data points
-    pub n: c_ulong,
+    pub n: usize,
 
     /// Standard errors (NULL if not computed)
     pub standard_errors: *mut c_double,
@@ -180,7 +175,7 @@ pub struct CppLoessResult {
     pub dimensions: c_int,
     /// Cross-validation scores (NULL if not computed, length = cv_scores_len)
     pub cv_scores: *mut c_double,
-    pub cv_scores_len: c_ulong,
+    pub cv_scores_len: usize,
 
     /// Opaque handle for `cpp_predict()`, non-NULL only if `retain_model` was set to 1.
     /// Must eventually be freed via `cpp_predict_handle_free`.
@@ -243,7 +238,7 @@ impl From<LoessResult<f64>> for CppLoessResult {
         CppLoessResult {
             x: p.x,
             y: p.y,
-            n: p.n as c_ulong,
+            n: p.n,
             standard_errors: p.standard_errors,
             confidence_lower: p.confidence_lower,
             confidence_upper: p.confidence_upper,
@@ -269,7 +264,7 @@ impl From<LoessResult<f64>> for CppLoessResult {
             leverage: p.leverage,
             dimensions: p.dimensions,
             cv_scores: p.cv_scores,
-            cv_scores_len: p.cv_scores_len as c_ulong,
+            cv_scores_len: p.cv_scores_len,
             predict_handle: p
                 .predict_state
                 .map(|state| Box::into_raw(Box::new(CppPredictHandle { state })))
@@ -355,7 +350,7 @@ pub unsafe extern "C" fn cpp_loess_new(
     zero_weight_fallback: *const c_char,
     auto_converge: c_double,
     cv_fractions: *const c_double,
-    cv_fractions_len: c_ulong,
+    cv_fractions_len: usize,
     cv_method: *const c_char,
     cv_k: c_int,
     parallel: c_int,
@@ -371,7 +366,7 @@ pub unsafe extern "C" fn cpp_loess_new(
     interpolation_vertices: c_int,
     boundary_degree_fallback: c_int,
     weighted_metric_weights: *const c_double,
-    weighted_metric_weights_len: c_ulong,
+    weighted_metric_weights_len: usize,
     missing: *const c_char,
     retain_model: c_int,
 ) -> *mut CppLoess {
@@ -405,16 +400,23 @@ pub unsafe extern "C" fn cpp_loess_new(
             Err(e) => return null_with_error(&e),
         };
 
-        let cv_fractions_vec =
-            shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len as usize);
+        let cv_fractions_vec = shared_parse::option_vec_from_ptr(cv_fractions, cv_fractions_len);
 
         let cv_method_str =
             shared_parse::parse_c_str_or_default(cv_method, shared_parse::DEFAULT_CV_METHOD)
                 .to_string();
-        let cv_k_usize = cv_k.max(2) as usize;
+        let cv_k_usize = match shared_parse::require_non_negative_usize("cv_k", cv_k) {
+            Ok(value) => value,
+            Err(error) => return null_with_error(&error),
+        };
+        if dimensions <= 0 || interpolation_vertices < 0 {
+            return null_with_error(
+                "dimensions must be positive and interpolation_vertices must be non-negative",
+            );
+        }
         let weighted_metric_weights_slice = shared_parse::option_slice_from_ptr(
             weighted_metric_weights,
-            weighted_metric_weights_len as usize,
+            weighted_metric_weights_len,
         );
         let distance_metric_str =
             (!distance_metric.is_null()).then_some(shared_parse::parse_c_str_or_default(
@@ -472,7 +474,7 @@ pub unsafe extern "C" fn cpp_loess_new(
             builder
         };
 
-        Box::into_raw(Box::new(CppLoess {
+        let model = CppLoess {
             builder: Some(builder),
             cv_fractions: cv_fractions_vec,
             cv_method: Some(cv_method_str),
@@ -483,7 +485,13 @@ pub unsafe extern "C" fn cpp_loess_new(
                 .then_some(interpolation_vertices as usize),
             boundary_degree_fallback: (boundary_degree_fallback >= 0)
                 .then_some(boundary_degree_fallback != 0),
-        }))
+        };
+        if let Err(error) = configured_batch_builder(&model)
+            .and_then(|builder| shared_parse::build_batch(builder, None))
+        {
+            return null_with_error(&error.message);
+        }
+        Box::into_raw(Box::new(model))
     })
 }
 
@@ -492,11 +500,10 @@ pub unsafe extern "C" fn cpp_loess_new(
 /// # Safety
 /// ptr must be valid.
 #[unsafe(no_mangle)]
-#[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Linux/macOS
-pub unsafe extern "C" fn cpp_loess_set_cv_seed(ptr: *mut CppLoess, seed: c_ulong) {
+pub unsafe extern "C" fn cpp_loess_set_cv_seed(ptr: *mut CppLoess, seed: u64) {
     with_panic_void(|| {
         if !ptr.is_null() {
-            unsafe { (*ptr).cv_seed = Some(u64::from(seed)) };
+            unsafe { (*ptr).cv_seed = Some(seed) };
         }
     });
 }
@@ -528,7 +535,7 @@ pub unsafe extern "C" fn cpp_streaming_set_cell(ptr: *mut CppStreamingLoess, cel
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_streaming_set_interpolation_vertices(
     ptr: *mut CppStreamingLoess,
-    vertices: c_ulong,
+    vertices: usize,
 ) {
     with_panic_void(|| {
         let _ = vertices;
@@ -624,7 +631,7 @@ pub unsafe extern "C" fn cpp_online_set_cell(ptr: *mut CppOnlineLoess, cell: c_d
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_online_set_interpolation_vertices(
     ptr: *mut CppOnlineLoess,
-    vertices: c_ulong,
+    vertices: usize,
 ) {
     with_panic_void(|| {
         let _ = vertices;
@@ -702,11 +709,11 @@ pub unsafe extern "C" fn cpp_online_set_prediction_intervals(
 pub unsafe extern "C" fn cpp_loess_fit(
     ptr: *mut CppLoess,
     x_values: *const c_double,
-    x_n: c_ulong,
+    x_n: usize,
     y_values: *const c_double,
-    y_n: c_ulong,
+    y_n: usize,
     custom_weights: *const c_double,
-    custom_weights_n: c_ulong,
+    custom_weights_n: usize,
 ) -> CppLoessResult {
     with_panic_result(|| {
         if ptr.is_null() {
@@ -717,32 +724,16 @@ pub unsafe extern "C" fn cpp_loess_fit(
         }
 
         let loess = &mut *ptr;
-        let x_slice = from_raw_parts(x_values, x_n as usize);
-        let y_slice = from_raw_parts(y_values, y_n as usize);
+        let x_slice = from_raw_parts(x_values, x_n);
+        let y_slice = from_raw_parts(y_values, y_n);
 
-        let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_n as usize);
+        let cw = shared_parse::option_vec_from_ptr(custom_weights, custom_weights_n);
 
-        if let Some(mut builder) = loess.builder.clone() {
-            builder = match map_invalid_arg_result(shared_parse::apply_cross_validation(
-                builder,
-                loess.cv_fractions.as_deref(),
-                loess.cv_method.as_deref(),
-                Some(loess.cv_k),
-                loess.cv_seed,
-            )) {
-                Ok(b) => b,
-                Err(e) => return e,
+        if loess.builder.is_some() {
+            let builder = match configured_batch_builder(loess) {
+                Ok(builder) => builder,
+                Err(error) => return error_result_from(error),
             };
-            if let Some(c) = loess.cell {
-                builder = builder.cell(c);
-            }
-            if let Some(v) = loess.interpolation_vertices {
-                builder = builder.interpolation_vertices(v);
-            }
-            if let Some(bdf) = loess.boundary_degree_fallback {
-                builder = builder.boundary_degree_fallback(bdf);
-            }
-
             let model = match shared_parse::build_batch(builder, cw) {
                 Ok(m) => m,
                 Err(e) => return error_result(&e.message),
@@ -755,6 +746,31 @@ pub unsafe extern "C" fn cpp_loess_fit(
             error_result(shared_parse::MODEL_NOT_INITIALIZED)
         }
     })
+}
+
+fn configured_batch_builder(
+    model: &CppLoess,
+) -> Result<LoessBuilder<f64>, shared_parse::BindingError> {
+    let builder = model.builder.clone().ok_or_else(|| {
+        shared_parse::BindingError::invalid_arg(shared_parse::MODEL_NOT_INITIALIZED)
+    })?;
+    let mut builder = shared_parse::map_invalid_arg(shared_parse::apply_cross_validation(
+        builder,
+        model.cv_fractions.as_deref(),
+        model.cv_method.as_deref(),
+        Some(model.cv_k),
+        model.cv_seed,
+    ))?;
+    if let Some(cell) = model.cell {
+        builder = builder.cell(cell);
+    }
+    if let Some(vertices) = model.interpolation_vertices {
+        builder = builder.interpolation_vertices(vertices);
+    }
+    if let Some(fallback) = model.boundary_degree_fallback {
+        builder = builder.boundary_degree_fallback(fallback);
+    }
+    Ok(builder)
 }
 
 /// Free model.
@@ -777,7 +793,7 @@ pub struct CppPredictResult {
     /// Predicted y values, one per query point (length = n)
     pub y: *mut c_double,
     /// Number of query points
-    pub n: c_ulong,
+    pub n: usize,
     /// Standard errors (NULL if not requested)
     pub standard_errors: *mut c_double,
     /// Lower confidence bounds (NULL if not requested)
@@ -834,7 +850,7 @@ fn predict_error_result(msg: &str) -> CppPredictResult {
 pub unsafe extern "C" fn cpp_predict(
     handle: *mut CppPredictHandle,
     new_x: *const c_double,
-    new_x_len: c_ulong,
+    new_x_len: usize,
     return_se: c_int,
     confidence_level: c_double,
     prediction_level: c_double,
@@ -850,7 +866,7 @@ pub unsafe extern "C" fn cpp_predict(
         if new_x.is_null() || new_x_len == 0 {
             return predict_error_result(shared_parse::INVALID_DATA_INPUTS);
         }
-        let new_x_slice = from_raw_parts(new_x, new_x_len as usize);
+        let new_x_slice = from_raw_parts(new_x, new_x_len);
         let extrapolation_str = (!extrapolation.is_null())
             .then_some(shared_parse::parse_c_str_or_default(extrapolation, "clamp"));
 
@@ -875,7 +891,7 @@ pub unsafe extern "C" fn cpp_predict(
         };
 
         CppPredictResult {
-            n: output.y.len() as c_ulong,
+            n: output.y.len(),
             y: shared_parse::vec_to_raw_ptr(output.y),
             standard_errors: shared_parse::opt_vec_to_raw_ptr(output.standard_errors),
             confidence_lower: shared_parse::opt_vec_to_raw_ptr(output.confidence_lower),
@@ -903,7 +919,7 @@ pub unsafe extern "C" fn cpp_predict_free_result(result: *mut CppPredictResult) 
             return;
         }
         let r = &mut *result;
-        let n = r.n as usize;
+        let n = r.n;
         shared_parse::free_raw_f64_buffer(r.y, n);
         shared_parse::free_raw_f64_buffer(r.standard_errors, n);
         shared_parse::free_raw_f64_buffer(r.confidence_lower, n);
@@ -912,6 +928,7 @@ pub unsafe extern "C" fn cpp_predict_free_result(result: *mut CppPredictResult) 
         shared_parse::free_raw_f64_buffer(r.prediction_upper, n);
         shared_parse::free_raw_f64_buffer(r.derivative, n * r.dimensions.max(1) as usize);
         shared_parse::free_raw_c_string(r.error);
+        *r = CppPredictResult::default();
     });
 }
 
@@ -961,7 +978,7 @@ pub unsafe extern "C" fn cpp_streaming_new(
     interpolation_vertices: c_int,
     boundary_degree_fallback: c_int,
     weighted_metric_weights: *const c_double,
-    weighted_metric_weights_len: c_ulong,
+    weighted_metric_weights_len: usize,
     missing: *const c_char,
     confidence_intervals: c_double,
     prediction_intervals: c_double,
@@ -1000,6 +1017,11 @@ pub unsafe extern "C" fn cpp_streaming_new(
             Ok(v) => v,
             Err(e) => return null_with_error(&e),
         };
+        if dimensions <= 0 || interpolation_vertices < 0 {
+            return null_with_error(
+                "dimensions must be positive and interpolation_vertices must be non-negative",
+            );
+        }
         let degree_str = (!degree.is_null()).then_some(shared_parse::parse_c_str_or_default(
             degree,
             shared_parse::DEFAULT_DEGREE,
@@ -1014,7 +1036,7 @@ pub unsafe extern "C" fn cpp_streaming_new(
             ));
         let weighted_metric_weights_slice = shared_parse::option_slice_from_ptr(
             weighted_metric_weights,
-            weighted_metric_weights_len as usize,
+            weighted_metric_weights_len,
         );
 
         let (builder, _) = match shared_parse::apply_builder_options(
@@ -1083,9 +1105,9 @@ pub unsafe extern "C" fn cpp_streaming_new(
 pub unsafe extern "C" fn cpp_streaming_process(
     ptr: *mut CppStreamingLoess,
     x_values: *const c_double,
-    x_n: c_ulong,
+    x_n: usize,
     y_values: *const c_double,
-    y_n: c_ulong,
+    y_n: usize,
 ) -> CppLoessResult {
     with_panic_result(|| {
         if ptr.is_null() {
@@ -1095,8 +1117,8 @@ pub unsafe extern "C" fn cpp_streaming_process(
         if x_values.is_null() || y_values.is_null() || x_n == 0 || y_n == 0 {
             return error_result(shared_parse::INVALID_DATA_INPUTS);
         }
-        let x_slice = from_raw_parts(x_values, x_n as usize);
-        let y_slice = from_raw_parts(y_values, y_n as usize);
+        let x_slice = from_raw_parts(x_values, x_n);
+        let y_slice = from_raw_parts(y_values, y_n);
 
         if let Some(model) = &mut loess.model {
             match map_runtime_result(model.process_chunk(x_slice, y_slice)) {
@@ -1174,7 +1196,7 @@ pub unsafe extern "C" fn cpp_online_new(
     interpolation_vertices: c_int,
     boundary_degree_fallback: c_int,
     weighted_metric_weights: *const c_double,
-    weighted_metric_weights_len: c_ulong,
+    weighted_metric_weights_len: usize,
     missing: *const c_char,
     confidence_intervals: c_double,
     prediction_intervals: c_double,
@@ -1217,11 +1239,14 @@ pub unsafe extern "C" fn cpp_online_new(
             Err(e) => return null_with_error(&e),
         };
 
-        let configured_dimensions = if dimensions > 0 {
-            dimensions as usize
-        } else {
-            1
-        };
+        let configured_dimensions =
+            match shared_parse::require_positive_usize("dimensions", dimensions) {
+                Ok(value) => value,
+                Err(error) => return null_with_error(&error),
+            };
+        if interpolation_vertices < 0 {
+            return null_with_error("interpolation_vertices must be non-negative");
+        }
         let degree_str = (!degree.is_null()).then_some(shared_parse::parse_c_str_or_default(
             degree,
             shared_parse::DEFAULT_DEGREE,
@@ -1236,7 +1261,7 @@ pub unsafe extern "C" fn cpp_online_new(
             ));
         let weighted_metric_weights_slice = shared_parse::option_slice_from_ptr(
             weighted_metric_weights,
-            weighted_metric_weights_len as usize,
+            weighted_metric_weights_len,
         );
         let (builder, _) = match shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -1348,7 +1373,7 @@ pub unsafe extern "C" fn cpp_online_add_point(
                         prediction_lower,
                         prediction_upper,
                         gradient,
-                        gradient_len: gradient_len as c_ulong,
+                        gradient_len,
                         error: ptr::null_mut(),
                     }
                 }
@@ -1371,7 +1396,7 @@ pub unsafe extern "C" fn cpp_online_free_output(output: *mut CppOnlineOutput) {
     with_panic_void(|| {
         if !output.is_null() {
             let out = unsafe { &mut *output };
-            shared_parse::free_raw_f64_buffer(out.gradient, out.gradient_len as usize);
+            shared_parse::free_raw_f64_buffer(out.gradient, out.gradient_len);
             out.gradient = ptr::null_mut();
             out.gradient_len = 0;
             shared_parse::free_raw_c_string(out.error);
@@ -1405,10 +1430,10 @@ pub unsafe extern "C" fn cpp_loess_free_result(result: *mut CppLoessResult) {
         }
 
         let r = &mut *result;
-        let n = r.n as usize;
-        let cv_n = r.cv_scores_len as usize;
+        let n = r.n;
+        let cv_n = r.cv_scores_len;
 
-        shared_parse::free_raw_f64_buffer(r.x, n);
+        shared_parse::free_raw_f64_buffer(r.x, n * r.dimensions.max(1) as usize);
         shared_parse::free_raw_f64_buffer(r.y, n);
         shared_parse::free_raw_f64_buffer(r.standard_errors, n);
         shared_parse::free_raw_f64_buffer(r.confidence_lower, n);
@@ -1421,5 +1446,71 @@ pub unsafe extern "C" fn cpp_loess_free_result(result: *mut CppLoessResult) {
         shared_parse::free_raw_f64_buffer(r.leverage, n);
         shared_parse::free_raw_f64_buffer(r.cv_scores, cv_n);
         shared_parse::free_raw_c_string(r.error);
+        if !r.predict_handle.is_null() {
+            drop(Box::from_raw(r.predict_handle));
+        }
+        *r = CppLoessResult::default();
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cv_seed_preserves_high_bits() {
+        let mut model = CppLoess {
+            builder: Some(LoessBuilder::new()),
+            cv_fractions: None,
+            cv_method: None,
+            cv_k: 5,
+            cell: None,
+            interpolation_vertices: None,
+            boundary_degree_fallback: None,
+            cv_seed: None,
+        };
+        let seed = (1u64 << 40) + 42;
+        unsafe { cpp_loess_set_cv_seed(&mut model, seed) };
+        assert_eq!(model.cv_seed, Some(seed));
+        assert_eq!(
+            std::mem::size_of::<usize>(),
+            std::mem::size_of_val(&CppLoessResult::default().n)
+        );
+    }
+
+    #[test]
+    fn result_free_releases_retained_handle_and_is_idempotent() {
+        let native = fastLoess::prelude::Loess::new()
+            .fraction(1.0)
+            .iterations(0)
+            .surface_mode("direct")
+            .retain_model(true)
+            .build()
+            .unwrap()
+            .fit(&[0.0, 1.0, 2.0, 3.0][..], &[0.0, 1.1, 2.0, 3.1][..])
+            .unwrap();
+        let retained = Arc::downgrade(native.predict_state.as_ref().unwrap());
+        let mut result = CppLoessResult::from(native);
+        assert!(retained.upgrade().is_some());
+        unsafe { cpp_loess_free_result(&mut result) };
+        assert!(retained.upgrade().is_none());
+        assert!(result.x.is_null());
+        assert!(result.predict_handle.is_null());
+        unsafe { cpp_loess_free_result(&mut result) };
+    }
+
+    #[test]
+    fn result_free_cleans_zero_length_errors() {
+        let mut result = error_result("test error");
+        unsafe { cpp_loess_free_result(&mut result) };
+        assert!(result.error.is_null());
+        unsafe { cpp_loess_free_result(&mut result) };
+        let mut prediction = CppPredictResult {
+            error: shared_parse::into_raw_error_c_string("test prediction error"),
+            ..Default::default()
+        };
+        unsafe { cpp_predict_free_result(&mut prediction) };
+        assert!(prediction.error.is_null());
+        unsafe { cpp_predict_free_result(&mut prediction) };
+    }
 }

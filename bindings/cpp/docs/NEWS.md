@@ -17,11 +17,15 @@ This changelog includes end-user changes only. For internal development notes, s
 
 * Breaking change: replaced the individual output booleans in `LoessOptions`, `OnlineOptions`, and `PredictOptions` with grouped `outputs` vectors.
 * Breaking change: replaced flat interval levels with `intervals`, removed flat CV fields in favor of `cv`, and moved CV seeding to optional outer `seed`; `seed = 0` is now reproducible.
+* Native C ABI lengths now use `size_t` and CV seeds use `uint64_t` instead of Windows-truncated `unsigned long`. Rebuild the wrapper/header and native library together; old Windows binaries are not layout-compatible.
 * C++ musl release jobs now build dynamic x86_64 and ARM64 shared libraries, allowing the musl assets to be published reliably.
 * Declared the public wrapper's C++17 requirement and represented unavailable diagnostics as empty `std::optional<double>` values instead of NaN sentinels.
 
 ### Fixed
 
+* Free retained prediction handles and zero-length error results, reset freed native results, and make wrapper error paths exception-safe. Multidimensional predictor buffers are freed with their full length.
+* Make empty/moved result accessors safe, bounds-check indexed access, preserve all predictor coordinates, and keep unavailable diagnostics/statistics absent.
+* Reject unknown or mode-inappropriate outputs and unsupported Batch-only Streaming options. Surface invalid Batch configuration at construction, reject negative counts and invalid active CV folds instead of coercing them, and preserve CV seed bits above 32 bits.
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.
 * Preserve case weights through sorted CV training subsets and multidimensional predictions. Serial and parallel CV now agree on seeded folds and held-out LOOCV predictions; K-fold counts above the retained observation count are rejected.
 * Reject non-positive or non-finite Streaming/Online auto-convergence tolerances. Online auto-convergence requires full updates with robustness iterations.

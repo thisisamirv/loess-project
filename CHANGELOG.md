@@ -141,6 +141,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Breaking change: replaced the individual output booleans in `LoessOptions`, `OnlineOptions`, and `PredictOptions` with grouped `outputs` vectors.
+- Native C ABI lengths now use `size_t` and CV seeds use `uint64_t`, fixing Windows `unsigned long` truncation. Rebuild headers/wrappers and native artifacts together; old Windows binaries are not layout-compatible.
 - Breaking change: replaced flat fit/prediction interval levels with `intervals` and removed flat CV fields in favor of `cv` plus optional outer `seed`; zero is now a valid deterministic seed.
 - C++ musl release jobs now build dynamic x86_64 and ARM64 shared libraries, allowing the musl assets to be published reliably.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
@@ -232,6 +233,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Fixed `bindings/cpp/spack/package.py` building/installing from the wrong directory (`bindings/cpp` instead of the workspace-root `target/release`), which broke `spack install fastloess-cpp` on every platform. Now builds by package name. Also moved the pyright suppression out of the recipe into a new root `pyrightconfig.json`.
+- Ported portable Windows MinGW test copying/CTest execution and compiler-runtime DLL staging; validated the regression harness with MSVC and MinGW.
+- Fixed retained-handle and zero-length-result cleanup leaks, idempotent native result freeing, exception-safe wrapper cleanup, empty/moved accessors, indexed bounds, and multidimensional predictor access/deallocation.
+- Reject unsupported output/mode options and invalid constructor configuration; remove CV-fold coercion, reject invalid dimensions/counts, and preserve high CV seed bits. Added native ownership/ABI regressions and C++ validation/lifetime tests. GPU-installer and installer-copy temporary-directory fixes have no LOESS counterpart.
 - Force-stage the tracked Spack recipe in the C++ release workflow so ignore rules cannot block automated version updates.
 - Fixed the C++ valgrind memory check being silently skipped in Linux CI because valgrind was not installed. The Linux matrix, Clang, and Intel oneAPI jobs now install it, as does the Linux `bindings/cpp/Makefile` `install-tools` target.
 - Updated the C++ Valgrind check to retain origin tracking and debug symbols, avoid unsupported Rust variable-DWARF parsing, and fail only on definite or indirect leaks; Rayon worker TLS can otherwise appear as possibly lost at process exit.

@@ -21,7 +21,9 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#include <initializer_list>
 #include <limits>
+#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -68,6 +70,18 @@ public:
   explicit LoessError(const std::string &message)
       : std::runtime_error(message) {}
 };
+
+inline void validateOutputs(const std::vector<std::string> &outputs,
+                            std::initializer_list<const char *> allowed) {
+  for (const auto &output : outputs) {
+    const auto *const found =
+        std::find_if(allowed.begin(), allowed.end(),
+                     [&output](const char *name) { return output == name; });
+    if (found == allowed.end()) {
+      throw LoessError("Unknown or unsupported output: " + output);
+    }
+  }
+}
 
 /**
  * @brief A result type that holds either a value or an error.
@@ -299,11 +313,7 @@ public:
   explicit PredictResult(const fastloess_CppPredictResult &c_result)
       : result_(c_result) {}
 
-  ~PredictResult() {
-    if (result_.n > 0) {
-      cpp_predict_free_result(&result_);
-    }
-  }
+  ~PredictResult() { cpp_predict_free_result(&result_); }
 
   // Move-only
   PredictResult(const PredictResult &) = delete;
@@ -315,9 +325,7 @@ public:
 
   PredictResult &operator=(PredictResult &&other) noexcept {
     if (this != &other) {
-      if (result_.n > 0) {
-        cpp_predict_free_result(&result_);
-      }
+      cpp_predict_free_result(&result_);
       result_ = other.result_;
       other.result_ = fastloess_CppPredictResult{};
     }
@@ -337,6 +345,9 @@ public:
 
   /// Predicted y values, one per query point
   std::vector<double> y() const {
+    if (result_.n == 0 || result_.y == nullptr) {
+      return {};
+    }
     return std::vector<double>(result_.y, result_.y + result_.n);
   }
 
@@ -446,8 +457,9 @@ public:
   /// training set (flattened, `dimensions` values per point).
   PredictResult predict(const std::vector<double> &new_x,
                         const PredictOptions &options = {}) const {
+    validateOutputs(options.outputs, {"se", "gradient", "derivative"});
     auto result = cpp_predict(
-        ptr_, new_x.data(), static_cast<unsigned long>(new_x.size()),
+        ptr_, new_x.data(), static_cast<size_t>(new_x.size()),
         hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
         options.intervals.prediction,
         (hasOutput(options.outputs, "gradient") ||
@@ -475,11 +487,7 @@ public:
   explicit LoessResult(const fastloess_CppLoessResult &c_result)
       : result_(c_result) {}
 
-  ~LoessResult() {
-    if (result_.n > 0) {
-      cpp_loess_free_result(&result_);
-    }
-  }
+  ~LoessResult() { cpp_loess_free_result(&result_); }
 
   // Move-only
   LoessResult(const LoessResult &) = delete;
@@ -491,9 +499,7 @@ public:
 
   LoessResult &operator=(LoessResult &&other) noexcept {
     if (this != &other) {
-      if (result_.n > 0) {
-        cpp_loess_free_result(&result_);
-      }
+      cpp_loess_free_result(&result_);
       result_ = other.result_;
       other.result_ = fastloess_CppLoessResult{};
     }
@@ -512,18 +518,37 @@ public:
   }
 
   /// Access x value at index
-  double x_value(size_t index) const { return result_.x[index]; }
+  double x_value(size_t index) const {
+    if (result_.x == nullptr || index >= size() * static_cast<size_t>(std::max(
+                                                      result_.dimensions, 1))) {
+      throw std::out_of_range("LOESS x index out of range");
+    }
+    return result_.x[index];
+  }
 
   /// Access smoothed y value at index
-  double y_value(size_t index) const { return result_.y[index]; }
+  double y_value(size_t index) const {
+    if (result_.y == nullptr || index >= size()) {
+      throw std::out_of_range("LOESS y index out of range");
+    }
+    return result_.y[index];
+  }
 
   /// Get x values as vector
   std::vector<double> x_vector() const {
-    return std::vector<double>(result_.x, result_.x + result_.n);
+    if (result_.n == 0 || result_.x == nullptr) {
+      return {};
+    }
+    const size_t count =
+        size() * static_cast<size_t>(std::max(result_.dimensions, 1));
+    return std::vector<double>(result_.x, result_.x + count);
   }
 
   /// Get smoothed y values as vector
   std::vector<double> y_vector() const {
+    if (result_.n == 0 || result_.y == nullptr) {
+      return {};
+    }
     return std::vector<double>(result_.y, result_.y + result_.n);
   }
 
@@ -611,19 +636,21 @@ public:
   int dimensions() const { return result_.dimensions; }
 
   /// Equivalent number of parameters / ENP (NaN if not computed)
-  double enp() const { return result_.enp; }
+  double enp() const { return valid() ? result_.enp : NAN; }
 
   /// Trace of hat matrix (NaN if not computed)
-  double trace_hat() const { return result_.trace_hat; }
+  double trace_hat() const { return valid() ? result_.trace_hat : NAN; }
 
   /// Delta1 for SE/CI computation (NaN if not computed)
-  double delta1() const { return result_.delta1; }
+  double delta1() const { return valid() ? result_.delta1 : NAN; }
 
   /// Delta2 for SE/CI computation (NaN if not computed)
-  double delta2() const { return result_.delta2; }
+  double delta2() const { return valid() ? result_.delta2 : NAN; }
 
   /// Residual scale estimate (NaN if not computed)
-  double residual_scale() const { return result_.residual_scale; }
+  double residual_scale() const {
+    return valid() ? result_.residual_scale : NAN;
+  }
 
   /// Per-point leverage / hat-matrix diagonal (empty if not computed)
   std::vector<double> leverage() const {
@@ -644,7 +671,9 @@ public:
   }
 
   /// Get diagnostics
-  Diagnostics diagnostics() const { return Diagnostics(result_); }
+  Diagnostics diagnostics() const {
+    return valid() ? Diagnostics(result_) : Diagnostics();
+  }
 
   /// Extract the retained predict model (only available when
   /// `LoessOptions::retain_model` was set to `true` before `fit()`). Transfers
@@ -666,6 +695,9 @@ private:
 class Loess {
 public:
   explicit Loess(const LoessOptions &options = {}) {
+    validateOutputs(options.outputs,
+                    {"diagnostics", "residuals", "weights", "gradient",
+                     "derivative", "se", "sorted"});
     const auto &cv_fractions = options.cv.fractions;
     const auto &cv_method = options.cv.method;
     const int cv_k = options.cv.k;
@@ -683,9 +715,8 @@ public:
             : 0,
         options.zero_weight_fallback.c_str(), options.auto_converge,
         cv_fractions.empty() ? nullptr : cv_fractions.data(),
-        static_cast<unsigned long>(cv_fractions.size()), cv_method.c_str(),
-        cv_k, options.parallel ? 1 : 0, options.degree.c_str(),
-        options.dimensions,
+        static_cast<size_t>(cv_fractions.size()), cv_method.c_str(), cv_k,
+        options.parallel ? 1 : 0, options.degree.c_str(), options.dimensions,
         options.weighted_metric_weights.empty()
             ? options.distance_metric.c_str()
             : nullptr,
@@ -695,13 +726,13 @@ public:
         options.weighted_metric_weights.empty()
             ? nullptr
             : options.weighted_metric_weights.data(),
-        static_cast<unsigned long>(options.weighted_metric_weights.size()),
+        static_cast<size_t>(options.weighted_metric_weights.size()),
         options.missing.c_str(), options.retain_model ? 1 : 0);
     if (ptr_ == nullptr) {
       throw LoessError(cpp_last_error_message());
     }
     if (options.seed.has_value()) {
-      cpp_loess_set_cv_seed(ptr_, static_cast<unsigned long>(*options.seed));
+      cpp_loess_set_cv_seed(ptr_, *options.seed);
     }
   }
 
@@ -745,18 +776,17 @@ public:
           "x length must be a non-zero multiple of y length");
     }
     auto result = cpp_loess_fit(
-        ptr_, x_values.data(), static_cast<unsigned long>(x_values.size()),
-        y_values.data(), static_cast<unsigned long>(y_values.size()),
+        ptr_, x_values.data(), static_cast<size_t>(x_values.size()),
+        y_values.data(), static_cast<size_t>(y_values.size()),
         custom_weights.empty() ? nullptr : custom_weights.data(),
-        static_cast<unsigned long>(custom_weights.size()));
+        static_cast<size_t>(custom_weights.size()));
 
+    LoessResult owned_result(result);
     if (result.error != nullptr) {
-      const std::string error_msg(result.error);
-      cpp_loess_free_result(&result);
-      return Expected<LoessResult>::make_error(error_msg);
+      return Expected<LoessResult>::make_error(owned_result.error());
     }
 
-    return Expected<LoessResult>(LoessResult(result));
+    return Expected<LoessResult>(std::move(owned_result));
   }
 
 private:
@@ -769,6 +799,14 @@ private:
 class StreamingLoess {
 public:
   explicit StreamingLoess(const StreamingOptions &options = {}) {
+    validateOutputs(options.outputs, {"diagnostics", "residuals", "weights",
+                                      "gradient", "derivative", "se"});
+    if (!options.cv.fractions.empty() || options.cv.method != "kfold" ||
+        options.cv.k != detail::k_default_cv_k || options.seed.has_value() ||
+        options.retain_model) {
+      throw LoessError("StreamingLoess does not support Batch-only CV, seed, "
+                       "or retained-model options");
+    }
     ptr_ = cpp_streaming_new(
         options.fraction, options.iterations, options.weight_function.c_str(),
         options.robustness_method.c_str(), options.scaling_method.c_str(),
@@ -792,7 +830,7 @@ public:
         options.weighted_metric_weights.empty()
             ? nullptr
             : options.weighted_metric_weights.data(),
-        static_cast<unsigned long>(options.weighted_metric_weights.size()),
+        static_cast<size_t>(options.weighted_metric_weights.size()),
         options.missing.c_str(), options.intervals.confidence,
         options.intervals.prediction, hasOutput(options.outputs, "se") ? 1 : 0);
     if (ptr_ == nullptr) {
@@ -833,15 +871,14 @@ public:
     }
 
     auto result = cpp_streaming_process(
-        ptr_, x_values.data(), static_cast<unsigned long>(x_values.size()),
-        y_values.data(), static_cast<unsigned long>(y_values.size()));
+        ptr_, x_values.data(), static_cast<size_t>(x_values.size()),
+        y_values.data(), static_cast<size_t>(y_values.size()));
 
+    LoessResult owned_result(result);
     if (result.error != nullptr) {
-      const std::string error_msg(result.error);
-      cpp_loess_free_result(&result);
-      return Expected<LoessResult>::make_error(error_msg);
+      return Expected<LoessResult>::make_error(owned_result.error());
     }
-    return Expected<LoessResult>(LoessResult(result));
+    return Expected<LoessResult>(std::move(owned_result));
   }
 
   Expected<LoessResult> finalize() {
@@ -851,12 +888,11 @@ public:
     expect_finalized_ = true;
 
     auto result = cpp_streaming_finalize(ptr_);
+    LoessResult owned_result(result);
     if (result.error != nullptr) {
-      const std::string error_msg(result.error);
-      cpp_loess_free_result(&result);
-      return Expected<LoessResult>::make_error(error_msg);
+      return Expected<LoessResult>::make_error(owned_result.error());
     }
-    return Expected<LoessResult>(LoessResult(result));
+    return Expected<LoessResult>(std::move(owned_result));
   }
 
 private:
@@ -949,6 +985,8 @@ private:
 class OnlineLoess {
 public:
   explicit OnlineLoess(const OnlineOptions &options = {}) {
+    validateOutputs(options.outputs,
+                    {"weights", "gradient", "derivative", "se"});
     ptr_ = cpp_online_new(
         options.fraction, options.iterations, options.weight_function.c_str(),
         options.robustness_method.c_str(), options.scaling_method.c_str(),
@@ -969,7 +1007,7 @@ public:
         options.weighted_metric_weights.empty()
             ? nullptr
             : options.weighted_metric_weights.data(),
-        static_cast<unsigned long>(options.weighted_metric_weights.size()),
+        static_cast<size_t>(options.weighted_metric_weights.size()),
         options.missing.c_str(), options.intervals.confidence,
         options.intervals.prediction, hasOutput(options.outputs, "se") ? 1 : 0);
     if (ptr_ == nullptr) {
@@ -1001,14 +1039,15 @@ public:
 
   Expected<OnlineOutput> add_point(double x, double y) {
     auto raw = cpp_online_add_point(ptr_, x, y);
+    std::unique_ptr<fastloess_CppOnlineOutput,
+                    decltype(&cpp_online_free_output)>
+        guard(&raw, cpp_online_free_output);
 
     if (raw.error != nullptr) {
       const std::string error_msg(raw.error);
-      cpp_online_free_output(&raw);
       return Expected<OnlineOutput>::make_error(error_msg);
     }
     OnlineOutput out(raw);
-    cpp_online_free_output(&raw);
     return Expected<OnlineOutput>(std::move(out));
   }
 

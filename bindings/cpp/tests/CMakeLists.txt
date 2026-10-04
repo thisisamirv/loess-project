@@ -79,6 +79,21 @@ if(WIN32)
             bcrypt
             pthread
         )
+        get_filename_component(MINGW_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
+        file(GLOB MINGW_RUNTIME_DLLS
+            "${MINGW_BIN_DIR}/libgcc_s_*-1.dll"
+            "${MINGW_BIN_DIR}/libstdc++-6.dll"
+            "${MINGW_BIN_DIR}/libwinpthread-1.dll"
+            "${MINGW_BIN_DIR}/libmcfgthread-*.dll"
+        )
+        foreach(MINGW_RUNTIME_DLL IN LISTS MINGW_RUNTIME_DLLS)
+            add_custom_command(TARGET test_fastloess_suite POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "${MINGW_RUNTIME_DLL}"
+                    "$<TARGET_FILE_DIR:test_fastloess_suite>"
+                VERBATIM
+            )
+        endforeach()
     endif()
 else()
     target_link_libraries(test_fastloess_suite ${FASTLOESS_LIB} pthread dl)

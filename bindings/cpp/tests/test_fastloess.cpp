@@ -9,10 +9,19 @@
 #include <iostream>
 #include <optional>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 using namespace fastloess;
+
+static_assert(sizeof(fastloess_CppLoessResult{}.n) == sizeof(size_t));
+static_assert(sizeof(fastloess_CppLoessResult{}.cv_scores_len) ==
+              sizeof(size_t));
+static_assert(sizeof(fastloess_CppOnlineOutput{}.gradient_len) ==
+              sizeof(size_t));
+static_assert(std::is_same<decltype(&cpp_loess_set_cv_seed),
+                           void (*)(fastloess_CppLoess *, uint64_t)>::value);
 
 namespace {
 
@@ -29,6 +38,7 @@ constexpr double k_domain_end_hundred = 100.0;
 constexpr double k_domain_end_thousand = 1000.0;
 constexpr double k_linear_slope = 2.0;
 constexpr double k_linear_intercept = 1.0;
+constexpr double k_expected_prediction_y = 1.5;
 constexpr size_t k_small_count = 5;
 constexpr size_t k_twenty_count = 20;
 constexpr size_t k_hundred_count = 100;
@@ -957,6 +967,99 @@ void testOnlineUpdateModeAndParams() {
 // NOLINTNEXTLINE(bugprone-exception-escape)
 int main() {
   try {
+    {
+      LoessResult empty;
+      assertTrue(!empty.diagnostics().rmse().has_value(),
+                 "empty diagnostics must be absent");
+      assertTrue(std::isnan(empty.enp()) && std::isnan(empty.residual_scale()),
+                 "empty hat statistics must be absent");
+      assertTrue(empty.x_vector().empty() && empty.y_vector().empty(),
+                 "empty fit accessors must be safe");
+      PredictResult empty_prediction;
+      assertTrue(empty_prediction.y().empty(),
+                 "empty prediction accessors must be safe");
+      bool rejected = false;
+      try {
+        empty.y_value(0);
+      } catch (const std::out_of_range &) {
+        rejected = true;
+      }
+      assertTrue(rejected, "empty indexed access must throw");
+    }
+    {
+      const auto expect_error = [](const auto &action) {
+        bool rejected = false;
+        try {
+          action();
+        } catch (const LoessError &) {
+          rejected = true;
+        }
+        assertTrue(rejected,
+                   "invalid constructor or output settings must throw");
+      };
+      LoessOptions batch;
+      batch.outputs = {"unknown"};
+      expect_error([&] { Loess model(batch); });
+      batch.outputs.clear();
+      batch.iterations = -1;
+      expect_error([&] { Loess model(batch); });
+      batch.iterations = 0;
+      batch.fraction = 0.0;
+      expect_error([&] { Loess model(batch); });
+      batch.fraction = k_fraction_half;
+      batch.cv.fractions = {k_fraction_half};
+      for (int folds : {-1, 0, 1}) {
+        batch.cv.k = folds;
+        expect_error([&] { Loess model(batch); });
+      }
+      batch.cv.k = 3;
+      batch.cv.method = "invalid";
+      expect_error([&] { Loess model(batch); });
+      StreamingOptions streaming;
+      streaming.outputs = {"sorted"};
+      expect_error([&] { StreamingLoess model(streaming); });
+      streaming.outputs.clear();
+      streaming.cv.fractions = {k_fraction_half};
+      expect_error([&] { StreamingLoess model(streaming); });
+      OnlineOptions online;
+      online.outputs = {"diagnostics"};
+      expect_error([&] { OnlineLoess model(online); });
+      PredictOptions prediction;
+      prediction.outputs = {"sorted"};
+      expect_error([&] {
+        PredictModel model;
+        model.predict({}, prediction);
+      });
+    }
+    {
+      LoessOptions options;
+      options.fraction = 1.0;
+      options.iterations = 0;
+      options.dimensions = 2;
+      options.surface_mode = "direct";
+      options.retain_model = true;
+      Loess model(options);
+      const std::vector<double> predictors = {0, 0, 1, 0, 0, 1,
+                                              1, 1, 2, 0, 0, 2};
+      const std::vector<double> observations = {0, 1, 2, 3, 2, 4};
+      PredictModel retained;
+      {
+        auto result = model.fit(predictors, observations);
+        assertTrue(result.has_value(), "multidimensional fit must succeed");
+        assertTrue(result.value().x_vector() == predictors,
+                   "all predictor coordinates must be accessible");
+        retained = result.value().predict_model();
+        LoessResult moved = std::move(result.value());
+        assertTrue(result.value().x_vector().empty(),
+                   "moved-from result access must be safe");
+        assertTrue(moved.y_vector().size() == observations.size(),
+                   "move must preserve data ownership");
+      }
+      const auto prediction = retained.predict({0.5, 0.5});
+      assertTrue(prediction.valid(),
+                 "retained model must outlive the fit result");
+      assertApprox(prediction.y()[0], k_expected_prediction_y);
+    }
     testBasicSmooth();
     testBasicSmoothSerial();
     testLoessWithDiagnostics();
