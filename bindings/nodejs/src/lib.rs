@@ -262,6 +262,7 @@ impl LoessResult {
         options: Option<PredictOptions>,
     ) -> Result<PredictOutput> {
         let opts = options.unwrap_or_default();
+        validate_outputs(opts.outputs.as_ref(), &["se", "gradient", "derivative"])?;
         let output = map_invalid_arg(shared_parse::run_predict(
             &self.inner,
             new_x.as_ref(),
@@ -370,6 +371,22 @@ impl PredictOutput {
 
 fn has_output(outputs: Option<&Vec<String>>, name: &str) -> bool {
     outputs.is_some_and(|values| values.iter().any(|value| value == name))
+}
+
+fn validate_outputs(outputs: Option<&Vec<String>>, allowed: &[&str]) -> Result<()> {
+    if let Some(output) = outputs
+        .into_iter()
+        .flatten()
+        .find(|value| !allowed.contains(&value.as_str()))
+    {
+        return Err(to_napi_error(shared_parse::BindingError::invalid_arg(
+            format!(
+                "unknown output '{output}'. Valid outputs: {}",
+                allowed.join(", ")
+            ),
+        )));
+    }
+    Ok(())
 }
 
 #[napi(object)]
@@ -572,6 +589,18 @@ pub struct OnlineSmoothOptions {
 fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder<f64>> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(
+            opts.outputs.as_ref(),
+            &[
+                "diagnostics",
+                "residuals",
+                "weights",
+                "gradient",
+                "derivative",
+                "se",
+                "sorted",
+            ],
+        )?;
         let grouped_cv = opts.cv.as_ref();
         let cv_seed = opts
             .seed
@@ -637,6 +666,17 @@ fn streaming_options_to_builder(
 ) -> Result<LoessBuilder<f64>> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(
+            opts.outputs.as_ref(),
+            &[
+                "diagnostics",
+                "residuals",
+                "weights",
+                "gradient",
+                "derivative",
+                "se",
+            ],
+        )?;
         let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
@@ -681,6 +721,10 @@ fn streaming_options_to_builder(
 fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<LoessBuilder<f64>> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        validate_outputs(
+            opts.outputs.as_ref(),
+            &["weights", "gradient", "derivative", "se"],
+        )?;
         let (configured_builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {

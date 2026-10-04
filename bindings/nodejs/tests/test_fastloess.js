@@ -278,6 +278,31 @@ test('grouped outputs select Batch, Streaming, Online, and prediction fields', (
     assert.ok(latest.standard_error !== null);
 });
 
+test('unknown output names are rejected for every API mode', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+    const invalidOutput = /unknown output/i;
+
+    assert.throws(
+        () => new fastloess.Loess({ outputs: ['typo'] }).fit(x, y),
+        invalidOutput
+    );
+    assert.throws(
+        () => new fastloess.StreamingLoess({ outputs: ['sorted'] }),
+        invalidOutput
+    );
+    assert.throws(
+        () => new fastloess.OnlineLoess({ outputs: ['diagnostics'] }),
+        invalidOutput
+    );
+
+    const model = new fastloess.Loess({ retain_model: true }).fit(x, y);
+    assert.throws(
+        () => model.predict(new Float64Array([2.5]), { outputs: ['weights'] }),
+        invalidOutput
+    );
+});
+
 test('SmoothOptions: return_gradient throws under default interpolation surface mode', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);
     const y = new Float64Array([2, 4, 6, 8, 10]);

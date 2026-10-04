@@ -264,6 +264,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Reject unknown output names for Batch, Streaming, Online, and prediction; restore the `fit_async()` declaration to `Promise<LoessResult>` after N-API builds. Online/prediction outputs were already wired, and the loader already detects musl; GPU installer/sidecar checks have no LOESS counterpart.
 - Fixed inconsistent naming of the Node.js binding as "JavaScript" across READMEs, doc-site home pages, and `CITATION.cff`.
 - Fixed `cv_seed` silently accepting negative values by validating the signed input before converting it to `u64`.
 
