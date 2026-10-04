@@ -205,6 +205,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `dev/bump_version.py` now also updates the Go module's `/vN` major-version-suffix path and the Maven dependency example version, both previously left stale after a version bump.
 - Aligned `OnlineLoess` defaults across the Rust core and bindings: `iterations` is now `0` with the default `update_mode = "incremental"`; positive robustness iterations require `update_mode = "full"`.
 - Replaced the stale "JavaScript" binding label with "Node.js" in the Julia README and docs-site homepage.
+- Build Valgrind 3.27.1 from source on Linux ARM64 C++ CI and put it first on `PATH`, replacing Ubuntu 24.04's 3.22 package for the existing optimized-build memory check.
 
 **loess-rs:**
 
