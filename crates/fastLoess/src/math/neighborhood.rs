@@ -9,11 +9,10 @@
 // @srrstats {RE4.0} KD-tree spatial index for fast nearest-neighbor lookup in local fits.
 
 // Export dependencies from loess-rs crate
-use loess_rs::internals::algorithms::regression::SolverLinalg;
+use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
-use loess_rs::internals::math::neighborhood::KDNode;
-use loess_rs::internals::math::neighborhood::KDTree;
+use loess_rs::internals::math::neighborhood::{KDNode, KDTree};
 use num_traits::Float;
 
 // External dependencies

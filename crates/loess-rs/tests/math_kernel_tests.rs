@@ -17,7 +17,7 @@
 
 use approx::assert_relative_eq;
 
-use loess_rs::internals::math::kernel::WeightFunction;
+use loess_rs::internals::primitives::policies::WeightFunction;
 use loess_rs::internals::primitives::window::Window;
 
 // ============================================================================

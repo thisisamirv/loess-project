@@ -13,8 +13,6 @@
 use core::f64::consts::{PI, SQRT_2};
 use num_traits::Float;
 
-// Internal dependencies
-
 // Square root of 2*pi, used in Gaussian kernel calculations.
 #[allow(clippy::excessive_precision)]
 const SQRT_2PI: f64 = 2.5066282746310005024157652848110452530069867406099_f64;
@@ -119,33 +117,7 @@ const UNIFORM_PROPERTIES: KernelProperties = KernelProperties {
 // Each kernel defines a function K: ℝ → [0, ∞) that maps normalized
 // distances to weights. Bounded kernels have support on [-1, 1], while
 // the Gaussian kernel has unbounded support.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-#[non_exhaustive]
-pub enum WeightFunction {
-    // Cosine kernel: K(u) = cos(pi * u / 2) for |u| < 1.
-    Cosine,
-
-    // Epanechnikov kernel: K(u) = (1 - u^2) for |u| < 1.
-    Epanechnikov,
-
-    // Gaussian kernel: K(u) = exp(-u^2 / 2).
-    Gaussian,
-
-    // Biweight (quartic) kernel: K(u) = (1 - u^2)^2 for |u| < 1.
-    Biweight,
-
-    // Triangular (linear) kernel: K(u) = (1 - |u|) for |u| < 1.
-    Triangle,
-
-    // Tricube kernel: K(u) = (1 - |u|^3)^3 for |u| < 1.
-    //
-    // This is the default and recommended kernel choice.
-    #[default]
-    Tricube,
-
-    // Uniform (rectangular) kernel: K(u) = 1 for |u| < 1.
-    Uniform,
-}
+use crate::primitives::policies::WeightFunction;
 
 impl WeightFunction {
     // Get the name of the weight function.

@@ -21,20 +21,8 @@ use std::vec::Vec;
 use num_traits::Float;
 
 // Internal dependencies
-use crate::engine::executor::SurfaceMode;
 use crate::primitives::errors::LoessError;
-
-// Policy for handling non-finite (NaN/Inf) values in input data.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum MissingPolicy {
-    // Return an error if any input value is non-finite (default).
-    #[default]
-    Error,
-
-    // Silently remove observations (rows) where any x dimension or y is
-    // non-finite before fitting.
-    Drop,
-}
+use crate::primitives::policies::{SurfaceMode, UpdateMode};
 
 // Validation utility for LOESS configuration and input data.
 //
@@ -382,9 +370,9 @@ impl Validator {
     // `standard_error` as `None`.
     pub fn validate_online_se_update_mode<T>(
         interval_type: Option<T>,
-        update_mode: crate::adapters::online::UpdateMode,
+        update_mode: UpdateMode,
     ) -> Result<(), LoessError> {
-        if interval_type.is_some() && update_mode != crate::adapters::online::UpdateMode::Full {
+        if interval_type.is_some() && update_mode != UpdateMode::Full {
             return Err(LoessError::StandardErrorRequiresFullUpdateMode);
         }
         Ok(())
@@ -393,9 +381,9 @@ impl Validator {
     // Validate that OnlineLoess robustness iterations require full updates.
     pub fn validate_online_iterations_update_mode(
         iterations: usize,
-        update_mode: crate::adapters::online::UpdateMode,
+        update_mode: UpdateMode,
     ) -> Result<(), LoessError> {
-        if iterations > 0 && update_mode != crate::adapters::online::UpdateMode::Full {
+        if iterations > 0 && update_mode != UpdateMode::Full {
             return Err(LoessError::RobustnessIterationsRequireFullUpdateMode);
         }
         Ok(())

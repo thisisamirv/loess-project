@@ -16,17 +16,16 @@ use std::fmt::Debug;
 use std::vec::Vec;
 
 // Export dependencies from loess-rs crate
-use loess_rs::internals::algorithms::regression::PolynomialDegree;
-use loess_rs::internals::algorithms::regression::{
-    RegressionContext, SolverLinalg, ZeroWeightFallback,
-};
+use loess_rs::internals::algorithms::regression::context::RegressionContext;
+use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
 use loess_rs::internals::evaluation::intervals::IntervalMethod;
 use loess_rs::internals::math::distance::DistanceLinalg;
-use loess_rs::internals::math::distance::DistanceMetric;
-use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood, NodeDistance};
 use loess_rs::internals::primitives::buffer::{FittingBuffer, NeighborhoodSearchBuffer};
+use loess_rs::internals::primitives::policies::{
+    DistanceMetric, PolynomialDegree, WeightFunction, ZeroWeightFallback,
+};
 
 use crate::engine::executor::LoessDistanceCalculator;
 

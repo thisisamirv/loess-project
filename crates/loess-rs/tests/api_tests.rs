@@ -24,14 +24,14 @@
 use approx::assert_relative_eq;
 use std::fmt::Write;
 
-use loess_rs::internals::algorithms::regression::PolynomialDegree;
-use loess_rs::internals::algorithms::robustness::RobustnessMethod;
 use loess_rs::internals::api::{Batch, Loess, Online, OnlineLoess, Streaming, StreamingLoess};
-use loess_rs::internals::engine::output::LoessResult;
+use loess_rs::internals::engine::executor::LoessResult;
 use loess_rs::internals::engine::validator::Validator;
 use loess_rs::internals::evaluation::diagnostics::Diagnostics;
-use loess_rs::internals::math::distance::DistanceMetric;
 use loess_rs::internals::primitives::errors::LoessError;
+use loess_rs::internals::primitives::policies::{
+    DistanceMetric, PolynomialDegree, RobustnessMethod,
+};
 use loess_rs::prelude::{CVBuilder, IntervalsBuilder};
 
 #[test]

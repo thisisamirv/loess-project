@@ -20,21 +20,7 @@ use core::iter::repeat_n;
 use num_traits::Float;
 
 // Policy for handling boundaries at the start and end of a data stream.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum BoundaryPolicy {
-    // Linearly extrapolate x-values and replicate y-values to provide context.
-    #[default]
-    Extend,
-
-    // Mirror values across the boundary.
-    Reflect,
-
-    // Use zero padding beyond data boundaries.
-    Zero,
-
-    // No boundary padding (standard LOESS behavior).
-    NoBoundary,
-}
+use crate::primitives::policies::BoundaryPolicy;
 
 impl BoundaryPolicy {
     // Apply the boundary policy to pad input data (1D or nD).

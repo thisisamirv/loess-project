@@ -19,12 +19,30 @@ use core::option::Option;
 use num_traits::Float;
 
 // Internal dependencies
-use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
-use crate::engine::executor::VertexPassFn;
-use crate::math::distance::DistanceMetric;
-use crate::math::kernel::WeightFunction;
 use crate::math::neighborhood::{KDTree, Neighborhood, NodeDistance, PointDistance};
 use crate::primitives::buffer::{CachedNeighborhood, FittingBuffer, NeighborhoodSearchBuffer};
+use crate::primitives::policies::{DistanceMetric, WeightFunction};
+use crate::primitives::policies::{PolynomialDegree, ZeroWeightFallback};
+
+pub type VertexPassFn<T> = fn(
+    &[T],
+    &[T],
+    usize,
+    &[T],
+    usize,
+    bool,
+    &[T],
+    &mut [T],
+    Option<&[CachedNeighborhood<T>]>,
+    &mut Vec<CachedNeighborhood<T>>,
+    WeightFunction,
+    ZeroWeightFallback,
+    PolynomialDegree,
+    &DistanceMetric<T>,
+    &[T],
+    bool,
+    Option<&[T]>,
+);
 
 // A cell in the spatial partition with references to its vertices.
 #[derive(Debug, Clone)]

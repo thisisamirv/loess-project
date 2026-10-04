@@ -14,19 +14,7 @@ use num_traits::Float;
 // Internal dependencies
 
 // Method for measuring the scale of residuals.
-#[allow(clippy::upper_case_acronyms)]
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub enum ScalingMethod {
-    // Median Absolute Residual: `median(|r|)`.
-    MAR,
-
-    // Median Absolute Deviation: `median(|r - median(r)|)`.
-    #[default]
-    MAD,
-
-    // Mean Absolute Residual: `mean(|r|)`.
-    Mean,
-}
+use crate::primitives::policies::ScalingMethod;
 
 impl ScalingMethod {
     // Compute the scale of the given values using the selected method.

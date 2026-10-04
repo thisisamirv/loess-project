@@ -23,7 +23,7 @@ use crate::adapters::batch::{BatchLoess, BatchLoessBuilder};
 use crate::adapters::defaults::default_overlap;
 use crate::adapters::online::OnlineLoessBuilder;
 use crate::adapters::streaming::StreamingLoessBuilder;
-use crate::algorithms::regression::SolverLinalg;
+use crate::algorithms::regression::specialized::SolverLinalg;
 use crate::engine::executor::{CVPassFn, IntervalPassFn, SmoothPassFn};
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::defaults::DEFAULT_CV_K_FOLDS;
@@ -33,20 +33,12 @@ use crate::math::linalg::FloatLinalg;
 use crate::primitives::backend::Backend;
 
 // Publicly re-exported types
-use crate::adapters::online::UpdateMode;
-use crate::adapters::streaming::MergeStrategy;
-use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
-use crate::algorithms::robustness::RobustnessMethod;
-use crate::engine::executor::SurfaceMode;
-pub use crate::engine::output::LoessResult;
-use crate::engine::predict::ExtrapolationPolicy;
-pub use crate::engine::predict::Predict;
-use crate::engine::validator::MissingPolicy;
-use crate::math::boundary::BoundaryPolicy;
-use crate::math::distance::DistanceMetric;
-use crate::math::kernel::WeightFunction;
-use crate::math::scaling::ScalingMethod;
-pub use crate::primitives::errors::LoessError;
+use crate::primitives::errors::LoessError;
+use crate::primitives::policies::{
+    BoundaryPolicy, DistanceMetric, ExtrapolationPolicy, MergeStrategy, MissingPolicy,
+    PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode, UpdateMode, WeightFunction,
+    ZeroWeightFallback,
+};
 
 // Converts a value into a typed enum, either infallibly (enum variant) or
 // via case-insensitive string parsing (string literal / `String`).
@@ -94,6 +86,17 @@ impl_into_enum_for!(UpdateMode);
 impl_into_enum_for!(WeightFunction);
 impl_into_enum_for!(ZeroWeightFallback);
 impl_into_enum_for!(ExtrapolationPolicy);
+
+impl<T: FloatLinalg> crate::adapters::predict::PredictBuilder<T> {
+    #[allow(private_bounds)]
+    pub fn extrapolation(mut self, policy: impl IntoEnum<ExtrapolationPolicy>) -> Self {
+        match policy.into_enum() {
+            Ok(value) => self.extrapolation = value,
+            Err(error) => self.pending_error = Some(error),
+        }
+        self
+    }
+}
 
 // IntoEnum for DistanceMetric<T>.
 //

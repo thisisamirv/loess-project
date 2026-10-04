@@ -8,12 +8,6 @@
 // @srrstats {G1.6} SIMD-optimized distance kernels via the `wide` crate (f64x4, f32x8).
 // @srrstats {G3.0} Normalized distance handles differing dimension scales automatically.
 
-// Feature-gated imports
-#[cfg(not(feature = "std"))]
-use alloc::vec::Vec;
-#[cfg(feature = "std")]
-use std::vec::Vec;
-
 // External dependencies
 use num_traits::Float;
 use wide::{f32x8, f64x4};
@@ -166,27 +160,7 @@ impl DistanceLinalg for f32 {
 }
 
 // Distance metric for nD LOESS neighborhood computation.
-#[derive(Debug, Clone, PartialEq, Default)]
-pub enum DistanceMetric<T> {
-    // Standard Euclidean distance: sqrt(sum((x_i - y_i)^2))
-    Euclidean,
-
-    // Normalized Euclidean distance.
-    #[default]
-    Normalized,
-
-    // Manhattan distance (L1 norm): sum(|x_i - y_i|)
-    Manhattan,
-
-    // Chebyshev distance (L-infinity norm): max|x_i - y_i|
-    Chebyshev,
-
-    // Minkowski distance (Lp norm): (sum(|x_i - y_i|^p))^(1/p)
-    Minkowski(T),
-
-    // Weighted Euclidean distance: sqrt(sum(w_i(x_i - y_i)^2))
-    Weighted(Vec<T>),
-}
+use crate::primitives::policies::DistanceMetric;
 
 impl<T: DistanceLinalg> DistanceMetric<T> {
     // Compute Euclidean distance between two nD points.

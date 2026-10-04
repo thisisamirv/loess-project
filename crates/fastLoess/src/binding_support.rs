@@ -85,26 +85,22 @@ where
 }
 use crate::prelude::{LoessError, LoessResult};
 use loess_rs::internals::adapters::online::OnlineOutput;
-use loess_rs::internals::adapters::online::UpdateMode;
-use loess_rs::internals::adapters::streaming::MergeStrategy;
-use loess_rs::internals::algorithms::regression::SolverLinalg;
-use loess_rs::internals::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
-use loess_rs::internals::algorithms::robustness::RobustnessMethod;
-use loess_rs::internals::alias;
-use loess_rs::internals::engine::executor::SurfaceMode;
-pub use loess_rs::internals::engine::predict::{
-    ExtrapolationPolicy, Predict, PredictBuilder, PredictOutput, PredictQuery, PredictState,
-    predict_batch,
+pub use loess_rs::internals::adapters::predict::{
+    Predict, PredictBuilder, PredictOutput, predict_batch,
 };
-use loess_rs::internals::engine::validator::MissingPolicy;
+use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
+use loess_rs::internals::alias;
+pub use loess_rs::internals::engine::executor::{PredictQuery, PredictState};
 use loess_rs::internals::evaluation::intervals::IntervalMethod;
-use loess_rs::internals::math::boundary::BoundaryPolicy;
 use loess_rs::internals::math::distance::DistanceLinalg;
-use loess_rs::internals::math::distance::DistanceMetric;
-use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
-use loess_rs::internals::math::scaling::ScalingMethod;
 use loess_rs::internals::primitives::backend::Backend;
+pub use loess_rs::internals::primitives::policies::ExtrapolationPolicy;
+use loess_rs::internals::primitives::policies::{BoundaryPolicy, DistanceMetric};
+use loess_rs::internals::primitives::policies::{
+    MergeStrategy, MissingPolicy, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
+    UpdateMode, WeightFunction, ZeroWeightFallback,
+};
 use std::ffi::{CStr, CString};
 use std::fmt::{Debug, Display, Formatter};
 use std::os::raw::c_char;
@@ -248,19 +244,20 @@ pub const CUSTOM_WEIGHTS_MUST_BE_NON_NEGATIVE: &str = "custom_weights must be no
 
 // Default string values for all parser-facing options. Re-exported from
 // `loess_rs::defaults` so that all bindings share a single source of truth.
-pub use loess_rs::internals::adapters::defaults::DEFAULT_ONLINE_UPDATE_MODE as DEFAULT_UPDATE_MODE;
-pub use loess_rs::internals::adapters::defaults::DEFAULT_STREAMING_MERGE_STRATEGY as DEFAULT_MERGE_STRATEGY;
-pub use loess_rs::internals::algorithms::defaults::DEFAULT_MISSING_POLICY;
-pub use loess_rs::internals::algorithms::defaults::DEFAULT_POLYNOMIAL_DEGREE as DEFAULT_DEGREE;
-pub use loess_rs::internals::algorithms::defaults::DEFAULT_ROBUSTNESS_METHOD;
-pub use loess_rs::internals::algorithms::defaults::DEFAULT_ZERO_WEIGHT_FALLBACK;
+pub use loess_rs::internals::adapters::defaults::{
+    DEFAULT_ONLINE_UPDATE_MODE as DEFAULT_UPDATE_MODE,
+    DEFAULT_STREAMING_MERGE_STRATEGY as DEFAULT_MERGE_STRATEGY,
+};
+pub use loess_rs::internals::algorithms::defaults::{
+    DEFAULT_MISSING_POLICY, DEFAULT_POLYNOMIAL_DEGREE as DEFAULT_DEGREE, DEFAULT_ROBUSTNESS_METHOD,
+    DEFAULT_ZERO_WEIGHT_FALLBACK,
+};
 pub use loess_rs::internals::engine::defaults::DEFAULT_SURFACE_MODE;
-pub use loess_rs::internals::evaluation::defaults::DEFAULT_CV_K_FOLDS;
-pub use loess_rs::internals::evaluation::defaults::DEFAULT_INTERVAL_LEVEL;
-pub use loess_rs::internals::math::defaults::DEFAULT_BOUNDARY_POLICY;
-pub use loess_rs::internals::math::defaults::DEFAULT_DISTANCE_METRIC;
-pub use loess_rs::internals::math::defaults::DEFAULT_SCALING_METHOD;
-pub use loess_rs::internals::math::defaults::DEFAULT_WEIGHT_FUNCTION;
+pub use loess_rs::internals::evaluation::defaults::{DEFAULT_CV_K_FOLDS, DEFAULT_INTERVAL_LEVEL};
+pub use loess_rs::internals::math::defaults::{
+    DEFAULT_BOUNDARY_POLICY, DEFAULT_DISTANCE_METRIC, DEFAULT_SCALING_METHOD,
+    DEFAULT_WEIGHT_FUNCTION,
+};
 // CV method is an internal subsystem fallback, not a user-facing default.
 pub const DEFAULT_CV_METHOD: &str = "kfold";
 

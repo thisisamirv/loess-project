@@ -9,24 +9,7 @@ use num_traits::Float;
 // Internal dependencies
 
 // Polynomial degree for local regression fitting.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum PolynomialDegree {
-    // Degree 0: Local constant (weighted mean)
-    Constant,
-
-    // Degree 1: Local linear regression (default)
-    #[default]
-    Linear,
-
-    // Degree 2: Local quadratic regression
-    Quadratic,
-
-    // Degree 3: Local cubic regression
-    Cubic,
-
-    // Degree 4: Local quartic regression
-    Quartic,
-}
+use crate::primitives::policies::PolynomialDegree;
 
 impl PolynomialDegree {
     // Get the numeric degree value.
@@ -185,18 +168,7 @@ impl PolynomialDegree {
 }
 
 // Policy for handling cases where all weights are zero.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum ZeroWeightFallback {
-    // Use local mean (default).
-    #[default]
-    UseLocalMean,
-
-    // Return the original y-value.
-    ReturnOriginal,
-
-    // Return None (propagate failure).
-    ReturnNone,
-}
+use crate::primitives::policies::ZeroWeightFallback;
 
 impl ZeroWeightFallback {
     // Create from u8 flag.

@@ -1,7 +1,7 @@
 #![cfg(feature = "dev")]
 use approx::assert_abs_diff_eq;
 use fastLoess::prelude::*;
-use loess_rs::internals::engine::predict::PredictBuilder;
+use loess_rs::internals::adapters::predict::PredictBuilder;
 
 #[test]
 fn test_predict_pass_consistency() {

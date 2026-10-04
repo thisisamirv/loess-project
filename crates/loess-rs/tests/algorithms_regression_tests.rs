@@ -19,15 +19,15 @@ use approx::assert_relative_eq;
 use core::fmt::Debug;
 use num_traits::Float;
 
-use loess_rs::internals::algorithms::regression::{
-    PolynomialDegree, RegressionContext, SolverLinalg, ZeroWeightFallback,
-};
+use loess_rs::internals::algorithms::regression::context::RegressionContext;
+use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
 use loess_rs::internals::api::{Batch, Streaming};
-use loess_rs::internals::math::distance::DistanceMetric;
-use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood};
 use loess_rs::internals::primitives::buffer::{FittingBuffer, NeighborhoodSearchBuffer};
+use loess_rs::internals::primitives::policies::{
+    DistanceMetric, PolynomialDegree, WeightFunction, ZeroWeightFallback,
+};
 use loess_rs::internals::primitives::window::Window;
 use loess_rs::prelude::*;
 
@@ -1626,9 +1626,9 @@ fn make_nd_neighborhood(
     k: usize,
 ) -> loess_rs::internals::math::neighborhood::Neighborhood<f64> {
     use loess_rs::internals::engine::executor::LoessDistanceCalculator;
-    use loess_rs::internals::math::distance::DistanceMetric;
     use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood};
     use loess_rs::internals::primitives::buffer::NeighborhoodSearchBuffer;
+    use loess_rs::internals::primitives::policies::DistanceMetric;
     let scales = vec![1.0f64; dims];
     let tree = KDTree::new(x, dims);
     let dist_calc = LoessDistanceCalculator {

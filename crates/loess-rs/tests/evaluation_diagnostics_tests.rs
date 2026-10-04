@@ -19,7 +19,7 @@
 use approx::{assert_abs_diff_eq, assert_relative_eq};
 
 use loess_rs::internals::evaluation::diagnostics::{Diagnostics, DiagnosticsState};
-use loess_rs::internals::math::scaling::ScalingMethod;
+use loess_rs::internals::primitives::policies::ScalingMethod;
 
 const MIN_TUNED_SCALE: f64 = 1e-12;
 const MAD_TO_STD_FACTOR: f64 = 1.4826;

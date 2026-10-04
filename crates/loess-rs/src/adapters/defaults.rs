@@ -1,7 +1,6 @@
 // Default values for adapter configuration (streaming, online, batch).
 
-use crate::adapters::online::UpdateMode;
-use crate::adapters::streaming::MergeStrategy;
+use crate::primitives::policies::{MergeStrategy, UpdateMode};
 
 // Default number of data points per chunk.
 pub const DEFAULT_STREAMING_CHUNK_SIZE: usize = 5_000;
@@ -36,9 +35,6 @@ pub const DEFAULT_ONLINE_ITERATIONS: usize = 0;
 pub const DEFAULT_ONLINE_UPDATE_MODE_ENUM: UpdateMode = UpdateMode::Incremental;
 #[cfg(feature = "dev")]
 pub const DEFAULT_ONLINE_UPDATE_MODE: &str = "incremental";
-
-// Default smoothing fraction. Approximately Cleveland's original recommendation of 2/3.
-pub const DEFAULT_FRACTION: f64 = 0.67;
 
 // Default CV seed: `None` means non-reproducible fold splitting.
 pub const DEFAULT_CV_SEED: Option<u64> = None;

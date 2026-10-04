@@ -18,10 +18,9 @@
 use approx::assert_relative_eq;
 use num_traits::Float;
 
-use loess_rs::internals::algorithms::regression::PolynomialDegree;
-use loess_rs::internals::engine::output::LoessResult;
+use loess_rs::internals::engine::executor::LoessResult;
 use loess_rs::internals::evaluation::diagnostics::Diagnostics;
-use loess_rs::internals::math::distance::DistanceMetric;
+use loess_rs::internals::primitives::policies::{DistanceMetric, PolynomialDegree};
 
 // ============================================================================
 // Test Helper Trait

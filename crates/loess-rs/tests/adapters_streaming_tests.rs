@@ -21,8 +21,8 @@ use loess_rs::prelude::*;
 
 use loess_rs::internals::adapters::streaming::StreamingLoessBuilder;
 use loess_rs::internals::api::Streaming;
-use loess_rs::internals::math::boundary::BoundaryPolicy;
 use loess_rs::internals::primitives::errors::LoessError;
+use loess_rs::internals::primitives::policies::BoundaryPolicy;
 
 // ============================================================================
 // Builder Validation Tests

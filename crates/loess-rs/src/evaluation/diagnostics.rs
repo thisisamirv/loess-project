@@ -14,7 +14,7 @@ use core::fmt::{Display, Formatter, Result};
 use num_traits::Float;
 
 // Internal dependencies
-use crate::math::scaling::ScalingMethod;
+use crate::primitives::policies::ScalingMethod;
 
 // Diagnostic metrics for assessing LOESS fit quality.
 #[derive(Debug, Clone, PartialEq)]

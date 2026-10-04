@@ -1,8 +1,7 @@
 // Default values for algorithms module types (regression, robustness).
 
-use crate::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
-use crate::algorithms::robustness::RobustnessMethod;
-use crate::engine::validator::MissingPolicy;
+use crate::primitives::policies::{MissingPolicy, RobustnessMethod};
+use crate::primitives::policies::{PolynomialDegree, ZeroWeightFallback};
 
 // Default number of robustness iterations for the **Batch** adapter.
 pub const DEFAULT_ITERATIONS: usize = 3;

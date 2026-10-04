@@ -14,8 +14,9 @@
 
 use approx::assert_relative_eq;
 
-use loess_rs::internals::engine::predict::{ExtrapolationPolicy, PredictBuilder};
+use loess_rs::internals::adapters::predict::PredictBuilder;
 use loess_rs::internals::primitives::errors::LoessError;
+use loess_rs::internals::primitives::policies::ExtrapolationPolicy;
 use loess_rs::prelude::*;
 
 fn linear_series(n: usize, slope: f64, intercept: f64) -> (Vec<f64>, Vec<f64>) {

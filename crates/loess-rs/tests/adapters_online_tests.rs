@@ -21,10 +21,9 @@ use approx::assert_relative_eq;
 use loess_rs::prelude::*;
 
 use loess_rs::internals::adapters::online::OnlineLoessBuilder;
-use loess_rs::internals::adapters::online::UpdateMode;
 use loess_rs::internals::api::Online;
-use loess_rs::internals::math::boundary::BoundaryPolicy;
 use loess_rs::internals::primitives::errors::LoessError;
+use loess_rs::internals::primitives::policies::{BoundaryPolicy, UpdateMode};
 
 // ============================================================================
 // Basic Functionality Tests

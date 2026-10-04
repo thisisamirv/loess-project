@@ -11,52 +11,28 @@
 #[cfg(not(feature = "std"))]
 use alloc::format;
 #[cfg(not(feature = "std"))]
-use alloc::sync::Arc;
-#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
-#[cfg(feature = "std")]
-use std::sync::Arc;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
 // External dependencies
 use core::fmt::Debug;
-use num_traits::Float;
 
 // Internal dependencies
-use crate::algorithms::interpolation::InterpolationSurface;
-use crate::algorithms::regression::{
-    PolynomialDegree, RegressionContext, SolverLinalg, ZeroWeightFallback,
-};
-use crate::api::IntoEnum;
-use crate::engine::executor::{LoessConfig, LoessDistanceCalculator, LoessExecutor};
-use crate::engine::output::LoessResult;
-use crate::evaluation::intervals::{
-    BootstrapConfig, BootstrapOutput, IntervalMethod, IntervalsBuilder,
-};
-use crate::math::distance::{DistanceLinalg, DistanceMetric};
-use crate::math::kernel::WeightFunction;
+
+use crate::algorithms::regression::context::RegressionContext;
+use crate::algorithms::regression::specialized::SolverLinalg;
+use crate::engine::executor::{LoessDistanceCalculator, LoessResult};
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, IntervalsBuilder};
+use crate::math::distance::DistanceLinalg;
 use crate::math::linalg::FloatLinalg;
 use crate::math::neighborhood::{KDTree, Neighborhood, NodeDistance};
 use crate::primitives::buffer::{FittingBuffer, NeighborhoodSearchBuffer};
 use crate::primitives::errors::LoessError;
 
 // Policy for evaluating query points outside the retained per-dimension training range.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum ExtrapolationPolicy {
-    // Clamp each out-of-range dimension to the nearest training boundary (default;
-    // matches `predict()`'s original behavior).
-    #[default]
-    Clamp,
-
-    // Linearly extrapolate from the boundary point's local fit and gradient (first-order
-    // Taylor expansion from the clamped point).
-    Linear,
-
-    // Fail the whole `predict()` call with `LoessError::PredictOutOfRange` if any query
-    // point falls outside the training range on any dimension.
-    Error,
-}
+use crate::engine::executor::{PredictQuery, PredictState, RawPredictValues};
+use crate::primitives::policies::ExtrapolationPolicy;
 
 // Fluent, deferred-validation configuration for a `Predict::call()` invocation. Call
 // `.build()` to validate and obtain the ready-to-call `Predict`.
@@ -176,17 +152,6 @@ impl<T: FloatLinalg> PredictBuilder<T> {
         self
     }
 
-    // Behavior for query points outside the training range: `"clamp"` (default),
-    // `"linear"`, `"error"`, or an `ExtrapolationPolicy` variant directly.
-    #[allow(private_bounds)]
-    pub fn extrapolation(mut self, policy: impl IntoEnum<ExtrapolationPolicy>) -> Self {
-        match policy.into_enum() {
-            Ok(p) => self.extrapolation = p,
-            Err(e) => self.pending_error = Some(e),
-        }
-        self
-    }
-
     // Under `"linear"` extrapolation, the maximum allowed per-dimension distance beyond
     // the training boundary before `call()` errors instead of returning an unbounded value.
     pub fn max_extrapolation_distance(mut self, distance: T) -> Self {
@@ -240,26 +205,6 @@ pub type Predict<T = f64> = PredictBuilder<T>;
 // Validated, ready-to-call configuration for a `Predict::call()` invocation, produced by
 // `PredictBuilder::build()`. Fields are private; the only way to construct one is via the
 // builder, so a `.build()` call can never be skipped.
-#[derive(Debug, Clone)]
-pub struct PredictQuery<T> {
-    return_se: bool,
-    confidence_intervals: Option<T>,
-    prediction_intervals: Option<T>,
-    bootstrap: Option<BootstrapConfig>,
-    return_derivative: bool,
-    extrapolation: ExtrapolationPolicy,
-    max_extrapolation_distance: Option<T>,
-    max_neighbor_distance: Option<T>,
-}
-
-impl<T> PredictQuery<T> {
-    // Whether the local fit's gradient is included in the output (used by fastLoess's
-    // parallel predict pass, which needs this outside `loess-rs` itself). No trait
-    // bounds needed: this just reads a plain `bool` field.
-    pub fn return_derivative(&self) -> bool {
-        self.return_derivative
-    }
-}
 
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> PredictQuery<T> {
     // Evaluate `result` (a fitted Batch model) at arbitrary out-of-sample query points
@@ -289,6 +234,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Predi
 }
 
 // Result of a `Predict::call()` invocation.
+
 #[derive(Debug, Clone)]
 pub struct PredictOutput<T> {
     // Predicted y-values, one per query point in `new_x`.
@@ -309,20 +255,12 @@ pub struct PredictOutput<T> {
     // (`dimensions` values per query point, flattened like `new_x`).
     pub derivative: Option<Vec<T>>,
 }
-
 // Per-point predict results before shared confidence/prediction interval math is applied:
 // `(y, optional flattened gradient, optional standard error)`.
-pub type RawPredictValues<T> = Result<(Vec<T>, Option<Vec<T>>, Option<Vec<T>>), LoessError>;
 
 // Signature for a custom (e.g. parallel) predict pass function. Computes only the
 // per-point values (y, optional gradient, optional standard error); the shared
 // confidence/prediction interval math is applied afterward by `predict_batch`.
-pub type PredictPassFn<T> = fn(
-    &PredictState<T>,
-    &[T], // new_x (flattened, `dimensions` values per query point)
-    &PredictQuery<T>,
-    bool, // need_se
-) -> RawPredictValues<T>;
 
 // Fitted-model state retained by a Batch `fit()` call when `.retain_model(true)` was set,
 // enabling `Predict::call()` to evaluate the fit at out-of-sample query points.
@@ -330,161 +268,10 @@ pub type PredictPassFn<T> = fn(
 // `x`/`y`/`robustness_weights`/`custom_weights` are the boundary-*padded* arrays actually
 // used for local fitting (not the shorter, unpadded arrays returned in `LoessResult`), so
 // that predictions near the edges of the training range are consistent with `fit()`.
-#[derive(Debug, Clone)]
-pub struct PredictState<T: Float> {
-    // Boundary-padded, flattened training predictors (`x.len() == dimensions * n_total`).
-    pub x: Vec<T>,
-
-    // Number of predictor dimensions.
-    pub dimensions: usize,
-
-    // Boundary-padded training responses, aligned with `x`.
-    pub y: Vec<T>,
-
-    // Final (post-robustness-iteration) weights, aligned with `x`/`y`.
-    pub robustness_weights: Vec<T>,
-
-    // Neighbor count (span), already resolved from `fraction`.
-    pub window_size: usize,
-
-    // Kernel weight function used during fitting.
-    pub weight_function: WeightFunction,
-
-    // Zero-weight fallback policy.
-    pub zero_weight_fallback: ZeroWeightFallback,
-
-    // Degree of local polynomial used during fitting.
-    pub polynomial_degree: PolynomialDegree,
-
-    // Distance metric used for neighborhood search during fitting.
-    pub distance_metric: DistanceMetric<T>,
-
-    // Per-dimension normalization scales (used when `distance_metric` is `Normalized`),
-    // computed from the unpadded training data's 10%-trimmed sample standard deviation.
-    pub scales: Vec<T>,
-
-    // Per-observation case weights, aligned with `x`/`y`, if provided.
-    pub custom_weights: Option<Vec<T>>,
-
-    // Global residual scale used to widen prediction intervals beyond the local standard
-    // error: the same `sqrt(RSS / delta1)` value as `LoessResult::residual_scale` if
-    // `.return_se()` was set on the original `fit()`, otherwise a MAD-based fallback
-    // (matching `Diagnostics.residual_sd`).
-    pub residual_sd: T,
-
-    // Standard error for in-range queries under `SurfaceMode::Interpolation`, precomputed
-    // with the exact same uniform approximate-leverage heuristic `fit()` itself falls back
-    // to there (`sigma * sqrt(eff_fraction / n)`). Keeps `predict()`'s SE self-consistent
-    // with whichever surface mode produced `y`, instead of pairing a fast/approximate `y`
-    // with an unrelated exact-leverage SE. Unused (and meaningless) when `surface` is `None`.
-    pub interpolation_se: T,
-
-    // Per-dimension minimum/maximum of the REAL (unpadded) training predictors, used to
-    // decide whether a query point is out-of-range for `ExtrapolationPolicy`. `x` above is
-    // boundary-*padded* and can extend well beyond this range on each dimension.
-    pub train_min: Vec<T>,
-    pub train_max: Vec<T>,
-
-    // KD-tree over `x`, built once when the model is retained rather than rebuilt on every
-    // `predict()` call (it would otherwise need to be reconstructed from scratch each time).
-    pub kdtree: KDTree<T>,
-
-    // Interpolation surface built during `fit()`, retained when `surface_mode()` was
-    // `Interpolation` (the default). `predict_one_full` reuses it (via `evaluate()`) for
-    // in-range query points, so the returned value matches `fit()`'s own `y_smooth` at
-    // training points instead of diverging via a separate exact per-point regression.
-    // `None` under `SurfaceMode::Direct`.
-    pub surface: Option<InterpolationSurface<T>>,
-
-    // Custom (e.g. parallel) predict pass, injected by extension crates like fastLoess.
-    pub custom_predict_pass: Option<PredictPassFn<T>>,
-    pub bootstrap_predictor: Option<Arc<dyn BootstrapPredictor<T>>>,
-}
-
-pub trait BootstrapPredictor<T: Float>: Debug + Send + Sync + core::panic::RefUnwindSafe {
-    fn compute(
-        &self,
-        bootstrap: BootstrapConfig,
-        method: &IntervalMethod<T>,
-        new_x: &[T],
-        options: &PredictQuery<T>,
-    ) -> Result<BootstrapOutput<T>, LoessError>;
-}
-
-#[derive(Debug)]
-pub(crate) struct RetainedBootstrapFit<T: FloatLinalg + SolverLinalg> {
-    pub x: Vec<T>,
-    pub smoothed: Vec<T>,
-    pub residuals: Vec<T>,
-    pub config: LoessConfig<T>,
-}
-
-impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static>
-    BootstrapPredictor<T> for RetainedBootstrapFit<T>
-{
-    fn compute(
-        &self,
-        bootstrap: BootstrapConfig,
-        method: &IntervalMethod<T>,
-        new_x: &[T],
-        options: &PredictQuery<T>,
-    ) -> Result<BootstrapOutput<T>, LoessError> {
-        let mut config = self.config.clone();
-        config.cv_fractions = None;
-        config.cv_kind = None;
-        config.return_variance = None;
-        config.return_gradient = false;
-        config.retain_model = true;
-        let mut query = options.clone();
-        query.bootstrap = None;
-        query.return_se = false;
-        query.confidence_intervals = None;
-        query.prediction_intervals = None;
-        bootstrap.compute_at_levels(
-            method,
-            options.prediction_intervals.unwrap_or(method.level),
-            &self.smoothed,
-            &self.residuals,
-            new_x.len() / config.dimensions,
-            |batch| {
-                batch
-                    .iter()
-                    .map(|response| {
-                        let fitted =
-                            LoessExecutor::run_with_config(&self.x, response, config.clone());
-                        let state = fitted
-                            .predict_state
-                            .ok_or(LoessError::PredictionUnavailable)?;
-                        Ok(predict_batch(&state, new_x, &query)?.y)
-                    })
-                    .collect()
-            },
-        )
-    }
-}
 
 // Manual `PartialEq` that ignores `kdtree`/`surface` (cached derived structures, not part
 // of model identity) and `custom_predict_pass` (function pointer comparisons aren't
 // meaningful - addresses aren't guaranteed unique across codegen units).
-impl<T: Float + PartialEq> PartialEq for PredictState<T> {
-    fn eq(&self, other: &Self) -> bool {
-        self.x == other.x
-            && self.dimensions == other.dimensions
-            && self.y == other.y
-            && self.robustness_weights == other.robustness_weights
-            && self.window_size == other.window_size
-            && self.weight_function == other.weight_function
-            && self.zero_weight_fallback == other.zero_weight_fallback
-            && self.polynomial_degree == other.polynomial_degree
-            && self.distance_metric == other.distance_metric
-            && self.scales == other.scales
-            && self.custom_weights == other.custom_weights
-            && self.residual_sd == other.residual_sd
-            && self.interpolation_se == other.interpolation_se
-            && self.train_min == other.train_min
-            && self.train_max == other.train_max
-    }
-}
 
 fn zero_vec<T: FloatLinalg>(n: usize) -> Vec<T> {
     let mut v = Vec::with_capacity(n);
@@ -803,11 +590,22 @@ pub fn predict_batch<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Se
             prediction: options.prediction_intervals.is_some(),
             se: true,
         };
+        let mut query = options.clone();
+        query.bootstrap = None;
+        query.return_se = false;
+        query.confidence_intervals = None;
+        query.prediction_intervals = None;
+        let mut evaluate = |refit: &PredictState<T>| Ok(predict_batch(refit, new_x, &query)?.y);
         let output = state
             .bootstrap_predictor
             .as_ref()
             .ok_or(LoessError::PredictionUnavailable)?
-            .compute(bootstrap, &method, new_x, options)?;
+            .compute(
+                bootstrap,
+                &method,
+                new_x.len() / state.dimensions,
+                &mut evaluate,
+            )?;
         return Ok(PredictOutput {
             y,
             derivative,

@@ -13,21 +13,21 @@ use crate::adapters::streaming::{ParallelStreamingLoess, ParallelStreamingLoessB
 use std::fmt::Debug;
 
 // Import base marker types for delegation
-use loess_rs::internals::api::Batch as BaseBatch;
-use loess_rs::internals::api::Online as BaseOnline;
-use loess_rs::internals::api::Streaming as BaseStreaming;
+use loess_rs::internals::api::{
+    Batch as BaseBatch, Online as BaseOnline, Streaming as BaseStreaming,
+};
 
 // Linear algebra imports
-use loess_rs::internals::algorithms::regression::SolverLinalg;
+use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
 
 // Publicly re-exported types
 pub use loess_rs::IntervalsBuilder;
+pub use loess_rs::internals::adapters::predict::Predict;
 use loess_rs::internals::api::LoessAdapter;
 pub use loess_rs::internals::api::LoessBuilder;
-pub use loess_rs::internals::engine::output::LoessResult;
-pub use loess_rs::internals::engine::predict::Predict;
+pub use loess_rs::internals::engine::executor::LoessResult;
 use loess_rs::internals::primitives::backend::Backend;
 pub use loess_rs::internals::primitives::errors::LoessError;
 pub use loess_rs::prelude::CVBuilder;

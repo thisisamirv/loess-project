@@ -25,27 +25,27 @@ use core::fmt::Debug;
 // Internal dependencies
 use crate::adapters::defaults::*;
 use crate::algorithms::defaults::*;
-use crate::algorithms::regression::{PolynomialDegree, SolverLinalg, ZeroWeightFallback};
-use crate::algorithms::robustness::RobustnessMethod;
+use crate::algorithms::interpolation::VertexPassFn;
+use crate::algorithms::regression::specialized::SolverLinalg;
 use crate::engine::defaults::*;
 use crate::engine::executor::{
     CVPassFn, FitPassFn, GradientPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig,
-    LoessExecutor, SmoothPassFn, SurfaceMode, VertexPassFn,
+    LoessExecutor, LoessResult, SmoothPassFn,
 };
-use crate::engine::output::LoessResult;
-use crate::engine::validator::{MissingPolicy, Validator};
+use crate::engine::validator::Validator;
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::diagnostics::Diagnostics;
 use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod};
-use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
-use crate::math::distance::{DistanceLinalg, DistanceMetric};
+use crate::math::distance::DistanceLinalg;
 use crate::math::hat_matrix::HatMatrixStats;
-use crate::math::kernel::WeightFunction;
 use crate::math::linalg::FloatLinalg;
-use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::errors::LoessError;
+use crate::primitives::policies::{
+    BoundaryPolicy, DistanceMetric, MissingPolicy, PolynomialDegree, RobustnessMethod,
+    ScalingMethod, SurfaceMode, WeightFunction, ZeroWeightFallback,
+};
 
 // Builder for batch LOESS processor.
 #[derive(Debug, Clone)]
@@ -405,7 +405,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             let mut config = retained_config.unwrap();
             config.fraction = Some(fraction_used);
             state.bootstrap_predictor =
-                Some(Arc::new(crate::engine::predict::RetainedBootstrapFit {
+                Some(Arc::new(crate::engine::executor::RetainedBootstrapFit {
                     x: x.to_vec(),
                     smoothed: y_smooth.clone(),
                     residuals: residuals.clone(),

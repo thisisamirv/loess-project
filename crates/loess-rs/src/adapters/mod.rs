@@ -6,6 +6,7 @@
 //! - **Batch**: Unified adapter for sequential execution
 //! - **Streaming**: Chunked processing for large datasets
 //! - **Online**: Incremental updates for real-time data
+//! - **Predict**: Out-of-sample evaluation of retained Batch models
 
 // Unified batch adapter for LOESS smoothing.
 pub mod batch;
@@ -18,3 +19,5 @@ pub mod streaming;
 
 // Online LOESS for real-time data streams.
 pub mod online;
+
+pub mod predict;

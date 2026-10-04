@@ -11,7 +11,7 @@ use core::marker::PhantomData;
 use num_traits::Float;
 
 // Module dependencies
-use super::types::PolynomialDegree;
+use crate::primitives::policies::PolynomialDegree;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 // Term Generators (Strategy Pattern)

@@ -25,33 +25,404 @@ use std::vec::Vec;
 
 // External dependencies
 use core::cmp::Ordering::Equal;
-use core::fmt::Debug;
+use core::fmt::{Debug, Display, Formatter};
 use num_traits::Float;
 
 // Internal dependencies
-use crate::adapters::defaults::*;
 use crate::algorithms::defaults::*;
 use crate::algorithms::interpolation::InterpolationSurface;
-use crate::algorithms::regression::{
-    PolynomialDegree, RegressionContext, SolverLinalg, ZeroWeightFallback,
-};
-use crate::algorithms::robustness::RobustnessMethod;
+use crate::algorithms::regression::context::RegressionContext;
+use crate::algorithms::regression::specialized::SolverLinalg;
 use crate::engine::defaults::*;
-use crate::engine::predict::PredictState;
 use crate::evaluation::cv::CVKind;
+use crate::evaluation::diagnostics::Diagnostics;
 use crate::evaluation::intervals::{BootstrapConfig, BootstrapOutput, IntervalMethod};
-use crate::math::boundary::BoundaryPolicy;
+use crate::primitives::errors::LoessError;
+use crate::primitives::policies::ExtrapolationPolicy;
+
 use crate::math::defaults::*;
-use crate::math::distance::{DistanceLinalg, DistanceMetric};
-use crate::math::kernel::WeightFunction;
+use crate::math::distance::DistanceLinalg;
 use crate::math::linalg::FloatLinalg;
 use crate::math::neighborhood::{KDTree, Neighborhood, NodeDistance, PointDistance};
-use crate::math::scaling::ScalingMethod;
 use crate::primitives::backend::Backend;
 use crate::primitives::buffer::{
     CachedNeighborhood, FittingBuffer, LoessBuffer, NeighborhoodSearchBuffer,
 };
+use crate::primitives::policies::{
+    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod,
+    WeightFunction, ZeroWeightFallback,
+};
 use crate::primitives::window::Window;
+
+#[derive(Debug, Clone)]
+pub struct PredictQuery<T> {
+    pub(crate) return_se: bool,
+    pub(crate) confidence_intervals: Option<T>,
+    pub(crate) prediction_intervals: Option<T>,
+    pub(crate) bootstrap: Option<BootstrapConfig>,
+    pub(crate) return_derivative: bool,
+    pub(crate) extrapolation: ExtrapolationPolicy,
+    pub(crate) max_extrapolation_distance: Option<T>,
+    pub(crate) max_neighbor_distance: Option<T>,
+}
+impl<T> PredictQuery<T> {
+    // Whether the local fit's gradient is included in the output (used by fastLoess's
+    // parallel predict pass, which needs this outside `loess-rs` itself). No trait
+    // bounds needed: this just reads a plain `bool` field.
+    pub fn return_derivative(&self) -> bool {
+        self.return_derivative
+    }
+}
+
+pub type RawPredictValues<T> = Result<(Vec<T>, Option<Vec<T>>, Option<Vec<T>>), LoessError>;
+pub type PredictPassFn<T> = fn(
+    &PredictState<T>,
+    &[T], // new_x (flattened, `dimensions` values per query point)
+    &PredictQuery<T>,
+    bool, // need_se
+) -> RawPredictValues<T>;
+#[derive(Debug, Clone)]
+pub struct PredictState<T: Float> {
+    // Boundary-padded, flattened training predictors (`x.len() == dimensions * n_total`).
+    pub x: Vec<T>,
+
+    // Number of predictor dimensions.
+    pub dimensions: usize,
+
+    // Boundary-padded training responses, aligned with `x`.
+    pub y: Vec<T>,
+
+    // Final (post-robustness-iteration) weights, aligned with `x`/`y`.
+    pub robustness_weights: Vec<T>,
+
+    // Neighbor count (span), already resolved from `fraction`.
+    pub window_size: usize,
+
+    // Kernel weight function used during fitting.
+    pub weight_function: WeightFunction,
+
+    // Zero-weight fallback policy.
+    pub zero_weight_fallback: ZeroWeightFallback,
+
+    // Degree of local polynomial used during fitting.
+    pub polynomial_degree: PolynomialDegree,
+
+    // Distance metric used for neighborhood search during fitting.
+    pub distance_metric: DistanceMetric<T>,
+
+    // Per-dimension normalization scales (used when `distance_metric` is `Normalized`),
+    // computed from the unpadded training data's 10%-trimmed sample standard deviation.
+    pub scales: Vec<T>,
+
+    // Per-observation case weights, aligned with `x`/`y`, if provided.
+    pub custom_weights: Option<Vec<T>>,
+
+    // Global residual scale used to widen prediction intervals beyond the local standard
+    // error: the same `sqrt(RSS / delta1)` value as `LoessResult::residual_scale` if
+    // `.return_se()` was set on the original `fit()`, otherwise a MAD-based fallback
+    // (matching `Diagnostics.residual_sd`).
+    pub residual_sd: T,
+
+    // Standard error for in-range queries under `SurfaceMode::Interpolation`, precomputed
+    // with the exact same uniform approximate-leverage heuristic `fit()` itself falls back
+    // to there (`sigma * sqrt(eff_fraction / n)`). Keeps `predict()`'s SE self-consistent
+    // with whichever surface mode produced `y`, instead of pairing a fast/approximate `y`
+    // with an unrelated exact-leverage SE. Unused (and meaningless) when `surface` is `None`.
+    pub interpolation_se: T,
+
+    // Per-dimension minimum/maximum of the REAL (unpadded) training predictors, used to
+    // decide whether a query point is out-of-range for `ExtrapolationPolicy`. `x` above is
+    // boundary-*padded* and can extend well beyond this range on each dimension.
+    pub train_min: Vec<T>,
+    pub train_max: Vec<T>,
+
+    // KD-tree over `x`, built once when the model is retained rather than rebuilt on every
+    // `predict()` call (it would otherwise need to be reconstructed from scratch each time).
+    pub kdtree: KDTree<T>,
+
+    // Interpolation surface built during `fit()`, retained when `surface_mode()` was
+    // `Interpolation` (the default). `predict_one_full` reuses it (via `evaluate()`) for
+    // in-range query points, so the returned value matches `fit()`'s own `y_smooth` at
+    // training points instead of diverging via a separate exact per-point regression.
+    // `None` under `SurfaceMode::Direct`.
+    pub surface: Option<InterpolationSurface<T>>,
+
+    // Custom (e.g. parallel) predict pass, injected by extension crates like fastLoess.
+    pub custom_predict_pass: Option<PredictPassFn<T>>,
+    pub bootstrap_predictor: Option<Arc<dyn BootstrapPredictor<T>>>,
+}
+pub type BootstrapPredictionFn<'a, T> =
+    dyn FnMut(&PredictState<T>) -> Result<Vec<T>, LoessError> + 'a;
+pub trait BootstrapPredictor<T: Float>: Debug + Send + Sync + core::panic::RefUnwindSafe {
+    fn compute(
+        &self,
+        bootstrap: BootstrapConfig,
+        method: &IntervalMethod<T>,
+        n_output: usize,
+        predict: &mut BootstrapPredictionFn<'_, T>,
+    ) -> Result<BootstrapOutput<T>, LoessError>;
+}
+impl<T: Float + PartialEq> PartialEq for PredictState<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x
+            && self.dimensions == other.dimensions
+            && self.y == other.y
+            && self.robustness_weights == other.robustness_weights
+            && self.window_size == other.window_size
+            && self.weight_function == other.weight_function
+            && self.zero_weight_fallback == other.zero_weight_fallback
+            && self.polynomial_degree == other.polynomial_degree
+            && self.distance_metric == other.distance_metric
+            && self.scales == other.scales
+            && self.custom_weights == other.custom_weights
+            && self.residual_sd == other.residual_sd
+            && self.interpolation_se == other.interpolation_se
+            && self.train_min == other.train_min
+            && self.train_max == other.train_max
+    }
+}
+
+// Comprehensive LOESS output containing smoothed values and diagnostics.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LoessResult<T: Float> {
+    // Input x-values (independent variable). Flattened for nD.
+    pub x: Vec<T>,
+
+    // Number of predictor dimensions.
+    pub dimensions: usize,
+
+    // Distance metric used for neighborhood search.
+    pub distance_metric: DistanceMetric<T>,
+
+    // Degree of local polynomial (0 for local mean, 1 for local linear, 2 for local quadratic).
+    pub polynomial_degree: PolynomialDegree,
+
+    // Smoothed y-values (dependent variable).
+    pub y: Vec<T>,
+
+    // Standard errors of the fit at each point.
+    pub standard_errors: Option<Vec<T>>,
+
+    // Lower bounds of the confidence intervals for the mean response.
+    pub confidence_lower: Option<Vec<T>>,
+
+    // Upper bounds of the confidence intervals for the mean response.
+    pub confidence_upper: Option<Vec<T>>,
+
+    // Lower bounds of the prediction intervals for new observations.
+    pub prediction_lower: Option<Vec<T>>,
+
+    // Upper bounds of the prediction intervals for new observations.
+    pub prediction_upper: Option<Vec<T>>,
+
+    // Residuals from the fit (y_i - y_hat_i).
+    pub residuals: Option<Vec<T>>,
+
+    // Final robustness weights from the iterative refinement process.
+    pub robustness_weights: Option<Vec<T>>,
+
+    // Comprehensive diagnostic metrics (RMSE, R^2, AIC, etc.).
+    pub diagnostics: Option<Diagnostics<T>>,
+
+    // Number of robustness iterations actually performed.
+    pub iterations_used: Option<usize>,
+
+    // Smoothing fraction used for the fit (optimal if selected by CV).
+    pub fraction_used: T,
+
+    // RMSE scores for each tested fraction during cross-validation.
+    pub cv_scores: Option<Vec<T>>,
+
+    // Equivalent Number of Parameters (trace of hat matrix).
+    // This measures the effective model complexity.
+    pub enp: Option<T>,
+
+    // Trace of the hat matrix (same as ENP for LOESS).
+    pub trace_hat: Option<T>,
+
+    // Delta1 for proper SE computation: tr((I-L)(I-L)').
+    // Used as the denominator for residual scale estimation.
+    pub delta1: Option<T>,
+
+    // Delta2 for SE computation: tr(((I-L)(I-L)')^2).
+    // Used for confidence interval width adjustment.
+    pub delta2: Option<T>,
+
+    // Residual scale estimate: sqrt(RSS / delta1).
+    // This is the proper estimate of sigma for inference.
+    pub residual_scale: Option<T>,
+
+    // Leverage (hat matrix diagonal) at each point.
+    // l_ii measures how much influence point i has on its own fitted value.
+    pub leverage: Option<Vec<T>>,
+
+    // Per-point local fit gradient (flattened, `dimensions` values per point), if
+    // `return_gradient` was set. Only computed in `SurfaceMode::Direct`; `None` in
+    // `SurfaceMode::Interpolation`.
+    pub gradient: Option<Vec<T>>,
+
+    // Retained fitted-model state for `predict()`, if `retain_model` was set. Wrapped in
+    // `Arc` so cloning a `LoessResult` (e.g. to hand to multiple worker threads) is a
+    // cheap refcount bump instead of deep-copying the whole padded training set.
+    pub predict_state: Option<Arc<PredictState<T>>>,
+}
+
+impl<T: Float> LoessResult<T> {
+    // Check if confidence intervals were computed.
+    pub fn has_confidence_intervals(&self) -> bool {
+        self.confidence_lower.is_some() && self.confidence_upper.is_some()
+    }
+
+    // Check if prediction intervals were computed.
+    pub fn has_prediction_intervals(&self) -> bool {
+        self.prediction_lower.is_some() && self.prediction_upper.is_some()
+    }
+
+    // Check if cross-validation was performed.
+    pub fn has_cv_scores(&self) -> bool {
+        self.cv_scores.is_some()
+    }
+
+    // Get the best (minimum) CV score.
+    pub fn best_cv_score(&self) -> Option<T> {
+        self.cv_scores.as_ref().and_then(|scores| {
+            scores
+                .iter()
+                .copied()
+                .min_by(|a, b| a.partial_cmp(b).unwrap_or(Equal))
+        })
+    }
+}
+
+impl<T: Float + Display + Debug> Display for LoessResult<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+        writeln!(f, "Summary:")?;
+        let n = self.y.len();
+        writeln!(f, "  Data points: {}", n)?;
+        writeln!(f, "  Dimensions:  {}", self.dimensions)?;
+        writeln!(f, "  Distance:    {:?}", self.distance_metric)?;
+        writeln!(f, "  Degree:      {:?}", self.polynomial_degree)?;
+        writeln!(f, "  Fraction:    {}", self.fraction_used)?;
+
+        if let Some(iters) = self.iterations_used {
+            writeln!(f, "  Iterations: {}", iters)?;
+        }
+
+        // Show robustness status
+        if self.robustness_weights.is_some() {
+            writeln!(f, "  Robustness: Applied")?;
+        }
+
+        if self.has_cv_scores()
+            && let Some(best_score) = self.best_cv_score()
+        {
+            writeln!(f, "  Best CV score: {}", best_score)?;
+        }
+        writeln!(f)?;
+
+        if let Some(diag) = &self.diagnostics {
+            writeln!(f, "{}", diag)?;
+        }
+
+        writeln!(f, "Smoothed Data:")?;
+
+        // Determine which columns to show
+        let has_std_err = self.standard_errors.is_some();
+        let has_conf = self.has_confidence_intervals();
+        let has_pred = self.has_prediction_intervals();
+        let has_resid = self.residuals.is_some();
+        let has_weights = self.robustness_weights.is_some();
+
+        // Build header
+        if self.dimensions == 1 {
+            write!(f, "{:>8} {:>12}", "X", "Y_smooth")?;
+        } else {
+            write!(f, "{:>8} {:>12}", "X (nD)", "Y_smooth")?;
+        }
+        if has_std_err {
+            write!(f, " {:>12}", "Std_Err")?;
+        }
+        if has_conf {
+            write!(f, " {:>12} {:>12}", "Conf_Lower", "Conf_Upper")?;
+        }
+        if has_pred {
+            write!(f, " {:>12} {:>12}", "Pred_Lower", "Pred_Upper")?;
+        }
+        if has_resid {
+            write!(f, " {:>12}", "Residual")?;
+        }
+        if has_weights {
+            write!(f, " {:>10}", "Rob_Weight")?;
+        }
+        writeln!(f)?;
+
+        // Separator line
+        let line_width = 21
+            + if has_std_err { 13 } else { 0 }
+            + if has_conf { 26 } else { 0 }
+            + if has_pred { 26 } else { 0 }
+            + if has_resid { 13 } else { 0 }
+            + if has_weights { 11 } else { 0 };
+        writeln!(f, "{:-<width$}", "", width = line_width)?;
+
+        // Data rows (show first 10 and last 10 if more than 20 points)
+        let n = self.x.len();
+        let show_all = n <= 20;
+        let rows_to_show: Vec<usize> = if show_all {
+            (0..n).collect()
+        } else {
+            (0..10).chain(n - 10..n).collect()
+        };
+
+        let mut prev_idx = 0;
+        for (i, &idx) in rows_to_show.iter().enumerate() {
+            // Add ellipsis if we skipped rows
+            if i > 0 && idx != prev_idx + 1 {
+                writeln!(f, "{:>8}", "...")?;
+            }
+            prev_idx = idx;
+
+            if self.dimensions == 1 {
+                write!(f, "{:>8.2} {:>12.6}", self.x[idx], self.y[idx])?;
+            } else {
+                write!(f, "{:>8.2} {:>12.6}", "[...]", self.y[idx])?;
+            }
+
+            // Standard error
+            if has_std_err && let Some(se) = &self.standard_errors {
+                write!(f, " {:>12.6}", se[idx])?;
+            }
+
+            // Confidence intervals
+            if has_conf
+                && let (Some(lower), Some(upper)) = (&self.confidence_lower, &self.confidence_upper)
+            {
+                write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
+            }
+
+            // Prediction intervals
+            if has_pred
+                && let (Some(lower), Some(upper)) = (&self.prediction_lower, &self.prediction_upper)
+            {
+                write!(f, " {:>12.6} {:>12.6}", lower[idx], upper[idx])?;
+            }
+
+            // Residuals
+            if has_resid && let Some(resid) = &self.residuals {
+                write!(f, " {:>12.6}", resid[idx])?;
+            }
+
+            // Robustness weights
+            if has_weights && let Some(weights) = &self.robustness_weights {
+                write!(f, " {:>10.4}", weights[idx])?;
+            }
+
+            writeln!(f)?;
+        }
+
+        Ok(())
+    }
+}
 
 fn loess_normalization_scales<T: Float>(x: &[T], n: usize, dims: usize) -> Vec<T> {
     let mut scales = vec![T::one(); dims];
@@ -158,15 +529,7 @@ impl<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> PointDistance<T>
 //
 // Controls whether to use interpolation surface (faster, less accurate) or
 // direct per-point fitting (slower, more accurate).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum SurfaceMode {
-    // Use interpolation surface for faster evaluation.
-    #[default]
-    Interpolation,
-
-    // Use direct per-point fitting for maximum accuracy.
-    Direct,
-}
+use crate::primitives::policies::SurfaceMode;
 
 // Signature for custom smooth pass function
 pub type SmoothPassFn<T> = fn(
@@ -225,26 +588,7 @@ pub type FitPassFn<T> = fn(
     Vec<T>,         // robustness_weights
 );
 
-// Signature for custom vertex pass function (Interpolation mode).
-pub type VertexPassFn<T> = fn(
-    &[T],                             // x (augmented)
-    &[T],                             // y (augmented)
-    usize,                            // dimensions
-    &[T],                             // vertices
-    usize,                            // window_size
-    bool,                             // use_robustness
-    &[T],                             // robustness_weights
-    &mut [T],                         // vertex_data (output: value + derivatives)
-    Option<&[CachedNeighborhood<T>]>, // existing neighborhoods (if refitting)
-    &mut Vec<CachedNeighborhood<T>>,  // output neighborhoods (if building)
-    WeightFunction,
-    ZeroWeightFallback,
-    PolynomialDegree,
-    &DistanceMetric<T>,
-    &[T],         // scales
-    bool,         // boundary_degree_fallback
-    Option<&[T]>, // custom_weights (per-observation user weights)
-);
+use crate::algorithms::interpolation::VertexPassFn;
 
 // Signature for custom KD-tree builder function.
 pub type KDTreeBuilderFn<T> = fn(points: &[T], dims: usize) -> KDTree<T>;
@@ -264,6 +608,45 @@ pub type GradientPassFn<T> = fn(
     &[T],               // scales (normalization scales per dimension)
     Option<&[T]>,       // custom_weights (per-observation user weights)
 ) -> Vec<T>; // flattened per-point gradient (n * dimensions)
+
+#[derive(Debug)]
+pub(crate) struct RetainedBootstrapFit<T: FloatLinalg + SolverLinalg> {
+    pub x: Vec<T>,
+    pub smoothed: Vec<T>,
+    pub residuals: Vec<T>,
+    pub config: LoessConfig<T>,
+}
+
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static>
+    BootstrapPredictor<T> for RetainedBootstrapFit<T>
+{
+    fn compute(
+        &self,
+        bootstrap: BootstrapConfig,
+        method: &IntervalMethod<T>,
+        n_output: usize,
+        predict: &mut BootstrapPredictionFn<'_, T>,
+    ) -> Result<BootstrapOutput<T>, crate::primitives::errors::LoessError> {
+        let mut config = self.config.clone();
+        config.cv_fractions = None;
+        config.cv_kind = None;
+        config.return_variance = None;
+        config.return_gradient = false;
+        config.retain_model = true;
+        bootstrap.compute_at(method, &self.smoothed, &self.residuals, n_output, |batch| {
+            batch
+                .iter()
+                .map(|response| {
+                    let fitted = LoessExecutor::run_with_config(&self.x, response, config.clone());
+                    let state = fitted
+                        .predict_state
+                        .ok_or(crate::primitives::errors::LoessError::PredictionUnavailable)?;
+                    predict(&state)
+                })
+                .collect()
+        })
+    }
+}
 
 // Output from LOESS execution.
 #[derive(Debug, Clone)]

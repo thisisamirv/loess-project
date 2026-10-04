@@ -1,6 +1,7 @@
 #![cfg(feature = "dev")]
 
-use loess_rs::internals::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
+use loess_rs::internals::primitives::policies::PolynomialDegree;
+use loess_rs::internals::primitives::policies::ZeroWeightFallback;
 
 // ============================================================================
 // PolynomialDegree Tests

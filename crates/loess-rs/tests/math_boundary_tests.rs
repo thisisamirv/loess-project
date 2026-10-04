@@ -1,7 +1,7 @@
 #![cfg(feature = "dev")]
 
 use loess_rs::internals::api::{Batch, Loess};
-use loess_rs::internals::math::boundary::BoundaryPolicy as BoundaryPolicyInternal;
+use loess_rs::internals::primitives::policies::BoundaryPolicy as BoundaryPolicyInternal;
 
 #[test]
 fn test_boundary_policy_comparison() {

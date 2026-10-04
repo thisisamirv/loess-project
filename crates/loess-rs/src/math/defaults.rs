@@ -1,9 +1,6 @@
 // Default values for math module types (kernel, scaling, boundary, distance).
 
-use crate::math::boundary::BoundaryPolicy;
-use crate::math::distance::DistanceMetric;
-use crate::math::kernel::WeightFunction;
-use crate::math::scaling::ScalingMethod;
+use crate::primitives::policies::{BoundaryPolicy, DistanceMetric, ScalingMethod, WeightFunction};
 
 // Default kernel weight function.
 pub const DEFAULT_WEIGHT_FUNCTION_ENUM: WeightFunction = WeightFunction::Tricube;

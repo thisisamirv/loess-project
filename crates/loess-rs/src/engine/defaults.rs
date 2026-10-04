@@ -1,6 +1,8 @@
 // Default values for engine configuration (surface evaluation, geometry).
 
-use crate::engine::executor::SurfaceMode;
+use crate::primitives::policies::SurfaceMode;
+
+pub const DEFAULT_FRACTION: f64 = 0.67;
 
 // Default number of predictor dimensions.
 pub const DEFAULT_DIMENSIONS: usize = 1;

@@ -23,7 +23,7 @@ use num_traits::float::Float;
 
 use loess_rs::internals::adapters::batch::BatchLoessBuilder;
 use loess_rs::internals::api::Batch;
-use loess_rs::internals::math::boundary::BoundaryPolicy;
+use loess_rs::internals::primitives::policies::BoundaryPolicy;
 
 // ============================================================================
 // Basic Functionality Tests

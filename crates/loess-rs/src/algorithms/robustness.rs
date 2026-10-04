@@ -14,21 +14,10 @@
 use num_traits::Float;
 
 // Internal dependencies
-use crate::math::scaling::ScalingMethod;
+use crate::primitives::policies::ScalingMethod;
 
 // Robustness weighting method for outlier downweighting.
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub enum RobustnessMethod {
-    // Bisquare (Tukey's biweight) - default and most common.
-    #[default]
-    Bisquare,
-
-    // Huber weights - less aggressive downweighting.
-    Huber,
-
-    // Talwar (hard threshold) - most aggressive.
-    Talwar,
-}
+use crate::primitives::policies::RobustnessMethod;
 
 impl RobustnessMethod {
     // Default tuning constant for bisquare robustness weights.

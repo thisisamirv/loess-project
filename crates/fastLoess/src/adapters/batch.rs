@@ -22,15 +22,15 @@ use std::sync::Arc;
 
 // Export dependencies from loess-rs crate
 use loess_rs::internals::adapters::batch::BatchLoessBuilder;
-use loess_rs::internals::algorithms::regression::SolverLinalg;
-use loess_rs::internals::engine::output::LoessResult;
+use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
+use loess_rs::internals::engine::executor::LoessResult;
 use loess_rs::internals::evaluation::cv::CVKind;
 use loess_rs::internals::evaluation::defaults::DEFAULT_CV_K_FOLDS;
 use loess_rs::internals::math::distance::DistanceLinalg;
-use loess_rs::internals::math::distance::DistanceMetric;
 use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::primitives::backend::Backend;
 use loess_rs::internals::primitives::errors::LoessError;
+use loess_rs::internals::primitives::policies::DistanceMetric;
 
 // Internal dependencies
 use crate::input::LoessInput;

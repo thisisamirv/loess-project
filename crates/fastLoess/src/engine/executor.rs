@@ -19,22 +19,22 @@ use num_traits::Float;
 use std::fmt::Debug;
 
 // Export dependencies from loess-rs crate
-use loess_rs::internals::algorithms::regression::RegressionContext;
-use loess_rs::internals::algorithms::regression::{
-    PolynomialDegree, SolverLinalg, ZeroWeightFallback,
-};
+use loess_rs::internals::algorithms::regression::context::RegressionContext;
+use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
+use loess_rs::internals::primitives::policies::{PolynomialDegree, ZeroWeightFallback};
 
-use loess_rs::internals::engine::executor::LoessDistanceCalculator as ExecutorLoessDistanceCalculator;
-use loess_rs::internals::engine::predict::{
-    PredictQuery, PredictState, RawPredictValues, predict_one_full,
+use loess_rs::internals::adapters::predict::predict_one_full;
+use loess_rs::internals::engine::executor::{
+    LoessDistanceCalculator as ExecutorLoessDistanceCalculator, PredictQuery, PredictState,
+    RawPredictValues,
 };
-use loess_rs::internals::math::distance::{DistanceLinalg, DistanceMetric};
-use loess_rs::internals::math::kernel::WeightFunction;
+use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::math::neighborhood::PointDistance;
 use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood, NodeDistance};
 use loess_rs::internals::primitives::buffer::CachedNeighborhood;
 use loess_rs::internals::primitives::buffer::{FittingBuffer, NeighborhoodSearchBuffer};
+use loess_rs::internals::primitives::policies::{DistanceMetric, WeightFunction};
 
 // Standard LOESS distance calculator for neighbor finding.
 pub struct LoessDistanceCalculator<'a, T: FloatLinalg + DistanceLinalg + SolverLinalg> {

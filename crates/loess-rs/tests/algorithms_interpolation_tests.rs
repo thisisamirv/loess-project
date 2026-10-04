@@ -13,12 +13,12 @@
 use approx::assert_relative_eq;
 
 use loess_rs::internals::algorithms::interpolation::InterpolationSurface;
-use loess_rs::internals::algorithms::regression::{PolynomialDegree, ZeroWeightFallback};
 use loess_rs::internals::engine::executor::LoessDistanceCalculator;
-use loess_rs::internals::math::distance::DistanceMetric;
-use loess_rs::internals::math::kernel::WeightFunction;
 use loess_rs::internals::math::neighborhood::{KDTree, Neighborhood, NodeDistance};
 use loess_rs::internals::primitives::buffer::{FittingBuffer, LoessBuffer};
+use loess_rs::internals::primitives::policies::{
+    DistanceMetric, PolynomialDegree, WeightFunction, ZeroWeightFallback,
+};
 
 use loess_rs::internals::algorithms::interpolation::SurfaceCell;
 use loess_rs::internals::primitives::buffer::CachedNeighborhood;

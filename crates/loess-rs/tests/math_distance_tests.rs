@@ -1,7 +1,7 @@
 #![cfg(feature = "dev")]
 
 use approx::assert_relative_eq;
-use loess_rs::internals::math::distance::DistanceMetric;
+use loess_rs::internals::primitives::policies::DistanceMetric;
 
 // ============================================================================
 // Euclidean Distance Tests

@@ -19,11 +19,10 @@ use num_traits::Float;
 
 // Internal dependencies
 use crate::evaluation::defaults::DEFAULT_INTERVAL_LEVEL;
-use crate::math::scaling::ScalingMethod;
 use crate::primitives::errors::LoessError;
+use crate::primitives::policies::ScalingMethod;
 use crate::primitives::window::Window;
 
-// Configuration for computing confidence/prediction intervals and standard errors.
 #[derive(Debug, Clone)]
 pub struct IntervalsBuilder<T> {
     pub(crate) confidence: Option<T>,
@@ -135,7 +134,229 @@ impl<T: Float> IntervalMethod<T> {
     pub fn prediction_coverage(&self) -> T {
         self.prediction_level.unwrap_or(self.level)
     }
+}
+pub const DEFAULT_BOOTSTRAP_SEED: u64 = 0x5EED_B007;
+pub const MIN_BOOTSTRAP_SAMPLES: usize = 2;
+pub const BOOTSTRAP_BATCH_SIZE: usize = 256;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct BootstrapConfig {
+    pub n_boot: usize,
+    pub seed: Option<u64>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct BootstrapOutput<T> {
+    pub std_errors: Vec<T>,
+    pub confidence_lower: Option<Vec<T>>,
+    pub confidence_upper: Option<Vec<T>>,
+    pub prediction_lower: Option<Vec<T>>,
+    pub prediction_upper: Option<Vec<T>>,
+}
+
+impl BootstrapConfig {
+    pub fn compute<T, F>(
+        &self,
+        method: &IntervalMethod<T>,
+        y_smooth: &[T],
+        residuals: &[T],
+        refit: F,
+    ) -> Result<BootstrapOutput<T>, LoessError>
+    where
+        T: Float,
+        F: FnMut(&[Vec<T>]) -> Result<Vec<Vec<T>>, LoessError>,
+    {
+        self.compute_at(method, y_smooth, residuals, y_smooth.len(), refit)
+    }
+
+    pub fn compute_at<T, F>(
+        &self,
+        method: &IntervalMethod<T>,
+        y_smooth: &[T],
+        residuals: &[T],
+        n_output: usize,
+        refit: F,
+    ) -> Result<BootstrapOutput<T>, LoessError>
+    where
+        T: Float,
+        F: FnMut(&[Vec<T>]) -> Result<Vec<Vec<T>>, LoessError>,
+    {
+        self.compute_at_levels(
+            method,
+            method.prediction_coverage(),
+            y_smooth,
+            residuals,
+            n_output,
+            refit,
+        )
+    }
+
+    pub(crate) fn compute_at_levels<T, F>(
+        &self,
+        method: &IntervalMethod<T>,
+        prediction_level: T,
+        y_smooth: &[T],
+        residuals: &[T],
+        n_output: usize,
+        mut refit: F,
+    ) -> Result<BootstrapOutput<T>, LoessError>
+    where
+        T: Float,
+        F: FnMut(&[Vec<T>]) -> Result<Vec<Vec<T>>, LoessError>,
+    {
+        if self.n_boot < MIN_BOOTSTRAP_SAMPLES {
+            return Err(LoessError::InvalidBootstrapSamples(self.n_boot));
+        }
+        if y_smooth.is_empty() {
+            return Err(LoessError::EmptyInput);
+        }
+        if y_smooth.len() != residuals.len() {
+            return Err(LoessError::InvalidInput(
+                "Bootstrap residual length mismatch".into(),
+            ));
+        }
+        if y_smooth
+            .iter()
+            .chain(residuals)
+            .any(|value| !value.is_finite())
+        {
+            return Err(LoessError::InvalidNumericValue(
+                "Bootstrap inputs must be finite".into(),
+            ));
+        }
+        if method.confidence
+            && (!method.level.is_finite() || method.level <= T::zero() || method.level >= T::one())
+        {
+            return Err(LoessError::InvalidIntervals(
+                method.level.to_f64().unwrap_or(f64::NAN),
+            ));
+        }
+        if method.prediction
+            && (!prediction_level.is_finite()
+                || prediction_level <= T::zero()
+                || prediction_level >= T::one())
+        {
+            return Err(LoessError::InvalidIntervals(
+                prediction_level.to_f64().unwrap_or(f64::NAN),
+            ));
+        }
+        let capacity = n_output
+            .checked_mul(self.n_boot)
+            .ok_or_else(|| LoessError::InvalidInput("Bootstrap output size overflow".into()))?;
+        let mut fits = vec![T::zero(); capacity];
+        let mean_residual = residuals
+            .iter()
+            .copied()
+            .fold(T::zero(), |sum, value| sum + value)
+            / T::from(residuals.len()).unwrap();
+        let centered: Vec<T> = residuals
+            .iter()
+            .map(|&value| value - mean_residual)
+            .collect();
+        let mut state = self.seed.unwrap_or(DEFAULT_BOOTSTRAP_SEED);
+        let mut draw = || {
+            state = state.wrapping_mul(6364136223846793005).wrapping_add(1);
+            (((state >> 32) * centered.len() as u64) >> 32) as usize
+        };
+        let mut done = 0;
+        while done < self.n_boot {
+            let count = BOOTSTRAP_BATCH_SIZE.min(self.n_boot - done);
+            let batch: Vec<Vec<T>> = (0..count)
+                .map(|_| {
+                    y_smooth
+                        .iter()
+                        .map(|&value| value + centered[draw()])
+                        .collect()
+                })
+                .collect();
+            let results = refit(&batch)?;
+            if results.len() != count
+                || results
+                    .iter()
+                    .any(|fit| fit.len() != n_output || fit.iter().any(|value| !value.is_finite()))
+            {
+                return Err(LoessError::RuntimeError(
+                    "Bootstrap refit returned invalid results".into(),
+                ));
+            }
+            for (replicate, fit) in results.iter().enumerate() {
+                for (point, &value) in fit.iter().enumerate() {
+                    fits[point * self.n_boot + done + replicate] = value;
+                }
+            }
+            done += count;
+        }
+        let tail = (T::one() - method.level) / T::from(2).unwrap();
+        let prediction_tail = (T::one() - prediction_level) / T::from(2).unwrap();
+        let mut output = BootstrapOutput {
+            std_errors: Vec::with_capacity(n_output),
+            confidence_lower: method.confidence.then(Vec::new),
+            confidence_upper: method.confidence.then(Vec::new),
+            prediction_lower: method.prediction.then(Vec::new),
+            prediction_upper: method.prediction.then(Vec::new),
+        };
+        for point in 0..n_output {
+            let samples = &mut fits[point * self.n_boot..(point + 1) * self.n_boot];
+            let mean = samples
+                .iter()
+                .copied()
+                .fold(T::zero(), |sum, value| sum + value)
+                / T::from(self.n_boot).unwrap();
+            let variance = samples.iter().fold(T::zero(), |sum, &value| {
+                sum + (value - mean) * (value - mean)
+            }) / T::from(self.n_boot - 1).unwrap();
+            output.std_errors.push(variance.sqrt());
+            if method.prediction {
+                let mut predictions: Vec<T> = samples
+                    .iter()
+                    .map(|&value| value + centered[draw()])
+                    .collect();
+                predictions.sort_unstable_by(|left, right| {
+                    left.partial_cmp(right)
+                        .unwrap_or(core::cmp::Ordering::Equal)
+                });
+                output
+                    .prediction_lower
+                    .as_mut()
+                    .unwrap()
+                    .push(bootstrap_quantile(&predictions, prediction_tail));
+                output
+                    .prediction_upper
+                    .as_mut()
+                    .unwrap()
+                    .push(bootstrap_quantile(&predictions, T::one() - prediction_tail));
+            }
+            if method.confidence {
+                samples.sort_unstable_by(|left, right| {
+                    left.partial_cmp(right)
+                        .unwrap_or(core::cmp::Ordering::Equal)
+                });
+                output
+                    .confidence_lower
+                    .as_mut()
+                    .unwrap()
+                    .push(bootstrap_quantile(samples, tail));
+                output
+                    .confidence_upper
+                    .as_mut()
+                    .unwrap()
+                    .push(bootstrap_quantile(samples, T::one() - tail));
+            }
+        }
+        Ok(output)
+    }
+}
+
+fn bootstrap_quantile<T: Float>(samples: &[T], probability: T) -> T {
+    let position = probability * T::from(samples.len() - 1).unwrap();
+    let lower = position.floor().to_usize().unwrap();
+    let upper = (lower + 1).min(samples.len() - 1);
+    let fraction = position - T::from(lower).unwrap();
+    samples[lower] + fraction * (samples[upper] - samples[lower])
+}
+
+// Configuration for computing confidence/prediction intervals and standard errors.
+impl<T: Float> IntervalMethod<T> {
     // Constant to convert MAD to an unbiased estimate of sigma for normal data.
     //
     // For normally distributed data, MAD × 1.4826 ≈ standard deviation.
@@ -579,224 +800,4 @@ impl<T: Float> IntervalMethod<T> {
             num / den
         }
     }
-}
-
-pub const DEFAULT_BOOTSTRAP_SEED: u64 = 0x5EED_B007;
-pub const MIN_BOOTSTRAP_SAMPLES: usize = 2;
-pub const BOOTSTRAP_BATCH_SIZE: usize = 256;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct BootstrapConfig {
-    pub n_boot: usize,
-    pub seed: Option<u64>,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub struct BootstrapOutput<T> {
-    pub std_errors: Vec<T>,
-    pub confidence_lower: Option<Vec<T>>,
-    pub confidence_upper: Option<Vec<T>>,
-    pub prediction_lower: Option<Vec<T>>,
-    pub prediction_upper: Option<Vec<T>>,
-}
-
-impl BootstrapConfig {
-    pub fn compute<T, F>(
-        &self,
-        method: &IntervalMethod<T>,
-        y_smooth: &[T],
-        residuals: &[T],
-        refit: F,
-    ) -> Result<BootstrapOutput<T>, LoessError>
-    where
-        T: Float,
-        F: FnMut(&[Vec<T>]) -> Result<Vec<Vec<T>>, LoessError>,
-    {
-        self.compute_at(method, y_smooth, residuals, y_smooth.len(), refit)
-    }
-
-    pub fn compute_at<T, F>(
-        &self,
-        method: &IntervalMethod<T>,
-        y_smooth: &[T],
-        residuals: &[T],
-        n_output: usize,
-        refit: F,
-    ) -> Result<BootstrapOutput<T>, LoessError>
-    where
-        T: Float,
-        F: FnMut(&[Vec<T>]) -> Result<Vec<Vec<T>>, LoessError>,
-    {
-        self.compute_at_levels(
-            method,
-            method.prediction_coverage(),
-            y_smooth,
-            residuals,
-            n_output,
-            refit,
-        )
-    }
-
-    pub(crate) fn compute_at_levels<T, F>(
-        &self,
-        method: &IntervalMethod<T>,
-        prediction_level: T,
-        y_smooth: &[T],
-        residuals: &[T],
-        n_output: usize,
-        mut refit: F,
-    ) -> Result<BootstrapOutput<T>, LoessError>
-    where
-        T: Float,
-        F: FnMut(&[Vec<T>]) -> Result<Vec<Vec<T>>, LoessError>,
-    {
-        if self.n_boot < MIN_BOOTSTRAP_SAMPLES {
-            return Err(LoessError::InvalidBootstrapSamples(self.n_boot));
-        }
-        if y_smooth.is_empty() {
-            return Err(LoessError::EmptyInput);
-        }
-        if y_smooth.len() != residuals.len() {
-            return Err(LoessError::InvalidInput(
-                "Bootstrap residual length mismatch".into(),
-            ));
-        }
-        if y_smooth
-            .iter()
-            .chain(residuals)
-            .any(|value| !value.is_finite())
-        {
-            return Err(LoessError::InvalidNumericValue(
-                "Bootstrap inputs must be finite".into(),
-            ));
-        }
-        if method.confidence
-            && (!method.level.is_finite() || method.level <= T::zero() || method.level >= T::one())
-        {
-            return Err(LoessError::InvalidIntervals(
-                method.level.to_f64().unwrap_or(f64::NAN),
-            ));
-        }
-        if method.prediction
-            && (!prediction_level.is_finite()
-                || prediction_level <= T::zero()
-                || prediction_level >= T::one())
-        {
-            return Err(LoessError::InvalidIntervals(
-                prediction_level.to_f64().unwrap_or(f64::NAN),
-            ));
-        }
-        let capacity = n_output
-            .checked_mul(self.n_boot)
-            .ok_or_else(|| LoessError::InvalidInput("Bootstrap output size overflow".into()))?;
-        let mut fits = vec![T::zero(); capacity];
-        let mean_residual = residuals
-            .iter()
-            .copied()
-            .fold(T::zero(), |sum, value| sum + value)
-            / T::from(residuals.len()).unwrap();
-        let centered: Vec<T> = residuals
-            .iter()
-            .map(|&value| value - mean_residual)
-            .collect();
-        let mut state = self.seed.unwrap_or(DEFAULT_BOOTSTRAP_SEED);
-        let mut draw = || {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1);
-            (((state >> 32) * centered.len() as u64) >> 32) as usize
-        };
-        let mut done = 0;
-        while done < self.n_boot {
-            let count = BOOTSTRAP_BATCH_SIZE.min(self.n_boot - done);
-            let batch: Vec<Vec<T>> = (0..count)
-                .map(|_| {
-                    y_smooth
-                        .iter()
-                        .map(|&value| value + centered[draw()])
-                        .collect()
-                })
-                .collect();
-            let results = refit(&batch)?;
-            if results.len() != count
-                || results
-                    .iter()
-                    .any(|fit| fit.len() != n_output || fit.iter().any(|value| !value.is_finite()))
-            {
-                return Err(LoessError::RuntimeError(
-                    "Bootstrap refit returned invalid results".into(),
-                ));
-            }
-            for (replicate, fit) in results.iter().enumerate() {
-                for (point, &value) in fit.iter().enumerate() {
-                    fits[point * self.n_boot + done + replicate] = value;
-                }
-            }
-            done += count;
-        }
-        let tail = (T::one() - method.level) / T::from(2).unwrap();
-        let prediction_tail = (T::one() - prediction_level) / T::from(2).unwrap();
-        let mut output = BootstrapOutput {
-            std_errors: Vec::with_capacity(n_output),
-            confidence_lower: method.confidence.then(Vec::new),
-            confidence_upper: method.confidence.then(Vec::new),
-            prediction_lower: method.prediction.then(Vec::new),
-            prediction_upper: method.prediction.then(Vec::new),
-        };
-        for point in 0..n_output {
-            let samples = &mut fits[point * self.n_boot..(point + 1) * self.n_boot];
-            let mean = samples
-                .iter()
-                .copied()
-                .fold(T::zero(), |sum, value| sum + value)
-                / T::from(self.n_boot).unwrap();
-            let variance = samples.iter().fold(T::zero(), |sum, &value| {
-                sum + (value - mean) * (value - mean)
-            }) / T::from(self.n_boot - 1).unwrap();
-            output.std_errors.push(variance.sqrt());
-            if method.prediction {
-                let mut predictions: Vec<T> = samples
-                    .iter()
-                    .map(|&value| value + centered[draw()])
-                    .collect();
-                predictions.sort_unstable_by(|left, right| {
-                    left.partial_cmp(right)
-                        .unwrap_or(core::cmp::Ordering::Equal)
-                });
-                output
-                    .prediction_lower
-                    .as_mut()
-                    .unwrap()
-                    .push(bootstrap_quantile(&predictions, prediction_tail));
-                output
-                    .prediction_upper
-                    .as_mut()
-                    .unwrap()
-                    .push(bootstrap_quantile(&predictions, T::one() - prediction_tail));
-            }
-            if method.confidence {
-                samples.sort_unstable_by(|left, right| {
-                    left.partial_cmp(right)
-                        .unwrap_or(core::cmp::Ordering::Equal)
-                });
-                output
-                    .confidence_lower
-                    .as_mut()
-                    .unwrap()
-                    .push(bootstrap_quantile(samples, tail));
-                output
-                    .confidence_upper
-                    .as_mut()
-                    .unwrap()
-                    .push(bootstrap_quantile(samples, T::one() - tail));
-            }
-        }
-        Ok(output)
-    }
-}
-
-fn bootstrap_quantile<T: Float>(samples: &[T], probability: T) -> T {
-    let position = probability * T::from(samples.len() - 1).unwrap();
-    let lower = position.floor().to_usize().unwrap();
-    let upper = (lower + 1).min(samples.len() - 1);
-    let fraction = position - T::from(lower).unwrap();
-    samples[lower] + fraction * (samples[upper] - samples[lower])
 }

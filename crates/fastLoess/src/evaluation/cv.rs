@@ -18,9 +18,8 @@ use std::fmt::Debug;
 use std::vec::Vec;
 
 // Export dependencies from loess-rs crate
-use loess_rs::internals::algorithms::regression::SolverLinalg;
-use loess_rs::internals::engine::executor::LoessConfig;
-use loess_rs::internals::engine::executor::LoessExecutor;
+use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
+use loess_rs::internals::engine::executor::{LoessConfig, LoessExecutor};
 use loess_rs::internals::evaluation::cv::CVKind;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;

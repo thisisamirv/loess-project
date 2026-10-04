@@ -13,15 +13,15 @@ use std::vec::Vec;
 use core::marker::PhantomData;
 
 // Internal dependencies
-use crate::math::kernel::WeightFunction;
 use crate::math::linalg::FloatLinalg;
 use crate::math::neighborhood::Neighborhood;
 use crate::primitives::buffer::FittingBuffer;
+use crate::primitives::policies::WeightFunction;
 
 // Module dependencies
 use super::generic::{self, GenericTermGenerator};
 use super::specialized::SolverLinalg;
-use super::types::{PolynomialDegree, ZeroWeightFallback};
+use crate::primitives::policies::{PolynomialDegree, ZeroWeightFallback};
 
 // Context containing all data needed to fit a single point (unified 1D/nD).
 pub struct RegressionContext<'a, T: FloatLinalg + SolverLinalg> {

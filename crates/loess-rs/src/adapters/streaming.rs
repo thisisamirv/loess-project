@@ -22,42 +22,25 @@ use core::mem;
 // Internal dependencies
 use crate::adapters::defaults::*;
 use crate::algorithms::defaults::*;
-use crate::algorithms::regression::{PolynomialDegree, SolverLinalg, ZeroWeightFallback};
-use crate::algorithms::robustness::RobustnessMethod;
+use crate::algorithms::interpolation::VertexPassFn;
+use crate::algorithms::regression::specialized::SolverLinalg;
 use crate::engine::defaults::*;
 use crate::engine::executor::{
     CVPassFn, FitPassFn, GradientPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig,
-    LoessExecutor, SmoothPassFn, SurfaceMode, VertexPassFn,
+    LoessExecutor, LoessResult, SmoothPassFn,
 };
-use crate::engine::output::LoessResult;
-use crate::engine::validator::{MissingPolicy, Validator};
+use crate::engine::validator::Validator;
 use crate::evaluation::diagnostics::DiagnosticsState;
 use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod};
-use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
-use crate::math::distance::{DistanceLinalg, DistanceMetric};
-use crate::math::kernel::WeightFunction;
+use crate::math::distance::DistanceLinalg;
 use crate::math::linalg::FloatLinalg;
-use crate::math::scaling::ScalingMethod;
 use crate::primitives::errors::LoessError;
-
-// Strategy for merging overlapping regions between streaming chunks.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub enum MergeStrategy {
-    // Arithmetic mean of overlapping smoothed values: `(v1 + v2) / 2`.
-    Average,
-
-    // Distance-based weights that favor values from the center of each chunk:
-    // v1 * (1 - alpha) + v2 * alpha where `alpha` is the relative position within the overlap.
-    #[default]
-    WeightedAverage,
-
-    // Use the value from the first chunk in processing order.
-    TakeFirst,
-
-    // Use the value from the last chunk in processing order.
-    TakeLast,
-}
+use crate::primitives::policies::{
+    BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod, SurfaceMode,
+    WeightFunction, ZeroWeightFallback,
+};
+use crate::primitives::policies::{MergeStrategy, MissingPolicy};
 
 // Builder for streaming LOESS processor.
 #[derive(Debug, Clone)]

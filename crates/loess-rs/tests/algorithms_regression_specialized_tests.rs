@@ -4,7 +4,7 @@
 //!
 //! Tests SIMD and scalar paths for all polynomial degrees via SolverLinalg trait.
 
-use loess_rs::internals::algorithms::regression::SolverLinalg;
+use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
 
 // ============================================================================
 // 1D Linear Tests

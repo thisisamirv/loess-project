@@ -15,8 +15,7 @@
 
 use approx::assert_relative_eq;
 
-use loess_rs::internals::algorithms::robustness::RobustnessMethod;
-use loess_rs::internals::math::scaling::ScalingMethod;
+use loess_rs::internals::primitives::policies::{RobustnessMethod, ScalingMethod};
 
 // ============================================================================
 // Bisquare Method Tests
