@@ -104,13 +104,9 @@ Async fit y[0]: 0.3274
 | `missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
 | `outputs` | `string[]` | `[]` | Optional fields: `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"` (or `"derivative"`), `"se"`, `"sorted"` |
-| `confidence_intervals` | `number` | `null` | Confidence level (e.g., 0.95) |
-| `prediction_intervals` | `number` | `null` | Prediction level (e.g., 0.95) |
-| `cv` | `{ fractions: number[]; method?: string; k?: number; seed?: number }` | disabled | Group CV settings; supplied keys override legacy CV fields |
-| `cv_method` | `string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
-| `cv_k` | `number` | `5` | Number of folds for k-fold CV |
-| `cv_fractions` | `number[]` | `null` | Fractions to test for cross-validation |
-| `cv_seed` | `number` | `null` | Random seed for cross-validation shuffling |
+| `intervals` | `{ confidence?: number; prediction?: number }` | `disabled` | Grouped confidence and prediction coverage levels. |
+| `cv` | `{ fractions: number[]; method?: string; k?: number }` | disabled | Grouped candidate fractions, method, and folds; seed is an outer option |
+| `seed` | `number` | `unset` | Seed for reproducible CV folds. |
 | `retain_model` | `boolean` | `false` | Retain training data, enabling `result.predict()` |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`/`fitAsync()`, not the options object |
 
@@ -286,23 +282,19 @@ Enable multi-threaded execution via Rayon.
 
 Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
 
-
 ### outputs: diagnostics
 
 *See: [`Diagnostics`](#diagnostics)*
 
 Include a `Diagnostics` object (RMSE, MAE, R², AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/`effective_df` additionally require `outputs: ["se"]` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
 
-
 ### outputs: residuals
 
 Include per-point residuals (`y - fitted`) in the result.
 
-
 ### outputs: weights
 
 Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
 
 ### outputs: gradient
 
@@ -313,13 +305,13 @@ Each local polynomial fit (degree >= linear) already computes per-dimension coef
 When selected in outputs, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
 To get both orderings, sort the default result client-side (e.g. by the returned `x` array's sort order) instead of calling `fit()` twice.
 
-### confidence_intervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`). `null` (default) disables confidence intervals.
 
-### prediction_intervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
@@ -329,10 +321,10 @@ Confidence level for the prediction interval for new observations (e.g. `0.95`).
 
 *See: [Cross-Validation](../guide/cross-validation.md)*
 
-- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method = "loocv"`.
-- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `cv_seed`: Seed for reproducible k-fold shuffling. `null` (default) uses a random seed.
+- `cv.method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv.k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+- `cv.k`: Number of folds for k-fold CV. Ignored when `cv_method = "loocv"`.
+- `cv.fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
+- `seed`: Seed for reproducible k-fold shuffling. `null` (default) uses a random seed.
 
 ### retain_model
 

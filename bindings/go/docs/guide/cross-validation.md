@@ -91,8 +91,7 @@ func main() {
  }
 
  opts := fastloess.DefaultOptions()
- opts.CVMethod = "loocv"
- opts.CVFractions = []float64{0.2, 0.3, 0.5, 0.7}
+ opts.CV = &fastloess.CVOptions{Fractions: []float64{0.2, 0.3, 0.5, 0.7}, Method: "loocv"}
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {
@@ -139,11 +138,9 @@ func main() {
  }
 
  opts := fastloess.DefaultOptions()
- opts.CVMethod = "kfold"
- opts.CVK = 5
- opts.CVFractions = []float64{0.3, 0.5, 0.7}
+ opts.CV = &fastloess.CVOptions{Fractions: []float64{0.3, 0.5, 0.7}, Method: "kfold", K: 5}
  seed := uint64(42)
- opts.CVSeed = &seed
+ opts.Seed = &seed
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {
@@ -212,9 +209,7 @@ func main() {
  }
 
  opts := fastloess.DefaultOptions()
- opts.CVMethod = "kfold"
- opts.CVK = 5
- opts.CVFractions = []float64{0.1, 0.3, 0.5, 0.7}
+ opts.CV = &fastloess.CVOptions{Fractions: []float64{0.1, 0.3, 0.5, 0.7}, Method: "kfold", K: 5}
 
  // Fraction  | CV Score (MSE)
  // 0.1       | 0.0542  <- Undersmoothed

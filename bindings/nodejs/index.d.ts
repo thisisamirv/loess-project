@@ -111,7 +111,6 @@ export interface CvOptions {
   fractions: Array<number>
   method?: string
   k?: number
-  seed?: number
 }
 
 /** Diagnostic statistics for the LOESS fit. */
@@ -130,6 +129,11 @@ export interface Diagnostics {
   effective_df?: number
   /** Residual standard deviation. */
   residual_sd: number
+}
+
+export interface IntervalsOptions {
+  confidence?: number
+  prediction?: number
 }
 
 /** Configuration options for online processing. */
@@ -172,8 +176,8 @@ export interface OnlineOutput {
  * A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
  * and cross-validation are all no-ops for online processing (it handles one
  * point at a time, always runs sequentially, and always returns a residual
- * inline), so they aren't fields on this type. `confidence_intervals`/
- * `prediction_intervals` and the "se" output require `update_mode: "full"`.
+ * inline), so they aren't fields on this type. `intervals` and the "se" output
+ * require `update_mode: "full"`.
  */
 export interface OnlineSmoothOptions {
   /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
@@ -197,16 +201,7 @@ export interface OnlineSmoothOptions {
   auto_converge?: number
   /** Optional output components: weights, gradient (or derivative), se. */
   outputs?: Array<string>
-  /**
-   * Confidence level for confidence intervals. Only computed under
-   * `update_mode: "full"`. Default: None.
-   */
-  confidence_intervals?: number
-  /**
-   * Confidence level for prediction intervals. Same `update_mode: "full"`
-   * requirement as `confidence_intervals`. Default: None.
-   */
-  prediction_intervals?: number
+  intervals?: IntervalsOptions
   /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
   degree?: string
   /** Number of predictor dimensions. Default: 1. */
@@ -231,10 +226,7 @@ export interface OnlineSmoothOptions {
 export interface PredictOptions {
   /** Optional output components: se, gradient (or derivative). */
   outputs?: Array<string>
-  /** Confidence interval coverage level (e.g. 0.95). Default: None. */
-  confidence_level?: number
-  /** Prediction interval coverage level (e.g. 0.95). Default: None. */
-  prediction_level?: number
+  intervals?: IntervalsOptions
   /** Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp". */
   extrapolation?: string
   /**
@@ -271,16 +263,7 @@ export interface SmoothOptions {
   outputs?: Array<string>
   /** Grouped cross-validation configuration for Batch smoothing. */
   cv?: CvOptions
-  /** Calculate confidence intervals (e.g., 0.95). Default: None. */
-  confidence_intervals?: number
-  /** Calculate prediction intervals. Default: None. */
-  prediction_intervals?: number
-  /** Fractions to use for cross-validation. */
-  cv_fractions?: Array<number>
-  /** CV method ("loocv", "kfold"). Default: "kfold". */
-  cv_method?: string
-  /** Number of folds for K-Fold CV. Default: 5. */
-  cv_k?: number
+  intervals?: IntervalsOptions
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
   /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
@@ -300,7 +283,7 @@ export interface SmoothOptions {
   /** Reduce polynomial degree to linear at boundary vertices (default true). */
   boundary_degree_fallback?: boolean
   /** Random seed for reproducible K-fold cross-validation splits. */
-  cv_seed?: number
+  seed?: number
   /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
   missing?: string
   /** Retain the fitted model's training data, enabling `LoessResult.predict()`. Default: false. */
@@ -342,16 +325,7 @@ export interface StreamingSmoothOptions {
   auto_converge?: number
   /** Optional output components: diagnostics, residuals, weights, gradient (or derivative), se. */
   outputs?: Array<string>
-  /**
-   * Confidence level for confidence intervals, computed per chunk and merged
-   * across overlap boundaries via `merge_strategy`. Default: None.
-   */
-  confidence_intervals?: number
-  /**
-   * Confidence level for prediction intervals; same per-chunk computation and
-   * overlap-merging as `confidence_intervals`. Default: None.
-   */
-  prediction_intervals?: number
+  intervals?: IntervalsOptions
   /** Enable parallel execution. Default: true. */
   parallel?: boolean
   /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */

@@ -74,7 +74,8 @@ class OnlineLoessTest {
     @Test
     void confidenceIntervalsRequiresFullUpdateMode() {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> new OnlineLoess(
-                OnlineOptions.builder().fraction(0.5).windowCapacity(10).confidenceIntervals(0.95).build()));
+                OnlineOptions.builder().fraction(0.5).windowCapacity(10)
+                        .intervals(IntervalsOptions.builder().confidence(0.95).build()).build()));
         assertTrue(ex.getMessage() != null && !ex.getMessage().isEmpty());
     }
 
@@ -86,8 +87,7 @@ class OnlineLoessTest {
                         .windowCapacity(10)
                         .minPoints(3)
                         .updateMode("full")
-                        .confidenceIntervals(0.95)
-                        .predictionIntervals(0.95)
+                        .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
                         .build())) {
             Optional<PointResult> last = Optional.empty();
             for (int i = 0; i < 6; i++) {

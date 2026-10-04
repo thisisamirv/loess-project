@@ -40,13 +40,9 @@ opts.Outputs = []string{"diagnostics"}
 | `Missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data: `error`, `drop`. |
 | `Parallel` | `bool` | `true` | Enable parallel processing. |
 | `Outputs` | `[]string` | `nil` | Optional fields: `diagnostics`, `residuals`, `weights`, `derivative`/`gradient`, `se`, `sorted`. |
-| `ConfidenceIntervals` | `*float64` | `nil` (disabled) | Confidence level in (0, 1), e.g. `0.95`. |
-| `PredictionIntervals` | `*float64` | `nil` (disabled) | Confidence level in (0, 1), e.g. `0.95`. |
-| `CV` | `*CVOptions` | `nil` | Group `Fractions`, `Method`, `K`, and `Seed`; takes precedence over legacy CV fields. |
-| `CVMethod` | `string` | `"kfold"` | `kfold` or `loocv`. |
-| `CVK` | `int` | `5` | Number of folds for k-fold CV. |
-| `CVFractions` | `[]float64` | `nil` (disabled) | Candidate fractions for cross-validation. |
-| `CVSeed` | `*uint64` | `nil` (random) | RNG seed for reproducible k-fold splits. |
+| `Intervals` | `*IntervalsOptions` | `nil` | Grouped confidence and prediction coverage levels. |
+| `CV` | `*CVOptions` | `nil` | Grouped `Fractions`, `Method`, and `K`; `Seed` is an outer option. |
+| `Seed` | `*uint64` | `nil` | Seed for reproducible CV folds. |
 | `RetainModel` | `bool` | `false` | Retain training data, enabling `Result.PredictModel` for out-of-sample prediction. |
 
 `Fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
@@ -85,11 +81,11 @@ Releases native resources. Safe to call multiple times. A finalizer is registere
 | --- | --- | --- |
 | `X`, `Y` | `[]float64` | Always. |
 | `StandardErrors` | `[]float64` | `Outputs` contains `"se"` |
-| `ConfidenceLower`, `ConfidenceUpper` | `[]float64` | `ConfidenceIntervals` set |
-| `PredictionLower`, `PredictionUpper` | `[]float64` | `PredictionIntervals` set |
+| `ConfidenceLower`, `ConfidenceUpper` | `[]float64` | `Intervals.Confidence` set |
+| `PredictionLower`, `PredictionUpper` | `[]float64` | `Intervals.Prediction` set |
 | `Residuals` | `[]float64` | `Outputs` contains `"residuals"` |
 | `RobustnessWeights` | `[]float64` | `Outputs` contains `"weights"` |
-| `CVScores` | `[]float64` | `CVFractions` set |
+| `CVScores` | `[]float64` | `CV.Fractions` set |
 | `FractionUsed` | `float64` | Always. |
 | `IterationsUsed` | `int` | Always (`-1` if not available). |
 | `Dimensions` | `int` | Always. |
@@ -272,13 +268,13 @@ Populate `Result.RobustnessWeights` (from the last robustness iteration).
 When selected in outputs, it reorders every result field (residuals, intervals, etc.) by `X` in an ascending manner, instead of in original input order.
 To get both orderings, sort the default result client-side (e.g. via `sort.Slice`) instead of calling `Fit` twice.
 
-### ConfidenceIntervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`). `nil` (default) disables confidence intervals.
 
-### PredictionIntervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
@@ -300,11 +296,11 @@ result, err := model.Fit(x, y, weights)
 
 ```go
 opts := fastloess.DefaultOptions()
-opts.CVMethod = "kfold"
-opts.CVK = 5
-opts.CVFractions = []float64{0.1, 0.2, 0.3, 0.5}
+opts.CV.Method = "kfold"
+opts.CV.K = 5
+opts.CV = &fastloess.CVOptions{Fractions: []float64{0.1, 0.2, 0.3, 0.5}}
 seed := uint64(42)
-opts.CVSeed = &seed
+opts.Seed = &seed
 
 model, _ := fastloess.NewLoess(opts)
 defer model.Close()

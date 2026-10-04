@@ -126,8 +126,7 @@ int main() {
 | `min_points` | `int` | `2` | Min points before smoothing starts |
 | `update_mode` | `std::string` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
 | `outputs` | `std::vector<std::string>` | `{}` | Optional fields: `weights`, `gradient`/`derivative`, `se` |
-| `confidence_intervals` | `double` | `NaN` | Confidence level for confidence intervals; requires `update_mode == "full"` |
-| `prediction_intervals` | `double` | `NaN` | Confidence level for prediction intervals; requires `update_mode == "full"` |
+| `intervals` | `IntervalsOptions` | `disabled` | Grouped confidence and prediction coverage levels. |
 
 Cross-validation, the `"sorted"` and `"diagnostics"` outputs, and `parallel` are Batch-only and not available here. Online residuals are always present; the `"residuals"` output name is not supported. Online always runs sequentially.
 
@@ -317,17 +316,17 @@ Select optional fields in `OnlineOutput` by name. An empty vector (default) requ
 
 Confidence and prediction intervals remain controlled by their numeric level fields and also require `update_mode = "full"`.
 
-### confidence_intervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `update_mode == "full"`. Construction fails if set (or `outputs` contains `"se"` or `prediction_intervals` is set) while `update_mode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `NaN` (default) disables confidence intervals.
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `update_mode == "full"`. Construction fails if set (or `outputs` contains `"se"` or `intervals.prediction` is set) while `update_mode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `NaN` (default) disables confidence intervals.
 
-### prediction_intervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `update_mode == "full"` requirement as `confidence_intervals`. `NaN` (default) disables prediction intervals.
+Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `update_mode == "full"` requirement as `intervals.confidence`. `NaN` (default) disables prediction intervals.
 
 ## Result Structure
 
@@ -343,8 +342,8 @@ Returned (inside `Expected`) by `add_point()`. Check `has_value()` before readin
 | `residual()` | `double` | Residual y − smoothed; always present |
 | `robustness_weight()` | `double` | Robustness weight, if `outputs` contains `"weights"` (`NaN` otherwise) |
 | `iterations_used()` | `int` | Robustness iterations performed (−1 if N/A) |
-| `confidence_lower()` / `confidence_upper()` | `double` | Confidence interval bounds, if `confidence_intervals` was set and `update_mode == "full"` (`NaN` otherwise) |
-| `prediction_lower()` / `prediction_upper()` | `double` | Prediction interval bounds, if `prediction_intervals` was set and `update_mode == "full"` (`NaN` otherwise) |
+| `confidence_lower()` / `confidence_upper()` | `double` | Confidence interval bounds, if `intervals.confidence` was set and `update_mode == "full"` (`NaN` otherwise) |
+| `prediction_lower()` / `prediction_upper()` | `double` | Prediction interval bounds, if `intervals.prediction` was set and `update_mode == "full"` (`NaN` otherwise) |
 | `gradient()` | `std::vector<double>` | Latest point's local fit gradient (`dimensions` values), if `outputs` contains `"gradient"` or `"derivative"` (empty otherwise) |
 
 There is no `Diagnostics` object for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

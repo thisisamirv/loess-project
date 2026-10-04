@@ -192,7 +192,7 @@ func TestLoess(t *testing.T) {
 		opts := fastloess.DefaultOptions()
 		opts.Fraction = 0.5
 		ci := 0.95
-		opts.ConfidenceIntervals = &ci
+		opts.Intervals = &fastloess.IntervalsOptions{Confidence: &ci}
 		res := fitOrFatal(t, opts, x, y)
 
 		if len(res.ConfidenceLower) != len(x) || len(res.ConfidenceUpper) != len(x) {
@@ -211,7 +211,7 @@ func TestLoess(t *testing.T) {
 		opts := fastloess.DefaultOptions()
 		opts.Fraction = 0.5
 		pi := 0.95
-		opts.PredictionIntervals = &pi
+		opts.Intervals = &fastloess.IntervalsOptions{Prediction: &pi}
 		res := fitOrFatal(t, opts, x, y)
 
 		if len(res.PredictionLower) != len(x) || len(res.PredictionUpper) != len(x) {
@@ -815,8 +815,7 @@ func TestStreamingLoess(t *testing.T) {
 		opts := fastloess.DefaultStreamingOptions()
 		opts.Fraction = 0.3
 		opts.ChunkSize = 100
-		opts.ConfidenceIntervals = &ci
-		opts.PredictionIntervals = &pi
+		opts.Intervals = &fastloess.IntervalsOptions{Confidence: &ci, Prediction: &pi}
 		model, err := fastloess.NewStreamingLoess(opts)
 		if err != nil {
 			t.Fatalf("NewStreamingLoess failed: %v", err)
@@ -1022,7 +1021,7 @@ func TestOnlineLoess(t *testing.T) {
 		opts := fastloess.DefaultOnlineOptions()
 		opts.Fraction = 0.5
 		opts.WindowCapacity = 10
-		opts.ConfidenceIntervals = &ci
+		opts.Intervals = &fastloess.IntervalsOptions{Confidence: &ci}
 		if _, err := fastloess.NewOnlineLoess(opts); err == nil {
 			t.Fatal("expected an error when ConfidenceIntervals is set without UpdateMode = \"full\"")
 		}
@@ -1035,8 +1034,7 @@ func TestOnlineLoess(t *testing.T) {
 		opts.WindowCapacity = 10
 		opts.MinPoints = 3
 		opts.UpdateMode = "full"
-		opts.ConfidenceIntervals = &ci
-		opts.PredictionIntervals = &pi
+		opts.Intervals = &fastloess.IntervalsOptions{Confidence: &ci, Prediction: &pi}
 		model, err := fastloess.NewOnlineLoess(opts)
 		if err != nil {
 			t.Fatalf("NewOnlineLoess failed: %v", err)
@@ -1185,8 +1183,8 @@ func TestErrorHandling(t *testing.T) {
 		y := []float64{2.0, 4.0, 6.0, 8.0, 10.0}
 
 		opts := fastloess.DefaultOptions()
-		opts.CVFractions = []float64{0.5}
-		opts.CVMethod = "invalid"
+		opts.CV = &fastloess.CVOptions{Fractions: []float64{0.5}}
+		opts.CV.Method = "invalid"
 		model, err := fastloess.NewLoess(opts)
 		if err != nil {
 			t.Fatalf("NewLoess unexpectedly failed: %v", err)
@@ -1348,13 +1346,11 @@ func TestCrossValidation(t *testing.T) {
 		x, y := sineData(30)
 		seed := uint64(42)
 		opts := fastloess.DefaultOptions()
-		opts.CVFractions = []float64{0.2}
-		opts.CVMethod = "invalid"
+		opts.Seed = &seed
 		opts.CV = &fastloess.CVOptions{
 			Fractions: []float64{0.3, 0.5},
 			Method:    "kfold",
 			K:         3,
-			Seed:      &seed,
 		}
 		res := fitOrFatal(t, opts, x, y)
 		if !inSet(res.FractionUsed, opts.CV.Fractions) || len(res.CVScores) != len(opts.CV.Fractions) {
@@ -1369,14 +1365,14 @@ func TestCrossValidation(t *testing.T) {
 		}
 
 		opts := fastloess.DefaultOptions()
-		opts.CVFractions = []float64{0.2, 0.3, 0.5, 0.7}
+		opts.CV = &fastloess.CVOptions{Fractions: []float64{0.2, 0.3, 0.5, 0.7}}
 		res := fitOrFatal(t, opts, x, y)
 
-		if !inSet(res.FractionUsed, opts.CVFractions) {
-			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CVFractions, res.FractionUsed)
+		if !inSet(res.FractionUsed, opts.CV.Fractions) {
+			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CV.Fractions, res.FractionUsed)
 		}
-		if len(res.CVScores) != len(opts.CVFractions) {
-			t.Fatalf("expected %d CV scores, got %d", len(opts.CVFractions), len(res.CVScores))
+		if len(res.CVScores) != len(opts.CV.Fractions) {
+			t.Fatalf("expected %d CV scores, got %d", len(opts.CV.Fractions), len(res.CVScores))
 		}
 		if len(res.Y) != len(x) {
 			t.Fatalf("expected %d values, got %d", len(x), len(res.Y))
@@ -1390,13 +1386,13 @@ func TestCrossValidation(t *testing.T) {
 		}
 
 		opts := fastloess.DefaultOptions()
-		opts.CVFractions = []float64{0.3, 0.5}
-		opts.CVMethod = "kfold"
-		opts.CVK = 5
+		opts.CV = &fastloess.CVOptions{Fractions: []float64{0.3, 0.5}}
+		opts.CV.Method = "kfold"
+		opts.CV.K = 5
 		res := fitOrFatal(t, opts, x, y)
 
-		if !inSet(res.FractionUsed, opts.CVFractions) {
-			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CVFractions, res.FractionUsed)
+		if !inSet(res.FractionUsed, opts.CV.Fractions) {
+			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CV.Fractions, res.FractionUsed)
 		}
 		if res.CVScores == nil {
 			t.Fatal("expected CVScores to be populated")
@@ -1407,12 +1403,12 @@ func TestCrossValidation(t *testing.T) {
 		x, y := sineData(20)
 
 		opts := fastloess.DefaultOptions()
-		opts.CVFractions = []float64{0.4, 0.6}
-		opts.CVMethod = "loocv"
+		opts.CV = &fastloess.CVOptions{Fractions: []float64{0.4, 0.6}}
+		opts.CV.Method = "loocv"
 		res := fitOrFatal(t, opts, x, y)
 
-		if !inSet(res.FractionUsed, opts.CVFractions) {
-			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CVFractions, res.FractionUsed)
+		if !inSet(res.FractionUsed, opts.CV.Fractions) {
+			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CV.Fractions, res.FractionUsed)
 		}
 		if res.CVScores == nil {
 			t.Fatal("expected CVScores to be populated")
@@ -1426,13 +1422,13 @@ func TestCrossValidation(t *testing.T) {
 		}
 
 		opts := fastloess.DefaultOptions()
-		opts.CVFractions = []float64{0.3, 0.5, 0.7}
+		opts.CV = &fastloess.CVOptions{Fractions: []float64{0.3, 0.5, 0.7}}
 		opts.Iterations = 2
 		opts.Outputs = []string{"diagnostics", "residuals"}
 		res := fitOrFatal(t, opts, x, y)
 
-		if !inSet(res.FractionUsed, opts.CVFractions) {
-			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CVFractions, res.FractionUsed)
+		if !inSet(res.FractionUsed, opts.CV.Fractions) {
+			t.Fatalf("expected FractionUsed to be one of %v, got %v", opts.CV.Fractions, res.FractionUsed)
 		}
 		if res.Diagnostics == nil {
 			t.Fatal("expected Diagnostics to be populated")
@@ -1447,7 +1443,7 @@ func TestCrossValidation(t *testing.T) {
 		copy(y, x)
 
 		opts := fastloess.DefaultOptions()
-		opts.CVFractions = []float64{0.5}
+		opts.CV = &fastloess.CVOptions{Fractions: []float64{0.5}}
 		res := fitOrFatal(t, opts, x, y)
 
 		if !approxEqual(res.FractionUsed, 0.5, 1e-9) {
@@ -1465,9 +1461,9 @@ func TestCrossValidation(t *testing.T) {
 		}
 
 		opts := fastloess.DefaultOptions()
-		opts.CVFractions = []float64{0.2, 0.3, 0.4}
+		opts.CV = &fastloess.CVOptions{Fractions: []float64{0.2, 0.3, 0.4}}
 		var seed uint64 = 42
-		opts.CVSeed = &seed
+		opts.Seed = &seed
 
 		res1 := fitOrFatal(t, opts, x, y)
 		res2 := fitOrFatal(t, opts, x, y)

@@ -17,7 +17,7 @@ DNA methylation data (from bisulfite sequencing or arrays) shows position-depend
 
 ### Solution
 
-A small `fraction = 0.1` lets LOESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `confidence_intervals = 0.95` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
+A small `fraction = 0.1` lets LOESS follow fine-scale spatial structure without smearing the transitions between methylated and unmethylated regions. `intervals=(confidence = 0.95,)` produces uncertainty bands that naturally widen at positions with sparser CpG coverage, making low-confidence segments immediately apparent in the plot.
 
 ```@example use-case-genomics
 using FastLOESS
@@ -31,7 +31,7 @@ observed = 50.0 .+ sin.(positions ./ 100.0) .* 20.0 .+ randn(rng, length(positio
 model = Loess(;
     fraction=0.1,
     iterations=3,
-    confidence_intervals=0.95
+    intervals=(confidence = 0.95,)
 )
 result = fit(model, positions, observed)
 

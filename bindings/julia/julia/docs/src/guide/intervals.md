@@ -29,7 +29,7 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-model = Loess(; fraction=0.5, confidence_intervals=0.95)
+model = Loess(; fraction=0.5, intervals=(confidence = 0.95,))
 result = fit(model, x, y)
 
 println("Smoothed (first 5): ", result.y[1:5])
@@ -51,7 +51,7 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-model = Loess(; fraction=0.5, prediction_intervals=0.95)
+model = Loess(; fraction=0.5, intervals=(prediction = 0.95,))
 result = fit(model, x, y)
 
 println("Prediction bounds: [$(result.prediction_lower[1]), $(result.prediction_upper[1])]")
@@ -73,8 +73,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(;
     fraction=0.5,
-    confidence_intervals=0.95,
-    prediction_intervals=0.95
+    intervals=(confidence = 0.95, prediction = 0.95)
 )
 result = fit(model, x, y)
 println("First smoothed value (95% CI + PI): ", result.y[1])
@@ -101,7 +100,7 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 # 99% confidence interval
-model = Loess(; confidence_intervals=0.99)
+model = Loess(; intervals=(confidence = 0.99,))
 result = fit(model, x, y)
 println("First smoothed value (99% CI): ", result.y[1])
 ```
@@ -120,7 +119,7 @@ rng = MersenneTwister(42)
 x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
-model = Loess(; confidence_intervals=0.95)
+model = Loess(; intervals=(confidence = 0.95,))
 result = fit(model, x, y)
 
 println("Standard errors (first 5): ", result.standard_errors[1:5])

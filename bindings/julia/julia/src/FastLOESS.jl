@@ -55,14 +55,31 @@ function _output_flags(
 	)
 end
 
+function _check_group_keys(group, allowed, name)
+	unknown = setdiff(Symbol.(collect(keys(group))), collect(allowed))
+	isempty(unknown) || throw(ArgumentError("Unknown $name options: $(join(unknown, ", "))"))
+end
+
+function _interval_options(intervals)
+	intervals === nothing && return (confidence = NaN, prediction = NaN)
+	_check_group_keys(intervals, (:confidence, :prediction), "intervals")
+	confidence = get(intervals, :confidence, nothing)
+	prediction = get(intervals, :prediction, nothing)
+	return (
+		confidence = confidence === nothing ? NaN : Float64(confidence),
+		prediction = prediction === nothing ? NaN : Float64(prediction),
+	)
+end
+
 function _cv_options(cv)
 	cv === nothing &&
-		return (fractions = Float64[], method = "kfold", k = 5, seed = nothing)
+		return (fractions = Float64[], method = "kfold", k = 5)
+	_check_group_keys(cv, (:fractions, :method, :k), "cv")
+	haskey(cv, :fractions) || throw(ArgumentError("cv requires fractions"))
 	return (
 		fractions = Float64.(get(cv, :fractions, Float64[])),
 		method = String(get(cv, :method, "kfold")),
 		k = Int(get(cv, :k, 5)),
-		seed = get(cv, :seed, nothing),
 	)
 end
 
@@ -243,8 +260,7 @@ Evaluate the fitted model at out-of-sample query points not in the training set
 # Keyword Arguments
 - `outputs::Vector{String} = String[]`: optional output components, including
 	`"se"`, `"gradient"`, and/or `"derivative"`.
-- `confidence_level::Union{Float64, Nothing} = nothing`
-- `prediction_level::Union{Float64, Nothing} = nothing`
+- `intervals = nothing`: grouped confidence and prediction coverage levels.
 - `extrapolation::String = "clamp"`: one of "clamp", "linear", "error".
 - `max_extrapolation_distance::Union{Float64, Nothing} = nothing`
 - `max_neighbor_distance::Union{Float64, Nothing} = nothing`
@@ -253,13 +269,13 @@ function predict(
 	model::PredictModel,
 	new_x::Vector{Float64};
 	outputs::Vector{String} = String[],
-	confidence_level::Union{Float64, Nothing} = nothing,
-	prediction_level::Union{Float64, Nothing} = nothing,
+	intervals = nothing,
 	extrapolation::String = "clamp",
 	max_extrapolation_distance::Union{Float64, Nothing} = nothing,
 	max_neighbor_distance::Union{Float64, Nothing} = nothing,
 )
 	flags = _output_flags(outputs; allowed = ("se", "gradient", "derivative"))
+	interval_options = _interval_options(intervals)
 
 	if model.handle == C_NULL
 		error(
@@ -286,8 +302,8 @@ function predict(
 		pointer(new_x),
 		Culong(length(new_x)),
 		Cint(flags.se),
-		(confidence_level === nothing ? NaN : confidence_level),
-		(prediction_level === nothing ? NaN : prediction_level),
+		interval_options.confidence,
+		interval_options.prediction,
 		Cint(flags.gradient),
 		extrapolation,
 		(max_extrapolation_distance === nothing ? NaN : max_extrapolation_distance),
@@ -643,8 +659,7 @@ Stateful batch LOESS smoother.
 - `robustness_method::String = "bisquare"`: Robustness method
 - `scaling_method::String = "mad"`: Scaling method for robustness
 - `boundary_policy::String = "extend"`: Handling of edge effects
-- `confidence_intervals::Float64 = NaN`: Confidence level (e.g., 0.95), NaN to disable
-- `prediction_intervals::Float64 = NaN`: Prediction interval level, NaN to disable
+- `intervals = nothing`: Grouped `confidence` and `prediction` coverage levels.
 - `outputs::Vector{String} = String[]`: Grouped optional outputs: `"diagnostics"`,
   `"residuals"`, `"weights"`, `"gradient"`/`"derivative"`, `"se"`, and `"sorted"`.
 - `outputs::Vector{String} = String[]`: Optional result components such as
@@ -652,10 +667,7 @@ Stateful batch LOESS smoother.
 	`"sorted"`.
 - `zero_weight_fallback::String = "use_local_mean"`: Fallback when all weights are zero. See Notes for a description of each option.
 - `auto_converge::Float64 = NaN`: Tolerance for auto-convergence, NaN to disable
-- `cv = nothing`: Grouped cross-validation settings (`fractions`, `method`, `k`, `seed`)
-- `cv_fractions::Vector{Float64} = Float64[]`: Fractions for cross-validation
-- `cv_method::String = "kfold"`: CV method (`"kfold"`, fast, or `"loocv"`, slow and exhaustive)
-- `cv_k::Int = 5`: Number of folds for k-fold CV
+- `cv = nothing`: Grouped cross-validation settings (`fractions`, `method`, `k`).
 - `parallel::Bool = true`: Enable parallel execution
 - `degree::String = "linear"`: Polynomial degree ("constant", "linear", "quadratic", etc.)
 - `dimensions::Int = 1`: Number of predictor dimensions
@@ -682,7 +694,7 @@ Stateful batch LOESS smoother.
   polynomial degree at boundary vertices when the requested `degree` can't be fit there.
   `nothing` (default) uses the library default (enabled). Only applies when
   `surface_mode = "interpolation"`.
-- `cv_seed::Union{Int, Nothing} = nothing`: Random seed for reproducible k-fold
+- `seed::Union{Int, Nothing} = nothing`: Random seed for reproducible k-fold
   cross-validation shuffling. `nothing` (default) uses a random seed.
 - `missing::String = "error"`: Policy for non-finite (NaN/Inf) values in input
   data. See Notes for a description of each option.
@@ -740,15 +752,12 @@ mutable struct Loess
 		robustness_method::String = "bisquare",
 		scaling_method::String = "mad",
 		boundary_policy::String = "extend",
-		confidence_intervals::Float64 = NaN,
-		prediction_intervals::Float64 = NaN,
 		outputs::Vector{String} = String[],
+		intervals = nothing,
 		cv = nothing,
+		seed::Union{Int, Nothing} = nothing,
 		zero_weight_fallback::String = "use_local_mean",
 		auto_converge::Float64 = NaN,
-		cv_fractions::Vector{Float64} = Float64[],
-		cv_method::String = "kfold",
-		cv_k::Int = 5,
 		parallel::Bool = true,
 		degree::String = "linear",
 		dimensions::Int = 1,
@@ -758,16 +767,19 @@ mutable struct Loess
 		cell::Union{Float64, Nothing} = nothing,
 		interpolation_vertices::Union{Int, Nothing} = nothing,
 		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
-		cv_seed::Union{Int, Nothing} = nothing,
 		missing::String = "error",
 		retain_model::Bool = false,
 	)
 		flags = _output_flags(outputs)
+		interval_options = _interval_options(intervals)
+		confidence_intervals = interval_options.confidence
+		prediction_intervals = interval_options.prediction
 		cv_options = _cv_options(cv)
-		cv_fractions = isempty(cv_options.fractions) ? cv_fractions : cv_options.fractions
-		cv_method = cv === nothing ? cv_method : cv_options.method
-		cv_k = cv === nothing ? cv_k : cv_options.k
-		cv_seed = cv === nothing ? cv_seed : cv_options.seed
+		cv_fractions = cv_options.fractions
+		cv_method = cv_options.method
+		cv_k = cv_options.k
+		cv_seed = seed
+		seed === nothing || seed >= 0 || throw(ArgumentError("seed must be non-negative"))
 		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
 
@@ -1039,12 +1051,8 @@ Stateful streaming LOESS smoother.
 - `boundary_degree_fallback::Union{Bool, Nothing} = nothing`: Fall back to lower polynomial
   degree at boundaries when higher degrees fail.
 - `missing::String = "error"`: Policy for non-finite (NaN/Inf) values in each chunk.
-- `confidence_intervals::Union{Float64, Nothing} = nothing`: Confidence level for
-  confidence intervals, computed per chunk and merged across overlap boundaries via
-  `merge_strategy`.
-- `prediction_intervals::Union{Float64, Nothing} = nothing`: Confidence level for
-  prediction intervals; same per-chunk computation and overlap-merging as
-  `confidence_intervals`.
+- `intervals = nothing`: Grouped `confidence` and `prediction` coverage levels,
+	computed per chunk and merged across overlap boundaries via `merge_strategy`.
   See `Loess` for a description of each option.
 """
 mutable struct StreamingLoess
@@ -1073,9 +1081,11 @@ mutable struct StreamingLoess
 		interpolation_vertices::Union{Int, Nothing} = nothing,
 		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
 		missing::String = "error",
-		confidence_intervals::Union{Float64, Nothing} = nothing,
-		prediction_intervals::Union{Float64, Nothing} = nothing,
+		intervals = nothing,
 	)
+		interval_options = _interval_options(intervals)
+		confidence_intervals = interval_options.confidence
+		prediction_intervals = interval_options.prediction
 		flags = _output_flags(
 			outputs;
 			allowed = (
@@ -1260,12 +1270,8 @@ Stateful online LOESS smoother.
 - `missing::String = "error"`: Policy for non-finite (NaN/Inf) `x`/`y` values passed
   to `add_point`. `"error"` (default) raises, `"drop"` silently ignores the point
   (returns `nothing` instead of adding it to the window).
-- `confidence_intervals::Union{Float64, Nothing} = nothing`: Confidence level for
-  confidence intervals. Only computed under `update_mode="full"` — raises an error at
-	construction if set (or the `"se"` output/`prediction_intervals` is set) while `update_mode`
-  is left at its default `"incremental"`.
-- `prediction_intervals::Union{Float64, Nothing} = nothing`: Confidence level for
-  prediction intervals; same `update_mode="full"` requirement as `confidence_intervals`.
+- `intervals = nothing`: Grouped `confidence` and `prediction` coverage levels.
+	Interval levels and the `"se"` output require `update_mode="full"`.
 """
 mutable struct OnlineLoess
 	handle::Ptr{Cvoid}
@@ -1293,9 +1299,11 @@ mutable struct OnlineLoess
 		interpolation_vertices::Union{Int, Nothing} = nothing,
 		boundary_degree_fallback::Union{Bool, Nothing} = nothing,
 		missing::String = "error",
-		confidence_intervals::Union{Float64, Nothing} = nothing,
-		prediction_intervals::Union{Float64, Nothing} = nothing,
+		intervals = nothing,
 	)
+		interval_options = _interval_options(intervals)
+		confidence_intervals = interval_options.confidence
+		prediction_intervals = interval_options.prediction
 		flags =
 			_output_flags(outputs; allowed = ("weights", "gradient", "derivative", "se"))
 		# Resolve weighted metric arguments

@@ -49,9 +49,7 @@ test_that("print.LoessResult shows cv_scores when present", {
     y <- sin(x) + rnorm(100, 0, 0.2)
     result <- fit(
         Loess(
-            cv_fractions = c(0.2, 0.3, 0.5),
-            cv_method = "kfold",
-            cv_k = 5L
+            cv = cv_opts(fractions = c(0.2, 0.3, 0.5), method = "kfold", k = 5L)
         ),
         x,
         y
@@ -91,6 +89,6 @@ test_that("plot.LoessResult draws confidence interval lines when present", {
     set.seed(42)
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, 0, 0.2)
-    result <- fit(Loess(fraction = 0.5, confidence_intervals = 0.95), x, y)
+    result <- fit(Loess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95)), x, y)
     expect_no_error(plot(result, main = "With CI"))
 })

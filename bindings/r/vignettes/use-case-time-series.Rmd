@@ -122,8 +122,7 @@ y <- 10 + 0.3 * t + sin(t / 5) + rnorm(500, sd = 2)
 model <- Loess(
     fraction = 0.2,
     iterations = 3,
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95
+    intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
 )
 result <- fit(model, t, y)
 
@@ -198,7 +197,7 @@ model <- Loess(
     fraction = 0.3,
     iterations = 3,
     outputs = "diagnostics",
-    confidence_intervals = 0.95
+    intervals = intervals_opts(confidence = 0.95)
 )
 result <- fit(model, hours, expression)
 

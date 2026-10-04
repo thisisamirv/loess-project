@@ -179,7 +179,7 @@ class TestLoess:
         x = np.linspace(0, 10, 20)
         y = 2 * x + np.random.normal(0, 1, 20)
 
-        loess = fastloess.Loess(fraction=0.5, confidence_intervals=0.95)
+        loess = fastloess.Loess(fraction=0.5, intervals={"confidence": 0.95})
         result = loess.fit(x, y)
 
         assert result.confidence_lower is not None
@@ -196,7 +196,7 @@ class TestLoess:
         x = np.linspace(0, 10, 20)
         y = 2 * x + np.random.normal(0, 1, 20)
 
-        loess = fastloess.Loess(fraction=0.5, prediction_intervals=0.95)
+        loess = fastloess.Loess(fraction=0.5, intervals={"prediction": 0.95})
         result = loess.fit(x, y)
 
         assert result.prediction_lower is not None
@@ -400,8 +400,7 @@ class TestStreamingLoess:
         streaming = fastloess.StreamingLoess(
             fraction=0.3,
             chunk_size=100,
-            confidence_intervals=0.95,
-            prediction_intervals=0.95,
+            intervals={"confidence": 0.95, "prediction": 0.95},
         )
         chunk_result = streaming.process_chunk(x, y)
 
@@ -477,7 +476,7 @@ class TestOnlineLoess:
         """Test online with confidence_intervals set and default update_mode raises."""
         with pytest.raises(ValueError):
             fastloess.OnlineLoess(
-                fraction=0.5, window_capacity=10, confidence_intervals=0.95
+                fraction=0.5, window_capacity=10, intervals={"confidence": 0.95}
             )
 
     def test_online_confidence_and_prediction_intervals_full_mode(self):
@@ -487,8 +486,7 @@ class TestOnlineLoess:
             window_capacity=10,
             min_points=3,
             update_mode="full",
-            confidence_intervals=0.95,
-            prediction_intervals=0.95,
+            intervals={"confidence": 0.95, "prediction": 0.95},
         )
 
         last = None
@@ -616,7 +614,7 @@ class TestErrorHandling:
         y = np.array([2.0, 4.0, 6.0, 8.0, 10.0])
 
         with pytest.raises(ValueError):
-            loess = fastloess.Loess(cv_fractions=[0.5], cv_method="invalid")
+            loess = fastloess.Loess(cv={"fractions": [0.5], "method": "invalid"})
             loess.fit(x, y)
 
     def test_invalid_missing_policy(self):
@@ -722,8 +720,8 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 30)
         y = x**2
         result = fastloess.Loess(
-            cv_fractions=[0.2],
-            cv={"fractions": [0.3, 0.5], "method": "kfold", "k": 3, "seed": 42},
+            cv={"fractions": [0.3, 0.5], "method": "kfold", "k": 3},
+            seed=42,
         ).fit(x, y)
         assert result.fraction_used in (0.3, 0.5)
         assert result.cv_scores is not None
@@ -734,12 +732,39 @@ class TestCrossValidation:
         with pytest.raises(ValueError):
             fastloess.Loess(cv={"fractions": "invalid"})
 
+        with pytest.raises(ValueError, match="unknown cv option"):
+            fastloess.Loess(cv={"fractions": [0.5], "seed": 42})
+        with pytest.raises(TypeError):
+            fastloess.Loess(cv_fractions=[0.5])
+
+    def test_grouped_intervals_and_prediction(self):
+        x = np.linspace(0, 10, 30)
+        y = x + 0.1 * np.sin(x)
+        result = fastloess.Loess(
+            fraction=0.5,
+            intervals={"confidence": 0.90, "prediction": 0.95},
+            retain_model=True,
+        ).fit(x, y)
+        assert result.confidence_lower is not None
+        assert result.prediction_lower is not None
+        prediction = result.predict(
+            np.array([2.5]), intervals={"confidence": 0.90, "prediction": 0.95}
+        )
+        assert prediction.confidence_lower is not None
+        assert prediction.prediction_lower is not None
+        with pytest.raises(ValueError, match="unknown intervals option"):
+            fastloess.Loess(intervals={"confidence_level": 0.95})
+        with pytest.raises(TypeError):
+            fastloess.Loess(confidence_intervals=0.95)
+        with pytest.raises(TypeError):
+            result.predict(np.array([2.5]), confidence_level=0.95)
+
     def test_cv_basic(self):
         """Test basic cross-validation selects a fraction."""
         x = np.linspace(0, 10, 50)
         y = 2 * x + np.sin(x)
 
-        loess = fastloess.Loess(cv_fractions=[0.2, 0.3, 0.5, 0.7])
+        loess = fastloess.Loess(cv={"fractions": [0.2, 0.3, 0.5, 0.7]})
         result = loess.fit(x, y)
 
         assert result.fraction_used in [0.2, 0.3, 0.5, 0.7]
@@ -752,7 +777,7 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 30)
         y = x**2
 
-        loess = fastloess.Loess(cv_fractions=[0.3, 0.5], cv_method="kfold", cv_k=5)
+        loess = fastloess.Loess(cv={"fractions": [0.3, 0.5], "method": "kfold", "k": 5})
         result = loess.fit(x, y)
 
         assert result.fraction_used in [0.3, 0.5]
@@ -763,7 +788,7 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 20)
         y = np.sin(x)
 
-        loess = fastloess.Loess(cv_fractions=[0.4, 0.6], cv_method="loocv")
+        loess = fastloess.Loess(cv={"fractions": [0.4, 0.6], "method": "loocv"})
         result = loess.fit(x, y)
 
         assert result.fraction_used in [0.4, 0.6]
@@ -775,7 +800,7 @@ class TestCrossValidation:
         y = 2 * x + 0.5 * np.sin(x)
 
         loess = fastloess.Loess(
-            cv_fractions=[0.3, 0.5, 0.7],
+            cv={"fractions": [0.3, 0.5, 0.7]},
             iterations=2,
             outputs=["diagnostics", "residuals"],
         )
@@ -790,7 +815,7 @@ class TestCrossValidation:
         x = np.linspace(0, 10, 25)
         y = x + np.random.normal(0, 0.1, 25)
 
-        loess = fastloess.Loess(cv_fractions=[0.5])
+        loess = fastloess.Loess(cv={"fractions": [0.5]})
         result = loess.fit(x, y)
 
         assert result.fraction_used == 0.5

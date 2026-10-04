@@ -35,7 +35,7 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastloess::Loess model({ .fraction = 0.5, .confidence_intervals = 0.95 });
+    fastloess::Loess model({ .fraction = 0.5, .intervals = { .confidence = 0.95 } });
     auto result = model.fit(x, y).value();
 
     auto ci_lower = result.confidence_lower();
@@ -70,7 +70,7 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastloess::Loess model({ .fraction = 0.5, .prediction_intervals = 0.95 });
+    fastloess::Loess model({ .fraction = 0.5, .intervals = { .prediction = 0.95 } });
     auto result = model.fit(x, y).value();
 
     std::cout << "Prediction bounds: [" << result.prediction_lower()[0] << ", " << result.prediction_upper()[0] << "]\n";
@@ -102,7 +102,7 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastloess::Loess model({ .fraction = 0.5, .confidence_intervals = 0.95, .prediction_intervals = 0.95 });
+    fastloess::Loess model({ .fraction = 0.5, .intervals = { .confidence = 0.95, .prediction = 0.95 } });
     auto result = model.fit(x, y).value();
 
     std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
@@ -140,7 +140,7 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastloess::Loess model({ .confidence_intervals = 0.99 });
+    fastloess::Loess model({ .intervals = { .confidence = 0.99 } });
     auto result = model.fit(x, y).value();
 
     std::cout << "99% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";
@@ -172,7 +172,7 @@ int main() {
         y[i] = std::sin(x[i]) + 0.1;
     }
 
-    fastloess::Loess model({ .confidence_intervals = 0.95 });
+    fastloess::Loess model({ .intervals = { .confidence = 0.95 } });
     auto result = model.fit(x, y).value();
 
     std::cout << "95% CI: [" << result.confidence_lower()[0] << ", " << result.confidence_upper()[0] << "]\n";

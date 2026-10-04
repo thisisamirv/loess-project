@@ -45,7 +45,7 @@ func main() {
  opts := fastloess.DefaultOptions()
  opts.Fraction = 0.5
  ci := 0.95 // 95% CI
- opts.ConfidenceIntervals = &ci
+ opts.Intervals = &fastloess.IntervalsOptions{Confidence: &ci}
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {
@@ -100,7 +100,7 @@ func main() {
  opts := fastloess.DefaultOptions()
  opts.Fraction = 0.5
  pi := 0.95 // 95% PI
- opts.PredictionIntervals = &pi
+ opts.Intervals = &fastloess.IntervalsOptions{Prediction: &pi}
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {
@@ -150,8 +150,7 @@ func main() {
  opts.Fraction = 0.5
  ci := 0.95
  pi := 0.95
- opts.ConfidenceIntervals = &ci
- opts.PredictionIntervals = &pi
+ opts.Intervals = &fastloess.IntervalsOptions{Confidence: &ci, Prediction: &pi}
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {
@@ -206,7 +205,7 @@ func main() {
  // 99% confidence interval
  opts := fastloess.DefaultOptions()
  ci := 0.99
- opts.ConfidenceIntervals = &ci
+ opts.Intervals = &fastloess.IntervalsOptions{Confidence: &ci}
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {

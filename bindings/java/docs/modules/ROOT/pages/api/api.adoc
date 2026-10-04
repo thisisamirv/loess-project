@@ -44,14 +44,10 @@ Options options = Options.builder()
 |`missing` |`String` |`"error"` |Policy for non-finite (NaN/Inf) values in input data: `error`, `drop`.
 |`parallel` |`boolean` |`true` |Enable parallel processing.
 |`outputs(String...)` |`String...` |empty |Select `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, `se`, and/or `sorted`.
-|`confidenceIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
-|`predictionIntervals` |`double` |`NaN` (disabled) |Confidence level in (0, 1), e.g. `0.95`.
-|`cvMethod` |`String` |`"kfold"` |`kfold` or `loocv`.
-|`cvK` |`int` |`5` |Number of folds for k-fold CV.
-|`cvFractions` |`double[]` |`null` (disabled) |Candidate fractions for cross-validation.
-|`cvSeed` |`long` (boxed) |`null` (random) |RNG seed for reproducible k-fold splits.
+|`intervals(IntervalsOptions)` |`IntervalsOptions` |disabled |Grouped confidence and prediction coverage levels.
 |`retainModel` |`boolean` |`false` |Retain training data, enabling `Result.predictModel()`.
-|`cv(CVOptions)` |`CVOptions` |disabled |Group candidate fractions, method, folds, and optional seed with `CVOptions.builder()`.
+|`cv(CVOptions)` |`CVOptions` |disabled |Group candidate fractions, method, and folds with `CVOptions.builder()`; set the outer seed separately.
+|`seed(long)` |`long` |unset |Seed for reproducible CV folds.
 |===
 
 `fraction` is the most important parameter: it controls the size of the local neighbourhood used at each point.
@@ -100,11 +96,11 @@ Releases native resources. Safe to call multiple times. Implements `AutoCloseabl
 
 |`x()`, `y()` |`double[]` |Always.
 |`standardErrors()` |`Optional<double[]>` |`outputs("se")`
-|`confidenceLower()`, `confidenceUpper()` |`Optional<double[]>` |`confidenceIntervals` set
-|`predictionLower()`, `predictionUpper()` |`Optional<double[]>` |`predictionIntervals` set
+|`confidenceLower()`, `confidenceUpper()` |`Optional<double[]>` |`intervals.confidence` set
+|`predictionLower()`, `predictionUpper()` |`Optional<double[]>` |`intervals.prediction` set
 |`residuals()` |`Optional<double[]>` |`outputs("residuals")`
 |`robustnessWeights()` |`Optional<double[]>` |`outputs("weights")`
-|`cvScores()` |`Optional<double[]>` |`cvFractions` set
+|`cvScores()` |`Optional<double[]>` |`cv.fractions` set
 |`fractionUsed()` |`double` |Always.
 |`iterationsUsed()` |`OptionalInt` |Always (empty if not available).
 |`dimensions()` |`int` |Always.
@@ -300,13 +296,13 @@ To get both orderings, sort the default result client-side (e.g. via a `Comparat
 
 Select `"gradient"` (or `"derivative"`) to expose the per-point gradient via `Result.gradient()` (`dimensions` values per point, flattened). Only supported when `surfaceMode = "direct"`; the default interpolation mode cannot reconstruct an exact per-point gradient, so `fit()` throws a `RuntimeException`.
 
-=== confidenceIntervals
+=== intervals.confidence
 
 _See: xref:../guide/intervals.adoc[Intervals]_
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
 
-=== predictionIntervals
+=== intervals.prediction
 
 _See: xref:../guide/intervals.adoc[Intervals]_
 
@@ -316,10 +312,10 @@ Confidence level for the prediction interval for new observations (e.g. `0.95`).
 
 _See: xref:../guide/cross-validation.adoc[Cross-Validation]_
 
-* `cvMethod`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cvK` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-* `cvK`: Number of folds for k-fold CV. Ignored when `cvMethod` is `"loocv"`.
-* `cvFractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-* `cvSeed`: Seed for reproducible k-fold shuffling. `null` (default) uses a random seed.
+* `cv.method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv.k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+* `cv.k`: Number of folds for k-fold CV. Ignored when `cv.method` is `"loocv"`.
+* `cv.fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
+* `seed`: Seed for reproducible k-fold shuffling. `null` (default) uses a random seed.
 
 === retainModel
 
@@ -345,10 +341,8 @@ try (Loess model = new Loess(Options.builder().build())) {
 [source,java]
 ----
 Options options = Options.builder()
-        .cvMethod("kfold")
-        .cvK(5)
-        .cvFractions(new double[] { 0.1, 0.2, 0.3, 0.5 })
-        .cvSeed(42L)
+        .cv(fastloess.CVOptions.builder().method("kfold").k(5).fractions(new double[] { 0.1, 0.2, 0.3, 0.5 }).build())
+        .seed(42L)
         .build();
 
 try (Loess model = new Loess(options)) {

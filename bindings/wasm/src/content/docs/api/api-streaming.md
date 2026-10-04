@@ -98,8 +98,7 @@ Fraction used: 0.5
 | `missing` | `string` | `"error"` | Policy for non-finite (NaN/Inf) values in each chunk |
 | `parallel` | `boolean` | `true` | Enable parallel execution |
 | `outputs` | `string[]` | `[]` | Optional fields: `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"` (or `"derivative"`), `"se"` |
-| `confidence_intervals` | `number` | `null` | Confidence level for confidence intervals, computed per chunk |
-| `prediction_intervals` | `number` | `null` | Confidence level for prediction intervals, computed per chunk |
+| `intervals` | `{ confidence?: number; prediction?: number }` | `disabled` | Grouped confidence and prediction coverage levels. |
 
 `"sorted"` output and cross-validation are Batch-only and not available here; see [fastLoess](api.md).
 
@@ -325,17 +324,17 @@ Include the final per-point robustness weights (from the last robustness iterati
 
 Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — throws instead of silently leaving `gradient` as `undefined` if requested under the default `"interpolation"` mode. Omitted by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
 
-### confidence_intervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `y` is, via `merge_strategy`. `null` (default) disables confidence intervals.
 
-### prediction_intervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `confidence_intervals`. `null` (default) disables prediction intervals.
+Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `intervals.confidence`. `null` (default) disables prediction intervals.
 
 ## Result Structure
 

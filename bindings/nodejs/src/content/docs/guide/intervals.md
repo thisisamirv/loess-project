@@ -30,7 +30,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const model = new Loess({ fraction: 0.5, confidence_intervals: 0.95 });
+const model = new Loess({ fraction: 0.5, intervals: { confidence : 0.95 } });
 const result = model.fit(x, y);
 
 result.y.slice(0, 5).forEach((y, i) => {
@@ -59,7 +59,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const model = new Loess({ fraction: 0.5, prediction_intervals: 0.95 });
+const model = new Loess({ fraction: 0.5, intervals: { prediction : 0.95 } });
 const result = model.fit(x, y);
 console.log(`Prediction bounds: [${result.prediction_lower[0]}, ${result.prediction_upper[0]}]`);
 ```
@@ -83,8 +83,7 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 
 const model = new Loess({
     fraction: 0.5,
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95
+    intervals: { confidence : 0.95, prediction : 0.95 }
 });
 const result = model.fit(x, y);
 console.log("95% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.confidence_upper[0].toFixed(4) + "]");
@@ -114,7 +113,7 @@ const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
 // 99% confidence interval
-const model = new Loess({ confidence_intervals: 0.99 });
+const model = new Loess({ intervals: { confidence : 0.99 } });
 const result = model.fit(x, y);
 console.log("99% CI: [" + result.confidence_lower[0].toFixed(4) + ", " + result.confidence_upper[0].toFixed(4) + "]");
 ```
@@ -136,7 +135,7 @@ const n = 100;
 const x = Float64Array.from({ length: n }, (_, i) => i * 2 * Math.PI / (n - 1));
 const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 17 - 0.5) * 0.6);
 
-const model = new Loess({ confidence_intervals: 0.95 });
+const model = new Loess({ intervals: { confidence : 0.95 } });
 const result = model.fit(x, y);
 
 result.standard_errors.slice(0, 5).forEach((se, i) => {

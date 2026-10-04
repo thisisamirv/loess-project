@@ -150,30 +150,15 @@ public final class StreamingOptions {
         }
 
         /**
-         * Sets the confidence interval level for each chunk.
+         * Sets grouped interval levels for each chunk.
          *
-         * @param confidenceIntervals the confidence level for confidence
-         * intervals, computed per chunk and merged across overlap boundaries
+         * @param intervals interval levels, merged across overlap boundaries
          * via {@code mergeStrategy}
          * @return this builder, for chaining
-         * @see Options.Builder#confidenceIntervals(double)
+         * @see Options.Builder#intervals(IntervalsOptions)
          */
-        public Builder confidenceIntervals(double confidenceIntervals) {
-            common.confidenceIntervals(confidenceIntervals);
-            return this;
-        }
-
-        /**
-         * Sets the prediction interval level for each chunk.
-         *
-         * @param predictionIntervals the confidence level for prediction
-         * intervals; same per-chunk computation and overlap-merging as
-         * {@code confidenceIntervals}
-         * @return this builder, for chaining
-         * @see Options.Builder#predictionIntervals(double)
-         */
-        public Builder predictionIntervals(double predictionIntervals) {
-            common.predictionIntervals(predictionIntervals);
+        public Builder intervals(IntervalsOptions intervals) {
+            common.intervals(intervals);
             return this;
         }
 

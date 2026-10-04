@@ -15,6 +15,7 @@
 #' @srrstats {G1.6} Sliding window for incremental updates.
 #'
 #' @inheritParams Loess
+#' @param intervals Grouped coverage levels from \code{\link{intervals_opts}}.
 #' @param outputs Optional character vector selecting \code{"weights"},
 #'   \code{"gradient"} (or \code{"derivative"}), and \code{"se"}.
 #'   \code{NULL} (default) selects no optional components; \code{"se"}
@@ -31,15 +32,6 @@
 #'   passed to \code{\link{add_point}}: \code{"error"} (default) raises an
 #'   error, \code{"drop"} silently ignores the point (returns \code{NULL})
 #'   instead of adding it to the window.
-#' @param confidence_intervals Confidence level for confidence intervals (e.g.
-#'   \code{0.95}). Only computed under \code{update_mode = "full"} — raises an
-#'   error at construction if set (or \code{outputs = "se"}/
-#'   \code{prediction_intervals} is set) while \code{update_mode} is left at
-#'   its default \code{"incremental"}.
-#'   \code{NULL} (default) disables confidence intervals.
-#' @param prediction_intervals Confidence level for prediction intervals; same
-#'   \code{update_mode = "full"} requirement as \code{confidence_intervals}.
-#'   \code{NULL} (default) disables prediction intervals.
 #'
 #' @return An OnlineLoess object.
 #' @examples
@@ -66,8 +58,7 @@ OnlineLoess <- function(
     zero_weight_fallback = "use_local_mean",
     update_mode = "incremental",
     auto_converge = NULL,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
+    intervals = NULL,
     degree = "linear",
     dimensions = 1L,
     distance_metric = "normalized",
@@ -80,11 +71,17 @@ OnlineLoess <- function(
     outputs = NULL
 ) {
     reject_extra_positional_args(sys.call(), "min_points")
+    if (...length() > 0L) {
+        stop("unused arguments (...)", call. = FALSE)
+    }
     validate_params(
         fraction = fraction,
         window_capacity = window_capacity,
         min_points = min_points
     )
+    interval_options <- parse_intervals_options(intervals)
+    confidence_intervals <- interval_options$confidence
+    prediction_intervals <- interval_options$prediction
     flags <- parse_outputs_flags(
         outputs,
         c("weights", "gradient", "derivative", "se")

@@ -76,8 +76,7 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("loocv")
-                .cvFractions(new double[] { 0.2, 0.3, 0.5, 0.7 })
+                .cv(fastloess.CVOptions.builder().method("loocv").fractions(new double[] { 0.2, 0.3, 0.5, 0.7 }).build())
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -116,10 +115,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("kfold")
-                .cvK(5)
-                .cvFractions(new double[] { 0.3, 0.5, 0.7 })
-                .cvSeed(42L)
+                .cv(fastloess.CVOptions.builder().method("kfold").k(5).fractions(new double[] { 0.3, 0.5, 0.7 }).build())
+                .seed(42L)
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -187,9 +184,7 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("kfold")
-                .cvK(5)
-                .cvFractions(new double[] { 0.1, 0.3, 0.5, 0.7 })
+                .cv(fastloess.CVOptions.builder().method("kfold").k(5).fractions(new double[] { 0.1, 0.3, 0.5, 0.7 }).build())
                 .build();
 
         // Fraction  | CV Score (MSE)

@@ -46,8 +46,7 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(;
-    cv_method="loocv",
-    cv_fractions=[0.2, 0.3, 0.5, 0.7]
+    cv=(method = "loocv", fractions = [0.2, 0.3, 0.5, 0.7])
 )
 result = fit(model, x, y)
 println("First smoothed value (LOOCV-selected fraction): ", result.y[1])
@@ -68,10 +67,8 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 model = Loess(;
-    cv_method="kfold",
-    cv_k=5,
-    cv_fractions=[0.3, 0.5, 0.7],
-    cv_seed=42
+    cv=(method = "kfold", k = 5, fractions = [0.3, 0.5, 0.7]),
+    seed =42
 )
 result = fit(model, x, y)
 println("First smoothed value (k-fold CV, k=5): ", result.y[1])
@@ -115,8 +112,7 @@ x = collect(range(0, 2π, length=100))
 y = sin.(x) .+ randn(rng, 100) .* 0.3
 
 # Example output
-model = Loess(; cv_method="kfold", cv_k=5,
-                cv_fractions=[0.1, 0.3, 0.5, 0.7])
+model = Loess(; cv=(method = "kfold", k = 5, fractions = [0.1, 0.3, 0.5, 0.7]))
 result = fit(model, x, y)
 
 # Fraction  | CV Score (MSE)

@@ -19,21 +19,20 @@ It always fits exactly, unlike `fit`'s default `surface_mode="interpolation"` â€
 | Keyword Argument | Type | Default | Description |
 | --- | --- | --- | --- |
 | `outputs` | `Vector{String}` | `String[]` | Select `"se"` and/or `"gradient"` (alias `"derivative"`). |
-| `confidence_level` | `Union{Float64, Nothing}` | `nothing` | Confidence interval coverage level (e.g. `0.95`) |
-| `prediction_level` | `Union{Float64, Nothing}` | `nothing` | Prediction interval coverage level (e.g. `0.95`) |
+| `intervals` | `NamedTuple` | `nothing` | Grouped confidence and prediction coverage levels. |
 | `extrapolation` | `String` | `"clamp"` | Behavior for query points outside the training range, on any dimension |
 | `max_extrapolation_distance` | `Union{Float64, Nothing}` | `nothing` | Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `Union{Float64, Nothing}` | `nothing` | Max allowed distance to the farthest point in a query's k-nearest-neighbor window before erroring |
 
 ### outputs: se
 
-Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `confidence_level`/`prediction_level` to be populated. Omitted by default.
+Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `intervals.confidence`/`intervals.prediction` to be populated. Omitted by default.
 
-### confidence_level
+### intervals.confidence
 
 Confidence level for the confidence interval around the mean response at each query point (e.g. `0.95`). Uses the same z-score convention as `fit`'s own confidence intervals. `nothing` (default) disables it.
 
-### prediction_level
+### intervals.prediction
 
 Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same residual scale `fit` used for its own intervals when available, otherwise falling back to a MAD-based estimate. `nothing` (default) disables it.
 

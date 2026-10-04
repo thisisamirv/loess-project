@@ -287,7 +287,7 @@ void testLoessWithConfidenceIntervals() {
 
   LoessOptions opts;
   opts.fraction = k_fraction_half;
-  opts.confidence_intervals = k_confidence_level;
+  opts.intervals.confidence = k_confidence_level;
   Loess loess(opts);
   auto result = loess.fit(x_vals, y_vals).value();
 
@@ -313,7 +313,7 @@ void testLoessWithPredictionIntervals() {
 
   LoessOptions opts;
   opts.fraction = k_fraction_half;
-  opts.prediction_intervals = k_confidence_level;
+  opts.intervals.prediction = k_confidence_level;
   Loess loess(opts);
   auto result = loess.fit(x_vals, y_vals).value();
 
@@ -464,8 +464,8 @@ void testStreamingConfidenceAndPredictionIntervals() {
   StreamingOptions opts;
   opts.fraction = k_fraction_third;
   opts.chunk_size = k_chunk_half;
-  opts.confidence_intervals = k_confidence_level;
-  opts.prediction_intervals = k_confidence_level;
+  opts.intervals.confidence = k_confidence_level;
+  opts.intervals.prediction = k_confidence_level;
   StreamingLoess stream(opts);
   auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
 
@@ -529,8 +529,8 @@ void testOnlineConfidenceAndPredictionIntervalsFullMode() {
   opts.window_capacity = k_window_capacity;
   opts.min_points = k_min_points_online;
   opts.update_mode = "full";
-  opts.confidence_intervals = k_confidence_level;
-  opts.prediction_intervals = k_confidence_level;
+  opts.intervals.confidence = k_confidence_level;
+  opts.intervals.prediction = k_confidence_level;
   OnlineLoess online(opts);
 
   std::optional<OnlineOutput> last;
@@ -865,19 +865,18 @@ void testLoessCrossValidation() {
   auto x_vals = data.first;
   auto y_vals = data.second;
   LoessOptions opts;
-  opts.cv_fractions = {k_fraction_third, k_fraction_half, k_fraction_seventh};
-  opts.cv_method = "kfold";
-  opts.cv_k = k_cv_k;
+  opts.cv.fractions = {k_fraction_third, k_fraction_half, k_fraction_seventh};
+  opts.cv.method = "kfold";
+  opts.cv.k = k_cv_k;
   Loess loess(opts);
   auto res = loess.fit(x_vals, y_vals).value();
   assertTrue(res.valid());
 
   LoessOptions grouped;
-  grouped.cv_method = "invalid";
   grouped.cv.fractions = {k_fraction_third, k_fraction_half};
   grouped.cv.method = "kfold";
   grouped.cv.k = k_cv_k;
-  grouped.cv.seed = k_cv_seed;
+  grouped.seed = k_cv_seed;
   Loess grouped_loess(grouped);
   assertTrue(grouped_loess.fit(x_vals, y_vals).value().valid());
 }

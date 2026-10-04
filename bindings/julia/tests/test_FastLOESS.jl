@@ -215,7 +215,7 @@ using FastLOESS
 			x = collect(range(0, 10, length = 20))
 			y = 2 .* x .+ randn(20)
 
-			model = Loess(fraction = 0.5, confidence_intervals = 0.95)
+			model = Loess(fraction = 0.5, intervals = (confidence = 0.95,))
 			result = fit(model, x, y)
 
 			@test result.confidence_lower !== nothing
@@ -230,7 +230,7 @@ using FastLOESS
 			x = collect(range(0, 10, length = 20))
 			y = 2 .* x .+ randn(20)
 
-			model = Loess(fraction = 0.5, prediction_intervals = 0.95)
+			model = Loess(fraction = 0.5, intervals = (prediction = 0.95,))
 			result = fit(model, x, y)
 
 			@test result.prediction_lower !== nothing
@@ -382,8 +382,7 @@ using FastLOESS
 			stream = StreamingLoess(
 				fraction = 0.3,
 				chunk_size = 100,
-				confidence_intervals = 0.95,
-				prediction_intervals = 0.95,
+				intervals = (confidence = 0.95, prediction = 0.95),
 			)
 			r1 = process_chunk(stream, x, y)
 
@@ -455,7 +454,7 @@ using FastLOESS
 			@test_throws ErrorException OnlineLoess(
 				fraction = 0.5,
 				window_capacity = 10,
-				confidence_intervals = 0.95,
+				intervals = (confidence = 0.95,),
 			)
 		end
 
@@ -465,8 +464,7 @@ using FastLOESS
 				window_capacity = 10,
 				min_points = 3,
 				update_mode = "full",
-				confidence_intervals = 0.95,
-				prediction_intervals = 0.95,
+				intervals = (confidence = 0.95, prediction = 0.95),
 			)
 
 			last_result = nothing
@@ -599,8 +597,7 @@ using FastLOESS
 			x = collect(range(0, 10, length = 30))
 			y = x .^ 2
 			model = Loess(
-				cv_fractions = [0.2],
-				cv = (fractions = [0.3, 0.5], method = "kfold", k = 3, seed = 42),
+				cv = (fractions = [0.3, 0.5], method = "kfold", k = 3), seed = 42,
 			)
 			result = fit(model, x, y)
 			@test result.fraction_used in [0.3, 0.5]
@@ -611,7 +608,7 @@ using FastLOESS
 			x = collect(range(0, 10, length = 50))
 			y = 2 .* x .+ sin.(x)
 
-			model = Loess(cv_fractions = [0.2, 0.3, 0.5, 0.7])
+			model = Loess(cv = (fractions = [0.2, 0.3, 0.5, 0.7],))
 			result = fit(model, x, y)
 
 			@test result.fraction_used in [0.2, 0.3, 0.5, 0.7]
@@ -622,7 +619,7 @@ using FastLOESS
 			x = collect(range(0, 10, length = 30))
 			y = x .^ 2
 
-			model = Loess(cv_fractions = [0.3, 0.5], cv_method = "kfold", cv_k = 5)
+			model = Loess(cv = (fractions = [0.3, 0.5], method = "kfold", k = 5))
 			result = fit(model, x, y)
 
 			@test result.fraction_used in [0.3, 0.5]
@@ -632,7 +629,7 @@ using FastLOESS
 			x = collect(range(0, 10, length = 20))
 			y = sin.(x)
 
-			model = Loess(cv_fractions = [0.4, 0.6], cv_method = "loocv")
+			model = Loess(cv = (fractions = [0.4, 0.6], method = "loocv"))
 			result = fit(model, x, y)
 
 			@test result.fraction_used in [0.4, 0.6]
@@ -774,12 +771,12 @@ using FastLOESS
 			xcv = collect(range(0, 100, length = 100))
 			ycv = sin.(xcv ./ 10) .+ 0.1 .* sin.(xcv)
 			m1 = fit(
-				Loess(fraction = 0.3, cv_fractions = [0.2, 0.3, 0.4], cv_seed = 42),
+				Loess(fraction = 0.3, cv = (fractions = [0.2, 0.3, 0.4],), seed = 42),
 				xcv,
 				ycv,
 			)
 			m2 = fit(
-				Loess(fraction = 0.3, cv_fractions = [0.2, 0.3, 0.4], cv_seed = 42),
+				Loess(fraction = 0.3, cv = (fractions = [0.2, 0.3, 0.4],), seed = 42),
 				xcv,
 				ycv,
 			)

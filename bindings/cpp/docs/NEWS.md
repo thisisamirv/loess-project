@@ -15,7 +15,8 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
-* Breaking change: replaced the individual output booleans in `LoessOptions`, `OnlineOptions`, and `PredictOptions` with grouped `outputs` vectors; interval levels remain separate fields.
+* Breaking change: replaced the individual output booleans in `LoessOptions`, `OnlineOptions`, and `PredictOptions` with grouped `outputs` vectors.
+* Breaking change: replaced flat interval levels with `intervals`, removed flat CV fields in favor of `cv`, and moved CV seeding to optional outer `seed`; `seed = 0` is now reproducible.
 * C++ musl release jobs now build dynamic x86_64 and ARM64 shared libraries, allowing the musl assets to be published reliably.
 * Declared the public wrapper's C++17 requirement and represented unavailable diagnostics as empty `std::optional<double>` values instead of NaN sentinels.
 

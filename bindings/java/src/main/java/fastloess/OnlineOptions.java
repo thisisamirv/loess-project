@@ -153,28 +153,14 @@ public final class OnlineOptions {
         }
 
         /**
-         * Sets the confidence interval level for full updates.
+         * Sets grouped interval levels for full updates.
          *
-         * @param confidenceIntervals the confidence level for confidence
-         * intervals; only computed under {@code updateMode("full")}
+         * @param intervals interval levels; require {@code updateMode("full")}
          * @return this builder, for chaining
-         * @see Options.Builder#confidenceIntervals(double)
+         * @see Options.Builder#intervals(IntervalsOptions)
          */
-        public Builder confidenceIntervals(double confidenceIntervals) {
-            common.confidenceIntervals(confidenceIntervals);
-            return this;
-        }
-
-        /**
-         * Sets the prediction interval level for full updates.
-         *
-         * @param predictionIntervals the confidence level for prediction
-         * intervals; only computed under {@code updateMode("full")}
-         * @return this builder, for chaining
-         * @see Options.Builder#predictionIntervals(double)
-         */
-        public Builder predictionIntervals(double predictionIntervals) {
-            common.predictionIntervals(predictionIntervals);
+        public Builder intervals(IntervalsOptions intervals) {
+            common.intervals(intervals);
             return this;
         }
 

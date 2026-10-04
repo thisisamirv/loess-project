@@ -139,8 +139,7 @@ func main() {
  opts.Iterations = 3
  ci := 0.95
  pi := 0.95
- opts.ConfidenceIntervals = &ci
- opts.PredictionIntervals = &pi
+ opts.Intervals = &fastloess.IntervalsOptions{Confidence: &ci, Prediction: &pi}
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {

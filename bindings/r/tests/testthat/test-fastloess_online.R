@@ -223,7 +223,7 @@ test_that("OnlineLoess: confidence_intervals requires update_mode = \"full\"", {
         OnlineLoess(
             fraction = 0.5,
             window_capacity = 10,
-            confidence_intervals = 0.95
+            intervals = intervals_opts(confidence = 0.95)
         )
     )
 })
@@ -234,8 +234,7 @@ test_that("OnlineLoess: CI/PI under update_mode = \"full\"", {
         window_capacity = 10,
         min_points = 3,
         update_mode = "full",
-        confidence_intervals = 0.95,
-        prediction_intervals = 0.95
+        intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
     )
 
     x <- as.double(0:5)

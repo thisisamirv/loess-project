@@ -18,6 +18,7 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Changed
 
 * Breaking change: replaced individual `return_*` output keywords with `outputs=[...]` for Batch, Streaming, Online, and prediction.
+* Breaking change: replaced flat interval keywords and prediction levels with `intervals=(confidence=..., prediction=...)`; CV uses only `cv=(fractions=..., method=..., k=...)` with an outer `seed`, replacing flat CV keywords and the nested seed. Unknown grouped keys raise `ArgumentError`.
 * Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels in the Julia binding.
 
 ### Fixed

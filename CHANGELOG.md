@@ -140,7 +140,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **C++:**
 
-- Breaking change: replaced the individual output booleans in `LoessOptions`, `OnlineOptions`, and `PredictOptions` with grouped `outputs` vectors; interval levels remain separate fields.
+- Breaking change: replaced the individual output booleans in `LoessOptions`, `OnlineOptions`, and `PredictOptions` with grouped `outputs` vectors.
+- Breaking change: replaced flat fit/prediction interval levels with `intervals` and removed flat CV fields in favor of `cv` plus optional outer `seed`; zero is now a valid deterministic seed.
 - C++ musl release jobs now build dynamic x86_64 and ARM64 shared libraries, allowing the musl assets to be published reliably.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Declared the public wrapper's C++17 requirement and represented unavailable diagnostics as empty `std::optional<double>` values instead of NaN sentinels.
@@ -148,6 +149,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Go:**
 
 - Breaking change: removed standalone output booleans from fit and prediction options; use `Outputs` for optional components.
+- Breaking change: grouped fit/prediction interval levels under `Intervals *IntervalsOptions`; CV uses only `CV *CVOptions` plus outer `Seed`, replacing flat CV fields and the nested seed.
 - Bumped the pinned `golangci-lint` install-script version from `v2.13.2` to `v2.14.0`.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Represent unavailable diagnostic metrics as nil optional values instead of NaN sentinels in the Go binding.
@@ -155,6 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Java:**
 
 - Breaking change: removed standalone output builder methods and prediction flags; use `outputs(...)` for optional components.
+- Breaking change: grouped fit/prediction interval levels under `intervals(IntervalsOptions)`; removed flat CV setters and `CVOptions.Builder.seed` in favor of `cv(CVOptions)` plus outer `seed(long)`.
 - Bumped the pinned Checkstyle standalone jar version from `14.1.0` to `14.3.0`.
 - Java's musl JNI release jobs now build dynamic x86_64 and ARM64 shared libraries, so the bundled resources selected by `NativeBridge` are published reliably.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
@@ -162,28 +165,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Julia:**
 
 - Breaking change: removed standalone output keywords from fit and prediction; use `outputs` for optional components.
+- Breaking change: grouped fit/prediction interval levels under `intervals`; removed flat CV keywords and the nested seed in favor of `cv=(fractions, method, k)` plus outer `seed`. Unknown grouped keys raise `ArgumentError`.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels in the Julia binding.
 
 **Node.js:**
 
 - Breaking change: removed standalone output booleans from fit and prediction options; use `outputs` for optional components.
+- Breaking change: grouped fit/prediction interval levels under `intervals`; removed flat CV fields and `cv.seed` in favor of grouped `cv` plus outer `seed`. Regenerated TypeScript declarations.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 
 **Python:**
 
 - Breaking change: removed standalone output keywords from fit and prediction, including `return_gradient` and `return_derivative`; use `outputs` for optional components.
+- Breaking change: grouped fit/prediction interval levels under `intervals`; removed flat CV keywords and the nested seed in favor of grouped `cv` plus outer `seed`. Unknown grouped keys raise `ValueError`; updated stubs and regression tests.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 
 **R:**
 
 - Breaking change: removed standalone output arguments from fit and prediction; use `outputs` for optional components. Regenerated package documentation and migrated tests and vignettes.
+- Breaking change: grouped fit/prediction interval levels under `intervals = intervals_opts(...)`; removed flat CV arguments and `cv_opts(seed = ...)` in favor of grouped `cv` plus outer `seed`. Reject removed named constructor arguments instead of silently ignoring them. Updated exported helpers and regenerated Rd references.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Replaced the local `Result` alias with `extendr_api::error::Result`, mapped unavailable diagnostics to R `NA`, added retry cleanup for transient Windows `pak` move failures, and added the root/binding `r-tests` workflow.
 
 **WASM:**
 
 - Breaking change: removed standalone output booleans from fit and prediction options and TypeScript declarations; use `outputs` for optional components.
+- Breaking change: grouped fit/prediction interval levels under `intervals`; removed flat CV fields and `cv.seed` in favor of grouped `cv` plus outer `seed`. Reject legacy/unknown keys and regenerate Node/browser packages and TypeScript declarations.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 
 ### Fixed

@@ -19,13 +19,13 @@ test('batch smoothing', () => {
     assert.ok(result.diagnostics.rmse < 0.1);
 });
 
-test('cv_seed rejects negative values', () => {
+test('seed rejects negative values', () => {
     assert.throws(
-        () => new fastloess.Loess({ cv_seed: -1 }).fit(
+        () => new fastloess.Loess({ seed: -1 }).fit(
             new Float64Array([1, 2, 3]),
             new Float64Array([2, 4, 6])
         ),
-        /cv_seed must be non-negative, got -1/
+        /seed must be non-negative, got -1/
     );
 });
 
@@ -88,8 +88,7 @@ test('StreamingLoess: return_se', () => {
 test('StreamingLoess: confidence_intervals and prediction_intervals', () => {
     const streamer = new fastloess.StreamingLoess({
         fraction: 0.3,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95
+        intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         chunk_size: 10,
         overlap: 2
@@ -125,7 +124,7 @@ test('OnlineLoess: confidence_intervals requires update_mode "full"', () => {
     assert.throws(() => {
         new fastloess.OnlineLoess({
             fraction: 0.5,
-            confidence_intervals: 0.95
+            intervals: { confidence: 0.95 }
         }, {
             window_capacity: 10,
             min_points: 2
@@ -136,8 +135,7 @@ test('OnlineLoess: confidence_intervals requires update_mode "full"', () => {
 test('OnlineLoess: confidence/prediction intervals under update_mode "full"', () => {
     const online = new fastloess.OnlineLoess({
         fraction: 1.0,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95
+        intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         window_capacity: 10,
         min_points: 3,
@@ -335,8 +333,7 @@ test('SmoothOptions: confidence_intervals, prediction_intervals', () => {
 
     const model = new fastloess.Loess({
         fraction: 0.5,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95,
+        intervals: { confidence: 0.95, prediction: 0.95 },
     });
     const result = model.fit(x, y);
 
@@ -420,9 +417,7 @@ test('SmoothOptions: cv_fractions, cv_method, cv_k', () => {
     const y = new Float64Array(Array.from({ length: 30 }, (_, i) => i * 2));
 
     const r = new fastloess.Loess({
-        cv_fractions: [0.3, 0.5, 0.7],
-        cv_method: 'kfold',
-        cv_k: 3,
+        cv: { fractions: [0.3, 0.5, 0.7], method: 'kfold', k: 3 },
     }).fit(x, y);
     assert.ok(r.cv_scores !== null);
     assert.strictEqual(r.cv_scores.length, 3);
@@ -432,16 +427,14 @@ test('SmoothOptions: grouped cv overrides individual CV fields', () => {
     const x = new Float64Array(Array.from({ length: 30 }, (_, i) => i));
     const y = new Float64Array(Array.from(x, value => value * value));
     const r = new fastloess.Loess({
-        cv_fractions: [0.2],
-        cv_method: 'invalid',
-        cv: { fractions: [0.3, 0.5], method: 'kfold', k: 3, seed: 42 }
+        cv: { fractions: [0.3, 0.5], method: 'kfold', k: 3 }, seed: 42
     }).fit(x, y);
     assert.strictEqual(r.cv_scores.length, 2);
     assert.ok([0.3, 0.5].includes(r.fraction_used));
 
     assert.throws(
-        () => new fastloess.Loess({ cv: { fractions: [0.3], seed: -1 } }).fit(x, y),
-        /cv_seed must be non-negative/
+        () => new fastloess.Loess({ cv: { fractions: [0.3] }, seed: -1 }).fit(x, y),
+        /seed must be non-negative/
     );
 });
 

@@ -15,7 +15,7 @@ opts.ChunkSize = 2000
 opts.Overlap = 200
 ```
 
-`StreamingOptions` embeds [`Options`](api.md) (all the same fields apply, except `CVFractions`/`CVMethod`/`CVK`/`CVSeed`, which are batch-only), plus:
+`StreamingOptions` embeds [`Options`](api.md) (all the same fields apply, except `CV.Fractions`/`CV.Method`/`CV.K`/`Seed`, which are batch-only), plus:
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -40,8 +40,7 @@ opts.Overlap = 200
 | `Overlap` | `int` | `ChunkSize / 10` | Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `MergeStrategy`. A good starting point is 10–20% of `ChunkSize`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice. Negative (the `DefaultStreamingOptions()` value, `-1`) means "use the library default", clamped to `[1, ChunkSize - 10]`. |
 | `MergeStrategy` | `string` | `"weighted_average"` | How overlapping chunk results are combined. |
 | `Outputs` | `[]string` | `nil` | Optional fields: `diagnostics`, `residuals`, `weights`, `derivative`/`gradient`, and `se`. |
-| `ConfidenceIntervals` | `*float64` | `nil` | Confidence level for confidence intervals, computed per chunk and merged across overlap boundaries via `MergeStrategy` |
-| `PredictionIntervals` | `*float64` | `nil` | Confidence level for prediction intervals; same per-chunk computation and overlap-merging as `ConfidenceIntervals` |
+| `Intervals` | `*IntervalsOptions` | `nil` | Grouped confidence and prediction coverage levels. |
 
 | Strategy | Alias | Behavior |
 | --- | --- | --- |
@@ -271,17 +270,17 @@ Populate `Result.RobustnessWeights` with the final per-point robustness weights 
 
 Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`Dimensions` values per point, flattened) in `Result.Gradient` at effectively no extra computation cost. Only supported when `SurfaceMode` is `"direct"` — returns an error instead of silently leaving `Gradient` as `nil` if requested under the default `"interpolation"` mode. Omitted by default. Gradient values in the overlap region are merged across chunk boundaries the same way `Y` is, via `MergeStrategy`.
 
-### ConfidenceIntervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `Y` is, via `MergeStrategy`. `nil` (default) disables confidence intervals.
 
-### PredictionIntervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `ConfidenceIntervals`. `nil` (default) disables prediction intervals.
+Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `Intervals.Confidence`. `nil` (default) disables prediction intervals.
 
 ## Result
 

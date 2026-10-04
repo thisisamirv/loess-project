@@ -37,12 +37,11 @@ class LoessTest {
     @Test
     void groupedCvConfiguresBatchFit() {
         double[] fractions = {0.3, 0.5};
-        CVOptions cv = CVOptions.builder().fractions(fractions).method("kfold").k(3).seed(42).build();
+        CVOptions cv = CVOptions.builder().fractions(fractions).method("kfold").k(3).build();
         fractions[0] = 0.9;
         Options options = Options.builder()
-                .cvFractions(new double[]{0.2})
-                .cvMethod("invalid")
                 .cv(cv)
+                .seed(42)
                 .build();
         assertEquals(0.3, options.cvFractions[0]);
         assertEquals("kfold", options.cvMethod);
@@ -122,13 +121,20 @@ class LoessTest {
 
         Options options = Options.builder()
                 .surfaceMode("direct")
+                .intervals(IntervalsOptions.builder().confidence(0.90).prediction(0.95).build())
                 .retainModel(true)
                 .build();
         try (Loess model = new Loess(options)) {
             Result result = model.fit(x, y);
+            assertTrue(result.confidenceLower().isPresent());
+            assertTrue(result.predictionLower().isPresent());
             try (PredictModel predictModel = result.predictModel().orElseThrow()) {
                 PredictResult prediction = predictModel.predict(
-                        new double[]{4.5}, PredictOptions.builder().outputs("se", "gradient").build());
+                        new double[]{4.5}, PredictOptions.builder().outputs("se", "gradient")
+                                .intervals(IntervalsOptions.builder().confidence(0.90).prediction(0.95).build())
+                                .build());
+                assertTrue(prediction.confidenceLower().isPresent());
+                assertTrue(prediction.predictionLower().isPresent());
                 assertEquals(1, prediction.standardErrors().orElseThrow().length);
                 assertEquals(1, prediction.derivative().orElseThrow().length);
             }
@@ -139,7 +145,7 @@ class LoessTest {
     void rejectsNegativeCvSeed() {
         RuntimeException ex = org.junit.jupiter.api.Assertions.assertThrows(
                 RuntimeException.class,
-                () -> new Loess(Options.builder().cvSeed(-1L).build()));
+                () -> new Loess(Options.builder().seed(-1L).build()));
         assertTrue(ex.getMessage().contains("cv_seed must be non-negative"));
     }
 

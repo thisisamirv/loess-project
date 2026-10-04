@@ -77,7 +77,7 @@ const y = Float64Array.from(x, (xi, i) => Math.sin(xi) + (((i * 7 + 3) % 17) / 1
 const model = new Loess({
     fraction: 0.2,
     iterations: 3,
-    prediction_intervals: 0.95
+    intervals: { prediction : 0.95 }
 });
 const result = model.fit(x, y);
 console.log("Prediction lower[0]:", result.prediction_lower[0].toFixed(4));

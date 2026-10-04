@@ -31,7 +31,7 @@ const observed = Float64Array.from(positions, p => 50 + Math.sin(p / 100) * 20 +
 const model = new Loess({
     fraction: 0.1,
     iterations: 3,
-    confidence_intervals: 0.95
+    intervals: { confidence : 0.95 }
 });
 const result = model.fit(positions, observed);
 console.log("CI lower[0]:", result.confidence_lower[0].toFixed(4));

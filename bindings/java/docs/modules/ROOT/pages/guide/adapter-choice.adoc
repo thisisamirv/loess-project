@@ -47,8 +47,7 @@ Options options = Options.builder()
         .iterations(3)
         .parallel(true)
                 .outputs("diagnostics")
-        .confidenceIntervals(0.95)
-        .predictionIntervals(0.95)
+        .intervals(fastloess.IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
         .build();
 
 try (Loess model = new Loess(options)) {

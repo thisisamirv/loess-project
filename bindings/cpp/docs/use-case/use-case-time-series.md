@@ -109,8 +109,7 @@ int main() {
     fastloess::Loess forecast_model({
         .fraction = 0.2,
         .iterations = 3,
-        .confidence_intervals = 0.95,
-        .prediction_intervals = 0.95
+        .intervals = { .confidence = 0.95, .prediction = 0.95 }
     });
     auto result = forecast_model.fit(t, y).value();
 

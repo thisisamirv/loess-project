@@ -70,8 +70,7 @@ y = 10.0 .+ 0.5 .* t .+ 3.0 .* sin.(t ./ 10.0) .+ randn(rng, 500) .* 3.0
 model = Loess(;
     fraction=0.2,
     iterations=3,
-    confidence_intervals=0.95,
-    prediction_intervals=0.95
+    intervals=(confidence = 0.95, prediction = 0.95)
 )
 result = fit(model, t, y)
 
@@ -141,7 +140,7 @@ expression = 100 .*(1.0 .+ 0.5 .* sin.(hours .*pi ./ 12.0)) .+ randn(length(hour
 model = Loess(;
     fraction=0.3,
     iterations=3,
-    confidence_intervals=0.95,
+    intervals=(confidence = 0.95,),
     outputs = ["diagnostics"]
 )
 result = fit(model, hours, expression)

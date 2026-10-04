@@ -57,8 +57,7 @@ model <- Loess(
     iterations = 3,
     parallel = TRUE,
     outputs = "diagnostics",
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95
+    intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
 )
 result <- fit(model, x, y)
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",

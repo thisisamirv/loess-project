@@ -175,8 +175,7 @@ class LoessResult:
         new_x: ArrayLike,
         *,
         outputs: Sequence[str] | None = None,
-        confidence_level: float | None = None,
-        prediction_level: float | None = None,
+        intervals: Mapping[str, float | None] | None = None,
         extrapolation: str = "clamp",
         max_extrapolation_distance: float | None = None,
         max_neighbor_distance: float | None = None,
@@ -236,15 +235,12 @@ class Loess:
         robustness_method: str = "bisquare",
         scaling_method: str = "mad",
         boundary_policy: str = "extend",
-        confidence_intervals: float | None = None,
-        prediction_intervals: float | None = None,
         outputs: Sequence[str] | None = None,
+        intervals: Mapping[str, float | None] | None = None,
         cv: Mapping[str, object] | None = None,
+        seed: int | None = None,
         zero_weight_fallback: str = "use_local_mean",
         auto_converge: float | None = None,
-        cv_fractions: Sequence[float] | None = None,
-        cv_method: str = "kfold",
-        cv_k: int = 5,
         parallel: bool = True,
         degree: str = "linear",
         dimensions: int = 1,
@@ -254,7 +250,6 @@ class Loess:
         cell: float | None = None,
         interpolation_vertices: int | None = None,
         boundary_degree_fallback: bool | None = None,
-        cv_seed: int | None = None,
         missing: str = "error",
         retain_model: bool = False,
     ) -> None:
@@ -297,8 +292,8 @@ class StreamingLoess:
         auto_converge: float | None = None,
         outputs: Sequence[str] | None = None,
         zero_weight_fallback: str = "use_local_mean",
-        confidence_intervals: float | None = None,
-        prediction_intervals: float | None = None,
+        intervals: Mapping[str, float | None] | None = None,
+        seed: int | None = None,
         parallel: bool = True,
         degree: str = "linear",
         dimensions: int = 1,
@@ -337,8 +332,8 @@ class OnlineLoess:
         auto_converge: float | None = None,
         outputs: Sequence[str] | None = None,
         zero_weight_fallback: str = "use_local_mean",
-        confidence_intervals: float | None = None,
-        prediction_intervals: float | None = None,
+        intervals: Mapping[str, float | None] | None = None,
+        seed: int | None = None,
         degree: str = "linear",
         dimensions: int = 1,
         distance_metric: str = "normalized",
@@ -351,7 +346,7 @@ class OnlineLoess:
     ) -> None:
         """Initialize the online processor.
 
-        `confidence_intervals`/`prediction_intervals`/`return_se` require
+        `intervals` and the "se" output require
         `update_mode="full"`; raises if requested under the default `"incremental"` mode.
         """
 

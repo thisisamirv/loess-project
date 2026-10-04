@@ -45,7 +45,7 @@ func main() {
  opts.Fraction = 0.1
  opts.Iterations = 3
  ci := 0.95
- opts.ConfidenceIntervals = &ci
+ opts.Intervals = &fastloess.IntervalsOptions{Confidence: &ci}
 
  model, err := fastloess.NewLoess(opts)
  if err != nil {

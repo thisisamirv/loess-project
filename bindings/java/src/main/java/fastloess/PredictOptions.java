@@ -9,10 +9,7 @@ import java.util.Set;
  *
  * @param outputs optional prediction components such as {@code "se"} and
  * {@code "gradient"}
- * @param confidenceLevel confidence interval coverage level (e.g.
- * {@code 0.95}), or {@code Double.NaN} to skip
- * @param predictionLevel prediction interval coverage level (e.g.
- * {@code 0.95}), or {@code Double.NaN} to skip
+ * @param intervals grouped interval coverage levels
  * @param extrapolation behavior for query points outside the training range:
  * one of {@code "clamp"} (default), {@code "linear"}, {@code "error"}
  * @param maxExtrapolationDistance under {@code "linear"} extrapolation, the
@@ -25,8 +22,7 @@ import java.util.Set;
  */
 public record PredictOptions(
         List<String> outputs,
-        double confidenceLevel,
-        double predictionLevel,
+        IntervalsOptions intervals,
         String extrapolation,
         double maxExtrapolationDistance,
         double maxNeighborDistance) {
@@ -46,8 +42,7 @@ public record PredictOptions(
     public static final class Builder {
 
         final Set<String> outputs = new LinkedHashSet<>();
-        double confidenceLevel = Double.NaN;
-        double predictionLevel = Double.NaN;
+        IntervalsOptions intervals = IntervalsOptions.builder().build();
         String extrapolation = "clamp";
         double maxExtrapolationDistance = Double.NaN;
         double maxNeighborDistance = Double.NaN;
@@ -56,24 +51,13 @@ public record PredictOptions(
         }
 
         /**
-         * Requests confidence intervals at the given level (e.g. {@code 0.95}).
+         * Configures grouped interval coverage levels.
          *
-         * @param confidenceLevel the confidence level
+         * @param intervals interval settings
          * @return this builder, for chaining
          */
-        public Builder confidenceLevel(double confidenceLevel) {
-            this.confidenceLevel = confidenceLevel;
-            return this;
-        }
-
-        /**
-         * Requests prediction intervals at the given level (e.g. {@code 0.95}).
-         *
-         * @param predictionLevel the prediction level
-         * @return this builder, for chaining
-         */
-        public Builder predictionLevel(double predictionLevel) {
-            this.predictionLevel = predictionLevel;
+        public Builder intervals(IntervalsOptions intervals) {
+            this.intervals = intervals;
             return this;
         }
 
@@ -143,8 +127,7 @@ public record PredictOptions(
         public PredictOptions build() {
             return new PredictOptions(
                     List.copyOf(outputs),
-                    confidenceLevel,
-                    predictionLevel,
+                    intervals,
                     extrapolation,
                     maxExtrapolationDistance,
                     maxNeighborDistance);

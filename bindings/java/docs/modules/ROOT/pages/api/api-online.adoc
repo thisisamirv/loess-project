@@ -16,7 +16,7 @@ OnlineOptions options = OnlineOptions.builder()
         .build();
 ----
 
-`OnlineOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `"sorted"` output, `"diagnostics"` output, `"residuals"` output, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, and `parallel`, which are Batch-only or Batch/Streaming-only). Online always runs sequentially. `confidenceIntervals`/`predictionIntervals`/`"se"` output require `updateMode("full")`. `outputs(String...)` accepts `"weights"`, `"gradient"`/`"derivative"`, and `"se"` (`"se"` requires `updateMode("full")`). Settings:
+`OnlineOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `"sorted"` output, `"diagnostics"` output, `"residuals"` output, `cv.fractions`/`cv.method`/`cv.k`/`seed`, and `parallel`, which are Batch-only or Batch/Streaming-only). Online always runs sequentially. `intervals.confidence`/`intervals.prediction`/`"se"` output require `updateMode("full")`. `outputs(String...)` accepts `"weights"`, `"gradient"`/`"derivative"`, and `"se"` (`"se"` requires `updateMode("full")`). Settings:
 
 [cols="1,1,1,1",options="header"]
 |===
@@ -43,8 +43,7 @@ OnlineOptions options = OnlineOptions.builder()
 |`minPoints` |`int` |`2` |Minimum points required before output starts
 |`updateMode` |`String` |`"incremental"` |How the window is updated as new points arrive
 |`outputs(String...)` |`String...` |empty |Select `weights`, `gradient`/`derivative`, and/or `se`.
-|`confidenceIntervals` |`double` |`NaN` (disabled) |Confidence level for confidence intervals; requires `updateMode("full")`
-|`predictionIntervals` |`double` |`NaN` (disabled) |Confidence level for prediction intervals; requires `updateMode("full")`
+|`intervals(IntervalsOptions)` |`IntervalsOptions` |disabled |Grouped confidence and prediction coverage levels.
 |===
 
 Cross-validation, the `"sorted"` and `"diagnostics"` outputs, and `parallel` are Batch-only. Online residuals are always present; there is no `"residuals"` output name.
@@ -255,19 +254,19 @@ Each local polynomial fit (degree >= linear) already computes per-dimension coef
 
 === outputs: se
 
-Include the standard error for the latest point in the result (`PointResult.standardError()`). Same `updateMode("full")` requirement as `confidenceIntervals`.
+Include the standard error for the latest point in the result (`PointResult.standardError()`). Same `updateMode("full")` requirement as `intervals.confidence`.
 
-=== confidenceIntervals
-
-_See: xref:../guide/intervals.adoc[Intervals]_
-
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `updateMode("full")` — throws at construction if set (or `"se"` output/`predictionIntervals` is set) while `updateMode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `NaN` (default) disables confidence intervals.
-
-=== predictionIntervals
+=== intervals.confidence
 
 _See: xref:../guide/intervals.adoc[Intervals]_
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `updateMode("full")` requirement as `confidenceIntervals`. `NaN` (default) disables prediction intervals.
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `updateMode("full")` — throws at construction if set (or `"se"` output/`intervals.prediction` is set) while `updateMode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `NaN` (default) disables confidence intervals.
+
+=== intervals.prediction
+
+_See: xref:../guide/intervals.adoc[Intervals]_
+
+Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `updateMode("full")` requirement as `intervals.confidence`. `NaN` (default) disables prediction intervals.
 
 == `PointResult` accessors
 
@@ -276,12 +275,12 @@ Confidence level for the prediction interval for new observations (e.g. `0.95`).
 |Accessor |Type |Notes
 
 |`y()` |`double` |Smoothed value.
-|`standardError()` |`OptionalDouble` |Standard error, if `"se"` output/`confidenceIntervals`/`predictionIntervals` was set and `updateMode("full")`.
+|`standardError()` |`OptionalDouble` |Standard error, if `"se"` output/`intervals.confidence`/`intervals.prediction` was set and `updateMode("full")`.
 |`residual()` |`OptionalDouble` |Residual y − smoothed; always present (there is no `"residuals"` output option for Online).
 |`robustnessWeight()` |`OptionalDouble` |Robustness weight, if `"weights"` output was set.
 |`iterationsUsed()` |`OptionalInt` |Robustness iterations performed; empty if not applicable.
-|`confidenceLower()` / `confidenceUpper()` |`OptionalDouble` |Confidence interval bounds, if `confidenceIntervals` was set and `updateMode("full")`.
-|`predictionLower()` / `predictionUpper()` |`OptionalDouble` |Prediction interval bounds, if `predictionIntervals` was set and `updateMode("full")`.
+|`confidenceLower()` / `confidenceUpper()` |`OptionalDouble` |Confidence interval bounds, if `intervals.confidence` was set and `updateMode("full")`.
+|`predictionLower()` / `predictionUpper()` |`OptionalDouble` |Prediction interval bounds, if `intervals.prediction` was set and `updateMode("full")`.
 |`gradient()` |`Optional<double[]>` |Latest point's local fit gradient (`dimensions` values), if `"gradient"` output was set (`surfaceMode = "direct"` only).
 |===
 

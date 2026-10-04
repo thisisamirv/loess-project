@@ -12,14 +12,10 @@ Loess(
   robustness_method = "bisquare",
   scaling_method = "mad",
   boundary_policy = "extend",
-  confidence_intervals = NULL,
-  prediction_intervals = NULL,
   outputs = NULL,
+  intervals = NULL,
   zero_weight_fallback = "use_local_mean",
   auto_converge = NULL,
-  cv_fractions = NULL,
-  cv_method = "kfold",
-  cv_k = 5L,
   parallel = TRUE,
   degree = "linear",
   dimensions = 1L,
@@ -29,7 +25,7 @@ Loess(
   cell = NULL,
   interpolation_vertices = NULL,
   boundary_degree_fallback = NULL,
-  cv_seed = NULL,
+  seed = NULL,
   missing = "error",
   retain_model = FALSE,
   cv = NULL
@@ -64,18 +60,12 @@ Loess(
 \code{"mirror"}), \code{"zero"}, or
 \code{"noboundary"} (alias: \code{"none"}).}
 
-\item{confidence_intervals}{Confidence level for confidence intervals,
-greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-disables confidence intervals.}
-
-\item{prediction_intervals}{Confidence level for prediction intervals,
-greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-disables prediction intervals.}
-
 \item{outputs}{Optional character vector selecting \code{"diagnostics"},
 \code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
 \code{"derivative"}), \code{"se"}, and \code{"sorted"}. \code{NULL}
 (default) selects no optional components.}
+
+\item{intervals}{Grouped coverage levels from \code{\link{intervals_opts}}.}
 
 \item{zero_weight_fallback}{Fallback policy when all robustness weights drop
 to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
@@ -84,14 +74,6 @@ to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
-
-\item{cv_fractions}{Numeric vector of candidate fractions for
-cross-validation. \code{NULL} (default) disables CV.}
-
-\item{cv_method}{Cross-validation method: \code{"kfold"} (default) or
-\code{"loocv"}.}
-
-\item{cv_k}{Number of folds for k-fold CV, at least 2. Default: 5.}
 
 \item{parallel}{Logical; enable parallel processing. Default: \code{TRUE}.}
 
@@ -127,8 +109,7 @@ model rather than the requested degree, avoiding unstable extrapolation.
 It has no effect below quadratic degree, and \code{FALSE} reproduces
 \code{stats::loess()}. \code{NULL} (default) uses the library default.}
 
-\item{cv_seed}{Integer seed for the cross-validation random number
-generator. \code{NULL} (default) uses a random seed.}
+\item{seed}{Seed for reproducible CV folds, or \code{NULL}.}
 
 \item{missing}{Policy for non-finite (NaN/Inf) values in the input data:
 \code{"error"} (default) raises an error, \code{"drop"} silently removes
@@ -141,8 +122,7 @@ between \code{x} and \code{y} always raises an error, even under
 training data, enabling \code{\link{predict.Loess}} for out-of-sample
 prediction. Default: \code{FALSE}.}
 
-\item{cv}{Grouped cross-validation settings from \code{\link{cv_opts}}.
-\code{NULL} uses the individual \code{cv_*} arguments.}
+\item{cv}{Grouped cross-validation settings from \code{\link{cv_opts}}.}
 }
 \value{
 A Loess object.

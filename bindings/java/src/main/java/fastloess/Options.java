@@ -240,24 +240,14 @@ public final class Options {
         }
 
         /**
-         * Requests confidence intervals at the given level (e.g. {@code 0.95}).
+         * Configures grouped confidence and prediction interval levels.
          *
-         * @param confidenceIntervals the confidence level
+         * @param intervals interval settings
          * @return this builder, for chaining
          */
-        public Builder confidenceIntervals(double confidenceIntervals) {
-            this.confidenceIntervals = confidenceIntervals;
-            return this;
-        }
-
-        /**
-         * Requests prediction intervals at the given level (e.g. {@code 0.95}).
-         *
-         * @param predictionIntervals the prediction level
-         * @return this builder, for chaining
-         */
-        public Builder predictionIntervals(double predictionIntervals) {
-            this.predictionIntervals = predictionIntervals;
+        public Builder intervals(IntervalsOptions intervals) {
+            this.confidenceIntervals = intervals.confidence();
+            this.predictionIntervals = intervals.prediction();
             return this;
         }
 
@@ -418,54 +408,17 @@ public final class Options {
             this.cvFractions = cv.fractions.clone();
             this.cvMethod = cv.method;
             this.cvK = cv.k;
-            this.cvSeed = cv.seed;
-            return this;
-        }
-
-        /**
-         * Candidate fractions to cross-validate; enables
-         * {@link Result#cvScores()}.
-         *
-         * @param cvFractions the fractions to test for cross-validation
-         * @return this builder, for chaining
-         */
-        public Builder cvFractions(double[] cvFractions) {
-            this.cvFractions = cvFractions;
-            return this;
-        }
-
-        /**
-         * One of {@code "kfold"}, {@code "loocv"} (default {@code "kfold"});
-         * only used when {@code cvFractions} is set.
-         *
-         * @param cvMethod the cross-validation method name
-         * @return this builder, for chaining
-         */
-        public Builder cvMethod(String cvMethod) {
-            this.cvMethod = cvMethod;
-            return this;
-        }
-
-        /**
-         * Number of folds for {@code "kfold"} cross-validation (default
-         * {@code 5}).
-         *
-         * @param cvK the number of folds
-         * @return this builder, for chaining
-         */
-        public Builder cvK(int cvK) {
-            this.cvK = cvK;
             return this;
         }
 
         /**
          * Seeds the cross-validation fold assignment for reproducibility.
          *
-         * @param cvSeed the random seed
+         * @param seed the random seed
          * @return this builder, for chaining
          */
-        public Builder cvSeed(long cvSeed) {
-            this.cvSeed = cvSeed;
+        public Builder seed(long seed) {
+            this.cvSeed = seed;
             return this;
         }
 

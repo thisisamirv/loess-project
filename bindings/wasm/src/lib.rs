@@ -16,11 +16,13 @@ pub fn init_panic_hook() {
 #[wasm_bindgen(typescript_custom_section)]
 const TS_TYPES: &'static str = r#"
 /** Configuration options for LOESS smoothing. */
+export interface IntervalsOptions { confidence?: number; prediction?: number; }
 export interface SmoothOptions {
     /** Optional output components: diagnostics, residuals, weights, gradient (or derivative), se, sorted. */
     outputs?: string[];
+    intervals?: IntervalsOptions;
     /** Grouped batch cross-validation configuration. */
-    cv?: { fractions: number[]; method?: string; k?: number; seed?: number };
+    cv?: { fractions: number[]; method?: string; k?: number };
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
     /** Number of robustness iterations. Default: 3. */
@@ -37,18 +39,8 @@ export interface SmoothOptions {
     scaling_method?: string;
     /** Auto-convergence tolerance. Disabled when absent. */
     auto_converge?: number;
-    /** Confidence interval level (e.g. 0.95). Disabled when absent. */
-    confidence_intervals?: number;
-    /** Prediction interval level (e.g. 0.95). Disabled when absent. */
-    prediction_intervals?: number;
     /** Enable parallel execution. Default: true. */
     parallel?: boolean;
-    /** Fractions to test for cross-validation. CV disabled when absent. */
-    cv_fractions?: number[];
-    /** CV method ("kfold" or "loocv"). Default: "kfold". */
-    cv_method?: string;
-    /** Number of folds for k-fold CV. Default: 5. */
-    cv_k?: number;
     /** Polynomial degree ("constant", "linear", "quadratic", "cubic", "quartic"). Default: "linear". */
     degree?: string;
     /** Number of predictor dimensions. Default: 1. */
@@ -66,7 +58,7 @@ export interface SmoothOptions {
     /** Fall back to lower polynomial degree at boundaries. Default: true. */
     boundary_degree_fallback?: boolean;
     /** Random seed for cross-validation. */
-    cv_seed?: number;
+    seed?: number;
     /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
     missing?: string;
     /** Retain the fitted model's training data, enabling `LoessResult.predict()`. Default: false. */
@@ -77,10 +69,7 @@ export interface SmoothOptions {
 export interface PredictOptions {
     /** Optional prediction components: se, gradient (or derivative). */
     outputs?: string[];
-    /** Confidence interval coverage level (e.g. 0.95). Disabled when absent. */
-    confidence_level?: number;
-    /** Prediction interval coverage level (e.g. 0.95). Disabled when absent. */
-    prediction_level?: number;
+    intervals?: IntervalsOptions;
     /** Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp". */
     extrapolation?: string;
     /** Under "linear" extrapolation, the maximum allowed distance beyond the training boundary before `predict()` errors instead of returning an unbounded value. */
@@ -111,6 +100,7 @@ export interface PredictOutput {
 export interface StreamingSmoothOptions {
     /** Optional output components: diagnostics, residuals, weights, gradient (or derivative), se. */
     outputs?: string[];
+    intervals?: IntervalsOptions;
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
     /** Number of robustness iterations. Default: 3. */
@@ -147,16 +137,13 @@ export interface StreamingSmoothOptions {
     boundary_degree_fallback?: boolean;
     /** Policy for non-finite (NaN/Inf) values in each chunk ("error", "drop"). Default: "error". */
     missing?: string;
-    /** Confidence interval level (e.g. 0.95), computed per chunk. Disabled when absent. */
-    confidence_intervals?: number;
-    /** Prediction interval level (e.g. 0.95), computed per chunk. Disabled when absent. */
-    prediction_intervals?: number;
 }
 
 /** Configuration options for online LOESS smoothing. A subset of `SmoothOptions`: diagnostics, residuals, parallel execution, and cross-validation have no equivalent here. `confidence_intervals`/`prediction_intervals` and the `se` output require `update_mode: "full"`. */
 export interface OnlineSmoothOptions {
     /** Optional output components: weights, gradient (or derivative), se. */
     outputs?: string[];
+    intervals?: IntervalsOptions;
     /** Smoothing fraction (0 < fraction <= 1). Default: 0.67. */
     fraction?: number;
     /** Number of robustness iterations. Default: 0; positive values require
@@ -192,10 +179,6 @@ export interface OnlineSmoothOptions {
     boundary_degree_fallback?: boolean;
     /** Policy for non-finite (NaN/Inf) `x`/`y` values passed to `add_point` ("error", "drop"). Default: "error". */
     missing?: string;
-    /** Confidence interval level (e.g. 0.95). Only computed under `update_mode: "full"`. Disabled when absent. */
-    confidence_intervals?: number;
-    /** Prediction interval level (e.g. 0.95). Only computed under `update_mode: "full"`. Disabled when absent. */
-    prediction_intervals?: number;
 }
 
 /** Configuration options for streaming LOESS. */
@@ -279,6 +262,7 @@ fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SmoothOptions {
     pub outputs: Option<Vec<String>>,
     pub cv: Option<CVOptionsJs>,
@@ -290,13 +274,9 @@ pub struct SmoothOptions {
     pub boundary_policy: Option<String>,
     pub scaling_method: Option<String>,
     pub auto_converge: Option<f64>,
-    pub confidence_intervals: Option<f64>,
-    pub prediction_intervals: Option<f64>,
+    pub intervals: Option<IntervalsOptionsJs>,
     #[serde(rename = "parallel")]
     pub parallel: Option<bool>,
-    pub cv_fractions: Option<Vec<f64>>,
-    pub cv_method: Option<String>,
-    pub cv_k: Option<u32>,
     pub degree: Option<String>,
     pub dimensions: Option<usize>,
     pub distance_metric: Option<String>,
@@ -305,24 +285,31 @@ pub struct SmoothOptions {
     pub cell: Option<f64>,
     pub interpolation_vertices: Option<usize>,
     pub boundary_degree_fallback: Option<bool>,
-    pub cv_seed: Option<u64>,
+    pub seed: Option<u64>,
     pub missing: Option<String>,
     pub retain_model: Option<bool>,
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct CVOptionsJs {
     pub fractions: Vec<f64>,
     pub method: Option<String>,
     pub k: Option<u32>,
-    pub seed: Option<u64>,
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct IntervalsOptionsJs {
+    pub confidence: Option<f64>,
+    pub prediction: Option<f64>,
+}
+
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct PredictOptionsJs {
     pub outputs: Option<Vec<String>>,
-    pub confidence_level: Option<f64>,
-    pub prediction_level: Option<f64>,
+    pub intervals: Option<IntervalsOptionsJs>,
     pub extrapolation: Option<String>,
     pub max_extrapolation_distance: Option<f64>,
     pub max_neighbor_distance: Option<f64>,
@@ -343,6 +330,7 @@ pub struct OnlineOptions {
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct StreamingSmoothOptions {
     pub outputs: Option<Vec<String>>,
     pub fraction: Option<f64>,
@@ -363,11 +351,11 @@ pub struct StreamingSmoothOptions {
     pub interpolation_vertices: Option<usize>,
     pub boundary_degree_fallback: Option<bool>,
     pub missing: Option<String>,
-    pub confidence_intervals: Option<f64>,
-    pub prediction_intervals: Option<f64>,
+    pub intervals: Option<IntervalsOptionsJs>,
 }
 
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct OnlineSmoothOptions {
     pub outputs: Option<Vec<String>>,
     pub fraction: Option<f64>,
@@ -387,8 +375,7 @@ pub struct OnlineSmoothOptions {
     pub interpolation_vertices: Option<usize>,
     pub boundary_degree_fallback: Option<bool>,
     pub missing: Option<String>,
-    pub confidence_intervals: Option<f64>,
-    pub prediction_intervals: Option<f64>,
+    pub intervals: Option<IntervalsOptionsJs>,
 }
 
 #[wasm_bindgen]
@@ -637,8 +624,7 @@ impl LoessResult {
         let opts: PredictOptionsJs = if options.is_undefined() || options.is_null() {
             PredictOptionsJs {
                 outputs: None,
-                confidence_level: None,
-                prediction_level: None,
+                intervals: None,
                 extrapolation: None,
                 max_extrapolation_distance: None,
                 max_neighbor_distance: None,
@@ -652,8 +638,8 @@ impl LoessResult {
             &new_x_vec,
             shared_parse::PredictOptionSet {
                 return_se: has_output(opts.outputs.as_ref(), "se"),
-                confidence_level: opts.confidence_level,
-                prediction_level: opts.prediction_level,
+                confidence_level: opts.intervals.as_ref().and_then(|value| value.confidence),
+                prediction_level: opts.intervals.as_ref().and_then(|value| value.prediction),
                 return_derivative: has_output(opts.outputs.as_ref(), "gradient")
                     || has_output(opts.outputs.as_ref(), "derivative"),
                 extrapolation: opts.extrapolation.as_deref(),
@@ -768,17 +754,10 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
         let cv = opts.cv.as_ref();
-        let cv_fractions = cv
-            .map(|value| value.fractions.as_slice())
-            .or(opts.cv_fractions.as_deref());
-        let cv_method = cv
-            .and_then(|value| value.method.as_deref())
-            .or(opts.cv_method.as_deref());
-        let cv_k = cv
-            .and_then(|value| value.k)
-            .map(|value| value as usize)
-            .or(opts.cv_k.map(|value| value as usize));
-        let cv_seed = cv.and_then(|value| value.seed).or(opts.cv_seed);
+        let cv_fractions = cv.map(|value| value.fractions.as_slice());
+        let cv_method = cv.and_then(|value| value.method.as_deref());
+        let cv_k = cv.and_then(|value| value.k).map(|value| value as usize);
+        let cv_seed = opts.seed;
         builder = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
@@ -793,8 +772,8 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<
                 return_residuals: has_output(opts.outputs.as_ref(), "residuals"),
                 return_robustness_weights: has_output(opts.outputs.as_ref(), "weights"),
                 return_diagnostics: has_output(opts.outputs.as_ref(), "diagnostics"),
-                confidence_intervals: opts.confidence_intervals,
-                prediction_intervals: opts.prediction_intervals,
+                confidence_intervals: opts.intervals.as_ref().and_then(|value| value.confidence),
+                prediction_intervals: opts.intervals.as_ref().and_then(|value| value.prediction),
                 parallel: opts.parallel,
                 degree: opts.degree.as_deref(),
                 dimensions: opts.dimensions,
@@ -844,8 +823,8 @@ fn streaming_options_to_builder(
                 return_residuals: has_output(opts.outputs.as_ref(), "residuals"),
                 return_robustness_weights: has_output(opts.outputs.as_ref(), "weights"),
                 return_diagnostics: has_output(opts.outputs.as_ref(), "diagnostics"),
-                confidence_intervals: opts.confidence_intervals,
-                prediction_intervals: opts.prediction_intervals,
+                confidence_intervals: opts.intervals.as_ref().and_then(|value| value.confidence),
+                prediction_intervals: opts.intervals.as_ref().and_then(|value| value.prediction),
                 parallel: opts.parallel,
                 degree: opts.degree.as_deref(),
                 dimensions: opts.dimensions,
@@ -897,8 +876,8 @@ fn online_options_to_builder(
                 interpolation_vertices: opts.interpolation_vertices,
                 boundary_degree_fallback: opts.boundary_degree_fallback,
                 missing: opts.missing.as_deref(),
-                confidence_intervals: opts.confidence_intervals,
-                prediction_intervals: opts.prediction_intervals,
+                confidence_intervals: opts.intervals.as_ref().and_then(|value| value.confidence),
+                prediction_intervals: opts.intervals.as_ref().and_then(|value| value.prediction),
                 return_se: has_output(opts.outputs.as_ref(), "se"),
                 ..Default::default()
             },

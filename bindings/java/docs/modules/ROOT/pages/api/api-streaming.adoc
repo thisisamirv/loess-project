@@ -14,7 +14,7 @@ StreamingOptions options = StreamingOptions.builder()
         .build();
 ----
 
-`StreamingOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `"sorted"` output, `cvFractions`/`cvMethod`/`cvK`/`cvSeed`, which are batch-only), plus:
+`StreamingOptions.Builder` exposes all the same settings as xref:./api.adoc[`Options.Builder`] (except `"sorted"` output, `cv.fractions`/`cv.method`/`cv.k`/`seed`, which are batch-only), plus:
 
 [cols="1,1,1,1",options="header"]
 |===
@@ -41,8 +41,7 @@ StreamingOptions options = StreamingOptions.builder()
 |`overlap` |`int` |`chunkSize / 10` |Number of points retained from the previous chunk as context, so the neighbourhood at chunk boundaries isn't artificially truncated. Points inside the overlap zone are fitted twice (once by each chunk) and reconciled via `mergeStrategy`. A good starting point is 10–20% of `chunkSize`: too little overlap causes visible boundary artefacts, while too much wastes computation refitting the same points twice. Negative (the builder default, `-1`) means "use the library default", clamped to `[1, chunkSize - 10]`.
 |`mergeStrategy` |`String` |`"weighted_average"` |How overlapping chunk results are combined.
 |`outputs(String...)` |`String...` |empty |Select `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, and/or `se`.
-|`confidenceIntervals` |`double` |`NaN` (disabled) |Confidence level for confidence intervals, computed per chunk and merged across overlap boundaries via `mergeStrategy`
-|`predictionIntervals` |`double` |`NaN` (disabled) |Confidence level for prediction intervals; same per-chunk computation and overlap-merging as `confidenceIntervals`
+|`intervals(IntervalsOptions)` |`IntervalsOptions` |disabled |Grouped confidence and prediction coverage levels.
 |===
 
 [cols="1,1,1",options="header"]
@@ -287,17 +286,17 @@ Include standard errors in the result (`Result.standardErrors()`), computed per 
 
 Populate `Result.robustnessWeights()` with the final per-point robustness weights (from the last robustness iteration).
 
-=== confidenceIntervals
+=== intervals.confidence
 
 _See: xref:../guide/intervals.adoc[Intervals]_
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `y` is, via `mergeStrategy`. `NaN` (default) disables confidence intervals.
 
-=== predictionIntervals
+=== intervals.prediction
 
 _See: xref:../guide/intervals.adoc[Intervals]_
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `confidenceIntervals`. `NaN` (default) disables prediction intervals.
+Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `intervals.confidence`. `NaN` (default) disables prediction intervals.
 
 == Result
 

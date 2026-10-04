@@ -29,7 +29,7 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Loess(fraction=0.5, confidence_intervals=0.95)
+model = fl.Loess(fraction=0.5, intervals={"confidence": 0.95})
 result = model.fit(x, y)
 
 print("Smoothed (first 5):", result.y[:5])
@@ -51,7 +51,7 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Loess(fraction=0.5, prediction_intervals=0.95)
+model = fl.Loess(fraction=0.5, intervals={"prediction": 0.95})
 result = model.fit(x, y)
 
 print("PI Lower (first 5):", result.prediction_lower[:5])
@@ -74,8 +74,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 model = fl.Loess(
     fraction=0.5,
-    confidence_intervals=0.95,
-    prediction_intervals=0.95
+    intervals={"confidence": 0.95, "prediction": 0.95}
 )
 result = model.fit(x, y)
 print(f"95% CI at midpoint: [{result.confidence_lower[50]:.4f}, {result.confidence_upper[50]:.4f}]")
@@ -103,7 +102,7 @@ y = np.sin(x) + rng.normal(0, 0.3, 100)
 
 ## 99% confidence interval
 
-model = fl.Loess(confidence_intervals=0.99)
+model = fl.Loess(intervals={"confidence": 0.99})
 result = model.fit(x, y)
 print(f"First lower CI bound (99%): {result.confidence_lower[0]:.4f}")
 :::
@@ -122,7 +121,7 @@ rng = np.random.default_rng(42)
 x = np.linspace(0, 2 * np.pi, 100)
 y = np.sin(x) + rng.normal(0, 0.3, 100)
 
-model = fl.Loess(confidence_intervals=0.95)
+model = fl.Loess(intervals={"confidence": 0.95})
 result = model.fit(x, y)
 print("Standard errors (first 5):", result.standard_errors[:5])
 :::

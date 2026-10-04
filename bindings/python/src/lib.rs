@@ -13,7 +13,7 @@ use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::binding_support as shared_parse;
 
-use ::fastLoess::prelude::LoessResult;
+use ::fastLoess::prelude::{IntervalsBuilder, LoessResult};
 use fastLoess::internals::api::LoessBuilder;
 
 // ============================================================================
@@ -35,23 +35,65 @@ fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
     to_py_error(shared_parse::BindingError::invalid_arg(e.to_string()))
 }
 
-type ParsedCvOptions = (Option<Vec<f64>>, String, usize, Option<u64>);
+type ParsedCvOptions = (Option<Vec<f64>>, String, usize);
 
-fn parse_cv_options(
-    cv: Option<&Bound<'_, PyDict>>,
-    legacy_fractions: Option<Vec<f64>>,
-    legacy_method: &str,
-    legacy_k: usize,
-    legacy_seed: Option<u64>,
-) -> PyResult<ParsedCvOptions> {
+#[derive(Default)]
+struct ParsedIntervals {
+    confidence: Option<f64>,
+    prediction: Option<f64>,
+}
+
+impl ParsedIntervals {
+    fn builder(self) -> IntervalsBuilder<f64> {
+        let mut options = IntervalsBuilder::new();
+        if let Some(level) = self.confidence {
+            options = options.confidence(level);
+        }
+        if let Some(level) = self.prediction {
+            options = options.prediction(level);
+        }
+        options
+    }
+}
+
+fn check_keys(group: &Bound<'_, PyDict>, allowed: &[&str], name: &str) -> PyResult<()> {
+    for key in group.keys() {
+        let key: String = key.extract().map_err(to_py_invalid_arg_error)?;
+        if !allowed.contains(&key.as_str()) {
+            return Err(PyValueError::new_err(format!(
+                "unknown {name} option '{key}'; expected one of: {}",
+                allowed.join(", ")
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn parse_intervals(intervals: Option<&Bound<'_, PyDict>>) -> PyResult<ParsedIntervals> {
+    let mut options = ParsedIntervals::default();
+    if let Some(group) = intervals {
+        check_keys(group, &["confidence", "prediction"], "intervals")?;
+        if let Some(value) = group
+            .get_item("confidence")?
+            .filter(|value| !value.is_none())
+        {
+            options.confidence = Some(value.extract().map_err(to_py_invalid_arg_error)?);
+        }
+        if let Some(value) = group
+            .get_item("prediction")?
+            .filter(|value| !value.is_none())
+        {
+            options.prediction = Some(value.extract().map_err(to_py_invalid_arg_error)?);
+        }
+    }
+    Ok(options)
+}
+
+fn parse_cv_options(cv: Option<&Bound<'_, PyDict>>) -> PyResult<ParsedCvOptions> {
     let Some(cv) = cv else {
-        return Ok((
-            legacy_fractions,
-            legacy_method.to_owned(),
-            legacy_k,
-            legacy_seed,
-        ));
+        return Ok((None, "kfold".to_owned(), 5));
     };
+    check_keys(cv, &["fractions", "method", "k"], "cv")?;
 
     let fractions = match cv.get_item("fractions")? {
         Some(value) => Some(
@@ -59,26 +101,20 @@ fn parse_cv_options(
                 .extract::<Vec<f64>>()
                 .map_err(to_py_invalid_arg_error)?,
         ),
-        None => legacy_fractions,
+        None => None,
     };
     if fractions.is_none() {
         return Err(PyValueError::new_err("cv requires a 'fractions' sequence"));
     }
     let method = match cv.get_item("method")? {
         Some(value) => value.extract::<String>().map_err(to_py_invalid_arg_error)?,
-        None => legacy_method.to_owned(),
+        None => "kfold".to_owned(),
     };
     let k = match cv.get_item("k")? {
         Some(value) => value.extract::<usize>().map_err(to_py_invalid_arg_error)?,
-        None => legacy_k,
+        None => 5,
     };
-    let seed = match cv.get_item("seed")? {
-        Some(value) if !value.is_none() => {
-            Some(value.extract::<u64>().map_err(to_py_invalid_arg_error)?)
-        }
-        _ => legacy_seed,
-    };
-    Ok((fractions, method, k, seed))
+    Ok((fractions, method, k))
 }
 
 // ============================================================================
@@ -385,8 +421,8 @@ impl PyLoessResult {
     ///     Query points (flattened, `dimensions` values per point).
     /// outputs : sequence[str], optional
     ///     Select "se", "gradient", and/or "derivative".
-    /// confidence_level : float, optional
-    /// prediction_level : float, optional
+    /// intervals : dict, optional
+    ///     Grouped confidence and prediction coverage levels.
     /// extrapolation : str, optional
     ///     One of "clamp" (default), "linear", "error".
     /// max_extrapolation_distance : float, optional
@@ -399,8 +435,7 @@ impl PyLoessResult {
         new_x,
         *,
         outputs=None,
-        confidence_level=None,
-        prediction_level=None,
+        intervals=None,
         extrapolation="clamp",
         max_extrapolation_distance=None,
         max_neighbor_distance=None,
@@ -411,13 +446,13 @@ impl PyLoessResult {
         py: Python<'py>,
         new_x: PyReadonlyArray1<'py, f64>,
         outputs: Option<Vec<String>>,
-        confidence_level: Option<f64>,
-        prediction_level: Option<f64>,
+        intervals: Option<&Bound<'_, PyDict>>,
         extrapolation: &str,
         max_extrapolation_distance: Option<f64>,
         max_neighbor_distance: Option<f64>,
     ) -> PyResult<PyPredictOutput> {
         validate_outputs(outputs.as_ref(), &["se", "gradient", "derivative"])?;
+        let intervals = parse_intervals(intervals)?;
         let new_x_vec = new_x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
         let output = py
             .detach(move || {
@@ -426,8 +461,8 @@ impl PyLoessResult {
                     &new_x_vec,
                     shared_parse::PredictOptionSet {
                         return_se: has_output(outputs.as_ref(), "se"),
-                        confidence_level,
-                        prediction_level,
+                        confidence_level: intervals.confidence,
+                        prediction_level: intervals.prediction,
                         return_derivative: has_output(outputs.as_ref(), "gradient")
                             || has_output(outputs.as_ref(), "derivative"),
                         extrapolation: Some(extrapolation),
@@ -492,8 +527,8 @@ impl PyStreamingLoess {
         boundary_policy="extend",
         auto_converge=None,
         outputs=None,
-        confidence_intervals=None,
-        prediction_intervals=None,
+        intervals=None,
+        seed=None,
         zero_weight_fallback="use_local_mean",
         merge_strategy="weighted_average",
         parallel=true,
@@ -519,8 +554,8 @@ impl PyStreamingLoess {
         boundary_policy: &str,
         auto_converge: Option<f64>,
         outputs: Option<Vec<String>>,
-        confidence_intervals: Option<f64>,
-        prediction_intervals: Option<f64>,
+        intervals: Option<&Bound<'_, PyDict>>,
+        seed: Option<u64>,
         zero_weight_fallback: &str,
         merge_strategy: &str,
         parallel: bool,
@@ -548,8 +583,6 @@ impl PyStreamingLoess {
                 return_residuals: has_output(outputs.as_ref(), "residuals"),
                 return_robustness_weights: has_output(outputs.as_ref(), "weights"),
                 return_diagnostics: has_output(outputs.as_ref(), "diagnostics"),
-                confidence_intervals,
-                prediction_intervals,
                 parallel: Some(parallel),
                 degree: Some(degree),
                 dimensions: Some(dimensions),
@@ -568,6 +601,10 @@ impl PyStreamingLoess {
             builder = builder.return_gradient();
         }
 
+        builder = builder.intervals(parse_intervals(intervals)?.builder());
+        if let Some(seed) = seed {
+            builder = builder.seed(seed);
+        }
         let processor =
             shared_parse::build_streaming(builder, Some(chunk_size), overlap, Some(merge_strategy))
                 .map_err(to_py_error)?;
@@ -691,8 +728,8 @@ impl PyOnlineLoess {
         update_mode="incremental",
         auto_converge=None,
         outputs=None,
-        confidence_intervals=None,
-        prediction_intervals=None,
+        intervals=None,
+        seed=None,
         zero_weight_fallback="use_local_mean",
         degree="linear",
         dimensions=1usize,
@@ -717,8 +754,8 @@ impl PyOnlineLoess {
         update_mode: &str,
         auto_converge: Option<f64>,
         outputs: Option<Vec<String>>,
-        confidence_intervals: Option<f64>,
-        prediction_intervals: Option<f64>,
+        intervals: Option<&Bound<'_, PyDict>>,
+        seed: Option<u64>,
         zero_weight_fallback: &str,
         degree: &str,
         dimensions: usize,
@@ -744,8 +781,6 @@ impl PyOnlineLoess {
                 return_residuals: false,
                 return_robustness_weights: has_output(outputs.as_ref(), "weights"),
                 return_diagnostics: false,
-                confidence_intervals,
-                prediction_intervals,
                 parallel: None,
                 degree: Some(degree),
                 dimensions: Some(dimensions),
@@ -764,6 +799,10 @@ impl PyOnlineLoess {
             builder = builder.return_gradient();
         }
 
+        builder = builder.intervals(parse_intervals(intervals)?.builder());
+        if let Some(seed) = seed {
+            builder = builder.seed(seed);
+        }
         let processor = shared_parse::build_online(
             builder,
             Some(window_capacity),
@@ -827,15 +866,12 @@ impl PyLoess {
         robustness_method="bisquare",
         scaling_method="mad",
         boundary_policy="extend",
-        confidence_intervals=None,
-        prediction_intervals=None,
         outputs=None,
+        intervals=None,
         cv=None,
+        seed=None,
         zero_weight_fallback="use_local_mean",
         auto_converge=None,
-        cv_fractions=None,
-        cv_method="kfold",
-        cv_k=5,
         parallel=true,
         degree="linear",
         dimensions=1usize,
@@ -845,7 +881,6 @@ impl PyLoess {
         cell=None,
         interpolation_vertices=None,
         boundary_degree_fallback=None,
-        cv_seed=None,
         missing="error",
         retain_model=false,
     ))]
@@ -857,15 +892,12 @@ impl PyLoess {
         robustness_method: &str,
         scaling_method: &str,
         boundary_policy: &str,
-        confidence_intervals: Option<f64>,
-        prediction_intervals: Option<f64>,
         outputs: Option<Vec<String>>,
+        intervals: Option<&Bound<'_, PyDict>>,
         cv: Option<Bound<'_, PyDict>>,
+        seed: Option<u64>,
         zero_weight_fallback: &str,
         auto_converge: Option<f64>,
-        cv_fractions: Option<Vec<f64>>,
-        cv_method: &str,
-        cv_k: usize,
         parallel: bool,
         degree: &str,
         dimensions: usize,
@@ -875,12 +907,10 @@ impl PyLoess {
         cell: Option<f64>,
         interpolation_vertices: Option<usize>,
         boundary_degree_fallback: Option<bool>,
-        cv_seed: Option<u64>,
         missing: &str,
         retain_model: bool,
     ) -> PyResult<Self> {
-        let (cv_fractions, cv_method, cv_k, cv_seed) =
-            parse_cv_options(cv.as_ref(), cv_fractions, cv_method, cv_k, cv_seed)?;
+        let (cv_fractions, cv_method, cv_k) = parse_cv_options(cv.as_ref())?;
         let (mut builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
@@ -895,8 +925,6 @@ impl PyLoess {
                 return_residuals: has_output(outputs.as_ref(), "residuals"),
                 return_robustness_weights: has_output(outputs.as_ref(), "weights"),
                 return_diagnostics: has_output(outputs.as_ref(), "diagnostics"),
-                confidence_intervals,
-                prediction_intervals,
                 parallel: Some(parallel),
                 degree: Some(degree),
                 dimensions: Some(dimensions),
@@ -911,15 +939,17 @@ impl PyLoess {
                 cv_fractions: cv_fractions.as_deref(),
                 cv_method: Some(&cv_method),
                 cv_k: Some(cv_k),
-                cv_seed,
+                cv_seed: seed,
                 missing: Some(missing),
                 retain_model: Some(retain_model),
+                ..Default::default()
             },
         ))?;
         if has_output(outputs.as_ref(), "gradient") || has_output(outputs.as_ref(), "derivative") {
             builder = builder.return_gradient();
         }
 
+        builder = builder.intervals(parse_intervals(intervals)?.builder());
         Ok(PyLoess {
             builder,
             fraction,

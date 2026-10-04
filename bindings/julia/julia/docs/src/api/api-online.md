@@ -77,8 +77,6 @@ end
 | `window_capacity` | `Int` | `1000` | Max points in sliding window |
 | `min_points` | `Int` | `2` | Min points before smoothing starts |
 | `update_mode` | `String` | `"incremental"` | Update mode (`"full"` or `"incremental"`) |
-| `confidence_intervals` | `Union{Float64, Nothing}` | `nothing` | Confidence level for confidence intervals; requires `update_mode="full"` |
-| `prediction_intervals` | `Union{Float64, Nothing}` | `nothing` | Confidence level for prediction intervals; requires `update_mode="full"` |
 
 Cross-validation, `"sorted"` output, `"diagnostics"` output, `"residuals"` output, and `parallel` are Batch-only (or Batch/Streaming-only) and not available here; see [Batch Adapter](api.md) for those. Online always runs sequentially.
 
@@ -258,7 +256,7 @@ Minimum number of points required before smoothing starts. `add_point` returns `
 
 ### outputs: se
 
-Include the standard error for the latest point in the result. Same `update_mode="full"` requirement as `confidence_intervals`.
+Include the standard error for the latest point in the result. Same `update_mode="full"` requirement as `intervals.confidence`.
 
 ### outputs: weights
 
@@ -268,17 +266,17 @@ Include the robustness weight from the latest point's fit in the result.
 
 Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`dimensions` values) in `OnlineOutput.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — raises an error instead of silently leaving `gradient` as `nothing` if requested under the default `"interpolation"` mode. Omitted by default.
 
-### confidence_intervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `update_mode="full"` — raises an error at construction if set (or `"se"` output/`prediction_intervals` is set) while `update_mode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `nothing` (default) disables confidence intervals.
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `update_mode="full"` — raises an error at construction if set (or `"se"` output/`intervals.prediction` is set) while `update_mode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `nothing` (default) disables confidence intervals.
 
-### prediction_intervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `update_mode="full"` requirement as `confidence_intervals`. `nothing` (default) disables prediction intervals.
+Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `update_mode="full"` requirement as `intervals.confidence`. `nothing` (default) disables prediction intervals.
 
 ## Result Structure
 
@@ -289,12 +287,12 @@ Returned by `add_point` once the window has enough points (`nothing` until then)
 | Field | Type | Description |
 | --- | --- | --- |
 | `y` | `Float64` | Smoothed value for the latest point |
-| `standard_error` | `Union{Float64, Nothing}` | Standard error, if `"se"` output/`confidence_intervals`/`prediction_intervals` was set and `update_mode="full"` |
+| `standard_error` | `Union{Float64, Nothing}` | Standard error, if `"se"` output/`intervals.confidence`/`intervals.prediction` was set and `update_mode="full"` |
 | `residual` | `Union{Float64, Nothing}` | Residual y − smoothed; always present (there is no `"residuals"` output option for Online) |
 | `robustness_weight` | `Union{Float64, Nothing}` | Robustness weight, if `"weights"` output was set |
 | `iterations_used` | `Union{Int, Nothing}` | Robustness iterations performed |
-| `confidence_lower` / `confidence_upper` | `Union{Float64, Nothing}` | Confidence interval bounds, if `confidence_intervals` was set and `update_mode="full"` |
-| `prediction_lower` / `prediction_upper` | `Union{Float64, Nothing}` | Prediction interval bounds, if `prediction_intervals` was set and `update_mode="full"` |
+| `confidence_lower` / `confidence_upper` | `Union{Float64, Nothing}` | Confidence interval bounds, if `intervals.confidence` was set and `update_mode="full"` |
+| `prediction_lower` / `prediction_upper` | `Union{Float64, Nothing}` | Prediction interval bounds, if `intervals.prediction` was set and `update_mode="full"` |
 | `gradient` | `Union{Vector{Float64}, Nothing}` | Latest point's local fit gradient (`dimensions` values), if `"gradient"` output was set |
 
 There is no `Diagnostics` object or `"diagnostics"` output option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R2 need more than one point's worth of history to be meaningful.

@@ -65,7 +65,7 @@ test_that("Loess confidence intervals work", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, sd = 0.2)
 
-    model <- Loess(fraction = 0.5, confidence_intervals = 0.95)
+    model <- Loess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95))
     result <- fit(model, as.double(x), as.double(y))
 
     expect_true("confidence_lower" %in% names(result))
@@ -83,7 +83,7 @@ test_that("Loess prediction intervals work", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, sd = 0.2)
 
-    model <- Loess(fraction = 0.5, prediction_intervals = 0.95)
+    model <- Loess(fraction = 0.5, intervals = intervals_opts(prediction = 0.95))
     result <- fit(model, as.double(x), as.double(y))
 
     expect_true("prediction_lower" %in% names(result))
@@ -92,7 +92,7 @@ test_that("Loess prediction intervals work", {
     expect_length(result$prediction_upper, length(y))
 
     # PI should be wider than CI
-    model_ci <- Loess(fraction = 0.5, confidence_intervals = 0.95)
+    model_ci <- Loess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95))
     result_ci <- fit(model_ci, as.double(x), as.double(y))
     expect_gt(
         mean(result$prediction_upper - result$prediction_lower),
@@ -295,9 +295,7 @@ test_that("Loess cross-validation works", {
 
     result <- fit(
         Loess(
-            cv_fractions = c(0.2, 0.3, 0.5, 0.7),
-            cv_method = "kfold",
-            cv_k = 5
+            cv = cv_opts(fractions = c(0.2, 0.3, 0.5, 0.7), method = "kfold", k = 5)
         ),
         as.double(x),
         as.double(y)
@@ -308,13 +306,11 @@ test_that("Loess cross-validation works", {
     expect_true(result$fraction_used %in% c(0.2, 0.3, 0.5, 0.7))
 })
 
-test_that("grouped cross-validation overrides legacy options", {
+test_that("grouped cross-validation configures seeded folds", {
     x <- as.double(1:30)
     result <- fit(
         Loess(
-            cv_fractions = 0.2,
-            cv_method = "invalid",
-            cv = cv_opts(fractions = c(0.3, 0.5), k = 3L, seed = 42)
+            cv = cv_opts(fractions = c(0.3, 0.5), k = 3L), seed = 42
         ),
         x,
         x * x
@@ -323,6 +319,13 @@ test_that("grouped cross-validation overrides legacy options", {
     expect_true(result$fraction_used %in% c(0.3, 0.5))
     expect_error(cv_opts(), "fractions")
     expect_error(cv_opts("invalid"), "fractions")
+    expect_error(cv_opts(c(0.5), seed = 42), "unused argument")
+    expect_error(Loess(cv_fractions = c(0.5)), "unused arguments")
+    expect_error(Loess(confidence_intervals = 0.95), "unused arguments")
+    expect_error(StreamingLoess(confidence_intervals = 0.95), "unused arguments")
+    expect_error(OnlineLoess(prediction_intervals = 0.95), "unused arguments")
+    expect_error(intervals_opts(confidence = 1), "between 0 and 1")
+    expect_error(Loess(intervals = list(confidence_level = 0.95)), "unused argument")
 })
 
 test_that("Loess handles edge cases", {

@@ -20,8 +20,7 @@ Requires `retain_model: true` on the constructor before `fit()`, otherwise `pred
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `outputs` | `string[]` | `[]` | Optional fields: `"se"`, `"gradient"` (or `"derivative"`) |
-| `confidence_level` | `number` | disabled | Confidence interval coverage level (e.g. `0.95`) |
-| `prediction_level` | `number` | disabled | Prediction interval coverage level (e.g. `0.95`) |
+| `intervals` | `{ confidence?: number; prediction?: number }` | `disabled` | Grouped confidence and prediction coverage levels. |
 | `extrapolation` | `string` | `"clamp"` | Behavior for query points outside the training range, on any dimension |
 | `max_extrapolation_distance` | `number` | disabled | Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `number` | disabled | Max allowed distance to the farthest point in a query's k-nearest-neighbor window before erroring |
@@ -30,11 +29,11 @@ Requires `retain_model: true` on the constructor before `fit()`, otherwise `pred
 
 Select `"se"` to compute standard errors for each query point using the retained model's residual scale and per-point leverage. Interval levels also enable standard errors. Select `"gradient"` (or `"derivative"`) to include the local fit's gradient (`dimensions` values per query point, flattened). Optional outputs are omitted by default.
 
-### confidence_level
+### intervals.confidence
 
 Confidence level for the confidence interval around the mean response at each query point (e.g. `0.95`). Uses the same z-score convention as `fit()`'s own confidence intervals. Disabled by default.
 
-### prediction_level
+### intervals.prediction
 
 Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same residual scale `fit()` used for its own intervals when available, otherwise falling back to a MAD-based estimate. Disabled by default.
 

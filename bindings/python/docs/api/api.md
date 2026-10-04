@@ -66,13 +66,9 @@ print(result)
 | `missing` | `str` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `parallel` | `bool` | `True` | Enable parallel execution |
 | `outputs` | `Sequence[str] \| None` | `None` | Select `diagnostics`, `residuals`, `weights`, `gradient` (or `derivative`), `se`, and/or `sorted` |
-| `confidence_intervals` | `float` | `None` | Confidence level (e.g., 0.95) |
-| `prediction_intervals` | `float` | `None` | Prediction level (e.g., 0.95) |
+| `intervals` | `dict` | `None` | Grouped confidence and prediction coverage levels. |
 | `cv` | `dict \| None` | `None` | Group `fractions`, `method`, `k`, and `seed`; supplied keys override individual CV arguments |
-| `cv_method` | `str` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
-| `cv_k` | `int` | `5` | Number of folds for k-fold CV |
-| `cv_fractions` | `list[float]` | `None` | Fractions to test for cross-validation |
-| `cv_seed` | `int` | `None` | Random seed for cross-validation shuffling |
+| `seed` | `int` | `None` | Seed for reproducible CV folds. |
 | `retain_model` | `bool` | `False` | Retain training data, enabling `predict()` on the result |
 | `custom_weights` | `list[float]` | `None` | Per-observation case weights — passed to `fit()`, not the constructor |
 
@@ -271,13 +267,13 @@ Select `"gradient"` to expose the per-point gradient (rate of change of the smoo
 Select `"sorted"` to reorder every result field (residuals, intervals, etc.) by `x` in ascending order instead of preserving input order.
 To get both orderings, sort the default result client-side (e.g. `np.argsort(result.x)`) instead of calling `fit()` twice.
 
-### confidence_intervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`). `None` (default) disables confidence intervals.
 
-### prediction_intervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
@@ -287,10 +283,10 @@ Confidence level for the prediction interval for new observations (e.g. `0.95`).
 
 *See: [Cross-Validation](../guide/cross-validation.md)*
 
-- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method="loocv"`.
-- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `cv_seed`: Seed for reproducible k-fold shuffling. `None` (default) uses a random seed.
+- `cv.method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv.k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+- `cv.k`: Number of folds for k-fold CV. Ignored when `cv={"method": "loocv"}`.
+- `cv.fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
+- `seed`: Seed for reproducible k-fold shuffling. `None` (default) uses a random seed.
 
 ### retain_model
 

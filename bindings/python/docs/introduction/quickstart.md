@@ -38,8 +38,7 @@ model = fl.Loess(
     fraction=0.5,
     iterations=3,
     outputs=["diagnostics"],
-    confidence_intervals=0.95,
-    prediction_intervals=0.95
+    intervals={"confidence": 0.95, "prediction": 0.95}
 )
 result = model.fit(x, y)
 

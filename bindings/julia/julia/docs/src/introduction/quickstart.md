@@ -36,8 +36,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = Loess(;
     fraction=0.5,
     iterations=3,
-    confidence_intervals=0.95,
-    prediction_intervals=0.95,
+    intervals=(confidence = 0.95, prediction = 0.95),
     outputs = ["diagnostics"]
 )
 result = fit(model, x, y)

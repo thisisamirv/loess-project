@@ -48,8 +48,7 @@ const model = new Loess({
     iterations: 3,
     parallel: true,
     outputs: ["diagnostics"],
-    confidence_intervals: 0.95,
-    prediction_intervals: 0.95
+    intervals: { confidence : 0.95, prediction : 0.95 }
 });
 const result = model.fit(x, y);
 console.log("95% CI at midpoint: [" + result.confidence_lower[50] + ", " + result.confidence_upper[50] + "]");

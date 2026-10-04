@@ -47,8 +47,7 @@ model <- Loess(
     fraction = 0.5,
     iterations = 3,
     outputs = "diagnostics",
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95
+    intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
 )
 result <- fit(model, x, y)
 
@@ -153,7 +152,7 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-model <- Loess(fraction = 0.5, confidence_intervals = 0.95)
+model <- Loess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95))
 result <- fit(model, x, y)
 
 plot(x, y, pch = 16, col = "gray", main = "LOESS Smoothing")

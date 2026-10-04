@@ -167,8 +167,7 @@ test('WASM streaming: return_se', () => {
 test('WASM streaming: confidence_intervals and prediction_intervals', () => {
     const streamer = new fastloess.StreamingLoess({
         fraction: 0.3,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95
+        intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         chunk_size: 10,
         overlap: 2
@@ -204,7 +203,7 @@ test('WASM online: confidence_intervals requires update_mode "full"', () => {
     assert.throws(() => {
         new fastloess.OnlineLoess({
             fraction: 0.5,
-            confidence_intervals: 0.95
+            intervals: { confidence: 0.95 }
         }, {
             window_capacity: 10,
             min_points: 2
@@ -215,8 +214,7 @@ test('WASM online: confidence_intervals requires update_mode "full"', () => {
 test('WASM online: confidence/prediction intervals under update_mode "full"', () => {
     const online = new fastloess.OnlineLoess({
         fraction: 1.0,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95
+        intervals: { confidence: 0.95, prediction: 0.95 }
     }, {
         window_capacity: 10,
         min_points: 3,
@@ -256,9 +254,7 @@ test('WASM grouped cv overrides individual CV fields', () => {
     const x = new Float64Array(Array.from({ length: 30 }, (_, index) => index));
     const y = new Float64Array(Array.from(x, value => value * value));
     const result = new fastloess.Loess({
-        cv_fractions: [0.2],
-        cv_method: 'invalid',
-        cv: { fractions: [0.3, 0.5], method: 'kfold', k: 3, seed: 42 }
+        cv: { fractions: [0.3, 0.5], method: 'kfold', k: 3 }, seed: 42
     }).fit(x, y);
     assert.strictEqual(result.cv_scores.length, 2);
     assert.ok([0.3, 0.5].includes(result.fraction_used));
@@ -285,8 +281,7 @@ test('WASM smooth: confidence_intervals, prediction_intervals', () => {
 
     const result = new fastloess.Loess({
         fraction: 0.5,
-        confidence_intervals: 0.95,
-        prediction_intervals: 0.95,
+        intervals: { confidence: 0.95, prediction: 0.95 },
     }).fit(x, y);
     assert.ok(result.confidence_lower !== null);
     assert.ok(result.prediction_upper !== null);

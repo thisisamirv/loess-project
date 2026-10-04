@@ -21,6 +21,7 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Changed
 
 * Breaking change: replaced individual `Return*` output fields with `Outputs: []string{...}` for Batch, Streaming, Online, and prediction options.
+* Breaking change: replaced flat interval fields and prediction levels with `Intervals *IntervalsOptions`; CV uses only `CV *CVOptions` with an outer `Seed`, replacing flat CV fields and `CVOptions.Seed`.
 * Represent unavailable diagnostic metrics as nil optional values instead of NaN sentinels in the Go binding.
 
 ### Fixed

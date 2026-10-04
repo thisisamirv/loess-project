@@ -17,8 +17,7 @@ OnlineLoess(
   zero_weight_fallback = "use_local_mean",
   update_mode = "incremental",
   auto_converge = NULL,
-  confidence_intervals = NULL,
-  prediction_intervals = NULL,
+  intervals = NULL,
   degree = "linear",
   dimensions = 1L,
   distance_metric = "normalized",
@@ -79,16 +78,7 @@ after each addition.}
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
 
-\item{confidence_intervals}{Confidence level for confidence intervals (e.g.
-\code{0.95}). Only computed under \code{update_mode = "full"} — raises an
-error at construction if set (or \code{outputs = "se"}/
-\code{prediction_intervals} is set) while \code{update_mode} is left at
-its default \code{"incremental"}.
-\code{NULL} (default) disables confidence intervals.}
-
-\item{prediction_intervals}{Confidence level for prediction intervals; same
-\code{update_mode = "full"} requirement as \code{confidence_intervals}.
-\code{NULL} (default) disables prediction intervals.}
+\item{intervals}{Grouped coverage levels from \code{\link{intervals_opts}}.}
 
 \item{degree}{Local polynomial degree: \code{"constant"}, \code{"linear"}
 (default), \code{"quadratic"}, \code{"cubic"}, or \code{"quartic"}.}

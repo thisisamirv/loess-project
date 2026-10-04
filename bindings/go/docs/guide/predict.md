@@ -22,8 +22,7 @@ It always fits exactly, unlike `Fit`'s default `SurfaceMode = "interpolation"` â
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `Outputs` | `[]string` | `nil` | Select `se` and/or `derivative`/`gradient`. |
-| `ConfidenceLevel` | `*float64` | `nil` | Confidence interval coverage level (e.g. `0.95`) |
-| `PredictionLevel` | `*float64` | `nil` | Prediction interval coverage level (e.g. `0.95`) |
+| `Intervals` | `*IntervalsOptions` | `nil` | Grouped confidence and prediction coverage levels. |
 | `Extrapolation` | `string` | `"clamp"` | Behavior for query points outside the training range, on any dimension |
 | `MaxExtrapolationDistance` | `*float64` | `nil` | Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring |
 | `MaxNeighborDistance` | `*float64` | `nil` | Max allowed distance to the farthest point in a query's k-nearest-neighbor window before erroring |
@@ -32,13 +31,13 @@ It always fits exactly, unlike `Fit`'s default `SurfaceMode = "interpolation"` â
 
 ### outputs: se
 
-Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `ConfidenceLevel`/`PredictionLevel` to be populated. Omitted by default.
+Computes standard errors for each query point, using the retained model's residual scale and per-point leverage. Required for `Intervals.Confidence`/`Intervals.Prediction` to be populated. Omitted by default.
 
-### ConfidenceLevel
+### intervals.confidence
 
 Confidence level for the confidence interval around the mean response at each query point (e.g. `0.95`). Uses the same z-score convention as `Fit`'s own confidence intervals. `nil` (default) disables it.
 
-### PredictionLevel
+### intervals.prediction
 
 Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same residual scale `Fit` used for its own intervals when available, otherwise falling back to a MAD-based estimate. `nil` (default) disables it.
 

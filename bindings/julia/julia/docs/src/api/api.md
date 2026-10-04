@@ -66,13 +66,8 @@ println("First smoothed value: ", result.y[1])
 | `auto_converge` | `Float64` | `NaN` | Auto-convergence tolerance |
 | `missing` | `String` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `parallel` | `Bool` | `true` | Enable parallel execution |
-| `confidence_intervals` | `Float64` | `NaN` | Confidence level (e.g., 0.95) |
-| `prediction_intervals` | `Float64` | `NaN` | Prediction level (e.g., 0.95) |
 | `cv` | `NamedTuple \| Dict \| Nothing` | `nothing` | Group `fractions`, `method`, `k`, and `seed`; takes precedence over individual CV settings |
-| `cv_method` | `String` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
-| `cv_k` | `Int` | `5` | Number of folds for k-fold CV |
-| `cv_fractions` | `Vector{Float64}` | `Float64[]` | Fractions to test for cross-validation |
-| `cv_seed` | `Union{Int, Nothing}` | `nothing` | Random seed for cross-validation shuffling |
+| `seed` | `Int` | `nothing` | Seed for reproducible CV folds. |
 | `retain_model` | `Bool` | `false` | Retain training data, enabling `predict(model, new_x; ...)` on the result |
 | `custom_weights` | `Vector{Float64}` | `nothing` | Per-observation case weights — passed to `fit`, not the constructor |
 
@@ -271,13 +266,13 @@ Each local polynomial fit (degree >= linear) already computes per-dimension coef
 When selected in outputs, it reorders every result field (residuals, intervals, etc.) by `x` in an ascending manner, instead of in original input order.
 To get both orderings, sort the default result client-side (e.g. `sortperm(result.x)`) instead of calling `fit` twice.
 
-### confidence_intervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
 
-### prediction_intervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
@@ -287,10 +282,10 @@ Confidence level for the prediction interval for new observations (e.g. `0.95`).
 
 *See: [Cross-Validation](../guide/cross-validation.md)*
 
-- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method="loocv"`.
-- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `cv_seed`: Seed for reproducible k-fold shuffling. `nothing` (default) uses a random seed.
+- `cv.method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv.k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+- `cv.k`: Number of folds for k-fold CV. Ignored when `cv=(method = "loocv",)`.
+- `cv.fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
+- `seed`: Seed for reproducible k-fold shuffling. `nothing` (default) uses a random seed.
 
 ### retain_model
 
@@ -363,8 +358,7 @@ y = sin.(x) .+ randn(rng, 100) .* 0.3
 model = Loess(;
     fraction=0.5,
     iterations=3,
-    confidence_intervals=0.95,
-    prediction_intervals=0.95,
+    intervals=(confidence = 0.95, prediction = 0.95),
     outputs = ["diagnostics"],
     parallel=true
 )

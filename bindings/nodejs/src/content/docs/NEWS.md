@@ -19,6 +19,7 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Changed
 
 * Breaking change: replaced individual `return_*` output booleans with `outputs: [...]` for Batch, Streaming, Online, and prediction options.
+* Breaking change: replaced flat interval options and prediction levels with `intervals: { confidence, prediction }`; CV uses only `cv: { fractions, method, k }` with an outer `seed`, replacing flat CV options and `cv.seed`.
 
 ### Fixed
 

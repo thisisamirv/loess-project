@@ -12,7 +12,7 @@ import (
 
 // OnlineOptions configures an OnlineLoess model. Cross-validation,
 // diagnostics/residuals, and Parallel are Batch-only (or Batch/Streaming-only)
-// and have no effect here. ConfidenceIntervals/PredictionIntervals/the "se" output
+// and have no effect here. Intervals and the "se" output
 // require UpdateMode = "full".
 type OnlineOptions struct {
 	// Fraction is the smoothing fraction, in (0, 1]. Default: 0.67.
@@ -83,16 +83,7 @@ type OnlineOptions struct {
 	// "derivative" (or "gradient"), and "se".
 	Outputs []string
 
-	// ConfidenceIntervals is the confidence level for confidence intervals
-	// (e.g. 0.95). Only computed under UpdateMode = "full" — returns an error
-	// at construction if set (or the "se" output/PredictionIntervals is set) while
-	// UpdateMode is left at its default "incremental". Nil disables confidence
-	// intervals.
-	ConfidenceIntervals *float64
-	// PredictionIntervals is the confidence level for prediction intervals;
-	// same UpdateMode = "full" requirement as ConfidenceIntervals. Nil
-	// disables prediction intervals.
-	PredictionIntervals *float64
+	Intervals *IntervalsOptions
 
 	// WindowCapacity is the maximum number of recent points retained.
 	// Default: 1000.
@@ -160,8 +151,7 @@ func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 	defer freeCString(surfaceMode)
 
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
-	confidenceIntervals, confidenceIntervalsSet := optPtr(opts.ConfidenceIntervals)
-	predictionIntervals, predictionIntervalsSet := optPtr(opts.PredictionIntervals)
+	confidenceIntervals, confidenceIntervalsSet, predictionIntervals, predictionIntervalsSet := intervalLevels(opts.Intervals)
 	wmwPtr, wmwLen := cDoubles(opts.WeightedMetricWeights)
 
 	cell, cellSet := 0.0, false

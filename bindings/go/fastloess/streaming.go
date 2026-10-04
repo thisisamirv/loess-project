@@ -82,14 +82,7 @@ type StreamingOptions struct {
 	// "weights", "derivative" (or "gradient"), and "se".
 	Outputs []string
 
-	// ConfidenceIntervals is the confidence level for confidence intervals
-	// (e.g. 0.95), computed per chunk and merged across overlap boundaries via
-	// MergeStrategy. Nil disables confidence intervals.
-	ConfidenceIntervals *float64
-	// PredictionIntervals is the confidence level for prediction intervals;
-	// same per-chunk computation and overlap-merging as ConfidenceIntervals.
-	// Nil disables prediction intervals.
-	PredictionIntervals *float64
+	Intervals *IntervalsOptions
 	// Parallel enables parallel processing. Default: true.
 	Parallel bool
 
@@ -157,8 +150,7 @@ func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
 	defer freeCString(surfaceMode)
 
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
-	confidenceIntervals, confidenceIntervalsSet := optPtr(opts.ConfidenceIntervals)
-	predictionIntervals, predictionIntervalsSet := optPtr(opts.PredictionIntervals)
+	confidenceIntervals, confidenceIntervalsSet, predictionIntervals, predictionIntervalsSet := intervalLevels(opts.Intervals)
 	wmwPtr, wmwLen := cDoubles(opts.WeightedMetricWeights)
 
 	cell, cellSet := 0.0, false

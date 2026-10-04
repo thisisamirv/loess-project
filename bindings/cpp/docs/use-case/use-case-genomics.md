@@ -35,7 +35,7 @@ int main() {
     }
 
     // positions and observed are std::vector<double>
-    fastloess::Loess model({ .fraction = 0.1, .iterations = 3, .confidence_intervals = 0.95, .outputs = {"diagnostics"} });
+    fastloess::Loess model({ .fraction = 0.1, .iterations = 3, .intervals = { .confidence = 0.95 }, .outputs = {"diagnostics"} });
     auto result = model.fit(positions, observed).value();
 
     // Smoothed profile in result.y_vector()

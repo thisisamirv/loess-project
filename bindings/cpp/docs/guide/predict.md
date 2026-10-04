@@ -21,21 +21,20 @@ Requires `retain_model = true` on `LoessOptions` before `fit()`; obtain the `Pre
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
 | `outputs` | `std::vector<std::string>` | `{}` | Optional prediction fields: `se`, `gradient`/`derivative` |
-| `confidence_level` | `double` | `NaN` | Confidence interval coverage level (e.g. `0.95`; NaN to disable) |
-| `prediction_level` | `double` | `NaN` | Prediction interval coverage level (e.g. `0.95`; NaN to disable) |
+| `intervals` | `IntervalsOptions` | `disabled` | Grouped confidence and prediction coverage levels. |
 | `extrapolation` | `std::string` | `"clamp"` | Behavior for query points outside the training range, on any dimension |
 | `max_extrapolation_distance` | `double` | `NaN` | Under `"linear"` extrapolation, the max allowed per-dimension distance beyond the training boundary before erroring |
 | `max_neighbor_distance` | `double` | `NaN` | Max allowed distance to the farthest point in a query's k-nearest-neighbor window before erroring |
 
 ### outputs
 
-Select optional prediction fields by name. Use `"se"` to compute standard errors for each query point, using the retained model's residual scale and per-point leverage; standard errors are also computed when `confidence_level` or `prediction_level` is set. Use `"gradient"` or `"derivative"` to include the local fit gradient (`dimensions` values per query point, flattened). An empty vector (default) requests neither field.
+Select optional prediction fields by name. Use `"se"` to compute standard errors for each query point, using the retained model's residual scale and per-point leverage; standard errors are also computed when `intervals.confidence` or `intervals.prediction` is set. Use `"gradient"` or `"derivative"` to include the local fit gradient (`dimensions` values per query point, flattened). An empty vector (default) requests neither field.
 
-### confidence_level
+### intervals.confidence
 
 Confidence level for the confidence interval around the mean response at each query point (e.g. `0.95`). Uses the same z-score convention as `fit()`'s own confidence intervals. `NaN` (default) disables it.
 
-### prediction_level
+### intervals.prediction
 
 Confidence level for the prediction interval for a new observation at each query point (e.g. `0.95`). Widens using the same residual scale `fit()` used for its own intervals when available, otherwise falling back to a MAD-based estimate. `NaN` (default) disables it.
 

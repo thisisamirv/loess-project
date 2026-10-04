@@ -15,6 +15,7 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Changed
 
 * Breaking change: replaced individual `return_*` output arguments with `outputs = c(...)` for Batch, Streaming, Online, and prediction.
+* Breaking change: replaced flat interval arguments and prediction levels with `intervals = intervals_opts(confidence = ..., prediction = ...)`; CV uses only `cv = cv_opts(...)` with an outer `seed`, replacing flat CV arguments and `cv_opts(seed = ...)`. Removed named constructor arguments now error instead of being silently ignored.
 * Unavailable diagnostics are now represented as R `NA` rather than generic `NaN` values.
 
 ### Fixed

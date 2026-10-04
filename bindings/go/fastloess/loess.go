@@ -15,7 +15,21 @@ type CVOptions struct {
 	Fractions []float64
 	Method    string
 	K         int
-	Seed      *uint64
+}
+
+// IntervalsOptions groups coverage levels; nil levels disable their intervals.
+type IntervalsOptions struct {
+	Confidence *float64
+	Prediction *float64
+}
+
+func intervalLevels(options *IntervalsOptions) (float64, bool, float64, bool) {
+	if options == nil {
+		return 0, false, 0, false
+	}
+	confidence, confidenceSet := optPtr(options.Confidence)
+	prediction, predictionSet := optPtr(options.Prediction)
+	return confidence, confidenceSet, prediction, predictionSet
 }
 
 // Options configures a Loess, StreamingLoess, or OnlineLoess model.
@@ -71,10 +85,10 @@ type Options struct {
 	SurfaceMode string
 	// Outputs selects optional result components: "diagnostics", "residuals",
 	// "weights", "derivative" (or "gradient"), "se", and "sorted".
-	Outputs []string
-	// CV groups batch cross-validation settings. When set, it takes precedence
-	// over CVFractions, CVMethod, CVK, and CVSeed.
-	CV *CVOptions
+	Outputs   []string
+	CV        *CVOptions
+	Intervals *IntervalsOptions
+	Seed      *uint64
 	// Cell is the interpolation cell size tuning parameter, in (0, 1].
 	// Nil uses the library default. Only applies when SurfaceMode is
 	// "interpolation".
@@ -88,26 +102,9 @@ type Options struct {
 	// uses the library default.
 	BoundaryDegreeFallback *bool
 
-	// ConfidenceIntervals is the confidence level for confidence intervals,
-	// in (0, 1) (e.g. 0.95). Nil disables confidence intervals.
-	ConfidenceIntervals *float64
-	// PredictionIntervals is the confidence level for prediction intervals,
-	// in (0, 1) (e.g. 0.95). Nil disables prediction intervals.
-	PredictionIntervals *float64
 	// AutoConverge is the convergence tolerance for early stopping of
 	// robustness iterations. Nil disables early stopping.
 	AutoConverge *float64
-
-	// CVFractions is a set of candidate fractions for cross-validation.
-	// Empty disables CV. Batch model only.
-	CVFractions []float64
-	// CVMethod is the cross-validation method: "kfold" (default) or "loocv".
-	CVMethod string
-	// CVK is the number of folds for k-fold CV. Default: 5.
-	CVK int
-	// CVSeed is the RNG seed for reproducible k-fold splits. Nil uses a
-	// random seed.
-	CVSeed *uint64
 
 	// Parallel enables parallel processing. Default: true.
 	Parallel bool
@@ -142,8 +139,6 @@ func DefaultOptions() Options {
 		Dimensions:         1,
 		DistanceMetric:     "normalized",
 		SurfaceMode:        "interpolation",
-		CVMethod:           "kfold",
-		CVK:                5,
 		Parallel:           true,
 	}
 }
@@ -179,9 +174,16 @@ func NewLoess(opts Options) (*Loess, error) {
 	defer freeCString(zwf)
 	missing := cStringOrNil(opts.Missing)
 	defer freeCString(missing)
-	cvMethodName, cvK, cvFractions, cvSeed := opts.CVMethod, opts.CVK, opts.CVFractions, opts.CVSeed
+	cvMethodName, cvK := "kfold", 5
+	var cvFractions []float64
 	if opts.CV != nil {
-		cvMethodName, cvK, cvFractions, cvSeed = opts.CV.Method, opts.CV.K, opts.CV.Fractions, opts.CV.Seed
+		cvFractions = opts.CV.Fractions
+		if opts.CV.Method != "" {
+			cvMethodName = opts.CV.Method
+		}
+		if opts.CV.K != 0 {
+			cvK = opts.CV.K
+		}
 	}
 	cvMethod := cStringOrNil(cvMethodName)
 	defer freeCString(cvMethod)
@@ -192,8 +194,7 @@ func NewLoess(opts Options) (*Loess, error) {
 	surfaceMode := cStringOrNil(opts.SurfaceMode)
 	defer freeCString(surfaceMode)
 
-	ci, ciSet := optPtr(opts.ConfidenceIntervals)
-	pi, piSet := optPtr(opts.PredictionIntervals)
+	ci, ciSet, pi, piSet := intervalLevels(opts.Intervals)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
 	cvFracPtr, cvFracLen := cDoubles(cvFractions)
 	wmwPtr, wmwLen := cDoubles(opts.WeightedMetricWeights)
@@ -251,8 +252,8 @@ func NewLoess(opts Options) (*Loess, error) {
 		return nil, errors.New(errMsg)
 	}
 
-	if cvSeed != nil {
-		C.go_loess_set_cv_seed(ptr, C.ulong(*cvSeed))
+	if opts.Seed != nil {
+		C.go_loess_set_cv_seed(ptr, C.ulong(*opts.Seed))
 	}
 
 	l := &Loess{ptr: ptr}

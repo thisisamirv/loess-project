@@ -149,8 +149,7 @@ int main() {
 | `overlap` | `int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `std::string` | `"weighted_average"` | Strategy for blending overlap regions |
 | `outputs` | `std::vector<std::string>` | `{}` | Optional fields: `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, `se` |
-| `confidence_intervals` | `double` | `NaN` | Confidence level for confidence intervals, computed per chunk and merged across overlap boundaries via `merge_strategy` |
-| `prediction_intervals` | `double` | `NaN` | Confidence level for prediction intervals; same per-chunk computation and overlap-merging as `confidence_intervals` |
+| `intervals` | `IntervalsOptions` | `disabled` | Grouped confidence and prediction coverage levels. |
 
 Cross-validation and the `"sorted"` output are Batch-only; `StreamingLoess` ignores `"sorted"` — see [fastLoess](api.md) for those.
 
@@ -351,17 +350,17 @@ Select optional result fields by name. An empty vector (default) requests only f
 
 Confidence and prediction intervals remain controlled by their numeric level fields and include standard errors automatically.
 
-### confidence_intervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `y` is, via `merge_strategy`. `NaN` (default) disables confidence intervals.
 
-### prediction_intervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `confidence_intervals`. `NaN` (default) disables prediction intervals.
+Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `intervals.confidence`. `NaN` (default) disables prediction intervals.
 
 ## Result Structure
 
@@ -376,8 +375,8 @@ Returned (inside `Expected`) by `process_chunk()` and `finalize()`.
 | `fraction_used()` | `double` | Fraction used |
 | `iterations_used()` | `int` | Robustness iterations actually performed (-1 = N/A) |
 | `standard_errors()` | `std::vector<double>` | Standard errors, if `outputs` contains `"se"` or an interval level was set (empty otherwise) |
-| `confidence_lower()`, `confidence_upper()` | `std::vector<double>` | Confidence interval bounds, if `confidence_intervals` was set (empty otherwise) |
-| `prediction_lower()`, `prediction_upper()` | `std::vector<double>` | Prediction interval bounds, if `prediction_intervals` was set (empty otherwise) |
+| `confidence_lower()`, `confidence_upper()` | `std::vector<double>` | Confidence interval bounds, if `intervals.confidence` was set (empty otherwise) |
+| `prediction_lower()`, `prediction_upper()` | `std::vector<double>` | Prediction interval bounds, if `intervals.prediction` was set (empty otherwise) |
 | `residuals()` | `std::vector<double>` | Residuals (if `outputs` contains `"residuals"`; empty if not) |
 | `robustness_weights()` | `std::vector<double>` | Robustness weights (if `outputs` contains `"weights"`; empty if not) |
 | `cv_scores()` | `std::vector<double>` | Always empty (Batch only) |

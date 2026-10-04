@@ -267,11 +267,8 @@ func (pm *PredictModel) Close() error {
 // PredictOptions configures a PredictModel.Predict call.
 type PredictOptions struct {
 	// Outputs selects optional prediction components: "se", "derivative", or "gradient".
-	Outputs []string
-	// ConfidenceLevel is the confidence interval coverage level (e.g. 0.95). Nil disables it.
-	ConfidenceLevel *float64
-	// PredictionLevel is the prediction interval coverage level (e.g. 0.95). Nil disables it.
-	PredictionLevel *float64
+	Outputs   []string
+	Intervals *IntervalsOptions
 	// Extrapolation is the behavior for query points outside the training range:
 	// "clamp" (default), "linear", or "error".
 	Extrapolation string
@@ -315,8 +312,7 @@ func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictRes
 	extrap := cStringOrNil(opts.Extrapolation)
 	defer freeCString(extrap)
 
-	cl, clSet := optPtr(opts.ConfidenceLevel)
-	pl, plSet := optPtr(opts.PredictionLevel)
+	cl, clSet, pl, plSet := intervalLevels(opts.Intervals)
 	maxExtrap, maxExtrapSet := optPtr(opts.MaxExtrapolationDistance)
 	maxNeighbor, maxNeighborSet := optPtr(opts.MaxNeighborDistance)
 	newXPtr, newXLen := cDoubles(newX)

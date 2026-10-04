@@ -100,8 +100,7 @@ y = trend_true + np.random.normal(0, 3, len(t))
 model = fl.Loess(
     fraction=0.2,
     iterations=3,
-    confidence_intervals=0.95,
-    prediction_intervals=0.95
+    intervals={"confidence": 0.95, "prediction": 0.95}
 )
 result = model.fit(t, y)
 
@@ -194,7 +193,7 @@ model = fl.Loess(
     fraction=0.3,
     iterations=3,
     outputs=["diagnostics"],
-    confidence_intervals=0.95
+    intervals={"confidence": 0.95}
 )
 result = model.fit(hours, expression)
 

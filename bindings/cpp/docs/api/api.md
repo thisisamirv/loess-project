@@ -110,13 +110,9 @@ int main() {
 | `missing` | `std::string` | `"error"` | Policy for non-finite (NaN/Inf) values in input data |
 | `parallel` | `bool` | `true` | Enable parallel execution |
 | `outputs` | `std::vector<std::string>` | `{}` | Optional result fields: `diagnostics`, `residuals`, `weights`, `gradient`/`derivative`, `se`, `sorted` |
-| `confidence_intervals` | `double` | `NaN` | Confidence level (e.g., 0.95; NaN to disable) |
-| `prediction_intervals` | `double` | `NaN` | Prediction level (e.g., 0.95; NaN to disable) |
+| `intervals` | `IntervalsOptions` | `disabled` | Grouped confidence and prediction coverage levels. |
 | `cv` | `CVOptions` | `{}` | Group `fractions`, `method`, `k`, and `seed`; nonempty fractions override legacy CV fields |
-| `cv_method` | `std::string` | `"kfold"` | CV method (`"kfold"` fast or `"loocv"` slow, exhaustive) |
-| `cv_k` | `int` | `5` | Number of folds for k-fold CV |
-| `cv_fractions` | `std::vector<double>` | `{}` | Fractions to test for cross-validation |
-| `cv_seed` | `uint64_t` | `0` | Random seed for cross-validation shuffling (0 = random) |
+| `seed` | `std::optional<uint64_t>` | `unset` | Seed for reproducible CV folds. |
 | `retain_model` | `bool` | `false` | Retain training data, enabling `LoessResult::predict_model()` |
 | `custom_weights` | `std::vector<double>` | `{}` | Per-observation case weights — passed to `fit()`, not the constructor |
 
@@ -301,13 +297,13 @@ Select optional result fields by name. An empty vector (default) requests only t
 
 Confidence and prediction intervals remain controlled by their numeric level fields. They include standard errors automatically.
 
-### confidence_intervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`). `NaN` (default) disables confidence intervals.
 
-### prediction_intervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
@@ -317,10 +313,10 @@ Confidence level for the prediction interval for new observations (e.g. `0.95`).
 
 *See: [Cross-Validation](../guide/cross-validation.md)*
 
-- `cv_method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv_k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
-- `cv_k`: Number of folds for k-fold CV. Ignored when `cv_method = "loocv"`.
-- `cv_fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `cv_seed`: Seed for reproducible k-fold shuffling. `0` (default) uses a random seed.
+- `cv.method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv.k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
+- `cv.k`: Number of folds for k-fold CV. Ignored when `cv_method = "loocv"`.
+- `cv.fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
+- `seed`: Seed for reproducible k-fold shuffling. `0` (default) uses a random seed.
 
 ### retain_model
 

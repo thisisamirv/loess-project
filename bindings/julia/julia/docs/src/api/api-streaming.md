@@ -78,8 +78,6 @@ println("First smoothed value: ", result.y[1])
 | `overlap` | `Int` | `chunk_size / 10` | Overlap between chunks |
 | `merge_strategy` | `String` | `"weighted_average"` | Strategy for blending overlap regions |
 | `parallel` | `Bool` | `true` | Enable parallel execution |
-| `confidence_intervals` | `Union{Float64, Nothing}` | `nothing` | Confidence level for confidence intervals, computed per chunk |
-| `prediction_intervals` | `Union{Float64, Nothing}` | `nothing` | Confidence level for prediction intervals, computed per chunk |
 
 `"sorted"` output and cross-validation are Batch-only and not available here; see [Batch Adapter](api.md).
 
@@ -300,17 +298,17 @@ Include the final per-point robustness weights (from the last robustness iterati
 
 Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (`dimensions` values per point, flattened) in `LoessResult.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"` — raises an error instead of silently leaving `gradient` as `nothing` if requested under the default `"interpolation"` mode. Omitted by default. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
 
-### confidence_intervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `y` is, via `merge_strategy`. `nothing` (default) disables confidence intervals.
 
-### prediction_intervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `confidence_intervals`. `nothing` (default) disables prediction intervals.
+Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `intervals.confidence`. `nothing` (default) disables prediction intervals.
 
 ## Result Structure
 

@@ -7,8 +7,7 @@
 \method{predict}{Loess}(
   object,
   new_x,
-  confidence_level = NULL,
-  prediction_level = NULL,
+  intervals = NULL,
   extrapolation = "clamp",
   max_extrapolation_distance = NULL,
   max_neighbor_distance = NULL,
@@ -23,11 +22,7 @@
 \item{new_x}{Numeric vector of out-of-sample query points (flattened,
 \code{dimensions} values per point).}
 
-\item{confidence_level}{Confidence interval coverage level (e.g. 0.95).
-\code{NULL} (default) disables it.}
-
-\item{prediction_level}{Prediction interval coverage level (e.g. 0.95).
-\code{NULL} (default) disables it.}
+\item{intervals}{Grouped coverage levels from \code{\link{intervals_opts}}.}
 
 \item{extrapolation}{Behavior for query points outside the training range:
 \code{"clamp"} (default), \code{"linear"}, or \code{"error"}.}

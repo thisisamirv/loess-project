@@ -88,8 +88,7 @@ class StreamingLoessTest {
                 StreamingOptions.builder()
                         .fraction(0.3)
                         .chunkSize(10)
-                        .confidenceIntervals(0.95)
-                        .predictionIntervals(0.95)
+                        .intervals(IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
                         .build())) {
             double[] x = new double[20];
             double[] y = new double[20];

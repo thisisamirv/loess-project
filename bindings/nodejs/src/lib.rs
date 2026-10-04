@@ -267,8 +267,8 @@ impl LoessResult {
             new_x.as_ref(),
             shared_parse::PredictOptionSet {
                 return_se: has_output(opts.outputs.as_ref(), "se"),
-                confidence_level: opts.confidence_level,
-                prediction_level: opts.prediction_level,
+                confidence_level: opts.intervals.as_ref().and_then(|value| value.confidence),
+                prediction_level: opts.intervals.as_ref().and_then(|value| value.prediction),
                 return_derivative: has_output(opts.outputs.as_ref(), "gradient")
                     || has_output(opts.outputs.as_ref(), "derivative"),
                 extrapolation: opts.extrapolation.as_deref(),
@@ -286,12 +286,7 @@ impl LoessResult {
 pub struct PredictOptions {
     /// Optional output components: se, gradient (or derivative).
     pub outputs: Option<Vec<String>>,
-    /// Confidence interval coverage level (e.g. 0.95). Default: None.
-    #[napi(js_name = "confidence_level")]
-    pub confidence_level: Option<f64>,
-    /// Prediction interval coverage level (e.g. 0.95). Default: None.
-    #[napi(js_name = "prediction_level")]
-    pub prediction_level: Option<f64>,
+    pub intervals: Option<IntervalsOptions>,
     /// Behavior for query points outside the training range ("clamp", "linear", "error"). Default: "clamp".
     pub extrapolation: Option<String>,
     /// Under "linear" extrapolation, the maximum allowed distance beyond the training
@@ -382,7 +377,12 @@ pub struct CVOptions {
     pub fractions: Vec<f64>,
     pub method: Option<String>,
     pub k: Option<u32>,
-    pub seed: Option<i64>,
+}
+
+#[napi(object)]
+pub struct IntervalsOptions {
+    pub confidence: Option<f64>,
+    pub prediction: Option<f64>,
 }
 
 /// Configuration options for LOESS smoothing.
@@ -414,21 +414,7 @@ pub struct SmoothOptions {
     pub outputs: Option<Vec<String>>,
     /// Grouped cross-validation configuration for Batch smoothing.
     pub cv: Option<CVOptions>,
-    /// Calculate confidence intervals (e.g., 0.95). Default: None.
-    #[napi(js_name = "confidence_intervals")]
-    pub confidence_intervals: Option<f64>,
-    /// Calculate prediction intervals. Default: None.
-    #[napi(js_name = "prediction_intervals")]
-    pub prediction_intervals: Option<f64>,
-    /// Fractions to use for cross-validation.
-    #[napi(js_name = "cv_fractions")]
-    pub cv_fractions: Option<Vec<f64>>,
-    /// CV method ("loocv", "kfold"). Default: "kfold".
-    #[napi(js_name = "cv_method")]
-    pub cv_method: Option<String>,
-    /// Number of folds for K-Fold CV. Default: 5.
-    #[napi(js_name = "cv_k")]
-    pub cv_k: Option<u32>,
+    pub intervals: Option<IntervalsOptions>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
     /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
@@ -453,8 +439,7 @@ pub struct SmoothOptions {
     #[napi(js_name = "boundary_degree_fallback")]
     pub boundary_degree_fallback: Option<bool>,
     /// Random seed for reproducible K-fold cross-validation splits.
-    #[napi(js_name = "cv_seed")]
-    pub cv_seed: Option<i64>,
+    pub seed: Option<i64>,
     /// Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error".
     #[napi(js_name = "missing")]
     pub missing: Option<String>,
@@ -493,14 +478,7 @@ pub struct StreamingSmoothOptions {
     pub auto_converge: Option<f64>,
     /// Optional output components: diagnostics, residuals, weights, gradient (or derivative), se.
     pub outputs: Option<Vec<String>>,
-    /// Confidence level for confidence intervals, computed per chunk and merged
-    /// across overlap boundaries via `merge_strategy`. Default: None.
-    #[napi(js_name = "confidence_intervals")]
-    pub confidence_intervals: Option<f64>,
-    /// Confidence level for prediction intervals; same per-chunk computation and
-    /// overlap-merging as `confidence_intervals`. Default: None.
-    #[napi(js_name = "prediction_intervals")]
-    pub prediction_intervals: Option<f64>,
+    pub intervals: Option<IntervalsOptions>,
     /// Enable parallel execution. Default: true.
     pub parallel: Option<bool>,
     /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
@@ -534,8 +512,8 @@ pub struct StreamingSmoothOptions {
 /// A subset of [`SmoothOptions`]: diagnostics, residuals, parallel execution,
 /// and cross-validation are all no-ops for online processing (it handles one
 /// point at a time, always runs sequentially, and always returns a residual
-/// inline), so they aren't fields on this type. `confidence_intervals`/
-/// `prediction_intervals` and the "se" output require `update_mode: "full"`.
+/// inline), so they aren't fields on this type. `intervals` and the "se" output
+/// require `update_mode: "full"`.
 #[napi(object)]
 pub struct OnlineSmoothOptions {
     /// Smoothing fraction (0 < fraction <= 1). Default: 0.67.
@@ -563,14 +541,7 @@ pub struct OnlineSmoothOptions {
     pub auto_converge: Option<f64>,
     /// Optional output components: weights, gradient (or derivative), se.
     pub outputs: Option<Vec<String>>,
-    /// Confidence level for confidence intervals. Only computed under
-    /// `update_mode: "full"`. Default: None.
-    #[napi(js_name = "confidence_intervals")]
-    pub confidence_intervals: Option<f64>,
-    /// Confidence level for prediction intervals. Same `update_mode: "full"`
-    /// requirement as `confidence_intervals`. Default: None.
-    #[napi(js_name = "prediction_intervals")]
-    pub prediction_intervals: Option<f64>,
+    pub intervals: Option<IntervalsOptions>,
     /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
     pub degree: Option<String>,
     /// Number of predictor dimensions. Default: 1.
@@ -602,13 +573,12 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
         let grouped_cv = opts.cv.as_ref();
-        let cv_seed = grouped_cv
-            .and_then(|cv| cv.seed)
-            .or(opts.cv_seed)
+        let cv_seed = opts
+            .seed
             .map(|seed| {
                 if seed < 0 {
                     Err(shared_parse::BindingError::invalid_arg(format!(
-                        "cv_seed must be non-negative, got {seed}"
+                        "seed must be non-negative, got {seed}"
                     )))
                 } else {
                     Ok(seed as u64)
@@ -630,8 +600,8 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
                 return_residuals: has_output(opts.outputs.as_ref(), "residuals"),
                 return_robustness_weights: has_output(opts.outputs.as_ref(), "weights"),
                 return_diagnostics: has_output(opts.outputs.as_ref(), "diagnostics"),
-                confidence_intervals: opts.confidence_intervals,
-                prediction_intervals: opts.prediction_intervals,
+                confidence_intervals: opts.intervals.as_ref().and_then(|value| value.confidence),
+                prediction_intervals: opts.intervals.as_ref().and_then(|value| value.prediction),
                 parallel: opts.parallel,
                 degree: opts.degree.as_deref(),
                 dimensions: opts.dimensions.map(|v| v as usize),
@@ -643,16 +613,9 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
                 cell: opts.cell,
                 interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
                 boundary_degree_fallback: opts.boundary_degree_fallback,
-                cv_fractions: grouped_cv
-                    .map(|cv| cv.fractions.as_slice())
-                    .or(opts.cv_fractions.as_deref()),
-                cv_method: grouped_cv
-                    .and_then(|cv| cv.method.as_deref())
-                    .or(opts.cv_method.as_deref()),
-                cv_k: grouped_cv
-                    .and_then(|cv| cv.k)
-                    .map(|v| v as usize)
-                    .or(opts.cv_k.map(|v| v as usize)),
+                cv_fractions: grouped_cv.map(|cv| cv.fractions.as_slice()),
+                cv_method: grouped_cv.and_then(|cv| cv.method.as_deref()),
+                cv_k: grouped_cv.and_then(|cv| cv.k).map(|v| v as usize),
                 cv_seed,
                 missing: opts.missing.as_deref(),
                 retain_model: opts.retain_model,
@@ -688,8 +651,8 @@ fn streaming_options_to_builder(
                 return_residuals: has_output(opts.outputs.as_ref(), "residuals"),
                 return_robustness_weights: has_output(opts.outputs.as_ref(), "weights"),
                 return_diagnostics: has_output(opts.outputs.as_ref(), "diagnostics"),
-                confidence_intervals: opts.confidence_intervals,
-                prediction_intervals: opts.prediction_intervals,
+                confidence_intervals: opts.intervals.as_ref().and_then(|value| value.confidence),
+                prediction_intervals: opts.intervals.as_ref().and_then(|value| value.prediction),
                 return_se: has_output(opts.outputs.as_ref(), "se"),
                 parallel: opts.parallel,
                 degree: opts.degree.as_deref(),
@@ -739,8 +702,8 @@ fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<Loess
                 interpolation_vertices: opts.interpolation_vertices.map(|v| v as usize),
                 boundary_degree_fallback: opts.boundary_degree_fallback,
                 missing: opts.missing.as_deref(),
-                confidence_intervals: opts.confidence_intervals,
-                prediction_intervals: opts.prediction_intervals,
+                confidence_intervals: opts.intervals.as_ref().and_then(|value| value.confidence),
+                prediction_intervals: opts.intervals.as_ref().and_then(|value| value.prediction),
                 return_se: has_output(opts.outputs.as_ref(), "se"),
                 ..Default::default()
             },

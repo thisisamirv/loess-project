@@ -84,8 +84,7 @@ print(final_result)
 | `merge_strategy` | `str` | `"weighted_average"` | Strategy for blending overlap regions |
 | `parallel` | `bool` | `True` | Enable parallel execution |
 | `outputs` | `Sequence[str] \| None` | `None` | Select `diagnostics`, `residuals`, `weights`, `gradient` (or `derivative`), and/or `se` |
-| `confidence_intervals` | `float` | `None` | Confidence level for confidence intervals, computed per chunk |
-| `prediction_intervals` | `float` | `None` | Confidence level for prediction intervals, computed per chunk |
+| `intervals` | `dict` | `None` | Grouped confidence and prediction coverage levels. |
 
 The `"sorted"` output is Batch-only and not available here; see [fastLoess](api.md).
 
@@ -299,17 +298,17 @@ Select `"weights"` to include the final per-point robustness weights (from the l
 
 Select `"gradient"` to expose the per-point gradient (`dimensions` values per point, flattened) in `LoessResult.gradient` at effectively no extra computation cost. Only supported when `surface_mode` is `"direct"`; requesting it under `"interpolation"` raises an error. Gradient values in the overlap region are merged across chunk boundaries the same way `y` is, via `merge_strategy`.
 
-### confidence_intervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
 Confidence level for the confidence interval around the mean response (e.g. `0.95`), computed per chunk and merged across overlap boundaries the same way `y` is, via `merge_strategy`. `None` (default) disables confidence intervals.
 
-### prediction_intervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `confidence_intervals`. `None` (default) disables prediction intervals.
+Confidence level for the prediction interval for new observations (e.g. `0.95`); same per-chunk computation and overlap-merging as `intervals.confidence`. `None` (default) disables prediction intervals.
 
 ## Result Structure
 

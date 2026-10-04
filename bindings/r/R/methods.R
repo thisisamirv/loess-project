@@ -162,10 +162,7 @@ fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
 #'   \code{retain_model = TRUE} passed to \code{\link{Loess}}.
 #' @param new_x Numeric vector of out-of-sample query points (flattened,
 #'   \code{dimensions} values per point).
-#' @param confidence_level Confidence interval coverage level (e.g. 0.95).
-#'   \code{NULL} (default) disables it.
-#' @param prediction_level Prediction interval coverage level (e.g. 0.95).
-#'   \code{NULL} (default) disables it.
+#' @param intervals Grouped coverage levels from \code{\link{intervals_opts}}.
 #' @param outputs Optional character vector selecting \code{"se"},
 #'   \code{"gradient"}, or \code{"derivative"}. \code{NULL} (default)
 #'   selects no optional components.
@@ -192,8 +189,7 @@ fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
 predict.Loess <- function(
     object,
     new_x,
-    confidence_level = NULL,
-    prediction_level = NULL,
+    intervals = NULL,
     extrapolation = "clamp",
     max_extrapolation_distance = NULL,
     max_neighbor_distance = NULL,
@@ -204,13 +200,14 @@ predict.Loess <- function(
         stop("unused arguments (...)")
     }
     flags <- parse_outputs_flags(outputs, c("se", "gradient", "derivative"))
+    interval_options <- parse_intervals_options(intervals)
     return_se <- flags[["se"]]
     return_derivative <- flags[["gradient"]] || flags[["derivative"]]
     object$handle$predict(
         as.double(new_x),
         as.logical(return_se),
-        coerce_nullable(confidence_level)[[1]],
-        coerce_nullable(prediction_level)[[1]],
+        coerce_nullable(interval_options$confidence)[[1]],
+        coerce_nullable(interval_options$prediction)[[1]],
         as.logical(
             return_derivative
         ),

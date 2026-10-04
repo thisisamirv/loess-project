@@ -17,7 +17,7 @@ opts.WindowCapacity = 200
 opts.MinPoints = 10
 ```
 
-`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CVFractions`/`CVMethod`/`CVK`/`CVSeed`, and `Parallel`, which are batch-only). `ConfidenceIntervals`/`PredictionIntervals`/`"se"` output require `UpdateMode = "full"`. `AddPoint` only accepts a single x coordinate: online mode does not support multivariate predictors even if `Dimensions` was set on construction. `Outputs` accepts `weights`, `derivative`/`gradient`, and `se`; `se` requires `UpdateMode = "full"`.
+`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CV.Fractions`/`CV.Method`/`CV.K`/`Seed`, and `Parallel`, which are batch-only). `Intervals.Confidence`/`Intervals.Prediction`/`"se"` output require `UpdateMode = "full"`. `AddPoint` only accepts a single x coordinate: online mode does not support multivariate predictors even if `Dimensions` was set on construction. `Outputs` accepts `weights`, `derivative`/`gradient`, and `se`; `se` requires `UpdateMode = "full"`.
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |
@@ -42,8 +42,7 @@ opts.MinPoints = 10
 | `MinPoints` | `int` | `2` | Minimum points required before output starts |
 | `UpdateMode` | `string` | `"incremental"` | How the window is updated as new points arrive |
 | `Outputs` | `[]string` | `nil` | Optional fields: `weights`, `derivative`/`gradient`, and `se`. |
-| `ConfidenceIntervals` | `*float64` | `nil` | Confidence level for confidence intervals; requires `UpdateMode = "full"` |
-| `PredictionIntervals` | `*float64` | `nil` | Confidence level for prediction intervals; requires `UpdateMode = "full"` |
+| `Intervals` | `*IntervalsOptions` | `nil` | Grouped confidence and prediction coverage levels. |
 
 Cross-validation, the `sorted` and `diagnostics` outputs, and `Parallel` are Batch-only and not available here. Online residuals are always present; the `residuals` output name is not supported.
 
@@ -233,7 +232,7 @@ See [API](api.md) for the descriptions of all inherited fields not covered above
 
 ### outputs: se
 
-Include the standard error for the latest point in the result (`PointResult.StandardError`). Same `UpdateMode = "full"` requirement as `ConfidenceIntervals`.
+Include the standard error for the latest point in the result (`PointResult.StandardError`). Same `UpdateMode = "full"` requirement as `Intervals.Confidence`.
 
 ### outputs: weights
 
@@ -243,29 +242,29 @@ Populate `PointResult.RobustnessWeight` with the robustness weight for the lates
 
 Each local polynomial fit (degree >= linear) already computes per-dimension coefficients internally; this exposes the latest point's gradient (`Dimensions` values) in `PointResult.Gradient` at effectively no extra computation cost. Only supported when `SurfaceMode` is `"direct"` — returns an error instead of silently leaving `Gradient` as `nil` if requested under the default `"interpolation"` mode. Omitted by default.
 
-### ConfidenceIntervals
+### intervals.confidence
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `UpdateMode = "full"` — returns an error at construction if set (or `"se"` output/`PredictionIntervals` is set) while `UpdateMode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `nil` (default) disables confidence intervals.
+Confidence level for the confidence interval around the mean response (e.g. `0.95`). Only computed under `UpdateMode = "full"` — returns an error at construction if set (or `"se"` output/`Intervals.Prediction` is set) while `UpdateMode` is left at its default `"incremental"`, since incremental updates never compute standard errors. `nil` (default) disables confidence intervals.
 
-### PredictionIntervals
+### intervals.prediction
 
 *See: [Intervals](../guide/intervals.md)*
 
-Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `UpdateMode = "full"` requirement as `ConfidenceIntervals`. `nil` (default) disables prediction intervals.
+Confidence level for the prediction interval for new observations (e.g. `0.95`). Same `UpdateMode = "full"` requirement as `Intervals.Confidence`. `nil` (default) disables prediction intervals.
 
 ## `PointResult` fields
 
 | Field | Type | Notes |
 | --- | --- | --- |
 | `Y` | `float64` | Smoothed value. |
-| `StandardError` | `float64` | Standard error, if `"se"` output/`ConfidenceIntervals`/`PredictionIntervals` was set and `UpdateMode = "full"` (`NaN` otherwise). |
+| `StandardError` | `float64` | Standard error, if `"se"` output/`Intervals.Confidence`/`Intervals.Prediction` was set and `UpdateMode = "full"` (`NaN` otherwise). |
 | `Residual` | `float64` | Residual y − smoothed; always present (there is no `"residuals"` output option for Online). |
 | `RobustnessWeight` | `float64` | Robustness weight, if `"weights"` output was set (`NaN` otherwise). |
 | `IterationsUsed` | `int` | Robustness iterations performed (`-1` if not applicable). |
-| `ConfidenceLower` / `ConfidenceUpper` | `float64` | Confidence interval bounds, if `ConfidenceIntervals` was set and `UpdateMode = "full"` (`NaN` otherwise). |
-| `PredictionLower` / `PredictionUpper` | `float64` | Prediction interval bounds, if `PredictionIntervals` was set and `UpdateMode = "full"` (`NaN` otherwise). |
+| `ConfidenceLower` / `ConfidenceUpper` | `float64` | Confidence interval bounds, if `Intervals.Confidence` was set and `UpdateMode = "full"` (`NaN` otherwise). |
+| `PredictionLower` / `PredictionUpper` | `float64` | Prediction interval bounds, if `Intervals.Prediction` was set and `UpdateMode = "full"` (`NaN` otherwise). |
 | `Gradient` | `[]float64` | Latest point's local fit gradient (`Dimensions` values), if `"gradient"` output was set (`SurfaceMode = "direct"` only). |
 
 There is no `Diagnostics` type or `"diagnostics"` output option for `OnlineLoess`: `PointResult` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.

@@ -16,8 +16,7 @@ StreamingLoess(
   boundary_policy = "extend",
   zero_weight_fallback = "use_local_mean",
   auto_converge = NULL,
-  confidence_intervals = NULL,
-  prediction_intervals = NULL,
+  intervals = NULL,
   merge_strategy = "weighted_average",
   parallel = TRUE,
   degree = "linear",
@@ -76,13 +75,7 @@ to zero: \code{"use_local_mean"} (default; aliases: \code{"local_mean"},
 \item{auto_converge}{Convergence tolerance for early stopping of robustness
 iterations. \code{NULL} (default) disables early stopping.}
 
-\item{confidence_intervals}{Confidence level for confidence intervals (e.g.
-\code{0.95}), computed per chunk and merged across overlap boundaries via
-\code{merge_strategy}. \code{NULL} (default) disables confidence intervals.}
-
-\item{prediction_intervals}{Confidence level for prediction intervals; same
-per-chunk computation and overlap-merging as \code{confidence_intervals}.
-\code{NULL} (default) disables prediction intervals.}
+\item{intervals}{Grouped coverage levels from \code{\link{intervals_opts}}.}
 
 \item{merge_strategy}{Strategy for reconciling overlapping chunk regions:
 \code{"weighted_average"} (default; alias: \code{"weighted"}),

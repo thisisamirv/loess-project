@@ -25,6 +25,7 @@
 #' @srrstats {RE2.0} Kernel, robustness, boundary, and scaling configurable.
 #'
 #' @inheritParams Loess
+#' @param intervals Grouped coverage levels from \code{\link{intervals_opts}}.
 #' @param outputs Optional character vector selecting \code{"diagnostics"},
 #'   \code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
 #'   \code{"derivative"}), and \code{"se"}. \code{NULL} (default) selects
@@ -39,12 +40,6 @@
 #'   \code{"average"} (alias: \code{"mean"}),
 #'   \code{"take_first"} (alias: \code{"first"}), or
 #'   \code{"take_last"} (alias: \code{"last"}).
-#' @param confidence_intervals Confidence level for confidence intervals (e.g.
-#'   \code{0.95}), computed per chunk and merged across overlap boundaries via
-#'   \code{merge_strategy}. \code{NULL} (default) disables confidence intervals.
-#' @param prediction_intervals Confidence level for prediction intervals; same
-#'   per-chunk computation and overlap-merging as \code{confidence_intervals}.
-#'   \code{NULL} (default) disables prediction intervals.
 #'
 #' @return A StreamingLoess object.
 #' @examples
@@ -67,8 +62,7 @@ StreamingLoess <- function(
     boundary_policy = "extend",
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
+    intervals = NULL,
     merge_strategy = "weighted_average",
     parallel = TRUE,
     degree = "linear",
@@ -83,7 +77,13 @@ StreamingLoess <- function(
     outputs = NULL
 ) {
     reject_extra_positional_args(sys.call(), "chunk_size")
+    if (...length() > 0L) {
+        stop("unused arguments (...)", call. = FALSE)
+    }
     validate_params(fraction = fraction, chunk_size = chunk_size)
+    interval_options <- parse_intervals_options(intervals)
+    confidence_intervals <- interval_options$confidence
+    prediction_intervals <- interval_options$prediction
     flags <- parse_outputs_flags(
         outputs,
         c("diagnostics", "residuals", "weights", "gradient", "derivative", "se")

@@ -9,13 +9,11 @@ public final class CVOptions {
     final double[] fractions;
     final String method;
     final int k;
-    final Long seed;
 
     private CVOptions(Builder builder) {
         this.fractions = builder.fractions.clone();
         this.method = builder.method;
         this.k = builder.k;
-        this.seed = builder.seed;
     }
 
     /**
@@ -35,7 +33,6 @@ public final class CVOptions {
         double[] fractions;
         String method = "kfold";
         int k = 5;
-        Long seed;
 
         Builder() {
         }
@@ -70,17 +67,6 @@ public final class CVOptions {
          */
         public Builder k(int k) {
             this.k = k;
-            return this;
-        }
-
-        /**
-         * Sets the reproducible fold-assignment seed.
-         *
-         * @param seed random seed
-         * @return this builder
-         */
-        public Builder seed(long seed) {
-            this.seed = seed;
             return this;
         }
 

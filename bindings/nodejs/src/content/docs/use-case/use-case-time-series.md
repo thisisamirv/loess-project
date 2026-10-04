@@ -82,7 +82,7 @@ const y = Float64Array.from(t, (ti, i) => 10 + 0.5 * ti + 3 * Math.sin(ti / 10) 
 const model = new fl.Loess({
     fraction: 0.2,
     iterations: 3,
-    prediction_intervals: 0.95
+    intervals: { prediction : 0.95 }
 });
 const result = model.fit(t, y);
 

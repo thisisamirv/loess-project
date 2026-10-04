@@ -17,6 +17,7 @@ This changelog includes end-user changes only. For internal development notes, s
 === Changed
 
 * Breaking change: replaced individual `return...` output setters and prediction flags with `outputs(...)` for Batch, Streaming, Online, and prediction options.
+* Breaking change: replaced flat interval setters and prediction levels with `intervals(IntervalsOptions)`; CV uses only `cv(CVOptions)` with an outer `seed(long)`, replacing flat CV setters and `CVOptions.Builder.seed`.
 
 === Fixed
 

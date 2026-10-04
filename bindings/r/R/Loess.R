@@ -75,21 +75,11 @@
 #'   Use \code{"minkowski:p"} to set a custom \emph{p} value.
 #' @param surface_mode Surface evaluation mode: \code{"interpolation"}
 #'   (default) or \code{"direct"}.
+#' @param intervals Grouped coverage levels from \code{\link{intervals_opts}}.
 #' @param outputs Optional character vector selecting \code{"diagnostics"},
 #'   \code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
 #'   \code{"derivative"}), \code{"se"}, and \code{"sorted"}. \code{NULL}
 #'   (default) selects no optional components.
-#' @param confidence_intervals Confidence level for confidence intervals,
-#'   greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-#'   disables confidence intervals.
-#' @param prediction_intervals Confidence level for prediction intervals,
-#'   greater than 0 and less than 1 (e.g., 0.95). \code{NULL} (default)
-#'   disables prediction intervals.
-#' @param cv_fractions Numeric vector of candidate fractions for
-#'   cross-validation. \code{NULL} (default) disables CV.
-#' @param cv_method Cross-validation method: \code{"kfold"} (default) or
-#'   \code{"loocv"}.
-#' @param cv_k Number of folds for k-fold CV, at least 2. Default: 5.
 #' @param weighted_metric_weights Numeric vector of per-dimension weights.
 #'   Length must equal \code{dimensions}. Only used when
 #'   \code{distance_metric = "weighted"}; setting
@@ -105,10 +95,8 @@
 #'   model rather than the requested degree, avoiding unstable extrapolation.
 #'   It has no effect below quadratic degree, and \code{FALSE} reproduces
 #'   \code{stats::loess()}. \code{NULL} (default) uses the library default.
-#' @param cv_seed Integer seed for the cross-validation random number
-#'   generator. \code{NULL} (default) uses a random seed.
 #' @param cv Grouped cross-validation settings from \code{\link{cv_opts}}.
-#'   \code{NULL} uses the individual \code{cv_*} arguments.
+#' @param seed Seed for reproducible CV folds, or \code{NULL}.
 #' @param retain_model Logical; if \code{TRUE}, retain the fitted model's
 #'   training data, enabling \code{\link{predict.Loess}} for out-of-sample
 #'   prediction. Default: \code{FALSE}.
@@ -130,14 +118,10 @@ Loess <- function(
     robustness_method = "bisquare",
     scaling_method = "mad",
     boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
     outputs = NULL,
+    intervals = NULL,
     zero_weight_fallback = "use_local_mean",
     auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
     parallel = TRUE,
     degree = "linear",
     dimensions = 1L,
@@ -147,18 +131,31 @@ Loess <- function(
     cell = NULL,
     interpolation_vertices = NULL,
     boundary_degree_fallback = NULL,
-    cv_seed = NULL,
+    seed = NULL,
     missing = "error",
     retain_model = FALSE,
     cv = NULL
 ) {
     reject_extra_positional_args(sys.call(), "fraction")
+    if (...length() > 0L) {
+        stop("unused arguments (...)", call. = FALSE)
+    }
     validate_params(fraction = fraction, iterations = iterations)
+    interval_options <- parse_intervals_options(intervals)
+    confidence_intervals <- interval_options$confidence
+    prediction_intervals <- interval_options$prediction
     if (!is.null(cv)) {
-        cv_fractions <- cv$fractions
-        cv_method <- if (is.null(cv$method)) "kfold" else cv$method
-        cv_k <- if (is.null(cv$k)) 5L else cv$k
-        cv_seed <- cv$seed
+        cv <- do.call(cv_opts, cv)
+    }
+    cv_fractions <- cv$fractions
+    cv_method <- if (is.null(cv$method)) "kfold" else cv$method
+    cv_k <- if (is.null(cv$k)) 5L else cv$k
+    cv_seed <- seed
+    if (!is.null(seed)) {
+        validate_scalar_numeric(seed, "seed")
+        if (!is.finite(seed) || seed < 0 || seed != floor(seed) || seed > 2^53) {
+            stop("seed must be a non-negative whole number up to 2^53", call. = FALSE)
+        }
     }
     flags <- parse_outputs_flags(
         outputs,
@@ -205,12 +202,11 @@ Loess <- function(
 #' @param fractions Numeric vector of candidate smoothing fractions.
 #' @param method Cross-validation method: \code{"kfold"} or \code{"loocv"}.
 #' @param k Number of folds for k-fold cross-validation. Default: 5.
-#' @param seed Seed for reproducible fold assignment, or \code{NULL}.
 #' @return A \code{cv_opts} list for \code{Loess(cv = ...)}.
 #' @examples
 #' model <- Loess(cv = cv_opts(fractions = c(0.2, 0.3, 0.5)))
 #' @export
-cv_opts <- function(fractions, method = "kfold", k = 5L, seed = NULL) {
+cv_opts <- function(fractions, method = "kfold", k = 5L) {
     if (missing(fractions) || is.null(fractions)) {
         stop(
             "`fractions` must be a numeric vector of candidate fractions",
@@ -224,9 +220,40 @@ cv_opts <- function(fractions, method = "kfold", k = 5L, seed = NULL) {
         list(
             fractions = as.double(fractions),
             method = as.character(method),
-            k = as.integer(k),
-            seed = seed
+            k = as.integer(k)
         ),
         class = "cv_opts"
     )
+}
+
+#' Interval options for fitting and prediction
+#'
+#' @param confidence Confidence coverage level in (0, 1), or \code{NULL}.
+#' @param prediction Prediction coverage level in (0, 1), or \code{NULL}.
+#' @return A named list for the \code{intervals} argument.
+#' @examples
+#' model <- Loess(intervals = intervals_opts(confidence = 0.95))
+#' @export
+intervals_opts <- function(confidence = NULL, prediction = NULL) {
+    levels <- list(confidence = confidence, prediction = prediction)
+    for (name in names(levels)) {
+        level <- levels[[name]]
+        if (!is.null(level)) {
+            validate_scalar_numeric(level, name)
+            if (!is.finite(level) || level <= 0 || level >= 1) {
+                stop(paste(name, "must be between 0 and 1"), call. = FALSE)
+            }
+        }
+    }
+    levels
+}
+
+parse_intervals_options <- function(intervals) {
+    if (is.null(intervals)) {
+        return(intervals_opts())
+    }
+    if (!is.list(intervals) || is.null(names(intervals)) || any(names(intervals) == "")) {
+        stop("intervals must be a named list", call. = FALSE)
+    }
+    do.call(intervals_opts, intervals)
 }

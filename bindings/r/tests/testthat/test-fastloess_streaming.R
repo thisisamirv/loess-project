@@ -225,8 +225,7 @@ test_that("StreamingLoess: confidence_intervals and prediction_intervals", {
     sl <- StreamingLoess(
         fraction = 0.3,
         chunk_size = 100,
-        confidence_intervals = 0.95,
-        prediction_intervals = 0.95
+        intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
     )
     chunk_result <- process_chunk(sl, x, y)
     expect_false(is.null(chunk_result$confidence_lower))

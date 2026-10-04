@@ -48,8 +48,11 @@ struct CVOptions {
   std::vector<double> fractions;
   std::string method = "kfold";
   int k = detail::k_default_cv_k;
-  /// Zero means no seed (random fold assignment).
-  uint64_t seed = 0;
+};
+
+struct IntervalsOptions {
+  double confidence = NAN;
+  double prediction = NAN;
 };
 
 inline bool hasOutput(const std::vector<std::string> &outputs,
@@ -139,15 +142,12 @@ struct LoessOptions {
   std::string boundary_policy = "extend";
   std::string zero_weight_fallback = "use_local_mean";
 
-  double confidence_intervals = NAN; ///< Confidence level (NaN = disabled)
-  double prediction_intervals = NAN; ///< Prediction level (NaN = disabled)
-  double auto_converge = NAN;        ///< Auto-convergence threshold
+  IntervalsOptions intervals;
+  double auto_converge = NAN; ///< Auto-convergence threshold
 
   /// Optional result components: "diagnostics", "residuals", "weights",
   /// "gradient" (or "derivative"), "se", and "sorted".
   std::vector<std::string> outputs;
-  /// Grouped cross-validation configuration; nonempty fractions take
-  /// precedence.
   CVOptions cv;
   bool parallel = true;
 
@@ -159,11 +159,6 @@ struct LoessOptions {
       "normalized"; ///< euclidean, normalized, manhattan, chebyshev
   std::string surface_mode = "interpolation"; ///< direct, interpolation
 
-  // Cross-validation options
-  std::vector<double> cv_fractions;
-  std::string cv_method = "kfold";
-  int cv_k = detail::k_default_cv_k;
-
   // Advanced / tuning options
   /// Per-dimension weights for the \"weighted\" distance metric.
   std::vector<double> weighted_metric_weights;
@@ -174,8 +169,7 @@ struct LoessOptions {
   int interpolation_vertices = 0;
   /// -1 = unset (library default), 0 = false, 1 = true.
   int boundary_degree_fallback = -1;
-  /// Seed for cross-validation RNG (0 = unset / random).
-  uint64_t cv_seed = 0;
+  std::optional<uint64_t> seed;
   /// Policy for non-finite (NaN/Inf) values in input data ("error", "drop").
   std::string missing = "error";
   /// Retain the fitted model's training data, enabling
@@ -202,7 +196,7 @@ struct StreamingOptions : public LoessOptions {
  * LOESS processes one point at a time and always runs sequentially.
  * Cross-validation and diagnostics/residuals are Batch-only (or
  * Batch/Streaming-only) and have no equivalent here.
- * `confidence_intervals`/`prediction_intervals`/`outputs = {"se"}` require
+ * `intervals` and `outputs = {"se"}` require
  * `update_mode == "full"`.
  */
 struct OnlineOptions {
@@ -217,12 +211,7 @@ struct OnlineOptions {
   /// Optional output components: "weights", "gradient" (or "derivative"),
   /// and/or "se". "se" requires `update_mode == "full"`.
   std::vector<std::string> outputs;
-  /// Confidence level for confidence intervals; requires `update_mode ==
-  /// "full"` (NaN = disabled).
-  double confidence_intervals = NAN;
-  /// Confidence level for prediction intervals; requires `update_mode ==
-  /// "full"` (NaN = disabled).
-  double prediction_intervals = NAN;
+  IntervalsOptions intervals;
   std::string degree = "linear";
   int dimensions = 1;
   std::string distance_metric = "normalized";
@@ -284,8 +273,7 @@ private:
 struct PredictOptions {
   /// Optional prediction components: "se" and/or "gradient" ("derivative").
   std::vector<std::string> outputs;
-  double confidence_level = NAN; ///< Confidence level (NaN = disabled)
-  double prediction_level = NAN; ///< Prediction level (NaN = disabled)
+  IntervalsOptions intervals;
   /// Behavior for query points outside the training range ("clamp", "linear",
   /// "error").
   std::string extrapolation = "clamp";
@@ -460,8 +448,8 @@ public:
                         const PredictOptions &options = {}) const {
     auto result = cpp_predict(
         ptr_, new_x.data(), static_cast<unsigned long>(new_x.size()),
-        hasOutput(options.outputs, "se") ? 1 : 0, options.confidence_level,
-        options.prediction_level,
+        hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
+        options.intervals.prediction,
         (hasOutput(options.outputs, "gradient") ||
          hasOutput(options.outputs, "derivative"))
             ? 1
@@ -678,17 +666,14 @@ private:
 class Loess {
 public:
   explicit Loess(const LoessOptions &options = {}) {
-    const bool grouped_cv = !options.cv.fractions.empty();
-    const auto &cv_fractions =
-        grouped_cv ? options.cv.fractions : options.cv_fractions;
-    const auto &cv_method = grouped_cv ? options.cv.method : options.cv_method;
-    const int cv_k = grouped_cv ? options.cv.k : options.cv_k;
-    const uint64_t cv_seed = grouped_cv ? options.cv.seed : options.cv_seed;
+    const auto &cv_fractions = options.cv.fractions;
+    const auto &cv_method = options.cv.method;
+    const int cv_k = options.cv.k;
     ptr_ = cpp_loess_new(
         options.fraction, options.iterations, options.weight_function.c_str(),
         options.robustness_method.c_str(), options.scaling_method.c_str(),
-        options.boundary_policy.c_str(), options.confidence_intervals,
-        options.prediction_intervals,
+        options.boundary_policy.c_str(), options.intervals.confidence,
+        options.intervals.prediction,
         hasOutput(options.outputs, "diagnostics") ? 1 : 0,
         hasOutput(options.outputs, "residuals") ? 1 : 0,
         hasOutput(options.outputs, "weights") ? 1 : 0,
@@ -715,8 +700,8 @@ public:
     if (ptr_ == nullptr) {
       throw LoessError(cpp_last_error_message());
     }
-    if (cv_seed > 0) {
-      cpp_loess_set_cv_seed(ptr_, static_cast<unsigned long>(cv_seed));
+    if (options.seed.has_value()) {
+      cpp_loess_set_cv_seed(ptr_, static_cast<unsigned long>(*options.seed));
     }
   }
 
@@ -808,8 +793,8 @@ public:
             ? nullptr
             : options.weighted_metric_weights.data(),
         static_cast<unsigned long>(options.weighted_metric_weights.size()),
-        options.missing.c_str(), options.confidence_intervals,
-        options.prediction_intervals, hasOutput(options.outputs, "se") ? 1 : 0);
+        options.missing.c_str(), options.intervals.confidence,
+        options.intervals.prediction, hasOutput(options.outputs, "se") ? 1 : 0);
     if (ptr_ == nullptr) {
       throw LoessError(cpp_last_error_message());
     }
@@ -985,8 +970,8 @@ public:
             ? nullptr
             : options.weighted_metric_weights.data(),
         static_cast<unsigned long>(options.weighted_metric_weights.size()),
-        options.missing.c_str(), options.confidence_intervals,
-        options.prediction_intervals, hasOutput(options.outputs, "se") ? 1 : 0);
+        options.missing.c_str(), options.intervals.confidence,
+        options.intervals.prediction, hasOutput(options.outputs, "se") ? 1 : 0);
     if (ptr_ == nullptr) {
       throw LoessError(cpp_last_error_message());
     }
