@@ -1,13 +1,9 @@
 [package]
-name = "validate"
+name = "visual-validation"
 version = "0.0.0"
 rust-version = "1.89"
 edition = "2024"
 publish = false
-
-[[bin]]
-name = "validate"
-path = "src/validate.rs"
 
 [[bin]]
 name = "visual"
@@ -15,5 +11,3 @@ path = "src/visual.rs"
 
 [dependencies]
 fastLoess = { path = "../../crates/fastLoess" }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"

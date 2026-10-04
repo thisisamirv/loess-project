@@ -1,33 +1,47 @@
-# validation/Makefile — Run validation and comparison for fastLoess vs R.
-#
-# Targets:
-#   fastloess-visual    Build and run the visual Rust binary (writes output/fastLoess/)
-#   fastloess-validate  Build and run the validate Rust binary (writes output/fastLoess/)
-#   r-validate          Run R reference script (writes output/r/)
-#   compare             Compare R and fastLoess outputs with compare.py
-#   plot                Generate plots with plot.py
+# Validation suites and visual data generation.
+
+.SHELLFLAGS := -ec
 
 PYTHON ?= python
-CARGO_DIR := fastLoess
+VISUAL_DIR := visual_validation
+R_LIB_DIR ?= ../bindings/r/.r-lib
+PYTHON_VENV ?= ../.venv
+ifeq ($(OS),Windows_NT)
+PYTHON_BINDING ?= $(PYTHON_VENV)/Scripts/python.exe
+else
+PYTHON_BINDING ?= $(PYTHON_VENV)/bin/python
+endif
 
-.PHONY: fastloess-visual fastloess-validate r-validate compare plot
+.PHONY: visual plot python-deps python-tests validation-deps r-tests
 
-fastloess-visual:
-	@echo "Building and running fastLoess visual..."
-	@cd $(CARGO_DIR) && cargo run --bin visual --release
-
-fastloess-validate:
-	@echo "Building and running fastLoess validate..."
-	@cd $(CARGO_DIR) && cargo run --bin validate --release
-
-r-validate:
-	@echo "Running R reference validation..."
-	@Rscript R/stats_loess.R
-
-compare:
-	@echo "Comparing outputs..."
-	@$(PYTHON) compare.py
+visual:
+	@echo "Generating visual validation data..."
+	@cd $(VISUAL_DIR) && cargo run --bin visual --release
 
 plot:
-	@echo "Generating plots..."
-	@$(PYTHON) plot.py
+	@echo "Generating visual validation plots..."
+	@cd $(VISUAL_DIR) && $(PYTHON) plot.py
+
+python-deps:
+	@if [ ! -x "$(PYTHON_BINDING)" ]; then $(PYTHON) -m venv "$(PYTHON_VENV)"; fi
+	@if ! $(PYTHON_BINDING) -c "import fastloess, numpy, pytest, hypothesis" >/dev/null 2>&1; then \
+	  $(PYTHON_BINDING) -m pip install -q "numpy>=1.20.0" pytest "hypothesis>=6,<7" ../bindings/python; \
+	fi
+
+python-tests: python-deps
+	@echo "Running Python-binding boundary validation..."
+	@$(PYTHON_BINDING) -m pytest -q property_tests/test_boundary_padding.py
+
+validation-deps:
+	@echo "Installing validation dependencies when missing..."
+	@Rscript -e "lib <- normalizePath('$(R_LIB_DIR)', winslash='/', mustWork=FALSE); dir.create(lib, recursive=TRUE, showWarnings=FALSE); .libPaths(c(lib, .libPaths())); required <- c('quickcheck', 'testthat', 'lintr'); missing <- required[!vapply(required, requireNamespace, logical(1), quietly=TRUE)]; if (length(missing)) install.packages(missing, lib=lib, repos='https://cloud.r-project.org'); stopifnot(all(vapply(required, requireNamespace, logical(1), quietly=TRUE)))"
+
+r-tests: validation-deps
+	@echo "Running R validation tests..."
+	@Rscript \
+	  -e ".libPaths(c(normalizePath('$(R_LIB_DIR)', winslash='/', mustWork=TRUE), .libPaths()))" \
+	  -e "my_linters <- lintr::linters_with_defaults(indentation_linter = lintr::indentation_linter(indent = 4L), object_name_linter = NULL, commented_code_linter = NULL, object_usage_linter = NULL)" \
+	  -e "lints <- c(lintr::lint_dir('property_tests', linters = my_linters), lintr::lint_dir('fixture_tests', linters = my_linters))" \
+	  -e "print(lints)" \
+	  -e "if (length(lints) > 0L) quit(status = 1)"
+	@Rscript -e ".libPaths(c(normalizePath('$(R_LIB_DIR)', winslash='/', mustWork=TRUE), .libPaths()))" -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('property_tests', package = 'rfastloess'); testthat::test_dir('fixture_tests', package = 'rfastloess')"

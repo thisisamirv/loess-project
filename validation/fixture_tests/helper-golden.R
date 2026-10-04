@@ -1,4 +1,4 @@
-# Shared helpers for the stored golden fixtures under tests/testthat/fixtures.
+# Shared helpers for the stored golden fixtures under fixture_tests/fixtures.
 # The generator and test use the same cases so committed values cannot drift
 # from the behavior being checked.
 

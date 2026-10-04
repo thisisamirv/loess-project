@@ -1,49 +1,55 @@
 # Validation
 
-Validates `fastLoess` (Rust) output against R's `stats::loess` as the reference implementation across 20 scenarios covering a wide range of inputs and parameter combinations.
+## Numerical Tests
 
-## Scenarios
-
-| # | Name | n | Fraction | Degree | Iterations | Notes |
-| --- | --- | --- | --- | --- | --- | --- |
-| 01 | Tiny Linear | 10 | 0.8 | 1 | 0 | Minimal dataset |
-| 02 | Quadratic Degree 2 | 50 | 0.4 | 2 | 0 | Quadratic fit on quadratic data |
-| 03 | Sine Standard | 100 | 0.3 | 1 | 0 | Noisy sine wave |
-| 04 | Sine Robust | 100 | 0.3 | 1 | 4 | Sine with 5% outliers, bisquare reweighting |
-| 05 | Degree 2 | 100 | 0.4 | 2 | 0 | Quadratic local polynomial |
-| 06 | Large Scale | 500 | 0.1 | 1 | 0 | Narrow bandwidth, 500 points |
-| 07 | High Smoothness | 100 | 0.9 | 1 | 0 | Very wide bandwidth |
-| 08 | Low Smoothness | 100 | 0.1 | 1 | 0 | Very narrow bandwidth, direct surface |
-| 09 | Sine Degree 2 | 100 | 0.3 | 2 | 0 | Quadratic fit on sine data |
-| 10 | Constant | 50 | 0.5 | 1 | 0 | Constant y signal |
-| 11 | Step Function | 100 | 0.4 | 1 | 0 | Discontinuous step signal |
-| 12 | End-effects Left | 50 | 0.3 | 1 | 0 | Left boundary behavior |
-| 13 | End-effects Right | 50 | 0.3 | 1 | 0 | Right boundary behavior |
-| 14 | Sparse Data | 20 | 0.6 | 1 | 0 | Wide x-range, only 20 points |
-| 15 | Dense Data | 500 | 0.05 | 1 | 0 | Very narrow bandwidth, 500 points |
-| 16 | Degree 2 Robust | 100 | 0.3 | 2 | 4 | Quadratic + bisquare on outlier data |
-| 17 | Degree 2 Direct | 100 | 0.2 | 2 | 0 | Quadratic, exact computation at all points |
-| 18 | Iter 2 Check | 100 | 0.4 | 1 | 2 | Two robustness iterations |
-| 19 | Interpolate Exact | 50 | 0.5 | 1 | 0 | Interpolation surface check |
-| 20 | Zero Variance | 10 | 0.5 | 1 | 0 | Constant y, minimal n |
-
-## Running
+R randomized properties and fixed reference cases live in
+[`property_tests/`](property_tests/). Golden-output tests and their committed
+fixtures live in [`fixture_tests/`](fixture_tests/). Run both suites, with R lint,
+and the Python boundary properties from the repository root:
 
 ```sh
-# Generate R reference outputs (writes output/r/)
-make r-validate
-
-# Run fastLoess validation (writes output/fastLoess/)
-make fastloess-validate
-
-# Run fastLoess visual output (writes output/fastLoess/)
-make fastloess-visual
-
-# Compare R and fastLoess outputs
-make compare
-
-# Generate plots
-make plot
+make r
+make validate
 ```
 
-Output JSON files are written to `output/r/` and `output/fastLoess/`.
+`make validate` creates the repository Python virtual environment when needed and
+installs NumPy, pytest, Hypothesis, and the local Python binding independently of
+`make python-dev`. Its boundary property generates 40 cases per policy across
+varied input lengths, irregular x spacing, response shapes, and fractions.
+Extend, Reflect, and Zero are compared with explicitly padded direct linear fits
+that preserve the original neighbor count. This isolates padding and output
+slicing; it is not an independent oracle for the shared LOESS engine.
+
+The R property suite compares direct and interpolated fits against `stats::loess`,
+including input order, sorted outputs, repeated predictors, robustness, and sparse
+outliers. Fixed cases cover noiseless and degenerate inputs and long-run robust
+fits. Golden fixtures pin boundary, interval, gradient, robustness-weight,
+Streaming, and Online behavior. `make validate` installs `quickcheck`, `testthat`,
+and `lintr` when missing; `quickcheck` is validation-only, not a package dependency.
+The R binding must already be installed, as above or by `make r-dev`.
+
+`make all-dev` runs validation last, after all component checks. `make r-dev` and
+`make r-tests` run package-only checks; they do not run these repository suites.
+
+## Visual Validation
+
+[`visual_validation/`](visual_validation/) generates CSV data for explanatory
+plots. These help inspect degrees, kernels, boundaries, intervals, adapters,
+multivariate surfaces, and other behaviors; they are not correctness oracles.
+
+From the repository root:
+
+```sh
+make -C validation visual
+make -C validation plot PYTHON=python
+```
+
+For plotting, choose an interpreter with NumPy, Pandas, and Matplotlib installed.
+Use an absolute interpreter path when passing `PYTHON`, or one resolved on `PATH`;
+for example, `make -C validation plot PYTHON=python`. Generated CSVs and SVGs are
+kept in [`visual_validation/output/`](visual_validation/output/).
+
+## Reference Sources
+
+[`reference/`](reference/) contains R's LOESS R/C/Fortran sources and Cleveland's
+original LOESS Fortran reference. These are distinct from LOWESS reference sources.

@@ -89,14 +89,14 @@ dev:
 	@echo "=============================================================================="
 	@echo "1. Installing R development packages..."
 	@echo "=============================================================================="
-	@echo "Installing R required packages (styler, testthat, rmarkdown, knitr, lintr, roxygen2, pkgdown, remotes, quickcheck)..."
+	@echo "Installing R required packages (styler, testthat, rmarkdown, knitr, lintr, roxygen2, pkgdown, remotes)..."
 	@echo "This may take a while depending on your internet connection and system performance."
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript \
 	  -e "lib <- Sys.getenv('R_LIBS_USER'); dir.create(lib, recursive = TRUE, showWarnings = FALSE); .libPaths(c(lib, .libPaths()))" \
 	  -e "# Bootstrap pak; it handles RSPM binary vs source selection automatically" \
 	  -e "if (!requireNamespace('pak', quietly = TRUE, lib.loc = lib)) { options(install.lock = FALSE); install.packages('pak', lib = lib, repos = 'https://r-lib.github.io/p/pak/stable/') }" \
 	  -e "# Required packages (CRAN)" \
-	  -e "required <- c('styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes', 'quickcheck')" \
+	  -e "required <- c('styler', 'testthat', 'rmarkdown', 'knitr', 'lintr', 'roxygen2', 'pkgdown', 'remotes')" \
 	  -e "tryCatch(pak::pkg_install(required, lib = lib, ask = FALSE), error = function(err) { message('pak install failed; clearing partial local cache and retrying once: ', conditionMessage(err)); unlink(c(Sys.glob(file.path(lib, '00LOCK*')), file.path(lib, '_cache'), file.path(lib, 'data.table')), recursive = TRUE, force = TRUE); Sys.setenv(PKG_NUM_WORKERS = '1'); pak::pkg_install(required, lib = lib, ask = FALSE) })" \
 	  -e "# commonmark's r-universe macOS ARM64 binary has had a checksum mismatch; install it from CRAN first" \
 	  -e "options(repos = c(CRAN = 'https://cloud.r-project.org')); pak::pkg_install('commonmark', lib = lib, ask = FALSE)" \
@@ -191,10 +191,6 @@ r-tests:
 	@cd $(R_DIR)/src && $(R_CROSS_ENV) cargo test -q --no-run $(R_CARGO_TARGET)
 	@rm -rf $(R_DIR)/src/.cargo
 	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "Sys.setenv(NOT_CRAN='true'); testthat::test_dir('$(R_DIR)/tests/testthat', package = 'rfastloess')"
-	@echo "Running the LOESS property suite 30 times in parallel..."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "scripts <- rep('$(R_DIR)/tests/testthat/test-property-loess.R', 30L); workers <- min(30L, parallel::detectCores()); cluster <- parallel::makeCluster(workers); on.exit(parallel::stopCluster(cluster), add = TRUE); jobs <- parallel::parLapply(cluster, scripts, function(path) testthat::test_file(path, reporter = 'silent')); failures <- vapply(jobs, inherits, logical(1), what = 'error'); if (any(failures)) quit(status = 1)"
-	@echo "Running the LOESS validation suite 30 times in parallel..."
-	@R_LIBS_USER=$(CURDIR)/$(R_LIB_DIR) Rscript -e "scripts <- rep('$(R_DIR)/tests/testthat/test-validation.R', 30L); workers <- min(30L, parallel::detectCores()); cluster <- parallel::makeCluster(workers); on.exit(parallel::stopCluster(cluster), add = TRUE); jobs <- parallel::parLapply(cluster, scripts, function(path) testthat::test_file(path, reporter = 'silent')); failures <- vapply(jobs, inherits, logical(1), what = 'error'); if (any(failures)) quit(status = 1)"
 
 tests: r-tests
 

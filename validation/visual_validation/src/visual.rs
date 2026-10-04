@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!();
 
     // Ensure output directory exists
-    let output_dir = "../output/visual/";
+    let output_dir = "output/visual/";
     create_dir_all(output_dir)?;
     println!("Output directory: {}", output_dir);
     println!();
@@ -137,7 +137,7 @@ fn run_fraction_comparison() -> Result<(), Box<dyn Error>> {
         results.push(result);
     }
 
-    let path = "../output/visual/fraction_comparison.csv";
+    let path = "output/visual/fraction_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_true,y_noisy,y_frac_0.2,y_frac_0.5,y_frac_0.9")?;
 
@@ -220,7 +220,7 @@ fn run_intervals_comparison() -> Result<(), Box<dyn Error>> {
         avg_pred_width / avg_conf_width
     );
 
-    let path = "../output/visual/intervals_comparison.csv";
+    let path = "output/visual/intervals_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(
         file,
@@ -307,7 +307,7 @@ fn run_robust_iter_comparison() -> Result<(), Box<dyn Error>> {
     println!("RMSE (Robust):     {:.4}", rmse_r);
     println!("Improvement:       {:.2}x", rmse_nr / rmse_r);
 
-    let path = "../output/visual/robust_iter_comparison.csv";
+    let path = "output/visual/robust_iter_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_true,y_noisy,y_non_robust,y_robust")?;
 
@@ -401,7 +401,7 @@ fn run_loess_concept() -> Result<(), Box<dyn Error>> {
     println!("Focus point: x = {:.2} (Index {})", x0, focus_idx);
     println!("Local Fit: a={:.3}, b={:.3}", a, b);
 
-    let path = "../output/visual/loess_concept.csv";
+    let path = "output/visual/loess_concept.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_noisy,y_smooth,weight,y_local_fit_x0,is_focus")?;
 
@@ -466,7 +466,7 @@ fn run_kernel_comparison() -> Result<(), Box<dyn Error>> {
         println!("  Kernel processed: {}", kernel);
     }
 
-    let path = "../output/visual/kernel_comparison.csv";
+    let path = "output/visual/kernel_comparison.csv";
     let mut file = File::create(path)?;
     write!(file, "x,y_true,y_noisy")?;
     for kernel in &kernels {
@@ -572,7 +572,7 @@ fn run_robust_method_comparison() -> Result<(), Box<dyn Error>> {
         println!("  RMSE {:8}: {:.4}", name, rmse);
     }
 
-    let path = "../output/visual/robust_method_comparison.csv";
+    let path = "output/visual/robust_method_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_true,y_noisy,y_bisquare,y_huber,y_talwar")?;
     for i in 0..n {
@@ -621,7 +621,7 @@ fn run_boundary_policy_comparison() -> Result<(), Box<dyn Error>> {
         println!("  Policy processed: {}", policy);
     }
 
-    let path = "../output/visual/boundary_comparison.csv";
+    let path = "output/visual/boundary_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_true,y_noisy,y_none,y_extend,y_reflect")?;
     for i in 0..n {
@@ -672,7 +672,9 @@ fn run_cv_comparison() -> Result<(), Box<dyn Error>> {
 
     // 1. LOOCV
     let loocv_result = Loess::new()
-        .cv(fastLoess::prelude::CVBuilder::new().method("loocv").fraction(candidate_fractions.to_vec()))
+        .cv(fastLoess::prelude::CVBuilder::new()
+            .method("loocv")
+            .fraction(candidate_fractions.to_vec()))
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -681,7 +683,11 @@ fn run_cv_comparison() -> Result<(), Box<dyn Error>> {
 
     // 2. K-Fold (5 folds)
     let kfold_result = Loess::new()
-        .cv(fastLoess::prelude::CVBuilder::new().method("kfold").k(5).fraction(candidate_fractions.to_vec())).seed(42)
+        .cv(fastLoess::prelude::CVBuilder::new()
+            .method("kfold")
+            .k(5)
+            .fraction(candidate_fractions.to_vec()))
+        .seed(42)
         .build()
         .unwrap()
         .fit(&x, &y)
@@ -698,7 +704,7 @@ fn run_cv_comparison() -> Result<(), Box<dyn Error>> {
     println!("  No CV Fraction (Fixed): 0.8");
 
     // Export scores comparison
-    let scores_path = "../output/visual/cv_scores.csv";
+    let scores_path = "output/visual/cv_scores.csv";
     let mut score_file = File::create(scores_path)?;
     writeln!(score_file, "fraction,loocv_rmse,kfold_rmse")?;
     let loocv_scores = loocv_result.cv_scores.as_ref().unwrap();
@@ -713,7 +719,7 @@ fn run_cv_comparison() -> Result<(), Box<dyn Error>> {
     println!("CV Scores exported to {}", scores_path);
 
     // Export fits comparison
-    let fits_path = "../output/visual/cv_fits.csv";
+    let fits_path = "output/visual/cv_fits.csv";
     let mut fit_file = File::create(fits_path)?;
     writeln!(fit_file, "x,y_true,y_noisy,y_loocv,y_kfold,y_fixed")?;
     for i in 0..n {
@@ -783,7 +789,7 @@ fn run_surface_mode_comparison() -> Result<(), Box<dyn Error>> {
         .fold(0.0f64, f64::max);
     println!("  max |Direct − Interp| = {:.4}", max_diff);
 
-    let path = "../output/visual/surface_mode_comparison.csv";
+    let path = "output/visual/surface_mode_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_true,y_noisy,y_direct,y_interpolation")?;
     for i in 0..n {
@@ -923,7 +929,7 @@ fn run_scaling_method_comparison() -> Result<(), Box<dyn Error>> {
             / n as f64
     );
 
-    let path = "../output/visual/scaling_comparison.csv";
+    let path = "output/visual/scaling_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_true,y_noisy,y_none,y_mad,y_mar,y_mean")?;
     for i in 0..n {
@@ -1047,7 +1053,7 @@ fn run_zero_weight_fallback_comparison() -> Result<(), Box<dyn Error>> {
         println!("  RMSE {}: {:.4}", name, rmse);
     }
 
-    let path = "../output/visual/zero_weight_comparison.csv";
+    let path = "output/visual/zero_weight_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(
         file,
@@ -1146,7 +1152,7 @@ fn run_merge_comparison() -> Result<(), Box<dyn Error>> {
     y_average.extend(streaming_average.finalize()?.y);
     y_first.extend(streaming_first.finalize()?.y);
 
-    let path = "../output/visual/merge_comparison.csv";
+    let path = "output/visual/merge_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_true,y_noisy,y_weighted,y_average,y_first")?;
     for i in 0..n {
@@ -1226,7 +1232,7 @@ fn run_online_comparison() -> Result<(), Box<dyn Error>> {
         y_large.push(r_large.as_ref().map(|o| o.y).unwrap_or(y[i]));
     }
 
-    let path = "../output/visual/online_comparison.csv";
+    let path = "output/visual/online_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_true,y_noisy,y_small_window,y_large_window")?;
     for i in 0..n {
@@ -1371,7 +1377,7 @@ fn run_adapter_comparison() -> Result<(), Box<dyn Error>> {
         y_o_on.push(r_on.as_ref().map(|o| o.y).unwrap_or(y_true[i]));
     }
 
-    let path = "../output/visual/adapter_comparison.csv";
+    let path = "output/visual/adapter_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(
         file,
@@ -1461,7 +1467,7 @@ fn run_degree_comparison() -> Result<(), Box<dyn Error>> {
     println!("RMSE Linear:    {:.6}", rmse_lin);
     println!("RMSE Quadratic: {:.6}", rmse_quad);
 
-    let path = "../output/visual/degree_comparison.csv";
+    let path = "output/visual/degree_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y_true,y_noisy,y_linear,y_quadratic")?;
     for i in 0..n {
@@ -1545,7 +1551,7 @@ fn run_higher_degree_comparison() -> Result<(), Box<dyn Error>> {
         results.push(result);
     }
 
-    let path = "../output/visual/higher_degree_comparison.csv";
+    let path = "output/visual/higher_degree_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(
         file,
@@ -1627,7 +1633,7 @@ fn run_multivariate_loess() -> Result<(), Box<dyn Error>> {
         .sqrt();
     println!("RMSE: {:.6}", rmse);
 
-    let path = "../output/visual/multivariate_loess.csv";
+    let path = "output/visual/multivariate_loess.csv";
     let mut file = File::create(path)?;
     writeln!(file, "x,y,z_true,z_smooth")?;
     for i in 0..result.y.len() {
@@ -1690,7 +1696,7 @@ fn run_degree_interpolation_comparison() -> Result<(), Box<dyn Error>> {
         results.push((direct.y, interp.y));
     }
 
-    let path = "../output/visual/degree_interpolation_comparison.csv";
+    let path = "output/visual/degree_interpolation_comparison.csv";
     let mut file = File::create(path)?;
     writeln!(
         file,

@@ -1,7 +1,7 @@
 # Regenerate the stored golden reference fixtures in this directory.
 #
-# Usage from the package root:
-#   Rscript tests/testthat/fixtures/make_reference.R
+# Usage from the repository root:
+#   Rscript validation/fixture_tests/fixtures/make_reference.R
 
 args <- commandArgs(trailingOnly = FALSE)
 self <- sub("^--file=", "", grep("^--file=", args, value = TRUE))
@@ -33,7 +33,10 @@ sums <- vapply(
     character(1)
 )
 provenance <- c(
-    sprintf("generated_by: %s", "tests/testthat/fixtures/make_reference.R"),
+    sprintf(
+        "generated_by: %s",
+        "validation/fixture_tests/fixtures/make_reference.R"
+    ),
     sprintf("generated_at: %s", format(Sys.time(), tz = "UTC", usetz = TRUE)),
     sprintf("r_version: %s", as.character(getRversion())),
     sprintf(

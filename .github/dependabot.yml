@@ -14,7 +14,7 @@ updates:
       prefix: "chore(ci)"
 
   # Rust workspace: crates/{loess-rs,fastLoess}, all bindings except R,
-  # validation/fastLoess (see root Cargo.toml members).
+  # validation/visual_validation (see root Cargo.toml members).
   - package-ecosystem: "cargo"
     directory: "/"
     schedule:

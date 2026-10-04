@@ -199,6 +199,7 @@ make java-clean # Clean build artifacts
 ```bash
 make all          # Build all components
 make all-dev      # Full quality-check workflow for all components
+make validate     # Python/R numerical validation (after installing the R binding)
 make all-coverage # Run coverage for loess-rs, fastLoess, python, and r
 make all-clean    # Clean all build artifacts
 make docs-test    # Run doc snippet tests across all languages
@@ -254,7 +255,7 @@ loess-project/
 │   ├── cpp/              # C++17 wrapper
 │   ├── go/               # cgo bindings
 │   └── java/             # JNI bindings
-├── validation/           # R vs loess-rs parity validation
+├── validation/           # Property/reference tests, golden fixtures, and visual data
 ├── benchmarks/           # Performance benchmarks (Criterion)
 └── Makefile              # Build automation
 ```
