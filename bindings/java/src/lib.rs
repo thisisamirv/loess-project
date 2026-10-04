@@ -97,29 +97,30 @@ fn jstring_to_option(env: &mut Env, s: &JString) -> Option<String> {
     jstring_to_string(env, s)
 }
 
-fn jarray_len(env: &mut Env, arr: &JDoubleArray) -> usize {
+fn jarray_len(env: &mut Env, arr: &JDoubleArray) -> AppResult<usize> {
     if arr.is_null() {
-        0
+        Ok(0)
     } else {
-        env.get_array_length(arr).unwrap_or(0) as usize
+        Ok(env.get_array_length(arr)? as usize)
     }
 }
 
-fn jarray_to_vec(env: &mut Env, arr: &JDoubleArray) -> Vec<f64> {
-    let len = jarray_len(env, arr);
+fn jarray_to_vec(env: &mut Env, arr: &JDoubleArray) -> AppResult<Vec<f64>> {
+    let len = jarray_len(env, arr)?;
     if len == 0 {
-        return Vec::new();
+        return Ok(Vec::new());
     }
     let mut buf = vec![0f64; len];
-    if env.get_double_array_region(arr, 0, &mut buf).is_err() {
-        return Vec::new();
-    }
-    buf
+    env.get_double_array_region(arr, 0, &mut buf)?;
+    Ok(buf)
 }
 
-fn jarray_to_option_vec(env: &mut Env, arr: &JDoubleArray) -> Option<Vec<f64>> {
-    let v = jarray_to_vec(env, arr);
-    if v.is_empty() { None } else { Some(v) }
+fn jarray_to_option_vec(env: &mut Env, arr: &JDoubleArray) -> AppResult<Option<Vec<f64>>> {
+    if arr.is_null() {
+        Ok(None)
+    } else {
+        jarray_to_vec(env, arr).map(Some)
+    }
 }
 
 fn opt_f64(value: jdouble) -> Option<f64> {
@@ -157,11 +158,13 @@ fn result_to_jobject<'local>(
     let iterations_used = result.iterations_used.map(|i| i as jint).unwrap_or(-1);
     // Extracted before the field-by-field moves below (moving a struct field out of an
     // owned value doesn't require the whole struct to still be intact afterward).
-    let predict_handle: jlong = result
+    let predict_handle = result
         .predict_state
         .clone()
-        .map(|state| Box::into_raw(Box::new(JavaPredictHandle { state })) as jlong)
-        .unwrap_or(0);
+        .map(|state| Box::new(JavaPredictHandle { state }));
+    let predict_handle_value = predict_handle
+        .as_ref()
+        .map_or(0, |handle| (&**handle as *const JavaPredictHandle) as jlong);
 
     let x = vec_to_jdoublearray(env, &Some(result.x))?;
     let y = vec_to_jdoublearray(env, &Some(result.y))?;
@@ -210,9 +213,12 @@ fn result_to_jobject<'local>(
             JValue::Object(&leverage),
             JValue::Int(dimensions),
             JValue::Bool(has_stats as jboolean),
-            JValue::Long(predict_handle),
+            JValue::Long(predict_handle_value),
         ],
     )?;
+    if let Some(handle) = predict_handle {
+        let _ = Box::into_raw(handle);
+    }
     Ok(obj)
 }
 
@@ -290,11 +296,17 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
             shared_parse::DEFAULT_ZERO_WEIGHT_FALLBACK,
         );
         let cv_method_str = jstring_or_default(env, &cv_method, "kfold");
-        let cv_fractions_vec = jarray_to_option_vec(env, &cv_fractions);
+        let cv_fractions_vec = jarray_to_option_vec(env, &cv_fractions)?;
+        if cv_fractions_vec
+            .as_ref()
+            .is_some_and(|fractions| fractions.is_empty())
+        {
+            return Err("CV fractions must not be empty".into());
+        }
         let degree_str = jstring_to_option(env, &degree);
         let distance_metric_str = jstring_to_option(env, &distance_metric);
         let surface_mode_str = jstring_to_option(env, &surface_mode);
-        let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights);
+        let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights)?;
         let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let iterations = shared_parse::require_non_negative_usize("iterations", iterations)?;
@@ -332,11 +344,26 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessNew<'local>(
             builder = builder.return_gradient();
         }
 
+        let cv_k_usize = if cv_fractions_vec
+            .as_ref()
+            .is_some_and(|fractions| !fractions.is_empty())
+            && matches!(
+                cv_method_str.to_ascii_lowercase().as_str(),
+                "kfold" | "k_fold" | "k-fold"
+            ) {
+            if cv_k < 2 {
+                return Err("k-fold CV requires at least 2 folds".into());
+            }
+            cv_k as usize
+        } else {
+            0
+        };
+
         Ok(Box::into_raw(Box::new(JavaLoess {
             builder: Some(builder),
             cv_fractions: cv_fractions_vec,
             cv_method: Some(cv_method_str),
-            cv_k: cv_k.max(2) as usize,
+            cv_k: cv_k_usize,
             cv_seed: None,
             cell: opt_f64(cell),
             interpolation_vertices: (interpolation_vertices > 0)
@@ -382,12 +409,12 @@ pub extern "system" fn Java_fastloess_NativeBridge_loessFit<'local>(
             return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
         }
         let loess = unsafe { &mut *(handle as *mut JavaLoess) };
-        let x_vec = jarray_to_vec(env, &x);
-        let y_vec = jarray_to_vec(env, &y);
+        let x_vec = jarray_to_vec(env, &x)?;
+        let y_vec = jarray_to_vec(env, &y)?;
         if x_vec.is_empty() || y_vec.is_empty() {
             return Err(shared_parse::INVALID_DATA_INPUTS.into());
         }
-        let cw = jarray_to_option_vec(env, &custom_weights);
+        let cw = jarray_to_option_vec(env, &custom_weights)?;
 
         let Some(mut builder) = loess.builder.clone() else {
             return Err(shared_parse::MODEL_NOT_INITIALIZED.into());
@@ -448,7 +475,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_predict<'local>(
             return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
         }
         let predict_handle = unsafe { &*(handle as *const JavaPredictHandle) };
-        let new_x_vec = jarray_to_vec(env, &new_x);
+        let new_x_vec = jarray_to_vec(env, &new_x)?;
         if new_x_vec.is_empty() {
             return Err(shared_parse::INVALID_DATA_INPUTS.into());
         }
@@ -567,7 +594,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
         let degree_str = jstring_to_option(env, &degree);
         let distance_metric_str = jstring_to_option(env, &distance_metric);
         let surface_mode_str = jstring_to_option(env, &surface_mode);
-        let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights);
+        let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights)?;
         let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let chunk_size = shared_parse::require_positive_usize("chunkSize", chunk_size)?;
@@ -576,7 +603,10 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingNew<'local>(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
-                iterations: Some(iterations as usize),
+                iterations: Some(shared_parse::require_non_negative_usize(
+                    "iterations",
+                    iterations,
+                )?),
                 weight_function: Some(&wf),
                 robustness_method: Some(&rm),
                 zero_weight_fallback: Some(&zwf),
@@ -634,8 +664,8 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingProcess<'local>(
             return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
         }
         let streaming = unsafe { &mut *(handle as *mut JavaStreamingLoess) };
-        let x_vec = jarray_to_vec(env, &x);
-        let y_vec = jarray_to_vec(env, &y);
+        let x_vec = jarray_to_vec(env, &x)?;
+        let y_vec = jarray_to_vec(env, &y)?;
         if x_vec.is_empty() || y_vec.is_empty() {
             return Err(shared_parse::INVALID_DATA_INPUTS.into());
         }
@@ -733,7 +763,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
         let degree_str = jstring_to_option(env, &degree);
         let distance_metric_str = jstring_to_option(env, &distance_metric);
         let surface_mode_str = jstring_to_option(env, &surface_mode);
-        let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights);
+        let weighted_metric_weights_vec = jarray_to_option_vec(env, &weighted_metric_weights)?;
         let missing_str = jstring_or_default(env, &missing, shared_parse::DEFAULT_MISSING_POLICY);
 
         let window_capacity =
@@ -745,7 +775,10 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineNew<'local>(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
                 fraction: Some(fraction),
-                iterations: Some(iterations as usize),
+                iterations: Some(shared_parse::require_non_negative_usize(
+                    "iterations",
+                    iterations,
+                )?),
                 weight_function: Some(&wf),
                 robustness_method: Some(&rm),
                 zero_weight_fallback: Some(&zwf),

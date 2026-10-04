@@ -283,8 +283,8 @@ public final class OnlineOptions {
         }
 
         /**
-         * Maximum number of points retained in the sliding window (default
-         * {@code 1000}).
+         * Sets the maximum number of points retained in the sliding window
+         * (default {@code 1000}).
          *
          * @param windowCapacity the maximum window size
          * @return this builder, for chaining
@@ -295,8 +295,8 @@ public final class OnlineOptions {
         }
 
         /**
-         * Minimum number of points required before a fit is produced (default
-         * {@code 2}).
+         * Sets the minimum number of points required before a fit is produced
+         * (default {@code 2}).
          *
          * @param minPoints the minimum point count
          * @return this builder, for chaining
@@ -307,7 +307,7 @@ public final class OnlineOptions {
         }
 
         /**
-         * One of {@code "incremental"}, {@code "full"} (default
+         * Selects incremental or full-window update behavior (default
          * {@code "incremental"}).
          *
          * @param updateMode the update mode name

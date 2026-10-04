@@ -3,7 +3,8 @@ package fastloess;
 import java.util.Optional;
 
 /**
- * An online LOESS model that updates incrementally as points arrive.
+ * An online LOESS model that updates incrementally as points arrive. Operations
+ * on one instance are synchronized because it owns mutable native state.
  */
 public final class OnlineLoess implements AutoCloseable {
 
@@ -53,7 +54,7 @@ public final class OnlineLoess implements AutoCloseable {
      * @return the smoothed output, or {@link Optional#empty()} if not enough
      * points have been seen yet
      */
-    public Optional<PointResult> addPoint(double x, double y) {
+    public synchronized Optional<PointResult> addPoint(double x, double y) {
         checkOpen();
         NativeOnlineOutput o = NativeBridge.onlineAddPoint(handle, x, y);
         return o.hasValue ? Optional.of(PointResult.fromNative(o)) : Optional.empty();
@@ -66,7 +67,7 @@ public final class OnlineLoess implements AutoCloseable {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         if (handle != 0) {
             NativeBridge.onlineFree(handle);
             handle = 0;

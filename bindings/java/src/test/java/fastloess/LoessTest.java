@@ -63,6 +63,32 @@ class LoessTest {
     }
 
     @Test
+    void rejectsEmptyCvFractions() {
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> CVOptions.builder().fractions().build());
+        assertTrue(ex.getMessage().contains("must not be empty"));
+    }
+
+    @Test
+    void rejectsEmptyCustomWeights() {
+        double[] x = linspace(5);
+        try (Loess model = new Loess(Options.builder().build())) {
+            IllegalArgumentException ex = assertThrows(
+                    IllegalArgumentException.class, () -> model.fit(x, x, new double[0]));
+            assertTrue(ex.getMessage().contains("must not be empty"));
+        }
+    }
+
+    @Test
+    void rejectsKfoldCountBelowTwo() {
+        CVOptions cv = CVOptions.builder().fractions(0.5).k(1).build();
+        RuntimeException ex = assertThrows(
+                RuntimeException.class, () -> new Loess(Options.builder().cv(cv).build()));
+        assertTrue(ex.getMessage().contains("at least 2 folds"));
+    }
+
+    @Test
     void returnsDiagnosticsWhenRequested() {
         double[] x = linspace(30);
         double[] y = new double[30];

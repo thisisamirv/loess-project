@@ -21,6 +21,8 @@ This changelog includes end-user changes only. For internal development notes, s
 
 === Fixed
 
+* Propagate JNI array length/read failures, preserve explicit empty arrays for validation, and defer retained prediction-handle ownership until Java result construction succeeds. Validate iterations and k-fold counts instead of casting/coercing invalid values, and synchronize operations that share mutable native handles.
+* Reject empty CV fractions and custom-weight arrays, and complete Online/Streaming builder Javadoc summaries. The `maven-javadoc-plugin` already uses `failOnWarnings`; no POM change was needed. Java GPU installer validation has no LOESS counterpart.
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.
 * Preserve case weights through sorted CV training subsets and multidimensional predictions. Serial and parallel CV now agree on seeded folds and held-out LOOCV predictions; K-fold counts above the retained observation count are rejected.
 * Reject non-positive or non-finite Streaming/Online auto-convergence tolerances. Online auto-convergence requires full updates with robustness iterations.

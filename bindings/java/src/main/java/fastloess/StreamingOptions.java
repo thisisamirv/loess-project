@@ -294,7 +294,7 @@ public final class StreamingOptions {
         }
 
         /**
-         * Number of points processed per chunk (default {@code 5000}).
+         * Sets the number of points processed per chunk (default {@code 5000}).
          *
          * @param chunkSize the chunk size
          * @return this builder, for chaining
@@ -305,8 +305,8 @@ public final class StreamingOptions {
         }
 
         /**
-         * Number of points overlapped between consecutive chunks (default:
-         * library default of {@code chunk_size / 10}, clamped to
+         * Sets the number of points overlapped between consecutive chunks
+         * (default: library default of {@code chunk_size / 10}, clamped to
          * {@code [1, chunk_size - 10]}). Any negative value means "use the
          * library default".
          *
@@ -319,9 +319,9 @@ public final class StreamingOptions {
         }
 
         /**
-         * One of
-         * {@code "average"}, {@code "weighted_average"}, {@code "take_first"}, {@code "take_last"}
-         * (default {@code "weighted_average"}).
+         * Selects how overlapping chunk results are merged: {@code "average"},
+         * {@code "weighted_average"}, {@code "take_first"}, or
+         * {@code "take_last"} (default {@code "weighted_average"}).
          *
          * @param mergeStrategy the merge strategy name
          * @return this builder, for chaining
