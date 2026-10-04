@@ -245,6 +245,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Go:**
 
 - Breaking: The Go module's import path now includes the required `/v2` major-version suffix; a new release is required for pkg.go.dev to resolve versions correctly.
+- Keep Batch, Streaming, Online, and retained prediction models alive during cgo calls so finalizers cannot free in-use native handles.
+- Reject unknown or mode-inappropriate output names, extra custom-weight slices, and Go counts outside the C `int` range; stop silently coercing invalid K-fold counts.
+- Use `size_t` for native array lengths and `unsigned long long`/`C.ulonglong` for full-width CV seeds, fixing Windows truncation and cgo type availability. Rebuild the generated header and native library together; old Windows binaries are ABI-incompatible.
 
 **Java:**
 

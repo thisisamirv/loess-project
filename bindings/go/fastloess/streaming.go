@@ -128,6 +128,17 @@ type StreamingLoess struct {
 
 // NewStreamingLoess creates a new streaming model with the given options.
 func NewStreamingLoess(opts StreamingOptions) (*StreamingLoess, error) {
+	if err := validateOutputs(opts.Outputs, "streaming", "diagnostics", "residuals", "weights", "gradient", "derivative", "se"); err != nil {
+		return nil, err
+	}
+	if err := validateCommonCounts(opts.Iterations, opts.Dimensions, opts.InterpolationVertices); err != nil {
+		return nil, err
+	}
+	for name, value := range map[string]int{"ChunkSize": opts.ChunkSize, "Overlap": opts.Overlap} {
+		if err := validateCInt(name, value); err != nil {
+			return nil, err
+		}
+	}
 	wf := cStringOrNil(opts.WeightFunction)
 	defer freeCString(wf)
 	rm := cStringOrNil(opts.RobustnessMethod)
@@ -225,6 +236,7 @@ func (s *StreamingLoess) ProcessChunk(x, y []float64) (Result, error) {
 	xPtr, xLen := cDoubles(x)
 	yPtr, yLen := cDoubles(y)
 	cres := C.go_streaming_process(s.ptr, xPtr, xLen, yPtr, yLen)
+	runtime.KeepAlive(s)
 	return resultFromC(cres)
 }
 
@@ -234,6 +246,7 @@ func (s *StreamingLoess) Finalize() (Result, error) {
 		return Result{}, errors.New("fastloess: Finalize called on a closed StreamingLoess model")
 	}
 	cres := C.go_streaming_finalize(s.ptr)
+	runtime.KeepAlive(s)
 	return resultFromC(cres)
 }
 

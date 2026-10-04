@@ -21,6 +21,178 @@ func sineData(n int) (x, y []float64) {
 	return x, y
 }
 
+func TestFitRejectsExtraCustomWeightSlices(t *testing.T) {
+	model, err := fastloess.NewLoess(fastloess.DefaultOptions())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer model.Close()
+	predictors, observations := linearData(10, 2, 1)
+	if _, err := model.Fit(predictors, observations, make([]float64, 10), make([]float64, 10)); err == nil {
+		t.Fatal("extra custom weight slices must not be silently ignored")
+	}
+}
+
+func TestInvalidGroupedOutputs(t *testing.T) {
+	for _, output := range []string{"unknown", "SE", ""} {
+		opts := fastloess.DefaultOptions()
+		opts.Outputs = []string{output}
+		model, err := fastloess.NewLoess(opts)
+		if model != nil {
+			model.Close()
+		}
+		if err == nil {
+			t.Errorf("batch accepted output %q", output)
+		}
+	}
+	streaming := fastloess.DefaultStreamingOptions()
+	streaming.Outputs = []string{"sorted"}
+	streamModel, err := fastloess.NewStreamingLoess(streaming)
+	if streamModel != nil {
+		streamModel.Close()
+	}
+	if err == nil {
+		t.Error("streaming accepted batch-only sorted output")
+	}
+	online := fastloess.DefaultOnlineOptions()
+	online.Outputs = []string{"residuals"}
+	onlineModel, err := fastloess.NewOnlineLoess(online)
+	if onlineModel != nil {
+		onlineModel.Close()
+	}
+	if err == nil {
+		t.Error("online accepted unsupported residuals output")
+	}
+	opts := fastloess.DefaultOptions()
+	opts.RetainModel = true
+	model, err := fastloess.NewLoess(opts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer model.Close()
+	predictors, observations := linearData(20, 2, 1)
+	result, err := model.Fit(predictors, observations)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.PredictModel == nil {
+		t.Fatal("retained model is missing")
+	}
+	defer result.PredictModel.Close()
+	if _, err := result.PredictModel.Predict([]float64{1}, fastloess.PredictOptions{Outputs: []string{"weights"}}); err == nil {
+		t.Error("prediction accepted unsupported weights output")
+	}
+}
+
+func TestInvalidKfoldCounts(t *testing.T) {
+	for _, folds := range []int{-1, 1} {
+		opts := fastloess.DefaultOptions()
+		opts.CV = &fastloess.CVOptions{Fractions: []float64{0.5, 0.8}, K: folds}
+		model, err := fastloess.NewLoess(opts)
+		if model != nil {
+			model.Close()
+		}
+		if err == nil {
+			t.Errorf("accepted invalid fold count %d", folds)
+		}
+	}
+}
+
+func TestCIntOverflow(t *testing.T) {
+	var oversized int64 = 1<<32 + 1
+	value := int(oversized)
+	if int64(value) != oversized {
+		t.Skip("requires 64-bit Go int")
+	}
+	for _, field := range []string{"Iterations", "Dimensions", "InterpolationVertices", "CV.K"} {
+		t.Run(field, func(t *testing.T) {
+			opts := fastloess.DefaultOptions()
+			switch field {
+			case "Iterations":
+				opts.Iterations = value
+			case "Dimensions":
+				opts.Dimensions = value
+			case "InterpolationVertices":
+				opts.InterpolationVertices = &value
+			case "CV.K":
+				opts.CV = &fastloess.CVOptions{Fractions: []float64{0.8}, K: value}
+			}
+			model, err := fastloess.NewLoess(opts)
+			if model != nil {
+				model.Close()
+			}
+			if err == nil {
+				t.Fatal("accepted overflowing C int")
+			}
+		})
+	}
+	for _, field := range []string{"ChunkSize", "Overlap"} {
+		opts := fastloess.DefaultStreamingOptions()
+		if field == "ChunkSize" {
+			opts.ChunkSize = value
+		} else {
+			opts.Overlap = value
+		}
+		model, err := fastloess.NewStreamingLoess(opts)
+		if model != nil {
+			model.Close()
+		}
+		if err == nil {
+			t.Errorf("accepted overflowing %s", field)
+		}
+	}
+	for _, field := range []string{"WindowCapacity", "MinPoints"} {
+		opts := fastloess.DefaultOnlineOptions()
+		if field == "WindowCapacity" {
+			opts.WindowCapacity = value
+		} else {
+			opts.MinPoints = value
+		}
+		model, err := fastloess.NewOnlineLoess(opts)
+		if model != nil {
+			model.Close()
+		}
+		if err == nil {
+			t.Errorf("accepted overflowing %s", field)
+		}
+	}
+}
+
+func TestHighBitCVSeeds(t *testing.T) {
+	predictors, observations := sineData(40)
+	fit := func(seed uint64) []float64 {
+		opts := fastloess.DefaultOptions()
+		opts.Seed = &seed
+		opts.CV = &fastloess.CVOptions{Fractions: []float64{0.4, 0.7}, K: 4}
+		model, err := fastloess.NewLoess(opts)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer model.Close()
+		result, err := model.Fit(predictors, observations)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(result.CVScores) != 2 {
+			t.Fatal("missing CV scores")
+		}
+		return result.CVScores
+	}
+	low := fit(17)
+	high := fit(1<<48 | 17)
+	repeated := fit(1<<48 | 17)
+	allEqual := true
+	for index := range high {
+		if high[index] != repeated[index] {
+			t.Fatal("high-bit seed is not reproducible")
+		}
+		allEqual = allEqual && low[index] == high[index]
+	}
+	if allEqual {
+		t.Fatal("CV seed high bits appear truncated")
+	}
+}
+
 func linearData(n int, slope, intercept float64) (x, y []float64) {
 	x = make([]float64, n)
 	y = make([]float64, n)

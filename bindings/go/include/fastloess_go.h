@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 typedef struct fastloess_GoLoess fastloess_GoLoess;
 
 typedef struct fastloess_GoOnlineLoess fastloess_GoOnlineLoess;
@@ -18,7 +20,7 @@ typedef struct fastloess_GoLoessResult {
   /**
    * Number of data points
    */
-  unsigned long n;
+  size_t n;
   /**
    * Standard errors (NULL if not computed)
    */
@@ -90,7 +92,7 @@ typedef struct fastloess_GoLoessResult {
    * Cross-validation scores (NULL if not computed, length = cv_scores_len)
    */
   double *cv_scores;
-  unsigned long cv_scores_len;
+  size_t cv_scores_len;
   /**
    * Opaque handle for `go_predict()`, non-NULL only if `retain_model` was set to 1.
    * Must eventually be freed via `go_predict_handle_free`.
@@ -110,7 +112,7 @@ typedef struct fastloess_GoPredictResult {
   /**
    * Number of query points
    */
-  unsigned long n;
+  size_t n;
   /**
    * Standard errors (NULL if not requested)
    */
@@ -203,7 +205,7 @@ struct fastloess_GoLoess *go_loess_new(double fraction,
                                        const char *zero_weight_fallback,
                                        double auto_converge,
                                        const double *cv_fractions,
-                                       unsigned long cv_fractions_len,
+                                       size_t cv_fractions_len,
                                        const char *cv_method,
                                        int cv_k,
                                        int parallel,
@@ -217,7 +219,7 @@ struct fastloess_GoLoess *go_loess_new(double fraction,
                                        int interpolation_vertices,
                                        int boundary_degree_fallback,
                                        const double *weighted_metric_weights,
-                                       unsigned long weighted_metric_weights_len,
+                                       size_t weighted_metric_weights_len,
                                        const char *missing,
                                        int retain_model,
                                        int return_gradient);
@@ -228,7 +230,7 @@ struct fastloess_GoLoess *go_loess_new(double fraction,
  * # Safety
  * ptr must be valid.
  */
-void go_loess_set_cv_seed(struct fastloess_GoLoess *ptr, unsigned long seed);
+void go_loess_set_cv_seed(struct fastloess_GoLoess *ptr, unsigned long long seed);
 
 /**
  * Fit the model.
@@ -239,11 +241,11 @@ void go_loess_set_cv_seed(struct fastloess_GoLoess *ptr, unsigned long seed);
  */
 struct fastloess_GoLoessResult go_loess_fit(struct fastloess_GoLoess *ptr,
                                             const double *x_values,
-                                            unsigned long x_n,
+                                            size_t x_n,
                                             const double *y_values,
-                                            unsigned long y_n,
+                                            size_t y_n,
                                             const double *custom_weights,
-                                            unsigned long custom_weights_n);
+                                            size_t custom_weights_n);
 
 /**
  * Free model.
@@ -264,7 +266,7 @@ void go_loess_free(struct fastloess_GoLoess *ptr);
  */
 struct fastloess_GoPredictResult go_predict(struct fastloess_GoPredictHandle *handle,
                                             const double *new_x,
-                                            unsigned long new_x_len,
+                                            size_t new_x_len,
                                             int return_se,
                                             double confidence_level,
                                             double prediction_level,
@@ -318,7 +320,7 @@ struct fastloess_GoStreamingLoess *go_streaming_new(double fraction,
                                                     int interpolation_vertices,
                                                     int boundary_degree_fallback,
                                                     const double *weighted_metric_weights,
-                                                    unsigned long weighted_metric_weights_len,
+                                                    size_t weighted_metric_weights_len,
                                                     const char *missing,
                                                     int return_gradient,
                                                     double confidence_intervals,
@@ -334,9 +336,9 @@ struct fastloess_GoStreamingLoess *go_streaming_new(double fraction,
  */
 struct fastloess_GoLoessResult go_streaming_process(struct fastloess_GoStreamingLoess *ptr,
                                                     const double *x_values,
-                                                    unsigned long x_n,
+                                                    size_t x_n,
                                                     const double *y_values,
-                                                    unsigned long y_n);
+                                                    size_t y_n);
 
 /**
  * Finalize the streaming process.
@@ -380,7 +382,7 @@ struct fastloess_GoOnlineLoess *go_online_new(double fraction,
                                               int interpolation_vertices,
                                               int boundary_degree_fallback,
                                               const double *weighted_metric_weights,
-                                              unsigned long weighted_metric_weights_len,
+                                              size_t weighted_metric_weights_len,
                                               const char *missing,
                                               int return_gradient,
                                               double confidence_intervals,

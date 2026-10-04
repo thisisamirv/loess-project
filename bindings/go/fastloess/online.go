@@ -129,6 +129,17 @@ type OnlineLoess struct {
 
 // NewOnlineLoess creates a new online model with the given options.
 func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
+	if err := validateOutputs(opts.Outputs, "online", "weights", "gradient", "derivative", "se"); err != nil {
+		return nil, err
+	}
+	if err := validateCommonCounts(opts.Iterations, opts.Dimensions, opts.InterpolationVertices); err != nil {
+		return nil, err
+	}
+	for name, value := range map[string]int{"WindowCapacity": opts.WindowCapacity, "MinPoints": opts.MinPoints} {
+		if err := validateCInt(name, value); err != nil {
+			return nil, err
+		}
+	}
 	wf := cStringOrNil(opts.WeightFunction)
 	defer freeCString(wf)
 	rm := cStringOrNil(opts.RobustnessMethod)
@@ -220,6 +231,7 @@ func (o *OnlineLoess) AddPoint(x, y float64) (res PointResult, ok bool, err erro
 	}
 
 	cout := C.go_online_add_point(o.ptr, C.double(x), C.double(y))
+	runtime.KeepAlive(o)
 	if cout.error != nil {
 		msg := C.GoString(cout.error)
 		C.go_online_free_output(&cout)

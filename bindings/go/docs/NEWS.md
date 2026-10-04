@@ -26,6 +26,9 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Keep model receivers alive during Batch, Streaming, Online, and retained-prediction cgo calls to prevent premature native-handle finalization.
+* Reject unknown or unsupported output names, extra custom-weight slices, and integer counts outside the C `int` range. Invalid K-fold counts are no longer silently coerced to two.
+* Preserve native array lengths and all CV seed bits on Windows with `size_t` lengths and cgo-compatible `unsigned long long` seeds. Rebuild the generated header and native library together; old Windows binaries are ABI-incompatible.
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.
 * Preserve case weights through sorted CV training subsets and multidimensional predictions. Serial and parallel CV now agree on seeded folds and held-out LOOCV predictions; K-fold counts above the retained observation count are rejected.
 * Reject non-positive or non-finite Streaming/Online auto-convergence tolerances. Online auto-convergence requires full updates with robustness iterations.

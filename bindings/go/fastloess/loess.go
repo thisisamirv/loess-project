@@ -7,7 +7,9 @@ import "C"
 
 import (
 	"errors"
+	"fmt"
 	"runtime"
+	"strings"
 )
 
 // CVOptions configures batch cross-validation. Nil disables grouped CV.
@@ -123,6 +125,41 @@ func hasOutput(outputs []string, name string) bool {
 	return false
 }
 
+func validateCInt(name string, value int) error {
+	if int64(value) < -1<<31 || int64(value) > 1<<31-1 {
+		return fmt.Errorf("fastloess: %s is outside the C int range", name)
+	}
+	return nil
+}
+
+func validateOutputs(outputs []string, adapter string, supported ...string) error {
+	for _, output := range outputs {
+		valid := false
+		for _, name := range supported {
+			if output == name {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return fmt.Errorf("fastloess: unknown %s output %q", adapter, output)
+		}
+	}
+	return nil
+}
+
+func validateCommonCounts(iterations, dimensions int, vertices *int) error {
+	for name, value := range map[string]int{"Iterations": iterations, "Dimensions": dimensions} {
+		if err := validateCInt(name, value); err != nil {
+			return err
+		}
+	}
+	if vertices != nil {
+		return validateCInt("InterpolationVertices", *vertices)
+	}
+	return nil
+}
+
 // DefaultOptions returns the library's recommended defaults. Start from this
 // and override only the fields you need.
 func DefaultOptions() Options {
@@ -162,6 +199,12 @@ type Loess struct {
 
 // NewLoess creates a new batch Loess model with the given options.
 func NewLoess(opts Options) (*Loess, error) {
+	if err := validateOutputs(opts.Outputs, "batch", "diagnostics", "residuals", "weights", "gradient", "derivative", "se", "sorted"); err != nil {
+		return nil, err
+	}
+	if err := validateCommonCounts(opts.Iterations, opts.Dimensions, opts.InterpolationVertices); err != nil {
+		return nil, err
+	}
 	wf := cStringOrNil(opts.WeightFunction)
 	defer freeCString(wf)
 	rm := cStringOrNil(opts.RobustnessMethod)
@@ -197,6 +240,15 @@ func NewLoess(opts Options) (*Loess, error) {
 	ci, ciSet, pi, piSet := intervalLevels(opts.Intervals)
 	autoConverge, autoConvergeSet := optPtr(opts.AutoConverge)
 	cvFracPtr, cvFracLen := cDoubles(cvFractions)
+	if err := validateCInt("CV.K", cvK); err != nil {
+		return nil, err
+	}
+	if len(cvFractions) > 0 && cvK < 2 {
+		switch strings.ToLower(cvMethodName) {
+		case "", "kfold", "k_fold", "k-fold":
+			return nil, errors.New("fastloess: CV.K must be at least 2")
+		}
+	}
 	wmwPtr, wmwLen := cDoubles(opts.WeightedMetricWeights)
 
 	cell, cellSet := 0.0, false
@@ -253,7 +305,7 @@ func NewLoess(opts Options) (*Loess, error) {
 	}
 
 	if opts.Seed != nil {
-		C.go_loess_set_cv_seed(ptr, C.ulong(*opts.Seed))
+		C.go_loess_set_cv_seed(ptr, C.ulonglong(*opts.Seed))
 	}
 
 	l := &Loess{ptr: ptr}
@@ -275,6 +327,9 @@ func (l *Loess) Fit(x, y []float64, customWeights ...[]float64) (Result, error) 
 	if len(x) == 0 || len(y) == 0 {
 		return Result{}, errors.New("fastloess: x and y must be non-empty")
 	}
+	if len(customWeights) > 1 {
+		return Result{}, errors.New("fastloess: Fit accepts at most one custom weight slice")
+	}
 	var cw []float64
 	if len(customWeights) > 0 {
 		cw = customWeights[0]
@@ -285,6 +340,7 @@ func (l *Loess) Fit(x, y []float64, customWeights ...[]float64) (Result, error) 
 	cwPtr, cwLen := cDoubles(cw)
 
 	cres := C.go_loess_fit(l.ptr, xPtr, xLen, yPtr, yLen, cwPtr, cwLen)
+	runtime.KeepAlive(l)
 	return resultFromC(cres)
 }
 

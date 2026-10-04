@@ -11,6 +11,7 @@ package fastloess
 // cross-compiler driver itself.
 #cgo windows,arm64 LDFLAGS: -static -L${SRCDIR}/../../../target/aarch64-pc-windows-gnullvm/release-c -lfastloess_go -lws2_32 -luserenv -lbcrypt -lntdll -lpthread
 #include <stdlib.h>
+#include <stddef.h>
 #include "fastloess_go.h"
 */
 import "C"
@@ -73,15 +74,15 @@ func optFloat(v float64, set bool) C.double {
 }
 
 // cDoubles returns a pointer to the first element of xs (or nil if empty)
-// and its length, suitable for passing to a `const double *, unsigned long`
+// and its length, suitable for passing to a `const double *, size_t`
 // FFI parameter pair. The backing array of a []float64 contains no Go
 // pointers, so passing its address across cgo is safe per the cgo pointer
 // passing rules.
-func cDoubles(xs []float64) (*C.double, C.ulong) {
+func cDoubles(xs []float64) (*C.double, C.size_t) {
 	if len(xs) == 0 {
 		return nil, 0
 	}
-	return (*C.double)(unsafe.Pointer(&xs[0])), C.ulong(len(xs))
+	return (*C.double)(unsafe.Pointer(&xs[0])), C.size_t(len(xs))
 }
 
 // cDoubleSliceToGo copies n float64s out of a Rust-allocated buffer. Returns
@@ -302,6 +303,9 @@ type PredictResult struct {
 // Predict evaluates the fitted model at out-of-sample query points not in the
 // training set (flattened, Dimensions values per point).
 func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictResult, error) {
+	if err := validateOutputs(opts.Outputs, "prediction", "se", "gradient", "derivative"); err != nil {
+		return PredictResult{}, err
+	}
 	if pm == nil || pm.ptr == nil {
 		return PredictResult{}, errors.New("fastloess: Predict called on a nil/closed PredictModel (was RetainModel set?)")
 	}
@@ -328,6 +332,7 @@ func (pm *PredictModel) Predict(newX []float64, opts PredictOptions) (PredictRes
 		optFloat(maxExtrap, maxExtrapSet),
 		optFloat(maxNeighbor, maxNeighborSet),
 	)
+	runtime.KeepAlive(pm)
 	if cres.error != nil {
 		msg := C.GoString(cres.error)
 		C.go_predict_free_result(&cres)
