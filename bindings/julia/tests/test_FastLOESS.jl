@@ -210,6 +210,16 @@ using FastLOESS
 			)
 		end
 
+		@testset "append rejects mismatched optional fields" begin
+			x = collect(1.0:8.0)
+			y = 2.0 .* x
+			with_se = fit(Loess(outputs = ["se"]), x, y)
+			without_se = fit(Loess(), x, y)
+
+			@test_throws ArgumentError append!(with_se, without_se)
+			@test length(with_se.x) == length(x)
+		end
+
 		@testset "with confidence intervals" begin
 			Random.seed!(42)
 			x = collect(range(0, 10, length = 20))
@@ -302,6 +312,16 @@ using FastLOESS
 	end
 
 	@testset "StreamingLoess" begin
+		@testset "concurrent chunk processing is serialized" begin
+			stream = StreamingLoess(fraction = 0.5, chunk_size = 100, overlap = 10)
+			tasks = [
+				Threads.@spawn process_chunk(stream, fill(1.0, 10), fill(1.0, 10)) for _ ∈ 1:8
+			]
+			results = fetch.(tasks)
+			@test all(result isa LoessResult for result ∈ results)
+			@test finalize(stream) isa LoessResult
+		end
+
 		@testset "basic streaming" begin
 			x = collect(range(0, 1000, length = 2000))
 			y = sin.(x ./ 100)
@@ -396,6 +416,12 @@ using FastLOESS
 	end
 
 	@testset "OnlineLoess" begin
+		@testset "concurrent updates are serialized" begin
+			model = OnlineLoess(window_capacity = 64, min_points = 2)
+			tasks = [Threads.@spawn add_point(model, 1.0, 1.0) for _ ∈ 1:32]
+			results = fetch.(tasks)
+			@test count(result -> result !== nothing, results) == 31
+		end
 		@testset "basic online" begin
 			x = collect(Float64, 1:10)
 			y = collect(Float64, 2:2:20)
@@ -657,6 +683,23 @@ using FastLOESS
 		@testset "invalid missing policy" begin
 			@test_throws ErrorException Loess(fraction = 0.5, missing = "invalid")
 		end
+
+		@testset "native constructor errors are surfaced" begin
+			for construct ∈ (
+				() -> Loess(weight_function = "invalid"),
+				() -> StreamingLoess(weight_function = "invalid"),
+				() -> OnlineLoess(weight_function = "invalid"),
+			)
+				err = try
+					construct()
+					nothing
+				catch e
+					e
+				end
+				@test err isa ErrorException
+				@test occursin("invalid", sprint(showerror, err))
+			end
+		end
 	end
 
 	@testset "Parameter Coverage" begin
@@ -863,6 +906,8 @@ using FastLOESS
 				window_capacity = 20,
 				degree = "quadratic",
 				auto_converge = 1e-3,
+				iterations = 1,
+				update_mode = "full",
 				scaling_method = "mean",
 				boundary_policy = "zero",
 				outputs = ["weights"],

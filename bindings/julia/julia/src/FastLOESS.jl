@@ -83,6 +83,11 @@ function _cv_options(cv)
 	)
 end
 
+function _constructor_error(fallback::String)
+	error_ptr = ccall((:jl_last_error_message, libfastloess), Ptr{Cchar}, ())
+	return error_ptr == C_NULL ? fallback : unsafe_string(error_ptr)
+end
+
 # Try to import JLL package first
 try
 	using fastloess_jll
@@ -283,7 +288,7 @@ function predict(
 		)
 	end
 
-	c_result = ccall(
+	c_result = GC.@preserve model new_x ccall(
 		(:jl_predict, libfastloess),
 		CJlPredictResult,
 		(
@@ -610,33 +615,32 @@ end
 
 Append the results from `b` to `a`. This modifies `a` in place.
 """
+const _APPENDABLE_RESULT_FIELDS = (
+	:standard_errors,
+	:confidence_lower,
+	:confidence_upper,
+	:prediction_lower,
+	:prediction_upper,
+	:residuals,
+	:robustness_weights,
+	:gradient,
+)
+
 function Base.append!(a::LoessResult, b::LoessResult)
+	for field ∈ _APPENDABLE_RESULT_FIELDS
+		left = getfield(a, field)
+		right = getfield(b, field)
+		(left === nothing) == (right === nothing) || throw(
+			ArgumentError("cannot append results with mismatched optional field: $field"),
+		)
+	end
+
 	append!(a.x, b.x)
 	append!(a.y, b.y)
 
-	if a.standard_errors !== nothing && b.standard_errors !== nothing
-		append!(a.standard_errors::Vector{Float64}, b.standard_errors::Vector{Float64})
-	end
-	if a.confidence_lower !== nothing && b.confidence_lower !== nothing
-		append!(a.confidence_lower::Vector{Float64}, b.confidence_lower::Vector{Float64})
-	end
-	if a.confidence_upper !== nothing && b.confidence_upper !== nothing
-		append!(a.confidence_upper::Vector{Float64}, b.confidence_upper::Vector{Float64})
-	end
-	if a.prediction_lower !== nothing && b.prediction_lower !== nothing
-		append!(a.prediction_lower::Vector{Float64}, b.prediction_lower::Vector{Float64})
-	end
-	if a.prediction_upper !== nothing && b.prediction_upper !== nothing
-		append!(a.prediction_upper::Vector{Float64}, b.prediction_upper::Vector{Float64})
-	end
-	if a.residuals !== nothing && b.residuals !== nothing
-		append!(a.residuals::Vector{Float64}, b.residuals::Vector{Float64})
-	end
-	if a.robustness_weights !== nothing && b.robustness_weights !== nothing
-		append!(
-			a.robustness_weights::Vector{Float64},
-			b.robustness_weights::Vector{Float64},
-		)
+	for field ∈ _APPENDABLE_RESULT_FIELDS
+		values = getfield(a, field)
+		values === nothing || append!(values, getfield(b, field))
 	end
 
 	# Update fraction_used and iterations_used if they differ?
@@ -783,7 +787,7 @@ mutable struct Loess
 		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
 
-		handle = ccall(
+		handle = GC.@preserve cv_fractions weighted_metric_weights ccall(
 			(:jl_loess_new, libfastloess),
 			Ptr{Cvoid},
 			(
@@ -854,7 +858,8 @@ mutable struct Loess
 		)
 
 		if handle == C_NULL
-			error("Failed to create Loess configuration")
+			error_message = _constructor_error("Failed to create Loess configuration")
+			error("fastloess error: $error_message")
 		end
 
 		# Apply optional overrides via setters
@@ -937,7 +942,7 @@ function fit(
 		end
 	end
 
-	c_result = ccall(
+	c_result = GC.@preserve l x y custom_weights ccall(
 		(:jl_loess_fit, libfastloess),
 		CJlLoessResult,
 		(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong, Ptr{Cdouble}, Culong),
@@ -998,7 +1003,7 @@ function fit(
 		end
 	end
 
-	c_result = ccall(
+	c_result = GC.@preserve l x_flat y custom_weights ccall(
 		(:jl_loess_fit, libfastloess),
 		CJlLoessResult,
 		(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong, Ptr{Cdouble}, Culong),
@@ -1057,6 +1062,7 @@ Stateful streaming LOESS smoother.
 """
 mutable struct StreamingLoess
 	handle::Ptr{Cvoid}
+	lock::ReentrantLock
 
 	function StreamingLoess(;
 		fraction::Float64 = 0.67,
@@ -1109,7 +1115,7 @@ mutable struct StreamingLoess
 			isnothing(boundary_degree_fallback) ? Cint(-1) :
 			(boundary_degree_fallback ? Cint(1) : Cint(0))
 
-		handle = ccall(
+		handle = GC.@preserve weighted_metric_weights ccall(
 			(:jl_streaming_loess_new, libfastloess),
 			Ptr{Cvoid},
 			(
@@ -1175,10 +1181,11 @@ mutable struct StreamingLoess
 		)
 
 		if handle == C_NULL
-			error("Failed to create StreamingLoess")
+			error_message = _constructor_error("Failed to create StreamingLoess")
+			error("fastloess error: $error_message")
 		end
 
-		obj = new(handle)
+		obj = new(handle, ReentrantLock())
 		finalizer(
 			x -> ccall(
 				(:jl_streaming_loess_free, libfastloess),
@@ -1203,15 +1210,17 @@ function process_chunk(s::StreamingLoess, x::Vector{Float64}, y::Vector{Float64}
 		throw(ArgumentError("x and y must have the same length"))
 	end
 
-	c_result = ccall(
-		(:jl_streaming_loess_process_chunk, libfastloess),
-		CJlLoessResult,
-		(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
-		s.handle,
-		x,
-		y,
-		Culong(n),
-	)
+	c_result = lock(s.lock) do
+		GC.@preserve s x y ccall(
+			(:jl_streaming_loess_process_chunk, libfastloess),
+			CJlLoessResult,
+			(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+			s.handle,
+			x,
+			y,
+			Culong(n),
+		)
+	end
 
 	return convert_result(c_result)
 end
@@ -1222,12 +1231,14 @@ end
 Finalize streaming and return remaining buffered data.
 """
 function finalize(s::StreamingLoess)
-	c_result = ccall(
-		(:jl_streaming_loess_finalize, libfastloess),
-		CJlLoessResult,
-		(Ptr{Cvoid},),
-		s.handle,
-	)
+	c_result = lock(s.lock) do
+		GC.@preserve s ccall(
+			(:jl_streaming_loess_finalize, libfastloess),
+			CJlLoessResult,
+			(Ptr{Cvoid},),
+			s.handle,
+		)
+	end
 
 	return convert_result(c_result)
 end
@@ -1276,6 +1287,7 @@ Stateful online LOESS smoother.
 mutable struct OnlineLoess
 	handle::Ptr{Cvoid}
 	dimensions::Int
+	lock::ReentrantLock
 
 	function OnlineLoess(;
 		fraction::Float64 = 0.67,
@@ -1318,7 +1330,7 @@ mutable struct OnlineLoess
 			isnothing(boundary_degree_fallback) ? Cint(-1) :
 			(boundary_degree_fallback ? Cint(1) : Cint(0))
 
-		handle = ccall(
+		handle = GC.@preserve weighted_metric_weights ccall(
 			(:jl_online_loess_new, libfastloess),
 			Ptr{Cvoid},
 			(
@@ -1378,10 +1390,11 @@ mutable struct OnlineLoess
 		)
 
 		if handle == C_NULL
-			error("Failed to create OnlineLoess")
+			error_message = _constructor_error("Failed to create OnlineLoess")
+			error("fastloess error: $error_message")
 		end
 
-		obj = new(handle, dimensions)
+		obj = new(handle, dimensions, ReentrantLock())
 		finalizer(
 			x -> ccall(
 				(:jl_online_loess_free, libfastloess),
@@ -1403,14 +1416,16 @@ Returns `nothing` while the window is still filling (fewer than `min_points`
 have been seen), and an `OnlineOutput` once smoothing begins.
 """
 function add_point(o::OnlineLoess, x::Float64, y::Float64)
-	c_result = ccall(
-		(:jl_online_loess_add_point, libfastloess),
-		CJlOnlineOutput,
-		(Ptr{Cvoid}, Cdouble, Cdouble),
-		o.handle,
-		x,
-		y,
-	)
+	c_result = lock(o.lock) do
+		GC.@preserve o ccall(
+			(:jl_online_loess_add_point, libfastloess),
+			CJlOnlineOutput,
+			(Ptr{Cvoid}, Cdouble, Cdouble),
+			o.handle,
+			x,
+			y,
+		)
+	end
 
 	if c_result.error != C_NULL
 		error_msg = unsafe_string(Ptr{UInt8}(c_result.error))
