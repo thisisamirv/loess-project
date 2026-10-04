@@ -447,12 +447,34 @@ class TestStreamingLoess:
 class TestOnlineLoess:
     """Tests for the OnlineLoess class."""
 
-    def test_online_rejects_multivariate_dimensions(self):
-        """Online updates accept one scalar x coordinate per point."""
-        with pytest.raises(
-            ValueError, match="OnlineLoess supports only one predictor dimension"
-        ):
-            fastloess.OnlineLoess(dimensions=2)
+    def test_online_multivariate_points(self):
+        """Online accepts one coordinate vector per multivariate point."""
+        online = fastloess.OnlineLoess(
+            fraction=1.0,
+            window_capacity=10,
+            min_points=3,
+            dimensions=2,
+            surface_mode="direct",
+            outputs=["gradient"],
+        )
+
+        results = []
+        for index in range(6):
+            result = online.add_point(
+                np.array([float(index), float(index * index)]),
+                float(2 * index + 1),
+            )
+            if result is not None:
+                results.append(result)
+
+        assert results
+        assert results[-1].gradient is not None
+        assert results[-1].gradient.shape == (2,)
+
+    def test_online_multivariate_point_requires_one_value_per_dimension(self):
+        online = fastloess.OnlineLoess(dimensions=2)
+        with pytest.raises(ValueError, match="x must have exactly 2 values"):
+            online.add_point([1.0], 2.0)
 
     def test_online_zero_weight_fallback(self):
         """Test online with zero_weight_fallback parameter."""

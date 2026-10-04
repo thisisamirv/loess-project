@@ -1019,15 +1019,37 @@ func TestStreamingLoess(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestOnlineLoess(t *testing.T) {
-	t.Run("RejectsMultivariateDimensions", func(t *testing.T) {
+	t.Run("MultivariateAddPointVector", func(t *testing.T) {
 		opts := fastloess.DefaultOnlineOptions()
+		opts.Fraction = 1
 		opts.Dimensions = 2
+		opts.SurfaceMode = "direct"
+		opts.Outputs = []string{"gradient"}
 		model, err := fastloess.NewOnlineLoess(opts)
-		if model != nil {
-			defer model.Close()
+		if err != nil {
+			t.Fatalf("NewOnlineLoess failed: %v", err)
 		}
-		if err == nil {
-			t.Fatal("expected NewOnlineLoess to reject Dimensions greater than one")
+		defer model.Close()
+
+		points := [][]float64{{0, 0}, {1, 0}, {0, 1}, {1, 1}}
+		responses := []float64{0, 1, 2, 3}
+		var result fastloess.PointResult
+		var ok bool
+		for index, point := range points {
+			result, ok, err = model.AddPointVector(point, responses[index])
+			if err != nil {
+				t.Fatalf("AddPointVector failed at point %d: %v", index, err)
+			}
+		}
+		if !ok {
+			t.Fatal("expected a smoothed result after four points")
+		}
+		if len(result.Gradient) != 2 {
+			t.Fatalf("expected 2 gradient components, got %d", len(result.Gradient))
+		}
+
+		if _, _, err := model.AddPointVector([]float64{1}, 2); err == nil {
+			t.Fatal("expected an error for a point with the wrong number of coordinates")
 		}
 	})
 

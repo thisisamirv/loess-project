@@ -483,8 +483,23 @@ using FastLOESS
 	end
 
 	@testset "OnlineLoess" begin
-		@testset "multivariate dimensions are rejected" begin
-			@test_throws ArgumentError OnlineLoess(dimensions = 2)
+		@testset "multivariate points" begin
+			online = OnlineLoess(
+				fraction = 1.0,
+				window_capacity = 10,
+				min_points = 3,
+				dimensions = 2,
+				surface_mode = "direct",
+				outputs = ["gradient"],
+			)
+			points = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
+			responses = [0.0, 1.0, 2.0, 3.0]
+			results = [add_point(online, points[i], responses[i]) for i ∈ eachindex(points)]
+			last_result = last(filter(result -> result !== nothing, results))
+
+			@test last_result.gradient !== nothing
+			@test length(last_result.gradient) == 2
+			@test_throws ArgumentError add_point(online, [1.0], 2.0)
 		end
 
 		@testset "concurrent updates are serialized" begin

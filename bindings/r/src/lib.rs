@@ -508,10 +508,10 @@ impl ROnlineLoess {
         Ok(Self { inner: model })
     }
 
-    fn add_point(&mut self, x: f64, y: f64) -> Result<Nullable<List>> {
+    fn add_point(&mut self, x: Vec<f64>, y: f64) -> Result<Nullable<List>> {
         let output = self
             .inner
-            .add_point(&[x], y)
+            .add_point(&x, y)
             .map_err(|e| to_r_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
 
         match output {

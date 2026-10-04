@@ -20,6 +20,25 @@ test_that("OnlineLoess basic functionality works", {
     expect_type(non_null[[1]]$y, "double")
 })
 
+test_that("OnlineLoess supports multivariate coordinate vectors", {
+    ol <- OnlineLoess(
+        fraction = 1,
+        window_capacity = 10,
+        min_points = 3,
+        dimensions = 2,
+        surface_mode = "direct",
+        outputs = "gradient"
+    )
+    points <- list(c(0, 0), c(1, 0), c(0, 1), c(1, 1))
+    results <- lapply(seq_along(points), function(i) {
+        add_point(ol, points[[i]], i - 1)
+    })
+    result <- Filter(Negate(is.null), results)[[1]]
+
+    expect_length(result$gradient, 2)
+    expect_error(add_point(ol, 1, 2), "exactly 2 values")
+})
+
 test_that("OnlineLoess window capacity works", {
     set.seed(42)
     x <- 1:100

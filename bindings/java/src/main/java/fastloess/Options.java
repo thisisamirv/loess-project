@@ -310,8 +310,8 @@ public final class Options {
         /**
          * The number of predictor dimensions (default {@code 1}). For
          * multivariate Batch and Streaming input, {@code x} is flattened
-         * row-major with length {@code y.length * dimensions}. Online supports
-         * only one predictor dimension.
+         * row-major with length {@code y.length * dimensions}. Online points
+         * use {@link OnlineLoess#addPoint(double[], double)}.
          *
          * @param dimensions the number of predictor dimensions
          * @return this builder, for chaining

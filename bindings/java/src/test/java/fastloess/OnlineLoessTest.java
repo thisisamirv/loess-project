@@ -2,6 +2,7 @@ package fastloess;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -10,11 +11,32 @@ import org.junit.jupiter.api.Test;
 class OnlineLoessTest {
 
     @Test
-    void rejectsMultivariateDimensions() {
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
-                () -> OnlineOptions.builder().dimensions(2));
-        assertTrue(ex.getMessage().contains("only one predictor dimension"));
+    void acceptsMultivariatePoints() {
+        try (OnlineLoess model = new OnlineLoess(
+                OnlineOptions.builder()
+                        .fraction(1.0)
+                        .windowCapacity(10)
+                        .minPoints(3)
+                        .dimensions(2)
+                        .surfaceMode("direct")
+                        .outputs("gradient")
+                        .build())) {
+            Optional<PointResult> last = Optional.empty();
+            double[][] points = {{0.0, 0.0}, {1.0, 0.0}, {0.0, 1.0}, {1.0, 1.0}};
+            double[] responses = {0.0, 1.0, 2.0, 3.0};
+            for (int i = 0; i < points.length; i++) {
+                Optional<PointResult> result = model.addPoint(points[i], responses[i]);
+                if (result.isPresent()) {
+                    last = result;
+                }
+            }
+            assertTrue(last.isPresent());
+            assertEquals(2, last.orElseThrow().gradient().orElseThrow().length);
+            IllegalArgumentException error = assertThrows(
+                    IllegalArgumentException.class,
+                    () -> model.addPoint(new double[]{1.0}, 2.0));
+            assertTrue(error.getMessage().contains("exactly 2 predictor coordinates"));
+        }
     }
 
     @Test

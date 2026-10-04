@@ -12,6 +12,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* Added `OnlineLoess.AddPointVector()` for multivariate Online point updates.
 * Added `CV *CVOptions` to Batch options for grouped cross-validation, taking precedence over individual CV fields.
 * Added `Outputs []string` to `Options`, `StreamingOptions`, `OnlineOptions`, and `PredictOptions` for grouped optional result selection.
 * Added `RetainModel` and `Result.PredictModel.Predict(newX, options)` for out-of-sample prediction.
@@ -26,7 +27,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
-* Reject explicitly empty custom weights instead of treating them as omitted, and reject multivariate Online dimensions during construction.
+* Reject explicitly empty custom weights instead of treating them as omitted.
 * Keep model receivers alive during Batch, Streaming, Online, and retained-prediction cgo calls to prevent premature native-handle finalization.
 * Reject unknown or unsupported output names, extra custom-weight slices, and integer counts outside the C `int` range. Invalid K-fold counts are no longer silently coerced to two.
 * Preserve native array lengths and all CV seed bits on Windows with `size_t` lengths and cgo-compatible `unsigned long long` seeds. Rebuild the generated header and native library together; old Windows binaries are ABI-incompatible.

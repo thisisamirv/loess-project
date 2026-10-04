@@ -22,7 +22,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
-* Reject Online configurations with `dimensions != 1` at construction; `add_point` accepts one scalar predictor.
+* Support multivariate Online updates by accepting one coordinate vector per `add_point` call while preserving scalar inputs for one-dimensional models.
 * Reject unknown output names across Batch, Streaming, Online, and prediction; accept documented array-like inputs for fit, streaming, and prediction; release the GIL during Online updates.
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.
 * Preserve case weights through sorted CV training subsets and multidimensional predictions. Serial and parallel CV now agree on seeded folds and held-out LOOCV predictions; K-fold counts above the retained observation count are rejected.

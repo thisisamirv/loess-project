@@ -200,6 +200,36 @@ test('WASM online smoothing', () => {
     assert.ok(Math.abs(lastSmoothed - 18) < 1.0);
 });
 
+test('WASM Online supports multivariate coordinate arrays', () => {
+    const online = new fastloess.OnlineLoess({
+        fraction: 1,
+        dimensions: 2,
+        surface_mode: 'direct',
+        outputs: ['gradient']
+    }, {
+        window_capacity: 10,
+        min_points: 3,
+        update_mode: 'full'
+    });
+
+    let latest;
+    for (const [x, y] of [
+        [[0, 0], 0],
+        [[1, 0], 1],
+        [[0, 1], 2],
+        [[1, 1], 3]
+    ]) {
+        latest = online.add_point_vector(new Float64Array(x), y);
+    }
+
+    assert.ok(latest !== undefined && latest !== null);
+    assert.strictEqual(latest.gradient.length, 2);
+    assert.throws(
+        () => online.add_point_vector(new Float64Array([1]), 2),
+        /Length mismatch.*dimensions=2/
+    );
+});
+
 test('WASM streaming: return_se', () => {
     const streamer = new fastloess.StreamingLoess({
         fraction: 0.3,

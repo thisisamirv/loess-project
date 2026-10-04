@@ -42,6 +42,8 @@ Online smoothed at x=3: 0.9975
 
 Adds a single point to the sliding window and returns an `OnlineOutput` once enough points are available, or `null` while the window is still filling.
 
+For multivariate models, set `dimensions` in `OnlineSmoothOptions` and call `add_point_vector()` with a `Float64Array` containing one coordinate per dimension. The scalar `add_point()` method remains available for one-dimensional models.
+
 ```javascript
 const { OnlineLoess } = require('fastloess');
 
@@ -64,6 +66,17 @@ console.log("Smoothed y:", result.y);
 Smoothed y: 0.22659245357374927
 ```
 
+For multivariate models, configure `dimensions` and pass each coordinate as a
+`Float64Array` to `add_point_vector`:
+
+```javascript
+const online2d = new OnlineLoess(
+    { dimensions: 2, surface_mode: 'direct', outputs: ['gradient'] },
+    { window_capacity: 10, min_points: 3 }
+);
+const output = online2d.add_point_vector(new Float64Array([0.5, 1.25]), 2.0);
+```
+
 ## Options Structures
 
 ### `OnlineSmoothOptions`
@@ -75,7 +88,7 @@ Smoothed y: 0.22659245357374927
 | `weight_function` | `string` | `"tricube"` | Weight function name |
 | `robustness_method` | `string` | `"bisquare"` | Robustness method name |
 | `degree` | `string` | `"linear"` | Polynomial degree of local fit |
-| `dimensions` | `number` | `1` | Online supports one predictor dimension |
+| `dimensions` | `number` | `1` | Number of predictor dimensions; multivariate updates use `add_point_vector()` |
 | `distance_metric` | `string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `number[]` | `null` | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode` | `string` | `"interpolation"` | Surface computation mode |
@@ -158,7 +171,7 @@ Cross-validation, `"sorted"` output, `"diagnostics"` output, `"residuals"` outpu
 
 *See: [Multivariate LOESS](../advanced/dimensions.md)*
 
-Online accepts only one predictor dimension because `add_point` takes a single scalar `x` coordinate.
+For multivariate models, set `dimensions` and pass one coordinate per dimension to `add_point_vector()`.
 
 ### distance_metric
 

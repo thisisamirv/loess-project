@@ -3,7 +3,6 @@
 # pylint: disable=unnecessary-ellipsis,unused-argument
 
 from collections.abc import Mapping, Sequence
-from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -336,7 +335,7 @@ class OnlineLoess:
         intervals: Mapping[str, float | None] | None = None,
         seed: int | None = None,
         degree: str = "linear",
-        dimensions: Literal[1] = 1,
+        dimensions: int = 1,
         distance_metric: str = "normalized",
         surface_mode: str = "interpolation",
         weighted_metric_weights: Sequence[float] | None = None,
@@ -351,5 +350,5 @@ class OnlineLoess:
         `update_mode="full"`; raises if requested under the default `"incremental"` mode.
         """
 
-    def add_point(self, x: float, y: float) -> OnlineOutput | None:
-        """Add a single point and return its smoothed value, or None if the window is still filling."""
+    def add_point(self, x: float | ArrayLike, y: float) -> OnlineOutput | None:
+        """Add a scalar or coordinate vector and return its smoothed value, or None while the window fills."""

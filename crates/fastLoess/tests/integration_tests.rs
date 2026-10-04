@@ -242,6 +242,27 @@ fn test_online_adapter_return_gradient() {
 }
 
 #[test]
+fn test_online_adapter_multivariate_points() {
+    let mut processor = OnlineLoess::new()
+        .fraction(1.0)
+        .iterations(0)
+        .dimensions(2)
+        .return_gradient()
+        .surface_mode("direct")
+        .min_points(3)
+        .window_capacity(10)
+        .build()
+        .unwrap();
+
+    let points = [([0.0, 0.0], 0.0), ([1.0, 0.0], 1.0), ([0.0, 1.0], 2.0)];
+    let mut output = None;
+    for (x, y) in points {
+        output = processor.add_point(&x, y).unwrap();
+    }
+    assert_eq!(output.unwrap().gradient.unwrap().len(), 2);
+}
+
+#[test]
 fn test_consistency() {
     // Verify that parallel and sequential computation yield identical results
     // NOTE: This test might fail if Parallel is broken. We verify it here.

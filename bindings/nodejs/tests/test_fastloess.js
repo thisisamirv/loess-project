@@ -105,10 +105,33 @@ test('online smoothing', () => {
     assert.ok(Math.abs(lastVal - 18) < 1.0);
 });
 
-test('online only supports one predictor dimension', () => {
+test('online multivariate smoothing accepts coordinate arrays', () => {
+    const online = new fastloess.OnlineLoess({
+        fraction: 1.0,
+        dimensions: 2,
+        surface_mode: 'direct',
+        outputs: ['gradient']
+    }, {
+        window_capacity: 10,
+        min_points: 3,
+        update_mode: 'full'
+    });
+
+    let latest = null;
+    for (const [x, y] of [
+        [[0, 0], 0],
+        [[1, 0], 1],
+        [[0, 1], 2],
+        [[1, 1], 3]
+    ]) {
+        latest = online.add_point_vector(new Float64Array(x), y);
+    }
+
+    assert.ok(latest !== null);
+    assert.strictEqual(latest.gradient.length, 2);
     assert.throws(
-        () => new fastloess.OnlineLoess({ dimensions: 2 }),
-        /OnlineLoess supports only one predictor dimension/
+        () => online.add_point_vector(new Float64Array([1]), 2),
+        /Length mismatch.*dimensions=2/
     );
 });
 

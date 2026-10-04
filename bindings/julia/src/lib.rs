@@ -997,7 +997,8 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
 /// Finalize and return remaining data.
 ///
 /// # Safety
-/// `ptr` must be a valid pointer.
+/// `ptr` must be a valid pointer. If `x_n` is nonzero, `x` must point to
+/// `x_n` initialized coordinate values.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_streaming_loess_finalize(ptr: *mut JlStreamingLoess) -> JlLoessResult {
     let result = catch_unwind(|| {
@@ -1215,7 +1216,8 @@ pub unsafe extern "C" fn jl_online_loess_new(
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_online_loess_add_point(
     ptr: *mut JlOnlineLoess,
-    x: c_double,
+    x: *const c_double,
+    x_n: c_ulong,
     y: c_double,
 ) -> JlOnlineOutput {
     let result = catch_unwind(|| {
@@ -1227,9 +1229,16 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
                 ..JlOnlineOutput::default()
             };
         }
+        if x.is_null() || x_n == 0 {
+            return JlOnlineOutput {
+                error: shared_parse::into_raw_error_c_string(shared_parse::INVALID_DATA_INPUTS),
+                ..JlOnlineOutput::default()
+            };
+        }
         let processor = unsafe { &mut *ptr };
+        let coordinates = unsafe { from_raw_parts(x, x_n as usize) };
 
-        match processor.inner.add_point(&[x], y) {
+        match processor.inner.add_point(coordinates, y) {
             Err(e) => JlOnlineOutput {
                 error: shared_parse::into_raw_error_c_string(&e.to_string()),
                 ..JlOnlineOutput::default()

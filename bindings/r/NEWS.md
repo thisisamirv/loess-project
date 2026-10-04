@@ -5,6 +5,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* `OnlineLoess()` now accepts multivariate coordinate vectors in `add_point()` when `dimensions` is greater than one.
 * Added an Alternative Software vignette with runnable Gaussian and robust comparisons to `stats::loess()` and a guide to LOESS-specific defaults.
 * Added `cv_opts()` and the `cv` argument on `Loess()` for grouped Batch cross-validation.
 * Added `outputs` to `Loess()`, `StreamingLoess()`, `OnlineLoess()`, and `predict.Loess()` for grouped optional results with mode-specific name validation.

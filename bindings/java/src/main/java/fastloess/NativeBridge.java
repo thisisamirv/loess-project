@@ -235,7 +235,7 @@ final class NativeBridge {
             double[] weightedMetricWeights,
             String missing);
 
-    static native NativeOnlineOutput onlineAddPoint(long handle, double x, double y);
+    static native NativeOnlineOutput onlineAddPoint(long handle, double[] x, double y);
 
     static native void onlineFree(long handle);
 }

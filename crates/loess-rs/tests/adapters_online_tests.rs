@@ -1041,6 +1041,30 @@ fn test_online_builder_dimensions_setter() {
     assert!(processor.window_size() > 0);
 }
 
+#[test]
+fn test_online_multivariate_points_validate_dimensions() {
+    let mut processor = Loess::<f64>::new()
+        .fraction(1.0)
+        .iterations(0)
+        .dimensions(2)
+        .surface_mode("direct")
+        .return_gradient()
+        .window_capacity(8)
+        .min_points(3)
+        .adapter(Online)
+        .build()
+        .unwrap();
+
+    assert!(processor.add_point(&[0.0, 0.0], 0.0).unwrap().is_none());
+    assert!(processor.add_point(&[1.0, 0.0], 1.0).unwrap().is_none());
+    let output = processor.add_point(&[0.0, 1.0], 2.0).unwrap().unwrap();
+    assert_eq!(output.gradient.unwrap().len(), 2);
+    assert!(matches!(
+        processor.add_point(&[1.0], 3.0),
+        Err(LoessError::MismatchedInputs { dimensions: 2, .. })
+    ));
+}
+
 // ============================================================================
 // Missing Value Handling (`missing`)
 // ============================================================================

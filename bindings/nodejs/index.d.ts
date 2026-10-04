@@ -77,6 +77,8 @@ export declare class OnlineLoess {
   constructor(options?: OnlineSmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
   /** Add a single point and get the smoothed value if enough points are available. */
   add_point(x: number, y: number): OnlineOutput | null
+  /** Add a point with one coordinate per configured predictor dimension. */
+  add_point_vector(x: Float64Array, y: number): OnlineOutput | null
 }
 
 /** Result of `LoessResult.predict()`. */
@@ -204,7 +206,7 @@ export interface OnlineSmoothOptions {
   intervals?: IntervalsOptions
   /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
   degree?: string
-  /** Online supports only one predictor dimension. */
+  /** Number of predictor dimensions; Online vector updates accept one coordinate per dimension. */
   dimensions?: number
   /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
   distance_metric?: string

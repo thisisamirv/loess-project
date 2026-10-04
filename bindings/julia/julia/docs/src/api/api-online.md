@@ -31,7 +31,7 @@ println(typeof(model))
 
 #### `add_point(model, x, y)`
 
-Adds a single point to the sliding window and returns the smoothed value for that point, or `nothing` while the window is still filling up (fewer than `min_points` seen so far). Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
+Adds one point to the sliding window. For one-dimensional models, `x` may be a scalar; for multivariate models, pass a vector with exactly `dimensions` values. The method returns the smoothed value for that point, or `nothing` while the window is still filling up (fewer than `min_points` seen so far). Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
 
 ```@example online
 using Random, Statistics
@@ -51,6 +51,13 @@ for i in eachindex(x)
 end
 ```
 
+For multivariate input, configure `dimensions` and pass one coordinate vector per update:
+
+```julia
+online2d = OnlineLoess(dimensions=2, surface_mode="direct")
+result = add_point(online2d, [0.5, 1.25], 2.0)
+```
+
 ## Options Structure
 
 ### `OnlineLoess` keyword arguments (mirrors `Loess`)
@@ -62,7 +69,7 @@ end
 | `weight_function` | `String` | `"tricube"` | Weight function name |
 | `robustness_method` | `String` | `"bisquare"` | Robustness method name |
 | `degree` | `String` | `"linear"` | Polynomial degree of local fit |
-| `dimensions` | `Int` | `1` | Number of predictor dimensions |
+| `dimensions` | `Int` | `1` | Number of predictor dimensions; each Online point must provide this many values |
 | `distance_metric` | `String` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `Union{Vector{Float64}, Nothing}` | `nothing` | Per-dimension weights (used when `distance_metric="weighted"`) |
 | `surface_mode` | `String` | `"interpolation"` | Surface computation mode |

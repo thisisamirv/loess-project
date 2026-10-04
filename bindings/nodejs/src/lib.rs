@@ -561,7 +561,7 @@ pub struct OnlineSmoothOptions {
     pub intervals: Option<IntervalsOptions>,
     /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
     pub degree: Option<String>,
-    /// Online supports only one predictor dimension.
+    /// Number of predictor dimensions; Online vector updates accept one coordinate per dimension.
     pub dimensions: Option<u32>,
     /// Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized".
     #[napi(js_name = "distance_metric")]
@@ -721,13 +721,6 @@ fn streaming_options_to_builder(
 fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<LoessBuilder<f64>> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
-        if let Some(dimensions) = opts.dimensions
-            && dimensions != 1
-        {
-            return Err(to_napi_error(shared_parse::BindingError::invalid_arg(
-                format!("OnlineLoess supports only one predictor dimension, got {dimensions}"),
-            )));
-        }
         validate_outputs(
             opts.outputs.as_ref(),
             &["weights", "gradient", "derivative", "se"],
@@ -966,6 +959,28 @@ impl OnlineLoess {
         let output = self
             .inner
             .add_point(&[x], y)
+            .map_err(|e| to_napi_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
+        Ok(output.map(|o| OnlineOutput {
+            y: o.y,
+            standard_error: o.standard_error,
+            residual: o.residual,
+            robustness_weight: o.robustness_weight,
+            iterations_used: o.iterations_used.map(|i| i as u32),
+            confidence_lower: o.confidence_lower,
+            confidence_upper: o.confidence_upper,
+            prediction_lower: o.prediction_lower,
+            prediction_upper: o.prediction_upper,
+            gradient: o.gradient,
+        }))
+    }
+
+    /// Add a point with one coordinate per configured predictor dimension.
+    #[napi(js_name = "add_point_vector")]
+    pub fn add_point_vector(&mut self, x: Float64Array, y: f64) -> Result<Option<OnlineOutput>> {
+        let x = x.as_ref().to_vec();
+        let output = self
+            .inner
+            .add_point(&x, y)
             .map_err(|e| to_napi_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
         Ok(output.map(|o| OnlineOutput {
             y: o.y,

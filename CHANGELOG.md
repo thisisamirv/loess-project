@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Added `OnlineLoess.AddPointVector()` for multivariate Online point updates.
 - Added `CV *CVOptions` to Batch options for grouped cross-validation, taking precedence over individual CV fields.
 - Added `Outputs []string` to `Options`, `StreamingOptions`, `OnlineOptions`, and `PredictOptions` for grouped optional result selection; existing boolean output fields remain supported.
 - Added `RetainModel` and `Result.PredictModel.Predict(newX, options)` for out-of-sample prediction.
@@ -55,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
+- Added `OnlineLoess.addPoint(double[], double)` for multivariate Online point updates while retaining the scalar overload.
 - Added an Alternative Software guide with runnable Gaussian and robust comparisons to R's `stats::loess()` and a LOESS feature matrix.
 - Added `CVOptions.builder()` and `Options.Builder.cv(...)` for grouped Batch cross-validation.
 - Added `outputs(String...)` to `Options.Builder`, `StreamingOptions.Builder`, `OnlineOptions.Builder`, and `PredictOptions.Builder` for grouped optional result selection.
@@ -65,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
+- Added multivariate Online updates through `add_point(model, coordinates, y)` when `dimensions` is greater than one.
 - Added `FastLOESS.version()` to report the installed Julia binding version from `Project.toml`.
 - Added an Alternative Software guide comparing `FastLOESS.jl` with `Loess.jl`, including a runnable numerical comparison and feature matrix.
 - Added the `cv` keyword to `Loess` for grouped cross-validation configuration.
@@ -76,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Added `OnlineLoess.add_point_vector()` for multivariate Online point updates.
 - Added a `version` export at `fastloess/version` so consumers can query the package version without loading the native addon.
 - Added `cv` to Batch options for grouped cross-validation configuration alongside legacy CV fields.
 - Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection alongside existing booleans.
@@ -85,6 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Python:**
 
+- Added multivariate Online updates by accepting coordinate arrays in `OnlineLoess.add_point()`.
 - Added an Alternative Software guide comparing Python LOESS results with `skmisc.loess`, including executable Gaussian and robust examples.
 - Added a grouped `cv` dictionary to the Batch constructor, with validation and fallback to individual CV arguments.
 - Added `outputs` sequences to `Loess`, `StreamingLoess`, `OnlineLoess`, and prediction for grouped optional result selection alongside existing booleans.
@@ -95,6 +100,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Added multivariate Online updates by accepting one coordinate vector per `add_point()` call.
 - Added `quickcheck` properties for randomized `stats::loess()` parity, sorted output, robust iterations through 12 passes, and sparse one-spike initial fits; fixed regressions cover 12- and 24-iteration robust fits.
 - Added a `quickcheck` property comparing tied x-values against `stats::loess()`. The existing properties build strictly increasing x, so ties never reached any comparison. Cases where `stats::loess()` reports a zero-width neighbourhood and falls back to a pseudoinverse are skipped, since it returns no well-defined value there.
 - Added a `quickcheck` property comparing the interpolated surface against `stats::loess()`. The other properties pin `surface = "direct"`, leaving the kd-tree vertex fits and cubic Hermite blending uncompared. It runs with `boundary_degree_fallback = FALSE`, which selects R's treatment of vertices outside the data range.
@@ -111,6 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Added `OnlineLoess.add_point_vector()` for multivariate Online point updates.
 - Added `version()` to report the WASM binding package version.
 - Added `cv` to the Batch options interface for grouped cross-validation configuration alongside legacy fields.
 - Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection alongside existing booleans.
@@ -265,7 +272,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
-- Reject explicitly empty custom weights instead of treating them as omitted, and reject multivariate Online dimensions during construction.
+- Reject explicitly empty custom weights instead of treating them as omitted.
 - Breaking: The Go module's import path now includes the required `/v2` major-version suffix; a new release is required for pkg.go.dev to resolve versions correctly.
 - Keep Batch, Streaming, Online, and retained prediction models alive during cgo calls so finalizers cannot free in-use native handles.
 - Reject unknown or mode-inappropriate output names, extra custom-weight slices, and Go counts outside the C `int` range; stop silently coercing invalid K-fold counts.
@@ -273,7 +280,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
-- Reject negative CV seeds before native model allocation, reject unsupported multivariate Online dimensions, and defensively copy weighted-metric arrays in immutable options.
+- Reject negative CV seeds before native model allocation and defensively copy weighted-metric arrays in immutable options.
 - Completed Streaming/Online builder Javadocs so the strict `failOnWarnings` documentation build passes; the Makefile now surfaces warning details if the gate regresses.
 - Propagate JNI array length/read failures, preserve explicit empty arrays for validation, and defer retained prediction-handle ownership until Java result construction succeeds. Validate iterations and k-fold counts instead of casting/coercing invalid values, and synchronize operations that share mutable native handles.
 - Reject empty CV fractions and custom-weight arrays, and complete Online/Streaming builder Javadoc summaries. The `maven-javadoc-plugin` already uses `failOnWarnings`; no POM change was needed. Java GPU installer validation has no LOESS counterpart.
@@ -282,7 +289,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
-- Reject multivariate vector calls before unsafe FFI reads, support matrix chunks for multivariate Streaming, reject Online dimensions above one, use fixed-width 64-bit CV seeds, validate interpolation caps before allocation, and reject appending results with different dimensions.
+- Reject multivariate vector calls before unsafe FFI reads, support matrix chunks for multivariate Streaming, use fixed-width 64-bit CV seeds, validate interpolation caps before allocation, and reject appending results with different dimensions.
 - Preserve Julia model owners and input arrays across native calls; serialize mutable Streaming/Online operations; reject `append!` when per-point optional result fields differ; and surface native constructor validation messages. GPU subprocess/target checks have no LOESS counterpart.
 - Fixed Julia 1.13 FFI loading by switching native calls to tuple-based `ccall` with a plain-string library path.
 
@@ -538,7 +545,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Python:**
 
-- Reject Online configurations with `dimensions != 1` at construction; `add_point` accepts one scalar predictor.
+- Support multivariate Python Online updates with per-point coordinate vectors while preserving scalar inputs for one-dimensional models.
 - Reject unknown output names across Batch, Streaming, Online, and prediction; convert documented array-like inputs to contiguous float64 data for fit, streaming, and prediction; release the GIL during Online updates. GPU wheel validation and Windows sidecars have no LOESS counterpart.
 - Fixed `OnlineLoess`/`StreamingLoess` defaults to match docs: `min_points` changed from `3` to `2`, and `update_mode` from `"full"` to `"incremental"`.
 - Corrected docs to state that result `x` values follow input order after internal sorting and mapping back; strengthened `test_unsorted_input` to assert this.

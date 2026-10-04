@@ -17,7 +17,20 @@ opts.WindowCapacity = 200
 opts.MinPoints = 10
 ```
 
-`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CV.Fractions`/`CV.Method`/`CV.K`/`Seed`, and `Parallel`, which are batch-only). `Intervals.Confidence`/`Intervals.Prediction`/`"se"` output require `UpdateMode = "full"`. `AddPoint` only accepts a single x coordinate: online mode does not support multivariate predictors even if `Dimensions` was set on construction. `Outputs` accepts `weights`, `derivative`/`gradient`, and `se`; `se` requires `UpdateMode = "full"`.
+`OnlineOptions` embeds [`Options`](api.md) (all the same fields apply, except `CV.Fractions`/`CV.Method`/`CV.K`/`Seed`, and `Parallel`, which are batch-only). `Intervals.Confidence`/`Intervals.Prediction`/`"se"` output require `UpdateMode = "full"`. `AddPoint` is the scalar convenience method for one-dimensional models; use `AddPointVector` with one coordinate per configured dimension for multivariate models. `Outputs` accepts `weights`, `derivative`/`gradient`, and `se`; `se` requires `UpdateMode = "full"`.
+
+```go
+opts := fastloess.DefaultOnlineOptions()
+opts.Dimensions = 2
+model, err := fastloess.NewOnlineLoess(opts)
+if err != nil {
+    panic(err)
+}
+defer model.Close()
+if _, _, err := model.AddPointVector([]float64{0.5, 1.25}, 2.0); err != nil {
+    panic(err)
+}
+```
 
 | Field | Type | Default | Description |
 | --- | --- | --- | --- |

@@ -10,6 +10,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* Added `OnlineLoess.add_point_vector()` for multivariate Online point updates.
 * Added `version()` to report the WASM binding package version.
 * Added `cv` to the Batch options interface for grouped cross-validation configuration alongside legacy fields.
 * Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection.

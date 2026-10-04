@@ -6,6 +6,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 === Added
 
+* Added `OnlineLoess.addPoint(double[], double)` for multivariate Online point updates while retaining the scalar overload.
 * Added an Alternative Software guide with runnable Gaussian and robust comparisons to R's `stats::loess()` and a LOESS feature matrix.
 * Added `CVOptions.builder()` and `Options.Builder.cv(...)` for grouped Batch cross-validation.
 * Added `outputs(String...)` to `Options.Builder`, `StreamingOptions.Builder`, `OnlineOptions.Builder`, and `PredictOptions.Builder` for grouped optional result selection.
@@ -21,7 +22,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 === Fixed
 
-* Reject negative CV seeds before native model allocation, reject unsupported multivariate Online dimensions, and defensively copy weighted-metric arrays in immutable options.
+* Reject negative CV seeds before native model allocation and defensively copy weighted-metric arrays in immutable options.
 * Propagate JNI array length/read failures, preserve explicit empty arrays for validation, and defer retained prediction-handle ownership until Java result construction succeeds. Validate iterations and k-fold counts instead of casting/coercing invalid values, and synchronize operations that share mutable native handles.
 * Reject empty CV fractions and custom-weight arrays, and complete Online/Streaming builder Javadoc summaries. The `maven-javadoc-plugin` already uses `failOnWarnings`; no POM change was needed. Java GPU installer validation has no LOESS counterpart.
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.

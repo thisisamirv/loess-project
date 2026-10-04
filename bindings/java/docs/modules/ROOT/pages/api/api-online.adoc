@@ -54,6 +54,8 @@ Cross-validation, the `"sorted"` and `"diagnostics"` outputs, and `parallel` are
 
 Adds a single observation. Returns `Optional.empty()` while the window is still filling (fewer than `minPoints` seen so far); once populated, the `PointResult` holds the smoothed value for the most recently added point. Once the window reaches `windowCapacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `updateMode` controls how much work each call does: `incremental` re-fits only the newest point, while `full` re-smooths the entire window for a more accurate but slower result.
 
+For multivariate models, configure `dimensions` and call `addPoint(double[] x, double y)` with one coordinate per dimension. The scalar overload remains available for one-dimensional models.
+
 == `OnlineLoess.close()`
 
 Releases native resources. Safe to call multiple times. Implements `AutoCloseable`.

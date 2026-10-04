@@ -302,7 +302,8 @@ finalize.StreamingLoess <- function(model, ...) {
 #' Add a single point to an online LOESS model
 #'
 #' @param model An \code{OnlineLoess} object.
-#' @param x A single numeric x value.
+#' @param x A numeric coordinate vector with one value per configured
+#'   dimension. For one-dimensional models, a scalar is also accepted.
 #' @param y A single numeric y value.
 #' @param ... Must be empty.
 #' @return An online result list, or \code{NULL} if fewer than
@@ -321,9 +322,15 @@ add_point.OnlineLoess <- function(model, x, y, ...) {
         stop("unused arguments (...)")
     }
     if (
-        !is.numeric(x) || is.complex(x) || length(x) != 1L || !is.null(dim(x))
+        !is.numeric(x) || is.complex(x) || !length(x) || !is.null(dim(x))
     ) {
-        stop("x must be a single numeric value", call. = FALSE)
+        stop("x must be a non-empty numeric coordinate vector", call. = FALSE)
+    }
+    if (length(x) != model$params$dimensions) {
+        stop(
+            sprintf("x must have exactly %d values", model$params$dimensions),
+            call. = FALSE
+        )
     }
     if (
         !is.numeric(y) || is.complex(y) || length(y) != 1L || !is.null(dim(y))

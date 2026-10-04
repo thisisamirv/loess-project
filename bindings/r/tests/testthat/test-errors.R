@@ -105,7 +105,7 @@ test_that("OnlineLoess rejects invalid inputs", {
     ol <- OnlineLoess(fraction = 0.5)
     result <- add_point(ol, 1.0, 2.0)
     expect_true(is.null(result) || "y" %in% names(result))
-    expect_error(add_point(ol, "x", 2), "x must be a single numeric value")
+    expect_error(add_point(ol, "x", 2), "non-empty numeric coordinate vector")
 
     # Extra ... args rejected by add_point.OnlineLoess
     expect_error(

@@ -9,6 +9,7 @@ import java.util.Optional;
 public final class OnlineLoess implements AutoCloseable {
 
     private long handle;
+    private final int dimensions;
 
     /**
      * Creates a new online model from the given options.
@@ -17,6 +18,7 @@ public final class OnlineLoess implements AutoCloseable {
      */
     public OnlineLoess(OnlineOptions options) {
         Options c = options.common;
+        this.dimensions = c.dimensions;
         this.handle = NativeBridge.onlineNew(
                 c.fraction,
                 c.iterations,
@@ -46,8 +48,8 @@ public final class OnlineLoess implements AutoCloseable {
     }
 
     /**
-     * Adds a point to the model, returning a smoothed output once at least
-     * {@code minPoints} have been seen, or {@link Optional#empty()} otherwise.
+     * Adds a one-dimensional point to the model. For multivariate models, use
+     * {@link #addPoint(double[], double)}.
      *
      * @param x the x value
      * @param y the y value
@@ -55,7 +57,23 @@ public final class OnlineLoess implements AutoCloseable {
      * points have been seen yet
      */
     public synchronized Optional<PointResult> addPoint(double x, double y) {
+        return addPoint(new double[]{x}, y);
+    }
+
+    /**
+     * Adds a point with one coordinate per configured predictor dimension.
+     * Returns a smoothed output once at least {@code minPoints} have been seen,
+     * or {@link Optional#empty()} otherwise.
+     *
+     * @param x predictor coordinates
+     * @param y response value
+     * @return the smoothed output, or empty while the window is filling
+     */
+    public synchronized Optional<PointResult> addPoint(double[] x, double y) {
         checkOpen();
+        if (x == null || x.length != dimensions) {
+            throw new IllegalArgumentException("x must contain exactly " + dimensions + " predictor coordinates");
+        }
         NativeOnlineOutput o = NativeBridge.onlineAddPoint(handle, x, y);
         return o.hasValue ? Optional.of(PointResult.fromNative(o)) : Optional.empty();
     }

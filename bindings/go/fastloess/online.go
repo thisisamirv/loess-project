@@ -48,7 +48,7 @@ type OnlineOptions struct {
 	// Degree is the local polynomial degree: "constant", "linear" (default),
 	// "quadratic", "cubic", or "quartic".
 	Degree string
-	// Dimensions is the number of predictor dimensions. Online supports only 1. Default: 1.
+	// Dimensions is the number of predictor dimensions. Default: 1.
 	Dimensions int
 	// DistanceMetric is the distance metric used for neighborhood search:
 	// "normalized" (default), "euclidean", "manhattan", "chebyshev",
@@ -119,8 +119,6 @@ func DefaultOnlineOptions() OnlineOptions {
 
 // OnlineLoess processes one (x, y) point at a time, useful for real-time
 // streaming data where results are needed immediately as points arrive.
-// AddPoint only accepts a single x coordinate: online mode does not support
-// multivariate predictors even if Dimensions was set on construction.
 //
 // OnlineLoess is not safe for concurrent use.
 type OnlineLoess struct {
@@ -131,9 +129,6 @@ type OnlineLoess struct {
 func NewOnlineLoess(opts OnlineOptions) (*OnlineLoess, error) {
 	if err := validateOutputs(opts.Outputs, "online", "weights", "gradient", "derivative", "se"); err != nil {
 		return nil, err
-	}
-	if opts.Dimensions > 1 {
-		return nil, errors.New("fastloess: OnlineLoess supports only one predictor dimension")
 	}
 	if err := validateCommonCounts(opts.Iterations, opts.Dimensions, opts.InterpolationVertices); err != nil {
 		return nil, err
@@ -225,16 +220,23 @@ func finalizeOnline(o *OnlineLoess) {
 	_ = o.Close()
 }
 
-// AddPoint adds a single (x, y) observation. ok is false while the window is
-// still filling (fewer than MinPoints seen so far); once ok is true, res
-// holds the smoothed value for the most recently added point.
-func (o *OnlineLoess) AddPoint(x, y float64) (res PointResult, ok bool, err error) {
+// AddPoint adds a one-dimensional (x, y) observation. Use AddPointVector for
+// multivariate coordinates. ok is false while the window is still filling.
+func (o *OnlineLoess) AddPoint(x, y float64) (PointResult, bool, error) {
+	return o.AddPointVector([]float64{x}, y)
+}
+
+// AddPointVector adds one observation with one x coordinate per configured
+// predictor dimension. ok is false while the window is still filling.
+func (o *OnlineLoess) AddPointVector(x []float64, y float64) (res PointResult, ok bool, err error) {
 	if o == nil || o.ptr == nil {
 		return PointResult{}, false, errors.New("fastloess: AddPoint called on a closed OnlineLoess model")
 	}
 
-	cout := C.go_online_add_point(o.ptr, C.double(x), C.double(y))
+	xPtr, xLen := cDoubles(x)
+	cout := C.go_online_add_point_vector(o.ptr, xPtr, xLen, C.double(y))
 	runtime.KeepAlive(o)
+	runtime.KeepAlive(x)
 	if cout.error != nil {
 		msg := C.GoString(cout.error)
 		C.go_online_free_output(&cout)

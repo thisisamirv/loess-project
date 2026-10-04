@@ -390,8 +390,7 @@ struct fastloess_GoOnlineLoess *go_online_new(double fraction,
                                               int return_se);
 
 /**
- * Add a single point to the model and return its smoothed value.
- * `has_value = 0` in the result means the window is still filling.
+ * Add a single scalar point to the model.
  *
  * # Safety
  * `ptr` must be a valid `GoOnlineLoess` pointer.
@@ -399,6 +398,18 @@ struct fastloess_GoOnlineLoess *go_online_new(double fraction,
 struct fastloess_GoOnlineOutput go_online_add_point(struct fastloess_GoOnlineLoess *ptr,
                                                     double x,
                                                     double y);
+
+/**
+ * Add a point with one coordinate per configured predictor dimension.
+ *
+ * # Safety
+ * `ptr` must be valid. If `x_n` is nonzero, `x_values` must point to `x_n`
+ * initialized values.
+ */
+struct fastloess_GoOnlineOutput go_online_add_point_vector(struct fastloess_GoOnlineLoess *ptr,
+                                                           const double *x_values,
+                                                           size_t x_n,
+                                                           double y);
 
 /**
  * Free the error field in a GoOnlineOutput (call only when error != NULL).

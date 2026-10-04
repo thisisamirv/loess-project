@@ -518,6 +518,13 @@ fn array_like_to_vec<'py>(py: Python<'py>, value: &Bound<'py, PyAny>) -> PyResul
         .map_err(to_py_invalid_arg_error)
 }
 
+fn online_coordinate_to_vec<'py>(py: Python<'py>, value: &Bound<'py, PyAny>) -> PyResult<Vec<f64>> {
+    if let Ok(scalar) = value.extract::<f64>() {
+        return Ok(vec![scalar]);
+    }
+    array_like_to_vec(py, value)
+}
+
 /// Streaming LOESS processor for incremental chunk-based smoothing.
 #[pyclass(name = "StreamingLoess")]
 pub struct PyStreamingLoess {
@@ -733,6 +740,7 @@ impl PyOnlineOutput {
 #[pyclass(name = "OnlineLoess")]
 pub struct PyOnlineLoess {
     inner: Mutex<ParallelOnlineLoess<f64>>,
+    dimensions: usize,
 }
 
 #[pymethods]
@@ -790,11 +798,6 @@ impl PyOnlineLoess {
         boundary_degree_fallback: Option<bool>,
         missing: &str,
     ) -> PyResult<Self> {
-        if dimensions != 1 {
-            return Err(PyValueError::new_err(
-                "OnlineLoess supports only one predictor dimension",
-            ));
-        }
         validate_outputs(
             outputs.as_ref(),
             &["weights", "gradient", "derivative", "se"],
@@ -844,12 +847,26 @@ impl PyOnlineLoess {
         .map_err(to_py_error)?;
         Ok(PyOnlineLoess {
             inner: Mutex::new(processor),
+            dimensions,
         })
     }
 
-    /// Add a single point and return its smoothed value, or None if the window
-    /// is still filling up.
-    fn add_point(&self, py: Python<'_>, x: f64, y: f64) -> PyResult<Option<PyOnlineOutput>> {
+    /// Add a point using a scalar x for 1D or a coordinate vector for multivariate input.
+    fn add_point<'py>(
+        &self,
+        py: Python<'py>,
+        x: &Bound<'py, PyAny>,
+        y: f64,
+    ) -> PyResult<Option<PyOnlineOutput>> {
+        let x_vec = online_coordinate_to_vec(py, x)?;
+        if x_vec.len() != self.dimensions {
+            return Err(PyValueError::new_err(format!(
+                "x must have exactly {} values for dimensions={}, got {}",
+                self.dimensions,
+                self.dimensions,
+                x_vec.len(),
+            )));
+        }
         let output = py.detach(move || {
             let mut inner = self.inner.lock().map_err(|e| {
                 to_py_error(shared_parse::BindingError::runtime(
@@ -857,7 +874,7 @@ impl PyOnlineLoess {
                 ))
             })?;
             inner
-                .add_point(&[x], y)
+                .add_point(&x_vec, y)
                 .map_err(|e| to_py_error(shared_parse::BindingError::invalid_arg(e.to_string())))
         })?;
         Ok(output.map(|o| PyOnlineOutput {

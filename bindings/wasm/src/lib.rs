@@ -231,6 +231,8 @@ export class OnlineLoess {
     constructor(options?: OnlineSmoothOptions, onlineOpts?: OnlineOptions);
     /** Add a single point and get the smoothed value, or null if not enough points yet. */
     add_point(x: number, y: number): OnlineOutput | null;
+    /** Add a point with one coordinate per configured predictor dimension. */
+    add_point_vector(x: Float64Array, y: number): OnlineOutput | null;
 }
 
 /** Result from a single online update step. */
@@ -1209,6 +1211,27 @@ impl OnlineLoess {
     #[wasm_bindgen(js_name = "add_point", skip_typescript)]
     pub fn add_point(&mut self, x: f64, y: f64) -> Result<JsValue, JsValue> {
         let output = map_invalid_arg(self.inner.add_point(&[x], y))?;
+        Ok(match output {
+            Some(o) => JsValue::from(OnlineOutput {
+                y: o.y,
+                standard_error: o.standard_error,
+                residual: o.residual,
+                robustness_weight: o.robustness_weight,
+                iterations_used: o.iterations_used,
+                confidence_lower: o.confidence_lower,
+                confidence_upper: o.confidence_upper,
+                prediction_lower: o.prediction_lower,
+                prediction_upper: o.prediction_upper,
+                gradient: o.gradient,
+            }),
+            None => JsValue::null(),
+        })
+    }
+
+    #[wasm_bindgen(js_name = "add_point_vector", skip_typescript)]
+    pub fn add_point_vector(&mut self, x: &Float64Array, y: f64) -> Result<JsValue, JsValue> {
+        let x = x.to_vec();
+        let output = map_invalid_arg(self.inner.add_point(&x, y))?;
         Ok(match output {
             Some(o) => JsValue::from(OnlineOutput {
                 y: o.y,

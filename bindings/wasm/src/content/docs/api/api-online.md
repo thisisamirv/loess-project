@@ -59,6 +59,16 @@ console.log("Smoothed y:", result.y);
 Smoothed y: 0.22659245357374927
 ```
 
+For multivariate models, set `dimensions` and pass a `Float64Array` with one coordinate per dimension to `add_point_vector()`:
+
+```javascript
+const online2d = new OnlineLoess(
+ { dimensions: 2, surface_mode: 'direct', outputs: ['gradient'] },
+ { window_capacity: 10, min_points: 3 }
+);
+const output = online2d.add_point_vector(new Float64Array([0.5, 1.25]), 2.0);
+```
+
 ## Options Structures
 
 ### `OnlineSmoothOptions`
@@ -273,11 +283,9 @@ Minimum number of points required before `add_point()` starts returning smoothed
 
 Include the standard error for the latest point in the result (`OnlineOutput.standard_error`). Same `update_mode = "full"` requirement as `intervals.confidence`.
 
-
 ### outputs: weights
 
 Include the robustness weight for the latest point (from the last robustness iteration) in the result.
-
 
 ### outputs: gradient
 

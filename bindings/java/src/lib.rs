@@ -824,7 +824,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
     mut env: EnvUnowned<'local>,
     _class: JClass<'local>,
     handle: jlong,
-    x: jdouble,
+    x: JDoubleArray<'local>,
     y: jdouble,
 ) -> JObject<'local> {
     env.with_env(|env| -> AppResult<JObject<'local>> {
@@ -832,7 +832,11 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
             return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
         }
         let online = unsafe { &mut *(handle as *mut JavaOnlineLoess) };
-        let point = online.model.add_point(&[x], y).map_err(|e| e.to_string())?;
+        let x_vec = jarray_to_vec(env, &x)?;
+        let point = online
+            .model
+            .add_point(&x_vec, y)
+            .map_err(|e| e.to_string())?;
 
         let (
             has_value,

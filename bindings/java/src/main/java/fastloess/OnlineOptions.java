@@ -197,18 +197,15 @@ public final class OnlineOptions {
         }
 
         /**
-         * Sets the number of predictor dimensions. Online supports only one.
+         * Sets the number of predictor dimensions. For dimensions above one,
+         * pass a coordinate array to
+         * {@link OnlineLoess#addPoint(double[], double)}.
          *
          * @param dimensions the number of predictor dimensions
          * @return this builder, for chaining
-         * @throws IllegalArgumentException if {@code dimensions} is greater
-         * than one
          * @see Options.Builder#dimensions(int)
          */
         public Builder dimensions(int dimensions) {
-            if (dimensions > 1) {
-                throw new IllegalArgumentException("OnlineLoess supports only one predictor dimension");
-            }
             common.dimensions(dimensions);
             return this;
         }

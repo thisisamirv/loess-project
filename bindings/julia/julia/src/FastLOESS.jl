@@ -1341,7 +1341,7 @@ Stateful online LOESS smoother.
   `"gradient"`, and `"se"`.
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling
 - `degree::String = "linear"`: Polynomial degree
-- `dimensions::Int = 1`: Online supports only one predictor dimension
+- `dimensions::Int = 1`: Number of predictor dimensions; multivariate `add_point` calls take coordinate vectors
 - `distance_metric::String = "normalized"`: Distance metric ("normalized", "euclidean",
   "manhattan", "chebyshev", "minkowski"). Use "minkowski:p" for a custom p value.
 - `surface_mode::String = "interpolation"`: Surface mode
@@ -1389,9 +1389,6 @@ mutable struct OnlineLoess
 		missing::String = "error",
 		intervals = nothing,
 	)
-		if dimensions > 1
-			throw(ArgumentError("OnlineLoess supports only one predictor dimension"))
-		end
 		configured_dimensions = max(dimensions, 1)
 		interval_options = _interval_options(intervals)
 		confidence_intervals = interval_options.confidence
@@ -1491,19 +1488,30 @@ end
 """
 	add_point(o::OnlineLoess, x, y) -> Union{OnlineOutput, Nothing}
 
-Add a single point to the online processor and return its smoothed value.
-Returns `nothing` while the window is still filling (fewer than `min_points`
-have been seen), and an `OnlineOutput` once smoothing begins.
+Add one point to the online processor and return its smoothed value. For a
+one-dimensional model, pass a scalar coordinate; for multivariate models, pass
+a vector with one coordinate per configured dimension. Returns `nothing` while
+the window is still filling (fewer than `min_points` have been seen).
 """
-function add_point(o::OnlineLoess, x::Float64, y::Float64)
+function add_point(o::OnlineLoess, x::Real, y::Real)
+	return add_point(o, Float64[x], Float64(y))
+end
+
+function add_point(o::OnlineLoess, x::AbstractVector{<:Real}, y::Real)
+	x_values = Float64.(x)
+	if length(x_values) != o.dimensions
+		throw(ArgumentError("x must have exactly $(o.dimensions) values for dimensions=$(o.dimensions)"))
+	end
+	response = Float64(y)
 	c_result = lock(o.lock) do
-		GC.@preserve o ccall(
+		GC.@preserve o x_values ccall(
 			(:jl_online_loess_add_point, libfastloess),
 			CJlOnlineOutput,
-			(Ptr{Cvoid}, Cdouble, Cdouble),
+			(Ptr{Cvoid}, Ptr{Cdouble}, Culong, Cdouble),
 			o.handle,
-			x,
-			y,
+			x_values,
+			Culong(length(x_values)),
+			response,
 		)
 	end
 

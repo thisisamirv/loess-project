@@ -26,7 +26,7 @@ online = fl.OnlineLoess(fraction=0.5, window_capacity=50)
 
 #### `add_point(x, y)`
 
-Adds a single point to the sliding window and returns the smoothed value for that point, or `None` while the window is still filling up (fewer than `min_points` seen so far). Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
+Adds one point to the sliding window. For one-dimensional models, `x` may be a scalar; for multivariate models, pass a one-dimensional array-like coordinate with exactly `dimensions` values. The method returns the smoothed value for that point, or `None` while the window is still filling up (fewer than `min_points` seen so far). Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
 
 :::{jupyter-execute}
 import fastloess as fl
@@ -44,6 +44,17 @@ result = online.add_point(x[2], y[2])
 print(result)
 :::
 
+For multivariate input, configure `dimensions` and pass a coordinate vector at each update:
+
+:::{jupyter-execute}
+import fastloess as fl
+import numpy as np
+
+online = fl.OnlineLoess(dimensions=2, surface_mode="direct")
+result = online.add_point(np.array([0.5, 1.25]), 2.0)
+print(result)
+:::
+
 ## Options Structure
 
 ### `OnlineOptions` (inherits `LoessOptions`)
@@ -55,7 +66,7 @@ print(result)
 | `weight_function` | `str` | `"tricube"` | Weight function name |
 | `robustness_method` | `str` | `"bisquare"` | Robustness method name |
 | `degree` | `str` | `"linear"` | Polynomial degree of local fit |
-| `dimensions` | `int` | `1` | Online supports only one predictor dimension |
+| `dimensions` | `int` | `1` | Number of predictor dimensions; each `add_point` coordinate must have this many values |
 | `distance_metric` | `str` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `list[float]` | `None` | Per-dimension weights (used when `distance_metric="weighted"`) |
 | `surface_mode` | `str` | `"interpolation"` | Surface computation mode |
@@ -133,7 +144,7 @@ Cross-validation, the `"sorted"` output, and `parallel` are Batch-only; the `"di
 
 *See: [Multivariate LOESS](../advanced/dimensions.md)*
 
-Online accepts only one predictor dimension because `add_point` takes a single scalar `x` coordinate. Multivariate predictors are supported by Batch and Streaming, not Online.
+Number of predictor dimensions. For Online, each `add_point` call supplies one coordinate vector of this length.
 
 ### distance_metric
 

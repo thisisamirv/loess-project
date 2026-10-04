@@ -1107,33 +1107,27 @@ pub unsafe extern "C" fn go_online_new(
     })
 }
 
-/// Add a single point to the model and return its smoothed value.
-/// `has_value = 0` in the result means the window is still filling.
-///
-/// # Safety
-/// `ptr` must be a valid `GoOnlineLoess` pointer.
-#[unsafe(no_mangle)]
-pub unsafe extern "C" fn go_online_add_point(
+fn go_online_error_output(message: &str) -> GoOnlineOutput {
+    GoOnlineOutput {
+        error: shared_parse::to_cstring_lossy(message).into_raw(),
+        ..GoOnlineOutput::default()
+    }
+}
+
+fn go_online_add_point_impl(
     ptr: *mut GoOnlineLoess,
-    x: c_double,
+    x: &[c_double],
     y: c_double,
 ) -> GoOnlineOutput {
-    let make_error = |msg: &str| -> GoOnlineOutput {
-        GoOnlineOutput {
-            error: shared_parse::to_cstring_lossy(msg).into_raw(),
-            ..GoOnlineOutput::default()
-        }
-    };
-
     match catch_unwind(AssertUnwindSafe(|| {
         if ptr.is_null() {
-            return make_error(shared_parse::MODEL_POINTER_IS_NULL);
+            return go_online_error_output(shared_parse::MODEL_POINTER_IS_NULL);
         }
         let loess = unsafe { &mut *ptr };
 
         if let Some(model) = &mut loess.model {
-            match model.add_point(&[x], y) {
-                Err(e) => make_error(&e.to_string()),
+            match model.add_point(x, y) {
+                Err(e) => go_online_error_output(&e.to_string()),
                 Ok(None) => GoOnlineOutput::default(),
                 Ok(Some(o)) => {
                     let (
@@ -1164,12 +1158,47 @@ pub unsafe extern "C" fn go_online_add_point(
                 }
             }
         } else {
-            make_error(shared_parse::MODEL_NOT_INITIALIZED)
+            go_online_error_output(shared_parse::MODEL_NOT_INITIALIZED)
         }
     })) {
         Ok(v) => v,
-        Err(_) => make_error(shared_parse::panic_fallback_message()),
+        Err(_) => go_online_error_output(shared_parse::panic_fallback_message()),
     }
+}
+
+/// Add a single scalar point to the model.
+///
+/// # Safety
+/// `ptr` must be a valid `GoOnlineLoess` pointer.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn go_online_add_point(
+    ptr: *mut GoOnlineLoess,
+    x: c_double,
+    y: c_double,
+) -> GoOnlineOutput {
+    go_online_add_point_impl(ptr, &[x], y)
+}
+
+/// Add a point with one coordinate per configured predictor dimension.
+///
+/// # Safety
+/// `ptr` must be valid. If `x_n` is nonzero, `x_values` must point to `x_n`
+/// initialized values.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn go_online_add_point_vector(
+    ptr: *mut GoOnlineLoess,
+    x_values: *const c_double,
+    x_n: usize,
+    y: c_double,
+) -> GoOnlineOutput {
+    if ptr.is_null() {
+        return go_online_error_output(shared_parse::MODEL_POINTER_IS_NULL);
+    }
+    if x_values.is_null() || x_n == 0 {
+        return go_online_error_output(shared_parse::INVALID_DATA_INPUTS);
+    }
+    let x = unsafe { from_raw_parts(x_values, x_n) };
+    go_online_add_point_impl(ptr, x, y)
 }
 
 /// Free the error field in a GoOnlineOutput (call only when error != NULL).

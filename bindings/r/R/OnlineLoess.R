@@ -32,6 +32,8 @@
 #'   passed to \code{\link{add_point}}: \code{"error"} (default) raises an
 #'   error, \code{"drop"} silently ignores the point (returns \code{NULL})
 #'   instead of adding it to the window.
+#' @param dimensions Number of predictor dimensions; each \code{add_point()}
+#'   call must provide one x coordinate per dimension.
 #'
 #' @return An OnlineLoess object.
 #' @examples
@@ -101,7 +103,8 @@ OnlineLoess <- function(
                 fraction = fraction,
                 window_capacity = window_capacity,
                 min_points = min_points,
-                iterations = iterations
+                iterations = iterations,
+                dimensions = dimensions
             )
         ),
         class = "OnlineLoess"
