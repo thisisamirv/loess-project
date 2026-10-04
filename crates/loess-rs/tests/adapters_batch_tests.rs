@@ -394,6 +394,23 @@ fn test_batch_cv_rejects_more_folds_than_observations() {
 }
 
 #[test]
+fn test_batch_rejects_overflowing_dimension_shape_without_panicking() {
+    let dimensions = usize::MAX / 2 + 2;
+    let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+        Loess::new()
+            .dimensions(dimensions)
+            .build()
+            .unwrap()
+            .fit(&[0.0, 1.0], &[0.0, 1.0])
+    }));
+
+    assert!(
+        matches!(result, Ok(Err(_))),
+        "overflowing dimension shapes must return a validation error"
+    );
+}
+
+#[test]
 fn test_batch_weighted_loocv_matches_independent_fold_fits() {
     use loess_rs::internals::evaluation::cv::CVKind;
 
@@ -443,6 +460,86 @@ fn test_batch_weighted_loocv_matches_independent_fold_fits() {
         .unwrap();
     for (actual, expected) in result.cv_scores.unwrap().iter().zip(expected) {
         assert_relative_eq!(*actual, expected, epsilon = 1e-12);
+    }
+}
+
+#[test]
+fn test_batch_multivariate_loocv_matches_retained_fold_predictions() {
+    let mut predictors = Vec::new();
+    let mut observations = Vec::new();
+    for row in 0..4 {
+        for column in 0..4 {
+            let x = row as f64;
+            let z = column as f64;
+            predictors.extend([x, z]);
+            let mut y = 1.5 * x - 0.75 * z + (x * z * 0.2).sin();
+            if row == 1 && column == 2 {
+                y += 20.0;
+            }
+            observations.push(y);
+        }
+    }
+
+    for surface_mode in ["direct", "interpolation"] {
+        for boundary_policy in ["noboundary", "reflect"] {
+            for iterations in [0, 5] {
+                let mut squared_error = 0.0;
+                for held_out in 0..observations.len() {
+                    let mut training_x = Vec::new();
+                    let mut training_y = Vec::new();
+                    for index in 0..observations.len() {
+                        if index == held_out {
+                            continue;
+                        }
+                        training_x.extend_from_slice(&predictors[index * 2..index * 2 + 2]);
+                        training_y.push(observations[index]);
+                    }
+
+                    let fitted = Loess::new()
+                        .fraction(0.55)
+                        .iterations(iterations)
+                        .auto_converge(1e-4)
+                        .dimensions(2)
+                        .surface_mode(surface_mode)
+                        .boundary_policy(boundary_policy)
+                        .retain_model(true)
+                        .adapter(Batch)
+                        .build()
+                        .unwrap()
+                        .fit(&training_x, &training_y)
+                        .unwrap();
+                    let query = &predictors[held_out * 2..held_out * 2 + 2];
+                    let prediction = Predict::new()
+                        .build()
+                        .unwrap()
+                        .call(&fitted, query)
+                        .unwrap()
+                        .y[0];
+                    squared_error += (observations[held_out] - prediction).powi(2);
+                }
+                let expected_rmse = (squared_error / observations.len() as f64).sqrt();
+                let result = Loess::new()
+                    .fraction(0.55)
+                    .iterations(iterations)
+                    .auto_converge(1e-4)
+                    .dimensions(2)
+                    .surface_mode(surface_mode)
+                    .boundary_policy(boundary_policy)
+                    .cv(CVBuilder::new().method("loocv").fraction(vec![0.55]))
+                    .adapter(Batch)
+                    .build()
+                    .unwrap()
+                    .fit(&predictors, &observations)
+                    .unwrap();
+
+                let actual_rmse = result.cv_scores.unwrap()[0];
+                assert!(
+                    (actual_rmse - expected_rmse).abs() < 1e-10,
+                    "surface={surface_mode}, boundary={boundary_policy}, iterations={iterations}: \
+                     CV RMSE {actual_rmse} differed from explicit-fold RMSE {expected_rmse}"
+                );
+            }
+        }
     }
 }
 

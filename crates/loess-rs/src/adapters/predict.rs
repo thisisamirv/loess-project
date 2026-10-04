@@ -207,6 +207,21 @@ impl<T: FloatLinalg> PredictBuilder<T> {
         {
             crate::engine::validator::Validator::validate_interval_level(level)?;
         }
+        for (name, distance) in [
+            (
+                "max_extrapolation_distance",
+                self.max_extrapolation_distance,
+            ),
+            ("max_neighbor_distance", self.max_neighbor_distance),
+        ] {
+            if let Some(distance) = distance
+                && (!distance.is_finite() || distance < T::zero())
+            {
+                return Err(LoessError::InvalidInput(format!(
+                    "{name} must be finite and non-negative"
+                )));
+            }
+        }
         Ok(PredictQuery {
             return_se: self.return_se,
             confidence_intervals: self.confidence_intervals,

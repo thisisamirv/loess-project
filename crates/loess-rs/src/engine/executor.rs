@@ -849,6 +849,9 @@ pub struct LoessExecutor<T: FloatLinalg + SolverLinalg> {
     // Number of robustness iterations.
     pub iterations: usize,
 
+    // Convergence tolerance for early stopping of robustness iterations.
+    pub auto_converge: Option<T>,
+
     // Kernel weight function.
     pub weight_function: WeightFunction,
 
@@ -967,6 +970,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         Self {
             fraction: T::from(DEFAULT_FRACTION).unwrap_or_else(|| T::from(0.5).unwrap()),
             iterations: DEFAULT_ITERATIONS,
+            auto_converge: None,
             weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
             zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
             robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
@@ -1029,6 +1033,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         if let Some(cw) = config.custom_weights.clone() {
             exec = exec.custom_weights(cw);
         }
+        exec.auto_converge = config.auto_converge;
         exec
     }
 
@@ -1271,22 +1276,53 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                  fraction: T| {
                     let mut subset_executor = executor.clone();
                     subset_executor.custom_weights = subset_weights(indices);
-                    let scales =
-                        loess_normalization_scales(training_x, training_y.len(), self.dimensions);
-                    let tree = if let Some(builder) = self.custom_kdtree_builder {
-                        builder(training_x, self.dimensions)
-                    } else {
-                        KDTree::new(training_x, self.dimensions)
-                    };
-                    subset_executor.predict(
+                    // Retain the actual fold fit so held-out predictions use its final
+                    // robustness weights, boundary padding, and interpolation surface.
+                    let fold_output = subset_executor.clone().retain_model(true).run(
                         training_x,
                         training_y,
-                        &vec![T::one(); training_y.len()],
-                        query_x,
-                        Window::calculate_span(training_y.len(), fraction),
-                        &scales,
-                        &tree,
-                    )
+                        Some(fraction),
+                        None,
+                        executor.auto_converge,
+                        None,
+                        None,
+                    );
+                    let state = fold_output
+                        .predict_state
+                        .expect("retained CV fold fit must produce prediction state");
+                    let dimensions = state.dimensions;
+                    subset_executor.custom_weights = state.custom_weights.clone();
+
+                    let mut predictions = Vec::with_capacity(query_x.len() / dimensions);
+                    for query_point in query_x.chunks_exact(dimensions) {
+                        let mut eval_point = query_point.to_vec();
+                        let mut out_of_range = false;
+                        for dimension in 0..dimensions {
+                            if query_point[dimension] < state.train_min[dimension] {
+                                eval_point[dimension] = state.train_min[dimension];
+                                out_of_range = true;
+                            } else if query_point[dimension] > state.train_max[dimension] {
+                                eval_point[dimension] = state.train_max[dimension];
+                                out_of_range = true;
+                            }
+                        }
+
+                        if !out_of_range && let Some(surface) = state.surface.as_ref() {
+                            predictions.push(surface.evaluate(query_point));
+                        } else {
+                            let prediction = subset_executor.predict(
+                                &state.x,
+                                &state.y,
+                                &state.robustness_weights,
+                                &eval_point,
+                                state.window_size,
+                                &state.scales,
+                                &state.kdtree,
+                            );
+                            predictions.push(prediction.first().copied().unwrap_or(T::zero()));
+                        }
+                    }
+                    predictions
                 },
             )
         } else {
@@ -1307,7 +1343,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                         training_y,
                         Some(fraction),
                         None,
-                        None,
+                        executor.auto_converge,
                         None,
                         None,
                     )

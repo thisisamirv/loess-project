@@ -289,6 +289,30 @@ fn test_predict_rejects_non_finite_new_x() {
     }
 }
 
+#[test]
+fn test_predict_rejects_invalid_distance_caps() {
+    for invalid in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, -1.0] {
+        assert!(matches!(
+            PredictBuilder::new()
+                .max_extrapolation_distance(invalid)
+                .build(),
+            Err(LoessError::InvalidInput(_))
+        ));
+        assert!(matches!(
+            PredictBuilder::new().max_neighbor_distance(invalid).build(),
+            Err(LoessError::InvalidInput(_))
+        ));
+    }
+
+    assert!(
+        PredictBuilder::new()
+            .max_extrapolation_distance(0.0)
+            .max_neighbor_distance(0.0)
+            .build()
+            .is_ok()
+    );
+}
+
 // ============================================================================
 // Multivariate (nD)
 // ============================================================================

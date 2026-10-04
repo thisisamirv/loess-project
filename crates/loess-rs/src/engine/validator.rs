@@ -45,7 +45,10 @@ impl Validator {
             return Err(LoessError::EmptyInput);
         }
         let n_y = y.len();
-        if x.len() != n_y * dimensions {
+        let expected_x_len = n_y.checked_mul(dimensions).ok_or_else(|| {
+            LoessError::InvalidInput("x length overflows y length times dimensions".into())
+        })?;
+        if x.len() != expected_x_len {
             return Err(LoessError::MismatchedInputs {
                 x_len: x.len(),
                 y_len: n_y,

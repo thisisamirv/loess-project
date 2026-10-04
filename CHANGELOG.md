@@ -209,6 +209,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Preserve configured robustness iterations, auto-convergence, boundary handling, and surface mode in multidimensional CV fold predictions; CV now evaluates held-out points against each fold's fitted model state.
+- Reject overflowing `y.len() * dimensions` input shapes without panicking, and reject negative or non-finite retained-prediction distance caps.
 - Used standard ceiling division for multivariate normalization trimming so strict Clippy passes without changing the trim count.
 - Validate original case-weight lengths and values before `missing("drop")` filters observations; invalid weights on dropped rows can no longer disappear.
 - Preserve case weights through sorted CV training subsets and multidimensional CV predictions; sort one-dimensional LOOCV training data and reject active K-fold counts above the retained observation count.

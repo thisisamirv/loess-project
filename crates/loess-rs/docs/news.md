@@ -21,6 +21,8 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Multidimensional CV now predicts held-out points using each fold's fitted model state, preserving robustness iterations, auto-convergence, boundary handling, and surface mode.
+* Reject overflowing `y.len() * dimensions` input shapes without panicking; reject negative or non-finite prediction distance caps.
 * Validate case weights before dropping missing observations, preserving errors on dropped rows.
 * Carry case weights through sorted CV subsets and multidimensional predictions; sort LOOCV training points and reject oversized active K-fold requests.
 * Validate Streaming/Online convergence tolerances and require full robustness updates for Online auto-convergence.
