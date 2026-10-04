@@ -19,7 +19,7 @@ use std::vec::Vec;
 
 // Export dependencies from loess-rs crate
 use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
-use loess_rs::internals::engine::executor::{LoessConfig, LoessExecutor};
+use loess_rs::internals::engine::executor::{CVRunOptions, LoessConfig, LoessExecutor};
 use loess_rs::internals::evaluation::cv::CVKind;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
@@ -74,7 +74,16 @@ where
 {
     let executor = LoessExecutor::from_config(config);
     let mut buffer = CVBuffer::new(y.len(), config.dimensions);
-    let (_, scores) =
-        executor.cross_validate(x, y, &[fraction], cv_kind, config.cv_seed, &mut buffer);
+    let (_, scores) = executor.cross_validate_with_options(
+        x,
+        y,
+        &[fraction],
+        CVRunOptions {
+            kind: cv_kind,
+            seed: config.cv_seed,
+            tolerance: config.auto_converge,
+        },
+        &mut buffer,
+    );
     scores.first().copied().unwrap_or_else(T::infinity)
 }

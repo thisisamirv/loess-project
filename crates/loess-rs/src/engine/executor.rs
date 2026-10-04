@@ -54,6 +54,13 @@ use crate::primitives::policies::{
 };
 use crate::primitives::window::Window;
 
+#[derive(Debug, Clone, Copy)]
+pub struct CVRunOptions<T> {
+    pub kind: CVKind,
+    pub seed: Option<u64>,
+    pub tolerance: Option<T>,
+}
+
 #[derive(Debug, Clone)]
 pub struct PredictQuery<T> {
     pub(crate) return_se: bool,
@@ -849,9 +856,6 @@ pub struct LoessExecutor<T: FloatLinalg + SolverLinalg> {
     // Number of robustness iterations.
     pub iterations: usize,
 
-    // Convergence tolerance for early stopping of robustness iterations.
-    pub auto_converge: Option<T>,
-
     // Kernel weight function.
     pub weight_function: WeightFunction,
 
@@ -970,7 +974,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         Self {
             fraction: T::from(DEFAULT_FRACTION).unwrap_or_else(|| T::from(0.5).unwrap()),
             iterations: DEFAULT_ITERATIONS,
-            auto_converge: None,
             weight_function: DEFAULT_WEIGHT_FUNCTION_ENUM,
             zero_weight_fallback: DEFAULT_ZERO_WEIGHT_FALLBACK_ENUM,
             robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
@@ -1033,7 +1036,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         if let Some(cw) = config.custom_weights.clone() {
             exec = exec.custom_weights(cw);
         }
-        exec.auto_converge = config.auto_converge;
         exec
     }
 
@@ -1219,7 +1221,17 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 let LoessBuffer {
                     ref mut cv_buffer, ..
                 } = workspace;
-                executor.cross_validate(x, y, cv_fracs, cv_kind, config.cv_seed, cv_buffer)
+                executor.cross_validate_with_options(
+                    x,
+                    y,
+                    cv_fracs,
+                    CVRunOptions {
+                        kind: cv_kind,
+                        seed: config.cv_seed,
+                        tolerance: config.auto_converge,
+                    },
+                    cv_buffer,
+                )
             };
 
             // Run final pass with best fraction
@@ -1258,6 +1270,27 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         seed: Option<u64>,
         buffer: &mut CVBuffer<T>,
     ) -> (T, Vec<T>) {
+        self.cross_validate_with_options(
+            x,
+            y,
+            fractions,
+            CVRunOptions {
+                kind,
+                seed,
+                tolerance: None,
+            },
+            buffer,
+        )
+    }
+
+    pub fn cross_validate_with_options(
+        &self,
+        x: &[T],
+        y: &[T],
+        fractions: &[T],
+        options: CVRunOptions<T>,
+        buffer: &mut CVBuffer<T>,
+    ) -> (T, Vec<T>) {
         let executor = self.clone().retain_model(false).return_gradient(false);
         let subset_weights = |indices: &[usize]| {
             self.custom_weights.as_ref().map(|weights| {
@@ -1283,7 +1316,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                         training_y,
                         Some(fraction),
                         None,
-                        executor.auto_converge,
+                        options.tolerance,
                         None,
                         None,
                     );
@@ -1328,12 +1361,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         } else {
             None
         };
-        kind.run_with_indices(
+        options.kind.run_with_indices(
             x,
             y,
             self.dimensions,
             fractions,
-            seed,
+            options.seed,
             |training_x, training_y, indices, fraction| {
                 let mut subset_executor = executor.clone();
                 subset_executor.custom_weights = subset_weights(indices);
@@ -1343,7 +1376,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                         training_y,
                         Some(fraction),
                         None,
-                        executor.auto_converge,
+                        options.tolerance,
                         None,
                         None,
                     )
