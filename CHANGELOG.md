@@ -280,6 +280,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
+- Reject multivariate vector calls before unsafe FFI reads, support matrix chunks for multivariate Streaming, reject Online dimensions above one, use fixed-width 64-bit CV seeds, validate interpolation caps before allocation, and reject appending results with different dimensions.
 - Preserve Julia model owners and input arrays across native calls; serialize mutable Streaming/Online operations; reject `append!` when per-point optional result fields differ; and surface native constructor validation messages. GPU subprocess/target checks have no LOESS counterpart.
 - Fixed Julia 1.13 FFI loading by switching native calls to tuple-based `ccall` with a plain-string library path.
 

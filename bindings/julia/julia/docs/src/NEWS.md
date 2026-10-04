@@ -24,6 +24,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Reject multivariate vector calls before unsafe FFI reads, support matrix chunks for multivariate Streaming, reject Online dimensions above one, use fixed-width 64-bit CV seeds, validate interpolation caps before allocation, and reject appending results with different dimensions.
 * Preserve model owners and input arrays across native calls, serialize mutable Streaming/Online operations, reject result appends with mismatched optional fields, and surface native constructor validation errors. GPU subprocess/target checks have no LOESS counterpart.
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.
 * Preserve case weights through sorted CV training subsets and multidimensional predictions. Serial and parallel CV now agree on seeded folds and held-out LOOCV predictions; K-fold counts above the retained observation count are rejected.

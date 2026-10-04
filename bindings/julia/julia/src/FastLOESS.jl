@@ -73,7 +73,8 @@ end
 
 function _check_group_keys(group, allowed, name)
 	unknown = setdiff(Symbol.(collect(keys(group))), collect(allowed))
-	isempty(unknown) || throw(ArgumentError("Unknown $name options: $(join(unknown, ", "))"))
+	isempty(unknown) ||
+		throw(ArgumentError("Unknown $name options: $(join(unknown, ", "))"))
 end
 
 function _interval_options(intervals)
@@ -88,8 +89,7 @@ function _interval_options(intervals)
 end
 
 function _cv_options(cv)
-	cv === nothing &&
-		return (fractions = Float64[], method = "kfold", k = 5)
+	cv === nothing && return (fractions = Float64[], method = "kfold", k = 5)
 	_check_group_keys(cv, (:fractions, :method, :k), "cv")
 	haskey(cv, :fractions) || throw(ArgumentError("cv requires fractions"))
 	return (
@@ -643,6 +643,8 @@ const _APPENDABLE_RESULT_FIELDS = (
 )
 
 function Base.append!(a::LoessResult, b::LoessResult)
+	a.dimensions == b.dimensions ||
+		throw(ArgumentError("cannot append results with different dimensions"))
 	for field ∈ _APPENDABLE_RESULT_FIELDS
 		left = getfield(a, field)
 		right = getfield(b, field)
@@ -798,8 +800,16 @@ mutable struct Loess
 		cv_fractions = cv_options.fractions
 		cv_method = cv_options.method
 		cv_k = cv_options.k
-		cv_seed = seed
 		seed === nothing || seed >= 0 || throw(ArgumentError("seed must be non-negative"))
+		cv_seed = seed === nothing ? nothing : UInt64(seed)
+		interpolation_vertices_value = if interpolation_vertices === nothing
+			nothing
+		else
+			interpolation_vertices > 0 ||
+				throw(ArgumentError("interpolation_vertices must be positive"))
+			Csize_t(interpolation_vertices)
+		end
+		configured_dimensions = max(dimensions, 1)
 		cv_ptr = isempty(cv_fractions) ? Ptr{Cdouble}(C_NULL) : pointer(cv_fractions)
 		cv_len = length(cv_fractions)
 
@@ -856,7 +866,7 @@ mutable struct Loess
 			Cint(cv_k),
 			Cint(parallel),
 			degree,
-			Cint(dimensions),
+			Cint(configured_dimensions),
 			distance_metric,
 			surface_mode,
 			Cint(flags.se),
@@ -888,13 +898,13 @@ mutable struct Loess
 				cell,
 			)
 		end
-		if interpolation_vertices !== nothing
+		if interpolation_vertices_value !== nothing
 			ccall(
 				(:jl_loess_set_interpolation_vertices, libfastloess),
 				Cvoid,
-				(Ptr{Cvoid}, Culong),
+				(Ptr{Cvoid}, Csize_t),
 				handle,
-				Culong(interpolation_vertices),
+				interpolation_vertices_value,
 			)
 		end
 		if boundary_degree_fallback !== nothing
@@ -910,13 +920,13 @@ mutable struct Loess
 			ccall(
 				(:jl_loess_set_cv_seed, libfastloess),
 				Cvoid,
-				(Ptr{Cvoid}, Culong),
+				(Ptr{Cvoid}, UInt64),
 				handle,
-				Culong(cv_seed),
+				UInt64(cv_seed),
 			)
 		end
 
-		obj = new(handle, dimensions)
+		obj = new(handle, configured_dimensions)
 		finalizer(
 			x -> ccall((:jl_loess_free, libfastloess), Cvoid, (Ptr{Cvoid},), x.handle),
 			obj,
@@ -947,6 +957,13 @@ function fit(
 	y::Vector{Float64};
 	custom_weights::Union{Vector{Float64}, Nothing} = nothing,
 )
+	if l.dimensions != 1
+		throw(
+			ArgumentError(
+				"vector x input requires dimensions=1; use an n-by-d Matrix for multivariate fits",
+			),
+		)
+	end
 	n = length(x)
 	if n != length(y)
 		throw(ArgumentError("x and y must have the same length"))
@@ -1078,6 +1095,7 @@ Stateful streaming LOESS smoother.
 """
 mutable struct StreamingLoess
 	handle::Ptr{Cvoid}
+	dimensions::Int
 	lock::ReentrantLock
 
 	function StreamingLoess(;
@@ -1105,6 +1123,7 @@ mutable struct StreamingLoess
 		missing::String = "error",
 		intervals = nothing,
 	)
+		configured_dimensions = max(dimensions, 1)
 		interval_options = _interval_options(intervals)
 		confidence_intervals = interval_options.confidence
 		prediction_intervals = interval_options.prediction
@@ -1181,7 +1200,7 @@ mutable struct StreamingLoess
 			merge_strategy,
 			Cint(parallel),
 			degree,
-			Cint(dimensions),
+			Cint(configured_dimensions),
 			distance_metric,
 			surface_mode,
 			cell_val,
@@ -1201,7 +1220,7 @@ mutable struct StreamingLoess
 			error("fastloess error: $error_message")
 		end
 
-		obj = new(handle, ReentrantLock())
+		obj = new(handle, configured_dimensions, ReentrantLock())
 		finalizer(
 			x -> ccall(
 				(:jl_streaming_loess_free, libfastloess),
@@ -1221,6 +1240,13 @@ end
 Process a chunk of data.
 """
 function process_chunk(s::StreamingLoess, x::Vector{Float64}, y::Vector{Float64})
+	if s.dimensions != 1
+		throw(
+			ArgumentError(
+				"vector x input requires dimensions=1; pass an n-by-d Matrix for multivariate chunks",
+			),
+		)
+	end
 	n = length(x)
 	if n != length(y)
 		throw(ArgumentError("x and y must have the same length"))
@@ -1233,6 +1259,40 @@ function process_chunk(s::StreamingLoess, x::Vector{Float64}, y::Vector{Float64}
 			(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
 			s.handle,
 			x,
+			y,
+			Culong(n),
+		)
+	end
+
+	return convert_result(c_result)
+end
+
+"""
+	process_chunk(s::StreamingLoess, x::Matrix{Float64}, y::Vector{Float64}) -> LoessResult
+
+Process a multivariate chunk. Rows are observations and columns are predictor
+dimensions.
+"""
+function process_chunk(s::StreamingLoess, x::Matrix{Float64}, y::Vector{Float64})
+	n = size(x, 1)
+	if size(x, 2) != s.dimensions
+		throw(
+			ArgumentError(
+				"x has $(size(x, 2)) columns but model has dimensions=$(s.dimensions)",
+			),
+		)
+	end
+	if n != length(y)
+		throw(ArgumentError("x and y must have the same number of observations"))
+	end
+	x_flat = vec(permutedims(x))
+	c_result = lock(s.lock) do
+		GC.@preserve s x_flat y ccall(
+			(:jl_streaming_loess_process_chunk, libfastloess),
+			CJlLoessResult,
+			(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+			s.handle,
+			x_flat,
 			y,
 			Culong(n),
 		)
@@ -1281,7 +1341,7 @@ Stateful online LOESS smoother.
   `"gradient"`, and `"se"`.
 - `zero_weight_fallback::String = "use_local_mean"`: Zero weight handling
 - `degree::String = "linear"`: Polynomial degree
-- `dimensions::Int = 1`: Number of predictor dimensions
+- `dimensions::Int = 1`: Online supports only one predictor dimension
 - `distance_metric::String = "normalized"`: Distance metric ("normalized", "euclidean",
   "manhattan", "chebyshev", "minkowski"). Use "minkowski:p" for a custom p value.
 - `surface_mode::String = "interpolation"`: Surface mode
@@ -1329,6 +1389,10 @@ mutable struct OnlineLoess
 		missing::String = "error",
 		intervals = nothing,
 	)
+		if dimensions > 1
+			throw(ArgumentError("OnlineLoess supports only one predictor dimension"))
+		end
+		configured_dimensions = max(dimensions, 1)
 		interval_options = _interval_options(intervals)
 		confidence_intervals = interval_options.confidence
 		prediction_intervals = interval_options.prediction
@@ -1390,7 +1454,7 @@ mutable struct OnlineLoess
 			Cint(flags.weights),
 			zero_weight_fallback,
 			degree,
-			Cint(dimensions),
+			Cint(configured_dimensions),
 			distance_metric,
 			surface_mode,
 			cell_val,
@@ -1410,7 +1474,7 @@ mutable struct OnlineLoess
 			error("fastloess error: $error_message")
 		end
 
-		obj = new(handle, dimensions, ReentrantLock())
+		obj = new(handle, configured_dimensions, ReentrantLock())
 		finalizer(
 			x -> ccall(
 				(:jl_online_loess_free, libfastloess),

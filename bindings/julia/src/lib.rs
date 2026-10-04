@@ -730,7 +730,7 @@ pub unsafe extern "C" fn jl_loess_set_cell(config_ptr: *mut JlLoessConfig, cell:
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_loess_set_interpolation_vertices(
     config_ptr: *mut JlLoessConfig,
-    vertices: c_ulong,
+    vertices: usize,
 ) {
     if config_ptr.is_null() {
         set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
@@ -738,7 +738,7 @@ pub unsafe extern "C" fn jl_loess_set_interpolation_vertices(
     }
     let config = unsafe { &mut *config_ptr };
     let builder = replace(&mut config.base_builder, LoessBuilder::<f64>::new());
-    config.base_builder = builder.interpolation_vertices(vertices as usize);
+    config.base_builder = builder.interpolation_vertices(vertices);
 }
 
 /// Set whether to reduce polynomial degree at boundary vertices for a config.
@@ -764,15 +764,14 @@ pub unsafe extern "C" fn jl_loess_set_boundary_degree_fallback(
 /// # Safety
 /// config_ptr must be a valid mutable pointer returned by jl_loess_new.
 #[unsafe(no_mangle)]
-#[allow(clippy::useless_conversion)] // c_ulong is u32 on Windows, u64 on Linux/macOS
-pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, seed: c_ulong) {
+pub unsafe extern "C" fn jl_loess_set_cv_seed(config_ptr: *mut JlLoessConfig, seed: u64) {
     if config_ptr.is_null() {
         set_last_error_message(shared_parse::CONFIG_POINTER_IS_NULL);
         return;
     }
     let config = unsafe { &mut *config_ptr };
     let builder = replace(&mut config.base_builder, LoessBuilder::<f64>::new());
-    config.base_builder = builder.seed(u64::from(seed));
+    config.base_builder = builder.seed(seed);
 }
 
 // ============================================================================

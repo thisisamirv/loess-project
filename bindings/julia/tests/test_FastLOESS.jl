@@ -35,7 +35,8 @@ using FastLOESS
 
 @testset "fastloess Julia Bindings" begin
 	@testset "package version" begin
-		metadata = TOML.parsefile(joinpath(dirname(pathof(FastLOESS)), "..", "Project.toml"))
+		metadata =
+			TOML.parsefile(joinpath(dirname(pathof(FastLOESS)), "..", "Project.toml"))
 		@test version() isa String
 		@test version() == metadata["version"]
 	end
@@ -52,6 +53,28 @@ using FastLOESS
 			@test length(result.y) == length(x)
 			@test length(result.x) == length(x)
 			@test result.fraction_used ≈ 0.5
+		end
+
+		@testset "multivariate vector input is rejected" begin
+			x = collect(1.0:8.0)
+			y = 2.0 .* x
+			model = Loess(dimensions = 2)
+			@test_throws ArgumentError fit(model, x, y)
+		end
+
+		@testset "multivariate result append requires matching dimensions" begin
+			x = collect(1.0:8.0)
+			y = 2.0 .* x
+			one_dimensional =
+				fit(Loess(surface_mode = "direct", outputs = ["gradient"]), x, y)
+			two_dimensional = fit(
+				Loess(dimensions = 2, surface_mode = "direct", outputs = ["gradient"]),
+				hcat(x, x .^ 2),
+				y,
+			)
+
+			@test_throws ArgumentError append!(one_dimensional, two_dimensional)
+			@test length(one_dimensional.y) == length(y)
 		end
 
 		@testset "reuse Loess instance" begin
@@ -174,7 +197,8 @@ using FastLOESS
 			se_prediction = predict(result.predict_model, [2.5]; outputs = ["se"])
 			@test se_prediction.standard_errors !== nothing
 			@test se_prediction.derivative === nothing
-			gradient_prediction = predict(result.predict_model, [2.5]; outputs = ["gradient"])
+			gradient_prediction =
+				predict(result.predict_model, [2.5]; outputs = ["gradient"])
 			@test gradient_prediction.derivative ≈ prediction.derivative
 
 			stream = StreamingLoess(
@@ -224,6 +248,19 @@ using FastLOESS
 
 			@test_throws ArgumentError append!(with_se, without_se)
 			@test length(with_se.x) == length(x)
+		end
+
+		@testset "constructor validates interpolation vertices and full-width seeds" begin
+			@test_throws ArgumentError Loess(interpolation_vertices = -1)
+			if Sys.WORD_SIZE == 64
+				model = Loess(
+					cv = (fractions = [0.2, 0.3], k = 3),
+					seed = Int(typemax(UInt32)) + 1,
+				)
+				x = collect(range(0, 10, length = 20))
+				result = fit(model, x, sin.(x))
+				@test length(result.cv_scores) == 2
+			end
 		end
 
 		@testset "with confidence intervals" begin
@@ -318,10 +355,34 @@ using FastLOESS
 	end
 
 	@testset "StreamingLoess" begin
+		@testset "multivariate chunks use matrix input" begin
+			x = collect(1.0:40.0)
+			y = 2.0 .* x
+			x_matrix = hcat(x, x .^ 2)
+			stream = StreamingLoess(
+				fraction = 0.5,
+				chunk_size = 10,
+				overlap = 2,
+				dimensions = 2,
+				surface_mode = "direct",
+				outputs = ["gradient"],
+			)
+
+			@test_throws ArgumentError process_chunk(stream, x, y)
+			first = process_chunk(stream, x_matrix, y)
+			tail = finalize(stream)
+			@test first.dimensions == 2
+			@test tail.dimensions == 2
+			@test length(first.gradient) == 2 * length(first.y)
+			@test length(tail.gradient) == 2 * length(tail.y)
+			@test length(first.y) + length(tail.y) == length(y)
+		end
+
 		@testset "concurrent chunk processing is serialized" begin
 			stream = StreamingLoess(fraction = 0.5, chunk_size = 100, overlap = 10)
 			tasks = [
-				Threads.@spawn process_chunk(stream, fill(1.0, 10), fill(1.0, 10)) for _ ∈ 1:8
+				Threads.@spawn process_chunk(stream, fill(1.0, 10), fill(1.0, 10)) for
+				_ ∈ 1:8
 			]
 			results = fetch.(tasks)
 			@test all(result isa LoessResult for result ∈ results)
@@ -422,6 +483,10 @@ using FastLOESS
 	end
 
 	@testset "OnlineLoess" begin
+		@testset "multivariate dimensions are rejected" begin
+			@test_throws ArgumentError OnlineLoess(dimensions = 2)
+		end
+
 		@testset "concurrent updates are serialized" begin
 			model = OnlineLoess(window_capacity = 64, min_points = 2)
 			tasks = [Threads.@spawn add_point(model, 1.0, 1.0) for _ ∈ 1:32]
@@ -628,9 +693,7 @@ using FastLOESS
 		@testset "grouped CV" begin
 			x = collect(range(0, 10, length = 30))
 			y = x .^ 2
-			model = Loess(
-				cv = (fractions = [0.3, 0.5], method = "kfold", k = 3), seed = 42,
-			)
+			model = Loess(cv = (fractions = [0.3, 0.5], method = "kfold", k = 3), seed = 42)
 			result = fit(model, x, y)
 			@test result.fraction_used in [0.3, 0.5]
 			@test length(result.cv_scores) == 2
