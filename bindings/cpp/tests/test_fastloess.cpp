@@ -153,6 +153,37 @@ void testBasicSmoothSerial() {
 
 void testLoessWithDiagnostics() {
   std::cout << "Running testLoessWithDiagnostics...\n";
+  const Diagnostics empty;
+  assertTrue(!empty.has_value() && !empty.rmse().has_value() &&
+                 !empty.mae().has_value() && !empty.r_squared().has_value() &&
+                 !empty.aic().has_value() && !empty.aicc().has_value() &&
+                 !empty.effective_df().has_value() &&
+                 !empty.residual_sd().has_value(),
+             "Default diagnostics should be empty");
+  fastloess_CppLoessResult raw{};
+  raw.rmse = NAN;
+  raw.mae = NAN;
+  raw.r_squared = NAN;
+  raw.aic = NAN;
+  raw.aicc = NAN;
+  raw.effective_df = NAN;
+  raw.residual_sd = NAN;
+  const Diagnostics unavailable(raw);
+  assertTrue(!unavailable.has_value() && !unavailable.rmse().has_value() &&
+                 !unavailable.mae().has_value() &&
+                 !unavailable.r_squared().has_value() &&
+                 !unavailable.aic().has_value() &&
+                 !unavailable.aicc().has_value() &&
+                 !unavailable.effective_df().has_value() &&
+                 !unavailable.residual_sd().has_value(),
+             "NaN diagnostics should be empty");
+  raw.aic = 0.0;
+  raw.aicc = -2.0;
+  raw.effective_df = 3.0;
+  const Diagnostics available(raw);
+  assertTrue(available.aic() == 0.0 && available.aicc() == -2.0 &&
+                 available.effective_df() == 3.0,
+             "Finite diagnostics should retain their values");
   const std::vector<double> x_vals(k_simple_x.begin(), k_simple_x.end());
   const std::vector<double> y_vals(k_simple_y_noisy.begin(),
                                    k_simple_y_noisy.end());

@@ -6,6 +6,11 @@ This document covers CMake-based consumption of the C++ binding.
 
 The C++ binding generates and installs a standard CMake package config, so downstream projects can use `find_package(fastloess CONFIG REQUIRED)` instead of wiring include directories and libraries manually.
 
+The public wrapper requires C++17 for `std::optional`. Linking
+`fastloess::fastloess` propagates this requirement to consumers, including those
+using the installed package. Diagnostic getters return `std::optional<double>`;
+unavailable metrics are empty rather than containing NaN.
+
 ## Windows Quick Start
 
 Build and install the package:

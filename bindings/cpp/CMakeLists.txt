@@ -20,6 +20,8 @@ corrosion_import_crate(MANIFEST_PATH Cargo.toml)
 
 set_target_properties(fastloess_cpp PROPERTIES EXPORT_NAME fastloess)
 
+target_compile_features(fastloess_cpp INTERFACE cxx_std_17)
+
 # Configure include directories
 # This ensures that #include "fastloess.hpp" works for consumers
 target_include_directories(

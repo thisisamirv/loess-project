@@ -148,7 +148,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Breaking change: replaced flat fit/prediction interval levels with `intervals` and removed flat CV fields in favor of `cv` plus optional outer `seed`; zero is now a valid deterministic seed.
 - C++ musl release jobs now build dynamic x86_64 and ARM64 shared libraries, allowing the musl assets to be published reliably.
 - Hoisted inline fully-qualified Rust paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
-- Declared the public wrapper's C++17 requirement and represented unavailable diagnostics as empty `std::optional<double>` values instead of NaN sentinels.
+- Declared the public wrapper's C++17 requirement through the exported CMake target's `cxx_std_17` interface feature. Unavailable diagnostics use empty `std::optional<double>` values, including default-constructed diagnostics and native NaN sentinels; finite values are preserved.
 
 **Go:**
 

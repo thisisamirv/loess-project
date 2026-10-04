@@ -272,13 +272,13 @@ private:
     return std::isnan(value) ? std::nullopt : std::optional<double>(value);
   }
 
-  std::optional<double> rmse_ = optional_metric(NAN);
-  std::optional<double> mae_ = optional_metric(NAN);
-  std::optional<double> r_squared_ = optional_metric(NAN);
-  std::optional<double> aic_ = optional_metric(NAN);
-  std::optional<double> aicc_ = optional_metric(NAN);
-  std::optional<double> effective_df_ = optional_metric(NAN);
-  std::optional<double> residual_sd_ = optional_metric(NAN);
+  std::optional<double> rmse_;
+  std::optional<double> mae_;
+  std::optional<double> r_squared_;
+  std::optional<double> aic_;
+  std::optional<double> aicc_;
+  std::optional<double> effective_df_;
+  std::optional<double> residual_sd_;
 };
 
 /**

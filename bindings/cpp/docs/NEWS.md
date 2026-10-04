@@ -19,7 +19,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Breaking change: replaced flat interval levels with `intervals`, removed flat CV fields in favor of `cv`, and moved CV seeding to optional outer `seed`; `seed = 0` is now reproducible.
 * Native C ABI lengths now use `size_t` and CV seeds use `uint64_t` instead of Windows-truncated `unsigned long`. Rebuild the wrapper/header and native library together; old Windows binaries are not layout-compatible.
 * C++ musl release jobs now build dynamic x86_64 and ARM64 shared libraries, allowing the musl assets to be published reliably.
-* Declared the public wrapper's C++17 requirement and represented unavailable diagnostics as empty `std::optional<double>` values instead of NaN sentinels.
+* The public CMake target propagates the wrapper's C++17 requirement to consumers. Unavailable diagnostics are empty `std::optional<double>` values, including default-constructed diagnostics and native NaN sentinels; finite values are preserved.
 
 ### Fixed
 
