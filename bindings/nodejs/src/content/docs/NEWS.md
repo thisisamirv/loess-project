@@ -10,6 +10,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* Added a `version` export at `fastloess/version` so consumers can query the Node.js package version without loading the native addon.
 * Added `cv` to Batch options for grouped cross-validation configuration alongside legacy CV fields.
 * Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection.
 * Added `retain_model` and `LoessResult.predict(newX, options)` for out-of-sample prediction.

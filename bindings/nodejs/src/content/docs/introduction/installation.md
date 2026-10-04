@@ -19,6 +19,19 @@ npm install
 npm run build
 ```
 
+## Check the Package Version
+
+Read the Node.js package version without loading the native addon:
+
+```javascript
+const { version } = require('fastloess/version');
+console.log(version);
+```
+
+```output
+2.1.0
+```
+
 ---
 
 ## Verify Installation

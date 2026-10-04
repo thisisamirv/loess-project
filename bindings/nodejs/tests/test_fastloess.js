@@ -1,7 +1,34 @@
 const test = require('node:test');
 const assert = require('node:assert');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
 
 const fastloess = require('..');
+
+test('version metadata is available without a native addon', () => {
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'fastloess-version-'));
+    try {
+        const packageDirectory = path.join(directory, 'node_modules', 'fastloess');
+        fs.mkdirSync(packageDirectory, { recursive: true });
+        for (const filename of ['package.json', 'version.js']) {
+            fs.copyFileSync(
+                path.join(__dirname, '..', filename),
+                path.join(packageDirectory, filename)
+            );
+        }
+        const child = spawnSync(process.execPath, [
+            '-e',
+            "process.stdout.write(require('fastloess/version').version)",
+        ], { cwd: directory, encoding: 'utf8' });
+        assert.strictEqual(child.status, 0, child.stderr);
+        assert.strictEqual(child.stdout, require('../package.json').version);
+        assert.strictEqual(require('../version').version, child.stdout);
+    } finally {
+        fs.rmSync(directory, { recursive: true, force: true });
+    }
+});
 
 test('batch smoothing', () => {
     const x = new Float64Array([1, 2, 3, 4, 5]);

@@ -10,6 +10,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* Added `version()` to report the WASM binding package version.
 * Added `cv` to the Batch options interface for grouped cross-validation configuration alongside legacy fields.
 * Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection.
 * Added `retain_model` and `LoessResult.predict(newX, options)` for out-of-sample prediction.

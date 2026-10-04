@@ -76,6 +76,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Added a `version` export at `fastloess/version` so consumers can query the package version without loading the native addon.
 - Added `cv` to Batch options for grouped cross-validation configuration alongside legacy CV fields.
 - Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection alongside existing booleans.
 - Added `retain_model` and `LoessResult.predict(newX, options)` for out-of-sample prediction.
@@ -110,6 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Added `version()` to report the WASM binding package version.
 - Added `cv` to the Batch options interface for grouped cross-validation configuration alongside legacy fields.
 - Added `outputs` arrays to Batch, Streaming, Online, and prediction options for grouped optional result selection alongside existing booleans.
 - Added `retain_model` and `LoessResult.predict(newX, options)` for out-of-sample prediction.
