@@ -65,7 +65,7 @@ public final class Options {
         this.degree = b.degree;
         this.dimensions = b.dimensions;
         this.distanceMetric = b.distanceMetric;
-        this.weightedMetricWeights = b.weightedMetricWeights;
+        this.weightedMetricWeights = b.weightedMetricWeights == null ? null : b.weightedMetricWeights.clone();
         this.surfaceMode = b.surfaceMode;
         this.cell = b.cell;
         this.interpolationVertices = b.interpolationVertices;
@@ -309,8 +309,9 @@ public final class Options {
 
         /**
          * The number of predictor dimensions (default {@code 1}). For
-         * multivariate input, {@code x} passed to {@code fit}/{@code addPoint}
-         * is flattened row-major with length {@code y.length * dimensions}.
+         * multivariate Batch and Streaming input, {@code x} is flattened
+         * row-major with length {@code y.length * dimensions}. Online supports
+         * only one predictor dimension.
          *
          * @param dimensions the number of predictor dimensions
          * @return this builder, for chaining
@@ -342,7 +343,7 @@ public final class Options {
          * @return this builder, for chaining
          */
         public Builder weightedMetricWeights(double[] weightedMetricWeights) {
-            this.weightedMetricWeights = weightedMetricWeights;
+            this.weightedMetricWeights = weightedMetricWeights == null ? null : weightedMetricWeights.clone();
             return this;
         }
 
@@ -418,6 +419,9 @@ public final class Options {
          * @return this builder, for chaining
          */
         public Builder seed(long seed) {
+            if (seed < 0) {
+                throw new IllegalArgumentException("cv_seed must be non-negative, got " + seed);
+            }
             this.cvSeed = seed;
             return this;
         }

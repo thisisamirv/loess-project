@@ -271,6 +271,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
+- Reject negative CV seeds before native model allocation, reject unsupported multivariate Online dimensions, and defensively copy weighted-metric arrays in immutable options.
 - Completed Streaming/Online builder Javadocs so the strict `failOnWarnings` documentation build passes; the Makefile now surfaces warning details if the gate regresses.
 - Propagate JNI array length/read failures, preserve explicit empty arrays for validation, and defer retained prediction-handle ownership until Java result construction succeeds. Validate iterations and k-fold counts instead of casting/coercing invalid values, and synchronize operations that share mutable native handles.
 - Reject empty CV fractions and custom-weight arrays, and complete Online/Streaming builder Javadoc summaries. The `maven-javadoc-plugin` already uses `failOnWarnings`; no POM change was needed. Java GPU installer validation has no LOESS counterpart.

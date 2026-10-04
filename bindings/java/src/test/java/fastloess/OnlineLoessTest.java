@@ -10,6 +10,14 @@ import org.junit.jupiter.api.Test;
 class OnlineLoessTest {
 
     @Test
+    void rejectsMultivariateDimensions() {
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> OnlineOptions.builder().dimensions(2));
+        assertTrue(ex.getMessage().contains("only one predictor dimension"));
+    }
+
+    @Test
     void addsPointsAndEventuallyProducesOutput() {
         try (OnlineLoess model = new OnlineLoess(OnlineOptions.builder().minPoints(5).build())) {
             boolean sawValue = false;

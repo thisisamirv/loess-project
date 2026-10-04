@@ -63,6 +63,17 @@ class LoessTest {
     }
 
     @Test
+    void weightedMetricWeightsAreDefensivelyCopied() {
+        double[] weights = {1.0, 2.0};
+        Options.Builder builder = Options.builder().weightedMetricWeights(weights);
+        weights[0] = 3.0;
+        Options options = builder.build();
+        weights[1] = 4.0;
+        assertEquals(1.0, options.weightedMetricWeights[0]);
+        assertEquals(2.0, options.weightedMetricWeights[1]);
+    }
+
+    @Test
     void rejectsEmptyCvFractions() {
         IllegalStateException ex = assertThrows(
                 IllegalStateException.class,
@@ -169,9 +180,9 @@ class LoessTest {
 
     @Test
     void rejectsNegativeCvSeed() {
-        RuntimeException ex = org.junit.jupiter.api.Assertions.assertThrows(
-                RuntimeException.class,
-                () -> new Loess(Options.builder().seed(-1L).build()));
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> Options.builder().seed(-1L));
         assertTrue(ex.getMessage().contains("cv_seed must be non-negative"));
     }
 
