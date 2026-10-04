@@ -529,6 +529,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Reject unsupported multivariate Online dimensions, keep generated native version checks tied to package metadata, and provide TypeScript declarations for `fastloess/version`.
 - Fixed `OnlineLoess`/`StreamingLoess` defaults to match docs: `min_points` changed from `3` to `2`, and `update_mode` from `"full"` to `"incremental"`.
 - Corrected docs to state that result `x` values follow input order after internal sorting and mapping back.
 - Fixed the "Handling Outliers" quickstart example printing nothing with only 6 points at `fraction = 0.5`; bumped to `0.7` so the outlier is actually downweighted.

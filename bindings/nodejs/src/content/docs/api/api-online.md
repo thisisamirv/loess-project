@@ -75,7 +75,7 @@ Smoothed y: 0.22659245357374927
 | `weight_function` | `string` | `"tricube"` | Weight function name |
 | `robustness_method` | `string` | `"bisquare"` | Robustness method name |
 | `degree` | `string` | `"linear"` | Polynomial degree of local fit |
-| `dimensions` | `number` | `1` | Number of predictor dimensions |
+| `dimensions` | `number` | `1` | Online supports one predictor dimension |
 | `distance_metric` | `string` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `number[]` | `null` | Per-dimension weights (used when `distance_metric = "weighted"`) |
 | `surface_mode` | `string` | `"interpolation"` | Surface computation mode |
@@ -158,9 +158,7 @@ Cross-validation, `"sorted"` output, `"diagnostics"` output, `"residuals"` outpu
 
 *See: [Multivariate LOESS](../advanced/dimensions.md)*
 
-Number of predictor dimensions. Set to match the number of columns in a multivariate `x` array.
-
-- Any integer `>= 1`; `1` (default) is univariate
+Online accepts only one predictor dimension because `add_point` takes a single scalar `x` coordinate.
 
 ### distance_metric
 
@@ -278,11 +276,9 @@ Minimum number of points required before `add_point()` starts returning smoothed
 
 Include the standard error for the latest point in the result (`OnlineOutput.standard_error`). Same `update_mode = "full"` requirement as `intervals.confidence`.
 
-
 ### outputs: weights
 
 Include the robustness weight for the latest point (from the last robustness iteration) in the result.
-
 
 ### outputs: gradient
 

@@ -204,7 +204,7 @@ export interface OnlineSmoothOptions {
   intervals?: IntervalsOptions
   /** Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear". */
   degree?: string
-  /** Number of predictor dimensions. Default: 1. */
+  /** Online supports only one predictor dimension. */
   dimensions?: number
   /** Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized". */
   distance_metric?: string

@@ -6,6 +6,7 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 
 const fastloess = require('..');
+const nativeLoaderSource = fs.readFileSync(path.join(__dirname, '..', 'index.js'), 'utf8');
 
 test('version metadata is available without a native addon', () => {
     const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'fastloess-version-'));
@@ -28,6 +29,15 @@ test('version metadata is available without a native addon', () => {
     } finally {
         fs.rmSync(directory, { recursive: true, force: true });
     }
+});
+
+test('native loader version checks follow package metadata', () => {
+    assert.match(
+        nativeLoaderSource,
+        /bindingPackageVersion !== require\('\.\/package\.json'\)\.version/
+    );
+    assert.doesNotMatch(nativeLoaderSource, /bindingPackageVersion !== '\d+\.\d+\.\d+'/);
+    assert.doesNotMatch(nativeLoaderSource, /expected \d+\.\d+\.\d+ but got/);
 });
 
 test('batch smoothing', () => {
@@ -93,6 +103,13 @@ test('online smoothing', () => {
 
     assert.ok(lastVal !== null);
     assert.ok(Math.abs(lastVal - 18) < 1.0);
+});
+
+test('online only supports one predictor dimension', () => {
+    assert.throws(
+        () => new fastloess.OnlineLoess({ dimensions: 2 }),
+        /OnlineLoess supports only one predictor dimension/
+    );
 });
 
 test('StreamingLoess: return_se', () => {

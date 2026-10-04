@@ -561,7 +561,7 @@ pub struct OnlineSmoothOptions {
     pub intervals: Option<IntervalsOptions>,
     /// Polynomial degree ("constant", "linear", "quadratic", etc.). Default: "linear".
     pub degree: Option<String>,
-    /// Number of predictor dimensions. Default: 1.
+    /// Online supports only one predictor dimension.
     pub dimensions: Option<u32>,
     /// Distance metric ("normalized", "euclidean", "manhattan", "chebyshev", "minkowski:p", "weighted"). Default: "normalized".
     #[napi(js_name = "distance_metric")]
@@ -721,6 +721,13 @@ fn streaming_options_to_builder(
 fn online_options_to_builder(opts: Option<&OnlineSmoothOptions>) -> Result<LoessBuilder<f64>> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
+        if let Some(dimensions) = opts.dimensions
+            && dimensions != 1
+        {
+            return Err(to_napi_error(shared_parse::BindingError::invalid_arg(
+                format!("OnlineLoess supports only one predictor dimension, got {dimensions}"),
+            )));
+        }
         validate_outputs(
             opts.outputs.as_ref(),
             &["weights", "gradient", "derivative", "se"],

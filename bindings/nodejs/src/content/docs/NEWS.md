@@ -24,6 +24,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Reject unsupported multivariate Online dimensions, keep generated native version checks tied to `package.json`, and provide TypeScript declarations for the `fastloess/version` subpath.
 * Reject unknown output names across Batch, Streaming, Online, and prediction options. Preserve the `fit_async()` TypeScript return type as `Promise<LoessResult>` after N-API builds.
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.
 * Preserve case weights through sorted CV training subsets and multidimensional predictions. Serial and parallel CV now agree on seeded folds and held-out LOOCV predictions; K-fold counts above the retained observation count are rejected.
