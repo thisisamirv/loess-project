@@ -3,6 +3,65 @@ use approx::assert_abs_diff_eq;
 use fastLoess::prelude::*;
 
 #[test]
+fn test_weighted_cv_matches_serial_for_all_methods_and_dimensions() {
+    for dimensions in [1, 2] {
+        let mut predictors = Vec::new();
+        let mut observations = Vec::new();
+        let mut weights = Vec::new();
+        for index in (0..25).rev() {
+            let coordinate = if dimensions == 1 {
+                index as f64
+            } else {
+                (index % 5) as f64
+            };
+            predictors.push(coordinate);
+            if dimensions == 2 {
+                predictors.push((index / 5) as f64);
+            }
+            observations
+                .push(coordinate + (index as f64).sin() + if index == 11 { 80.0 } else { 0.0 });
+            weights.push(if index == 11 {
+                0.0
+            } else {
+                0.5 + (index % 3) as f64
+            });
+        }
+        for method in ["kfold", "loocv"] {
+            let fit = |parallel| {
+                Loess::new()
+                    .iterations(0)
+                    .dimensions(dimensions)
+                    .surface_mode("direct")
+                    .boundary_policy("noboundary")
+                    .custom_weights(weights.clone())
+                    .cv(CVBuilder::new()
+                        .method(method)
+                        .k(4)
+                        .fraction(vec![0.45, 0.8]))
+                    .seed(17)
+                    .parallel(parallel)
+                    .build()
+                    .unwrap()
+                    .fit(&predictors, &observations)
+                    .unwrap()
+            };
+            let serial = fit(false);
+            let parallel = fit(true);
+            assert_eq!(parallel.fraction_used, serial.fraction_used);
+            for (&actual, &expected) in parallel
+                .cv_scores
+                .as_ref()
+                .unwrap()
+                .iter()
+                .zip(serial.cv_scores.as_ref().unwrap())
+            {
+                assert_abs_diff_eq!(actual, expected, epsilon = 1e-8);
+            }
+        }
+    }
+}
+
+#[test]
 fn test_grouped_cross_validation_parallel() {
     let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
     let y: Vec<f64> = x.iter().map(|&xi| (xi / 5.0).sin()).collect();

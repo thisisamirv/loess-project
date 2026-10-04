@@ -24,13 +24,6 @@ const SQRT_PI: f64 = 1.772453850905516027298167483341145182797_f64;
 // pi/2, used in cosine kernel calculations.
 const PI_OVER_2: f64 = PI / 2.0;
 
-// Cutoff for Gaussian kernel evaluation.
-//
-// Beyond this normalized distance, the Gaussian kernel value is effectively
-// zero (exp(-6^2/2) approx 6.9e-9). This prevents numerical underflow and improves
-// performance.
-const GAUSSIAN_CUTOFF: f64 = 6.0;
-
 // # Mathematical Properties
 //
 // | Kernel       | Formula                     | Efficiency† | R(K)                    | mu_2(K)               |
@@ -224,18 +217,7 @@ impl WeightFunction {
 
             WeightFunction::Epanechnikov => T::one() - abs_u * abs_u,
 
-            WeightFunction::Gaussian => {
-                // Convert to f64 for exponential calculation
-                let u_f64 = abs_u.to_f64().unwrap_or(f64::INFINITY);
-
-                // Use cutoff to avoid underflow to zero
-                if u_f64 > GAUSSIAN_CUTOFF {
-                    T::from(f64::MIN_POSITIVE).unwrap_or_else(T::zero)
-                } else {
-                    let val = (-0.5 * u_f64 * u_f64).exp().max(f64::MIN_POSITIVE);
-                    T::from(val).unwrap_or_else(T::zero)
-                }
-            }
+            WeightFunction::Gaussian => (-T::from(0.5).unwrap() * abs_u * abs_u).exp(),
 
             WeightFunction::Biweight => {
                 let tmp = T::one() - abs_u * abs_u;

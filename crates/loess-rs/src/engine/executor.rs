@@ -46,7 +46,7 @@ use crate::math::linalg::FloatLinalg;
 use crate::math::neighborhood::{KDTree, Neighborhood, NodeDistance, PointDistance};
 use crate::primitives::backend::Backend;
 use crate::primitives::buffer::{
-    CachedNeighborhood, FittingBuffer, LoessBuffer, NeighborhoodSearchBuffer,
+    CVBuffer, CachedNeighborhood, FittingBuffer, LoessBuffer, NeighborhoodSearchBuffer,
 };
 use crate::primitives::policies::{
     BoundaryPolicy, DistanceMetric, PolynomialDegree, RobustnessMethod, ScalingMethod,
@@ -154,6 +154,10 @@ pub struct PredictState<T: Float> {
 pub type BootstrapPredictionFn<'a, T> =
     dyn FnMut(&PredictState<T>) -> Result<Vec<T>, LoessError> + 'a;
 pub trait BootstrapPredictor<T: Float>: Debug + Send + Sync + core::panic::RefUnwindSafe {
+    fn original_residuals(&self) -> Option<&[T]> {
+        None
+    }
+
     fn compute(
         &self,
         bootstrap: BootstrapConfig,
@@ -574,6 +578,7 @@ pub type IntervalPassFn<T> = fn(
     PolynomialDegree,   // polynomial_degree
     &DistanceMetric<T>, // distance_metric
     &[T],               // scales (normalization scales per dimension)
+    Option<&[T]>,
 ) -> Vec<T>; // standard errors
 
 // Signature for custom iteration batch pass function.
@@ -620,6 +625,10 @@ pub(crate) struct RetainedBootstrapFit<T: FloatLinalg + SolverLinalg> {
 impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static>
     BootstrapPredictor<T> for RetainedBootstrapFit<T>
 {
+    fn original_residuals(&self) -> Option<&[T]> {
+        Some(&self.residuals)
+    }
+
     fn compute(
         &self,
         bootstrap: BootstrapConfig,
@@ -1202,55 +1211,10 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             let (best_frac, scores) = if let Some(callback) = config.custom_cv_pass {
                 callback(x, y, cv_fracs, cv_kind, &config)
             } else {
-                let predictor = if dims > 1 {
-                    Some(|train_x: &[T], train_y: &[T], test_x: &[T], f: T| {
-                        let n_train = train_y.len();
-                        let window_size = Window::calculate_span(n_train, f);
-
-                        let scales = loess_normalization_scales(train_x, n_train, dims);
-                        let kdtree = if let Some(builder) = executor.custom_kdtree_builder {
-                            builder(train_x, dims)
-                        } else {
-                            KDTree::new(train_x, dims)
-                        };
-
-                        executor.predict(
-                            train_x,
-                            train_y,
-                            &vec![T::one(); n_train],
-                            test_x,
-                            window_size,
-                            &scales,
-                            &kdtree,
-                        )
-                    })
-                } else {
-                    None
-                };
-
                 let LoessBuffer {
                     ref mut cv_buffer, ..
                 } = workspace;
-
-                // CV candidate fits only ever read `.smoothed`; never retain model state or
-                // compute the gradient for them, avoiding wasted work per candidate
-                // fraction/fold.
-                let cv_executor = executor.clone().retain_model(false).return_gradient(false);
-
-                cv_kind.run(
-                    x,
-                    y,
-                    dims,
-                    cv_fracs,
-                    config.cv_seed,
-                    |tx, ty, f| {
-                        cv_executor
-                            .run(tx, ty, Some(f), None, None, None, None)
-                            .smoothed
-                    },
-                    predictor,
-                    cv_buffer,
-                )
+                executor.cross_validate(x, y, cv_fracs, cv_kind, config.cv_seed, cv_buffer)
             };
 
             // Run final pass with best fraction
@@ -1278,6 +1242,80 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 Some(&mut workspace),
             )
         }
+    }
+
+    pub fn cross_validate(
+        &self,
+        x: &[T],
+        y: &[T],
+        fractions: &[T],
+        kind: CVKind,
+        seed: Option<u64>,
+        buffer: &mut CVBuffer<T>,
+    ) -> (T, Vec<T>) {
+        let executor = self.clone().retain_model(false).return_gradient(false);
+        let subset_weights = |indices: &[usize]| {
+            self.custom_weights.as_ref().map(|weights| {
+                indices
+                    .iter()
+                    .map(|&index| weights[index])
+                    .collect::<Vec<_>>()
+            })
+        };
+        let predictor = if self.dimensions > 1 {
+            Some(
+                |training_x: &[T],
+                 training_y: &[T],
+                 indices: &[usize],
+                 query_x: &[T],
+                 fraction: T| {
+                    let mut subset_executor = executor.clone();
+                    subset_executor.custom_weights = subset_weights(indices);
+                    let scales =
+                        loess_normalization_scales(training_x, training_y.len(), self.dimensions);
+                    let tree = if let Some(builder) = self.custom_kdtree_builder {
+                        builder(training_x, self.dimensions)
+                    } else {
+                        KDTree::new(training_x, self.dimensions)
+                    };
+                    subset_executor.predict(
+                        training_x,
+                        training_y,
+                        &vec![T::one(); training_y.len()],
+                        query_x,
+                        Window::calculate_span(training_y.len(), fraction),
+                        &scales,
+                        &tree,
+                    )
+                },
+            )
+        } else {
+            None
+        };
+        kind.run_with_indices(
+            x,
+            y,
+            self.dimensions,
+            fractions,
+            seed,
+            |training_x, training_y, indices, fraction| {
+                let mut subset_executor = executor.clone();
+                subset_executor.custom_weights = subset_weights(indices);
+                subset_executor
+                    .run(
+                        training_x,
+                        training_y,
+                        Some(fraction),
+                        None,
+                        None,
+                        None,
+                        None,
+                    )
+                    .smoothed
+            },
+            predictor,
+            buffer,
+        )
     }
 
     // Execute smoothing with explicit overrides for specific parameters.
@@ -1771,10 +1809,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 
         // Standard errors (now using actual leverage if available)
         let se = if let Some(interval_method) = confidence_method {
-            if eff_fraction >= T::one() && dims == 1 {
-                Some(IntervalMethod::compute_global_ols_se(x, y, &y_smooth))
-            // Check for custom interval pass callback
-            } else if let Some(callback) = self.custom_interval_pass {
+            if let Some(callback) = self.custom_interval_pass {
                 // Use custom parallel/accelerated implementation
                 Some(callback(
                     x,
@@ -1790,7 +1825,46 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     self.polynomial_degree,
                     &self.distance_metric,
                     &scales_local,
+                    custom_weights_aug.as_deref(),
                 ))
+            } else if dims == 1
+                && !is_augmented
+                && self.polynomial_degree == PolynomialDegree::Linear
+            {
+                let mut standard_errors = Vec::with_capacity(n);
+                for query_index in 0..n {
+                    kdtree.find_kernel_neighborhood(
+                        &x[query_index..query_index + 1],
+                        window_size,
+                        &dist_calc,
+                        self.weight_function,
+                        &mut workspace.search_buffer,
+                        &mut workspace.neighborhood,
+                    );
+                    let neighborhood = &workspace.neighborhood;
+                    let bandwidth = neighborhood.max_distance;
+                    let standard_error = if bandwidth <= T::epsilon() {
+                        T::zero()
+                    } else {
+                        IntervalMethod::compute_local_se((0..neighborhood.len()).map(|neighbor| {
+                            let index = neighborhood.indices[neighbor];
+                            let weight = self
+                                .weight_function
+                                .compute_weight(neighborhood.distances[neighbor] / bandwidth)
+                                * workspace.executor_buffer.robustness_weights[index]
+                                * custom_weights_aug
+                                    .as_ref()
+                                    .map_or(T::one(), |weights| weights[index]);
+                            (
+                                x[index] - x[query_index],
+                                weight,
+                                y[index] - y_smooth[index],
+                            )
+                        }))
+                    };
+                    standard_errors.push(standard_error);
+                }
+                Some(standard_errors)
             } else if let Some(ref lev) = leverage_values {
                 // Use actual leverage values
                 T::batch_abs_residuals(
@@ -1977,11 +2051,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             let query_point = &x_query[query_offset..query_offset + dims];
 
             // Find neighbors in training data (KD-tree is always available)
-            kdtree.find_k_nearest(
+            kdtree.find_kernel_neighborhood(
                 query_point,
                 window_size,
                 &dist_calc,
-                None,
+                self.weight_function,
                 &mut workspace.search_buffer,
                 &mut workspace.neighborhood,
             );
@@ -2003,6 +2077,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 false, // compute_leverage
                 Some(&mut workspace.fitting_buffer),
             );
+            if let Some(weights) = self.custom_weights.as_deref() {
+                context = context.with_custom_weights(weights);
+            }
             if let Some((val, _)) = context.fit() {
                 *pred = val;
             } else {
@@ -2081,11 +2158,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 neighborhood.max_distance = cached.max_distance;
             } else {
                 // Compute neighborhood via KD-tree
-                kdtree.find_k_nearest(
+                kdtree.find_kernel_neighborhood(
                     query_point,
                     window_size,
                     &dist_calc,
-                    None,
+                    self.weight_function,
                     search_buffer,
                     neighborhood,
                 );

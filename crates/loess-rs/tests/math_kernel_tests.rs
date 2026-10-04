@@ -155,12 +155,20 @@ fn test_gaussian_weight_values() {
         "Gaussian at 0 should be positive"
     );
 
-    // At large u, should still return small positive value
-    let val_large = gaussian.compute_weight(1000.0f64);
-    assert!(
-        val_large > 0.0 && val_large.is_finite(),
-        "Gaussian at large u should be positive and finite"
+    assert_relative_eq!(
+        gaussian.compute_weight(8.0f64),
+        (-32.0f64).exp(),
+        epsilon = 1e-25
     );
+    assert_relative_eq!(
+        gaussian.compute_weight(8.0f32),
+        (-32.0f32).exp(),
+        epsilon = 1e-20
+    );
+
+    // At large u, the true exponential naturally underflows.
+    let val_large = gaussian.compute_weight(1000.0f64);
+    assert_eq!(val_large, 0.0);
 }
 
 /// Test Cosine kernel formula.

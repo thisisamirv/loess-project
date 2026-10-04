@@ -158,11 +158,11 @@ pub fn smooth_pass_parallel<T>(
                 let query_point = &x[query_offset..query_offset + dims];
 
                 // Find k-nearest neighbors in AUGMENTED data
-                kdtree.find_k_nearest(
+                kdtree.find_kernel_neighborhood(
                     query_point,
                     window_size,
                     &dist_calc,
-                    None,
+                    weight_function,
                     search_buffer,
                     neighborhood,
                 );
@@ -248,11 +248,11 @@ where
                 let query_offset = i * dims;
                 let query_point = &x[query_offset..query_offset + dims];
 
-                kdtree.find_k_nearest(
+                kdtree.find_kernel_neighborhood(
                     query_point,
                     window_size,
                     &dist_calc,
-                    None,
+                    weight_function,
                     search_buffer,
                     neighborhood,
                 );
@@ -378,11 +378,11 @@ pub fn vertex_pass_parallel<T>(
                         metric: distance_metric,
                         scales,
                     };
-                    kdtree.find_k_nearest(
+                    kdtree.find_kernel_neighborhood(
                         vertex,
                         window_size,
                         &dist_calc,
-                        None,
+                        weight_function,
                         search_buffer,
                         neighborhood,
                     );

@@ -21,21 +21,21 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Validate case weights before dropping missing observations, preserving errors on dropped rows.
+* Carry case weights through sorted CV subsets and multidimensional predictions; sort LOOCV training points and reject oversized active K-fold requests.
+* Validate Streaming/Online convergence tolerances and require full robustness updates for Online auto-convergence.
+* Include all observations for Gaussian kernels at the k-th-neighbor bandwidth and remove the artificial Gaussian tail floor.
+* Use case-weighted local standard errors consistently in linear fit and retained prediction; stabilize the standalone OLS SE utility for translated coordinates.
+* Honor configured zero-weight fallback policies in constant, degenerate, insufficient-neighbor and coefficient-fit paths.
 * Aligned `OnlineLoess` defaults across the Rust core and bindings: `iterations` is now `0` with the default `update_mode = "incremental"`; positive robustness iterations require `update_mode = "full"`.
 * Cleaned up `loess_rs::prelude` of accidentally-leaked internals (`LoessBuilder`, adapter markers) — use the `Loess`/`StreamingLoess`/`OnlineLoess` type aliases directly.
-* Matched LOWESS's effective-zero MAR stop and removed the absolute bisquare scale floor, while retaining the centered-MAD fallback.
-* Added the classical simple-linear-regression standard-error path for one-dimensional global fits (`fraction >= 1.0`), matching `stats::lm`'s `se.fit` formula.
+* Preserve R LOESS's machine-minimum MAR stop and even-sample `3 * (lower + upper)` scale arithmetic, including subnormal residuals; centered MAD retains its separate fallback.
+* Remove the unconditional span-one OLS standard-error shortcut; LOESS retains its local kernel geometry at span one.
 * Corrected serial LOESS standard errors to use the local-linear equivalent-kernel leverage and kernel-corrected residual degrees of freedom, preserving positive SEs for downweighted observations. Added Monte Carlo calibration and interval edge-case regressions.
 * Fixed seeded k-fold CV with unordered test queries: batch interpolation now locates each query bracket independently with binary search instead of relying on a monotone scan pointer.
 * Fixed local-linear and global OLS regression on small-magnitude predictors by using scale-relative degeneracy checks instead of absolute x-variance thresholds. Added gradient and standard-error regressions for small x scales.
-* Matched Cleveland/R's local-linear degeneracy rule in one-dimensional linear fits by suppressing slopes when weighted local spread is below `0.001` of the global x-range.
-* Matched R's `1e-7` span-truncation adjustment instead of rounding near-integer neighborhoods with `1e-5`.
-* Matched R's normalized adjusted-weight fitted-value accumulation without parity-, sparsity-, or response-scale-specific branches.
-* Separated local-weight adjustment and fitted-response accumulation into R's original loop order, avoiding platform-dependent cancellation in sparse robust fits.
 * Separated robustness scale scratch storage from local kernel weights so median selection cannot contaminate the next R-equivalent smoothing pass.
-* Matched R's `w * ((x - mean_x) * (x - mean_x))` spread parenthesization, preserving cancellation-scale endpoint fits during robust passes.
-* Matched R's even-length `cmad = 3 * (lower + upper)` operation order instead of scaling an averaged median.
-* Extended local kernel scans beyond the nominal right window edge until R's `0.999 * h` cutoff, matching `lowest()` on asymmetric neighborhoods.
+* Retain R LOESS's span truncation and regression-solver rank handling, not LOWESS-specific global-spread, radius-cutoff, or tied-run accumulation rules.
 * Fixed k-fold cross-validation to pool every test point's squared error before taking one RMSE, matching LOOCV instead of averaging per-fold RMSEs.
 
 ## 2.0.0

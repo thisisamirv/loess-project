@@ -23,6 +23,9 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Reuse the serial CV fold engine for parallel candidates, preserving case weights, seeded shuffling, multidimensional normalization and held-out LOOCV predictions.
+* Forward case weights into parallel interval estimation and use the same local-SE moments as serial fits.
+* Include full Gaussian kernel support in parallel smoothing, gradients, vertex refits and prediction without changing the k-th-neighbor bandwidth.
 * Fixed `OnlineLoess`/`StreamingLoess` defaults to match docs: `min_points` changed from `3` to `2`, and `update_mode` from `"full"` to `"incremental"`.
 * Corrected docs to state that result `x` values follow input order after internal sorting and mapping back.
 * Fixed the "Handling Outliers" quickstart example printing nothing at `fraction = 0.5` with only 6 points; bumped to `0.7`.

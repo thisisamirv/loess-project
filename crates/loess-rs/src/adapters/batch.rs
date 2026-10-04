@@ -283,9 +283,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     // Perform LOESS smoothing on the provided data.
     pub fn fit(self, x: &[T], y: &[T]) -> Result<LoessResult<T>, LoessError> {
         Validator::validate_lengths(x, y, self.config.dimensions)?;
+        if let Some(weights) = self.config.custom_weights.as_deref() {
+            Validator::validate_custom_weights(weights, y.len())?;
+        }
 
-        // Apply the missing-value policy before any other validation, so a
-        // `Drop` policy sees the filtered data and `Error` sees the raw data.
+        // Validate observation values after applying the missing-value policy.
         let (x_owned, y_owned, custom_weights) = match self.config.missing {
             MissingPolicy::Drop => Validator::drop_non_finite(
                 x,
@@ -299,10 +301,13 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         let y: &[T] = &y_owned;
 
         Validator::validate_inputs(x, y, self.config.dimensions)?;
-
-        // Validate custom_weights length if provided
-        if let Some(ref uw) = custom_weights {
-            Validator::validate_custom_weights(uw, y.len())?;
+        if self.config.cv_fractions.is_some()
+            && let Some(CVKind::KFold(folds)) = self.config.cv_kind
+            && folds > y.len()
+        {
+            return Err(LoessError::InvalidInput(
+                "K-fold count must not exceed the number of observations".into(),
+            ));
         }
 
         // KD-Tree handles unsorted data natively - no need to sort

@@ -432,6 +432,30 @@ impl<T: Float> IntervalMethod<T> {
         (variance * leverage).sqrt()
     }
 
+    pub fn compute_local_se<I>(samples: I) -> T
+    where
+        I: IntoIterator<Item = (T, T, T)>,
+    {
+        let mut sum_w = T::zero();
+        let mut sum_w_r2 = T::zero();
+        let mut s1 = T::zero();
+        let mut s2 = T::zero();
+        let mut t0 = T::zero();
+        let mut t1 = T::zero();
+        let mut t2 = T::zero();
+        for (offset, weight, residual) in samples {
+            let squared_weight = weight * weight;
+            sum_w = sum_w + weight;
+            sum_w_r2 = sum_w_r2 + weight * residual * residual;
+            s1 = s1 + weight * offset;
+            s2 = s2 + weight * offset * offset;
+            t0 = t0 + squared_weight;
+            t1 = t1 + squared_weight * offset;
+            t2 = t2 + squared_weight * offset * offset;
+        }
+        Self::compute_se(sum_w, sum_w_r2, s1, s2, t0, t1, t2)
+    }
+
     // Classical simple-linear-regression standard errors for a global 1D fit.
     // This is the same se.fit formula used by stats::lm:
     // sigma_hat * sqrt(1/n + (x0 - x_mean)^2 / Sxx).
@@ -442,11 +466,15 @@ impl<T: Float> IntervalMethod<T> {
         }
 
         let n_t = T::from(n).unwrap_or(T::one());
-        let x_mean = x.iter().fold(T::zero(), |sum, &value| sum + value) / n_t;
+        let origin = x[0];
+        let centered_mean = x
+            .iter()
+            .fold(T::zero(), |sum, &value| sum + (value - origin))
+            / n_t;
         let mut sse = T::zero();
         let mut sxx = T::zero();
         for ((&xi, &yi), &fit) in x.iter().zip(y.iter()).zip(y_smooth.iter()) {
-            let dx = xi - x_mean;
+            let dx = (xi - origin) - centered_mean;
             sxx = sxx + dx * dx;
             let residual = yi - fit;
             sse = sse + residual * residual;
@@ -459,14 +487,17 @@ impl<T: Float> IntervalMethod<T> {
         }
 
         let sigma = (sse / df).sqrt();
-        let tol = T::epsilon() * x.iter().fold(T::zero(), |sum, &value| sum + value * value);
+        let tol = T::epsilon() * sxx;
         if sxx <= tol {
             let se = sigma * (T::one() / n_t).sqrt();
             return vec![se; n];
         }
 
         x.iter()
-            .map(|&xi| sigma * (T::one() / n_t + (xi - x_mean) * (xi - x_mean) / sxx).sqrt())
+            .map(|&xi| {
+                let centered = (xi - origin) - centered_mean;
+                sigma * (T::one() / n_t + centered * centered / sxx).sqrt()
+            })
             .collect()
     }
 

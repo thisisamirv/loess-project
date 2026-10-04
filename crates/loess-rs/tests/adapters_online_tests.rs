@@ -20,6 +20,39 @@
 use approx::assert_relative_eq;
 use loess_rs::prelude::*;
 
+#[test]
+fn test_online_auto_converge_requires_valid_active_robustness() {
+    for tolerance in [0.0, -1.0, f64::NAN, f64::INFINITY] {
+        let result = Loess::<f64>::new()
+            .iterations(2)
+            .auto_converge(tolerance)
+            .update_mode("full")
+            .adapter(Online)
+            .build();
+        assert!(matches!(result, Err(LoessError::InvalidTolerance(_))));
+    }
+    for mode in ["incremental", "full"] {
+        assert!(
+            Loess::<f64>::new()
+                .iterations(0)
+                .auto_converge(1e-6)
+                .update_mode(mode)
+                .adapter(Online)
+                .build()
+                .is_err()
+        );
+    }
+    assert!(
+        Loess::<f64>::new()
+            .iterations(2)
+            .auto_converge(1e-6)
+            .update_mode("full")
+            .adapter(Online)
+            .build()
+            .is_ok()
+    );
+}
+
 use loess_rs::internals::adapters::online::OnlineLoessBuilder;
 use loess_rs::internals::api::Online;
 use loess_rs::internals::primitives::errors::LoessError;

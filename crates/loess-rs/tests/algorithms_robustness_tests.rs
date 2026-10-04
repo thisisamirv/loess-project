@@ -17,6 +17,33 @@ use approx::assert_relative_eq;
 
 use loess_rs::internals::primitives::policies::{RobustnessMethod, ScalingMethod};
 
+#[test]
+fn test_bisquare_mar_even_scale_matches_r_operation_order() {
+    let residuals = [
+        f64::from_bits(900_719_925_474_099),
+        f64::from_bits(900_719_925_474_100),
+    ];
+    let scale = 3.0 * (residuals[0] + residuals[1]);
+    let expected: Vec<_> = residuals
+        .iter()
+        .map(|residual| {
+            let ratio = residual / scale;
+            let factor = 1.0 - ratio * ratio;
+            factor * factor
+        })
+        .collect();
+    let mut weights = [1.0; 2];
+    let mut scratch = [0.0; 2];
+    let stopped = RobustnessMethod::Bisquare.apply_robustness_weights(
+        &residuals,
+        &mut weights,
+        ScalingMethod::MAR,
+        &mut scratch,
+    );
+    assert!(!stopped);
+    assert_eq!(weights.as_slice(), expected.as_slice());
+}
+
 // ============================================================================
 // Bisquare Method Tests
 // ============================================================================

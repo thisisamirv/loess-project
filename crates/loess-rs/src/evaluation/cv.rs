@@ -64,13 +64,50 @@ impl CVKind {
         fractions: &[T],
         seed: Option<u64>,
         mut smoother: F,
-        mut predictor: Option<P>,
+        predictor: Option<P>,
         cv_buffer: &mut CVBuffer<T>,
     ) -> (T, Vec<T>)
     where
         T: Float + Debug + Send + Sync + 'static,
         F: FnMut(&[T], &[T], T) -> Vec<T>,
         P: FnMut(&[T], &[T], &[T], T) -> Vec<T>,
+    {
+        self.run_with_indices(
+            x,
+            y,
+            dimensions,
+            fractions,
+            seed,
+            |training_x, training_y, _, fraction| smoother(training_x, training_y, fraction),
+            predictor.map(|mut callback| {
+                move |training_x: &[T],
+                      training_y: &[T],
+                      _: &[usize],
+                      query_x: &[T],
+                      fraction: T| {
+                    callback(training_x, training_y, query_x, fraction)
+                }
+            }),
+            cv_buffer,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn run_with_indices<T, F, P>(
+        self,
+        x: &[T],
+        y: &[T],
+        dimensions: usize,
+        fractions: &[T],
+        seed: Option<u64>,
+        mut smoother: F,
+        mut predictor: Option<P>,
+        cv_buffer: &mut CVBuffer<T>,
+    ) -> (T, Vec<T>)
+    where
+        T: Float + Debug + Send + Sync + 'static,
+        F: FnMut(&[T], &[T], &[usize], T) -> Vec<T>,
+        P: FnMut(&[T], &[T], &[usize], &[T], T) -> Vec<T>,
     {
         match self {
             CVKind::KFold(k) => Self::kfold_cross_validation(
@@ -273,8 +310,8 @@ impl CVKind {
     ) -> (T, Vec<T>)
     where
         T: Float + Debug + Send + Sync + 'static,
-        F: FnMut(&[T], &[T], T) -> Vec<T>,
-        P: FnMut(&[T], &[T], &[T], T) -> Vec<T>,
+        F: FnMut(&[T], &[T], &[usize], T) -> Vec<T>,
+        P: FnMut(&[T], &[T], &[usize], &[T], T) -> Vec<T>,
     {
         let n = x.len() / dims;
         if n < k || k < 2 {
@@ -339,18 +376,24 @@ impl CVKind {
                 }
 
                 let predictions = if let Some(ref mut p_fn) = predictor {
-                    p_fn(tx, ty, tex, frac)
-                } else {
-                    // 1D Case: Training data MUST be sorted for LOESS
-                    let mut train_data: Vec<(T, T)> = tx
+                    let training_indices: Vec<_> = indices[..test_start]
                         .iter()
-                        .zip(ty.iter())
-                        .map(|(&xi, &yi)| (xi, yi))
+                        .chain(&indices[test_end..])
+                        .copied()
                         .collect();
-                    train_data.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(Equal));
-                    let (sorted_tx, sorted_ty): (Vec<T>, Vec<T>) = train_data.into_iter().unzip();
+                    p_fn(tx, ty, &training_indices, tex, frac)
+                } else {
+                    let mut training_indices: Vec<_> = indices[..test_start]
+                        .iter()
+                        .chain(&indices[test_end..])
+                        .copied()
+                        .collect();
+                    training_indices
+                        .sort_by(|&left, &right| x[left].partial_cmp(&x[right]).unwrap_or(Equal));
+                    let (sorted_tx, sorted_ty) =
+                        Self::build_subset_from_indices(x, y, dims, &training_indices);
 
-                    let train_smooth = smoother(&sorted_tx, &sorted_ty, frac);
+                    let train_smooth = smoother(&sorted_tx, &sorted_ty, &training_indices, frac);
                     let mut preds = Vec::with_capacity(tex.len() / dims);
                     for &xi in tex.iter() {
                         preds.push(Self::interpolate_prediction(&sorted_tx, &train_smooth, xi));
@@ -391,8 +434,8 @@ impl CVKind {
     ) -> (T, Vec<T>)
     where
         T: Float + Debug + Send + Sync + 'static,
-        F: FnMut(&[T], &[T], T) -> Vec<T>,
-        P: FnMut(&[T], &[T], &[T], T) -> Vec<T>,
+        F: FnMut(&[T], &[T], &[usize], T) -> Vec<T>,
+        P: FnMut(&[T], &[T], &[usize], &[T], T) -> Vec<T>,
     {
         let n = x.len() / dims;
         let mut cv_scores = vec![T::zero(); fractions.len()];
@@ -423,12 +466,16 @@ impl CVKind {
 
                 let test_offset = i * dims;
                 test_point.copy_from_slice(&x[test_offset..test_offset + dims]);
+                let mut training_indices: Vec<_> = (0..n).filter(|&index| index != i).collect();
 
                 let predicted = if let Some(ref mut p_fn) = predictor {
-                    let preds = p_fn(tx, ty, &test_point, frac);
+                    let preds = p_fn(tx, ty, &training_indices, &test_point, frac);
                     preds[0]
                 } else {
-                    let train_smooth = smoother(tx, ty, frac);
+                    training_indices
+                        .sort_by(|&left, &right| x[left].partial_cmp(&x[right]).unwrap_or(Equal));
+                    Self::build_subset_inplace(x, y, dims, &training_indices, tx, ty);
+                    let train_smooth = smoother(tx, ty, &training_indices, frac);
                     Self::interpolate_prediction(tx, &train_smooth, test_point[0])
                 };
 

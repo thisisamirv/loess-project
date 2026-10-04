@@ -205,26 +205,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **loess-rs:**
 
 - Used standard ceiling division for multivariate normalization trimming so strict Clippy passes without changing the trim count.
+- Validate original case-weight lengths and values before `missing("drop")` filters observations; invalid weights on dropped rows can no longer disappear.
+- Preserve case weights through sorted CV training subsets and multidimensional CV predictions; sort one-dimensional LOOCV training data and reject active K-fold counts above the retained observation count.
+- Validate Streaming/Online auto-convergence tolerances and reject Online auto-convergence unless full updates perform robustness iterations.
+- Keep the k-th-neighbor Gaussian bandwidth while including all observations in Gaussian fits, vertices, and predictions; use the true exponential without an artificial tail floor.
+- Use case-weighted local moments for one-dimensional linear fit and retained-prediction standard errors, and preserve translated-coordinate accuracy in the standalone OLS SE utility.
+- Respect zero-weight fallback policies in constant-degree, zero-bandwidth, insufficient-neighbor, and coefficient-fit paths.
 - Cleaned up `loess_rs::prelude` of accidentally-leaked internals (`LoessBuilder`, adapter markers) — use the `Loess`/`StreamingLoess`/`OnlineLoess` type aliases directly.
-- Matched LOWESS's effective-zero MAR stop and removed the absolute bisquare scale floor, while retaining the centered-MAD fallback.
+- Preserve R LOESS's machine-minimum MAR stop and match its even-sample `3 * (lower + upper)` bisquare scale arithmetic, including subnormal residuals; retain the centered-MAD fallback.
 - `make loess-rs-dev` now also runs `cargo test --doc`, previously never checked by any `make` target.
-- Added the classical simple-linear-regression standard-error path for one-dimensional global fits (`fraction >= 1.0`), matching `stats::lm`'s `se.fit` formula.
+- Removed the unconditional span-one OLS standard-error shortcut: LOESS still uses local kernel geometry at span one.
 - Corrected serial LOESS standard errors to use the local-linear equivalent-kernel leverage and kernel-corrected residual degrees of freedom, preserving positive SEs for downweighted observations. Added Monte Carlo calibration and interval edge-case regressions.
 - Fixed seeded k-fold CV with unordered test queries: batch interpolation now locates each query bracket independently with binary search instead of relying on a monotone scan pointer.
 - Fixed local-linear and global OLS regression on small-magnitude predictors by using scale-relative degeneracy checks instead of absolute x-variance thresholds. Added gradient and standard-error regressions for small x scales.
-- Matched Cleveland/R's local-linear degeneracy rule in one-dimensional linear fits by suppressing slopes when weighted local spread is below `0.001` of the global x-range.
-- Matched R's `1e-7` span-truncation adjustment instead of rounding near-integer neighborhoods with `1e-5`.
-- Matched R's normalized adjusted-weight fitted-value accumulation without parity-, sparsity-, or response-scale-specific branches.
-- Separated local-weight adjustment and fitted-response accumulation into R's original loop order, avoiding platform-dependent cancellation in sparse robust fits.
 - Separated robustness scale scratch storage from local kernel weights so median selection cannot contaminate the next R-equivalent smoothing pass.
-- Matched R's `w * ((x - mean_x) * (x - mean_x))` spread parenthesization, preserving cancellation-scale endpoint fits during robust passes.
-- Matched R's even-length `cmad = 3 * (lower + upper)` operation order instead of scaling an averaged median.
-- Extended local kernel scans beyond the nominal right window edge until R's `0.999 * h` cutoff, matching `lowest()` on asymmetric neighborhoods.
+- Keep R LOESS's truncated span and regression-solver rank handling rather than LOWESS-specific epsilon, global-spread, radius-cutoff, or tied-run accumulation rules.
 - Fixed k-fold cross-validation to pool every test point's squared error before taking one RMSE, matching LOOCV instead of averaging per-fold RMSEs.
 
 **fastLoess:**
 
 - `make fastLoess-dev` now also runs `cargo test --doc`, previously never checked by any `make` target.
+- Reuse the serial CV fold engine while evaluating fractions concurrently, preserving case weights, seeded shuffling, multidimensional normalization, and exact held-out LOOCV rather than in-sample residual scores.
+- Forward case weights through parallel interval estimation and use the same local-SE moments as serial fits; Gaussian fitting, vertex refits, and prediction retain full kernel support at the original bandwidth.
 - Fixed parallel direct 1D standard errors collapsing to zero for observations with zero robustness weight. The interval pass now uses the exact local-linear equivalent-kernel variance multiplier and kernel-corrected residual degrees of freedom, matching the serial calculation.
 
 **C++:**

@@ -231,6 +231,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
 
         // Validate iterations
         Validator::validate_iterations(self.iterations)?;
+        if let Some(tolerance) = self.auto_converge {
+            Validator::validate_tolerance(tolerance)?;
+        }
 
         // Validate that return_gradient is only combined with surface_mode("direct")
         Validator::validate_gradient_surface_mode(self.return_gradient, self.surface_mode)?;

@@ -52,8 +52,6 @@ impl RobustnessMethod {
             return false;
         }
 
-        let base_scale = self.compute_scale(residuals, scaling_method, scratch);
-
         let (method_type, tuning_constant) = match self {
             Self::Bisquare => (0, Self::DEFAULT_BISQUARE_C),
             Self::Huber => (1, Self::DEFAULT_HUBER_C),
@@ -61,7 +59,31 @@ impl RobustnessMethod {
         };
 
         let c_t = T::from(tuning_constant).unwrap_or(T::one());
-        let tuned_scale = base_scale * c_t;
+        let (base_scale, tuned_scale) = if matches!(self, Self::Bisquare)
+            && matches!(scaling_method, ScalingMethod::MAR)
+        {
+            for (value, residual) in scratch.iter_mut().zip(residuals) {
+                *value = residual.abs();
+            }
+            let middle_index = residuals.len() / 2;
+            let (lower, middle, _) = scratch.select_nth_unstable_by(middle_index, |left, right| {
+                left.partial_cmp(right)
+                    .unwrap_or(core::cmp::Ordering::Equal)
+            });
+            let middle_value = *middle;
+            let tuned = if residuals.len().is_multiple_of(2) {
+                let lower_value = lower
+                    .iter()
+                    .fold(T::zero(), |largest, &value| largest.max(value));
+                T::from(3.0).unwrap_or(T::one()) * (lower_value + middle_value)
+            } else {
+                c_t * middle_value
+            };
+            (T::zero(), tuned)
+        } else {
+            let base = self.compute_scale(residuals, scaling_method, scratch);
+            (base, base * c_t)
+        };
 
         if matches!(scaling_method, ScalingMethod::MAR) && tuned_scale < T::min_positive_value() {
             return true;

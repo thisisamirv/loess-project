@@ -19,6 +19,7 @@ use num_traits::Float;
 
 // Internal dependencies
 use crate::primitives::buffer::{NeighborhoodSearchBuffer, NeighborhoodStorage};
+use crate::primitives::policies::WeightFunction;
 
 // Helper structure for max-heap in KD-tree search.
 // Orders by distance (the second field).
@@ -180,6 +181,30 @@ impl<T: Float> KDTree<T> {
             nodes,
             points,
             dimensions,
+        }
+    }
+
+    pub fn find_kernel_neighborhood<D: PointDistance<T>>(
+        &self,
+        query: &[T],
+        window_size: usize,
+        dist_calc: &D,
+        kernel: WeightFunction,
+        buffer: &mut NeighborhoodSearchBuffer<NodeDistance<T>>,
+        neighborhood: &mut Neighborhood<T>,
+    ) {
+        self.find_k_nearest(query, window_size, dist_calc, None, buffer, neighborhood);
+        let bandwidth = neighborhood.max_distance;
+        if kernel == WeightFunction::Gaussian && bandwidth > T::epsilon() {
+            self.find_k_nearest(
+                query,
+                self.nodes.len(),
+                dist_calc,
+                None,
+                buffer,
+                neighborhood,
+            );
+            neighborhood.max_distance = bandwidth;
         }
     }
 

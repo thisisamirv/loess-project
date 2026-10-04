@@ -265,6 +265,188 @@ fn test_batch_diagnostics() {
 ///
 /// Verifies that CV selects one of the candidate fractions and returns scores.
 #[test]
+fn test_batch_zero_case_weights_honor_fallback_for_all_degrees() {
+    let predictors = [0.0, 1.0, 2.0, 3.0, 4.0];
+    let observations = [5.0, 8.0, 1.0, 6.0, 12.0];
+    for degree in ["constant", "linear", "quadratic"] {
+        for fallback in ["return_original", "return_none"] {
+            let result = Loess::new()
+                .fraction(1.0)
+                .iterations(0)
+                .degree(degree)
+                .surface_mode("direct")
+                .boundary_policy("noboundary")
+                .custom_weights(vec![0.0; observations.len()])
+                .zero_weight_fallback(fallback)
+                .adapter(Batch)
+                .build()
+                .unwrap()
+                .fit(&predictors, &observations)
+                .unwrap();
+            assert_eq!(
+                result.y, observations,
+                "degree={degree}, fallback={fallback}"
+            );
+        }
+    }
+}
+
+#[test]
+fn test_batch_weighted_local_standard_errors_use_fitted_case_weights() {
+    use loess_rs::internals::evaluation::intervals::IntervalMethod;
+
+    let predictors: Vec<f64> = (0..12).map(|index| index as f64).collect();
+    let observations: Vec<_> = predictors
+        .iter()
+        .map(|&value| value + value.sin())
+        .collect();
+    let weights: Vec<_> = (0..12).map(|index| 0.5 + (index % 4) as f64).collect();
+    let result = Loess::new()
+        .fraction(1.0)
+        .iterations(0)
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .custom_weights(weights.clone())
+        .outputs(["se"])
+        .retain_model(true)
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&predictors, &observations)
+        .unwrap();
+    for (query_index, &query) in predictors.iter().enumerate() {
+        let bandwidth = query.max(11.0 - query);
+        let mut moments = [0.0; 7];
+        for index in 0..predictors.len() {
+            let offset = predictors[index] - query;
+            let weight = (1.0 - (offset / bandwidth).abs().powi(3)).powi(3) * weights[index];
+            let residual = observations[index] - result.y[index];
+            moments[0] += weight;
+            moments[1] += weight * residual * residual;
+            moments[2] += weight * offset;
+            moments[3] += weight * offset * offset;
+            moments[4] += weight * weight;
+            moments[5] += weight * weight * offset;
+            moments[6] += weight * weight * offset * offset;
+        }
+        let expected = IntervalMethod::compute_se(
+            moments[0], moments[1], moments[2], moments[3], moments[4], moments[5], moments[6],
+        );
+        assert_relative_eq!(
+            result.standard_errors.as_ref().unwrap()[query_index],
+            expected,
+            epsilon = 1e-12
+        );
+    }
+    let prediction = Predict::new()
+        .outputs(["se"])
+        .build()
+        .unwrap()
+        .call(&result, &[predictors[4]])
+        .unwrap();
+    assert_relative_eq!(
+        prediction.standard_errors.unwrap()[0],
+        result.standard_errors.as_ref().unwrap()[4],
+        epsilon = 1e-12
+    );
+}
+
+#[test]
+fn test_batch_gaussian_includes_points_beyond_bandwidth_neighbors() {
+    let predictors: Vec<f64> = (0..9).map(|index| index as f64).collect();
+    let mut observations = predictors.clone();
+    observations[6] += 100.0;
+    let result = Loess::new()
+        .fraction(0.34)
+        .iterations(0)
+        .degree("constant")
+        .weight_function("gaussian")
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&predictors, &observations)
+        .unwrap();
+    let query = predictors[3];
+    let mut total = 0.0;
+    let mut weighted_response = 0.0;
+    for (&predictor, &response) in predictors.iter().zip(&observations) {
+        let weight = (-0.5 * (predictor - query).powi(2)).exp();
+        total += weight;
+        weighted_response += weight * response;
+    }
+    assert_relative_eq!(result.y[3], weighted_response / total, epsilon = 1e-12);
+}
+
+#[test]
+fn test_batch_cv_rejects_more_folds_than_observations() {
+    let model = Loess::<f64>::new()
+        .cv(CVBuilder::new().k(6).fraction(vec![0.5]))
+        .adapter(Batch)
+        .build()
+        .unwrap();
+    assert!(
+        model
+            .fit(&[0.0, 1.0, 2.0, 3.0, 4.0], &[0.0, 1.0, 2.0, 3.0, 4.0])
+            .is_err()
+    );
+}
+
+#[test]
+fn test_batch_weighted_loocv_matches_independent_fold_fits() {
+    use loess_rs::internals::evaluation::cv::CVKind;
+
+    let predictors = [2.0, 0.0, 5.0, 1.0, 4.0, 3.0];
+    let observations = [3.0, 0.0, 100.0, 1.5, 5.5, 4.0];
+    let weights = [0.1, 1.0, 0.0, 3.0, 8.0, 2.0];
+    let fractions = vec![0.6, 0.9];
+    let mut expected = Vec::new();
+    for &fraction in &fractions {
+        let mut squared_error = 0.0;
+        for held_out in 0..predictors.len() {
+            let mut indices: Vec<usize> = (0..predictors.len())
+                .filter(|&index| index != held_out)
+                .collect();
+            indices
+                .sort_by(|&left, &right| predictors[left].partial_cmp(&predictors[right]).unwrap());
+            let training_x: Vec<_> = indices.iter().map(|&index| predictors[index]).collect();
+            let training_y: Vec<_> = indices.iter().map(|&index| observations[index]).collect();
+            let training_weights: Vec<_> = indices.iter().map(|&index| weights[index]).collect();
+            let fitted = Loess::new()
+                .fraction(fraction)
+                .iterations(0)
+                .surface_mode("direct")
+                .boundary_policy("noboundary")
+                .custom_weights(training_weights)
+                .adapter(Batch)
+                .build()
+                .unwrap()
+                .fit(&training_x, &training_y)
+                .unwrap();
+            let prediction =
+                CVKind::interpolate_prediction(&training_x, &fitted.y, predictors[held_out]);
+            squared_error += (observations[held_out] - prediction).powi(2);
+        }
+        expected.push((squared_error / predictors.len() as f64).sqrt());
+    }
+    let result = Loess::new()
+        .iterations(0)
+        .surface_mode("direct")
+        .boundary_policy("noboundary")
+        .custom_weights(weights.to_vec())
+        .cv(CVBuilder::new().method("loocv").fraction(fractions))
+        .adapter(Batch)
+        .build()
+        .unwrap()
+        .fit(&predictors, &observations)
+        .unwrap();
+    for (actual, expected) in result.cv_scores.unwrap().iter().zip(expected) {
+        assert_relative_eq!(*actual, expected, epsilon = 1e-12);
+    }
+}
+
+#[test]
 fn test_batch_cv_kfold() {
     let x = (0..10).map(|v| v as f64).collect::<Vec<_>>();
     let y = x.iter().map(|v| v * v + 0.1).collect::<Vec<_>>();
@@ -879,6 +1061,32 @@ fn test_batch_missing_drop_filters_custom_weights_in_lockstep() {
         .expect("custom_weights should be filtered in lockstep with dropped rows");
 
     assert_eq!(result.y.len(), x.len() - 1);
+}
+
+#[test]
+fn test_batch_missing_drop_validates_original_custom_weights() {
+    let x = [0.0, 1.0, 2.0, 3.0, 4.0];
+    let y = [0.0, 2.0, 4.0, 6.0, f64::NAN];
+    for weights in [
+        vec![1.0; 4],
+        vec![1.0; 6],
+        vec![1.0, 1.0, 1.0, 1.0, -1.0],
+        vec![1.0, 1.0, 1.0, 1.0, f64::NAN],
+        vec![1.0, 1.0, 1.0, 1.0, f64::INFINITY],
+    ] {
+        let result = Loess::new()
+            .fraction(1.0)
+            .missing("drop")
+            .custom_weights(weights.clone())
+            .adapter(Batch)
+            .build()
+            .unwrap()
+            .fit(&x, &y);
+        assert!(
+            result.is_err(),
+            "invalid original weights accepted: {weights:?}"
+        );
+    }
 }
 
 #[test]

@@ -260,11 +260,11 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
                     };
 
                 // Find neighbors for this vertex using workspace buffers
-                kdtree.find_k_nearest(
+                kdtree.find_kernel_neighborhood(
                     vertex,
                     window_size,
                     dist_calc,
-                    None,
+                    weight_function,
                     search_buffer,
                     neighborhood,
                 );

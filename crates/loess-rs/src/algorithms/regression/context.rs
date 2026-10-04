@@ -135,6 +135,9 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
         // Handle zero bandwidth case (all neighbors at same location)
         if max_distance <= T::epsilon() {
             let (val, sum_w) = self.weighted_mean_and_sum();
+            if sum_w <= T::epsilon() {
+                return self.handle_zero_weights_fit();
+            }
             let leverage = if sum_w > T::epsilon() {
                 T::one() / sum_w
             } else {
@@ -154,6 +157,9 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
         // For constant degree, just compute weighted mean
         if self.polynomial_degree == PolynomialDegree::Constant {
             let (val, sum_w) = self.weighted_mean_and_sum();
+            if sum_w <= T::epsilon() {
+                return self.handle_zero_weights_fit();
+            }
             let leverage = if sum_w > T::epsilon() {
                 T::one() / sum_w
             } else {
@@ -254,7 +260,10 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
 
         // Handle zero bandwidth or constant degree - return [value, 0, 0, ...]
         if max_distance <= T::epsilon() || self.polynomial_degree == PolynomialDegree::Constant {
-            let (val, _) = self.weighted_mean_and_sum();
+            let (mut val, sum_w) = self.weighted_mean_and_sum();
+            if sum_w <= T::epsilon() {
+                val = self.handle_zero_weights_fit()?.0;
+            }
             let mut coeffs = vec![T::zero(); d + 1];
             coeffs[0] = val;
             return Some(coeffs);
@@ -486,8 +495,11 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
             return result;
         }
 
-        // Fallback: return [mean, 0, 0, ...]
-        let (val, _) = self.weighted_mean_and_sum();
+        // Fallback for an unsolved polynomial fit.
+        let (mut val, sum_w) = self.weighted_mean_and_sum();
+        if sum_w <= T::epsilon() {
+            val = self.handle_zero_weights_fit()?.0;
+        }
         let mut coeffs = vec![T::zero(); d + 1];
         coeffs[0] = val;
         Some(coeffs)
@@ -563,6 +575,9 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
         let n_neighbors = self.neighborhood.len();
         if n_neighbors < n_coeffs {
             let (val, sum_w) = self.weighted_mean_and_sum();
+            if sum_w <= T::epsilon() {
+                return self.handle_zero_weights_fit();
+            }
             let leverage = if sum_w > T::epsilon() {
                 T::one() / sum_w
             } else {

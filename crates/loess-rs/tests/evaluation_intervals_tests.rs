@@ -532,6 +532,19 @@ fn test_compute_se_downweighted_point_keeps_positive_leverage() {
 }
 
 #[test]
+fn test_global_ols_standard_errors_are_translation_invariant() {
+    let predictors = [0.0, 1.0, 2.0, 3.0, 4.0];
+    let translated: Vec<_> = predictors.iter().map(|&value| value + 1e12).collect();
+    let observations = [1.0, 3.1, 4.8, 7.2, 8.9];
+    let fitted = [1.0, 3.0, 5.0, 7.0, 9.0];
+    let expected = IntervalMethod::compute_global_ols_se(&predictors, &observations, &fitted);
+    let actual = IntervalMethod::compute_global_ols_se(&translated, &observations, &fitted);
+    for (actual, expected) in actual.iter().zip(expected) {
+        assert_relative_eq!(*actual, expected, epsilon = 1e-12);
+    }
+}
+
+#[test]
 fn test_global_ols_standard_errors_match_classical_formula() {
     let x = vec![1.0f64, 2.0, 3.0, 4.0, 5.0];
     let y = vec![2.0f64, 5.0, 5.0, 9.0, 11.0];

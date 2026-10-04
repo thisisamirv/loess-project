@@ -19,6 +19,17 @@
 
 use loess_rs::prelude::*;
 
+#[test]
+fn test_streaming_auto_converge_rejects_invalid_tolerances() {
+    for tolerance in [0.0, -1.0, f64::NAN, f64::INFINITY] {
+        let result = Loess::<f64>::new()
+            .auto_converge(tolerance)
+            .adapter(Streaming)
+            .build();
+        assert!(matches!(result, Err(LoessError::InvalidTolerance(_))));
+    }
+}
+
 use loess_rs::internals::adapters::streaming::StreamingLoessBuilder;
 use loess_rs::internals::api::Streaming;
 use loess_rs::internals::primitives::errors::LoessError;

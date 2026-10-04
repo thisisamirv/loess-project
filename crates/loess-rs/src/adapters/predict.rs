@@ -430,6 +430,17 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
         }
     }
 
+    if state.weight_function.support().is_none() {
+        kdtree.find_kernel_neighborhood(
+            &eval_point,
+            state.window_size,
+            dist_calc,
+            state.weight_function,
+            search_buffer,
+            neighborhood,
+        );
+    }
+
     let gradient = if need_gradient {
         // `fit_with_coefficients()` only has a buffered implementation (the non-buffered
         // path is a stub that always falls back to a zero-gradient degenerate case), so a
@@ -509,6 +520,31 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     let se = need_se.then(|| {
         if surface_active {
             state.interpolation_se
+        } else if dims == 1
+            && state.polynomial_degree.value() == 1
+            && let Some(residuals) = state
+                .bootstrap_predictor
+                .as_ref()
+                .and_then(|predictor| predictor.original_residuals())
+                .filter(|residuals| residuals.len() == state.y.len())
+        {
+            let bandwidth = neighborhood.max_distance;
+            if bandwidth <= T::epsilon() {
+                T::zero()
+            } else {
+                IntervalMethod::compute_local_se((0..neighborhood.len()).map(|neighbor| {
+                    let index = neighborhood.indices[neighbor];
+                    let weight = state
+                        .weight_function
+                        .compute_weight(neighborhood.distances[neighbor] / bandwidth)
+                        * state.robustness_weights[index]
+                        * state
+                            .custom_weights
+                            .as_ref()
+                            .map_or(T::one(), |weights| weights[index]);
+                    (state.x[index] - eval_point[0], weight, residuals[index])
+                }))
+            }
         } else {
             state.residual_sd * leverage.max(T::zero()).sqrt()
         }
