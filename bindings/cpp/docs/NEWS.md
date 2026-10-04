@@ -23,6 +23,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Forward the selected distance metric when per-dimension weights are supplied, and support multivariate Online points through a vector-coordinate `add_point` overload.
 * Free retained prediction handles and zero-length error results, reset freed native results, and make wrapper error paths exception-safe. Multidimensional predictor buffers are freed with their full length.
 * Make empty/moved result accessors safe, bounds-check indexed access, preserve all predictor coordinates, and keep unavailable diagnostics/statistics absent.
 * Reject unknown or mode-inappropriate outputs and unsupported Batch-only Streaming options. Surface invalid Batch configuration at construction, reject negative counts and invalid active CV folds instead of coercing them, and preserve CV seed bits above 32 bits.

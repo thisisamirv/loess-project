@@ -61,6 +61,8 @@ y[0]: 0.226592
 
 Adds a single point to the sliding window. Returns `Expected<OnlineOutput>` — check `result.has_value()` to see whether the window is ready.
 
+The scalar overload requires `dimensions == 1`. For multivariate Online models, pass a `std::vector<double>` containing one coordinate per configured dimension.
+
 ```cpp
 #include <fastloess.hpp>
 #include <cmath>

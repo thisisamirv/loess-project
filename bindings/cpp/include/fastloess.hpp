@@ -717,10 +717,8 @@ public:
         cv_fractions.empty() ? nullptr : cv_fractions.data(),
         static_cast<size_t>(cv_fractions.size()), cv_method.c_str(), cv_k,
         options.parallel ? 1 : 0, options.degree.c_str(), options.dimensions,
-        options.weighted_metric_weights.empty()
-            ? options.distance_metric.c_str()
-            : nullptr,
-        options.surface_mode.c_str(), hasOutput(options.outputs, "se") ? 1 : 0,
+        options.distance_metric.c_str(), options.surface_mode.c_str(),
+        hasOutput(options.outputs, "se") ? 1 : 0,
         hasOutput(options.outputs, "sorted") ? 1 : 0, options.cell,
         options.interpolation_vertices, options.boundary_degree_fallback,
         options.weighted_metric_weights.empty()
@@ -821,10 +819,7 @@ public:
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.parallel ? 1 : 0, options.chunk_size, options.overlap,
         options.merge_strategy.c_str(), options.degree.c_str(),
-        options.dimensions,
-        options.weighted_metric_weights.empty()
-            ? options.distance_metric.c_str()
-            : nullptr,
+        options.dimensions, options.distance_metric.c_str(),
         options.surface_mode.c_str(), options.cell,
         options.interpolation_vertices, options.boundary_degree_fallback,
         options.weighted_metric_weights.empty()
@@ -999,11 +994,9 @@ public:
         options.zero_weight_fallback.c_str(), options.auto_converge,
         options.window_capacity, options.min_points,
         options.update_mode.c_str(), options.degree.c_str(), options.dimensions,
-        options.weighted_metric_weights.empty()
-            ? options.distance_metric.c_str()
-            : nullptr,
-        options.surface_mode.c_str(), options.cell,
-        options.interpolation_vertices, options.boundary_degree_fallback,
+        options.distance_metric.c_str(), options.surface_mode.c_str(),
+        options.cell, options.interpolation_vertices,
+        options.boundary_degree_fallback,
         options.weighted_metric_weights.empty()
             ? nullptr
             : options.weighted_metric_weights.data(),
@@ -1038,9 +1031,19 @@ public:
   }
 
   Expected<OnlineOutput> add_point(double x, double y) {
-    auto raw = cpp_online_add_point(ptr_, x, y);
-    std::unique_ptr<fastloess_CppOnlineOutput,
-                    decltype(&cpp_online_free_output)>
+    return wrap_output(cpp_online_add_point(ptr_, x, y));
+  }
+
+  /// Add a point with one coordinate per configured predictor dimension.
+  Expected<OnlineOutput> add_point(const std::vector<double> &x, double y) {
+    return wrap_output(cpp_online_add_point_nd(
+        ptr_, x.data(), static_cast<size_t>(x.size()), y));
+  }
+
+private:
+  static Expected<OnlineOutput> wrap_output(fastloess_CppOnlineOutput raw) {
+    const std::unique_ptr<fastloess_CppOnlineOutput,
+                          decltype(&cpp_online_free_output)>
         guard(&raw, cpp_online_free_output);
 
     if (raw.error != nullptr) {
@@ -1051,7 +1054,6 @@ public:
     return Expected<OnlineOutput>(std::move(out));
   }
 
-private:
   fastloess_CppOnlineLoess *ptr_ = nullptr;
 };
 

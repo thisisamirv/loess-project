@@ -63,6 +63,10 @@ constexpr int k_overlap_size = 3;
 constexpr double k_fraction_six_tenths = 0.6;
 constexpr double k_epsilon_1e6 = 1e-6;
 constexpr double k_prediction_query_x = 2.5;
+constexpr size_t k_weighted_grid_side = 4;
+constexpr double k_weighted_response_column_scale = 7.0;
+constexpr double k_weighted_metric_column_weight = 100.0;
+constexpr double k_online_multidimensional_expected_y = 3.0;
 
 // ── Test fixture data ──────────────────────────────────────────────────────
 // Constexpr arrays: literals in constexpr initializers are not magic numbers.
@@ -552,6 +556,38 @@ void testOnlineBasic() {
   assertTrue(points_out > 0);
 }
 
+void testOnlineMultidimensionalInput() {
+  OnlineOptions options;
+  options.fraction = 1.0;
+  options.dimensions = 2;
+  options.surface_mode = "direct";
+  options.window_capacity = k_window_capacity;
+  options.min_points = k_min_points_online;
+  options.update_mode = "full";
+  OnlineLoess online(options);
+
+  const std::array<std::array<double, 2>, 4> points = {{
+      {0.0, 0.0},
+      {1.0, 0.0},
+      {0.0, 1.0},
+      {1.0, 1.0},
+  }};
+  std::optional<OnlineOutput> last;
+  for (const auto &point : points) {
+    auto output = online.add_point(std::vector<double>{point[0], point[1]},
+                                   point[0] + (k_linear_slope * point[1]));
+    assertTrue(output.has_value(), "multidimensional point should be accepted");
+    if (output.value().has_value()) {
+      last = std::move(output.value());
+    }
+  }
+  if (!last.has_value()) {
+    assertTrue(false, "multidimensional online fit should produce output");
+    return;
+  }
+  assertApprox(last->y(), k_online_multidimensional_expected_y, k_epsilon_1e6);
+}
+
 void testOnlineReturnSeRequiresFullUpdateMode() {
   std::cout << "Running testOnlineReturnSeRequiresFullUpdateMode...\n";
   OnlineOptions opts;
@@ -791,6 +827,49 @@ void testLoessDistanceMetrics() {
     auto res = loess.fit(x_vals, y_vals).value();
     assertTrue(res.y_vector().size() == k_thirty_count, metric);
   }
+}
+
+void testLoessWeightedDistanceUsesExplicitMetric() {
+  std::vector<double> x_vals;
+  std::vector<double> y_vals;
+  for (size_t row = 0; row < k_weighted_grid_side; ++row) {
+    for (size_t column = 0; column < k_weighted_grid_side; ++column) {
+      const double first_coordinate = static_cast<double>(row);
+      const double second_coordinate = static_cast<double>(column);
+      x_vals.push_back(first_coordinate);
+      x_vals.push_back(second_coordinate);
+      y_vals.push_back((first_coordinate * first_coordinate) +
+                       (k_weighted_response_column_scale * second_coordinate *
+                        second_coordinate) +
+                       (first_coordinate * second_coordinate));
+    }
+  }
+
+  LoessOptions normalized_options;
+  normalized_options.fraction = k_fraction_half;
+  normalized_options.iterations = 0;
+  normalized_options.dimensions = 2;
+  normalized_options.degree = "constant";
+  normalized_options.surface_mode = "direct";
+  const auto normalized =
+      Loess(normalized_options).fit(x_vals, y_vals).value().y_vector();
+
+  LoessOptions weighted_options = normalized_options;
+  weighted_options.distance_metric = "weighted";
+  weighted_options.weighted_metric_weights = {1.0,
+                                              k_weighted_metric_column_weight};
+  const auto weighted =
+      Loess(weighted_options).fit(x_vals, y_vals).value().y_vector();
+
+  bool metrics_differ = false;
+  for (size_t index = 0; index < normalized.size(); ++index) {
+    if (!isApprox(normalized[index], weighted[index], k_epsilon_1e6)) {
+      metrics_differ = true;
+      break;
+    }
+  }
+  assertTrue(metrics_differ,
+             "weighted_metric_weights must affect explicitly weighted fits");
 }
 
 void testLoessSurfaceModeAndReturnSe() {
@@ -1114,6 +1193,7 @@ int main() {
     testStreamingConfidenceAndPredictionIntervals();
 
     testOnlineBasic();
+    testOnlineMultidimensionalInput();
     testOnlineReturnSeRequiresFullUpdateMode();
     testOnlineConfidenceAndPredictionIntervalsFullMode();
 
@@ -1128,6 +1208,7 @@ int main() {
     testLoessAutoConverge();
     testLoessPolynomialDegrees();
     testLoessDistanceMetrics();
+    testLoessWeightedDistanceUsesExplicitMetric();
     testLoessSurfaceModeAndReturnSe();
     testLoessWeightFunctions();
     testLoessCustomWeights();

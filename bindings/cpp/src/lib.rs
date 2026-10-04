@@ -1320,7 +1320,65 @@ pub unsafe extern "C" fn cpp_online_new(
     })
 }
 
-/// Add a single point to the model and return its smoothed value.
+fn online_error_output(msg: &str) -> CppOnlineOutput {
+    CppOnlineOutput {
+        error: shared_parse::to_cstring_lossy(msg).into_raw(),
+        ..CppOnlineOutput::default()
+    }
+}
+
+unsafe fn online_add_point_impl(
+    ptr: *mut CppOnlineLoess,
+    x: &[c_double],
+    y: c_double,
+) -> CppOnlineOutput {
+    if ptr.is_null() {
+        return online_error_output(shared_parse::MODEL_POINTER_IS_NULL);
+    }
+    let loess = unsafe { &mut *ptr };
+    let Some(model) = &mut loess.model else {
+        return online_error_output(shared_parse::MODEL_NOT_INITIALIZED);
+    };
+    match model.add_point(x, y) {
+        Err(error) => online_error_output(&error.to_string()),
+        Ok(None) => CppOnlineOutput::default(),
+        Ok(Some(output)) => {
+            let (
+                standard_error,
+                residual,
+                robustness_weight,
+                iterations_used,
+                confidence_lower,
+                confidence_upper,
+                prediction_lower,
+                prediction_upper,
+            ) = shared_parse::extract_online_output(&output);
+            let gradient_len = output
+                .gradient
+                .as_ref()
+                .map(|values| values.len())
+                .unwrap_or(0);
+            let gradient = shared_parse::opt_vec_to_raw_ptr(output.gradient);
+            CppOnlineOutput {
+                has_value: 1,
+                y: output.y,
+                standard_error,
+                residual,
+                robustness_weight,
+                iterations_used,
+                confidence_lower,
+                confidence_upper,
+                prediction_lower,
+                prediction_upper,
+                gradient,
+                gradient_len,
+                error: ptr::null_mut(),
+            }
+        }
+    }
+}
+
+/// Add a single one-dimensional point to the model.
 /// `has_value = 0` in the result means the window is still filling.
 ///
 /// # Safety
@@ -1331,59 +1389,35 @@ pub unsafe extern "C" fn cpp_online_add_point(
     x: c_double,
     y: c_double,
 ) -> CppOnlineOutput {
-    let make_error = |msg: &str| -> CppOnlineOutput {
-        CppOnlineOutput {
-            error: shared_parse::to_cstring_lossy(msg).into_raw(),
-            ..CppOnlineOutput::default()
-        }
-    };
-
-    match catch_unwind(AssertUnwindSafe(|| {
-        if ptr.is_null() {
-            return make_error(shared_parse::MODEL_POINTER_IS_NULL);
-        }
-        let loess = unsafe { &mut *ptr };
-
-        if let Some(model) = &mut loess.model {
-            match model.add_point(&[x], y) {
-                Err(e) => make_error(&e.to_string()),
-                Ok(None) => CppOnlineOutput::default(),
-                Ok(Some(o)) => {
-                    let (
-                        standard_error,
-                        residual,
-                        robustness_weight,
-                        iterations_used,
-                        confidence_lower,
-                        confidence_upper,
-                        prediction_lower,
-                        prediction_upper,
-                    ) = shared_parse::extract_online_output(&o);
-                    let gradient_len = o.gradient.as_ref().map(|v| v.len()).unwrap_or(0);
-                    let gradient = shared_parse::opt_vec_to_raw_ptr(o.gradient);
-                    CppOnlineOutput {
-                        has_value: 1,
-                        y: o.y,
-                        standard_error,
-                        residual,
-                        robustness_weight,
-                        iterations_used,
-                        confidence_lower,
-                        confidence_upper,
-                        prediction_lower,
-                        prediction_upper,
-                        gradient,
-                        gradient_len,
-                        error: ptr::null_mut(),
-                    }
-                }
-            }
-        } else {
-            make_error(shared_parse::MODEL_NOT_INITIALIZED)
-        }
+    match catch_unwind(AssertUnwindSafe(|| unsafe {
+        online_add_point_impl(ptr, &[x], y)
     })) {
-        Ok(v) => v,
-        Err(_) => make_error(shared_parse::panic_fallback_message()),
+        Ok(output) => output,
+        Err(_) => online_error_output(shared_parse::panic_fallback_message()),
+    }
+}
+
+/// Add one point with one coordinate per configured predictor dimension.
+/// `has_value = 0` in the result means the window is still filling.
+///
+/// # Safety
+/// `ptr` must be valid. If `x_n` is nonzero, `x_values` must point to `x_n` valid values.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_online_add_point_nd(
+    ptr: *mut CppOnlineLoess,
+    x_values: *const c_double,
+    x_n: usize,
+    y: c_double,
+) -> CppOnlineOutput {
+    match catch_unwind(AssertUnwindSafe(|| {
+        if x_values.is_null() || x_n == 0 {
+            return online_error_output(shared_parse::INVALID_DATA_INPUTS);
+        }
+        let x = unsafe { from_raw_parts(x_values, x_n) };
+        unsafe { online_add_point_impl(ptr, x, y) }
+    })) {
+        Ok(output) => output,
+        Err(_) => online_error_output(shared_parse::panic_fallback_message()),
     }
 }
 
