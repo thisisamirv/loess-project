@@ -3,6 +3,7 @@
 # pylint: disable=unnecessary-ellipsis,unused-argument
 
 from collections.abc import Mapping, Sequence
+from typing import Literal
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -335,7 +336,7 @@ class OnlineLoess:
         intervals: Mapping[str, float | None] | None = None,
         seed: int | None = None,
         degree: str = "linear",
-        dimensions: int = 1,
+        dimensions: Literal[1] = 1,
         distance_metric: str = "normalized",
         surface_mode: str = "interpolation",
         weighted_metric_weights: Sequence[float] | None = None,

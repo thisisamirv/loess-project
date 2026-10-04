@@ -790,6 +790,11 @@ impl PyOnlineLoess {
         boundary_degree_fallback: Option<bool>,
         missing: &str,
     ) -> PyResult<Self> {
+        if dimensions != 1 {
+            return Err(PyValueError::new_err(
+                "OnlineLoess supports only one predictor dimension",
+            ));
+        }
         validate_outputs(
             outputs.as_ref(),
             &["weights", "gradient", "derivative", "se"],

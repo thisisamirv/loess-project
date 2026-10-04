@@ -55,7 +55,7 @@ print(result)
 | `weight_function` | `str` | `"tricube"` | Weight function name |
 | `robustness_method` | `str` | `"bisquare"` | Robustness method name |
 | `degree` | `str` | `"linear"` | Polynomial degree of local fit |
-| `dimensions` | `int` | `1` | Number of predictor dimensions |
+| `dimensions` | `int` | `1` | Online supports only one predictor dimension |
 | `distance_metric` | `str` | `"normalized"` | Distance metric; use `"minkowski:p"` for custom p |
 | `weighted_metric_weights` | `list[float]` | `None` | Per-dimension weights (used when `distance_metric="weighted"`) |
 | `surface_mode` | `str` | `"interpolation"` | Surface computation mode |
@@ -133,9 +133,7 @@ Cross-validation, the `"sorted"` output, and `parallel` are Batch-only; the `"di
 
 *See: [Multivariate LOESS](../advanced/dimensions.md)*
 
-Number of predictor dimensions. Set to match the number of columns in a multivariate `x` array.
-
-- Any integer `>= 1`; `1` (default) is univariate
+Online accepts only one predictor dimension because `add_point` takes a single scalar `x` coordinate. Multivariate predictors are supported by Batch and Streaming, not Online.
 
 ### distance_metric
 

@@ -447,6 +447,13 @@ class TestStreamingLoess:
 class TestOnlineLoess:
     """Tests for the OnlineLoess class."""
 
+    def test_online_rejects_multivariate_dimensions(self):
+        """Online updates accept one scalar x coordinate per point."""
+        with pytest.raises(
+            ValueError, match="OnlineLoess supports only one predictor dimension"
+        ):
+            fastloess.OnlineLoess(dimensions=2)
+
     def test_online_zero_weight_fallback(self):
         """Test online with zero_weight_fallback parameter."""
         x = np.arange(20, dtype=float)
