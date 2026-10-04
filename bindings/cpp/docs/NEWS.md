@@ -7,6 +7,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* Added Windows x64 MinGW, Linux x86/ARMv7, Android ABI, and iOS device/simulator release binaries with matching cross-target CI builds.
 * Added compile-time C++ version macros and runtime `cpp_version()` reporting; generated and distributed the version header with CMake, Spack, and prebuilt release assets.
 * Added `CVOptions cv` to Batch options for grouped cross-validation while preserving legacy CV fields.
 * Added `retain_model`, `LoessResult::predict_model()`, and new `PredictModel`/`PredictOptions`/`PredictResult` RAII classes for out-of-sample prediction.

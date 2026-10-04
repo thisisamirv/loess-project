@@ -24,6 +24,26 @@ wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastl
 g++ -o myapp myapp.cpp -L. -lfastloess-linux-arm64
 ```
 
+## Pre-built Binaries (Linux (x86), 32-bit)
+
+```bash
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-x86.so
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.h
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
+g++ -m32 -std=c++17 -I. -o myapp myapp.cpp -L. -lfastloess-linux-x86
+```
+
+## Pre-built Binaries (Linux (ARMv7), hard-float)
+
+```bash
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-armv7.so
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.h
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
+arm-linux-gnueabihf-g++ -std=c++17 -I. -o myapp myapp.cpp -L. -lfastloess-linux-armv7
+```
+
 ## Pre-built Binaries (Linux (x64), musl/Alpine)
 
 ```bash
@@ -64,6 +84,31 @@ curl -LO https://github.com/thisisamirv/loess-project/releases/latest/download/f
 clang++ -o myapp myapp.cpp -L. -lfastloess-macos-arm64
 ```
 
+## Pre-built Binaries (Android)
+
+Choose the shared library matching the Android ABI used by your application:
+
+| ABI | Release asset |
+| --- | --- |
+| `arm64-v8a` | `libfastloess-android-arm64-v8a.so` |
+| `armeabi-v7a` | `libfastloess-android-armeabi-v7a.so` |
+| `x86` | `libfastloess-android-x86.so` |
+| `x86_64` | `libfastloess-android-x86_64.so` |
+
+Download the C++ and C headers (`fastloess.hpp`, `fastloess.h`, and `fastloess_version.h`) from the same release. Bundle and link the `.so` for the ABI being built by the Android NDK.
+
+## Pre-built Binaries (iOS)
+
+The release provides static archives for physical devices and simulators. Use only the archive matching the active Xcode destination:
+
+| Destination | Rust target | Release asset |
+| --- | --- | --- |
+| iOS device (arm64) | `aarch64-apple-ios` | `libfastloess-ios-arm64.a` |
+| iOS simulator (Apple silicon) | `aarch64-apple-ios-sim` | `libfastloess-ios-simulator-arm64.a` |
+| iOS simulator (Intel) | `x86_64-apple-ios` | `libfastloess-ios-simulator-x86_64.a` |
+
+Download the C++ and C headers (`fastloess.hpp`, `fastloess.h`, and `fastloess_version.h`) from the same release and link the matching static archive into your app or framework.
+
 ## Pre-built Binaries (Windows (x64))
 
 ```powershell
@@ -84,6 +129,17 @@ wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastl
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
 wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess-win32-arm64.lib
 cl /std:c++17 myapp.cpp /link fastloess-win32-arm64.lib
+```
+
+## Pre-built Binaries (Windows (x64), MinGW-w64)
+
+```powershell
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess-win32-x64-gnu.dll
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-win32-x64-gnu.dll.a
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.hpp
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess.h
+wget https://github.com/thisisamirv/loess-project/releases/latest/download/fastloess_version.h
+g++ -std=c++17 -I. -o myapp myapp.cpp -L. -lfastloess-win32-x64-gnu
 ```
 
 ## From Source
