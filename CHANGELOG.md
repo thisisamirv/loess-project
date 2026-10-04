@@ -247,6 +247,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **C++:**
 
+- Mirror the C++ release and prebuilt installation guidance across Linux, macOS, and Windows, including MSVC import libraries and all required headers.
 - Forward the selected distance metric when per-dimension weights are supplied, and support multivariate Online points through a vector-coordinate `add_point` overload.
 - Fixed `bindings/cpp/spack/package.py` building/installing from the wrong directory (`bindings/cpp` instead of the workspace-root `target/release`), which broke `spack install fastloess-cpp` on every platform. Now builds by package name. Also moved the pyright suppression out of the recipe into a new root `pyrightconfig.json`.
 - Ported portable Windows MinGW test copying/CTest execution and compiler-runtime DLL staging; validated the regression harness with MSVC and MinGW.
