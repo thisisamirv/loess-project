@@ -173,6 +173,36 @@ class TestLoess:
         assert latest.gradient is not None
         assert latest.standard_error is not None
 
+    def test_unknown_outputs_are_rejected_for_every_api(self):
+        x = np.arange(1.0, 6.0)
+        y = 2.0 * x
+
+        with pytest.raises(ValueError, match="unknown output"):
+            fastloess.Loess(outputs=["typo"])
+        with pytest.raises(ValueError, match="unknown output"):
+            fastloess.StreamingLoess(outputs=["sorted"])
+        with pytest.raises(ValueError, match="unknown output"):
+            fastloess.OnlineLoess(outputs=["diagnostics"])
+
+        result = fastloess.Loess(retain_model=True).fit(x, y)
+        with pytest.raises(ValueError, match="unknown output"):
+            result.predict([2.5], outputs=["weights"])
+
+    def test_documented_array_like_inputs(self):
+        base = np.arange(10.0)
+        x = base[::2]
+        y = (2.0, 4.0, 6.0, 8.0, 10.0)
+        weights = [1.0] * len(x)
+
+        result = fastloess.Loess(retain_model=True).fit(x, y, weights)
+        assert len(result.y) == len(x)
+        prediction = result.predict([2.5])
+        assert len(prediction.y) == 1
+
+        streaming = fastloess.StreamingLoess(chunk_size=10)
+        streamed = streaming.process_chunk(x.tolist(), y)
+        assert len(streamed.y) > 0
+
     def test_loess_with_confidence_intervals(self):
         """Test loess with confidence intervals."""
         np.random.seed(42)
@@ -991,6 +1021,8 @@ class TestParameterCoverage:
         o = fastloess.OnlineLoess(
             fraction=0.5,
             window_capacity=20,
+            iterations=1,
+            update_mode="full",
             degree="quadratic",
             auto_converge=1e-3,
             scaling_method="mean",

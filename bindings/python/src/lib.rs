@@ -5,7 +5,7 @@ use numpy::{PyArray1, PyReadonlyArray1};
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyAny, PyDict};
 use std::fmt::Display;
 use std::sync::Mutex;
 
@@ -444,7 +444,7 @@ impl PyLoessResult {
     fn predict<'py>(
         &self,
         py: Python<'py>,
-        new_x: PyReadonlyArray1<'py, f64>,
+        new_x: &Bound<'py, PyAny>,
         outputs: Option<Vec<String>>,
         intervals: Option<&Bound<'_, PyDict>>,
         extrapolation: &str,
@@ -453,7 +453,7 @@ impl PyLoessResult {
     ) -> PyResult<PyPredictOutput> {
         validate_outputs(outputs.as_ref(), &["se", "gradient", "derivative"])?;
         let intervals = parse_intervals(intervals)?;
-        let new_x_vec = new_x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
+        let new_x_vec = array_like_to_vec(py, new_x)?;
         let output = py
             .detach(move || {
                 shared_parse::run_predict(
@@ -504,6 +504,18 @@ fn validate_outputs(outputs: Option<&Vec<String>>, allowed: &[&str]) -> PyResult
         )));
     }
     Ok(())
+}
+
+fn array_like_to_vec<'py>(py: Python<'py>, value: &Bound<'py, PyAny>) -> PyResult<Vec<f64>> {
+    let numpy = py.import("numpy")?;
+    let kwargs = PyDict::new(py);
+    kwargs.set_item("dtype", numpy.getattr("float64")?)?;
+    let array = numpy.call_method("ascontiguousarray", (value,), Some(&kwargs))?;
+    let array: PyReadonlyArray1<'py, f64> = array.extract()?;
+    array
+        .as_slice()
+        .map(|values| values.to_vec())
+        .map_err(to_py_invalid_arg_error)
 }
 
 /// Streaming LOESS processor for incremental chunk-based smoothing.
@@ -569,6 +581,17 @@ impl PyStreamingLoess {
         boundary_degree_fallback: Option<bool>,
         missing: &str,
     ) -> PyResult<Self> {
+        validate_outputs(
+            outputs.as_ref(),
+            &[
+                "diagnostics",
+                "residuals",
+                "weights",
+                "gradient",
+                "derivative",
+                "se",
+            ],
+        )?;
         let (mut builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
@@ -617,11 +640,11 @@ impl PyStreamingLoess {
     fn process_chunk<'py>(
         &self,
         py: Python<'py>,
-        x: PyReadonlyArray1<'py, f64>,
-        y: PyReadonlyArray1<'py, f64>,
+        x: &Bound<'py, PyAny>,
+        y: &Bound<'py, PyAny>,
     ) -> PyResult<PyLoessResult> {
-        let x_vec = x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
-        let y_vec = y.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
+        let x_vec = array_like_to_vec(py, x)?;
+        let y_vec = array_like_to_vec(py, y)?;
 
         let result = py.detach(move || {
             self.inner
@@ -767,6 +790,10 @@ impl PyOnlineLoess {
         boundary_degree_fallback: Option<bool>,
         missing: &str,
     ) -> PyResult<Self> {
+        validate_outputs(
+            outputs.as_ref(),
+            &["weights", "gradient", "derivative", "se"],
+        )?;
         let (mut builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
             shared_parse::BuilderOptionSet {
@@ -817,15 +844,17 @@ impl PyOnlineLoess {
 
     /// Add a single point and return its smoothed value, or None if the window
     /// is still filling up.
-    fn add_point(&self, x: f64, y: f64) -> PyResult<Option<PyOnlineOutput>> {
-        let mut inner = self.inner.lock().map_err(|e| {
-            to_py_error(shared_parse::BindingError::runtime(
-                shared_parse::mutex_poisoned_message(&e.to_string()),
-            ))
+    fn add_point(&self, py: Python<'_>, x: f64, y: f64) -> PyResult<Option<PyOnlineOutput>> {
+        let output = py.detach(move || {
+            let mut inner = self.inner.lock().map_err(|e| {
+                to_py_error(shared_parse::BindingError::runtime(
+                    shared_parse::mutex_poisoned_message(&e.to_string()),
+                ))
+            })?;
+            inner
+                .add_point(&[x], y)
+                .map_err(|e| to_py_error(shared_parse::BindingError::invalid_arg(e.to_string())))
         })?;
-        let output = inner
-            .add_point(&[x], y)
-            .map_err(|e| to_py_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
         Ok(output.map(|o| PyOnlineOutput {
             y: o.y,
             standard_error: o.standard_error,
@@ -910,6 +939,18 @@ impl PyLoess {
         missing: &str,
         retain_model: bool,
     ) -> PyResult<Self> {
+        validate_outputs(
+            outputs.as_ref(),
+            &[
+                "diagnostics",
+                "residuals",
+                "weights",
+                "gradient",
+                "derivative",
+                "se",
+                "sorted",
+            ],
+        )?;
         let (cv_fractions, cv_method, cv_k) = parse_cv_options(cv.as_ref())?;
         let (mut builder, _) = map_invalid_arg(shared_parse::apply_builder_options(
             LoessBuilder::<f64>::new(),
@@ -979,19 +1020,15 @@ impl PyLoess {
     fn fit<'py>(
         &self,
         py: Python<'py>,
-        x: PyReadonlyArray1<'py, f64>,
-        y: PyReadonlyArray1<'py, f64>,
-        custom_weights: Option<PyReadonlyArray1<'py, f64>>,
+        x: &Bound<'py, PyAny>,
+        y: &Bound<'py, PyAny>,
+        custom_weights: Option<&Bound<'py, PyAny>>,
     ) -> PyResult<PyLoessResult> {
         // 1. Copy data (Must be done with GIL)
-        let x_vec = x.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
-        let y_vec = y.as_slice().map_err(to_py_invalid_arg_error)?.to_vec();
-        let uw_vec: Option<Vec<f64>> = custom_weights
-            .map(|uw| {
-                uw.as_slice()
-                    .map(|s| s.to_vec())
-                    .map_err(to_py_invalid_arg_error)
-            })
+        let x_vec = array_like_to_vec(py, x)?;
+        let y_vec = array_like_to_vec(py, y)?;
+        let uw_vec = custom_weights
+            .map(|weights| array_like_to_vec(py, weights))
             .transpose()?;
 
         // Clone the pre-built builder for this fit call

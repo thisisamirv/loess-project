@@ -3,9 +3,10 @@
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
-from fastloess import Loess
+from fastloess import Loess, OnlineLoess
 
 
 def heavy_computation():
@@ -68,6 +69,29 @@ def test_gil_release():
         sys.exit(1)
     else:
         print("PASS: Main thread remained responsive.")
+
+
+def test_online_add_point_releases_gil():
+    """A full-window online update should not block unrelated Python threads."""
+    online = OnlineLoess(
+        fraction=0.5,
+        window_capacity=1000,
+        min_points=1000,
+        iterations=5,
+        update_mode="full",
+    )
+    for index in range(999):
+        online.add_point(float(index), float(index))
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(online.add_point, 999.0, 999.0)
+        ticks = 0
+        while not future.done():
+            ticks += 1
+            time.sleep(0.01)
+        future.result()
+
+    assert ticks > 0
 
 
 if __name__ == "__main__":

@@ -513,6 +513,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Python:**
 
+- Reject unknown output names across Batch, Streaming, Online, and prediction; convert documented array-like inputs to contiguous float64 data for fit, streaming, and prediction; release the GIL during Online updates. GPU wheel validation and Windows sidecars have no LOESS counterpart.
 - Fixed `OnlineLoess`/`StreamingLoess` defaults to match docs: `min_points` changed from `3` to `2`, and `update_mode` from `"full"` to `"incremental"`.
 - Corrected docs to state that result `x` values follow input order after internal sorting and mapping back; strengthened `test_unsorted_input` to assert this.
 - Fixed the "Handling Outliers" quickstart example printing nothing at `fraction = 0.5` with only 6 points; bumped to `0.7`.
