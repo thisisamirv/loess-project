@@ -30,3 +30,14 @@ model = Loess()
 result = fit(model, x, y)
 println("Installed successfully!")
 ```
+
+## Check the Package Version
+
+Read the Julia binding version from its installed package metadata:
+
+```@example package_version
+using FastLOESS
+version()
+```
+
+This is the Julia package version, not the version of the native library.

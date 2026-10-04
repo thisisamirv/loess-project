@@ -24,11 +24,27 @@ println("Smoothed values: ", result.y)
 """
 module FastLOESS
 
+using TOML
+
 export Loess, StreamingLoess, OnlineLoess
 export fit, process_chunk, finalize, add_point, predict
 export LoessResult, OnlineOutput, Diagnostics, PredictModel, PredictResult
+export version
 
 import Base: finalize
+
+function _package_version()
+	project_file = joinpath(dirname(@__DIR__), "Project.toml")
+	return get(TOML.parsefile(project_file), "version", "unknown")
+end
+
+"""
+	version() -> String
+
+Return the installed FastLOESS Julia package version from `Project.toml`.
+This is the Julia binding version, not the native Rust library version.
+"""
+version() = _package_version()
 
 function _output_flags(
 	outputs;

@@ -64,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
+- Added `FastLOESS.version()` to report the installed Julia binding version from `Project.toml`.
 - Added an Alternative Software guide comparing `FastLOESS.jl` with `Loess.jl`, including a runnable numerical comparison and feature matrix.
 - Added the `cv` keyword to `Loess` for grouped cross-validation configuration.
 - Added `outputs=[...]` to `Loess`, `StreamingLoess`, `OnlineLoess`, and `predict` for grouped optional result selection; existing individual output keywords remain supported.

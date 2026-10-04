@@ -7,6 +7,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* Added `FastLOESS.version()` to report the installed Julia binding version from `Project.toml`.
 * Added an Alternative Software guide comparing `FastLOESS.jl` with `Loess.jl`, including a runnable numerical comparison and feature matrix.
 * Added the `cv` keyword to `Loess` for grouped cross-validation configuration.
 * Added `outputs=[...]` to `Loess`, `StreamingLoess`, `OnlineLoess`, and `predict` for grouped optional result selection.

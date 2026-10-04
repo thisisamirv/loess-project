@@ -14,10 +14,12 @@ keywords = ["loess", "smoothing", "statistics", "regression", "bioinformatics"]
 categories = ["science", "algorithms"]
 
 [deps]
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 fastloess_jll = "4babd41b-8569-5769-b094-a2a3f6511883"
 
 [compat]
 julia = "1.6"
+TOML = "1"
 fastloess_jll = "2.1.0"
 Test = "1"
 Random = "1"

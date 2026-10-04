@@ -16,6 +16,7 @@ Run with: julia --project=bindings/julia/julia tests/julia/test_fastloess.jl
 using Test
 using Random
 using Statistics
+using TOML
 
 # Handle package loading - check if we're already in the fastloess project
 using Pkg
@@ -33,6 +34,11 @@ end
 using FastLOESS
 
 @testset "fastloess Julia Bindings" begin
+	@testset "package version" begin
+		metadata = TOML.parsefile(joinpath(dirname(pathof(FastLOESS)), "..", "Project.toml"))
+		@test version() isa String
+		@test version() == metadata["version"]
+	end
 
 	@testset "Loess (Batch)" begin
 		@testset "default parameters" begin
