@@ -39,7 +39,7 @@ use crate::algorithms::robustness::RobustnessMethod;
 use crate::engine::defaults::*;
 use crate::engine::predict::PredictState;
 use crate::evaluation::cv::CVKind;
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::intervals::{BootstrapConfig, BootstrapOutput, IntervalMethod};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
@@ -544,6 +544,32 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLinalg>
     LoessExecutor<T>
 {
+    pub(crate) fn bootstrap_fit(
+        x: &[T],
+        y: &[T],
+        smoothed: &[T],
+        mut config: LoessConfig<T>,
+        bootstrap: BootstrapConfig,
+        method: &IntervalMethod<T>,
+    ) -> Result<BootstrapOutput<T>, crate::primitives::errors::LoessError> {
+        config.cv_fractions = None;
+        config.cv_kind = None;
+        config.return_variance = None;
+        config.retain_model = false;
+        config.return_gradient = false;
+        let residuals: Vec<T> = y
+            .iter()
+            .zip(smoothed)
+            .map(|(&value, &fit)| value - fit)
+            .collect();
+        bootstrap.compute(method, smoothed, &residuals, |batch| {
+            Ok(batch
+                .iter()
+                .map(|response| Self::run_with_config(x, response, config.clone()).smoothed)
+                .collect())
+        })
+    }
+
     // Create a new executor with default parameters.
     pub fn new() -> Self {
         Self {
@@ -1509,6 +1535,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     s
                 }),
                 custom_predict_pass: None,
+                bootstrap_predictor: None,
             })
         });
 

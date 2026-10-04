@@ -32,7 +32,7 @@ use crate::engine::executor::{
 use crate::engine::output::LoessResult;
 use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::diagnostics::DiagnosticsState;
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
@@ -114,6 +114,8 @@ pub struct StreamingLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg>
     // Interval estimation method (standard error / confidence / prediction intervals).
     // Computed per chunk and merged across overlap boundaries via `merge_strategy`.
     pub interval_type: Option<IntervalMethod<T>>,
+
+    pub bootstrap: Option<BootstrapConfig>,
 
     // Deferred error from adapter conversion
     pub deferred_error: Option<LoessError>,
@@ -201,6 +203,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             return_gradient: DEFAULT_RETURN_GRADIENT,
             interval_type: None,
+            bootstrap: None,
             auto_converge: default_auto_converge(),
             deferred_error: None,
             polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
@@ -235,6 +238,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
         Validator::validate_no_duplicates(self.duplicate_param)?;
 
         // Validate fraction
+        if let Some(bootstrap) = self.bootstrap {
+            Validator::validate_bootstrap_samples(bootstrap.n_boot)?;
+        }
+        if let Some(method) = self.interval_type {
+            Validator::validate_interval_level(method.level)?;
+        }
         Validator::validate_fraction(self.fraction)?;
 
         // Validate iterations
@@ -380,28 +389,49 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             backend: None,
         };
         // Execute LOESS on combined data
+        let refit_config = self.config.bootstrap.map(|_| config.clone());
         let result = LoessExecutor::run_with_config(&combined_x, &combined_y, config);
         let smoothed = result.smoothed;
-        let std_errors_full = result.std_errors;
+        let mut std_errors_full = result.std_errors;
+        let bootstrap_result = if let Some(bootstrap) = self.config.bootstrap {
+            Some(LoessExecutor::bootstrap_fit(
+                &combined_x,
+                &combined_y,
+                &smoothed,
+                refit_config.unwrap(),
+                bootstrap,
+                &self.config.interval_type.unwrap_or_else(IntervalMethod::se),
+            )?)
+        } else {
+            None
+        };
+        if let Some(output) = &bootstrap_result {
+            std_errors_full = Some(output.std_errors.clone());
+        }
 
         // Confidence/prediction interval bounds over the whole combined (overlap+new
         // data) array, computed the same way Batch does (`IntervalMethod::compute_intervals`)
         // - the executor itself only produces plain std_errors.
-        let (conf_lower_full, conf_upper_full, pred_lower_full, pred_upper_full) = if let (
-            Some(method),
-            Some(se),
-        ) =
-            (&self.config.interval_type, std_errors_full.as_ref())
-        {
-            let interval_residuals: Vec<T> = combined_y
-                .iter()
-                .zip(smoothed.iter())
-                .map(|(&yi, &si)| yi - si)
-                .collect();
-            method.compute_intervals(&smoothed, se, &interval_residuals, None, None)?
-        } else {
-            (None, None, None, None)
-        };
+        let (conf_lower_full, conf_upper_full, pred_lower_full, pred_upper_full) =
+            if let Some(output) = bootstrap_result {
+                (
+                    output.confidence_lower,
+                    output.confidence_upper,
+                    output.prediction_lower,
+                    output.prediction_upper,
+                )
+            } else if let (Some(method), Some(se)) =
+                (&self.config.interval_type, std_errors_full.as_ref())
+            {
+                let interval_residuals: Vec<T> = combined_y
+                    .iter()
+                    .zip(smoothed.iter())
+                    .map(|(&yi, &si)| yi - si)
+                    .collect();
+                method.compute_intervals(&smoothed, se, &interval_residuals, None, None)?
+            } else {
+                (None, None, None, None)
+            };
 
         // Determine how much to return vs buffer
         let combined_points = combined_y.len();
@@ -768,7 +798,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             None
         };
 
-        let has_se = self.config.interval_type.is_some();
+        let has_se = self.config.interval_type.is_some() || self.config.bootstrap.is_some();
         let has_confidence = self
             .config
             .interval_type

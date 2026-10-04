@@ -8,7 +8,7 @@ Confidence and prediction intervals for uncertainty quantification.
 ![Confidence and Prediction Intervals](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/loess-rs/assets/diagrams/intervals_comparison.svg)
 
 !!! note "Adapter support"
-    Confidence and prediction intervals are available in **Batch** mode only. Streaming and Online modes do not support intervals.
+    Confidence and prediction intervals are available in Batch, Streaming, full-update Online, and retained-model prediction. Online intervals and bootstrap require `update_mode("full")`.
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
@@ -123,6 +123,45 @@ First point 95% CI: [0.301714242148439, 0.35303683799350516]
 ```
 
 ---
+
+## Residual Bootstrap
+
+Add `.bootstrap(n_boot)` to replace analytic standard errors and bounds with residual-bootstrap estimates. At least two replicates are required. `.seed(seed)` makes sampling reproducible; omitting it uses a fixed default seed. The seed also configures Batch cross-validation. Without bootstrap, existing analytic interval behavior is unchanged.
+
+Each replicate samples centered training residuals with replacement, adds them to the fitted response, and refits using the same degree, dimensions, metric, case weights, robustness settings, and selected fraction. Refits are processed in batches of at most 256. Standard errors are sample standard deviations; bounds use linearly interpolated percentiles. Prediction bounds include a fresh residual draw, not a normal-error assumption.
+
+```rust
+use loess_rs::prelude::*;
+
+fn main() -> Result<(), LoessError> {
+    let x: Vec<f64> = (0..30).map(|index| index as f64 / 29.0).collect();
+    let y: Vec<f64> = x.iter().enumerate()
+        .map(|(index, value)| value.sin() + (index % 3) as f64 * 0.05)
+        .collect();
+    let result = Loess::new()
+        .fraction(0.5)
+        .confidence_intervals(0.95)
+        .prediction_intervals(0.95)
+        .bootstrap(64)
+        .seed(42)
+        .retain_model(true)
+        .build()?
+        .fit(&x, &y)?;
+    let prediction = Predict::new()
+        .confidence_intervals(0.90)
+        .prediction_intervals(0.95)
+        .bootstrap(64)
+        .seed(42)
+        .build()?
+        .call(&result, &[0.25, 0.75])?;
+    assert_eq!(prediction.standard_errors.as_ref().unwrap().len(), 2);
+    Ok(())
+}
+```
+
+Bootstrap alone returns standard errors without interval bounds. Streaming resamples each combined overlap-and-chunk window before applying its usual merge policy. Full-update Online resamples each sliding window and returns the latest point. Prediction refits the original observations before evaluating query points, preserving interpolation and extrapolation settings. Retaining a model also retains its bootstrap refit context; sampling is performed only when requested.
+
+The `bootstrap` and `seed` methods described here belong to `loess-rs`; this change does not add corresponding methods to `fastLoess` or language bindings.
 
 ## Confidence Levels
 

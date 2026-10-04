@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Added `.bootstrap(n_boot).seed(seed)` residual-bootstrap standard errors and percentile confidence/prediction intervals across Batch, Streaming, full-update Online, and retained-model prediction. Refits preserve LOESS settings and case weights, use centered residuals and batches of at most 256, and support n-dimensional data, interpolation, and `no_std`.
 - Added grouped cross-validation configuration via `CVBuilder::method(...).fractions(...)` and `.cv(...)`; `CVBuilder` is in the prelude and the `CVOptions<T>` result type is at the crate root.
 - Added `LoessBuilder::outputs(names)` as a grouped replacement for individual output toggles; unknown names are accumulated and reported together by `.build()`.
 - Added `return_gradient` to the Batch, Streaming, and Online adapter builders, exposing each point's local-fit gradient (`LoessResult::gradient` / `OnlineOutput::gradient`) at no extra computation cost. Only populated when `surface_mode` is `"direct"`. `false` by default.

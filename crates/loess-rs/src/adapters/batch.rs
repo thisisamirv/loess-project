@@ -36,7 +36,7 @@ use crate::engine::output::LoessResult;
 use crate::engine::validator::{MissingPolicy, Validator};
 use crate::evaluation::cv::CVKind;
 use crate::evaluation::diagnostics::Diagnostics;
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
@@ -67,6 +67,8 @@ pub struct BatchLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
 
     // Confidence/Prediction interval configuration
     pub interval_type: Option<IntervalMethod<T>>,
+
+    pub bootstrap: Option<BootstrapConfig>,
 
     // Fractions for cross-validation
     pub cv_fractions: Option<Vec<T>>,
@@ -189,6 +191,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
             robustness_method: DEFAULT_ROBUSTNESS_METHOD_ENUM,
             scaling_method: DEFAULT_SCALING_METHOD_ENUM,
             interval_type: None,
+            bootstrap: None,
             cv_fractions: None,
             cv_kind: None,
             cv_seed: DEFAULT_CV_SEED,
@@ -246,6 +249,9 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Batch
         Validator::validate_gradient_surface_mode(self.return_gradient, self.surface_mode)?;
 
         // Validate interval type
+        if let Some(bootstrap) = self.bootstrap {
+            Validator::validate_bootstrap_samples(bootstrap.n_boot)?;
+        }
         if let Some(ref method) = self.interval_type {
             Validator::validate_interval_level(method.level)?;
         }
@@ -358,15 +364,35 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         };
 
         // Execute unified LOESS (KD-Tree handles unsorted data)
+        let refit_config = self.config.bootstrap.map(|_| config.clone());
+        let retained_config = self.config.retain_model.then(|| config.clone());
         let result = LoessExecutor::run_with_config(x, y, config);
 
         let y_smooth = result.smoothed;
-        let std_errors = result.std_errors;
+        let mut std_errors = result.std_errors;
         let iterations_used = result.iterations;
         let fraction_used = result.used_fraction;
         let cv_scores = result.cv_scores;
         let gradient = result.gradient;
         let mut predict_state = result.predict_state;
+
+        let bootstrap_result = if let Some(bootstrap) = self.config.bootstrap {
+            let mut config = refit_config.unwrap();
+            config.fraction = Some(fraction_used);
+            Some(LoessExecutor::bootstrap_fit(
+                x,
+                y,
+                &y_smooth,
+                config,
+                bootstrap,
+                &self.config.interval_type.unwrap_or_else(IntervalMethod::se),
+            )?)
+        } else {
+            None
+        };
+        if let Some(output) = &bootstrap_result {
+            std_errors = Some(output.std_errors.clone());
+        }
 
         // Calculate residuals (data is in original order, no unsorting needed)
         let residuals: Vec<T> = y
@@ -374,6 +400,18 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             .zip(y_smooth.iter())
             .map(|(&orig, &smoothed_val)| orig - smoothed_val)
             .collect();
+
+        if let Some(state) = predict_state.as_mut().and_then(Arc::get_mut) {
+            let mut config = retained_config.unwrap();
+            config.fraction = Some(fraction_used);
+            state.bootstrap_predictor =
+                Some(Arc::new(crate::engine::predict::RetainedBootstrapFit {
+                    x: x.to_vec(),
+                    smoothed: y_smooth.clone(),
+                    residuals: residuals.clone(),
+                    config,
+                }));
+        }
 
         // Get robustness weights from executor result (final iteration weights)
         let rob_weights = if self.config.return_robustness_weights {
@@ -428,7 +466,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 
         // Compute intervals
         let (conf_lower, conf_upper, pred_lower, pred_upper) =
-            if let Some(method) = &self.config.interval_type {
+            if let Some(output) = bootstrap_result {
+                (
+                    output.confidence_lower,
+                    output.confidence_upper,
+                    output.prediction_lower,
+                    output.prediction_upper,
+                )
+            } else if let Some(method) = &self.config.interval_type {
                 if let Some(se) = &std_errors {
                     method.compute_intervals(&y_smooth, se, &residuals, delta1, delta2)?
                 } else {

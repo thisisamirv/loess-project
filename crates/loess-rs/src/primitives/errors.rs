@@ -57,6 +57,8 @@ pub enum LoessError {
     // Interval coverage level must be strictly between 0 and 1.
     InvalidIntervals(f64),
 
+    InvalidBootstrapSamples(usize),
+
     // Convergence tolerance must be positive and finite.
     InvalidTolerance(f64),
 
@@ -239,6 +241,12 @@ impl Display for LoessError {
             }
             Self::InvalidIntervals(level) => {
                 write!(f, "Invalid interval level: {level} (must be > 0 and < 1)")
+            }
+            Self::InvalidBootstrapSamples(samples) => {
+                write!(
+                    f,
+                    "Invalid bootstrap samples: {samples} (must be at least 2)"
+                )
             }
             Self::InvalidTolerance(tol) => {
                 write!(f, "Invalid tolerance: {tol} (must be > 0 and finite)")

@@ -28,7 +28,7 @@ use crate::engine::executor::{
     LoessExecutor, SmoothPassFn, SurfaceMode, VertexPassFn,
 };
 use crate::engine::validator::{MissingPolicy, Validator};
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod};
 use crate::math::boundary::BoundaryPolicy;
 use crate::math::defaults::*;
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
@@ -96,6 +96,8 @@ pub struct OnlineLoessBuilder<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
 
     // Interval estimation method (`Full` update mode only; validated at `.build()`).
     pub interval_type: Option<IntervalMethod<T>>,
+
+    pub bootstrap: Option<BootstrapConfig>,
 
     // Deferred error from adapter conversion
     pub deferred_error: Option<LoessError>,
@@ -175,6 +177,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
             return_robustness_weights: DEFAULT_RETURN_ROBUSTNESS_WEIGHTS,
             return_gradient: DEFAULT_RETURN_GRADIENT,
             interval_type: None,
+            bootstrap: None,
             auto_converge: default_auto_converge(),
             deferred_error: None,
             polynomial_degree: DEFAULT_POLYNOMIAL_DEGREE_ENUM,
@@ -208,6 +211,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
         Validator::validate_no_duplicates(self.duplicate_param)?;
 
         // Validate fraction
+        if let Some(bootstrap) = self.bootstrap {
+            Validator::validate_bootstrap_samples(bootstrap.n_boot)?;
+        }
+        if let Some(method) = self.interval_type {
+            Validator::validate_interval_level(method.level)?;
+        }
         Validator::validate_fraction(self.fraction)?;
 
         // Validate iterations
@@ -222,7 +231,11 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
 
         // Validate that return_se()/confidence_intervals()/prediction_intervals() is
         // only combined with update_mode("full")
-        Validator::validate_online_se_update_mode(self.interval_type, self.update_mode)?;
+        Validator::validate_online_se_update_mode(
+            self.interval_type
+                .or_else(|| self.bootstrap.map(|_| IntervalMethod::se())),
+            self.update_mode,
+        )?;
         Validator::validate_online_iterations_update_mode(self.iterations, self.update_mode)?;
 
         let capacity = self.window_capacity;
@@ -505,7 +518,22 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 
                     let result = LoessExecutor::run_with_config(x_vec, y_vec, config.clone());
                     let smoothed_vec = result.smoothed;
-                    let se_vec = result.std_errors;
+                    let mut se_vec = result.std_errors;
+                    let bootstrap_result = if let Some(bootstrap) = self.config.bootstrap {
+                        Some(LoessExecutor::bootstrap_fit(
+                            x_vec,
+                            y_vec,
+                            &smoothed_vec,
+                            config.clone(),
+                            bootstrap,
+                            &self.config.interval_type.unwrap_or_else(IntervalMethod::se),
+                        )?)
+                    } else {
+                        None
+                    };
+                    if let Some(output) = &bootstrap_result {
+                        se_vec = Some(output.std_errors.clone());
+                    }
 
                     let smoothed_val = smoothed_vec.last().copied().ok_or_else(|| {
                         LoessError::InvalidNumericValue("No smoothed output produced".into())
@@ -525,7 +553,26 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     // from the whole window's smoothed values/SE/residuals the same way
                     // Batch does (`IntervalMethod::compute_intervals`), then taking the
                     // last element - the executor itself only produces plain std_errors.
-                    let ci_bounds = if let (Some(method), Some(se)) =
+                    let ci_bounds = if let Some(output) = bootstrap_result {
+                        (
+                            output
+                                .confidence_lower
+                                .as_ref()
+                                .and_then(|values| values.last().copied()),
+                            output
+                                .confidence_upper
+                                .as_ref()
+                                .and_then(|values| values.last().copied()),
+                            output
+                                .prediction_lower
+                                .as_ref()
+                                .and_then(|values| values.last().copied()),
+                            output
+                                .prediction_upper
+                                .as_ref()
+                                .and_then(|values| values.last().copied()),
+                        )
+                    } else if let (Some(method), Some(se)) =
                         (&self.config.interval_type, se_vec.as_ref())
                     {
                         let residuals: Vec<T> = y_vec

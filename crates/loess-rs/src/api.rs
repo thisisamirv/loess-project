@@ -222,6 +222,9 @@ pub struct LoessBuilder<
     // interval estimation configuration.
     pub interval_type: Option<IntervalMethod<T>>,
 
+    pub bootstrap_samples: Option<usize>,
+    pub bootstrap_seed: Option<u64>,
+
     // Candidate bandwidths for cross-validation.
     pub cv_fractions: Option<Vec<T>>,
 
@@ -374,6 +377,8 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             robustness_method: None,
             scaling_method: None,
             interval_type: None,
+            bootstrap_samples: None,
+            bootstrap_seed: None,
             cv_fractions: None,
             cv_kind: None,
             cv_seed: None,
@@ -570,6 +575,20 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         if self.interval_type.is_none() {
             self.interval_type = Some(IntervalMethod::se());
         }
+        self
+    }
+
+    pub fn bootstrap(mut self, n_boot: usize) -> Self {
+        if self.bootstrap_samples.is_some() {
+            self.duplicate_param = Some("bootstrap");
+        }
+        self.bootstrap_samples = Some(n_boot);
+        self
+    }
+
+    pub fn seed(mut self, seed: u64) -> Self {
+        self.bootstrap_seed = Some(seed);
+        self.cv_seed = Some(seed);
         self
     }
 
@@ -971,6 +990,13 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(it) = builder.interval_type {
             result.interval_type = Some(it);
         }
+        result.bootstrap =
+            builder
+                .bootstrap_samples
+                .map(|n_boot| crate::evaluation::intervals::BootstrapConfig {
+                    n_boot,
+                    seed: builder.bootstrap_seed,
+                });
         if let Some(cvf) = builder.cv_fractions {
             result.cv_fractions = Some(cvf);
         }
@@ -1148,6 +1174,13 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(it) = builder.interval_type {
             result.interval_type = Some(it);
         }
+        result.bootstrap =
+            builder
+                .bootstrap_samples
+                .map(|n_boot| crate::evaluation::intervals::BootstrapConfig {
+                    n_boot,
+                    seed: builder.bootstrap_seed,
+                });
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
         }
@@ -1260,6 +1293,13 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Loess
         if let Some(it) = builder.interval_type {
             result.interval_type = Some(it);
         }
+        result.bootstrap =
+            builder
+                .bootstrap_samples
+                .map(|n_boot| crate::evaluation::intervals::BootstrapConfig {
+                    n_boot,
+                    seed: builder.bootstrap_seed,
+                });
         if let Some(ac) = builder.auto_converge {
             result.auto_converge = Some(ac);
         }

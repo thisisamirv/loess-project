@@ -21,12 +21,376 @@ use loess_rs::prelude::*;
 
 use loess_rs::internals::api::Batch;
 use loess_rs::internals::engine::validator::Validator;
-use loess_rs::internals::evaluation::intervals::IntervalMethod;
+use loess_rs::internals::evaluation::intervals::{
+    BOOTSTRAP_BATCH_SIZE, BootstrapConfig, DEFAULT_BOOTSTRAP_SEED, IntervalMethod,
+};
 use loess_rs::internals::primitives::errors::LoessError;
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
+
+#[test]
+fn test_bootstrap_sample_sd_and_percentiles() {
+    let config = BootstrapConfig {
+        n_boot: 3,
+        seed: Some(0),
+    };
+    let output = config
+        .compute(&IntervalMethod::confidence(0.8), &[0.0], &[0.0], |_| {
+            Ok(vec![vec![1.0], vec![3.0], vec![5.0]])
+        })
+        .unwrap();
+    assert_relative_eq!(output.std_errors[0], 2.0, epsilon = 1e-12);
+    assert_relative_eq!(output.confidence_lower.unwrap()[0], 1.4, epsilon = 1e-12);
+    assert_relative_eq!(output.confidence_upper.unwrap()[0], 4.6, epsilon = 1e-12);
+}
+
+#[test]
+fn test_bootstrap_batch_fit() {
+    let x: Vec<f64> = (0..20).map(|index| index as f64 / 19.0).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .enumerate()
+        .map(|(index, value)| value.sin() + (index % 3) as f64 * 0.1)
+        .collect();
+    let builder = Loess::new()
+        .surface_mode("direct")
+        .fraction(0.6)
+        .confidence_intervals(0.9)
+        .prediction_intervals(0.9)
+        .bootstrap(24)
+        .seed(0);
+    let first = builder.clone().build().unwrap().fit(&x, &y).unwrap();
+    let second = builder.build().unwrap().fit(&x, &y).unwrap();
+    assert_eq!(first.standard_errors, second.standard_errors);
+    assert_eq!(first.confidence_lower, second.confidence_lower);
+    assert_eq!(first.prediction_lower, second.prediction_lower);
+    assert_eq!(first.standard_errors.as_ref().unwrap().len(), x.len());
+    assert!(
+        first
+            .standard_errors
+            .unwrap()
+            .iter()
+            .any(|value| *value > 0.0)
+    );
+    assert!(matches!(
+        Loess::<f64>::new().bootstrap(1).build(),
+        Err(LoessError::InvalidBootstrapSamples(1))
+    ));
+}
+
+#[test]
+fn test_bootstrap_seed_and_invalid_samples() {
+    let config = BootstrapConfig {
+        n_boot: 32,
+        seed: Some(0),
+    };
+    let method = IntervalMethod::prediction(0.9);
+    let first = config
+        .compute(&method, &[10.0, 20.0], &[1.0, 3.0], |batch| {
+            Ok(batch.to_vec())
+        })
+        .unwrap();
+    let second = config
+        .compute(&method, &[10.0, 20.0], &[1.0, 3.0], |batch| {
+            Ok(batch.to_vec())
+        })
+        .unwrap();
+    assert_eq!(first, second);
+    assert!(first.std_errors.iter().all(|value| *value > 0.0));
+    for n_boot in [0, 1] {
+        let invalid = BootstrapConfig { n_boot, seed: None };
+        assert_eq!(
+            invalid
+                .compute(&method, &[0.0], &[0.0], |batch| Ok(batch.to_vec()))
+                .unwrap_err(),
+            LoessError::InvalidBootstrapSamples(n_boot)
+        );
+    }
+}
+
+#[test]
+fn test_bootstrap_streaming_and_online_match_batch() {
+    let x: Vec<f64> = (0..20).map(|index| index as f64 / 19.0).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .enumerate()
+        .map(|(index, value)| value.sin() + (index % 3) as f64 * 0.1)
+        .collect();
+    let batch = Loess::new()
+        .surface_mode("direct")
+        .iterations(0)
+        .fraction(0.6)
+        .confidence_intervals(0.9)
+        .bootstrap(8)
+        .seed(0)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let mut streaming = StreamingLoess::new()
+        .surface_mode("direct")
+        .iterations(0)
+        .fraction(0.6)
+        .chunk_size(20)
+        .overlap(3)
+        .confidence_intervals(0.9)
+        .bootstrap(8)
+        .seed(0)
+        .build()
+        .unwrap();
+    let chunk = streaming.process_chunk(&x, &y).unwrap();
+    let tail = streaming.finalize().unwrap();
+    let mut errors = chunk.standard_errors.unwrap();
+    errors.extend(tail.standard_errors.unwrap());
+    assert_eq!(errors, batch.standard_errors.clone().unwrap());
+    let mut lower = chunk.confidence_lower.unwrap();
+    lower.extend(tail.confidence_lower.unwrap());
+    assert_eq!(lower, batch.confidence_lower.clone().unwrap());
+    let mut online = OnlineLoess::new()
+        .surface_mode("direct")
+        .iterations(0)
+        .fraction(0.6)
+        .update_mode("full")
+        .window_capacity(20)
+        .min_points(3)
+        .confidence_intervals(0.9)
+        .bootstrap(8)
+        .seed(0)
+        .build()
+        .unwrap();
+    let mut latest = None;
+    for (&point, &response) in x.iter().zip(&y) {
+        latest = online.add_point(&[point], response).unwrap();
+    }
+    let latest = latest.unwrap();
+    assert_eq!(
+        latest.standard_error,
+        batch.standard_errors.unwrap().last().copied()
+    );
+    assert_eq!(
+        latest.confidence_lower,
+        batch.confidence_lower.unwrap().last().copied()
+    );
+    assert!(matches!(
+        OnlineLoess::<f64>::new().bootstrap(8).build(),
+        Err(LoessError::StandardErrorRequiresFullUpdateMode)
+    ));
+    assert!(matches!(
+        StreamingLoess::<f64>::new().bootstrap(1).build(),
+        Err(LoessError::InvalidBootstrapSamples(1))
+    ));
+}
+
+#[test]
+fn test_bootstrap_prediction_is_seeded_and_uses_query_points() {
+    let x: Vec<f64> = (0..20).map(|index| index as f64 / 19.0).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .enumerate()
+        .map(|(index, value)| value.sin() + (index % 3) as f64 * 0.1)
+        .collect();
+    let fitted = Loess::new()
+        .surface_mode("direct")
+        .fraction(0.6)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let query = Predict::new()
+        .confidence_intervals(0.8)
+        .prediction_intervals(0.95)
+        .bootstrap(24)
+        .seed(0)
+        .build()
+        .unwrap();
+    let first = query.call(&fitted, &[0.25, 0.75]).unwrap();
+    let second = query.call(&fitted, &[0.25, 0.75]).unwrap();
+    assert_eq!(first.y.len(), 2);
+    assert_eq!(first.standard_errors, second.standard_errors);
+    assert_eq!(first.prediction_lower, second.prediction_lower);
+    assert_eq!(first.confidence_lower, second.confidence_lower);
+    assert!(
+        first
+            .standard_errors
+            .unwrap()
+            .iter()
+            .any(|value| *value > 0.0)
+    );
+    assert!(matches!(
+        Predict::<f64>::new().bootstrap(1).build(),
+        Err(LoessError::InvalidBootstrapSamples(1))
+    ));
+}
+
+#[test]
+fn test_bootstrap_batches_default_seed_and_failures() {
+    let config = BootstrapConfig {
+        n_boot: BOOTSTRAP_BATCH_SIZE + 1,
+        seed: None,
+    };
+    let method = IntervalMethod::se();
+    let mut sizes = Vec::new();
+    let first = config
+        .compute(&method, &[10.0, 20.0], &[1.0, 3.0], |batch| {
+            sizes.push(batch.len());
+            Ok(batch.to_vec())
+        })
+        .unwrap();
+    assert_eq!(sizes, vec![BOOTSTRAP_BATCH_SIZE, 1]);
+    let explicit = BootstrapConfig {
+        seed: Some(DEFAULT_BOOTSTRAP_SEED),
+        ..config
+    };
+    assert_eq!(
+        first,
+        explicit
+            .compute(&method, &[10.0, 20.0], &[1.0, 3.0], |batch| Ok(
+                batch.to_vec()
+            ))
+            .unwrap()
+    );
+    assert!(matches!(
+        config.compute(&method, &[], &[], |_| Ok(vec![])),
+        Err(LoessError::EmptyInput)
+    ));
+    assert!(matches!(
+        config.compute(&method, &[0.0], &[], |_| Ok(vec![])),
+        Err(LoessError::InvalidInput(_))
+    ));
+    assert!(matches!(
+        config.compute(&method, &[0.0], &[f64::NAN], |_| Ok(vec![])),
+        Err(LoessError::InvalidNumericValue(_))
+    ));
+    assert!(matches!(
+        config.compute(&method, &[0.0], &[0.0], |_| Ok(vec![])),
+        Err(LoessError::RuntimeError(_))
+    ));
+    let error = LoessError::RuntimeError("refit failure".into());
+    assert_eq!(
+        config
+            .compute(&method, &[0.0], &[0.0], |_| Err(error.clone()))
+            .unwrap_err(),
+        error
+    );
+}
+
+#[test]
+fn test_bootstrap_weighted_nd_refits_and_sorting() {
+    let mut x = Vec::new();
+    let mut y = Vec::new();
+    for index in (0..36).rev() {
+        let row = (index / 6) as f64 / 5.0;
+        let column = (index % 6) as f64 / 5.0;
+        x.extend([row, column]);
+        y.push(row * row + row * column + (index as f64).sin() * 0.1);
+    }
+    let weights: Vec<f64> = (0..36).map(|index| 1.0 + (index % 4) as f64).collect();
+    let base = Loess::new()
+        .dimensions(2)
+        .degree("quadratic")
+        .surface_mode("direct")
+        .fraction(0.65)
+        .iterations(1)
+        .custom_weights(weights)
+        .confidence_intervals(0.9);
+    let plain = base.clone().build().unwrap().fit(&x, &y).unwrap();
+    let fitted = base
+        .clone()
+        .bootstrap(8)
+        .seed(7)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    assert_eq!(fitted.y, plain.y);
+    let residuals: Vec<f64> = y
+        .iter()
+        .zip(&plain.y)
+        .map(|(response, fit)| response - fit)
+        .collect();
+    let mut refit_builder = base.clone();
+    refit_builder.interval_type = None;
+    let expected = BootstrapConfig {
+        n_boot: 8,
+        seed: Some(7),
+    }
+    .compute(
+        &IntervalMethod::confidence(0.9),
+        &plain.y,
+        &residuals,
+        |batch| {
+            batch
+                .iter()
+                .map(|response| Ok(refit_builder.clone().build()?.fit(&x, response)?.y))
+                .collect()
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        fitted.standard_errors.as_ref().unwrap(),
+        &expected.std_errors
+    );
+    assert_eq!(fitted.confidence_lower, expected.confidence_lower);
+    let sorted = base
+        .return_sorted()
+        .bootstrap(8)
+        .seed(7)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    let mut reversed = fitted.standard_errors.unwrap();
+    reversed.reverse();
+    assert_eq!(sorted.standard_errors.unwrap(), reversed);
+}
+
+#[test]
+fn test_bootstrap_interpolation_cv_and_f32() {
+    let x: Vec<f64> = (0..20).map(|index| index as f64 / 19.0).collect();
+    let y: Vec<f64> = x
+        .iter()
+        .enumerate()
+        .map(|(index, value)| value.sin() + (index % 3) as f64 * 0.1)
+        .collect();
+    let fitted = Loess::new()
+        .cv(CVBuilder::method("kfold").k(3).fractions(vec![0.5, 0.8]))
+        .bootstrap(8)
+        .seed(3)
+        .retain_model(true)
+        .build()
+        .unwrap()
+        .fit(&x, &y)
+        .unwrap();
+    assert!(fitted.cv_scores.is_some());
+    assert_eq!(fitted.standard_errors.as_ref().unwrap().len(), y.len());
+    let predicted = Predict::new()
+        .bootstrap(8)
+        .seed(3)
+        .build()
+        .unwrap()
+        .call(&fitted, &[0.25])
+        .unwrap();
+    assert_eq!(predicted.standard_errors.unwrap().len(), 1);
+    let x32: Vec<f32> = x.iter().map(|value| *value as f32).collect();
+    let y32: Vec<f32> = y.iter().map(|value| *value as f32).collect();
+    let fitted32 = Loess::new()
+        .surface_mode("direct")
+        .bootstrap(8)
+        .build()
+        .unwrap()
+        .fit(&x32, &y32)
+        .unwrap();
+    assert!(
+        fitted32
+            .standard_errors
+            .unwrap()
+            .iter()
+            .all(|value| value.is_finite())
+    );
+}
 
 fn uniform_weight_fn<T: num_traits::Float>(_u: T) -> T {
     T::one()

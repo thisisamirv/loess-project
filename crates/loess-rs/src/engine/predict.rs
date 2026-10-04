@@ -11,7 +11,11 @@
 #[cfg(not(feature = "std"))]
 use alloc::format;
 #[cfg(not(feature = "std"))]
+use alloc::sync::Arc;
+#[cfg(not(feature = "std"))]
 use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use std::sync::Arc;
 #[cfg(feature = "std")]
 use std::vec::Vec;
 
@@ -25,9 +29,9 @@ use crate::algorithms::regression::{
     PolynomialDegree, RegressionContext, SolverLinalg, ZeroWeightFallback,
 };
 use crate::api::IntoEnum;
-use crate::engine::executor::LoessDistanceCalculator;
+use crate::engine::executor::{LoessConfig, LoessDistanceCalculator, LoessExecutor};
 use crate::engine::output::LoessResult;
-use crate::evaluation::intervals::IntervalMethod;
+use crate::evaluation::intervals::{BootstrapConfig, BootstrapOutput, IntervalMethod};
 use crate::math::distance::{DistanceLinalg, DistanceMetric};
 use crate::math::kernel::WeightFunction;
 use crate::math::linalg::FloatLinalg;
@@ -64,6 +68,9 @@ pub struct PredictBuilder<T> {
 
     // Prediction interval coverage level (e.g. `Some(0.95)`), or `None` to skip.
     pub prediction_intervals: Option<T>,
+
+    pub bootstrap_samples: Option<usize>,
+    pub bootstrap_seed: Option<u64>,
 
     // Include the local fit's gradient (`dimensions` values per query point, flattened)
     // in the output.
@@ -103,6 +110,8 @@ impl<T: FloatLinalg> Default for PredictBuilder<T> {
             return_se: false,
             confidence_intervals: None,
             prediction_intervals: None,
+            bootstrap_samples: None,
+            bootstrap_seed: None,
             return_derivative: false,
             extrapolation: ExtrapolationPolicy::default(),
             max_extrapolation_distance: None,
@@ -134,6 +143,16 @@ impl<T: FloatLinalg> PredictBuilder<T> {
     // Request a prediction interval at the given coverage level (e.g. `0.95`).
     pub fn prediction_intervals(mut self, level: T) -> Self {
         self.prediction_intervals = Some(level);
+        self
+    }
+
+    pub fn bootstrap(mut self, n_boot: usize) -> Self {
+        self.bootstrap_samples = Some(n_boot);
+        self
+    }
+
+    pub fn seed(mut self, seed: u64) -> Self {
+        self.bootstrap_seed = Some(seed);
         self
     }
 
@@ -176,10 +195,23 @@ impl<T: FloatLinalg> PredictBuilder<T> {
         if let Some(e) = self.pending_error {
             return Err(e);
         }
+        if let Some(samples) = self.bootstrap_samples {
+            crate::engine::validator::Validator::validate_bootstrap_samples(samples)?;
+            for level in [self.confidence_intervals, self.prediction_intervals]
+                .into_iter()
+                .flatten()
+            {
+                crate::engine::validator::Validator::validate_interval_level(level)?;
+            }
+        }
         Ok(PredictQuery {
             return_se: self.return_se,
             confidence_intervals: self.confidence_intervals,
             prediction_intervals: self.prediction_intervals,
+            bootstrap: self.bootstrap_samples.map(|n_boot| BootstrapConfig {
+                n_boot,
+                seed: self.bootstrap_seed,
+            }),
             return_derivative: self.return_derivative,
             extrapolation: self.extrapolation,
             max_extrapolation_distance: self.max_extrapolation_distance,
@@ -200,6 +232,7 @@ pub struct PredictQuery<T> {
     return_se: bool,
     confidence_intervals: Option<T>,
     prediction_intervals: Option<T>,
+    bootstrap: Option<BootstrapConfig>,
     return_derivative: bool,
     extrapolation: ExtrapolationPolicy,
     max_extrapolation_distance: Option<T>,
@@ -352,6 +385,69 @@ pub struct PredictState<T: Float> {
 
     // Custom (e.g. parallel) predict pass, injected by extension crates like fastLoess.
     pub custom_predict_pass: Option<PredictPassFn<T>>,
+    pub bootstrap_predictor: Option<Arc<dyn BootstrapPredictor<T>>>,
+}
+
+pub trait BootstrapPredictor<T: Float>: Debug + Send + Sync {
+    fn compute(
+        &self,
+        bootstrap: BootstrapConfig,
+        method: &IntervalMethod<T>,
+        new_x: &[T],
+        options: &PredictQuery<T>,
+    ) -> Result<BootstrapOutput<T>, LoessError>;
+}
+
+#[derive(Debug)]
+pub(crate) struct RetainedBootstrapFit<T: FloatLinalg + SolverLinalg> {
+    pub x: Vec<T>,
+    pub smoothed: Vec<T>,
+    pub residuals: Vec<T>,
+    pub config: LoessConfig<T>,
+}
+
+impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync + 'static>
+    BootstrapPredictor<T> for RetainedBootstrapFit<T>
+{
+    fn compute(
+        &self,
+        bootstrap: BootstrapConfig,
+        method: &IntervalMethod<T>,
+        new_x: &[T],
+        options: &PredictQuery<T>,
+    ) -> Result<BootstrapOutput<T>, LoessError> {
+        let mut config = self.config.clone();
+        config.cv_fractions = None;
+        config.cv_kind = None;
+        config.return_variance = None;
+        config.return_gradient = false;
+        config.retain_model = true;
+        let mut query = options.clone();
+        query.bootstrap = None;
+        query.return_se = false;
+        query.confidence_intervals = None;
+        query.prediction_intervals = None;
+        bootstrap.compute_at_levels(
+            method,
+            options.prediction_intervals.unwrap_or(method.level),
+            &self.smoothed,
+            &self.residuals,
+            new_x.len() / config.dimensions,
+            |batch| {
+                batch
+                    .iter()
+                    .map(|response| {
+                        let fitted =
+                            LoessExecutor::run_with_config(&self.x, response, config.clone());
+                        let state = fitted
+                            .predict_state
+                            .ok_or(LoessError::PredictionUnavailable)?;
+                        Ok(predict_batch(&state, new_x, &query)?.y)
+                    })
+                    .collect()
+            },
+        )
+    }
 }
 
 // Manual `PartialEq` that ignores `kdtree`/`surface` (cached derived structures, not part
@@ -672,15 +768,42 @@ pub fn predict_batch<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Se
         }
     }
 
-    let need_se = options.return_se
-        || options.confidence_intervals.is_some()
-        || options.prediction_intervals.is_some();
+    let need_se = options.bootstrap.is_none()
+        && (options.return_se
+            || options.confidence_intervals.is_some()
+            || options.prediction_intervals.is_some());
 
     let (y, derivative, se) = if let Some(pass) = state.custom_predict_pass {
         pass(state, new_x, options, need_se)?
     } else {
         predict_batch_serial(state, new_x, options, need_se)?
     };
+
+    if let Some(bootstrap) = options.bootstrap {
+        let method = IntervalMethod {
+            level: options
+                .confidence_intervals
+                .or(options.prediction_intervals)
+                .unwrap_or_else(|| T::from(0.95).unwrap()),
+            confidence: options.confidence_intervals.is_some(),
+            prediction: options.prediction_intervals.is_some(),
+            se: true,
+        };
+        let output = state
+            .bootstrap_predictor
+            .as_ref()
+            .ok_or(LoessError::PredictionUnavailable)?
+            .compute(bootstrap, &method, new_x, options)?;
+        return Ok(PredictOutput {
+            y,
+            derivative,
+            standard_errors: Some(output.std_errors),
+            confidence_lower: output.confidence_lower,
+            confidence_upper: output.confidence_upper,
+            prediction_lower: output.prediction_lower,
+            prediction_upper: output.prediction_upper,
+        });
+    }
 
     let (confidence_lower, confidence_upper) = if let Some(level) = options.confidence_intervals {
         let se_vals = se.as_deref().unwrap_or(&[]);

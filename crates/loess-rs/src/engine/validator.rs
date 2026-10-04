@@ -178,6 +178,14 @@ impl Validator {
         Ok(())
     }
 
+    #[inline(never)]
+    pub fn validate_bootstrap_samples(n_boot: usize) -> Result<(), LoessError> {
+        if n_boot < crate::evaluation::intervals::MIN_BOOTSTRAP_SAMPLES {
+            return Err(LoessError::InvalidBootstrapSamples(n_boot));
+        }
+        Ok(())
+    }
+
     // Validate a collection of candidate fractions for cross-validation.
     pub fn validate_cv_fractions<T: Float>(fracs: &[T]) -> Result<(), LoessError> {
         if fracs.is_empty() {
