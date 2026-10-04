@@ -209,6 +209,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Preserve retained-prediction zero-weight fallback semantics: return the matching training response for `return_original`, and `NaN` for `return_none` or unmatched original-value queries.
 - Preserve configured robustness iterations, auto-convergence, boundary handling, and surface mode in multidimensional CV fold predictions; CV now evaluates held-out points against each fold's fitted model state.
 - Reject overflowing `y.len() * dimensions` input shapes without panicking, and reject negative or non-finite retained-prediction distance caps.
 - Used standard ceiling division for multivariate normalization trimming so strict Clippy passes without changing the trim count.

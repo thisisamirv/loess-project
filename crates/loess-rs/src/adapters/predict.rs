@@ -34,7 +34,7 @@ use crate::primitives::errors::LoessError;
 
 // Policy for evaluating query points outside the retained per-dimension training range.
 use crate::engine::executor::{PredictQuery, PredictState, RawPredictValues};
-use crate::primitives::policies::ExtrapolationPolicy;
+use crate::primitives::policies::{ExtrapolationPolicy, ZeroWeightFallback};
 
 // Fluent, deferred-validation configuration for a `Predict::call()` invocation. Call
 // `.build()` to validate and obtain the ready-to-call `Predict`.
@@ -456,6 +456,18 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
         );
     }
 
+    let query_idx = state
+        .x
+        .chunks_exact(dims)
+        .position(|training_point| training_point == query_point);
+    let (query_idx, zero_weight_fallback) = match (state.zero_weight_fallback, query_idx) {
+        (ZeroWeightFallback::ReturnOriginal, Some(query_idx)) => {
+            (query_idx, ZeroWeightFallback::ReturnOriginal)
+        }
+        (ZeroWeightFallback::ReturnOriginal, None) => (0, ZeroWeightFallback::ReturnNone),
+        (fallback, _) => (0, fallback),
+    };
+
     let gradient = if need_gradient {
         // `fit_with_coefficients()` only has a buffered implementation (the non-buffered
         // path is a stub that always falls back to a zero-gradient degenerate case), so a
@@ -466,13 +478,13 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
             &state.x,
             dims,
             &state.y,
-            0, // query_idx is not used when query_point is Some
+            query_idx,
             Some(eval_point.as_slice()),
             neighborhood,
             true, // use_robustness
             &state.robustness_weights,
             state.weight_function,
-            state.zero_weight_fallback,
+            zero_weight_fallback,
             state.polynomial_degree,
             false, // compute_leverage (fit_with_coefficients doesn't support it)
             Some(&mut buffer),
@@ -494,13 +506,13 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
         &state.x,
         dims,
         &state.y,
-        0,
+        query_idx,
         Some(eval_point.as_slice()),
         neighborhood,
         true,
         &state.robustness_weights,
         state.weight_function,
-        state.zero_weight_fallback,
+        zero_weight_fallback,
         state.polynomial_degree,
         need_se,
         None,
@@ -508,7 +520,7 @@ pub fn predict_one_full<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     if let Some(cw) = state.custom_weights.as_deref() {
         context = context.with_custom_weights(cw);
     }
-    let (mut y, leverage) = context.fit().unwrap_or((T::zero(), T::zero()));
+    let (mut y, leverage) = context.fit().unwrap_or((T::nan(), T::zero()));
 
     // In-range (so the fast path above was skipped only because a gradient was needed):
     // prefer the surface's value for `y` anyway, so it still matches `fit()`'s `y_smooth` at

@@ -292,6 +292,49 @@ fn test_batch_zero_case_weights_honor_fallback_for_all_degrees() {
 }
 
 #[test]
+fn test_predict_custom_weight_zero_window_honors_fallback() {
+    let predictors = [0.0, 1.0, 2.0, 3.0, 4.0];
+    let observations = [10.0, 20.0, 30.0, 40.0, 50.0];
+
+    for (fallback, expected_at_training_point) in
+        [("return_original", Some(50.0)), ("return_none", None)]
+    {
+        let fitted = Loess::new()
+            .fraction(1.0)
+            .iterations(0)
+            .surface_mode("direct")
+            .boundary_policy("noboundary")
+            .custom_weights(vec![1.0, 0.0, 0.0, 0.0, 0.0])
+            .zero_weight_fallback(fallback)
+            .retain_model(true)
+            .build()
+            .unwrap()
+            .fit(&predictors, &observations)
+            .unwrap();
+
+        let prediction = Predict::new()
+            .build()
+            .unwrap()
+            .call(&fitted, &[4.0])
+            .unwrap()
+            .y[0];
+        if let Some(expected) = expected_at_training_point {
+            assert_eq!(prediction, expected, "fallback={fallback}");
+        } else {
+            assert!(prediction.is_nan(), "fallback={fallback}: {prediction}");
+        }
+
+        let prediction = Predict::new()
+            .build()
+            .unwrap()
+            .call(&fitted, &[3.5])
+            .unwrap()
+            .y[0];
+        assert!(prediction.is_nan(), "fallback={fallback}: {prediction}");
+    }
+}
+
+#[test]
 fn test_batch_weighted_local_standard_errors_use_fitted_case_weights() {
     use loess_rs::internals::evaluation::intervals::IntervalMethod;
 

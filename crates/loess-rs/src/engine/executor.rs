@@ -1261,28 +1261,6 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         }
     }
 
-    pub fn cross_validate(
-        &self,
-        x: &[T],
-        y: &[T],
-        fractions: &[T],
-        kind: CVKind,
-        seed: Option<u64>,
-        buffer: &mut CVBuffer<T>,
-    ) -> (T, Vec<T>) {
-        self.cross_validate_with_options(
-            x,
-            y,
-            fractions,
-            CVRunOptions {
-                kind,
-                seed,
-                tolerance: None,
-            },
-            buffer,
-        )
-    }
-
     pub fn cross_validate_with_options(
         &self,
         x: &[T],
