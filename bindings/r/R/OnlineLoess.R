@@ -76,8 +76,11 @@ OnlineLoess <- function(
     }
     validate_params(
         fraction = fraction,
+        iterations = iterations,
         window_capacity = window_capacity,
-        min_points = min_points
+        min_points = min_points,
+        dimensions = dimensions,
+        interpolation_vertices = interpolation_vertices
     )
     interval_options <- parse_intervals_options(intervals)
     confidence_intervals <- interval_options$confidence

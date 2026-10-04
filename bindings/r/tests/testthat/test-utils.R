@@ -11,6 +11,10 @@ validate_common_args <- getFromNamespace("validate_common_args", "rfastloess")
 validate_params <- getFromNamespace("validate_params", "rfastloess")
 coerce_nullable <- getFromNamespace("coerce_nullable", "rfastloess")
 env_args <- getFromNamespace("env_args", "rfastloess")
+validate_named_options <- getFromNamespace(
+    "validate_named_options",
+    "rfastloess"
+)
 
 # ── validate_common_args ────────────────────────────────────────────────────
 
@@ -18,6 +22,25 @@ test_that("validate_common_args rejects mismatched lengths", {
     expect_error(
         validate_common_args(1:3, 1:4, 0.5, 3),
         "must match y"
+    )
+})
+
+test_that("validate_common_args rejects non-numeric and malformed inputs", {
+    expect_error(
+        validate_common_args(as.character(1:5), 1:5, 0.5, 3),
+        "x must be numeric"
+    )
+    expect_error(
+        validate_common_args(1:5, as.character(1:5), 0.5, 3),
+        "y must be a numeric vector"
+    )
+    expect_error(
+        validate_common_args(array(1:8, c(2, 2, 2)), 1:2, 0.5, 3),
+        "vector or matrix"
+    )
+    expect_error(
+        validate_common_args(matrix(1:6, nrow = 3), 1:2, 0.5, 3),
+        "rows must match"
     )
 })
 
@@ -50,6 +73,45 @@ test_that("validate_common_args rejects negative iterations", {
     expect_error(
         validate_common_args(1:5, 1:5, 0.5, -1),
         "iterations must be a non-negative integer"
+    )
+})
+
+test_that("count validation rejects fractional and overflowing values", {
+    expect_error(validate_params(0.5, iterations = 1.5), "whole number")
+    expect_error(validate_params(0.5, iterations = Inf), "single numeric value")
+    expect_error(
+        validate_params(0.5, iterations = .Machine$integer.max + 1),
+        "maximum supported integer"
+    )
+    expect_error(validate_params(0.5, window_capacity = 10.5), "whole number")
+    expect_error(validate_params(0.5, overlap = 2.5), "whole number")
+    expect_error(validate_params(0.5, dimensions = 1.5), "whole number")
+    expect_error(
+        validate_params(0.5, interpolation_vertices = 10.5),
+        "whole number"
+    )
+})
+
+test_that("grouped options require unique known names", {
+    expect_error(
+        validate_named_options(list(1), "fractions", "cv"),
+        "named list"
+    )
+    expect_error(
+        validate_named_options(
+            list(fractions = 1, fractions = 2),
+            "fractions",
+            "cv"
+        ),
+        "Duplicate `cv` keys"
+    )
+    expect_error(
+        validate_named_options(
+            list(fractions = 1, typo = 2),
+            "fractions",
+            "cv"
+        ),
+        "Invalid `cv` key"
     )
 })
 

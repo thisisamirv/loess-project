@@ -523,6 +523,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Reject fractional/overflowing count options and malformed grouped CV/interval lists; validate numeric vector/matrix shapes, accept integer custom weights, and validate prediction/Online inputs. GPU installer/library hardening has no LOESS R counterpart.
 - Fixed `bindings/r/Makefile`'s Air auto-install target (`make r` → `make r-dev`).
 - Fixed the R benchmark script calling `fit` as a field instead of the S3 generic `fit(model, x, y)`.
 - Fixed `OnlineLoess`/`StreamingLoess` defaults to match docs: `min_points` changed from `3` to `2`, and `update_mode` from `"full"` to `"incremental"`.

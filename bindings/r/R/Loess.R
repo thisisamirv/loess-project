@@ -3,7 +3,7 @@
 #' @description
 #' Create a stateful LOESS model for batch smoothing. This is the default
 #' mode: it processes the entire dataset at once and supports every feature
-#' (confidence/prediction intervals, cross-validation, GPU backend).
+#' (confidence/prediction intervals and cross-validation).
 #'
 #' @details
 #' Best suited when the dataset fits in memory and you need intervals,
@@ -140,11 +140,17 @@ Loess <- function(
     if (...length() > 0L) {
         stop("unused arguments (...)", call. = FALSE)
     }
-    validate_params(fraction = fraction, iterations = iterations)
+    validate_params(
+        fraction = fraction,
+        iterations = iterations,
+        dimensions = dimensions,
+        interpolation_vertices = interpolation_vertices
+    )
     interval_options <- parse_intervals_options(intervals)
     confidence_intervals <- interval_options$confidence
     prediction_intervals <- interval_options$prediction
     if (!is.null(cv)) {
+        validate_named_options(cv, c("fractions", "method", "k"), "cv")
         cv <- do.call(cv_opts, cv)
     }
     cv_fractions <- cv$fractions
@@ -153,8 +159,13 @@ Loess <- function(
     cv_seed <- seed
     if (!is.null(seed)) {
         validate_scalar_numeric(seed, "seed")
-        if (!is.finite(seed) || seed < 0 || seed != floor(seed) || seed > 2^53) {
-            stop("seed must be a non-negative whole number up to 2^53", call. = FALSE)
+        if (
+            !is.finite(seed) || seed < 0 || seed != floor(seed) || seed > 2^53
+        ) {
+            stop(
+                "seed must be a non-negative whole number up to 2^53",
+                call. = FALSE
+            )
         }
     }
     flags <- parse_outputs_flags(
@@ -213,13 +224,27 @@ cv_opts <- function(fractions, method = "kfold", k = 5L) {
             call. = FALSE
         )
     }
-    if (!is.numeric(fractions) || length(fractions) == 0L) {
+    validate_numeric_vector(fractions, "fractions")
+    if (length(fractions) == 0L) {
         stop("`fractions` must be a non-empty numeric vector", call. = FALSE)
+    }
+    if (any(!is.finite(fractions)) || any(fractions <= 0 | fractions > 1)) {
+        stop(
+            "`fractions` must be finite values greater than 0 and at most 1",
+            call. = FALSE
+        )
+    }
+    if (!is.character(method) || length(method) != 1L || is.na(method)) {
+        stop("`method` must be a single character value", call. = FALSE)
+    }
+    validate_optional_count(k, "cv_k", allow_zero = FALSE)
+    if (tolower(method) %in% c("kfold", "k_fold", "k-fold") && k < 2) {
+        stop("k-fold CV requires at least 2 folds", call. = FALSE)
     }
     structure(
         list(
             fractions = as.double(fractions),
-            method = as.character(method),
+            method = method,
             k = as.integer(k)
         ),
         class = "cv_opts"
@@ -252,8 +277,10 @@ parse_intervals_options <- function(intervals) {
     if (is.null(intervals)) {
         return(intervals_opts())
     }
-    if (!is.list(intervals) || is.null(names(intervals)) || any(names(intervals) == "")) {
-        stop("intervals must be a named list", call. = FALSE)
-    }
+    validate_named_options(
+        intervals,
+        c("confidence", "prediction"),
+        "intervals"
+    )
     do.call(intervals_opts, intervals)
 }

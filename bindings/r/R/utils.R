@@ -25,9 +25,38 @@
 #' @srrstats {G3.0} Tolerance-based comparisons used in robustness weights.
 #' @noRd
 validate_xy_dims <- function(x, y) {
+    validate_numeric_vector(y, "y")
+    if (!is.numeric(x) || is.complex(x)) {
+        stop("x must be numeric", call. = FALSE)
+    }
+    x_dims <- dim(x)
+    if (!is.null(x_dims) && length(x_dims) != 2L) {
+        stop("x must be a numeric vector or matrix", call. = FALSE)
+    }
+
     n_y <- length(y)
-    if (length(x) == 0 || n_y == 0 || length(x) %% n_y != 0) {
+    if (n_y == 0L || length(x) == 0L || (is.matrix(x) && nrow(x) != n_y)) {
+        stop("x rows must match y's length", call. = FALSE)
+    }
+    if (!is.matrix(x) && length(x) %% n_y != 0L) {
         stop("x must match y's length or be its multiple for multi-dim input")
+    }
+}
+
+validate_numeric_vector <- function(value, name) {
+    if (!is.numeric(value) || is.complex(value) || !is.null(dim(value))) {
+        stop(sprintf("%s must be a numeric vector", name), call. = FALSE)
+    }
+}
+
+validate_numeric_scalar <- function(value, name) {
+    if (
+        !is.numeric(value) ||
+            is.complex(value) ||
+            length(value) != 1L ||
+            !is.null(dim(value))
+    ) {
+        stop(sprintf("%s must be a single numeric value", name), call. = FALSE)
     }
 }
 
@@ -50,7 +79,14 @@ validate_fraction <- function(fraction) {
 
 
 validate_iterations <- function(iterations) {
-    if (!is.numeric(iterations) || length(iterations) != 1 || iterations < 0) {
+    if (
+        !is.numeric(iterations) ||
+            length(iterations) != 1L ||
+            !is.finite(iterations) ||
+            iterations < 0 ||
+            iterations != floor(iterations) ||
+            iterations > 1000
+    ) {
         stop("iterations must be a non-negative integer")
     }
 }
@@ -58,7 +94,7 @@ validate_iterations <- function(iterations) {
 
 validate_common_args <- function(x, y, fraction, iterations) {
     validate_xy_dims(x, y)
-    validate_min_points(x)
+    validate_min_points(y)
     validate_fraction(fraction)
     validate_iterations(iterations)
 
@@ -72,7 +108,7 @@ validate_common_args <- function(x, y, fraction, iterations) {
 
 
 validate_scalar_numeric <- function(value, name) {
-    if (!is.numeric(value) || length(value) != 1L || is.na(value)) {
+    if (!is.numeric(value) || length(value) != 1L || !is.finite(value)) {
         stop(sprintf("%s must be a single numeric value", name))
     }
 }
@@ -84,6 +120,12 @@ validate_optional_count <- function(value, name, allow_zero = TRUE) {
     }
 
     validate_scalar_numeric(value, name)
+    if (value != floor(value)) {
+        stop(sprintf("%s must be a whole number", name))
+    }
+    if (value > .Machine$integer.max) {
+        stop(sprintf("%s exceeds the maximum supported integer", name))
+    }
     if (allow_zero && value < 0) {
         stop(sprintf("%s must be a non-negative integer", name))
     }
@@ -91,6 +133,30 @@ validate_optional_count <- function(value, name, allow_zero = TRUE) {
         stop(sprintf("%s must be a positive integer", name))
     }
 
+    invisible(NULL)
+}
+
+validate_named_options <- function(options, valid, name) {
+    if (!is.list(options)) {
+        stop(sprintf("`%s` must be a named list", name), call. = FALSE)
+    }
+    keys <- names(options)
+    if (length(options) && (is.null(keys) || anyNA(keys) || any(keys == ""))) {
+        stop(sprintf("`%s` must be a named list", name), call. = FALSE)
+    }
+    if (anyDuplicated(keys)) {
+        stop(
+            sprintf("Duplicate `%s` keys are not allowed", name),
+            call. = FALSE
+        )
+    }
+    unknown <- setdiff(keys, valid)
+    if (length(unknown)) {
+        stop(
+            sprintf("Invalid `%s` key(s): %s", name, toString(unknown)),
+            call. = FALSE
+        )
+    }
     invisible(NULL)
 }
 
@@ -166,7 +232,10 @@ validate_params <- function(
     iterations = NULL,
     window_capacity = NULL,
     min_points = NULL,
-    chunk_size = NULL
+    chunk_size = NULL,
+    overlap = NULL,
+    dimensions = NULL,
+    interpolation_vertices = NULL
 ) {
     validate_scalar_numeric(fraction, "fraction")
     if (fraction < 0 || fraction > 1) {
@@ -174,13 +243,26 @@ validate_params <- function(
     }
 
     validate_optional_count(iterations, "iterations")
+    if (!is.null(iterations) && iterations > 1000) {
+        stop("iterations must be between 0 and 1000", call. = FALSE)
+    }
     validate_optional_count(
         window_capacity,
         "window_capacity",
         allow_zero = FALSE
     )
     validate_optional_count(min_points, "min_points")
+    if (!is.null(min_points) && min_points < 2) {
+        stop("min_points must be at least 2", call. = FALSE)
+    }
     validate_optional_count(chunk_size, "chunk_size", allow_zero = FALSE)
+    validate_optional_count(overlap, "overlap")
+    validate_optional_count(dimensions, "dimensions", allow_zero = FALSE)
+    validate_optional_count(
+        interpolation_vertices,
+        "interpolation_vertices",
+        allow_zero = FALSE
+    )
 }
 
 #' Coerce optional values to Nullable

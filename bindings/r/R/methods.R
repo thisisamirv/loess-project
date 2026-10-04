@@ -153,6 +153,19 @@ fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
         model$params$fraction,
         model$params$iterations
     )
+    if (!is.null(custom_weights)) {
+        validate_numeric_vector(custom_weights, "custom_weights")
+        if (length(custom_weights) != length(y)) {
+            stop("custom_weights must have the same length as y", call. = FALSE)
+        }
+        if (any(!is.finite(custom_weights)) || any(custom_weights < 0)) {
+            stop(
+                "custom_weights must be finite and non-negative",
+                call. = FALSE
+            )
+        }
+        custom_weights <- as.double(custom_weights)
+    }
     model$handle$fit(validated_args$x, validated_args$y, custom_weights)
 }
 
@@ -198,6 +211,16 @@ predict.Loess <- function(
 ) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
+    }
+    validate_numeric_vector(new_x, "new_x")
+    if (
+        length(new_x) == 0L ||
+            length(new_x) %% object$params$dimensions != 0L
+    ) {
+        stop(
+            "new_x must be non-empty and its length must be a multiple of dimensions",
+            call. = FALSE
+        )
     }
     flags <- parse_outputs_flags(outputs, c("se", "gradient", "derivative"))
     interval_options <- parse_intervals_options(intervals)
@@ -296,6 +319,16 @@ add_point <- function(model, ...) UseMethod("add_point")
 add_point.OnlineLoess <- function(model, x, y, ...) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
+    }
+    if (
+        !is.numeric(x) || is.complex(x) || length(x) != 1L || !is.null(dim(x))
+    ) {
+        stop("x must be a single numeric value", call. = FALSE)
+    }
+    if (
+        !is.numeric(y) || is.complex(y) || length(y) != 1L || !is.null(dim(y))
+    ) {
+        stop("y must be a single numeric value", call. = FALSE)
     }
     model$handle$add_point(as.double(x), as.double(y))
 }

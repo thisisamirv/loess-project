@@ -22,6 +22,9 @@ test_that("Loess rejects invalid inputs", {
         Loess(iterations = -1),
         "iterations must be a non-negative integer"
     )
+    expect_error(Loess(iterations = 1.5), "whole number")
+    expect_error(Loess(dimensions = 1.5), "whole number")
+    expect_error(Loess(interpolation_vertices = 10.5), "whole number")
 
     # Mismatched lengths at fit time
     expect_error(
@@ -52,6 +55,26 @@ test_that("Loess rejects invalid inputs", {
         ),
         "dimensions"
     )
+
+    expect_error(
+        fit(Loess(), letters[1:5], 1:5),
+        "x must be numeric"
+    )
+    expect_error(
+        fit(Loess(), 1:5, matrix(1:5, ncol = 1)),
+        "y must be a numeric vector"
+    )
+    expect_error(
+        fit(Loess(), array(1:8, c(2, 2, 2)), 1:2),
+        "vector or matrix"
+    )
+
+    retained <- Loess(retain_model = TRUE)
+    fit(retained, 1:5, 1:5)
+    expect_error(
+        predict(retained, letters[1:2]),
+        "new_x must be a numeric vector"
+    )
 })
 
 test_that("OnlineLoess rejects invalid inputs", {
@@ -74,11 +97,15 @@ test_that("OnlineLoess rejects invalid inputs", {
         OnlineLoess(min_points = -1),
         "min_points must be a non-negative integer"
     )
+    expect_error(OnlineLoess(iterations = 1.5), "whole number")
+    expect_error(OnlineLoess(window_capacity = 100.5), "whole number")
+    expect_error(OnlineLoess(min_points = 2.5), "whole number")
 
     # add_point accepts scalar x and y without error
     ol <- OnlineLoess(fraction = 0.5)
     result <- add_point(ol, 1.0, 2.0)
     expect_true(is.null(result) || "y" %in% names(result))
+    expect_error(add_point(ol, "x", 2), "x must be a single numeric value")
 
     # Extra ... args rejected by add_point.OnlineLoess
     expect_error(
@@ -103,6 +130,9 @@ test_that("StreamingLoess rejects invalid inputs", {
         StreamingLoess(chunk_size = 0),
         "chunk_size must be a positive integer"
     )
+    expect_error(StreamingLoess(iterations = 2.5), "whole number")
+    expect_error(StreamingLoess(chunk_size = 20.5), "whole number")
+    expect_error(StreamingLoess(overlap = 2.5), "whole number")
 
     # Mismatched lengths at process_chunk time
     sl <- StreamingLoess(fraction = 0.5)

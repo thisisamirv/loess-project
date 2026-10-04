@@ -65,7 +65,10 @@ test_that("Loess confidence intervals work", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, sd = 0.2)
 
-    model <- Loess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95))
+    model <- Loess(
+        fraction = 0.5,
+        intervals = intervals_opts(confidence = 0.95)
+    )
     result <- fit(model, as.double(x), as.double(y))
 
     expect_true("confidence_lower" %in% names(result))
@@ -83,7 +86,10 @@ test_that("Loess prediction intervals work", {
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, sd = 0.2)
 
-    model <- Loess(fraction = 0.5, intervals = intervals_opts(prediction = 0.95))
+    model <- Loess(
+        fraction = 0.5,
+        intervals = intervals_opts(prediction = 0.95)
+    )
     result <- fit(model, as.double(x), as.double(y))
 
     expect_true("prediction_lower" %in% names(result))
@@ -92,7 +98,10 @@ test_that("Loess prediction intervals work", {
     expect_length(result$prediction_upper, length(y))
 
     # PI should be wider than CI
-    model_ci <- Loess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95))
+    model_ci <- Loess(
+        fraction = 0.5,
+        intervals = intervals_opts(confidence = 0.95)
+    )
     result_ci <- fit(model_ci, as.double(x), as.double(y))
     expect_gt(
         mean(result$prediction_upper - result$prediction_lower),
@@ -178,7 +187,14 @@ test_that("grouped outputs work across all R adapters and prediction", {
         fraction = 0.7,
         surface_mode = "direct",
         retain_model = TRUE,
-        outputs = c("diagnostics", "residuals", "weights", "gradient", "se", "sorted")
+        outputs = c(
+            "diagnostics",
+            "residuals",
+            "weights",
+            "gradient",
+            "se",
+            "sorted"
+        )
     )
     result <- fit(model, x, y)
     expect_type(result$diagnostics, "list")
@@ -295,7 +311,11 @@ test_that("Loess cross-validation works", {
 
     result <- fit(
         Loess(
-            cv = cv_opts(fractions = c(0.2, 0.3, 0.5, 0.7), method = "kfold", k = 5)
+            cv = cv_opts(
+                fractions = c(0.2, 0.3, 0.5, 0.7),
+                method = "kfold",
+                k = 5
+            )
         ),
         as.double(x),
         as.double(y)
@@ -310,7 +330,8 @@ test_that("grouped cross-validation configures seeded folds", {
     x <- as.double(1:30)
     result <- fit(
         Loess(
-            cv = cv_opts(fractions = c(0.3, 0.5), k = 3L), seed = 42
+            cv = cv_opts(fractions = c(0.3, 0.5), k = 3L),
+            seed = 42
         ),
         x,
         x * x
@@ -322,10 +343,38 @@ test_that("grouped cross-validation configures seeded folds", {
     expect_error(cv_opts(c(0.5), seed = 42), "unused argument")
     expect_error(Loess(cv_fractions = c(0.5)), "unused arguments")
     expect_error(Loess(confidence_intervals = 0.95), "unused arguments")
-    expect_error(StreamingLoess(confidence_intervals = 0.95), "unused arguments")
+    expect_error(
+        StreamingLoess(confidence_intervals = 0.95),
+        "unused arguments"
+    )
     expect_error(OnlineLoess(prediction_intervals = 0.95), "unused arguments")
     expect_error(intervals_opts(confidence = 1), "between 0 and 1")
-    expect_error(Loess(intervals = list(confidence_level = 0.95)), "unused argument")
+    expect_error(
+        Loess(intervals = list(confidence_level = 0.95)),
+        "Invalid `intervals` key"
+    )
+    expect_error(Loess(cv = list(fractions = c(0.5), k = 2.5)), "whole number")
+    expect_error(
+        Loess(cv = list(fractions = c(0.5), typo = 3)),
+        "Invalid `cv` key"
+    )
+    expect_error(Loess(cv = unname(list(c(0.5)))), "named list")
+    expect_error(
+        Loess(
+            intervals = structure(
+                list(0.8, 0.9),
+                names = c("confidence", "confidence")
+            )
+        ),
+        "Duplicate `intervals` keys"
+    )
+})
+
+test_that("Loess preserves valid two-dimensional matrix inputs", {
+    x <- matrix(as.double(1:40), ncol = 2)
+    y <- as.double(rowMeans(x))
+    result <- fit(Loess(dimensions = 2L), x, y)
+    expect_length(result$y, length(y))
 })
 
 test_that("Loess handles edge cases", {
@@ -461,8 +510,10 @@ test_that("Loess: uniform custom_weights equal no weights", {
     loess <- Loess(fraction = 0.6)
     r_no_w <- fit(loess, x, y)
     r_w <- fit(loess, x, y, custom_weights = w_uniform)
+    r_w_integer <- fit(loess, x, y, custom_weights = rep(1L, length(y)))
 
     expect_equal(r_w$y, r_no_w$y, tolerance = 1e-6)
+    expect_equal(r_w_integer$y, r_no_w$y, tolerance = 1e-6)
 })
 
 test_that("Loess: custom_weights wrong length raises error", {

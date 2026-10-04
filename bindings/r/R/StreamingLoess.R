@@ -80,7 +80,14 @@ StreamingLoess <- function(
     if (...length() > 0L) {
         stop("unused arguments (...)", call. = FALSE)
     }
-    validate_params(fraction = fraction, chunk_size = chunk_size)
+    validate_params(
+        fraction = fraction,
+        iterations = iterations,
+        chunk_size = chunk_size,
+        overlap = overlap,
+        dimensions = dimensions,
+        interpolation_vertices = interpolation_vertices
+    )
     interval_options <- parse_intervals_options(intervals)
     confidence_intervals <- interval_options$confidence
     prediction_intervals <- interval_options$prediction
