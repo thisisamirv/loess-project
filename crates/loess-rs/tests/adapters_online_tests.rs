@@ -1191,22 +1191,49 @@ fn test_online_missing_drop_ignores_nan_point() {
 /// Test that `gradient` is `None` by default (not requested).
 #[test]
 fn test_online_gradient_none_by_default() {
-    let mut processor = Loess::new()
-        .fraction(1.0)
-        .surface_mode("direct")
-        .window_capacity(5)
-        .min_points(2)
-        .adapter(Online)
-        .build()
-        .unwrap();
+    for mode in ["incremental", "full"] {
+        for dimensions in [1, 2] {
+            for weighted in [false, true] {
+                let mut processor = Loess::new()
+                    .fraction(1.0)
+                    .iterations(0)
+                    .dimensions(dimensions)
+                    .surface_mode("direct")
+                    .window_capacity(6)
+                    .min_points(3)
+                    .update_mode(mode)
+                    .adapter(Online)
+                    .build()
+                    .unwrap();
 
-    let mut last = None;
-    for i in 0..5 {
-        last = processor
-            .add_point(&[i as f64], 2.0 * i as f64 + 1.0)
-            .unwrap();
+                for index in 0..12 {
+                    let coordinates = if dimensions == 1 {
+                        vec![f64::from(index)]
+                    } else {
+                        vec![f64::from(index % 3), f64::from(index / 3)]
+                    };
+                    let response = 2.0 * coordinates[0] + 1.0;
+                    let output = if weighted {
+                        processor.add_point_weighted(
+                            &coordinates,
+                            response,
+                            1.0 + f64::from(index % 3),
+                        )
+                    } else {
+                        processor.add_point(&coordinates, response)
+                    }
+                    .unwrap();
+                    if index < 2 {
+                        assert!(output.is_none());
+                    } else {
+                        let output = output.unwrap();
+                        assert!(output.y.is_finite());
+                        assert!(output.gradient.is_none());
+                    }
+                }
+            }
+        }
     }
-    assert!(last.unwrap().gradient.is_none());
 }
 
 /// Test the exact two-point linear special case (1D) exposes the exact slope.

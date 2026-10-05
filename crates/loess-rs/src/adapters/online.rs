@@ -464,10 +464,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     let smoothed_val = result.smoothed.last().copied().ok_or_else(|| {
                         LoessError::InvalidNumericValue("No smoothed output produced".into())
                     })?;
-                    let grad = result
-                        .gradient
-                        .as_ref()
-                        .map(|g| g[g.len() - dimensions..].to_vec());
+                    let grad = if self.config.return_gradient {
+                        result
+                            .gradient
+                            .as_ref()
+                            .map(|g| g[g.len() - dimensions..].to_vec())
+                    } else {
+                        None
+                    };
 
                     (
                         smoothed_val,
@@ -563,10 +567,14 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     } else {
                         None
                     };
-                    let grad = result
-                        .gradient
-                        .as_ref()
-                        .map(|g| g[g.len() - dimensions..].to_vec());
+                    let grad = if self.config.return_gradient {
+                        result
+                            .gradient
+                            .as_ref()
+                            .map(|g| g[g.len() - dimensions..].to_vec())
+                    } else {
+                        None
+                    };
 
                     // Confidence/prediction interval bounds for the latest point, computed
                     // from the whole window's smoothed values/SE/residuals the same way

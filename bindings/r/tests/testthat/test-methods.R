@@ -154,6 +154,6 @@ test_that("retained prediction validates query shapes and gradient aliases", {
     gradient <- predict(model, c(10, 11), outputs = "gradient")
     derivative <- predict(model, c(10, 11), outputs = "derivative")
     expect_equal(gradient$derivative, c(2, 2), tolerance = 1e-10)
-    expect_equal(gradient, derivative)
+    expect_identical(gradient, derivative)
     expect_false("derivative" %in% names(predict(model, 5)))
 })
