@@ -21,9 +21,12 @@ reference:
       - process_chunk
       - finalize
       - add_point
+      - window_diagnostics
       - plot.LoessResult
       - predict.Loess
+      - predict_window
       - cv_opts
+      - intervals_opts
       - print.Loess
       - print.LoessResult
       - print.OnlineLoess
