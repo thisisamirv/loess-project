@@ -468,7 +468,7 @@ public:
   PredictResult predict(const std::vector<double> &new_x,
                         const PredictOptions &options = {}) const {
     validateOutputs(options.outputs, {"se", "gradient", "derivative"});
-    auto result = cpp_predict(
+    const auto result = cpp_predict(
         ptr_, new_x.data(), static_cast<size_t>(new_x.size()),
         hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
         options.intervals.prediction,
@@ -705,9 +705,15 @@ private:
 class Loess {
 public:
   explicit Loess(const LoessOptions &options = {}) {
-    validateOutputs(options.outputs,
-                    {"diagnostics", "residuals", "weights", "gradient",
-                     "derivative", "se", "sorted"});
+    validateOutputs(options.outputs, {
+                                         "diagnostics",
+                                         "residuals",
+                                         "weights",
+                                         "gradient",
+                                         "derivative",
+                                         "se",
+                                         "sorted",
+                                     });
     const auto &cv_fractions = options.cv.fractions;
     const auto &cv_method = options.cv.method;
     const int cv_k = options.cv.k;
@@ -783,7 +789,7 @@ public:
       return Expected<LoessResult>::make_error(
           "x length must be a non-zero multiple of y length");
     }
-    auto result = cpp_loess_fit(
+    const auto result = cpp_loess_fit(
         ptr_, x_values.data(), static_cast<size_t>(x_values.size()),
         y_values.data(), static_cast<size_t>(y_values.size()),
         custom_weights.empty() ? nullptr : custom_weights.data(),
@@ -807,8 +813,14 @@ private:
 class StreamingLoess {
 public:
   explicit StreamingLoess(const StreamingOptions &options = {}) {
-    validateOutputs(options.outputs, {"diagnostics", "residuals", "weights",
-                                      "gradient", "derivative", "se"});
+    validateOutputs(options.outputs, {
+                                         "diagnostics",
+                                         "residuals",
+                                         "weights",
+                                         "gradient",
+                                         "derivative",
+                                         "se",
+                                     });
     if (!options.cv.fractions.empty() || options.cv.method != "kfold" ||
         options.cv.k != detail::k_default_cv_k || options.seed.has_value() ||
         options.retain_model) {
@@ -875,7 +887,7 @@ public:
       return Expected<LoessResult>::make_error("x and y length mismatch");
     }
 
-    auto result = cpp_streaming_process(
+    const auto result = cpp_streaming_process(
         ptr_, x_values.data(), static_cast<size_t>(x_values.size()),
         y_values.data(), static_cast<size_t>(y_values.size()));
 
@@ -897,7 +909,7 @@ public:
         x_values.size() % y_values.size() != 0) {
       return Expected<LoessResult>::make_error("x and y length mismatch");
     }
-    auto result = cpp_streaming_process_weighted(
+    const auto result = cpp_streaming_process_weighted(
         ptr_, x_values.data(), static_cast<size_t>(x_values.size()),
         y_values.data(), static_cast<size_t>(y_values.size()),
         custom_weights.data(), static_cast<size_t>(custom_weights.size()));
@@ -914,7 +926,7 @@ public:
     }
     expect_finalized_ = true;
 
-    auto result = cpp_streaming_finalize(ptr_);
+    const auto result = cpp_streaming_finalize(ptr_);
     LoessResult owned_result(result);
     if (result.error != nullptr) {
       return Expected<LoessResult>::make_error(owned_result.error());
@@ -1102,7 +1114,7 @@ public:
   predict_window(const std::vector<double> &new_x,
                  const PredictOptions &options = {}) const {
     validateOutputs(options.outputs, {"se", "gradient", "derivative"});
-    auto raw = cpp_online_predict_window(
+    const auto raw = cpp_online_predict_window(
         ptr_, new_x.data(), static_cast<size_t>(new_x.size()),
         hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
         options.intervals.prediction,

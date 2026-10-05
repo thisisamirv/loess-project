@@ -110,7 +110,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (linear local regression): 0.32737554007097225
+First smoothed value (linear local regression): 0.3273755400709722
 ----
 
 '''
@@ -157,7 +157,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (quadratic local regression): 0.06774573827605762
+First smoothed value (quadratic local regression): 0.06774573827605472
 ----
 
 '''
@@ -204,7 +204,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (cubic local regression): 0.24223407215665502
+First smoothed value (cubic local regression): 0.242234072156906
 ----
 
 '''
@@ -251,7 +251,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (quartic local regression): 0.23853339300114756
+First smoothed value (quartic local regression): 0.2385333929885781
 ----
 
 '''

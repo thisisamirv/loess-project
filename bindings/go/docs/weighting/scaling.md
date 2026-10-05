@@ -71,7 +71,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (mad scaling): 0.3851521721408433
+First smoothed value (mad scaling): 0.3851521721408432
 ```
 
 ---
@@ -122,7 +122,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (mar scaling): 0.38346278347676666
+First smoothed value (mar scaling): 0.3834627834767666
 ```
 
 ---
@@ -173,7 +173,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (mean scaling): 0.3836713912293716
+First smoothed value (mean scaling): 0.3836713912293715
 ```
 
 ---

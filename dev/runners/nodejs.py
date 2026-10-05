@@ -28,13 +28,19 @@ _MAX_ATTEMPTS = 3
 
 
 def _ensure_nodejs_selflink(nodejs_dir: Path) -> None:
-    """Create node_modules/fastloess shim so require('fastloess') resolves locally."""
+    """Create or update the local package shim, including its version subpath."""
     nm_fastloess = nodejs_dir / "node_modules" / "fastloess"
-    if nm_fastloess.exists():
+    index_path = nm_fastloess / "index.js"
+    index_source = "module.exports = require('../../');\n"
+    if nm_fastloess.exists() and (
+        not index_path.is_file()
+        or index_path.read_text(encoding="utf-8") != index_source
+    ):
         return
     nm_fastloess.mkdir(parents=True, exist_ok=True)
-    (nm_fastloess / "index.js").write_text(
-        "module.exports = require('../../');\n", encoding="utf-8"
+    index_path.write_text(index_source, encoding="utf-8")
+    (nm_fastloess / "version.js").write_text(
+        "module.exports = require('../../version.js');\n", encoding="utf-8"
     )
     (nm_fastloess / "package.json").write_text(
         '{"name":"fastloess","main":"index.js","version":"0.0.0"}\n',

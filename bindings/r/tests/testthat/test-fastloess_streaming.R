@@ -66,7 +66,10 @@ test_that("StreamingLoess custom weights downweight outliers", {
     plain_result <- process_chunk(plain, x, y)
 
     expect_lt(abs(weighted_result$y[6] - 11), abs(plain_result$y[6] - 11))
-    expect_error(process_chunk(weighted, x, y, custom_weights = 1), "one numeric value per observation")
+    expect_error(
+        process_chunk(weighted, x, y, custom_weights = 1),
+        "one numeric value per observation"
+    )
 })
 
 test_that("StreamingLoess handles different chunk sizes", {

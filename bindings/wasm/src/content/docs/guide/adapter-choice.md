@@ -56,8 +56,8 @@ console.log("R2:", result.diagnostics.r_squared);
 ```
 
 ```output
-95% CI at midpoint: [0.0004104796937607347, 0.14291505841208219]
-R2: 0.9614463018021439
+95% CI at midpoint: [0.00041543067589761007, 0.1429101074299454]
+R2: 0.9614463018021437
 ```
 
 ---
@@ -110,7 +110,7 @@ console.log("Smoothed y[0]:", result.y[0]);
 ```
 
 ```output
-Smoothed y[0]: 0.13084302660412322
+Smoothed y[0]: 0.1308430266041239
 ```
 
 ---

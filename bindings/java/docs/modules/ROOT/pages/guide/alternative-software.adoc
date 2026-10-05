@@ -136,7 +136,7 @@ public class AltSoftwareRobust {
 
 [source,console]
 ----
-Max abs difference: 2.6645352591003757E-15
+Max abs difference: 1.7763568394002505E-15
 ----
 
 '''

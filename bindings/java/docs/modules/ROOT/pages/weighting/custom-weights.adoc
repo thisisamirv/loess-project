@@ -132,7 +132,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (custom weights): 0.3133924139354197
+First smoothed value (custom weights): 0.3133924139354195
 ----
 
 '''
@@ -176,7 +176,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (custom weights): 0.32839570689121644
+First smoothed value (custom weights): 0.3283957068912162
 ----
 
 '''
@@ -218,7 +218,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (custom weights): 0.8673742206424481
+First smoothed value (custom weights): 0.867374220642448
 ----
 
 '''

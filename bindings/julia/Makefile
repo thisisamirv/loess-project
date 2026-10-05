@@ -144,7 +144,7 @@ _julia_checks_internal:
 	@echo "Doc snippet tests (julia)..."
 	@julia --project=$(JL_DIR)/julia/docs -e 'using Pkg; Pkg.develop(path="$(JL_DIR)/julia"); Pkg.instantiate()'
 	@$(PYTHON) dev/check_links.py --lang julia
-	@$(PYTHON) dev/verify_snippets.py --lang julia --timeout 120
+	@$(PYTHON) dev/verify_snippets.py --lang julia --update-outputs --timeout 120
 	@echo "$(JL_PKG) checks completed successfully!"
 	@echo ""
 	@echo "To use in Julia:"

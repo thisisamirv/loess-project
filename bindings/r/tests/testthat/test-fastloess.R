@@ -349,8 +349,8 @@ test_that("grouped cross-validation configures seeded folds", {
     expect_length(large_seed_result$cv_scores, 2L)
     expect_error(cv_opts(), "fractions")
     expect_error(cv_opts("invalid"), "fractions")
-    expect_error(cv_opts(c(0.5), seed = 42), "unused argument")
-    expect_error(Loess(cv_fractions = c(0.5)), "unused arguments")
+    expect_error(cv_opts(0.5, seed = 42), "unused argument")
+    expect_error(Loess(cv_fractions = 0.5), "unused arguments")
     expect_error(Loess(confidence_intervals = 0.95), "unused arguments")
     expect_error(
         StreamingLoess(confidence_intervals = 0.95),
@@ -362,12 +362,12 @@ test_that("grouped cross-validation configures seeded folds", {
         Loess(intervals = list(confidence_level = 0.95)),
         "Invalid `intervals` key"
     )
-    expect_error(Loess(cv = list(fractions = c(0.5), k = 2.5)), "whole number")
+    expect_error(Loess(cv = list(fractions = 0.5, k = 2.5)), "whole number")
     expect_error(
-        Loess(cv = list(fractions = c(0.5), typo = 3)),
+        Loess(cv = list(fractions = 0.5, typo = 3)),
         "Invalid `cv` key"
     )
-    expect_error(Loess(cv = unname(list(c(0.5)))), "named list")
+    expect_error(Loess(cv = unname(list(0.5))), "named list")
     expect_error(
         Loess(
             intervals = structure(

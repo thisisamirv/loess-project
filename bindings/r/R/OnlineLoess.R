@@ -15,7 +15,6 @@
 #' @srrstats {G1.6} Sliding window for incremental updates.
 #'
 #' @inheritParams Loess
-#' @param intervals Grouped coverage levels from \code{\link{intervals_opts}}.
 #' @param outputs Optional character vector selecting \code{"weights"},
 #'   \code{"gradient"} (or \code{"derivative"}), and \code{"se"}.
 #'   \code{NULL} (default) selects no optional components; \code{"se"}

@@ -56,6 +56,8 @@ end
 For multivariate input, configure `dimensions` and pass one coordinate vector per update:
 
 ```julia
+using FastLOESS
+
 online2d = OnlineLoess(dimensions=2, surface_mode="direct")
 result = add_point(online2d, [0.5, 1.25], 2.0)
 ```

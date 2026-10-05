@@ -148,7 +148,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (custom weights): 0.3133924139354199
+First smoothed value (custom weights): 0.31339241393541944
 ```
 
 ---
@@ -201,7 +201,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (custom weights): 0.3283957068912162
+First smoothed value (custom weights): 0.3283957068912164
 ```
 
 ---
@@ -254,7 +254,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (custom weights): 0.8673742206424481
+First smoothed value (custom weights): 0.867374220642448
 ```
 
 ---

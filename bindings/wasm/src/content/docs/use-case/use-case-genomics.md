@@ -38,7 +38,7 @@ console.log("CI lower[0]:", result.confidence_lower[0].toFixed(4));
 ```
 
 ```output
-CI lower[0]: 36.2283
+CI lower[0]: 36.6609
 ```
 
 ---

@@ -85,7 +85,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (huber robustness): 0.38558472729724125
+First smoothed value (huber robustness): 0.38558472729724136
 ```
 
 ---
@@ -246,5 +246,5 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (auto-converge): 0.385251011791276
+First smoothed value (auto-converge): 0.3852510117912758
 ```

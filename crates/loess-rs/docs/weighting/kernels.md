@@ -88,7 +88,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (epanechnikov kernel): 0.39850349766212073
+First smoothed value (epanechnikov kernel): 0.39850349766212056
 ```
 
 ---
@@ -121,7 +121,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (gaussian kernel): 0.40202286297371675
+First smoothed value (gaussian kernel): 0.30867217313009426
 ```
 
 ---
@@ -154,7 +154,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (biweight kernel): 0.38497927398395515
+First smoothed value (biweight kernel): 0.38497927398395493
 ```
 
 ---
@@ -187,7 +187,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (cosine kernel): 0.3966042541358943
+First smoothed value (cosine kernel): 0.39660425413589423
 ```
 
 ---
@@ -220,7 +220,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (triangle kernel): 0.3921003596819943
+First smoothed value (triangle kernel): 0.39210035968199425
 ```
 
 ---
@@ -253,7 +253,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (uniform kernel): 0.39988697926380407
+First smoothed value (uniform kernel): 0.39988697926380445
 ```
 
 ---

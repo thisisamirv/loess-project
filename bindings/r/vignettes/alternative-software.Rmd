@@ -60,7 +60,8 @@ reference_robust <- stats::loess(
 result_robust <- fit(
     Loess(
         fraction = 0.5, iterations = 3L, surface_mode = "direct",
-        zero_weight_fallback = "return_original", boundary_policy = "noboundary",
+        zero_weight_fallback = "return_original",
+        boundary_policy = "noboundary",
         scaling_method = "mar", parallel = FALSE
     ),
     x, y

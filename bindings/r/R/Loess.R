@@ -149,47 +149,8 @@ Loess <- function(
         dimensions = dimensions,
         interpolation_vertices = interpolation_vertices
     )
-    interval_options <- parse_intervals_options(intervals)
-    confidence_intervals <- interval_options$confidence
-    prediction_intervals <- interval_options$prediction
-    if (!is.null(cv)) {
-        validate_named_options(cv, c("fractions", "method", "k"), "cv")
-        cv <- do.call(cv_opts, cv)
-    }
-    cv_fractions <- cv$fractions
-    cv_method <- if (is.null(cv$method)) "kfold" else cv$method
-    cv_k <- if (is.null(cv$k)) 5L else cv$k
-    cv_seed <- seed
-    if (!is.null(seed)) {
-        validate_scalar_numeric(seed, "seed")
-        if (
-            !is.finite(seed) || seed < 0 || seed != floor(seed) || seed > 2^53
-        ) {
-            stop(
-                "seed must be a non-negative whole number up to 2^53",
-                call. = FALSE
-            )
-        }
-    }
-    flags <- parse_outputs_flags(
-        outputs,
-        c(
-            "diagnostics",
-            "residuals",
-            "weights",
-            "gradient",
-            "derivative",
-            "se",
-            "sorted"
-        )
-    )
-    return_diagnostics <- flags[["diagnostics"]]
-    return_residuals <- flags[["residuals"]]
-    return_robustness_weights <- flags[["weights"]]
-    return_gradient <- flags[["gradient"]] || flags[["derivative"]]
-    return_se <- flags[["se"]]
-    return_sorted <- flags[["sorted"]]
-    handle <- do.call(RLoess$new, env_args(loess_params))
+    grouped_args <- parse_loess_grouped_args(outputs, intervals, cv, seed)
+    handle <- do.call(RLoess$new, env_args(loess_params, grouped_args))
 
     structure(
         list(
@@ -211,6 +172,55 @@ Loess <- function(
     )
 }
 
+parse_loess_grouped_args <- function(outputs, intervals, cv, seed) {
+    interval_options <- parse_intervals_options(intervals)
+    if (!is.null(cv)) {
+        validate_named_options(cv, c("fractions", "method", "k"), "cv")
+        cv <- do.call(cv_opts, cv)
+    }
+    validate_loess_seed(seed)
+
+    flags <- parse_outputs_flags(
+        outputs,
+        c(
+            "diagnostics",
+            "residuals",
+            "weights",
+            "gradient",
+            "derivative",
+            "se",
+            "sorted"
+        )
+    )
+    list(
+        confidence_intervals = interval_options$confidence,
+        prediction_intervals = interval_options$prediction,
+        cv_fractions = cv$fractions,
+        cv_method = if (is.null(cv$method)) "kfold" else cv$method,
+        cv_k = if (is.null(cv$k)) 5L else cv$k,
+        cv_seed = seed,
+        return_diagnostics = flags[["diagnostics"]],
+        return_residuals = flags[["residuals"]],
+        return_robustness_weights = flags[["weights"]],
+        return_gradient = flags[["gradient"]] || flags[["derivative"]],
+        return_se = flags[["se"]],
+        return_sorted = flags[["sorted"]]
+    )
+}
+
+validate_loess_seed <- function(seed) {
+    if (is.null(seed)) {
+        return(invisible(NULL))
+    }
+    validate_scalar_numeric(seed, "seed")
+    if (seed < 0 || seed != floor(seed) || seed > 2^53) {
+        stop(
+            "seed must be a non-negative whole number up to 2^53",
+            call. = FALSE
+        )
+    }
+}
+
 #' Cross-validation options for \code{\link{Loess}}
 #'
 #' @param fractions Numeric vector of candidate smoothing fractions.
@@ -221,6 +231,19 @@ Loess <- function(
 #' model <- Loess(cv = cv_opts(fractions = c(0.2, 0.3, 0.5)))
 #' @export
 cv_opts <- function(fractions, method = "kfold", k = 5L) {
+    validate_cv_fractions(fractions)
+    validate_cv_folds(method, k)
+    structure(
+        list(
+            fractions = as.double(fractions),
+            method = method,
+            k = as.integer(k)
+        ),
+        class = "cv_opts"
+    )
+}
+
+validate_cv_fractions <- function(fractions) {
     if (missing(fractions) || is.null(fractions)) {
         stop(
             "`fractions` must be a numeric vector of candidate fractions",
@@ -231,12 +254,15 @@ cv_opts <- function(fractions, method = "kfold", k = 5L) {
     if (length(fractions) == 0L) {
         stop("`fractions` must be a non-empty numeric vector", call. = FALSE)
     }
-    if (any(!is.finite(fractions)) || any(fractions <= 0 | fractions > 1)) {
+    if (!all(is.finite(fractions)) || any(fractions <= 0 | fractions > 1)) {
         stop(
             "`fractions` must be finite values greater than 0 and at most 1",
             call. = FALSE
         )
     }
+}
+
+validate_cv_folds <- function(method, k) {
     if (!is.character(method) || length(method) != 1L || is.na(method)) {
         stop("`method` must be a single character value", call. = FALSE)
     }
@@ -244,14 +270,6 @@ cv_opts <- function(fractions, method = "kfold", k = 5L) {
     if (tolower(method) %in% c("kfold", "k_fold", "k-fold") && k < 2) {
         stop("k-fold CV requires at least 2 folds", call. = FALSE)
     }
-    structure(
-        list(
-            fractions = as.double(fractions),
-            method = method,
-            k = as.integer(k)
-        ),
-        class = "cv_opts"
-    )
 }
 
 #' Interval options for fitting and prediction
@@ -269,7 +287,7 @@ intervals_opts <- function(confidence = NULL, prediction = NULL) {
         if (!is.null(level)) {
             validate_scalar_numeric(level, name)
             if (!is.finite(level) || level <= 0 || level >= 1) {
-                stop(paste(name, "must be between 0 and 1"), call. = FALSE)
+                stop(name, " must be between 0 and 1", call. = FALSE)
             }
         }
     }

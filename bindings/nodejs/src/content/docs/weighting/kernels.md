@@ -101,7 +101,7 @@ console.log("y[0]:", result.y[0].toFixed(4));
 ```
 
 ```output
-y[0]: 0.1708
+y[0]: 0.0808
 ```
 
 ---

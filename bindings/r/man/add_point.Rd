@@ -19,7 +19,8 @@ dimension. For one-dimensional models, a scalar is also accepted.}
 
 \item{y}{A single numeric y value.}
 
-\item{weight}{Finite non-negative case weight for this observation; defaults to 1.}
+\item{weight}{Finite non-negative case weight for this observation; defaults
+to 1.}
 }
 \value{
 An online result list, or \code{NULL} if fewer than

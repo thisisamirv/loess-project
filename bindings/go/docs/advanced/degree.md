@@ -122,7 +122,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (linear local regression): 0.32737554007097236
+First smoothed value (linear local regression): 0.3273755400709722
 ```
 
 ---
@@ -174,7 +174,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (quadratic local regression): 0.06774573827605593
+First smoothed value (quadratic local regression): 0.06774573827607189
 ```
 
 ---
@@ -226,7 +226,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (cubic local regression): 0.24223407215670598
+First smoothed value (cubic local regression): 0.24223407215683598
 ```
 
 ---
@@ -278,7 +278,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (quartic local regression): 0.23853339300125218
+First smoothed value (quartic local regression): 0.2385333929886238
 ```
 
 ---

@@ -1167,6 +1167,15 @@ pub unsafe extern "C" fn cpp_streaming_process(
     })
 }
 
+/// Process a chunk of data with per-observation case weights.
+///
+/// # Safety
+/// `ptr` must be null or point to a live `CppStreamingLoess` created by
+/// `cpp_streaming_new`, with exclusive access for the duration of this call.
+/// Non-null `x_values`, `y_values`, and `weights` must point to aligned,
+/// initialized arrays readable for `x_n`, `y_n`, and `weights_n` elements,
+/// respectively. The arrays must remain valid and unmodified during this call
+/// and must not overlap the model being mutated.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_streaming_process_weighted(
     ptr: *mut CppStreamingLoess,
@@ -1492,6 +1501,11 @@ pub unsafe extern "C" fn cpp_online_add_point_nd(
     }
 }
 
+/// Add a weighted one-dimensional point to the model.
+///
+/// # Safety
+/// `ptr` must be null or point to a live `CppOnlineLoess` created by
+/// `cpp_online_new`, with exclusive access for the duration of this call.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_online_add_point_weighted(
     ptr: *mut CppOnlineLoess,
@@ -1507,6 +1521,14 @@ pub unsafe extern "C" fn cpp_online_add_point_weighted(
     }
 }
 
+/// Add a weighted point with one coordinate per predictor dimension.
+///
+/// # Safety
+/// `ptr` must be null or point to a live `CppOnlineLoess` created by
+/// `cpp_online_new`, with exclusive access for the duration of this call.
+/// Non-null `x_values` must point to an aligned, initialized array readable
+/// for `x_n` elements. The array must remain valid and unmodified during this
+/// call and must not overlap the model being mutated.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_online_add_point_nd_weighted(
     ptr: *mut CppOnlineLoess,
@@ -1527,6 +1549,11 @@ pub unsafe extern "C" fn cpp_online_add_point_nd_weighted(
     }
 }
 
+/// Compute diagnostics for the current online window.
+///
+/// # Safety
+/// `ptr` must be null or point to a live `CppOnlineLoess` created by
+/// `cpp_online_new`. The model must not be mutated or freed during this call.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_online_window_diagnostics(
     ptr: *mut CppOnlineLoess,
@@ -1578,6 +1605,14 @@ pub unsafe extern "C" fn cpp_online_window_diagnostics(
     }
 }
 
+/// Free the error string owned by an online diagnostics result.
+///
+/// # Safety
+/// `result` must be null or point to a valid, writable `CppOnlineDiagnostics`
+/// returned by `cpp_online_window_diagnostics`, with exclusive access during
+/// this call. Its non-null error pointer must be unchanged and not previously
+/// freed through another copy of the result. The result structure itself is
+/// not freed by this function.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn cpp_online_free_diagnostics(result: *mut CppOnlineDiagnostics) {
     with_panic_void(|| {
@@ -1589,6 +1624,15 @@ pub unsafe extern "C" fn cpp_online_free_diagnostics(result: *mut CppOnlineDiagn
     });
 }
 
+/// Predict at query points using the current online window.
+///
+/// # Safety
+/// `ptr` must be null or point to a live `CppOnlineLoess` created by
+/// `cpp_online_new`. The model must not be mutated or freed during this call.
+/// Non-null `new_x` must point to an aligned, initialized array readable for
+/// `new_x_len` elements. `extrapolation` must be null or point to a valid
+/// null-terminated C string. Both inputs must remain valid and unmodified for
+/// the duration of this call.
 #[unsafe(no_mangle)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe extern "C" fn cpp_online_predict_window(

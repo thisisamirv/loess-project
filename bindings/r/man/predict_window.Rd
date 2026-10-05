@@ -2,9 +2,21 @@
 % Please edit documentation in R/methods.R
 \name{predict_window}
 \alias{predict_window}
+\alias{predict_window.OnlineLoess}
 \title{Predict from the current Online window}
 \usage{
 predict_window(model, ...)
+
+\method{predict_window}{OnlineLoess}(
+  model,
+  new_x,
+  outputs = NULL,
+  intervals = NULL,
+  extrapolation = "clamp",
+  max_extrapolation_distance = NULL,
+  max_neighbor_distance = NULL,
+  ...
+)
 }
 \arguments{
 \item{model}{An OnlineLoess object.}
@@ -16,18 +28,28 @@ predict_window(model, ...)
 \item{outputs}{Optional character vector selecting \code{"se"} and/or
 \code{"gradient"} (alias \code{"derivative"}).}
 
-\item{intervals}{Grouped confidence and prediction coverage levels.}
+\item{intervals}{Grouped coverage levels from \code{\link{intervals_opts}}.}
 
 \item{extrapolation}{Behavior outside the window's predictor bounds:
 \code{"clamp"} (default), \code{"linear"}, or \code{"error"}.}
 
 \item{max_extrapolation_distance}{Optional cap for linear extrapolation.}
 
-\item{max_neighbor_distance}{Optional cap for sparse-neighborhood predictions.}
+\item{max_neighbor_distance}{Optional cap for sparse-neighborhood
+predictions.}
 }
 \value{
 A list containing predicted values and requested optional outputs.
 }
 \description{
 Predict from the current Online window
+}
+\examples{
+model <- OnlineLoess(
+    fraction = 1, window_capacity = 20L, surface_mode = "direct"
+)
+for (x in 1:10) {
+    invisible(add_point(model, x, 2 * x + 1))
+}
+predict_window(model, c(4.5, 5.5), outputs = "gradient")
 }

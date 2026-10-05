@@ -99,7 +99,7 @@ test_that("grouped options require unique known names", {
     )
     expect_error(
         validate_named_options(
-            list(fractions = 1, fractions = 2),
+            setNames(list(1, 2), rep("fractions", 2)),
             "fractions",
             "cv"
         ),
@@ -211,4 +211,68 @@ test_that("OnlineLoess constructor coerces all param types via env_args", {
         update_mode = "incremental"
     )
     expect_s3_class(model, "OnlineLoess")
+})
+
+test_that("validation handles empty, matrix and flattened coordinates", {
+    for (xy in list(list(numeric(), numeric()), list(numeric(), 1:2))) {
+        expect_error(
+            validate_common_args(xy[[1]], xy[[2]], 0.5, 0),
+            "rows must match"
+        )
+    }
+    coordinates <- matrix(1:6, nrow = 3)
+    result <- validate_common_args(coordinates, 1:3, 0.5, 0)
+    expect_identical(result$x, as.double(t(coordinates)))
+    result <- validate_common_args(1:6, 1:3, 0.5, 1000)
+    expect_identical(result$x, as.double(1:6))
+    expect_identical(result$iterations, 1000L)
+    for (value in list(NULL, "bad", c(0, 1), NA_real_, Inf, -1, 1.5, 1001)) {
+        expect_error(
+            validate_common_args(1:3, 1:3, 0.5, value),
+            "iterations must be a non-negative integer"
+        )
+    }
+})
+
+test_that("constructor count validation checks upper and lower limits", {
+    expect_error(validate_params(0.5, iterations = 1001), "0 and 1000")
+    expect_error(validate_params(0.5, min_points = 1), "at least 2")
+    expect_error(validate_params(0.5, window_capacity = 0), "positive integer")
+    expect_error(validate_params(0.5, overlap = -1), "non-negative integer")
+})
+
+test_that("grouped options reject malformed names and containers", {
+    for (options in list(1, list(1), setNames(list(1), NA_character_))) {
+        expect_error(
+            validate_named_options(options, "fractions", "cv"),
+            "named list"
+        )
+    }
+})
+
+test_that("CV options validate fraction, method and fold boundaries", {
+    expect_error(cv_opts(NULL), "candidate fractions")
+    expect_error(cv_opts(numeric()), "non-empty")
+    for (fractions in list(NA_real_, Inf, 0, -0.1, 1.1)) {
+        expect_error(cv_opts(fractions), "finite values")
+    }
+    for (method in list(1, character(), c("kfold", "loocv"), NA_character_)) {
+        expect_error(cv_opts(0.5, method = method), "single character")
+    }
+    for (method in c("kfold", "k_fold", "k-fold", "KFOLD")) {
+        expect_error(cv_opts(0.5, method = method, k = 1), "at least 2 folds")
+    }
+    expect_identical(cv_opts(1, method = "loocv", k = 1)$k, 1L)
+    expect_identical(cv_opts(c(0.2, 1), k = 2)$fractions, c(0.2, 1))
+})
+
+test_that("Loess seed validation rejects invalid and accepts boundary values", {
+    for (seed in list(-1, 1.5, 2^53 + 2)) {
+        expect_error(Loess(seed = seed), "non-negative whole number")
+    }
+    for (seed in list("bad", NA_real_, Inf)) {
+        expect_error(Loess(seed = seed), "single numeric value")
+    }
+    expect_s3_class(Loess(seed = 0), "Loess")
+    expect_s3_class(Loess(seed = 2^53), "Loess")
 })

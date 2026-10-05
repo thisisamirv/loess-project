@@ -1353,6 +1353,12 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
     })
 }
 
+/// Return diagnostics for the current OnlineLowess window.
+///
+/// # Safety
+/// `ptr` may be null, in which case an error result is returned. Otherwise, it must be an
+/// aligned pointer to a live `JlOnlineLoess` created by `jl_online_loess_new`, and it must not be
+/// mutated or freed until this function returns.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_online_loess_window_diagnostics(
     ptr: *mut JlOnlineLoess,
@@ -1392,6 +1398,12 @@ pub unsafe extern "C" fn jl_online_loess_window_diagnostics(
     })
 }
 
+/// Free the owned error string in an OnlineLowess diagnostics result.
+///
+/// # Safety
+/// `diagnostics` may be null. Otherwise, it must point to a valid, initialized, writable
+/// `JlOnlineDiagnostics`. Its `error` field must be null or an unfreed C string allocated by this
+/// library; the diagnostics value must not be accessed concurrently during this call.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn jl_online_free_diagnostics(diagnostics: *mut JlOnlineDiagnostics) {
     if !diagnostics.is_null() {
@@ -1402,6 +1414,15 @@ pub unsafe extern "C" fn jl_online_free_diagnostics(diagnostics: *mut JlOnlineDi
 
 #[unsafe(no_mangle)]
 #[allow(clippy::too_many_arguments)]
+/// Predict values for query coordinates against the current OnlineLowess window.
+///
+/// # Safety
+/// `ptr` may be null, in which case an error result is returned. Otherwise, it must be an aligned
+/// pointer to a live `JlOnlineLoess` created by `jl_online_loess_new`, and it must not be mutated
+/// or freed until this function returns. When `new_x_n` is nonzero, a non-null `new_x` must point
+/// to one allocation containing at least `new_x_n` initialized, readable, aligned `c_double`
+/// values, with the total size no greater than `isize::MAX`. If `extrapolation` is non-null, it
+/// must point to a readable NUL-terminated C string for the duration of the call.
 pub unsafe extern "C" fn jl_online_loess_predict_window(
     ptr: *mut JlOnlineLoess,
     new_x: *const c_double,

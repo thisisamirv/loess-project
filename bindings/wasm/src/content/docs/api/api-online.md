@@ -62,6 +62,8 @@ Smoothed y: 0.22659245357374927
 For multivariate models, set `dimensions` and pass a `Float64Array` with one coordinate per dimension to `add_point_vector()`:
 
 ```javascript
+const { OnlineLoess } = require('fastloess-wasm');
+
 const online2d = new OnlineLoess(
  { dimensions: 2, surface_mode: 'direct', outputs: ['gradient'] },
  { window_capacity: 10, min_points: 3 }

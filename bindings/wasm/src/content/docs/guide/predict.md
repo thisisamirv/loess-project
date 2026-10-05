@@ -95,7 +95,7 @@ console.log(prediction.y, prediction.standard_errors, prediction.derivative);
 ```
 
 ```output
-Float64Array(1) [ 5.1 ] Float64Array(1) [ 0 ] Float64Array(1) [ 2.2 ]
+Float64Array(1) [ 5.1 ] undefined Float64Array(1) [ 2.2000000000000006 ]
 ```
 
 ### Linear Extrapolation

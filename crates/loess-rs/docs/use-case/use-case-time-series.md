@@ -38,7 +38,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (fraction=0.1): 10.093542139519066
+First smoothed value (fraction=0.1): 10.093542139519057
 ```
 
 ---
@@ -76,7 +76,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First residual: -0.14731032286452259
+First residual: -0.14731032286452264
 ```
 
 ---
@@ -111,7 +111,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First point 95% CI: [0.1978029930337883, 0.20299753584186697]
+First point 95% CI: [0.1978029930337881, 0.20299753584186683]
 ```
 
 ---
@@ -140,7 +140,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (fraction=0.2): 10.805209531654254
+First smoothed value (fraction=0.2): 10.80520953165424
 ```
 
 ---
@@ -172,9 +172,9 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (fraction=0.05): 0.01070320999232197
-First smoothed value (fraction=0.2): 0.20040026443782763
-First smoothed value (fraction=0.5): 0.3273755400709721
+First smoothed value (fraction=0.05): 0.03842391965656453
+First smoothed value (fraction=0.2): 0.20040026443782746
+First smoothed value (fraction=0.5): 0.32737554007097214
 ```
 
 ---

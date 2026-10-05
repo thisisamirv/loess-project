@@ -27,7 +27,7 @@ if project_name != "FastLOESS"
     project_root = dirname(dirname(script_dir))
     julia_pkg_dir = joinpath(project_root, "bindings", "julia", "julia")
     if !haskey(Pkg.project().dependencies, "FastLOESS")
-        Pkg.develop(path=julia_pkg_dir)
+        Pkg.develop(path = julia_pkg_dir)
     end
 end
 
@@ -46,7 +46,7 @@ using FastLOESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Loess(fraction=0.5)
+            model = Loess(fraction = 0.5)
             result = fit(model, x, y)
 
             @test result isa LoessResult
@@ -58,7 +58,7 @@ using FastLOESS
         @testset "multivariate vector input is rejected" begin
             x = collect(1.0:8.0)
             y = 2.0 .* x
-            model = Loess(dimensions=2)
+            model = Loess(dimensions = 2)
             @test_throws ArgumentError fit(model, x, y)
         end
 
@@ -66,9 +66,9 @@ using FastLOESS
             x = collect(1.0:8.0)
             y = 2.0 .* x
             one_dimensional =
-                fit(Loess(surface_mode="direct", outputs=["gradient"]), x, y)
+                fit(Loess(surface_mode = "direct", outputs = ["gradient"]), x, y)
             two_dimensional = fit(
-                Loess(dimensions=2, surface_mode="direct", outputs=["gradient"]),
+                Loess(dimensions = 2, surface_mode = "direct", outputs = ["gradient"]),
                 hcat(x, x .^ 2),
                 y,
             )
@@ -83,7 +83,7 @@ using FastLOESS
             x2 = [1.0, 2.0, 3.0]
             y2 = [1.0, 2.0, 3.0]
 
-            model = Loess(fraction=0.5)
+            model = Loess(fraction = 0.5)
 
             # First fit
             result1 = fit(model, x1, y1)
@@ -98,7 +98,7 @@ using FastLOESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Loess(fraction=0.5, parallel=false)
+            model = Loess(fraction = 0.5, parallel = false)
             result = fit(model, x, y)
 
             @test result isa LoessResult
@@ -109,7 +109,7 @@ using FastLOESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Loess(fraction=0.5, outputs=["diagnostics"])
+            model = Loess(fraction = 0.5, outputs = ["diagnostics"])
             result = fit(model, x, y)
 
             @test result.diagnostics !== nothing
@@ -127,7 +127,7 @@ using FastLOESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Loess(fraction=0.5, outputs=["residuals"])
+            model = Loess(fraction = 0.5, outputs = ["residuals"])
             result = fit(model, x, y)
 
             @test result.residuals !== nothing
@@ -138,7 +138,7 @@ using FastLOESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 100.0, 8.2, 9.8]  # Outlier
 
-            model = Loess(fraction=0.7, iterations=3, outputs=["weights"])
+            model = Loess(fraction = 0.7, iterations = 3, outputs = ["weights"])
             result = fit(model, x, y)
 
             @test result.robustness_weights !== nothing
@@ -151,7 +151,7 @@ using FastLOESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.1, 5.9, 8.2, 9.8]
 
-            model = Loess(fraction=0.7, surface_mode="direct", outputs=["gradient"])
+            model = Loess(fraction = 0.7, surface_mode = "direct", outputs = ["gradient"])
             result = fit(model, x, y)
 
             @test result.gradient !== nothing
@@ -163,10 +163,10 @@ using FastLOESS
             y = [6.2, 2.1, 4.0, 8.1, 10.2]
             result = fit(
                 Loess(
-                    fraction=1.0,
-                    surface_mode="direct",
-                    retain_model=true,
-                    outputs=[
+                    fraction = 1.0,
+                    surface_mode = "direct",
+                    retain_model = true,
+                    outputs = [
                         "diagnostics",
                         "residuals",
                         "weights",
@@ -187,25 +187,25 @@ using FastLOESS
             @test issorted(result.x)
 
             prediction =
-                predict(result.predict_model, [2.5]; outputs=["se", "derivative"])
+                predict(result.predict_model, [2.5]; outputs = ["se", "derivative"])
             @test prediction.standard_errors !== nothing
             @test prediction.derivative !== nothing
 
             default_prediction = predict(result.predict_model, [2.5])
             @test default_prediction.standard_errors === nothing
             @test default_prediction.derivative === nothing
-            se_prediction = predict(result.predict_model, [2.5]; outputs=["se"])
+            se_prediction = predict(result.predict_model, [2.5]; outputs = ["se"])
             @test se_prediction.standard_errors !== nothing
             @test se_prediction.derivative === nothing
             gradient_prediction =
-                predict(result.predict_model, [2.5]; outputs=["gradient"])
+                predict(result.predict_model, [2.5]; outputs = ["gradient"])
             @test gradient_prediction.derivative ≈ prediction.derivative
 
             stream = StreamingLoess(
-                fraction=0.5,
-                chunk_size=10,
-                surface_mode="direct",
-                outputs=["residuals", "weights", "gradient", "se"],
+                fraction = 0.5,
+                chunk_size = 10,
+                surface_mode = "direct",
+                outputs = ["residuals", "weights", "gradient", "se"],
             )
             stream_result = process_chunk(stream, collect(1.0:10.0), collect(2.0:2.0:20.0))
             @test stream_result.residuals !== nothing
@@ -214,12 +214,12 @@ using FastLOESS
             @test stream_result.standard_errors !== nothing
 
             online = OnlineLoess(
-                fraction=1.0,
-                window_capacity=10,
-                min_points=3,
-                update_mode="full",
-                surface_mode="direct",
-                outputs=["weights", "gradient", "se"],
+                fraction = 1.0,
+                window_capacity = 10,
+                min_points = 3,
+                update_mode = "full",
+                surface_mode = "direct",
+                outputs = ["weights", "gradient", "se"],
             )
             online_result = nothing
             for i ∈ 1:5
@@ -230,20 +230,20 @@ using FastLOESS
             @test online_result.gradient !== nothing
             @test online_result.standard_error !== nothing
 
-            @test_throws ArgumentError Loess(outputs=["unknown"])
-            @test_throws ArgumentError StreamingLoess(outputs=["sorted"])
-            @test_throws ArgumentError OnlineLoess(outputs=["residuals"])
+            @test_throws ArgumentError Loess(outputs = ["unknown"])
+            @test_throws ArgumentError StreamingLoess(outputs = ["sorted"])
+            @test_throws ArgumentError OnlineLoess(outputs = ["residuals"])
             @test_throws ArgumentError predict(
                 result.predict_model,
                 [2.5];
-                outputs=["residuals"],
+                outputs = ["residuals"],
             )
         end
 
         @testset "append rejects mismatched optional fields" begin
             x = collect(1.0:8.0)
             y = 2.0 .* x
-            with_se = fit(Loess(outputs=["se"]), x, y)
+            with_se = fit(Loess(outputs = ["se"]), x, y)
             without_se = fit(Loess(), x, y)
 
             @test_throws ArgumentError append!(with_se, without_se)
@@ -251,13 +251,13 @@ using FastLOESS
         end
 
         @testset "constructor validates interpolation vertices and full-width seeds" begin
-            @test_throws ArgumentError Loess(interpolation_vertices=-1)
+            @test_throws ArgumentError Loess(interpolation_vertices = -1)
             if Sys.WORD_SIZE == 64
                 model = Loess(
-                    cv=(fractions=[0.2, 0.3], k=3),
-                    seed=Int(typemax(UInt32)) + 1,
+                    cv = (fractions = [0.2, 0.3], k = 3),
+                    seed = Int(typemax(UInt32)) + 1,
                 )
-                x = collect(range(0, 10, length=20))
+                x = collect(range(0, 10, length = 20))
                 result = fit(model, x, sin.(x))
                 @test length(result.cv_scores) == 2
             end
@@ -265,10 +265,10 @@ using FastLOESS
 
         @testset "with confidence intervals" begin
             Random.seed!(42)
-            x = collect(range(0, 10, length=20))
+            x = collect(range(0, 10, length = 20))
             y = 2 .* x .+ randn(20)
 
-            model = Loess(fraction=0.5, intervals=(confidence=0.95,))
+            model = Loess(fraction = 0.5, intervals = (confidence = 0.95,))
             result = fit(model, x, y)
 
             @test result.confidence_lower !== nothing
@@ -280,10 +280,10 @@ using FastLOESS
 
         @testset "with prediction intervals" begin
             Random.seed!(42)
-            x = collect(range(0, 10, length=20))
+            x = collect(range(0, 10, length = 20))
             y = 2 .* x .+ randn(20)
 
-            model = Loess(fraction=0.5, intervals=(prediction=0.95,))
+            model = Loess(fraction = 0.5, intervals = (prediction = 0.95,))
             result = fit(model, x, y)
 
             @test result.prediction_lower !== nothing
@@ -296,7 +296,7 @@ using FastLOESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, NaN, 6.0, 8.0, 10.0]
 
-            model = Loess(fraction=0.5, missing="drop")
+            model = Loess(fraction = 0.5, missing = "drop")
             result = fit(model, x, y)
 
             @test length(result.y) == length(x) - 1
@@ -306,20 +306,20 @@ using FastLOESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, NaN, 6.0, 8.0, 10.0]
 
-            model = Loess(fraction=0.5)
+            model = Loess(fraction = 0.5)
             @test_throws ErrorException fit(model, x, y)
         end
     end
 
     @testset "Weight Functions" begin
-        x = collect(range(0, 10, length=20))
+        x = collect(range(0, 10, length = 20))
         y = sin.(x)
 
         kernels = ["tricube", "epanechnikov", "gaussian", "uniform", "biweight", "triangle"]
 
         for kernel ∈ kernels
             @testset "$kernel" begin
-                model = Loess(fraction=0.5, weight_function=kernel)
+                model = Loess(fraction = 0.5, weight_function = kernel)
                 result = fit(model, x, y)
                 @test length(result.y) == length(x)
             end
@@ -334,7 +334,7 @@ using FastLOESS
 
         for method ∈ methods
             @testset "$method" begin
-                model = Loess(fraction=0.7, iterations=3, robustness_method=method)
+                model = Loess(fraction = 0.7, iterations = 3, robustness_method = method)
                 result = fit(model, x, y)
                 @test length(result.y) == length(x)
             end
@@ -347,7 +347,7 @@ using FastLOESS
 
         for iterations ∈ [0, 1, 3, 5]
             @testset "iterations=$iterations" begin
-                model = Loess(fraction=0.7, iterations=iterations)
+                model = Loess(fraction = 0.7, iterations = iterations)
                 result = fit(model, x, y)
                 @test length(result.y) == length(x)
             end
@@ -360,12 +360,12 @@ using FastLOESS
             y = 2.0 .* x
             x_matrix = hcat(x, x .^ 2)
             stream = StreamingLoess(
-                fraction=0.5,
-                chunk_size=10,
-                overlap=2,
-                dimensions=2,
-                surface_mode="direct",
-                outputs=["gradient"],
+                fraction = 0.5,
+                chunk_size = 10,
+                overlap = 2,
+                dimensions = 2,
+                surface_mode = "direct",
+                outputs = ["gradient"],
             )
 
             @test_throws ArgumentError process_chunk(stream, x, y)
@@ -379,7 +379,7 @@ using FastLOESS
         end
 
         @testset "concurrent chunk processing is serialized" begin
-            stream = StreamingLoess(fraction=0.5, chunk_size=100, overlap=10)
+            stream = StreamingLoess(fraction = 0.5, chunk_size = 100, overlap = 10)
             tasks = [
                 Threads.@spawn process_chunk(stream, fill(1.0, 10), fill(1.0, 10)) for
                 _ ∈ 1:8
@@ -390,10 +390,10 @@ using FastLOESS
         end
 
         @testset "basic streaming" begin
-            x = collect(range(0, 1000, length=2000))
+            x = collect(range(0, 1000, length = 2000))
             y = sin.(x ./ 100)
 
-            stream = StreamingLoess(fraction=0.1, chunk_size=1000)
+            stream = StreamingLoess(fraction = 0.1, chunk_size = 1000)
 
             # First chunk
             r1 = process_chunk(stream, x[1:1000], y[1:1000])
@@ -411,10 +411,10 @@ using FastLOESS
 
         @testset "larger dataset streaming results" begin
             Random.seed!(42)
-            x = collect(range(0, 1000, length=5000))
+            x = collect(range(0, 1000, length = 5000))
             y = sin.(x ./ 100) .+ randn(5000) .* 0.1
 
-            stream = StreamingLoess(fraction=0.05, chunk_size=1500)
+            stream = StreamingLoess(fraction = 0.05, chunk_size = 1500)
 
             # We just verify it runs without error
             process_chunk(stream, x[1:2500], y[1:2500])
@@ -423,14 +423,14 @@ using FastLOESS
         end
 
         @testset "streaming accuracy" begin
-            x = collect(range(0, 100, length=200))
+            x = collect(range(0, 100, length = 200))
             y = 2 .* x .+ 1  # Perfect linear
 
-            stream = StreamingLoess(fraction=0.5, chunk_size=1000)
+            stream = StreamingLoess(fraction = 0.5, chunk_size = 1000)
             r1 = process_chunk(stream, x, y)
             r2 = finalize(stream)
 
-            model_batch = Loess(fraction=0.5)
+            model_batch = Loess(fraction = 0.5)
             result_batch = fit(model_batch, x, y)
 
             # Combine streaming results
@@ -440,11 +440,11 @@ using FastLOESS
         end
 
         @testset "missing = \"drop\" removes non-finite rows" begin
-            x = collect(range(0, 100, length=50))
+            x = collect(range(0, 100, length = 50))
             y = sin.(x ./ 10)
             y[5] = NaN
 
-            stream = StreamingLoess(fraction=0.1, chunk_size=50, missing="drop")
+            stream = StreamingLoess(fraction = 0.1, chunk_size = 50, missing = "drop")
             r1 = process_chunk(stream, x, y)
             r2 = finalize(stream)
 
@@ -452,10 +452,10 @@ using FastLOESS
         end
 
         @testset "return_se" begin
-            x = collect(range(0, 100, length=200))
+            x = collect(range(0, 100, length = 200))
             y = sin.(x ./ 10)
 
-            stream = StreamingLoess(fraction=0.3, chunk_size=100, outputs=["se"])
+            stream = StreamingLoess(fraction = 0.3, chunk_size = 100, outputs = ["se"])
             r1 = process_chunk(stream, x, y)
 
             @test r1.standard_errors !== nothing
@@ -463,13 +463,13 @@ using FastLOESS
         end
 
         @testset "confidence_intervals and prediction_intervals" begin
-            x = collect(range(0, 100, length=200))
+            x = collect(range(0, 100, length = 200))
             y = sin.(x ./ 10)
 
             stream = StreamingLoess(
-                fraction=0.3,
-                chunk_size=100,
-                intervals=(confidence=0.95, prediction=0.95),
+                fraction = 0.3,
+                chunk_size = 100,
+                intervals = (confidence = 0.95, prediction = 0.95),
             )
             r1 = process_chunk(stream, x, y)
 
@@ -487,25 +487,31 @@ using FastLOESS
             y[6] = 100.0
             weights = ones(length(y))
             weights[6] = 0.0
-            options = (fraction=1.0, chunk_size=10, overlap=0, iterations=0, surface_mode="direct")
+            options = (
+                fraction = 1.0,
+                chunk_size = 10,
+                overlap = 0,
+                iterations = 0,
+                surface_mode = "direct",
+            )
             weighted = StreamingLoess(; options...)
             plain = StreamingLoess(; options...)
-            weighted_result = process_chunk(weighted, x, y; custom_weights=weights)
+            weighted_result = process_chunk(weighted, x, y; custom_weights = weights)
             plain_result = process_chunk(plain, x, y)
             @test abs(weighted_result.y[6] - 11.0) < abs(plain_result.y[6] - 11.0)
-            @test_throws ArgumentError process_chunk(weighted, x, y; custom_weights=[1.0])
+            @test_throws ArgumentError process_chunk(weighted, x, y; custom_weights = [1.0])
         end
     end
 
     @testset "OnlineLoess" begin
         @testset "multivariate points" begin
             online = OnlineLoess(
-                fraction=1.0,
-                window_capacity=10,
-                min_points=3,
-                dimensions=2,
-                surface_mode="direct",
-                outputs=["gradient"],
+                fraction = 1.0,
+                window_capacity = 10,
+                min_points = 3,
+                dimensions = 2,
+                surface_mode = "direct",
+                outputs = ["gradient"],
             )
             points = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
             responses = [0.0, 1.0, 2.0, 3.0]
@@ -519,12 +525,12 @@ using FastLOESS
 
         @testset "weighted points, diagnostics, and current-window prediction" begin
             options = (
-                fraction=1.0,
-                iterations=0,
-                window_capacity=10,
-                min_points=10,
-                update_mode="full",
-                surface_mode="direct",
+                fraction = 1.0,
+                iterations = 0,
+                window_capacity = 10,
+                min_points = 10,
+                update_mode = "full",
+                surface_mode = "direct",
             )
             weighted = OnlineLoess(; options...)
             plain = OnlineLoess(; options...)
@@ -535,7 +541,7 @@ using FastLOESS
                 add_point(weighted, x, y; weight)
                 add_point(plain, x, y)
             end
-            @test_throws ErrorException add_point(weighted, 10.0, 21.0; weight=-1.0)
+            @test_throws ErrorException add_point(weighted, 10.0, 21.0; weight = -1.0)
             diagnostics = window_diagnostics(weighted)
             @test diagnostics !== nothing
             @test diagnostics.rmse > 0.0
@@ -545,7 +551,7 @@ using FastLOESS
         end
 
         @testset "concurrent updates are serialized" begin
-            model = OnlineLoess(window_capacity=64, min_points=2)
+            model = OnlineLoess(window_capacity = 64, min_points = 2)
             tasks = [Threads.@spawn add_point(model, 1.0, 1.0) for _ ∈ 1:32]
             results = fetch.(tasks)
             @test count(result -> result !== nothing, results) == 31
@@ -554,7 +560,7 @@ using FastLOESS
             x = collect(Float64, 1:10)
             y = collect(Float64, 2:2:20)
 
-            online = OnlineLoess(fraction=0.5, window_capacity=10, min_points=3)
+            online = OnlineLoess(fraction = 0.5, window_capacity = 10, min_points = 3)
             results = [add_point(online, x[i], y[i]) for i ∈ eachindex(x)]
 
             @test any(r !== nothing for r ∈ results)
@@ -563,10 +569,10 @@ using FastLOESS
 
         @testset "with noise" begin
             Random.seed!(42)
-            x = collect(range(0, 20, length=50))
+            x = collect(range(0, 20, length = 50))
             y = 2 .* x .+ randn(50)
 
-            online = OnlineLoess(fraction=0.3, window_capacity=20, min_points=5)
+            online = OnlineLoess(fraction = 0.3, window_capacity = 20, min_points = 5)
             results = [add_point(online, x[i], y[i]) for i ∈ eachindex(x)]
 
             @test any(r !== nothing for r ∈ results)
@@ -576,13 +582,13 @@ using FastLOESS
             x = collect(Float64, 0:99)
             y = 20.0 .+ 5.0 .* sin.(x .* 0.1)
 
-            o1 = OnlineLoess(fraction=0.3, window_capacity=50, update_mode="full")
+            o1 = OnlineLoess(fraction = 0.3, window_capacity = 50, update_mode = "full")
             results_full = [add_point(o1, x[i], y[i]) for i ∈ eachindex(x)]
 
             o2 = OnlineLoess(
-                fraction=0.3,
-                window_capacity=50,
-                update_mode="incremental",
+                fraction = 0.3,
+                window_capacity = 50,
+                update_mode = "incremental",
             )
             results_inc = [add_point(o2, x[i], y[i]) for i ∈ eachindex(x)]
 
@@ -591,34 +597,34 @@ using FastLOESS
         end
 
         @testset "missing = \"drop\" ignores non-finite point" begin
-            online = OnlineLoess(fraction=0.5, window_capacity=10, missing="drop")
+            online = OnlineLoess(fraction = 0.5, window_capacity = 10, missing = "drop")
             result = add_point(online, 1.0, NaN)
             @test result === nothing
         end
 
         @testset "return_se requires update_mode = full" begin
             @test_throws ErrorException OnlineLoess(
-                fraction=0.5,
-                window_capacity=10,
-                outputs=["se"],
+                fraction = 0.5,
+                window_capacity = 10,
+                outputs = ["se"],
             )
         end
 
         @testset "confidence_intervals requires update_mode = full" begin
             @test_throws ErrorException OnlineLoess(
-                fraction=0.5,
-                window_capacity=10,
-                intervals=(confidence=0.95,),
+                fraction = 0.5,
+                window_capacity = 10,
+                intervals = (confidence = 0.95,),
             )
         end
 
         @testset "confidence and prediction intervals under update_mode = full" begin
             online = OnlineLoess(
-                fraction=1.0,
-                window_capacity=10,
-                min_points=3,
-                update_mode="full",
-                intervals=(confidence=0.95, prediction=0.95),
+                fraction = 1.0,
+                window_capacity = 10,
+                min_points = 3,
+                update_mode = "full",
+                intervals = (confidence = 0.95, prediction = 0.95),
             )
 
             last_result = nothing
@@ -642,7 +648,7 @@ using FastLOESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [2.0, 4.0, 6.0, 8.0, 10.0]
 
-            model = Loess(fraction=0.5)
+            model = Loess(fraction = 0.5)
             result = fit(model, x, y)
 
             @test result.diagnostics === nothing
@@ -659,7 +665,7 @@ using FastLOESS
         x = [1.0, 2.0, 3.0, 4.0, 5.0]
         y = [2.0, 4.0, 6.0, 8.0, 10.0]  # Perfect linear
 
-        model = Loess(fraction=0.5, outputs=["diagnostics"])
+        model = Loess(fraction = 0.5, outputs = ["diagnostics"])
         result = fit(model, x, y)
 
         diag = result.diagnostics
@@ -674,7 +680,7 @@ using FastLOESS
             x = [1.0, 2.0]
             y = [2.0, 4.0]
 
-            model = Loess(fraction=1.0)
+            model = Loess(fraction = 1.0)
             result = fit(model, x, y)
             @test length(result.y) == 2
         end
@@ -682,10 +688,10 @@ using FastLOESS
         @testset "large dataset" begin
             Random.seed!(42)
             n = 1000
-            x = collect(range(0, 100, length=n))
+            x = collect(range(0, 100, length = n))
             y = sin.(x ./ 10) .+ randn(n) .* 0.1
 
-            model = Loess(fraction=0.1)
+            model = Loess(fraction = 0.1)
             result = fit(model, x, y)
             @test length(result.y) == n
         end
@@ -694,7 +700,7 @@ using FastLOESS
             x = [3.0, 1.0, 5.0, 2.0, 4.0]
             y = [6.0, 2.0, 10.0, 4.0, 8.0]
 
-            model = Loess(fraction=0.7)
+            model = Loess(fraction = 0.7)
             result = fit(model, x, y)
             @test length(result.y) == 5
         end
@@ -703,7 +709,7 @@ using FastLOESS
             x = [3.0, 1.0, 5.0, 2.0, 4.0]
             y = [6.0, 2.0, 10.0, 4.0, 8.0]
 
-            model = Loess(fraction=0.7)
+            model = Loess(fraction = 0.7)
             result = fit(model, x, y)
             @test result.x == x
         end
@@ -712,17 +718,17 @@ using FastLOESS
             x = [3.0, 1.0, 5.0, 2.0, 4.0]
             y = [6.0, 2.0, 10.0, 4.0, 8.0]
 
-            model = Loess(fraction=0.7, outputs=["residuals", "weights", "sorted"])
+            model = Loess(fraction = 0.7, outputs = ["residuals", "weights", "sorted"])
             result = fit(model, x, y)
 
             @test issorted(result.x)
             @test result.x != x
 
-            unsorted_model = Loess(fraction=0.7, outputs=["residuals", "weights"])
+            unsorted_model = Loess(fraction = 0.7, outputs = ["residuals", "weights"])
             unsorted_result = fit(unsorted_model, x, y)
 
             @test sort(collect(zip(result.x, result.y))) ==
-                sort(collect(zip(unsorted_result.x, unsorted_result.y)))
+                  sort(collect(zip(unsorted_result.x, unsorted_result.y)))
             @test length(result.residuals) == length(x)
             @test length(result.robustness_weights) == length(x)
         end
@@ -731,7 +737,7 @@ using FastLOESS
             x = [1.0, 1.0, 2.0, 2.0, 3.0]
             y = [2.0, 2.1, 4.0, 3.9, 6.0]
 
-            model = Loess(fraction=0.7)
+            model = Loess(fraction = 0.7)
             result = fit(model, x, y)
             @test length(result.y) == 5
         end
@@ -740,7 +746,7 @@ using FastLOESS
             x = [1.0, 2.0, 3.0, 4.0, 5.0]
             y = [5.0, 5.0, 5.0, 5.0, 5.0]
 
-            model = Loess(fraction=0.5)
+            model = Loess(fraction = 0.5)
             result = fit(model, x, y)
             @test result.y ≈ y rtol = 1e-10
         end
@@ -748,19 +754,19 @@ using FastLOESS
 
     @testset "Cross-Validation" begin
         @testset "grouped CV" begin
-            x = collect(range(0, 10, length=30))
+            x = collect(range(0, 10, length = 30))
             y = x .^ 2
-            model = Loess(cv=(fractions=[0.3, 0.5], method="kfold", k=3), seed=42)
+            model = Loess(cv = (fractions = [0.3, 0.5], method = "kfold", k = 3), seed = 42)
             result = fit(model, x, y)
             @test result.fraction_used in [0.3, 0.5]
             @test length(result.cv_scores) == 2
         end
 
         @testset "basic CV" begin
-            x = collect(range(0, 10, length=50))
+            x = collect(range(0, 10, length = 50))
             y = 2 .* x .+ sin.(x)
 
-            model = Loess(cv=(fractions=[0.2, 0.3, 0.5, 0.7],))
+            model = Loess(cv = (fractions = [0.2, 0.3, 0.5, 0.7],))
             result = fit(model, x, y)
 
             @test result.fraction_used in [0.2, 0.3, 0.5, 0.7]
@@ -768,20 +774,20 @@ using FastLOESS
         end
 
         @testset "k-fold CV" begin
-            x = collect(range(0, 10, length=30))
+            x = collect(range(0, 10, length = 30))
             y = x .^ 2
 
-            model = Loess(cv=(fractions=[0.3, 0.5], method="kfold", k=5))
+            model = Loess(cv = (fractions = [0.3, 0.5], method = "kfold", k = 5))
             result = fit(model, x, y)
 
             @test result.fraction_used in [0.3, 0.5]
         end
 
         @testset "LOOCV" begin
-            x = collect(range(0, 10, length=20))
+            x = collect(range(0, 10, length = 20))
             y = sin.(x)
 
-            model = Loess(cv=(fractions=[0.4, 0.6], method="loocv"))
+            model = Loess(cv = (fractions = [0.4, 0.6], method = "loocv"))
             result = fit(model, x, y)
 
             @test result.fraction_used in [0.4, 0.6]
@@ -793,28 +799,28 @@ using FastLOESS
             x = [1.0, 2.0, 3.0]
             y = [2.0, 4.0]
 
-            model = Loess(fraction=0.5)
+            model = Loess(fraction = 0.5)
             @test_throws ArgumentError fit(model, x, y)
         end
 
         @testset "invalid weight function" begin
             # Error happens at construction time now
-            @test_throws ErrorException Loess(fraction=0.5, weight_function="invalid")
+            @test_throws ErrorException Loess(fraction = 0.5, weight_function = "invalid")
         end
 
         @testset "invalid robustness method" begin
-            @test_throws ErrorException Loess(fraction=0.5, robustness_method="invalid")
+            @test_throws ErrorException Loess(fraction = 0.5, robustness_method = "invalid")
         end
 
         @testset "invalid missing policy" begin
-            @test_throws ErrorException Loess(fraction=0.5, missing="invalid")
+            @test_throws ErrorException Loess(fraction = 0.5, missing = "invalid")
         end
 
         @testset "native constructor errors are surfaced" begin
             for construct ∈ (
-                () -> Loess(weight_function="invalid"),
-                () -> StreamingLoess(weight_function="invalid"),
-                () -> OnlineLoess(weight_function="invalid"),
+                () -> Loess(weight_function = "invalid"),
+                () -> StreamingLoess(weight_function = "invalid"),
+                () -> OnlineLoess(weight_function = "invalid"),
             )
                 err = try
                     construct()
@@ -829,64 +835,64 @@ using FastLOESS
     end
 
     @testset "Parameter Coverage" begin
-        x20 = collect(range(0, 10, length=20))
+        x20 = collect(range(0, 10, length = 20))
         y20 = sin.(x20)
         x5 = [1.0, 2.0, 3.0, 4.0, 5.0]
         y5 = [2.0, 4.0, 6.0, 8.0, 10.0]
 
         @testset "Loess: scaling_method" begin
             for sm ∈ ["mad", "mar", "mean"]
-                r = fit(Loess(fraction=0.5, scaling_method=sm), x5, y5)
+                r = fit(Loess(fraction = 0.5, scaling_method = sm), x5, y5)
                 @test length(r.y) == 5
             end
         end
 
         @testset "Loess: boundary_policy" begin
             for bp ∈ ["extend", "reflect", "zero", "noboundary"]
-                r = fit(Loess(fraction=0.5, boundary_policy=bp), x5, y5)
+                r = fit(Loess(fraction = 0.5, boundary_policy = bp), x5, y5)
                 @test length(r.y) == 5
             end
         end
 
         @testset "Loess: zero_weight_fallback" begin
             for zwf ∈ ["use_local_mean", "return_original", "return_none"]
-                r = fit(Loess(fraction=0.5, zero_weight_fallback=zwf), x5, y5)
+                r = fit(Loess(fraction = 0.5, zero_weight_fallback = zwf), x5, y5)
                 @test length(r.y) == 5
             end
         end
 
         @testset "Loess: auto_converge" begin
-            r = fit(Loess(fraction=0.5, auto_converge=1e-4), x5, y5)
+            r = fit(Loess(fraction = 0.5, auto_converge = 1e-4), x5, y5)
             @test length(r.y) == 5
         end
 
         @testset "Loess: degree" begin
             for deg ∈ ["constant", "linear", "quadratic"]
-                r = fit(Loess(fraction=0.9, degree=deg), x5, y5)
+                r = fit(Loess(fraction = 0.9, degree = deg), x5, y5)
                 @test length(r.y) == 5
             end
         end
 
         @testset "Loess: distance_metric variants" begin
             for dm ∈ ["normalized", "euclidean", "manhattan", "chebyshev"]
-                r = fit(Loess(fraction=0.5, distance_metric=dm), x20, y20)
+                r = fit(Loess(fraction = 0.5, distance_metric = dm), x20, y20)
                 @test length(r.y) == 20
             end
         end
 
         @testset "Loess: minkowski via distance_metric string" begin
-            r = fit(Loess(fraction=0.5, distance_metric="minkowski:3"), x20, y20)
+            r = fit(Loess(fraction = 0.5, distance_metric = "minkowski:3"), x20, y20)
             @test length(r.y) == 20
         end
 
         @testset "Loess: surface_mode=direct" begin
-            r = fit(Loess(fraction=0.5, surface_mode="direct"), x5, y5)
+            r = fit(Loess(fraction = 0.5, surface_mode = "direct"), x5, y5)
             @test length(r.y) == 5
         end
 
         @testset "Loess: return_se" begin
             r = fit(
-                Loess(fraction=0.5, outputs=["se"], surface_mode="direct"),
+                Loess(fraction = 0.5, outputs = ["se"], surface_mode = "direct"),
                 x20,
                 y20,
             )
@@ -895,20 +901,20 @@ using FastLOESS
         end
 
         @testset "Loess: cell / interpolation_vertices / boundary_degree_fallback take effect" begin
-            xdense = collect(range(0, 100, length=500))
+            xdense = collect(range(0, 100, length = 500))
             ydense = sin.(xdense ./ 10)
             base =
-                fit(Loess(fraction=0.2, surface_mode="interpolation"), xdense, ydense)
+                fit(Loess(fraction = 0.2, surface_mode = "interpolation"), xdense, ydense)
             with_cell = fit(
-                Loess(fraction=0.2, surface_mode="interpolation", cell=0.9),
+                Loess(fraction = 0.2, surface_mode = "interpolation", cell = 0.9),
                 xdense,
                 ydense,
             )
             with_vertices = fit(
                 Loess(
-                    fraction=0.2,
-                    surface_mode="interpolation",
-                    interpolation_vertices=5,
+                    fraction = 0.2,
+                    surface_mode = "interpolation",
+                    interpolation_vertices = 5,
                 ),
                 xdense,
                 ydense,
@@ -917,7 +923,7 @@ using FastLOESS
             @test base.y != with_vertices.y
 
             @test_throws ErrorException fit(
-                Loess(fraction=0.2, surface_mode="interpolation", cell=2.0),
+                Loess(fraction = 0.2, surface_mode = "interpolation", cell = 2.0),
                 xdense,
                 ydense,
             )
@@ -925,10 +931,10 @@ using FastLOESS
             # Smoke test: boundary_degree_fallback is accepted and does not error.
             r_bdf = fit(
                 Loess(
-                    fraction=0.2,
-                    surface_mode="interpolation",
-                    degree="quadratic",
-                    boundary_degree_fallback=false,
+                    fraction = 0.2,
+                    surface_mode = "interpolation",
+                    degree = "quadratic",
+                    boundary_degree_fallback = false,
                 ),
                 xdense,
                 ydense,
@@ -937,15 +943,15 @@ using FastLOESS
         end
 
         @testset "Loess: cv_seed reproducibility" begin
-            xcv = collect(range(0, 100, length=100))
+            xcv = collect(range(0, 100, length = 100))
             ycv = sin.(xcv ./ 10) .+ 0.1 .* sin.(xcv)
             m1 = fit(
-                Loess(fraction=0.3, cv=(fractions=[0.2, 0.3, 0.4],), seed=42),
+                Loess(fraction = 0.3, cv = (fractions = [0.2, 0.3, 0.4],), seed = 42),
                 xcv,
                 ycv,
             )
             m2 = fit(
-                Loess(fraction=0.3, cv=(fractions=[0.2, 0.3, 0.4],), seed=42),
+                Loess(fraction = 0.3, cv = (fractions = [0.2, 0.3, 0.4],), seed = 42),
                 xcv,
                 ycv,
             )
@@ -953,14 +959,14 @@ using FastLOESS
         end
 
         @testset "StreamingLoess: merge_strategy" begin
-            xlong = collect(range(0, 100, length=200))
+            xlong = collect(range(0, 100, length = 200))
             ylong = sin.(xlong ./ 10)
             for ms ∈ ["average", "weighted_average", "take_first", "take_last"]
                 s = StreamingLoess(
-                    fraction=0.3,
-                    chunk_size=100,
-                    overlap=20,
-                    merge_strategy=ms,
+                    fraction = 0.3,
+                    chunk_size = 100,
+                    overlap = 20,
+                    merge_strategy = ms,
                 )
                 r1 = process_chunk(s, xlong, ylong)
                 r2 = finalize(s)
@@ -969,13 +975,13 @@ using FastLOESS
         end
 
         @testset "StreamingLoess: minkowski via distance_metric string" begin
-            xlong = collect(range(0, 50, length=100))
+            xlong = collect(range(0, 50, length = 100))
             ylong = sin.(xlong)
             s = StreamingLoess(
-                fraction=0.3,
-                chunk_size=60,
-                overlap=10,
-                distance_metric="minkowski:2.5",
+                fraction = 0.3,
+                chunk_size = 60,
+                overlap = 10,
+                distance_metric = "minkowski:2.5",
             )
             r1 = process_chunk(s, xlong, ylong)
             r2 = finalize(s)
@@ -983,19 +989,19 @@ using FastLOESS
         end
 
         @testset "StreamingLoess: misc params" begin
-            xlong = collect(range(0, 100, length=200))
+            xlong = collect(range(0, 100, length = 200))
             ylong = sin.(xlong ./ 10)
             s = StreamingLoess(
-                fraction=0.3,
-                chunk_size=100,
-                overlap=10,
-                scaling_method="mar",
-                boundary_policy="reflect",
-                auto_converge=1e-3,
-                outputs=["diagnostics", "residuals", "weights"],
-                zero_weight_fallback="return_original",
-                degree="quadratic",
-                surface_mode="direct",
+                fraction = 0.3,
+                chunk_size = 100,
+                overlap = 10,
+                scaling_method = "mar",
+                boundary_policy = "reflect",
+                auto_converge = 1e-3,
+                outputs = ["diagnostics", "residuals", "weights"],
+                zero_weight_fallback = "return_original",
+                degree = "quadratic",
+                surface_mode = "direct",
             )
             r1 = process_chunk(s, xlong, ylong)
             r2 = finalize(s)
@@ -1006,7 +1012,7 @@ using FastLOESS
             xo = collect(Float64, 1:20)
             yo = xo .* 2.0
             for um ∈ ["full", "incremental"]
-                o = OnlineLoess(fraction=0.5, window_capacity=10, update_mode=um)
+                o = OnlineLoess(fraction = 0.5, window_capacity = 10, update_mode = um)
                 results = [add_point(o, xo[i], yo[i]) for i ∈ eachindex(xo)]
                 @test any(r !== nothing for r ∈ results)
             end
@@ -1016,29 +1022,29 @@ using FastLOESS
             xo = collect(Float64, 1:20)
             yo = xo .* 2.0
             o = OnlineLoess(
-                fraction=0.5,
-                window_capacity=10,
-                distance_metric="minkowski:3",
+                fraction = 0.5,
+                window_capacity = 10,
+                distance_metric = "minkowski:3",
             )
             results = [add_point(o, xo[i], yo[i]) for i ∈ eachindex(xo)]
             @test any(r !== nothing for r ∈ results)
         end
 
         @testset "OnlineLoess: misc params" begin
-            xo = collect(range(0, 10, length=30))
+            xo = collect(range(0, 10, length = 30))
             yo = sin.(xo)
             o = OnlineLoess(
-                fraction=0.5,
-                window_capacity=20,
-                degree="quadratic",
-                auto_converge=1e-3,
-                iterations=1,
-                update_mode="full",
-                scaling_method="mean",
-                boundary_policy="zero",
-                outputs=["weights"],
-                zero_weight_fallback="return_none",
-                surface_mode="direct",
+                fraction = 0.5,
+                window_capacity = 20,
+                degree = "quadratic",
+                auto_converge = 1e-3,
+                iterations = 1,
+                update_mode = "full",
+                scaling_method = "mean",
+                boundary_policy = "zero",
+                outputs = ["weights"],
+                zero_weight_fallback = "return_none",
+                surface_mode = "direct",
             )
             results = [add_point(o, xo[i], yo[i]) for i ∈ eachindex(xo)]
             @test any(r !== nothing for r ∈ results)
@@ -1052,9 +1058,9 @@ using FastLOESS
 
         @testset "zero weight on outlier reduces error" begin
             w_zero = [1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0]
-            model = Loess(fraction=0.6)
+            model = Loess(fraction = 0.6)
             r_no_w = fit(model, x, y_outlier)
-            r_w = fit(model, x, y_outlier; custom_weights=w_zero)
+            r_w = fit(model, x, y_outlier; custom_weights = w_zero)
 
             non_outlier = [1, 2, 3, 5, 6, 7]
             err_no_w = mean(abs.(r_no_w.y[non_outlier] .- y_true[non_outlier]))
@@ -1065,9 +1071,9 @@ using FastLOESS
         @testset "uniform weights equal no weights" begin
             y = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
             w_uniform = ones(length(y))
-            model = Loess(fraction=0.6)
+            model = Loess(fraction = 0.6)
             r_no_w = fit(model, x, y)
-            r_w = fit(model, x, y; custom_weights=w_uniform)
+            r_w = fit(model, x, y; custom_weights = w_uniform)
             @test r_w.y ≈ r_no_w.y atol = 1e-6
         end
 
@@ -1080,8 +1086,8 @@ using FastLOESS
             weights_high = ones(Float64, n)
             weights_high[8] = 100.0
 
-            model = Loess(fraction=0.6, iterations=0)
-            result_high = fit(model, x_spike, y_spike; custom_weights=weights_high)
+            model = Loess(fraction = 0.6, iterations = 0)
+            result_high = fit(model, x_spike, y_spike; custom_weights = weights_high)
             result_equal = fit(model, x_spike, y_spike)
 
             @test result_high.y[8] > result_equal.y[8]
@@ -1090,15 +1096,15 @@ using FastLOESS
         @testset "wrong length raises error" begin
             y = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
             w_bad = [1.0, 1.0, 1.0]
-            model = Loess(fraction=0.6)
-            @test_throws Exception fit(model, x, y; custom_weights=w_bad)
+            model = Loess(fraction = 0.6)
+            @test_throws Exception fit(model, x, y; custom_weights = w_bad)
         end
 
         @testset "negative weight raises error" begin
             y = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0]
             w_neg = [1.0, -1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
-            model = Loess(fraction=0.6)
-            @test_throws Exception fit(model, x, y; custom_weights=w_neg)
+            model = Loess(fraction = 0.6)
+            @test_throws Exception fit(model, x, y; custom_weights = w_neg)
         end
     end
 

@@ -62,7 +62,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (bisquare robustness): 0.38515217214084335
+First smoothed value (bisquare robustness): 0.3851521721408433
 ----
 
 '''
@@ -109,7 +109,7 @@ public class Example {
 
 [source,console]
 ----
-First smoothed value (huber robustness): 0.38558472729724125
+First smoothed value (huber robustness): 0.3855847272972413
 ----
 
 '''
@@ -258,7 +258,7 @@ public class Example {
 
 [source,console]
 ----
-y[0]: 0.38515217214084335
+y[0]: 0.3851521721408433
 ----
 
 '''

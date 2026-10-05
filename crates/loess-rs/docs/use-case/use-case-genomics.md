@@ -49,7 +49,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First lower CI bound (95%): 0.14936362588280888
+First lower CI bound (95%): 0.14936362588280738
 ```
 
 ---
@@ -98,7 +98,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First residual: -3.9994581815344983
+First residual: -3.99945818153458
 ```
 
 ---
@@ -131,7 +131,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (streaming genome): 41.5626367475186
+First smoothed value (streaming genome): 41.56263674751861
 ```
 
 ---

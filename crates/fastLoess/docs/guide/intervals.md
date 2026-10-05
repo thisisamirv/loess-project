@@ -118,7 +118,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First point 95% CI: [0.2569579331671805, 0.39779314697476365]
+First point 95% CI: [0.2577313994160416, 0.39701968072590266]
 ```
 
 ---
@@ -164,7 +164,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First lower CI bound (99%): 0.23303091517410238
+First lower CI bound (99%): 0.23532279812128631
 ```
 
 ---
@@ -198,9 +198,9 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-Point 0: SE = 0.0591
-Point 1: SE = 0.0589
-Point 2: SE = 0.0588
+Point 0: SE = 0.0582
+Point 1: SE = 0.0583
+Point 2: SE = 0.0585
 ```
 
 ---

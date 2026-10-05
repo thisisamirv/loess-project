@@ -18,3 +18,10 @@ reaches \code{min_points}.
 \description{
 Compute diagnostics for the current Online window
 }
+\examples{
+model <- OnlineLoess(fraction = 1, window_capacity = 20L)
+for (x in 1:10) {
+    invisible(add_point(model, x, 2 * x + 1))
+}
+window_diagnostics(model)
+}

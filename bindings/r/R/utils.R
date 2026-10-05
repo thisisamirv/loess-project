@@ -26,6 +26,11 @@
 #' @noRd
 validate_xy_dims <- function(x, y) {
     validate_numeric_vector(y, "y")
+    validate_x_shape(x)
+    validate_xy_lengths(x, length(y))
+}
+
+validate_x_shape <- function(x) {
     if (!is.numeric(x) || is.complex(x)) {
         stop("x must be numeric", call. = FALSE)
     }
@@ -33,8 +38,9 @@ validate_xy_dims <- function(x, y) {
     if (!is.null(x_dims) && length(x_dims) != 2L) {
         stop("x must be a numeric vector or matrix", call. = FALSE)
     }
+}
 
-    n_y <- length(y)
+validate_xy_lengths <- function(x, n_y) {
     if (n_y == 0L || length(x) == 0L || (is.matrix(x) && nrow(x) != n_y)) {
         stop("x rows must match y's length", call. = FALSE)
     }
@@ -48,18 +54,6 @@ validate_numeric_vector <- function(value, name) {
         stop(sprintf("%s must be a numeric vector", name), call. = FALSE)
     }
 }
-
-validate_numeric_scalar <- function(value, name) {
-    if (
-        !is.numeric(value) ||
-            is.complex(value) ||
-            length(value) != 1L ||
-            !is.null(dim(value))
-    ) {
-        stop(sprintf("%s must be a single numeric value", name), call. = FALSE)
-    }
-}
-
 
 validate_min_points <- function(x, min_n = 2L) {
     if (length(x) < min_n) {
@@ -79,11 +73,23 @@ validate_fraction <- function(fraction) {
 
 
 validate_iterations <- function(iterations) {
+    validate_iteration_scalar(iterations)
+    validate_iteration_range(iterations)
+}
+
+validate_iteration_scalar <- function(iterations) {
     if (
         !is.numeric(iterations) ||
             length(iterations) != 1L ||
-            !is.finite(iterations) ||
-            iterations < 0 ||
+            !is.finite(iterations)
+    ) {
+        stop("iterations must be a non-negative integer")
+    }
+}
+
+validate_iteration_range <- function(iterations) {
+    if (
+        iterations < 0 ||
             iterations != floor(iterations) ||
             iterations > 1000
     ) {
@@ -319,17 +325,24 @@ param_types <- list(
 #'
 #' Captures all known parameters from the calling function's environment.
 #' @param param_names Character vector of parameter names to extract.
+#' @param overrides Named values that take precedence over the parent
+#'   environment.
 #' @return Coerced list ready for do.call.
 #' @noRd
-env_args <- function(param_names) {
+env_args <- function(param_names, overrides = list()) {
     env <- parent.frame()
     result <- lapply(param_names, function(name) {
-        val <- get(name, envir = env)
+        val <- if (name %in% names(overrides)) {
+            overrides[[name]]
+        } else {
+            get(name, envir = env)
+        }
         type <- param_types[[name]]
         if (is.null(type)) {
             return(val)
         }
-        switch(type,
+        switch(
+            type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),

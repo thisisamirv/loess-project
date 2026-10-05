@@ -67,7 +67,8 @@ print.LoessResult <- function(x, ...) {
 plot.LoessResult <- function(x, main = "LOESS Fit", ...) {
     if (!is.null(x$dimensions) && x$dimensions != 1L) {
         stop(
-            "plot.LoessResult() supports only one-dimensional fits; select a predictor dimension for a custom plot",
+            "plot.LoessResult() supports only one-dimensional fits; ",
+            "select a predictor dimension for a custom plot",
             call. = FALSE
         )
     }
@@ -168,7 +169,7 @@ fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
         if (length(custom_weights) != length(y)) {
             stop("custom_weights must have the same length as y", call. = FALSE)
         }
-        if (any(!is.finite(custom_weights)) || any(custom_weights < 0)) {
+        if (!all(is.finite(custom_weights)) || any(custom_weights < 0)) {
             stop(
                 "custom_weights must be finite and non-negative",
                 call. = FALSE
@@ -185,7 +186,7 @@ fit.Loess <- function(model, x, y, custom_weights = NULL, ...) {
 #'   \code{retain_model = TRUE} passed to \code{\link{Loess}}.
 #' @param new_x Numeric vector of out-of-sample query points (flattened,
 #'   \code{dimensions} values per point).
-#' @param intervals Grouped coverage levels from \code{\link{intervals_opts}}.
+#' @inheritParams Loess
 #' @param outputs Optional character vector selecting \code{"se"},
 #'   \code{"gradient"}, or \code{"derivative"}. \code{NULL} (default)
 #'   selects no optional components.
@@ -228,7 +229,8 @@ predict.Loess <- function(
             length(new_x) %% object$params$dimensions != 0L
     ) {
         stop(
-            "new_x must be non-empty and its length must be a multiple of dimensions",
+            "new_x must be non-empty and its length must be a multiple of ",
+            "dimensions",
             call. = FALSE
         )
     }
@@ -268,7 +270,13 @@ process_chunk <- function(model, ...) UseMethod("process_chunk")
 
 #' @rdname process_chunk
 #' @export
-process_chunk.StreamingLoess <- function(model, x, y, custom_weights = NULL, ...) {
+process_chunk.StreamingLoess <- function(
+    model,
+    x,
+    y,
+    custom_weights = NULL,
+    ...
+) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
     }
@@ -288,11 +296,21 @@ process_chunk.StreamingLoess <- function(model, x, y, custom_weights = NULL, ...
     if (is.null(custom_weights)) {
         model$handle$process_chunk(args$x, args$y)
     } else {
-        if (!is.numeric(custom_weights) || is.complex(custom_weights) ||
-            length(custom_weights) != length(args$y)) {
-            stop("custom_weights must have one numeric value per observation", call. = FALSE)
+        if (
+            !is.numeric(custom_weights) ||
+                is.complex(custom_weights) ||
+                length(custom_weights) != length(args$y)
+        ) {
+            stop(
+                "custom_weights must have one numeric value per observation",
+                call. = FALSE
+            )
         }
-        model$handle$process_chunk_weighted(args$x, args$y, as.double(custom_weights))
+        model$handle$process_chunk_weighted(
+            args$x,
+            args$y,
+            as.double(custom_weights)
+        )
     }
 }
 
@@ -324,7 +342,8 @@ finalize.StreamingLoess <- function(model, ...) {
 #' @param x A numeric coordinate vector with one value per configured
 #'   dimension. For one-dimensional models, a scalar is also accepted.
 #' @param y A single numeric y value.
-#' @param weight Finite non-negative case weight for this observation; defaults to 1.
+#' @param weight Finite non-negative case weight for this observation; defaults
+#'   to 1.
 #' @param ... Must be empty.
 #' @return An online result list, or \code{NULL} if fewer than
 #'   \code{min_points} have been added.
@@ -341,27 +360,58 @@ add_point.OnlineLoess <- function(model, x, y, weight = 1.0, ...) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
     }
-    if (
-        !is.numeric(x) || is.complex(x) || !length(x) || !is.null(dim(x))
-    ) {
+    validate_online_coordinates(x, model$params$dimensions)
+    validate_online_response(y)
+    validate_online_weight(weight)
+    model$handle$add_point_weighted(
+        as.double(x),
+        as.double(y),
+        as.double(weight)
+    )
+}
+
+validate_online_coordinates <- function(x, dimensions) {
+    if (!is.numeric(x) || is.complex(x) || !length(x) || !is.null(dim(x))) {
         stop("x must be a non-empty numeric coordinate vector", call. = FALSE)
     }
-    if (length(x) != model$params$dimensions) {
+    if (length(x) != dimensions) {
         stop(
-            sprintf("x must have exactly %d values", model$params$dimensions),
+            sprintf("x must have exactly %d values", dimensions),
             call. = FALSE
         )
     }
+}
+
+validate_online_response <- function(y) {
     if (
         !is.numeric(y) || is.complex(y) || length(y) != 1L || !is.null(dim(y))
     ) {
         stop("y must be a single numeric value", call. = FALSE)
     }
-    if (!is.numeric(weight) || is.complex(weight) || length(weight) != 1L ||
-        !is.finite(weight) || weight < 0 || !is.null(dim(weight))) {
-        stop("weight must be a single finite non-negative numeric value", call. = FALSE)
+}
+
+validate_online_weight <- function(weight) {
+    validate_online_weight_shape(weight)
+    if (!is.finite(weight) || weight < 0) {
+        stop(
+            "weight must be a single finite non-negative numeric value",
+            call. = FALSE
+        )
     }
-    model$handle$add_point_weighted(as.double(x), as.double(y), as.double(weight))
+}
+
+validate_online_weight_shape <- function(weight) {
+    if (
+        !is.numeric(weight) ||
+            is.complex(weight) ||
+            length(weight) != 1L ||
+            !is.null(dim(weight))
+    ) {
+        stop(
+            "weight must be a single finite non-negative numeric value",
+            call. = FALSE
+        )
+    }
 }
 
 #' Compute diagnostics for the current Online window
@@ -370,6 +420,12 @@ add_point.OnlineLoess <- function(model, x, y, weight = 1.0, ...) {
 #' @param ... Must be empty.
 #' @return A list of goodness-of-fit metrics, or `NULL` until the window
 #'   reaches `min_points`.
+#' @examples
+#' model <- OnlineLoess(fraction = 1, window_capacity = 20L)
+#' for (x in 1:10) {
+#'     invisible(add_point(model, x, 2 * x + 1))
+#' }
+#' window_diagnostics(model)
 #' @export
 window_diagnostics <- function(model, ...) UseMethod("window_diagnostics")
 
@@ -387,16 +443,26 @@ window_diagnostics.OnlineLoess <- function(model, ...) {
 #' @param new_x Numeric query points (flattened, one coordinate per dimension).
 #' @param outputs Optional character vector selecting `"se"` and/or
 #'   `"gradient"` (alias `"derivative"`).
-#' @param intervals Grouped confidence and prediction coverage levels.
 #' @param extrapolation Behavior outside the window's predictor bounds:
 #'   `"clamp"` (default), `"linear"`, or `"error"`.
 #' @param max_extrapolation_distance Optional cap for linear extrapolation.
-#' @param max_neighbor_distance Optional cap for sparse-neighborhood predictions.
+#' @param max_neighbor_distance Optional cap for sparse-neighborhood
+#'   predictions.
 #' @param ... Must be empty.
 #' @return A list containing predicted values and requested optional outputs.
+#' @examples
+#' model <- OnlineLoess(
+#'     fraction = 1, window_capacity = 20L, surface_mode = "direct"
+#' )
+#' for (x in 1:10) {
+#'     invisible(add_point(model, x, 2 * x + 1))
+#' }
+#' predict_window(model, c(4.5, 5.5), outputs = "gradient")
 #' @export
 predict_window <- function(model, ...) UseMethod("predict_window")
 
+#' @rdname predict_window
+#' @inheritParams Loess
 #' @export
 predict_window.OnlineLoess <- function(
     model,
@@ -412,7 +478,9 @@ predict_window.OnlineLoess <- function(
         stop("unused arguments (...)", call. = FALSE)
     }
     if (
-        !is.numeric(new_x) || is.complex(new_x) || !length(new_x) ||
+        !is.numeric(new_x) ||
+            is.complex(new_x) ||
+            !length(new_x) ||
             !is.null(dim(new_x))
     ) {
         stop("new_x must be a non-empty numeric vector", call. = FALSE)

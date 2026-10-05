@@ -176,7 +176,7 @@ public class Example {
 
 [source,console]
 ----
-Smoothed (dashboard, latest tick): -0.004114623979934003
+Smoothed (dashboard, latest tick): -0.004114623979933547
 ----
 
 '''

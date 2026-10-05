@@ -117,7 +117,7 @@ fn main() -> Result<(), LoessError> {
 ```output
 y: [5.1]
 SE: Some([0.0])
-Derivative: Some([2.2])
+Derivative: Some([2.2000000000000006])
 ```
 
 ### Linear Extrapolation

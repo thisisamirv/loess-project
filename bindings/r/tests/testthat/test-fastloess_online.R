@@ -43,7 +43,7 @@ test_that("OnlineLoess supports multivariate coordinate vectors", {
     )
 })
 
-test_that("OnlineLoess supports weights, diagnostics, and current-window prediction", {
+test_that("OnlineLoess weighted diagnostics and window prediction work", {
     options <- list(
         fraction = 1,
         window_capacity = 10,
@@ -68,7 +68,10 @@ test_that("OnlineLoess supports weights, diagnostics, and current-window predict
 
     weighted_prediction <- predict_window(weighted, 5)
     plain_prediction <- predict_window(plain, 5)
-    expect_lt(abs(weighted_prediction$y[1] - 11), abs(plain_prediction$y[1] - 11))
+    expect_lt(
+        abs(weighted_prediction$y[1] - 11),
+        abs(plain_prediction$y[1] - 11)
+    )
 })
 
 test_that("OnlineLoess window capacity works", {

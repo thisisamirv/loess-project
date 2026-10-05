@@ -29,7 +29,6 @@
 #' @srrstats {RE2.0} Kernel, robustness, boundary, and scaling configurable.
 #'
 #' @inheritParams Loess
-#' @param intervals Grouped coverage levels from \code{\link{intervals_opts}}.
 #' @param outputs Optional character vector selecting \code{"diagnostics"},
 #'   \code{"residuals"}, \code{"weights"}, \code{"gradient"} (or
 #'   \code{"derivative"}), and \code{"se"}. \code{NULL} (default) selects

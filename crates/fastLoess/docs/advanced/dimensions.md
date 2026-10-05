@@ -44,7 +44,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (fraction=0.3): 0.2473103228645226
+First smoothed value (fraction=0.3): 0.24731032286452265
 ```
 
 ---
@@ -76,7 +76,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (2D): 1.2376155507789228
+First smoothed value (2D): 1.1731119188972245
 ```
 
 ---
@@ -109,7 +109,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (3D): -0.6843807668562619
+First smoothed value (3D): -0.7609406997615841
 ```
 
 ---

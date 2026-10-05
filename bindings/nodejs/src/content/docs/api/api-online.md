@@ -70,6 +70,8 @@ For multivariate models, configure `dimensions` and pass each coordinate as a
 `Float64Array` to `add_point_vector`:
 
 ```javascript
+const { OnlineLoess } = require('fastloess');
+
 const online2d = new OnlineLoess(
     { dimensions: 2, surface_mode: 'direct', outputs: ['gradient'] },
     { window_capacity: 10, min_points: 3 }

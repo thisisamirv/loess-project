@@ -146,7 +146,7 @@ public class Example {
 
 [source,console]
 ----
-First point 95% CI: [0.2569579331671807, 0.3977931469747638]
+First point 95% CI: [0.25773139941604145, 0.39701968072590293]
 ----
 
 '''
@@ -193,7 +193,7 @@ public class Example {
 
 [source,console]
 ----
-First lower CI bound (99%): 0.23303091517410257
+First lower CI bound (99%): 0.23532279812128631
 ----
 
 '''
@@ -233,9 +233,9 @@ public class Example {
 
 [source,console]
 ----
-Point 0: SE = 0.0591
-Point 1: SE = 0.0589
-Point 2: SE = 0.0588
+Point 0: SE = 0.0582
+Point 1: SE = 0.0583
+Point 2: SE = 0.0585
 ----
 
 '''

@@ -84,7 +84,7 @@ console.log("Prediction lower[0]:", result.prediction_lower[0].toFixed(4));
 ```
 
 ```output
-Prediction lower[0]: -0.5090
+Prediction lower[0]: -0.5069
 ```
 
 ---

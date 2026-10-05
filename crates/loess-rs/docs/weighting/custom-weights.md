@@ -80,7 +80,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (custom weights): 0.3896093788723435
+First smoothed value (custom weights): 0.38960937887234337
 ```
 
 ---
@@ -117,7 +117,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (custom weights): 0.31339241393541983
+First smoothed value (custom weights): 0.3133924139354195
 ```
 
 ---
@@ -152,7 +152,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (custom weights): 0.32839570689121644
+First smoothed value (custom weights): 0.3283957068912162
 ```
 
 ---
@@ -187,7 +187,7 @@ fn main() -> Result<(), LoessError> {
 ```
 
 ```output
-First smoothed value (custom weights): 0.8673742206424481
+First smoothed value (custom weights): 0.867374220642448
 ```
 
 ---

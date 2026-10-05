@@ -105,6 +105,55 @@ test_that("plot.LoessResult draws confidence interval lines when present", {
     set.seed(42)
     x <- seq(0, 10, length.out = 50)
     y <- sin(x) + rnorm(50, 0, 0.2)
-    result <- fit(Loess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95)), x, y)
+    result <- fit(
+        Loess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95)),
+        x,
+        y
+    )
     expect_no_error(plot(result, main = "With CI"))
+})
+
+test_that("online methods reject malformed inputs and unused arguments", {
+    model <- OnlineLoess(window_capacity = 20L)
+    for (value in list(NULL, "bad", 1i, matrix(1))) {
+        expect_error(add_point(model, value, 1), "coordinate vector")
+    }
+    expect_error(add_point(model, c(1, 2), 1), "exactly 1 values")
+    for (value in list(NULL, "bad", 1i, c(1, 2), matrix(1))) {
+        expect_error(add_point(model, 1, value), "single numeric value")
+    }
+    invalid_weights <- list(
+        NULL, "bad", 1i, c(1, 2), matrix(1), NA_real_, NaN, Inf, -1
+    )
+    for (weight in invalid_weights) {
+        expect_error(
+            add_point(model, 1, 1, weight = weight),
+            "single finite non-negative numeric value"
+        )
+    }
+    expect_error(add_point(model, 1, 1, typo = 1), "unused arguments")
+    expect_error(window_diagnostics(model, typo = 1), "unused arguments")
+    expect_error(predict_window(model, 1, typo = 1), "unused arguments")
+    expect_null(add_point(model, 1L, 3L, weight = 0L))
+    expect_type(add_point(model, 2L, 5L, weight = 1L)$y, "double")
+})
+
+test_that("retained prediction validates query shapes and gradient aliases", {
+    model <- Loess(
+        fraction = 0.8,
+        iterations = 0L,
+        surface_mode = "direct",
+        retain_model = TRUE
+    )
+    invisible(fit(model, 1:20, 2 * (1:20) + 1))
+    expect_error(predict(model, numeric()), "non-empty")
+    expect_error(predict(model, matrix(1)), "numeric vector")
+    expect_error(predict(model, 1, typo = 1), "unused arguments")
+    multivariate <- Loess(dimensions = 2L)
+    expect_error(predict(multivariate, 1:3), "multiple of dimensions")
+    gradient <- predict(model, c(10, 11), outputs = "gradient")
+    derivative <- predict(model, c(10, 11), outputs = "derivative")
+    expect_equal(gradient$derivative, c(2, 2), tolerance = 1e-10)
+    expect_equal(gradient, derivative)
+    expect_false("derivative" %in% names(predict(model, 5)))
 })

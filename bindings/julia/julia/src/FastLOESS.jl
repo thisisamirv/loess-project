@@ -48,7 +48,7 @@ version() = _package_version()
 
 function _output_flags(
     outputs;
-    allowed=(
+    allowed = (
         "diagnostics",
         "residuals",
         "weights",
@@ -62,12 +62,12 @@ function _output_flags(
     unknown = setdiff(selected, String.(allowed))
     isempty(unknown) || throw(ArgumentError("Unknown outputs: $(join(unknown, ", "))"))
     return (
-        diagnostics="diagnostics" in selected,
-        residuals="residuals" in selected,
-        weights="weights" in selected,
-        gradient="gradient" in selected || "derivative" in selected,
-        se="se" in selected,
-        sorted="sorted" in selected,
+        diagnostics = "diagnostics" in selected,
+        residuals = "residuals" in selected,
+        weights = "weights" in selected,
+        gradient = "gradient" in selected || "derivative" in selected,
+        se = "se" in selected,
+        sorted = "sorted" in selected,
     )
 end
 
@@ -78,24 +78,24 @@ function _check_group_keys(group, allowed, name)
 end
 
 function _interval_options(intervals)
-    intervals === nothing && return (confidence=NaN, prediction=NaN)
+    intervals === nothing && return (confidence = NaN, prediction = NaN)
     _check_group_keys(intervals, (:confidence, :prediction), "intervals")
     confidence = get(intervals, :confidence, nothing)
     prediction = get(intervals, :prediction, nothing)
     return (
-        confidence=confidence === nothing ? NaN : Float64(confidence),
-        prediction=prediction === nothing ? NaN : Float64(prediction),
+        confidence = confidence === nothing ? NaN : Float64(confidence),
+        prediction = prediction === nothing ? NaN : Float64(prediction),
     )
 end
 
 function _cv_options(cv)
-    cv === nothing && return (fractions=Float64[], method="kfold", k=5)
+    cv === nothing && return (fractions = Float64[], method = "kfold", k = 5)
     _check_group_keys(cv, (:fractions, :method, :k), "cv")
     haskey(cv, :fractions) || throw(ArgumentError("cv requires fractions"))
     return (
-        fractions=Float64.(get(cv, :fractions, Float64[])),
-        method=String(get(cv, :method, "kfold")),
-        k=Int(get(cv, :k, 5)),
+        fractions = Float64.(get(cv, :fractions, Float64[])),
+        method = String(get(cv, :method, "kfold")),
+        k = Int(get(cv, :k, 5)),
     )
 end
 
@@ -289,13 +289,13 @@ Evaluate the fitted model at out-of-sample query points not in the training set
 function predict(
     model::PredictModel,
     new_x::Vector{Float64};
-    outputs::Vector{String}=String[],
-    intervals=nothing,
-    extrapolation::String="clamp",
-    max_extrapolation_distance::Union{Float64,Nothing}=nothing,
-    max_neighbor_distance::Union{Float64,Nothing}=nothing,
+    outputs::Vector{String} = String[],
+    intervals = nothing,
+    extrapolation::String = "clamp",
+    max_extrapolation_distance::Union{Float64,Nothing} = nothing,
+    max_neighbor_distance::Union{Float64,Nothing} = nothing,
 )
-    flags = _output_flags(outputs; allowed=("se", "gradient", "derivative"))
+    flags = _output_flags(outputs; allowed = ("se", "gradient", "derivative"))
     interval_options = _interval_options(intervals)
 
     if model.handle == C_NULL
@@ -522,7 +522,7 @@ function ptr_to_vector(ptr::Ptr{Cdouble}, n::Int)
     if ptr == C_NULL
         return nothing
     end
-    return unsafe_wrap(Array, ptr, n, own=false) |> copy
+    return unsafe_wrap(Array, ptr, n, own = false) |> copy
 end
 
 function convert_result(c_result::CJlLoessResult)
@@ -591,7 +591,7 @@ function convert_result(c_result::CJlLoessResult)
     end
 
     cv_scores = if c_result.cv_scores != C_NULL && c_result.cv_scores_len > 0
-        unsafe_wrap(Array, c_result.cv_scores, Int(c_result.cv_scores_len), own=false) |> copy
+        unsafe_wrap(Array, c_result.cv_scores, Int(c_result.cv_scores_len), own = false) |> copy
     else
         nothing
     end
@@ -780,29 +780,29 @@ mutable struct Loess
     dimensions::Int
 
     function Loess(;
-        fraction::Float64=0.67,
-        iterations::Int=3,
-        weight_function::String="tricube",
-        robustness_method::String="bisquare",
-        scaling_method::String="mad",
-        boundary_policy::String="extend",
-        outputs::Vector{String}=String[],
-        intervals=nothing,
-        cv=nothing,
-        seed::Union{Int,Nothing}=nothing,
-        zero_weight_fallback::String="use_local_mean",
-        auto_converge::Float64=NaN,
-        parallel::Bool=true,
-        degree::String="linear",
-        dimensions::Int=1,
-        distance_metric::String="normalized",
-        weighted_metric_weights::Union{Vector{Float64},Nothing}=nothing,
-        surface_mode::String="interpolation",
-        cell::Union{Float64,Nothing}=nothing,
-        interpolation_vertices::Union{Int,Nothing}=nothing,
-        boundary_degree_fallback::Union{Bool,Nothing}=nothing,
-        missing::String="error",
-        retain_model::Bool=false,
+        fraction::Float64 = 0.67,
+        iterations::Int = 3,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        outputs::Vector{String} = String[],
+        intervals = nothing,
+        cv = nothing,
+        seed::Union{Int,Nothing} = nothing,
+        zero_weight_fallback::String = "use_local_mean",
+        auto_converge::Float64 = NaN,
+        parallel::Bool = true,
+        degree::String = "linear",
+        dimensions::Int = 1,
+        distance_metric::String = "normalized",
+        weighted_metric_weights::Union{Vector{Float64},Nothing} = nothing,
+        surface_mode::String = "interpolation",
+        cell::Union{Float64,Nothing} = nothing,
+        interpolation_vertices::Union{Int,Nothing} = nothing,
+        boundary_degree_fallback::Union{Bool,Nothing} = nothing,
+        missing::String = "error",
+        retain_model::Bool = false,
     )
         flags = _output_flags(outputs)
         interval_options = _interval_options(intervals)
@@ -967,7 +967,7 @@ function fit(
     l::Loess,
     x::Vector{Float64},
     y::Vector{Float64};
-    custom_weights::Union{Vector{Float64},Nothing}=nothing,
+    custom_weights::Union{Vector{Float64},Nothing} = nothing,
 )
     if l.dimensions != 1
         throw(
@@ -1024,14 +1024,14 @@ function fit(
     l::Loess,
     x::Matrix{Float64},
     y::Vector{Float64};
-    custom_weights::Union{Vector{Float64},Nothing}=nothing,
+    custom_weights::Union{Vector{Float64},Nothing} = nothing,
 )
     n = size(x, 1)
     if size(x, 2) != l.dimensions
         throw(
             ArgumentError(
                 "x has $(size(x, 2)) columns but model has dimensions=$(l.dimensions); " *
-                    "pass dimensions=$(size(x, 2)) to Loess()",
+                "pass dimensions=$(size(x, 2)) to Loess()",
             ),
         )
     end
@@ -1111,29 +1111,29 @@ mutable struct StreamingLoess
     lock::ReentrantLock
 
     function StreamingLoess(;
-        fraction::Float64=0.67,
-        chunk_size::Int=5000,
-        overlap::Int=-1,
-        iterations::Int=3,
-        weight_function::String="tricube",
-        robustness_method::String="bisquare",
-        scaling_method::String="mad",
-        boundary_policy::String="extend",
-        auto_converge::Float64=NaN,
-        outputs::Vector{String}=String[],
-        zero_weight_fallback::String="use_local_mean",
-        parallel::Bool=true,
-        degree::String="linear",
-        dimensions::Int=1,
-        distance_metric::String="normalized",
-        surface_mode::String="interpolation",
-        merge_strategy::String="weighted_average",
-        weighted_metric_weights::Union{Vector{Float64},Nothing}=nothing,
-        cell::Union{Float64,Nothing}=nothing,
-        interpolation_vertices::Union{Int,Nothing}=nothing,
-        boundary_degree_fallback::Union{Bool,Nothing}=nothing,
-        missing::String="error",
-        intervals=nothing,
+        fraction::Float64 = 0.67,
+        chunk_size::Int = 5000,
+        overlap::Int = -1,
+        iterations::Int = 3,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        auto_converge::Float64 = NaN,
+        outputs::Vector{String} = String[],
+        zero_weight_fallback::String = "use_local_mean",
+        parallel::Bool = true,
+        degree::String = "linear",
+        dimensions::Int = 1,
+        distance_metric::String = "normalized",
+        surface_mode::String = "interpolation",
+        merge_strategy::String = "weighted_average",
+        weighted_metric_weights::Union{Vector{Float64},Nothing} = nothing,
+        cell::Union{Float64,Nothing} = nothing,
+        interpolation_vertices::Union{Int,Nothing} = nothing,
+        boundary_degree_fallback::Union{Bool,Nothing} = nothing,
+        missing::String = "error",
+        intervals = nothing,
     )
         configured_dimensions = max(dimensions, 1)
         interval_options = _interval_options(intervals)
@@ -1141,7 +1141,7 @@ mutable struct StreamingLoess
         prediction_intervals = interval_options.prediction
         flags = _output_flags(
             outputs;
-            allowed=(
+            allowed = (
                 "diagnostics",
                 "residuals",
                 "weights",
@@ -1255,7 +1255,7 @@ function process_chunk(
     s::StreamingLoess,
     x::Vector{Float64},
     y::Vector{Float64};
-    custom_weights::Union{Vector{Float64},Nothing}=nothing,
+    custom_weights::Union{Vector{Float64},Nothing} = nothing,
 )
     if s.dimensions != 1
         throw(
@@ -1310,7 +1310,7 @@ function process_chunk(
     s::StreamingLoess,
     x::Matrix{Float64},
     y::Vector{Float64};
-    custom_weights::Union{Vector{Float64},Nothing}=nothing,
+    custom_weights::Union{Vector{Float64},Nothing} = nothing,
 )
     n = size(x, 1)
     if size(x, 2) != s.dimensions
@@ -1324,7 +1324,9 @@ function process_chunk(
         throw(ArgumentError("x and y must have the same number of observations"))
     end
     if !isnothing(custom_weights) && length(custom_weights) != n
-        throw(ArgumentError("custom_weights must have the same number of observations as y"))
+        throw(
+            ArgumentError("custom_weights must have the same number of observations as y"),
+        )
     end
     x_flat = vec(permutedims(x))
     c_result = lock(s.lock) do
@@ -1420,35 +1422,35 @@ mutable struct OnlineLoess
     lock::ReentrantLock
 
     function OnlineLoess(;
-        fraction::Float64=0.67,
-        window_capacity::Int=1000,
-        min_points::Int=2,
-        iterations::Int=0,
-        weight_function::String="tricube",
-        robustness_method::String="bisquare",
-        scaling_method::String="mad",
-        boundary_policy::String="extend",
-        update_mode::String="incremental",
-        auto_converge::Float64=NaN,
-        outputs::Vector{String}=String[],
-        zero_weight_fallback::String="use_local_mean",
-        degree::String="linear",
-        dimensions::Int=1,
-        distance_metric::String="normalized",
-        surface_mode::String="interpolation",
-        weighted_metric_weights::Union{Vector{Float64},Nothing}=nothing,
-        cell::Union{Float64,Nothing}=nothing,
-        interpolation_vertices::Union{Int,Nothing}=nothing,
-        boundary_degree_fallback::Union{Bool,Nothing}=nothing,
-        missing::String="error",
-        intervals=nothing,
+        fraction::Float64 = 0.67,
+        window_capacity::Int = 1000,
+        min_points::Int = 2,
+        iterations::Int = 0,
+        weight_function::String = "tricube",
+        robustness_method::String = "bisquare",
+        scaling_method::String = "mad",
+        boundary_policy::String = "extend",
+        update_mode::String = "incremental",
+        auto_converge::Float64 = NaN,
+        outputs::Vector{String} = String[],
+        zero_weight_fallback::String = "use_local_mean",
+        degree::String = "linear",
+        dimensions::Int = 1,
+        distance_metric::String = "normalized",
+        surface_mode::String = "interpolation",
+        weighted_metric_weights::Union{Vector{Float64},Nothing} = nothing,
+        cell::Union{Float64,Nothing} = nothing,
+        interpolation_vertices::Union{Int,Nothing} = nothing,
+        boundary_degree_fallback::Union{Bool,Nothing} = nothing,
+        missing::String = "error",
+        intervals = nothing,
     )
         configured_dimensions = max(dimensions, 1)
         interval_options = _interval_options(intervals)
         confidence_intervals = interval_options.confidence
         prediction_intervals = interval_options.prediction
         flags =
-            _output_flags(outputs; allowed=("weights", "gradient", "derivative", "se"))
+            _output_flags(outputs; allowed = ("weights", "gradient", "derivative", "se"))
         # Resolve weighted metric arguments
         wm_ptr, wm_len = if !isnothing(weighted_metric_weights)
             weighted_metric_weights, Culong(length(weighted_metric_weights))
@@ -1547,14 +1549,18 @@ one-dimensional model, pass a scalar coordinate; for multivariate models, pass
 a vector with one coordinate per configured dimension. Returns `nothing` while
 the window is still filling (fewer than `min_points` have been seen).
 """
-function add_point(o::OnlineLoess, x::Real, y::Real; weight::Real=1.0)
+function add_point(o::OnlineLoess, x::Real, y::Real; weight::Real = 1.0)
     return add_point(o, Float64[x], Float64(y); weight)
 end
 
-function add_point(o::OnlineLoess, x::AbstractVector{<:Real}, y::Real; weight::Real=1.0)
+function add_point(o::OnlineLoess, x::AbstractVector{<:Real}, y::Real; weight::Real = 1.0)
     x_values = Float64.(x)
     if length(x_values) != o.dimensions
-        throw(ArgumentError("x must have exactly $(o.dimensions) values for dimensions=$(o.dimensions)"))
+        throw(
+            ArgumentError(
+                "x must have exactly $(o.dimensions) values for dimensions=$(o.dimensions)",
+            ),
+        )
     end
     response = Float64(y)
     c_result = lock(o.lock) do
@@ -1654,13 +1660,13 @@ end
 function predict_window(
     o::OnlineLoess,
     new_x::Vector{Float64};
-    outputs::Vector{String}=String[],
-    intervals=nothing,
-    extrapolation::String="clamp",
-    max_extrapolation_distance::Union{Float64,Nothing}=nothing,
-    max_neighbor_distance::Union{Float64,Nothing}=nothing,
+    outputs::Vector{String} = String[],
+    intervals = nothing,
+    extrapolation::String = "clamp",
+    max_extrapolation_distance::Union{Float64,Nothing} = nothing,
+    max_neighbor_distance::Union{Float64,Nothing} = nothing,
 )
-    flags = _output_flags(outputs; allowed=("se", "gradient", "derivative"))
+    flags = _output_flags(outputs; allowed = ("se", "gradient", "derivative"))
     interval_options = _interval_options(intervals)
     c_result = lock(o.lock) do
         GC.@preserve o new_x ccall(

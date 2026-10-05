@@ -8,6 +8,7 @@
 #include <exception>
 #include <iostream>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -143,7 +144,7 @@ void testBasicSmooth() {
   LoessOptions opts;
   opts.fraction = k_fraction_half;
   Loess loess(opts);
-  auto result = loess.fit(x_vals, y_vals).value();
+  auto const result = loess.fit(x_vals, y_vals).value();
 
   assertTrue(result.valid(), "Result should be valid");
   assertTrue(result.y_vector().size() == k_small_count,
@@ -162,7 +163,7 @@ void testBasicSmoothSerial() {
   opts.fraction = k_fraction_half;
   opts.parallel = false;
   Loess loess(opts);
-  auto result = loess.fit(x_vals, y_vals).value();
+  auto const result = loess.fit(x_vals, y_vals).value();
 
   assertTrue(result.valid());
   assertTrue(result.y_vector().size() == k_small_count);
@@ -210,9 +211,9 @@ void testLoessWithDiagnostics() {
   opts.fraction = k_fraction_half;
   opts.outputs = {"diagnostics"};
   Loess loess(opts);
-  auto result = loess.fit(x_vals, y_vals).value();
+  auto const result = loess.fit(x_vals, y_vals).value();
 
-  auto diag = result.diagnostics();
+  auto const diag = result.diagnostics();
   assertTrue(diag.has_value(), "Diagnostics missing");
   const auto rmse = diag.rmse();
   const auto mae = diag.mae();
@@ -236,7 +237,7 @@ void testLoessWithResiduals() {
   opts.fraction = k_fraction_half;
   opts.outputs = {"residuals"};
   Loess loess(opts);
-  auto result = loess.fit(x_vals, y_vals).value();
+  auto const result = loess.fit(x_vals, y_vals).value();
 
   assertTrue(result.residuals().size() == k_small_count, "Residuals missing");
 }
@@ -252,9 +253,9 @@ void testLoessWithRobustnessWeights() {
   opts.iterations = k_iterations3;
   opts.outputs = {"weights"};
   Loess loess(opts);
-  auto result = loess.fit(x_vals, y_vals).value();
+  auto const result = loess.fit(x_vals, y_vals).value();
 
-  auto weights = result.robustness_weights();
+  auto const weights = result.robustness_weights();
   assertTrue(weights.size() == k_small_count);
   for (const double weight : weights) {
     assertTrue(weight >= 0 && weight <= 1, "Weight out of range");
@@ -272,9 +273,9 @@ void testLoessWithGradient() {
   opts.surface_mode = "direct";
   opts.outputs = {"gradient"};
   Loess loess(opts);
-  auto result = loess.fit(x_vals, y_vals).value();
+  auto const result = loess.fit(x_vals, y_vals).value();
 
-  auto gradient = result.gradient();
+  auto const gradient = result.gradient();
   assertTrue(gradient.size() == k_small_count * result.dimensions(),
              "Gradient count mismatch");
 }
@@ -289,11 +290,11 @@ void testPredictGroupedOutputs() {
   fit_options.retain_model = true;
   Loess loess(fit_options);
   auto fit_result = loess.fit(x_vals, y_vals).value();
-  auto predict_model = fit_result.predict_model();
+  auto const predict_model = fit_result.predict_model();
 
   PredictOptions predict_options;
   predict_options.outputs = {"se", "derivative"};
-  auto prediction =
+  auto const prediction =
       predict_model.predict({k_prediction_query_x}, predict_options);
 
   assertTrue(prediction.valid(), "Prediction should be valid");
@@ -312,7 +313,7 @@ void testLoessReturnSorted() {
   LoessOptions default_options;
   default_options.fraction = k_fraction_seventh;
   Loess default_loess(default_options);
-  auto default_result = default_loess.fit(unsorted_x, unsorted_y).value();
+  auto const default_result = default_loess.fit(unsorted_x, unsorted_y).value();
   assertTrue(default_result.x_vector() == unsorted_x,
              "return_sorted should default to original input order");
 
@@ -320,7 +321,7 @@ void testLoessReturnSorted() {
   sorted_options.fraction = k_fraction_seventh;
   sorted_options.outputs = {"residuals", "weights", "sorted"};
   Loess sorted_loess(sorted_options);
-  auto sorted_result = sorted_loess.fit(unsorted_x, unsorted_y).value();
+  auto const sorted_result = sorted_loess.fit(unsorted_x, unsorted_y).value();
 
   const auto sorted_x = sorted_result.x_vector();
   assertTrue(std::is_sorted(sorted_x.begin(), sorted_x.end()),
@@ -348,7 +349,7 @@ void testLoessWithConfidenceIntervals() {
   opts.fraction = k_fraction_half;
   opts.intervals.confidence = k_confidence_level;
   Loess loess(opts);
-  auto result = loess.fit(x_vals, y_vals).value();
+  auto const result = loess.fit(x_vals, y_vals).value();
 
   auto conf_lower = result.confidence_lower();
   auto conf_upper = result.confidence_upper();
@@ -374,7 +375,7 @@ void testLoessWithPredictionIntervals() {
   opts.fraction = k_fraction_half;
   opts.intervals.prediction = k_confidence_level;
   Loess loess(opts);
-  auto result = loess.fit(x_vals, y_vals).value();
+  auto const result = loess.fit(x_vals, y_vals).value();
 
   assertTrue(result.prediction_lower().size() == k_twenty_count);
   assertTrue(result.prediction_upper().size() == k_twenty_count);
@@ -393,8 +394,8 @@ void testLoessReuse() {
   opts.outputs = {"diagnostics"};
   Loess loess(opts);
 
-  auto result1 = loess.fit(x_vals1, y_vals1).value();
-  auto result2 = loess.fit(x_vals2, y_vals2).value();
+  auto const result1 = loess.fit(x_vals1, y_vals1).value();
+  auto const result2 = loess.fit(x_vals2, y_vals2).value();
 
   assertTrue(result1.y_vector().size() == k_small_count);
   assertTrue(result2.y_vector().size() == k_small_count);
@@ -417,8 +418,8 @@ void testStreamingReturnsAllPoints() {
   opts.chunk_size = k_chunk_large; // > k_hundred_count
   StreamingLoess stream(opts);
 
-  auto val1 = stream.process_chunk(x_vals, y_vals).value();
-  auto val2 = stream.finalize().value();
+  auto const val1 = stream.process_chunk(x_vals, y_vals).value();
+  auto const val2 = stream.finalize().value();
 
   assertTrue(val1.y_vector().size() + val2.y_vector().size() == k_hundred_count,
              "Total points mismatch");
@@ -440,8 +441,8 @@ void testStreamingBasic() {
   opts.chunk_size = k_chunk_small;
   StreamingLoess stream(opts);
 
-  auto chunk_result = stream.process_chunk(x_vals, y_vals).value();
-  auto final_result = stream.finalize().value();
+  auto const chunk_result = stream.process_chunk(x_vals, y_vals).value();
+  auto const final_result = stream.finalize().value();
   (void)chunk_result;
   (void)final_result;
 }
@@ -462,8 +463,8 @@ void testStreamingAccuracy() {
   sopts.fraction = k_fraction_half;
   sopts.chunk_size = k_chunk_small;
   StreamingLoess stream(sopts);
-  auto val1 = stream.process_chunk(x_vals, y_vals).value();
-  auto val2 = stream.finalize().value();
+  auto const val1 = stream.process_chunk(x_vals, y_vals).value();
+  auto const val2 = stream.finalize().value();
 
   std::vector<double> stream_y;
   auto y_vec1 = val1.y_vector();
@@ -475,7 +476,7 @@ void testStreamingAccuracy() {
   LoessOptions bopts;
   bopts.fraction = k_fraction_half;
   Loess batch(bopts);
-  auto bres = batch.fit(x_vals, y_vals).value();
+  auto const bres = batch.fit(x_vals, y_vals).value();
   auto batch_y = bres.y_vector();
 
   assertTrue(stream_y.size() == batch_y.size());
@@ -500,7 +501,7 @@ void testStreamingReturnSe() {
   opts.chunk_size = k_chunk_half;
   opts.outputs = {"se"};
   StreamingLoess stream(opts);
-  auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
+  auto const chunk_res = stream.process_chunk(x_vals, y_vals).value();
 
   assertTrue(!chunk_res.standard_errors().empty(),
              "standard errors should be populated");
@@ -526,7 +527,7 @@ void testStreamingConfidenceAndPredictionIntervals() {
   opts.intervals.confidence = k_confidence_level;
   opts.intervals.prediction = k_confidence_level;
   StreamingLoess stream(opts);
-  auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
+  auto const chunk_res = stream.process_chunk(x_vals, y_vals).value();
 
   auto conf_lower = chunk_res.confidence_lower();
   auto conf_upper = chunk_res.confidence_upper();
@@ -558,7 +559,7 @@ void testOnlineBasic() {
 
   int points_out = 0;
   for (size_t idx = 0; idx < x_vals.size(); ++idx) {
-    auto out = online.add_point(x_vals[idx], y_vals[idx]).value();
+    auto const out = online.add_point(x_vals[idx], y_vals[idx]).value();
     if (out.has_value()) {
       points_out++;
     }
@@ -576,12 +577,14 @@ void testOnlineMultidimensionalInput() {
   options.update_mode = "full";
   OnlineLoess online(options);
 
-  const std::array<std::array<double, 2>, 4> points = {{
-      {0.0, 0.0},
-      {1.0, 0.0},
-      {0.0, 1.0},
-      {1.0, 1.0},
-  }};
+  const std::array<std::array<double, 2>, 4> points = {
+      {
+          {0.0, 0.0},
+          {1.0, 0.0},
+          {0.0, 1.0},
+          {1.0, 1.0},
+      },
+  };
   std::optional<OnlineOutput> last;
   for (const auto &point : points) {
     auto output = online.add_point(std::vector<double>{point[0], point[1]},
@@ -618,11 +621,12 @@ void testWeightedAdaptersAndOnlineWindowApis() {
   streaming_options.surface_mode = "direct";
   StreamingLoess weighted_stream(streaming_options);
   StreamingLoess plain_stream(streaming_options);
-  auto weighted_chunk = weighted_stream
-                            .process_chunk_weighted(
-                                predictor_values, response_values, case_weights)
-                            .value();
-  auto plain_chunk =
+  auto const weighted_chunk =
+      weighted_stream
+          .process_chunk_weighted(predictor_values, response_values,
+                                  case_weights)
+          .value();
+  auto const plain_chunk =
       plain_stream.process_chunk(predictor_values, response_values).value();
   assertTrue(std::abs(weighted_chunk.y_vector()[k_weighted_outlier_index] -
                       k_weighted_expected_prediction_y) <
@@ -653,13 +657,16 @@ void testWeightedAdaptersAndOnlineWindowApis() {
            .has_value());
 
   auto diagnostics = weighted_online.window_diagnostics().value();
-  assertTrue(diagnostics.has_value());
+  if (!diagnostics.has_value()) {
+    assertTrue(false, "online window should produce diagnostics");
+    return;
+  }
   assertTrue(diagnostics->rmse().has_value());
-  PredictOptions predict_options;
-  auto weighted_prediction =
+  PredictOptions const predict_options;
+  auto const weighted_prediction =
       weighted_online.predict_window({k_weighted_query_x}, predict_options)
           .value();
-  auto plain_prediction =
+  auto const plain_prediction =
       plain_online.predict_window({k_weighted_query_x}, predict_options)
           .value();
   assertTrue(
@@ -732,7 +739,7 @@ void testMismatchedLengths() {
   }
 
   // Also test checking has_value()
-  auto res = loess.fit(x_vals, y_vals);
+  auto const res = loess.fit(x_vals, y_vals);
   assertTrue(!res.has_value());
   assertTrue(!res.error().empty());
 }
@@ -746,7 +753,7 @@ void testLoessMissingPolicy() {
     LoessOptions opts;
     opts.fraction = k_fraction_half;
     Loess loess(opts);
-    auto res = loess.fit(x_vals, y_vals);
+    auto const res = loess.fit(x_vals, y_vals);
     assertTrue(!res.has_value(), "default missing policy should reject NaN");
   }
 
@@ -755,7 +762,7 @@ void testLoessMissingPolicy() {
     opts.fraction = k_fraction_half;
     opts.missing = "drop";
     Loess loess(opts);
-    auto res = loess.fit(x_vals, y_vals).value();
+    auto const res = loess.fit(x_vals, y_vals).value();
     assertTrue(res.y_vector().size() == x_vals.size() - 1);
   }
 
@@ -787,8 +794,8 @@ void testStreamingMissingPolicy() {
   opts.chunk_size = k_window_capacity;
   opts.missing = "drop";
   StreamingLoess streamer(opts);
-  auto chunk_res = streamer.process_chunk(x_vals, y_vals).value();
-  auto final_res = streamer.finalize().value();
+  auto const chunk_res = streamer.process_chunk(x_vals, y_vals).value();
+  auto const final_res = streamer.finalize().value();
   assertTrue(chunk_res.y_vector().size() + final_res.y_vector().size() ==
              x_vals.size() - 1);
 }
@@ -821,89 +828,89 @@ std::pair<std::vector<double>, std::vector<double>> makeLinear30() {
 
 void testLoessScalingMethods() {
   std::cout << "Running testLoessScalingMethods...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
+  auto const data = makeLinear30();
+  auto const x_vals = data.first;
+  auto const y_vals = data.second;
   for (const char *method : {"mad", "mar", "mean"}) {
     LoessOptions opts;
     opts.fraction = k_fraction_half;
     opts.scaling_method = method;
     Loess loess(opts);
-    auto res = loess.fit(x_vals, y_vals).value();
+    auto const res = loess.fit(x_vals, y_vals).value();
     assertTrue(res.y_vector().size() == k_thirty_count, method);
   }
 }
 
 void testLoessBoundaryPolicies() {
   std::cout << "Running testLoessBoundaryPolicies...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
+  auto const data = makeLinear30();
+  auto const x_vals = data.first;
+  auto const y_vals = data.second;
   for (const char *policy : {"extend", "reflect", "zero", "noboundary"}) {
     LoessOptions opts;
     opts.fraction = k_fraction_half;
     opts.boundary_policy = policy;
     Loess loess(opts);
-    auto res = loess.fit(x_vals, y_vals).value();
+    auto const res = loess.fit(x_vals, y_vals).value();
     assertTrue(res.y_vector().size() == k_thirty_count, policy);
   }
 }
 
 void testLoessZeroWeightFallback() {
   std::cout << "Running testLoessZeroWeightFallback...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
+  auto const data = makeLinear30();
+  auto const x_vals = data.first;
+  auto const y_vals = data.second;
   for (const char *fallback_name :
        {"use_local_mean", "return_original", "return_none"}) {
     LoessOptions opts;
     opts.fraction = k_fraction_half;
     opts.zero_weight_fallback = fallback_name;
     Loess loess(opts);
-    auto res = loess.fit(x_vals, y_vals).value();
+    auto const res = loess.fit(x_vals, y_vals).value();
     assertTrue(res.y_vector().size() == k_thirty_count, fallback_name);
   }
 }
 
 void testLoessAutoConverge() {
   std::cout << "Running testLoessAutoConverge...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
+  auto const data = makeLinear30();
+  auto const x_vals = data.first;
+  auto const y_vals = data.second;
   LoessOptions opts;
   opts.fraction = k_fraction_half;
   opts.auto_converge = k_auto_converge_tol;
   Loess loess(opts);
-  auto res = loess.fit(x_vals, y_vals).value();
+  auto const res = loess.fit(x_vals, y_vals).value();
   assertTrue(res.y_vector().size() == k_thirty_count);
 }
 
 void testLoessPolynomialDegrees() {
   std::cout << "Running testLoessPolynomialDegrees...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
+  auto const data = makeLinear30();
+  auto const x_vals = data.first;
+  auto const y_vals = data.second;
   for (const char *deg : {"constant", "linear", "quadratic"}) {
     LoessOptions opts;
     opts.fraction = k_fraction_half;
     opts.degree = deg;
     Loess loess(opts);
-    auto res = loess.fit(x_vals, y_vals).value();
+    auto const res = loess.fit(x_vals, y_vals).value();
     assertTrue(res.y_vector().size() == k_thirty_count, deg);
   }
 }
 
 void testLoessDistanceMetrics() {
   std::cout << "Running testLoessDistanceMetrics...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
+  auto const data = makeLinear30();
+  auto const x_vals = data.first;
+  auto const y_vals = data.second;
   for (const char *metric : {"euclidean", "manhattan", "chebyshev"}) {
     LoessOptions opts;
     opts.fraction = k_fraction_half;
     opts.distance_metric = metric;
     Loess loess(opts);
-    auto res = loess.fit(x_vals, y_vals).value();
+    auto const res = loess.fit(x_vals, y_vals).value();
     assertTrue(res.y_vector().size() == k_thirty_count, metric);
   }
 }
@@ -935,8 +942,10 @@ void testLoessWeightedDistanceUsesExplicitMetric() {
 
   LoessOptions weighted_options = normalized_options;
   weighted_options.distance_metric = "weighted";
-  weighted_options.weighted_metric_weights = {1.0,
-                                              k_weighted_metric_column_weight};
+  weighted_options.weighted_metric_weights = {
+      1.0,
+      k_weighted_metric_column_weight,
+  };
   const auto weighted =
       Loess(weighted_options).fit(x_vals, y_vals).value().y_vector();
 
@@ -953,35 +962,41 @@ void testLoessWeightedDistanceUsesExplicitMetric() {
 
 void testLoessSurfaceModeAndReturnSe() {
   std::cout << "Running testLoessSurfaceModeAndReturnSe...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
+  auto const data = makeLinear30();
+  auto const x_vals = data.first;
+  auto const y_vals = data.second;
   LoessOptions opts;
   opts.fraction = k_fraction_half;
   opts.surface_mode = "direct";
   opts.outputs = {"se"};
   Loess loess(opts);
-  auto res = loess.fit(x_vals, y_vals).value();
+  auto const res = loess.fit(x_vals, y_vals).value();
   assertTrue(res.y_vector().size() == k_thirty_count);
   assertTrue(!std::isnan(res.enp()),
              "enp should be set with outputs se+direct");
-  auto std_errors = res.standard_errors();
+  auto const std_errors = res.standard_errors();
   assertTrue(std_errors.size() == k_thirty_count,
              "Standard errors should be populated");
 }
 
 void testLoessWeightFunctions() {
   std::cout << "Running testLoessWeightFunctions...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
-  for (const char *weight_fn : {"epanechnikov", "gaussian", "uniform",
-                                "biweight", "triangle", "cosine"}) {
+  auto const data = makeLinear30();
+  auto const x_vals = data.first;
+  auto const y_vals = data.second;
+  for (const char *weight_fn : {
+           "epanechnikov",
+           "gaussian",
+           "uniform",
+           "biweight",
+           "triangle",
+           "cosine",
+       }) {
     LoessOptions opts;
     opts.fraction = k_fraction_half;
     opts.weight_function = weight_fn;
     Loess loess(opts);
-    auto res = loess.fit(x_vals, y_vals).value();
+    auto const res = loess.fit(x_vals, y_vals).value();
     assertTrue(res.y_vector().size() == k_thirty_count, weight_fn);
   }
 }
@@ -999,8 +1014,8 @@ void testLoessCustomWeights() {
     LoessOptions opts;
     opts.fraction = k_fraction_six_tenths;
     Loess loess(opts);
-    auto r_no_w = loess.fit(x_vals, y_outlier).value();
-    auto r_w = loess.fit(x_vals, y_outlier, w_zero).value();
+    auto const r_no_w = loess.fit(x_vals, y_outlier).value();
+    auto const r_w = loess.fit(x_vals, y_outlier, w_zero).value();
 
     const std::vector<size_t> non_outlier = {0, 1, 2, 4, 5, 6};
     double err_no_w = 0.0;
@@ -1018,8 +1033,8 @@ void testLoessCustomWeights() {
     LoessOptions opts;
     opts.fraction = k_fraction_six_tenths;
     Loess loess(opts);
-    auto r_no_w = loess.fit(x_vals, y_true).value();
-    auto r_w = loess.fit(x_vals, y_true, w_uniform).value();
+    auto const r_no_w = loess.fit(x_vals, y_true).value();
+    auto const r_w = loess.fit(x_vals, y_true, w_uniform).value();
     for (size_t idx = 0; idx < r_no_w.y_vector().size(); ++idx) {
       assertApprox(r_w.y_vector()[idx], r_no_w.y_vector()[idx], k_epsilon_1e6);
     }
@@ -1031,7 +1046,7 @@ void testLoessCustomWeights() {
     LoessOptions opts;
     opts.fraction = k_fraction_six_tenths;
     Loess loess(opts);
-    auto res = loess.fit(x_vals, y_true, w_bad);
+    auto const res = loess.fit(x_vals, y_true, w_bad);
     assertTrue(!res.has_value(), "wrong-length weights should return error");
   }
 
@@ -1041,38 +1056,38 @@ void testLoessCustomWeights() {
     LoessOptions opts;
     opts.fraction = k_fraction_six_tenths;
     Loess loess(opts);
-    auto res = loess.fit(x_vals, y_true, w_neg);
+    auto const res = loess.fit(x_vals, y_true, w_neg);
     assertTrue(!res.has_value(), "negative weights should return error");
   }
 }
 
 void testLoessRobustnessMethods() {
   std::cout << "Running testLoessRobustnessMethods...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
+  auto const data = makeLinear30();
+  auto const x_vals = data.first;
+  auto const y_vals = data.second;
   for (const char *robustness_m : {"huber", "talwar"}) {
     LoessOptions opts;
     opts.fraction = k_fraction_half;
     opts.iterations = k_iterations2;
     opts.robustness_method = robustness_m;
     Loess loess(opts);
-    auto res = loess.fit(x_vals, y_vals).value();
+    auto const res = loess.fit(x_vals, y_vals).value();
     assertTrue(res.y_vector().size() == k_thirty_count, robustness_m);
   }
 }
 
 void testLoessCrossValidation() {
   std::cout << "Running testLoessCrossValidation...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
+  auto const data = makeLinear30();
+  auto const x_vals = data.first;
+  auto const y_vals = data.second;
   LoessOptions opts;
   opts.cv.fractions = {k_fraction_third, k_fraction_half, k_fraction_seventh};
   opts.cv.method = "kfold";
   opts.cv.k = k_cv_k;
   Loess loess(opts);
-  auto res = loess.fit(x_vals, y_vals).value();
+  auto const res = loess.fit(x_vals, y_vals).value();
   assertTrue(res.valid());
 
   LoessOptions grouped;
@@ -1086,9 +1101,9 @@ void testLoessCrossValidation() {
 
 void testStreamingMergeStrategies() {
   std::cout << "Running testStreamingMergeStrategies...\n";
-  auto data = makeLinear30();
-  auto x_vals = data.first;
-  auto y_vals = data.second;
+  auto const data = makeLinear30();
+  auto const x_vals = data.first;
+  auto const y_vals = data.second;
   for (const char *merge_strat : {"average", "first", "last"}) {
     StreamingOptions opts;
     opts.fraction = k_fraction_half;
@@ -1096,8 +1111,8 @@ void testStreamingMergeStrategies() {
     opts.overlap = 0;
     opts.merge_strategy = merge_strat;
     StreamingLoess stream(opts);
-    auto chunk_res = stream.process_chunk(x_vals, y_vals).value();
-    auto final_res = stream.finalize().value();
+    auto const chunk_res = stream.process_chunk(x_vals, y_vals).value();
+    auto const final_res = stream.finalize().value();
     assertTrue(chunk_res.y_vector().size() + final_res.y_vector().size() ==
                    k_thirty_count,
                merge_strat);
@@ -1163,14 +1178,14 @@ int main() {
     assertTrue(std::string(cpp_version()) == FASTLOESS_CPP_VERSION_STRING,
                "Runtime library version must match generated header version");
     {
-      LoessResult empty;
+      LoessResult const empty;
       assertTrue(!empty.diagnostics().rmse().has_value(),
                  "empty diagnostics must be absent");
       assertTrue(std::isnan(empty.enp()) && std::isnan(empty.residual_scale()),
                  "empty hat statistics must be absent");
       assertTrue(empty.x_vector().empty() && empty.y_vector().empty(),
                  "empty fit accessors must be safe");
-      PredictResult empty_prediction;
+      PredictResult const empty_prediction;
       assertTrue(empty_prediction.y().empty(),
                  "empty prediction accessors must be safe");
       bool rejected = false;
@@ -1194,35 +1209,35 @@ int main() {
       };
       LoessOptions batch;
       batch.outputs = {"unknown"};
-      expect_error([&] { Loess model(batch); });
+      expect_error([&] { Loess const model(batch); });
       batch.outputs.clear();
       batch.iterations = -1;
-      expect_error([&] { Loess model(batch); });
+      expect_error([&] { Loess const model(batch); });
       batch.iterations = 0;
       batch.fraction = 0.0;
-      expect_error([&] { Loess model(batch); });
+      expect_error([&] { Loess const model(batch); });
       batch.fraction = k_fraction_half;
       batch.cv.fractions = {k_fraction_half};
-      for (int folds : {-1, 0, 1}) {
+      for (int const folds : {-1, 0, 1}) {
         batch.cv.k = folds;
-        expect_error([&] { Loess model(batch); });
+        expect_error([&] { Loess const model(batch); });
       }
       batch.cv.k = 3;
       batch.cv.method = "invalid";
-      expect_error([&] { Loess model(batch); });
+      expect_error([&] { Loess const model(batch); });
       StreamingOptions streaming;
       streaming.outputs = {"sorted"};
-      expect_error([&] { StreamingLoess model(streaming); });
+      expect_error([&] { StreamingLoess const model(streaming); });
       streaming.outputs.clear();
       streaming.cv.fractions = {k_fraction_half};
-      expect_error([&] { StreamingLoess model(streaming); });
+      expect_error([&] { StreamingLoess const model(streaming); });
       OnlineOptions online;
       online.outputs = {"diagnostics"};
-      expect_error([&] { OnlineLoess model(online); });
+      expect_error([&] { OnlineLoess const model(online); });
       PredictOptions prediction;
       prediction.outputs = {"sorted"};
       expect_error([&] {
-        PredictModel model;
+        PredictModel const model;
         model.predict({}, prediction);
       });
     }
@@ -1234,8 +1249,9 @@ int main() {
       options.surface_mode = "direct";
       options.retain_model = true;
       Loess model(options);
-      const std::vector<double> predictors = {0, 0, 1, 0, 0, 1,
-                                              1, 1, 2, 0, 0, 2};
+      const std::vector<double> predictors = {
+          0, 0, 1, 0, 0, 1, 1, 1, 2, 0, 0, 2,
+      };
       const std::vector<double> observations = {0, 1, 2, 3, 2, 4};
       PredictModel retained;
       {
@@ -1244,7 +1260,7 @@ int main() {
         assertTrue(result.value().x_vector() == predictors,
                    "all predictor coordinates must be accessible");
         retained = result.value().predict_model();
-        LoessResult moved = std::move(result.value());
+        LoessResult const moved = std::move(result.value());
         assertTrue(result.value().x_vector().empty(),
                    "moved-from result access must be safe");
         assertTrue(moved.y_vector().size() == observations.size(),

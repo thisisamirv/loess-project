@@ -13,6 +13,9 @@ from .base import REPO_ROOT, RunResult, Snippet, _find_exe
 
 
 def skip_reason(snippet: Snippet) -> str | None:
+    code = snippet.code
+    if re.search(r"^\s*import\b", code, re.MULTILINE) or "await init(" in code:
+        return "ES module import (not supported in CJS runner)"
     return None
 
 

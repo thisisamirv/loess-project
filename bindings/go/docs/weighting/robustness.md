@@ -69,7 +69,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (bisquare robustness): 0.3851521721408433
+First smoothed value (bisquare robustness): 0.3851521721408432
 ```
 
 ---
@@ -299,7 +299,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (mad scaling): 0.3851521721408433
+First smoothed value (mad scaling): 0.3851521721408432
 ```
 
 See [Scaling Methods](scaling.md) for a full breakdown.
@@ -351,5 +351,5 @@ func main() {
 ```
 
 ```output
-First smoothed value (auto-converge): 0.38525101179127597
+First smoothed value (auto-converge): 0.3852510117912758
 ```

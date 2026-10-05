@@ -65,7 +65,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (1D LOESS): 0.24731032286452279
+First smoothed value (1D LOESS): 0.2473103228645227
 ```
 
 ---
@@ -116,7 +116,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (2D LOESS, lat/lon): 1.1732725263911794
+First smoothed value (2D LOESS, lat/lon): 1.1526376996826049
 ```
 
 ---
@@ -169,7 +169,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (3D LOESS): -0.6783014734063575
+First smoothed value (3D LOESS): -0.1882383650842344
 ```
 
 ---

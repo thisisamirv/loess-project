@@ -79,7 +79,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (average merge): 0.3851521721408433
+First smoothed value (average merge): 0.3851521721408432
 ```
 
 ---
@@ -134,7 +134,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (take_first merge): 0.3851521721408433
+First smoothed value (take_first merge): 0.3851521721408432
 ```
 
 ---
@@ -189,7 +189,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (take_last merge): 0.3851521721408433
+First smoothed value (take_last merge): 0.3851521721408432
 ```
 
 ---
@@ -248,7 +248,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (weighted_average merge): 0.3851521721408433
+First smoothed value (weighted_average merge): 0.3851521721408432
 ```
 
 ---
