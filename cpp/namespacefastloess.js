@@ -11,6 +11,7 @@ var namespacefastloess =
     [ "CVOptions", "structfastloess_1_1CVOptions.html", "structfastloess_1_1CVOptions" ],
     [ "Diagnostics", "classfastloess_1_1Diagnostics.html", "classfastloess_1_1Diagnostics" ],
     [ "Expected", "classfastloess_1_1Expected.html", "classfastloess_1_1Expected" ],
+    [ "IntervalsOptions", "structfastloess_1_1IntervalsOptions.html", "structfastloess_1_1IntervalsOptions" ],
     [ "Loess", "classfastloess_1_1Loess.html", "classfastloess_1_1Loess" ],
     [ "LoessError", "classfastloess_1_1LoessError.html", "classfastloess_1_1LoessError" ],
     [ "LoessOptions", "structfastloess_1_1LoessOptions.html", "structfastloess_1_1LoessOptions" ],
@@ -23,5 +24,6 @@ var namespacefastloess =
     [ "PredictResult", "classfastloess_1_1PredictResult.html", "classfastloess_1_1PredictResult" ],
     [ "StreamingLoess", "classfastloess_1_1StreamingLoess.html", "classfastloess_1_1StreamingLoess" ],
     [ "StreamingOptions", "structfastloess_1_1StreamingOptions.html", "structfastloess_1_1StreamingOptions" ],
-    [ "hasOutput", "namespacefastloess.html#a3a5aa6cb156511f5afdd9437f14a1220", null ]
+    [ "hasOutput", "namespacefastloess.html#a3a5aa6cb156511f5afdd9437f14a1220", null ],
+    [ "validateOutputs", "namespacefastloess.html#ae9cd04f894409b8f7bd69cd6086d4271", null ]
 ];

@@ -127,6 +127,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a2f87e5bcc659dc93bb65ab1087af0bfa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae5faeacb6f5a64e0f5bcd4ebbdf2cf9e" id="r_ae5faeacb6f5a64e0f5bcd4ebbdf2cf9e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">Expected</a>&lt; <a class="el" href="classfastloess_1_1LoessResult.html">LoessResult</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1StreamingLoess.html#ae5faeacb6f5a64e0f5bcd4ebbdf2cf9e">process_chunk</a> (<a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; &amp;<a class="el" href="classfastloess_1_1Expected.html">x_values</a>, <a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; &amp;<a class="el" href="classfastloess_1_1Expected.html">y_values</a>)</td></tr>
 <tr class="separator:ae5faeacb6f5a64e0f5bcd4ebbdf2cf9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc2c8d04a33e18bbdc05d07d7ea9c6ef" id="r_acc2c8d04a33e18bbdc05d07d7ea9c6ef"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">Expected</a>&lt; <a class="el" href="classfastloess_1_1LoessResult.html">LoessResult</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1StreamingLoess.html#acc2c8d04a33e18bbdc05d07d7ea9c6ef">process_chunk_weighted</a> (<a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; &amp;<a class="el" href="classfastloess_1_1Expected.html">x_values</a>, <a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; &amp;<a class="el" href="classfastloess_1_1Expected.html">y_values</a>, <a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; &amp;custom_weights)</td></tr>
+<tr class="separator:acc2c8d04a33e18bbdc05d07d7ea9c6ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1a7873b246d8cc285add37f4262e2e0d" id="r_a1a7873b246d8cc285add37f4262e2e0d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">Expected</a>&lt; <a class="el" href="classfastloess_1_1LoessResult.html">LoessResult</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1StreamingLoess.html#a1a7873b246d8cc285add37f4262e2e0d">finalize</a> ()</td></tr>
 <tr class="separator:a1a7873b246d8cc285add37f4262e2e0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -334,6 +336,48 @@ Public Member Functions</h2></td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>y_values</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="acc2c8d04a33e18bbdc05d07d7ea9c6ef" name="acc2c8d04a33e18bbdc05d07d7ea9c6ef"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc2c8d04a33e18bbdc05d07d7ea9c6ef">&#9670;&#160;</a></span>process_chunk_weighted()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">Expected</a>&lt; <a class="el" href="classfastloess_1_1LoessResult.html">LoessResult</a> &gt; fastloess::StreamingLoess::process_chunk_weighted </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>x_values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>y_values</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>custom_weights</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

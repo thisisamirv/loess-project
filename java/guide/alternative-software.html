@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Alternative Software :: fastloess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/guide/alternative-software.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -250,8 +250,8 @@ public class AltSoftwareGaussian {
 
         Options options = Options.builder()
                 .fraction(0.6)
-                .degree("linear")
                 .iterations(0)
+                .degree("linear")
                 .surfaceMode("direct")
                 .boundaryPolicy("noboundary")
                 .build();
@@ -323,11 +323,11 @@ public class AltSoftwareRobust {
 
         Options options = Options.builder()
                 .fraction(0.6)
-                .degree("linear")
                 .iterations(3)
-                .scalingMethod("mar")
+                .degree("linear")
                 .surfaceMode("direct")
                 .boundaryPolicy("noboundary")
+                .scalingMethod("mar")
                 .build();
 
         try (Loess model = new Loess(options)) {

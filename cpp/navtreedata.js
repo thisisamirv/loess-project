@@ -79,7 +79,11 @@ var NAVTREE =
       ] ]
     ] ],
     [ "Files", "files.html", [
-      [ "File List", "files.html", "files_dup" ]
+      [ "File List", "files.html", "files_dup" ],
+      [ "File Members", "globals.html", [
+        [ "All", "globals.html", null ],
+        [ "Macros", "globals_defs.html", null ]
+      ] ]
     ] ]
   ] ]
 ];
@@ -87,7 +91,7 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "adapter_choice.html",
-"classfastloess_1_1StreamingLoess.html#a2f87e5bcc659dc93bb65ab1087af0bfa"
+"classfastloess_1_1PredictResult.html#afcf547868d0cc51b7357f9c086393e46"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>OnlineLoess API :: fastloess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/api/api-online.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -218,7 +218,7 @@
 </div>
 </div>
 <div class="paragraph">
-<p><code>OnlineOptions.Builder</code> exposes all the same settings as <a href="api.html" class="xref page"><code>Options.Builder</code></a> (except <code>returnSorted</code>, <code>returnDiagnostics</code>, <code>returnResiduals</code>, <code>cvFractions</code>/<code>cvMethod</code>/<code>cvK</code>/<code>cvSeed</code>, and <code>parallel</code>, which are Batch-only or Batch/Streaming-only). Online always runs sequentially. <code>confidenceIntervals</code>/<code>predictionIntervals</code>/<code>returnSe</code> require <code>updateMode("full")</code>. <code>outputs(String&#8230;&#8203;)</code> accepts <code>"weights"</code>, <code>"gradient"</code>/<code>"derivative"</code>, and <code>"se"</code> (<code>"se"</code> requires <code>updateMode("full")</code>). Settings:</p>
+<p><code>OnlineOptions.Builder</code> exposes all the same settings as <a href="api.html" class="xref page"><code>Options.Builder</code></a> (except <code>"sorted"</code> output, <code>"diagnostics"</code> output, <code>"residuals"</code> output, <code>cv.fractions</code>/<code>cv.method</code>/<code>cv.k</code>/<code>seed</code>, and <code>parallel</code>, which are Batch-only or Batch/Streaming-only). Online always runs sequentially. <code>intervals.confidence</code>/<code>intervals.prediction</code>/<code>"se"</code> output require <code>updateMode("full")</code>. <code>outputs(String&#8230;&#8203;)</code> accepts <code>"weights"</code>, <code>"gradient"</code>/<code>"derivative"</code>, and <code>"se"</code> (<code>"se"</code> requires <code>updateMode("full")</code>). Settings:</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -259,48 +259,6 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"bisquare"</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Robustness method</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>scalingMethod</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"mad"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Residual scaling method</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boundaryPolicy</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"extend"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary handling policy</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>zeroWeightFallback</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Zero-weight handling</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>missing</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Policy for non-finite (NaN/Inf) values in each point</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>autoConverge</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code> (disabled)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-convergence tolerance</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs(String&#8230;&#8203;)</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String&#8230;&#8203;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">empty</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Select <code>weights</code>, <code>gradient</code>/<code>derivative</code>, and/or <code>se</code>.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include <code>robustnessWeight()</code> in result</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>degree</code></p></td>
@@ -345,34 +303,40 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Number of interpolation vertices</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>zeroWeightFallback</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zero-weight handling</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boundaryPolicy</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"extend"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary handling policy</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>boundaryDegreeFallback</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>null</code> (auto)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Fall back to lower polynomial degree at boundaries when higher degrees fail</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnGradient</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include the latest point&#8217;s local fit gradient in the result (<code>surfaceMode = "direct"</code> only)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>scalingMethod</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"mad"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual scaling method</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceIntervals</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>autoConverge</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code> (disabled)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence level for confidence intervals; requires <code>updateMode("full")</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-convergence tolerance</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>predictionIntervals</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code> (disabled)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence level for prediction intervals; requires <code>updateMode("full")</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSe</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include standard error in result; requires <code>updateMode("full")</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>missing</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Policy for non-finite (NaN/Inf) values in each point</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>windowCapacity</code></p></td>
@@ -392,6 +356,18 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"incremental"</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">How the window is updated as new points arrive</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs(String&#8230;&#8203;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String&#8230;&#8203;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">empty</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Select <code>weights</code>, <code>gradient</code>/<code>derivative</code>, and/or <code>se</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervals(IntervalsOptions)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IntervalsOptions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">disabled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Grouped confidence and prediction coverage levels.</p></td>
+</tr>
 </tbody>
 </table>
 <div class="paragraph">
@@ -410,6 +386,10 @@
 <div class="sectionbody">
 <div class="paragraph">
 <p>Adds a single observation. Returns <code>Optional.empty()</code> while the window is still filling (fewer than <code>minPoints</code> seen so far); once populated, the <code>PointResult</code> holds the smoothed value for the most recently added point. Once the window reaches <code>windowCapacity</code>, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. <code>updateMode</code> controls how much work each call does: <code>incremental</code> re-fits only the newest point, while <code>full</code> re-smooths the entire window for a more accurate but slower result.</p>
+</div>
+<div class="paragraph">
+<p>For multivariate models, configure <code>dimensions</code> and call <code>addPoint(double[] x, double y)</code> with one coordinate per dimension. The scalar overload remains available for one-dimensional models.
+Scalar and vector overloads also accept a final case-weight argument; existing overloads use weight <code>1</code>. <code>windowDiagnostics()</code> computes diagnostics for the current window on demand, and <code>predictWindow(newX, options)</code> predicts from that bounded window without retaining older observations.</p>
 </div>
 </div>
 </div>
@@ -559,132 +539,6 @@
 </div>
 </div>
 <div class="sect2">
-<h3 id="scalingmethod"><a class="anchor" href="#scalingmethod"></a>scalingMethod</h3>
-<div class="paragraph">
-<p><em>See: <a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></em></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</p>
-</li>
-<li>
-<p><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</p>
-</li>
-<li>
-<p><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="boundarypolicy"><a class="anchor" href="#boundarypolicy"></a>boundaryPolicy</h3>
-<div class="paragraph">
-<p><em>See: <a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></em></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>"extend"</code> (default; alias: <code>"pad"</code>)</p>
-</li>
-<li>
-<p><code>"reflect"</code> (alias: <code>"mirror"</code>)</p>
-</li>
-<li>
-<p><code>"zero"</code></p>
-</li>
-<li>
-<p><code>"noboundary"</code> (alias: <code>"none"</code>)</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="zeroweightfallback"><a class="anchor" href="#zeroweightfallback"></a>zeroWeightFallback</h3>
-<div class="paragraph">
-<p>Behavior when all neighborhood weights are zero:</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Option</th>
-<th class="tableblock halign-left valign-top">Behavior</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Use the mean of the neighborhood</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_original"</code> (alias: <code>"original"</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Return the original y value</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_none"</code> (alias: <code>"none"</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Return <code>NaN</code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect2">
-<h3 id="missing"><a class="anchor" href="#missing"></a>missing</h3>
-<div class="paragraph">
-<p>Policy for handling a non-finite (NaN/Inf) <code>x</code> or <code>y</code> value passed to <code>addPoint</code> (overrides the row-dropping behavior described in <a href="api.html" class="xref page">API</a> since Online processes one point at a time):</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Option</th>
-<th class="tableblock halign-left valign-top">Behavior</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code> (default)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Throw an error</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"drop"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Silently ignore the point — <code>addPoint</code> returns <code>Optional.empty()</code> instead of adding it to the window</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect2">
-<h3 id="autoconverge"><a class="anchor" href="#autoconverge"></a>autoConverge</h3>
-<div class="paragraph">
-<p><em>See: <a href="../weighting/robustness.html" class="xref page">Robustness</a></em></p>
-</div>
-<div class="paragraph">
-<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnrobustnessweights"><a class="anchor" href="#returnrobustnessweights"></a>returnRobustnessWeights</h3>
-<div class="paragraph">
-<p>Populate <code>PointResult.robustnessWeight()</code> with the robustness weight for the latest point (from the last robustness iteration).</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>robustnessWeight()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>robustnessWeight()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
 <h3 id="degree"><a class="anchor" href="#degree"></a>degree</h3>
 <div class="paragraph">
 <p><em>See: <a href="../advanced/degree.html" class="xref page">Polynomial Degree</a></em></p>
@@ -814,6 +668,60 @@
 </div>
 </div>
 <div class="sect2">
+<h3 id="zeroweightfallback"><a class="anchor" href="#zeroweightfallback"></a>zeroWeightFallback</h3>
+<div class="paragraph">
+<p>Behavior when all neighborhood weights are zero:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use the mean of the neighborhood</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_original"</code> (alias: <code>"original"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the original y value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_none"</code> (alias: <code>"none"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return <code>NaN</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="boundarypolicy"><a class="anchor" href="#boundarypolicy"></a>boundaryPolicy</h3>
+<div class="paragraph">
+<p><em>See: <a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"extend"</code> (default; alias: <code>"pad"</code>)</p>
+</li>
+<li>
+<p><code>"reflect"</code> (alias: <code>"mirror"</code>)</p>
+</li>
+<li>
+<p><code>"zero"</code></p>
+</li>
+<li>
+<p><code>"noboundary"</code> (alias: <code>"none"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
 <h3 id="boundarydegreefallback"><a class="anchor" href="#boundarydegreefallback"></a>boundaryDegreeFallback</h3>
 <div class="paragraph">
 <p>Whether to reduce the polynomial degree at boundary vertices when the requested <code>degree</code> can&#8217;t be fit there (e.g., not enough neighbours). Only applies when <code>surfaceMode</code> is <code>"interpolation"</code>.</p>
@@ -833,44 +741,60 @@
 </div>
 </div>
 <div class="sect2">
-<h3 id="returngradient"><a class="anchor" href="#returngradient"></a>returnGradient</h3>
+<h3 id="scalingmethod"><a class="anchor" href="#scalingmethod"></a>scalingMethod</h3>
 <div class="paragraph">
-<p>Each local polynomial fit (degree &gt;= linear) already computes per-dimension coefficients internally; this exposes the latest point&#8217;s gradient (<code>dimensions</code> values) via <code>PointResult.gradient()</code> at effectively no extra computation cost. Only supported when <code>surfaceMode = "direct"</code> — throws a <code>RuntimeException</code> instead of silently leaving <code>gradient()</code> empty if requested under the default <code>"interpolation"</code> mode. <code>false</code> by default.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="confidenceintervals"><a class="anchor" href="#confidenceintervals"></a>confidenceIntervals</h3>
-<div class="paragraph">
-<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
-</div>
-<div class="paragraph">
-<p>Confidence level for the confidence interval around the mean response (e.g. <code>0.95</code>). Only computed under <code>updateMode("full")</code> — throws at construction if set (or <code>returnSe</code>/<code>predictionIntervals</code> is set) while <code>updateMode</code> is left at its default <code>"incremental"</code>, since incremental updates never compute standard errors. <code>NaN</code> (default) disables confidence intervals.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="predictionintervals"><a class="anchor" href="#predictionintervals"></a>predictionIntervals</h3>
-<div class="paragraph">
-<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
-</div>
-<div class="paragraph">
-<p>Confidence level for the prediction interval for new observations (e.g. <code>0.95</code>). Same <code>updateMode("full")</code> requirement as <code>confidenceIntervals</code>. <code>NaN</code> (default) disables prediction intervals.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnse"><a class="anchor" href="#returnse"></a>returnSe</h3>
-<div class="paragraph">
-<p>Include the standard error for the latest point in the result (<code>PointResult.standardError()</code>). Same <code>updateMode("full")</code> requirement as <code>confidenceIntervals</code>.</p>
+<p><em>See: <a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></em></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>false</code> (default) — leaves <code>standardError()</code> empty</p>
+<p><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</p>
 </li>
 <li>
-<p><code>true</code> — populates <code>standardError()</code></p>
+<p><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</p>
+</li>
+<li>
+<p><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</p>
 </li>
 </ul>
 </div>
+</div>
+<div class="sect2">
+<h3 id="autoconverge"><a class="anchor" href="#autoconverge"></a>autoConverge</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/robustness.html" class="xref page">Robustness</a></em></p>
+</div>
+<div class="paragraph">
+<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="missing"><a class="anchor" href="#missing"></a>missing</h3>
+<div class="paragraph">
+<p>Policy for handling a non-finite (NaN/Inf) <code>x</code> or <code>y</code> value passed to <code>addPoint</code> (overrides the row-dropping behavior described in <a href="api.html" class="xref page">API</a> since Online processes one point at a time):</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Throw an error</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"drop"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Silently ignore the point — <code>addPoint</code> returns <code>Optional.empty()</code> instead of adding it to the window</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect2">
 <h3 id="windowcapacity"><a class="anchor" href="#windowcapacity"></a>windowCapacity</h3>
@@ -923,6 +847,42 @@
 <p>See <a href="api.html" class="xref page">API</a> for the descriptions of all inherited settings not covered above.</p>
 </div>
 </div>
+<div class="sect2">
+<h3 id="outputs-weights"><a class="anchor" href="#outputs-weights"></a>outputs: weights</h3>
+<div class="paragraph">
+<p>Populate <code>PointResult.robustnessWeight()</code> with the robustness weight for the latest point (from the last robustness iteration).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-gradient"><a class="anchor" href="#outputs-gradient"></a>outputs: gradient</h3>
+<div class="paragraph">
+<p>Each local polynomial fit (degree &gt;= linear) already computes per-dimension coefficients internally; this exposes the latest point&#8217;s gradient (<code>dimensions</code> values) via <code>PointResult.gradient()</code> at effectively no extra computation cost. Only supported when <code>surfaceMode = "direct"</code> — throws a <code>RuntimeException</code> instead of silently leaving <code>gradient()</code> empty if requested under the default <code>"interpolation"</code> mode. Omitted by default.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-se"><a class="anchor" href="#outputs-se"></a>outputs: se</h3>
+<div class="paragraph">
+<p>Include the standard error for the latest point in the result (<code>PointResult.standardError()</code>). Same <code>updateMode("full")</code> requirement as <code>intervals.confidence</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="intervals-confidence"><a class="anchor" href="#intervals-confidence"></a>intervals.confidence</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Confidence level for the confidence interval around the mean response (e.g. <code>0.95</code>). Only computed under <code>updateMode("full")</code> — throws at construction if set (or <code>"se"</code> output/<code>intervals.prediction</code> is set) while <code>updateMode</code> is left at its default <code>"incremental"</code>, since incremental updates never compute standard errors. <code>NaN</code> (default) disables confidence intervals.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="intervals-prediction"><a class="anchor" href="#intervals-prediction"></a>intervals.prediction</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Confidence level for the prediction interval for new observations (e.g. <code>0.95</code>). Same <code>updateMode("full")</code> requirement as <code>intervals.confidence</code>. <code>NaN</code> (default) disables prediction intervals.</p>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -950,17 +910,17 @@
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>standardError()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Standard error, if <code>returnSe</code>/<code>confidenceIntervals</code>/<code>predictionIntervals</code> was set and <code>updateMode("full")</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Standard error, if <code>"se"</code> output/<code>intervals.confidence</code>/<code>intervals.prediction</code> was set and <code>updateMode("full")</code>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>residual()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Residual y − smoothed; always present (there is no <code>returnResiduals</code> option for Online).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual y − smoothed; always present (there is no <code>"residuals"</code> output option for Online).</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>robustnessWeight()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Robustness weight, if <code>returnRobustnessWeights</code> was set.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Robustness weight, if <code>"weights"</code> output was set.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>iterationsUsed()</code></p></td>
@@ -970,22 +930,22 @@
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceLower()</code> / <code>confidenceUpper()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence interval bounds, if <code>confidenceIntervals</code> was set and <code>updateMode("full")</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence interval bounds, if <code>intervals.confidence</code> was set and <code>updateMode("full")</code>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>predictionLower()</code> / <code>predictionUpper()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>OptionalDouble</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Prediction interval bounds, if <code>predictionIntervals</code> was set and <code>updateMode("full")</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Prediction interval bounds, if <code>intervals.prediction</code> was set and <code>updateMode("full")</code>.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>gradient()</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Optional&lt;double[]&gt;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Latest point&#8217;s local fit gradient (<code>dimensions</code> values), if <code>returnGradient</code> was set (<code>surfaceMode = "direct"</code> only).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Latest point&#8217;s local fit gradient (<code>dimensions</code> values), if <code>"gradient"</code> output was set (<code>surfaceMode = "direct"</code> only).</p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p>There is no <code>Diagnostics</code> type or <code>returnDiagnostics</code> option for <code>OnlineLoess</code>: <code>PointResult</code> carries no diagnostics accessor, since diagnostics like RMSE/R² need more than one point&#8217;s worth of history to be meaningful.</p>
+<p>There is no <code>Diagnostics</code> type or <code>"diagnostics"</code> output option for <code>OnlineLoess</code>: <code>PointResult</code> carries no diagnostics accessor, since diagnostics like RMSE/R² need more than one point&#8217;s worth of history to be meaningful.</p>
 </div>
 </div>
 </div>

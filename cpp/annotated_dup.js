@@ -4,6 +4,7 @@ var annotated_dup =
       [ "CVOptions", "structfastloess_1_1CVOptions.html", "structfastloess_1_1CVOptions" ],
       [ "Diagnostics", "classfastloess_1_1Diagnostics.html", "classfastloess_1_1Diagnostics" ],
       [ "Expected", "classfastloess_1_1Expected.html", "classfastloess_1_1Expected" ],
+      [ "IntervalsOptions", "structfastloess_1_1IntervalsOptions.html", "structfastloess_1_1IntervalsOptions" ],
       [ "Loess", "classfastloess_1_1Loess.html", "classfastloess_1_1Loess" ],
       [ "LoessError", "classfastloess_1_1LoessError.html", "classfastloess_1_1LoessError" ],
       [ "LoessOptions", "structfastloess_1_1LoessOptions.html", "structfastloess_1_1LoessOptions" ],

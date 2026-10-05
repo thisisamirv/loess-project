@@ -116,12 +116,8 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a16143f057452bff2549428bf002eb13b" id="r_a16143f057452bff2549428bf002eb13b"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1PredictOptions.html#a16143f057452bff2549428bf002eb13b">outputs</a></td></tr>
 <tr class="memdesc:a16143f057452bff2549428bf002eb13b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional prediction components: "se" and/or "gradient" ("derivative").  <br /></td></tr>
 <tr class="separator:a16143f057452bff2549428bf002eb13b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0fdf5a1e218ff33f22023b2c7ff51c2b" id="r_a0fdf5a1e218ff33f22023b2c7ff51c2b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1PredictOptions.html#a0fdf5a1e218ff33f22023b2c7ff51c2b">confidence_level</a> = <a class="el" href="classfastloess_1_1Expected.html">NAN</a></td></tr>
-<tr class="memdesc:a0fdf5a1e218ff33f22023b2c7ff51c2b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Confidence level (NaN = disabled)  <br /></td></tr>
-<tr class="separator:a0fdf5a1e218ff33f22023b2c7ff51c2b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4fa55e3332b06a1738e4ea3b8de1116c" id="r_a4fa55e3332b06a1738e4ea3b8de1116c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">double</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1PredictOptions.html#a4fa55e3332b06a1738e4ea3b8de1116c">prediction_level</a> = <a class="el" href="classfastloess_1_1Expected.html">NAN</a></td></tr>
-<tr class="memdesc:a4fa55e3332b06a1738e4ea3b8de1116c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Prediction level (NaN = disabled)  <br /></td></tr>
-<tr class="separator:a4fa55e3332b06a1738e4ea3b8de1116c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5bf08c9c0a64fd5b07f4bd72eff2e58b" id="r_a5bf08c9c0a64fd5b07f4bd72eff2e58b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structfastloess_1_1IntervalsOptions.html">IntervalsOptions</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1PredictOptions.html#a5bf08c9c0a64fd5b07f4bd72eff2e58b">intervals</a></td></tr>
+<tr class="separator:a5bf08c9c0a64fd5b07f4bd72eff2e58b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a33c4026e68cc8da498e28d527233102c" id="r_a33c4026e68cc8da498e28d527233102c"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1PredictOptions.html#a33c4026e68cc8da498e28d527233102c">extrapolation</a> = &quot;clamp&quot;</td></tr>
 <tr class="memdesc:a33c4026e68cc8da498e28d527233102c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Behavior for query points outside the training range ("clamp", "linear", "error").  <br /></td></tr>
 <tr class="separator:a33c4026e68cc8da498e28d527233102c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -135,22 +131,6 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Options for <code><a class="el" href="classfastloess_1_1PredictModel.html#a0110cc4f5f6feba0be6bcbd144af8823" title="Evaluate the fitted model at out-of-sample query points not in the training set (flattened,...">PredictModel::predict()</a></code>. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
-<a id="a0fdf5a1e218ff33f22023b2c7ff51c2b" name="a0fdf5a1e218ff33f22023b2c7ff51c2b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0fdf5a1e218ff33f22023b2c7ff51c2b">&#9670;&#160;</a></span>confidence_level</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">double</a> fastloess::PredictOptions::confidence_level = <a class="el" href="classfastloess_1_1Expected.html">NAN</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Confidence level (NaN = disabled) </p>
-
-</div>
-</div>
 <a id="a33c4026e68cc8da498e28d527233102c" name="a33c4026e68cc8da498e28d527233102c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a33c4026e68cc8da498e28d527233102c">&#9670;&#160;</a></span>extrapolation</h2>
 
@@ -164,6 +144,20 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Behavior for query points outside the training range ("clamp", "linear", "error"). </p>
+
+</div>
+</div>
+<a id="a5bf08c9c0a64fd5b07f4bd72eff2e58b" name="a5bf08c9c0a64fd5b07f4bd72eff2e58b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5bf08c9c0a64fd5b07f4bd72eff2e58b">&#9670;&#160;</a></span>intervals</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structfastloess_1_1IntervalsOptions.html">IntervalsOptions</a> fastloess::PredictOptions::intervals</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -212,22 +206,6 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Optional prediction components: "se" and/or "gradient" ("derivative"). </p>
-
-</div>
-</div>
-<a id="a4fa55e3332b06a1738e4ea3b8de1116c" name="a4fa55e3332b06a1738e4ea3b8de1116c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4fa55e3332b06a1738e4ea3b8de1116c">&#9670;&#160;</a></span>prediction_level</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classfastloess_1_1Expected.html">double</a> fastloess::PredictOptions::prediction_level = <a class="el" href="classfastloess_1_1Expected.html">NAN</a></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Prediction level (NaN = disabled) </p>
 
 </div>
 </div>

@@ -114,19 +114,24 @@ $(document).ready(function(){initNavTree('fastloess_8hpp.html',''); initResizabl
 <code>#include &lt;cmath&gt;</code><br />
 <code>#include &lt;cstdint&gt;</code><br />
 <code>#include &lt;cstring&gt;</code><br />
+<code>#include &lt;initializer_list&gt;</code><br />
 <code>#include &lt;limits&gt;</code><br />
+<code>#include &lt;memory&gt;</code><br />
 <code>#include &lt;optional&gt;</code><br />
 <code>#include &lt;stdexcept&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;utility&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 <code>#include &quot;fastloess.h&quot;</code><br />
+<code>#include &quot;<a class="el" href="fastloess__version_8h_source.html">fastloess_version.h</a>&quot;</code><br />
 </div>
 <p><a href="fastloess_8hpp_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1CVOptions.html">fastloess::CVOptions</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structfastloess_1_1IntervalsOptions.html">fastloess::IntervalsOptions</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1LoessError.html">fastloess::LoessError</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Exception thrown when LOESS operation fails.  <a href="classfastloess_1_1LoessError.html#details">More...</a><br /></td></tr>
@@ -184,6 +189,8 @@ Namespaces</h2></td></tr>
 Functions</h2></td></tr>
 <tr class="memitem:a3a5aa6cb156511f5afdd9437f14a1220" id="r_a3a5aa6cb156511f5afdd9437f14a1220"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastloess.html#a3a5aa6cb156511f5afdd9437f14a1220">fastloess::hasOutput</a> (<a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; std::string &gt; &amp;outputs, <a class="el" href="classfastloess_1_1Expected.html">const</a> <a class="el" href="classfastloess_1_1Expected.html">char</a> *<a class="el" href="classfastloess_1_1Expected.html">name</a>)</td></tr>
 <tr class="separator:a3a5aa6cb156511f5afdd9437f14a1220"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae9cd04f894409b8f7bd69cd6086d4271" id="r_ae9cd04f894409b8f7bd69cd6086d4271"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">void</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacefastloess.html#ae9cd04f894409b8f7bd69cd6086d4271">fastloess::validateOutputs</a> (<a class="el" href="classfastloess_1_1Expected.html">const</a> std::vector&lt; std::string &gt; &amp;outputs, std::initializer_list&lt; <a class="el" href="classfastloess_1_1Expected.html">const</a> <a class="el" href="classfastloess_1_1Expected.html">char</a> * &gt; <a class="el" href="classfastloess_1_1Expected.html">allowed</a>)</td></tr>
+<tr class="separator:ae9cd04f894409b8f7bd69cd6086d4271"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>

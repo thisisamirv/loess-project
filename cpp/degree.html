@@ -145,19 +145,19 @@ Degree Comparison</div></div>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    <a class="code hl_struct" href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a> deg0_opts;</div>
-<div class="line">    deg0_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">degree</a> = <span class="stringliteral">&quot;constant&quot;</span>;</div>
 <div class="line">    deg0_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fraction</a> = 0.5;</div>
+<div class="line">    deg0_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">degree</a> = <span class="stringliteral">&quot;constant&quot;</span>;</div>
 <div class="line">    <a class="code hl_class" href="classfastloess_1_1Loess.html">fastloess::Loess</a> model(deg0_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:678</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:705</div></div>
 <div class="ttc" id="afastloess_8hpp_html"><div class="ttname"><a href="fastloess_8hpp.html">fastloess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLoess library.</div></div>
-<div class="ttc" id="astructfastloess_1_1LoessOptions_html"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a></div><div class="ttdoc">Options for configuring LOESS smoothing.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:132</div></div>
-<div class="ttc" id="astructfastloess_1_1LoessOptions_html_a74cd5ca0f18e82875093bb3aecfde3ce"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fastloess::LoessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastloess.hpp:133</div></div>
-<div class="ttc" id="astructfastloess_1_1LoessOptions_html_a97cfb3c4075d0db3c93a007024c3e1fc"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">fastloess::LoessOptions::degree</a></div><div class="ttdeci">std::string degree</div><div class="ttdoc">constant, linear, quadratic, cubic, quartic</div><div class="ttdef"><b>Definition</b> fastloess.hpp:155</div></div>
+<div class="ttc" id="astructfastloess_1_1LoessOptions_html"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a></div><div class="ttdoc">Options for configuring LOESS smoothing.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:150</div></div>
+<div class="ttc" id="astructfastloess_1_1LoessOptions_html_a74cd5ca0f18e82875093bb3aecfde3ce"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fastloess::LoessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastloess.hpp:151</div></div>
+<div class="ttc" id="astructfastloess_1_1LoessOptions_html_a97cfb3c4075d0db3c93a007024c3e1fc"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">fastloess::LoessOptions::degree</a></div><div class="ttdeci">std::string degree</div><div class="ttdoc">constant, linear, quadratic, cubic, quartic</div><div class="ttdef"><b>Definition</b> fastloess.hpp:170</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.7052</div>
 </div><!-- fragment --><hr  />
 <h2>Degree 1 — Local Linear (Default)</h2>
@@ -180,8 +180,8 @@ Degree Comparison</div></div>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    <a class="code hl_struct" href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a> deg1_opts;</div>
-<div class="line">    deg1_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">degree</a> = <span class="stringliteral">&quot;linear&quot;</span>;</div>
 <div class="line">    deg1_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fraction</a> = 0.5;</div>
+<div class="line">    deg1_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">degree</a> = <span class="stringliteral">&quot;linear&quot;</span>;</div>
 <div class="line">    <a class="code hl_class" href="classfastloess_1_1Loess.html">fastloess::Loess</a> model(deg1_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
@@ -210,8 +210,8 @@ Degree Comparison</div></div>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    <a class="code hl_struct" href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a> deg2_opts;</div>
-<div class="line">    deg2_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">degree</a> = <span class="stringliteral">&quot;quadratic&quot;</span>;</div>
 <div class="line">    deg2_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fraction</a> = 0.5;</div>
+<div class="line">    deg2_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">degree</a> = <span class="stringliteral">&quot;quadratic&quot;</span>;</div>
 <div class="line">    <a class="code hl_class" href="classfastloess_1_1Loess.html">fastloess::Loess</a> model(deg2_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
@@ -240,8 +240,8 @@ Degree Comparison</div></div>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    <a class="code hl_struct" href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a> deg3_opts;</div>
-<div class="line">    deg3_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">degree</a> = <span class="stringliteral">&quot;cubic&quot;</span>;</div>
 <div class="line">    deg3_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fraction</a> = 0.6;</div>
+<div class="line">    deg3_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">degree</a> = <span class="stringliteral">&quot;cubic&quot;</span>;</div>
 <div class="line">    <a class="code hl_class" href="classfastloess_1_1Loess.html">fastloess::Loess</a> model(deg3_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>
@@ -270,8 +270,8 @@ Degree Comparison</div></div>
 <div class="line">    }</div>
 <div class="line"> </div>
 <div class="line">    <a class="code hl_struct" href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a> deg4_opts;</div>
-<div class="line">    deg4_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">degree</a> = <span class="stringliteral">&quot;quartic&quot;</span>;</div>
 <div class="line">    deg4_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fraction</a> = 0.7;</div>
+<div class="line">    deg4_opts.<a class="code hl_variable" href="structfastloess_1_1LoessOptions.html#a97cfb3c4075d0db3c93a007024c3e1fc">degree</a> = <span class="stringliteral">&quot;quartic&quot;</span>;</div>
 <div class="line">    <a class="code hl_class" href="classfastloess_1_1Loess.html">fastloess::Loess</a> model(deg4_opts);</div>
 <div class="line">    <span class="keyword">auto</span> result = model.fit(x, y).value();</div>
 <div class="line"> </div>

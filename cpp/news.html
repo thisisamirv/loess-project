@@ -106,6 +106,8 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
 <h2>[Unreleased]</h2>
 <h3>Added</h3>
 <ul>
+<li>Added Windows x64 MinGW, Linux x86/ARMv7, Android ABI, and iOS device/simulator release binaries with matching cross-target CI builds.</li>
+<li>Added compile-time C++ version macros and runtime <code>cpp_version()</code> reporting; generated and distributed the version header with CMake, Spack, and prebuilt release assets.</li>
 <li>Added <code>CVOptions cv</code> to Batch options for grouped cross-validation while preserving legacy CV fields.</li>
 <li>Added <code>retain_model</code>, <code>LoessResult::predict_model()</code>, and new <code>PredictModel</code>/<code>PredictOptions</code>/<code>PredictResult</code> RAII classes for out-of-sample prediction.</li>
 <li>Added <code>return_gradient</code> to <code>LoessOptions</code> and <code>OnlineOptions</code>.</li>
@@ -114,12 +116,29 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
 </ul>
 <h3>Changed</h3>
 <ul>
-<li>Breaking change: replaced the individual output booleans in <code>LoessOptions</code>, <code>OnlineOptions</code>, and <code>PredictOptions</code> with grouped <code>outputs</code> vectors; interval levels remain separate fields.</li>
+<li>Clarified Batch <code>residual_sd</code> as <code>1.4826 * MAD</code>; Streaming reports the cumulative sample standard deviation of emitted residuals.</li>
+<li>Package each prebuilt platform library and its headers in a separate release tar archive.</li>
+<li>Breaking change: replaced the individual output booleans in <code>LoessOptions</code>, <code>OnlineOptions</code>, and <code>PredictOptions</code> with grouped <code>outputs</code> vectors.</li>
+<li>Breaking change: replaced flat interval levels with <code>intervals</code>, removed flat CV fields in favor of <code>cv</code>, and moved CV seeding to optional outer <code>seed</code>; <code>seed = 0</code> is now reproducible.</li>
+<li>Native C ABI lengths now use <code>size_t</code> and CV seeds use <code>uint64_t</code> instead of Windows-truncated <code>unsigned long</code>. Rebuild the wrapper/header and native library together; old Windows binaries are not layout-compatible.</li>
 <li>C++ musl release jobs now build dynamic x86_64 and ARM64 shared libraries, allowing the musl assets to be published reliably.</li>
-<li>Declared the public wrapper's C++17 requirement and represented unavailable diagnostics as empty <code>std::optional&lt;double&gt;</code> values instead of NaN sentinels.</li>
+<li>The public CMake target propagates the wrapper's C++17 requirement to consumers. Unavailable diagnostics are empty <code>std::optional&lt;double&gt;</code> values, including default-constructed diagnostics and native NaN sentinels; finite values are preserved.</li>
 </ul>
 <h3>Fixed</h3>
 <ul>
+<li>Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.</li>
+<li>Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.</li>
+<li>Forward the selected distance metric when per-dimension weights are supplied, and support multivariate Online points through a vector-coordinate <code>add_point</code> overload.</li>
+<li>Free retained prediction handles and zero-length error results, reset freed native results, and make wrapper error paths exception-safe. Multidimensional predictor buffers are freed with their full length.</li>
+<li>Make empty/moved result accessors safe, bounds-check indexed access, preserve all predictor coordinates, and keep unavailable diagnostics/statistics absent.</li>
+<li>Reject unknown or mode-inappropriate outputs and unsupported Batch-only Streaming options. Surface invalid Batch configuration at construction, reject negative counts and invalid active CV folds instead of coercing them, and preserve CV seed bits above 32 bits.</li>
+<li>Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.</li>
+<li>Preserve case weights through sorted CV training subsets and multidimensional predictions. Serial and parallel CV now agree on seeded folds and held-out LOOCV predictions; K-fold counts above the retained observation count are rejected.</li>
+<li>Reject non-positive or non-finite Streaming/Online auto-convergence tolerances. Online auto-convergence requires full updates with robustness iterations.</li>
+<li>Include all observations for Gaussian smoothing and prediction while preserving the k-th-neighbor bandwidth; use the true exponential without an artificial tail floor.</li>
+<li>Correct case-weighted standard errors for direct, unpadded one-dimensional linear fits and retained prediction, with matching serial/parallel local moments. Span-one fits no longer substitute a kernel-free global OLS formula.</li>
+<li>Honor configured zero-weight fallback policies in constant-degree, zero-bandwidth, insufficient-neighbor, and coefficient-fit paths.</li>
+<li>Match R LOESS's even-sample bisquare MAR scale arithmetic, including extremely small residuals, while preserving the centered-MAD fallback.</li>
 <li>Aligned <code>OnlineLoess</code> defaults across the Rust core and bindings: <code>iterations</code> is now <code>0</code> with the default <code>update_mode = "incremental"</code>; positive robustness iterations require <code>update_mode = "full"</code>.</li>
 <li>Fixed <code>bindings/cpp/spack/package.py</code> building/installing from the wrong directory (<code>bindings/cpp</code> instead of the workspace-root <code>target/release</code>), which broke <code>spack install fastloess-cpp</code> on every platform. Now builds by package name. Also moved the pyright suppression out of the recipe into a new root <code>pyrightconfig.json</code>.</li>
 </ul>
@@ -176,7 +195,8 @@ $(document).ready(function(){initNavTree('news.html',''); initResizable(); });
 <h2>0.9.0</h2>
 <h3>Added</h3>
 <ul>
-<li>Added the C++ binding. </li>
+<li>Added the C++ binding.</li>
+<li>Added weighted Streaming/Online updates, Online window diagnostics, and prediction from the current window. </li>
 </ul>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->

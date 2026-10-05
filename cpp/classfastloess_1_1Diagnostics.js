@@ -2,6 +2,7 @@ var classfastloess_1_1Diagnostics =
 [
     [ "Diagnostics", "classfastloess_1_1Diagnostics.html#aa692aa60715ef77210075acc26283000", null ],
     [ "Diagnostics", "classfastloess_1_1Diagnostics.html#aa1fe8cec6b1adb46fb1451f7052f530a", null ],
+    [ "Diagnostics", "classfastloess_1_1Diagnostics.html#a58df0171bf0ebde4a75fe7a6761730ad", null ],
     [ "aic", "classfastloess_1_1Diagnostics.html#a0da48ebbd39e22ae02725a1da12f95c1", null ],
     [ "aicc", "classfastloess_1_1Diagnostics.html#a57fc1ff5389d5c237660d6688442cec9", null ],
     [ "effective_df", "classfastloess_1_1Diagnostics.html#ae281ca48cbe8e069825d197135edd1e6", null ],

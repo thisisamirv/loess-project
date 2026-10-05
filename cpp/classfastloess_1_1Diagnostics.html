@@ -117,6 +117,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aa692aa60715ef77210075acc26283000"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa1fe8cec6b1adb46fb1451f7052f530a" id="r_aa1fe8cec6b1adb46fb1451f7052f530a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1Diagnostics.html#aa1fe8cec6b1adb46fb1451f7052f530a">Diagnostics</a> (<a class="el" href="classfastloess_1_1Expected.html">const</a> <a class="el" href="classfastloess_1_1Expected.html">fastloess_CppLoessResult</a> &amp;<a class="el" href="classfastloess_1_1Expected.html">result</a>)</td></tr>
 <tr class="separator:aa1fe8cec6b1adb46fb1451f7052f530a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a58df0171bf0ebde4a75fe7a6761730ad" id="r_a58df0171bf0ebde4a75fe7a6761730ad"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1Diagnostics.html#a58df0171bf0ebde4a75fe7a6761730ad">Diagnostics</a> (<a class="el" href="classfastloess_1_1Expected.html">const</a> <a class="el" href="classfastloess_1_1Expected.html">fastloess_CppOnlineDiagnostics</a> &amp;<a class="el" href="classfastloess_1_1Expected.html">result</a>)</td></tr>
+<tr class="separator:a58df0171bf0ebde4a75fe7a6761730ad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5e85580bde440a5af09f3189749ddf1" id="r_ac5e85580bde440a5af09f3189749ddf1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classfastloess_1_1Expected.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1Diagnostics.html#ac5e85580bde440a5af09f3189749ddf1">has_value</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
 <tr class="separator:ac5e85580bde440a5af09f3189749ddf1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a18bdc8c43af5369870022623c629dbc5" id="r_a18bdc8c43af5369870022623c629dbc5"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1Diagnostics.html#a18bdc8c43af5369870022623c629dbc5">rmse</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
@@ -132,13 +134,14 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae281ca48cbe8e069825d197135edd1e6" id="r_ae281ca48cbe8e069825d197135edd1e6"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1Diagnostics.html#ae281ca48cbe8e069825d197135edd1e6">effective_df</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
 <tr class="separator:ae281ca48cbe8e069825d197135edd1e6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afece05377e3125596b52d5dfde02b21e" id="r_afece05377e3125596b52d5dfde02b21e"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="classfastloess_1_1Expected.html">double</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfastloess_1_1Diagnostics.html#afece05377e3125596b52d5dfde02b21e">residual_sd</a> () <a class="el" href="classfastloess_1_1Expected.html">const</a></td></tr>
+<tr class="memdesc:afece05377e3125596b52d5dfde02b21e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Batch: robust residual scale estimate (1.4826 * MAD); Streaming: cumulative sample SD of emitted residuals.  <br /></td></tr>
 <tr class="separator:afece05377e3125596b52d5dfde02b21e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classfastloess_1_1Diagnostics.html" title="Diagnostics from LOESS fitting.">Diagnostics</a> from LOESS fitting. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aa692aa60715ef77210075acc26283000" name="aa692aa60715ef77210075acc26283000"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa692aa60715ef77210075acc26283000">&#9670;&#160;</a></span>Diagnostics() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aa692aa60715ef77210075acc26283000">&#9670;&#160;</a></span>Diagnostics() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -163,7 +166,7 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <a id="aa1fe8cec6b1adb46fb1451f7052f530a" name="aa1fe8cec6b1adb46fb1451f7052f530a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa1fe8cec6b1adb46fb1451f7052f530a">&#9670;&#160;</a></span>Diagnostics() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1fe8cec6b1adb46fb1451f7052f530a">&#9670;&#160;</a></span>Diagnostics() <span class="overload">[2/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -175,6 +178,32 @@ Public Member Functions</h2></td></tr>
           <td class="memname">fastloess::Diagnostics::Diagnostics </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classfastloess_1_1Expected.html">const</a> <a class="el" href="classfastloess_1_1Expected.html">fastloess_CppLoessResult</a> &amp;&#160;</td>
+          <td class="paramname"><em>result</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">explicit</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a58df0171bf0ebde4a75fe7a6761730ad" name="a58df0171bf0ebde4a75fe7a6761730ad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58df0171bf0ebde4a75fe7a6761730ad">&#9670;&#160;</a></span>Diagnostics() <span class="overload">[3/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">fastloess::Diagnostics::Diagnostics </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classfastloess_1_1Expected.html">const</a> <a class="el" href="classfastloess_1_1Expected.html">fastloess_CppOnlineDiagnostics</a> &amp;&#160;</td>
           <td class="paramname"><em>result</em></td><td>)</td>
           <td></td>
         </tr>
@@ -361,6 +390,8 @@ Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Batch: robust residual scale estimate (1.4826 * MAD); Streaming: cumulative sample SD of emitted residuals. </p>
 
 </div>
 </div>

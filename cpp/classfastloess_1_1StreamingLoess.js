@@ -7,5 +7,6 @@ var classfastloess_1_1StreamingLoess =
     [ "finalize", "classfastloess_1_1StreamingLoess.html#a1a7873b246d8cc285add37f4262e2e0d", null ],
     [ "operator=", "classfastloess_1_1StreamingLoess.html#a1d4fe401014cc93df34ebebdc7516d38", null ],
     [ "operator=", "classfastloess_1_1StreamingLoess.html#a2f87e5bcc659dc93bb65ab1087af0bfa", null ],
-    [ "process_chunk", "classfastloess_1_1StreamingLoess.html#ae5faeacb6f5a64e0f5bcd4ebbdf2cf9e", null ]
+    [ "process_chunk", "classfastloess_1_1StreamingLoess.html#ae5faeacb6f5a64e0f5bcd4ebbdf2cf9e", null ],
+    [ "process_chunk_weighted", "classfastloess_1_1StreamingLoess.html#acc2c8d04a33e18bbdc05d07d7ea9c6ef", null ]
 ];

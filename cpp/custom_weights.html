@@ -111,9 +111,7 @@ $(document).ready(function(){initNavTree('custom_weights.html',''); initResizabl
 \[w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right) \times r_j\]
 </p>
 <p>where \(K\) is the distance kernel, \(h_i\) is the local bandwidth, and \(r_j\) is the robustness weight from the current iteration.</p>
-<blockquote class="doxtable">
-<p>&zwj;<b>Batch adapter only:</b> <code>custom_weights</code> applies in <b>Batch</b> mode. It is silently ignored in Streaming and Online adapters. </p>
-</blockquote>
+<p><code>custom_weights</code> supplies one finite non-negative prior weight per observation. Batch accepts weights in <code>fit</code>; Streaming accepts <code>process_chunk_weighted</code>; Online accepts weighted <code>add_point</code> overloads. Streaming preserves weights through overlap buffers, and Online evicts each weight with its observation. Existing unweighted calls use weight <code>1.0</code>.</p>
 <hr  />
 <h2>When to Use Custom Weights</h2>
 <table class="markdownTable">
@@ -170,9 +168,9 @@ $(document).ready(function(){initNavTree('custom_weights.html',''); initResizabl
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclassfastloess_1_1Expected_html_a8d42c6a77cf5c282230aee46b48da418"><div class="ttname"><a href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">fastloess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastloess.hpp:88</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:678</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:754</div></div>
+<div class="ttc" id="aclassfastloess_1_1Expected_html_a8d42c6a77cf5c282230aee46b48da418"><div class="ttname"><a href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">fastloess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastloess.hpp:106</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:705</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:778</div></div>
 <div class="ttc" id="afastloess_8hpp_html"><div class="ttname"><a href="fastloess_8hpp.html">fastloess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLoess library.</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.389609</div>
 </div><!-- fragment --><hr  />

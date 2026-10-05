@@ -118,16 +118,11 @@ $(document).ready(function(){initNavTree('functions.html',''); initResizable(); 
 <h3><a id="index_c" name="index_c"></a>- c -</h3><ul>
 <li>cell&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#acd2bc3c4524514a60cdb7d62aacc4620">fastloess::LoessOptions</a>, <a class="el" href="structfastloess_1_1OnlineOptions.html#a07e8ad036581f97858dadf206dbebe52">fastloess::OnlineOptions</a></li>
 <li>chunk_size&#160;:&#160;<a class="el" href="structfastloess_1_1StreamingOptions.html#ae2c3404649b3a143e31b2f62c88a1de5">fastloess::StreamingOptions</a></li>
-<li>confidence_intervals&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#ac3e43ce46b31bf8ed26e56a78336b50c">fastloess::LoessOptions</a>, <a class="el" href="structfastloess_1_1OnlineOptions.html#a26d5bd0b06adfd5af2f1e3b0dd193a7f">fastloess::OnlineOptions</a></li>
-<li>confidence_level&#160;:&#160;<a class="el" href="structfastloess_1_1PredictOptions.html#a0fdf5a1e218ff33f22023b2c7ff51c2b">fastloess::PredictOptions</a></li>
+<li>confidence&#160;:&#160;<a class="el" href="structfastloess_1_1IntervalsOptions.html#a1a418b530359487938780042dd07d342">fastloess::IntervalsOptions</a></li>
 <li>confidence_lower()&#160;:&#160;<a class="el" href="classfastloess_1_1LoessResult.html#a96a5a7eb1a4db916b7d5f55be67bf8fc">fastloess::LoessResult</a>, <a class="el" href="classfastloess_1_1OnlineOutput.html#ad3002e2c972ba34ebe8c7d303c76aca5">fastloess::OnlineOutput</a>, <a class="el" href="classfastloess_1_1PredictResult.html#a2261006b5738c5f49a66bd51ea152680">fastloess::PredictResult</a></li>
 <li>confidence_upper()&#160;:&#160;<a class="el" href="classfastloess_1_1LoessResult.html#a278d8f453d9f726ba719f190878a62b9">fastloess::LoessResult</a>, <a class="el" href="classfastloess_1_1OnlineOutput.html#a1e8f62dfc7555d45c573ae895f706078">fastloess::OnlineOutput</a>, <a class="el" href="classfastloess_1_1PredictResult.html#aa0b970dafc3902d23c6ebf86236d57d8">fastloess::PredictResult</a></li>
 <li>cv&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#a90c35300fb04c5ec05a14fc4ef25a59f">fastloess::LoessOptions</a></li>
-<li>cv_fractions&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#a4a6c82009faa2d814982cdaa2615ae10">fastloess::LoessOptions</a></li>
-<li>cv_k&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#a69f80b4e05e39f0aae7a493ea56b359b">fastloess::LoessOptions</a></li>
-<li>cv_method&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#a20de9cf5b3264e07593eca820f816aee">fastloess::LoessOptions</a></li>
 <li>cv_scores()&#160;:&#160;<a class="el" href="classfastloess_1_1LoessResult.html#ac964de7951d3820f3494db52e7c9206e">fastloess::LoessResult</a></li>
-<li>cv_seed&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#ac34d365b02654f3f1a9e40c719b580c5">fastloess::LoessOptions</a></li>
 </ul>
 
 
@@ -173,6 +168,7 @@ $(document).ready(function(){initNavTree('functions.html',''); initResizable(); 
 
 <h3><a id="index_i" name="index_i"></a>- i -</h3><ul>
 <li>interpolation_vertices&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#aa9e7a32074aaf7e2861191523099ac68">fastloess::LoessOptions</a>, <a class="el" href="structfastloess_1_1OnlineOptions.html#ad68f7dec50ac1884c870347c43728023">fastloess::OnlineOptions</a></li>
+<li>intervals&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#a0c686dadca535d8a7423e1c138314974">fastloess::LoessOptions</a>, <a class="el" href="structfastloess_1_1OnlineOptions.html#ad1c396699a72c570338433da4c9f33ed">fastloess::OnlineOptions</a>, <a class="el" href="structfastloess_1_1PredictOptions.html#a5bf08c9c0a64fd5b07f4bd72eff2e58b">fastloess::PredictOptions</a></li>
 <li>iterations&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#adad32b7937a62e6ef5502cce329063b9">fastloess::LoessOptions</a>, <a class="el" href="structfastloess_1_1OnlineOptions.html#abb487bb853bb34ccb9ad4a78432c84f9">fastloess::OnlineOptions</a></li>
 <li>iterations_used()&#160;:&#160;<a class="el" href="classfastloess_1_1LoessResult.html#af66d4669ffb3b4ab581d243ba1c0ee01">fastloess::LoessResult</a>, <a class="el" href="classfastloess_1_1OnlineOutput.html#a489fb043f8dd1be5ae5f928f7939ddc7">fastloess::OnlineOutput</a></li>
 </ul>
@@ -216,13 +212,14 @@ $(document).ready(function(){initNavTree('functions.html',''); initResizable(); 
 <li>parallel&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#adfc1281ca0bcc93f743f932c8f938bfa">fastloess::LoessOptions</a></li>
 <li>predict()&#160;:&#160;<a class="el" href="classfastloess_1_1PredictModel.html#a0110cc4f5f6feba0be6bcbd144af8823">fastloess::PredictModel</a></li>
 <li>predict_model()&#160;:&#160;<a class="el" href="classfastloess_1_1LoessResult.html#a409c44a4b96085ad9c92b84f395ffa02">fastloess::LoessResult</a></li>
-<li>prediction_intervals&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#ac1383a921e36b49b08d050e7d20a4523">fastloess::LoessOptions</a>, <a class="el" href="structfastloess_1_1OnlineOptions.html#ae475cd129b866732ba741fa3d8a09f0b">fastloess::OnlineOptions</a></li>
-<li>prediction_level&#160;:&#160;<a class="el" href="structfastloess_1_1PredictOptions.html#a4fa55e3332b06a1738e4ea3b8de1116c">fastloess::PredictOptions</a></li>
+<li>predict_window()&#160;:&#160;<a class="el" href="classfastloess_1_1OnlineLoess.html#abce5f02df6b838d71c5de498339ab601">fastloess::OnlineLoess</a></li>
+<li>prediction&#160;:&#160;<a class="el" href="structfastloess_1_1IntervalsOptions.html#a4e88697ba132faa3d8fd111c058249f2">fastloess::IntervalsOptions</a></li>
 <li>prediction_lower()&#160;:&#160;<a class="el" href="classfastloess_1_1LoessResult.html#ae158ff272f835628ca12166ce4cdf4ff">fastloess::LoessResult</a>, <a class="el" href="classfastloess_1_1OnlineOutput.html#a85c853dcfe9e3743cfc634fce57fe43d">fastloess::OnlineOutput</a>, <a class="el" href="classfastloess_1_1PredictResult.html#afa6f64ba3eed4a464741e1e991ba6cef">fastloess::PredictResult</a></li>
 <li>prediction_upper()&#160;:&#160;<a class="el" href="classfastloess_1_1LoessResult.html#ab42584927081188be41a10fba8a89555">fastloess::LoessResult</a>, <a class="el" href="classfastloess_1_1OnlineOutput.html#afcefb1e19b0a083f32147e43f5b38b40">fastloess::OnlineOutput</a>, <a class="el" href="classfastloess_1_1PredictResult.html#a1c42a1145a3d47bc288b703000e19b5c">fastloess::PredictResult</a></li>
 <li>PredictModel()&#160;:&#160;<a class="el" href="classfastloess_1_1PredictModel.html#afecce7da0fc63bff9742385370c5e59c">fastloess::PredictModel</a></li>
 <li>PredictResult()&#160;:&#160;<a class="el" href="classfastloess_1_1PredictResult.html#a4cbfb7ab4319bf61bd2a4cb82660a415">fastloess::PredictResult</a></li>
 <li>process_chunk()&#160;:&#160;<a class="el" href="classfastloess_1_1StreamingLoess.html#ae5faeacb6f5a64e0f5bcd4ebbdf2cf9e">fastloess::StreamingLoess</a></li>
+<li>process_chunk_weighted()&#160;:&#160;<a class="el" href="classfastloess_1_1StreamingLoess.html#acc2c8d04a33e18bbdc05d07d7ea9c6ef">fastloess::StreamingLoess</a></li>
 </ul>
 
 
@@ -242,7 +239,7 @@ $(document).ready(function(){initNavTree('functions.html',''); initResizable(); 
 
 <h3><a id="index_s" name="index_s"></a>- s -</h3><ul>
 <li>scaling_method&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#ab431933b32b26b675ef7c4ea24e6741d">fastloess::LoessOptions</a>, <a class="el" href="structfastloess_1_1OnlineOptions.html#a035dcdc8b87a4e6b20972a4545329b88">fastloess::OnlineOptions</a></li>
-<li>seed&#160;:&#160;<a class="el" href="structfastloess_1_1CVOptions.html#a38396803be4f5261cb0e6a99b41fd0d8">fastloess::CVOptions</a></li>
+<li>seed&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#a0ee2e05290d64e05398bd1e5c3cc663a">fastloess::LoessOptions</a></li>
 <li>size()&#160;:&#160;<a class="el" href="classfastloess_1_1LoessResult.html#a19b885acc33e759526a636cc31a41122">fastloess::LoessResult</a>, <a class="el" href="classfastloess_1_1PredictResult.html#a8d116d94196dc77f849445e3bbd67512">fastloess::PredictResult</a></li>
 <li>standard_error()&#160;:&#160;<a class="el" href="classfastloess_1_1OnlineOutput.html#a9065d694971c79bdb0d8b2fe1a93e117">fastloess::OnlineOutput</a></li>
 <li>standard_errors()&#160;:&#160;<a class="el" href="classfastloess_1_1LoessResult.html#a4ac27862cbcead065abbd87fcd5d0553">fastloess::LoessResult</a>, <a class="el" href="classfastloess_1_1PredictResult.html#a03fcdb413608f021b631e94b002e340a">fastloess::PredictResult</a></li>
@@ -271,6 +268,7 @@ $(document).ready(function(){initNavTree('functions.html',''); initResizable(); 
 <li>weight_function&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#a5158756d51ab7523e2151eddeb8c465e">fastloess::LoessOptions</a>, <a class="el" href="structfastloess_1_1OnlineOptions.html#af2bfcf51695223edb346d21ccb3b5399">fastloess::OnlineOptions</a></li>
 <li>weighted_metric_weights&#160;:&#160;<a class="el" href="structfastloess_1_1LoessOptions.html#a43b259baa804c25879bfbc3c371b854b">fastloess::LoessOptions</a>, <a class="el" href="structfastloess_1_1OnlineOptions.html#aa66bd7d32f0c35993990a5425697b712">fastloess::OnlineOptions</a></li>
 <li>window_capacity&#160;:&#160;<a class="el" href="structfastloess_1_1OnlineOptions.html#a277ba38ed5f101d0a678ceaee011a179">fastloess::OnlineOptions</a></li>
+<li>window_diagnostics()&#160;:&#160;<a class="el" href="classfastloess_1_1OnlineLoess.html#aba70cc986e68697bd3aba76534c1a8e9">fastloess::OnlineLoess</a></li>
 </ul>
 
 

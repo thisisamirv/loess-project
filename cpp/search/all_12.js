@@ -4,7 +4,7 @@ var searchData=
   ['scaling_20methods_1',['Scaling Methods',['../scaling.html',1,'weighting']]],
   ['scaling_2emd_2',['scaling.md',['../scaling_8md.html',1,'']]],
   ['scaling_5fmethod_3',['scaling_method',['../structfastloess_1_1LoessOptions.html#ab431933b32b26b675ef7c4ea24e6741d',1,'fastloess::LoessOptions::scaling_method'],['../structfastloess_1_1OnlineOptions.html#a035dcdc8b87a4e6b20972a4545329b88',1,'fastloess::OnlineOptions::scaling_method']]],
-  ['seed_4',['seed',['../structfastloess_1_1CVOptions.html#a38396803be4f5261cb0e6a99b41fd0d8',1,'fastloess::CVOptions']]],
+  ['seed_4',['seed',['../structfastloess_1_1LoessOptions.html#a0ee2e05290d64e05398bd1e5c3cc663a',1,'fastloess::LoessOptions']]],
   ['series_20analysis_5',['Time Series Analysis',['../use_case_time_series.html',1,'use_case']]],
   ['size_6',['size',['../classfastloess_1_1PredictResult.html#a8d116d94196dc77f849445e3bbd67512',1,'fastloess::PredictResult::size()'],['../classfastloess_1_1LoessResult.html#a19b885acc33e759526a636cc31a41122',1,'fastloess::LoessResult::size()']]],
   ['smoothing_7',['Genomic Data Smoothing',['../use_case_genomics.html',1,'use_case']]],
