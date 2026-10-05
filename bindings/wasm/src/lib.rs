@@ -779,15 +779,16 @@ impl PredictOutput {
 // LOESS smoother.
 #[wasm_bindgen(skip_typescript)]
 pub struct Loess {
-    options: JsValue,
+    builder: LoessBuilder<f64>,
 }
 
 #[wasm_bindgen]
 impl Loess {
     /// Create a new `Loess` model with the given options.
     #[wasm_bindgen(constructor, skip_typescript)]
-    pub fn new(options: JsValue) -> Loess {
-        Loess { options }
+    pub fn new(options: JsValue) -> Result<Loess, JsValue> {
+        let builder = batch_options_from_value(options)?;
+        Ok(Loess { builder })
     }
 
     /// Fit the model to data and return smoothed values.
@@ -802,7 +803,7 @@ impl Loess {
         smooth(
             x,
             y,
-            self.options.clone(),
+            self.builder.clone(),
             customWeights.map(|b| b.to_vec()),
         )
     }
@@ -997,12 +998,7 @@ fn online_options_to_builder(
     Ok(builder)
 }
 
-fn smooth(
-    x: &Float64Array,
-    y: &Float64Array,
-    options: JsValue,
-    custom_weights: Option<Vec<f64>>,
-) -> Result<LoessResult, JsValue> {
+fn batch_options_from_value(options: JsValue) -> Result<LoessBuilder<f64>, JsValue> {
     validate_option_keys(
         &options,
         "batch",
@@ -1039,13 +1035,20 @@ fn smooth(
         &["confidence", "prediction"],
     )?;
     validate_nested_option_keys(&options, "cv", "cv", &["fractions", "method", "k"])?;
-    let opts = if !options.is_undefined() && !options.is_null() {
-        Some(serde_wasm_bindgen::from_value::<SmoothOptions>(options)?)
-    } else {
+    let opts = if options.is_undefined() || options.is_null() {
         None
+    } else {
+        Some(serde_wasm_bindgen::from_value::<SmoothOptions>(options)?)
     };
-    let builder = batch_options_to_builder(opts)?;
+    batch_options_to_builder(opts)
+}
 
+fn smooth(
+    x: &Float64Array,
+    y: &Float64Array,
+    builder: LoessBuilder<f64>,
+    custom_weights: Option<Vec<f64>>,
+) -> Result<LoessResult, JsValue> {
     let x_vec = x.to_vec();
     let y_vec = y.to_vec();
 

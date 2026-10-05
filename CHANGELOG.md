@@ -250,6 +250,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Snapshot and validate Batch options at `Loess` construction so later mutations to the caller's options object cannot change subsequent fits.
 - Restore TypeScript declarations for retained prediction and weighted Streaming, validate CV seeds as safe JavaScript integers including fractional values, and strengthen confidence/prediction interval output tests.
 - Reject unknown option keys and mode-inappropriate output names; return owned typed-array copies that remain valid after freeing result owners.
 - `make loess-rs-dev` now also runs `cargo test --doc`, previously never checked by any `make` target.
