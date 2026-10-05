@@ -5,12 +5,19 @@
 R randomized properties and fixed reference cases live in
 [`property_tests/`](property_tests/). Golden-output tests and their committed
 fixtures live in [`fixture_tests/`](fixture_tests/). Run both suites, with R lint,
-and the Python boundary properties from the repository root:
+the Python boundary properties, and direct Rust-core regressions from the
+repository root:
 
 ```sh
 make r
 make validate
 ```
+
+Direct Rust-core numerical regressions live in
+[`rust_tests/tests/numerical_regressions.rs`](rust_tests/tests/numerical_regressions.rs).
+They cover Gaussian standard errors, high-range scaling and diagnostics, and
+case-weight invariants. `make validate` runs them alongside the binding-level
+suites.
 
 `make validate` creates the repository Python virtual environment when needed and
 installs NumPy, pytest, Hypothesis, and the local Python binding independently of
@@ -33,9 +40,10 @@ The R binding must already be installed, as above or by `make r-dev`.
 
 ## Visual Validation
 
-[`visual_validation/`](visual_validation/) generates CSV data for explanatory
-plots. These help inspect degrees, kernels, boundaries, intervals, adapters,
-multivariate surfaces, and other behaviors; they are not correctness oracles.
+[`rust_tests/`](rust_tests/) generates CSV data for explanatory plots and
+contains the direct Rust numerical tests. The visual comparisons help inspect
+degrees, kernels, boundaries, intervals, adapters, multivariate surfaces, and
+other behaviors; they are not correctness oracles.
 
 From the repository root:
 
@@ -47,7 +55,7 @@ make -C validation plot PYTHON=python
 For plotting, choose an interpreter with NumPy, Pandas, and Matplotlib installed.
 Use an absolute interpreter path when passing `PYTHON`, or one resolved on `PATH`;
 for example, `make -C validation plot PYTHON=python`. Generated CSVs and SVGs are
-kept in [`visual_validation/output/`](visual_validation/output/).
+kept in [`rust_tests/output/`](rust_tests/output/).
 
 ## Reference Sources
 

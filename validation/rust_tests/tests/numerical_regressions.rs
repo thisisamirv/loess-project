@@ -1,5 +1,3 @@
-#![cfg(feature = "dev")]
-
 use loess_rs::internals::api::Batch;
 use loess_rs::internals::evaluation::diagnostics::{Diagnostics, DiagnosticsState};
 use loess_rs::internals::primitives::policies::{RobustnessMethod, ScalingMethod};

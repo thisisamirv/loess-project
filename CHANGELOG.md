@@ -140,7 +140,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Monorepo:**
 
 - Updated validation CI to install the R binding and run root `make validate`, which owns Python and R validation dependency setup.
-- Moved R property/reference tests and golden fixtures to `validation/property_tests/` and `validation/fixture_tests/`; consolidated visual generation, plotting, and outputs under `validation/visual_validation/`. Removed `validate.rs` and the redundant JSON comparison pipeline. `make all-dev` runs `validate` last; `r-dev` and `r-tests` remain package-only, and `quickcheck` is validation-only.
+- Moved R property/reference tests and golden fixtures to `validation/property_tests/` and `validation/fixture_tests/`; consolidated visual generation, plotting, outputs, and direct Rust numerical regressions under `validation/rust_tests/`. Removed `validate.rs` and the redundant JSON comparison pipeline. `make all-dev` runs `validate` last; `r-dev` and `r-tests` remain package-only, and `quickcheck` is validation-only.
 - Updated the vendored `doxygen-awesome-css` theme to v2.5.0 and the Hugo docs build to v0.167.0.
 
 **loess-rs:**

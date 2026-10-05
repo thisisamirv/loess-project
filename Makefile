@@ -168,6 +168,7 @@ r-tests:
 	@"$(MAKE)" -f bindings/r/Makefile r-tests
 
 validate:
+	@"$(MAKE)" -C validation rust-tests
 	@"$(MAKE)" -C validation python-tests PYTHON="$(PYTHON)"
 	@"$(MAKE)" -C validation r-tests
 
