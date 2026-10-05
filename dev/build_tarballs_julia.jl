@@ -7,7 +7,7 @@ version = v"1.0.0"
 
 # Update the commit hash when releasing a new version
 sources = [
-	GitSource("https://github.com/thisisamirv/loess-project.git", "7313aee6914041ad43ff1b163f45a3d53bdeef68"),
+    GitSource("https://github.com/thisisamirv/loess-project.git", "7313aee6914041ad43ff1b163f45a3d53bdeef68"),
 ]
 
 # Build script
@@ -37,7 +37,7 @@ filter!(p -> arch(p) != "riscv64", platforms)
 
 # Products
 products = [
-	LibraryProduct(["libfastloess_jl", "fastloess_jl"], :libfastloess_jl; dont_dlopen = true),
+    LibraryProduct(["libfastloess_jl", "fastloess_jl"], :libfastloess_jl; dont_dlopen=true),
 ]
 
 # No JLL dependencies required
@@ -45,7 +45,7 @@ dependencies = Dependency[]
 
 # Build with Rust compiler support
 build_tarballs(ARGS, name, version, sources, script, platforms, products, dependencies;
-	julia_compat = "1.6",
-	compilers = [:rust, :c],
-	preferred_gcc_version = v"10",
-	lock_microarchitecture = false)
+    julia_compat="1.6",
+    compilers=[:rust, :c],
+    preferred_gcc_version=v"10",
+    lock_microarchitecture=false)

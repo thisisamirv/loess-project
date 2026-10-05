@@ -77,14 +77,14 @@ end
 
 try
     makedocs(
-        sitename = "FastLOESS.jl",
-        modules = [FastLOESS],
-        format = Documenter.HTML(
-            prettyurls = get(ENV, "CI", "false") == "true",
-            canonical = "https://thisisamirv.github.io/loess-project/julia/stable/",
-            repolink = "https://github.com/thisisamirv/loess-project",
+        sitename="FastLOESS.jl",
+        modules=[FastLOESS],
+        format=Documenter.HTML(
+            prettyurls=get(ENV, "CI", "false") == "true",
+            canonical="https://thisisamirv.github.io/loess-project/julia/stable/",
+            repolink="https://github.com/thisisamirv/loess-project",
         ),
-        pages = [
+        pages=[
             "Home" => "index.md",
             "Introduction" => [
                 "introduction/installation.md",
@@ -120,9 +120,9 @@ try
             "API Reference" => "api.md",
             "News" => "NEWS.md",
         ],
-        authors = "Amir Valizadeh",
-        warnonly = true,
-        checkdocs = :none,
+        authors="Amir Valizadeh",
+        warnonly=true,
+        checkdocs=:none,
     )
 finally
     for (path, content) ∈ original_contents
