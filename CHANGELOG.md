@@ -233,6 +233,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 - Prevent overflow in even-sample medians, mean-absolute and bisquare scaling, Batch/Streaming diagnostics and AIC, and local/all-tied case-weight normalization for large finite values.
 - Make one-dimensional boundary padding permutation-invariant; validate weighted-distance weights and Minkowski exponents at builder time to prevent panics and invalid fits.
 - Preserve retained-prediction zero-weight fallback semantics: return the matching training response for `return_original`, and `NaN` for `return_none` or unmatched original-value queries.

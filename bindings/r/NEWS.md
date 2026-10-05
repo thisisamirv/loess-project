@@ -23,6 +23,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 * Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Reject fractional/overflowing integer and count options before FFI coercion; validate grouped CV/interval lists and numeric vector/matrix shapes; accept integer custom weights.
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.

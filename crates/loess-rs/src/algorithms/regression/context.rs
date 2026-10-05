@@ -187,7 +187,7 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
                 weights.push(w);
             }
 
-            let weight_sum = Self::normalize_weights_if_sum_overflows(weights);
+            let weight_sum = Self::normalize_weights(weights);
             if weight_sum <= T::epsilon() {
                 self.buffer = buffer;
                 return self.handle_zero_weights_fit();
@@ -221,7 +221,7 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
                 weights.push(w);
             }
 
-            let weight_sum = Self::normalize_weights_if_sum_overflows(&mut weights);
+            let weight_sum = Self::normalize_weights(&mut weights);
             // Check numerical stability of weights
             if weight_sum <= T::epsilon() {
                 self.buffer = buffer;
@@ -292,7 +292,7 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
                 weights.push(w);
             }
 
-            Self::normalize_weights_if_sum_overflows(weights);
+            Self::normalize_weights(weights);
 
             buf.xtw_x.clear();
             buf.xtw_x.resize(n_coeffs * n_coeffs, T::zero());
@@ -521,36 +521,24 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
         }
     }
 
-    // Rescale only when summing individually finite weights overflows, preserving
-    // the original normalization order for ordinary neighborhoods.
-    fn normalize_weights_if_sum_overflows(weights: &mut [T]) -> T {
-        let sum = weights
-            .iter()
-            .copied()
-            .fold(T::zero(), |total, weight| total + weight);
-        if sum.is_finite() {
-            return sum;
-        }
-
+    // LOESS fits depend on relative neighborhood weights, not their common scale.
+    // Normalize before epsilon checks and normal-equation accumulation.
+    fn normalize_weights(weights: &mut [T]) -> T {
         let scale = weights.iter().copied().fold(T::zero(), T::max);
-        if scale <= T::zero() {
+        if !scale.is_finite() || scale <= T::zero() {
             return T::zero();
         }
 
-        let scaled_sum = weights
-            .iter()
-            .fold(T::zero(), |total, &weight| total + weight / scale);
+        let mut sum = T::zero();
         for weight in weights {
-            *weight = (*weight / scale) / scaled_sum;
+            *weight = *weight / scale;
+            sum = sum + *weight;
         }
-        T::one()
+        sum
     }
 
     // Compute weighted mean and sum of weights.
     fn weighted_mean_and_sum(&self) -> (T, T) {
-        let mut sum_wy = T::zero();
-        let mut sum_w = T::zero();
-        let mut max_weight = T::zero();
         let max_dist = self.neighborhood.max_distance;
         let bandwidth = if max_dist > T::epsilon() {
             max_dist
@@ -571,29 +559,9 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
             }
         };
 
-        for i in 0..self.neighborhood.len() {
-            let idx = self.neighborhood.indices[i];
-            let w = weight_at(i);
-            max_weight = max_weight.max(w);
-            sum_wy = sum_wy + w * self.y[idx];
-            sum_w = sum_w + w;
-        }
-
-        if sum_w.is_finite() && sum_wy.is_finite() {
-            let val = if sum_w > T::epsilon() {
-                sum_wy / sum_w
-            } else {
-                let n_f = T::from(self.neighborhood.len()).unwrap_or_else(|| T::one());
-                self.neighborhood
-                    .indices
-                    .iter()
-                    .map(|&i| self.y[i])
-                    .fold(T::zero(), |a, b| a + b)
-                    / n_f
-            };
-            return (val, sum_w);
-        }
-
+        let max_weight = (0..self.neighborhood.len())
+            .map(weight_at)
+            .fold(T::zero(), T::max);
         if max_weight <= T::zero() {
             let n_f = T::from(self.neighborhood.len()).unwrap_or_else(|| T::one());
             let val = self
@@ -603,7 +571,7 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
                 .map(|&i| self.y[i])
                 .fold(T::zero(), |a, b| a + b)
                 / n_f;
-            return (val, sum_w);
+            return (val, T::zero());
         }
 
         let scaled_sum = (0..self.neighborhood.len())
@@ -614,7 +582,7 @@ impl<'a, T: FloatLinalg + SolverLinalg> RegressionContext<'a, T> {
             let normalized_weight = (weight_at(i) / max_weight) / scaled_sum;
             weighted_mean = weighted_mean + normalized_weight * self.y[idx];
         }
-        (weighted_mean, sum_w)
+        (weighted_mean, scaled_sum)
     }
 
     // Internal WLS solver.

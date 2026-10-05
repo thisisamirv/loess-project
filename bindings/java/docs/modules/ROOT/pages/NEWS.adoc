@@ -24,6 +24,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 === Fixed
 
+* Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 * Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Reject negative CV seeds before native model allocation and defensively copy weighted-metric arrays in immutable options.
 * Propagate JNI array length/read failures, preserve explicit empty arrays for validation, and defer retained prediction-handle ownership until Java result construction succeeds. Validate iterations and k-fold counts instead of casting/coercing invalid values, and synchronize operations that share mutable native handles.

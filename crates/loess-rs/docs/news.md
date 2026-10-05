@@ -22,6 +22,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 * Prevent overflow in even-sample medians, mean-absolute and bisquare scaling, Batch/Streaming diagnostics and AIC, and local/all-tied case-weight normalization for large finite values.
 * Make one-dimensional boundary padding permutation-invariant, validate weighted-distance weights before fitting, and reject non-finite or non-positive Minkowski exponents at build time.
 * Preserve retained-prediction zero-weight fallback semantics: return the matching training response for `return_original`, and `NaN` for `return_none` or unmatched original-value queries.

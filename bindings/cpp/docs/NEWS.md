@@ -27,6 +27,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 * Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Forward the selected distance metric when per-dimension weights are supplied, and support multivariate Online points through a vector-coordinate `add_point` overload.
 * Free retained prediction handles and zero-length error results, reset freed native results, and make wrapper error paths exception-safe. Multidimensional predictor buffers are freed with their full length.

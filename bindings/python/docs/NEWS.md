@@ -23,6 +23,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 * Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Corrected Streaming result documentation to describe standard errors and confidence/prediction intervals when requested.
 * Support multivariate Online updates by accepting one coordinate vector per `add_point` call while preserving scalar inputs for one-dimensional models.

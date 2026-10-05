@@ -28,6 +28,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 * Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Reject explicitly empty custom weights instead of treating them as omitted.
 * Keep model receivers alive during Batch, Streaming, Online, and retained-prediction cgo calls to prevent premature native-handle finalization.

@@ -1471,6 +1471,36 @@ fn test_batch_custom_weights_zero_weight_reduces_influence() {
     );
 }
 
+#[test]
+fn test_batch_custom_weights_common_scaling_preserves_fit() {
+    let x: Vec<f64> = (0..11).map(|i| i as f64).collect();
+    let mut y: Vec<f64> = x.iter().map(|value| 2.0 * value).collect();
+    y[5] = 1000.0;
+
+    let mut weights = vec![1.0; x.len()];
+    weights[5] = 0.0;
+    let scaled_weights = weights.iter().map(|weight| weight * 1e-20).collect();
+
+    let fit = |weights| {
+        Loess::new()
+            .fraction(0.6)
+            .iterations(0)
+            .surface_mode("direct")
+            .custom_weights(weights)
+            .adapter(Batch)
+            .build()
+            .unwrap()
+            .fit(&x, &y)
+            .unwrap()
+    };
+    let unit_scale = fit(weights);
+    let small_scale = fit(scaled_weights);
+
+    for (expected, actual) in unit_scale.y.iter().zip(&small_scale.y) {
+        assert_relative_eq!(expected, actual, max_relative = 1e-10, epsilon = 1e-10);
+    }
+}
+
 // Uniform weights equal to 1 produce the same result as no weights
 #[test]
 fn test_batch_custom_weights_uniform_equals_no_weights() {

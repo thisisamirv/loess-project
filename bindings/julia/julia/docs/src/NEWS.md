@@ -26,6 +26,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 * Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Reject multivariate vector calls before unsafe FFI reads, use fixed-width 64-bit CV seeds, validate interpolation caps before allocation, and reject appending results with different dimensions.
 * Preserve model owners and input arrays across native calls, serialize mutable Streaming/Online operations, reject result appends with mismatched optional fields, and surface native constructor validation errors. GPU subprocess/target checks have no LOESS counterpart.

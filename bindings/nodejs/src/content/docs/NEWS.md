@@ -26,6 +26,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 * Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Keep generated native version checks tied to `package.json`, and provide TypeScript declarations for the `fastloess/version` subpath.
 * Reject unknown output names across Batch, Streaming, Online, and prediction options. Preserve the `fit_async()` TypeScript return type as `Promise<LoessResult>` after N-API builds.
