@@ -65,7 +65,7 @@ result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, lat/lon):\n")
 #> First 6 smoothed values (2D LOESS, lat/lon):
 print(head(result$y))
-#> [1]  0.18141178  0.02484439 -0.03151726  0.21964023  0.09924185 -0.22071524
+#> [1]  0.9062292  0.1435735 -0.9750541  1.2252353 -0.4044206 -0.8664023
 ```
 
 ------------------------------------------------------------------------
@@ -91,7 +91,7 @@ result <- fit(model, x3d, y)
 cat("First 6 smoothed values (3D LOESS):\n")
 #> First 6 smoothed values (3D LOESS):
 print(head(result$y))
-#> [1] 0.8041757 0.9710899 0.8812859 1.0388899 0.9834350 0.8277124
+#> [1] 0.1070178 1.2940146 0.3345450 1.2766746 1.9559779 0.6504406
 ```
 
 ------------------------------------------------------------------------
@@ -121,7 +121,7 @@ result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, weighted distance):\n")
 #> First 6 smoothed values (2D LOESS, weighted distance):
 print(head(result$y))
-#> [1]  0.17709387  0.08359416 -0.05142187  0.14223791  0.12033868 -0.13208634
+#> [1]  0.7770580  0.1104610 -1.0415788  1.1566705 -0.3800008 -0.9127029
 ```
 
 ------------------------------------------------------------------------
@@ -136,12 +136,12 @@ print(head(result$y))
 ``` r
 
 # Exact fit at every point — slower but no interpolation artefacts
-model <- Loess(surface_mode = "direct", fraction = 0.3, dimensions = 2L)
+model <- Loess(fraction = 0.3, dimensions = 2L, surface_mode = "direct")
 result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, direct surface):\n")
 #> First 6 smoothed values (2D LOESS, direct surface):
 print(head(result$y))
-#> [1]  0.19275941  0.02956952  0.01604781  0.22483189  0.13748470 -0.23519835
+#> [1]  1.0042372  0.1831346 -0.9723946  1.0257415 -0.3229626 -0.9038626
 ```
 
 For large 2D or 3D datasets use `"interpolation"` (default) and tune
@@ -150,16 +150,16 @@ For large 2D or 3D datasets use `"interpolation"` (default) and tune
 ``` r
 
 model <- Loess(
-    surface_mode = "interpolation",
-    cell = 0.2,
     fraction = 0.3,
-    dimensions = 2L
+    dimensions = 2L,
+    surface_mode = "interpolation",
+    cell = 0.2
 )
 result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, interpolation surface):\n")
 #> First 6 smoothed values (2D LOESS, interpolation surface):
 print(head(result$y))
-#> [1]  0.18141178  0.02484439 -0.03151726  0.21964023  0.09924185 -0.22071524
+#> [1]  0.9062292  0.1435735 -0.9750541  1.2252353 -0.4044206 -0.8664023
 ```
 
 ``` r

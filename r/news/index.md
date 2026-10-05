@@ -4,6 +4,12 @@
 
 ### Added
 
+- Added case weights to Streaming chunks and Online points, plus
+  current-window Online diagnostics and prediction.
+- [`OnlineLoess()`](https://thisisamirv.github.io/loess-project/r/reference/OnlineLoess.md)
+  now accepts multivariate coordinate vectors in
+  [`add_point()`](https://thisisamirv.github.io/loess-project/r/reference/add_point.md)
+  when `dimensions` is greater than one.
 - Added an Alternative Software vignette with runnable Gaussian and
   robust comparisons to
   [`stats::loess()`](https://rdrr.io/r/stats/loess.html) and a guide to
@@ -19,8 +25,7 @@
   [`OnlineLoess()`](https://thisisamirv.github.io/loess-project/r/reference/OnlineLoess.md),
   and
   [`predict.Loess()`](https://thisisamirv.github.io/loess-project/r/reference/predict.Loess.md)
-  for grouped optional results with mode-specific name validation;
-  existing `return_*` arguments remain supported.
+  for grouped optional results with mode-specific name validation.
 - Added `retain_model` and a
   [`predict.Loess()`](https://thisisamirv.github.io/loess-project/r/reference/predict.Loess.md)
   S3 method for out-of-sample prediction.
@@ -40,11 +45,51 @@
 
 ### Changed
 
+- Clarified Batch `residual_sd` as `1.4826 * MAD`; Streaming reports the
+  cumulative sample standard deviation of emitted residuals.
+- Breaking change: replaced individual `return_*` output arguments with
+  `outputs = c(...)` for Batch, Streaming, Online, and prediction.
+- Breaking change: replaced flat interval arguments and prediction
+  levels with
+  `intervals = intervals_opts(confidence = ..., prediction = ...)`; CV
+  uses only `cv = cv_opts(...)` with an outer `seed`, replacing flat CV
+  arguments and `cv_opts(seed = ...)`. Removed named constructor
+  arguments now error instead of being silently ignored.
 - Unavailable diagnostics are now represented as R `NA` rather than
   generic `NaN` values.
 
 ### Fixed
 
+- Normalize local case weights by their neighborhood maximum so common
+  scaling cannot turn valid positive weights into an epsilon-triggered
+  unweighted fallback.
+- Prevented overflow in even medians, mean/bisquare scales,
+  Batch/Streaming diagnostics and AIC, and local/all-tied weight sums
+  for large finite inputs.
+- Reject fractional/overflowing integer and count options before FFI
+  coercion; validate grouped CV/interval lists and numeric vector/matrix
+  shapes; accept integer custom weights.
+- Validate case-weight lengths and values before dropping missing
+  observations, so invalid weights on dropped rows are not silently
+  ignored.
+- Preserve case weights through sorted CV training subsets and
+  multidimensional predictions. Serial and parallel CV now agree on
+  seeded folds and held-out LOOCV predictions; K-fold counts above the
+  retained observation count are rejected.
+- Reject non-positive or non-finite Streaming/Online auto-convergence
+  tolerances. Online auto-convergence requires full updates with
+  robustness iterations.
+- Include all observations for Gaussian smoothing and prediction while
+  preserving the k-th-neighbor bandwidth; use the true exponential
+  without an artificial tail floor.
+- Correct case-weighted standard errors for direct, unpadded
+  one-dimensional linear fits and retained prediction, with matching
+  serial/parallel local moments. Span-one fits no longer substitute a
+  kernel-free global OLS formula.
+- Honor configured zero-weight fallback policies in constant-degree,
+  zero-bandwidth, insufficient-neighbor, and coefficient-fit paths.
+- Match R LOESS’s even-sample bisquare MAR scale arithmetic, including
+  extremely small residuals, while preserving the centered-MAD fallback.
 - Aligned `OnlineLoess` defaults across the Rust core and bindings:
   `iterations` is now `0` with the default
   `update_mode = "incremental"`; positive robustness iterations require
@@ -52,6 +97,12 @@
 - Fixed `cv_seed` silently accepting negative values and reinterpreting
   them as a huge unsigned seed instead of raising an error. Now
   validated before the cast.
+- Fixed multivariate Batch/Streaming matrix inputs being flattened in
+  R’s column-major order; preserve row-wise coordinates. CV seeds now
+  honor the documented full exact-integer range through 2^53, matrix
+  [`predict_window()`](https://thisisamirv.github.io/loess-project/r/reference/predict_window.md)
+  queries are rejected instead of being misinterpreted, and plotting
+  multivariate results now returns a clear unsupported-mode error.
 
 ## rfastloess 2.0.0
 

@@ -38,21 +38,38 @@
 <h2 class="pkg-version" data-toc-text="development version" id="rfastloess-development-version">rfastloess (development version)<a class="anchor" aria-label="anchor" href="#rfastloess-development-version"></a></h2>
 <div class="section level3">
 <h3 id="added-development-version">Added<a class="anchor" aria-label="anchor" href="#added-development-version"></a></h3>
-<ul><li>Added an Alternative Software vignette with runnable Gaussian and robust comparisons to <code><a href="https://rdrr.io/r/stats/loess.html" class="external-link">stats::loess()</a></code> and a guide to LOESS-specific defaults.</li>
+<ul><li>Added case weights to Streaming chunks and Online points, plus current-window Online diagnostics and prediction.</li>
+<li>
+<code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> now accepts multivariate coordinate vectors in <code><a href="../reference/add_point.html">add_point()</a></code> when <code>dimensions</code> is greater than one.</li>
+<li>Added an Alternative Software vignette with runnable Gaussian and robust comparisons to <code><a href="https://rdrr.io/r/stats/loess.html" class="external-link">stats::loess()</a></code> and a guide to LOESS-specific defaults.</li>
 <li>Added <code><a href="../reference/cv_opts.html">cv_opts()</a></code> and the <code>cv</code> argument on <code><a href="../reference/Loess.html">Loess()</a></code> for grouped Batch cross-validation.</li>
-<li>Added <code>outputs</code> to <code><a href="../reference/Loess.html">Loess()</a></code>, <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>, and <code><a href="../reference/predict.Loess.html">predict.Loess()</a></code> for grouped optional results with mode-specific name validation; existing <code>return_*</code> arguments remain supported.</li>
+<li>Added <code>outputs</code> to <code><a href="../reference/Loess.html">Loess()</a></code>, <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>, and <code><a href="../reference/predict.Loess.html">predict.Loess()</a></code> for grouped optional results with mode-specific name validation.</li>
 <li>Added <code>retain_model</code> and a <code><a href="../reference/predict.Loess.html">predict.Loess()</a></code> S3 method for out-of-sample prediction.</li>
 <li>Added <code>return_gradient</code> to <code><a href="../reference/Loess.html">Loess()</a></code>, <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code>, and <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>.</li>
 <li>Added <code>confidence_intervals</code>/<code>prediction_intervals</code>/<code>return_se</code> to <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code> and <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>. <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> requires <code>update_mode = "full"</code> or errors. New bound fields on <code><a href="../reference/add_point.html">add_point()</a></code>’s result.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
-<ul><li>Unavailable diagnostics are now represented as R <code>NA</code> rather than generic <code>NaN</code> values.</li>
+<ul><li>Clarified Batch <code>residual_sd</code> as <code>1.4826 * MAD</code>; Streaming reports the cumulative sample standard deviation of emitted residuals.</li>
+<li>Breaking change: replaced individual <code>return_*</code> output arguments with <code>outputs = c(...)</code> for Batch, Streaming, Online, and prediction.</li>
+<li>Breaking change: replaced flat interval arguments and prediction levels with <code>intervals = intervals_opts(confidence = ..., prediction = ...)</code>; CV uses only <code>cv = cv_opts(...)</code> with an outer <code>seed</code>, replacing flat CV arguments and <code>cv_opts(seed = ...)</code>. Removed named constructor arguments now error instead of being silently ignored.</li>
+<li>Unavailable diagnostics are now represented as R <code>NA</code> rather than generic <code>NaN</code> values.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
-<ul><li>Aligned <code>OnlineLoess</code> defaults across the Rust core and bindings: <code>iterations</code> is now <code>0</code> with the default <code>update_mode = "incremental"</code>; positive robustness iterations require <code>update_mode = "full"</code>.</li>
+<ul><li>Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.</li>
+<li>Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.</li>
+<li>Reject fractional/overflowing integer and count options before FFI coercion; validate grouped CV/interval lists and numeric vector/matrix shapes; accept integer custom weights.</li>
+<li>Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.</li>
+<li>Preserve case weights through sorted CV training subsets and multidimensional predictions. Serial and parallel CV now agree on seeded folds and held-out LOOCV predictions; K-fold counts above the retained observation count are rejected.</li>
+<li>Reject non-positive or non-finite Streaming/Online auto-convergence tolerances. Online auto-convergence requires full updates with robustness iterations.</li>
+<li>Include all observations for Gaussian smoothing and prediction while preserving the k-th-neighbor bandwidth; use the true exponential without an artificial tail floor.</li>
+<li>Correct case-weighted standard errors for direct, unpadded one-dimensional linear fits and retained prediction, with matching serial/parallel local moments. Span-one fits no longer substitute a kernel-free global OLS formula.</li>
+<li>Honor configured zero-weight fallback policies in constant-degree, zero-bandwidth, insufficient-neighbor, and coefficient-fit paths.</li>
+<li>Match R LOESS’s even-sample bisquare MAR scale arithmetic, including extremely small residuals, while preserving the centered-MAD fallback.</li>
+<li>Aligned <code>OnlineLoess</code> defaults across the Rust core and bindings: <code>iterations</code> is now <code>0</code> with the default <code>update_mode = "incremental"</code>; positive robustness iterations require <code>update_mode = "full"</code>.</li>
 <li>Fixed <code>cv_seed</code> silently accepting negative values and reinterpreting them as a huge unsigned seed instead of raising an error. Now validated before the cast.</li>
+<li>Fixed multivariate Batch/Streaming matrix inputs being flattened in R’s column-major order; preserve row-wise coordinates. CV seeds now honor the documented full exact-integer range through 2^53, matrix <code><a href="../reference/predict_window.html">predict_window()</a></code> queries are rejected instead of being misinterpreted, and plotting multivariate results now returns a clear unsupported-mode error.</li>
 </ul></div>
 </div>
     <div class="section level2">

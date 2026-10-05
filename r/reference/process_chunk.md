@@ -8,7 +8,7 @@ Process a data chunk through a streaming LOESS model
 process_chunk(model, ...)
 
 # S3 method for class 'StreamingLoess'
-process_chunk(model, x, y, ...)
+process_chunk(model, x, y, custom_weights = NULL, ...)
 ```
 
 ## Arguments
@@ -28,6 +28,10 @@ process_chunk(model, x, y, ...)
 - y:
 
   Numeric vector of y values.
+
+- custom_weights:
+
+  Optional numeric case weight per observation.
 
 ## Value
 

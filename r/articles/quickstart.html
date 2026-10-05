@@ -96,18 +96,17 @@ starting values for most signals.</p>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span></span>
 <span>    fraction <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>    iterations <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>    confidence_intervals <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span>    prediction_intervals <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span>    return_diagnostics <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    outputs <span class="op">=</span> <span class="st">"diagnostics"</span>,</span>
+<span>    intervals <span class="op">=</span> <span class="fu"><a href="../reference/intervals_opts.html">intervals_opts</a></span><span class="op">(</span>confidence <span class="op">=</span> <span class="fl">0.95</span>, prediction <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Smoothed (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">y</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Smoothed (first 5): 0.4758389 0.4846388 0.4944609 0.5054102 0.5169758</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"CI Lower (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; CI Lower (first 5): 0.3381404 0.3455916 0.3539923 0.3634793 0.3735825</span></span>
+<span><span class="co">#&gt; CI Lower (first 5): 0.3394052 0.346882 0.3553893 0.3651472 0.3757715</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"CI Upper (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; CI Upper (first 5): 0.6135373 0.6236859 0.6349296 0.647341 0.6603691</span></span>
+<span><span class="co">#&gt; CI Upper (first 5): 0.6122726 0.6223956 0.6335326 0.6456731 0.65818</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"R2:"</span>, <span class="va">result</span><span class="op">$</span><span class="va">diagnostics</span><span class="op">$</span><span class="va">r_squared</span>, <span class="st">"\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R2: 0.78173</span></span></code></pre></div>
 <hr>
@@ -126,7 +125,7 @@ starting values for most signals.</p>
 <span>    fraction <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>    iterations <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>    robustness_method <span class="op">=</span> <span class="st">"bisquare"</span>,</span>
-<span>    return_robustness_weights <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    outputs <span class="op">=</span> <span class="st">"weights"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x_out</span>, <span class="va">y_with_outlier</span><span class="op">)</span></span>
 <span></span>
@@ -208,7 +207,7 @@ chunks with overlap.</p>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, confidence_intervals <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, intervals <span class="op">=</span> <span class="fu"><a href="../reference/intervals_opts.html">intervals_opts</a></span><span class="op">(</span>confidence <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, pch <span class="op">=</span> <span class="fl">16</span>, col <span class="op">=</span> <span class="st">"gray"</span>, main <span class="op">=</span> <span class="st">"LOESS Smoothing"</span><span class="op">)</span></span>

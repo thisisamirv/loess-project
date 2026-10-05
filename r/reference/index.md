@@ -27,16 +27,25 @@ Objects returned by fit methods and helper functions.
 - [`add_point()`](https://thisisamirv.github.io/loess-project/r/reference/add_point.md)
   : Add a single point to an online LOESS model
 
+- [`window_diagnostics()`](https://thisisamirv.github.io/loess-project/r/reference/window_diagnostics.md)
+  : Compute diagnostics for the current Online window
+
 - [`plot(`*`<LoessResult>`*`)`](https://thisisamirv.github.io/loess-project/r/reference/plot.LoessResult.md)
   : Plot Loess Result
 
 - [`predict(`*`<Loess>`*`)`](https://thisisamirv.github.io/loess-project/r/reference/predict.Loess.md)
   : Predict from a fitted LOESS model at out-of-sample points
 
+- [`predict_window()`](https://thisisamirv.github.io/loess-project/r/reference/predict_window.md)
+  : Predict from the current Online window
+
 - [`cv_opts()`](https://thisisamirv.github.io/loess-project/r/reference/cv_opts.md)
   :
 
   Cross-validation options for `Loess`
+
+- [`intervals_opts()`](https://thisisamirv.github.io/loess-project/r/reference/intervals_opts.md)
+  : Interval options for fitting and prediction
 
 - [`print(`*`<Loess>`*`)`](https://thisisamirv.github.io/loess-project/r/reference/print.Loess.md)
   : Print Loess Model

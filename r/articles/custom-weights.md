@@ -17,8 +17,12 @@ w_{ij} = \text{custom\_weights}[j] \times K\!\left(\frac{d_{ij}}{h_i}\right)
 where $`K`$ is the distance kernel, $`h_i`$ is the local bandwidth, and
 $`r_j`$ is the robustness weight from the current iteration.
 
-> **Batch adapter only:** `custom_weights` applies in **Batch** mode. It
-> is silently ignored in Streaming and Online adapters.
+`custom_weights` supplies one finite non-negative prior weight per
+observation. Batch accepts weights in `fit`; Streaming accepts
+`process_chunk(..., custom_weights=...)`; Online accepts
+`add_point(..., weight=...)`. Streaming preserves weights through
+overlap buffers, and Online evicts each weight with its observation.
+Existing unweighted calls use weight `1.0`.
 
 ------------------------------------------------------------------------
 

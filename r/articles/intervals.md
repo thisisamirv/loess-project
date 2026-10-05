@@ -7,9 +7,9 @@ intervals](../reference/figures/intervals_comparison.svg)
 
 Confidence and prediction intervals
 
-> **Adapter support:** Confidence and prediction intervals are available
-> in **Batch** mode only. Streaming and Online modes do not support
-> intervals.
+> **Adapter support:** Batch and Streaming support confidence and
+> prediction intervals; Online supports them in `update_mode = "full"`
+> only.
 
 | Type           | Represents                 | Width  | Use                   |
 |----------------|----------------------------|--------|-----------------------|
@@ -29,7 +29,7 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-model <- Loess(fraction = 0.5, confidence_intervals = 0.95)
+model <- Loess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95))
 result <- fit(model, x, y)
 
 # Plot with bands
@@ -47,7 +47,7 @@ lines(result$x, result$confidence_upper, col = "blue", lty = 2)
 
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 95% CI at midpoint: [ -0.102212 ,  0.1763286 ]
+#> 95% CI at midpoint: [ -0.1007995 ,  0.1749161 ]
 ```
 
 ------------------------------------------------------------------------
@@ -63,7 +63,7 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-model <- Loess(fraction = 0.5, prediction_intervals = 0.95)
+model <- Loess(fraction = 0.5, intervals = intervals_opts(prediction = 0.95))
 result <- fit(model, x, y)
 
 plot(x, y, pch = 16, col = "gray",
@@ -80,7 +80,7 @@ lines(result$x, result$prediction_upper, col = "red", lty = 2)
 
 cat("Prediction bounds: [", result$prediction_lower[1], ", ",
     result$prediction_upper[1], "]\n")
-#> Prediction bounds: [ -0.1439302 ,  1.095608 ]
+#> Prediction bounds: [ -0.1436505 ,  1.095328 ]
 ```
 
 ------------------------------------------------------------------------
@@ -98,8 +98,7 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(
     fraction = 0.5,
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95
+    intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
 )
 result <- fit(model, x, y)
 
@@ -128,7 +127,7 @@ legend("topright",
 
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 95% CI at midpoint: [ -0.102212 ,  0.1763286 ]
+#> 95% CI at midpoint: [ -0.1007995 ,  0.1749161 ]
 ```
 
 ------------------------------------------------------------------------
@@ -146,10 +145,10 @@ Common levels and their z-values:
 ``` r
 
 # 99% confidence interval
-model <- Loess(fraction = 0.5, confidence_intervals = 0.99)
+model <- Loess(fraction = 0.5, intervals = intervals_opts(confidence = 0.99))
 result <- fit(model, x, y)
 cat("First lower CI bound (99%):", result$confidence_lower[1], "\n")
-#> First lower CI bound (99%): 0.2948638
+#> First lower CI bound (99%): 0.296526
 ```
 
 ------------------------------------------------------------------------
@@ -160,19 +159,19 @@ Access standard errors directly (available when intervals are computed):
 
 ``` r
 
-model <- Loess(fraction = 0.5, return_se = TRUE)
+model <- Loess(fraction = 0.5, outputs = "se")
 result <- fit(model, x, y)
 cat("Standard errors (first 5):", head(result$standard_errors, 5), "\n")
-#> Standard errors (first 5): 0.0702543 0.07094242 0.0716677 0.07241371 0.07315985
+#> Standard errors (first 5): 0.06960904 0.07028408 0.07095493 0.07156272 0.07204299
 ```
 
 ------------------------------------------------------------------------
 
 ## Availability
 
-> **Batch Mode Only:** Confidence and prediction intervals are only
-> available in **Batch** mode. Streaming and Online modes do not support
-> intervals.
+> **Adapter support:** Confidence and prediction intervals are available
+> in Batch and Streaming; Online supports them in `update_mode = "full"`
+> only. intervals.
 
 | Feature              | Batch | Streaming | Online |
 |----------------------|-------|-----------|--------|

@@ -7,17 +7,14 @@ Predict from a fitted LOESS model at out-of-sample points
 ``` r
 # S3 method for class 'Loess'
 predict(
-    object,
-    new_x,
-    return_se = FALSE,
-    confidence_level = NULL,
-    prediction_level = NULL,
-    return_derivative = FALSE,
-    extrapolation = "clamp",
-    max_extrapolation_distance = NULL,
-    max_neighbor_distance = NULL,
-    outputs = NULL,
-    ...
+  object,
+  new_x,
+  intervals = NULL,
+  extrapolation = "clamp",
+  max_extrapolation_distance = NULL,
+  max_neighbor_distance = NULL,
+  outputs = NULL,
+  ...
 )
 ```
 
@@ -35,24 +32,10 @@ predict(
   Numeric vector of out-of-sample query points (flattened, `dimensions`
   values per point).
 
-- return_se:
+- intervals:
 
-  Logical; include standard errors in the output. Default: `FALSE`.
-
-- confidence_level:
-
-  Confidence interval coverage level (e.g. 0.95). `NULL` (default)
-  disables it.
-
-- prediction_level:
-
-  Prediction interval coverage level (e.g. 0.95). `NULL` (default)
-  disables it.
-
-- return_derivative:
-
-  Logical; include the local fit's gradient in the output. Default:
-  `FALSE`.
+  Grouped coverage levels from
+  [`intervals_opts`](https://thisisamirv.github.io/loess-project/r/reference/intervals_opts.md).
 
 - extrapolation:
 
@@ -74,7 +57,7 @@ predict(
 - outputs:
 
   Optional character vector selecting `"se"`, `"gradient"`, or
-  `"derivative"`; combined with the corresponding individual flags.
+  `"derivative"`. `NULL` (default) selects no optional components.
 
 - ...:
 

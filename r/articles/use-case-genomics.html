@@ -84,10 +84,11 @@ noise.</p>
 </h3>
 <p>A small <code>fraction = 0.1</code> lets LOESS follow fine-scale
 spatial structure without smearing the transitions between methylated
-and unmethylated regions. <code>confidence_intervals = 0.95</code>
-produces uncertainty bands that naturally widen at positions with
-sparser CpG coverage, making low-confidence segments immediately
-apparent in the plot.</p>
+and unmethylated regions.
+<code>intervals = intervals_opts(confidence = 0.95)</code> produces
+uncertainty bands that naturally widen at positions with sparser CpG
+coverage, making low-confidence segments immediately apparent in the
+plot.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/thisisamirv/loess-project" class="external-link">rfastloess</a></span><span class="op">)</span></span>
 <span></span>
@@ -102,7 +103,7 @@ apparent in the plot.</p>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span></span>
 <span>    fraction <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>    iterations <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>    confidence_intervals <span class="op">=</span> <span class="fl">0.95</span></span>
+<span>    intervals <span class="op">=</span> <span class="fu"><a href="../reference/intervals_opts.html">intervals_opts</a></span><span class="op">(</span>confidence <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">positions</span>, <span class="va">observed</span><span class="op">)</span></span>
 <span></span>
@@ -150,9 +151,9 @@ extreme counts.</p>
 <span><span class="va">observed</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Poisson.html" class="external-link">rpois</a></span><span class="op">(</span><span class="va">n</span>, <span class="va">true_signal</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span></span>
-<span>    fraction <span class="op">=</span> <span class="fl">0.05</span>,   <span class="co"># Very local smoothing</span></span>
-<span>    iterations <span class="op">=</span> <span class="fl">5</span>,    <span class="co"># Strong robustness</span></span>
-<span>    return_residuals <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    fraction <span class="op">=</span> <span class="fl">0.05</span>,   <span class="co"># Very local smoothing,</span></span>
+<span>    iterations <span class="op">=</span> <span class="fl">5</span>,    <span class="co"># Strong robustness,</span></span>
+<span>    outputs <span class="op">=</span> <span class="st">"residuals"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">positions</span>, <span class="va">observed</span><span class="op">)</span></span>
 <span></span>
@@ -179,8 +180,8 @@ extreme counts.</p>
 <span><span class="co"># Process chromosome-by-chromosome or in chunks</span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
 <span>    fraction   <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>    chunk_size <span class="op">=</span> <span class="fl">100000</span>,   <span class="co"># 100kb chunks</span></span>
-<span>    overlap    <span class="op">=</span> <span class="fl">10000</span>,    <span class="co"># 10kb overlap</span></span>
+<span>    chunk_size <span class="op">=</span> <span class="fl">100000</span>,   <span class="co"># 100kb chunks,</span></span>
+<span>    overlap    <span class="op">=</span> <span class="fl">10000</span>,    <span class="co"># 10kb overlap,</span></span>
 <span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">positions</span>, <span class="va">coverage</span><span class="op">)</span></span>

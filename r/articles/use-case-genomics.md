@@ -18,9 +18,10 @@ position-dependent patterns that can be obscured by measurement noise.
 
 A small `fraction = 0.1` lets LOESS follow fine-scale spatial structure
 without smearing the transitions between methylated and unmethylated
-regions. `confidence_intervals = 0.95` produces uncertainty bands that
-naturally widen at positions with sparser CpG coverage, making
-low-confidence segments immediately apparent in the plot.
+regions. `intervals = intervals_opts(confidence = 0.95)` produces
+uncertainty bands that naturally widen at positions with sparser CpG
+coverage, making low-confidence segments immediately apparent in the
+plot.
 
 ``` r
 
@@ -37,7 +38,7 @@ observed  <- pmax(0, pmin(1, observed))
 model <- Loess(
     fraction = 0.1,
     iterations = 3,
-    confidence_intervals = 0.95
+    intervals = intervals_opts(confidence = 0.95)
 )
 result <- fit(model, positions, observed)
 
@@ -87,9 +88,9 @@ true_signal <- background + peak1 + peak2 + peak3
 observed <- rpois(n, true_signal)
 
 model <- Loess(
-    fraction = 0.05,   # Very local smoothing
-    iterations = 5,    # Strong robustness
-    return_residuals = TRUE
+    fraction = 0.05,   # Very local smoothing,
+    iterations = 5,    # Strong robustness,
+    outputs = "residuals"
 )
 result <- fit(model, positions, observed)
 
@@ -118,8 +119,8 @@ coverage  <- rpois(length(positions), 50)
 # Process chromosome-by-chromosome or in chunks
 model <- StreamingLoess(
     fraction   = 0.05,
-    chunk_size = 100000,   # 100kb chunks
-    overlap    = 10000,    # 10kb overlap
+    chunk_size = 100000,   # 100kb chunks,
+    overlap    = 10000,    # 10kb overlap,
     merge_strategy = "weighted_average"
 )
 process_chunk(model, positions, coverage)

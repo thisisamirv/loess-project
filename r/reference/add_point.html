@@ -44,7 +44,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">add_point</span><span class="op">(</span><span class="va">model</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'OnlineLoess'</span></span>
-<span><span class="fu">add_point</span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">add_point</span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span>, weight <span class="op">=</span> <span class="fl">1</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -60,11 +60,17 @@
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A single numeric x value.</p></dd>
+<dd><p>A numeric coordinate vector with one value per configured
+dimension. For one-dimensional models, a scalar is also accepted.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
 <dd><p>A single numeric y value.</p></dd>
+
+
+<dt id="arg-weight">weight<a class="anchor" aria-label="anchor" href="#arg-weight"></a></dt>
+<dd><p>Finite non-negative case weight for this observation; defaults
+to 1.</p></dd>
 
 </dl></div>
     <div class="section level2">

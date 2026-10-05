@@ -150,7 +150,7 @@ accuracy; computationally cheapest.</p>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>degree <span class="op">=</span> <span class="st">"constant"</span>, fraction <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, degree <span class="op">=</span> <span class="st">"constant"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (constant/Nadaraya-Watson):\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; First 6 smoothed values (constant/Nadaraya-Watson):</span></span>
@@ -167,7 +167,7 @@ vast majority of applications.</p>
 <p><strong>Use when</strong>: Default; monotone or gently curved data;
 boundary accuracy matters.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>degree <span class="op">=</span> <span class="st">"linear"</span>, fraction <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, degree <span class="op">=</span> <span class="st">"linear"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (linear local regression):\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; First 6 smoothed values (linear local regression):</span></span>
@@ -184,7 +184,7 @@ variance.</p>
 <p><strong>Use when</strong>: Data has visible curvature or local
 extrema; use a larger <code>fraction</code> to stabilise the fit.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>degree <span class="op">=</span> <span class="st">"quadratic"</span>, fraction <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, degree <span class="op">=</span> <span class="st">"quadratic"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (quadratic local regression):\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; First 6 smoothed values (quadratic local regression):</span></span>
@@ -201,7 +201,7 @@ stable.</p>
 <p><strong>Use when</strong>: Data has clear S-shaped curves or multiple
 inflection points; use <code>fraction</code> &gt;= 0.5.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>degree <span class="op">=</span> <span class="st">"cubic"</span>, fraction <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.6</span>, degree <span class="op">=</span> <span class="st">"cubic"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (cubic local regression):\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; First 6 smoothed values (cubic local regression):</span></span>
@@ -218,7 +218,7 @@ overfitting.</p>
 <p><strong>Use when</strong>: Fine oscillatory structure is physically
 meaningful and the dataset is large; always cross-validate.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>degree <span class="op">=</span> <span class="st">"quartic"</span>, fraction <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.7</span>, degree <span class="op">=</span> <span class="st">"quartic"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First 6 smoothed values (quartic local regression):\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; First 6 smoothed values (quartic local regression):</span></span>

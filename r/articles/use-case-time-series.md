@@ -42,7 +42,7 @@ legend("topleft", c("Observed", "Trend (LOESS)"),
 
 ## Seasonal Decomposition
 
-Setting `return_residuals = TRUE` stores `observed − smoothed` alongside
+Setting `outputs = "residuals"` stores `observed − smoothed` alongside
 the smooth. A slightly wider `fraction = 0.4` produces a smoother
 baseline trend, so short-duration oscillations end up in the residuals
 rather than being absorbed into the trend component. The residual series
@@ -60,9 +60,9 @@ seasonal <- 15 * sin(2 * pi * t / 12)
 noise    <- rnorm(120, sd = 5)
 y        <- trend + seasonal + noise
 
-model    <- Loess(fraction = 0.4, iterations = 2)
+model    <- Loess(fraction = 0.4, iterations = 2, outputs = "residuals")
 result   <- fit(model, t, y)
-residual <- y - result$y
+residual <- result$residuals
 
 par(mfrow = c(2, 1), mar = c(4, 4, 2, 0.5))
 plot(t, y, type = "l", col = "gray",
@@ -125,8 +125,7 @@ y <- 10 + 0.3 * t + sin(t / 5) + rnorm(500, sd = 2)
 model <- Loess(
     fraction = 0.2,
     iterations = 3,
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95
+    intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
 )
 result <- fit(model, t, y)
 
@@ -208,8 +207,8 @@ expression <- 100 * (1 + 0.5 * sin(hours * pi / 12)) +
 model <- Loess(
     fraction = 0.3,
     iterations = 3,
-    confidence_intervals = 0.95,
-    return_diagnostics = TRUE
+    outputs = "diagnostics",
+    intervals = intervals_opts(confidence = 0.95)
 )
 result <- fit(model, hours, expression)
 

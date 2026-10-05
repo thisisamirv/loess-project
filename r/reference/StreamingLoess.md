@@ -12,36 +12,30 @@ flushes any remaining buffered points after the last chunk.
 
 ``` r
 StreamingLoess(
-    fraction = 0.67,
-    chunk_size = 5000L,
-    ...,
-    overlap = NULL,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_gradient = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_se = FALSE,
-    merge_strategy = "weighted_average",
-    parallel = TRUE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL,
-    missing = "error",
-    outputs = NULL
+  fraction = 0.67,
+  chunk_size = 5000L,
+  ...,
+  overlap = NULL,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  intervals = NULL,
+  merge_strategy = "weighted_average",
+  parallel = TRUE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL,
+  missing = "error",
+  outputs = NULL
 )
 ```
 
@@ -109,43 +103,10 @@ StreamingLoess(
   Convergence tolerance for early stopping of robustness iterations.
   `NULL` (default) disables early stopping.
 
-- return_diagnostics:
+- intervals:
 
-  Logical; if `TRUE`, return fit-quality metrics (RMSE, MAE, R-squared,
-  AIC, etc.). Default: `FALSE`.
-
-- return_residuals:
-
-  Logical; if `TRUE`, return residuals in the result. Default: `FALSE`.
-
-- return_robustness_weights:
-
-  Logical; if `TRUE`, return per-point robustness weights. Default:
-  `FALSE`.
-
-- return_gradient:
-
-  Logical; if `TRUE`, return the per-point local fit gradient in the
-  result. Requires `surface_mode = "direct"`; raises an error instead of
-  silently leaving `gradient` absent if requested under the default
-  `"interpolation"` mode. Default: `FALSE`.
-
-- confidence_intervals:
-
-  Confidence level for confidence intervals (e.g. `0.95`), computed per
-  chunk and merged across overlap boundaries via `merge_strategy`.
-  `NULL` (default) disables confidence intervals.
-
-- prediction_intervals:
-
-  Confidence level for prediction intervals; same per-chunk computation
-  and overlap-merging as `confidence_intervals`. `NULL` (default)
-  disables prediction intervals.
-
-- return_se:
-
-  Include standard errors in the result, computed per chunk and merged
-  across overlap boundaries via `merge_strategy`. Default: `FALSE`.
+  Grouped coverage levels from
+  [`intervals_opts`](https://thisisamirv.github.io/loess-project/r/reference/intervals_opts.md).
 
 - merge_strategy:
 
@@ -215,8 +176,8 @@ StreamingLoess(
 - outputs:
 
   Optional character vector selecting `"diagnostics"`, `"residuals"`,
-  `"weights"`, `"gradient"` (or `"derivative"`), and `"se"`. Combined
-  with individual flags.
+  `"weights"`, `"gradient"` (or `"derivative"`), and `"se"`. `NULL`
+  (default) selects no optional components.
 
 ## Value
 
@@ -224,7 +185,10 @@ A StreamingLoess object.
 
 ## Details
 
-Best suited for datasets over 100,000 points, memory-constrained
+When `outputs` includes `"diagnostics"`, `residual_sd` is the cumulative
+sample standard deviation of emitted residuals. Batch `residual_sd`
+instead uses the robust residual scale estimate `1.4826 * MAD`. Best
+suited for datasets over 100,000 points, memory-constrained
 environments, or batch processing pipelines. For smaller datasets that
 fit in memory, see
 [`Loess`](https://thisisamirv.github.io/loess-project/r/reference/Loess.md);

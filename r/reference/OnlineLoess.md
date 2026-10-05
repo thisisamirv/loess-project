@@ -8,33 +8,29 @@ sliding window and processes each incoming point immediately via
 
 ``` r
 OnlineLoess(
-    fraction = 0.67,
-    window_capacity = 1000L,
-    min_points = 2L,
-    ...,
-    iterations = 0L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    zero_weight_fallback = "use_local_mean",
-    update_mode = "incremental",
-    auto_converge = NULL,
-    return_robustness_weights = FALSE,
-    return_gradient = FALSE,
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_se = FALSE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL,
-    missing = "error",
-    outputs = NULL
+  fraction = 0.67,
+  window_capacity = 1000L,
+  min_points = 2L,
+  ...,
+  iterations = 0L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  zero_weight_fallback = "use_local_mean",
+  update_mode = "incremental",
+  auto_converge = NULL,
+  intervals = NULL,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL,
+  missing = "error",
+  outputs = NULL
 )
 ```
 
@@ -107,37 +103,10 @@ OnlineLoess(
   Convergence tolerance for early stopping of robustness iterations.
   `NULL` (default) disables early stopping.
 
-- return_robustness_weights:
+- intervals:
 
-  Logical; if `TRUE`, return per-point robustness weights. Default:
-  `FALSE`.
-
-- return_gradient:
-
-  Logical; if `TRUE`, return the per-point local fit gradient in the
-  result. Requires `surface_mode = "direct"`; raises an error instead of
-  silently leaving `gradient` absent if requested under the default
-  `"interpolation"` mode. Default: `FALSE`.
-
-- confidence_intervals:
-
-  Confidence level for confidence intervals (e.g. `0.95`). Only computed
-  under `update_mode = "full"` — raises an error at construction if set
-  (or `return_se`/ `prediction_intervals` is set) while `update_mode` is
-  left at its default `"incremental"`. `NULL` (default) disables
-  confidence intervals.
-
-- prediction_intervals:
-
-  Confidence level for prediction intervals; same `update_mode = "full"`
-  requirement as `confidence_intervals`. `NULL` (default) disables
-  prediction intervals.
-
-- return_se:
-
-  Include the standard error for the latest point in the result. Same
-  `update_mode = "full"` requirement as `confidence_intervals`. Default:
-  `FALSE`.
+  Grouped coverage levels from
+  [`intervals_opts`](https://thisisamirv.github.io/loess-project/r/reference/intervals_opts.md).
 
 - degree:
 
@@ -146,7 +115,9 @@ OnlineLoess(
 
 - dimensions:
 
-  Number of predictor dimensions. Default: 1.
+  Number of predictor dimensions; each
+  [`add_point()`](https://thisisamirv.github.io/loess-project/r/reference/add_point.md)
+  call must provide one x coordinate per dimension.
 
 - distance_metric:
 
@@ -195,8 +166,8 @@ OnlineLoess(
 - outputs:
 
   Optional character vector selecting `"weights"`, `"gradient"` (or
-  `"derivative"`), and `"se"`. Combined with individual flags; `"se"`
-  requires full update mode.
+  `"derivative"`), and `"se"`. `NULL` (default) selects no optional
+  components; `"se"` requires full update mode.
 
 ## Value
 

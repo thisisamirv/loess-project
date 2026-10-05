@@ -37,18 +37,17 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 model <- Loess(
     fraction = 0.5,
     iterations = 3,
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95,
-    return_diagnostics = TRUE
+    outputs = "diagnostics",
+    intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
 )
 result <- fit(model, x, y)
 
 cat("Smoothed (first 5):", head(result$y, 5), "\n")
 #> Smoothed (first 5): 0.4758389 0.4846388 0.4944609 0.5054102 0.5169758
 cat("CI Lower (first 5):", head(result$confidence_lower, 5), "\n")
-#> CI Lower (first 5): 0.3381404 0.3455916 0.3539923 0.3634793 0.3735825
+#> CI Lower (first 5): 0.3394052 0.346882 0.3553893 0.3651472 0.3757715
 cat("CI Upper (first 5):", head(result$confidence_upper, 5), "\n")
-#> CI Upper (first 5): 0.6135373 0.6236859 0.6349296 0.647341 0.6603691
+#> CI Upper (first 5): 0.6122726 0.6223956 0.6335326 0.6456731 0.65818
 cat("R2:", result$diagnostics$r_squared, "\n")
 #> R2: 0.78173
 ```
@@ -70,7 +69,7 @@ model <- Loess(
     fraction = 0.7,
     iterations = 5,
     robustness_method = "bisquare",
-    return_robustness_weights = TRUE
+    outputs = "weights"
 )
 result <- fit(model, x_out, y_with_outlier)
 
@@ -160,7 +159,7 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-model <- Loess(fraction = 0.5, confidence_intervals = 0.95)
+model <- Loess(fraction = 0.5, intervals = intervals_opts(confidence = 0.95))
 result <- fit(model, x, y)
 
 plot(x, y, pch = 16, col = "gray", main = "LOESS Smoothing")

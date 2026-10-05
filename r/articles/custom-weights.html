@@ -82,11 +82,13 @@ is the distance kernel,
 is the local bandwidth, and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>j</mi></msub><annotation encoding="application/x-tex">r_j</annotation></semantics></math>
 is the robustness weight from the current iteration.</p>
-<blockquote>
-<p><strong>Batch adapter only:</strong> <code>custom_weights</code>
-applies in <strong>Batch</strong> mode. It is silently ignored in
-Streaming and Online adapters.</p>
-</blockquote>
+<p><code>custom_weights</code> supplies one finite non-negative prior
+weight per observation. Batch accepts weights in <code>fit</code>;
+Streaming accepts <code>process_chunk(..., custom_weights=...)</code>;
+Online accepts <code>add_point(..., weight=...)</code>. Streaming
+preserves weights through overlap buffers, and Online evicts each weight
+with its observation. Existing unweighted calls use weight
+<code>1.0</code>.</p>
 <hr>
 </div>
 <div class="section level2">

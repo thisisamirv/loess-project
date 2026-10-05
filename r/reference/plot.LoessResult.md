@@ -1,6 +1,7 @@
 # Plot Loess Result
 
-Plot Loess Result
+Plotting supports one-dimensional results. For a multivariate fit,
+select a predictor dimension and create a custom plot.
 
 ## Usage
 

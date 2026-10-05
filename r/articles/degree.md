@@ -39,7 +39,7 @@ set.seed(42)
 x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
-model <- Loess(degree = "constant", fraction = 0.5)
+model <- Loess(fraction = 0.5, degree = "constant")
 result <- fit(model, x, y)
 cat("First 6 smoothed values (constant/Nadaraya-Watson):\n")
 #> First 6 smoothed values (constant/Nadaraya-Watson):
@@ -60,7 +60,7 @@ matters.
 
 ``` r
 
-model <- Loess(degree = "linear", fraction = 0.5)
+model <- Loess(fraction = 0.5, degree = "linear")
 result <- fit(model, x, y)
 cat("First 6 smoothed values (linear local regression):\n")
 #> First 6 smoothed values (linear local regression):
@@ -81,7 +81,7 @@ variance.
 
 ``` r
 
-model <- Loess(degree = "quadratic", fraction = 0.5)
+model <- Loess(fraction = 0.5, degree = "quadratic")
 result <- fit(model, x, y)
 cat("First 6 smoothed values (quadratic local regression):\n")
 #> First 6 smoothed values (quadratic local regression):
@@ -102,7 +102,7 @@ points; use `fraction` \>= 0.5.
 
 ``` r
 
-model <- Loess(degree = "cubic", fraction = 0.6)
+model <- Loess(fraction = 0.6, degree = "cubic")
 result <- fit(model, x, y)
 cat("First 6 smoothed values (cubic local regression):\n")
 #> First 6 smoothed values (cubic local regression):
@@ -123,7 +123,7 @@ the dataset is large; always cross-validate.
 
 ``` r
 
-model <- Loess(degree = "quartic", fraction = 0.7)
+model <- Loess(fraction = 0.7, degree = "quartic")
 result <- fit(model, x, y)
 cat("First 6 smoothed values (quartic local regression):\n")
 #> First 6 smoothed values (quartic local regression):

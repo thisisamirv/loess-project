@@ -73,7 +73,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Josh Stone <cuviper@gmail.com>
     License: Apache-2.0 OR MIT
     ----------------------------------------
-    Package: bitflags (2.13.2)
+    Package: bitflags (2.13.1)
     Authors: The Rust Project Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -97,23 +97,23 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Emilio Cobos Álvarez <emilio@crisal.io>, Jeff Muizelaar <jmuizelaar@mozilla.com>, Kartikaya Gupta <kats@mozilla.com>, Ryan Hunt <rhunt@eqrion.net>
     License: MPL-2.0
     ----------------------------------------
-    Package: cc (1.5.1)
+    Package: cc (1.4.3)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: cfg-if (1.0.5)
+    Package: cfg-if (1.0.4)
     Authors: Alex Crichton <alex@alexcrichton.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: clap (4.6.7)
+    Package: clap (4.6.6)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: clap_builder (4.6.7)
+    Package: clap_builder (4.6.6)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: clap_lex (1.1.1)
+    Package: clap_lex (1.1.0)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -129,19 +129,19 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Nick Fitzgerald <fitzgen@gmail.com>
     License: Apache-2.0/MIT
     ----------------------------------------
-    Package: convert_case (0.12.0)
+    Package: convert_case (0.11.0)
     Authors: rutrum <dave@rutrum.net>
     License: MIT
     ----------------------------------------
-    Package: crossbeam-deque (0.8.8)
+    Package: crossbeam-deque (0.8.7)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: crossbeam-epoch (0.9.21)
+    Package: crossbeam-epoch (0.9.20)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: crossbeam-utils (0.8.23)
+    Package: crossbeam-utils (0.8.22)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -149,7 +149,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Matt Mastracci <matthew@mastracci.com>
     License: Apache-2.0 OR MIT
     ----------------------------------------
-    Package: either (1.18.0)
+    Package: either (1.17.0)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -165,7 +165,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Stjepan Glavina <stjepang@gmail.com>
     License: Apache-2.0 OR MIT
     ----------------------------------------
-    Package: find-msvc-tools (0.1.14)
+    Package: find-msvc-tools (0.1.11)
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -221,7 +221,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: indexmap (2.14.2)
+    Package: indexmap (2.14.0)
     Authors:
     License: Apache-2.0 OR MIT
     ----------------------------------------
@@ -249,7 +249,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Robert Bragg <robert@sixbynine.org>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: js-sys (0.3.106)
+    Package: js-sys (0.3.104)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -269,7 +269,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Dan Gohman <dev@sunfishcode.online>
     License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
     ----------------------------------------
-    Package: log (0.4.34)
+    Package: log (0.4.33)
     Authors: The Rust Project Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -281,7 +281,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Andrew Gallant <jamslam@gmail.com>, bluss
     License: Unlicense OR MIT
     ----------------------------------------
-    Package: minicov (0.3.8)
+    Package: minicov (0.3.9)
     Authors: Amanieu d'Antras <amanieu@gmail.com>
     License: Apache-2.0/MIT
     ----------------------------------------
@@ -289,23 +289,23 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Sébastien Crozet <developer@crozet.re>
     License: Apache-2.0
     ----------------------------------------
-    Package: napi (3.13.0)
+    Package: napi (3.12.1)
     Authors: Nathan Sobo <nathan@github.com>, Yinan Long <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-build (2.5.0)
+    Package: napi-build (2.4.1)
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-derive (3.6.9)
+    Package: napi-derive (3.6.3)
     Authors: LongYinan <lynweklm@gmail.com>, Forehalo <forehalo@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-derive-backend (6.1.4)
+    Package: napi-derive-backend (6.1.2)
     Authors:
     License: MIT
     ----------------------------------------
-    Package: napi-sys (3.3.2)
+    Package: napi-sys (3.3.0)
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
@@ -365,7 +365,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: Apache-2.0 OR MIT
     ----------------------------------------
-    Package: portable-atomic-util (0.2.8)
+    Package: portable-atomic-util (0.2.7)
     Authors:
     License: Apache-2.0 OR MIT
     ----------------------------------------
@@ -373,23 +373,23 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3 (0.29.3)
+    Package: pyo3 (0.29.2)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-build-config (0.29.3)
+    Package: pyo3-build-config (0.29.2)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-ffi (0.29.3)
+    Package: pyo3-ffi (0.29.2)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-macros (0.29.3)
+    Package: pyo3-macros (0.29.2)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-macros-backend (0.29.3)
+    Package: pyo3-macros-backend (0.29.2)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
@@ -421,7 +421,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: rustix (1.1.5)
+    Package: rustix (1.1.4)
     Authors: Dan Gohman <dev@sunfishcode.online>, Jakub Konka <kubkon@jakubkonka.com>
     License: Apache-2.0 WITH LLVM-exception OR Apache-2.0 OR MIT
     ----------------------------------------
@@ -501,17 +501,13 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Steven Allen <steven@stebalien.com>, The Rust Project Developers, Ashley Mannix <ashleymannix@live.com.au>, Jason White <me@jasonwhite.io>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: thiserror (2.0.21)
+    Package: thiserror (2.0.20)
     Authors: David Tolnay <dtolnay@gmail.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: thiserror-impl (2.0.21)
+    Package: thiserror-impl (2.0.20)
     Authors: David Tolnay <dtolnay@gmail.com>
     License: MIT OR Apache-2.0
-    ----------------------------------------
-    Package: tokio (1.53.1)
-    Authors: Tokio Contributors <team@tokio.rs>
-    License: MIT
     ----------------------------------------
     Package: toml (0.9.12+spec-1.1.0)
     Authors:
@@ -533,7 +529,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: unicode-ident (1.0.26)
+    Package: unicode-ident (1.0.24)
     Authors: David Tolnay <dtolnay@gmail.com>
     License: (MIT OR Apache-2.0) AND Unicode-3.0
     ----------------------------------------
@@ -549,39 +545,39 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Andrew Gallant <jamslam@gmail.com>
     License: Unlicense/MIT
     ----------------------------------------
-    Package: wasm-bindgen (0.2.129)
+    Package: wasm-bindgen (0.2.127)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-futures (0.4.79)
+    Package: wasm-bindgen-futures (0.4.77)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-macro (0.2.129)
+    Package: wasm-bindgen-macro (0.2.127)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-macro-support (0.2.129)
+    Package: wasm-bindgen-macro-support (0.2.127)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-shared (0.2.129)
+    Package: wasm-bindgen-shared (0.2.127)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-test (0.3.79)
+    Package: wasm-bindgen-test (0.3.77)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-test-macro (0.3.79)
+    Package: wasm-bindgen-test-macro (0.3.77)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wasm-bindgen-test-shared (0.2.129)
+    Package: wasm-bindgen-test-shared (0.2.127)
     Authors: The wasm-bindgen Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: wide (1.7.1)
+    Package: wide (1.7.0)
     Authors: Lokathor <zefria@gmail.com>
     License: Zlib OR Apache-2.0 OR MIT
     ----------------------------------------

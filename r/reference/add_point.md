@@ -8,7 +8,7 @@ Add a single point to an online LOESS model
 add_point(model, ...)
 
 # S3 method for class 'OnlineLoess'
-add_point(model, x, y, ...)
+add_point(model, x, y, weight = 1, ...)
 ```
 
 ## Arguments
@@ -23,11 +23,16 @@ add_point(model, x, y, ...)
 
 - x:
 
-  A single numeric x value.
+  A numeric coordinate vector with one value per configured dimension.
+  For one-dimensional models, a scalar is also accepted.
 
 - y:
 
   A single numeric y value.
+
+- weight:
+
+  Finite non-negative case weight for this observation; defaults to 1.
 
 ## Value
 

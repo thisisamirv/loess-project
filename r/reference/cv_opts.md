@@ -6,7 +6,7 @@ Cross-validation options for
 ## Usage
 
 ``` r
-cv_opts(fractions, method = "kfold", k = 5L, seed = NULL)
+cv_opts(fractions, method = "kfold", k = 5L)
 ```
 
 ## Arguments
@@ -22,10 +22,6 @@ cv_opts(fractions, method = "kfold", k = 5L, seed = NULL)
 - k:
 
   Number of folds for k-fold cross-validation. Default: 5.
-
-- seed:
-
-  Seed for reproducible fold assignment, or `NULL`.
 
 ## Value
 

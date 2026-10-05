@@ -46,15 +46,14 @@ y <- sin(x) + rnorm(100, sd = 0.3)
 model <- Loess(
     fraction = 0.5,
     iterations = 3,
-    confidence_intervals = 0.95,
-    prediction_intervals = 0.95,
-    return_diagnostics = TRUE,
-    parallel = TRUE
+    parallel = TRUE,
+    outputs = "diagnostics",
+    intervals = intervals_opts(confidence = 0.95, prediction = 0.95)
 )
 result <- fit(model, x, y)
 cat("95% CI at midpoint: [", result$confidence_lower[50], ", ",
     result$confidence_upper[50], "]\n")
-#> 95% CI at midpoint: [ -0.09570347 ,  0.1979411 ]
+#> 95% CI at midpoint: [ -0.09551516 ,  0.1977528 ]
 cat("R2:", result$diagnostics$r_squared, "\n")
 #> R2: 0.7588806
 ```

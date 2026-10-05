@@ -126,9 +126,9 @@ has uniform data density.</p>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
-<span>    merge_strategy <span class="op">=</span> <span class="st">"average"</span>,</span>
 <span>    chunk_size <span class="op">=</span> <span class="fl">60</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">20</span></span>
+<span>    overlap <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>    merge_strategy <span class="op">=</span> <span class="st">"average"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co"># The second chunk's overlap region (its first 20 points) is where</span></span>
@@ -150,9 +150,9 @@ after each chunk (no look-ahead revision); left-chunk context
 dominates.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
-<span>    merge_strategy <span class="op">=</span> <span class="st">"take_first"</span>,</span>
 <span>    chunk_size <span class="op">=</span> <span class="fl">60</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">20</span></span>
+<span>    overlap <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>    merge_strategy <span class="op">=</span> <span class="st">"take_first"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span><span class="op">)</span></span>
@@ -173,9 +173,9 @@ quality; you are post-processing complete data rather than streaming in
 real time.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
-<span>    merge_strategy <span class="op">=</span> <span class="st">"take_last"</span>,</span>
 <span>    chunk_size <span class="op">=</span> <span class="fl">60</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">20</span></span>
+<span>    overlap <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>    merge_strategy <span class="op">=</span> <span class="st">"take_last"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span><span class="op">)</span></span>
@@ -197,9 +197,9 @@ important than speed; moderate overlap (10–20% of chunk size) is
 used.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/StreamingLoess.html">StreamingLoess</a></span><span class="op">(</span></span>
-<span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span>,</span>
 <span>    chunk_size <span class="op">=</span> <span class="fl">60</span>,</span>
-<span>    overlap <span class="op">=</span> <span class="fl">20</span></span>
+<span>    overlap <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>    merge_strategy <span class="op">=</span> <span class="st">"weighted_average"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/invisible.html" class="external-link">invisible</a></span><span class="op">(</span><span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">60</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/process_chunk.html">process_chunk</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span>, <span class="va">y</span><span class="op">[</span><span class="fl">61</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span><span class="op">)</span></span>

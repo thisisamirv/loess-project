@@ -105,6 +105,7 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="textblock"><h1>Installation</h1>
 <p>Install the LOESS library for your preferred language.</p>
 <p>Each prebuilt platform archive contains that platform's library and the matching C++ and C headers. Download and extract the archive for your target; its files are placed in the current directory.</p>
+<p>Future C++ releases build with the committed workspace <code>Cargo.lock</code> and include <code>THIRD_PARTY_LICENSES.html</code>, generated from the locked runtime dependency graph. The existing v2.0.0 binaries did not publish their build lockfile or dependency notices; a report generated later cannot establish the dependencies embedded in those binaries.</p>
 <h2>Pre-built Binaries (Linux (x64))</h2>
 <div class="fragment"><div class="line">wget https://github.com/thisisamirv/loess-project/releases/latest/download/libfastloess-linux-x64.tar</div>
 <div class="line">tar -xf libfastloess-linux-x64.tar</div>
@@ -193,7 +194,19 @@ $(document).ready(function(){initNavTree('installation.html',''); initResizable(
 <div class="fragment"><div class="line">conda install -c conda-forge libfastloess</div>
 </div><!-- fragment --><h2>From Spack</h2>
 <div class="fragment"><div class="line">spack install fastloess-cpp</div>
-</div><!-- fragment --><hr  />
+</div><!-- fragment --><p>The recipe links its homepage to the C++ documentation and provides checks for the installed headers and library directory. Recipes with the standalone smoke test can compile and run a small linear fit against the installed library:</p>
+<div class="fragment"><div class="line">spack test run --alias fastloess-cpp-smoke fastloess-cpp</div>
+<div class="line">spack test results -l fastloess-cpp-smoke</div>
+</div><!-- fragment --><h2>From vcpkg (Repository Overlay)</h2>
+<p>The repository provides a <code>fastloess</code> overlay port for the published v2.0.0 CPU shared library. It is not yet part of vcpkg's curated registry. Rust and Cargo are not required for installation.</p>
+<p>From the repository root, with <code>VCPKG_ROOT</code> pointing to an existing vcpkg checkout:</p>
+<div class="fragment"><div class="line">&amp; &quot;$env:VCPKG_ROOT/vcpkg.exe&quot; install fastloess:x64-windows --overlay-ports=bindings/cpp/vcpkg</div>
+</div><!-- fragment --><p>Windows x64/ARM64 MSVC, glibc Linux x64/ARM64, and macOS x64/ARM64 dynamic targets are supported. Use dynamic triplets such as <code>x64-linux-dynamic</code> or <code>arm64-osx-dynamic</code> on Unix; default static triplets and musl are unsupported by this port. Debug and Release consumers use the same prebuilt Release library; Windows requires the dynamic CRT.</p>
+<p>Configure your application with vcpkg's CMake toolchain and the same triplet, then link the installed target:</p>
+<div class="fragment"><div class="line">find_package(fastloess CONFIG REQUIRED)</div>
+<div class="line">target_link_libraries(myapp PRIVATE fastloess::fastloess)</div>
+</div><!-- fragment --><p>The overlay README under <code>bindings/cpp/vcpkg</code> contains installation, consumer validation, and clangd configuration commands. The v2.0.0 port discloses its dependency-license provenance limitation; future releases must install the matching generated notices before that limitation can be resolved.</p>
+<hr  />
 <h2>Verify Installation</h2>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &lt;<a class="code" href="fastloess_8hpp.html">fastloess.hpp</a>&gt;</span></div>
 <div class="line"><span class="preprocessor">#include &lt;iostream&gt;</span></div>

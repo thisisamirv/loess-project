@@ -2,46 +2,36 @@
 
 Create a stateful LOESS model for batch smoothing. This is the default
 mode: it processes the entire dataset at once and supports every feature
-(confidence/prediction intervals, cross-validation, GPU backend).
+(confidence/prediction intervals and cross-validation).
 
 ## Usage
 
 ``` r
 Loess(
-    fraction = 0.67,
-    ...,
-    iterations = 3L,
-    weight_function = "tricube",
-    robustness_method = "bisquare",
-    scaling_method = "mad",
-    boundary_policy = "extend",
-    confidence_intervals = NULL,
-    prediction_intervals = NULL,
-    return_diagnostics = FALSE,
-    return_residuals = FALSE,
-    return_robustness_weights = FALSE,
-    return_gradient = FALSE,
-    zero_weight_fallback = "use_local_mean",
-    auto_converge = NULL,
-    cv_fractions = NULL,
-    cv_method = "kfold",
-    cv_k = 5L,
-    parallel = TRUE,
-    degree = "linear",
-    dimensions = 1L,
-    distance_metric = "normalized",
-    surface_mode = "interpolation",
-    return_se = FALSE,
-    return_sorted = FALSE,
-    weighted_metric_weights = NULL,
-    cell = NULL,
-    interpolation_vertices = NULL,
-    boundary_degree_fallback = NULL,
-    cv_seed = NULL,
-    missing = "error",
-    retain_model = FALSE,
-    outputs = NULL,
-    cv = NULL
+  fraction = 0.67,
+  ...,
+  iterations = 3L,
+  weight_function = "tricube",
+  robustness_method = "bisquare",
+  scaling_method = "mad",
+  boundary_policy = "extend",
+  outputs = NULL,
+  intervals = NULL,
+  zero_weight_fallback = "use_local_mean",
+  auto_converge = NULL,
+  parallel = TRUE,
+  degree = "linear",
+  dimensions = 1L,
+  distance_metric = "normalized",
+  surface_mode = "interpolation",
+  weighted_metric_weights = NULL,
+  cell = NULL,
+  interpolation_vertices = NULL,
+  boundary_degree_fallback = NULL,
+  seed = NULL,
+  missing = "error",
+  retain_model = FALSE,
+  cv = NULL
 )
 ```
 
@@ -86,36 +76,16 @@ Loess(
   `"reflect"` (alias: `"mirror"`), `"zero"`, or `"noboundary"` (alias:
   `"none"`).
 
-- confidence_intervals:
+- outputs:
 
-  Confidence level for confidence intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables confidence intervals.
+  Optional character vector selecting `"diagnostics"`, `"residuals"`,
+  `"weights"`, `"gradient"` (or `"derivative"`), `"se"`, and `"sorted"`.
+  `NULL` (default) selects no optional components.
 
-- prediction_intervals:
+- intervals:
 
-  Confidence level for prediction intervals, greater than 0 and less
-  than 1 (e.g., 0.95). `NULL` (default) disables prediction intervals.
-
-- return_diagnostics:
-
-  Logical; if `TRUE`, return fit-quality metrics (RMSE, MAE, R-squared,
-  AIC, etc.). Default: `FALSE`.
-
-- return_residuals:
-
-  Logical; if `TRUE`, return residuals in the result. Default: `FALSE`.
-
-- return_robustness_weights:
-
-  Logical; if `TRUE`, return per-point robustness weights. Default:
-  `FALSE`.
-
-- return_gradient:
-
-  Logical; if `TRUE`, return the per-point local fit gradient in the
-  result. Requires `surface_mode = "direct"`; raises an error instead of
-  silently leaving `gradient` absent if requested under the default
-  `"interpolation"` mode. Default: `FALSE`.
+  Grouped coverage levels from
+  [`intervals_opts`](https://thisisamirv.github.io/loess-project/r/reference/intervals_opts.md).
 
 - zero_weight_fallback:
 
@@ -128,19 +98,6 @@ Loess(
 
   Convergence tolerance for early stopping of robustness iterations.
   `NULL` (default) disables early stopping.
-
-- cv_fractions:
-
-  Numeric vector of candidate fractions for cross-validation. `NULL`
-  (default) disables CV.
-
-- cv_method:
-
-  Cross-validation method: `"kfold"` (default) or `"loocv"`.
-
-- cv_k:
-
-  Number of folds for k-fold CV, at least 2. Default: 5.
 
 - parallel:
 
@@ -164,20 +121,6 @@ Loess(
 - surface_mode:
 
   Surface evaluation mode: `"interpolation"` (default) or `"direct"`.
-
-- return_se:
-
-  Logical; if `TRUE`, compute hat-matrix statistics (effective degrees
-  of freedom, leverage, standard errors). Default: `FALSE`.
-
-- return_sorted:
-
-  Logical; if `TRUE`, return results sorted ascending by `x` instead of
-  in the original input order. Default: `FALSE`. To get both orderings
-  without re-fitting, sort the default (unsorted) result client-side
-  (e.g. `order(result$x)`) rather than calling
-  [`fit()`](https://thisisamirv.github.io/loess-project/r/reference/fit.md)
-  twice.
 
 - weighted_metric_weights:
 
@@ -206,10 +149,9 @@ Loess(
   [`stats::loess()`](https://rdrr.io/r/stats/loess.html). `NULL`
   (default) uses the library default.
 
-- cv_seed:
+- seed:
 
-  Integer seed for the cross-validation random number generator. `NULL`
-  (default) uses a random seed.
+  Seed for reproducible CV folds, or `NULL`.
 
 - missing:
 
@@ -225,18 +167,10 @@ Loess(
   [`predict.Loess`](https://thisisamirv.github.io/loess-project/r/reference/predict.Loess.md)
   for out-of-sample prediction. Default: `FALSE`.
 
-- outputs:
-
-  Optional character vector selecting `"diagnostics"`, `"residuals"`,
-  `"weights"`, `"gradient"` (or `"derivative"`), `"se"`, and `"sorted"`.
-  Combined with the corresponding `return_*` arguments; `NULL` selects
-  none.
-
 - cv:
 
   Grouped cross-validation settings from
   [`cv_opts`](https://thisisamirv.github.io/loess-project/r/reference/cv_opts.md).
-  `NULL` uses the individual `cv_*` arguments.
 
 ## Value
 
@@ -253,6 +187,9 @@ for point-by-point real-time data, see
 
 `fraction` is the most important parameter: it controls the size of the
 local neighbourhood used at each point.
+
+When `outputs` includes `"diagnostics"`, Batch `residual_sd` is the
+robust residual scale estimate `1.4826 * MAD`.
 
 |         |                 |                          |
 |---------|-----------------|--------------------------|

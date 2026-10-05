@@ -47,8 +47,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(
-    cv_method = "loocv",
-    cv_fractions = c(0.2, 0.3, 0.5, 0.7)
+    cv = cv_opts(method = "loocv", fractions = c(0.2, 0.3, 0.5, 0.7))
 )
 result <- fit(model, x, y)
 
@@ -70,10 +69,8 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- Loess(
-    cv_method = "kfold",
-    cv_k = 5,
-    cv_fractions = c(0.3, 0.5, 0.7),
-    cv_seed = 42L
+    cv = cv_opts(method = "kfold", k = 5, fractions = c(0.3, 0.5, 0.7)),
+    seed = 42L
 )
 result <- fit(model, x, y)
 cat("Selected fraction (CV):", result$fraction_used, "\n")
@@ -121,7 +118,7 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 fractions <- c(0.1, 0.3, 0.5, 0.7)
-model <- Loess(cv_method = "kfold", cv_k = 5, cv_fractions = fractions)
+model <- Loess(cv = cv_opts(method = "kfold", k = 5, fractions = fractions))
 result <- fit(model, x, y)
 
 plot(fractions, result$cv_scores, type = "b",

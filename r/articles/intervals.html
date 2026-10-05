@@ -69,9 +69,9 @@
 <img src="../reference/figures/intervals_comparison.svg" alt="Confidence and prediction intervals"><div class="figcaption">Confidence and prediction intervals</div>
 </div>
 <blockquote>
-<p><strong>Adapter support:</strong> Confidence and prediction intervals
-are available in <strong>Batch</strong> mode only. Streaming and Online
-modes do not support intervals.</p>
+<p><strong>Adapter support:</strong> Batch and Streaming support
+confidence and prediction intervals; Online supports them in
+<code>update_mode = "full"</code> only.</p>
 </blockquote>
 <table class="table">
 <colgroup>
@@ -113,7 +113,7 @@ modes do not support intervals.</p>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, confidence_intervals <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, intervals <span class="op">=</span> <span class="fu"><a href="../reference/intervals_opts.html">intervals_opts</a></span><span class="op">(</span>confidence <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot with bands</span></span>
@@ -127,7 +127,7 @@ modes do not support intervals.</p>
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"95% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 95% CI at midpoint: [ -0.102212 ,  0.1763286 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; 95% CI at midpoint: [ -0.1007995 ,  0.1749161 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -140,7 +140,7 @@ modes do not support intervals.</p>
 <span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span>, length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">100</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, prediction_intervals <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, intervals <span class="op">=</span> <span class="fu"><a href="../reference/intervals_opts.html">intervals_opts</a></span><span class="op">(</span>prediction <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, pch <span class="op">=</span> <span class="fl">16</span>, col <span class="op">=</span> <span class="st">"gray"</span>,</span>
@@ -153,7 +153,7 @@ modes do not support intervals.</p>
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Prediction bounds: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">prediction_lower</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">prediction_upper</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Prediction bounds: [ -0.1439302 ,  1.095608 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; Prediction bounds: [ -0.1436505 ,  1.095328 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -168,8 +168,7 @@ modes do not support intervals.</p>
 <span></span>
 <span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span></span>
 <span>    fraction <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>    confidence_intervals <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span>    prediction_intervals <span class="op">=</span> <span class="fl">0.95</span></span>
+<span>    intervals <span class="op">=</span> <span class="fu"><a href="../reference/intervals_opts.html">intervals_opts</a></span><span class="op">(</span>confidence <span class="op">=</span> <span class="fl">0.95</span>, prediction <span class="op">=</span> <span class="fl">0.95</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span></span>
@@ -194,7 +193,7 @@ modes do not support intervals.</p>
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"95% CI at midpoint: ["</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">", "</span>,</span>
 <span>    <span class="va">result</span><span class="op">$</span><span class="va">confidence_upper</span><span class="op">[</span><span class="fl">50</span><span class="op">]</span>, <span class="st">"]\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; 95% CI at midpoint: [ -0.102212 ,  0.1763286 ]</span></span></code></pre></div>
+<span><span class="co">#&gt; 95% CI at midpoint: [ -0.1007995 ,  0.1749161 ]</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -227,10 +226,10 @@ modes do not support intervals.</p>
 </table>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># 99% confidence interval</span></span>
-<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, confidence_intervals <span class="op">=</span> <span class="fl">0.99</span><span class="op">)</span></span>
+<span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, intervals <span class="op">=</span> <span class="fu"><a href="../reference/intervals_opts.html">intervals_opts</a></span><span class="op">(</span>confidence <span class="op">=</span> <span class="fl">0.99</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"First lower CI bound (99%):"</span>, <span class="va">result</span><span class="op">$</span><span class="va">confidence_lower</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; First lower CI bound (99%): 0.2948638</span></span></code></pre></div>
+<span><span class="co">#&gt; First lower CI bound (99%): 0.296526</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
@@ -239,19 +238,19 @@ modes do not support intervals.</p>
 <p>Access standard errors directly (available when intervals are
 computed):</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, return_se <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">model</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span>fraction <span class="op">=</span> <span class="fl">0.5</span>, outputs <span class="op">=</span> <span class="st">"se"</span><span class="op">)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span><span class="va">model</span>, <span class="va">x</span>, <span class="va">y</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Standard errors (first 5):"</span>, <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">standard_errors</span>, <span class="fl">5</span><span class="op">)</span>, <span class="st">"\n"</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Standard errors (first 5): 0.0702543 0.07094242 0.0716677 0.07241371 0.07315985</span></span></code></pre></div>
+<span><span class="co">#&gt; Standard errors (first 5): 0.06960904 0.07028408 0.07095493 0.07156272 0.07204299</span></span></code></pre></div>
 <hr>
 </div>
 <div class="section level2">
 <h2 id="availability">Availability<a class="anchor" aria-label="anchor" href="#availability"></a>
 </h2>
 <blockquote>
-<p><strong>Batch Mode Only:</strong> Confidence and prediction intervals
-are only available in <strong>Batch</strong> mode. Streaming and Online
-modes do not support intervals.</p>
+<p><strong>Adapter support:</strong> Confidence and prediction intervals
+are available in Batch and Streaming; Online supports them in
+<code>update_mode = "full"</code> only. intervals.</p>
 </blockquote>
 <table class="table">
 <thead><tr class="header">

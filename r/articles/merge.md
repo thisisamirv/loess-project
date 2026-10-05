@@ -43,9 +43,9 @@ x <- seq(0, 2 * pi, length.out = 100)
 y <- sin(x) + rnorm(100, sd = 0.3)
 
 model <- StreamingLoess(
-    merge_strategy = "average",
     chunk_size = 60,
-    overlap = 20
+    overlap = 20,
+    merge_strategy = "average"
 )
 invisible(process_chunk(model, x[1:60], y[1:60]))
 # The second chunk's overlap region (its first 20 points) is where
@@ -70,9 +70,9 @@ right-chunk estimate. Produces a left-flush output.
 ``` r
 
 model <- StreamingLoess(
-    merge_strategy = "take_first",
     chunk_size = 60,
-    overlap = 20
+    overlap = 20,
+    merge_strategy = "take_first"
 )
 invisible(process_chunk(model, x[1:60], y[1:60]))
 result <- process_chunk(model, x[61:100], y[61:100])
@@ -96,9 +96,9 @@ post-processing complete data rather than streaming in real time.
 ``` r
 
 model <- StreamingLoess(
-    merge_strategy = "take_last",
     chunk_size = 60,
-    overlap = 20
+    overlap = 20,
+    merge_strategy = "take_last"
 )
 invisible(process_chunk(model, x[1:60], y[1:60]))
 result <- process_chunk(model, x[61:100], y[61:100])
@@ -123,9 +123,9 @@ speed; moderate overlap (10–20% of chunk size) is used.
 ``` r
 
 model <- StreamingLoess(
-    merge_strategy = "weighted_average",
     chunk_size = 60,
-    overlap = 20
+    overlap = 20,
+    merge_strategy = "weighted_average"
 )
 invisible(process_chunk(model, x[1:60], y[1:60]))
 result <- process_chunk(model, x[61:100], y[61:100])

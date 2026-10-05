@@ -112,8 +112,9 @@ fallback:</p>
 <span><span class="va">result_robust</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span></span>
 <span>        fraction <span class="op">=</span> <span class="fl">0.5</span>, iterations <span class="op">=</span> <span class="fl">3L</span>, surface_mode <span class="op">=</span> <span class="st">"direct"</span>,</span>
-<span>        boundary_policy <span class="op">=</span> <span class="st">"noboundary"</span>, scaling_method <span class="op">=</span> <span class="st">"mar"</span>,</span>
-<span>        zero_weight_fallback <span class="op">=</span> <span class="st">"return_original"</span>, parallel <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>        zero_weight_fallback <span class="op">=</span> <span class="st">"return_original"</span>,</span>
+<span>        boundary_policy <span class="op">=</span> <span class="st">"noboundary"</span>,</span>
+<span>        scaling_method <span class="op">=</span> <span class="st">"mar"</span>, parallel <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    <span class="va">x</span>, <span class="va">y</span></span>
 <span><span class="op">)</span></span>
@@ -134,7 +135,7 @@ while <code><a href="../reference/Loess.html">Loess()</a></code> reduces them to
 <span><span class="op">)</span></span>
 <span><span class="va">result_interpolated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit.html">fit</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="../reference/Loess.html">Loess</a></span><span class="op">(</span></span>
-<span>        fraction <span class="op">=</span> <span class="fl">0.5</span>, degree <span class="op">=</span> <span class="st">"quadratic"</span>, iterations <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>        fraction <span class="op">=</span> <span class="fl">0.5</span>, iterations <span class="op">=</span> <span class="fl">0L</span>, degree <span class="op">=</span> <span class="st">"quadratic"</span>,</span>
 <span>        surface_mode <span class="op">=</span> <span class="st">"interpolate"</span>, boundary_policy <span class="op">=</span> <span class="st">"noboundary"</span>,</span>
 <span>        boundary_degree_fallback <span class="op">=</span> <span class="cn">FALSE</span>, parallel <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>    <span class="op">)</span>,</span>
