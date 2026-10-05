@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Intervals :: fastloess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/guide/intervals.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -277,7 +277,7 @@ public class Example {
 
         Options options = Options.builder()
                 .fraction(0.5)
-                .confidenceIntervals(0.95) // 95% CI
+                .intervals(fastloess.IntervalsOptions.builder().confidence(0.95).build()) // 95% CI
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -328,7 +328,7 @@ public class Example {
 
         Options options = Options.builder()
                 .fraction(0.5)
-                .predictionIntervals(0.95) // 95% PI
+                .intervals(fastloess.IntervalsOptions.builder().prediction(0.95).build()) // 95% PI
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -372,8 +372,7 @@ public class Example {
 
         Options options = Options.builder()
                 .fraction(0.5)
-                .confidenceIntervals(0.95)
-                .predictionIntervals(0.95)
+                .intervals(fastloess.IntervalsOptions.builder().confidence(0.95).prediction(0.95).build())
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -447,7 +446,7 @@ public class Example {
         }
 
         // 99% confidence interval
-        Options options = Options.builder().confidenceIntervals(0.99).build();
+        Options options = Options.builder().intervals(fastloess.IntervalsOptions.builder().confidence(0.99).build()).build();
 
         try (Loess model = new Loess(options)) {
             Result result = model.fit(x, y);

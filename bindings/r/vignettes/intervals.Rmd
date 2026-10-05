@@ -17,8 +17,8 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 
 ![Confidence and prediction intervals](../man/figures/intervals_comparison.svg)
 
-> **Adapter support:** Confidence and prediction intervals are available in
-> **Batch** mode only. Streaming and Online modes do not support intervals.
+> **Adapter support:** Batch and Streaming support confidence and prediction
+> intervals; Online supports them in `update_mode = "full"` only.
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
@@ -150,8 +150,8 @@ cat("Standard errors (first 5):", head(result$standard_errors, 5), "\n")
 
 ## Availability
 
-> **Batch Mode Only:** Confidence and prediction intervals are only
-> available in **Batch** mode. Streaming and Online modes do not support
+> **Adapter support:** Confidence and prediction intervals are available in
+> Batch and Streaming; Online supports them in `update_mode = "full"` only.
 > intervals.
 
 | Feature | Batch | Streaming | Online |

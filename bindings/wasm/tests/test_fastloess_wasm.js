@@ -230,6 +230,35 @@ test('WASM Online supports multivariate coordinate arrays', () => {
     );
 });
 
+test('WASM weighted adapters expose window diagnostics and prediction', () => {
+    const x = Float64Array.from({ length: 10 }, (_, index) => index);
+    const y = Float64Array.from(x, (value, index) => index === 5 ? 100 : 2 * value + 1);
+    const weights = Float64Array.from(x, (_, index) => index === 5 ? 0 : 1);
+    const options = { fraction: 1, iterations: 0, surface_mode: 'direct' };
+    const weightedStream = new fastloess.StreamingLoess(options, {
+        chunk_size: 10,
+        overlap: 0
+    }).process_chunk_weighted(x, y, weights);
+    const plainStream = new fastloess.StreamingLoess(options, {
+        chunk_size: 10,
+        overlap: 0
+    }).process_chunk(x, y);
+    assert.ok(Math.abs(weightedStream.y[5] - 11) < Math.abs(plainStream.y[5] - 11));
+
+    const onlineOptions = { window_capacity: 10, min_points: 10, update_mode: 'full' };
+    const weightedOnline = new fastloess.OnlineLoess(options, onlineOptions);
+    const plainOnline = new fastloess.OnlineLoess(options, onlineOptions);
+    for (let index = 0; index < x.length; index++) {
+        weightedOnline.add_point_weighted(x[index], y[index], weights[index]);
+        plainOnline.add_point(x[index], y[index]);
+    }
+    assert.ok(weightedOnline.window_diagnostics().rmse > 0);
+    assert.throws(() => weightedOnline.add_point_weighted(10, 21, -1), /non-negative/);
+    const weightedPrediction = weightedOnline.predict_window(new Float64Array([5]));
+    const plainPrediction = plainOnline.predict_window(new Float64Array([5]));
+    assert.ok(Math.abs(weightedPrediction.y[0] - 11) < Math.abs(plainPrediction.y[0] - 11));
+});
+
 test('WASM streaming: return_se', () => {
     const streamer = new fastloess.StreamingLoess({
         fraction: 0.3,

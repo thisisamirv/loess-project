@@ -17,8 +17,7 @@ The effective weight of observation \f$j\f$ in a local fit centred at \f$x_i\f$ 
 where \f$K\f$ is the distance kernel, \f$h_i\f$ is the local bandwidth, and \f$r_j\f$ is
 the robustness weight from the current iteration.
 
-> **Batch adapter only:** `custom_weights` applies in **Batch** mode. It is silently ignored in
-> Streaming and Online adapters.
+`custom_weights` supplies one finite non-negative prior weight per observation. Batch accepts weights in `fit`; Streaming accepts `process_chunk_weighted`; Online accepts weighted `add_point` overloads. Streaming preserves weights through overlap buffers, and Online evicts each weight with its observation. Existing unweighted calls use weight `1.0`.
 
 <hr>
 

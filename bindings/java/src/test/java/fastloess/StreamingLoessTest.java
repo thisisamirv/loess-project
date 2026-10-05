@@ -8,6 +8,32 @@ import org.junit.jupiter.api.Test;
 class StreamingLoessTest {
 
     @Test
+    void weightedChunksDownweightOutliers() {
+        double[] x = new double[10];
+        double[] y = new double[10];
+        double[] weights = new double[10];
+        for (int i = 0; i < x.length; i++) {
+            x[i] = i;
+            y[i] = 2.0 * i + 1.0;
+            weights[i] = 1.0;
+        }
+        y[5] = 100.0;
+        weights[5] = 0.0;
+        StreamingOptions options = StreamingOptions.builder()
+                .fraction(1.0)
+                .iterations(0)
+                .chunkSize(10)
+                .overlap(0)
+                .surfaceMode("direct")
+                .build();
+        try (StreamingLoess weighted = new StreamingLoess(options); StreamingLoess plain = new StreamingLoess(options)) {
+            Result weightedResult = weighted.processChunk(x, y, weights);
+            Result plainResult = plain.processChunk(x, y);
+            assertTrue(Math.abs(weightedResult.y()[5] - 11.0) < Math.abs(plainResult.y()[5] - 11.0));
+        }
+    }
+
+    @Test
     void processesChunksAndFinalizes() {
         try (StreamingLoess model = new StreamingLoess(StreamingOptions.builder().chunkSize(10).overlap(5).build())) {
             double[] x1 = new double[10];

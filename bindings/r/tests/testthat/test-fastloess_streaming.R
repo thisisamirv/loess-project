@@ -28,6 +28,29 @@ test_that("StreamingLoess basic functionality works", {
     expect_length(result$y, length(y))
 })
 
+test_that("StreamingLoess custom weights downweight outliers", {
+    x <- as.double(0:9)
+    y <- 2 * x + 1
+    y[6] <- 100
+    weights <- rep(1, length(y))
+    weights[6] <- 0
+
+    options <- list(
+        fraction = 1,
+        chunk_size = 10,
+        overlap = 0,
+        iterations = 0,
+        surface_mode = "direct"
+    )
+    weighted <- do.call(StreamingLoess, options)
+    plain <- do.call(StreamingLoess, options)
+    weighted_result <- process_chunk(weighted, x, y, custom_weights = weights)
+    plain_result <- process_chunk(plain, x, y)
+
+    expect_lt(abs(weighted_result$y[6] - 11), abs(plain_result$y[6] - 11))
+    expect_error(process_chunk(weighted, x, y, custom_weights = 1), "one numeric value per observation")
+})
+
 test_that("StreamingLoess handles different chunk sizes", {
     set.seed(42)
     x <- seq(0, 10, length.out = 500)

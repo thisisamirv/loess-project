@@ -39,6 +39,34 @@ test_that("OnlineLoess supports multivariate coordinate vectors", {
     expect_error(add_point(ol, 1, 2), "exactly 2 values")
 })
 
+test_that("OnlineLoess supports weights, diagnostics, and current-window prediction", {
+    options <- list(
+        fraction = 1,
+        window_capacity = 10,
+        min_points = 10,
+        iterations = 0,
+        update_mode = "full",
+        surface_mode = "direct"
+    )
+    weighted <- do.call(OnlineLoess, options)
+    plain <- do.call(OnlineLoess, options)
+    for (i in 0:9) {
+        y <- if (i == 5) 100 else 2 * i + 1
+        weight <- if (i == 5) 0 else 1
+        add_point(weighted, i, y, weight = weight)
+        add_point(plain, i, y)
+    }
+
+    expect_error(add_point(weighted, 10, 21, weight = -1), "non-negative")
+    diagnostics <- window_diagnostics(weighted)
+    expect_type(diagnostics, "list")
+    expect_gt(diagnostics$rmse, 0)
+
+    weighted_prediction <- predict_window(weighted, 5)
+    plain_prediction <- predict_window(plain, 5)
+    expect_lt(abs(weighted_prediction$y[1] - 11), abs(plain_prediction$y[1] - 11))
+})
+
 test_that("OnlineLoess window capacity works", {
     set.seed(42)
     x <- 1:100
@@ -221,6 +249,8 @@ test_that("OnlineLoess: scaling_method, boundary_policy, auto_converge", {
     ol <- OnlineLoess(
         fraction = 0.5,
         window_capacity = 20,
+        iterations = 2,
+        update_mode = "full",
         scaling_method = "mar",
         boundary_policy = "reflect",
         auto_converge = 1e-3,

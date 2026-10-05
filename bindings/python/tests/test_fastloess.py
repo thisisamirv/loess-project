@@ -443,6 +443,30 @@ class TestStreamingLoess:
         widths_pi = chunk_result.prediction_upper - chunk_result.prediction_lower
         assert np.all(widths_pi >= widths_ci - 1e-9)
 
+    def test_streaming_custom_weights_downweight_outlier(self):
+        x = np.arange(10, dtype=np.float64)
+        y = 2.0 * x + 1.0
+        y[5] = 100.0
+        weights = np.ones_like(y)
+        weights[5] = 0.0
+        streaming = fastloess.StreamingLoess(
+            fraction=1.0,
+            chunk_size=10,
+            overlap=0,
+            surface_mode="direct",
+            iterations=0,
+        )
+        result = streaming.process_chunk(x, y, custom_weights=weights)
+        baseline = fastloess.StreamingLoess(
+            fraction=1.0,
+            chunk_size=10,
+            overlap=0,
+            surface_mode="direct",
+            iterations=0,
+        ).process_chunk(x, y)
+
+        assert abs(result.y[5] - 11.0) < abs(baseline.y[5] - 11.0)
+
 
 class TestOnlineLoess:
     """Tests for the OnlineLoess class."""
@@ -559,6 +583,40 @@ class TestOnlineLoess:
         assert last.prediction_upper is not None
         assert last.confidence_lower <= last.confidence_upper
         assert last.prediction_lower <= last.prediction_upper
+
+    def test_online_weighted_window_diagnostics_and_prediction(self):
+        online = fastloess.OnlineLoess(
+            fraction=1.0,
+            window_capacity=10,
+            min_points=10,
+            update_mode="full",
+            surface_mode="direct",
+        )
+        unweighted = fastloess.OnlineLoess(
+            fraction=1.0,
+            window_capacity=10,
+            min_points=10,
+            update_mode="full",
+            surface_mode="direct",
+        )
+        for index in range(10):
+            x = float(index)
+            y = 100.0 if index == 5 else 2.0 * x + 1.0
+            weight = 0.0 if index == 5 else 1.0
+            online.add_point(x, y, weight=weight)
+            unweighted.add_point(x, y)
+
+        diagnostics = online.window_diagnostics()
+        assert diagnostics is not None
+        assert diagnostics.rmse > 0.0
+        with pytest.raises(ValueError, match="non-negative"):
+            online.add_point(10.0, 21.0, weight=-1.0)
+
+        weighted_prediction = online.predict_window(np.array([5.0]))
+        unweighted_prediction = unweighted.predict_window(np.array([5.0]))
+        assert abs(weighted_prediction.y[0] - 11.0) < abs(
+            unweighted_prediction.y[0] - 11.0
+        )
 
 
 class TestLoessResult:

@@ -63,6 +63,8 @@ Adds a single point to the sliding window. Returns `Expected<OnlineOutput>` — 
 
 The scalar overload requires `dimensions == 1`. For multivariate Online models, pass a `std::vector<double>` containing one coordinate per configured dimension.
 
+Weighted overloads accept a finite non-negative case weight as the final argument. `window_diagnostics()` computes metrics for the current window on demand, and `predict_window(new_x, options)` predicts from a fresh fit of that bounded window.
+
 ```cpp
 #include <fastloess.hpp>
 #include <cmath>

@@ -6,7 +6,7 @@ Evaluate a fitted Batch model at query points that were not in the training set.
 
 ## Overview
 
-Out-of-sample prediction is available in **Batch** mode only. Streaming and Online modes do not support it.
+Retained-model prediction is available in **Batch** mode. Online also provides `predict_window` for a fresh fit of its current bounded window; Streaming does not retain a complete training model for query-time prediction.
 
 `fastloess::PredictModel::predict(new_x, options)` evaluates the fit at arbitrary query points, like R's `predict(model, newdata)`. Query points are flattened, `dimensions` values per point.
 

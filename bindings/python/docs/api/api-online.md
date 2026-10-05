@@ -24,7 +24,7 @@ import fastloess as fl
 online = fl.OnlineLoess(fraction=0.5, window_capacity=50)
 :::
 
-#### `add_point(x, y)`
+#### `add_point(x, y, weight=1.0)`
 
 Adds one point to the sliding window. For one-dimensional models, `x` may be a scalar; for multivariate models, pass a one-dimensional array-like coordinate with exactly `dimensions` values. The method returns the smoothed value for that point, or `None` while the window is still filling up (fewer than `min_points` seen so far). Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
 
@@ -44,6 +44,8 @@ result = online.add_point(x[2], y[2])
 print(result)
 :::
 
+`weight` is a finite non-negative case weight; zero excludes the observation from local fits while retaining it in the window. The default `1.0` preserves unweighted behavior.
+
 For multivariate input, configure `dimensions` and pass a coordinate vector at each update:
 
 :::{jupyter-execute}
@@ -54,6 +56,14 @@ online = fl.OnlineLoess(dimensions=2, surface_mode="direct")
 result = online.add_point(np.array([0.5, 1.25]), 2.0)
 print(result)
 :::
+
+#### `window_diagnostics()`
+
+Computes RMSE, MAE, R-squared, and residual scale for a full fit of the current window on demand. Returns `None` before `min_points`; ordinary updates incur no diagnostics cost.
+
+#### `predict_window(new_x, ...)`
+
+Fits the current bounded window on demand and predicts query points using the same options as [`LoessResult.predict()`](../guide/predict.md). No older observations are retained.
 
 ## Options Structure
 

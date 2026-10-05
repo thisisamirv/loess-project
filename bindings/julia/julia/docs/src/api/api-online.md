@@ -31,6 +31,8 @@ println(typeof(model))
 
 #### `add_point(model, x, y)`
 
+Both scalar and vector updates accept the keyword `weight` (finite and non-negative); the default is `1.0`. `window_diagnostics(model)` computes diagnostics for the current window on demand, and `predict_window(model, new_x; kwargs...)` fits and predicts using only that bounded window.
+
 Adds one point to the sliding window. For one-dimensional models, `x` may be a scalar; for multivariate models, pass a vector with exactly `dimensions` values. The method returns the smoothed value for that point, or `nothing` while the window is still filling up (fewer than `min_points` seen so far). Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
 
 ```@example online

@@ -61,6 +61,8 @@ Confidence/prediction intervals and standard errors are computed per chunk and m
 
 Fits and returns the result for one chunk. Each chunk is fit together with the trailing `Overlap` points buffered from the previous call, then only the points that are fully resolved are returned — the tail of the chunk (the next `Overlap` points) is held back internally, since it will be refit once the following chunk arrives and its estimate reconciled via `MergeStrategy`. This is what lets the adapter process a dataset far larger than memory allows, one bounded-size chunk at a time, without ever materializing the whole dataset at once. For multivariate input (`Dimensions > 1`), `x` is flattened row-major. Call repeatedly as chunks arrive.
 
+`ProcessChunkWeighted(x, y, customWeights)` is the case-weighted equivalent. Weights must be finite and non-negative, one per observation, and remain aligned with buffered overlap points.
+
 ## `(*StreamingLoess) Finalize() (Result, error)`
 
 Flushes the overlap points still buffered from the last `ProcessChunk` call. Because each call withholds its tail until the next chunk arrives to resolve it, the final chunk's tail would never be emitted otherwise — always call `Finalize` once after the last chunk to retrieve it.

@@ -647,13 +647,14 @@ mod adapters;
 mod api;
 
 pub use crate::api::CVOptions;
+pub use crate::engine::executor::PredictOutput;
 pub use crate::evaluation::intervals::IntervalsBuilder;
 
 // Standard LOESS prelude.
 pub mod prelude {
     pub use crate::adapters::predict::Predict;
     pub use crate::api::{CVBuilder, Loess, OnlineLoess, StreamingLoess};
-    pub use crate::engine::executor::LoessResult;
+    pub use crate::engine::executor::{LoessResult, PredictOutput};
     pub use crate::evaluation::intervals::IntervalsBuilder;
     pub use crate::primitives::errors::LoessError;
 }

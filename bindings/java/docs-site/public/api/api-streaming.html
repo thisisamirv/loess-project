@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>StreamingLoess API :: fastloess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/api/api-streaming.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -213,7 +213,7 @@
 </div>
 </div>
 <div class="paragraph">
-<p><code>StreamingOptions.Builder</code> exposes all the same settings as <a href="api.html" class="xref page"><code>Options.Builder</code></a> (except <code>returnSorted</code>, <code>cvFractions</code>/<code>cvMethod</code>/<code>cvK</code>/<code>cvSeed</code>, which are batch-only), plus:</p>
+<p><code>StreamingOptions.Builder</code> exposes all the same settings as <a href="api.html" class="xref page"><code>Options.Builder</code></a> (except <code>"sorted"</code> output, <code>cv.fractions</code>/<code>cv.method</code>/<code>cv.k</code>/<code>seed</code>, which are batch-only), plus:</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -254,60 +254,6 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"bisquare"</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Robustness method</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>scalingMethod</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"mad"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Residual scaling method</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boundaryPolicy</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"extend"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary handling policy</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>zeroWeightFallback</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Zero-weight handling</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>missing</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Policy for non-finite (NaN/Inf) values in each chunk</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>autoConverge</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code> (disabled)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-convergence tolerance</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs(String&#8230;&#8203;)</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String&#8230;&#8203;</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">empty</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Select <code>diagnostics</code>, <code>residuals</code>, <code>weights</code>, <code>gradient</code>/<code>derivative</code>, and/or <code>se</code>.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnDiagnostics</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Compute RMSE, MAE, R2</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnResiduals</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include residuals in result</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnRobustnessWeights</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include weights in result</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>degree</code></p></td>
@@ -352,34 +298,40 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">Number of interpolation vertices</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>zeroWeightFallback</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Zero-weight handling</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boundaryPolicy</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"extend"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Boundary handling policy</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>boundaryDegreeFallback</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Boolean</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>null</code> (auto)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Fall back to lower polynomial degree at boundaries when higher degrees fail</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnGradient</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include the per-point local fit gradient in the result (<code>surfaceMode = "direct"</code> only)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>scalingMethod</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"mad"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Residual scaling method</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>confidenceIntervals</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>autoConverge</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code> (disabled)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence level for confidence intervals, computed per chunk and merged across overlap boundaries via <code>mergeStrategy</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auto-convergence tolerance</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>predictionIntervals</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>double</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>NaN</code> (disabled)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Confidence level for prediction intervals; same per-chunk computation and overlap-merging as <code>confidenceIntervals</code></p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>returnSe</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>boolean</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>false</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Include standard errors in result, computed per chunk and merged across overlap boundaries via <code>mergeStrategy</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>missing</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Policy for non-finite (NaN/Inf) values in each chunk</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>chunkSize</code></p></td>
@@ -398,6 +350,18 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>"weighted_average"</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">How overlapping chunk results are combined.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>outputs(String&#8230;&#8203;)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String&#8230;&#8203;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">empty</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Select <code>diagnostics</code>, <code>residuals</code>, <code>weights</code>, <code>gradient</code>/<code>derivative</code>, and/or <code>se</code>.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>intervals(IntervalsOptions)</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>IntervalsOptions</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">disabled</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Grouped confidence and prediction coverage levels.</p></td>
 </tr>
 </tbody>
 </table>
@@ -446,7 +410,7 @@
 </div>
 </div>
 <div class="paragraph">
-<p>Confidence/prediction intervals and standard errors are computed per chunk and merged across overlap boundaries via <code>mergeStrategy</code>, same as <code>y</code>. Cross-validation and the <code>"sorted"</code> output are Batch-only and not available here; existing individual output setters remain supported.</p>
+<p>Confidence/prediction intervals and standard errors are computed per chunk and merged across overlap boundaries via <code>mergeStrategy</code>, same as <code>y</code>. Cross-validation and the <code>"sorted"</code> output are Batch-only and not available here; Optional components are selected only through outputs.</p>
 </div>
 </div>
 </div>
@@ -461,6 +425,9 @@
 <div class="sectionbody">
 <div class="paragraph">
 <p>Fits and returns the result for one chunk. Each chunk is fit together with the trailing <code>overlap</code> points buffered from the previous call, then only the points that are fully resolved are returned — the tail of the chunk (the next <code>overlap</code> points) is held back internally, since it will be refit once the following chunk arrives and its estimate reconciled via <code>mergeStrategy</code>. This is what lets the adapter process a dataset far larger than memory allows, one bounded-size chunk at a time, without ever materializing the whole dataset at once. Call repeatedly as chunks arrive.</p>
+</div>
+<div class="paragraph">
+<p>The <code>processChunk(double[] x, double[] y, double[] customWeights)</code> overload accepts one finite non-negative case weight per observation and carries weights through buffered overlap points.</p>
 </div>
 </div>
 </div>
@@ -618,176 +585,6 @@
 </div>
 </div>
 <div class="sect2">
-<h3 id="scalingmethod"><a class="anchor" href="#scalingmethod"></a>scalingMethod</h3>
-<div class="paragraph">
-<p><em>See: <a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></em></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</p>
-</li>
-<li>
-<p><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</p>
-</li>
-<li>
-<p><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="boundarypolicy"><a class="anchor" href="#boundarypolicy"></a>boundaryPolicy</h3>
-<div class="paragraph">
-<p><em>See: <a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></em></p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>"extend"</code> (default; alias: <code>"pad"</code>)</p>
-</li>
-<li>
-<p><code>"reflect"</code> (alias: <code>"mirror"</code>)</p>
-</li>
-<li>
-<p><code>"zero"</code></p>
-</li>
-<li>
-<p><code>"noboundary"</code> (alias: <code>"none"</code>)</p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="zeroweightfallback"><a class="anchor" href="#zeroweightfallback"></a>zeroWeightFallback</h3>
-<div class="paragraph">
-<p>Behavior when all neighborhood weights are zero:</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Option</th>
-<th class="tableblock halign-left valign-top">Behavior</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Use the mean of the neighborhood</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_original"</code> (alias: <code>"original"</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Return the original y value</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_none"</code> (alias: <code>"none"</code>)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Return <code>NaN</code></p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="sect2">
-<h3 id="missing"><a class="anchor" href="#missing"></a>missing</h3>
-<div class="paragraph">
-<p>Policy for handling non-finite (NaN/Inf) values within each chunk:</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Option</th>
-<th class="tableblock halign-left valign-top">Behavior</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code> (default)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Throw an error if any value in the chunk is non-finite</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"drop"</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer</p></td>
-</tr>
-</tbody>
-</table>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-A length mismatch between <code>x</code> and <code>y</code> always throws, even under <code>"drop"</code>.
-</td>
-</tr>
-</table>
-</div>
-</div>
-<div class="sect2">
-<h3 id="autoconverge"><a class="anchor" href="#autoconverge"></a>autoConverge</h3>
-<div class="paragraph">
-<p><em>See: <a href="../weighting/robustness.html" class="xref page">Robustness</a></em></p>
-</div>
-<div class="paragraph">
-<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returndiagnostics"><a class="anchor" href="#returndiagnostics"></a>returnDiagnostics</h3>
-<div class="paragraph">
-<p>Populate <code>Result.diagnostics()</code> with RMSE, MAE, R², and residual_sd. <code>effectiveDf</code>/<code>aic</code>/<code>aicc</code> require standard errors, which are Batch-only, so they&#8217;re always empty here.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>Result.diagnostics()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>Result.diagnostics()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnresiduals"><a class="anchor" href="#returnresiduals"></a>returnResiduals</h3>
-<div class="paragraph">
-<p>Populate <code>Result.residuals()</code> (<code>y - fitted</code>).</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>Result.residuals()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>Result.residuals()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnrobustnessweights"><a class="anchor" href="#returnrobustnessweights"></a>returnRobustnessWeights</h3>
-<div class="paragraph">
-<p>Populate <code>Result.robustnessWeights()</code> with the final per-point robustness weights (from the last robustness iteration).</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><code>false</code> (default) — leaves <code>Result.robustnessWeights()</code> empty</p>
-</li>
-<li>
-<p><code>true</code> — populates <code>Result.robustnessWeights()</code></p>
-</li>
-</ul>
-</div>
-</div>
-<div class="sect2">
 <h3 id="degree"><a class="anchor" href="#degree"></a>degree</h3>
 <div class="paragraph">
 <p><em>See: <a href="../advanced/degree.html" class="xref page">Polynomial Degree</a></em></p>
@@ -917,6 +714,60 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 </div>
 </div>
 <div class="sect2">
+<h3 id="zeroweightfallback"><a class="anchor" href="#zeroweightfallback"></a>zeroWeightFallback</h3>
+<div class="paragraph">
+<p>Behavior when all neighborhood weights are zero:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"use_local_mean"</code> (default; aliases: <code>"local_mean"</code>, <code>"mean"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Use the mean of the neighborhood</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_original"</code> (alias: <code>"original"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return the original y value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"return_none"</code> (alias: <code>"none"</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Return <code>NaN</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="boundarypolicy"><a class="anchor" href="#boundarypolicy"></a>boundaryPolicy</h3>
+<div class="paragraph">
+<p><em>See: <a href="../advanced/boundary.html" class="xref page">Boundary Handling</a></em></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>"extend"</code> (default; alias: <code>"pad"</code>)</p>
+</li>
+<li>
+<p><code>"reflect"</code> (alias: <code>"mirror"</code>)</p>
+</li>
+<li>
+<p><code>"zero"</code></p>
+</li>
+<li>
+<p><code>"noboundary"</code> (alias: <code>"none"</code>)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
 <h3 id="boundarydegreefallback"><a class="anchor" href="#boundarydegreefallback"></a>boundaryDegreeFallback</h3>
 <div class="paragraph">
 <p>Whether to reduce the polynomial degree at boundary vertices when the requested <code>degree</code> can&#8217;t be fit there (e.g., not enough neighbours). Only applies when <code>surfaceMode</code> is <code>"interpolation"</code>.</p>
@@ -936,43 +787,71 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 </div>
 </div>
 <div class="sect2">
-<h3 id="returngradient"><a class="anchor" href="#returngradient"></a>returnGradient</h3>
+<h3 id="scalingmethod"><a class="anchor" href="#scalingmethod"></a>scalingMethod</h3>
 <div class="paragraph">
-<p>Each local polynomial fit (degree &gt;= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (<code>dimensions</code> values per point, flattened) via <code>Result.gradient()</code> at effectively no extra computation cost. Only supported when <code>surfaceMode = "direct"</code> — throws a <code>RuntimeException</code> instead of silently leaving <code>gradient()</code> empty if requested under the default <code>"interpolation"</code> mode. <code>false</code> by default. Gradient values in the overlap region are merged across chunk boundaries the same way <code>y</code> is, via <code>mergeStrategy</code>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="confidenceintervals"><a class="anchor" href="#confidenceintervals"></a>confidenceIntervals</h3>
-<div class="paragraph">
-<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
-</div>
-<div class="paragraph">
-<p>Confidence level for the confidence interval around the mean response (e.g. <code>0.95</code>), computed per chunk and merged across overlap boundaries the same way <code>y</code> is, via <code>mergeStrategy</code>. <code>NaN</code> (default) disables confidence intervals.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="predictionintervals"><a class="anchor" href="#predictionintervals"></a>predictionIntervals</h3>
-<div class="paragraph">
-<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
-</div>
-<div class="paragraph">
-<p>Confidence level for the prediction interval for new observations (e.g. <code>0.95</code>); same per-chunk computation and overlap-merging as <code>confidenceIntervals</code>. <code>NaN</code> (default) disables prediction intervals.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="returnse"><a class="anchor" href="#returnse"></a>returnSe</h3>
-<div class="paragraph">
-<p>Include standard errors in the result (<code>Result.standardErrors()</code>), computed per chunk and merged across overlap boundaries via <code>mergeStrategy</code>.</p>
+<p><em>See: <a href="../weighting/scaling.html" class="xref page">Scaling Methods</a></em></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><code>false</code> (default) — leaves <code>standardErrors()</code> empty</p>
+<p><code>"mad"</code> (default; alias: <code>"median_absolute_deviation"</code>)</p>
 </li>
 <li>
-<p><code>true</code> — populates <code>standardErrors()</code></p>
+<p><code>"mar"</code> (alias: <code>"median_absolute_residual"</code>)</p>
+</li>
+<li>
+<p><code>"mean"</code> (alias: <code>"mean_absolute_residual"</code>)</p>
 </li>
 </ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="autoconverge"><a class="anchor" href="#autoconverge"></a>autoConverge</h3>
+<div class="paragraph">
+<p><em>See: <a href="../weighting/robustness.html" class="xref page">Robustness</a></em></p>
+</div>
+<div class="paragraph">
+<p>Convergence tolerance for early stopping of robustness iterations. <code>NaN</code> (default) disables early stopping.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="missing"><a class="anchor" href="#missing"></a>missing</h3>
+<div class="paragraph">
+<p>Policy for handling non-finite (NaN/Inf) values within each chunk:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Option</th>
+<th class="tableblock halign-left valign-top">Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"error"</code> (default)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Throw an error if any value in the chunk is non-finite</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>"drop"</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Silently remove rows where any x dimension or y is non-finite before merging the chunk with the overlap buffer</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+A length mismatch between <code>x</code> and <code>y</code> always throws, even under <code>"drop"</code>.
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -1042,6 +921,54 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 <div class="content">
 <img src="../_images/merge_comparison.svg" alt="Merge Strategies">
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-residuals"><a class="anchor" href="#outputs-residuals"></a>outputs: residuals</h3>
+<div class="paragraph">
+<p>Populate <code>Result.residuals()</code> (<code>y - fitted</code>).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-diagnostics"><a class="anchor" href="#outputs-diagnostics"></a>outputs: diagnostics</h3>
+<div class="paragraph">
+<p>Populate <code>Result.diagnostics()</code> with RMSE, MAE, R², and residual_sd. <code>effectiveDf</code>/<code>aic</code>/<code>aicc</code> require standard errors, which are Batch-only, so they&#8217;re always empty here.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-gradient"><a class="anchor" href="#outputs-gradient"></a>outputs: gradient</h3>
+<div class="paragraph">
+<p>Each local polynomial fit (degree &gt;= linear) already computes per-dimension coefficients internally; this exposes the per-point gradient (<code>dimensions</code> values per point, flattened) via <code>Result.gradient()</code> at effectively no extra computation cost. Only supported when <code>surfaceMode = "direct"</code> — throws a <code>RuntimeException</code> instead of silently leaving <code>gradient()</code> empty if requested under the default <code>"interpolation"</code> mode. Omitted by default. Gradient values in the overlap region are merged across chunk boundaries the same way <code>y</code> is, via <code>mergeStrategy</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-se"><a class="anchor" href="#outputs-se"></a>outputs: se</h3>
+<div class="paragraph">
+<p>Include standard errors in the result (<code>Result.standardErrors()</code>), computed per chunk and merged across overlap boundaries via <code>mergeStrategy</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="outputs-weights"><a class="anchor" href="#outputs-weights"></a>outputs: weights</h3>
+<div class="paragraph">
+<p>Populate <code>Result.robustnessWeights()</code> with the final per-point robustness weights (from the last robustness iteration).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="intervals-confidence"><a class="anchor" href="#intervals-confidence"></a>intervals.confidence</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Confidence level for the confidence interval around the mean response (e.g. <code>0.95</code>), computed per chunk and merged across overlap boundaries the same way <code>y</code> is, via <code>mergeStrategy</code>. <code>NaN</code> (default) disables confidence intervals.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="intervals-prediction"><a class="anchor" href="#intervals-prediction"></a>intervals.prediction</h3>
+<div class="paragraph">
+<p><em>See: <a href="../guide/intervals.html" class="xref page">Intervals</a></em></p>
+</div>
+<div class="paragraph">
+<p>Confidence level for the prediction interval for new observations (e.g. <code>0.95</code>); same per-chunk computation and overlap-merging as <code>intervals.confidence</code>. <code>NaN</code> (default) disables prediction intervals.</p>
 </div>
 </div>
 </div>

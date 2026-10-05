@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Custom Weights :: fastloess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/weighting/custom-weights.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -222,9 +222,7 @@
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<div class="paragraph">
-<p><strong>Batch adapter only:</strong> <code>customWeights</code> applies in <strong>Batch</strong> (<code>Loess</code>) mode. It is silently ignored in <code>StreamingLoess</code> and <code>OnlineLoess</code>.</p>
-</div>
+<code>customWeights</code> supplies one finite non-negative prior weight per observation. Batch accepts weights in <code>Loess.fit</code>; Streaming accepts the weighted <code>processChunk</code> overload; Online accepts weighted <code>addPoint</code> overloads. Streaming preserves weights through overlap buffers, and Online evicts each weight with its observation. Existing unweighted methods use weight <code>1.0</code>.
 </td>
 </tr>
 </table>

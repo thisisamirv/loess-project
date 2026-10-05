@@ -258,6 +258,13 @@ public:
         effective_df_(optional_metric(result.effective_df)),
         residual_sd_(optional_metric(result.residual_sd)) {}
 
+  explicit Diagnostics(const fastloess_CppOnlineDiagnostics &result)
+      : rmse_(optional_metric(result.rmse)), mae_(optional_metric(result.mae)),
+        r_squared_(optional_metric(result.r_squared)),
+        aic_(optional_metric(result.aic)), aicc_(optional_metric(result.aicc)),
+        effective_df_(optional_metric(result.effective_df)),
+        residual_sd_(optional_metric(result.residual_sd)) {}
+
   bool has_value() const { return rmse_.has_value(); }
 
   std::optional<double> rmse() const { return rmse_; }
@@ -877,6 +884,28 @@ public:
     return Expected<LoessResult>(std::move(owned_result));
   }
 
+  Expected<LoessResult>
+  process_chunk_weighted(const std::vector<double> &x_values,
+                         const std::vector<double> &y_values,
+                         const std::vector<double> &custom_weights) {
+    if (expect_finalized_) {
+      return Expected<LoessResult>::make_error("Model already finalized");
+    }
+    if (y_values.empty() || x_values.empty() ||
+        x_values.size() % y_values.size() != 0) {
+      return Expected<LoessResult>::make_error("x and y length mismatch");
+    }
+    auto result = cpp_streaming_process_weighted(
+        ptr_, x_values.data(), static_cast<size_t>(x_values.size()),
+        y_values.data(), static_cast<size_t>(y_values.size()),
+        custom_weights.data(), static_cast<size_t>(custom_weights.size()));
+    LoessResult owned_result(result);
+    if (result.error != nullptr) {
+      return Expected<LoessResult>::make_error(owned_result.error());
+    }
+    return Expected<LoessResult>(std::move(owned_result));
+  }
+
   Expected<LoessResult> finalize() {
     if (expect_finalized_) {
       return Expected<LoessResult>::make_error("Model already finalized");
@@ -1035,10 +1064,57 @@ public:
     return wrap_output(cpp_online_add_point(ptr_, x, y));
   }
 
+  Expected<OnlineOutput> add_point(double x, double y, double weight) {
+    return wrap_output(cpp_online_add_point_weighted(ptr_, x, y, weight));
+  }
+
   /// Add a point with one coordinate per configured predictor dimension.
   Expected<OnlineOutput> add_point(const std::vector<double> &x, double y) {
     return wrap_output(cpp_online_add_point_nd(
         ptr_, x.data(), static_cast<size_t>(x.size()), y));
+  }
+
+  Expected<OnlineOutput> add_point(const std::vector<double> &x, double y,
+                                   double weight) {
+    return wrap_output(cpp_online_add_point_nd_weighted(
+        ptr_, x.data(), static_cast<size_t>(x.size()), y, weight));
+  }
+
+  Expected<std::optional<Diagnostics>> window_diagnostics() const {
+    auto raw = cpp_online_window_diagnostics(ptr_);
+    if (raw.error != nullptr) {
+      const std::string message(raw.error);
+      cpp_online_free_diagnostics(&raw);
+      return Expected<std::optional<Diagnostics>>::make_error(message);
+    }
+    if (raw.has_value == 0) {
+      cpp_online_free_diagnostics(&raw);
+      return Expected<std::optional<Diagnostics>>(std::nullopt);
+    }
+    Diagnostics diagnostics(raw);
+    cpp_online_free_diagnostics(&raw);
+    return Expected<std::optional<Diagnostics>>(diagnostics);
+  }
+
+  Expected<PredictResult>
+  predict_window(const std::vector<double> &new_x,
+                 const PredictOptions &options = {}) const {
+    validateOutputs(options.outputs, {"se", "gradient", "derivative"});
+    auto raw = cpp_online_predict_window(
+        ptr_, new_x.data(), static_cast<size_t>(new_x.size()),
+        hasOutput(options.outputs, "se") ? 1 : 0, options.intervals.confidence,
+        options.intervals.prediction,
+        (hasOutput(options.outputs, "gradient") ||
+         hasOutput(options.outputs, "derivative"))
+            ? 1
+            : 0,
+        options.extrapolation.c_str(), options.max_extrapolation_distance,
+        options.max_neighbor_distance);
+    PredictResult result(raw);
+    if (raw.error != nullptr) {
+      return Expected<PredictResult>::make_error(result.error());
+    }
+    return Expected<PredictResult>(std::move(result));
   }
 
 private:

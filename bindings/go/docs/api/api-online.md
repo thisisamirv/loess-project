@@ -3,6 +3,8 @@ title: "OnlineLoess API"
 weight: 34
 ---
 
+`AddPointWeighted` and `AddPointVectorWeighted` accept a finite non-negative case weight; existing methods use weight `1`. `WindowDiagnostics()` computes metrics for the current window on demand, and `PredictWindow(newX, options)` fits and predicts against that bounded window.
+
 For real-time data: processes one `(x, y)` point at a time and returns a smoothed value immediately once enough points have been seen.
 
 See also: [API](api.md)

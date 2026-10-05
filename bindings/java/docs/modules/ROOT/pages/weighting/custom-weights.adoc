@@ -16,9 +16,7 @@ w_{ij} = \text{customWeights}_j \times K\!\left(\frac{d_{ij}}{h_i}\right) \times
 where stem:[K] is the distance kernel, stem:[h_i] is the local bandwidth, and stem:[r_j] is the robustness weight from the current iteration.
 
 [NOTE]
-====
-*Batch adapter only:* `customWeights` applies in *Batch* (`Loess`) mode. It is silently ignored in `StreamingLoess` and `OnlineLoess`.
-====
+`customWeights` supplies one finite non-negative prior weight per observation. Batch accepts weights in `Loess.fit`; Streaming accepts the weighted `processChunk` overload; Online accepts weighted `addPoint` overloads. Streaming preserves weights through overlap buffers, and Online evicts each weight with its observation. Existing unweighted methods use weight `1.0`.
 
 '''
 

@@ -11,6 +11,35 @@ import org.junit.jupiter.api.Test;
 class OnlineLoessTest {
 
     @Test
+    void weightedWindowDiagnosticsAndPrediction() {
+        OnlineOptions options = OnlineOptions.builder()
+                .fraction(1.0)
+                .iterations(0)
+                .windowCapacity(10)
+                .minPoints(10)
+                .updateMode("full")
+                .surfaceMode("direct")
+                .build();
+        try (OnlineLoess weighted = new OnlineLoess(options); OnlineLoess plain = new OnlineLoess(options)) {
+            for (int i = 0; i < 10; i++) {
+                double y = i == 5 ? 100.0 : 2.0 * i + 1.0;
+                weighted.addPoint((double) i, y, i == 5 ? 0.0 : 1.0);
+                plain.addPoint((double) i, y);
+            }
+            Diagnostics diagnostics = weighted.windowDiagnostics().orElseThrow();
+            assertTrue(diagnostics.rmse() > 0.0);
+            RuntimeException error = assertThrows(
+                    RuntimeException.class,
+                    () -> weighted.addPoint(10.0, 21.0, -1.0));
+            assertTrue(error.getMessage() != null && !error.getMessage().isEmpty());
+
+            double weightedPrediction = weighted.predictWindow(new double[]{5.0}).y()[0];
+            double plainPrediction = plain.predictWindow(new double[]{5.0}).y()[0];
+            assertTrue(Math.abs(weightedPrediction - 11.0) < Math.abs(plainPrediction - 11.0));
+        }
+    }
+
+    @Test
     void acceptsMultivariatePoints() {
         try (OnlineLoess model = new OnlineLoess(
                 OnlineOptions.builder()

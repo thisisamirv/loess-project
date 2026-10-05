@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Multivariate LOESS :: fastloess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/advanced/dimensions.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -325,8 +325,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .dimensions(2)
                 .fraction(0.3)
+                .dimensions(2)
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -373,8 +373,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .dimensions(3)
                 .fraction(0.5)
+                .dimensions(3)
                 .build();
 
         try (Loess model = new Loess(options)) {

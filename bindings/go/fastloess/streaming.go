@@ -240,6 +240,26 @@ func (s *StreamingLoess) ProcessChunk(x, y []float64) (Result, error) {
 	return resultFromC(cres)
 }
 
+// ProcessChunkWeighted processes a chunk with one case weight per observation.
+// Weights must be finite, non-negative, and the same length as y.
+func (s *StreamingLoess) ProcessChunkWeighted(x, y, customWeights []float64) (Result, error) {
+	if s == nil || s.ptr == nil {
+		return Result{}, errors.New("fastloess: ProcessChunkWeighted called on a closed StreamingLoess model")
+	}
+	if len(x) == 0 || len(y) == 0 {
+		return Result{}, errors.New("fastloess: x and y must be non-empty")
+	}
+	xPtr, xLen := cDoubles(x)
+	yPtr, yLen := cDoubles(y)
+	weightsPtr, weightsLen := cDoubles(customWeights)
+	cres := C.go_streaming_process_weighted(s.ptr, xPtr, xLen, yPtr, yLen, weightsPtr, weightsLen)
+	runtime.KeepAlive(s)
+	runtime.KeepAlive(x)
+	runtime.KeepAlive(y)
+	runtime.KeepAlive(customWeights)
+	return resultFromC(cres)
+}
+
 // Finalize flushes any buffered data and returns the final merged result.
 func (s *StreamingLoess) Finalize() (Result, error) {
 	if s == nil || s.ptr == nil {

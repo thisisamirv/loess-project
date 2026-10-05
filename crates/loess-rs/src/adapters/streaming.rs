@@ -250,6 +250,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg>
             config: self,
             overlap_buffer_x: Vec::new(),
             overlap_buffer_y: Vec::new(),
+            overlap_buffer_weights: Vec::new(),
             overlap_buffer_smoothed: Vec::new(),
             overlap_buffer_robustness_weights: Vec::new(),
             overlap_buffer_gradient: Vec::new(),
@@ -272,6 +273,7 @@ pub struct StreamingLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug
     config: StreamingLoessBuilder<T>,
     overlap_buffer_x: Vec<T>,
     overlap_buffer_y: Vec<T>,
+    overlap_buffer_weights: Vec<T>,
     overlap_buffer_smoothed: Vec<T>,
     overlap_buffer_robustness_weights: Vec<T>,
     overlap_buffer_gradient: Vec<T>,
@@ -288,19 +290,51 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 {
     // Process a chunk of data.
     pub fn process_chunk(&mut self, x: &[T], y: &[T]) -> Result<LoessResult<T>, LoessError> {
+        self.process_chunk_with_optional_weights(x, y, None)
+    }
+
+    /// Process a chunk with one case weight per observation.
+    pub fn process_chunk_weighted(
+        &mut self,
+        x: &[T],
+        y: &[T],
+        weights: &[T],
+    ) -> Result<LoessResult<T>, LoessError> {
+        self.process_chunk_with_optional_weights(x, y, Some(weights))
+    }
+
+    fn process_chunk_with_optional_weights(
+        &mut self,
+        x: &[T],
+        y: &[T],
+        weights: Option<&[T]>,
+    ) -> Result<LoessResult<T>, LoessError> {
         Validator::validate_lengths(x, y, self.config.dimensions)?;
+        let default_weights;
+        let weights = match weights {
+            Some(weights) => {
+                Validator::validate_custom_weights(weights, y.len())?;
+                weights
+            }
+            None => {
+                default_weights = vec![T::one(); y.len()];
+                &default_weights
+            }
+        };
 
         // Apply the missing-value policy before any other validation, so a
         // `Drop` policy sees the filtered data and `Error` sees the raw data.
-        let (x_owned, y_owned);
-        let (x, y): (&[T], &[T]) = match self.config.missing {
+        let (x_owned, y_owned, weights_owned);
+        let (x, y, weights): (&[T], &[T], &[T]) = match self.config.missing {
             MissingPolicy::Drop => {
-                let (xo, yo, _) = Validator::drop_non_finite(x, y, self.config.dimensions, None);
+                let (xo, yo, wo) =
+                    Validator::drop_non_finite(x, y, self.config.dimensions, Some(weights));
                 x_owned = xo;
                 y_owned = yo;
-                (&x_owned, &y_owned)
+                weights_owned = wo.expect("weights are provided before dropping rows");
+                (&x_owned, &y_owned, &weights_owned)
             }
-            MissingPolicy::Error => (x, y),
+            MissingPolicy::Error => (x, y, weights),
         };
 
         // Validate inputs using standard validator
@@ -308,15 +342,17 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 
         // Combine with overlap from previous chunk
         let prev_overlap_len = self.overlap_buffer_smoothed.len();
-        let (combined_x, combined_y) = if self.overlap_buffer_x.is_empty() {
+        let (combined_x, combined_y, combined_weights) = if self.overlap_buffer_x.is_empty() {
             // No overlap: copy data directly
-            (x.to_vec(), y.to_vec())
+            (x.to_vec(), y.to_vec(), weights.to_vec())
         } else {
             let mut cx = mem::take(&mut self.overlap_buffer_x);
             cx.extend_from_slice(x);
             let mut cy = mem::take(&mut self.overlap_buffer_y);
             cy.extend_from_slice(y);
-            (cx, cy)
+            let mut cw = mem::take(&mut self.overlap_buffer_weights);
+            cw.extend_from_slice(weights);
+            (cx, cy, cw)
         };
 
         // Check grid resolution (max_vertices defaults to N = chunk_size)
@@ -359,7 +395,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             interpolation_vertices: self.config.interpolation_vertices,
             cell: self.config.cell,
             boundary_degree_fallback: self.config.boundary_degree_fallback,
-            custom_weights: None,
+            custom_weights: Some(combined_weights.clone()),
             retain_model: false,
             return_gradient: self.config.return_gradient,
             // ++++++++++++++++++++++++++++++++++++++
@@ -652,6 +688,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             let overlap_start_x = overlap_start * dimensions;
             self.overlap_buffer_x = combined_x[overlap_start_x..].to_vec();
             self.overlap_buffer_y = combined_y[overlap_start..].to_vec();
+            self.overlap_buffer_weights = combined_weights[overlap_start..].to_vec();
             self.overlap_buffer_smoothed = smoothed[overlap_start..].to_vec();
             if self.config.return_robustness_weights {
                 self.overlap_buffer_robustness_weights =
@@ -678,6 +715,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         } else {
             self.overlap_buffer_x.clear();
             self.overlap_buffer_y.clear();
+            self.overlap_buffer_weights.clear();
             self.overlap_buffer_smoothed.clear();
             self.overlap_buffer_robustness_weights.clear();
             self.overlap_buffer_gradient.clear();
@@ -844,6 +882,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
         // Clear buffers
         self.overlap_buffer_x.clear();
         self.overlap_buffer_y.clear();
+        self.overlap_buffer_weights.clear();
         self.overlap_buffer_smoothed.clear();
         self.overlap_buffer_robustness_weights.clear();
         self.overlap_buffer_gradient.clear();
@@ -860,6 +899,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
     pub fn reset(&mut self) {
         self.overlap_buffer_x.clear();
         self.overlap_buffer_y.clear();
+        self.overlap_buffer_weights.clear();
         self.overlap_buffer_smoothed.clear();
         self.overlap_buffer_robustness_weights.clear();
         self.overlap_buffer_gradient.clear();

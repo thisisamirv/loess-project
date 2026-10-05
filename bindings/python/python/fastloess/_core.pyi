@@ -308,7 +308,9 @@ class StreamingLoess:
     ) -> None:
         """Initialize the streaming processor."""
 
-    def process_chunk(self, x: ArrayLike, y: ArrayLike) -> LoessResult:
+    def process_chunk(
+        self, x: ArrayLike, y: ArrayLike, custom_weights: ArrayLike | None = None
+    ) -> LoessResult:
         """Process a chunk of data and return smoothed values."""
 
     def finalize(self) -> LoessResult:
@@ -350,5 +352,22 @@ class OnlineLoess:
         `update_mode="full"`; raises if requested under the default `"incremental"` mode.
         """
 
-    def add_point(self, x: float | ArrayLike, y: float) -> OnlineOutput | None:
+    def add_point(
+        self, x: float | ArrayLike, y: float, weight: float = 1.0
+    ) -> OnlineOutput | None:
         """Add a scalar or coordinate vector and return its smoothed value, or None while the window fills."""
+
+    def window_diagnostics(self) -> Diagnostics | None:
+        """Compute diagnostics for the current sliding window on demand."""
+
+    def predict_window(
+        self,
+        new_x: ArrayLike,
+        *,
+        outputs: Sequence[str] | None = None,
+        intervals: Mapping[str, float | None] | None = None,
+        extrapolation: str = "clamp",
+        max_extrapolation_distance: float | None = None,
+        max_neighbor_distance: float | None = None,
+    ) -> PredictOutput:
+        """Predict query points using a fit of the current sliding window."""

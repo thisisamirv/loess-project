@@ -21,6 +21,80 @@ use approx::assert_relative_eq;
 use loess_rs::prelude::*;
 
 #[test]
+fn test_online_weighted_updates_diagnostics_and_window_prediction() {
+    let mut weighted = Loess::new()
+        .fraction(1.0)
+        .iterations(0)
+        .surface_mode("direct")
+        .min_points(10)
+        .window_capacity(10)
+        .update_mode("full")
+        .adapter(Online)
+        .build()
+        .expect("weighted online builder should succeed");
+    let mut unweighted = Loess::new()
+        .fraction(1.0)
+        .iterations(0)
+        .surface_mode("direct")
+        .min_points(10)
+        .window_capacity(10)
+        .update_mode("full")
+        .adapter(Online)
+        .build()
+        .expect("unweighted online builder should succeed");
+
+    let mut weighted_last = None;
+    let mut unweighted_last = None;
+    for index in 0..10 {
+        let x = [f64::from(index)];
+        let y = if index == 5 {
+            100.0
+        } else {
+            2.0 * f64::from(index) + 1.0
+        };
+        let weight = if index == 5 { 0.0 } else { 1.0 };
+        weighted_last = weighted
+            .add_point_weighted(&x, y, weight)
+            .expect("weighted update should succeed");
+        unweighted_last = unweighted
+            .add_point(&x, y)
+            .expect("unweighted update should succeed");
+    }
+
+    assert!(
+        weighted_last.is_some(),
+        "full weighted window should produce output"
+    );
+    assert!(
+        unweighted_last.is_some(),
+        "full unweighted window should produce output"
+    );
+    assert!(weighted.add_point_weighted(&[10.0], 21.0, -1.0).is_err());
+
+    let prediction_options = Predict::new()
+        .build()
+        .expect("predict options should build");
+    let weighted_at_outlier = weighted
+        .predict_window(&[5.0], &prediction_options)
+        .expect("weighted outlier query should succeed");
+    let unweighted_at_outlier = unweighted
+        .predict_window(&[5.0], &prediction_options)
+        .expect("unweighted outlier query should succeed");
+    assert!((weighted_at_outlier.y[0] - 11.0).abs() < (unweighted_at_outlier.y[0] - 11.0).abs());
+
+    let diagnostics = weighted
+        .window_diagnostics()
+        .expect("window diagnostics should compute")
+        .expect("full window should have diagnostics");
+    assert!(diagnostics.rmse > 0.0);
+
+    let prediction = weighted
+        .predict_window(&[4.5], &prediction_options)
+        .expect("current-window prediction should succeed");
+    assert!((prediction.y[0] - 10.0).abs() < 1.0);
+}
+
+#[test]
 fn test_online_auto_converge_requires_valid_active_robustness() {
     for tolerance in [0.0, -1.0, f64::NAN, f64::INFINITY] {
         let result = Loess::<f64>::new()
@@ -62,9 +136,6 @@ use loess_rs::internals::primitives::policies::{BoundaryPolicy, UpdateMode};
 // Basic Functionality Tests
 // ============================================================================
 
-/// Test basic incremental smoothing with exact linear data.
-///
-/// Verifies that online LOESS reproduces exact linear data when fraction=1.0.
 #[test]
 fn test_online_exact_linear_reproduction() {
     let x = [0.0f64, 1.0, 2.0];

@@ -13,6 +13,7 @@ use std::sync::Arc;
 
 use fastLoess::internals::api::{LoessBuilder, LoessResult};
 use fastLoess::internals::binding_support as shared_parse;
+use fastLoess::prelude::{IntervalsBuilder, Predict};
 
 // ============================================================================
 // Helper Functions
@@ -393,6 +394,11 @@ impl RStreamingLoess {
         loess_result_to_list(result)
     }
 
+    fn process_chunk_weighted(&mut self, x: &[f64], y: &[f64], weights: &[f64]) -> Result<List> {
+        let result = map_runtime(self.inner.process_chunk_weighted(x, y, weights))?;
+        loess_result_to_list(result)
+    }
+
     fn finalize(&mut self) -> Result<List> {
         let result = map_runtime(self.inner.finalize())?;
         loess_result_to_list(result)
@@ -509,9 +515,13 @@ impl ROnlineLoess {
     }
 
     fn add_point(&mut self, x: Vec<f64>, y: f64) -> Result<Nullable<List>> {
+        self.add_point_weighted(x, y, 1.0)
+    }
+
+    fn add_point_weighted(&mut self, x: Vec<f64>, y: f64, weight: f64) -> Result<Nullable<List>> {
         let output = self
             .inner
-            .add_point(&x, y)
+            .add_point_weighted(&x, y, weight)
             .map_err(|e| to_r_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
 
         match output {
@@ -548,6 +558,92 @@ impl ROnlineLoess {
                 Ok(NotNull(List::from_pairs(items)))
             }
         }
+    }
+
+    fn window_diagnostics(&self) -> Result<Nullable<List>> {
+        match self
+            .inner
+            .window_diagnostics()
+            .map_err(|e| to_r_error(shared_parse::BindingError::runtime(e.to_string())))?
+        {
+            None => Ok(Null),
+            Some(diagnostics) => Ok(NotNull(List::from_pairs(vec![
+                ("rmse", diagnostics.rmse.into_robj()),
+                ("mae", diagnostics.mae.into_robj()),
+                ("r_squared", diagnostics.r_squared.into_robj()),
+                ("aic", diagnostics.aic.into_robj()),
+                ("aicc", diagnostics.aicc.into_robj()),
+                ("effective_df", diagnostics.effective_df.into_robj()),
+                ("residual_sd", diagnostics.residual_sd.into_robj()),
+            ]))),
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn predict_window(
+        &self,
+        new_x: Vec<f64>,
+        outputs: Vec<String>,
+        confidence_level: Nullable<f64>,
+        prediction_level: Nullable<f64>,
+        extrapolation: &str,
+        max_extrapolation_distance: Nullable<f64>,
+        max_neighbor_distance: Nullable<f64>,
+    ) -> Result<List> {
+        let mut builder = Predict::new().extrapolation(extrapolation);
+        let mut intervals = IntervalsBuilder::new();
+        if outputs.iter().any(|output| output == "se") {
+            builder = builder.return_se();
+        }
+        if outputs
+            .iter()
+            .any(|output| output == "gradient" || output == "derivative")
+        {
+            builder = builder.return_derivative();
+        }
+        if outputs
+            .iter()
+            .any(|output| !["se", "gradient", "derivative"].contains(&output.as_str()))
+        {
+            return Err(to_r_error(shared_parse::BindingError::invalid_arg(
+                "prediction outputs must be se, gradient, or derivative",
+            )));
+        }
+        if let NotNull(level) = confidence_level {
+            intervals = intervals.confidence(level);
+        }
+        if let NotNull(level) = prediction_level {
+            intervals = intervals.prediction(level);
+        }
+        builder = builder.intervals(intervals);
+        if let NotNull(distance) = max_extrapolation_distance {
+            builder = builder.max_extrapolation_distance(distance);
+        }
+        if let NotNull(distance) = max_neighbor_distance {
+            builder = builder.max_neighbor_distance(distance);
+        }
+        let query = map_invalid_arg(builder.build())?;
+        let output = map_invalid_arg(self.inner.predict_window(&new_x, &query))?;
+        let mut items: Vec<(&str, Robj)> = vec![("y", output.y.into_robj())];
+        if let Some(values) = output.standard_errors {
+            items.push(("standard_errors", values.into_robj()));
+        }
+        if let Some(values) = output.confidence_lower {
+            items.push(("confidence_lower", values.into_robj()));
+        }
+        if let Some(values) = output.confidence_upper {
+            items.push(("confidence_upper", values.into_robj()));
+        }
+        if let Some(values) = output.prediction_lower {
+            items.push(("prediction_lower", values.into_robj()));
+        }
+        if let Some(values) = output.prediction_upper {
+            items.push(("prediction_upper", values.into_robj()));
+        }
+        if let Some(values) = output.derivative {
+            items.push(("derivative", values.into_robj()));
+        }
+        Ok(List::from_pairs(items))
     }
 }
 

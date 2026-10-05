@@ -7,7 +7,7 @@
 \usage{
 process_chunk(model, ...)
 
-\method{process_chunk}{StreamingLoess}(model, x, y, ...)
+\method{process_chunk}{StreamingLoess}(model, x, y, custom_weights = NULL, ...)
 }
 \arguments{
 \item{model}{A \code{StreamingLoess} object.}
@@ -17,6 +17,8 @@ process_chunk(model, ...)
 \item{x}{Numeric vector of x values.}
 
 \item{y}{Numeric vector of y values.}
+
+\item{custom_weights}{Optional numeric case weight per observation.}
 }
 \value{
 A \code{LoessResult} for this chunk.

@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Added weighted Streaming chunks and Online points, preserving weights through overlap/window eviction, plus on-demand Online window diagnostics and `predict_window()` against the current bounded window.
 - Add `Predict::outputs(names)` for grouped `se` and `derivative` selection, with `gradient` as an alias and unknown names rejected by `build()`; preserve legacy selectors and implicit interval/bootstrap standard errors.
 - Added residual-bootstrap standard errors and percentile confidence/prediction intervals across Batch, Streaming, full-update Online, and retained-model prediction. Refits preserve LOESS settings and case weights, use centered residuals and batches of at most 256, and support n-dimensional data, interpolation, and `no_std`.
 - Added grouped cross-validation configuration via `CVBuilder::new().method(...).fraction(...)` and `.cv(...)`; `CVBuilder` is in the prelude and the `CVOptions<T>` result type is at the crate root.
@@ -29,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **fastLoess:**
 
+- Forwarded weighted chunk/point updates, Online window diagnostics, and current-window prediction through the parallel adapters.
 - Expose the shared grouped prediction-output selector through `fastLoess::Predict` and update parallel prediction examples and consistency coverage.
 - Added `.cv(...)` to the parallel Batch builder, re-exporting `CVBuilder` through the prelude and `CVOptions<T>` at the crate root.
 - Added `outputs(names)` to the `Loess`, `StreamingLoess`, and `OnlineLoess` wrappers, forwarding grouped output selection and deferred unknown-name errors to the core builder.
@@ -37,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **C++:**
 
+- Added weighted Streaming/Online overloads, Online window diagnostics, and prediction from the current window.
 - Added Windows x64 MinGW, Linux x86/ARMv7, Android ABI, and iOS device/simulator release binaries with matching cross-target CI builds.
 - Added generated compile-time version macros and runtime `cpp_version()` reporting, with the version header included in CMake, Spack, and release packaging.
 - Added `CVOptions cv` to Batch options for grouped cross-validation while preserving legacy CV fields.
@@ -47,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Added `ProcessChunkWeighted`, weighted Online point methods, `WindowDiagnostics`, and `PredictWindow` for the current Online window.
 - Added `OnlineLoess.AddPointVector()` for multivariate Online point updates.
 - Added `CV *CVOptions` to Batch options for grouped cross-validation, taking precedence over individual CV fields.
 - Added `Outputs []string` to `Options`, `StreamingOptions`, `OnlineOptions`, and `PredictOptions` for grouped optional result selection; existing boolean output fields remain supported.
@@ -56,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Java:**
 
+- Added weighted Streaming/Online overloads, `windowDiagnostics()`, and `predictWindow()` against the bounded Online window.
 - Added `OnlineLoess.addPoint(double[], double)` for multivariate Online point updates while retaining the scalar overload.
 - Added an Alternative Software guide with runnable Gaussian and robust comparisons to R's `stats::loess()` and a LOESS feature matrix.
 - Added `CVOptions.builder()` and `Options.Builder.cv(...)` for grouped Batch cross-validation.
@@ -67,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Julia:**
 
+- Added weighted Streaming chunks and Online points, `window_diagnostics`, and `predict_window` using the current window.
 - Added multivariate Online updates through `add_point(model, coordinates, y)` when `dimensions` is greater than one.
 - Added `FastLOESS.version()` to report the installed Julia binding version from `Project.toml`.
 - Added an Alternative Software guide comparing `FastLOESS.jl` with `Loess.jl`, including a runnable numerical comparison and feature matrix.
@@ -79,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Added weighted Streaming/Online methods, `window_diagnostics()`, and `predict_window()` against the current Online window.
 - Added `OnlineLoess.add_point_vector()` for multivariate Online point updates.
 - Added a `version` export at `fastloess/version` so consumers can query the package version without loading the native addon.
 - Added `cv` to Batch options for grouped cross-validation configuration alongside legacy CV fields.
@@ -89,6 +96,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Python:**
 
+- Added optional case weights to Streaming chunks and Online points, plus `window_diagnostics()` and `predict_window()` for the current Online window.
 - Added multivariate Online updates by accepting coordinate arrays in `OnlineLoess.add_point()`.
 - Added an Alternative Software guide comparing Python LOESS results with `skmisc.loess`, including executable Gaussian and robust examples.
 - Added a grouped `cv` dictionary to the Batch constructor, with validation and fallback to individual CV arguments.
@@ -100,6 +108,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Added `custom_weights` to Streaming chunks and a `weight` argument to Online updates, plus `window_diagnostics()` and `predict_window()`.
 - Added multivariate Online updates by accepting one coordinate vector per `add_point()` call.
 - Added `quickcheck` properties for randomized `stats::loess()` parity, sorted output, robust iterations through 12 passes, and sparse one-spike initial fits; fixed regressions cover 12- and 24-iteration robust fits.
 - Added a `quickcheck` property comparing tied x-values against `stats::loess()`. The existing properties build strictly increasing x, so ties never reached any comparison. Cases where `stats::loess()` reports a zero-width neighbourhood and falls back to a pseudoinverse are skipped, since it returns no well-defined value there.
@@ -117,6 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Added weighted Streaming/Online updates, `window_diagnostics()`, and `predict_window()` for the current Online window.
 - Added `OnlineLoess.add_point_vector()` for multivariate Online point updates.
 - Added `version()` to report the WASM binding package version.
 - Added `cv` to the Batch options interface for grouped cross-validation configuration alongside legacy fields.
@@ -298,6 +308,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reject unknown output names for Batch, Streaming, Online, and prediction; restore the `fit_async()` declaration to `Promise<LoessResult>` after N-API builds. Online/prediction outputs were already wired, and the loader already detects musl; GPU installer/sidecar checks have no LOESS counterpart.
 - Fixed inconsistent naming of the Node.js binding as "JavaScript" across READMEs, doc-site home pages, and `CITATION.cff`.
 - Fixed `cv_seed` silently accepting negative values by validating the signed input before converting it to `u64`.
+
+**Python:**
+
+- Corrected the Streaming result documentation for standard errors and confidence/prediction intervals, which are computed when requested.
 
 **R:**
 

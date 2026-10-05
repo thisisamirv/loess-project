@@ -85,3 +85,5 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Added the Node.js binding.
+
+* Added weighted Streaming/Online updates, Online window diagnostics, and prediction from the current window.

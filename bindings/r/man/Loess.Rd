@@ -130,7 +130,7 @@ A Loess object.
 \description{
 Create a stateful LOESS model for batch smoothing. This is the default
 mode: it processes the entire dataset at once and supports every feature
-(confidence/prediction intervals, cross-validation, GPU backend).
+(confidence/prediction intervals and cross-validation).
 }
 \details{
 Best suited when the dataset fits in memory and you need intervals,

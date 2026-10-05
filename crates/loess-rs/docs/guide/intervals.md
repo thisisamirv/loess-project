@@ -235,10 +235,10 @@ Point 2: SE = 0.0252
 ## Availability
 
 !!! warning "Batch Mode Only"
-    Confidence and prediction intervals are only available in **Batch** mode. Streaming and Online modes do not support intervals.
+    Confidence and prediction intervals are available in Batch and Streaming. Online computes them only in `UpdateMode::Full`; incremental Online updates do not compute standard errors.
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
-| Confidence intervals | ✓ | ✗ | ✗ |
-| Prediction intervals | ✓ | ✗ | ✗ |
-| Standard errors | ✓ | ✗ | ✗ |
+| Confidence intervals | ✓ | ✓ (per chunk, overlap-merged) | ✓ (`Full` updates only) |
+| Prediction intervals | ✓ | ✓ (per chunk, overlap-merged) | ✓ (`Full` updates only) |
+| Standard errors | ✓ | ✓ | ✓ (`Full` updates only) |

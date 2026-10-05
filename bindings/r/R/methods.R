@@ -245,6 +245,7 @@ predict.Loess <- function(
 #' @param model A \code{StreamingLoess} object.
 #' @param x Numeric vector of x values.
 #' @param y Numeric vector of y values.
+#' @param custom_weights Optional numeric case weight per observation.
 #' @param ... Must be empty.
 #' @return A \code{LoessResult} for this chunk.
 #' @examples
@@ -257,7 +258,7 @@ process_chunk <- function(model, ...) UseMethod("process_chunk")
 
 #' @rdname process_chunk
 #' @export
-process_chunk.StreamingLoess <- function(model, x, y, ...) {
+process_chunk.StreamingLoess <- function(model, x, y, custom_weights = NULL, ...) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
     }
@@ -274,7 +275,15 @@ process_chunk.StreamingLoess <- function(model, x, y, ...) {
         model$params$fraction,
         model$params$iterations
     )
-    model$handle$process_chunk(args$x, args$y)
+    if (is.null(custom_weights)) {
+        model$handle$process_chunk(args$x, args$y)
+    } else {
+        if (!is.numeric(custom_weights) || is.complex(custom_weights) ||
+            length(custom_weights) != length(args$y)) {
+            stop("custom_weights must have one numeric value per observation", call. = FALSE)
+        }
+        model$handle$process_chunk_weighted(args$x, args$y, as.double(custom_weights))
+    }
 }
 
 #' Finalize a streaming LOESS model
@@ -305,6 +314,7 @@ finalize.StreamingLoess <- function(model, ...) {
 #' @param x A numeric coordinate vector with one value per configured
 #'   dimension. For one-dimensional models, a scalar is also accepted.
 #' @param y A single numeric y value.
+#' @param weight Finite non-negative case weight for this observation; defaults to 1.
 #' @param ... Must be empty.
 #' @return An online result list, or \code{NULL} if fewer than
 #'   \code{min_points} have been added.
@@ -317,7 +327,7 @@ add_point <- function(model, ...) UseMethod("add_point")
 
 #' @rdname add_point
 #' @export
-add_point.OnlineLoess <- function(model, x, y, ...) {
+add_point.OnlineLoess <- function(model, x, y, weight = 1.0, ...) {
     if (...length() > 0L) {
         stop("unused arguments (...)")
     }
@@ -337,5 +347,72 @@ add_point.OnlineLoess <- function(model, x, y, ...) {
     ) {
         stop("y must be a single numeric value", call. = FALSE)
     }
-    model$handle$add_point(as.double(x), as.double(y))
+    if (!is.numeric(weight) || is.complex(weight) || length(weight) != 1L ||
+        !is.finite(weight) || weight < 0 || !is.null(dim(weight))) {
+        stop("weight must be a single finite non-negative numeric value", call. = FALSE)
+    }
+    model$handle$add_point_weighted(as.double(x), as.double(y), as.double(weight))
+}
+
+#' Compute diagnostics for the current Online window
+#'
+#' @param model An OnlineLoess object.
+#' @param ... Must be empty.
+#' @return A list of goodness-of-fit metrics, or `NULL` until the window
+#'   reaches `min_points`.
+#' @export
+window_diagnostics <- function(model, ...) UseMethod("window_diagnostics")
+
+#' @export
+window_diagnostics.OnlineLoess <- function(model, ...) {
+    if (...length() > 0L) {
+        stop("unused arguments (...)", call. = FALSE)
+    }
+    model$handle$window_diagnostics()
+}
+
+#' Predict from the current Online window
+#'
+#' @param model An OnlineLoess object.
+#' @param new_x Numeric query points (flattened, one coordinate per dimension).
+#' @param outputs Optional character vector selecting `"se"` and/or
+#'   `"gradient"` (alias `"derivative"`).
+#' @param intervals Grouped confidence and prediction coverage levels.
+#' @param extrapolation Behavior outside the window's predictor bounds:
+#'   `"clamp"` (default), `"linear"`, or `"error"`.
+#' @param max_extrapolation_distance Optional cap for linear extrapolation.
+#' @param max_neighbor_distance Optional cap for sparse-neighborhood predictions.
+#' @param ... Must be empty.
+#' @return A list containing predicted values and requested optional outputs.
+#' @export
+predict_window <- function(model, ...) UseMethod("predict_window")
+
+#' @export
+predict_window.OnlineLoess <- function(
+    model,
+    new_x,
+    outputs = NULL,
+    intervals = NULL,
+    extrapolation = "clamp",
+    max_extrapolation_distance = NULL,
+    max_neighbor_distance = NULL,
+    ...
+) {
+    if (...length() > 0L) {
+        stop("unused arguments (...)", call. = FALSE)
+    }
+    if (!is.numeric(new_x) || is.complex(new_x) || !length(new_x)) {
+        stop("new_x must be a non-empty numeric vector", call. = FALSE)
+    }
+    flags <- parse_outputs_flags(outputs, c("se", "gradient", "derivative"))
+    interval_options <- parse_intervals_options(intervals)
+    model$handle$predict_window(
+        as.double(new_x),
+        names(flags)[flags],
+        coerce_nullable(interval_options$confidence)[[1]],
+        coerce_nullable(interval_options$prediction)[[1]],
+        as.character(extrapolation),
+        coerce_nullable(max_extrapolation_distance)[[1]],
+        coerce_nullable(max_neighbor_distance)[[1]]
+    )
 }

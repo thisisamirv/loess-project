@@ -480,6 +480,21 @@ using FastLOESS
 			pi_width = r1.prediction_upper .- r1.prediction_lower
 			@test all(pi_width .>= ci_width .- 1e-9)
 		end
+
+		@testset "weighted chunks downweight outliers" begin
+			x = collect(0.0:9.0)
+			y = 2.0 .* x .+ 1.0
+			y[6] = 100.0
+			weights = ones(length(y))
+			weights[6] = 0.0
+			options = (fraction = 1.0, chunk_size = 10, overlap = 0, iterations = 0, surface_mode = "direct")
+			weighted = StreamingLoess(; options...)
+			plain = StreamingLoess(; options...)
+			weighted_result = process_chunk(weighted, x, y; custom_weights = weights)
+			plain_result = process_chunk(plain, x, y)
+			@test abs(weighted_result.y[6] - 11.0) < abs(plain_result.y[6] - 11.0)
+			@test_throws ArgumentError process_chunk(weighted, x, y; custom_weights = [1.0])
+		end
 	end
 
 	@testset "OnlineLoess" begin
@@ -500,6 +515,33 @@ using FastLOESS
 			@test last_result.gradient !== nothing
 			@test length(last_result.gradient) == 2
 			@test_throws ArgumentError add_point(online, [1.0], 2.0)
+		end
+
+		@testset "weighted points, diagnostics, and current-window prediction" begin
+			options = (
+				fraction = 1.0,
+				iterations = 0,
+				window_capacity = 10,
+				min_points = 10,
+				update_mode = "full",
+				surface_mode = "direct",
+			)
+			weighted = OnlineLoess(; options...)
+			plain = OnlineLoess(; options...)
+			for index ∈ 0:9
+				x = Float64(index)
+				y = index == 5 ? 100.0 : 2.0 * x + 1.0
+				weight = index == 5 ? 0.0 : 1.0
+				add_point(weighted, x, y; weight)
+				add_point(plain, x, y)
+			end
+			@test_throws ErrorException add_point(weighted, 10.0, 21.0; weight = -1.0)
+			diagnostics = window_diagnostics(weighted)
+			@test diagnostics !== nothing
+			@test diagnostics.rmse > 0.0
+			weighted_prediction = predict_window(weighted, [5.0])
+			plain_prediction = predict_window(plain, [5.0])
+			@test abs(weighted_prediction.y[1] - 11.0) < abs(plain_prediction.y[1] - 11.0)
 		end
 
 		@testset "concurrent updates are serialized" begin

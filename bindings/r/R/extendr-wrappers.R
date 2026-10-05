@@ -83,6 +83,10 @@ RStreamingLoess$process_chunk <- function(x, y) {
     .Call(wrap__RStreamingLoess__process_chunk, self, x, y)
 }
 
+RStreamingLoess$process_chunk_weighted <- function(x, y, custom_weights) {
+    .Call(wrap__RStreamingLoess__process_chunk_weighted, self, x, y, custom_weights)
+}
+
 RStreamingLoess$finalize <- function() {
     .Call(wrap__RStreamingLoess__finalize, self)
 }
@@ -123,6 +127,25 @@ ROnlineLoess$new <- function(
 
 ROnlineLoess$add_point <- function(x, y) {
     .Call(wrap__ROnlineLoess__add_point, self, x, y)
+}
+
+ROnlineLoess$add_point_weighted <- function(x, y, weight) {
+    .Call(wrap__ROnlineLoess__add_point_weighted, self, x, y, weight)
+}
+
+ROnlineLoess$window_diagnostics <- function() {
+    .Call(wrap__ROnlineLoess__window_diagnostics, self)
+}
+
+ROnlineLoess$predict_window <- function(
+    new_x, outputs, confidence_level, prediction_level, extrapolation,
+    max_extrapolation_distance, max_neighbor_distance
+) {
+    .Call(
+        wrap__ROnlineLoess__predict_window, self, new_x, outputs,
+        confidence_level, prediction_level, extrapolation,
+        max_extrapolation_distance, max_neighbor_distance
+    )
 }
 
 #' @export

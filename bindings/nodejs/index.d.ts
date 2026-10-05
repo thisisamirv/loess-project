@@ -76,9 +76,13 @@ export declare class OnlineLoess {
   /** Create a new online LOESS smoother. */
   constructor(options?: OnlineSmoothOptions | undefined | null, onlineOpts?: OnlineOptions | undefined | null)
   /** Add a single point and get the smoothed value if enough points are available. */
-  add_point(x: number, y: number): OnlineOutput | null
+  add_point(x: number, y: number, weight?: number | undefined | null): OnlineOutput | null
   /** Add a point with one coordinate per configured predictor dimension. */
-  add_point_vector(x: Float64Array, y: number): OnlineOutput | null
+  add_point_vector(x: Float64Array, y: number, weight?: number | undefined | null): OnlineOutput | null
+  /** Compute diagnostics for the current sliding window on demand. */
+  window_diagnostics(): Diagnostics | null
+  /** Predict query points using a fitted model of the current sliding window. */
+  predict_window(newX: Float64Array, options?: PredictOptions | undefined | null): PredictOutput
 }
 
 /** Result of `LoessResult.predict()`. */
@@ -105,6 +109,8 @@ export declare class StreamingLoess {
   constructor(options?: StreamingSmoothOptions | undefined | null, streamingOpts?: StreamingOptions | undefined | null)
   /** Process a chunk of data. */
   process_chunk(x: Float64Array, y: Float64Array): LoessResult
+  /** Process a chunk with one case weight per observation. */
+  process_chunk_weighted(x: Float64Array, y: Float64Array, customWeights: Float64Array): LoessResult
   /** Finalize the stream and return remaining data. */
   finalize(): LoessResult
 }

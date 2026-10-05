@@ -60,6 +60,20 @@ public final class StreamingLoess implements AutoCloseable {
     }
 
     /**
+     * Processes a chunk with one case weight per observation.
+     *
+     * @param x the predictor values
+     * @param y the response values
+     * @param customWeights finite, non-negative weights, one per response
+     * @return the partial fit result for this chunk
+     */
+    public synchronized Result processChunk(double[] x, double[] y, double[] customWeights) {
+        checkOpen();
+        NativeResult r = NativeBridge.streamingProcessWeighted(handle, x, y, customWeights);
+        return Result.fromNative(r);
+    }
+
+    /**
      * Merges all processed chunks into a final result.
      *
      * @return the final merged result

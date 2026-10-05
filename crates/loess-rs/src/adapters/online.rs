@@ -25,9 +25,10 @@ use crate::algorithms::regression::specialized::SolverLinalg;
 use crate::engine::defaults::*;
 use crate::engine::executor::{
     CVPassFn, FitPassFn, GradientPassFn, IntervalPassFn, KDTreeBuilderFn, LoessConfig,
-    LoessExecutor, SmoothPassFn,
+    LoessExecutor, LoessResult, PredictOutput, PredictQuery, SmoothPassFn,
 };
 use crate::engine::validator::Validator;
+use crate::evaluation::diagnostics::Diagnostics;
 use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod};
 use crate::math::defaults::*;
 use crate::math::distance::DistanceLinalg;
@@ -243,6 +244,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + SolverLinalg> Onlin
             config: self,
             window_x: VecDeque::with_capacity(capacity),
             window_y: VecDeque::with_capacity(capacity),
+            window_weights: VecDeque::with_capacity(capacity),
             scratch_x: Vec::with_capacity(capacity),
             scratch_y: Vec::with_capacity(capacity),
         })
@@ -286,6 +288,7 @@ pub struct OnlineLoess<T: FloatLinalg + DistanceLinalg + SolverLinalg> {
     config: OnlineLoessBuilder<T>,
     window_x: VecDeque<T>,
     window_y: VecDeque<T>,
+    window_weights: VecDeque<T>,
     // Pre-allocated scratch buffer for x values during smoothing
     scratch_x: Vec<T>,
     // Pre-allocated scratch buffer for y values during smoothing
@@ -297,6 +300,19 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 {
     // Add a new point and get its smoothed value.
     pub fn add_point(&mut self, x: &[T], y: T) -> Result<Option<OnlineOutput<T>>, LoessError> {
+        self.add_point_weighted(x, y, T::one())
+    }
+
+    /// Add a point with an observation weight and get its smoothed value.
+    ///
+    /// Weights must be finite and non-negative; zero excludes the observation
+    /// from the local fit while retaining it in the window.
+    pub fn add_point_weighted(
+        &mut self,
+        x: &[T],
+        y: T,
+        weight: T,
+    ) -> Result<Option<OnlineOutput<T>>, LoessError> {
         // Validate new point
         let dimensions = self.config.dimensions;
         if x.len() != dimensions {
@@ -306,6 +322,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 dimensions,
             });
         }
+        Validator::validate_custom_weights(&[weight], 1)?;
         match self.config.missing {
             MissingPolicy::Error => {
                 for &xi in x {
@@ -325,6 +342,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
             self.window_x.push_back(xi);
         }
         self.window_y.push_back(y);
+        self.window_weights.push_back(weight);
 
         // Evict oldest if over capacity
         if self.window_y.len() > self.config.window_capacity {
@@ -332,6 +350,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                 self.window_x.pop_front();
             }
             self.window_y.pop_front();
+            self.window_weights.pop_front();
         }
 
         // Check if we have enough points
@@ -424,7 +443,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                         interpolation_vertices: self.config.interpolation_vertices,
                         cell: self.config.cell,
                         boundary_degree_fallback: self.config.boundary_degree_fallback,
-                        custom_weights: None,
+                        custom_weights: Some(self.window_weights.iter().copied().collect()),
                         retain_model: false,
                         return_gradient: self.config.return_gradient,
                         // ++++++++++++++++++++++++++++++++++++++
@@ -499,7 +518,7 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                         interpolation_vertices: self.config.interpolation_vertices,
                         cell: self.config.cell,
                         boundary_degree_fallback: self.config.boundary_degree_fallback,
-                        custom_weights: None,
+                        custom_weights: Some(self.window_weights.iter().copied().collect()),
                         retain_model: false,
                         return_gradient: self.config.return_gradient,
                         // ++++++++++++++++++++++++++++++++++++++
@@ -623,12 +642,131 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
 
     // Get the current window size.
     pub fn window_size(&self) -> usize {
-        self.window_x.len()
+        self.window_y.len()
+    }
+
+    /// Compute diagnostics for a full fit of the current window on demand.
+    /// Returns `None` until the window reaches `min_points`.
+    pub fn window_diagnostics(&self) -> Result<Option<Diagnostics<T>>, LoessError> {
+        Ok(self
+            .fit_window(false)?
+            .and_then(|result| result.diagnostics))
+    }
+
+    /// Predict query points using a fitted model of the current sliding window.
+    ///
+    /// This performs a full fit on demand and retains no data beyond the existing window.
+    pub fn predict_window(
+        &self,
+        new_x: &[T],
+        options: &PredictQuery<T>,
+    ) -> Result<PredictOutput<T>, LoessError> {
+        let result = self.fit_window(true)?.ok_or_else(|| {
+            LoessError::InvalidInput(
+                "predict_window requires at least min_points observations".into(),
+            )
+        })?;
+        options.call(&result, new_x)
+    }
+
+    fn fit_window(&self, retain_model: bool) -> Result<Option<LoessResult<T>>, LoessError> {
+        if self.window_y.len() < self.config.min_points {
+            return Ok(None);
+        }
+        let x = self.window_x.iter().copied().collect::<Vec<_>>();
+        let y = self.window_y.iter().copied().collect::<Vec<_>>();
+        let n = y.len();
+        if self.config.surface_mode == SurfaceMode::Interpolation {
+            Validator::validate_interpolation_grid(
+                T::from(self.config.cell.unwrap_or(0.2)).unwrap_or_else(|| T::from(0.2).unwrap()),
+                self.config.fraction,
+                self.config.dimensions,
+                self.config.interpolation_vertices.unwrap_or(n),
+                self.config.cell.is_some(),
+                self.config.interpolation_vertices.is_some(),
+            )?;
+        }
+
+        let config = LoessConfig {
+            fraction: Some(self.config.fraction),
+            iterations: self.config.iterations,
+            weight_function: self.config.weight_function,
+            robustness_method: self.config.robustness_method,
+            scaling_method: self.config.scaling_method,
+            zero_weight_fallback: self.config.zero_weight_fallback,
+            boundary_policy: self.config.boundary_policy,
+            polynomial_degree: self.config.polynomial_degree,
+            dimensions: self.config.dimensions,
+            distance_metric: self.config.distance_metric.clone(),
+            auto_converge: self.config.auto_converge,
+            cv_fractions: None,
+            cv_kind: None,
+            return_variance: self.config.interval_type,
+            cv_seed: None,
+            surface_mode: self.config.surface_mode,
+            interpolation_vertices: self.config.interpolation_vertices,
+            cell: self.config.cell,
+            boundary_degree_fallback: self.config.boundary_degree_fallback,
+            custom_weights: Some(self.window_weights.iter().copied().collect()),
+            retain_model,
+            return_gradient: self.config.return_gradient,
+            custom_smooth_pass: self.config.custom_smooth_pass,
+            custom_cv_pass: self.config.custom_cv_pass,
+            custom_interval_pass: self.config.custom_interval_pass,
+            custom_gradient_pass: self.config.custom_gradient_pass,
+            custom_fit_pass: self.config.custom_fit_pass,
+            custom_vertex_pass: self.config.custom_vertex_pass,
+            custom_kdtree_builder: self.config.custom_kdtree_builder,
+            parallel: false,
+            backend: None,
+        };
+        let output = LoessExecutor::run_with_config(&x, &y, config);
+        let residuals: Vec<T> = y
+            .iter()
+            .zip(output.smoothed.iter())
+            .map(|(&actual, &fitted)| actual - fitted)
+            .collect();
+        let diagnostics = Some(Diagnostics::compute(
+            &y,
+            &output.smoothed,
+            &residuals,
+            output.std_errors.as_deref(),
+        ));
+        Ok(Some(LoessResult {
+            x,
+            dimensions: self.config.dimensions,
+            distance_metric: self.config.distance_metric.clone(),
+            polynomial_degree: self.config.polynomial_degree,
+            y: output.smoothed,
+            standard_errors: output.std_errors,
+            confidence_lower: None,
+            confidence_upper: None,
+            prediction_lower: None,
+            prediction_upper: None,
+            residuals: Some(residuals),
+            robustness_weights: self
+                .config
+                .return_robustness_weights
+                .then_some(output.robustness_weights),
+            diagnostics,
+            iterations_used: output.iterations,
+            fraction_used: output.used_fraction,
+            cv_scores: None,
+            enp: None,
+            trace_hat: None,
+            delta1: None,
+            delta2: None,
+            residual_scale: None,
+            leverage: output.leverage,
+            gradient: output.gradient,
+            predict_state: output.predict_state,
+        }))
     }
 
     // Clear the window.
     pub fn reset(&mut self) {
         self.window_x.clear();
         self.window_y.clear();
+        self.window_weights.clear();
     }
 }

@@ -29,6 +29,8 @@ println(typeof(model))
 
 #### `process_chunk(model, x, y)`
 
+Chunks can be weighted with `process_chunk(model, x, y; custom_weights=weights)`, using one finite non-negative case weight per observation. Weights are retained with points buffered for overlap.
+
 Feeds one chunk of data into the model. Each chunk is fit together with the trailing `overlap` points buffered from the previous call, then only the points that are fully resolved are returned — the tail of the chunk (the next `overlap` points) is held back internally, since it will be refit once the following chunk arrives and its estimate reconciled via `merge_strategy`. This is what lets the adapter process a dataset far larger than memory allows, one bounded-size chunk at a time, without ever materializing the whole dataset at once.
 
 ```@example streaming

@@ -20,6 +20,44 @@
 use loess_rs::prelude::*;
 
 #[test]
+fn test_streaming_custom_weights_downweight_outlier() {
+    let x: Vec<f64> = (0..10).map(f64::from).collect();
+    let mut y = x.clone();
+    y[5] = 100.0;
+    let mut weights = vec![1.0; y.len()];
+    weights[5] = 0.0;
+
+    let mut weighted = Loess::new()
+        .fraction(1.0)
+        .iterations(0)
+        .surface_mode("direct")
+        .chunk_size(10)
+        .overlap(0)
+        .adapter(Streaming)
+        .build()
+        .expect("weighted streaming builder should succeed");
+    let result = weighted
+        .process_chunk_weighted(&x, &y, &weights)
+        .expect("weighted streaming chunk should succeed");
+
+    let mut unweighted = Loess::new()
+        .fraction(1.0)
+        .iterations(0)
+        .surface_mode("direct")
+        .chunk_size(10)
+        .overlap(0)
+        .adapter(Streaming)
+        .build()
+        .expect("unweighted streaming builder should succeed");
+    let baseline = unweighted
+        .process_chunk(&x, &y)
+        .expect("unweighted streaming chunk should succeed");
+
+    assert!((result.y[5] - y[5]).abs() > (baseline.y[5] - y[5]).abs());
+    assert!(weighted.process_chunk_weighted(&x, &y, &[1.0]).is_err());
+}
+
+#[test]
 fn test_streaming_auto_converge_rejects_invalid_tolerances() {
     for tolerance in [0.0, -1.0, f64::NAN, f64::INFINITY] {
         let result = Loess::<f64>::new()

@@ -22,6 +22,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Corrected Streaming result documentation to describe standard errors and confidence/prediction intervals when requested.
 * Support multivariate Online updates by accepting one coordinate vector per `add_point` call while preserving scalar inputs for one-dimensional models.
 * Reject unknown output names across Batch, Streaming, Online, and prediction; accept documented array-like inputs for fit, streaming, and prediction; release the GIL during Online updates.
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.
@@ -81,3 +82,5 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Added the Python LOESS binding.
+
+* Added case weights to Streaming chunks and Online points, plus current-window Online diagnostics and prediction.

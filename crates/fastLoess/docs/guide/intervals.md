@@ -8,7 +8,7 @@ Confidence and prediction intervals for uncertainty quantification.
 ![Confidence and Prediction Intervals](https://raw.githubusercontent.com/thisisamirv/loess-project/main/crates/fastLoess/assets/diagrams/intervals_comparison.svg)
 
 !!! note "Adapter support"
-    Confidence and prediction intervals are available in **Batch** mode only. Streaming and Online modes do not support intervals.
+    Confidence and prediction intervals are available in Batch and Streaming. Online computes them only in `update_mode("full")`; incremental Online updates do not compute standard errors.
 
 | Type | Represents | Width | Use |
 | --- | --- | --- | --- |
@@ -207,11 +207,11 @@ Point 2: SE = 0.0588
 
 ## Availability
 
-!!! warning "Batch Mode Only"
-    Confidence and prediction intervals are only available in **Batch** mode. Streaming and Online modes do not support intervals.
+!!! note "Adapter support"
+    Streaming intervals are computed per chunk and merged over overlaps. Online intervals and bootstrap require full updates; incremental Online updates do not compute standard errors.
 
 | Feature | Batch | Streaming | Online |
 | --- | --- | --- | --- |
-| Confidence intervals | ✓ | ✗ | ✗ |
-| Prediction intervals | ✓ | ✗ | ✗ |
-| Standard errors | ✓ | ✗ | ✗ |
+| Confidence intervals | ✓ | ✓ (per chunk, overlap-merged) | ✓ (`Full` updates only) |
+| Prediction intervals | ✓ | ✓ (per chunk, overlap-merged) | ✓ (`Full` updates only) |
+| Standard errors | ✓ | ✓ | ✓ (`Full` updates only) |

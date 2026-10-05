@@ -84,10 +84,9 @@ where
     }
 }
 use crate::prelude::{LoessError, LoessResult};
+pub use loess_rs::PredictOutput;
 use loess_rs::internals::adapters::online::OnlineOutput;
-pub use loess_rs::internals::adapters::predict::{
-    Predict, PredictBuilder, PredictOutput, predict_batch,
-};
+pub use loess_rs::internals::adapters::predict::{Predict, PredictBuilder, predict_batch};
 use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
 use loess_rs::internals::alias;
 pub use loess_rs::internals::engine::executor::{PredictQuery, PredictState};

@@ -111,8 +111,36 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
     {
         let x_slice = x.as_loess_slice()?;
         let y_slice = y.as_loess_slice()?;
+        self.initialize_processor()?;
+        self.processor
+            .as_mut()
+            .unwrap()
+            .process_chunk(x_slice, y_slice)
+    }
 
-        // Lazily initialize the processor with parallel callbacks
+    /// Process a chunk with one case weight per observation.
+    pub fn process_chunk_weighted<I1, I2, I3>(
+        &mut self,
+        x: &I1,
+        y: &I2,
+        weights: &I3,
+    ) -> Result<LoessResult<T>, LoessError>
+    where
+        I1: LoessInput<T> + ?Sized,
+        I2: LoessInput<T> + ?Sized,
+        I3: LoessInput<T> + ?Sized,
+    {
+        let x_slice = x.as_loess_slice()?;
+        let y_slice = y.as_loess_slice()?;
+        let weights_slice = weights.as_loess_slice()?;
+        self.initialize_processor()?;
+        self.processor
+            .as_mut()
+            .unwrap()
+            .process_chunk_weighted(x_slice, y_slice, weights_slice)
+    }
+
+    fn initialize_processor(&mut self) -> Result<(), LoessError> {
         if self.processor.is_none() {
             let mut builder = self.config.base.clone();
 
@@ -127,11 +155,7 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
 
             self.processor = Some(builder.build()?);
         }
-
-        self.processor
-            .as_mut()
-            .unwrap()
-            .process_chunk(x_slice, y_slice)
+        Ok(())
     }
 
     // Finalize processing and get any remaining buffered data.

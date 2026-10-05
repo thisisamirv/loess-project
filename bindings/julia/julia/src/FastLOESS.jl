@@ -27,7 +27,7 @@ module FastLOESS
 using TOML
 
 export Loess, StreamingLoess, OnlineLoess
-export fit, process_chunk, finalize, add_point, predict
+export fit, process_chunk, finalize, add_point, predict, window_diagnostics, predict_window
 export LoessResult, OnlineOutput, Diagnostics, PredictModel, PredictResult
 export version
 
@@ -468,6 +468,18 @@ struct CJlOnlineOutput
 	prediction_upper::Cdouble
 	gradient::Ptr{Cdouble}
 	dimensions::Cint
+	error::Ptr{Cchar}
+end
+
+struct CJlOnlineDiagnostics
+	has_value::Cint
+	rmse::Cdouble
+	mae::Cdouble
+	r_squared::Cdouble
+	aic::Cdouble
+	aicc::Cdouble
+	effective_df::Cdouble
+	residual_sd::Cdouble
 	error::Ptr{Cchar}
 end
 
@@ -1239,7 +1251,12 @@ end
 
 Process a chunk of data.
 """
-function process_chunk(s::StreamingLoess, x::Vector{Float64}, y::Vector{Float64})
+function process_chunk(
+	s::StreamingLoess,
+	x::Vector{Float64},
+	y::Vector{Float64};
+	custom_weights::Union{Vector{Float64}, Nothing} = nothing,
+)
 	if s.dimensions != 1
 		throw(
 			ArgumentError(
@@ -1251,17 +1268,33 @@ function process_chunk(s::StreamingLoess, x::Vector{Float64}, y::Vector{Float64}
 	if n != length(y)
 		throw(ArgumentError("x and y must have the same length"))
 	end
+	if !isnothing(custom_weights) && length(custom_weights) != n
+		throw(ArgumentError("custom_weights must have the same length as y"))
+	end
 
 	c_result = lock(s.lock) do
-		GC.@preserve s x y ccall(
-			(:jl_streaming_loess_process_chunk, libfastloess),
-			CJlLoessResult,
-			(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
-			s.handle,
-			x,
-			y,
-			Culong(n),
-		)
+		if isnothing(custom_weights)
+			GC.@preserve s x y ccall(
+				(:jl_streaming_loess_process_chunk, libfastloess),
+				CJlLoessResult,
+				(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+				s.handle,
+				x,
+				y,
+				Culong(n),
+			)
+		else
+			GC.@preserve s x y custom_weights ccall(
+				(:jl_streaming_loess_process_chunk_weighted, libfastloess),
+				CJlLoessResult,
+				(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+				s.handle,
+				x,
+				y,
+				custom_weights,
+				Culong(n),
+			)
+		end
 	end
 
 	return convert_result(c_result)
@@ -1273,7 +1306,12 @@ end
 Process a multivariate chunk. Rows are observations and columns are predictor
 dimensions.
 """
-function process_chunk(s::StreamingLoess, x::Matrix{Float64}, y::Vector{Float64})
+function process_chunk(
+	s::StreamingLoess,
+	x::Matrix{Float64},
+	y::Vector{Float64};
+	custom_weights::Union{Vector{Float64}, Nothing} = nothing,
+)
 	n = size(x, 1)
 	if size(x, 2) != s.dimensions
 		throw(
@@ -1285,17 +1323,33 @@ function process_chunk(s::StreamingLoess, x::Matrix{Float64}, y::Vector{Float64}
 	if n != length(y)
 		throw(ArgumentError("x and y must have the same number of observations"))
 	end
+	if !isnothing(custom_weights) && length(custom_weights) != n
+		throw(ArgumentError("custom_weights must have the same number of observations as y"))
+	end
 	x_flat = vec(permutedims(x))
 	c_result = lock(s.lock) do
-		GC.@preserve s x_flat y ccall(
-			(:jl_streaming_loess_process_chunk, libfastloess),
-			CJlLoessResult,
-			(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
-			s.handle,
-			x_flat,
-			y,
-			Culong(n),
-		)
+		if isnothing(custom_weights)
+			GC.@preserve s x_flat y ccall(
+				(:jl_streaming_loess_process_chunk, libfastloess),
+				CJlLoessResult,
+				(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+				s.handle,
+				x_flat,
+				y,
+				Culong(n),
+			)
+		else
+			GC.@preserve s x_flat y custom_weights ccall(
+				(:jl_streaming_loess_process_chunk_weighted, libfastloess),
+				CJlLoessResult,
+				(Ptr{Cvoid}, Ptr{Cdouble}, Ptr{Cdouble}, Ptr{Cdouble}, Culong),
+				s.handle,
+				x_flat,
+				y,
+				custom_weights,
+				Culong(n),
+			)
+		end
 	end
 
 	return convert_result(c_result)
@@ -1493,11 +1547,11 @@ one-dimensional model, pass a scalar coordinate; for multivariate models, pass
 a vector with one coordinate per configured dimension. Returns `nothing` while
 the window is still filling (fewer than `min_points` have been seen).
 """
-function add_point(o::OnlineLoess, x::Real, y::Real)
-	return add_point(o, Float64[x], Float64(y))
+function add_point(o::OnlineLoess, x::Real, y::Real; weight::Real = 1.0)
+	return add_point(o, Float64[x], Float64(y); weight)
 end
 
-function add_point(o::OnlineLoess, x::AbstractVector{<:Real}, y::Real)
+function add_point(o::OnlineLoess, x::AbstractVector{<:Real}, y::Real; weight::Real = 1.0)
 	x_values = Float64.(x)
 	if length(x_values) != o.dimensions
 		throw(ArgumentError("x must have exactly $(o.dimensions) values for dimensions=$(o.dimensions)"))
@@ -1507,11 +1561,12 @@ function add_point(o::OnlineLoess, x::AbstractVector{<:Real}, y::Real)
 		GC.@preserve o x_values ccall(
 			(:jl_online_loess_add_point, libfastloess),
 			CJlOnlineOutput,
-			(Ptr{Cvoid}, Ptr{Cdouble}, Culong, Cdouble),
+			(Ptr{Cvoid}, Ptr{Cdouble}, Culong, Cdouble, Cdouble),
 			o.handle,
 			x_values,
 			Culong(length(x_values)),
 			response,
+			Float64(weight),
 		)
 	end
 
@@ -1554,6 +1609,115 @@ function add_point(o::OnlineLoess, x::AbstractVector{<:Real}, y::Real)
 	)
 
 	return output
+end
+
+function window_diagnostics(o::OnlineLoess)
+	c_result = lock(o.lock) do
+		GC.@preserve o ccall(
+			(:jl_online_loess_window_diagnostics, libfastloess),
+			CJlOnlineDiagnostics,
+			(Ptr{Cvoid},),
+			o.handle,
+		)
+	end
+	if c_result.error != C_NULL
+		error_message = unsafe_string(Ptr{UInt8}(c_result.error))
+		ccall(
+			(:jl_online_free_diagnostics, libfastloess),
+			Cvoid,
+			(Ptr{CJlOnlineDiagnostics},),
+			Ref(c_result),
+		)
+		error("fastloess error: $error_message")
+	end
+	if c_result.has_value == 0
+		return nothing
+	end
+	result = Diagnostics(
+		c_result.rmse,
+		c_result.mae,
+		c_result.r_squared,
+		isnan(c_result.aic) ? nothing : c_result.aic,
+		isnan(c_result.aicc) ? nothing : c_result.aicc,
+		isnan(c_result.effective_df) ? nothing : c_result.effective_df,
+		c_result.residual_sd,
+	)
+	ccall(
+		(:jl_online_free_diagnostics, libfastloess),
+		Cvoid,
+		(Ptr{CJlOnlineDiagnostics},),
+		Ref(c_result),
+	)
+	return result
+end
+
+function predict_window(
+	o::OnlineLoess,
+	new_x::Vector{Float64};
+	outputs::Vector{String} = String[],
+	intervals = nothing,
+	extrapolation::String = "clamp",
+	max_extrapolation_distance::Union{Float64, Nothing} = nothing,
+	max_neighbor_distance::Union{Float64, Nothing} = nothing,
+)
+	flags = _output_flags(outputs; allowed = ("se", "gradient", "derivative"))
+	interval_options = _interval_options(intervals)
+	c_result = lock(o.lock) do
+		GC.@preserve o new_x ccall(
+			(:jl_online_loess_predict_window, libfastloess),
+			CJlPredictResult,
+			(
+				Ptr{Cvoid},
+				Ptr{Cdouble},
+				Culong,
+				Cint,
+				Cdouble,
+				Cdouble,
+				Cint,
+				Cstring,
+				Cdouble,
+				Cdouble,
+			),
+			o.handle,
+			new_x,
+			Culong(length(new_x)),
+			Cint(flags.se),
+			interval_options.confidence,
+			interval_options.prediction,
+			Cint(flags.gradient),
+			extrapolation,
+			isnothing(max_extrapolation_distance) ? NaN : max_extrapolation_distance,
+			isnothing(max_neighbor_distance) ? NaN : max_neighbor_distance,
+		)
+	end
+	if c_result.error != C_NULL
+		error_message = unsafe_string(Ptr{UInt8}(c_result.error))
+		ccall(
+			(:jl_predict_free_result, libfastloess),
+			Cvoid,
+			(Ptr{CJlPredictResult},),
+			Ref(c_result),
+		)
+		error("fastloess error: $error_message")
+	end
+	n = Int(c_result.n)
+	dimensions = max(Int(c_result.dimensions), 1)
+	result = PredictResult(
+		ptr_to_vector(c_result.y, n),
+		ptr_to_vector(c_result.standard_errors, n),
+		ptr_to_vector(c_result.confidence_lower, n),
+		ptr_to_vector(c_result.confidence_upper, n),
+		ptr_to_vector(c_result.prediction_lower, n),
+		ptr_to_vector(c_result.prediction_upper, n),
+		ptr_to_vector(c_result.derivative, n * dimensions),
+	)
+	ccall(
+		(:jl_predict_free_result, libfastloess),
+		Cvoid,
+		(Ptr{CJlPredictResult},),
+		Ref(c_result),
+	)
+	return result
 end
 
 end # module FastLOESS

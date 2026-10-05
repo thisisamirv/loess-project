@@ -22,7 +22,9 @@ import fastloess as fl
 stream = fl.StreamingLoess(chunk_size=50, overlap=10)
 :::
 
-#### `process_chunk(x, y)`
+#### `process_chunk(x, y, custom_weights=None)`
+
+`custom_weights`, when provided, must contain one finite non-negative case weight per observation. Weights stay aligned with points buffered across chunk overlaps.
 
 Feeds one chunk of data into the model. Each chunk is fit together with the trailing `overlap` points buffered from the previous call, then only the points that are fully resolved are returned — the tail of the chunk (the next `overlap` points) is held back internally, since it will be refit once the following chunk arrives and its estimate reconciled via `merge_strategy`. This is what lets the adapter process a dataset far larger than memory allows, one bounded-size chunk at a time, without ever materializing the whole dataset at once.
 
@@ -322,11 +324,11 @@ Returned by `process_chunk()` and `finalize()`.
 | `y` | `ndarray` | Smoothed y values |
 | `fraction_used` | `float` | Fraction used |
 | `iterations_used` | `int \| None` | Robustness iterations actually performed |
-| `standard_errors` | `ndarray \| None` | Always `None` (Batch only) |
-| `confidence_lower` | `ndarray \| None` | Always `None` (Batch only) |
-| `confidence_upper` | `ndarray \| None` | Always `None` (Batch only) |
-| `prediction_lower` | `ndarray \| None` | Always `None` (Batch only) |
-| `prediction_upper` | `ndarray \| None` | Always `None` (Batch only) |
+| `standard_errors` | `ndarray \| None` | Standard errors (if requested via `outputs` or intervals) |
+| `confidence_lower` | `ndarray \| None` | Confidence bounds (if `intervals.confidence` was requested) |
+| `confidence_upper` | `ndarray \| None` | Confidence bounds (if `intervals.confidence` was requested) |
+| `prediction_lower` | `ndarray \| None` | Prediction bounds (if `intervals.prediction` was requested) |
+| `prediction_upper` | `ndarray \| None` | Prediction bounds (if `intervals.prediction` was requested) |
 | `residuals` | `ndarray \| None` | Residuals (if `"residuals"` was requested) |
 | `robustness_weights` | `ndarray \| None` | Robustness weights (if `"weights"` was requested) |
 | `cv_scores` | `ndarray \| None` | Always `None` (Batch only) |

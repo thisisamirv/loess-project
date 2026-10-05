@@ -193,6 +193,23 @@ impl<T: Float + PartialEq> PartialEq for PredictState<T> {
     }
 }
 
+/// Result of a prediction query against a fitted model.
+#[derive(Debug, Clone)]
+pub struct PredictOutput<T> {
+    /// Predicted y-values, one per query point in `new_x`.
+    pub y: Vec<T>,
+    /// Standard errors, when requested or required for intervals.
+    pub standard_errors: Option<Vec<T>>,
+    /// Confidence interval bounds for the mean response.
+    pub confidence_lower: Option<Vec<T>>,
+    pub confidence_upper: Option<Vec<T>>,
+    /// Prediction interval bounds for a new observation.
+    pub prediction_lower: Option<Vec<T>>,
+    pub prediction_upper: Option<Vec<T>>,
+    /// Local fit gradients (`dimensions` values per query point, flattened).
+    pub derivative: Option<Vec<T>>,
+}
+
 // Comprehensive LOESS output containing smoothed values and diagnostics.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LoessResult<T: Float> {

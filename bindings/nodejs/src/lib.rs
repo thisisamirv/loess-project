@@ -7,7 +7,7 @@ use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::LoessBuilder;
 use ::fastLoess::internals::binding_support as shared_parse;
-use ::fastLoess::prelude::LoessResult as InnerLoessResult;
+use ::fastLoess::prelude::{IntervalsBuilder, LoessResult as InnerLoessResult, Predict};
 
 fn to_napi_error(err: shared_parse::BindingError) -> Error {
     let status = match err.category {
@@ -896,6 +896,22 @@ impl StreamingLoess {
         Ok(LoessResult { inner: result })
     }
 
+    /// Process a chunk with one case weight per observation.
+    #[napi(js_name = "process_chunk_weighted")]
+    pub fn process_chunk_weighted(
+        &mut self,
+        x: Float64Array,
+        y: Float64Array,
+        custom_weights: Float64Array,
+    ) -> Result<LoessResult> {
+        let result: InnerLoessResult<f64> = map_runtime(self.inner.process_chunk_weighted(
+            x.as_ref(),
+            y.as_ref(),
+            custom_weights.as_ref(),
+        ))?;
+        Ok(LoessResult { inner: result })
+    }
+
     /// Finalize the stream and return remaining data.
     #[napi]
     pub fn finalize(&mut self) -> Result<LoessResult> {
@@ -955,10 +971,15 @@ impl OnlineLoess {
 
     /// Add a single point and get the smoothed value if enough points are available.
     #[napi(js_name = "add_point")]
-    pub fn add_point(&mut self, x: f64, y: f64) -> Result<Option<OnlineOutput>> {
+    pub fn add_point(
+        &mut self,
+        x: f64,
+        y: f64,
+        weight: Option<f64>,
+    ) -> Result<Option<OnlineOutput>> {
         let output = self
             .inner
-            .add_point(&[x], y)
+            .add_point_weighted(&[x], y, weight.unwrap_or(1.0))
             .map_err(|e| to_napi_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
         Ok(output.map(|o| OnlineOutput {
             y: o.y,
@@ -976,11 +997,16 @@ impl OnlineLoess {
 
     /// Add a point with one coordinate per configured predictor dimension.
     #[napi(js_name = "add_point_vector")]
-    pub fn add_point_vector(&mut self, x: Float64Array, y: f64) -> Result<Option<OnlineOutput>> {
+    pub fn add_point_vector(
+        &mut self,
+        x: Float64Array,
+        y: f64,
+        weight: Option<f64>,
+    ) -> Result<Option<OnlineOutput>> {
         let x = x.as_ref().to_vec();
         let output = self
             .inner
-            .add_point(&x, y)
+            .add_point_weighted(&x, y, weight.unwrap_or(1.0))
             .map_err(|e| to_napi_error(shared_parse::BindingError::invalid_arg(e.to_string())))?;
         Ok(output.map(|o| OnlineOutput {
             y: o.y,
@@ -994,5 +1020,66 @@ impl OnlineLoess {
             prediction_upper: o.prediction_upper,
             gradient: o.gradient,
         }))
+    }
+
+    /// Compute diagnostics for the current sliding window on demand.
+    #[napi(js_name = "window_diagnostics")]
+    pub fn window_diagnostics(&self) -> Result<Option<Diagnostics>> {
+        self.inner
+            .window_diagnostics()
+            .map_err(|e| to_napi_error(shared_parse::BindingError::runtime(e.to_string())))
+            .map(|result| {
+                result.map(|d| Diagnostics {
+                    rmse: d.rmse,
+                    mae: d.mae,
+                    r_squared: d.r_squared,
+                    aic: d.aic,
+                    aicc: d.aicc,
+                    effective_df: d.effective_df,
+                    residual_sd: d.residual_sd,
+                })
+            })
+    }
+
+    /// Predict query points using a fitted model of the current sliding window.
+    #[napi(js_name = "predict_window")]
+    pub fn predict_window(
+        &self,
+        new_x: Float64Array,
+        options: Option<PredictOptions>,
+    ) -> Result<PredictOutput> {
+        let PredictOptions {
+            outputs,
+            intervals,
+            extrapolation,
+            max_extrapolation_distance,
+            max_neighbor_distance,
+        } = options.unwrap_or_default();
+        validate_outputs(outputs.as_ref(), &["se", "gradient", "derivative"])?;
+
+        let mut interval_builder = IntervalsBuilder::new();
+        if let Some(intervals) = intervals {
+            if let Some(level) = intervals.confidence {
+                interval_builder = interval_builder.confidence(level);
+            }
+            if let Some(level) = intervals.prediction {
+                interval_builder = interval_builder.prediction(level);
+            }
+        }
+        let mut builder = Predict::new()
+            .intervals(interval_builder)
+            .extrapolation(extrapolation.as_deref().unwrap_or("clamp"));
+        if let Some(outputs) = outputs {
+            builder = builder.outputs(outputs);
+        }
+        if let Some(distance) = max_extrapolation_distance {
+            builder = builder.max_extrapolation_distance(distance);
+        }
+        if let Some(distance) = max_neighbor_distance {
+            builder = builder.max_neighbor_distance(distance);
+        }
+        let query = map_invalid_arg(builder.build())?;
+        let output = map_invalid_arg(self.inner.predict_window(new_x.as_ref(), &query))?;
+        Ok(PredictOutput { inner: output })
     }
 }

@@ -156,3 +156,5 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Initial release.
+
+* Added case-weighted Streaming chunks and Online point updates, plus on-demand diagnostics and prediction from the current Online window.

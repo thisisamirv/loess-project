@@ -183,6 +183,22 @@ typedef struct fastloess_GoOnlineOutput {
   char *error;
 } fastloess_GoOnlineOutput;
 
+/**
+ * Window-level Online diagnostics. Optional metrics use NaN; has_value is 0
+ * until the window reaches min_points.
+ */
+typedef struct fastloess_GoOnlineDiagnostics {
+  int has_value;
+  double rmse;
+  double mae;
+  double r_squared;
+  double aic;
+  double aicc;
+  double effective_df;
+  double residual_sd;
+  char *error;
+} fastloess_GoOnlineDiagnostics;
+
 const char *go_last_error_message(void);
 
 /**
@@ -341,6 +357,21 @@ struct fastloess_GoLoessResult go_streaming_process(struct fastloess_GoStreaming
                                                     size_t y_n);
 
 /**
+ * Process a chunk with one case weight per observation.
+ *
+ * # Safety
+ * `ptr` must be valid. Each non-empty input pointer must point to its respective length of
+ * initialized values.
+ */
+struct fastloess_GoLoessResult go_streaming_process_weighted(struct fastloess_GoStreamingLoess *ptr,
+                                                             const double *x_values,
+                                                             size_t x_n,
+                                                             const double *y_values,
+                                                             size_t y_n,
+                                                             const double *weights,
+                                                             size_t weights_n);
+
+/**
  * Finalize the streaming process.
  *
  * # Safety
@@ -400,6 +431,17 @@ struct fastloess_GoOnlineOutput go_online_add_point(struct fastloess_GoOnlineLoe
                                                     double y);
 
 /**
+ * Add a scalar point with a finite, non-negative case weight.
+ *
+ * # Safety
+ * `ptr` must be a valid `GoOnlineLoess` pointer.
+ */
+struct fastloess_GoOnlineOutput go_online_add_point_weighted(struct fastloess_GoOnlineLoess *ptr,
+                                                             double x,
+                                                             double y,
+                                                             double weight);
+
+/**
  * Add a point with one coordinate per configured predictor dimension.
  *
  * # Safety
@@ -410,6 +452,53 @@ struct fastloess_GoOnlineOutput go_online_add_point_vector(struct fastloess_GoOn
                                                            const double *x_values,
                                                            size_t x_n,
                                                            double y);
+
+/**
+ * Add a coordinate vector with a finite, non-negative case weight.
+ *
+ * # Safety
+ * `ptr` must be valid. If `x_n` is nonzero, `x_values` must point to `x_n`
+ * initialized values.
+ */
+struct fastloess_GoOnlineOutput go_online_add_point_vector_weighted(struct fastloess_GoOnlineLoess *ptr,
+                                                                    const double *x_values,
+                                                                    size_t x_n,
+                                                                    double y,
+                                                                    double weight);
+
+/**
+ * Compute diagnostics for the current Online window.
+ *
+ * # Safety
+ * `ptr` must be a valid `GoOnlineLoess` pointer.
+ */
+struct fastloess_GoOnlineDiagnostics go_online_window_diagnostics(struct fastloess_GoOnlineLoess *ptr);
+
+/**
+ * Free an Online diagnostics error message, if present.
+ *
+ * # Safety
+ * `diagnostics` must point to a GoOnlineDiagnostics returned by this crate.
+ */
+void go_online_free_diagnostics(struct fastloess_GoOnlineDiagnostics *diagnostics);
+
+/**
+ * Predict query points using the current Online window.
+ *
+ * # Safety
+ * `ptr` must be valid. `new_x` must point to `new_x_len` initialized values;
+ * `extrapolation` must be a valid C string or null.
+ */
+struct fastloess_GoPredictResult go_online_predict_window(struct fastloess_GoOnlineLoess *ptr,
+                                                          const double *new_x,
+                                                          size_t new_x_len,
+                                                          int return_se,
+                                                          double confidence_level,
+                                                          double prediction_level,
+                                                          int return_derivative,
+                                                          const char *extrapolation,
+                                                          double max_extrapolation_distance,
+                                                          double max_neighbor_distance);
 
 /**
  * Free the error field in a GoOnlineOutput (call only when error != NULL).

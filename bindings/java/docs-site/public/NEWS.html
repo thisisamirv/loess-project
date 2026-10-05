@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Changelog :: fastloess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/NEWS.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="./_/css/site.css">
   </head>
   <body class="article">
@@ -205,6 +205,12 @@
 <div class="ulist">
 <ul>
 <li>
+<p>Added case-weighted Streaming chunks and Online points, plus Online window diagnostics and prediction.</p>
+</li>
+<li>
+<p>Added <code>OnlineLoess.addPoint(double[], double)</code> for multivariate Online point updates while retaining the scalar overload.</p>
+</li>
+<li>
 <p>Added an Alternative Software guide with runnable Gaussian and robust comparisons to R&#8217;s <code>stats::loess()</code> and a LOESS feature matrix.</p>
 </li>
 <li>
@@ -230,12 +236,51 @@
 </div>
 <div class="sect2">
 <h3 id="changed"><a class="anchor" href="#changed"></a>Changed</h3>
-
+<div class="ulist">
+<ul>
+<li>
+<p>Breaking change: replaced individual <code>return&#8230;&#8203;</code> output setters and prediction flags with <code>outputs(&#8230;&#8203;)</code> for Batch, Streaming, Online, and prediction options.</p>
+</li>
+<li>
+<p>Breaking change: replaced flat interval setters and prediction levels with <code>intervals(IntervalsOptions)</code>; CV uses only <code>cv(CVOptions)</code> with an outer <code>seed(long)</code>, replacing flat CV setters and <code>CVOptions.Builder.seed</code>.</p>
+</li>
+</ul>
+</div>
 </div>
 <div class="sect2">
 <h3 id="fixed"><a class="anchor" href="#fixed"></a>Fixed</h3>
 <div class="ulist">
 <ul>
+<li>
+<p>Reject negative CV seeds before native model allocation and defensively copy weighted-metric arrays in immutable options.</p>
+</li>
+<li>
+<p>Propagate JNI array length/read failures, preserve explicit empty arrays for validation, and defer retained prediction-handle ownership until Java result construction succeeds. Validate iterations and k-fold counts instead of casting/coercing invalid values, and synchronize operations that share mutable native handles.</p>
+</li>
+<li>
+<p>Reject empty CV fractions and custom-weight arrays, and complete Online/Streaming builder Javadoc summaries. The <code>maven-javadoc-plugin</code> already uses <code>failOnWarnings</code>; no POM change was needed. Java GPU installer validation has no LOESS counterpart.</p>
+</li>
+<li>
+<p>Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.</p>
+</li>
+<li>
+<p>Preserve case weights through sorted CV training subsets and multidimensional predictions. Serial and parallel CV now agree on seeded folds and held-out LOOCV predictions; K-fold counts above the retained observation count are rejected.</p>
+</li>
+<li>
+<p>Reject non-positive or non-finite Streaming/Online auto-convergence tolerances. Online auto-convergence requires full updates with robustness iterations.</p>
+</li>
+<li>
+<p>Include all observations for Gaussian smoothing and prediction while preserving the k-th-neighbor bandwidth; use the true exponential without an artificial tail floor.</p>
+</li>
+<li>
+<p>Correct case-weighted standard errors for direct, unpadded one-dimensional linear fits and retained prediction, with matching serial/parallel local moments. Span-one fits no longer substitute a kernel-free global OLS formula.</p>
+</li>
+<li>
+<p>Honor configured zero-weight fallback policies in constant-degree, zero-bandwidth, insufficient-neighbor, and coefficient-fit paths.</p>
+</li>
+<li>
+<p>Match R LOESS&#8217;s even-sample bisquare MAR scale arithmetic, including extremely small residuals, while preserving the centered-MAD fallback.</p>
+</li>
 <li>
 <p>Aligned <code>OnlineLoess</code> defaults across the Rust core and bindings: <code>iterations</code> is now <code>0</code> with the default <code>update_mode = "incremental"</code>; positive robustness iterations require <code>update_mode = "full"</code>.</p>
 </li>

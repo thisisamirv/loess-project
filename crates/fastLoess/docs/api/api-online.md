@@ -32,6 +32,8 @@ fn main() -> Result<(), LoessError> {
 
 Adds a single point `(x, y)` to the window. `x` is a slice of predictor values (one per dimension). Returns `Result<Option<OnlineOutput<T>>, LoessError>`.
 
+`add_point_weighted(x, y, weight)` accepts a finite non-negative case weight; `add_point` uses weight `1`. `window_diagnostics()` computes full-window metrics on demand. `predict_window(new_x, options)` fits the current bounded window and predicts query points without retaining older observations.
+
 ```rust
 use fastLoess::prelude::*;
 use std::f64::consts::TAU;
@@ -314,4 +316,4 @@ Returned inside `Ok(Some(...))` by `add_point()`. `None` while the window is sti
 | `iterations_used` | `Option<usize>` | Robustness iterations performed |
 | `gradient` | `Option<Vec<T>>` | Local fit gradient (`dimensions` values) for the latest point, if `return_gradient` was set |
 
-There is no `Diagnostics` type or `return_diagnostics` option for `OnlineLoess`: `OnlineOutput` carries no diagnostics field, since diagnostics like RMSE/R² need more than one point's worth of history to be meaningful.
+`OnlineOutput` has no per-point diagnostics field. Call `window_diagnostics()` to compute RMSE, MAE, R-squared, and residual scale for the full current window on demand; it returns `None` until `min_points` have arrived.

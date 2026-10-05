@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Cross-Validation :: fastloess (Java)</title>
     <link rel="canonical" href="https://thisisamirv.github.io/loess-project/java/guide/cross-validation.html">
-    <meta name="generator" content="Antora 3.2.0">
+    <meta name="generator" content="Antora 3.2.1">
     <link rel="stylesheet" href="../_/css/site.css">
   </head>
   <body class="article">
@@ -283,8 +283,7 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("loocv")
-                .cvFractions(new double[] { 0.2, 0.3, 0.5, 0.7 })
+                .cv(fastloess.CVOptions.builder().method("loocv").fractions(new double[] { 0.2, 0.3, 0.5, 0.7 }).build())
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -326,10 +325,8 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("kfold")
-                .cvK(5)
-                .cvFractions(new double[] { 0.3, 0.5, 0.7 })
-                .cvSeed(42L)
+                .cv(fastloess.CVOptions.builder().method("kfold").k(5).fractions(new double[] { 0.3, 0.5, 0.7 }).build())
+                .seed(42L)
                 .build();
 
         try (Loess model = new Loess(options)) {
@@ -446,9 +443,7 @@ public class Example {
         }
 
         Options options = Options.builder()
-                .cvMethod("kfold")
-                .cvK(5)
-                .cvFractions(new double[] { 0.1, 0.3, 0.5, 0.7 })
+                .cv(fastloess.CVOptions.builder().method("kfold").k(5).fractions(new double[] { 0.1, 0.3, 0.5, 0.7 }).build())
                 .build();
 
         // Fraction  | CV Score (MSE)

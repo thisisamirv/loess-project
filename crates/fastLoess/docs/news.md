@@ -86,3 +86,5 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Initial release with parallel execution support.
+
+* Forward weighted chunk/point updates, Online window diagnostics, and current-window prediction through the parallel adapter facade.

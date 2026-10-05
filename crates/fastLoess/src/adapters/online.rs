@@ -15,8 +15,11 @@ use std::result::Result;
 
 // Export dependencies from loess-rs crate
 use crate::adapters::apply_weighted_metric_weights;
+use loess_rs::PredictOutput;
 use loess_rs::internals::adapters::online::{OnlineLoessBuilder, OnlineOutput};
 use loess_rs::internals::algorithms::regression::specialized::SolverLinalg;
+use loess_rs::internals::engine::executor::PredictQuery;
+use loess_rs::internals::evaluation::diagnostics::Diagnostics;
 use loess_rs::internals::math::distance::DistanceLinalg;
 use loess_rs::internals::math::linalg::FloatLinalg;
 use loess_rs::internals::primitives::errors::LoessError;
@@ -92,6 +95,30 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Float + Debug + Send + Syn
     // Add a new point and get its smoothed value.
     pub fn add_point(&mut self, x: &[T], y: T) -> Result<Option<OnlineOutput<T>>, LoessError> {
         self.processor.add_point(x, y)
+    }
+
+    /// Add a point with an observation weight.
+    pub fn add_point_weighted(
+        &mut self,
+        x: &[T],
+        y: T,
+        weight: T,
+    ) -> Result<Option<OnlineOutput<T>>, LoessError> {
+        self.processor.add_point_weighted(x, y, weight)
+    }
+
+    /// Compute diagnostics for the current sliding window on demand.
+    pub fn window_diagnostics(&self) -> Result<Option<Diagnostics<T>>, LoessError> {
+        self.processor.window_diagnostics()
+    }
+
+    /// Predict query points using the current sliding window.
+    pub fn predict_window(
+        &self,
+        new_x: &[T],
+        options: &PredictQuery<T>,
+    ) -> Result<PredictOutput<T>, LoessError> {
+        self.processor.predict_window(new_x, options)
     }
 
     // Get the current window size.

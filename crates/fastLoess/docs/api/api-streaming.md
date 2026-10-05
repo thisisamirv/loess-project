@@ -30,6 +30,8 @@ fn main() -> Result<(), LoessError> {
 
 Processes a chunk of data. Returns `LoessResult<T>` with partial results.
 
+`process_chunk_weighted(x, y, weights)` accepts one finite non-negative case weight per observation and preserves weights through overlap refits.
+
 ```rust
 use fastLoess::prelude::*;
 use std::f64::consts::TAU;
@@ -335,11 +337,11 @@ Returned by `process_chunk()` and `finalize()`.
 | `y` | `Vec<T>` | Smoothed y values |
 | `fraction_used` | `T` | Fraction used |
 | `iterations_used` | `Option<usize>` | Robustness iterations actually performed |
-| `standard_errors` | `Option<Vec<T>>` | Always `None` (Batch only) |
-| `confidence_lower` | `Option<Vec<T>>` | Always `None` (Batch only) |
-| `confidence_upper` | `Option<Vec<T>>` | Always `None` (Batch only) |
-| `prediction_lower` | `Option<Vec<T>>` | Always `None` (Batch only) |
-| `prediction_upper` | `Option<Vec<T>>` | Always `None` (Batch only) |
+| `standard_errors` | `Option<Vec<T>>` | Standard errors when requested with intervals or bootstrap |
+| `confidence_lower` | `Option<Vec<T>>` | Confidence bounds when requested; overlap values are merged |
+| `confidence_upper` | `Option<Vec<T>>` | Confidence bounds when requested; overlap values are merged |
+| `prediction_lower` | `Option<Vec<T>>` | Prediction bounds when requested; overlap values are merged |
+| `prediction_upper` | `Option<Vec<T>>` | Prediction bounds when requested; overlap values are merged |
 | `residuals` | `Option<Vec<T>>` | Residuals (if `return_residuals()`) |
 | `robustness_weights` | `Option<Vec<T>>` | Robustness weights (if `return_robustness_weights()`) |
 | `cv_scores` | `Option<Vec<T>>` | Always `None` (Batch only) |

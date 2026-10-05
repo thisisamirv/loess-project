@@ -24,7 +24,7 @@ use core::fmt::Debug;
 
 use crate::algorithms::regression::context::RegressionContext;
 use crate::algorithms::regression::specialized::SolverLinalg;
-use crate::engine::executor::{LoessDistanceCalculator, LoessResult};
+use crate::engine::executor::{LoessDistanceCalculator, LoessResult, PredictOutput};
 use crate::evaluation::intervals::{BootstrapConfig, IntervalMethod, IntervalsBuilder};
 use crate::math::distance::DistanceLinalg;
 use crate::math::linalg::FloatLinalg;
@@ -273,28 +273,6 @@ impl<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync> Predi
     }
 }
 
-// Result of a `Predict::call()` invocation.
-
-#[derive(Debug, Clone)]
-pub struct PredictOutput<T> {
-    // Predicted y-values, one per query point in `new_x`.
-    pub y: Vec<T>,
-
-    // Standard errors, if `return_se`/`confidence_intervals`/`prediction_intervals` was requested.
-    pub standard_errors: Option<Vec<T>>,
-
-    // Confidence interval bounds for the mean response, if `confidence_intervals` was set.
-    pub confidence_lower: Option<Vec<T>>,
-    pub confidence_upper: Option<Vec<T>>,
-
-    // Prediction interval bounds for a new observation, if `prediction_intervals` was set.
-    pub prediction_lower: Option<Vec<T>>,
-    pub prediction_upper: Option<Vec<T>>,
-
-    // Local fit's gradient at each query point, if `return_derivative` was set
-    // (`dimensions` values per query point, flattened like `new_x`).
-    pub derivative: Option<Vec<T>>,
-}
 // Per-point predict results before shared confidence/prediction interval math is applied:
 // `(y, optional flattened gradient, optional standard error)`.
 

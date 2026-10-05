@@ -15,6 +15,7 @@ use ::fastLoess::internals::binding_support as shared_parse;
 
 use ::fastLoess::prelude::{IntervalsBuilder, LoessResult};
 use fastLoess::internals::api::LoessBuilder;
+use fastLoess::prelude::Predict;
 
 // ============================================================================
 // Helper Functions
@@ -644,25 +645,32 @@ impl PyStreamingLoess {
     }
 
     /// Process a chunk of data.
+    #[pyo3(signature = (x, y, custom_weights=None))]
     fn process_chunk<'py>(
         &self,
         py: Python<'py>,
         x: &Bound<'py, PyAny>,
         y: &Bound<'py, PyAny>,
+        custom_weights: Option<&Bound<'py, PyAny>>,
     ) -> PyResult<PyLoessResult> {
         let x_vec = array_like_to_vec(py, x)?;
         let y_vec = array_like_to_vec(py, y)?;
+        let weights_vec = custom_weights
+            .map(|weights| array_like_to_vec(py, weights))
+            .transpose()?;
 
         let result = py.detach(move || {
-            self.inner
-                .lock()
-                .map_err(|e| {
-                    to_py_error(shared_parse::BindingError::runtime(
-                        shared_parse::mutex_poisoned_message(&e.to_string()),
-                    ))
-                })?
-                .process_chunk(&x_vec, &y_vec)
-                .map_err(|e| to_py_error(shared_parse::BindingError::runtime(e.to_string())))
+            let mut inner = self.inner.lock().map_err(|e| {
+                to_py_error(shared_parse::BindingError::runtime(
+                    shared_parse::mutex_poisoned_message(&e.to_string()),
+                ))
+            })?;
+            let result = if let Some(weights) = weights_vec.as_deref() {
+                inner.process_chunk_weighted(&x_vec, &y_vec, weights)
+            } else {
+                inner.process_chunk(&x_vec, &y_vec)
+            };
+            result.map_err(|e| to_py_error(shared_parse::BindingError::runtime(e.to_string())))
         })?;
 
         Ok(PyLoessResult { inner: result })
@@ -852,11 +860,13 @@ impl PyOnlineLoess {
     }
 
     /// Add a point using a scalar x for 1D or a coordinate vector for multivariate input.
+    #[pyo3(signature = (x, y, weight=1.0))]
     fn add_point<'py>(
         &self,
         py: Python<'py>,
         x: &Bound<'py, PyAny>,
         y: f64,
+        weight: f64,
     ) -> PyResult<Option<PyOnlineOutput>> {
         let x_vec = online_coordinate_to_vec(py, x)?;
         if x_vec.len() != self.dimensions {
@@ -874,7 +884,7 @@ impl PyOnlineLoess {
                 ))
             })?;
             inner
-                .add_point(&x_vec, y)
+                .add_point_weighted(&x_vec, y, weight)
                 .map_err(|e| to_py_error(shared_parse::BindingError::invalid_arg(e.to_string())))
         })?;
         Ok(output.map(|o| PyOnlineOutput {
@@ -889,6 +899,81 @@ impl PyOnlineLoess {
             prediction_upper: o.prediction_upper,
             gradient: o.gradient,
         }))
+    }
+
+    /// Compute diagnostics for the current sliding window on demand.
+    fn window_diagnostics(&self, py: Python<'_>) -> PyResult<Option<PyDiagnostics>> {
+        let diagnostics = py.detach(|| {
+            self.inner
+                .lock()
+                .map_err(|e| {
+                    to_py_error(shared_parse::BindingError::runtime(
+                        shared_parse::mutex_poisoned_message(&e.to_string()),
+                    ))
+                })?
+                .window_diagnostics()
+                .map_err(|e| to_py_error(shared_parse::BindingError::runtime(e.to_string())))
+        })?;
+        Ok(diagnostics.map(|d| PyDiagnostics {
+            rmse: d.rmse,
+            mae: d.mae,
+            r_squared: d.r_squared,
+            aic: d.aic,
+            aicc: d.aicc,
+            effective_df: d.effective_df,
+            residual_sd: d.residual_sd,
+        }))
+    }
+
+    /// Predict query points using a fitted model of the current sliding window.
+    #[pyo3(signature = (
+        new_x,
+        *,
+        outputs=None,
+        intervals=None,
+        extrapolation="clamp",
+        max_extrapolation_distance=None,
+        max_neighbor_distance=None,
+    ))]
+    #[allow(clippy::too_many_arguments)]
+    fn predict_window<'py>(
+        &self,
+        py: Python<'py>,
+        new_x: &Bound<'py, PyAny>,
+        outputs: Option<Vec<String>>,
+        intervals: Option<&Bound<'_, PyDict>>,
+        extrapolation: &str,
+        max_extrapolation_distance: Option<f64>,
+        max_neighbor_distance: Option<f64>,
+    ) -> PyResult<PyPredictOutput> {
+        validate_outputs(outputs.as_ref(), &["se", "gradient", "derivative"])?;
+        let intervals = parse_intervals(intervals)?;
+        let new_x_vec = array_like_to_vec(py, new_x)?;
+        let mut builder = Predict::new()
+            .intervals(intervals.builder())
+            .extrapolation(extrapolation);
+        if let Some(names) = outputs.as_ref() {
+            builder = builder.outputs(names.iter().map(String::as_str));
+        }
+        if let Some(distance) = max_extrapolation_distance {
+            builder = builder.max_extrapolation_distance(distance);
+        }
+        if let Some(distance) = max_neighbor_distance {
+            builder = builder.max_neighbor_distance(distance);
+        }
+        let options = builder.build().map_err(to_py_invalid_arg_error)?;
+        let output = py.detach(move || {
+            self.inner
+                .lock()
+                .map_err(|e| {
+                    to_py_error(shared_parse::BindingError::runtime(
+                        shared_parse::mutex_poisoned_message(&e.to_string()),
+                    ))
+                })?
+                .predict_window(&new_x_vec, &options)
+                .map_err(|e| to_py_error(shared_parse::BindingError::invalid_arg(e.to_string())))
+        })?;
+        Ok(PyPredictOutput { inner: output })
     }
 }
 

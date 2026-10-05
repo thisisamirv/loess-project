@@ -73,6 +73,10 @@ constexpr size_t k_weighted_grid_side = 4;
 constexpr double k_weighted_response_column_scale = 7.0;
 constexpr double k_weighted_metric_column_weight = 100.0;
 constexpr double k_online_multidimensional_expected_y = 3.0;
+constexpr size_t k_weighted_outlier_index = 5;
+constexpr double k_weighted_outlier_response = 100.0;
+constexpr double k_weighted_query_x = 5.0;
+constexpr double k_weighted_expected_prediction_y = 11.0;
 
 // ── Test fixture data ──────────────────────────────────────────────────────
 // Constexpr arrays: literals in constexpr initializers are not magic numbers.
@@ -592,6 +596,75 @@ void testOnlineMultidimensionalInput() {
     return;
   }
   assertApprox(last->y(), k_online_multidimensional_expected_y, k_epsilon_1e6);
+}
+
+void testWeightedAdaptersAndOnlineWindowApis() {
+  std::vector<double> predictor_values(k_window_capacity);
+  std::vector<double> response_values(k_window_capacity);
+  std::vector<double> case_weights(k_window_capacity, 1.0);
+  for (size_t idx = 0; idx < predictor_values.size(); ++idx) {
+    predictor_values[idx] = static_cast<double>(idx);
+    response_values[idx] =
+        (k_linear_slope * predictor_values[idx]) + k_linear_intercept;
+  }
+  response_values[k_weighted_outlier_index] = k_weighted_outlier_response;
+  case_weights[k_weighted_outlier_index] = 0.0;
+
+  StreamingOptions streaming_options;
+  streaming_options.fraction = 1.0;
+  streaming_options.iterations = 0;
+  streaming_options.chunk_size = k_window_capacity;
+  streaming_options.overlap = 0;
+  streaming_options.surface_mode = "direct";
+  StreamingLoess weighted_stream(streaming_options);
+  StreamingLoess plain_stream(streaming_options);
+  auto weighted_chunk = weighted_stream
+                            .process_chunk_weighted(
+                                predictor_values, response_values, case_weights)
+                            .value();
+  auto plain_chunk =
+      plain_stream.process_chunk(predictor_values, response_values).value();
+  assertTrue(std::abs(weighted_chunk.y_vector()[k_weighted_outlier_index] -
+                      k_weighted_expected_prediction_y) <
+             std::abs(plain_chunk.y_vector()[k_weighted_outlier_index] -
+                      k_weighted_expected_prediction_y));
+
+  OnlineOptions online_options;
+  online_options.fraction = 1.0;
+  online_options.iterations = 0;
+  online_options.window_capacity = k_window_capacity;
+  online_options.min_points = k_window_capacity;
+  online_options.update_mode = "full";
+  online_options.surface_mode = "direct";
+  OnlineLoess weighted_online(online_options);
+  OnlineLoess plain_online(online_options);
+  for (size_t idx = 0; idx < predictor_values.size(); ++idx) {
+    weighted_online
+        .add_point(predictor_values[idx], response_values[idx],
+                   case_weights[idx])
+        .value();
+    plain_online.add_point(predictor_values[idx], response_values[idx]).value();
+  }
+  assertTrue(
+      !weighted_online
+           .add_point(k_domain_end_ten,
+                      (k_linear_slope * k_domain_end_ten) + k_linear_intercept,
+                      -1.0)
+           .has_value());
+
+  auto diagnostics = weighted_online.window_diagnostics().value();
+  assertTrue(diagnostics.has_value());
+  assertTrue(diagnostics->rmse().has_value());
+  PredictOptions predict_options;
+  auto weighted_prediction =
+      weighted_online.predict_window({k_weighted_query_x}, predict_options)
+          .value();
+  auto plain_prediction =
+      plain_online.predict_window({k_weighted_query_x}, predict_options)
+          .value();
+  assertTrue(
+      std::abs(weighted_prediction.y()[0] - k_weighted_expected_prediction_y) <
+      std::abs(plain_prediction.y()[0] - k_weighted_expected_prediction_y));
 }
 
 void testOnlineReturnSeRequiresFullUpdateMode() {
@@ -1202,6 +1275,7 @@ int main() {
 
     testOnlineBasic();
     testOnlineMultidimensionalInput();
+    testWeightedAdaptersAndOnlineWindowApis();
     testOnlineReturnSeRequiresFullUpdateMode();
     testOnlineConfidenceAndPredictionIntervalsFullMode();
 

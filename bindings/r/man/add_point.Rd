@@ -7,16 +7,19 @@
 \usage{
 add_point(model, ...)
 
-\method{add_point}{OnlineLoess}(model, x, y, ...)
+\method{add_point}{OnlineLoess}(model, x, y, weight = 1, ...)
 }
 \arguments{
 \item{model}{An \code{OnlineLoess} object.}
 
 \item{...}{Must be empty.}
 
-\item{x}{A single numeric x value.}
+\item{x}{A numeric coordinate vector with one value per configured
+dimension. For one-dimensional models, a scalar is also accepted.}
 
 \item{y}{A single numeric y value.}
+
+\item{weight}{Finite non-negative case weight for this observation; defaults to 1.}
 }
 \value{
 An online result list, or \code{NULL} if fewer than

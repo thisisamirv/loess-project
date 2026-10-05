@@ -635,6 +635,7 @@ pub mod prelude {
         CVBuilder, IntervalsBuilder, Loess, LoessError, LoessResult, OnlineLoess, Predict,
         StreamingLoess,
     };
+    pub use loess_rs::PredictOutput;
 }
 
 // Internal modules for development and testing.

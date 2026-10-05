@@ -33,6 +33,17 @@ public record Diagnostics(
                 r.residualSd);
     }
 
+    static Diagnostics fromWindow(double[] values) {
+        return new Diagnostics(
+                values[0],
+                values[1],
+                values[2],
+                optionalDouble(values[3]),
+                optionalDouble(values[4]),
+                optionalDouble(values[5]),
+                values[6]);
+    }
+
     private static Optional<Double> optionalDouble(double value) {
         return Double.isNaN(value) ? Optional.empty() : Optional.of(value);
     }

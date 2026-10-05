@@ -223,18 +223,33 @@ func finalizeOnline(o *OnlineLoess) {
 // AddPoint adds a one-dimensional (x, y) observation. Use AddPointVector for
 // multivariate coordinates. ok is false while the window is still filling.
 func (o *OnlineLoess) AddPoint(x, y float64) (PointResult, bool, error) {
-	return o.AddPointVector([]float64{x}, y)
+	return o.AddPointWeighted(x, y, 1.0)
+}
+
+// AddPointWeighted adds a scalar observation with a finite, non-negative case weight.
+func (o *OnlineLoess) AddPointWeighted(x, y, weight float64) (PointResult, bool, error) {
+	return o.addPointVectorWeighted([]float64{x}, y, weight)
 }
 
 // AddPointVector adds one observation with one x coordinate per configured
 // predictor dimension. ok is false while the window is still filling.
 func (o *OnlineLoess) AddPointVector(x []float64, y float64) (res PointResult, ok bool, err error) {
+	return o.AddPointVectorWeighted(x, y, 1.0)
+}
+
+// AddPointVectorWeighted adds one coordinate vector and case weight. ok is
+// false while the window is still filling.
+func (o *OnlineLoess) AddPointVectorWeighted(x []float64, y, weight float64) (res PointResult, ok bool, err error) {
+	return o.addPointVectorWeighted(x, y, weight)
+}
+
+func (o *OnlineLoess) addPointVectorWeighted(x []float64, y, weight float64) (res PointResult, ok bool, err error) {
 	if o == nil || o.ptr == nil {
 		return PointResult{}, false, errors.New("fastloess: AddPoint called on a closed OnlineLoess model")
 	}
 
 	xPtr, xLen := cDoubles(x)
-	cout := C.go_online_add_point_vector(o.ptr, xPtr, xLen, C.double(y))
+	cout := C.go_online_add_point_vector_weighted(o.ptr, xPtr, xLen, C.double(y), C.double(weight))
 	runtime.KeepAlive(o)
 	runtime.KeepAlive(x)
 	if cout.error != nil {
@@ -260,6 +275,84 @@ func (o *OnlineLoess) AddPointVector(x []float64, y float64) (res PointResult, o
 	}
 	C.go_online_free_output(&cout)
 	return res, true, nil
+}
+
+// WindowDiagnostics computes fit diagnostics for the current sliding window.
+// It returns nil, nil until the window reaches MinPoints.
+func (o *OnlineLoess) WindowDiagnostics() (*Diagnostics, error) {
+	if o == nil || o.ptr == nil {
+		return nil, errors.New("fastloess: WindowDiagnostics called on a closed OnlineLoess model")
+	}
+	result := C.go_online_window_diagnostics(o.ptr)
+	runtime.KeepAlive(o)
+	if result.error != nil {
+		msg := C.GoString(result.error)
+		C.go_online_free_diagnostics(&result)
+		return nil, errors.New(msg)
+	}
+	defer C.go_online_free_diagnostics(&result)
+	if result.has_value == 0 {
+		return nil, nil
+	}
+	return &Diagnostics{
+		RMSE:        cDoubleOptional(result.rmse),
+		MAE:         cDoubleOptional(result.mae),
+		RSquared:    cDoubleOptional(result.r_squared),
+		AIC:         cDoubleOptional(result.aic),
+		AICc:        cDoubleOptional(result.aicc),
+		EffectiveDF: cDoubleOptional(result.effective_df),
+		ResidualSD:  cDoubleOptional(result.residual_sd),
+	}, nil
+}
+
+// PredictWindow evaluates query points using a full fit of the current window.
+func (o *OnlineLoess) PredictWindow(newX []float64, opts PredictOptions) (PredictResult, error) {
+	if err := validateOutputs(opts.Outputs, "prediction", "se", "gradient", "derivative"); err != nil {
+		return PredictResult{}, err
+	}
+	if o == nil || o.ptr == nil {
+		return PredictResult{}, errors.New("fastloess: PredictWindow called on a closed OnlineLoess model")
+	}
+	if len(newX) == 0 {
+		return PredictResult{}, errors.New("fastloess: newX must be non-empty")
+	}
+	extrapolation := cStringOrNil(opts.Extrapolation)
+	defer freeCString(extrapolation)
+	confidence, confidenceSet, prediction, predictionSet := intervalLevels(opts.Intervals)
+	maxExtrapolation, maxExtrapolationSet := optPtr(opts.MaxExtrapolationDistance)
+	maxNeighbor, maxNeighborSet := optPtr(opts.MaxNeighborDistance)
+	newXPtr, newXLen := cDoubles(newX)
+	result := C.go_online_predict_window(
+		o.ptr,
+		newXPtr,
+		newXLen,
+		boolToCInt(hasOutput(opts.Outputs, "se")),
+		optFloat(confidence, confidenceSet),
+		optFloat(prediction, predictionSet),
+		boolToCInt(hasOutput(opts.Outputs, "gradient") || hasOutput(opts.Outputs, "derivative")),
+		extrapolation,
+		optFloat(maxExtrapolation, maxExtrapolationSet),
+		optFloat(maxNeighbor, maxNeighborSet),
+	)
+	runtime.KeepAlive(o)
+	runtime.KeepAlive(newX)
+	if result.error != nil {
+		msg := C.GoString(result.error)
+		C.go_predict_free_result(&result)
+		return PredictResult{}, errors.New(msg)
+	}
+	defer C.go_predict_free_result(&result)
+	n := int(result.n)
+	dimensions := int(result.dimensions)
+	return PredictResult{
+		Y:               cDoubleSliceToGo(result.y, n),
+		StandardErrors:  cDoubleSliceToGo(result.standard_errors, n),
+		ConfidenceLower: cDoubleSliceToGo(result.confidence_lower, n),
+		ConfidenceUpper: cDoubleSliceToGo(result.confidence_upper, n),
+		PredictionLower: cDoubleSliceToGo(result.prediction_lower, n),
+		PredictionUpper: cDoubleSliceToGo(result.prediction_upper, n),
+		Derivative:      cDoubleSliceToGo(result.derivative, n*dimensions),
+	}, nil
 }
 
 // Close releases the native resources held by this model. Safe to call

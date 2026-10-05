@@ -18,7 +18,7 @@ use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use fastLoess::internals::api::LoessBuilder;
 use fastLoess::internals::binding_support as shared_parse;
-use fastLoess::prelude::LoessResult;
+use fastLoess::prelude::{IntervalsBuilder, LoessResult, Predict};
 
 thread_local! {
     #[allow(clippy::missing_const_for_thread_local)]
@@ -124,6 +124,35 @@ pub struct CppOnlineOutput {
     pub gradient: *mut c_double,
     pub gradient_len: usize,
     pub error: *mut c_char, // NULL if no error
+}
+
+#[repr(C)]
+pub struct CppOnlineDiagnostics {
+    pub has_value: c_int,
+    pub rmse: c_double,
+    pub mae: c_double,
+    pub r_squared: c_double,
+    pub aic: c_double,
+    pub aicc: c_double,
+    pub effective_df: c_double,
+    pub residual_sd: c_double,
+    pub error: *mut c_char,
+}
+
+impl Default for CppOnlineDiagnostics {
+    fn default() -> Self {
+        Self {
+            has_value: 0,
+            rmse: f64::NAN,
+            mae: f64::NAN,
+            r_squared: f64::NAN,
+            aic: f64::NAN,
+            aicc: f64::NAN,
+            effective_df: f64::NAN,
+            residual_sd: f64::NAN,
+            error: ptr::null_mut(),
+        }
+    }
 }
 
 // Result struct that can be passed across FFI boundary.
@@ -322,6 +351,7 @@ pub struct CppStreamingLoess {
 // Opaque handle to an online Loess model.
 pub struct CppOnlineLoess {
     model: Option<ParallelOnlineLoess<f64>>,
+    dimensions: usize,
 }
 
 // Opaque handle retained by `cpp_loess_fit` (in `CppLoessResult::predict_handle`, if
@@ -1137,6 +1167,37 @@ pub unsafe extern "C" fn cpp_streaming_process(
     })
 }
 
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_streaming_process_weighted(
+    ptr: *mut CppStreamingLoess,
+    x_values: *const c_double,
+    x_n: usize,
+    y_values: *const c_double,
+    y_n: usize,
+    weights: *const c_double,
+    weights_n: usize,
+) -> CppLoessResult {
+    with_panic_result(|| {
+        if ptr.is_null() {
+            return error_result(shared_parse::MODEL_POINTER_IS_NULL);
+        }
+        if x_values.is_null() || y_values.is_null() || weights.is_null() || x_n == 0 || y_n == 0 {
+            return error_result(shared_parse::INVALID_DATA_INPUTS);
+        }
+        let model = unsafe { &mut *ptr };
+        let x = unsafe { from_raw_parts(x_values, x_n) };
+        let y = unsafe { from_raw_parts(y_values, y_n) };
+        let weights = unsafe { from_raw_parts(weights, weights_n) };
+        match &mut model.model {
+            Some(model) => match map_runtime_result(model.process_chunk_weighted(x, y, weights)) {
+                Ok(result) => result.into(),
+                Err(error) => error,
+            },
+            None => error_result(shared_parse::MODEL_NOT_INITIALIZED),
+        }
+    })
+}
+
 /// Finalize the streaming process.
 ///
 /// # Safety
@@ -1322,7 +1383,10 @@ pub unsafe extern "C" fn cpp_online_new(
             Err(e) => return null_with_error(&e.message),
         };
 
-        Box::into_raw(Box::new(CppOnlineLoess { model: Some(model) }))
+        Box::into_raw(Box::new(CppOnlineLoess {
+            model: Some(model),
+            dimensions: configured_dimensions,
+        }))
     })
 }
 
@@ -1337,6 +1401,7 @@ unsafe fn online_add_point_impl(
     ptr: *mut CppOnlineLoess,
     x: &[c_double],
     y: c_double,
+    weight: c_double,
 ) -> CppOnlineOutput {
     if ptr.is_null() {
         return online_error_output(shared_parse::MODEL_POINTER_IS_NULL);
@@ -1345,7 +1410,7 @@ unsafe fn online_add_point_impl(
     let Some(model) = &mut loess.model else {
         return online_error_output(shared_parse::MODEL_NOT_INITIALIZED);
     };
-    match model.add_point(x, y) {
+    match model.add_point_weighted(x, y, weight) {
         Err(error) => online_error_output(&error.to_string()),
         Ok(None) => CppOnlineOutput::default(),
         Ok(Some(output)) => {
@@ -1396,7 +1461,7 @@ pub unsafe extern "C" fn cpp_online_add_point(
     y: c_double,
 ) -> CppOnlineOutput {
     match catch_unwind(AssertUnwindSafe(|| unsafe {
-        online_add_point_impl(ptr, &[x], y)
+        online_add_point_impl(ptr, &[x], y, 1.0)
     })) {
         Ok(output) => output,
         Err(_) => online_error_output(shared_parse::panic_fallback_message()),
@@ -1420,10 +1485,183 @@ pub unsafe extern "C" fn cpp_online_add_point_nd(
             return online_error_output(shared_parse::INVALID_DATA_INPUTS);
         }
         let x = unsafe { from_raw_parts(x_values, x_n) };
-        unsafe { online_add_point_impl(ptr, x, y) }
+        unsafe { online_add_point_impl(ptr, x, y, 1.0) }
     })) {
         Ok(output) => output,
         Err(_) => online_error_output(shared_parse::panic_fallback_message()),
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_online_add_point_weighted(
+    ptr: *mut CppOnlineLoess,
+    x: c_double,
+    y: c_double,
+    weight: c_double,
+) -> CppOnlineOutput {
+    match catch_unwind(AssertUnwindSafe(|| unsafe {
+        online_add_point_impl(ptr, &[x], y, weight)
+    })) {
+        Ok(output) => output,
+        Err(_) => online_error_output(shared_parse::panic_fallback_message()),
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_online_add_point_nd_weighted(
+    ptr: *mut CppOnlineLoess,
+    x_values: *const c_double,
+    x_n: usize,
+    y: c_double,
+    weight: c_double,
+) -> CppOnlineOutput {
+    match catch_unwind(AssertUnwindSafe(|| {
+        if x_values.is_null() || x_n == 0 {
+            return online_error_output(shared_parse::INVALID_DATA_INPUTS);
+        }
+        let x = unsafe { from_raw_parts(x_values, x_n) };
+        unsafe { online_add_point_impl(ptr, x, y, weight) }
+    })) {
+        Ok(output) => output,
+        Err(_) => online_error_output(shared_parse::panic_fallback_message()),
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_online_window_diagnostics(
+    ptr: *mut CppOnlineLoess,
+) -> CppOnlineDiagnostics {
+    match catch_unwind(AssertUnwindSafe(|| {
+        if ptr.is_null() {
+            return CppOnlineDiagnostics {
+                error: shared_parse::to_cstring_lossy(shared_parse::MODEL_POINTER_IS_NULL)
+                    .into_raw(),
+                ..CppOnlineDiagnostics::default()
+            };
+        }
+        let processor = unsafe { &*ptr };
+        let model = match &processor.model {
+            Some(model) => model,
+            None => {
+                return CppOnlineDiagnostics {
+                    error: shared_parse::to_cstring_lossy(shared_parse::MODEL_NOT_INITIALIZED)
+                        .into_raw(),
+                    ..CppOnlineDiagnostics::default()
+                };
+            }
+        };
+        match model.window_diagnostics() {
+            Ok(None) => CppOnlineDiagnostics::default(),
+            Ok(Some(d)) => CppOnlineDiagnostics {
+                has_value: 1,
+                rmse: d.rmse,
+                mae: d.mae,
+                r_squared: d.r_squared,
+                aic: d.aic.unwrap_or(f64::NAN),
+                aicc: d.aicc.unwrap_or(f64::NAN),
+                effective_df: d.effective_df.unwrap_or(f64::NAN),
+                residual_sd: d.residual_sd,
+                error: ptr::null_mut(),
+            },
+            Err(error) => CppOnlineDiagnostics {
+                error: shared_parse::to_cstring_lossy(&error.to_string()).into_raw(),
+                ..CppOnlineDiagnostics::default()
+            },
+        }
+    })) {
+        Ok(result) => result,
+        Err(_) => CppOnlineDiagnostics {
+            error: shared_parse::to_cstring_lossy(shared_parse::panic_fallback_message())
+                .into_raw(),
+            ..CppOnlineDiagnostics::default()
+        },
+    }
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn cpp_online_free_diagnostics(result: *mut CppOnlineDiagnostics) {
+    with_panic_void(|| {
+        if !result.is_null() {
+            let result = unsafe { &mut *result };
+            shared_parse::free_raw_c_string(result.error);
+            result.error = ptr::null_mut();
+        }
+    });
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::too_many_arguments)]
+pub unsafe extern "C" fn cpp_online_predict_window(
+    ptr: *mut CppOnlineLoess,
+    new_x: *const c_double,
+    new_x_len: usize,
+    return_se: c_int,
+    confidence_level: c_double,
+    prediction_level: c_double,
+    return_derivative: c_int,
+    extrapolation: *const c_char,
+    max_extrapolation_distance: c_double,
+    max_neighbor_distance: c_double,
+) -> CppPredictResult {
+    match catch_unwind(AssertUnwindSafe(|| {
+        if ptr.is_null() {
+            return predict_error_result(shared_parse::MODEL_POINTER_IS_NULL);
+        }
+        if new_x.is_null() || new_x_len == 0 {
+            return predict_error_result(shared_parse::INVALID_DATA_INPUTS);
+        }
+        let model = unsafe { &*ptr };
+        let processor = match &model.model {
+            Some(processor) => processor,
+            None => return predict_error_result(shared_parse::MODEL_NOT_INITIALIZED),
+        };
+        let new_x = unsafe { from_raw_parts(new_x, new_x_len) };
+        let extrapolation = unsafe { shared_parse::parse_c_str_or_default(extrapolation, "clamp") };
+        let mut intervals = IntervalsBuilder::new();
+        if !confidence_level.is_nan() {
+            intervals = intervals.confidence(confidence_level);
+        }
+        if !prediction_level.is_nan() {
+            intervals = intervals.prediction(prediction_level);
+        }
+        let mut builder = Predict::new()
+            .intervals(intervals)
+            .extrapolation(extrapolation);
+        if return_se != 0 {
+            builder = builder.return_se();
+        }
+        if return_derivative != 0 {
+            builder = builder.return_derivative();
+        }
+        if !max_extrapolation_distance.is_nan() {
+            builder = builder.max_extrapolation_distance(max_extrapolation_distance);
+        }
+        if !max_neighbor_distance.is_nan() {
+            builder = builder.max_neighbor_distance(max_neighbor_distance);
+        }
+        let query = match builder.build() {
+            Ok(query) => query,
+            Err(error) => return predict_error_result(&error.to_string()),
+        };
+        let output = match processor.predict_window(new_x, &query) {
+            Ok(output) => output,
+            Err(error) => return predict_error_result(&error.to_string()),
+        };
+        CppPredictResult {
+            n: output.y.len(),
+            y: shared_parse::vec_to_raw_ptr(output.y),
+            standard_errors: shared_parse::opt_vec_to_raw_ptr(output.standard_errors),
+            confidence_lower: shared_parse::opt_vec_to_raw_ptr(output.confidence_lower),
+            confidence_upper: shared_parse::opt_vec_to_raw_ptr(output.confidence_upper),
+            prediction_lower: shared_parse::opt_vec_to_raw_ptr(output.prediction_lower),
+            prediction_upper: shared_parse::opt_vec_to_raw_ptr(output.prediction_upper),
+            derivative: shared_parse::opt_vec_to_raw_ptr(output.derivative),
+            dimensions: model.dimensions as c_int,
+            error: ptr::null_mut(),
+        }
+    })) {
+        Ok(result) => result,
+        Err(_) => predict_error_result(shared_parse::panic_fallback_message()),
     }
 }
 

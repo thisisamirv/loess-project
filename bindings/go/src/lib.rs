@@ -20,7 +20,7 @@ use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use fastLoess::internals::api::LoessBuilder;
 use fastLoess::internals::binding_support as shared_parse;
-use fastLoess::prelude::LoessResult;
+use fastLoess::prelude::{IntervalsBuilder, LoessResult, Predict};
 
 thread_local! {
     #[allow(clippy::missing_const_for_thread_local)]
@@ -125,6 +125,37 @@ pub struct GoOnlineOutput {
     /// Number of predictor dimensions (needed to know `gradient`'s true length)
     pub dimensions: c_int,
     pub error: *mut c_char, // NULL if no error
+}
+
+/// Window-level Online diagnostics. Optional metrics use NaN; has_value is 0
+/// until the window reaches min_points.
+#[repr(C)]
+pub struct GoOnlineDiagnostics {
+    pub has_value: c_int,
+    pub rmse: c_double,
+    pub mae: c_double,
+    pub r_squared: c_double,
+    pub aic: c_double,
+    pub aicc: c_double,
+    pub effective_df: c_double,
+    pub residual_sd: c_double,
+    pub error: *mut c_char,
+}
+
+impl Default for GoOnlineDiagnostics {
+    fn default() -> Self {
+        Self {
+            has_value: 0,
+            rmse: f64::NAN,
+            mae: f64::NAN,
+            r_squared: f64::NAN,
+            aic: f64::NAN,
+            aicc: f64::NAN,
+            effective_df: f64::NAN,
+            residual_sd: f64::NAN,
+            error: ptr::null_mut(),
+        }
+    }
 }
 
 // Result struct that can be passed across FFI boundary.
@@ -920,6 +951,44 @@ pub unsafe extern "C" fn go_streaming_process(
     })
 }
 
+/// Process a chunk with one case weight per observation.
+///
+/// # Safety
+/// `ptr` must be valid. Each non-empty input pointer must point to its respective length of
+/// initialized values.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn go_streaming_process_weighted(
+    ptr: *mut GoStreamingLoess,
+    x_values: *const c_double,
+    x_n: usize,
+    y_values: *const c_double,
+    y_n: usize,
+    weights: *const c_double,
+    weights_n: usize,
+) -> GoLoessResult {
+    with_panic_result(|| {
+        if ptr.is_null() {
+            return error_result(shared_parse::MODEL_POINTER_IS_NULL);
+        }
+        if x_values.is_null() || y_values.is_null() || weights.is_null() || x_n == 0 || y_n == 0 {
+            return error_result(shared_parse::INVALID_DATA_INPUTS);
+        }
+        let x_slice = from_raw_parts(x_values, x_n);
+        let y_slice = from_raw_parts(y_values, y_n);
+        let weights_slice = from_raw_parts(weights, weights_n);
+        let loess = unsafe { &mut *ptr };
+        if let Some(model) = &mut loess.model {
+            match map_runtime_result(model.process_chunk_weighted(x_slice, y_slice, weights_slice))
+            {
+                Ok(result) => result.into(),
+                Err(error) => error,
+            }
+        } else {
+            error_result(shared_parse::MODEL_NOT_INITIALIZED)
+        }
+    })
+}
+
 /// Finalize the streaming process.
 ///
 /// # Safety
@@ -1118,6 +1187,7 @@ fn go_online_add_point_impl(
     ptr: *mut GoOnlineLoess,
     x: &[c_double],
     y: c_double,
+    weight: c_double,
 ) -> GoOnlineOutput {
     match catch_unwind(AssertUnwindSafe(|| {
         if ptr.is_null() {
@@ -1126,7 +1196,7 @@ fn go_online_add_point_impl(
         let loess = unsafe { &mut *ptr };
 
         if let Some(model) = &mut loess.model {
-            match model.add_point(x, y) {
+            match model.add_point_weighted(x, y, weight) {
                 Err(e) => go_online_error_output(&e.to_string()),
                 Ok(None) => GoOnlineOutput::default(),
                 Ok(Some(o)) => {
@@ -1176,7 +1246,21 @@ pub unsafe extern "C" fn go_online_add_point(
     x: c_double,
     y: c_double,
 ) -> GoOnlineOutput {
-    go_online_add_point_impl(ptr, &[x], y)
+    go_online_add_point_impl(ptr, &[x], y, 1.0)
+}
+
+/// Add a scalar point with a finite, non-negative case weight.
+///
+/// # Safety
+/// `ptr` must be a valid `GoOnlineLoess` pointer.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn go_online_add_point_weighted(
+    ptr: *mut GoOnlineLoess,
+    x: c_double,
+    y: c_double,
+    weight: c_double,
+) -> GoOnlineOutput {
+    go_online_add_point_impl(ptr, &[x], y, weight)
 }
 
 /// Add a point with one coordinate per configured predictor dimension.
@@ -1198,7 +1282,175 @@ pub unsafe extern "C" fn go_online_add_point_vector(
         return go_online_error_output(shared_parse::INVALID_DATA_INPUTS);
     }
     let x = unsafe { from_raw_parts(x_values, x_n) };
-    go_online_add_point_impl(ptr, x, y)
+    go_online_add_point_impl(ptr, x, y, 1.0)
+}
+
+/// Add a coordinate vector with a finite, non-negative case weight.
+///
+/// # Safety
+/// `ptr` must be valid. If `x_n` is nonzero, `x_values` must point to `x_n`
+/// initialized values.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn go_online_add_point_vector_weighted(
+    ptr: *mut GoOnlineLoess,
+    x_values: *const c_double,
+    x_n: usize,
+    y: c_double,
+    weight: c_double,
+) -> GoOnlineOutput {
+    if ptr.is_null() {
+        return go_online_error_output(shared_parse::MODEL_POINTER_IS_NULL);
+    }
+    if x_values.is_null() || x_n == 0 {
+        return go_online_error_output(shared_parse::INVALID_DATA_INPUTS);
+    }
+    let x = unsafe { from_raw_parts(x_values, x_n) };
+    go_online_add_point_impl(ptr, x, y, weight)
+}
+
+fn go_online_diagnostics_error(message: &str) -> GoOnlineDiagnostics {
+    GoOnlineDiagnostics {
+        error: shared_parse::to_cstring_lossy(message).into_raw(),
+        ..GoOnlineDiagnostics::default()
+    }
+}
+
+/// Compute diagnostics for the current Online window.
+///
+/// # Safety
+/// `ptr` must be a valid `GoOnlineLoess` pointer.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn go_online_window_diagnostics(
+    ptr: *mut GoOnlineLoess,
+) -> GoOnlineDiagnostics {
+    match catch_unwind(AssertUnwindSafe(|| {
+        if ptr.is_null() {
+            return go_online_diagnostics_error(shared_parse::MODEL_POINTER_IS_NULL);
+        }
+        let loess = unsafe { &*ptr };
+        let model = match &loess.model {
+            Some(model) => model,
+            None => return go_online_diagnostics_error(shared_parse::MODEL_NOT_INITIALIZED),
+        };
+        match model.window_diagnostics() {
+            Ok(None) => GoOnlineDiagnostics::default(),
+            Ok(Some(d)) => GoOnlineDiagnostics {
+                has_value: 1,
+                rmse: d.rmse,
+                mae: d.mae,
+                r_squared: d.r_squared,
+                aic: d.aic.unwrap_or(f64::NAN),
+                aicc: d.aicc.unwrap_or(f64::NAN),
+                effective_df: d.effective_df.unwrap_or(f64::NAN),
+                residual_sd: d.residual_sd,
+                error: ptr::null_mut(),
+            },
+            Err(e) => go_online_diagnostics_error(&e.to_string()),
+        }
+    })) {
+        Ok(result) => result,
+        Err(_) => go_online_diagnostics_error(shared_parse::panic_fallback_message()),
+    }
+}
+
+/// Free an Online diagnostics error message, if present.
+///
+/// # Safety
+/// `diagnostics` must point to a GoOnlineDiagnostics returned by this crate.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn go_online_free_diagnostics(diagnostics: *mut GoOnlineDiagnostics) {
+    with_panic_void(|| {
+        if !diagnostics.is_null() {
+            let value = unsafe { &mut *diagnostics };
+            shared_parse::free_raw_c_string(value.error);
+            value.error = ptr::null_mut();
+        }
+    });
+}
+
+/// Predict query points using the current Online window.
+///
+/// # Safety
+/// `ptr` must be valid. `new_x` must point to `new_x_len` initialized values;
+/// `extrapolation` must be a valid C string or null.
+#[unsafe(no_mangle)]
+#[allow(clippy::too_many_arguments)]
+pub unsafe extern "C" fn go_online_predict_window(
+    ptr: *mut GoOnlineLoess,
+    new_x: *const c_double,
+    new_x_len: usize,
+    return_se: c_int,
+    confidence_level: c_double,
+    prediction_level: c_double,
+    return_derivative: c_int,
+    extrapolation: *const c_char,
+    max_extrapolation_distance: c_double,
+    max_neighbor_distance: c_double,
+) -> GoPredictResult {
+    match catch_unwind(AssertUnwindSafe(|| {
+        if ptr.is_null() {
+            return predict_error_result(shared_parse::MODEL_POINTER_IS_NULL);
+        }
+        if new_x.is_null() || new_x_len == 0 {
+            return predict_error_result(shared_parse::INVALID_DATA_INPUTS);
+        }
+        let loess = unsafe { &*ptr };
+        let model = match &loess.model {
+            Some(model) => model,
+            None => return predict_error_result(shared_parse::MODEL_NOT_INITIALIZED),
+        };
+        let new_x = unsafe { from_raw_parts(new_x, new_x_len) };
+        let extrapolation = if extrapolation.is_null() {
+            "clamp".to_owned()
+        } else {
+            shared_parse::parse_c_str_or_default(extrapolation, "clamp").to_owned()
+        };
+        let mut intervals = IntervalsBuilder::new();
+        if !confidence_level.is_nan() {
+            intervals = intervals.confidence(confidence_level);
+        }
+        if !prediction_level.is_nan() {
+            intervals = intervals.prediction(prediction_level);
+        }
+        let mut query = Predict::new()
+            .intervals(intervals)
+            .extrapolation(extrapolation.as_str());
+        if return_se != 0 {
+            query = query.return_se();
+        }
+        if return_derivative != 0 {
+            query = query.return_derivative();
+        }
+        if !max_extrapolation_distance.is_nan() {
+            query = query.max_extrapolation_distance(max_extrapolation_distance);
+        }
+        if !max_neighbor_distance.is_nan() {
+            query = query.max_neighbor_distance(max_neighbor_distance);
+        }
+        let query = match query.build() {
+            Ok(query) => query,
+            Err(e) => return predict_error_result(&e.to_string()),
+        };
+        let output = match model.predict_window(new_x, &query) {
+            Ok(output) => output,
+            Err(e) => return predict_error_result(&e.to_string()),
+        };
+        GoPredictResult {
+            n: output.y.len(),
+            y: shared_parse::vec_to_raw_ptr(output.y),
+            standard_errors: shared_parse::opt_vec_to_raw_ptr(output.standard_errors),
+            confidence_lower: shared_parse::opt_vec_to_raw_ptr(output.confidence_lower),
+            confidence_upper: shared_parse::opt_vec_to_raw_ptr(output.confidence_upper),
+            prediction_lower: shared_parse::opt_vec_to_raw_ptr(output.prediction_lower),
+            prediction_upper: shared_parse::opt_vec_to_raw_ptr(output.prediction_upper),
+            derivative: shared_parse::opt_vec_to_raw_ptr(output.derivative),
+            dimensions: loess.dimensions as c_int,
+            error: ptr::null_mut(),
+        }
+    })) {
+        Ok(result) => result,
+        Err(_) => predict_error_result(shared_parse::panic_fallback_message()),
+    }
 }
 
 /// Free the error field in a GoOnlineOutput (call only when error != NULL).

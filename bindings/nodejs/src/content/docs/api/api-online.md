@@ -77,6 +77,8 @@ const online2d = new OnlineLoess(
 const output = online2d.add_point_vector(new Float64Array([0.5, 1.25]), 2.0);
 ```
 
+Use `add_point_weighted(x, y, weight)` or `add_point_vector_weighted(x, y, weight)` to provide a finite non-negative case weight. `window_diagnostics()` computes metrics for the current window on demand; `predict_window(newX, options)` predicts from a fresh fit of that bounded window.
+
 ## Options Structures
 
 ### `OnlineSmoothOptions`

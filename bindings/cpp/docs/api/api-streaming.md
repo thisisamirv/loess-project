@@ -53,6 +53,8 @@ y[0]: 0.224537
 
 Processes a chunk of data. Returns partial results.
 
+`process_chunk_weighted(x, y, custom_weights)` accepts one finite non-negative case weight per observation and preserves weights across buffered overlap points.
+
 ```cpp
 #include <fastloess.hpp>
 #include <cmath>

@@ -735,6 +735,45 @@ func TestLoess(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestStreamingLoess(t *testing.T) {
+	t.Run("WeightedOutlier", func(t *testing.T) {
+		x, y := linearData(10, 2.0, 1.0)
+		y[5] = 100.0
+		weights := make([]float64, len(y))
+		for index := range weights {
+			weights[index] = 1.0
+		}
+		weights[5] = 0.0
+
+		opts := fastloess.DefaultStreamingOptions()
+		opts.Fraction = 1.0
+		opts.Iterations = 0
+		opts.ChunkSize = 10
+		opts.Overlap = 0
+		opts.SurfaceMode = "direct"
+		weighted, err := fastloess.NewStreamingLoess(opts)
+		if err != nil {
+			t.Fatalf("NewStreamingLoess failed: %v", err)
+		}
+		defer weighted.Close()
+		weightedResult, err := weighted.ProcessChunkWeighted(x, y, weights)
+		if err != nil {
+			t.Fatalf("ProcessChunkWeighted failed: %v", err)
+		}
+
+		plain, err := fastloess.NewStreamingLoess(opts)
+		if err != nil {
+			t.Fatalf("NewStreamingLoess failed: %v", err)
+		}
+		defer plain.Close()
+		plainResult, err := plain.ProcessChunk(x, y)
+		if err != nil {
+			t.Fatalf("ProcessChunk failed: %v", err)
+		}
+		if math.Abs(weightedResult.Y[5]-11.0) >= math.Abs(plainResult.Y[5]-11.0) {
+			t.Fatalf("zero-weight outlier still influenced fit: weighted=%v plain=%v", weightedResult.Y[5], plainResult.Y[5])
+		}
+	})
+
 	t.Run("ReturnsAllPoints", func(t *testing.T) {
 		x, y := linearData(100, 2.0, 1.0)
 
@@ -1019,6 +1058,61 @@ func TestStreamingLoess(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestOnlineLoess(t *testing.T) {
+	t.Run("WeightedDiagnosticsAndWindowPrediction", func(t *testing.T) {
+		opts := fastloess.DefaultOnlineOptions()
+		opts.Fraction = 1
+		opts.Iterations = 0
+		opts.Dimensions = 1
+		opts.SurfaceMode = "direct"
+		opts.WindowCapacity = 10
+		opts.MinPoints = 10
+		opts.UpdateMode = "full"
+		weighted, err := fastloess.NewOnlineLoess(opts)
+		if err != nil {
+			t.Fatalf("NewOnlineLoess failed: %v", err)
+		}
+		defer weighted.Close()
+		plain, err := fastloess.NewOnlineLoess(opts)
+		if err != nil {
+			t.Fatalf("NewOnlineLoess failed: %v", err)
+		}
+		defer plain.Close()
+
+		for index := 0; index < 10; index++ {
+			x := float64(index)
+			y := 2*x + 1
+			weight := 1.0
+			if index == 5 {
+				y = 100
+				weight = 0
+			}
+			if _, _, err := weighted.AddPointWeighted(x, y, weight); err != nil {
+				t.Fatalf("weighted update failed: %v", err)
+			}
+			if _, _, err := plain.AddPoint(x, y); err != nil {
+				t.Fatalf("unweighted update failed: %v", err)
+			}
+		}
+		if _, _, err := weighted.AddPointWeighted(10, 21, -1); err == nil {
+			t.Fatal("expected negative Online weight to fail")
+		}
+		diagnostics, err := weighted.WindowDiagnostics()
+		if err != nil || diagnostics == nil || diagnostics.RMSE == nil {
+			t.Fatalf("expected window diagnostics, got %#v, %v", diagnostics, err)
+		}
+		weightedPrediction, err := weighted.PredictWindow([]float64{5}, fastloess.PredictOptions{})
+		if err != nil {
+			t.Fatalf("weighted window prediction failed: %v", err)
+		}
+		plainPrediction, err := plain.PredictWindow([]float64{5}, fastloess.PredictOptions{})
+		if err != nil {
+			t.Fatalf("plain window prediction failed: %v", err)
+		}
+		if math.Abs(weightedPrediction.Y[0]-11) >= math.Abs(plainPrediction.Y[0]-11) {
+			t.Fatalf("zero-weight outlier still influenced prediction: weighted=%v plain=%v", weightedPrediction.Y[0], plainPrediction.Y[0])
+		}
+	})
+
 	t.Run("MultivariateAddPointVector", func(t *testing.T) {
 		opts := fastloess.DefaultOnlineOptions()
 		opts.Fraction = 1

@@ -233,6 +233,14 @@ export class OnlineLoess {
     add_point(x: number, y: number): OnlineOutput | null;
     /** Add a point with one coordinate per configured predictor dimension. */
     add_point_vector(x: Float64Array, y: number): OnlineOutput | null;
+    /** Add a scalar point with a case weight. */
+    add_point_weighted(x: number, y: number, weight: number): OnlineOutput | null;
+    /** Add a coordinate vector with a case weight. */
+    add_point_vector_weighted(x: Float64Array, y: number, weight: number): OnlineOutput | null;
+    /** Compute fit diagnostics for the current window, or null before warm-up. */
+    window_diagnostics(): Diagnostics | null;
+    /** Predict query points using a fit of the current window. */
+    predict_window(newX: Float64Array, options?: PredictOptions): PredictOutput;
 }
 
 /** Result from a single online update step. */
@@ -255,7 +263,7 @@ use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use ::fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use ::fastLoess::internals::api::LoessBuilder;
 use ::fastLoess::internals::binding_support as shared_parse;
-use ::fastLoess::prelude::LoessResult as InnerLoessResult;
+use ::fastLoess::prelude::{IntervalsBuilder, LoessResult as InnerLoessResult, Predict};
 
 fn to_js_error(err: shared_parse::BindingError) -> JsValue {
     JsValue::from_str(&err.message)
@@ -1126,6 +1134,24 @@ impl StreamingLoess {
         Ok(LoessResult { inner: result })
     }
 
+    #[wasm_bindgen(js_name = process_chunk_weighted, skip_typescript)]
+    pub fn process_chunk_weighted(
+        &mut self,
+        x: &Float64Array,
+        y: &Float64Array,
+        weights: &Float64Array,
+    ) -> Result<LoessResult, JsValue> {
+        let x_vec = x.to_vec();
+        let y_vec = y.to_vec();
+        let weights_vec = weights.to_vec();
+        let result: InnerLoessResult<f64> = map_runtime(self.inner.process_chunk_weighted(
+            &x_vec,
+            &y_vec,
+            &weights_vec,
+        ))?;
+        Ok(LoessResult { inner: result })
+    }
+
     #[wasm_bindgen(skip_typescript)]
     pub fn finalize(&mut self) -> Result<LoessResult, JsValue> {
         let result: InnerLoessResult<f64> = map_runtime(self.inner.finalize())?;
@@ -1247,5 +1273,118 @@ impl OnlineLoess {
             }),
             None => JsValue::null(),
         })
+    }
+
+    #[wasm_bindgen(js_name = add_point_weighted, skip_typescript)]
+    pub fn add_point_weighted(&mut self, x: f64, y: f64, weight: f64) -> Result<JsValue, JsValue> {
+        self.add_point_vector_weighted(&Float64Array::from(&[x][..]), y, weight)
+    }
+
+    #[wasm_bindgen(js_name = add_point_vector_weighted, skip_typescript)]
+    pub fn add_point_vector_weighted(
+        &mut self,
+        x: &Float64Array,
+        y: f64,
+        weight: f64,
+    ) -> Result<JsValue, JsValue> {
+        let x = x.to_vec();
+        let output = map_invalid_arg(self.inner.add_point_weighted(&x, y, weight))?;
+        Ok(match output {
+            Some(o) => JsValue::from(OnlineOutput {
+                y: o.y,
+                standard_error: o.standard_error,
+                residual: o.residual,
+                robustness_weight: o.robustness_weight,
+                iterations_used: o.iterations_used,
+                confidence_lower: o.confidence_lower,
+                confidence_upper: o.confidence_upper,
+                prediction_lower: o.prediction_lower,
+                prediction_upper: o.prediction_upper,
+                gradient: o.gradient,
+            }),
+            None => JsValue::null(),
+        })
+    }
+
+    #[wasm_bindgen(js_name = window_diagnostics, skip_typescript)]
+    pub fn window_diagnostics(&self) -> Result<JsValue, JsValue> {
+        let diagnostics = map_runtime(self.inner.window_diagnostics())?;
+        Ok(match diagnostics {
+            Some(d) => JsValue::from(Diagnostics {
+                rmse: d.rmse,
+                mae: d.mae,
+                r_squared: d.r_squared,
+                aic: d.aic,
+                aicc: d.aicc,
+                effective_df: d.effective_df,
+                residual_sd: d.residual_sd,
+            }),
+            None => JsValue::null(),
+        })
+    }
+
+    #[wasm_bindgen(js_name = predict_window, skip_typescript)]
+    pub fn predict_window(
+        &self,
+        new_x: &Float64Array,
+        options: JsValue,
+    ) -> Result<PredictOutput, JsValue> {
+        validate_option_keys(
+            &options,
+            "prediction",
+            &[
+                "outputs",
+                "intervals",
+                "extrapolation",
+                "max_extrapolation_distance",
+                "max_neighbor_distance",
+            ],
+        )?;
+        validate_nested_option_keys(
+            &options,
+            "intervals",
+            "intervals",
+            &["confidence", "prediction"],
+        )?;
+        let opts: PredictOptionsJs = if options.is_undefined() || options.is_null() {
+            PredictOptionsJs {
+                outputs: None,
+                intervals: None,
+                extrapolation: None,
+                max_extrapolation_distance: None,
+                max_neighbor_distance: None,
+            }
+        } else {
+            serde_wasm_bindgen::from_value(options)?
+        };
+        validate_outputs(opts.outputs.as_ref(), &["se", "gradient", "derivative"])?;
+        let mut intervals = IntervalsBuilder::new();
+        if let Some(level) = opts.intervals.as_ref().and_then(|value| value.confidence) {
+            intervals = intervals.confidence(level);
+        }
+        if let Some(level) = opts.intervals.as_ref().and_then(|value| value.prediction) {
+            intervals = intervals.prediction(level);
+        }
+        let mut builder = Predict::new()
+            .intervals(intervals)
+            .extrapolation(opts.extrapolation.as_deref().unwrap_or("clamp"));
+        if has_output(opts.outputs.as_ref(), "se") {
+            builder = builder.return_se();
+        }
+        if has_output(opts.outputs.as_ref(), "gradient")
+            || has_output(opts.outputs.as_ref(), "derivative")
+        {
+            builder = builder.return_derivative();
+        }
+        if let Some(distance) = opts.max_extrapolation_distance {
+            builder = builder.max_extrapolation_distance(distance);
+        }
+        if let Some(distance) = opts.max_neighbor_distance {
+            builder = builder.max_neighbor_distance(distance);
+        }
+        let query = map_invalid_arg(builder.build())?;
+        let new_x = new_x.to_vec();
+        let output = map_invalid_arg(self.inner.predict_window(&new_x, &query))?;
+        Ok(PredictOutput { inner: output })
     }
 }

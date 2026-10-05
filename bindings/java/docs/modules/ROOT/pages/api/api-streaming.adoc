@@ -66,6 +66,8 @@ Confidence/prediction intervals and standard errors are computed per chunk and m
 
 Fits and returns the result for one chunk. Each chunk is fit together with the trailing `overlap` points buffered from the previous call, then only the points that are fully resolved are returned — the tail of the chunk (the next `overlap` points) is held back internally, since it will be refit once the following chunk arrives and its estimate reconciled via `mergeStrategy`. This is what lets the adapter process a dataset far larger than memory allows, one bounded-size chunk at a time, without ever materializing the whole dataset at once. Call repeatedly as chunks arrive.
 
+The `processChunk(double[] x, double[] y, double[] customWeights)` overload accepts one finite non-negative case weight per observation and carries weights through buffered overlap points.
+
 == `StreamingLoess.finish() Result`
 
 Flushes the overlap points still buffered from the last `processChunk` call. Because each call withholds its tail until the next chunk arrives to resolve it, the final chunk's tail would never be emitted otherwise — always call `finish` once after the last chunk to retrieve it.

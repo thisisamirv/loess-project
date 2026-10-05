@@ -46,3 +46,5 @@ This changelog includes end-user changes only. For internal development notes, s
 ### Added
 
 * Added the Go binding.
+
+* Added case-weighted Streaming chunks and Online points, plus Online window diagnostics and prediction.

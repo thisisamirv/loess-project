@@ -16,7 +16,7 @@ use fastLoess::internals::adapters::online::ParallelOnlineLoess;
 use fastLoess::internals::adapters::streaming::ParallelStreamingLoess;
 use fastLoess::internals::api::LoessBuilder;
 use fastLoess::internals::binding_support as shared_parse;
-use fastLoess::prelude::LoessResult;
+use fastLoess::prelude::{IntervalsBuilder, LoessResult, Predict};
 
 use jni::EnvUnowned;
 use jni::errors::ThrowRuntimeExAndDefault;
@@ -679,6 +679,32 @@ pub extern "system" fn Java_fastloess_NativeBridge_streamingProcess<'local>(
 }
 
 #[unsafe(no_mangle)]
+pub extern "system" fn Java_fastloess_NativeBridge_streamingProcessWeighted<'local>(
+    mut env: EnvUnowned<'local>,
+    _class: JClass<'local>,
+    handle: jlong,
+    x: JDoubleArray<'local>,
+    y: JDoubleArray<'local>,
+    weights: JDoubleArray<'local>,
+) -> JObject<'local> {
+    env.with_env(|env| -> AppResult<JObject<'local>> {
+        if handle == 0 {
+            return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
+        }
+        let streaming = unsafe { &mut *(handle as *mut JavaStreamingLoess) };
+        let x_vec = jarray_to_vec(env, &x)?;
+        let y_vec = jarray_to_vec(env, &y)?;
+        let weights_vec = jarray_to_vec(env, &weights)?;
+        let result = streaming
+            .model
+            .process_chunk_weighted(&x_vec, &y_vec, &weights_vec)
+            .map_err(|e| e.to_string())?;
+        result_to_jobject(env, result)
+    })
+    .resolve::<ThrowRuntimeExAndDefault>()
+}
+
+#[unsafe(no_mangle)]
 pub extern "system" fn Java_fastloess_NativeBridge_streamingFinalize<'local>(
     mut env: EnvUnowned<'local>,
     _class: JClass<'local>,
@@ -826,6 +852,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
     handle: jlong,
     x: JDoubleArray<'local>,
     y: jdouble,
+    weight: jdouble,
 ) -> JObject<'local> {
     env.with_env(|env| -> AppResult<JObject<'local>> {
         if handle == 0 {
@@ -835,7 +862,7 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
         let x_vec = jarray_to_vec(env, &x)?;
         let point = online
             .model
-            .add_point(&x_vec, y)
+            .add_point_weighted(&x_vec, y, weight)
             .map_err(|e| e.to_string())?;
 
         let (
@@ -902,6 +929,115 @@ pub extern "system" fn Java_fastloess_NativeBridge_onlineAddPoint<'local>(
             ],
         )?;
         Ok(obj)
+    })
+    .resolve::<ThrowRuntimeExAndDefault>()
+}
+
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_fastloess_NativeBridge_onlineWindowDiagnostics<'local>(
+    mut env: EnvUnowned<'local>,
+    _class: JClass<'local>,
+    handle: jlong,
+) -> JDoubleArray<'local> {
+    env.with_env(|env| -> AppResult<JDoubleArray<'local>> {
+        if handle == 0 {
+            return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
+        }
+        let online = unsafe { &*(handle as *const JavaOnlineLoess) };
+        let Some(diagnostics) = online
+            .model
+            .window_diagnostics()
+            .map_err(|e| e.to_string())?
+        else {
+            return env.new_double_array(0).map_err(Into::into);
+        };
+        let values = [
+            diagnostics.rmse,
+            diagnostics.mae,
+            diagnostics.r_squared,
+            diagnostics.aic.unwrap_or(f64::NAN),
+            diagnostics.aicc.unwrap_or(f64::NAN),
+            diagnostics.effective_df.unwrap_or(f64::NAN),
+            diagnostics.residual_sd,
+        ];
+        let result = env.new_double_array(values.len())?;
+        env.set_double_array_region(&result, 0, &values)?;
+        Ok(result)
+    })
+    .resolve::<ThrowRuntimeExAndDefault>()
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::too_many_arguments)]
+pub extern "system" fn Java_fastloess_NativeBridge_onlinePredictWindow<'local>(
+    mut env: EnvUnowned<'local>,
+    _class: JClass<'local>,
+    handle: jlong,
+    new_x: JDoubleArray<'local>,
+    return_se: jboolean,
+    confidence_level: jdouble,
+    prediction_level: jdouble,
+    return_derivative: jboolean,
+    extrapolation: JString<'local>,
+    max_extrapolation_distance: jdouble,
+    max_neighbor_distance: jdouble,
+) -> JObject<'local> {
+    env.with_env(|env| -> AppResult<JObject<'local>> {
+        if handle == 0 {
+            return Err(shared_parse::MODEL_POINTER_IS_NULL.into());
+        }
+        let online = unsafe { &*(handle as *const JavaOnlineLoess) };
+        let new_x_vec = jarray_to_vec(env, &new_x)?;
+        let extrapolation = jstring_to_option(env, &extrapolation);
+        let mut intervals = IntervalsBuilder::new();
+        if let Some(level) = opt_f64(confidence_level) {
+            intervals = intervals.confidence(level);
+        }
+        if let Some(level) = opt_f64(prediction_level) {
+            intervals = intervals.prediction(level);
+        }
+        let mut builder = Predict::new()
+            .intervals(intervals)
+            .extrapolation(extrapolation.as_deref().unwrap_or("clamp"));
+        if return_se {
+            builder = builder.return_se();
+        }
+        if return_derivative {
+            builder = builder.return_derivative();
+        }
+        if let Some(distance) = opt_f64(max_extrapolation_distance) {
+            builder = builder.max_extrapolation_distance(distance);
+        }
+        if let Some(distance) = opt_f64(max_neighbor_distance) {
+            builder = builder.max_neighbor_distance(distance);
+        }
+        let query = builder.build().map_err(|e| e.to_string())?;
+        let output = online
+            .model
+            .predict_window(&new_x_vec, &query)
+            .map_err(|e| e.to_string())?;
+        let y = vec_to_jdoublearray(env, &Some(output.y))?;
+        let standard_errors = vec_to_jdoublearray(env, &output.standard_errors)?;
+        let confidence_lower = vec_to_jdoublearray(env, &output.confidence_lower)?;
+        let confidence_upper = vec_to_jdoublearray(env, &output.confidence_upper)?;
+        let prediction_lower = vec_to_jdoublearray(env, &output.prediction_lower)?;
+        let prediction_upper = vec_to_jdoublearray(env, &output.prediction_upper)?;
+        let derivative = vec_to_jdoublearray(env, &output.derivative)?;
+        let class = env.find_class(PREDICT_RESULT_CLASS)?;
+        env.new_object(
+            class,
+            PREDICT_RESULT_CTOR_SIG,
+            &[
+                JValue::Object(&y),
+                JValue::Object(&standard_errors),
+                JValue::Object(&confidence_lower),
+                JValue::Object(&confidence_upper),
+                JValue::Object(&prediction_lower),
+                JValue::Object(&prediction_upper),
+                JValue::Object(&derivative),
+            ],
+        )
+        .map_err(Into::into)
     })
     .resolve::<ThrowRuntimeExAndDefault>()
 }

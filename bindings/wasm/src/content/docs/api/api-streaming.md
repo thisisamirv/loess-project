@@ -33,6 +33,8 @@ typeof process_chunk: function
 
 #### `process_chunk(x, y)`
 
+`process_chunk_weighted(x, y, weights)` accepts one finite non-negative case weight per observation and preserves weights across buffered overlap points.
+
 Processes a chunk of data. Returns partial results.
 
 ```javascript
@@ -304,21 +306,17 @@ Enable multi-threaded execution via the Rayon-based web worker pool.
 
 Include standard errors in the result (`LoessResult.standard_errors`), computed per chunk and merged across overlap boundaries via `merge_strategy`.
 
-
 ### outputs: diagnostics
 
 Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always `null` here.
-
 
 ### outputs: residuals
 
 Include per-point residuals (`y - fitted`) in the result.
 
-
 ### outputs: weights
 
 Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
 
 ### outputs: gradient
 

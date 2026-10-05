@@ -83,7 +83,8 @@ iterations. \code{NULL} (default) disables early stopping.}
 \item{degree}{Local polynomial degree: \code{"constant"}, \code{"linear"}
 (default), \code{"quadratic"}, \code{"cubic"}, or \code{"quartic"}.}
 
-\item{dimensions}{Number of predictor dimensions. Default: 1.}
+\item{dimensions}{Number of predictor dimensions; each \code{add_point()}
+call must provide one x coordinate per dimension.}
 
 \item{distance_metric}{Distance metric for neighbourhood computation:
 \code{"normalized"} (default), \code{"euclidean"}, \code{"manhattan"},

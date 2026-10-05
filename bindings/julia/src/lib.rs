@@ -17,7 +17,7 @@ use std::sync::Arc;
 
 use fastLoess::internals::api::LoessBuilder;
 use fastLoess::internals::binding_support as shared_parse;
-use fastLoess::prelude::LoessResult;
+use fastLoess::prelude::{IntervalsBuilder, LoessResult, Predict};
 
 thread_local! {
     static JL_LAST_ERROR: RefCell<Option<CString>> = const { RefCell::new(None) };
@@ -81,6 +81,35 @@ pub struct JlOnlineOutput {
     /// Number of predictor dimensions (needed to know `gradient`'s true length)
     pub dimensions: c_int,
     pub error: *mut c_char, // NULL if no error
+}
+
+#[repr(C)]
+pub struct JlOnlineDiagnostics {
+    pub has_value: c_int,
+    pub rmse: c_double,
+    pub mae: c_double,
+    pub r_squared: c_double,
+    pub aic: c_double,
+    pub aicc: c_double,
+    pub effective_df: c_double,
+    pub residual_sd: c_double,
+    pub error: *mut c_char,
+}
+
+impl Default for JlOnlineDiagnostics {
+    fn default() -> Self {
+        Self {
+            has_value: 0,
+            rmse: f64::NAN,
+            mae: f64::NAN,
+            r_squared: f64::NAN,
+            aic: f64::NAN,
+            aicc: f64::NAN,
+            effective_df: f64::NAN,
+            residual_sd: f64::NAN,
+            error: ptr::null_mut(),
+        }
+    }
 }
 
 impl Default for JlOnlineOutput {
@@ -994,6 +1023,49 @@ pub unsafe extern "C" fn jl_streaming_loess_process_chunk(
     }
 }
 
+/// Process a chunk with one case weight per observation.
+///
+/// # Safety
+/// `ptr` must be valid. Input pointers must each reference their documented lengths.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_streaming_loess_process_chunk_weighted(
+    ptr: *mut JlStreamingLoess,
+    x: *const c_double,
+    y: *const c_double,
+    weights: *const c_double,
+    n: c_ulong,
+) -> JlLoessResult {
+    let result = catch_unwind(|| {
+        if ptr.is_null() {
+            return error_result(shared_parse::PROCESSOR_POINTER_IS_NULL);
+        }
+        if x.is_null() || y.is_null() || weights.is_null() {
+            return error_result(shared_parse::XY_ARRAYS_MUST_NOT_BE_NULL);
+        }
+        if n == 0 {
+            return error_result(shared_parse::ARRAY_LENGTH_MUST_BE_GREATER_THAN_ZERO);
+        }
+        let processor = unsafe { &mut *ptr };
+        let n = n as usize;
+        let x_n = n * processor.dimensions.max(1);
+        let x_slice = unsafe { from_raw_parts(x, x_n) };
+        let y_slice = unsafe { from_raw_parts(y, n) };
+        let weights_slice = unsafe { from_raw_parts(weights, n) };
+        match map_runtime_result(processor.inner.process_chunk_weighted(
+            x_slice,
+            y_slice,
+            weights_slice,
+        )) {
+            Ok(result) => loess_result_to_jl(result),
+            Err(error) => *error,
+        }
+    });
+    match result {
+        Ok(result) => result,
+        Err(_) => error_result(shared_parse::panic_fallback_message()),
+    }
+}
+
 /// Finalize and return remaining data.
 ///
 /// # Safety
@@ -1219,6 +1291,7 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
     x: *const c_double,
     x_n: c_ulong,
     y: c_double,
+    weight: c_double,
 ) -> JlOnlineOutput {
     let result = catch_unwind(|| {
         if ptr.is_null() {
@@ -1238,7 +1311,7 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
         let processor = unsafe { &mut *ptr };
         let coordinates = unsafe { from_raw_parts(x, x_n as usize) };
 
-        match processor.inner.add_point(coordinates, y) {
+        match processor.inner.add_point_weighted(coordinates, y, weight) {
             Err(e) => JlOnlineOutput {
                 error: shared_parse::into_raw_error_c_string(&e.to_string()),
                 ..JlOnlineOutput::default()
@@ -1278,6 +1351,123 @@ pub unsafe extern "C" fn jl_online_loess_add_point(
         error: shared_parse::into_raw_error_c_string(shared_parse::panic_fallback_message()),
         ..JlOnlineOutput::default()
     })
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_online_loess_window_diagnostics(
+    ptr: *mut JlOnlineLoess,
+) -> JlOnlineDiagnostics {
+    let result = catch_unwind(|| {
+        if ptr.is_null() {
+            return JlOnlineDiagnostics {
+                error: shared_parse::into_raw_error_c_string(
+                    shared_parse::PROCESSOR_POINTER_IS_NULL,
+                ),
+                ..JlOnlineDiagnostics::default()
+            };
+        }
+        let processor = unsafe { &*ptr };
+        match processor.inner.window_diagnostics() {
+            Err(error) => JlOnlineDiagnostics {
+                error: shared_parse::into_raw_error_c_string(&error.to_string()),
+                ..JlOnlineDiagnostics::default()
+            },
+            Ok(None) => JlOnlineDiagnostics::default(),
+            Ok(Some(diagnostics)) => JlOnlineDiagnostics {
+                has_value: 1,
+                rmse: diagnostics.rmse,
+                mae: diagnostics.mae,
+                r_squared: diagnostics.r_squared,
+                aic: diagnostics.aic.unwrap_or(f64::NAN),
+                aicc: diagnostics.aicc.unwrap_or(f64::NAN),
+                effective_df: diagnostics.effective_df.unwrap_or(f64::NAN),
+                residual_sd: diagnostics.residual_sd,
+                error: ptr::null_mut(),
+            },
+        }
+    });
+    result.unwrap_or_else(|_| JlOnlineDiagnostics {
+        error: shared_parse::into_raw_error_c_string(shared_parse::panic_fallback_message()),
+        ..JlOnlineDiagnostics::default()
+    })
+}
+
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn jl_online_free_diagnostics(diagnostics: *mut JlOnlineDiagnostics) {
+    if !diagnostics.is_null() {
+        shared_parse::free_raw_c_string((*diagnostics).error);
+        (*diagnostics).error = ptr::null_mut();
+    }
+}
+
+#[unsafe(no_mangle)]
+#[allow(clippy::too_many_arguments)]
+pub unsafe extern "C" fn jl_online_loess_predict_window(
+    ptr: *mut JlOnlineLoess,
+    new_x: *const c_double,
+    new_x_n: c_ulong,
+    return_se: c_int,
+    confidence_level: c_double,
+    prediction_level: c_double,
+    return_derivative: c_int,
+    extrapolation: *const c_char,
+    max_extrapolation_distance: c_double,
+    max_neighbor_distance: c_double,
+) -> JlPredictResult {
+    let result = catch_unwind(|| {
+        if ptr.is_null() {
+            return predict_error_result(shared_parse::PROCESSOR_POINTER_IS_NULL);
+        }
+        if new_x.is_null() || new_x_n == 0 {
+            return predict_error_result(shared_parse::INVALID_DATA_INPUTS);
+        }
+        let processor = unsafe { &*ptr };
+        let new_x = unsafe { from_raw_parts(new_x, new_x_n as usize) };
+        let extrapolation = unsafe { shared_parse::parse_c_str_or_default(extrapolation, "clamp") };
+        let mut intervals = IntervalsBuilder::new();
+        if !confidence_level.is_nan() {
+            intervals = intervals.confidence(confidence_level);
+        }
+        if !prediction_level.is_nan() {
+            intervals = intervals.prediction(prediction_level);
+        }
+        let mut builder = Predict::new()
+            .intervals(intervals)
+            .extrapolation(extrapolation);
+        if return_se != 0 {
+            builder = builder.return_se();
+        }
+        if return_derivative != 0 {
+            builder = builder.return_derivative();
+        }
+        if !max_extrapolation_distance.is_nan() {
+            builder = builder.max_extrapolation_distance(max_extrapolation_distance);
+        }
+        if !max_neighbor_distance.is_nan() {
+            builder = builder.max_neighbor_distance(max_neighbor_distance);
+        }
+        let query = match builder.build() {
+            Ok(query) => query,
+            Err(error) => return predict_error_result(&error.to_string()),
+        };
+        let output = match processor.inner.predict_window(new_x, &query) {
+            Ok(output) => output,
+            Err(error) => return predict_error_result(&error.to_string()),
+        };
+        JlPredictResult {
+            n: output.y.len() as c_ulong,
+            y: shared_parse::vec_to_raw_ptr(output.y),
+            standard_errors: shared_parse::opt_vec_to_raw_ptr(output.standard_errors),
+            confidence_lower: shared_parse::opt_vec_to_raw_ptr(output.confidence_lower),
+            confidence_upper: shared_parse::opt_vec_to_raw_ptr(output.confidence_upper),
+            prediction_lower: shared_parse::opt_vec_to_raw_ptr(output.prediction_lower),
+            prediction_upper: shared_parse::opt_vec_to_raw_ptr(output.prediction_upper),
+            derivative: shared_parse::opt_vec_to_raw_ptr(output.derivative),
+            dimensions: processor.dimensions as c_int,
+            error: ptr::null_mut(),
+        }
+    });
+    result.unwrap_or_else(|_| predict_error_result(shared_parse::panic_fallback_message()))
 }
 
 /// Free the error field of a JlOnlineOutput returned by jl_online_loess_add_point.

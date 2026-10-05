@@ -204,6 +204,8 @@ final class NativeBridge {
 
     static native NativeResult streamingProcess(long handle, double[] x, double[] y);
 
+    static native NativeResult streamingProcessWeighted(long handle, double[] x, double[] y, double[] weights);
+
     static native NativeResult streamingFinalize(long handle);
 
     static native void streamingFree(long handle);
@@ -235,7 +237,20 @@ final class NativeBridge {
             double[] weightedMetricWeights,
             String missing);
 
-    static native NativeOnlineOutput onlineAddPoint(long handle, double[] x, double y);
+    static native NativeOnlineOutput onlineAddPoint(long handle, double[] x, double y, double weight);
+
+    static native double[] onlineWindowDiagnostics(long handle);
+
+    static native NativePredictResult onlinePredictWindow(
+            long handle,
+            double[] newX,
+            boolean returnSe,
+            double confidenceLevel,
+            double predictionLevel,
+            boolean returnDerivative,
+            String extrapolation,
+            double maxExtrapolationDistance,
+            double maxNeighborDistance);
 
     static native void onlineFree(long handle);
 }
