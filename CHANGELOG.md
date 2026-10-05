@@ -149,7 +149,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Breaking change: group confidence, prediction, and bootstrap configuration under `.intervals(IntervalsBuilder::new()...)`, and use `.cv(CVBuilder::new().method(...).fraction(...))`. One outer `.seed(...)` controls both CV and bootstrap; individual interval/CV setters and CV-local seeds were removed. Confidence and prediction coverage levels are independent.
 - Hoisted inline fully-qualified paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Flattened `tests/loess-rs/` into `tests/` directly: each test file is now its own integration test binary. No behavior changes.
-- Bumped the vendored KaTeX CDN version from `0.18.7` to `0.18.9`, updating SRI hashes to match.
+- Bumped the KaTeX CDN assets from `0.18.9` to `0.19.0` and refreshed their SRI hashes.
 - Removed unused `pub use` re-exports with no consumer via that path. No behavior changes.
 - Marked `WeightFunction` as non-exhaustive so downstream kernel must reject unsupported future variants explicitly.
 - Matched R `stats::loess` span truncation, multivariate predictor normalization, and bisquare robustness cutoffs; MAR now uses R's uncentered median absolute residual and machine-minimum scale stop, while MAD remains the default. Near-singular local linear fits are handled by the regression solver rather than a global-range slope cutoff.
@@ -159,7 +159,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adopt the grouped interval/CV APIs and shared seed across Batch, Streaming, Online, and retained-model prediction; validate parallel adapter options at construction and preserve language-binding option structs.
 - Hoisted inline fully-qualified paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Flattened `tests/fastLoess/` into `tests/` directly: each test file is now its own integration test binary. No behavior changes.
-- Bumped the vendored KaTeX CDN version from `0.18.7` to `0.18.9`, updating SRI hashes to match.
+- Bumped the KaTeX CDN assets from `0.18.9` to `0.19.0` and refreshed their SRI hashes.
 - Removed unused `pub use` re-exports with no consumer via that path. No behavior changes.
 - Replaced `std::mem::forget` with `Box::into_raw` in `vec_to_raw_ptr`, making the FFI ownership transfer explicit; bindings still release it through `free_raw_f64_buffer`.
 - Implemented `std::error::Error` for `BindingError`.
