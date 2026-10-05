@@ -16,12 +16,14 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Clarified Batch `residual_sd` as `1.4826 * MAD`; Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Breaking change: replaced individual `return_*` output arguments with `outputs = c(...)` for Batch, Streaming, Online, and prediction.
 * Breaking change: replaced flat interval arguments and prediction levels with `intervals = intervals_opts(confidence = ..., prediction = ...)`; CV uses only `cv = cv_opts(...)` with an outer `seed`, replacing flat CV arguments and `cv_opts(seed = ...)`. Removed named constructor arguments now error instead of being silently ignored.
 * Unavailable diagnostics are now represented as R `NA` rather than generic `NaN` values.
 
 ### Fixed
 
+* Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Reject fractional/overflowing integer and count options before FFI coercion; validate grouped CV/interval lists and numeric vector/matrix shapes; accept integer custom weights.
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.
 * Preserve case weights through sorted CV training subsets and multidimensional predictions. Serial and parallel CV now agree on seeded folds and held-out LOOCV predictions; K-fold counts above the retained observation count are rejected.

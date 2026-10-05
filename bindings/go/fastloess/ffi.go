@@ -114,7 +114,8 @@ type Diagnostics struct {
 	AIC         *float64
 	AICc        *float64
 	EffectiveDF *float64
-	ResidualSD  *float64
+	// ResidualSD: Batch is a robust residual scale estimate (1.4826 * MAD); Streaming is the cumulative sample SD of emitted residuals.
+	ResidualSD *float64
 }
 
 // HatMatrixStats holds hat-matrix statistics, populated when Outputs contains

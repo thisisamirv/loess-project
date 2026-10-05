@@ -260,23 +260,19 @@ Enable multi-threaded execution via the Rayon-based web worker pool.
 
 Computes hat-matrix statistics (effective degrees of freedom, leverage, delta1/delta2) in addition to standard errors.
 
-
 ### outputs: diagnostics
 
 *See: [`Diagnostics`](#diagnostics)*
 
 Include a `Diagnostics` object (RMSE, MAE, R², AIC/AICc, effective degrees of freedom) in the result. AIC/AICc/`effective_df` additionally require `outputs: ["se"]` (or confidence/prediction intervals) to be populated, since they depend on hat-matrix statistics.
 
-
 ### outputs: residuals
 
 Include per-point residuals (`y - fitted`) in the result.
 
-
 ### outputs: weights
 
 Include the final per-point robustness weights (from the last robustness iteration) in the result.
-
 
 ### outputs: gradient
 
@@ -355,7 +351,7 @@ Per-observation weights, passed to `fit()` rather than the options object.
 | `rmse` | `number` | Root Mean Squared Error |
 | `mae` | `number` | Mean Absolute Error |
 | `r_squared` | `number` | R-squared |
-| `residual_sd` | `number` | Residual standard deviation |
+| `residual_sd` | `number` | Robust residual scale estimate (`1.4826 * MAD`) |
 | `effective_df` | `number` \| `undefined` | Effective degrees of freedom |
 | `aic` | `number` \| `undefined` | AIC |
 | `aicc` | `number` \| `undefined` | AICc |

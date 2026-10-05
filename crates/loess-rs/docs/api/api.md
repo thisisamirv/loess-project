@@ -361,7 +361,7 @@ Per-observation case weights. Must have the same length as `y`; all values must 
 | `rmse` | `T` | Root Mean Squared Error |
 | `mae` | `T` | Mean Absolute Error |
 | `r_squared` | `T` | R-squared |
-| `residual_sd` | `T` | Residual standard deviation |
+| `residual_sd` | `T` | Robust residual scale estimate (`1.4826 * MAD`) |
 | `effective_df` | `Option<T>` | Effective degrees of freedom |
 | `aic` | `Option<T>` | AIC |
 | `aicc` | `Option<T>` | AICc |

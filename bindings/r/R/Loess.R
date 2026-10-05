@@ -14,6 +14,9 @@
 #' `fraction` is the most important parameter: it controls the size of the
 #' local neighbourhood used at each point.
 #'
+#' When `outputs` includes `"diagnostics"`, Batch `residual_sd` is the robust
+#' residual scale estimate `1.4826 * MAD`.
+#'
 #' | Range | Effect | Use case |
 #' | --- | --- | --- |
 #' | 0.1-0.3 | Fine detail | Rapidly changing signals |

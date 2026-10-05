@@ -109,7 +109,7 @@ Releases native resources. Safe to call multiple times. Implements `AutoCloseabl
 |`gradient()` |`Optional<double[]>` |`outputs("gradient")`/`outputs("derivative")` (`surfaceMode = "direct"` only)
 |===
 
-`Diagnostics` holds `rmse()`, `mae()`, `rSquared()`, `aic()`, `aicc()`, `effectiveDf()`, `residualSd()` (the last three are `Optional<Double>`).
+`Diagnostics` holds `rmse()`, `mae()`, `rSquared()`, `aic()`, `aicc()`, `effectiveDf()`, and `residualSd()` (the last three are `Optional<Double>`). Batch `residualSd()` is the robust residual scale estimate (`1.4826 * MAD`); Streaming uses the cumulative sample SD of emitted residuals.
 
 `HatMatrixStats` holds `enp()`, `traceHat()`, `delta1()`, `delta2()`, `residualScale()`, `leverage()` (per-point hat-matrix diagonal).
 

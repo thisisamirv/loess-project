@@ -274,7 +274,7 @@ Populate `Result.residuals()` (`y - fitted`).
 
 === outputs: diagnostics
 
-Populate `Result.diagnostics()` with RMSE, MAE, R², and residual_sd. `effectiveDf`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always empty here.
+Populate `Result.diagnostics()` with RMSE, MAE, R², and residual_sd. Streaming `residualSd()` is the cumulative sample standard deviation of emitted residuals. `effectiveDf`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always empty here.
 
 === outputs: gradient
 

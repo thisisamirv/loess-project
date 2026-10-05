@@ -312,7 +312,7 @@ Include standard errors in the result (`LoessResult.standard_errors`), computed 
 
 ### outputs: diagnostics
 
-Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always `null` here.
+Include a `Diagnostics` object (RMSE, MAE, R², residual_sd) in the result. Streaming `residual_sd` is the cumulative sample standard deviation of emitted residuals. `effective_df`/`aic`/`aicc` require standard errors, which are Batch-only, so they're always `null` here.
 
 ### outputs: residuals
 
@@ -369,7 +369,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `rmse` | `number` | Root Mean Squared Error |
 | `mae` | `number` | Mean Absolute Error |
 | `r_squared` | `number` | R-squared |
-| `residual_sd` | `number` | Residual standard deviation |
+| `residual_sd` | `number` | Cumulative sample SD of emitted residuals |
 | `effective_df` | `number \| null` | Always `null` (requires standard errors, Batch only) |
 | `aic` | `number \| null` | Always `null` (requires `effective_df`, Batch only) |
 | `aicc` | `number \| null` | Always `null` (requires `effective_df`, Batch only) |

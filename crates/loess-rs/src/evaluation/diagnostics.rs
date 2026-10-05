@@ -37,25 +37,131 @@ pub struct Diagnostics<T> {
     // Estimated effective degrees of freedom (df_eff).
     pub effective_df: Option<T>,
 
-    // Robust residual standard deviation estimated from MAD.
+    // Residual scale estimate: Batch uses scaled MAD; Streaming uses sample SD.
     pub residual_sd: T,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct ScaledSumProducts<T: Float> {
+    scale: T,
+    sum: T,
+}
+
+impl<T: Float> ScaledSumProducts<T> {
+    fn new() -> Self {
+        Self {
+            scale: T::zero(),
+            sum: T::zero(),
+        }
+    }
+
+    fn add_product(&mut self, left: T, right: T) {
+        let product_scale = T::max(left.abs(), right.abs());
+        if product_scale == T::zero() {
+            return;
+        }
+        let scaled_product = (left / product_scale) * (right / product_scale);
+        if product_scale > self.scale {
+            let ratio = self.scale / product_scale;
+            self.sum = self.sum * ratio * ratio + scaled_product;
+            self.scale = product_scale;
+        } else {
+            let ratio = product_scale / self.scale;
+            self.sum = self.sum + scaled_product * ratio * ratio;
+        }
+    }
+
+    fn root_mean_square(&self, count: T) -> T {
+        if self.scale <= T::zero() || count <= T::zero() {
+            return T::zero();
+        }
+        self.scale * (self.sum.max(T::zero()) / count).sqrt()
+    }
+
+    fn ratio_to(&self, denominator: &Self) -> T {
+        if self.scale <= T::zero() || self.sum <= T::zero() {
+            return T::zero();
+        }
+        if denominator.scale <= T::zero() || denominator.sum <= T::zero() {
+            return T::infinity();
+        }
+        let scale_ratio = self.scale / denominator.scale;
+        scale_ratio * scale_ratio * (self.sum / denominator.sum)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct StreamingDiagnosticsMoments<T: Float> {
+    response_origin: T,
+    response_mean_offset: T,
+    response_centered_squares: ScaledSumProducts<T>,
+    residual_origin: T,
+    residual_mean_offset: T,
+    residual_centered_squares: ScaledSumProducts<T>,
+    residual_squares: ScaledSumProducts<T>,
+    mean_absolute_residual: T,
+}
+
+impl<T: Float> StreamingDiagnosticsMoments<T> {
+    fn new() -> Self {
+        Self {
+            response_origin: T::zero(),
+            response_mean_offset: T::zero(),
+            response_centered_squares: ScaledSumProducts::new(),
+            residual_origin: T::zero(),
+            residual_mean_offset: T::zero(),
+            residual_centered_squares: ScaledSumProducts::new(),
+            residual_squares: ScaledSumProducts::new(),
+            mean_absolute_residual: T::zero(),
+        }
+    }
+
+    fn update(&mut self, count: usize, response: T, residual: T) {
+        if count == 1 {
+            self.response_origin = response;
+            self.residual_origin = residual;
+        }
+        let count_t = T::from(count).unwrap_or(T::one());
+
+        let response_offset = response - self.response_origin;
+        let response_delta = response_offset - self.response_mean_offset;
+        self.response_mean_offset = self.response_mean_offset + response_delta / count_t;
+        self.response_centered_squares
+            .add_product(response_delta, response_offset - self.response_mean_offset);
+
+        let residual_offset = residual - self.residual_origin;
+        let residual_delta = residual_offset - self.residual_mean_offset;
+        self.residual_mean_offset = self.residual_mean_offset + residual_delta / count_t;
+        self.residual_centered_squares
+            .add_product(residual_delta, residual_offset - self.residual_mean_offset);
+        self.residual_squares.add_product(residual, residual);
+        self.mean_absolute_residual =
+            self.mean_absolute_residual + (residual.abs() - self.mean_absolute_residual) / count_t;
+    }
 }
 
 // Cumulative state for computing diagnostics in streaming mode.
 #[derive(Debug, Clone, PartialEq)]
-pub struct DiagnosticsState<T> {
+pub struct DiagnosticsState<T: Float> {
     // Total number of observations.
     pub n: usize,
     // Sum of y values.
     pub sum_y: T,
     // Sum of squared y values.
     pub sum_y_sq: T,
+    // First response value used to center streaming variance updates.
+    pub origin_y: T,
+    // Running mean of response offsets from `origin_y`.
+    pub mean_y_offset: T,
+    // Centered sum of squares of response offsets from `origin_y`.
+    pub sum_y_centered_sq: T,
     // Sum of residuals (y - ŷ).
     pub sum_r: T,
     // Sum of squared residuals.
     pub sum_r_sq: T,
     // Sum of absolute residuals.
     pub sum_abs_r: T,
+    moments: StreamingDiagnosticsMoments<T>,
 }
 
 impl<T: Float> Default for DiagnosticsState<T> {
@@ -71,9 +177,13 @@ impl<T: Float> DiagnosticsState<T> {
             n: 0,
             sum_y: T::zero(),
             sum_y_sq: T::zero(),
+            origin_y: T::zero(),
+            mean_y_offset: T::zero(),
+            sum_y_centered_sq: T::zero(),
             sum_r: T::zero(),
             sum_r_sq: T::zero(),
             sum_abs_r: T::zero(),
+            moments: StreamingDiagnosticsMoments::new(),
         }
     }
 
@@ -81,7 +191,17 @@ impl<T: Float> DiagnosticsState<T> {
     pub fn update(&mut self, y: &[T], y_smooth: &[T]) {
         for (&yi, &ys) in y.iter().zip(y_smooth.iter()) {
             let r = yi - ys;
+            self.moments.update(self.n + 1, yi, r);
+            if self.n == 0 {
+                self.origin_y = yi;
+            }
+            let y_offset = yi - self.origin_y;
             self.n += 1;
+            let count = T::from(self.n).unwrap_or(T::one());
+            let delta = y_offset - self.mean_y_offset;
+            self.mean_y_offset = self.mean_y_offset + delta / count;
+            self.sum_y_centered_sq =
+                self.sum_y_centered_sq + delta * (y_offset - self.mean_y_offset);
             self.sum_y = self.sum_y + yi;
             self.sum_y_sq = self.sum_y_sq + yi * yi;
             self.sum_r = self.sum_r + r;
@@ -105,26 +225,33 @@ impl<T: Float> DiagnosticsState<T> {
             };
         }
 
-        let rmse = (self.sum_r_sq / n_t).sqrt();
-        let mae = self.sum_abs_r / n_t;
+        let rmse = self.moments.residual_squares.root_mean_square(n_t);
+        let mae = self.moments.mean_absolute_residual;
 
-        // R-squared: 1 - SS_res / SS_tot
-        let ss_tot = self.sum_y_sq - (self.sum_y * self.sum_y) / n_t;
-        let r_squared = if ss_tot > T::from(1e-12).unwrap() * self.sum_y_sq.abs() {
-            T::one() - self.sum_r_sq / ss_tot
-        } else if self.sum_r_sq < T::from(1e-12).unwrap() * self.sum_y_sq.abs()
-            || self.sum_r_sq == T::zero()
-        {
+        // The centered accumulator avoids cancellation at large response offsets.
+        let response_has_variance = self.moments.response_centered_squares.sum > T::zero();
+        let r_squared = if response_has_variance {
             T::one()
+                - self
+                    .moments
+                    .residual_squares
+                    .ratio_to(&self.moments.response_centered_squares)
         } else {
-            T::zero()
+            let response_scale = self.origin_y.abs().max(T::one());
+            let roundoff = T::from(16).unwrap_or(T::one()) * T::epsilon() * response_scale;
+            if rmse <= roundoff {
+                T::one()
+            } else {
+                T::zero()
+            }
         };
 
         // Residual SD: estimated from global variance of residuals
         // Var(r) = (sum_r_sq - (sum_r)^2 / n) / (n - 1)
         let residual_sd = if self.n > 1 {
-            let var_r = (self.sum_r_sq - (self.sum_r * self.sum_r) / n_t) / (n_t - T::one());
-            var_r.max(T::zero()).sqrt()
+            self.moments
+                .residual_centered_squares
+                .root_mean_square(n_t - T::one())
         } else {
             rmse
         };
@@ -182,37 +309,47 @@ impl<T: Float> Diagnostics<T> {
         }
     }
 
-    // Compute the residual sum of squares (RSS).
-    // RSS = sum r_i^2.
-    fn calculate_rss(residuals: &[T]) -> T {
-        residuals.iter().fold(T::zero(), |acc, &r| acc + r * r)
-    }
-
     // Compute the root mean squared error (RMSE).
     // RMSE = sqrt((1/n) * sum (y_i - y_hat_i)^2).
     pub fn calculate_rmse(y: &[T], y_smooth: &[T]) -> T {
         let n_t = T::from(y.len()).unwrap_or(T::one());
-        let rss = y
+        let residual_scale = y
             .iter()
             .zip(y_smooth.iter())
-            .fold(T::zero(), |acc, (&yi, &ys)| {
-                let r = yi - ys;
-                acc + r * r
-            });
+            .fold(T::zero(), |scale, (&yi, &ys)| scale.max((yi - ys).abs()));
+        if residual_scale == T::zero() {
+            return T::zero();
+        }
 
-        (rss / n_t).sqrt()
+        let scaled_rss = y
+            .iter()
+            .zip(y_smooth.iter())
+            .fold(T::zero(), |sum, (&yi, &ys)| {
+                let scaled_residual = (yi - ys) / residual_scale;
+                sum + scaled_residual * scaled_residual
+            });
+        residual_scale * (scaled_rss / n_t).sqrt()
     }
 
     // Compute the mean absolute error (MAE).
     // MAE = (1/n) * sum |y_i - y_hat_i|.
     pub fn calculate_mae(y: &[T], y_smooth: &[T]) -> T {
         let n_t = T::from(y.len()).unwrap_or(T::one());
-        let sum = y
+        let residual_scale = y
             .iter()
             .zip(y_smooth.iter())
-            .fold(T::zero(), |acc, (&yi, &ys)| acc + (yi - ys).abs());
+            .fold(T::zero(), |scale, (&yi, &ys)| scale.max((yi - ys).abs()));
+        if residual_scale == T::zero() {
+            return T::zero();
+        }
 
-        sum / n_t
+        let scaled_sum_abs = y
+            .iter()
+            .zip(y_smooth.iter())
+            .fold(T::zero(), |sum, (&yi, &ys)| {
+                sum + (yi - ys).abs() / residual_scale
+            });
+        residual_scale * (scaled_sum_abs / n_t)
     }
 
     // Compute the coefficient of determination (R^2).
@@ -220,35 +357,56 @@ impl<T: Float> Diagnostics<T> {
     // sum of squares and SS_tot is the total sum of squares.
     pub fn calculate_r_squared(y: &[T], y_smooth: &[T]) -> T {
         let n = y.len();
+        if n == 0 {
+            return T::zero();
+        }
         if n == 1 {
             return T::one();
         }
 
-        let n_t = T::from(n).unwrap_or(T::one());
+        let origin = y[0];
+        let mut mean_offset = T::zero();
+        for (index, &yi) in y.iter().enumerate() {
+            let offset = yi - origin;
+            let count = T::from(index + 1).unwrap_or(T::one());
+            mean_offset = mean_offset + (offset - mean_offset) / count;
+        }
 
-        // Compute mean
-        let sum = y.iter().copied().fold(T::zero(), |acc, v| acc + v);
-        let mean = sum / n_t;
+        let (response_scale, residual_scale) = y.iter().zip(y_smooth.iter()).fold(
+            (T::zero(), T::zero()),
+            |(y_scale, r_scale), (&yi, &ys)| {
+                let deviation = (yi - origin) - mean_offset;
+                let residual = yi - ys;
+                (y_scale.max(deviation.abs()), r_scale.max(residual.abs()))
+            },
+        );
 
-        // Compute SS_tot and SS_res in one pass
-        let (ss_tot, ss_res) =
-            y.iter()
-                .zip(y_smooth.iter())
-                .fold((T::zero(), T::zero()), |(tot, res), (&yi, &ys)| {
-                    let deviation = yi - mean;
-                    let residual = yi - ys;
-                    (tot + deviation * deviation, res + residual * residual)
-                });
-
-        if ss_tot == T::zero() {
+        if response_scale == T::zero() {
             // All y values are identical
-            if ss_res == T::zero() {
+            if residual_scale == T::zero() {
                 T::one() // Perfect fit
             } else {
                 T::zero() // No variance to explain
             }
         } else {
-            T::one() - ss_res / ss_tot
+            let (scaled_ss_tot, scaled_ss_res) = y.iter().zip(y_smooth.iter()).fold(
+                (T::zero(), T::zero()),
+                |(tot, res), (&yi, &ys)| {
+                    let scaled_deviation = ((yi - origin) - mean_offset) / response_scale;
+                    let scaled_residual = if residual_scale == T::zero() {
+                        T::zero()
+                    } else {
+                        (yi - ys) / residual_scale
+                    };
+                    (
+                        tot + scaled_deviation * scaled_deviation,
+                        res + scaled_residual * scaled_residual,
+                    )
+                },
+            );
+            let scale_ratio = residual_scale / response_scale;
+            let residual_ratio = scale_ratio * scale_ratio * (scaled_ss_res / scaled_ss_tot);
+            T::one() - residual_ratio
         }
     }
 
@@ -314,13 +472,22 @@ impl<T: Float> Diagnostics<T> {
     // AIC = n * ln(RSS / n) + 2 * df_eff.
     pub fn calculate_aic(residuals: &[T], effective_df: T) -> T {
         let n = T::from(residuals.len()).unwrap_or(T::one());
-        let rss = Self::calculate_rss(residuals);
+        let residual_scale = residuals
+            .iter()
+            .fold(T::zero(), |scale, &residual| scale.max(residual.abs()));
 
-        if rss <= T::zero() || n <= T::zero() {
+        if residual_scale <= T::zero() || n <= T::zero() {
             return T::infinity();
         }
 
-        n * (rss / n).ln() + T::from(Self::LINEAR_PARAMS).unwrap() * effective_df
+        let scaled_rss = residuals.iter().fold(T::zero(), |sum, &residual| {
+            let scaled = residual / residual_scale;
+            sum + scaled * scaled
+        });
+        let log_mean_squared_error =
+            T::from(2.0).unwrap() * residual_scale.ln() + (scaled_rss / n).ln();
+
+        n * log_mean_squared_error + T::from(Self::LINEAR_PARAMS).unwrap() * effective_df
     }
 
     // Compute the corrected Akaike Information Criterion (AICc).

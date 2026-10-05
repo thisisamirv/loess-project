@@ -145,6 +145,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Clarified that Batch `Diagnostics.residual_sd` uses `1.4826 * MAD`, while Streaming reports the cumulative sample standard deviation of emitted residuals.
 - Breaking change: group confidence, prediction, and bootstrap configuration under `.intervals(IntervalsBuilder::new()...)`, and use `.cv(CVBuilder::new().method(...).fraction(...))`. One outer `.seed(...)` controls both CV and bootstrap; individual interval/CV setters and CV-local seeds were removed. Confidence and prediction coverage levels are independent.
 - Hoisted inline fully-qualified paths to top-level `use` imports; genuine name collisions stay qualified with a comment. No behavior changes.
 - Flattened `tests/loess-rs/` into `tests/` directly: each test file is now its own integration test binary. No behavior changes.
@@ -232,6 +233,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Prevent overflow in even-sample medians, mean-absolute and bisquare scaling, Batch/Streaming diagnostics and AIC, and local/all-tied case-weight normalization for large finite values.
 - Make one-dimensional boundary padding permutation-invariant; validate weighted-distance weights and Minkowski exponents at builder time to prevent panics and invalid fits.
 - Preserve retained-prediction zero-weight fallback semantics: return the matching training response for `return_original`, and `NaN` for `return_none` or unmatched original-value queries.
 - Preserve configured robustness iterations, auto-convergence, boundary handling, and surface mode in multidimensional CV fold predictions; CV now evaluates held-out points against each fold's fitted model state.

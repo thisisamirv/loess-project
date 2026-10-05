@@ -20,11 +20,13 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Clarified Batch `residual_sd` as `1.4826 * MAD`; Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Breaking change: replaced individual `return_*` output booleans with `outputs: [...]` for Batch, Streaming, Online, and prediction options.
 * Breaking change: replaced flat interval options and prediction levels with `intervals: { confidence, prediction }`; CV uses only `cv: { fractions, method, k }` with an outer `seed`, replacing flat CV options and `cv.seed`. Legacy and unknown option keys are rejected.
 
 ### Fixed
 
+* Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Restored TypeScript declarations for retained prediction and weighted Streaming, documented and validated the JavaScript-safe CV seed range, and strengthened interval output assertions.
 
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.

@@ -353,7 +353,7 @@ Returned by `process_chunk()` and `finalize()`.
 | `rmse` | `T` | Root Mean Squared Error |
 | `mae` | `T` | Mean Absolute Error |
 | `r_squared` | `T` | R-squared |
-| `residual_sd` | `T` | Residual standard deviation |
+| `residual_sd` | `T` | Cumulative sample SD of emitted residuals |
 | `effective_df` | `Option<T>` | Always `None` (requires standard errors, Batch only) |
 | `aic` | `Option<T>` | Always `None` (requires `effective_df`, Batch only) |
 | `aicc` | `Option<T>` | Always `None` (requires `effective_df`, Batch only) |

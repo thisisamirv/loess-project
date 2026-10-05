@@ -17,6 +17,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Clarified Batch `residual_sd` as `1.4826 * MAD`; Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Package each prebuilt platform library and its headers in a separate release tar archive.
 * Breaking change: replaced the individual output booleans in `LoessOptions`, `OnlineOptions`, and `PredictOptions` with grouped `outputs` vectors.
 * Breaking change: replaced flat interval levels with `intervals`, removed flat CV fields in favor of `cv`, and moved CV seeding to optional outer `seed`; `seed = 0` is now reproducible.
@@ -26,6 +27,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Forward the selected distance metric when per-dimension weights are supplied, and support multivariate Online points through a vector-coordinate `add_point` overload.
 * Free retained prediction handles and zero-length error results, reset freed native results, and make wrapper error paths exception-safe. Multidimensional predictor buffers are freed with their full length.
 * Make empty/moved result accessors safe, bounds-check indexed access, preserve all predictor coordinates, and keep unavailable diagnostics/statistics absent.

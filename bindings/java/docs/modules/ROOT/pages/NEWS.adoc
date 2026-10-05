@@ -18,11 +18,13 @@ This changelog includes end-user changes only. For internal development notes, s
 
 === Changed
 
+* Clarified Batch `residualSd()` as `1.4826 * MAD`; Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Breaking change: replaced individual `return...` output setters and prediction flags with `outputs(...)` for Batch, Streaming, Online, and prediction options.
 * Breaking change: replaced flat interval setters and prediction levels with `intervals(IntervalsOptions)`; CV uses only `cv(CVOptions)` with an outer `seed(long)`, replacing flat CV setters and `CVOptions.Builder.seed`.
 
 === Fixed
 
+* Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Reject negative CV seeds before native model allocation and defensively copy weighted-metric arrays in immutable options.
 * Propagate JNI array length/read failures, preserve explicit empty arrays for validation, and defer retained prediction-handle ownership until Java result construction succeeds. Validate iterations and k-fold counts instead of casting/coercing invalid values, and synchronize operations that share mutable native handles.
 * Reject empty CV fractions and custom-weight arrays, and complete Online/Streaming builder Javadoc summaries. The `maven-javadoc-plugin` already uses `failOnWarnings`; no POM change was needed. Java GPU installer validation has no LOESS counterpart.

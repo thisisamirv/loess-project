@@ -395,7 +395,7 @@ All accessors are const methods (not public fields):
 | `rmse()` | `double` | Root Mean Squared Error |
 | `mae()` | `double` | Mean Absolute Error |
 | `r_squared()` | `double` | R-squared |
-| `residual_sd()` | `double` | Residual standard deviation |
+| `residual_sd()` | `double` | Cumulative sample SD of emitted residuals |
 | `effective_df()` | `double` | Always `NaN` (requires standard errors, Batch only) |
 | `aic()` | `double` | Always `NaN` (requires `effective_df`, Batch only) |
 | `aicc()` | `double` | Always `NaN` (requires `effective_df`, Batch only) |

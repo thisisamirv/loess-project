@@ -369,7 +369,7 @@ All accessors are const methods (not public fields):
 | `rmse()` | `double` | Root Mean Squared Error |
 | `mae()` | `double` | Mean Absolute Error |
 | `r_squared()` | `double` | R-squared |
-| `residual_sd()` | `double` | Residual standard deviation |
+| `residual_sd()` | `double` | Robust residual scale estimate (`1.4826 * MAD`) |
 | `effective_df()` | `double` | Effective degrees of freedom (NaN if not computed) |
 | `aic()` | `double` | AIC (NaN if not computed) |
 | `aicc()` | `double` | AICc (NaN if not computed) |

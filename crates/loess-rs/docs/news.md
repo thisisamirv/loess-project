@@ -15,12 +15,14 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Clarified that Batch `residual_sd` is `1.4826 * MAD`, while Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Use `.outputs([...])` in place of individual `return_*` selectors for Batch, Streaming, Online, and retained-model prediction; legacy Rust selectors remain available.
 * Marked `WeightFunction` as non-exhaustive so downstream kernel must reject unsupported future variants explicitly.
 * Matched R `stats::loess` span truncation, multivariate predictor normalization, and bisquare robustness cutoffs; MAR now uses R's uncentered median absolute residual and machine-minimum scale stop, while MAD remains the default. Near-singular local linear fits are handled by the regression solver rather than a global-range slope cutoff.
 
 ### Fixed
 
+* Prevent overflow in even-sample medians, mean-absolute and bisquare scaling, Batch/Streaming diagnostics and AIC, and local/all-tied case-weight normalization for large finite values.
 * Make one-dimensional boundary padding permutation-invariant, validate weighted-distance weights before fitting, and reject non-finite or non-positive Minkowski exponents at build time.
 * Preserve retained-prediction zero-weight fallback semantics: return the matching training response for `return_original`, and `NaN` for `return_none` or unmatched original-value queries.
 * Multidimensional CV now predicts held-out points using each fold's fitted model state, preserving robustness iterations, auto-convergence, boundary handling, and surface mode.

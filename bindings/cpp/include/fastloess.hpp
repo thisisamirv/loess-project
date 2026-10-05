@@ -273,6 +273,8 @@ public:
   std::optional<double> aic() const { return aic_; }
   std::optional<double> aicc() const { return aicc_; }
   std::optional<double> effective_df() const { return effective_df_; }
+  /// Batch: robust residual scale estimate (1.4826 * MAD); Streaming:
+  /// cumulative sample SD of emitted residuals.
   std::optional<double> residual_sd() const { return residual_sd_; }
 
 private:

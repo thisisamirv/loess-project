@@ -139,7 +139,10 @@ arrive in chunks, see \code{\link{StreamingLoess}}; for point-by-point
 real-time data, see \code{\link{OnlineLoess}}.
 
 \code{fraction} is the most important parameter: it controls the size of the
-local neighbourhood used at each point.\tabular{lll}{
+local neighbourhood used at each point.
+
+When \code{outputs} includes \code{"diagnostics"}, Batch \code{residual_sd} is the robust
+residual scale estimate \code{1.4826 * MAD}.\tabular{lll}{
    Range \tab Effect \tab Use case \cr
    0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
    0.3-0.5 \tab Balanced \tab General purpose \cr

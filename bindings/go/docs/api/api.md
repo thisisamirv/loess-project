@@ -95,7 +95,7 @@ Releases native resources. Safe to call multiple times. A finalizer is registere
 
 `Outputs` groups optional result selection. Supported names are `"diagnostics"`, `"residuals"`, `"weights"`, `"derivative"` (or `"gradient"`), `"se"`, and `"sorted"`. For example, `[]string{"diagnostics", "residuals", "se"}` enables those components. Use only `Outputs` to select optional components.
 
-`Diagnostics` holds `RMSE`, `MAE`, `RSquared`, `AIC`, `AICc`, `EffectiveDF`, `ResidualSD`.
+`Diagnostics` holds `RMSE`, `MAE`, `RSquared`, `AIC`, `AICc`, `EffectiveDF`, and `ResidualSD`. Batch `ResidualSD` is the robust scale estimate (`1.4826 * MAD`); Streaming uses the cumulative sample SD of emitted residuals.
 
 `HatMatrixStats` holds `ENP`, `TraceHat`, `Delta1`, `Delta2`, `ResidualScale`, `Leverage`.
 

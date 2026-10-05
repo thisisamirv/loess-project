@@ -16,6 +16,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Clarified that Batch `residual_sd` is `1.4826 * MAD`, while Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Use `.outputs([...])` in place of individual `return_*` selectors for Batch, Streaming, Online, and retained-model prediction; legacy Rust selectors remain available.
 * Breaking: Removed unsupported interval and diagnostics options from Streaming/Online and `parallel` from `OnlineLoess`; Online fitting always runs sequentially.
 * Consolidated the fastLoess README (merging Installation/Documentation, dropping GitHub-only alert syntax, and removing sections covered by docs pages), and moved parameter docs into API option tables, removing `parameters.md`. Replaced `kernels.md`/`adapter-choice.md` mermaid flowcharts with tables because rustdoc does not render mermaid.
@@ -23,6 +24,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Require explicit `distance_metric("weighted")` selection before applying `weighted_metric_weights`; support fixed-size Rust arrays as fit inputs.
 * Reuse the serial CV fold engine for parallel candidates, preserving case weights, seeded shuffling, multidimensional normalization and held-out LOOCV predictions.
 * Forward case weights into parallel interval estimation and use the same local-SE moments as serial fits.

@@ -17,11 +17,13 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Clarified Batch `residual_sd` as `1.4826 * MAD`; Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Breaking change: replaced individual `return_*` output keywords, including `return_gradient` and prediction's `return_derivative`, with `outputs=[...]` for Batch, Streaming, Online, and prediction.
 * Breaking change: replaced flat interval keywords and prediction levels with `intervals={"confidence": ..., "prediction": ...}`; CV uses only `cv={"fractions": ..., "method": ..., "k": ...}` with an outer `seed`, replacing flat CV keywords and the nested seed. Unknown grouped keys raise `ValueError`.
 
 ### Fixed
 
+* Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Corrected Streaming result documentation to describe standard errors and confidence/prediction intervals when requested.
 * Support multivariate Online updates by accepting one coordinate vector per `add_point` call while preserving scalar inputs for one-dimensional models.
 * Reject unknown output names across Batch, Streaming, Online, and prediction; accept documented array-like inputs for fit, streaming, and prediction; release the GIL during Online updates.

@@ -258,7 +258,7 @@ Include standard errors in the result (`Result.StandardErrors`), computed per ch
 
 ### outputs: diagnostics
 
-Populate `Result.Diagnostics` with RMSE, MAE, R², and residual_sd. `EffectiveDF`/`AIC`/`AICc` require standard errors, which are Batch-only, so they're always unset here.
+Populate `Result.Diagnostics` with RMSE, MAE, R², and residual_sd. Streaming `ResidualSD` is the cumulative sample standard deviation of emitted residuals. `EffectiveDF`/`AIC`/`AICc` require standard errors, which are Batch-only, so they're always unset here.
 
 ### outputs: residuals
 

@@ -21,12 +21,14 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Clarified Batch `ResidualSD` as `1.4826 * MAD`; Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Breaking change: replaced individual `Return*` output fields with `Outputs: []string{...}` for Batch, Streaming, Online, and prediction options.
 * Breaking change: replaced flat interval fields and prediction levels with `Intervals *IntervalsOptions`; CV uses only `CV *CVOptions` with an outer `Seed`, replacing flat CV fields and `CVOptions.Seed`.
 * Represent unavailable diagnostic metrics as nil optional values instead of NaN sentinels in the Go binding.
 
 ### Fixed
 
+* Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Reject explicitly empty custom weights instead of treating them as omitted.
 * Keep model receivers alive during Batch, Streaming, Online, and retained-prediction cgo calls to prevent premature native-handle finalization.
 * Reject unknown or unsupported output names, extra custom-weight slices, and integer counts outside the C `int` range. Invalid K-fold counts are no longer silently coerced to two.

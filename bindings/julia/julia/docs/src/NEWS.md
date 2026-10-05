@@ -19,12 +19,14 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Clarified Batch `residual_sd` as `1.4826 * MAD`; Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Breaking change: replaced individual `return_*` output keywords with `outputs=[...]` for Batch, Streaming, Online, and prediction.
 * Breaking change: replaced flat interval keywords and prediction levels with `intervals=(confidence=..., prediction=...)`; CV uses only `cv=(fractions=..., method=..., k=...)` with an outer `seed`, replacing flat CV keywords and the nested seed. Unknown grouped keys raise `ArgumentError`.
 * Represent unavailable diagnostic metrics as `nothing` instead of `NaN` sentinels in the Julia binding.
 
 ### Fixed
 
+* Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Reject multivariate vector calls before unsafe FFI reads, use fixed-width 64-bit CV seeds, validate interpolation caps before allocation, and reject appending results with different dimensions.
 * Preserve model owners and input arrays across native calls, serialize mutable Streaming/Online operations, reject result appends with mismatched optional fields, and surface native constructor validation errors. GPU subprocess/target checks have no LOESS counterpart.
 * Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.

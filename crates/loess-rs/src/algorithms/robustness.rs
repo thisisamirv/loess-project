@@ -59,6 +59,7 @@ impl RobustnessMethod {
         };
 
         let c_t = T::from(tuning_constant).unwrap_or(T::one());
+        let mut bisquare_scale_factor = c_t;
         let (base_scale, tuned_scale) = if matches!(self, Self::Bisquare)
             && matches!(scaling_method, ScalingMethod::MAR)
         {
@@ -71,15 +72,22 @@ impl RobustnessMethod {
                     .unwrap_or(core::cmp::Ordering::Equal)
             });
             let middle_value = *middle;
-            let tuned = if residuals.len().is_multiple_of(2) {
+            if residuals.len().is_multiple_of(2) {
                 let lower_value = lower
                     .iter()
                     .fold(T::zero(), |largest, &value| largest.max(value));
-                T::from(3.0).unwrap_or(T::one()) * (lower_value + middle_value)
+                let base = lower_value + (middle_value - lower_value) / T::from(2.0).unwrap();
+                if base > T::zero() {
+                    bisquare_scale_factor = T::from(3.0).unwrap_or(T::one())
+                        * (lower_value / base + middle_value / base);
+                }
+                (
+                    base,
+                    T::from(3.0).unwrap_or(T::one()) * (lower_value + middle_value),
+                )
             } else {
-                c_t * middle_value
-            };
-            (T::zero(), tuned)
+                (middle_value, c_t * middle_value)
+            }
         } else {
             let base = self.compute_scale(residuals, scaling_method, scratch);
             (base, base * c_t)
@@ -91,7 +99,8 @@ impl RobustnessMethod {
 
         for (i, &r) in residuals.iter().enumerate() {
             weights[i] = match method_type {
-                0 => Self::bisquare_weight(r, tuned_scale),
+                0 if tuned_scale.is_finite() => Self::bisquare_weight(r, tuned_scale),
+                0 => Self::bisquare_weight_from_factor(r, base_scale, bisquare_scale_factor),
                 1 => Self::huber_weight(r, base_scale, c_t),
                 _ => Self::talwar_weight(r, base_scale, c_t),
             };
@@ -116,16 +125,16 @@ impl RobustnessMethod {
             return T::zero();
         }
 
-        let mut sum_abs = T::zero();
-        for &r in residuals {
-            sum_abs = sum_abs + r.abs();
-        }
-        let mae = sum_abs / T::from(n).unwrap();
-
-        // Safety: If Mean is 0, Median is also 0. Exit early.
-        if mae.is_zero() {
+        let mean_abs_scale = residuals
+            .iter()
+            .fold(T::zero(), |scale, residual| scale.max(residual.abs()));
+        if mean_abs_scale == T::zero() {
             return T::zero();
         }
+        let scaled_sum = residuals.iter().fold(T::zero(), |sum, residual| {
+            sum + residual.abs() / mean_abs_scale
+        });
+        let mean_abs = mean_abs_scale * (scaled_sum / T::from(n).unwrap());
 
         // Compute robust scale using the selected method (median-based).
         // This is usually the more expensive operation (O(N) or O(N log N)).
@@ -137,7 +146,7 @@ impl RobustnessMethod {
         if matches!(scaling_method, ScalingMethod::MAD)
             && scale_val <= T::from(Self::MIN_TUNED_SCALE).unwrap_or_else(T::epsilon)
         {
-            mae.max(scale_val)
+            mean_abs.max(scale_val)
         } else {
             scale_val
         }
@@ -160,8 +169,6 @@ impl RobustnessMethod {
             return T::one();
         }
         let abs_residual = residual.abs();
-
-        // Thresholds (0.001 and 0.999)
         let low_threshold = T::from(0.001).unwrap();
         let high_threshold = T::from(0.999).unwrap();
 
@@ -176,8 +183,27 @@ impl RobustnessMethod {
         }
     }
 
+    // Evaluate bisquare weights without constructing an overflowing tuned scale.
+    #[inline]
+    fn bisquare_weight_from_factor<T: Float>(residual: T, base_scale: T, factor: T) -> T {
+        if base_scale <= T::zero() || factor <= T::zero() {
+            return T::one();
+        }
+
+        let normalized = (residual.abs() / factor) / base_scale;
+        let low_threshold = T::from(0.001).unwrap();
+        let high_threshold = T::from(0.999).unwrap();
+        if normalized <= low_threshold {
+            T::one()
+        } else if normalized <= high_threshold {
+            let tmp = T::one() - normalized * normalized;
+            tmp * tmp
+        } else {
+            T::zero()
+        }
+    }
+
     // Compute Huber weight.
-    //
     // # Formula
     //
     // u = |r| / s

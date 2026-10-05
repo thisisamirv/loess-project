@@ -7,6 +7,10 @@
 #' flushes any remaining buffered points after the last chunk.
 #'
 #' @details
+#'
+#' When `outputs` includes `"diagnostics"`, `residual_sd` is the cumulative
+#' sample standard deviation of emitted residuals. Batch `residual_sd` instead
+#' uses the robust residual scale estimate `1.4826 * MAD`.
 #' Best suited for datasets over 100,000 points, memory-constrained
 #' environments, or batch processing pipelines. For smaller datasets that fit
 #' in memory, see \code{\link{Loess}}; for point-by-point real-time data,
