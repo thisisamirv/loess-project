@@ -251,6 +251,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Resolve Starlight i18n/404 collection warnings and Astro Markdown-plugin deprecations in the docs build.
 - Snapshot and validate Batch options at `Loess` construction so later mutations to the caller's options object cannot change subsequent fits.
 - Restore TypeScript declarations for retained prediction and weighted Streaming, validate CV seeds as safe JavaScript integers including fractional values, and strengthen confidence/prediction interval output tests.
 - Reject unknown option keys and mode-inappropriate output names; return owned typed-array copies that remain valid after freeing result owners.
@@ -310,6 +311,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Resolve Starlight i18n/404 collection warnings and Astro Markdown-plugin deprecations in the docs build.
 - Reject fractional, non-finite, negative, and JavaScript-unsafe CV seeds before casting; document the safe-integer range.
 - Reject unknown output names for Batch, Streaming, Online, and prediction; restore the `fit_async()` declaration to `Promise<LoessResult>` after N-API builds. Online/prediction outputs were already wired, and the loader already detects musl; GPU installer/sidecar checks have no LOESS counterpart.
 - Fixed inconsistent naming of the Node.js binding as "JavaScript" across READMEs, doc-site home pages, and `CITATION.cff`.
