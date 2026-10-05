@@ -103,6 +103,7 @@ OnlineLoess <- function(
                 fraction = fraction,
                 window_capacity = window_capacity,
                 min_points = min_points,
+                update_mode = update_mode,
                 iterations = iterations,
                 dimensions = dimensions
             )

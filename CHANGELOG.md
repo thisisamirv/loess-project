@@ -319,6 +319,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **R:**
 
+- Fixed `print.OnlineLoess()` omitting the configured update mode and `print.LoessResult()` labeling CV score counts as folds.
 - Preserve row-wise coordinates when fitting Batch/Streaming matrix predictors; support CV seeds through the documented 2^53 limit, reject matrix-shaped Online prediction queries, and report the univariate-only plotting limitation explicitly.
 - Added `srr` and its rOpenSci repositories to the R docs workflow so pkgdown can load the configured `srr` template.
 - Install `commonmark` from CRAN before resolving the rOpenSci tooling dependencies, avoiding the invalid-checksum macOS ARM64 binary from r-universe.
