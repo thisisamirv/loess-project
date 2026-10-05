@@ -239,6 +239,9 @@
 <div class="ulist">
 <ul>
 <li>
+<p>Clarified Batch <code>residualSd()</code> as <code>1.4826 * MAD</code>; Streaming reports the cumulative sample standard deviation of emitted residuals.</p>
+</li>
+<li>
 <p>Breaking change: replaced individual <code>return&#8230;&#8203;</code> output setters and prediction flags with <code>outputs(&#8230;&#8203;)</code> for Batch, Streaming, Online, and prediction options.</p>
 </li>
 <li>
@@ -251,6 +254,12 @@
 <h3 id="fixed"><a class="anchor" href="#fixed"></a>Fixed</h3>
 <div class="ulist">
 <ul>
+<li>
+<p>Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.</p>
+</li>
+<li>
+<p>Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.</p>
+</li>
 <li>
 <p>Reject negative CV seeds before native model allocation and defensively copy weighted-metric arrays in immutable options.</p>
 </li>

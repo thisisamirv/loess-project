@@ -932,7 +932,7 @@ A length mismatch between <code>x</code> and <code>y</code> always throws, even 
 <div class="sect2">
 <h3 id="outputs-diagnostics"><a class="anchor" href="#outputs-diagnostics"></a>outputs: diagnostics</h3>
 <div class="paragraph">
-<p>Populate <code>Result.diagnostics()</code> with RMSE, MAE, R², and residual_sd. <code>effectiveDf</code>/<code>aic</code>/<code>aicc</code> require standard errors, which are Batch-only, so they&#8217;re always empty here.</p>
+<p>Populate <code>Result.diagnostics()</code> with RMSE, MAE, R², and residual_sd. Streaming <code>residualSd()</code> is the cumulative sample standard deviation of emitted residuals. <code>effectiveDf</code>/<code>aic</code>/<code>aicc</code> require standard errors, which are Batch-only, so they&#8217;re always empty here.</p>
 </div>
 </div>
 <div class="sect2">

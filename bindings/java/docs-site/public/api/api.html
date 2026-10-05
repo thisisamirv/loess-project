@@ -582,7 +582,7 @@
 </tbody>
 </table>
 <div class="paragraph">
-<p><code>Diagnostics</code> holds <code>rmse()</code>, <code>mae()</code>, <code>rSquared()</code>, <code>aic()</code>, <code>aicc()</code>, <code>effectiveDf()</code>, <code>residualSd()</code> (the last three are <code>Optional&lt;Double&gt;</code>).</p>
+<p><code>Diagnostics</code> holds <code>rmse()</code>, <code>mae()</code>, <code>rSquared()</code>, <code>aic()</code>, <code>aicc()</code>, <code>effectiveDf()</code>, and <code>residualSd()</code> (the last three are <code>Optional&lt;Double&gt;</code>). Batch <code>residualSd()</code> is the robust residual scale estimate (<code>1.4826 * MAD</code>); Streaming uses the cumulative sample SD of emitted residuals.</p>
 </div>
 <div class="paragraph">
 <p><code>HatMatrixStats</code> holds <code>enp()</code>, <code>traceHat()</code>, <code>delta1()</code>, <code>delta2()</code>, <code>residualScale()</code>, <code>leverage()</code> (per-point hat-matrix diagonal).</p>
