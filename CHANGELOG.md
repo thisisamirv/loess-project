@@ -39,6 +39,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **C++:**
 
+- Added a checksum-pinned vcpkg overlay for v2.0.0 desktop shared libraries, CMake integration, and a standalone duplicate-include and linear-fit consumer test.
+- Added committed-lockfile C++ release builds and generated third-party dependency license notices in future release archives.
 - Added weighted Streaming/Online overloads, Online window diagnostics, and prediction from the current window.
 - Added Spack installation sanity checks and a standalone C++17 compile-and-run test against the installed headers and library.
 - Added Windows x64 MinGW, Linux x86/ARMv7, Android ABI, and iOS device/simulator release binaries with matching cross-target CI builds.
@@ -276,6 +278,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **C++:**
 
+- Fixed result-struct redefinitions when including the C ABI header alongside the C++ wrapper by generating an include guard.
 - Mirror the C++ release and prebuilt installation guidance across Linux, macOS, and Windows, including MSVC import libraries and all required headers.
 - Install `fastloess_version.h` from the Spack recipe only when present, preserving compatibility with older release archives.
 - Forward the selected distance metric when per-dimension weights are supplied, and support multivariate Online points through a vector-coordinate `add_point` overload.

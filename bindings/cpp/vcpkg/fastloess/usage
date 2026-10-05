@@ -1,0 +1,13 @@
+fastloess provides the upstream CMake target:
+
+    find_package(fastloess CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE fastloess::fastloess)
+
+This port installs a checksum-pinned upstream CPU library for Windows x64/ARM64,
+glibc Linux x64/ARM64, or macOS x64/ARM64. The v2.0.0 release has no musl
+binary; musl triplets are rejected. Shared linkage is
+required. Use dynamic-linkage triplets such as `x64-linux-dynamic`,
+`arm64-linux-dynamic`, `x64-osx-dynamic`, or `arm64-osx-dynamic`; default static
+Linux/macOS triplets are unsupported. Windows uses the dynamic MSVC runtime and
+generates its import library from the verified export list. Debug and Release
+consumers both use the upstream Release library. Rust and Cargo are not required.

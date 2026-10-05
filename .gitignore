@@ -3,6 +3,7 @@ debug/
 target/
 **/target/
 Cargo.lock
+!/Cargo.lock
 **/*.rs.bk
 *.pdb
 **/mutants.out*/
@@ -58,6 +59,7 @@ venv/
 .vscode/
 .clangd
 !bindings/cpp/.clangd
+!bindings/cpp/vcpkg/test-project/.clangd
 .cache/
 compile_commands.json
 *.swp
@@ -65,6 +67,8 @@ compile_commands.json
 *~
 *.todo
 Rplots.pdf
+.internal_note.md
+.response.md
 
 # OS / System
 .DS_Store
@@ -127,6 +131,7 @@ Manifest.toml
 # C++
 compile_flags.txt
 *.obj
+bindings/cpp/vcpkg/.internal_note.md
 
 # Stray generated dirs (accidental output under the wrong working directory)
 bindings/*/benchmarks/
