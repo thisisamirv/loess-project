@@ -147,7 +147,7 @@ Multivariate LOESS</div></div>
 <div class="line">}</div>
 <div class="ttc" id="aclassfastloess_1_1Expected_html_a8d42c6a77cf5c282230aee46b48da418"><div class="ttname"><a href="classfastloess_1_1Expected.html#a8d42c6a77cf5c282230aee46b48da418">fastloess::Expected::value</a></div><div class="ttdeci">T &amp; value() &amp;</div><div class="ttdef"><b>Definition</b> fastloess.hpp:106</div></div>
 <div class="ttc" id="aclassfastloess_1_1Loess_html"><div class="ttname"><a href="classfastloess_1_1Loess.html">fastloess::Loess</a></div><div class="ttdoc">Batch LOESS model.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:705</div></div>
-<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:778</div></div>
+<div class="ttc" id="aclassfastloess_1_1Loess_html_ad4ff821f5ef1b5815aebffab45187ed4"><div class="ttname"><a href="classfastloess_1_1Loess.html#ad4ff821f5ef1b5815aebffab45187ed4">fastloess::Loess::fit</a></div><div class="ttdeci">Expected&lt; LoessResult &gt; fit(const std::vector&lt; double &gt; &amp;x_values, const std::vector&lt; double &gt; &amp;y_values, const std::vector&lt; double &gt; &amp;custom_weights={})</div><div class="ttdef"><b>Definition</b> fastloess.hpp:784</div></div>
 <div class="ttc" id="afastloess_8hpp_html"><div class="ttname"><a href="fastloess_8hpp.html">fastloess.hpp</a></div><div class="ttdoc">C++ wrapper for fastLoess library.</div></div>
 </div><!-- fragment --><div class="fragment"><div class="line">y[0]: 0.24731</div>
 </div><!-- fragment --><hr  />
@@ -182,7 +182,7 @@ Multivariate LOESS</div></div>
 <div class="ttc" id="astructfastloess_1_1LoessOptions_html"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html">fastloess::LoessOptions</a></div><div class="ttdoc">Options for configuring LOESS smoothing.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:150</div></div>
 <div class="ttc" id="astructfastloess_1_1LoessOptions_html_a4b136efcebfc6170575c896083b78708"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a4b136efcebfc6170575c896083b78708">fastloess::LoessOptions::dimensions</a></div><div class="ttdeci">int dimensions</div><div class="ttdoc">Number of predictor dimensions.</div><div class="ttdef"><b>Definition</b> fastloess.hpp:172</div></div>
 <div class="ttc" id="astructfastloess_1_1LoessOptions_html_a74cd5ca0f18e82875093bb3aecfde3ce"><div class="ttname"><a href="structfastloess_1_1LoessOptions.html#a74cd5ca0f18e82875093bb3aecfde3ce">fastloess::LoessOptions::fraction</a></div><div class="ttdeci">double fraction</div><div class="ttdoc">Smoothing fraction (0, 1].</div><div class="ttdef"><b>Definition</b> fastloess.hpp:151</div></div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 1.23762</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: 1.17311</div>
 </div><!-- fragment --><hr  />
 <h2>3D and Higher</h2>
 <p>Three or more predictors. The neighbourhood radius grows in each additional dimension, so a larger <code>fraction</code> (or smaller dataset) is typically needed.</p>
@@ -213,7 +213,7 @@ Multivariate LOESS</div></div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;y[0]: &quot;</span> &lt;&lt; result.y_vector()[0] &lt;&lt; <span class="stringliteral">&quot;\n&quot;</span>;</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-</div><!-- fragment --><div class="fragment"><div class="line">y[0]: -0.684381</div>
+</div><!-- fragment --><div class="fragment"><div class="line">y[0]: -0.760941</div>
 </div><!-- fragment --><hr  />
 <h2>Distance Metrics for Multivariate Data</h2>
 <p>When <code>dimensions &gt; 1</code> you can also control how inter-point distances are computed.</p>
