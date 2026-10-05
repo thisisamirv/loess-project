@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Added weighted Streaming/Online overloads, Online window diagnostics, and prediction from the current window.
+- Added Spack installation sanity checks and a standalone C++17 compile-and-run test against the installed headers and library.
 - Added Windows x64 MinGW, Linux x86/ARMv7, Android ABI, and iOS device/simulator release binaries with matching cross-target CI builds.
 - Added generated compile-time version macros and runtime `cpp_version()` reporting, with the version header included in CMake, Spack, and release packaging.
 - Added `CVOptions cv` to Batch options for grouped cross-validation while preserving legacy CV fields.
@@ -167,6 +168,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Changed prebuilt C++ releases to provide one tar archive per platform, containing its library, import library when applicable, and headers.
+- Expanded the Spack package description and linked its homepage to the C++ documentation.
 - Breaking change: replaced the individual output booleans in `LoessOptions`, `OnlineOptions`, and `PredictOptions` with grouped `outputs` vectors.
 - Native C ABI lengths now use `size_t` and CV seeds use `uint64_t`, fixing Windows `unsigned long` truncation. Rebuild headers/wrappers and native artifacts together; old Windows binaries are not layout-compatible.
 - Breaking change: replaced flat fit/prediction interval levels with `intervals` and removed flat CV fields in favor of `cv` plus optional outer `seed`; zero is now a valid deterministic seed.
@@ -275,6 +277,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **C++:**
 
 - Mirror the C++ release and prebuilt installation guidance across Linux, macOS, and Windows, including MSVC import libraries and all required headers.
+- Install `fastloess_version.h` from the Spack recipe only when present, preserving compatibility with older release archives.
 - Forward the selected distance metric when per-dimension weights are supplied, and support multivariate Online points through a vector-coordinate `add_point` overload.
 - Fixed `bindings/cpp/spack/package.py` building/installing from the wrong directory (`bindings/cpp` instead of the workspace-root `target/release`), which broke `spack install fastloess-cpp` on every platform. Now builds by package name. Also moved the pyright suppression out of the recipe into a new root `pyrightconfig.json`.
 - Ported portable Windows MinGW test copying/CTest execution and compiler-runtime DLL staging; validated the regression harness with MSVC and MinGW.
