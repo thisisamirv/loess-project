@@ -561,7 +561,12 @@ impl<T: FloatLinalg + DistanceLinalg + Debug + Send + Sync + 'static + SolverLin
                     let smoothed_val = smoothed_vec.last().copied().ok_or_else(|| {
                         LoessError::InvalidNumericValue("No smoothed output produced".into())
                     })?;
-                    let std_err = se_vec.as_ref().and_then(|v| v.last().copied());
+                    let std_err =
+                        if self.config.interval_type.is_some() || self.config.bootstrap.is_some() {
+                            se_vec.as_ref().and_then(|values| values.last().copied())
+                        } else {
+                            None
+                        };
                     let rob_weight = if self.config.return_robustness_weights {
                         result.robustness_weights.last().copied()
                     } else {

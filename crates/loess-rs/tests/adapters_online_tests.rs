@@ -1229,6 +1229,11 @@ fn test_online_gradient_none_by_default() {
                         let output = output.unwrap();
                         assert!(output.y.is_finite());
                         assert!(output.gradient.is_none());
+                        assert!(output.standard_error.is_none());
+                        assert!(output.confidence_lower.is_none());
+                        assert!(output.confidence_upper.is_none());
+                        assert!(output.prediction_lower.is_none());
+                        assert!(output.prediction_upper.is_none());
                     }
                 }
             }
