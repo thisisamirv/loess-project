@@ -290,7 +290,7 @@ export interface SmoothOptions {
   interpolation_vertices?: number
   /** Reduce polynomial degree to linear at boundary vertices (default true). */
   boundary_degree_fallback?: boolean
-  /** Random seed for reproducible K-fold cross-validation splits. */
+  /** Non-negative JavaScript safe-integer seed for reproducible K-fold cross-validation splits. */
   seed?: number
   /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
   missing?: string

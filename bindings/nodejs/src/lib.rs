@@ -455,8 +455,8 @@ pub struct SmoothOptions {
     /// Reduce polynomial degree to linear at boundary vertices (default true).
     #[napi(js_name = "boundary_degree_fallback")]
     pub boundary_degree_fallback: Option<bool>,
-    /// Random seed for reproducible K-fold cross-validation splits.
-    pub seed: Option<i64>,
+    /// Non-negative JavaScript safe-integer seed for reproducible K-fold cross-validation splits.
+    pub seed: Option<f64>,
     /// Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error".
     #[napi(js_name = "missing")]
     pub missing: Option<String>,
@@ -586,6 +586,8 @@ pub struct OnlineSmoothOptions {
 }
 
 /// Build a LoessBuilder from Batch options, applying every field.
+const MAX_SAFE_INTEGER: f64 = 9_007_199_254_740_991.0;
+
 fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder<f64>> {
     let mut builder = LoessBuilder::<f64>::new();
     if let Some(opts) = opts {
@@ -605,9 +607,10 @@ fn batch_options_to_builder(opts: Option<&SmoothOptions>) -> Result<LoessBuilder
         let cv_seed = opts
             .seed
             .map(|seed| {
-                if seed < 0 {
+                if !seed.is_finite() || seed < 0.0 || seed.fract() != 0.0 || seed > MAX_SAFE_INTEGER
+                {
                     Err(shared_parse::BindingError::invalid_arg(format!(
-                        "seed must be non-negative, got {seed}"
+                        "seed must be a non-negative JavaScript safe integer, got {seed}"
                     )))
                 } else {
                     Ok(seed as u64)

@@ -56,14 +56,16 @@ test('batch smoothing', () => {
     assert.ok(result.diagnostics.rmse < 0.1);
 });
 
-test('seed rejects negative values', () => {
-    assert.throws(
-        () => new fastloess.Loess({ seed: -1 }).fit(
-            new Float64Array([1, 2, 3]),
-            new Float64Array([2, 4, 6])
-        ),
-        /seed must be non-negative, got -1/
-    );
+test('seed must be a non-negative JavaScript safe integer', () => {
+    const x = new Float64Array([1, 2, 3, 4, 5]);
+    const y = new Float64Array([2, 4, 6, 8, 10]);
+    for (const seed of [-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1]) {
+        assert.throws(
+            () => new fastloess.Loess({ seed }).fit(x, y),
+            /safe integer/
+        );
+    }
+    assert.doesNotThrow(() => new fastloess.Loess({ seed: Number.MAX_SAFE_INTEGER }).fit(x, y));
 });
 
 test('streaming smoothing', () => {
@@ -559,7 +561,7 @@ test('SmoothOptions: grouped cv overrides individual CV fields', () => {
 
     assert.throws(
         () => new fastloess.Loess({ cv: { fractions: [0.3] }, seed: -1 }).fit(x, y),
-        /seed must be non-negative/
+        /safe integer/
     );
 });
 

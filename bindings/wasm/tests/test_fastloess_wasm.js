@@ -381,6 +381,10 @@ test('WASM grouped cv overrides individual CV fields', () => {
         () => new fastloess.Loess({ seed: Number.MAX_SAFE_INTEGER + 1 }).fit(x, y),
         /safe integer/i
     );
+    assert.throws(
+        () => new fastloess.Loess({ seed: 1.5 }).fit(x, y),
+        /safe integer/i
+    );
     safeSeedResult.free();
     safeSeedModel.free();
 });

@@ -106,7 +106,7 @@ Async fit y[0]: 0.3274
 | `outputs` | `string[]` | `[]` | Optional fields: `"diagnostics"`, `"residuals"`, `"weights"`, `"gradient"` (or `"derivative"`), `"se"`, `"sorted"` |
 | `intervals` | `{ confidence?: number; prediction?: number }` | `disabled` | Grouped confidence and prediction coverage levels. |
 | `cv` | `{ fractions: number[]; method?: string; k?: number }` | disabled | Grouped candidate fractions, method, and folds; seed is an outer option |
-| `seed` | `number` | `unset` | Seed for reproducible CV folds. |
+| `seed` | `number` | `unset` | Non-negative safe-integer seed for reproducible CV folds, up to `Number.MAX_SAFE_INTEGER`. |
 | `retain_model` | `boolean` | `false` | Retain training data, enabling `result.predict()` |
 | `custom_weights` | `Float64Array` | `null` | Per-observation case weights — passed to `fit()`/`fitAsync()`, not the options object |
 
@@ -324,7 +324,7 @@ Confidence level for the prediction interval for new observations (e.g. `0.95`).
 - `cv.method`: `"kfold"` (default) — fast, evaluates each candidate fraction over `cv.k` folds; `"loocv"` — slow, exhaustive leave-one-out cross-validation
 - `cv.k`: Number of folds for k-fold CV. Ignored when `cv_method = "loocv"`.
 - `cv.fractions`: Candidate fractions to evaluate. Cross-validation is disabled unless this is set.
-- `seed`: Seed for reproducible k-fold shuffling. `null` (default) uses a random seed.
+- `seed`: Non-negative safe-integer seed for reproducible k-fold shuffling, from `0` through `Number.MAX_SAFE_INTEGER`. `null` (default) uses a random seed; fractional, negative, non-finite, and unsafe values throw.
 
 ### retain_model
 

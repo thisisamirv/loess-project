@@ -250,7 +250,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
-- Restore TypeScript declarations for retained prediction and weighted Streaming, validate CV seeds as safe JavaScript integers, and strengthen confidence/prediction interval output tests.
+- Restore TypeScript declarations for retained prediction and weighted Streaming, validate CV seeds as safe JavaScript integers including fractional values, and strengthen confidence/prediction interval output tests.
 - Reject unknown option keys and mode-inappropriate output names; return owned typed-array copies that remain valid after freeing result owners.
 - `make loess-rs-dev` now also runs `cargo test --doc`, previously never checked by any `make` target.
 - Removed the unconditional span-one OLS standard-error shortcut: LOESS still uses local kernel geometry at span one.
@@ -308,6 +308,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Node.js:**
 
+- Reject fractional, non-finite, negative, and JavaScript-unsafe CV seeds before casting; document the safe-integer range.
 - Reject unknown output names for Batch, Streaming, Online, and prediction; restore the `fit_async()` declaration to `Promise<LoessResult>` after N-API builds. Online/prediction outputs were already wired, and the loader already detects musl; GPU installer/sidecar checks have no LOESS counterpart.
 - Fixed inconsistent naming of the Node.js binding as "JavaScript" across READMEs, doc-site home pages, and `CITATION.cff`.
 - Fixed `cv_seed` silently accepting negative values by validating the signed input before converting it to `u64`.
