@@ -370,6 +370,19 @@ test('WASM grouped cv overrides individual CV fields', () => {
     }).fit(x, y);
     assert.strictEqual(result.cv_scores.length, 2);
     assert.ok([0.3, 0.5].includes(result.fraction_used));
+
+    const safeSeedModel = new fastloess.Loess({
+        cv: { fractions: [0.3, 0.5], k: 3 },
+        seed: Number.MAX_SAFE_INTEGER
+    });
+    const safeSeedResult = safeSeedModel.fit(x, y);
+    assert.strictEqual(safeSeedResult.cv_scores.length, 2);
+    assert.throws(
+        () => new fastloess.Loess({ seed: Number.MAX_SAFE_INTEGER + 1 }).fit(x, y),
+        /safe integer/i
+    );
+    safeSeedResult.free();
+    safeSeedModel.free();
 });
 
 // ---- Parameter coverage tests ----
@@ -395,8 +408,12 @@ test('WASM smooth: confidence_intervals, prediction_intervals', () => {
         fraction: 0.5,
         intervals: { confidence: 0.95, prediction: 0.95 },
     }).fit(x, y);
-    assert.ok(result.confidence_lower !== null);
-    assert.ok(result.prediction_upper !== null);
+    assert.ok(result.confidence_lower instanceof Float64Array);
+    assert.ok(result.confidence_upper instanceof Float64Array);
+    assert.ok(result.prediction_lower instanceof Float64Array);
+    assert.ok(result.prediction_upper instanceof Float64Array);
+    assert.strictEqual(result.confidence_lower.length, y.length);
+    assert.strictEqual(result.prediction_upper.length, y.length);
 });
 
 test('WASM smooth: degree, surface_mode, distance_metric', () => {

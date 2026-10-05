@@ -63,7 +63,7 @@ export interface SmoothOptions {
     interpolation_vertices?: number;
     /** Fall back to lower polynomial degree at boundaries. Default: true. */
     boundary_degree_fallback?: boolean;
-    /** Random seed for cross-validation. */
+    /** Non-negative safe-integer seed for cross-validation (at most Number.MAX_SAFE_INTEGER). */
     seed?: number;
     /** Policy for non-finite (NaN/Inf) values in input data ("error", "drop"). Default: "error". */
     missing?: string;
@@ -82,6 +82,11 @@ export interface PredictOptions {
     max_extrapolation_distance?: number;
     /** Maximum allowed distance to the farthest point in a query's neighbor window before `predict()` errors, catching in-range-but-sparse query points. */
     max_neighbor_distance?: number;
+}
+
+/** Out-of-sample prediction methods added to the generated result class. */
+export interface LoessResult {
+    predict(newX: Float64Array, options?: PredictOptions): PredictOutput;
 }
 
 /** Result of `LoessResult.predict()`. */
@@ -221,6 +226,8 @@ export class StreamingLoess {
     constructor(options?: StreamingSmoothOptions, streamingOpts?: StreamingOptions);
     /** Process a chunk of data. */
     process_chunk(x: Float64Array, y: Float64Array): LoessResult;
+    /** Process a chunk with one case weight per observation. */
+    process_chunk_weighted(x: Float64Array, y: Float64Array, weights: Float64Array): LoessResult;
     /** Finalize the stream and return remaining data. */
     finalize(): LoessResult;
 }
@@ -243,20 +250,6 @@ export class OnlineLoess {
     predict_window(newX: Float64Array, options?: PredictOptions): PredictOutput;
 }
 
-/** Result from a single online update step. */
-export class OnlineOutput {
-    free(): void;
-    get y(): number;
-    get standard_error(): number | undefined;
-    get residual(): number | undefined;
-    get robustness_weight(): number | undefined;
-    get iterations_used(): number | undefined;
-    get confidence_lower(): number | undefined;
-    get confidence_upper(): number | undefined;
-    get prediction_lower(): number | undefined;
-    get prediction_upper(): number | undefined;
-    get gradient(): Float64Array | undefined;
-}
 "#;
 
 use ::fastLoess::internals::adapters::online::ParallelOnlineLoess;
@@ -351,7 +344,7 @@ pub struct SmoothOptions {
     pub cell: Option<f64>,
     pub interpolation_vertices: Option<usize>,
     pub boundary_degree_fallback: Option<bool>,
-    pub seed: Option<u64>,
+    pub seed: Option<f64>,
     pub missing: Option<String>,
     pub retain_model: Option<bool>,
 }
@@ -838,7 +831,22 @@ fn batch_options_to_builder(opts: Option<SmoothOptions>) -> Result<LoessBuilder<
         let cv_fractions = cv.map(|value| value.fractions.as_slice());
         let cv_method = cv.and_then(|value| value.method.as_deref());
         let cv_k = cv.and_then(|value| value.k).map(|value| value as usize);
-        let cv_seed = opts.seed;
+        let cv_seed = match opts.seed {
+            Some(seed)
+                if seed.is_finite()
+                    && seed >= 0.0
+                    && seed.fract() == 0.0
+                    && seed <= 9_007_199_254_740_991.0 =>
+            {
+                Some(seed as u64)
+            }
+            Some(_) => {
+                return Err(JsValue::from_str(
+                    "seed must be a non-negative safe integer no greater than Number.MAX_SAFE_INTEGER",
+                ));
+            }
+            None => None,
+        };
         builder = map_invalid_arg(shared_parse::apply_builder_options(
             builder,
             shared_parse::BuilderOptionSet {
