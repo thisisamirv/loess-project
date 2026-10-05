@@ -85,6 +85,15 @@ test_that("plot.LoessResult runs without error", {
     expect_no_error(plot(result))
 })
 
+test_that("plot.LoessResult explains its multivariate limitation", {
+    result <- structure(
+        list(x = as.double(1:4), y = as.double(1:2), dimensions = 2L),
+        class = "LoessResult"
+    )
+
+    expect_error(plot(result), "supports only one-dimensional fits")
+})
+
 test_that("plot.LoessResult draws confidence interval lines when present", {
     set.seed(42)
     x <- seq(0, 10, length.out = 50)

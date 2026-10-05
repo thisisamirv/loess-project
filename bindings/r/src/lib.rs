@@ -104,7 +104,7 @@ impl RLoess {
         cell: Nullable<f64>,
         interpolation_vertices: Nullable<i32>,
         boundary_degree_fallback: Nullable<bool>,
-        cv_seed: Nullable<i32>,
+        cv_seed: Nullable<f64>,
         missing: &str,
         retain_model: bool,
     ) -> Result<Self> {
@@ -117,7 +117,19 @@ impl RLoess {
             Null => None,
         };
         let seed = match cv_seed {
-            NotNull(s) => Some(require_non_negative_usize("cv_seed", s)? as u64),
+            NotNull(s)
+                if s.is_finite()
+                    && s >= 0.0
+                    && s.fract() == 0.0
+                    && s <= 9_007_199_254_740_992.0 =>
+            {
+                Some(s as u64)
+            }
+            NotNull(_) => {
+                return Err(to_r_error(shared_parse::BindingError::invalid_arg(
+                    "cv_seed must be a non-negative whole number up to 2^53".to_string(),
+                )));
+            }
             Null => None,
         };
         let iterations = require_non_negative_usize("iterations", iterations)?;

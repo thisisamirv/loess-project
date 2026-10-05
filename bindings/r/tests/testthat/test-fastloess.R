@@ -338,6 +338,15 @@ test_that("grouped cross-validation configures seeded folds", {
     )
     expect_length(result$cv_scores, 2L)
     expect_true(result$fraction_used %in% c(0.3, 0.5))
+    large_seed_result <- fit(
+        Loess(
+            cv = cv_opts(fractions = c(0.3, 0.5), k = 3L),
+            seed = 2^53
+        ),
+        x,
+        x * x
+    )
+    expect_length(large_seed_result$cv_scores, 2L)
     expect_error(cv_opts(), "fractions")
     expect_error(cv_opts("invalid"), "fractions")
     expect_error(cv_opts(c(0.5), seed = 42), "unused argument")
@@ -371,10 +380,20 @@ test_that("grouped cross-validation configures seeded folds", {
 })
 
 test_that("Loess preserves valid two-dimensional matrix inputs", {
-    x <- matrix(as.double(1:40), ncol = 2)
-    y <- as.double(rowMeans(x))
-    result <- fit(Loess(dimensions = 2L), x, y)
-    expect_length(result$y, length(y))
+    set.seed(1)
+    x <- cbind(runif(60), runif(60))
+    y <- 3 * x[, 1] + 7 * x[, 2]
+    options <- list(
+        fraction = 1,
+        iterations = 0L,
+        dimensions = 2L,
+        surface_mode = "direct"
+    )
+    matrix_result <- fit(do.call(Loess, options), x, y)
+    row_major_result <- fit(do.call(Loess, options), as.double(t(x)), y)
+
+    expect_equal(matrix_result$y, row_major_result$y, tolerance = 1e-12)
+    expect_equal(matrix_result$y, y, tolerance = 1e-10)
 })
 
 test_that("Loess handles edge cases", {

@@ -28,6 +28,24 @@ test_that("StreamingLoess basic functionality works", {
     expect_length(result$y, length(y))
 })
 
+test_that("StreamingLoess preserves matrix predictor row order", {
+    set.seed(1)
+    predictors <- cbind(runif(60), runif(60))
+    responses <- 3 * predictors[, 1] + 7 * predictors[, 2]
+    model <- StreamingLoess(
+        fraction = 1,
+        chunk_size = 60L,
+        overlap = 0L,
+        iterations = 0L,
+        dimensions = 2L,
+        surface_mode = "direct"
+    )
+
+    result <- process_chunk(model, predictors, responses)
+
+    expect_equal(result$y, responses, tolerance = 1e-10)
+})
+
 test_that("StreamingLoess custom weights downweight outliers", {
     x <- as.double(0:9)
     y <- 2 * x + 1

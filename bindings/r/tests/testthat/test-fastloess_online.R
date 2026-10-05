@@ -37,6 +37,10 @@ test_that("OnlineLoess supports multivariate coordinate vectors", {
 
     expect_length(result$gradient, 2)
     expect_error(add_point(ol, 1, 2), "exactly 2 values")
+    expect_error(
+        predict_window(ol, matrix(c(0.25, 0.8, 0.75, 0.2), nrow = 2)),
+        "new_x must be a non-empty numeric vector"
+    )
 })
 
 test_that("OnlineLoess supports weights, diagnostics, and current-window prediction", {

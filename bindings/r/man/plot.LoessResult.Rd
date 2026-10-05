@@ -17,7 +17,8 @@
 NULL, invisibly. Called for side effects (plotting).
 }
 \description{
-Plot Loess Result
+Plotting supports one-dimensional results. For a multivariate fit, select a
+predictor dimension and create a custom plot.
 }
 \examples{
 x <- seq(0, 10, length.out = 100)

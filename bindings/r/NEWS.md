@@ -32,6 +32,7 @@ This changelog includes end-user changes only. For internal development notes, s
 * Match R LOESS's even-sample bisquare MAR scale arithmetic, including extremely small residuals, while preserving the centered-MAD fallback.
 * Aligned `OnlineLoess` defaults across the Rust core and bindings: `iterations` is now `0` with the default `update_mode = "incremental"`; positive robustness iterations require `update_mode = "full"`.
 * Fixed `cv_seed` silently accepting negative values and reinterpreting them as a huge unsigned seed instead of raising an error. Now validated before the cast.
+* Fixed multivariate Batch/Streaming matrix inputs being flattened in R's column-major order; preserve row-wise coordinates. CV seeds now honor the documented full exact-integer range through 2^53, matrix `predict_window()` queries are rejected instead of being misinterpreted, and plotting multivariate results now returns a clear unsupported-mode error.
 
 ## rfastloess 2.0.0
 

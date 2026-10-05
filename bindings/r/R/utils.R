@@ -99,7 +99,7 @@ validate_common_args <- function(x, y, fraction, iterations) {
     validate_iterations(iterations)
 
     list(
-        x = as.double(x),
+        x = if (is.matrix(x)) as.double(t(x)) else as.double(x),
         y = as.double(y),
         fraction = as.double(fraction),
         iterations = as.integer(iterations)
@@ -329,8 +329,7 @@ env_args <- function(param_names) {
         if (is.null(type)) {
             return(val)
         }
-        switch(
-            type,
+        switch(type,
             double = as.double(val),
             integer = as.integer(val),
             character = as.character(val),

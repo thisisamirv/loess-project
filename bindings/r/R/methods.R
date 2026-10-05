@@ -47,6 +47,9 @@ print.LoessResult <- function(x, ...) {
 
 #' Plot Loess Result
 #'
+#' Plotting supports one-dimensional results. For a multivariate fit, select a
+#' predictor dimension and create a custom plot.
+#'
 #' @param x A LoessResult object.
 #' @param main Plot title.
 #' @param ... Additional arguments passed to plot() and lines().
@@ -62,6 +65,13 @@ print.LoessResult <- function(x, ...) {
 #' @importFrom graphics lines
 #' @export
 plot.LoessResult <- function(x, main = "LOESS Fit", ...) {
+    if (!is.null(x$dimensions) && x$dimensions != 1L) {
+        stop(
+            "plot.LoessResult() supports only one-dimensional fits; select a predictor dimension for a custom plot",
+            call. = FALSE
+        )
+    }
+
     # Plot the smoothed curve
     plot(
         x$x,
@@ -401,7 +411,10 @@ predict_window.OnlineLoess <- function(
     if (...length() > 0L) {
         stop("unused arguments (...)", call. = FALSE)
     }
-    if (!is.numeric(new_x) || is.complex(new_x) || !length(new_x)) {
+    if (
+        !is.numeric(new_x) || is.complex(new_x) || !length(new_x) ||
+            !is.null(dim(new_x))
+    ) {
         stop("new_x must be a non-empty numeric vector", call. = FALSE)
     }
     flags <- parse_outputs_flags(outputs, c("se", "gradient", "derivative"))
