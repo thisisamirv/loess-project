@@ -207,6 +207,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
       - name: Install GNU Make (Windows)
         run: choco install make -y
       - name: Install cppcheck (Windows)
