@@ -70,16 +70,15 @@ impl Validator {
         let n = y.len();
         let mut xs = Vec::with_capacity(x.len());
         let mut ys = Vec::with_capacity(n);
-        let mut ws = Vec::with_capacity(custom_weights.map_or(0, |weights| weights.len().min(n)));
+        let weights = custom_weights.unwrap_or(&[]);
+        let mut ws = Vec::with_capacity(weights.len().min(n));
         for i in 0..n {
             let row = &x[i * dimensions..i * dimensions + dimensions];
             if row.iter().all(|v| v.is_finite()) && y[i].is_finite() {
                 xs.extend_from_slice(row);
                 ys.push(y[i]);
-                if let Some(weights) = custom_weights
-                    && i < weights.len()
-                {
-                    ws.push(weights[i]);
+                if let Some(weight) = weights.get(i) {
+                    ws.push(*weight);
                 }
             }
         }
