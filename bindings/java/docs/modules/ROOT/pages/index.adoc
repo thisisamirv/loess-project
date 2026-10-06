@@ -57,7 +57,7 @@ Read more about how LOESS works in the https://thisisamirv.github.io/loess-proje
 
 === Speed
 
-The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is typically *5–20x faster* than R's `loess` in serial mode, and up to *200x faster* on large datasets with parallel execution.
+`fastLoess` beats the competition by being *47.3× faster than R's `stats::loess` in serial mode* and *236.4× faster in parallel compared to R's `stats::loess`*; speedups vary by workload, and parallel execution is not always faster. For datasets of 1,000 points or fewer, serial execution is advised.
 
 For more details on the performance comparison, see the https://thisisamirv.github.io/loess-project/java/benchmarks/[Benchmarks] page.
 

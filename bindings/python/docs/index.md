@@ -19,7 +19,7 @@ LOESS is a nonparametric regression method that fits smooth curves through scatt
 
 ### Speed
 
-The `loess` project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is typically **5–20x faster** than R's `loess` in serial mode, and up to **200x faster** on large datasets with parallel execution.
+`fastLoess` beats the competition by being **47.3× faster than R's `stats::loess` in serial mode** and **236.4× faster in parallel compared to R's `stats::loess`**; speedups vary by workload, and parallel execution is not always faster. For datasets of 1,000 points or fewer, serial execution is advised.
 
 ![LOESS Benchmarks](assets/diagrams/benchmark_comparison.svg)
 

@@ -114,7 +114,7 @@ Restart clangd after first configuration if cached diagnostics remain. Build dir
 - `fastloess/portfile.cmake` downloads the SHA512-pinned platform library and matching source archive and installs the package through a thin CMake wrapper.
 - `fastloess/fastloess.def` records the verified DLL export names used to generate the import library.
 - `fastloess/fastloess.h` was generated from the exact `v2.0.0` source build with cbindgen. It must be updated alongside the binary and wrapper when their ABI changes.
-- The v2.0.0 installed copyright notice includes the upstream license texts and discloses that exact Rust dependency provenance is unavailable. Future C++ release archives include `THIRD_PARTY_LICENSES.html`, generated from the committed workspace lockfile using the root `about.toml` and `about.hbs`.
+- The v2.0.0 installed copyright notice includes the upstream license texts and discloses that exact Rust dependency provenance is unavailable. Future C++ release archives include `THIRD_PARTY_LICENSES.html`, generated from the committed workspace lockfile using `dev/about.toml` and `dev/about.hbs`.
 
 For a version update, refresh the manifest, binary/source checksums, export definition, ABI header, and wrapper project version together, then repeat consumer tests. Install the matching dependency license report with the upstream license texts once the port targets a release that publishes it. Do not expand supported triplets without testing them. Offline and vcpkg download-only operation have not been validated.
 

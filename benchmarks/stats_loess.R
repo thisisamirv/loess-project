@@ -61,7 +61,11 @@ run_benchmark <- function(name, size, func, iterations = 10, warmup = 2) {
         median_time_ms = median(times),
         min_time_ms = min(times),
         max_time_ms = max(times),
-        fitted = if (!is.null(last_output)) as.numeric(fitted(last_output)) else NULL
+        fitted = if (!is.null(last_output)) {
+            as.numeric(fitted(last_output))
+        } else {
+            NULL
+        }
     )
 }
 
@@ -143,10 +147,17 @@ benchmark_scalability <- function(iterations = 10) {
     for (size in sizes) {
         data <- generate_sine_data(size)
         run <- function() {
-            loess(data$y ~ data$x, span = 0.1, control = loess.control(iterations = 3))
+            loess(
+                data$y ~ data$x,
+                span = 0.1,
+                control = loess.control(iterations = 3)
+            )
         }
         results[[paste0("scale_", size)]] <- run_benchmark(
-            paste0("scale_", size), size, run, iterations
+            paste0("scale_", size),
+            size,
+            run,
+            iterations
         )
     }
     results
@@ -162,10 +173,17 @@ benchmark_fraction <- function(iterations = 10) {
         local({
             frac_val <- frac
             run <- function() {
-                loess(data$y ~ data$x, span = frac_val, control = loess.control(iterations = 3))
+                loess(
+                    data$y ~ data$x,
+                    span = frac_val,
+                    control = loess.control(iterations = 3)
+                )
             }
             results[[paste0("fraction_", frac_val)]] <<- run_benchmark(
-                paste0("fraction_", frac_val), size, run, iterations
+                paste0("fraction_", frac_val),
+                size,
+                run,
+                iterations
             )
         })
     }
@@ -182,10 +200,17 @@ benchmark_iterations <- function(iterations = 10) {
         local({
             it_val <- it
             run <- function() {
-                loess(data$y ~ data$x, span = 0.2, control = loess.control(iterations = it_val))
+                loess(
+                    data$y ~ data$x,
+                    span = 0.2,
+                    control = loess.control(iterations = it_val)
+                )
             }
             results[[paste0("iterations_", it_val)]] <<- run_benchmark(
-                paste0("iterations_", it_val), size, run, iterations
+                paste0("iterations_", it_val),
+                size,
+                run,
+                iterations
             )
         })
     }
@@ -199,10 +224,17 @@ benchmark_financial <- function(iterations = 10) {
     for (size in sizes) {
         data <- generate_financial_data(size)
         run <- function() {
-            loess(data$y ~ data$x, span = 0.1, control = loess.control(iterations = 2))
+            loess(
+                data$y ~ data$x,
+                span = 0.1,
+                control = loess.control(iterations = 2)
+            )
         }
         results[[paste0("financial_", size)]] <- run_benchmark(
-            paste0("financial_", size), size, run, iterations
+            paste0("financial_", size),
+            size,
+            run,
+            iterations
         )
     }
     results
@@ -215,10 +247,17 @@ benchmark_scientific <- function(iterations = 10) {
     for (size in sizes) {
         data <- generate_scientific_data(size)
         run <- function() {
-            loess(data$y ~ data$x, span = 0.15, control = loess.control(iterations = 3))
+            loess(
+                data$y ~ data$x,
+                span = 0.15,
+                control = loess.control(iterations = 3)
+            )
         }
         results[[paste0("scientific_", size)]] <- run_benchmark(
-            paste0("scientific_", size), size, run, iterations
+            paste0("scientific_", size),
+            size,
+            run,
+            iterations
         )
     }
     results
@@ -231,11 +270,18 @@ benchmark_genomic <- function(iterations = 10) {
     for (size in sizes) {
         data <- generate_genomic_data(size)
         run <- function() {
-            loess(data$y ~ data$x, span = 0.1, control = loess.control(iterations = 3))
+            loess(
+                data$y ~ data$x,
+                span = 0.1,
+                control = loess.control(iterations = 3)
+            )
         }
         size_str <- format(size, scientific = FALSE, trim = TRUE)
         results[[paste0("genomic_", size_str)]] <- run_benchmark(
-            paste0("genomic_", size_str), size, run, iterations
+            paste0("genomic_", size_str),
+            size,
+            run,
+            iterations
         )
     }
     results
@@ -248,28 +294,49 @@ benchmark_pathological <- function(iterations = 10) {
     # Clustered
     data_clustered <- generate_clustered_data(size)
     run_clustered <- function() {
-        loess(data_clustered$y ~ data_clustered$x, span = 0.3, control = loess.control(iterations = 2))
+        loess(
+            data_clustered$y ~ data_clustered$x,
+            span = 0.3,
+            control = loess.control(iterations = 2)
+        )
     }
     results$clustered <- run_benchmark(
-        "clustered", size, run_clustered, iterations
+        "clustered",
+        size,
+        run_clustered,
+        iterations
     )
 
     # High noise
     data_noisy <- generate_high_noise_data(size)
     run_noise <- function() {
-        loess(data_noisy$y ~ data_noisy$x, span = 0.5, control = loess.control(iterations = 5))
+        loess(
+            data_noisy$y ~ data_noisy$x,
+            span = 0.5,
+            control = loess.control(iterations = 5)
+        )
     }
     results$high_noise <- run_benchmark(
-        "high_noise", size, run_noise, iterations
+        "high_noise",
+        size,
+        run_noise,
+        iterations
     )
 
     # Extreme outliers
     data_outlier <- generate_outlier_data(size)
     run_outliers <- function() {
-        loess(data_outlier$y ~ data_outlier$x, span = 0.2, control = loess.control(iterations = 10))
+        loess(
+            data_outlier$y ~ data_outlier$x,
+            span = 0.2,
+            control = loess.control(iterations = 10)
+        )
     }
     results$extreme_outliers <- run_benchmark(
-        "extreme_outliers", size, run_outliers, iterations
+        "extreme_outliers",
+        size,
+        run_outliers,
+        iterations
     )
 
     # Constant y
@@ -277,10 +344,17 @@ benchmark_pathological <- function(iterations = 10) {
     y_const <- rep(5.0, size)
     data_const <- list(x = x_const, y = y_const)
     run_const <- function() {
-        loess(data_const$y ~ data_const$x, span = 0.2, control = loess.control(iterations = 2))
+        loess(
+            data_const$y ~ data_const$x,
+            span = 0.2,
+            control = loess.control(iterations = 2)
+        )
     }
     results$constant_y <- run_benchmark(
-        "constant_y", size, run_const, iterations
+        "constant_y",
+        size,
+        run_const,
+        iterations
     )
 
     results
@@ -295,20 +369,34 @@ benchmark_large <- function(iterations = 3) {
     size <- 50000
     data <- generate_sine_data(size)
     run_direct <- function() {
-        loess(data$y ~ data$x, span = 0.1, control = loess.control(iterations = 3, surface = "direct"))
+        loess(
+            data$y ~ data$x,
+            span = 0.1,
+            control = loess.control(iterations = 3, surface = "direct")
+        )
     }
     results$large_direct <- run_benchmark(
-        "large_direct", size, run_direct, iterations,
+        "large_direct",
+        size,
+        run_direct,
+        iterations,
         warmup = 1
     )
 
     # Same workload but with the default (interpolate) surface, showing how
     # much the k-d tree shortcut speeds things up at scale.
     run_interp <- function() {
-        loess(data$y ~ data$x, span = 0.1, control = loess.control(iterations = 3, surface = "interpolate"))
+        loess(
+            data$y ~ data$x,
+            span = 0.1,
+            control = loess.control(iterations = 3, surface = "interpolate")
+        )
     }
     results$large_interp <- run_benchmark(
-        "large_interp", size, run_interp, iterations,
+        "large_interp",
+        size,
+        run_interp,
+        iterations,
         warmup = 1
     )
 
@@ -321,22 +409,33 @@ benchmark_large <- function(iterations = 3) {
     run_high_iter <- function() {
         loess(
             data_iter$y ~ data_iter$x,
-            span = 0.1, family = "symmetric",
+            span = 0.1,
+            family = "symmetric",
             control = loess.control(iterations = 10, surface = "direct")
         )
     }
     results$large_high_iter <- run_benchmark(
-        "large_high_iter", size_iter, run_high_iter, iterations,
+        "large_high_iter",
+        size_iter,
+        run_high_iter,
+        iterations,
         warmup = 1
     )
 
     # Larger span (wider local window) at the same scale, since span cost
     # compounds even with the interpolation shortcut active.
     run_high_frac <- function() {
-        loess(data$y ~ data$x, span = 0.67, control = loess.control(iterations = 3, surface = "interpolate"))
+        loess(
+            data$y ~ data$x,
+            span = 0.67,
+            control = loess.control(iterations = 3, surface = "interpolate")
+        )
     }
     results$large_high_fraction <- run_benchmark(
-        "large_high_fraction", size, run_high_frac, iterations,
+        "large_high_fraction",
+        size,
+        run_high_frac,
+        iterations,
         warmup = 1
     )
 
