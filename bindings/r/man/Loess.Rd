@@ -5,30 +5,30 @@
 \title{LOESS Batch Smoothing}
 \usage{
 Loess(
-  fraction = 0.67,
-  ...,
-  iterations = 3L,
-  weight_function = "tricube",
-  robustness_method = "bisquare",
-  scaling_method = "mad",
-  boundary_policy = "extend",
-  outputs = NULL,
-  intervals = NULL,
-  zero_weight_fallback = "use_local_mean",
-  auto_converge = NULL,
-  parallel = TRUE,
-  degree = "linear",
-  dimensions = 1L,
-  distance_metric = "normalized",
-  surface_mode = "interpolation",
-  weighted_metric_weights = NULL,
-  cell = NULL,
-  interpolation_vertices = NULL,
-  boundary_degree_fallback = NULL,
-  seed = NULL,
-  missing = "error",
-  retain_model = FALSE,
-  cv = NULL
+    fraction = 0.67,
+    ...,
+    iterations = 3L,
+    weight_function = "tricube",
+    robustness_method = "bisquare",
+    scaling_method = "mad",
+    boundary_policy = "extend",
+    outputs = NULL,
+    intervals = NULL,
+    zero_weight_fallback = "use_local_mean",
+    auto_converge = NULL,
+    parallel = TRUE,
+    degree = "linear",
+    dimensions = 1L,
+    distance_metric = "normalized",
+    surface_mode = "interpolation",
+    weighted_metric_weights = NULL,
+    cell = NULL,
+    interpolation_vertices = NULL,
+    boundary_degree_fallback = NULL,
+    seed = NULL,
+    missing = "error",
+    retain_model = FALSE,
+    cv = NULL
 )
 }
 \arguments{
@@ -143,11 +143,11 @@ local neighbourhood used at each point.
 
 When \code{outputs} includes \code{"diagnostics"}, Batch \code{residual_sd} is the robust
 residual scale estimate \code{1.4826 * MAD}.\tabular{lll}{
-   Range \tab Effect \tab Use case \cr
-   0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
-   0.3-0.5 \tab Balanced \tab General purpose \cr
-   0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
-   0.7-1.0 \tab Very smooth \tab Trend extraction \cr
+    Range \tab Effect \tab Use case \cr
+    0.1-0.3 \tab Fine detail \tab Rapidly changing signals \cr
+    0.3-0.5 \tab Balanced \tab General purpose \cr
+    0.5-0.7 \tab Heavy smoothing \tab Noisy data \cr
+    0.7-1.0 \tab Very smooth \tab Trend extraction \cr
 }
 }
 \examples{

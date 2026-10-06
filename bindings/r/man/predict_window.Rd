@@ -8,14 +8,14 @@
 predict_window(model, ...)
 
 \method{predict_window}{OnlineLoess}(
-  model,
-  new_x,
-  outputs = NULL,
-  intervals = NULL,
-  extrapolation = "clamp",
-  max_extrapolation_distance = NULL,
-  max_neighbor_distance = NULL,
-  ...
+    model,
+    new_x,
+    outputs = NULL,
+    intervals = NULL,
+    extrapolation = "clamp",
+    max_extrapolation_distance = NULL,
+    max_neighbor_distance = NULL,
+    ...
 )
 }
 \arguments{

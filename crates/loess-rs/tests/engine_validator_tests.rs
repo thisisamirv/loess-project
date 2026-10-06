@@ -134,6 +134,28 @@ fn test_validate_valid_input() {
     );
 }
 
+#[test]
+fn test_drop_non_finite_preserves_optional_weights() {
+    let predictors = [0.0, 0.0, 1.0, f64::NAN, 2.0, 2.0, 3.0, 3.0];
+    let responses = [0.0, 2.0, f64::INFINITY, 6.0];
+    let input_weights = [1.0, 2.0, 3.0, 4.0];
+
+    for weights in [None, Some(input_weights.as_slice())] {
+        assert_eq!(
+            Validator::drop_non_finite(&predictors, &responses, 2, weights),
+            (
+                vec![0.0, 0.0, 3.0, 3.0],
+                vec![0.0, 6.0],
+                weights.map(|_| vec![1.0, 4.0]),
+            )
+        );
+        assert_eq!(
+            Validator::drop_non_finite(&predictors, &[f64::NAN; 4], 2, weights),
+            (vec![], vec![], weights.map(|_| vec![]))
+        );
+    }
+}
+
 // ============================================================================
 // Parameter Validation Tests
 // ============================================================================

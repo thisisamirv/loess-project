@@ -123,7 +123,15 @@ test_that("online methods reject malformed inputs and unused arguments", {
         expect_error(add_point(model, 1, value), "single numeric value")
     }
     invalid_weights <- list(
-        NULL, "bad", 1i, c(1, 2), matrix(1), NA_real_, NaN, Inf, -1
+        NULL,
+        "bad",
+        1i,
+        c(1, 2),
+        matrix(1),
+        NA_real_,
+        NaN,
+        Inf,
+        -1
     )
     for (weight in invalid_weights) {
         expect_error(

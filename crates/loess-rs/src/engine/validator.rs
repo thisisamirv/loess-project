@@ -70,7 +70,7 @@ impl Validator {
         let n = y.len();
         let mut xs = Vec::with_capacity(x.len());
         let mut ys = Vec::with_capacity(n);
-        let mut ws = custom_weights.map(|w| Vec::with_capacity(w.len().min(n)));
+        let mut ws = Vec::with_capacity(custom_weights.map_or(0, |weights| weights.len().min(n)));
         for i in 0..n {
             let row = &x[i * dimensions..i * dimensions + dimensions];
             if row.iter().all(|v| v.is_finite()) && y[i].is_finite() {
@@ -78,13 +78,12 @@ impl Validator {
                 ys.push(y[i]);
                 if let Some(weights) = custom_weights
                     && i < weights.len()
-                    && let Some(filtered_weights) = ws.as_mut()
                 {
-                    filtered_weights.push(weights[i]);
+                    ws.push(weights[i]);
                 }
             }
         }
-        (xs, ys, ws)
+        (xs, ys, custom_weights.map(|_| ws))
     }
 
     // Validate input arrays for LOESS smoothing.
