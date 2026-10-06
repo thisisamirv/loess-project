@@ -540,7 +540,7 @@ test_that("matches stats::loess prediction standard errors", {
     )
 })
 
-test_that("compares finite stats::loess fits on degenerate predictor geometry", {
+test_that("compares finite loess fits on degenerate predictor geometry", {
     property <- function(samples, geometry, fraction, degree, parallel) {
         predictors <- switch(
             geometry,
@@ -577,7 +577,7 @@ test_that("compares finite stats::loess fits on degenerate predictor geometry", 
     )
 })
 
-test_that("matches stats::loess across extreme predictor and response scales", {
+test_that("matches loess across extreme predictor and response scales", {
     property <- function(
         samples,
         fraction,

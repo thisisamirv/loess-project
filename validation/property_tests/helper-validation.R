@@ -36,9 +36,9 @@ loess_property_x <- function(order_values) {
 #' @param custom_weights Optional case weights, passed to both implementations.
 #' @param cell Interpolation cell size, passed to both implementations.
 #' @param parallel Whether to exercise the parallel Rust implementation.
-#' @param new_x Optional out-of-sample query points, with one predictor per column.
+#' @param new_x Optional out-of-sample query points, with one predictor/column.
 #' @param se Whether to compare prediction standard errors.
-#' @param compare_singular Whether to compare finite pseudoinverse reference fits.
+#' @param compare_singular Whether to compare finite pseudoinverse fits.
 #' @noRd
 check_stats_loess <- function(
     x,
