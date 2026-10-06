@@ -27,6 +27,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Preserve zero interpolation subdivision thresholds to match R's small-span cell trees, retaining terminal observation vertices and correcting interpolated fits on small datasets.
 * Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 * Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.
 * Forward the selected distance metric when per-dimension weights are supplied, and support multivariate Online points through a vector-coordinate `add_point` overload.

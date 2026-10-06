@@ -106,6 +106,7 @@ fn test_build_simple_1d() {
     let root = &surface.cells[surface.root];
     assert_relative_eq!(root.lower[0], effective_min, epsilon = 1e-10);
     assert_relative_eq!(root.upper[0], effective_max, epsilon = 1e-10);
+    assert!(surface.vertices.contains(&max_x));
 }
 
 /// Test building a simple 2D surface.

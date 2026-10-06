@@ -193,8 +193,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         let fc = (T::from(n).unwrap() * cell_fraction * fraction)
             .floor()
             .to_usize()
-            .unwrap_or(1)
-            .max(1);
+            .unwrap_or(1);
 
         // Disable the minimum cell diameter check
         let fd = T::zero();

@@ -22,6 +22,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Preserve zero interpolation subdivision thresholds to match R's small-span cell trees, retaining terminal observation vertices and correcting interpolated fits on small datasets.
 * Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 * Prevent overflow in even-sample medians, mean-absolute and bisquare scaling, Batch/Streaming diagnostics and AIC, and local/all-tied case-weight normalization for large finite values.
 * Make one-dimensional boundary padding permutation-invariant, validate weighted-distance weights before fitting, and reject non-finite or non-positive Minkowski exponents at build time.

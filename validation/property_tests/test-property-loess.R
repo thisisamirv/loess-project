@@ -91,8 +91,54 @@ test_that("matches stats::loess for tied x-values (property-based)", {
     )
 })
 
-# The comparisons above pin the direct surface, leaving R's interpolated surface
-# (local fits at kd-tree vertices blended with cubic Hermite bases) untested.
+test_that("matches stats::loess when the interpolation threshold is zero", {
+    order_values <- c(
+        -95.852866,
+        50.239543,
+        44.266116,
+        38.704759,
+        63.911146,
+        -14.960172,
+        80.152979,
+        7.994468,
+        99.341495,
+        -97.587895,
+        -86.512836,
+        -30.204539
+    )
+    responses <- c(
+        22.357882,
+        25.303123,
+        -5.544972,
+        -50.281210,
+        78.202536,
+        52.206016,
+        -89.353151,
+        -63.280238,
+        87.488326,
+        66.498669,
+        15.548199,
+        37.319462
+    )
+    predictors <- loess_property_x(order_values)
+    fraction <- 0.412400163523853
+
+    expect_equal(floor(length(predictors) * fraction * 0.2), 0)
+    for (degree in 1:2) {
+        expect_true(check_stats_loess(
+            predictors,
+            responses,
+            fraction,
+            degree = degree,
+            surface = "interpolate",
+            boundary_degree_fallback = FALSE,
+            tolerance = 1e-10
+        ))
+    }
+})
+
+# Also compare R's interpolated surface (local fits at kd-tree vertices blended
+# with cubic Hermite bases) on randomized inputs.
 # `boundary_degree_fallback = FALSE` selects R's behaviour at vertices outside
 # the data range; the package default reduces those to linear fits instead.
 test_that("matches stats::loess on the interpolated surface", {
@@ -127,14 +173,16 @@ test_that("matches stats::loess on the interpolated surface", {
 })
 
 test_that("matches stats::loess for randomized robust fits with outliers", {
-    property <- function(n,
-                         seed,
-                         fraction,
-                         degree,
-                         iterations,
-                         spike_position,
-                         spike_magnitude,
-                         spike_negative) {
+    property <- function(
+        n,
+        seed,
+        fraction,
+        degree,
+        iterations,
+        spike_position,
+        spike_magnitude,
+        spike_negative
+    ) {
         set.seed(seed)
         x <- as.double(seq(-5, 5, length.out = n)[sample.int(n)])
         y <- as.double(sin(x) + rnorm(n, sd = 0.2))
@@ -204,11 +252,13 @@ test_that("matches stats::loess for fixed long-run robust fits", {
 })
 
 test_that("matches initial stats::loess fits for sparse one-spike responses", {
-    property <- function(x,
-                         spike_position,
-                         spike_magnitude,
-                         spike_negative,
-                         fraction) {
+    property <- function(
+        x,
+        spike_position,
+        spike_magnitude,
+        spike_negative,
+        fraction
+    ) {
         x <- loess_property_x(x)
 
         spike_index <- min(length(x), floor(spike_position * length(x)) + 1L)
