@@ -9,14 +9,14 @@ predict_window(model, ...)
 
 # S3 method for class 'OnlineLoess'
 predict_window(
-  model,
-  new_x,
-  outputs = NULL,
-  intervals = NULL,
-  extrapolation = "clamp",
-  max_extrapolation_distance = NULL,
-  max_neighbor_distance = NULL,
-  ...
+    model,
+    new_x,
+    outputs = NULL,
+    intervals = NULL,
+    extrapolation = "clamp",
+    max_extrapolation_distance = NULL,
+    max_neighbor_distance = NULL,
+    ...
 )
 ```
 

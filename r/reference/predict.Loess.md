@@ -7,14 +7,14 @@ Predict from a fitted LOESS model at out-of-sample points
 ``` r
 # S3 method for class 'Loess'
 predict(
-  object,
-  new_x,
-  intervals = NULL,
-  extrapolation = "clamp",
-  max_extrapolation_distance = NULL,
-  max_neighbor_distance = NULL,
-  outputs = NULL,
-  ...
+    object,
+    new_x,
+    intervals = NULL,
+    extrapolation = "clamp",
+    max_extrapolation_distance = NULL,
+    max_neighbor_distance = NULL,
+    outputs = NULL,
+    ...
 )
 ```
 
