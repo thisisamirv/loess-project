@@ -60,6 +60,10 @@
 
 ### Fixed
 
+- Correct unweighted, unpadded one-dimensional linear prediction
+  standard errors without robustness downweighting using the smoothing
+  influence rows and global residual degrees of freedom, including
+  interpolation; align prediction-interval residual scales.
 - Correct tied-coordinate interpolation splits and normalized cell
   geometry, add two-dimensional neighboring-edge blending, and match R’s
   neighborhood rounding near integer span boundaries.
