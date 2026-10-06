@@ -350,6 +350,279 @@ test_that("matches stats::loess near span boundaries with varied cell sizes", {
     )
 })
 
+test_that("matches stats::loess predictions at interior and boundary queries", {
+    property <- function(
+        samples,
+        fraction,
+        degree,
+        position,
+        interpolate,
+        parallel
+    ) {
+        predictors <- loess_property_x(samples[[1]])
+        lower <- min(predictors)
+        upper <- max(predictors)
+        anchor <- predictors[1L + floor(position * (length(predictors) - 1L))]
+        queries <- pmax(
+            lower,
+            pmin(
+                upper,
+                c(
+                    lower,
+                    upper,
+                    lower + position * (upper - lower),
+                    anchor,
+                    anchor - (upper - lower) * 1e-8,
+                    anchor + (upper - lower) * 1e-8
+                )
+            )
+        )
+
+        expect_true(check_stats_loess(
+            predictors,
+            samples[[2]],
+            fraction,
+            degree = degree,
+            new_x = queries,
+            surface = if (interpolate) "interpolate" else "direct",
+            boundary_degree_fallback = FALSE,
+            parallel = parallel,
+            tolerance = 1e-10
+        ))
+    }
+    quickcheck::for_all(
+        samples = quickcheck::equal_length(
+            quickcheck::double_bounded(-100, 100),
+            quickcheck::double_bounded(-10, 10),
+            len = c(24L, 48L)
+        ),
+        fraction = quickcheck::double_bounded(0.6, 1.0, len = 1L),
+        degree = quickcheck::integer_bounded(1L, 2L, len = 1L),
+        position = quickcheck::double_bounded(0, 1, len = 1L),
+        interpolate = quickcheck::logical_(len = 1L),
+        parallel = quickcheck::logical_(len = 1L),
+        property = property,
+        tests = 100L,
+        shrinks = 0L,
+        discards = 1000L
+    )
+})
+
+test_that("matches stats::loess for three- and four-dimensional fits", {
+    property <- function(
+        samples,
+        dimensions,
+        fraction,
+        degree,
+        scale,
+        interpolate,
+        parallel
+    ) {
+        predictors <- do.call(cbind, samples[seq_len(dimensions)])
+        predictors[, 2L] <- predictors[, 2L] * scale
+        responses <- samples[[5]] + predictors[, 1L] * samples[[2]]
+
+        expect_true(check_stats_loess(
+            predictors,
+            responses,
+            fraction,
+            degree = degree,
+            surface = if (interpolate) "interpolate" else "direct",
+            boundary_degree_fallback = FALSE,
+            parallel = parallel,
+            tolerance = 1e-10
+        ))
+    }
+    quickcheck::for_all(
+        samples = quickcheck::equal_length(
+            quickcheck::double_bounded(-3, 3),
+            quickcheck::double_bounded(-3, 3),
+            quickcheck::double_bounded(-3, 3),
+            quickcheck::double_bounded(-3, 3),
+            quickcheck::double_bounded(-10, 10),
+            len = c(96L, 128L)
+        ),
+        dimensions = quickcheck::integer_bounded(3L, 4L, len = 1L),
+        fraction = quickcheck::double_bounded(0.65, 1.0, len = 1L),
+        degree = quickcheck::integer_bounded(1L, 2L, len = 1L),
+        scale = quickcheck::double_bounded(0.01, 100, len = 1L),
+        interpolate = quickcheck::logical_(len = 1L),
+        parallel = quickcheck::logical_(len = 1L),
+        property = property,
+        tests = 50L,
+        shrinks = 0L,
+        discards = 1000L
+    )
+})
+
+test_that("matches stats::loess for weighted robust multidimensional fits", {
+    property <- function(
+        samples,
+        fraction,
+        degree,
+        iterations,
+        interpolate,
+        parallel
+    ) {
+        predictors <- cbind(samples[[1]], samples[[2]])
+        responses <- samples[[3]]
+        responses[1L] <- responses[1L] + 20
+
+        expect_true(check_stats_loess(
+            predictors,
+            responses,
+            fraction,
+            degree = degree,
+            iterations = iterations,
+            custom_weights = samples[[4]],
+            surface = if (interpolate) "interpolate" else "direct",
+            boundary_degree_fallback = FALSE,
+            parallel = parallel,
+            tolerance = 1e-10
+        ))
+    }
+    quickcheck::for_all(
+        samples = quickcheck::equal_length(
+            quickcheck::double_bounded(-3, 3),
+            quickcheck::double_bounded(-3, 3),
+            quickcheck::double_bounded(-5, 5),
+            quickcheck::double_bounded(0.1, 3),
+            len = c(48L, 72L)
+        ),
+        fraction = quickcheck::double_bounded(0.75, 1.0, len = 1L),
+        degree = quickcheck::integer_bounded(1L, 2L, len = 1L),
+        iterations = quickcheck::integer_bounded(1L, 6L, len = 1L),
+        interpolate = quickcheck::logical_(len = 1L),
+        parallel = quickcheck::logical_(len = 1L),
+        property = property,
+        tests = 50L,
+        shrinks = 0L,
+        discards = 1000L
+    )
+})
+
+test_that("matches stats::loess prediction standard errors", {
+    property <- function(samples, fraction, position, interpolate, parallel) {
+        predictors <- loess_property_x(samples[[1]])
+        queries <- c(
+            min(predictors),
+            max(predictors),
+            min(predictors) + position * diff(range(predictors))
+        )
+
+        expect_true(check_stats_loess(
+            predictors,
+            samples[[2]],
+            fraction,
+            degree = 1L,
+            new_x = queries,
+            se = TRUE,
+            surface = if (interpolate) "interpolate" else "direct",
+            boundary_degree_fallback = FALSE,
+            parallel = parallel,
+            tolerance = 1e-10
+        ))
+    }
+    quickcheck::for_all(
+        samples = quickcheck::equal_length(
+            quickcheck::double_bounded(-100, 100),
+            quickcheck::double_bounded(-5, 5),
+            len = c(48L, 80L)
+        ),
+        fraction = quickcheck::double_bounded(0.6, 1.0, len = 1L),
+        position = quickcheck::double_bounded(0, 1, len = 1L),
+        interpolate = quickcheck::logical_(len = 1L),
+        parallel = quickcheck::logical_(len = 1L),
+        property = property,
+        tests = 100L,
+        shrinks = 0L,
+        discards = 1000L
+    )
+})
+
+test_that("compares finite stats::loess fits on degenerate predictor geometry", {
+    property <- function(samples, geometry, fraction, degree, parallel) {
+        predictors <- switch(
+            geometry,
+            rep(2, length(samples[[1]])),
+            cbind(samples[[1]], 2 * samples[[1]]),
+            cbind(round(samples[[1]]), round(samples[[1]])^2)
+        )
+
+        expect_true(check_stats_loess(
+            predictors,
+            samples[[2]],
+            fraction,
+            degree = degree,
+            surface = "direct",
+            parallel = parallel,
+            compare_singular = TRUE,
+            tolerance = 1e-10
+        ))
+    }
+    quickcheck::for_all(
+        samples = quickcheck::equal_length(
+            quickcheck::double_bounded(-3, 3),
+            quickcheck::double_bounded(-5, 5),
+            len = c(40L, 64L)
+        ),
+        geometry = quickcheck::integer_bounded(1L, 3L, len = 1L),
+        fraction = quickcheck::double_bounded(0.8, 1.0, len = 1L),
+        degree = quickcheck::integer_bounded(1L, 2L, len = 1L),
+        parallel = quickcheck::logical_(len = 1L),
+        property = property,
+        tests = 100L,
+        shrinks = 0L,
+        discards = 1000L
+    )
+})
+
+test_that("matches stats::loess across extreme predictor and response scales", {
+    property <- function(
+        samples,
+        fraction,
+        degree,
+        exponent,
+        translation,
+        response_exponent,
+        interpolate,
+        parallel
+    ) {
+        scale <- 10^exponent
+        predictors <- (loess_property_x(samples[[1]]) + translation) * scale
+        responses <- samples[[2]] * 10^response_exponent
+
+        expect_true(check_stats_loess(
+            predictors,
+            responses,
+            fraction,
+            degree = degree,
+            surface = if (interpolate) "interpolate" else "direct",
+            boundary_degree_fallback = FALSE,
+            parallel = parallel,
+            tolerance = 1e-10
+        ))
+    }
+    quickcheck::for_all(
+        samples = quickcheck::equal_length(
+            quickcheck::double_bounded(-100, 100),
+            quickcheck::double_bounded(-5, 5),
+            len = c(32L, 64L)
+        ),
+        fraction = quickcheck::double_bounded(0.65, 1.0, len = 1L),
+        degree = quickcheck::integer_bounded(1L, 2L, len = 1L),
+        exponent = quickcheck::integer_bounded(-12L, 12L, len = 1L),
+        translation = quickcheck::double_bounded(-1e6, 1e6, len = 1L),
+        response_exponent = quickcheck::integer_bounded(-4L, 8L, len = 1L),
+        interpolate = quickcheck::logical_(len = 1L),
+        parallel = quickcheck::logical_(len = 1L),
+        property = property,
+        tests = 100L,
+        shrinks = 0L,
+        discards = 1000L
+    )
+})
+
 test_that("matches stats::loess for randomized robust fits with outliers", {
     property <- function(
         n,
@@ -463,5 +736,19 @@ test_that("matches initial stats::loess fits for sparse one-spike responses", {
         tests = 200L,
         shrinks = 0L,
         discards = 1000L
+    )
+})
+
+test_that("accounts explicitly for reference comparisons and discards", {
+    expect_gt(loess_reference_counts$compared, 0L)
+    message(
+        "Reference comparisons: ",
+        loess_reference_counts$compared,
+        "; discarded: ",
+        loess_reference_counts$discarded,
+        "; finite singular fits compared: ",
+        loess_reference_counts$singular,
+        "; captured failures: ",
+        length(loess_reference_counts$failures)
     )
 })
