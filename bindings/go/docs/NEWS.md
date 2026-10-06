@@ -12,6 +12,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Added
 
+* New Go module releases bundle the native header, CPU libraries for Linux/macOS/Windows on amd64 and arm64, dependency license notices, and checksums. Consumers no longer need separate native downloads or manual `CGO_CFLAGS`/`CGO_LDFLAGS` setup; cgo and a compatible C compiler are still required.
 * Added `OnlineLoess.AddPointVector()` for multivariate Online point updates.
 * Added `CV *CVOptions` to Batch options for grouped cross-validation, taking precedence over individual CV fields.
 * Added `Outputs []string` to `Options`, `StreamingOptions`, `OnlineOptions`, and `PredictOptions` for grouped optional result selection.
@@ -21,6 +22,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Changed
 
+* Native linking now defaults to the bundled CPU library. Use `-tags=musl` on musl Linux, or `-tags=external_native` for source-built or custom libraries; the monorepo Make targets select external-native mode automatically.
 * Clarified Batch `ResidualSD` as `1.4826 * MAD`; Streaming reports the cumulative sample standard deviation of emitted residuals.
 * Breaking change: replaced individual `Return*` output fields with `Outputs: []string{...}` for Batch, Streaming, Online, and prediction options.
 * Breaking change: replaced flat interval fields and prediction levels with `Intervals *IntervalsOptions`; CV uses only `CV *CVOptions` with an outer `Seed`, replacing flat CV fields and `CVOptions.Seed`.

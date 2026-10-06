@@ -115,6 +115,8 @@ bindings/wasm/src/content/docs/reference/
 bindings/go/docs-site/public/
 bindings/go/docs-site/resources/
 bindings/go/docs-site/.hugo_build.lock
+bindings/go/fastloess/include/
+bindings/go/fastloess/native/
 
 # WebAssembly
 pkg/

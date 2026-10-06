@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Bundle native headers, eight desktop CPU archives, dependency notices, checksums, and source provenance in new Go module releases so supported consumers need no manual native installation; add musl selection and an external-native override for source/custom builds.
 - Added `ProcessChunkWeighted`, weighted Online point methods, `WindowDiagnostics`, and `PredictWindow` for the current Online window.
 - Added `OnlineLoess.AddPointVector()` for multivariate Online point updates.
 - Added `CV *CVOptions` to Batch options for grouped cross-validation, taking precedence over individual CV fields.
