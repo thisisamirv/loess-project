@@ -210,6 +210,12 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x64
+      - name: Pin Rust MSVC linker
+        shell: pwsh
+        run: |
+          $linker = Join-Path $env:VCToolsInstallDir "bin\Hostx64\x64\link.exe"
+          if (-not (Test-Path -LiteralPath $linker)) { throw "MSVC linker not found: $linker" }
+          "CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_LINKER=$linker" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
       - name: Install GNU Make (Windows)
         run: choco install make -y
       - name: Install cppcheck (Windows)
