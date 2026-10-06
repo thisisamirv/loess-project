@@ -106,7 +106,65 @@ fn gaussian_standard_errors_use_the_full_kernel_neighborhood() {
         .unwrap()
         .call(&retained, &[query])
         .unwrap();
-    let query_all_points = gaussian_se_reference(&x, &y, &retained.y, query, 1.5, 0..x.len());
+    let influence_row = |query: f64, truncate: bool| {
+        let mut nearest: Vec<usize> = (0..x.len()).collect();
+        nearest
+            .sort_by(|&left, &right| (x[left] - query).abs().total_cmp(&(x[right] - query).abs()));
+        let bandwidth = (x[nearest[2]] - query).abs();
+        let mut weights = vec![0.0; x.len()];
+        for &observation in nearest.iter().take(if truncate { 3 } else { x.len() }) {
+            let offset = (x[observation] - query) / bandwidth;
+            weights[observation] = (-0.5 * offset * offset).exp();
+        }
+        let sum: f64 = weights.iter().sum();
+        let first: f64 = weights
+            .iter()
+            .zip(&x)
+            .map(|(weight, predictor)| weight * (predictor - query))
+            .sum();
+        let second: f64 = weights
+            .iter()
+            .zip(&x)
+            .map(|(weight, predictor)| weight * (predictor - query).powi(2))
+            .sum();
+        let determinant = sum * second - first * first;
+        weights
+            .iter()
+            .zip(&x)
+            .map(|(weight, predictor)| {
+                weight * (second - first * (predictor - query)) / determinant
+            })
+            .collect::<Vec<_>>()
+    };
+    let degrees_of_freedom: f64 = x
+        .iter()
+        .enumerate()
+        .map(|(training, &predictor)| {
+            influence_row(predictor, false)
+                .iter()
+                .enumerate()
+                .map(|(observation, &coefficient)| {
+                    let identity = if observation == training { 1.0 } else { 0.0 };
+                    (identity - coefficient).powi(2)
+                })
+                .sum::<f64>()
+        })
+        .sum();
+    let residual_variance = y
+        .iter()
+        .zip(&retained.y)
+        .map(|(response, fitted)| (response - fitted).powi(2))
+        .sum::<f64>()
+        / degrees_of_freedom;
+    let query_norm = |truncate| {
+        influence_row(query, truncate)
+            .iter()
+            .map(|coefficient| coefficient * coefficient)
+            .sum::<f64>()
+    };
+    let query_all_points = (residual_variance * query_norm(false)).sqrt();
+    let query_k_nearest_only = (residual_variance * query_norm(true)).sqrt();
+    assert!((query_all_points - query_k_nearest_only).abs() > 1e-3);
     assert_close(
         prediction.standard_errors.unwrap()[0],
         query_all_points,

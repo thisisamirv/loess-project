@@ -98,6 +98,80 @@ fn test_predict_linear_standard_errors_match_r_exact_statistics() {
 }
 
 #[test]
+fn test_predict_linear_standard_errors_follow_fitted_kernel() {
+    let predictors: Vec<f64> = (0..16).map(|index| index as f64 / 3.0).collect();
+    let responses: Vec<f64> = predictors
+        .iter()
+        .enumerate()
+        .map(|(index, predictor)| predictor.sin() + if index % 2 == 0 { 0.2 } else { -0.1 })
+        .collect();
+    let queries = [0.0, 1.1, 3.3, 5.0];
+    for kernel in [
+        "tricube",
+        "gaussian",
+        "uniform",
+        "cosine",
+        "epanechnikov",
+        "biweight",
+        "triangle",
+    ] {
+        for surface in ["direct", "interpolate"] {
+            let fit = |values: &[f64]| {
+                Loess::new()
+                    .fraction(0.75)
+                    .iterations(0)
+                    .degree("linear")
+                    .weight_function(kernel)
+                    .surface_mode(surface)
+                    .boundary_policy("noboundary")
+                    .retain_model(true)
+                    .build()
+                    .unwrap()
+                    .fit(&predictors, values)
+                    .unwrap()
+            };
+            let fitted = fit(&responses);
+            let actual = Predict::new()
+                .outputs(["se"])
+                .build()
+                .unwrap()
+                .call(&fitted, &queries)
+                .unwrap();
+            let mut degrees_of_freedom = 0.0;
+            let mut norms = [0.0; 4];
+            for observation in 0..predictors.len() {
+                let mut basis = vec![0.0; predictors.len()];
+                basis[observation] = 1.0;
+                let basis_fit = fit(&basis);
+                for (training, &coefficient) in basis_fit.y.iter().enumerate() {
+                    let identity = if observation == training { 1.0 } else { 0.0 };
+                    degrees_of_freedom += (identity - coefficient).powi(2);
+                }
+                let prediction = Predict::new()
+                    .build()
+                    .unwrap()
+                    .call(&basis_fit, &queries)
+                    .unwrap();
+                for (norm, &coefficient) in norms.iter_mut().zip(&prediction.y) {
+                    *norm += coefficient * coefficient;
+                }
+            }
+            let variance = responses
+                .iter()
+                .zip(&fitted.y)
+                .map(|(response, fitted)| (response - fitted).powi(2))
+                .sum::<f64>()
+                / degrees_of_freedom;
+            for (&standard_error, norm) in
+                actual.standard_errors.as_ref().unwrap().iter().zip(norms)
+            {
+                assert_relative_eq!(standard_error, (variance * norm).sqrt(), epsilon = 1e-10);
+            }
+        }
+    }
+}
+
+#[test]
 fn test_predict_grouped_outputs_select_only_requested_components() {
     let (x, y) = linear_series(20, 2.0, 1.0);
     let fitted = Loess::new()

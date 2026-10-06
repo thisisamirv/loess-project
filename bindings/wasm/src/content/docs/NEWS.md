@@ -26,7 +26,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
-* Correct unweighted, unpadded one-dimensional linear prediction standard errors without robustness downweighting using the smoothing influence rows and global residual degrees of freedom, including interpolation; align prediction-interval residual scales.
+* Use the fitted model's kernel for unweighted, unpadded one-dimensional linear prediction standard errors without robustness downweighting, with smoothing influence rows and global residual degrees of freedom, including interpolation; align prediction-interval residual scales.
 * Correct tied-coordinate interpolation splits and normalized cell geometry, add two-dimensional neighboring-edge blending, and match R's neighborhood rounding near integer span boundaries.
 * Preserve zero interpolation subdivision thresholds to match R's small-span cell trees, retaining terminal observation vertices and correcting interpolated fits on small datasets.
 * Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
