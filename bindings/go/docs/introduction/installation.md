@@ -5,7 +5,7 @@ weight: 15
 
 ## Requirements
 
-- Go 1.21+
+- Go 1.23+
 - `CGO_ENABLED=1` and a C compiler:
   - Linux/macOS: GCC or Clang (usually already present)
   - Windows: a MinGW-w64 toolchain (e.g. via [MSYS2](https://www.msys2.org/) or [WinLibs](https://winlibs.com/)), since Go's `cgo` invokes `gcc` on Windows, not MSVC's `cl.exe`
@@ -26,7 +26,12 @@ make go-dev    # full dev checks: fmt, lint, tests, doc snippets
 
 Outside the monorepo, download the prebuilt static library and header attached to a [GitHub release](https://github.com/thisisamirv/loess-project/releases), then point `cgo` at them:
 
+Put `fastloess_go.h` in your native installation's `include` directory and rename the selected platform archive to `libfastloess_go.a` in its `lib` directory. The `-lfastloess_go` linker flag does not find the platform-suffixed release filename automatically. Use the Go module and native assets from the same release; `go get` does not install the native library or header.
+
+The existing v2.0.0 Go tag predates the required `/v2` module-path correction. A new release containing the corrected module path is needed for public Go proxy resolution; published tags must not be moved or replaced.
+
 ```sh
+export CGO_ENABLED=1
 export CGO_CFLAGS="-I/path/to/fastloess_go/include"
 export CGO_LDFLAGS="-L/path/to/fastloess_go/lib -lfastloess_go -lm -ldl -lpthread"  # Linux
 go build ./...
@@ -41,5 +46,5 @@ Alternatively, build the native library yourself from the [`loess-project`](http
 ```sh
 git clone https://github.com/thisisamirv/loess-project
 cd loess-project
-cargo build -p fastloess-go --profile release-c
+cargo build --locked -p fastloess-go --profile release-c
 ```

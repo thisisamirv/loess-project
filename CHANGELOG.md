@@ -295,6 +295,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Go:**
 
+- Build release archives with the committed lockfile and cgo-compatible `release-c` profile; validate standalone consumers and release metadata before publishing module tags, reject conflicting tags, and verify public proxy resolution.
 - Reject explicitly empty custom weights instead of treating them as omitted.
 - Breaking: The Go module's import path now includes the required `/v2` major-version suffix; a new release is required for pkg.go.dev to resolve versions correctly.
 - Keep Batch, Streaming, Online, and retained prediction models alive during cgo calls so finalizers cannot free in-use native handles.
