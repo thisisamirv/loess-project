@@ -1,4 +1,7 @@
 {
+    "extraPaths": [
+        "bindings/python/python"
+    ],
     "executionEnvironments": [
         {
             "root": "bindings/cpp/spack",

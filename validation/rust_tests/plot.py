@@ -705,8 +705,8 @@ def plot_cv_comparison():
         color="#ef4444",
     )
 
-    best_loocv_fraction = df_scores.loc[df_scores["loocv_rmse"].idxmin(), "fraction"]
-    best_kfold_fraction = df_scores.loc[df_scores["kfold_rmse"].idxmin(), "fraction"]
+    best_loocv_fraction = df_scores.at[df_scores["loocv_rmse"].idxmin(), "fraction"]
+    best_kfold_fraction = df_scores.at[df_scores["kfold_rmse"].idxmin(), "fraction"]
 
     ax1.axvline(best_loocv_fraction, color="#3b82f6", alpha=0.3, linestyle="-")
     ax1.axvline(best_kfold_fraction, color="#ef4444", alpha=0.3, linestyle="--")

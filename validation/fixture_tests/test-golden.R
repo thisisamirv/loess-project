@@ -235,14 +235,16 @@ test_that("matches stats::loess on the interpolated surface", {
 })
 
 test_that("matches stats::loess for randomized robust fits with outliers", {
-    property <- function(n,
-                         seed,
-                         fraction,
-                         degree,
-                         iterations,
-                         spike_position,
-                         spike_magnitude,
-                         spike_negative) {
+    property <- function(
+        n,
+        seed,
+        fraction,
+        degree,
+        iterations,
+        spike_position,
+        spike_magnitude,
+        spike_negative
+    ) {
         set.seed(seed)
         x <- as.double(seq(-5, 5, length.out = n)[sample.int(n)])
         y <- as.double(sin(x) + rnorm(n, sd = 0.2))
@@ -312,11 +314,13 @@ test_that("matches stats::loess for fixed long-run robust fits", {
 })
 
 test_that("matches initial stats::loess fits for sparse one-spike responses", {
-    property <- function(x,
-                         spike_position,
-                         spike_magnitude,
-                         spike_negative,
-                         fraction) {
+    property <- function(
+        x,
+        spike_position,
+        spike_magnitude,
+        spike_negative,
+        fraction
+    ) {
         x <- loess_property_x(x)
 
         spike_index <- min(length(x), floor(spike_position * length(x)) + 1L)

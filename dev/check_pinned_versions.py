@@ -120,11 +120,11 @@ def _version_tuple(v: str) -> tuple[int, ...]:
 def _is_outdated(current: str, latest: str) -> bool:
     # Pad to equal length so a shorthand pin like Cargo's "0.9" compares
     # equal to "0.9.0" instead of being treated as older due to tuple length.
-    c, l = _version_tuple(current), _version_tuple(latest)
-    n = max(len(c), len(l))
+    c, latest_parts = _version_tuple(current), _version_tuple(latest)
+    n = max(len(c), len(latest_parts))
     c += (0,) * (n - len(c))
-    l += (0,) * (n - len(l))
-    return l > c
+    latest_parts += (0,) * (n - len(latest_parts))
+    return latest_parts > c
 
 
 def _latest_release(repo: str, tag_prefix: str = "") -> str:
