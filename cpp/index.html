@@ -138,7 +138,7 @@ $(document).ready(function(){initNavTree('index.html',''); initResizable(); });
 <hr  />
 <h2>Why this package?</h2>
 <h3>Speed</h3>
-<p>The <code>loess</code> project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is typically <b>5–20x faster</b> than R's <code>loess</code> in serial mode, and up to <b>200x faster</b> on large datasets with parallel execution.</p>
+<p><code>fastLoess</code> beats the competition by being <b>47.3× faster than R's <code>stats::loess</code> in serial mode</b> and <b>236.4× faster in parallel compared to R's <code>stats::loess</code></b>; speedups vary by workload, and parallel execution is not always faster. For datasets of 1,000 points or fewer, serial execution is advised.</p>
 <p>For more details on the performance comparison, see the <a href="https://thisisamirv.github.io/loess-project/cpp/benchmarks.html">Benchmarks</a> page.</p>
 <h3>Robustness</h3>
 <p>This implementation is <em>more robust</em> than R's <code>loess</code> due to two key design choices:</p>

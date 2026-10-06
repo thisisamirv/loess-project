@@ -297,7 +297,7 @@
 <div class="sect2">
 <h3 id="speed"><a class="anchor" href="#speed"></a>Speed</h3>
 <div class="paragraph">
-<p>The <code>loess</code> project beats the competition in terms of speed, whether in single-threaded or multi-threaded parallel execution. It is typically <strong>5–20x faster</strong> than R&#8217;s <code>loess</code> in serial mode, and up to <strong>200x faster</strong> on large datasets with parallel execution.</p>
+<p><code>fastLoess</code> beats the competition by being <strong>47.3× faster than R&#8217;s <code>stats::loess</code> in serial mode</strong> and <strong>236.4× faster in parallel compared to R&#8217;s <code>stats::loess</code></strong>; speedups vary by workload, and parallel execution is not always faster. For datasets of 1,000 points or fewer, serial execution is advised.</p>
 </div>
 <div class="paragraph">
 <p>For more details on the performance comparison, see the <a href="https://thisisamirv.github.io/loess-project/java/benchmarks/">Benchmarks</a> page.</p>

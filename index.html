@@ -279,11 +279,12 @@ href="https://github.com/thisisamirv/lowess-project"><code>lowess-project</code>
 <hr />
 <h2 id="why-this-package">Why this package?</h2>
 <h3 id="speed">Speed</h3>
-<p>The <code>loess</code> project beats the competition in terms of
-speed, whether in single-threaded or multi-threaded parallel execution.
-It is typically <strong>5–20x faster</strong> than R's
-<code>loess</code> in serial mode, and up to <strong>200x
-faster</strong> on large datasets with parallel execution.</p>
+<p><code>fastLoess</code> beats the competition by being <strong>47.3×
+faster than R's <code>stats::loess</code> in serial mode</strong> and
+<strong>236.4× faster in parallel compared to R's
+<code>stats::loess</code></strong>; speedups vary by workload, and
+parallel execution is not always faster. For datasets of 1,000 points or
+fewer, serial execution is advised.</p>
 <p>For more details on the performance comparison, see the Benchmarks
 page in the documentation for your binding/crate.</p>
 <h3 id="robustness">Robustness</h3>

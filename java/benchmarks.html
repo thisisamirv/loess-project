@@ -190,18 +190,16 @@
 </aside>
 <article class="doc">
 <h1 class="page">Benchmarks</h1>
-<div id="preamble">
-<div class="sectionbody">
 <div class="paragraph">
-<p>The Java binding calls the shared <code>fastLoess</code> Rust core through JNI. The figures below are reference measurements of that core from the repository&#8217;s R comparison harness; they do not measure Java/JNI overhead or Java-specific workloads.</p>
+<p>The Java binding calls the shared <code>fastLoess</code> Rust core through JNI. These are CPU reference results from the repository&#8217;s R comparison harness; they do not measure Java/JNI overhead or Java-specific workloads. This LOESS implementation has no GPU backend.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="_images/benchmark_comparison.svg" alt="Runtime and speedup comparison of stats::loess with serial and parallel rfastloess across benchmark categories">
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="cpu-benchmarks"><a class="anchor" href="#cpu-benchmarks"></a>CPU Benchmarks</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>Speedup relative to R&#8217;s <code>stats::loess</code> (higher is better):</p>
+<p>The table uses mean timings. Speedups in parentheses are relative to base R&#8217;s <code>stats::loess</code>; values above 1x are faster than R.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -212,174 +210,203 @@
 </colgroup>
 <thead>
 <tr>
-<th class="tableblock halign-left valign-top">Category</th>
-<th class="tableblock halign-left valign-top">R (stats)</th>
-<th class="tableblock halign-left valign-top">Serial</th>
-<th class="tableblock halign-left valign-top">Parallel</th>
+<th class="tableblock halign-left valign-top">Scenario</th>
+<th class="tableblock halign-left valign-top">R</th>
+<th class="tableblock halign-left valign-top">rfastloess (serial)</th>
+<th class="tableblock halign-left valign-top">rfastloess (parallel)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Clustered</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">19.7x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>27.1x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">clustered</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">42.92 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.40 ms (17.9x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.82 ms (23.6x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Constant Y</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">15.5x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>19.1x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">constant_y</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">27.78 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.07 ms (13.4x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.62 ms (17.1x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Extreme Outliers</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>6.9x</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">5.4x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">extreme_outliers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">27.74 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4.35 ms (6.4x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4.21 ms (6.6x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Financial</strong> (500-5K)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>3.7x</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">3.4x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">financial_1000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.48 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.56 ms (2.7x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.67 ms (2.2x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Fraction</strong> (0.05-0.67)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">17.3x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>25.4x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">financial_500</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.70 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.25 ms (2.8x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.66 ms (1.1x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Genomic</strong> (1K-5K)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>4.9x</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">2.9x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">financial_5000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13.36 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.27 ms (5.9x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.71 ms (7.8x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Genomic</strong> (100K)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">129.6x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>131.9x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fraction_0.05</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8.22 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.70 ms (3.0x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4.14 ms (2.0x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>High Noise</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">17.8x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>20.7x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fraction_0.1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13.74 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.54 ms (5.4x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.42 ms (5.7x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Iterations</strong> (1-10)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">9.9x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>15.0x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fraction_0.2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">24.19 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.87 ms (8.4x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.25 ms (10.7x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Large</strong> (Direct)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">0.8x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>2.4x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fraction_0.3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">32.65 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.26 ms (10.0x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.48 ms (9.4x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Large</strong> (High Fraction)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>612.5x</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">550.6x</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fraction_0.5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">52.39 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.95 ms (17.8x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.11 ms (16.8x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Large</strong> (High Iterations)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">5.3x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>7.3x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">fraction_0.67</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">75.48 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.53 ms (29.9x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.57 ms (29.3x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Large</strong> (Interpolate)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">57.6x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>90.7x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">genomic_1000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.34 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.61 ms (2.2x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.89 ms (1.5x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Scale</strong> (1K-10K)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">7.5x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>9.2x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">genomic_100000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5 652.21 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">51.02 ms (110.8x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">33.27 ms (169.9x)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Scientific</strong> (500-5K)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">3.6x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>4.0x</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">genomic_5000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">12.51 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.79 ms (4.5x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.64 ms (4.7x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">high_noise</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">70.11 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.38 ms (20.7x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.45 ms (28.6x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">iterations_1</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">22.75 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.66 ms (13.7x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.87 ms (7.9x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">iterations_10</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">22.53 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5.19 ms (4.3x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4.45 ms (5.1x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">iterations_2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">23.47 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.28 ms (10.3x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.68 ms (8.8x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">iterations_3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">23.28 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.86 ms (8.1x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.55 ms (9.1x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">iterations_5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">22.62 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.66 ms (6.2x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.26 ms (6.9x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">large_direct</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">10 066.93 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20 179.44 ms (0.5x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">9 135.54 ms (1.1x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">large_high_fraction</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">14 587.37 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">24.95 ms (584.7x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">61.71 ms (236.4x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">large_high_iter</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8 461.60 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2 391.07 ms (3.5x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 099.72 ms (7.7x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">large_interp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 274.90 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">26.95 ms (47.3x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">18.88 ms (67.5x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scale_1000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.41 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.80 ms (1.8x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4.21 ms (0.3x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scale_10000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">46.15 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5.13 ms (9.0x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">8.21 ms (5.6x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scale_5000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13.27 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.06 ms (4.3x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4.74 ms (2.8x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scientific_1000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.76 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.83 ms (2.1x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1.02 ms (1.7x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scientific_500</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.72 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.39 ms (1.8x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">0.66 ms (1.1x)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">scientific_5000</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">18.38 ms</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3.10 ms (5.9x)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2.73 ms (6.7x)</p></td>
 </tr>
 </tbody>
 </table>
 <div class="paragraph">
-<p><em>Mean per-scenario speedup within each category, rounded to one decimal.</em></p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="large-scale-timings"><a class="anchor" href="#large-scale-timings"></a>Large-Scale Timings</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Mean elapsed times from the latest comparison run:</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 28.5714%;">
-<col style="width: 14.2857%;">
-<col style="width: 14.2857%;">
-<col style="width: 14.2857%;">
-<col style="width: 14.2857%;">
-<col style="width: 14.2858%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Variant</th>
-<th class="tableblock halign-left valign-top"><code>stats::loess</code></th>
-<th class="tableblock halign-left valign-top">Serial core</th>
-<th class="tableblock halign-left valign-top">Parallel core</th>
-<th class="tableblock halign-left valign-top">Speedup (serial)</th>
-<th class="tableblock halign-left valign-top">Speedup (parallel)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>large_direct</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">7.86 s</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">9.55 s</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">3.27 s</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">0.8x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">2.4x</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>large_interp</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1.21 s</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">20.96 ms</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">13.30 ms</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">57.6x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">90.7x</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>large_high_iter</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">6.75 s</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">1.27 s</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">0.92 s</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">5.3x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">7.3x</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>large_high_fraction</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">8.71 s</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">14.22 ms</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">15.82 ms</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">612.5x</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">550.6x</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>Parallel execution is not faster for every workload: the serial core is faster in the <code>large_high_fraction</code> run. A dedicated JMH benchmark can measure end-to-end Java/JNI overhead and compare Java-specific option configurations.</p>
-</div>
-</div>
+<p>In this run, <code>large_direct</code> is the large exact-fit case where R is faster than the serial core; parallel execution is 1.1x faster than R. The largest listed speedup is 584.7x for serial execution on <code>large_high_fraction</code>, where parallel execution is slower than serial.</p>
 </div>
 </article>
   </div>

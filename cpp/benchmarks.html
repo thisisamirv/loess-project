@@ -102,44 +102,75 @@ $(document).ready(function(){initNavTree('benchmarks.html',''); initResizable();
   <div class="headertitle"><div class="title">Benchmarks</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><h1>Benchmarks</h1>
-<h2>CPU Benchmarks</h2>
-<p>Speedup relative to R's <code>stats::loess</code> (higher is better):</p>
+<div class="textblock"><p>These are shared CPU reference results from the R comparison harness, not separately measured C++ binding timings. This LOESS implementation has no GPU backend.</p>
+<p><img src="../assets/diagrams/benchmark_comparison.svg" alt="Runtime and speedup comparison of stats::loess with serial and parallel rfastloess across benchmark categories" style="pointer-events: none;" class="inline"/></p>
+<p>The table uses mean timings. Speedups in parentheses are relative to base R's <code>stats::loess</code>; values above 1× are faster than R.</p>
 <table class="markdownTable">
 <tr class="markdownTableHead">
-<th class="markdownTableHeadNone">Category   </th><th class="markdownTableHeadNone">R (stats)   </th><th class="markdownTableHeadNone">Serial   </th><th class="markdownTableHeadNone">Parallel    </th></tr>
+<th class="markdownTableHeadNone">Scenario   </th><th class="markdownTableHeadRight">R   </th><th class="markdownTableHeadRight">rfastloess (serial)   </th><th class="markdownTableHeadRight">rfastloess (parallel)    </th></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Clustered</b>   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">19.7×   </td><td class="markdownTableBodyNone"><b>27.1×</b>    </td></tr>
+<td class="markdownTableBodyNone">clustered   </td><td class="markdownTableBodyRight">42.92 ms   </td><td class="markdownTableBodyRight">2.40 ms (17.9×)   </td><td class="markdownTableBodyRight">1.82 ms (23.6×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Constant Y</b>   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">15.5×   </td><td class="markdownTableBodyNone"><b>19.1×</b>    </td></tr>
+<td class="markdownTableBodyNone">constant_y   </td><td class="markdownTableBodyRight">27.78 ms   </td><td class="markdownTableBodyRight">2.07 ms (13.4×)   </td><td class="markdownTableBodyRight">1.62 ms (17.1×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Extreme Outliers</b>   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone"><b>6.9×</b>   </td><td class="markdownTableBodyNone">5.4×    </td></tr>
+<td class="markdownTableBodyNone">extreme_outliers   </td><td class="markdownTableBodyRight">27.74 ms   </td><td class="markdownTableBodyRight">4.35 ms (6.4×)   </td><td class="markdownTableBodyRight">4.21 ms (6.6×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Financial</b> (500–5K)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone"><b>3.7×</b>   </td><td class="markdownTableBodyNone">3.4×    </td></tr>
+<td class="markdownTableBodyNone">financial_1000   </td><td class="markdownTableBodyRight">1.48 ms   </td><td class="markdownTableBodyRight">0.56 ms (2.7×)   </td><td class="markdownTableBodyRight">0.67 ms (2.2×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Fraction</b> (0.05–0.67)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">17.3×   </td><td class="markdownTableBodyNone"><b>25.4×</b>    </td></tr>
+<td class="markdownTableBodyNone">financial_500   </td><td class="markdownTableBodyRight">0.70 ms   </td><td class="markdownTableBodyRight">0.25 ms (2.8×)   </td><td class="markdownTableBodyRight">0.66 ms (1.1×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Genomic</b> (1K–5K)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone"><b>4.9×</b>   </td><td class="markdownTableBodyNone">2.9×    </td></tr>
+<td class="markdownTableBodyNone">financial_5000   </td><td class="markdownTableBodyRight">13.36 ms   </td><td class="markdownTableBodyRight">2.27 ms (5.9×)   </td><td class="markdownTableBodyRight">1.71 ms (7.8×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Genomic</b> (100K)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">129.6×   </td><td class="markdownTableBodyNone"><b>131.9×</b>    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.05   </td><td class="markdownTableBodyRight">8.22 ms   </td><td class="markdownTableBodyRight">2.70 ms (3.0×)   </td><td class="markdownTableBodyRight">4.14 ms (2.0×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>High Noise</b>   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">17.8×   </td><td class="markdownTableBodyNone"><b>20.7×</b>    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.1   </td><td class="markdownTableBodyRight">13.74 ms   </td><td class="markdownTableBodyRight">2.54 ms (5.4×)   </td><td class="markdownTableBodyRight">2.42 ms (5.7×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Iterations</b> (1–10)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">9.9×   </td><td class="markdownTableBodyNone"><b>15.0×</b>    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.2   </td><td class="markdownTableBodyRight">24.19 ms   </td><td class="markdownTableBodyRight">2.87 ms (8.4×)   </td><td class="markdownTableBodyRight">2.25 ms (10.7×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Large</b> (Direct)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">0.8×   </td><td class="markdownTableBodyNone"><b>2.4×</b>    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.3   </td><td class="markdownTableBodyRight">32.65 ms   </td><td class="markdownTableBodyRight">3.26 ms (10.0×)   </td><td class="markdownTableBodyRight">3.48 ms (9.4×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Large</b> (High Fraction)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone"><b>612.5×</b>   </td><td class="markdownTableBodyNone">550.6×    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.5   </td><td class="markdownTableBodyRight">52.39 ms   </td><td class="markdownTableBodyRight">2.95 ms (17.8×)   </td><td class="markdownTableBodyRight">3.11 ms (16.8×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Large</b> (High Iterations)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">5.3×   </td><td class="markdownTableBodyNone"><b>7.3×</b>    </td></tr>
+<td class="markdownTableBodyNone">fraction_0.67   </td><td class="markdownTableBodyRight">75.48 ms   </td><td class="markdownTableBodyRight">2.53 ms (29.9×)   </td><td class="markdownTableBodyRight">2.57 ms (29.3×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Large</b> (Interpolate)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">57.6×   </td><td class="markdownTableBodyNone"><b>90.7×</b>    </td></tr>
+<td class="markdownTableBodyNone">genomic_1000   </td><td class="markdownTableBodyRight">1.34 ms   </td><td class="markdownTableBodyRight">0.61 ms (2.2×)   </td><td class="markdownTableBodyRight">0.89 ms (1.5×)    </td></tr>
 <tr class="markdownTableRowEven">
-<td class="markdownTableBodyNone"><b>Scale</b> (1K–10K)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">7.5×   </td><td class="markdownTableBodyNone"><b>9.2×</b>    </td></tr>
+<td class="markdownTableBodyNone">genomic_100000   </td><td class="markdownTableBodyRight">5 652.21 ms   </td><td class="markdownTableBodyRight">51.02 ms (110.8×)   </td><td class="markdownTableBodyRight">33.27 ms (169.9×)    </td></tr>
 <tr class="markdownTableRowOdd">
-<td class="markdownTableBodyNone"><b>Scientific</b> (500–5K)   </td><td class="markdownTableBodyNone">1×   </td><td class="markdownTableBodyNone">3.6×   </td><td class="markdownTableBodyNone"><b>4.0×</b>   </td></tr>
+<td class="markdownTableBodyNone">genomic_5000   </td><td class="markdownTableBodyRight">12.51 ms   </td><td class="markdownTableBodyRight">2.79 ms (4.5×)   </td><td class="markdownTableBodyRight">2.64 ms (4.7×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">high_noise   </td><td class="markdownTableBodyRight">70.11 ms   </td><td class="markdownTableBodyRight">3.38 ms (20.7×)   </td><td class="markdownTableBodyRight">2.45 ms (28.6×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">iterations_1   </td><td class="markdownTableBodyRight">22.75 ms   </td><td class="markdownTableBodyRight">1.66 ms (13.7×)   </td><td class="markdownTableBodyRight">2.87 ms (7.9×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">iterations_10   </td><td class="markdownTableBodyRight">22.53 ms   </td><td class="markdownTableBodyRight">5.19 ms (4.3×)   </td><td class="markdownTableBodyRight">4.45 ms (5.1×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">iterations_2   </td><td class="markdownTableBodyRight">23.47 ms   </td><td class="markdownTableBodyRight">2.28 ms (10.3×)   </td><td class="markdownTableBodyRight">2.68 ms (8.8×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">iterations_3   </td><td class="markdownTableBodyRight">23.28 ms   </td><td class="markdownTableBodyRight">2.86 ms (8.1×)   </td><td class="markdownTableBodyRight">2.55 ms (9.1×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">iterations_5   </td><td class="markdownTableBodyRight">22.62 ms   </td><td class="markdownTableBodyRight">3.66 ms (6.2×)   </td><td class="markdownTableBodyRight">3.26 ms (6.9×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">large_direct   </td><td class="markdownTableBodyRight">10 066.93 ms   </td><td class="markdownTableBodyRight">20 179.44 ms (0.5×)   </td><td class="markdownTableBodyRight">9 135.54 ms (1.1×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">large_high_fraction   </td><td class="markdownTableBodyRight">14 587.37 ms   </td><td class="markdownTableBodyRight">24.95 ms (584.7×)   </td><td class="markdownTableBodyRight">61.71 ms (236.4×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">large_high_iter   </td><td class="markdownTableBodyRight">8 461.60 ms   </td><td class="markdownTableBodyRight">2 391.07 ms (3.5×)   </td><td class="markdownTableBodyRight">1 099.72 ms (7.7×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">large_interp   </td><td class="markdownTableBodyRight">1 274.90 ms   </td><td class="markdownTableBodyRight">26.95 ms (47.3×)   </td><td class="markdownTableBodyRight">18.88 ms (67.5×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">scale_1000   </td><td class="markdownTableBodyRight">1.41 ms   </td><td class="markdownTableBodyRight">0.80 ms (1.8×)   </td><td class="markdownTableBodyRight">4.21 ms (0.3×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">scale_10000   </td><td class="markdownTableBodyRight">46.15 ms   </td><td class="markdownTableBodyRight">5.13 ms (9.0×)   </td><td class="markdownTableBodyRight">8.21 ms (5.6×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">scale_5000   </td><td class="markdownTableBodyRight">13.27 ms   </td><td class="markdownTableBodyRight">3.06 ms (4.3×)   </td><td class="markdownTableBodyRight">4.74 ms (2.8×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">scientific_1000   </td><td class="markdownTableBodyRight">1.76 ms   </td><td class="markdownTableBodyRight">0.83 ms (2.1×)   </td><td class="markdownTableBodyRight">1.02 ms (1.7×)    </td></tr>
+<tr class="markdownTableRowEven">
+<td class="markdownTableBodyNone">scientific_500   </td><td class="markdownTableBodyRight">0.72 ms   </td><td class="markdownTableBodyRight">0.39 ms (1.8×)   </td><td class="markdownTableBodyRight">0.66 ms (1.1×)    </td></tr>
+<tr class="markdownTableRowOdd">
+<td class="markdownTableBodyNone">scientific_5000   </td><td class="markdownTableBodyRight">18.38 ms   </td><td class="markdownTableBodyRight">3.10 ms (5.9×)   </td><td class="markdownTableBodyRight">2.73 ms (6.7×)   </td></tr>
 </table>
-<p><em>Mean per-scenario speedup within each category, rounded to one decimal.</em> </p>
 </div></div><!-- contents -->
 </div><!-- PageDoc -->
 </div><!-- doc-content -->
