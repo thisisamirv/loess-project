@@ -22,6 +22,7 @@ This changelog includes end-user changes only. For internal development notes, s
 
 ### Fixed
 
+* Correct tied-coordinate interpolation splits and normalized cell geometry, add two-dimensional neighboring-edge blending, and match R's neighborhood rounding near integer span boundaries.
 * Preserve zero interpolation subdivision thresholds to match R's small-span cell trees, retaining terminal observation vertices and correcting interpolated fits on small datasets.
 * Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 * Prevent overflow in even-sample medians, mean-absolute and bisquare scaling, Batch/Streaming diagnostics and AIC, and local/all-tied case-weight normalization for large finite values.

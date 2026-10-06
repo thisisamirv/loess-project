@@ -208,6 +208,11 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
             max_vertices,
             fc,
             fd,
+            if matches!(distance_metric, DistanceMetric::Normalized) {
+                scales
+            } else {
+                &[]
+            },
         );
 
         // Fit at each vertex - store value + d partial derivatives
@@ -453,6 +458,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
         max_vertices: usize,
         fc: usize,
         fd: T,
+        scales: &[T],
     ) {
         let vc = 1usize << dimensions; // Number of corners per cell (2^d)
         let max_cells = max_vertices.saturating_mul(2); // ncmax equivalent
@@ -511,7 +517,7 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
                         max_val = val;
                     }
                 }
-                let spread = max_val - min_val;
+                let spread = (max_val - min_val) * scales.get(d).copied().unwrap_or(T::one());
                 if spread > best_spread {
                     best_spread = spread;
                     best_dim = d;
@@ -534,15 +540,12 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
                 }
                 let m_off_usize = m_off as usize;
 
-                // Re-partition only when offset != 0
-                if offset != 0 {
-                    let (lower, upper, check) = if offset < 0 {
-                        (lo, m_off_usize, m_off_usize)
-                    } else {
-                        (m_off_usize + 1, hi, m_off_usize + 1)
-                    };
-                    Self::partition_by_dim(pi, lower, upper, check, x, best_dim, dimensions);
-                }
+                let (lower, upper, check) = if offset < 0 {
+                    (lo, m_off_usize, m_off_usize)
+                } else {
+                    (m_off_usize + 1, hi, m_off_usize + 1)
+                };
+                Self::partition_by_dim(pi, lower, upper, check, x, best_dim, dimensions);
 
                 // check if tied
                 if m_off_usize < hi {
@@ -755,7 +758,11 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
 
     // Find the leaf cell containing a query point.
     fn find_cell(&self, query: &[T]) -> usize {
-        let mut current = self.root;
+        self.find_cell_from(self.root, query)
+    }
+
+    fn find_cell_from(&self, start: usize, query: &[T]) -> usize {
+        let mut current = start;
 
         loop {
             let cell = &self.cells[current];
@@ -854,9 +861,125 @@ impl<T: Float + Debug + Send + Sync + 'static> InterpolationSurface<T> {
             return phi0 * g0_val + phi1 * g1_val + (psi0 * g0_deriv + psi1 * g1_deriv) * range;
         }
 
-        // For higher dimensions, use tensor Hermite interpolation
-        // This provides C1 continuity across cell boundaries compared to multilinear interpolation
-        self.hermite_tensor_interpolation(cell, query)
+        let tensor = self.hermite_tensor_interpolation(cell, query);
+        if d == 2 && cell.vertex_indices.len() == 4 {
+            self.hermite_blended_interpolation_2d(cell, query, tensor)
+        } else {
+            tensor
+        }
+    }
+
+    fn adjacent_cell_2d(
+        &self,
+        query: &[T],
+        dimension: usize,
+        boundary: T,
+        upper_side: bool,
+    ) -> Option<&SurfaceCell<T>> {
+        let mut current = self.root;
+        let mut adjacent = None;
+        while let Some((left, right)) = self.cells[current].children {
+            let split_dim = self.cells[current].split_dim.unwrap();
+            let split_val = self.cells[current].split_val.unwrap();
+            if split_dim == dimension && split_val == boundary {
+                adjacent = Some(if upper_side { right } else { left });
+            }
+            current = if query[split_dim] <= split_val {
+                left
+            } else {
+                right
+            };
+        }
+        adjacent.map(|start| &self.cells[self.find_cell_from(start, query)])
+    }
+
+    fn hermite_edge_2d(
+        &self,
+        cell: &SurfaceCell<T>,
+        query: &[T],
+        dimension: usize,
+        upper_side: bool,
+    ) -> (T, T) {
+        let along = 1 - dimension;
+        let lower_corner = usize::from(upper_side) << dimension;
+        let upper_corner = lower_corner | (1 << along);
+        let mut lower = cell.lower[along];
+        let mut upper = cell.upper[along];
+        let mut lower_vertex = cell.vertex_indices[lower_corner];
+        let mut upper_vertex = cell.vertex_indices[upper_corner];
+        let boundary = if upper_side {
+            cell.upper[dimension]
+        } else {
+            cell.lower[dimension]
+        };
+
+        if let Some(adjacent) = self.adjacent_cell_2d(query, dimension, boundary, upper_side) {
+            let adjacent_lower = usize::from(!upper_side) << dimension;
+            let adjacent_upper = adjacent_lower | (1 << along);
+            if lower < adjacent.lower[along] {
+                lower = adjacent.lower[along];
+                lower_vertex = adjacent.vertex_indices[adjacent_lower];
+            }
+            if adjacent.upper[along] < upper {
+                upper = adjacent.upper[along];
+                upper_vertex = adjacent.vertex_indices[adjacent_upper];
+            }
+        }
+
+        let component = |vertex: usize, component: usize| {
+            self.vertex_data
+                .get(vertex * 3 + component)
+                .copied()
+                .unwrap_or(T::zero())
+        };
+        let range = upper - lower;
+        if range <= T::zero() {
+            return (
+                component(lower_vertex, 0),
+                component(lower_vertex, dimension + 1),
+            );
+        }
+        let position = ((query[along] - lower) / range)
+            .max(T::zero())
+            .min(T::one());
+        let phi0 = Self::hermite_phi0(position);
+        let phi1 = Self::hermite_phi1(position);
+        let psi0 = Self::hermite_psi0(position);
+        let psi1 = Self::hermite_psi1(position);
+        (
+            phi0 * component(lower_vertex, 0)
+                + phi1 * component(upper_vertex, 0)
+                + (psi0 * component(lower_vertex, along + 1)
+                    + psi1 * component(upper_vertex, along + 1))
+                    * range,
+            phi0 * component(lower_vertex, dimension + 1)
+                + phi1 * component(upper_vertex, dimension + 1),
+        )
+    }
+
+    fn hermite_blended_interpolation_2d(&self, cell: &SurfaceCell<T>, query: &[T], tensor: T) -> T {
+        let mut blended = T::zero();
+        for dimension in 0..2 {
+            let range = cell.upper[dimension] - cell.lower[dimension];
+            let position = if range > T::zero() {
+                ((query[dimension] - cell.lower[dimension]) / range)
+                    .max(T::zero())
+                    .min(T::one())
+            } else {
+                T::zero()
+            };
+            let (lower_value, lower_derivative) =
+                self.hermite_edge_2d(cell, query, dimension, false);
+            let (upper_value, upper_derivative) =
+                self.hermite_edge_2d(cell, query, dimension, true);
+            blended = blended
+                + Self::hermite_phi0(position) * lower_value
+                + Self::hermite_phi1(position) * upper_value
+                + (Self::hermite_psi0(position) * lower_derivative
+                    + Self::hermite_psi1(position) * upper_derivative)
+                    * range;
+        }
+        blended - tensor
     }
 
     // Fallback interpolation when cell has insufficient vertices.

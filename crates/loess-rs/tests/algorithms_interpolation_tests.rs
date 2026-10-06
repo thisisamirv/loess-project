@@ -38,6 +38,50 @@ fn create_mock_dist_calc() -> LoessDistanceCalculator<'static, f64> {
 // Surface Construction Tests
 // ============================================================================
 
+#[test]
+fn test_interpolate_2d_reconciles_neighboring_edges() {
+    let leaf = |lower: [f64; 2], upper: [f64; 2], corners: [usize; 4]| SurfaceCell {
+        lower: lower.to_vec(),
+        upper: upper.to_vec(),
+        vertex_indices: corners.to_vec(),
+        children: None,
+        split_dim: None,
+        split_val: None,
+        point_lo: 0,
+        point_hi: 0,
+    };
+    let mut root = leaf([0.0, 0.0], [1.0, 1.0], [0, 1, 2, 3]);
+    root.children = Some((1, 2));
+    root.split_dim = Some(0);
+    root.split_val = Some(0.5);
+    let mut right = leaf([0.5, 0.0], [1.0, 1.0], [4, 1, 5, 3]);
+    right.children = Some((3, 4));
+    right.split_dim = Some(1);
+    right.split_val = Some(0.5);
+    let mut vertex_data = vec![0.0; 24];
+    vertex_data[18] = 1.0;
+    let surface = InterpolationSurface {
+        vertex_data,
+        vertices: vec![
+            0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.5, 0.0, 0.5, 1.0, 0.5, 0.5, 1.0, 0.5,
+        ],
+        cells: vec![
+            root,
+            leaf([0.0, 0.0], [0.5, 1.0], [0, 4, 2, 5]),
+            right,
+            leaf([0.5, 0.0], [1.0, 0.5], [4, 1, 6, 7]),
+            leaf([0.5, 0.5], [1.0, 1.0], [6, 7, 5, 3]),
+        ],
+        root: 0,
+        dimensions: 2,
+        vertex_neighborhoods: vec![],
+    };
+
+    for predictor in [0.5 - 1e-7, 0.5, 0.5 + 1e-7] {
+        assert_relative_eq!(surface.evaluate(&[predictor, 0.25]), 0.5, epsilon = 1e-10);
+    }
+}
+
 /// Test building a simple 1D surface.
 ///
 /// Verifies that vertices are created at bounds.

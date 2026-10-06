@@ -96,7 +96,7 @@ impl Window {
     #[inline]
     pub fn calculate_span<T: Float>(n: usize, frac: T) -> usize {
         let n_t = T::from(n).unwrap_or_else(|| T::from(n as u16).unwrap_or(T::one()));
-        let frac_n = frac * n_t;
+        let frac_n = frac * n_t + T::from(1e-5).unwrap_or(T::zero());
         let frac_n_int = frac_n.to_usize().unwrap_or(0);
         usize::max(2, usize::min(n, frac_n_int))
     }

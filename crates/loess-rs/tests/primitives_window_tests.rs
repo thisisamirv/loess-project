@@ -307,10 +307,18 @@ fn test_calculate_span_edge_fractions() {
     let span = Window::calculate_span(n, 0.01);
     assert_eq!(span, 2, "Minimum span should be 2");
 
-    // The Fortran engine truncates `f * n` without the C wrapper's
-    // workspace-allocation epsilon.
+    // Current R passes the C wrapper's epsilon-adjusted count into Fortran.
     let span = Window::calculate_span(n, 0.0299999995);
-    assert_eq!(span, 2, "Neighborhood size should use floor(n * span)");
+    assert_eq!(
+        span, 3,
+        "Neighborhood size should use floor(n * span + 1e-5)"
+    );
+
+    let span = Window::calculate_span(n, 0.0299998);
+    assert_eq!(
+        span, 2,
+        "The allowance must not round genuinely smaller spans"
+    );
 
     // Fraction of 0
     let span = Window::calculate_span(n, 0.0);

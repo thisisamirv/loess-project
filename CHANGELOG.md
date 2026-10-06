@@ -239,6 +239,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Match R's tied-coordinate split search and normalized interpolation partitions, and reconcile neighboring edges with two-dimensional Hermite blending.
+- Match current R's `floor(n * span + 1e-5)` neighborhood sizing near integer span boundaries instead of selecting one fewer neighbor.
 - Preserve zero interpolation subdivision thresholds to match R's small-span cell trees, retaining terminal observation vertices and correcting interpolated fits on small datasets.
 - Normalize absent custom weights to an empty slice before missing-value filtering, avoiding optimized ARM64 branches on unused optional-slice metadata while preserving optional weight outputs.
 - Avoid inspecting unrequested standard errors in full Online updates, eliminating optimized C++ Valgrind uninitialized-value reports while preserving requested interval and bootstrap outputs.
