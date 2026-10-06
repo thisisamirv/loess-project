@@ -65,7 +65,7 @@ result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, lat/lon):\n")
 #> First 6 smoothed values (2D LOESS, lat/lon):
 print(head(result$y))
-#> [1]  0.9062292  0.1435735 -0.9750541  1.2252353 -0.4044206 -0.8664023
+#> [1]  0.8862701  0.1927108 -0.9944883  1.2333466 -0.3672725 -0.8455709
 ```
 
 ------------------------------------------------------------------------
@@ -91,7 +91,7 @@ result <- fit(model, x3d, y)
 cat("First 6 smoothed values (3D LOESS):\n")
 #> First 6 smoothed values (3D LOESS):
 print(head(result$y))
-#> [1] 0.1070178 1.2940146 0.3345450 1.2766746 1.9559779 0.6504406
+#> [1] 0.1068976 1.2894880 0.3929455 1.2633451 1.9611165 0.6332138
 ```
 
 ------------------------------------------------------------------------
@@ -121,7 +121,7 @@ result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, weighted distance):\n")
 #> First 6 smoothed values (2D LOESS, weighted distance):
 print(head(result$y))
-#> [1]  0.7770580  0.1104610 -1.0415788  1.1566705 -0.3800008 -0.9127029
+#> [1]  0.7660138  0.1220163 -1.0388792  1.1475979 -0.3815295 -0.9092784
 ```
 
 ------------------------------------------------------------------------
@@ -159,7 +159,7 @@ result <- fit(model, x2d, z)
 cat("First 6 smoothed values (2D LOESS, interpolation surface):\n")
 #> First 6 smoothed values (2D LOESS, interpolation surface):
 print(head(result$y))
-#> [1]  0.9062292  0.1435735 -0.9750541  1.2252353 -0.4044206 -0.8664023
+#> [1]  0.8862701  0.1927108 -0.9944883  1.2333466 -0.3672725 -0.8455709
 ```
 
 ``` r

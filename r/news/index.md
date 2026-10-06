@@ -60,6 +60,9 @@
 
 ### Fixed
 
+- Correct tied-coordinate interpolation splits and normalized cell
+  geometry, add two-dimensional neighboring-edge blending, and match R’s
+  neighborhood rounding near integer span boundaries.
 - Preserve zero interpolation subdivision thresholds to match R’s
   small-span cell trees, retaining terminal observation vertices and
   correcting interpolated fits on small datasets.
