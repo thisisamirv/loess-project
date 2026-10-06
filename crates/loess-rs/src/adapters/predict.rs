@@ -609,6 +609,148 @@ fn predict_batch_serial<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug +
     Ok((y, derivative, se))
 }
 
+fn linear_prediction_standard_errors<
+    T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Send + Sync,
+>(
+    state: &PredictState<T>,
+    queries: &[T],
+) -> Option<(Vec<T>, T)> {
+    let residuals = state.bootstrap_predictor.as_ref()?.original_residuals()?;
+    let count = state.y.len();
+    if state.dimensions != 1
+        || state.polynomial_degree.value() != 1
+        || state.custom_weights.is_some()
+        || residuals.len() != count
+        || state
+            .robustness_weights
+            .iter()
+            .any(|&weight| weight != T::one())
+        || queries.is_empty()
+    {
+        return None;
+    }
+    let queries: Vec<T> = queries
+        .iter()
+        .map(|&query| query.max(state.train_min[0]).min(state.train_max[0]))
+        .collect();
+
+    let distance = LoessDistanceCalculator {
+        metric: state.distance_metric.clone(),
+        scales: &state.scales,
+    };
+    let mut search = NeighborhoodSearchBuffer::new(state.window_size);
+    let mut neighborhood = Neighborhood::with_capacity(state.window_size);
+    let influence = |query: T,
+                     search: &mut NeighborhoodSearchBuffer<NodeDistance<T>>,
+                     neighborhood: &mut Neighborhood<T>| {
+        state.kdtree.find_kernel_neighborhood(
+            &[query],
+            state.window_size,
+            &distance,
+            state.weight_function,
+            search,
+            neighborhood,
+        );
+        let bandwidth = neighborhood.max_distance;
+        let mut values = vec![T::zero(); count];
+        let mut derivatives = vec![T::zero(); count];
+        if bandwidth <= T::zero() {
+            return (values, derivatives);
+        }
+        let mut total = T::zero();
+        let mut first = T::zero();
+        let mut second = T::zero();
+        for neighbor in 0..neighborhood.len() {
+            let index = neighborhood.indices[neighbor];
+            let offset = (state.x[index] - query) / bandwidth;
+            let weight = state
+                .weight_function
+                .compute_weight(neighborhood.distances[neighbor] / bandwidth);
+            values[index] = weight;
+            total = total + weight;
+            first = first + weight * offset;
+            second = second + weight * offset * offset;
+        }
+        let determinant = total * second - first * first;
+        if determinant > T::zero() {
+            for neighbor in 0..neighborhood.len() {
+                let index = neighborhood.indices[neighbor];
+                let offset = (state.x[index] - query) / bandwidth;
+                let weight = values[index];
+                values[index] = weight * (second - first * offset) / determinant;
+                derivatives[index] = weight * (total * offset - first) / (determinant * bandwidth);
+            }
+        } else if total > T::zero() {
+            for value in &mut values {
+                *value = *value / total;
+            }
+        }
+        (values, derivatives)
+    };
+
+    let mut delta = T::zero();
+    let mut query_norms = vec![T::zero(); queries.len()];
+    if let Some(surface) = &state.surface {
+        let vertex_rows: Vec<_> = surface
+            .vertices
+            .iter()
+            .map(|&vertex| influence(vertex, &mut search, &mut neighborhood))
+            .collect();
+        let mut basis_surface = surface.clone();
+        basis_surface.vertex_data.fill(T::zero());
+        for observation in 0..count {
+            for (vertex, (values, derivatives)) in vertex_rows.iter().enumerate() {
+                basis_surface.vertex_data[vertex * 2] = values[observation];
+                basis_surface.vertex_data[vertex * 2 + 1] = derivatives[observation];
+            }
+            for training in 0..count {
+                let identity = if observation == training {
+                    T::one()
+                } else {
+                    T::zero()
+                };
+                let difference =
+                    identity - basis_surface.evaluate(&state.x[training..training + 1]);
+                delta = delta + difference * difference;
+            }
+            for (query, norm) in queries.iter().zip(&mut query_norms) {
+                let coefficient = basis_surface.evaluate(&[*query]);
+                *norm = *norm + coefficient * coefficient;
+            }
+        }
+    } else {
+        for training in 0..count {
+            let (values, _) = influence(state.x[training], &mut search, &mut neighborhood);
+            for (observation, coefficient) in values.iter().enumerate() {
+                let identity = if observation == training {
+                    T::one()
+                } else {
+                    T::zero()
+                };
+                let difference = identity - *coefficient;
+                delta = delta + difference * difference;
+            }
+        }
+        for (query, norm) in queries.iter().zip(&mut query_norms) {
+            let (values, _) = influence(*query, &mut search, &mut neighborhood);
+            *norm = values
+                .iter()
+                .fold(T::zero(), |sum, value| sum + *value * *value);
+        }
+    }
+    if delta <= T::zero() {
+        return None;
+    }
+    let residual_scale = IntervalMethod::calculate_residual_sd(residuals, Some(delta));
+    Some((
+        query_norms
+            .iter()
+            .map(|norm| residual_scale * norm.sqrt())
+            .collect(),
+        residual_scale,
+    ))
+}
+
 // Evaluate the fitted model at a batch of out-of-sample query points (flattened, `dimensions`
 // values per point), per `options`. Delegates the per-point work to `state.custom_predict_pass`
 // if set (e.g. fastLoess's Rayon-parallel implementation), otherwise evaluates serially.
@@ -639,11 +781,19 @@ pub fn predict_batch<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Se
             || options.confidence_intervals.is_some()
             || options.prediction_intervals.is_some());
 
-    let (y, derivative, se) = if let Some(pass) = state.custom_predict_pass {
+    let (y, derivative, mut se) = if let Some(pass) = state.custom_predict_pass {
         pass(state, new_x, options, need_se)?
     } else {
         predict_batch_serial(state, new_x, options, need_se)?
     };
+
+    let mut residual_sd = state.residual_sd;
+    if need_se
+        && let Some((standard_errors, scale)) = linear_prediction_standard_errors(state, new_x)
+    {
+        se = Some(standard_errors);
+        residual_sd = scale;
+    }
 
     if let Some(bootstrap) = options.bootstrap {
         let method = IntervalMethod {
@@ -698,7 +848,7 @@ pub fn predict_batch<T: FloatLinalg + DistanceLinalg + SolverLinalg + Debug + Se
         let se_vals = se.as_deref().unwrap_or(&[]);
         let z = IntervalMethod::<T>::approximate_z_score(level)
             .map_err(|_| LoessError::InvalidIntervals(level.to_f64().unwrap_or(0.0)))?;
-        let rsd_sq = state.residual_sd * state.residual_sd;
+        let rsd_sq = residual_sd * residual_sd;
         let lower: Vec<T> = y
             .iter()
             .zip(se_vals)

@@ -239,6 +239,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Correct unweighted, unpadded one-dimensional linear prediction standard errors without robustness downweighting using the direct/interpolated smoothing influence rows and global residual degrees of freedom; use the same residual scale for prediction intervals.
 - Match R's tied-coordinate split search and normalized interpolation partitions, and reconcile neighboring edges with two-dimensional Hermite blending.
 - Match current R's `floor(n * span + 1e-5)` neighborhood sizing near integer span boundaries instead of selecting one fewer neighbor.
 - Preserve zero interpolation subdivision thresholds to match R's small-span cell trees, retaining terminal observation vertices and correcting interpolated fits on small datasets.

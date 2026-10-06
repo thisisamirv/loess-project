@@ -20,6 +20,84 @@ use loess_rs::internals::primitives::policies::ExtrapolationPolicy;
 use loess_rs::prelude::*;
 
 #[test]
+fn test_predict_linear_standard_errors_match_r_exact_statistics() {
+    let predictors: Vec<f64> = (0..16)
+        .map(|index| -2.0 + 4.0 * index as f64 / 15.0)
+        .collect();
+    let noise = [-0.2, 0.1, 0.15, -0.05];
+    let responses: Vec<f64> = predictors
+        .iter()
+        .enumerate()
+        .map(|(index, predictor)| predictor.sin() + noise[index % noise.len()])
+        .collect();
+    let queries = [-2.0, -0.8, 0.3, 2.0];
+    for (surface, expected) in [
+        (
+            "direct",
+            [
+                0.121088321071387,
+                0.0655643360701872,
+                0.0699024596980623,
+                0.121088321071387,
+            ],
+        ),
+        (
+            "interpolate",
+            [
+                0.121426677268784,
+                0.0672163013022476,
+                0.0679928915449786,
+                0.121434117380072,
+            ],
+        ),
+    ] {
+        let fitted = Loess::new()
+            .fraction(0.75)
+            .iterations(0)
+            .degree("linear")
+            .boundary_policy("noboundary")
+            .surface_mode(surface)
+            .retain_model(true)
+            .build()
+            .unwrap()
+            .fit(&predictors, &responses)
+            .unwrap();
+        for outputs in [&["se"][..], &["se", "gradient"][..]] {
+            let prediction = Predict::new()
+                .outputs(outputs)
+                .build()
+                .unwrap()
+                .call(&fitted, &queries)
+                .unwrap();
+            for (&actual, &reference) in prediction
+                .standard_errors
+                .as_ref()
+                .unwrap()
+                .iter()
+                .zip(&expected)
+            {
+                assert_relative_eq!(actual, reference, epsilon = 1e-10);
+            }
+        }
+        let clamped = Predict::new()
+            .outputs(["se"])
+            .build()
+            .unwrap()
+            .call(&fitted, &[-3.0, -0.8, 0.3, 3.0])
+            .unwrap();
+        for (&actual, &reference) in clamped
+            .standard_errors
+            .as_ref()
+            .unwrap()
+            .iter()
+            .zip(&expected)
+        {
+            assert_relative_eq!(actual, reference, epsilon = 1e-10);
+        }
+    }
+}
+
+#[test]
 fn test_predict_grouped_outputs_select_only_requested_components() {
     let (x, y) = linear_series(20, 2.0, 1.0);
     let fitted = Loess::new()
