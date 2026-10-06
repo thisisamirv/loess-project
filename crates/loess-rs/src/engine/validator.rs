@@ -76,10 +76,11 @@ impl Validator {
             if row.iter().all(|v| v.is_finite()) && y[i].is_finite() {
                 xs.extend_from_slice(row);
                 ys.push(y[i]);
-                if let (Some(w), Some(wv)) = (custom_weights, ws.as_mut())
-                    && i < w.len()
+                if let Some(weights) = custom_weights
+                    && i < weights.len()
+                    && let Some(filtered_weights) = ws.as_mut()
                 {
-                    wv.push(w[i]);
+                    filtered_weights.push(weights[i]);
                 }
             }
         }

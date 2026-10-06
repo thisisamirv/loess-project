@@ -238,6 +238,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **loess-rs:**
 
+- Short-circuit absent custom weights during missing-value filtering, avoiding eager optional-vector inspection and optimized C++ Valgrind uninitialized-value reports.
 - Avoid inspecting unrequested standard errors in full Online updates, eliminating optimized C++ Valgrind uninitialized-value reports while preserving requested interval and bootstrap outputs.
 - Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.
 - Prevent overflow in even-sample medians, mean-absolute and bisquare scaling, Batch/Streaming diagnostics and AIC, and local/all-tied case-weight normalization for large finite values.
