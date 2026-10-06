@@ -259,7 +259,7 @@ jobs:
         env:
           TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
           PUBLISH_GO_MODULE: "true"
-        run: bash dev/runners/package_go_module.sh fastloess
+        run: bash dev/package_go_module.sh fastloess
 
       - name: Verify public module resolution
         working-directory: bindings/go/fastloess
