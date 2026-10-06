@@ -57,7 +57,8 @@
 </ul></div>
 <div class="section level3">
 <h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
-<ul><li>Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.</li>
+<ul><li>Preserve zero interpolation subdivision thresholds to match R’s small-span cell trees, retaining terminal observation vertices and correcting interpolated fits on small datasets.</li>
+<li>Normalize local case weights by their neighborhood maximum so common scaling cannot turn valid positive weights into an epsilon-triggered unweighted fallback.</li>
 <li>Prevented overflow in even medians, mean/bisquare scales, Batch/Streaming diagnostics and AIC, and local/all-tied weight sums for large finite inputs.</li>
 <li>Reject fractional/overflowing integer and count options before FFI coercion; validate grouped CV/interval lists and numeric vector/matrix shapes; accept integer custom weights.</li>
 <li>Validate case-weight lengths and values before dropping missing observations, so invalid weights on dropped rows are not silently ignored.</li>

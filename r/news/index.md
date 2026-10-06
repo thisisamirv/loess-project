@@ -60,6 +60,9 @@
 
 ### Fixed
 
+- Preserve zero interpolation subdivision thresholds to match R’s
+  small-span cell trees, retaining terminal observation vertices and
+  correcting interpolated fits on small datasets.
 - Normalize local case weights by their neighborhood maximum so common
   scaling cannot turn valid positive weights into an epsilon-triggered
   unweighted fallback.
