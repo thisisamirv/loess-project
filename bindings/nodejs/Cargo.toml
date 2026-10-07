@@ -1,6 +1,6 @@
 [package]
 name = "fastloess-node"
-version = "2.1.0"
+version = "3.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -16,11 +16,11 @@ categories = ["science", "algorithms"]
 crate-type = ["cdylib"]
 
 [dependencies]
-fastLoess = { path = "../../crates/fastLoess", version = "2.1", features = [
+fastLoess = { path = "../../crates/fastLoess", version = "3.0", features = [
     "dev",
 ] }
-napi = { version = "3.12", features = ["napi4"] }
+napi = { version = "3.14", features = ["napi4"] }
 napi-derive = "3.6"
 
 [build-dependencies]
-napi-build = "2.4"
+napi-build = "2.6"

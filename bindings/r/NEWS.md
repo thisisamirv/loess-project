@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD024 MD025 MD041 -->
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md).
 
-## rfastloess (development version)
+## rfastloess 3.0.0
 
 ### Added
 

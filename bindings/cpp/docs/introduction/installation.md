@@ -230,6 +230,6 @@ int main() {
 ```
 
 ```output
-Header version: 2.1.0
-Loaded library version: 2.1.0
+Header version: 3.0.0
+Loaded library version: 3.0.0
 ```

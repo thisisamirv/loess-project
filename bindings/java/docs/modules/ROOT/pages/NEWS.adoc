@@ -2,7 +2,7 @@
 
 This changelog includes end-user changes only. For internal development notes, see the https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md[repository changelog].
 
-== [Unreleased]
+== 3.0.0
 
 === Added
 

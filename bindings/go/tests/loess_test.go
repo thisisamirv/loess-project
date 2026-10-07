@@ -5,7 +5,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+	"github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func sineData(n int) (x, y []float64) {

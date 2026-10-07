@@ -1,6 +1,6 @@
 [package]
 name = "fastloess-wasm"
-version = "2.1.0"
+version = "3.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 license = "MIT OR Apache-2.0"
@@ -16,7 +16,7 @@ categories = ["science", "algorithms"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-fastLoess = { path = "../../crates/fastLoess", version = "2.1", features = [
+fastLoess = { path = "../../crates/fastLoess", version = "3.0", features = [
     "dev",
 ] }
 wasm-bindgen = "0.2"

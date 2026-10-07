@@ -35,7 +35,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -82,7 +82,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -116,7 +116,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (2D LOESS, lat/lon): 1.1526376996826049
+First smoothed value (2D LOESS, lat/lon): 1.1463081627522493
 ```
 
 ---
@@ -133,7 +133,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -169,7 +169,7 @@ func main() {
 ```
 
 ```output
-First smoothed value (3D LOESS): -0.1882383650842344
+First smoothed value (3D LOESS): -0.7824400989855329
 ```
 
 ---

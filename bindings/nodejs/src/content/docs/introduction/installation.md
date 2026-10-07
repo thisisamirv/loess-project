@@ -29,7 +29,7 @@ console.log(version);
 ```
 
 ```output
-2.1.0
+3.0.0
 ```
 
 ---

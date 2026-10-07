@@ -43,7 +43,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -93,7 +93,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -143,7 +143,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -193,7 +193,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -243,7 +243,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -293,7 +293,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -343,7 +343,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {

@@ -23,7 +23,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -73,7 +73,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -122,7 +122,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -173,7 +173,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -220,7 +220,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -269,7 +269,7 @@ import (
  "log"
  "math"
 
- "github.com/thisisamirv/loess-project/bindings/go/fastloess/v2"
+ "github.com/thisisamirv/loess-project/bindings/go/fastloess/v3"
 )
 
 func main() {
@@ -301,7 +301,7 @@ func main() {
 ```
 
 ```output
-R2: %!f(*float64=0x28e072dc60f8)
+R2: %!f(*float64=0x394fbe90078)
 ```
 
 ---

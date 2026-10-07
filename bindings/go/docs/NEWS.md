@@ -8,7 +8,7 @@ weight: 100
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md).
 
-## \[Unreleased\]
+## 3.0.0
 
 ### Added
 

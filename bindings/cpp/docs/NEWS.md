@@ -3,7 +3,7 @@
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md).
 
 <!-- markdownlint-disable MD024 MD025 -->
-## \[Unreleased\]
+## 3.0.0
 
 ### Added
 

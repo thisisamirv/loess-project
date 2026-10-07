@@ -17,7 +17,6 @@ The Batch adapter already covers a comprehensive set of options (polynomial degr
 
 - **Adaptive/automatic fraction selection**: CV-based bandwidth selection currently requires hand-picking a `cv_fractions` grid. A continuous search (e.g. golden-section over `(0, 1]` minimizing CV error or AICc) would remove the hardest tuning decision.
 - **Automatic `cell`/`interpolation_vertices` tuning**: these interpolation-grid knobs currently must be chosen manually; heuristics based on `dimensions`/`n`/`fraction` (similar to R's `loess` internals) would remove another hard-to-tune, nD-specific parameter.
-- **Bootstrap-based intervals**: an alternative to the existing analytic hat-matrix SE-based confidence/prediction intervals, useful when the residual-normality assumption is questionable.
 - **GPU backend**: `Backend` ([backend.rs](crates/loess-rs/src/primitives/backend.rs)) is currently a placeholder enum with only a `CPU` variant — `fastLoess`'s `fit()` already matches on it and falls through to the Rayon-parallel CPU passes. Adding a `Backend::GPU` variant backed by, e.g., `wgpu`/CUDA kernels for the KD-tree build and per-point local WLS solves (the two hottest passes for large nD datasets) would let `fastLoess` offload batch fitting without changing the public API.
 
 **Streaming:**
@@ -226,7 +225,7 @@ Each crate defines its own version and all metadata independently:
 # Individual crate Cargo.toml
 [package]
 name = "loess-rs"
-version = "2.1.0"
+version = "3.0.0"
 authors = ["Amir Valizadeh <thisisamirv@gmail.com>"]
 edition = "2024"
 rust-version = "1.89"

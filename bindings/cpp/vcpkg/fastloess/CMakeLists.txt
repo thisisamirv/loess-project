@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(fastloess-vcpkg VERSION 2.0.0 LANGUAGES CXX)
+project(fastloess-vcpkg VERSION 3.0.0 LANGUAGES CXX)
 
 include(CMakePackageConfigHelpers)
 get_filename_component(FASTLOESS_BINARY_NAME "${FASTLOESS_BINARY}" NAME)
