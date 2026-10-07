@@ -1,19 +1,18 @@
 cmake_minimum_required(VERSION 3.24)
-project(fastloess-vcpkg VERSION 3.0.0 LANGUAGES CXX)
+project(fastloess-vcpkg VERSION "${FASTLOESS_VERSION}" LANGUAGES CXX)
 
 include(CMakePackageConfigHelpers)
-get_filename_component(FASTLOESS_BINARY_NAME "${FASTLOESS_BINARY}" NAME)
 
-if(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
-    message(FATAL_ERROR "This prebuilt package requires a 64-bit target ABI.")
+if(NOT FASTLOESS_PACKAGE_DIR OR NOT FASTLOESS_BINARY_NAME)
+    message(
+        FATAL_ERROR
+        "FASTLOESS_PACKAGE_DIR and FASTLOESS_BINARY_NAME are required."
+    )
 endif()
 
 if(WIN32)
     if(NOT MSVC)
         message(FATAL_ERROR "Prebuilt Windows packages require the MSVC ABI.")
-    endif()
-    if(FASTLOESS_ARCH STREQUAL "")
-        set(FASTLOESS_ARCH x64)
     endif()
     if(FASTLOESS_ARCH STREQUAL "x64")
         set(import_machine x64)
@@ -25,8 +24,10 @@ if(WIN32)
             "Unsupported Windows architecture: ${FASTLOESS_ARCH}"
         )
     endif()
-
-    set(import_library "${CMAKE_CURRENT_BINARY_DIR}/fastloess_cpp.dll.lib")
+    set(FASTLOESS_IMPORT_LIBRARY_NAME fastloess.lib)
+    set(import_library
+        "${CMAKE_CURRENT_BINARY_DIR}/${FASTLOESS_IMPORT_LIBRARY_NAME}"
+    )
     file(READ "${CMAKE_CURRENT_SOURCE_DIR}/fastloess.def" import_definition)
     string(
         REPLACE "fastloess-win32-x64.dll"
@@ -48,38 +49,48 @@ if(WIN32)
         VERBATIM
     )
     add_custom_target(fastloess-import-library ALL DEPENDS "${import_library}")
-
-    install(FILES "${FASTLOESS_BINARY}" DESTINATION bin)
-    install(FILES "${import_library}" DESTINATION lib)
+    install(
+        FILES "${FASTLOESS_PACKAGE_DIR}/${FASTLOESS_BINARY_NAME}"
+        DESTINATION bin
+    )
+    install(
+        FILES "${import_library}"
+        DESTINATION lib
+    )
+    set(FASTLOESS_LIBRARY_DIR bin)
 else()
-    install(FILES "${FASTLOESS_BINARY}" DESTINATION lib)
+    install(
+        FILES "${FASTLOESS_PACKAGE_DIR}/${FASTLOESS_BINARY_NAME}"
+        DESTINATION lib
+    )
+    set(FASTLOESS_LIBRARY_DIR lib)
 endif()
+
 install(
     FILES
-        "${CMAKE_CURRENT_SOURCE_DIR}/fastloess.h"
-        "${FASTLOESS_SOURCE_DIR}/bindings/cpp/include/fastloess.hpp"
+        "${FASTLOESS_PACKAGE_DIR}/fastloess.hpp"
+        "${FASTLOESS_PACKAGE_DIR}/fastloess.h"
+        "${FASTLOESS_PACKAGE_DIR}/fastloess_version.h"
     DESTINATION include
 )
-if(EXISTS "${FASTLOESS_SOURCE_DIR}/bindings/cpp/include/fastloess_version.h")
-    install(
-        FILES "${FASTLOESS_SOURCE_DIR}/bindings/cpp/include/fastloess_version.h"
-        DESTINATION include
-    )
-endif()
+install(
+    FILES "${FASTLOESS_PACKAGE_DIR}/THIRD_PARTY_LICENSES.html"
+    DESTINATION share/fastloess
+)
 
 configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/fastloessConfig.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/fastloessConfig.cmake"
-    INSTALL_DESTINATION share/fastloess
+    "${CMAKE_CURRENT_SOURCE_DIR}/unofficial-fastloessConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/unofficial-fastloessConfig.cmake"
+    INSTALL_DESTINATION share/unofficial-fastloess
 )
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/fastloessConfigVersion.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/unofficial-fastloessConfigVersion.cmake"
     VERSION "${PROJECT_VERSION}"
     COMPATIBILITY SameMajorVersion
 )
 install(
     FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/fastloessConfig.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/fastloessConfigVersion.cmake"
-    DESTINATION share/fastloess
+        "${CMAKE_CURRENT_BINARY_DIR}/unofficial-fastloessConfig.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/unofficial-fastloessConfigVersion.cmake"
+    DESTINATION share/unofficial-fastloess
 )

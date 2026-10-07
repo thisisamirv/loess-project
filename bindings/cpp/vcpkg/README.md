@@ -1,6 +1,6 @@
 # LOESS for vcpkg
 
-The `fastloess` overlay port provides Rust-backed C++17 LOESS smoothing with batch, streaming, and online adapters. It installs a SHA512-verified prebuilt CPU library from the matching upstream release and exposes the CMake target `fastloess::fastloess`. Rust and Cargo are not required to install or consume this port.
+The `fastloess` overlay port provides Rust-backed C++17 LOESS smoothing with batch, streaming, and online adapters. It installs a SHA512-verified prebuilt CPU library from the matching upstream release and exposes the `unofficial-fastloess` CMake package with the `unofficial::fastloess::fastloess` target. Rust and Cargo are not required to install or consume this port.
 
 Use this port as a repository overlay. Its supported targets are limited to those accepted by the portfile and manifest and for which the matching upstream release publishes a binary.
 
@@ -42,7 +42,7 @@ vcpkg install fastloess:x64-linux-dynamic --overlay-ports=bindings/cpp/vcpkg
 vcpkg install fastloess:arm64-osx-dynamic --overlay-ports=bindings/cpp/vcpkg
 ```
 
-The overlay downloads the upstream native library and matching source archive for headers and license texts. Both downloads are verified by SHA512. Network access is needed unless these artifacts are cached; no crates.io or Rust toolchain downloads occur.
+The overlay downloads a SHA512-verified platform archive containing the upstream native library, C++ headers, generated ABI header, and third-party dependency license report. It also downloads the matching source archive for the MIT and Apache license texts; that archive is SHA512-verified as well. Network access is needed unless these artifacts are cached; no crates.io or Rust toolchain downloads occur.
 
 ## CMake Integration
 
@@ -57,8 +57,8 @@ On Linux or macOS, use the same form with a matching dynamic triplet. For musl, 
 In your application's CMake project:
 
 ```cmake
-find_package(fastloess CONFIG REQUIRED)
-target_link_libraries(my_app PRIVATE fastloess::fastloess)
+find_package(unofficial-fastloess CONFIG REQUIRED)
+target_link_libraries(my_app PRIVATE unofficial::fastloess::fastloess)
 ```
 
 The target supplies the installed include directory, C++17 requirement, and native library. All consumer configurations map to the selected prebuilt artifact. Include `<fastloess.hpp>` for the C++ interface; the port installs the matching generated ABI header alongside it. On Windows, make the installed DLL available to the application through its executable directory or `PATH`. On Unix-like systems, ensure the platform loader can find the installed shared library.
@@ -111,9 +111,8 @@ Restart clangd after first configuration if cached diagnostics remain. Build dir
 ## Port Maintenance
 
 - `fastloess/vcpkg.json` declares package metadata and supported triplets.
-- `fastloess/portfile.cmake` downloads the SHA512-pinned platform library and matching source archive and installs the package through a thin CMake wrapper.
+- `fastloess/portfile.cmake` downloads the SHA512-pinned platform archive and matching source archive and installs the package through a thin CMake wrapper.
 - `fastloess/fastloess.def` records the verified DLL export names used to generate the import library.
-- `fastloess/fastloess.h` is the generated ABI header. Update it alongside the binary and wrapper when their ABI changes.
-- Upstream release archives include `THIRD_PARTY_LICENSES.html`, generated from the committed workspace lockfile using `dev/about.toml` and `dev/about.hbs`. The report documents third-party Rust dependency licenses and provenance. When updating the port, make the report available with the installed copyright materials alongside the upstream MIT and Apache license texts.
+- Upstream release archives include the generated ABI header and `THIRD_PARTY_LICENSES.html`, generated from the committed workspace lockfile using `dev/about.toml` and `dev/about.hbs`. The report documents third-party Rust dependency licenses and provenance. The port installs it alongside the upstream MIT and Apache license texts.
 
-For each release update, refresh the manifest, binary/source checksums, supported triplet logic, export definition, ABI header, and wrapper project version together. Confirm that the source archive contains the matching dependency license report, install it with the copyright materials, and repeat consumer tests for every supported triplet. Do not expand supported triplets without testing them. Offline and vcpkg download-only operation have not been validated. Follow the [vcpkg maintainer guide](https://learn.microsoft.com/en-us/vcpkg/contributing/maintainer-guide) for package acceptance requirements.
+For each release update, refresh the manifest, archive/source checksums, supported triplet logic, export definition, and wrapper project version together. Confirm the platform archive contains the matching ABI header and dependency license report, then repeat consumer tests for every supported triplet. Do not expand supported triplets without testing them. Offline and vcpkg download-only operation have not been validated. Follow the [vcpkg maintainer guide](https://learn.microsoft.com/en-us/vcpkg/contributing/maintainer-guide) for package acceptance requirements.
