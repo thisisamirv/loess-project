@@ -1,6 +1,6 @@
 # Changelog
 
-## rfastloess (development version)
+## rfastloess 3.0.0
 
 ### Added
 

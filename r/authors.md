@@ -11,13 +11,13 @@ Source:
 [`inst/CITATION`](https://github.com/thisisamirv/loess-project/blob/main/inst/CITATION)
 
 Valizadeh A (2025). *High-Performance LOESS Smoothing for R*. R package
-version 2.1.0, <https://github.com/thisisamirv/loess-project>.
+version 3.0.0, <https://github.com/thisisamirv/loess-project>.
 
     @Manual{,
       title = {High-Performance LOESS Smoothing for R},
       author = {Amir Valizadeh},
       year = {2025},
-      note = {R package version 2.1.0},
+      note = {R package version 3.0.0},
       url = {https://github.com/thisisamirv/loess-project},
     }
 
@@ -289,11 +289,11 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: Sébastien Crozet <developer@crozet.re>
     License: Apache-2.0
     ----------------------------------------
-    Package: napi (3.12.1)
+    Package: napi (3.14.2)
     Authors: Nathan Sobo <nathan@github.com>, Yinan Long <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
-    Package: napi-build (2.4.1)
+    Package: napi-build (2.6.0)
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------
@@ -305,7 +305,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors:
     License: MIT
     ----------------------------------------
-    Package: napi-sys (3.3.0)
+    Package: napi-sys (3.4.0)
     Authors: LongYinan <lynweklm@gmail.com>
     License: MIT
     ----------------------------------------

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rfastloess</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">2.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">3.0.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,9 +35,9 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="rfastloess-development-version">rfastloess (development version)<a class="anchor" aria-label="anchor" href="#rfastloess-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="3.0.0" id="rfastloess-300">rfastloess 3.0.0<a class="anchor" aria-label="anchor" href="#rfastloess-300"></a></h2>
 <div class="section level3">
-<h3 id="added-development-version">Added<a class="anchor" aria-label="anchor" href="#added-development-version"></a></h3>
+<h3 id="added-3-0-0">Added<a class="anchor" aria-label="anchor" href="#added-3-0-0"></a></h3>
 <ul><li>Added case weights to Streaming chunks and Online points, plus current-window Online diagnostics and prediction.</li>
 <li>
 <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> now accepts multivariate coordinate vectors in <code><a href="../reference/add_point.html">add_point()</a></code> when <code>dimensions</code> is greater than one.</li>
@@ -49,14 +49,14 @@
 <li>Added <code>confidence_intervals</code>/<code>prediction_intervals</code>/<code>return_se</code> to <code><a href="../reference/StreamingLoess.html">StreamingLoess()</a></code> and <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code>. <code><a href="../reference/OnlineLoess.html">OnlineLoess()</a></code> requires <code>update_mode = "full"</code> or errors. New bound fields on <code><a href="../reference/add_point.html">add_point()</a></code>’s result.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
+<h3 id="changed-3-0-0">Changed<a class="anchor" aria-label="anchor" href="#changed-3-0-0"></a></h3>
 <ul><li>Clarified Batch <code>residual_sd</code> as <code>1.4826 * MAD</code>; Streaming reports the cumulative sample standard deviation of emitted residuals.</li>
 <li>Breaking change: replaced individual <code>return_*</code> output arguments with <code>outputs = c(...)</code> for Batch, Streaming, Online, and prediction.</li>
 <li>Breaking change: replaced flat interval arguments and prediction levels with <code>intervals = intervals_opts(confidence = ..., prediction = ...)</code>; CV uses only <code>cv = cv_opts(...)</code> with an outer <code>seed</code>, replacing flat CV arguments and <code>cv_opts(seed = ...)</code>. Removed named constructor arguments now error instead of being silently ignored.</li>
 <li>Unavailable diagnostics are now represented as R <code>NA</code> rather than generic <code>NaN</code> values.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="fixed-development-version">Fixed<a class="anchor" aria-label="anchor" href="#fixed-development-version"></a></h3>
+<h3 id="fixed-3-0-0">Fixed<a class="anchor" aria-label="anchor" href="#fixed-3-0-0"></a></h3>
 <ul><li>Use the fitted model’s kernel for unweighted, unpadded one-dimensional linear prediction standard errors without robustness downweighting, with smoothing influence rows and global residual degrees of freedom, including interpolation; align prediction-interval residual scales.</li>
 <li>Correct tied-coordinate interpolation splits and normalized cell geometry, add two-dimensional neighboring-edge blending, and match R’s neighborhood rounding near integer span boundaries.</li>
 <li>Preserve zero interpolation subdivision thresholds to match R’s small-span cell trees, retaining terminal observation vertices and correcting interpolated fits on small datasets.</li>
