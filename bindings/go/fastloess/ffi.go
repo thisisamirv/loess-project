@@ -1,7 +1,7 @@
 package fastloess
 
 /*
-#cgo CFLAGS: -I${SRCDIR}/../include
+#cgo CFLAGS: -I${SRCDIR}/include -I${SRCDIR}/../include
 #include <stdlib.h>
 #include <stddef.h>
 #include "fastloess_go.h"
