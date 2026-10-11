@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from datetime import date
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -442,6 +443,14 @@ def build_targets(
             "CITATION.cff",
             re.compile(r'^version: "\d+\.\d+\.\d+"$', re.MULTILINE),
             f'version: "{new_version}"',
+            1,
+        )
+    )
+    targets.append(
+        (
+            "CITATION.cff",
+            re.compile(r'^date-released: "\d{4}-\d{2}-\d{2}"$', re.MULTILINE),
+            f'date-released: "{date.today().isoformat()}"',
             1,
         )
     )

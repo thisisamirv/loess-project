@@ -7,8 +7,10 @@ authors:
   - family-names: "Valizadeh"
     given-names: "Amir"
     email: "thisisamirv@gmail.com"
-    orcid: "https://orcid.org/0000-0000-0000-0000"
-license: "MIT OR Apache-2.0"
+    orcid: "https://orcid.org/0000-0001-5983-8527"
+license:
+  - Apache-2.0
+  - MIT
 repository-code: "https://github.com/thisisamirv/loess-project"
 url: "https://loess.readthedocs.io/"
 keywords:
@@ -23,7 +25,7 @@ keywords:
   - nodejs
   - wasm
   - cpp
-date-released: "2026-07-06"
+date-released: "2026-10-07"
 version: "3.0.0"
 references:
   - type: article
