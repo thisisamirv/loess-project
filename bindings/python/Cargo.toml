@@ -16,8 +16,8 @@ categories = ["science", "algorithms"]
 fastLoess = { path = "../../crates/fastLoess", version = "3.0", features = [
     "dev",
 ] }
-pyo3 = { version = "0.29", features = ["abi3-py38"] }
-numpy = "0.29"
+pyo3 = { version = "0.30", features = ["abi3-py39"] }
+numpy = "0.30"
 
 [lib]
 name = "fastloess"

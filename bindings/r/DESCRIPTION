@@ -17,4 +17,4 @@ VignetteBuilder: knitr
 BugReports: https://github.com/thisisamirv/loess-project/issues
 URL: https://github.com/thisisamirv/loess-project, https://thisisamirv.github.io/loess-project/r/
 Config/rextendr/version: 0.5.0
-Config/roxygen2/version: 8.1.0
+Config/roxygen2/version: 8.1.1

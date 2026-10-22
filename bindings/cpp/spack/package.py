@@ -1,12 +1,10 @@
 # Copyright Spack Project Developers. See COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-# ruff: noqa: F403, F405, UP006
-# isort: skip_file
 
 import os
 import textwrap
-from typing import ClassVar, List  # noqa: UP035
+from typing import ClassVar, List
 
 from spack.package import *
 from spack_repo.builtin.build_systems.cargo import CargoPackage
