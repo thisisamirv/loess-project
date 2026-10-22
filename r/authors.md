@@ -341,7 +341,7 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: The Rust Project Developers
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: numpy (0.29.0)
+    Package: numpy (0.30.0)
     Authors: The rust-numpy Project Developers, PyO3 Project and Contributors <https://github.com/PyO3>
     License: BSD-2-Clause
     ----------------------------------------
@@ -373,23 +373,23 @@ Scatterplots.” *Journal of the American Statistical Association*,
     Authors: David Tolnay <dtolnay@gmail.com>, Alex Crichton <alex@alexcrichton.com>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3 (0.29.2)
+    Package: pyo3 (0.30.1)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-build-config (0.29.2)
+    Package: pyo3-build-config (0.30.1)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-ffi (0.29.2)
+    Package: pyo3-ffi (0.30.1)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-macros (0.29.2)
+    Package: pyo3-macros (0.30.1)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
-    Package: pyo3-macros-backend (0.29.2)
+    Package: pyo3-macros-backend (0.30.1)
     Authors: PyO3 Project and Contributors <https://github.com/PyO3>
     License: MIT OR Apache-2.0
     ----------------------------------------
