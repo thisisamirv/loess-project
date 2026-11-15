@@ -36,6 +36,18 @@ fn to_py_invalid_arg_error(e: impl Display) -> PyErr {
     to_py_error(shared_parse::BindingError::invalid_arg(e.to_string()))
 }
 
+fn mutex_poison_err(err: &impl Display) -> PyErr {
+    to_py_error(shared_parse::BindingError::runtime(
+        shared_parse::mutex_poisoned_message(&err.to_string()),
+    ))
+}
+
+fn already_closed_err(name: &str) -> PyErr {
+    to_py_error(shared_parse::BindingError::runtime(format!(
+        "{name} has already been closed"
+    )))
+}
+
 type ParsedCvOptions = (Option<Vec<f64>>, String, usize);
 
 #[derive(Default)]
@@ -476,6 +488,25 @@ impl PyLoessResult {
         Ok(PyPredictOutput { inner: output })
     }
 
+    /// Drop retained predict state early. Idempotent; GC still finalizes the rest.
+    fn close(&mut self) {
+        self.inner.predict_state = None;
+    }
+
+    fn __enter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    #[pyo3(signature = (_exc_type=None, _exc_value=None, _traceback=None))]
+    fn __exit__(
+        &mut self,
+        _exc_type: Option<&Bound<'_, PyAny>>,
+        _exc_value: Option<&Bound<'_, PyAny>>,
+        _traceback: Option<&Bound<'_, PyAny>>,
+    ) {
+        self.close();
+    }
+
     fn __repr__(&self) -> String {
         format!(
             "LoessResult(n={}, fraction_used={:.4})",
@@ -529,7 +560,7 @@ fn online_coordinate_to_vec<'py>(py: Python<'py>, value: &Bound<'py, PyAny>) -> 
 /// Streaming LOESS processor for incremental chunk-based smoothing.
 #[pyclass(name = "StreamingLoess")]
 pub struct PyStreamingLoess {
-    inner: Mutex<ParallelStreamingLoess<f64>>,
+    inner: Mutex<Option<ParallelStreamingLoess<f64>>>,
 }
 
 #[pymethods]
@@ -640,7 +671,7 @@ impl PyStreamingLoess {
             shared_parse::build_streaming(builder, Some(chunk_size), overlap, Some(merge_strategy))
                 .map_err(to_py_error)?;
         Ok(PyStreamingLoess {
-            inner: Mutex::new(processor),
+            inner: Mutex::new(Some(processor)),
         })
     }
 
@@ -660,17 +691,16 @@ impl PyStreamingLoess {
             .transpose()?;
 
         let result = py.detach(move || {
-            let mut inner = self.inner.lock().map_err(|e| {
-                to_py_error(shared_parse::BindingError::runtime(
-                    shared_parse::mutex_poisoned_message(&e.to_string()),
-                ))
-            })?;
+            let mut guard = self.inner.lock().map_err(|e| mutex_poison_err(&e))?;
+            let model = guard
+                .as_mut()
+                .ok_or_else(|| already_closed_err("StreamingLoess"))?;
             let result = if let Some(weights) = weights_vec.as_deref() {
-                inner.process_chunk_weighted(&x_vec, &y_vec, weights)
+                model.process_chunk_weighted(&x_vec, &y_vec, weights)
             } else {
-                inner.process_chunk(&x_vec, &y_vec)
+                model.process_chunk(&x_vec, &y_vec)
             };
-            result.map_err(|e| to_py_error(shared_parse::BindingError::runtime(e.to_string())))
+            shared_parse::map_loess_result(result).map_err(to_py_error)
         })?;
 
         Ok(PyLoessResult { inner: result })
@@ -679,18 +709,35 @@ impl PyStreamingLoess {
     /// Finalize smoothing and return remaining buffered data.
     fn finalize(&self, py: Python<'_>) -> PyResult<PyLoessResult> {
         let result = py.detach(move || {
-            self.inner
-                .lock()
-                .map_err(|e| {
-                    to_py_error(shared_parse::BindingError::runtime(
-                        shared_parse::mutex_poisoned_message(&e.to_string()),
-                    ))
-                })?
-                .finalize()
-                .map_err(|e| to_py_error(shared_parse::BindingError::runtime(e.to_string())))
+            let mut guard = self.inner.lock().map_err(|e| mutex_poison_err(&e))?;
+            let model = guard
+                .as_mut()
+                .ok_or_else(|| already_closed_err("StreamingLoess"))?;
+            shared_parse::map_loess_result(model.finalize()).map_err(to_py_error)
         })?;
 
         Ok(PyLoessResult { inner: result })
+    }
+
+    /// Release native streaming state early. Idempotent.
+    fn close(&self) {
+        if let Ok(mut guard) = self.inner.lock() {
+            guard.take();
+        }
+    }
+
+    fn __enter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    #[pyo3(signature = (_exc_type=None, _exc_value=None, _traceback=None))]
+    fn __exit__(
+        &self,
+        _exc_type: Option<&Bound<'_, PyAny>>,
+        _exc_value: Option<&Bound<'_, PyAny>>,
+        _traceback: Option<&Bound<'_, PyAny>>,
+    ) {
+        self.close();
     }
 }
 
@@ -744,10 +791,35 @@ impl PyOnlineOutput {
     }
 }
 
+/// Result of [`OnlineLoess.add_point`](PyOnlineLoess::add_point).
+#[pyclass(name = "AddPointResult", from_py_object)]
+#[derive(Clone)]
+pub struct PyAddPointResult {
+    /// `"filling"`, `"ready"`, or `"dropped"`.
+    #[pyo3(get)]
+    pub status: String,
+    /// Smoothed output when `status` is `"ready"`; otherwise `None`.
+    #[pyo3(get)]
+    pub point: Option<PyOnlineOutput>,
+}
+
+#[pymethods]
+impl PyAddPointResult {
+    fn __repr__(&self) -> String {
+        match &self.point {
+            Some(point) => format!(
+                "AddPointResult(status={:?}, point=OnlineOutput(y={:.4}))",
+                self.status, point.y
+            ),
+            None => format!("AddPointResult(status={:?}, point=None)", self.status),
+        }
+    }
+}
+
 /// Online LOESS processor for real-time data streams.
 #[pyclass(name = "OnlineLoess")]
 pub struct PyOnlineLoess {
-    inner: Mutex<ParallelOnlineLoess<f64>>,
+    inner: Mutex<Option<ParallelOnlineLoess<f64>>>,
     dimensions: usize,
 }
 
@@ -854,12 +926,17 @@ impl PyOnlineLoess {
         )
         .map_err(to_py_error)?;
         Ok(PyOnlineLoess {
-            inner: Mutex::new(processor),
+            inner: Mutex::new(Some(processor)),
             dimensions,
         })
     }
 
     /// Add a point using a scalar x for 1D or a coordinate vector for multivariate input.
+    ///
+    /// Returns status `"filling"` while fewer than `min_points` finite
+    /// observations have been accepted, `"ready"` once smoothing begins
+    /// (`point` holds the output), or `"dropped"` when `missing = "drop"`
+    /// ignores a non-finite `x` or `y`.
     #[pyo3(signature = (x, y, weight=1.0))]
     fn add_point<'py>(
         &self,
@@ -867,7 +944,7 @@ impl PyOnlineLoess {
         x: &Bound<'py, PyAny>,
         y: f64,
         weight: f64,
-    ) -> PyResult<Option<PyOnlineOutput>> {
+    ) -> PyResult<PyAddPointResult> {
         let x_vec = online_coordinate_to_vec(py, x)?;
         if x_vec.len() != self.dimensions {
             return Err(PyValueError::new_err(format!(
@@ -877,42 +954,50 @@ impl PyOnlineLoess {
                 x_vec.len(),
             )));
         }
+        let dropped_candidate = x_vec.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
         let output = py.detach(move || {
-            let mut inner = self.inner.lock().map_err(|e| {
-                to_py_error(shared_parse::BindingError::runtime(
-                    shared_parse::mutex_poisoned_message(&e.to_string()),
-                ))
-            })?;
-            inner
-                .add_point_weighted(&x_vec, y, weight)
-                .map_err(|e| to_py_error(shared_parse::BindingError::invalid_arg(e.to_string())))
+            let mut guard = self.inner.lock().map_err(|e| mutex_poison_err(&e))?;
+            let model = guard
+                .as_mut()
+                .ok_or_else(|| already_closed_err("OnlineLoess"))?;
+            shared_parse::map_loess_result(model.add_point_weighted(&x_vec, y, weight))
+                .map_err(to_py_error)
         })?;
-        Ok(output.map(|o| PyOnlineOutput {
-            y: o.y,
-            standard_error: o.standard_error,
-            residual: o.residual,
-            robustness_weight: o.robustness_weight,
-            iterations_used: o.iterations_used,
-            confidence_lower: o.confidence_lower,
-            confidence_upper: o.confidence_upper,
-            prediction_lower: o.prediction_lower,
-            prediction_upper: o.prediction_upper,
-            gradient: o.gradient,
-        }))
+        Ok(match output {
+            Some(o) => PyAddPointResult {
+                status: "ready".to_owned(),
+                point: Some(PyOnlineOutput {
+                    y: o.y,
+                    standard_error: o.standard_error,
+                    residual: o.residual,
+                    robustness_weight: o.robustness_weight,
+                    iterations_used: o.iterations_used,
+                    confidence_lower: o.confidence_lower,
+                    confidence_upper: o.confidence_upper,
+                    prediction_lower: o.prediction_lower,
+                    prediction_upper: o.prediction_upper,
+                    gradient: o.gradient,
+                }),
+            },
+            None if dropped_candidate => PyAddPointResult {
+                status: "dropped".to_owned(),
+                point: None,
+            },
+            None => PyAddPointResult {
+                status: "filling".to_owned(),
+                point: None,
+            },
+        })
     }
 
     /// Compute diagnostics for the current sliding window on demand.
     fn window_diagnostics(&self, py: Python<'_>) -> PyResult<Option<PyDiagnostics>> {
         let diagnostics = py.detach(|| {
-            self.inner
-                .lock()
-                .map_err(|e| {
-                    to_py_error(shared_parse::BindingError::runtime(
-                        shared_parse::mutex_poisoned_message(&e.to_string()),
-                    ))
-                })?
-                .window_diagnostics()
-                .map_err(|e| to_py_error(shared_parse::BindingError::runtime(e.to_string())))
+            let mut guard = self.inner.lock().map_err(|e| mutex_poison_err(&e))?;
+            let model = guard
+                .as_mut()
+                .ok_or_else(|| already_closed_err("OnlineLoess"))?;
+            shared_parse::map_loess_result(model.window_diagnostics()).map_err(to_py_error)
         })?;
         Ok(diagnostics.map(|d| PyDiagnostics {
             rmse: d.rmse,
@@ -963,17 +1048,35 @@ impl PyOnlineLoess {
         }
         let options = builder.build().map_err(to_py_invalid_arg_error)?;
         let output = py.detach(move || {
-            self.inner
-                .lock()
-                .map_err(|e| {
-                    to_py_error(shared_parse::BindingError::runtime(
-                        shared_parse::mutex_poisoned_message(&e.to_string()),
-                    ))
-                })?
-                .predict_window(&new_x_vec, &options)
-                .map_err(|e| to_py_error(shared_parse::BindingError::invalid_arg(e.to_string())))
+            let mut guard = self.inner.lock().map_err(|e| mutex_poison_err(&e))?;
+            let model = guard
+                .as_mut()
+                .ok_or_else(|| already_closed_err("OnlineLoess"))?;
+            shared_parse::map_loess_result(model.predict_window(&new_x_vec, &options))
+                .map_err(to_py_error)
         })?;
         Ok(PyPredictOutput { inner: output })
+    }
+
+    /// Release native online state early. Idempotent.
+    fn close(&self) {
+        if let Ok(mut guard) = self.inner.lock() {
+            guard.take();
+        }
+    }
+
+    fn __enter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    #[pyo3(signature = (_exc_type=None, _exc_value=None, _traceback=None))]
+    fn __exit__(
+        &self,
+        _exc_type: Option<&Bound<'_, PyAny>>,
+        _exc_value: Option<&Bound<'_, PyAny>>,
+        _traceback: Option<&Bound<'_, PyAny>>,
+    ) {
+        self.close();
     }
 }
 
@@ -1172,6 +1275,7 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyPredictOutput>()?;
     m.add_class::<PyDiagnostics>()?;
     m.add_class::<PyOnlineOutput>()?;
+    m.add_class::<PyAddPointResult>()?;
     m.add_class::<PyLoess>()?;
     m.add_class::<PyStreamingLoess>()?;
     m.add_class::<PyOnlineLoess>()?;

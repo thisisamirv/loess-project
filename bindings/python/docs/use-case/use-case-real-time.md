@@ -12,7 +12,7 @@ When data arrives continuously—from sensors, logs, or streaming pipelines—yo
 
 For true real-time applications where each point must be processed immediately.
 
-`window_capacity = 25` limits the internal buffer to the 25 most recent observations; each `add_point` call costs O(window) rather than growing with total history. `min_points = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return `null`/`None`/`nothing`. `update_mode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
+`window_capacity = 25` limits the internal buffer to the 25 most recent observations; each `add_point` call costs O(window) rather than growing with total history. `min_points = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return `status="filling"`. `update_mode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
 
 ### Sensor Data Example
 
@@ -37,8 +37,8 @@ online = fl.OnlineLoess(
 )
 for xi, yi in zip(times, temperatures):
     result = online.add_point(float(xi), float(yi))
-    if result is not None:
-        print(f"Time {xi:.0f}: smoothed = {result.y:.2f}")
+    if result.status == "ready":
+        print(f"Time {xi:.0f}: smoothed = {result.point.y:.2f}")
         if xi >= 9:
             break
 :::

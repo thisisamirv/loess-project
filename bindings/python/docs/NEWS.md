@@ -3,6 +3,18 @@
 
 This changelog includes end-user changes only. For internal development notes, see the [repository changelog](https://github.com/thisisamirv/loess-project/blob/main/CHANGELOG.md).
 
+## Unreleased
+
+### Changed
+
+* Breaking change: `OnlineLoess.add_point` returns `AddPointResult` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | None`.
+
+### Fixed
+
+* Distinguishing Online `add_point` filling vs `missing="drop"` via ternary `status`.
+* Adding idempotent `close()` / context-manager support on `OnlineLoess`, `StreamingLoess`, and `LoessResult` (clears retained predict state).
+* Mapping Streaming/Online failures via `map_loess_result` so InvalidArg vs Runtime categories match Batch/`predict`.
+
 ## 3.0.0
 
 ### Added

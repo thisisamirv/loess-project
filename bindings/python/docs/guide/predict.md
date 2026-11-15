@@ -12,7 +12,7 @@ Retained-model prediction is available in **Batch** mode only. Online also provi
 
 It always fits exactly, unlike `fit()`'s default `surface_mode="interpolation"` — so predicting at a training point may not exactly match `fit()`'s output unless `surface_mode="direct"` was used.
 
-Requires `retain_model=True` on the constructor before `fit()`, otherwise `predict()` raises `LoessError`.
+Requires `retain_model=True` on the constructor before `fit()`, otherwise `predict()` raises `ValueError` or `RuntimeError`.
 
 ---
 
@@ -50,7 +50,7 @@ Behavior for query points outside the training range, on any dimension:
 | --- | --- |
 | `"clamp"` (default) | Clamps each out-of-range dimension to the nearest training boundary |
 | `"linear"` | Linearly extrapolates from the boundary point's local fit and gradient (first-order Taylor expansion) |
-| `"error"` | Fails the whole call with `LoessError` |
+| `"error"` | Fails the whole call with `ValueError` or `RuntimeError` |
 
 ### max_extrapolation_distance
 

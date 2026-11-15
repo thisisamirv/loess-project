@@ -167,7 +167,9 @@ class TestLoess:
         )
         latest = None
         for x_value, y_value in zip(x, y):
-            latest = online.add_point(float(x_value), float(y_value))
+            result = online.add_point(float(x_value), float(y_value))
+            if result.status == "ready":
+                latest = result.point
         assert latest is not None
         assert latest.robustness_weight is not None
         assert latest.gradient is not None
@@ -488,8 +490,8 @@ class TestOnlineLoess:
                 np.array([float(index), float(index * index)]),
                 float(2 * index + 1),
             )
-            if result is not None:
-                results.append(result)
+            if result.status == "ready":
+                results.append(result.point)
 
         assert results
         assert results[-1].gradient is not None
@@ -513,11 +515,22 @@ class TestOnlineLoess:
             online.add_point(x[i], y[i])
 
     def test_online_missing_drop_ignores_nan_point(self):
-        """Test online with missing="drop" ignores non-finite points."""
-        online = fastloess.OnlineLoess(fraction=0.5, window_capacity=10, missing="drop")
+        """Test online with missing="drop" distinguishes drop from filling."""
+        online = fastloess.OnlineLoess(
+            fraction=0.5, window_capacity=10, min_points=3, missing="drop"
+        )
 
-        result = online.add_point(1.0, float("nan"))
-        assert result is None
+        filling = online.add_point(0.0, 0.0)
+        assert filling.status == "filling"
+        assert filling.point is None
+
+        dropped = online.add_point(1.0, float("nan"))
+        assert dropped.status == "dropped"
+        assert dropped.point is None
+
+        still_filling = online.add_point(2.0, 4.0)
+        assert still_filling.status == "filling"
+        assert still_filling.point is None
 
     def test_online_basic(self):
         """Test basic online smoothing."""
@@ -529,8 +542,8 @@ class TestOnlineLoess:
         results = []
         for i in range(len(x)):
             result = online.add_point(x[i], y[i])
-            if result is not None:
-                results.append(result.y)
+            if result.status == "ready":
+                results.append(result.point.y)
 
         assert len(results) > 0
 
@@ -545,8 +558,8 @@ class TestOnlineLoess:
         results = []
         for i in range(len(x)):
             result = online.add_point(x[i], y[i])
-            if result is not None:
-                results.append(result.y)
+            if result.status == "ready":
+                results.append(result.point.y)
 
         assert len(results) > 0
 
@@ -574,7 +587,9 @@ class TestOnlineLoess:
 
         last = None
         for i in range(6):
-            last = online.add_point(float(i), 2.0 * i + 1.0)
+            result = online.add_point(float(i), 2.0 * i + 1.0)
+            if result.status == "ready":
+                last = result.point
 
         assert last is not None
         assert last.confidence_lower is not None
@@ -1075,7 +1090,7 @@ class TestParameterCoverage:
         for um in ["full", "incremental"]:
             o = fastloess.OnlineLoess(fraction=0.5, window_capacity=10, update_mode=um)
             results = [o.add_point(xi, yi) for xi, yi in zip(x, y)]
-            assert any(r is not None for r in results)
+            assert any(r.status == "ready" for r in results)
 
     def test_online_minkowski_p(self):
         x = np.arange(20, dtype=float)
@@ -1086,7 +1101,7 @@ class TestParameterCoverage:
             distance_metric="minkowski:3.0",
         )
         results = [o.add_point(xi, yi) for xi, yi in zip(x, y)]
-        assert any(r is not None for r in results)
+        assert any(r.status == "ready" for r in results)
 
     def test_online_weighted_metric(self):
         x = np.arange(20, dtype=float)
@@ -1098,7 +1113,7 @@ class TestParameterCoverage:
             weighted_metric_weights=[1.0],
         )
         results = [o.add_point(xi, yi) for xi, yi in zip(x, y)]
-        assert any(r is not None for r in results)
+        assert any(r.status == "ready" for r in results)
 
     def test_online_misc_params(self):
         """Cover: auto_converge, return_robustness_weights, degree, scaling_method,
@@ -1118,7 +1133,7 @@ class TestParameterCoverage:
             surface_mode="direct",
         )
         results = [o.add_point(xi, yi) for xi, yi in zip(x, y)]
-        assert any(r is not None for r in results)
+        assert any(r.status == "ready" for r in results)
 
 
 class TestCustomWeights:

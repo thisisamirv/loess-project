@@ -8,6 +8,7 @@ fastLoess Rust crate.
 
 from .__version__ import __version__
 from ._core import (
+    AddPointResult,
     Diagnostics,
     Loess,
     LoessResult,
@@ -18,6 +19,7 @@ from ._core import (
 )
 
 __all__ = [
+    "AddPointResult",
     "Diagnostics",
     "Loess",
     "LoessResult",

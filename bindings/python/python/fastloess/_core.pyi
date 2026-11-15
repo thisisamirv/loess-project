@@ -3,6 +3,8 @@
 # pylint: disable=unnecessary-ellipsis,unused-argument
 
 from collections.abc import Mapping, Sequence
+from types import TracebackType
+from typing import Literal, Self
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -39,7 +41,7 @@ class Diagnostics:
         """Batch: robust residual scale estimate (1.4826 * MAD); Streaming: cumulative sample SD of emitted residuals."""
 
 class OnlineOutput:
-    """Result from a single add_point() call."""
+    """Result from a single add_point() call when status is ``"ready"``."""
 
     @property
     def y(self) -> float:
@@ -80,6 +82,17 @@ class OnlineOutput:
     @property
     def gradient(self) -> NDArray[np.float64] | None:
         """Local fit gradient for the latest point (None if not requested), `dimensions` values."""
+
+class AddPointResult:
+    """Result of ``OnlineLoess.add_point()``."""
+
+    @property
+    def status(self) -> Literal["filling", "ready", "dropped"]:
+        """``"filling"``, ``"ready"``, or ``"dropped"``."""
+
+    @property
+    def point(self) -> OnlineOutput | None:
+        """Smoothed output when ``status`` is ``"ready"``; otherwise ``None``."""
 
 class LoessResult:
     """Result from LOESS smoothing."""
@@ -191,6 +204,17 @@ class LoessResult:
         extrapolation : str
             One of "clamp" (default), "linear", "error".
         """
+
+    def close(self) -> None:
+        """Drop retained predict state early. Idempotent."""
+
+    def __enter__(self) -> Self: ...
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None: ...
 
 class PredictOutput:
     """Result from `LoessResult.predict()`."""
@@ -316,6 +340,17 @@ class StreamingLoess:
     def finalize(self) -> LoessResult:
         """Finalize smoothing and return remaining buffered data."""
 
+    def close(self) -> None:
+        """Release native streaming state early. Idempotent."""
+
+    def __enter__(self) -> Self: ...
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None: ...
+
 class OnlineLoess:
     """Online LOESS processor for real-time data streams."""
 
@@ -354,8 +389,8 @@ class OnlineLoess:
 
     def add_point(
         self, x: float | ArrayLike, y: float, weight: float = 1.0
-    ) -> OnlineOutput | None:
-        """Add a scalar or coordinate vector and return its smoothed value, or None while the window fills."""
+    ) -> AddPointResult:
+        """Add a point; ``status`` is ``"filling"``, ``"ready"``, or ``"dropped"``."""
 
     def window_diagnostics(self) -> Diagnostics | None:
         """Compute diagnostics for the current sliding window on demand."""
@@ -371,3 +406,14 @@ class OnlineLoess:
         max_neighbor_distance: float | None = None,
     ) -> PredictOutput:
         """Predict query points using a fit of the current sliding window."""
+
+    def close(self) -> None:
+        """Release native online state early. Idempotent."""
+
+    def __enter__(self) -> Self: ...
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None: ...

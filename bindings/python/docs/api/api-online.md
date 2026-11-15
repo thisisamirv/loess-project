@@ -24,9 +24,9 @@ import fastloess as fl
 online = fl.OnlineLoess(fraction=0.5, window_capacity=50)
 :::
 
-#### `add_point(x, y, weight=1.0)`
+#### `add_point(x, y, weight=1.0) -> AddPointResult`
 
-Adds one point to the sliding window. For one-dimensional models, `x` may be a scalar; for multivariate models, pass a one-dimensional array-like coordinate with exactly `dimensions` values. The method returns the smoothed value for that point, or `None` while the window is still filling up (fewer than `min_points` seen so far). Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
+Adds one point to the sliding window. For one-dimensional models, `x` may be a scalar; for multivariate models, pass a one-dimensional array-like coordinate with exactly `dimensions` values. Returns an `AddPointResult` whose `status` is `"filling"` while fewer than `min_points` finite observations have been accepted, `"ready"` once smoothing begins (`point` holds the `OnlineOutput`), or `"dropped"` when `missing = "drop"` ignores a non-finite input. Once the window reaches `window_capacity`, each new point evicts the oldest one, so memory stays bounded regardless of how much history has passed through. `update_mode` controls how much work each call does: `"incremental"` re-fits only the newest point, while `"full"` re-smooths the entire window for a more accurate but slower result.
 
 :::{jupyter-execute}
 import fastloess as fl
@@ -37,11 +37,11 @@ y = np.sin(x) + 0.1
 
 online = fl.OnlineLoess(fraction=0.5, window_capacity=50, min_points=3)
 
-result = online.add_point(x[0], y[0])  # None
-result = online.add_point(x[1], y[1])  # None
+result = online.add_point(x[0], y[0])  # status == "filling"
+result = online.add_point(x[1], y[1])  # status == "filling"
 
 result = online.add_point(x[2], y[2])
-print(result)
+print(result.status, result.point)
 :::
 
 `weight` is a finite non-negative case weight; zero excludes the observation from local fits while retaining it in the window. The default `1.0` preserves unweighted behavior.
@@ -54,8 +54,12 @@ import numpy as np
 
 online = fl.OnlineLoess(dimensions=2, surface_mode="direct")
 result = online.add_point(np.array([0.5, 1.25]), 2.0)
-print(result)
+print(result.status, result.point)
 :::
+
+#### `close()`
+
+Releases native online state early. Safe to call multiple times. Supports `with OnlineLoess(...) as online:`.
 
 #### `window_diagnostics()`
 
@@ -249,7 +253,7 @@ Policy for handling a non-finite (NaN/Inf) `x` or `y` value passed to `add_point
 | Option | Behavior |
 | --- | --- |
 | `"error"` (default) | Raise an error |
-| `"drop"` | Silently ignore the point — `add_point` returns `None` instead of adding it to the window |
+| `"drop"` | Silently ignore the point — `add_point` returns `status="dropped"` instead of adding it to the window |
 
 ### window_capacity
 
@@ -257,7 +261,7 @@ Maximum number of most recent points kept in the sliding window; older points ar
 
 ### min_points
 
-Minimum number of points required before smoothing starts. `add_point()` returns `None` until the window reaches this size.
+Minimum number of points required before smoothing starts. `add_point()` returns `status="filling"` until the window reaches this size.
 
 ### update_mode
 
@@ -294,9 +298,16 @@ Confidence level for the prediction interval for new observations (e.g. `0.95`).
 
 ## Result Structure
 
+### `AddPointResult`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `status` | `str` | `"filling"`, `"ready"`, or `"dropped"` |
+| `point` | `OnlineOutput \| None` | Present when `status` is `"ready"`; otherwise `None` |
+
 ### `OnlineOutput`
 
-Returned by `add_point()` once the window has enough points (`None` until then).
+Returned in `AddPointResult.point` once the window has enough points (`status` is `"filling"` or `"dropped"` otherwise).
 
 | Field | Type | Description |
 | --- | --- | --- |

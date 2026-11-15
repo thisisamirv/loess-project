@@ -328,6 +328,8 @@ Per-observation weights, passed to `fit()` rather than the constructor.
 | `gradient` | `ndarray \| None` | Per-point local fit gradient, flattened (if `"gradient"` was requested, `surface_mode="direct"` only) |
 | `dimensions` | `int` | Number of predictor dimensions |
 
+`LoessResult.close()` drops retained predict state early (idempotent). Prefer `with result:` when `retain_model=True`.
+
 ### `Diagnostics`
 
 | Field | Type | Description |
@@ -344,7 +346,7 @@ Per-observation weights, passed to `fit()` rather than the constructor.
 
 ### `LoessResult.predict(new_x, ...) -> PredictOutput`
 
-Evaluates the fitted model at out-of-sample query points (flattened, `dimensions` values per point). Requires `retain_model=True` on the constructor before `fit()`, otherwise raises `LoessError`.
+Evaluates the fitted model at out-of-sample query points (flattened, `dimensions` values per point). Requires `retain_model=True` on the constructor before `fit()`, otherwise raises `ValueError` or `RuntimeError`.
 
 ## Example
 

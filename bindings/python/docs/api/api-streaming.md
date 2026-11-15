@@ -58,6 +58,10 @@ final_result = stream.finalize()
 print(final_result)
 :::
 
+#### `close()`
+
+Releases native streaming state early. Safe to call multiple times. Supports `with StreamingLoess(...) as stream:`.
+
 ## Options Structure
 
 ### `StreamingOptions` (inherits `LoessOptions`)
