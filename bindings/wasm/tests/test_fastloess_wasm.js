@@ -163,7 +163,10 @@ test('WASM grouped outputs select Batch, Streaming, Online, and prediction field
     }, { window_capacity: 10, min_points: 3, update_mode: 'full' });
     let latest;
     for (let index = 0; index < x.length; index++) {
-        latest = online.add_point(x[index], y[index]);
+        const res = online.add_point(x[index], y[index]);
+        if (res.status === 'ready') {
+            latest = res.point;
+        }
     }
     assert.ok(latest.robustness_weight !== undefined);
     assert.ok(latest.gradient !== undefined);
@@ -204,8 +207,8 @@ test('WASM online smoothing', () => {
     let lastSmoothed;
     for (let i = 0; i < 10; i++) {
         const res = online.add_point(i, i * 2);
-        if (res !== undefined && res !== null) {
-            lastSmoothed = res.y;
+        if (res.status === 'ready') {
+            lastSmoothed = res.point.y;
         }
     }
 
@@ -232,7 +235,10 @@ test('WASM Online supports multivariate coordinate arrays', () => {
         [[0, 1], 2],
         [[1, 1], 3]
     ]) {
-        latest = online.add_point_vector(new Float64Array(x), y);
+        const res = online.add_point_vector(new Float64Array(x), y);
+        if (res.status === 'ready') {
+            latest = res.point;
+        }
     }
 
     assert.ok(latest !== undefined && latest !== null);
@@ -349,8 +355,8 @@ test('WASM online: confidence/prediction intervals under update_mode "full"', ()
     let last;
     for (let i = 0; i < 6; i++) {
         const res = online.add_point(i, 2 * i + 1);
-        if (res !== undefined && res !== null) {
-            last = res;
+        if (res.status === 'ready') {
+            last = res.point;
         }
     }
 
@@ -494,8 +500,8 @@ test('WASM online: update mode via options', () => {
     let lastSmoothed;
     for (let i = 0; i < 10; i++) {
         const res = online.add_point(i, i * 2);
-        if (res !== undefined && res !== null) {
-            lastSmoothed = res.y;
+        if (res.status === 'ready') {
+            lastSmoothed = res.point.y;
         }
     }
     assert.ok(lastSmoothed !== undefined && lastSmoothed !== null);
@@ -529,13 +535,25 @@ test('WASM streaming: missing = "drop" removes non-finite rows', () => {
     assert.strictEqual(r1.y.length + r2.y.length, 9);
 });
 
-test('WASM online: missing = "drop" ignores non-finite point', () => {
-    const online = new fastloess.OnlineLoess(
-        { fraction: 0.5, missing: 'drop' },
-        { window_capacity: 10 }
-    );
-    const r = online.add_point(1.0, NaN);
-    assert.ok(r === undefined || r === null);
+test('WASM online missing: "drop" reports dropped distinct from filling', () => {
+    const online = new fastloess.OnlineLoess({
+        fraction: 0.5,
+        missing: 'drop'
+    }, {
+        window_capacity: 10,
+        min_points: 5
+    });
+
+    const filling = online.add_point(0, 0);
+    assert.strictEqual(filling.status, 'filling');
+    assert.strictEqual(filling.point, null);
+
+    const dropped = online.add_point(1, NaN);
+    assert.strictEqual(dropped.status, 'dropped');
+    assert.strictEqual(dropped.point, null);
+
+    const stillFilling = online.add_point(2, 4);
+    assert.strictEqual(stillFilling.status, 'filling');
 });
 
 test('WASM smooth: invalid missing policy throws', () => {

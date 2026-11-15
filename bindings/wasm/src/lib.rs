@@ -84,13 +84,41 @@ export interface PredictOptions {
     max_neighbor_distance?: number;
 }
 
-/** Out-of-sample prediction methods added to the generated result class. */
+/** Result of a batch/streaming fit. */
 export interface LoessResult {
+    /** Release the WASM result allocation. */
+    free(): void;
+    /** Drop retained predict state early. Idempotent; `free()` still releases the rest. */
+    close(): void;
+    readonly x: Float64Array;
+    readonly y: Float64Array;
+    readonly residuals: Float64Array | undefined;
+    readonly standard_errors: Float64Array | undefined;
+    readonly confidence_lower: Float64Array | undefined;
+    readonly confidence_upper: Float64Array | undefined;
+    readonly prediction_lower: Float64Array | undefined;
+    readonly prediction_upper: Float64Array | undefined;
+    readonly robustness_weights: Float64Array | undefined;
+    readonly diagnostics: Diagnostics | undefined;
+    readonly cv_scores: Float64Array | undefined;
+    readonly fraction_used: number;
+    readonly iterations_used: number | undefined;
+    readonly enp: number | undefined;
+    readonly trace_hat: number | undefined;
+    readonly delta1: number | undefined;
+    readonly delta2: number | undefined;
+    readonly residual_scale: number | undefined;
+    readonly leverage: Float64Array | undefined;
+    readonly gradient: Float64Array | undefined;
+    readonly dimensions: number;
+    /** Evaluate the fitted model at out-of-sample query points. Requires `retain_model: true`. */
     predict(newX: Float64Array, options?: PredictOptions): PredictOutput;
 }
 
 /** Result of `LoessResult.predict()`. */
 export interface PredictOutput {
+    /** Release the WASM result allocation. */
+    free(): void;
     /** Predicted y values, one per query point. */
     readonly y: Float64Array;
     /** Standard errors (if requested). */
@@ -105,6 +133,14 @@ export interface PredictOutput {
     readonly prediction_upper: Float64Array | undefined;
     /** Local fit's gradient at each query point (if requested). */
     readonly derivative: Float64Array | undefined;
+}
+
+/** Result of `OnlineLoess.add_point()` / `add_point_vector()` / weighted variants. */
+export interface AddPointResult {
+    /** `"filling"`, `"ready"`, or `"dropped"`. */
+    status: "filling" | "ready" | "dropped";
+    /** Smoothed output when `status` is `"ready"`; otherwise `null`. */
+    point: OnlineOutput | null;
 }
 
 /** Configuration options for streaming LOESS smoothing. A subset of `SmoothOptions`: cross-validation has no equivalent here. */
@@ -223,6 +259,8 @@ export class Loess {
 /** Streaming LOESS smoother for large datasets. */
 export class StreamingLoess {
     free(): void;
+    /** Release native streaming state early. Idempotent. */
+    close(): void;
     constructor(options?: StreamingSmoothOptions, streamingOpts?: StreamingOptions);
     /** Process a chunk of data. */
     process_chunk(x: Float64Array, y: Float64Array): LoessResult;
@@ -235,19 +273,41 @@ export class StreamingLoess {
 /** Online LOESS smoother for real-time data. */
 export class OnlineLoess {
     free(): void;
+    /** Release native online state early. Idempotent. */
+    close(): void;
     constructor(options?: OnlineSmoothOptions, onlineOpts?: OnlineOptions);
-    /** Add a single point and get the smoothed value, or null if not enough points yet. */
-    add_point(x: number, y: number): OnlineOutput | null;
-    /** Add a point with one coordinate per configured predictor dimension. */
-    add_point_vector(x: Float64Array, y: number): OnlineOutput | null;
-    /** Add a scalar point with a case weight. */
-    add_point_weighted(x: number, y: number, weight: number): OnlineOutput | null;
-    /** Add a coordinate vector with a case weight. */
-    add_point_vector_weighted(x: Float64Array, y: number, weight: number): OnlineOutput | null;
+    /**
+     * Add a single point.
+     * Returns status `"filling"` while fewer than `min_points` finite observations
+     * have been accepted, `"ready"` once smoothing begins (`point` holds the output),
+     * or `"dropped"` when `missing = "drop"` ignores a non-finite `x` or `y`.
+     */
+    add_point(x: number, y: number): AddPointResult;
+    /** Add a point with one coordinate per configured predictor dimension. Same ternary status contract. */
+    add_point_vector(x: Float64Array, y: number): AddPointResult;
+    /** Add a scalar point with a case weight. Weight is not part of drop detection. */
+    add_point_weighted(x: number, y: number, weight: number): AddPointResult;
+    /** Add a coordinate vector with a case weight. Weight is not part of drop detection. */
+    add_point_vector_weighted(x: Float64Array, y: number, weight: number): AddPointResult;
     /** Compute fit diagnostics for the current window, or null before warm-up. */
     window_diagnostics(): Diagnostics | null;
     /** Predict query points using a fit of the current window. */
     predict_window(newX: Float64Array, options?: PredictOptions): PredictOutput;
+}
+
+/** Result from a single online update step. */
+export class OnlineOutput {
+    free(): void;
+    get y(): number;
+    get standard_error(): number | undefined;
+    get residual(): number | undefined;
+    get robustness_weight(): number | undefined;
+    get iterations_used(): number | undefined;
+    get confidence_lower(): number | undefined;
+    get confidence_upper(): number | undefined;
+    get prediction_lower(): number | undefined;
+    get prediction_upper(): number | undefined;
+    get gradient(): Float64Array | undefined;
 }
 
 "#;
@@ -259,15 +319,30 @@ use ::fastLoess::internals::binding_support as shared_parse;
 use ::fastLoess::prelude::{IntervalsBuilder, LoessResult as InnerLoessResult, Predict};
 
 fn to_js_error(err: shared_parse::BindingError) -> JsValue {
-    JsValue::from_str(&err.message)
+    let error = js_sys::Error::new(&err.message);
+    let code = match err.category {
+        shared_parse::BindingErrorCategory::InvalidArg => "InvalidArg",
+        shared_parse::BindingErrorCategory::Runtime => "Runtime",
+    };
+    let _ = Reflect::set(&error, &JsValue::from_str("code"), &JsValue::from_str(code));
+    error.into()
+}
+
+fn map_binding<T>(result: Result<T, shared_parse::BindingError>) -> Result<T, JsValue> {
+    result.map_err(to_js_error)
 }
 
 fn map_invalid_arg<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
     shared_parse::map_invalid_arg(result).map_err(to_js_error)
 }
 
+#[allow(dead_code)]
 fn map_runtime<T, E: ToString>(result: Result<T, E>) -> Result<T, JsValue> {
     shared_parse::map_runtime(result).map_err(to_js_error)
+}
+
+fn map_loess_err<T>(result: Result<T, ::fastLoess::prelude::LoessError>) -> Result<T, JsValue> {
+    shared_parse::map_loess_result(result).map_err(to_js_error)
 }
 
 fn validate_option_keys(value: &JsValue, name: &str, allowed: &[&str]) -> Result<(), JsValue> {
@@ -660,6 +735,12 @@ impl LoessResult {
         self.inner.dimensions as u32
     }
 
+    /// Drop retained predict state early. Idempotent; `free()` still releases the rest.
+    #[wasm_bindgen(skip_typescript)]
+    pub fn close(&mut self) {
+        self.inner.predict_state = None;
+    }
+
     /// Evaluate the fitted model at out-of-sample query points not in the training set.
     ///
     /// Requires `retain_model: true` to have been set on the builder before `fit()`.
@@ -699,7 +780,7 @@ impl LoessResult {
         };
         validate_outputs(opts.outputs.as_ref(), &["se", "gradient", "derivative"])?;
         let new_x_vec = new_x.to_vec();
-        let output = map_invalid_arg(shared_parse::run_predict(
+        let output = map_binding(shared_parse::run_predict(
             &self.inner,
             &new_x_vec,
             shared_parse::PredictOptionSet {
@@ -1052,16 +1133,50 @@ fn smooth(
     let x_vec = x.to_vec();
     let y_vec = y.to_vec();
 
-    let model = map_runtime(shared_parse::build_batch(builder, custom_weights))?;
-    let result = map_runtime(model.fit(&x_vec, &y_vec))?;
+    let model = map_binding(shared_parse::build_batch(builder, custom_weights))?;
+    let result = map_loess_err(model.fit(&x_vec, &y_vec))?;
 
     Ok(LoessResult { inner: result })
+}
+
+fn add_point_js_result(
+    output: Option<OnlineOutput>,
+    dropped_candidate: bool,
+) -> Result<JsValue, JsValue> {
+    let obj = Object::new();
+    match output {
+        Some(o) => {
+            Reflect::set(
+                &obj,
+                &JsValue::from_str("status"),
+                &JsValue::from_str("ready"),
+            )?;
+            Reflect::set(&obj, &JsValue::from_str("point"), &JsValue::from(o))?;
+        }
+        None if dropped_candidate => {
+            Reflect::set(
+                &obj,
+                &JsValue::from_str("status"),
+                &JsValue::from_str("dropped"),
+            )?;
+            Reflect::set(&obj, &JsValue::from_str("point"), &JsValue::null())?;
+        }
+        None => {
+            Reflect::set(
+                &obj,
+                &JsValue::from_str("status"),
+                &JsValue::from_str("filling"),
+            )?;
+            Reflect::set(&obj, &JsValue::from_str("point"), &JsValue::null())?;
+        }
+    }
+    Ok(obj.into())
 }
 
 // LOESS smoother.
 #[wasm_bindgen(skip_typescript)]
 pub struct StreamingLoess {
-    inner: ParallelStreamingLoess<f64>,
+    inner: Option<ParallelStreamingLoess<f64>>,
 }
 
 #[wasm_bindgen]
@@ -1124,14 +1239,20 @@ impl StreamingLoess {
                 (None, None, None)
             };
 
-        let model = map_runtime(shared_parse::build_streaming(
+        let model = map_binding(shared_parse::build_streaming(
             builder,
             chunk_size,
             overlap,
             merge_strategy.as_deref(),
         ))?;
 
-        Ok(StreamingLoess { inner: model })
+        Ok(StreamingLoess { inner: Some(model) })
+    }
+
+    fn model_mut(&mut self) -> Result<&mut ParallelStreamingLoess<f64>, JsValue> {
+        self.inner
+            .as_mut()
+            .ok_or_else(|| js_sys::Error::new("StreamingLoess has already been closed").into())
     }
 
     #[wasm_bindgen(js_name = process_chunk, skip_typescript)]
@@ -1142,7 +1263,8 @@ impl StreamingLoess {
     ) -> Result<LoessResult, JsValue> {
         let x_vec = x.to_vec();
         let y_vec = y.to_vec();
-        let result: InnerLoessResult<f64> = map_runtime(self.inner.process_chunk(&x_vec, &y_vec))?;
+        let result: InnerLoessResult<f64> =
+            map_loess_err(self.model_mut()?.process_chunk(&x_vec, &y_vec))?;
         Ok(LoessResult { inner: result })
     }
 
@@ -1156,25 +1278,30 @@ impl StreamingLoess {
         let x_vec = x.to_vec();
         let y_vec = y.to_vec();
         let weights_vec = weights.to_vec();
-        let result: InnerLoessResult<f64> = map_runtime(self.inner.process_chunk_weighted(
-            &x_vec,
-            &y_vec,
-            &weights_vec,
-        ))?;
+        let result: InnerLoessResult<f64> = map_loess_err(
+            self.model_mut()?
+                .process_chunk_weighted(&x_vec, &y_vec, &weights_vec),
+        )?;
         Ok(LoessResult { inner: result })
     }
 
     #[wasm_bindgen(skip_typescript)]
     pub fn finalize(&mut self) -> Result<LoessResult, JsValue> {
-        let result: InnerLoessResult<f64> = map_runtime(self.inner.finalize())?;
+        let result: InnerLoessResult<f64> = map_loess_err(self.model_mut()?.finalize())?;
         Ok(LoessResult { inner: result })
+    }
+
+    /// Release native streaming state early. Idempotent.
+    #[wasm_bindgen(skip_typescript)]
+    pub fn close(&mut self) {
+        self.inner.take();
     }
 }
 
 // LOESS smoother.
 #[wasm_bindgen(skip_typescript)]
 pub struct OnlineLoess {
-    inner: ParallelOnlineLoess<f64>,
+    inner: Option<ParallelOnlineLoess<f64>>,
 }
 
 #[wasm_bindgen]
@@ -1236,21 +1363,34 @@ impl OnlineLoess {
                 (None, None, None)
             };
 
-        let model = map_runtime(shared_parse::build_online(
+        let model = map_binding(shared_parse::build_online(
             builder,
             window_capacity,
             min_points,
             update_mode.as_deref(),
         ))?;
 
-        Ok(OnlineLoess { inner: model })
+        Ok(OnlineLoess { inner: Some(model) })
+    }
+
+    fn model_mut(&mut self) -> Result<&mut ParallelOnlineLoess<f64>, JsValue> {
+        self.inner
+            .as_mut()
+            .ok_or_else(|| js_sys::Error::new("OnlineLoess has already been closed").into())
+    }
+
+    fn model(&self) -> Result<&ParallelOnlineLoess<f64>, JsValue> {
+        self.inner
+            .as_ref()
+            .ok_or_else(|| js_sys::Error::new("OnlineLoess has already been closed").into())
     }
 
     #[wasm_bindgen(js_name = "add_point", skip_typescript)]
     pub fn add_point(&mut self, x: f64, y: f64) -> Result<JsValue, JsValue> {
-        let output = map_invalid_arg(self.inner.add_point(&[x], y))?;
-        Ok(match output {
-            Some(o) => JsValue::from(OnlineOutput {
+        let dropped_candidate = !(x.is_finite() && y.is_finite());
+        let output = map_loess_err(self.model_mut()?.add_point(&[x], y))?;
+        add_point_js_result(
+            output.map(|o| OnlineOutput {
                 y: o.y,
                 standard_error: o.standard_error,
                 residual: o.residual,
@@ -1262,16 +1402,17 @@ impl OnlineLoess {
                 prediction_upper: o.prediction_upper,
                 gradient: o.gradient,
             }),
-            None => JsValue::null(),
-        })
+            dropped_candidate,
+        )
     }
 
     #[wasm_bindgen(js_name = "add_point_vector", skip_typescript)]
     pub fn add_point_vector(&mut self, x: &Float64Array, y: f64) -> Result<JsValue, JsValue> {
         let x = x.to_vec();
-        let output = map_invalid_arg(self.inner.add_point(&x, y))?;
-        Ok(match output {
-            Some(o) => JsValue::from(OnlineOutput {
+        let dropped_candidate = x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
+        let output = map_loess_err(self.model_mut()?.add_point(&x, y))?;
+        add_point_js_result(
+            output.map(|o| OnlineOutput {
                 y: o.y,
                 standard_error: o.standard_error,
                 residual: o.residual,
@@ -1283,8 +1424,8 @@ impl OnlineLoess {
                 prediction_upper: o.prediction_upper,
                 gradient: o.gradient,
             }),
-            None => JsValue::null(),
-        })
+            dropped_candidate,
+        )
     }
 
     #[wasm_bindgen(js_name = add_point_weighted, skip_typescript)]
@@ -1300,9 +1441,11 @@ impl OnlineLoess {
         weight: f64,
     ) -> Result<JsValue, JsValue> {
         let x = x.to_vec();
-        let output = map_invalid_arg(self.inner.add_point_weighted(&x, y, weight))?;
-        Ok(match output {
-            Some(o) => JsValue::from(OnlineOutput {
+        // Weight is not part of drop detection — match C++.
+        let dropped_candidate = x.iter().any(|xi| !xi.is_finite()) || !y.is_finite();
+        let output = map_loess_err(self.model_mut()?.add_point_weighted(&x, y, weight))?;
+        add_point_js_result(
+            output.map(|o| OnlineOutput {
                 y: o.y,
                 standard_error: o.standard_error,
                 residual: o.residual,
@@ -1314,13 +1457,13 @@ impl OnlineLoess {
                 prediction_upper: o.prediction_upper,
                 gradient: o.gradient,
             }),
-            None => JsValue::null(),
-        })
+            dropped_candidate,
+        )
     }
 
     #[wasm_bindgen(js_name = window_diagnostics, skip_typescript)]
     pub fn window_diagnostics(&self) -> Result<JsValue, JsValue> {
-        let diagnostics = map_runtime(self.inner.window_diagnostics())?;
+        let diagnostics = map_loess_err(self.model()?.window_diagnostics())?;
         Ok(match diagnostics {
             Some(d) => JsValue::from(Diagnostics {
                 rmse: d.rmse,
@@ -1396,7 +1539,13 @@ impl OnlineLoess {
         }
         let query = map_invalid_arg(builder.build())?;
         let new_x = new_x.to_vec();
-        let output = map_invalid_arg(self.inner.predict_window(&new_x, &query))?;
+        let output = map_loess_err(self.model()?.predict_window(&new_x, &query))?;
         Ok(PredictOutput { inner: output })
+    }
+
+    /// Release native online state early. Idempotent.
+    #[wasm_bindgen(skip_typescript)]
+    pub fn close(&mut self) {
+        self.inner.take();
     }
 }

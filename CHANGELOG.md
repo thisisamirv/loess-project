@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **WASM:**
 
+- Breaking change: `OnlineLoess.add_point` / `add_point_vector` / weighted variants return `{ status, point }` with `status` of `"filling"` / `"ready"` / `"dropped"` instead of `OnlineOutput | null`.
 - Bumped `astrojs/markdown-remark` to v7.3.9, `astrojs/starlight` to v0.43.1, `astro` to v7.4.12, `katex` to v0.19.1, `oxlint` to v1.93.0, and `typedoc-plugin-markdown` to v4.14.1.
 
 ### Fixed
@@ -91,6 +92,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Distinguish online `missing="drop"` (`status: "dropped"`) from a still-filling window (`status: "filling"`); `add_point` / `add_point_vector` return `{ status, point }`.
 - Add idempotent `close()` (and `Symbol.dispose`) on `OnlineLoess`, `StreamingLoess`, and `LoessResult` (clears retained predict state).
 - Align `fit_async` custom-weights with sync `fit`, and categorize Online errors via `map_loess_result`.
+
+**WASM:**
+
+- Distinguish online `missing="drop"` (`status: "dropped"`) from a still-filling window (`status: "filling"`); `add_point` / `add_point_vector` / weighted variants return `{ status, point }`.
+- Add idempotent `close()` on `OnlineLoess`, `StreamingLoess`, and `LoessResult` (clears retained predict state).
+- Preserve binding error categories on thrown JS `Error`s and map Online/fit/stream failures via `map_loess_result`.
 
 ## 3.0.0
 

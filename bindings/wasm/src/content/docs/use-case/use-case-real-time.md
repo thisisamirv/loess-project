@@ -14,7 +14,7 @@ When data arrives continuously—from sensors, logs, or streaming pipelines—yo
 
 For true real-time applications where each point must be processed immediately.
 
-`window_capacity = 25` limits the internal buffer to the 25 most recent observations; each `add_point` call costs O(window) rather than growing with total history. `min_points = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return `null`/`None`/`nothing`. `update_mode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
+`window_capacity = 25` limits the internal buffer to the 25 most recent observations; each `add_point` call costs O(window) rather than growing with total history. `min_points = 5` suppresses output until the window holds enough points for a stable fit — calls made before that threshold return `status: "filling"`. `update_mode = "incremental"` re-fits only the most recent point rather than the full window, halving typical latency at a modest accuracy cost.
 
 ### Sensor Data Example
 
@@ -33,8 +33,8 @@ const processor = new OnlineLoess(
 let rt_printed = 0;
 for (let i = 0; i < x.length; i++) {
     const res = processor.add_point(x[i], y[i]);
-    if (res !== undefined && res !== null) {
-        if (rt_printed < 5) console.log("Smoothed y:", res.y.toFixed(4));
+    if (res.status === "ready") {
+        if (rt_printed < 5) console.log("Smoothed y:", res.point.y.toFixed(4));
         rt_printed++;
     }
 }
